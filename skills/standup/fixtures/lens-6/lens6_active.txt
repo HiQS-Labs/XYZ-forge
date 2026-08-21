@@ -1,0 +1,1 @@
+rel-01M0EC3AGK2DWYAC1WV7FMG2Q6  0.7.2    Daybreak     active   target=2026-08-26 shipped=- tracking=https://github.com/HiQS-Suite/XYZ-forge/issues/77 items=9

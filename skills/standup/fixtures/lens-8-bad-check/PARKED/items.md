@@ -1,0 +1,1 @@
+- [issue:1] bad check obj — check: {"kind": } — close: close 1

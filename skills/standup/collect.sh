@@ -2,6 +2,7 @@
 set -uo pipefail
 
 FIXTURE_DIR=""
+SESSION_FILE=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     # `$2` under `set -u` is an unbound-variable abort on a bare `--fixture`, which surfaces as a
@@ -11,10 +12,20 @@ while [[ $# -gt 0 ]]; do
       if [[ $# -lt 2 || -z "${2:-}" ]]; then
         echo "collect.sh: --fixture requires a directory operand" >&2; exit 2
       fi
-      FIXTURE_DIR="$2"; shift 2 ;;
+      export FIXTURE_DIR="$2"; shift 2 ;;
+    --session)
+      if [[ $# -lt 2 || -z "${2:-}" ]]; then
+        echo "collect.sh: --session requires a file operand" >&2; exit 2
+      fi
+      SESSION_FILE="$2"; shift 2 ;;
     *) echo "collect.sh: unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+
+if [[ -z "$SESSION_FILE" && -z "$FIXTURE_DIR" ]]; then
+  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  SESSION_FILE="$REPO_ROOT/.standup-transcript.json"
+fi
 
 # `jq` is this collector's only external dependency beyond git and coreutils, and it is load-bearing:
 # every candidate and the branch name are JSON-encoded through it, precisely so a path or ref
@@ -30,9 +41,12 @@ done
 if ! command -v jq >/dev/null 2>&1; then
   printf '%s\n' '{"repo": {"branch": "unknown"},' \
     ' "lenses": {' \
+    '   "1": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "2": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "3": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
-    '   "7": {"status": "degraded", "degraded_id": "D5", "candidates": []}' \
+    '   "6": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "7": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "8": {"status": "degraded", "degraded_id": "D5", "candidates": []}' \
     ' }' \
     '}'
   echo "collect.sh: jq is required and was not found on PATH — every lens degraded (D5)." >&2
@@ -550,14 +564,371 @@ else
   lens7_deg="\"D4\""
 fi
 
+# ── Lens 1: Conversation ──────────────────────────────────────────────────────────────────────────
+lens1_status="ok"
+lens1_deg="null"
+lens1_cands="[]"
+if [[ -n "$FIXTURE_DIR" && -f "$FIXTURE_DIR/session.json" ]]; then
+  SESSION_FILE="$FIXTURE_DIR/session.json"
+fi
+
+if [[ -n "$SESSION_FILE" && -f "$SESSION_FILE" ]]; then
+  out1=$(python3 -c '
+import sys, json, hashlib, re
+try:
+    with open(sys.argv[1], "r") as f:
+        data = json.load(f)
+    if not isinstance(data, list):
+        raise ValueError()
+    if len(data) == 0:
+        raise ValueError()
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError()
+except Exception:
+    print("D6")
+    sys.exit(0)
+
+cands = []
+for item in data:
+    if item.get("completed") or item.get("parked"):
+        continue
+    quote = item.get("quote")
+    what = item.get("what")
+    close = item.get("close")
+    if not isinstance(quote, str) or not isinstance(what, str) or not isinstance(close, str):
+        print("D6")
+        sys.exit(0)
+        
+    norm = re.sub(r"[^\w\s]", "", quote.lower())
+    norm = re.sub(r"\s+", " ", norm).strip()
+    if not norm:
+        print("D6")
+        sys.exit(0)
+        
+    sha = hashlib.sha256(norm.encode("utf-8")).hexdigest()[:12]
+    cands.append({
+        "key": f"conv:{sha}",
+        "what": what,
+        "evidence_type": "quote",
+        "evidence_payload": norm,
+        "staleness": 0,
+        "close": close,
+        "close_kind": "inspect" if close.startswith("inspect:") else "command",
+        "live_state": norm
+    })
+print(json.dumps(cands))
+' "$SESSION_FILE")
+  if [[ "$out1" == "D6" ]]; then
+    lens1_status="degraded"; lens1_deg="\"D6\""
+  else
+    lens1_cands="$out1"
+  fi
+else
+  lens1_status="degraded"; lens1_deg="\"D6\""
+fi
+
+# ── Lens 6: RELEASES ledger ───────────────────────────────────────────────────────────────────────
+lens6_status="ok"
+lens6_deg="null"
+lens6_cands="[]"
+out6=$(python3 -c '
+import sys, os, time, json, re, calendar, datetime
+
+def main():
+    def parse_date(d):
+        try:
+            dt = datetime.datetime.strptime(d, "%Y-%m-%d")
+            return calendar.timegm(dt.utctimetuple())
+        except Exception:
+            return None
+
+    def run_mock(id, cmd):
+        import os, subprocess
+        fx = os.environ.get("FIXTURE_DIR", "")
+        if fx:
+            rc_file = os.path.join(fx, f"{id}.rc")
+            txt_file = os.path.join(fx, f"{id}.txt")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f: rc = int(f.read().strip())
+                out = ""
+                if os.path.exists(txt_file):
+                    with open(txt_file) as f: out = f.read()
+                return rc, out
+            if os.path.exists(txt_file):
+                with open(txt_file) as f: out = f.read()
+                return 0, out
+            return 1, f"Missing fixture: {id}\n"
+        proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+        return proc.returncode, proc.stdout + proc.stderr
+
+    rc_chk, out_chk = run_mock("lens6_check", ["python3", "utils/py/releases_app.py", "check"])
+    rc_nxt, out_nxt = run_mock("lens6_next", ["python3", "utils/py/releases_app.py", "next"])
+    rc_drf, out_drf = run_mock("lens6_draft", ["python3", "utils/py/releases_app.py", "list", "--status", "draft"])
+    rc_act, out_act = run_mock("lens6_active", ["python3", "utils/py/releases_app.py", "list", "--status", "active"])
+
+    if (rc_chk not in (0, 1, 2)) or (rc_nxt != 0) or (rc_drf != 0) or (rc_act != 0):
+        print("D5")
+        sys.exit(0)
+
+    cands = []
+    versions = []
+
+    def parse_list(out):
+        for line in out.splitlines():
+            if not line.strip(): continue
+            parts = line.split()
+            if len(parts) >= 2 and parts[0].startswith("rel-") and parts[1] != "-":
+                versions.append(parts[1])
+            else:
+                print("D5")
+                sys.exit(0)
+
+    parse_list(out_drf)
+    parse_list(out_act)
+
+    seen_keys = set()
+
+    for v in versions:
+        rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", ["python3", "utils/py/releases_app.py", "show", "--version", v])
+        if rc_show != 0 or not out_show.startswith("GID:"):
+            print("D5")
+            sys.exit(0)
+            
+        show_fields = {}
+        for line in out_show.splitlines():
+            if ":" in line:
+                k, val = line.split(":", 1)
+                show_fields[k.strip()] = val.strip()
+                
+        st = show_fields.get("Status")
+        td = show_fields.get("Target Date")
+        if st == "active" and td and td != "None" and parse_date(td):
+            target_ts = parse_date(td)
+            now_ts = int(time.time())
+            env_now = os.environ.get("RELEASES_APP_NOW", "")
+            if env_now:
+                now_ts = parse_date(env_now[:10]) or now_ts
+            if now_ts > target_ts:
+                rule_name = "release-target-passed"
+                key = f"rule:{rule_name}:{v}"
+                if key not in seen_keys:
+                    cands.append({
+                        "key": key,
+                        "what": f"ship {v}",
+                        "evidence_type": "rule",
+                        "evidence_payload": f"{rule_name}@{v}",
+                        "rule_name": rule_name,
+                        "staleness": target_ts,
+                        "close": f"python3 utils/py/releases_app.py ship {v}",
+                        "close_kind": "command",
+                        "live_state": f"warn: rule={rule_name}: release {v} is active past target of {td}"
+                    })
+                    seen_keys.add(key)
+
+    for line in out_chk.splitlines():
+        if line.startswith("FAIL: rule="):
+            rule_str = line.split(":", 2)[1].strip()
+            rule_name = rule_str[5:]
+            key = f"rule:{rule_name}:db"
+            if key not in seen_keys:
+                cands.append({
+                    "key": key,
+                    "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
+                    "evidence_type": "rule",
+                    "evidence_payload": f"{rule_name}@db",
+                    "rule_name": rule_name,
+                    "staleness": None,
+                    "close": "python3 utils/py/releases_app.py check --rebuild",
+                    "close_kind": "command",
+                    "live_state": line.strip()
+                })
+                seen_keys.add(key)
+        elif line.startswith("warn: rule="):
+            m = re.search(r"warn: rule=([^:]+):\s*([^\s]+)\s+.*?target of ([0-9]{4}-[0-9]{2}-[0-9]{2})", line)
+            if m:
+                rule_name = m.group(1)
+                v = m.group(2)
+                td = parse_date(m.group(3))
+                key = f"rule:{rule_name}:{v}"
+                if key not in seen_keys:
+                    cands.append({
+                        "key": key,
+                        "what": f"ship {v}" if "overdue" in rule_name or "target" in rule_name else f"resolve {rule_name.replace(chr(45), chr(32))}",
+                        "evidence_type": "rule",
+                        "evidence_payload": f"{rule_name}@{v}",
+                        "rule_name": rule_name,
+                        "staleness": td,
+                        "close": f"python3 utils/py/releases_app.py ship {v}",
+                        "close_kind": "command",
+                        "live_state": line.strip()
+                    })
+                    seen_keys.add(key)
+            else:
+                parts = line.split(":", 2)
+                rule_name = parts[1].strip()[5:]
+                key = f"rule:{rule_name}:db"
+                if key not in seen_keys:
+                    cands.append({
+                        "key": key,
+                        "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
+                        "evidence_type": "rule",
+                        "evidence_payload": f"{rule_name}@db",
+                        "rule_name": rule_name,
+                        "staleness": None,
+                        "close": "python3 utils/py/releases_app.py check",
+                        "close_kind": "command",
+                        "live_state": line.strip()
+                    })
+                    seen_keys.add(key)
+    print(json.dumps(cands))
+
+try:
+    main()
+except Exception:
+    print("D5")
+    sys.exit(0)
+')
+if [[ "$out6" == "D5" ]]; then
+  lens6_status="degraded"; lens6_deg="\"D5\""
+else
+  lens6_cands="$out6"
+fi
+
+# ── Lens 8: PARKED ────────────────────────────────────────────────────────────────────────────────
+lens8_status="ok"
+lens8_deg="null"
+lens8_cands="[]"
+out8=$(python3 -c '
+import os, sys, json, glob, re
+fx = os.environ.get("FIXTURE_DIR", "")
+parked_dir = os.path.join(fx, "PARKED") if fx else "PARKED"
+
+if not os.path.isdir(parked_dir):
+    print("D3")
+    sys.exit(0)
+
+PARK_RE = re.compile(r"^- \[([^\]]+)\](.*)— check: (\{.*?\}) — close: (.*?)(?: —|$)")
+def run_probe(chk, key):
+    import subprocess
+    kind = chk.get("kind")
+    args = chk.get("args", [])
+    if kind == "test-e" and args:
+        if fx:
+            rc_file = os.path.join(fx, f"lens8_test_e_{key.replace(chr(58), chr(95))}.rc")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f:
+                    rc = int(f.read().strip())
+                    return rc == 0, f"exit {rc}"
+            return False, "missing fixture"
+        ex = os.path.exists(args[0])
+        return ex, "exists" if ex else "missing"
+    elif kind == "gh-issue-state" and args:
+        if fx:
+            txt_file = os.path.join(fx, f"lens8_gh_{args[0]}.txt")
+            if os.path.exists(txt_file):
+                with open(txt_file) as f: out = f.read()
+                return "CLOSED" in out, "CLOSED" if "CLOSED" in out else "OPEN"
+            return False, "missing fixture"
+        print("D3")
+        sys.exit(0)
+    elif kind == "releases-check":
+        if fx:
+            rc_file = os.path.join(fx, "lens8_releases_check.rc")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f:
+                    rc = int(f.read().strip())
+                    return rc == 0, f"exit {rc}"
+            return False, "missing fixture"
+        try:
+            rc = subprocess.run(["python3", "utils/py/releases_app.py", "check"], capture_output=True).returncode
+            return rc == 0, f"exit {rc}"
+        except Exception:
+            return False, "error"
+    elif kind == "git-log" and args:
+        if fx:
+            rc_file = os.path.join(fx, f"lens8_git_log.rc")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f:
+                    rc = int(f.read().strip())
+                    return rc == 0, f"exit {rc}"
+            return False, "missing fixture"
+        try:
+            rc = subprocess.run(["git", "log", "--oneline", "-1", str(args[0])], capture_output=True).returncode
+            return rc == 0, f"exit {rc}"
+        except Exception:
+            return False, "error"
+    else:
+        print("D3")
+        sys.exit(0)
+
+cands = []
+try:
+    for path in glob.glob(os.path.join(parked_dir, "*.md")):
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line_str = line.strip()
+                if not line_str.startswith("- ["):
+                    continue
+                m = PARK_RE.match(line_str)
+                if not m:
+                    print("D3")
+                    sys.exit(0)
+                key, rest, check_str, close_str = m.groups()
+                try:
+                    chk = json.loads(check_str)
+                    if not isinstance(chk, dict) or "kind" not in chk:
+                        raise ValueError()
+                    if "args" in chk and not isinstance(chk["args"], list):
+                        raise ValueError()
+                except Exception:
+                    print("D3")
+                    sys.exit(0)
+                
+                first_seen = None
+                fs_m = re.search(r"first seen: ([0-9]+)", line_str)
+                if fs_m:
+                    first_seen = int(fs_m.group(1))
+                
+                try:
+                    is_done, state_str = run_probe(chk, key)
+                except Exception:
+                    print("D3")
+                    sys.exit(0)
+                    
+                if is_done:
+                    cands.append({
+                        "key": f"park:{key}",
+                        "what": f"close parked item {key}",
+                        "evidence_type": "park",
+                        "evidence_payload": key,
+                        "staleness": first_seen,
+                        "close": close_str,
+                        "close_kind": "command" if not close_str.startswith("inspect:") else "inspect",
+                        "live_state": state_str
+                    })
+except Exception:
+    print("D3")
+    sys.exit(0)
+print(json.dumps(cands))
+')
+if [[ "$out8" == "D3" ]]; then
+  lens8_status="degraded"; lens8_deg="\"D3\""
+else
+  lens8_cands="$out8"
+fi
+
 branch_json=$(jq -Rn --arg b "$branch" '$b')
 
 cat <<EOF
 {"repo": {"branch": $branch_json},
  "lenses": {
+   "1": {"status": "$lens1_status", "degraded_id": $lens1_deg, "candidates": $lens1_cands},
    "2": {"status": "$lens2_status", "degraded_id": $lens2_deg, "candidates": $lens2_cands},
    "3": {"status": "$lens3_status", "degraded_id": $lens3_deg, "candidates": $lens3_cands},
-   "7": {"status": "$lens7_status", "degraded_id": $lens7_deg, "candidates": $lens7_cands}
+   "6": {"status": "$lens6_status", "degraded_id": $lens6_deg, "candidates": $lens6_cands},
+   "7": {"status": "$lens7_status", "degraded_id": $lens7_deg, "candidates": $lens7_cands},
+   "8": {"status": "$lens8_status", "degraded_id": $lens8_deg, "candidates": $lens8_cands}
  }
 }
 EOF
@@ -567,6 +938,6 @@ EOF
 # the document and then exited 0, so a caller checking the exit code was told the collection
 # succeeded after a bounded read had failed. The document is the same either way — this is about the
 # out-of-band signal a caller can act on without parsing JSON.
-if [[ "$lens2_status" != "ok" || "$lens3_status" != "ok" || "$lens7_status" != "ok" ]]; then
+if [[ "$lens1_status" != "ok" || "$lens2_status" != "ok" || "$lens3_status" != "ok" || "$lens6_status" != "ok" || "$lens7_status" != "ok" || "$lens8_status" != "ok" ]]; then
   exit 3
 fi

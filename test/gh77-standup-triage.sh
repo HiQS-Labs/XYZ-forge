@@ -194,7 +194,27 @@ out="$(T "$W/lens7.json" --dry-run 2>&1)"
 has "lens 7 diverged classifies to tier 5" "$out" "5 · sync ROADMAP ledger"
 
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-7-fail" > "$W/deg7.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1" > "$W/lens1.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-fail" > "$W/deg1.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6" > "$W/lens6.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-fail" > "$W/deg6.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8" > "$W/lens8.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail" > "$W/deg8.json"
 out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
+out="$(T "$W/lens1.json" --dry-run 2>&1)" || true
+has "lens 1 finds session mention" "$out" "re-file 77"
+out="$(T "$W/deg1.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly with D6" "$out" "D6"
+
+out="$(T "$W/lens6.json" --dry-run 2>&1)" || true
+has "lens 6 finds overdue release" "$out" "ship 0.7.2"
+out="$(T "$W/deg6.json" --dry-run 2>&1)" || true
+has "lens 6 degrades loudly with D5" "$out" "D5"
+
+out="$(T "$W/lens8.json" --dry-run 2>&1)" || true
+has "lens 8 finds done work" "$out" "close parked item issue:301"
+out="$(T "$W/deg8.json" --dry-run 2>&1)" || true
+has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
 echo
@@ -214,6 +234,18 @@ has "lens 3 degrades loudly on failed dirty-tree check" "$out" "D5"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-2-quote-branch" > "$W/quote_branch.json"
 out="$(T "$W/quote_branch.json" --dry-run 2>&1)" || true
 has "JSON encoding handles branch name with double quotes" "$out" "commit or discard releases.db"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-bad-schema" > "$W/deg_lens1_schema.json" 2>/dev/null
+out="$(T "$W/deg_lens1_schema.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly on malformed session schema" "$out" "D6"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-empty-session" > "$W/deg_lens1_empty.json" 2>/dev/null
+out="$(T "$W/deg_lens1_empty.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly on empty session" "$out" "D6"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-bad-check" > "$W/deg_lens8_schema.json" 2>/dev/null
+out="$(T "$W/deg_lens8_schema.json" --dry-run 2>&1)" || true
+has "lens 8 degrades loudly on malformed check object" "$out" "no PARKED/"
 
 echo
 # ── 13. The collector's own dependency is not allowed to fail silently ───────────────────
@@ -246,6 +278,21 @@ if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$W/nojq.json" 2>/
   pass=$((pass+1)); echo "  PASS: it still emits VALID JSON with jq unavailable — never an empty stdin"
 else
   fail=$((fail+1)); echo "  FAIL: jq-unavailable output is not valid JSON — consumer sees silence" >&2
+fi
+if python3 -c '
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    expected_keys = {"1", "2", "3", "6", "7", "8"}
+    keys = set(d.get("lenses", {}).keys())
+    if keys != expected_keys: sys.exit(1)
+    if any(l.get("degraded_id") != "D5" for l in d["lenses"].values()): sys.exit(2)
+except Exception:
+    sys.exit(3)
+' "$W/nojq.json"; then
+  pass=$((pass+1)); echo "  PASS: fallback document contains exactly lenses 1, 2, 3, 6, 7, 8 all as D5"
+else
+  fail=$((fail+1)); echo "  FAIL: fallback document keys or degraded_id mismatch" >&2
 fi
 out="$(T "$W/nojq.json" --dry-run 2>&1)" || true
 has "every lens degrades loudly with D5 when jq is unavailable" "$out" "D5"
@@ -390,7 +437,7 @@ is "  and it is never dropped — the operator still learns the file is there" \
    "$(F lens-2-newline-path 'len(d["lenses"]["2"]["candidates"])')" "1"
 C lens-2-newline-path > "$W/nl.json" 2>/dev/null
 is "  so the rendered screen keeps one physical line per item" \
-   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "5"
+   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "8"
 
 # The required mtime is validated BEFORE jq sees it. A non-integer made jq's `tonumber` fail; with
 # `set +e` active the candidate silently became EMPTY while the lens stayed `ok`, and the final
@@ -503,6 +550,44 @@ if [ -z "$bad_json" ]; then
 else
   fail_ "these fixtures produced no/invalid JSON (the consumer would read them as a clean session):$bad_json"
 fi
+
+echo
+# ── 20. Round-5 Reviewer: Lens 1 canonical identity, Lens 6 show parse, Lens 8 controls ─────────
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-malformed-actionable" > "$W/deg_lens1_malformed.json" 2>/dev/null
+out="$(T "$W/deg_lens1_malformed.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly (D6) if actionable item has missing/malformed quote/what/close" "$out" "D6"
+
+export RELEASES_APP_NOW="2026-08-20T12:00:00Z"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-overdue-show" > "$W/lens6_overdue.json" 2>/dev/null
+out="$(T "$W/lens6_overdue.json" --dry-run 2>&1)" || true
+has "lens 6 extracts overdue candidate from show output even without check warning" "$out" "ship 0.9.0"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-controls" > "$W/lens8_controls.json" 2>/dev/null
+out="$(T "$W/lens8_controls.json" --dry-run 2>&1)" || true
+has "lens 8 success control for test-e yields candidate" "$out" "close parked item issue:1"
+has "lens 8 success control for git-log yields candidate" "$out" "close parked item issue:2"
+has "lens 8 success control for releases-check yields candidate" "$out" "close parked item issue:3"
+is "lens 8 explicit state is preserved in live_state for test-e" "$(F lens-8-controls 'next((c["live_state"] for c in d["lenses"]["8"]["candidates"] if c["evidence_payload"]=="issue:1"), None)')" "exit 0"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail-controls" > "$W/lens8_fail_controls.json" 2>/dev/null
+is "lens 8 failure controls yield zero candidates" "$(F lens-8-fail-controls 'len(d["lenses"]["8"]["candidates"])')" "0"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-bad-read" > "$W/lens8_bad_read.json" 2>/dev/null
+out="$(T "$W/lens8_bad_read.json" --dry-run 2>&1)" || true
+has "lens 8 degrades loudly with D3 on unreadable PARKED record" "$out" "no PARKED/"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-bad-read" > "$W/lens6_bad_read.json" 2>/dev/null
+out="$(T "$W/lens6_bad_read.json" --dry-run 2>&1)" || true
+has "lens 6 degrades loudly with D5 on unreadable fixture" "$out" "D5"
+
+echo
+# ── 21. Lens 1 non-fixture control ─────────────────────────────────────────────────────────────
+echo '[{"quote":"test quote","what":"test what","close":"inspect: test"}]' > "$W/.standup-transcript.json"
+(cd "$W" && bash "$ROOT_DIR/skills/standup/collect.sh") > "$W/live_lens1_nonfixture.json" 2>/dev/null
+rm -f "$W/.standup-transcript.json"
+out="$(T "$W/live_lens1_nonfixture.json" --dry-run 2>&1)" || true
+has "Lens 1 works outside fixture mode when .standup-transcript.json is present at repo root" "$out" "test what"
 
 echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
