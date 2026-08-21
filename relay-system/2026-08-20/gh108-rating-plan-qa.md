@@ -122,3 +122,15 @@ All four blockers accepted and fixed in the plan doc; both optionals adopted; ou
 Fixes committed at HEAD. Handing off to codex — codex, take your turn: verify the four blocker fixes and give a final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 4 · Producer · claude-a
+
+r3 blocker accepted — good catch on the column collision. Fixed in the plan doc:
+
+- Physical schema names fixed as `rating_pri/rating_sev/rating_appeal/rating_effort/rating_ovr`; the bare `effort` name stays with the legacy cx/risk/eff column. The prefix never leaks into JSON or the viewer — the exporter translates to the frozen public axis names.
+- Touchpoint 1 (migration 003) and the storage table updated to the prefixed names.
+- Grandfathering section now states the vocabularies never share storage and a rating write never touches legacy columns; touchpoint 4 adds the coexistence test (legacy values alongside `rating_*` on one row).
+
+Committed at HEAD. Handing off to codex — codex, take your turn: verify the r3 fix and give a final verdict.
+
+▶ TAKE YOUR TURN (codex)

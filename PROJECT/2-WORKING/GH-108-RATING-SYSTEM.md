@@ -70,7 +70,7 @@ One rule: **scores are authored where the task is authored, and stored where the
 |---|---|---|
 | ROADMAP.md entry line | `rated 70/40/55/60` (+ optional ` ovr 350`) — see grammar below | `roadmap sync` parser |
 | PROJECT doc frontmatter | `rating: "pri/sev/appeal/effort 70/40/55/60 · calc 225"` | humans; not machine-parsed in v1 |
-| `releases.db` | four new nullable INTEGER columns + `ovr` on `roadmap_items` | exporter, future `releases dashboard` |
+| `releases.db` | five new nullable INTEGER columns on `roadmap_items`, physically named **`rating_pri` / `rating_sev` / `rating_appeal` / `rating_effort` / `rating_ovr`** — prefixed because the table already has a legacy `effort` column (cx/risk/eff's third field), which SQLite cannot duplicate and grandfathered data must not share. The exporter translates physical names to the frozen public axis names; the `rating_` prefix never leaks into JSON or the viewer | exporter, future `releases dashboard` |
 | `data.json` / `--json` | `metrics: {pri, sev, appeal, effort, calc}` + `override` + `effectiveScore` per card | timeline viewer, /radar, /10days (#107) |
 
 **The one canonical grammar (Codex r1 — the doc previously stated three forms):**
@@ -103,10 +103,10 @@ derived value invites the drift class this repo already fights everywhere else.
 
 | # | Component | Change | Size |
 |---|---|---|---|
-| 1 | `utils/py/releases_app.py` (roadmap sync) | parse `rated N/N/N/N` + `ovr N` from entry text; **migration 003** adding 5 nullable columns to `roadmap_items` — wired into the migration chain the rebuild path executes (currently 001/002 only), with the hard-coded column lists in the canonical dump writer AND `load_dump()` extended to carry them; reject out-of-range values loudly at sync time | M+ |
+| 1 | `utils/py/releases_app.py` (roadmap sync) | parse `rated N/N/N/N` + `ovr N` from entry text; **migration 003** adding the 5 nullable `rating_*` columns to `roadmap_items` (prefixed — the bare `effort` name is taken by the legacy vocabulary) — wired into the migration chain the rebuild path executes (currently 001/002 only), with the hard-coded column lists in the canonical dump writer AND `load_dump()` extended to carry them; reject out-of-range values loudly at sync time | M+ |
 | 2 | `utils/timeline/export_timeline.py` | select the rating columns into the roadmap index (today's query selects none); map → card `metrics` + `override`; derive `calc` and emit `effectiveScore` (= `ovr` if set, else `calc`) so consumers never reimplement the precedence rule; add stdout `--json`; sev hot flag | S |
 | 3 | `utils/timeline/RELEASES.html` | more than legend text (Codex r1): the metric loops hard-code `pri/sev/app/calc` in BOTH the card renderer and the what's-next strip — rename legacy `app` → `appeal`, add `effort`, then flip the footer legend | S |
-| 4 | `test/gh69-roadmap-shadow.sh` (owns `roadmap sync` parser behavior) | happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged, both-vocabularies error, and a dump→rebuild round trip preserving ratings; `test/gh32-releases-app.sh` keeps cross-ledger/migration-chain coverage only | S |
+| 4 | `test/gh69-roadmap-shadow.sh` (owns `roadmap sync` parser behavior) | happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged, both-vocabularies-on-one-entry error, a row carrying legacy `cx/risk/eff` column values ALONGSIDE new `rating_*` values (grandfathered columns untouched by a rating write), and a dump→rebuild round trip preserving ratings; `test/gh32-releases-app.sh` keeps cross-ledger/migration-chain coverage only | S |
 | 5 | Intake template / PDDA scaffold | replace cx/risk/eff with the rating line | XS |
 | 6 | `PROJECT/1-INBOX`+ROADMAP authoring | backfill ACTIVE WINDOW ONLY (Daybreak + Cargo manifest and detour items, ~12 tasks) | S (operator judgment) |
 
@@ -120,6 +120,9 @@ frontmatter ratings, a dedicated leaderboard page (rides #75), and any write pat
 - The `complexity/risk/effort` columns and their parser **stay** — 26 unpopulated rows and 1
   populated row (GH-5) cost nothing.
 - An entry carrying BOTH vocabularies is a sync error (loud, not silent preference).
+- The vocabularies never share storage: legacy values live in `complexity/risk/effort`, new ratings
+  in the `rating_*` columns (Codex r2 — the bare `effort` name is already taken). A rating write
+  never touches the legacy columns; a row may legitimately carry both sets while grandfathered.
 - Intake docs switch to the rating line on their next edit; no sweep.
 - The columns are removed only when the last cx/risk/eff row is gone — tracked as a checklist tail on
   #108, not a phase.
