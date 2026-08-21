@@ -207,9 +207,14 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5" > "$W/lens5.json"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-fail" > "$W/deg5.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-manifest" > "$W/lens5_manifest.json"
 
 out="$(T "$W/lens4.json" --dry-run 2>&1)" || true
-has "lens 4 finds open PR" "$out" "review PR 51"
+has "lens 4 finds open PR 51" "$out" "review PR 51"
+has "lens 4 pin classification for CLEAN" "$out" "4 · review PR 51"
+has "lens 4 pin classification for non-CLEAN (BLOCKED goes to 6)" "$out" "6 · review PR 52"
+is "lens 4 structured candidate emits merge_state" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["4"]["candidates"][0]["merge_state"])' "$W/lens4.json")" "CLEAN"
+
 out="$(T "$W/deg4.json" --dry-run 2>&1)" || true
 has "lens 4 degrades loudly with D1" "$out" "D1"
 out="$(T "$W/lens4_trunc.json" --dry-run 2>&1)" || true
@@ -217,9 +222,29 @@ has "lens 4 truncates at 50 and degrades with D2" "$out" "D2"
 
 out="$(T "$W/lens5.json" --dry-run 2>&1)" || true
 has "lens 5 finds triage issue" "$out" "triage issue 200"
+is "lens 5 structured candidate emits live_state with updatedAt" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["5"]["candidates"][0]["live_state"])' "$W/lens5.json")" "OPEN/2026-08-19"
 out="$(T "$W/deg5.json" --dry-run 2>&1)" || true
 has "lens 5 degrades loudly with D1" "$out" "D1"
-out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
+
+out="$(T "$W/lens5_manifest.json" --dry-run 2>&1)" || true
+has "lens 5 manifest source contributes exactly its issue number" "$out" "triage issue 999"
+
+# Rerun/fingerprint regression test for Lens 5
+rm -f "$W/sess_lens5.json"
+T "$W/lens5.json" --apply --session-state "$W/sess_lens5.json" >/dev/null 2>&1
+out="$(T "$W/lens5.json" --dry-run --session-state "$W/sess_lens5.json" 2>&1)" || true
+has "unchanged lens 5 item is suppressed on rerun" "$out" "1 suppressed"
+hasnt "  and does not re-render" "$out" "triage issue 200"
+
+python3 -c 'import json; print(json.dumps({"number": 200, "state": "OPEN", "title": "An Issue", "updatedAt": "2026-08-20T14:00:00Z"}))' > "$W/lens5_issue_200_updated.json"
+cp "$ROOT_DIR/skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt" "$W/lens5_issue_200_bak.txt"
+cp "$W/lens5_issue_200_updated.json" "$ROOT_DIR/skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5" > "$W/lens5_updated.json"
+mv "$W/lens5_issue_200_bak.txt" "$ROOT_DIR/skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt"
+
+out="$(T "$W/lens5_updated.json" --dry-run --session-state "$W/sess_lens5.json" 2>&1)" || true
+has "  but a changed live state (updatedAt) re-raises it" "$out" "triage issue 200"
+
 out="$(T "$W/lens1.json" --dry-run 2>&1)" || true
 has "lens 1 finds session mention" "$out" "re-file 77"
 out="$(T "$W/deg1.json" --dry-run 2>&1)" || true

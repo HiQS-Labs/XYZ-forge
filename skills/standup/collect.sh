@@ -690,6 +690,7 @@ for pr in data:
             "evidence_payload": f"{num}+{merge_state}",
             "staleness": int(stale_ts),
             "stale_days": stale_days,
+            "merge_state": merge_state,
             "live_state": f"{merge_state}/{is_draft}/{updated_date}",
             "close": f"gh pr review {num}",
             "close_kind": "command"
@@ -733,7 +734,6 @@ def get_bounded_set(fx, session_file):
                 for line in f:
                     if line.strip().isdigit():
                         nums.add(int(line.strip()))
-        return sorted(list(nums))
         
     if os.path.exists(session_file):
         try:
@@ -748,7 +748,7 @@ def get_bounded_set(fx, session_file):
         except Exception:
             pass
 
-    roadmap_path = "ROADMAP.md"
+    roadmap_path = os.path.join(fx, "ROADMAP.md") if fx else "ROADMAP.md"
     try:
         with open(roadmap_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -763,10 +763,10 @@ def get_bounded_set(fx, session_file):
     except Exception:
         pass
 
-    db_path = "releases.db"
+    db_path = os.path.join(fx, "releases.db") if fx else "releases.db"
     try:
         c = sqlite3.connect(db_path)
-        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status IN (''draft'', ''active'') AND i.url IS NOT NULL").fetchall()
+        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status IN ('\''draft'\'', '\''active'\'') AND i.url IS NOT NULL").fetchall()
         for r in rows:
             m = re.search(r"issues/(\d+)$", r[0])
             if m:
@@ -812,6 +812,9 @@ for num in nums:
         sys.exit(0)
     try:
         data = json.loads(out)
+        if "number" not in data or "title" not in data:
+            print("D5")
+            sys.exit(0)
         state = data.get("state", "UNKNOWN")
         updated_at = data.get("updatedAt", "")
         
@@ -821,13 +824,14 @@ for num in nums:
             stale_ts = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
             stale_ts = int(stale_ts)
             
+        updated_date = updated_at[:10] if updated_at else ""
         cands.append({
             "key": f"issue:{num}",
             "what": f"triage issue {num}",
             "evidence_type": "issue",
             "evidence_payload": f"{num}+{state}@none",
             "staleness": stale_ts,
-            "live_state": state,
+            "live_state": f"{state}/{updated_date}" if updated_date else state,
             "close": f"gh issue view {num}",
             "close_kind": "command"
         })

@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -142,3 +142,13 @@ swept file: yes
 I swept the full `collect.sh` and `gh77-standup-triage.sh` plus the complete fixture tree; no additional pre-existing defects were found in those scoped files. I did not run project artifacts or tests, per this reviewer turn's containment rule.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+
+- Added the required missing fixtures: `lens-4/`, `lens-4-fail/`, `lens-4-truncated/`, `lens-5/`, `lens-5-fail/`, and `lens-5-manifest/`.
+- **Lens 4 (`collect.sh`)**: Added `merge_state` to the candidate output to fix the missing field for `triage.py`. Updated `gh77-standup-triage.sh` to explicitly pin and verify classification for both `CLEAN` (tier 4) and non-CLEAN (`BLOCKED`, tier 6) states.
+- **Lens 5 (`collect.sh`)**: Corrected the SQL query literal quoting from `''draft'', ''active''` to proper single quotes inside the shell heredoc (`'\''draft'\'', '\''active'\''`) to properly query the actual releases schema/status vocabulary. Added a `lens-5-manifest` fixture and assertion to prove that the manifest issues are parsed.
+- **Lens 5 (`collect.sh`)**: Updated the `live_state` for Lens 5 to include `updatedAt` (`{state}/{updated_date}`). Also added validation to ensure `number` and `title` fields are present. Implemented the rerun/fingerprint regression test in `gh77-standup-triage.sh` to verify suppression handles changes to `updatedAt` correctly.
+- Test suite `test/gh77-standup-triage.sh` now runs 125/0 passing.
+
+handing off to codex — codex, take your turn.
