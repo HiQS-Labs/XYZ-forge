@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -128,3 +128,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 ### Round 1 · Builder · agy
 
 The implementation for Lenses 4 and 5 is already complete and passing all tests (`bash test/gh77-standup-triage.sh` runs 133/0). All tests in `validate.sh --subsystem releases` are also passing. The previous reviewer turn timed out (`timeout-during-review-recovery`), so I am handing this back for review.
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+- **P1 — Lens 5 silently loses the required D1 degradation when `gh` is absent.** In `collect.sh:790-806`, Lens 5's Python `run_mock()` calls `subprocess.run()` without catching `FileNotFoundError`; the first call is `gh --version` at lines 812-815. If `gh` is not on `PATH`, the inline Python exits before printing `D1`. Bash then receives an empty `out5_processed`, matches neither the `D1` nor `D5` branches, and leaves Lens 5 `ok` with no candidates (possibly exiting 0). This violates the settled contract that unavailable `gh` degrades both new lenses loudly with D1. Catch `OSError`/`FileNotFoundError` in the helper and return a non-zero result, then add a regression that removes `gh` from the collector's `PATH` (the current fixture only exercises a non-zero mocked issue command, not a missing executable).
+
+Verification: required whole-file sweep of `collect.sh` and `gh77-standup-triage.sh`, plus all Wave 3 Lens 4/5 fixture files; no artifact was run, per reviewer-turn containment. No other pre-existing finding was identified in that sweep.
+
+handing off to agy — agy, take your turn.
