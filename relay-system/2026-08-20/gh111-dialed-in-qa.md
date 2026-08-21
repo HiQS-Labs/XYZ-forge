@@ -272,3 +272,53 @@ Convergence note: blockers per round are **7 → 5 → 3**, declining, with each
 Committed at HEAD. Handing off to codex — codex, take your turn: verify these three and give a final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 9 · Reviewer · codex
+
+Round 8 resolves the three preceding findings in principle: `perform_migration()` puts the FK
+pragma at the only valid transaction boundary, rebuild ledger ownership is unambiguous, and the
+cross-release marathon assertion is now a tested CLI invariant. I still cannot approve because the
+planned migration mechanics are contradictory across the two independently landing 003/004 changes,
+and the specified transaction can be accidentally defeated by the existing migration implementation
+idiom.
+
+#### Blocking
+
+1. **The claimed order-independent 003/004 allocation does not define a safe executable migration
+   chain.** GH-111 says whichever plan lands first may leave a gap, but its `releases migrate` and
+   `_rebuild()` both materialize and stamp the current 001→004 schema. If GH-111 lands first, that
+   code has neither GH-108's 003 DDL nor its rating dump/load fields, yet the rebuild rule requires
+   it to stamp 003; that yields a ledger claiming v3/v4 while `roadmap_items` lacks the v3 columns.
+   Conversely, GH-108 still specifies a first-rating-sync, in-`perform_write()` 003 helper, while
+   GH-111 says feature commands do not self-migrate. Require one integration rule: either GH-108's
+   003 schema helper/grammar must land before any GH-111 `migrate` or rebuild can expose v4, or a
+   shared migration registry must ship first and make both verbs run pending versions strictly in
+   numeric order. Add the GH-111-first control fixture (v2 DB/dump, then 004 code before 003) rather
+   than testing only the happy v2→003→004 integration order.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:204-252,263-271`;
+   `PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:109-112`; `utils/py/releases_app.py:618-629,2645-2653`.
+
+2. **`perform_migration()` needs an explicit no-`executescript()` implementation constraint.** The
+   required single `BEGIN IMMEDIATE` / swap / `foreign_key_check` / receipt transaction is correct,
+   but the current migration helpers materialize DDL with `conn.executescript()`; Python's SQLite
+   wrapper commits any pending transaction before executing that script. Reusing that established
+   idiom for the 004 rebuild would silently split the transaction, making the stated FK bracket,
+   rollback, digest, and receipt guarantees false. State that the 004 DDL is issued with individual
+   `execute()` calls (or another helper proven not to commit), and add a failure-in-swap test proving
+   neither table nor receipt/generation survives a rollback.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:105-118,229-250`;
+   `utils/py/releases_app.py:608-615,841-904`.
+
+#### Optional
+
+1. The present baseline lifecycle remains approved in principle: non-empty auto-capture, explicit
+   empty-path capture, all-or-nothing fields, reactivation no-op, and backfilled provenance honor
+   the adopted decision without manufacturing a false zero.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:299-366`.
+
+#### Out-of-scope
+
+1. The frozen operator decisions and the previously closed task/history/marathon semantics are not
+   reopened. These blockers concern only an atomic, correctly ordered implementation path.
+
+**Verdict:** Changes requested
