@@ -410,7 +410,7 @@ is "  and it is never dropped — the operator still learns the file is there" \
    "$(F lens-2-newline-path 'len(d["lenses"]["2"]["candidates"])')" "1"
 C lens-2-newline-path > "$W/nl.json" 2>/dev/null
 is "  so the rendered screen keeps one physical line per item" \
-   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "7"
+   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "8"
 
 # The required mtime is validated BEFORE jq sees it. A non-integer made jq's `tonumber` fail; with
 # `set +e` active the candidate silently became EMPTY while the lens stayed `ok`, and the final

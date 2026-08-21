@@ -576,20 +576,23 @@ except Exception:
 
 cands = []
 for item in data:
+    if item.get("completed") or item.get("parked"):
+        continue
     quote = item.get("quote", "")
     what = item.get("what", "")
     close = item.get("close", "")
     norm = re.sub(r"[^\w\s]", "", quote.lower())
-    norm = re.sub(r"\s+", " ", norm)
-    h = hashlib.sha256(norm.encode("utf-8")).hexdigest()[:12]
+    norm = re.sub(r"\s+", " ", norm).strip()
+    if not norm:
+        continue
     cands.append({
-        "key": f"conv:{h}",
+        "key": f"quote:{norm}",
         "what": what,
         "evidence_type": "quote",
-        "evidence_payload": quote,
+        "evidence_payload": norm,
         "staleness": 0,
         "close": close,
-        "close_kind": "command",
+        "close_kind": "inspect" if close.startswith("inspect:") else "command",
         "live_state": "session-mention"
     })
 print(json.dumps(cands))
@@ -640,19 +643,31 @@ rc_nxt, out_nxt = run_mock("lens6_next", "python3 utils/py/releases_app.py next"
 rc_drf, out_drf = run_mock("lens6_draft", "python3 utils/py/releases_app.py list --status draft")
 rc_act, out_act = run_mock("lens6_active", "python3 utils/py/releases_app.py list --status active")
 
-if rc_chk != 0 and rc_chk != 1 and rc_chk != 2:
+if (rc_chk not in (0, 1, 2)) or (rc_nxt != 0) or (rc_drf != 0) or (rc_act != 0):
     print("D5")
     sys.exit(0)
 
 cands = []
 versions = []
-for line in (out_drf + "\n" + out_act).splitlines():
-    parts = line.split()
-    if len(parts) >= 2 and parts[0].startswith("rel-") and parts[1] != "-":
-        versions.append(parts[1])
+
+def parse_list(out):
+    for line in out.splitlines():
+        if not line.strip(): continue
+        parts = line.split()
+        if len(parts) >= 2 and parts[0].startswith("rel-") and parts[1] != "-":
+            versions.append(parts[1])
+        else:
+            print("D5")
+            sys.exit(0)
+
+parse_list(out_drf)
+parse_list(out_act)
 
 for v in versions:
-    run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", f"python3 utils/py/releases_app.py show --version {v}")
+    rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", f"python3 utils/py/releases_app.py show --version {v}")
+    if rc_show != 0 or not out_show.startswith("GID:"):
+        print("D5")
+        sys.exit(0)
 
 for line in out_chk.splitlines():
     if line.startswith("FAIL: rule="):
@@ -727,7 +742,7 @@ def run_probe(chk, arg):
     kind = chk.get("kind")
     args = chk.get("args", [])
     if kind == "test-e" and args:
-        return 0 == subprocess.run(f"test -e \"{args[0]}\"", shell=True).returncode
+        return os.path.exists(args[0])
     elif kind == "gh-issue-state" and args:
         if fx:
             txt_file = os.path.join(fx, f"lens8_gh_{args[0]}.txt")
@@ -735,39 +750,53 @@ def run_probe(chk, arg):
                 with open(txt_file) as f: out = f.read()
                 return "CLOSED" in out
             return False
-        res = subprocess.run(f"gh issue view {args[0]} --json state", shell=True, capture_output=True, text=True)
         try:
+            res = subprocess.run(["gh", "issue", "view", str(args[0]), "--json", "state"], capture_output=True, text=True)
             return json.loads(res.stdout).get("state") == "CLOSED"
         except Exception:
             return False
     elif kind == "releases-check":
         if fx:
             txt_file = os.path.join(fx, "lens8_releases_check.txt")
-            if os.path.exists(txt_file): return True
+            return os.path.exists(txt_file)
+        try:
+            return 0 == subprocess.run(["python3", "utils/py/releases_app.py", "check"]).returncode
+        except Exception:
             return False
-        return 0 == subprocess.run("python3 utils/py/releases_app.py check", shell=True).returncode
     elif kind == "git-log" and args:
         if fx:
-            txt_file = os.path.join(fx, f"lens8_git_log.txt")
-            if os.path.exists(txt_file): return True
+            txt_file = os.path.join(fx, "lens8_git_log.txt")
+            return os.path.exists(txt_file)
+        try:
+            return 0 == subprocess.run(["git", "log", "--oneline", "-1", str(args[0])], capture_output=True).returncode
+        except Exception:
             return False
-        return 0 == subprocess.run(f"git log --oneline -1 \"{args[0]}\"", shell=True).returncode
-    return False
+    else:
+        print("D3")
+        sys.exit(0)
 
 cands = []
 for path in glob.glob(os.path.join(parked_dir, "*.md")):
     with open(path, "r", encoding="utf-8") as fh:
         for line in fh:
-            m = PARK_RE.match(line.strip())
-            if not m: continue
+            line_str = line.strip()
+            if not line_str.startswith("- ["):
+                continue
+            m = PARK_RE.match(line_str)
+            if not m:
+                print("D3")
+                sys.exit(0)
             key, rest, check_str, close_str = m.groups()
             try:
                 chk = json.loads(check_str)
+                if not isinstance(chk, dict) or "kind" not in chk:
+                    raise ValueError()
             except Exception:
-                continue
+                print("D3")
+                sys.exit(0)
             
             first_seen = None
-            fs_m = re.search(r"first seen: ([0-9]+)", line)
+            fs_m = re.search(r"first seen: ([0-9]+)", line_str)
             if fs_m:
                 first_seen = int(fs_m.group(1))
             
