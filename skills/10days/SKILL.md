@@ -218,8 +218,9 @@ For each `INCLUDE` verdict:
   **If it has no `## Acceptance` section and the issue does, add one — copied verbatim.**
 - **No doc exists**: author `PROJECT/2-WORKING/GH-<N>-<slug>.md` using this repo's
   standard capture-doc frontmatter (`gh_issue`, `source`, `title`, `status`, `created`,
-  `updated`, `owner`, `doc_type`, `complexity`/`risk`/`effort` with
-  `ratings_provisional: true`, `goal`), where **`source` is the full tracking-issue URL** so a
+  `updated`, `owner`, `doc_type`, `rating` (GH-108: `"pri/sev/appeal/effort 70/40/55/60 · calc
+  225"` — four axes 1-100, higher is better on every one, effort scoring cheapness; add
+  `ratings_provisional: true` when the numbers are a first guess), `goal`), where **`source` is the full tracking-issue URL** so a
   reader can diff the doc against the issue it claims to implement in one step. Give it an `## Acceptance` section copied
   verbatim from the issue's, plus a best-effort contract:
 

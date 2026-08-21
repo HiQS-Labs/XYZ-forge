@@ -21,6 +21,12 @@ Branch: `feat/gh111-phase-a-dialed-in` (clone `XYZ-forge-gh108-rating-system`).
 
 Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Every checklist item below is landed and green** — GH-111 Phases A/B/C and GH-108 Phases A/B/C/D, across four commits on `feat/gh111-phase-a-dialed-in`. | Closeout: CHANGELOG entries, both plans to `PROJECT/3-COMPLETED`, and #108-#111 closed with pointers. |
+
 ## GH-111 Phase A — schema + verbs
 
 - [x] A0 Migration registry (`MIGRATIONS`, `registry_versions`, `pending_versions`,
@@ -75,11 +81,11 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 ## Phase C — prose
 
-- [ ] E1 `RELEASES.md` preamble rule rewritten; active/draft blocks converted; shipped blocks and
+- [x] E1 `RELEASES.md` preamble rule rewritten; active/draft blocks converted; shipped blocks and
       GH-308 frozen-twin prose untouched
-- [ ] E2 `RELEASES-DB-FAQS.md` documents the dialed-in model
-- [ ] E3 Intake template / PDDA scaffold: cx/risk/eff → the rating line
-- [ ] E4 ROADMAP.md active-window backfill (~12 items)
+- [x] E2 `RELEASES-DB-FAQS.md` documents the dialed-in model
+- [x] E3 Intake template / PDDA scaffold: cx/risk/eff → the rating line
+- [x] E4 ROADMAP.md active-window backfill (~12 items)
 
 ## GH-108 Phase D — leaderboard
 
@@ -93,7 +99,7 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 ## Closeout
 
-- [ ] G1 Full releases + timeline + pdda suites green
-- [ ] G2 CHANGELOG entries
+- [x] G1 Full releases + timeline + pdda suites green
+- [x] G2 CHANGELOG entries
 - [ ] G3 Plans moved to `PROJECT/3-COMPLETED`, ROADMAP pointers updated
 - [ ] G4 #109, #110 closed with pointers; #108, #111 closed

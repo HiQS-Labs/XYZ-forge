@@ -59,29 +59,22 @@ import json, sys
 payload = json.load(open(sys.argv[1]))
 top_n = int(sys.argv[2])
 
-rows = []
-for rel in payload["releases"]:
-    for item in rel["detours"] + rel["roadmap"]:
-        group = item.get("type") == "marathon"
-        for card in (item["cards"] if group else [item]):
-            m = card.get("metrics")
-            if not m:
-                continue
-            rows.append({
-                "id": card["id"],
-                "title": card["title"],
-                "release": rel["name"],
-                "lane": "marathon" if group else card["sectionLabel"],
-                "score": m["effectiveScore"],
-                "calc": m["calc"],
-                "override": card.get("override", {}).get("value"),
-                "axes": (m["pri"], m["sev"], m["appeal"], m["effort"]),
-                "issue": (card.get("links") or {}).get("issue"),
-            })
-
-# Rank by effectiveScore, then by id so equal scores order deterministically rather than by
-# whichever release happened to be walked first.
-rows.sort(key=lambda r: (-r["score"], r["id"]))
+# ratedTasks is the complete, already-ranked set the exporter emits: every rated roadmap row
+# once,
+# annotated with where it currently sits. Ranking off the release cards alone would silently omit
+# every rated task still in the queue — most of the candidates for "what goes to the front".
+rows = [{
+    "id": t["id"],
+    "title": t["title"],
+    "release": t["release"] or "—",
+    "lane": t["lane"],
+    "score": t["metrics"]["effectiveScore"],
+    "calc": t["metrics"]["calc"],
+    "override": (t.get("override") or {}).get("value"),
+    "axes": (t["metrics"]["pri"], t["metrics"]["sev"],
+             t["metrics"]["appeal"], t["metrics"]["effort"]),
+    "issue": (t.get("links") or {}).get("issue"),
+} for t in payload["ratedTasks"]]
 
 out = []
 w = out.append

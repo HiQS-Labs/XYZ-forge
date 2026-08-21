@@ -154,13 +154,17 @@ ok "  and calc appears nowhere in the dump (a stored derived value is the drift 
 ok "  and the word \"rated\" in the entry's own TITLE is prose, not a second score token" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT COUNT(*) FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
 
-write_ledger '- **GH-1 · rated entry** 🆕 — body. rated 70/40/55/60 ovr 350 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+write_ledger '- **GH-1 · prose that NAMES the tokens** 🆕 — a highly rated entry; the `ovr` override wins over calc. rated 70/40/55/60 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "prose naming the two token words around a real score parses the score, not the prose (rc=$rc)" \
+   "[ $rc -eq 0 ] && [ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri = 70 AND rating_ovr IS NULL FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
+
+write_ledger '- **GH-1 · with an override** 🆕 — body. rated 70/40/55/60 ovr 350 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
 out="$(ra roadmap sync 2>&1)"
 ok "an override parses and rides alongside the honest axes" \
-   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr||\":\"||rating_pri FROM roadmap_items WHERE gh_number=1')\" = '350:70' ]"
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr = 350 AND rating_pri = 70 FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
 ok "  and the override wins over calc for ranking (roadmap list shows calc>ovr)" \
    "ra roadmap list 2>/dev/null | grep -q 'calc=225>350'"
-
 G7="$(gen_now)"
 refuses(){ # <label> <rule> <entry text>
   write_ledger "$3"

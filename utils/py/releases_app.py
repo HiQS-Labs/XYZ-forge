@@ -2600,7 +2600,10 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
 # counts as a token and is refused rather than read as unrated.
 _RATED_TOKEN_RE = re.compile(r"\brated\s+\d")
 _RATED_RE = re.compile(r"\brated\s+(\d+)/(\d+)/(\d+)/(\d+)(?![\w/])")
-_OVR_TOKEN_RE = re.compile(r"\bovr\b")
+# Same shape as the `rated` token test: `ovr` counts only when something FOLLOWS it after
+# whitespace. Prose that names the term (an `ovr` override, "the ovr, wins over calc") is not
+# a score, while a genuinely dangling `ovr soon` still counts and is refused by shape.
+_OVR_TOKEN_RE = re.compile(r"\bovr\s+\S")
 _OVR_RE = re.compile(r"\bovr\s+(\d+)(?![\w/])")
 _LEGACY_CRE_RE = re.compile(r"cx/risk/eff (\d+)/(\d+)/(\d+)")
 

@@ -107,7 +107,10 @@ R="$(mkrepo b)"
 rout init --slug xyz-forge
 LEDGER_HASH="$(md5 -q "$REAL_LEDGER")"
 V="$(rlog import "$REAL_LEDGER")"; if has "$V" "imported 9 block(s)"; then ok "import brings in all 9 blocks of the real ledger (9th = Cargo 0.9.0, cut 2026-08-20)" 0; else ok "import 9 blocks" 1; fi
-N="$(sql "SELECT COUNT(*) FROM doc_lines")"; ok "the 86-line preamble lands verbatim in doc_lines (release-less document content)" "$(is "$N" "86"; echo $?)"
+# The count tracks the REAL ledger's preamble and moves when the preamble is edited (86 -> 100 on
+# 2026-08-20, when GH-111 replaced the freeze rule with the dialed-in one). The assertion is that
+# EVERY release-less line lands verbatim, not that the number is 86.
+N="$(sql "SELECT COUNT(*) FROM doc_lines")"; ok "the 100-line preamble lands verbatim in doc_lines (release-less document content)" "$(is "$N" "100"; echo $?)"
 N="$(sql "SELECT COUNT(*) FROM doc_lines WHERE content = '# Major Releases'")"; ok "doc_lines hold the verbatim first line" "$(is "$N" "1"; echo $?)"
 N="$(sql 'SELECT COUNT(*) FROM grandfather_entries WHERE disposition IS NULL')"; if [ "$N" -gt 0 ] 2>/dev/null; then ok "every tolerated violation is recorded in grandfather_entries (import is not a silent fill)" 0; else ok "grandfather entries exist" 1; fi
 N="$(sql "SELECT COUNT(*) FROM issue_refs WHERE temp_id GLOB 'MIG-*'")"; ok "all 9 imported blocks got import-only MIG- placeholder refs (importer is uniform; GH_URL lines land in legacy_lines)" "$(is "$N" "9"; echo $?)"

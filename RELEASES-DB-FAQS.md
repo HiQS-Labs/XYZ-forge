@@ -393,6 +393,106 @@ Until those land, the honest habit after closing issues or merging a release PR 
 
 ---
 
+## Q: What does it mean for a task to be DIALED IN? (GH-111)
+
+Membership in a release is a **state in the database**, not a sentence in `RELEASES.md`. Three
+states, and only these:
+
+| State | Meaning | Written by |
+|---|---|---|
+| `dialed_in` | committed to this release; counts toward the denominator | `manifest dial-in` |
+| `shipped` | the work landed, with evidence | `manifest ship --evidence` |
+| `cut` | removed from this release, with a recorded reason | `manifest cut --reason` |
+
+Legal transitions are `dialed_in -> shipped` and `dialed_in -> cut`. Both terminal states are
+terminal **for that row** — re-admitting a cut task is a NEW dial-in row, so the history stays
+append-only and readable.
+
+**A task is dialed into exactly one release at a time**, enforced by a unique index over active
+membership only (`WHERE state = 'dialed_in'`). That predicate is what makes the constraint safe:
+ordinary release history — a task cut from one release and dialed into another — never trips it.
+Handing work from release A to release B is `manifest cut --gid A <issue> --reason "handed off"`
+then `manifest dial-in --gid B <issue> --reason "…"`, which RECORDS the move instead of leaving the
+task quietly on both ledgers. Marathons are exclusive the same way, and their links are permanent:
+a marathon is a release-scoped effort, so reusing one would make "which release ran this marathon"
+unanswerable.
+
+There is no freeze. Dialing a task in requires `--reason`, exactly as cutting one does —
+deliberateness comes from every commitment stating its case, not from making the commitment
+expensive to change.
+
+## Q: If nothing is frozen, what stops "N of M" from lying?
+
+The **baseline**: `releases.baseline_count`, plus `baseline_at` and `baseline_source` for
+provenance. It is the count of dialed-in-plus-shipped members at kickoff, and it is **write-once** —
+overwriting it would erase exactly the thing it exists to measure. Two numbers come out of it:
+
+- **Progress** — `shipped / (dialed_in + shipped)`, against the LIVE manifest. Cut rows still
+  render, but they stop inflating the total; the denominator has to mean *committed work* or "N of
+  M" is not a commitment figure.
+- **Growth** — `(dialed_in + shipped) − baseline_count`. Positive is scope added since kickoff.
+  **Negative is legitimate and meaningful**: more was cut than added.
+
+The snapshot is taken automatically on the `draft -> active` transition, **but only when the
+manifest is non-empty**. Releases here are created as a row first and dialed in afterwards, so a
+naive snapshot-on-activate would hand most releases a baseline of 0 and then report every real
+commitment as scope growth — the metric would lie in the common case. An empty manifest therefore
+takes NO baseline; `releases baseline --gid <rel>` fills it in later. A release with no baseline
+shows progress alone, with no growth figure and no placeholder zero.
+
+`active -> draft -> active` is a silent no-op that preserves the original snapshot; the explicit
+verb refuses a second capture. Those differ on purpose: an accidental recapture should be
+impossible, but a legitimate status round trip must not fail.
+
+Releases already underway when GH-111 landed were backfilled from their current manifest and
+flagged `backfilled`, never `observed` — the mechanism did not witness that kickoff, and the flag
+says so.
+
+## Q: How do I upgrade an existing ledger's schema?
+
+`releases migrate`. It is the ONLY upgrade path, and it is idempotent — with nothing pending it
+reports the current version and writes nothing.
+
+Before GH-111 there was no path at all: `apply_migrations()` ran from `releases init` only, so an
+existing database silently stayed at whatever version it was created with. Feature commands do
+**not** self-migrate. `roadmap sync`, for instance, refuses with `rule=schema-behind` when it meets
+a rated entry and a ledger with no rating columns, rather than installing schema of its own.
+
+Two rules make the chain safe:
+
+- **The codebase's migration REGISTRY is the truth.** `migrate` and `check --rebuild` apply and
+  stamp exactly the versions the registry defines — never a hard-coded range. A build that carries
+  004 but not 003 stamps `{1, 2, 4}` and correctly does not claim 3.
+- **Pending migrations apply in ascending order, gaps permitted**, which is safe only because
+  migrations are mutually independent. That is a standing constraint on every future one.
+
+A migration runs under `perform_migration()` — `perform_write()`'s durability contract with the
+foreign-key pragma bracketed OUTSIDE `BEGIN`, because SQLite ignores a `PRAGMA foreign_keys` change
+while a transaction is open and a table-rebuild migration therefore has no executable path through
+the ordinary writer. `PRAGMA foreign_key_check` gates the commit. On failure the transaction rolls
+back, enforcement is restored, and the journal is deliberately **left in place** so `releases check`
+treats it as an interrupted write — louder than an ordinary refusal, because a half-considered
+schema change is worth stopping the world for.
+
+## Q: What are the pri/sev/appeal/effort scores? (GH-108)
+
+Four axes, 1–100 each, authored on a `ROADMAP.md` entry line as `rated 70/40/55/60` with an optional
+` ovr 350`. **Higher is better on every axis**, effort included — it scores *cheapness*, not cost, so
+all four combine without sign-flipping and a 90/90/90/90 item reads as what it is: a screaming quick
+win.
+
+`calc` is the equal-weighted SUM of the four (4–400), and it is **derived at read time, never
+stored** — a stored derived value is the drift class this whole grammar exists to prevent. `ovr` is
+the operator override: it replaces `calc` for ranking wherever both exist, so anything can be pinned
+to the front of the line, while the four axes keep their honest values underneath.
+
+A malformed `rated` or `ovr` token is REFUSED by name — never read as "unrated". Silently dropping a
+mistyped score would look exactly like the operator never scored the task.
+
+Read the ranking with `bash utils/leaderboard.sh` (writes `LEADERBOARD.md`) or open
+`LEADERBOARD.html`. Both consume `export_timeline.py --json` and sort on the `effectiveScore` the
+exporter derives — one scorer, never two.
+
 ## Quick reference
 
 ```bash
@@ -404,6 +504,15 @@ $R list                  # releases
 $R show --version 0.7.0  # or --gid <ULID>
 $R next                  # next unshipped release by target date
 $R gen                   # side-by-side view; NEVER writes RELEASES.md
+$R migrate               # upgrade a LIVE ledger to the registry's schema (idempotent)
+$R baseline --gid <ULID> # capture a release's kickoff commitment count (write-once)
+
+$R manifest dial-in --gid <rel> <issue> --reason "…"     # one release at a time
+$R manifest ship    --gid <rel> <issue> --evidence "…"   # mid-release progress
+$R manifest cut     --gid <rel> <issue> --reason "…"     # recorded, never silent
+$R manifest marathon --gid <rel> <issue> --marathon <mar>  # link an existing member
+
+bash utils/leaderboard.sh          # regenerate LEADERBOARD.md (idempotent; --check for drift)
 
 utils/releases-merge-resolve.sh   # finish a ledger merge: rebuild, verify, stage (never commits)
 ```
@@ -429,6 +538,9 @@ check: clean (0 failures, 0 warning(s))
 | `releases.db.bak` | DB displaced by `check --rebuild` | no |
 | `releases-app.lock` | repo-scoped writer lock, in the **git common-dir** (GH-448 idiom) | no |
 | `releases-app-journal.json` | intent journal; exists only mid-write | no |
+| `RELEASES-PREVIEW.html` | baked timeline view; refreshed by the GH-106 post-write hook | yes, where adopted |
+| `LEADERBOARD.md` | generated ranking of every rated task — never hand-edited | yes, where adopted |
+| `LEADERBOARD.html` | the same ranking, baked from the SAME template as the timeline | yes, where adopted |
 
 `RELEASES-PREVIEW.md` was **removed 2026-08-19**. It existed to give a human a readable view of the
 DB without SQL; a desktop SQLite viewer and the GitHub Projects cards from `releases project sync`

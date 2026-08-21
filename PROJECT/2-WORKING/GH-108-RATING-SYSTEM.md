@@ -19,6 +19,12 @@ goal: >
 > **Operator decisions in this doc are LOCKED (2026-08-20, two rounds).** Sections marked FROZEN
 > restate them; everything else is implementation planning and may be revised by review.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **ALL FOUR PHASES BUILT 2026-08-20** on `feat/gh111-phase-a-dialed-in`. A: migration 003 (five nullable `rating_*` columns, transaction-safe, registry-driven), the one canonical `rated N/N/N/N` + ` ovr N` grammar in `roadmap sync` with a named refusal for every malformed shape, and the dump grammar both directions. B: exporter emits `metrics` + `effectiveScore` under the public axis names, joins detour cards to the roadmap index, flags `sev >= 80` hot, and gained `--json`; the viewer renames `app` -> `appeal`, adds `effort` to both metric loops, and flips the footer legend in the same commit. C: the intake scaffold takes the rating line and the 15 active-window ROADMAP entries are rated. D: `utils/leaderboard.sh` -> `LEADERBOARD.md`, `--leaderboard` -> `LEADERBOARD.html` from the SAME template via a `view` field, cross-linked from `.top`, all three refreshed by the GH-106 hook. gh69 24 -> 50, gh103 37/0. | Merge into `development`. The backfilled scores are a defensible FIRST PASS read off what the ledger already says (operator front-of-line calls, built-vs-unstarted, blast radius) — they are the operator's to revise, one `rated` edit plus a sync. Deferred as named: GH label mirroring, re-weighting, and machine-parsed doc frontmatter. |
+
 ## Problem
 
 The repo has three half-systems for "how important is this":

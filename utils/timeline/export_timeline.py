@@ -464,6 +464,36 @@ def build_payload(cx, today, md_path=None):
     (schema_v,) = cx.execute("SELECT MAX(version) FROM schema_migrations").fetchone()
     last_ago = days_since(last_op, today) if last_op else None
 
+    # ── the complete ranking set ────────────────────────────────────────────────────────────────
+    # The timeline only shows work that is ON a release (manifest members) or in flight beside one
+    # (detours). A rated task sitting in the QUEUE appears nowhere — and a high-scoring queued task
+    # is exactly what "what should go to the front of the line" is asking about, so ranking off the
+    # cards alone would answer the question by hiding most of the candidates. ratedTasks is
+    # therefore every rated roadmap row, once, annotated with where it currently sits.
+    placement = {}
+    for c in columns:
+        for item in c["detours"] + c["roadmap"]:
+            group = item.get("type") == "marathon"
+            for card in (item["cards"] if group else [item]):
+                placement[card["id"]] = (c["name"],
+                                         "marathon" if group else card["sectionLabel"])
+    rated_tasks = []
+    for gh, road in roadmap_idx.items():
+        metrics = road.get("metrics")
+        if not metrics:
+            continue
+        cid = f"GH-{gh}"
+        release, lane = placement.get(cid, (None, road.get("section") or "roadmap"))
+        entry = {"id": cid, "title": road["title"], "release": release, "lane": lane,
+                 "metrics": metrics,
+                 "links": {"issue": road["issue_url"]} if road.get("issue_url") else None}
+        if road.get("rating_ovr") is not None:
+            entry["override"] = {"value": road["rating_ovr"],
+                                 "hot": road["rating_ovr"] > metrics["calc"]}
+        rated_tasks.append(entry)
+    # ties break on id, so the ranking is deterministic rather than dict-iteration order
+    rated_tasks.sort(key=lambda r: (-r["metrics"]["effectiveScore"], r["id"]))
+
     for c in columns:
         del c["_raw"]
 
@@ -485,6 +515,8 @@ def build_payload(cx, today, md_path=None):
             "releasesTotal": len(columns),
             "releasesOverdue": n_overdue,
         },
+        # every rated task in the ledger, ranked — the leaderboard's single input
+        "ratedTasks": rated_tasks,
         "justFinished": jf,
         "whatsNext": wn,
         "releases": columns,
@@ -587,11 +619,8 @@ def main(argv=None):
         # files stay standalone and openable from a plain git checkout with no server.
         args.leaderboard.write_text(
             bake_static(args.template.read_text(), dict(payload, view="leaderboard")))
-        rated = sum(1 for r in payload["releases"]
-                    for item in r["detours"] + r["roadmap"]
-                    for c in (item["cards"] if item.get("type") == "marathon" else [item])
-                    if c.get("metrics"))
-        print(f"wrote {args.leaderboard} ({rated} rated task(s), self-contained)")
+        print(f"wrote {args.leaderboard} "
+              f"({len(payload['ratedTasks'])} rated task(s), self-contained)")
         return
 
     if args.preview:
