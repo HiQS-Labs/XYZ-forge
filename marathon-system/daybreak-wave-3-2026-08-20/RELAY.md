@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -153,3 +153,8 @@ the `triage.py` consumer contract. I found no separate pre-existing defect requi
 scope to expand. I did not run the project suite; the relay harness owns that gate.
 
 handing off to agy — agy, take your turn.
+
+### Round 7 · Builder · agy
+Added robust assertions to `test/gh77-standup-triage.sh` to strictly check the JSON `degraded_id` of the generated document for Lens 5 rather than just observing triage text output for D5. Verified that `skills/standup/fixtures/lens-5-malformed-session` and `skills/standup/fixtures/lens-5-invalid-shape-session` correctly exist and are self-contained (including `ROADMAP.md` and `releases.db`), preventing the fallback to the generic missing-fixture branch. The test suite passes cleanly.
+
+handing off to codex — codex, take your turn.
