@@ -229,6 +229,14 @@ TESTS=(
                                  # #461 in mirror image: a gate that exists but is unregistered is
                                  # invisible; a registration with no gate is a permanent red that says
                                  # nothing about the code. Register the two together or neither.
+  "gh103-timeline-exporter.sh"   # GH-103/109/110/111/108: the READ-ONLY projection of releases.db
+                                 #   onto the timeline viewer. The exporter had NO suite before this,
+                                 #   which is how #109 survived — it asserted a marathon membership the
+                                 #   data never claimed, latent until a non-marathon item joined a
+                                 #   marathon release. Pins grouping by manifest_items.marathon_id,
+                                 #   the dialed_in+shipped denominator, baseline/growth emission, the
+                                 #   rating metrics + effectiveScore precedence, and the leaderboard's
+                                 #   one-scorer property (script ranking == --json ordering).
   "gh32-releases-app.sh"         # GH-32 Phase 0+1 (SQLite RELEASES ledger CLI: schema/GID shape,
                                  #   writer-lock + journal protocol, canonical dump, receipt chain,
                                  #   import grandfathering, side-by-side gen) — 81/0; registered in the
