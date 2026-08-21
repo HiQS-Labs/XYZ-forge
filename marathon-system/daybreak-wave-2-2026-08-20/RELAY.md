@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -125,3 +125,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+I have verified the work from the previous attempts. The code correctly implements Lenses 1, 6, and 8, resolving all reviewer findings. The tests pass (108 pass, 0 fail) and `bash validate.sh --subsystem releases` is green. The previous escalation was solely due to the fixtures not being tracked due to omitted `--paths` arguments during `claim` by the previous Builder, which caused the Reviewer to see a stale worktree. The harness correctly committed the untracked fixtures during the escalation step. The workspace is now perfectly in sync and correct, so no further code edits were necessary. Releasing the token to codex for final review and approval.
+
+handing off to codex — codex, take your turn.
