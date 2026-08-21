@@ -8,8 +8,8 @@ export TICK_BIN="$TICK"
 DRIVER="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/marathon-drive.sh"
 tick_a init >/dev/null
 
-# Set up the fixture repo as the marathon root: .gitignore .tick/, seed an initial commit.
-printf '.tick/\n' > "$A/.gitignore"
+# Set up the fixture repo as the marathon root: .gitignore .tick/ and .xyz/, seed an initial commit.
+printf '.tick/\n.xyz/\n' > "$A/.gitignore"
 git -C "$A" add .gitignore >/dev/null 2>&1
 git -C "$A" commit -q -m "init"
 INIT_HEAD="$(git -C "$A" rev-parse HEAD)"   # saved so we can hard-reset between cases

@@ -2175,7 +2175,7 @@ relay-file: {rel_relay}
                 if len(line) >= 4:
                     p = line[3:]
                     in_phases = bool(phases_rel) and p.startswith(phases_rel)
-                    if not in_phases and not p.startswith(".tick/"):
+                    if not in_phases and not p.startswith(".tick/") and not p.startswith(".xyz/") and not p.startswith(".relay-scratch/"):
                         dirty.append(p)
             if dirty:
                 log("WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.")
