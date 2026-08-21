@@ -249,6 +249,15 @@ previously assumed a mechanism that does not exist.
   so the existing crash-recovery path sees an interrupted migration exactly as it sees an interrupted
   write. Receipt and dump ordering are unchanged from `perform_write()`; only the pragma bracket is
   new.
+
+  **Implementation constraint — no `executescript()` (Codex r4 B2).** Every existing migration
+  materializes DDL through `conn.executescript()` (`releases_app.py:612, 624, 2649`), and Python's
+  `sqlite3` wrapper **issues a COMMIT before running that script**. Reusing the house idiom for 004
+  would silently split the transaction and make every guarantee above false — the FK bracket, the
+  rollback, the digest chain, and the receipt coupling — while appearing to work. **004's DDL is
+  issued as individual `execute()` calls** (or via a helper proven not to commit). Pinned by a
+  failure-injection test: force an error mid-swap and assert that neither the rebuilt tables nor the
+  generation bump nor the op_receipt survives the rollback.
 - It is idempotent: with nothing pending it is a clean no-op that still reports the current version.
 - Feature commands do **not** self-migrate. (GH-108's plan sketched a per-feature "sync detects
   version 3 missing and runs a 003 helper" path; with a real `migrate` verb that special case should
@@ -261,7 +270,35 @@ previously assumed a mechanism that does not exist.
 "Whoever lands second renumbers" was process, not a guard. Replaced by:
 
 - **Allocation is fixed now: GH-108 owns 003, GH-111 owns 004.** Neither renumbers; whichever lands
-  first simply leaves a gap the other fills.
+  first simply leaves a gap the other fills. **A gap is only safe under the registry rule below**
+  (Codex r4 B1) — the earlier bare claim of order-independence was wrong, because a hardcoded
+  "stamp 001→004" would have a GH-111-first build claiming v3 while `roadmap_items` lacked 003's
+  columns entirely.
+
+### The migration registry — prerequisite for the fixed allocation (Codex r4 B1)
+
+`apply_migrations()` today is a hardcoded if-chain (`if 1 not in applied: … if 2 not in applied: …`,
+`releases_app.py:618-629`), which cannot express a gap. Replace it with an ordered **registry keyed
+by version**, and make three rules explicit:
+
+1. **The codebase's registry is the truth.** `migrate` and `_rebuild()` apply and stamp exactly the
+   versions the registry defines — never a hardcoded range. A GH-111-first build registers
+   {001, 002, 004}, stamps those three, and correctly does not claim 003.
+2. **Pending migrations apply in ascending numeric order**, gaps permitted. When 003 later lands on a
+   database already at 004, it applies then.
+3. **Migrations must be mutually independent**, which is what makes rule 2 safe, and is a standing
+   constraint on future ones. It holds here by inspection: 003 touches `roadmap_items`; 004 touches
+   `manifest_items`, `manifest_state_events`, and `releases` — disjoint sets.
+
+**Required integration rule:** GH-108's plan currently specifies a per-feature "first rating-capable
+sync detects 003 missing and runs a helper inside `perform_write()`", which directly contradicts this
+plan's "feature commands do not self-migrate." **That helper must be dropped in favor of `releases
+migrate` before either lands** — a fix belonging to GH-108's doc, recorded here because leaving two
+plans contradicting each other is how the wrong one gets built.
+
+**Control fixture, not just the happy path:** test **GH-111-first** — a v2 database, 004 applied with
+003 absent from the registry, asserting the ledger reads {1, 2, 4} and `roadmap_items` has no rating
+columns; then introduce 003 and assert it applies cleanly on top of 004.
 - `validate_merged_dump()` gains a rule **refusing duplicate `schema_migrations.version` values** in
   a merged dump — the failure a git merge of two independently-numbered branches would otherwise
   produce silently. **Scope it honestly (Codex r2 optional 1):** this catches a union-merged *dump*,
