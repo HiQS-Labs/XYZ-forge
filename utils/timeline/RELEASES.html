@@ -154,6 +154,20 @@ body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip,bod
 .badge.od{color:var(--card);background:var(--red);font-weight:700;font-size:10px;padding:1px 6px}
 .node .meta{font-size:11px;color:var(--ink2);margin-top:2px}
 .node .base{white-space:nowrap}
+/* ---- leaderboard view: same page, same chrome, one different body ---- */
+body[data-view="leaderboard"] #strip,body[data-view="leaderboard"] .rail::before,
+body[data-view="leaderboard"] .rail::after,body[data-view="leaderboard"] .scrim,
+body[data-view="leaderboard"] .nav{display:none}
+body[data-view="leaderboard"] #track{display:block;overflow:auto;padding:10px 14px}
+.lb{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.lb th{text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--ink3);border-bottom:1px solid var(--line);padding:4px 8px;position:sticky;top:0;
+  background:var(--bg)}
+.lb td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.lb td.n,.lb th.n{text-align:right;white-space:nowrap}
+.lb .sc{font-weight:700;color:var(--ink)}
+.lb tr[data-ovr] .sc{color:var(--red)}
+.lb .empty{padding:16px;color:var(--ink3)}
 .blurb{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--ink);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .node:hover .blurb,.node:focus-visible .blurb,.node:focus-within .blurb{-webkit-line-clamp:99}
@@ -202,6 +216,10 @@ article[hidden]{display:none}
       <span class="mono" id="pg-subtitle" style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink3)"></span>
     </div>
     <div style="display:flex;align-items:baseline;gap:10px">
+      <!-- The cross-link lives in .top, not #fbar: #fbar is inside the collapsible header, so a
+           link there vanishes the moment the operator collapses the chrome. -->
+      <a id="view-link" class="mono" href="./LEADERBOARD.html"
+         style="font-size:10px;letter-spacing:0.06em;text-transform:uppercase">leaderboard →</a>
       <span class="mono" id="pg-generated" style="font-size:10px;color:var(--ink3)"></span>
       <button id="hdr-toggle" type="button" aria-expanded="true" title="collapse header">▴</button>
     </div>
@@ -429,8 +447,66 @@ article[hidden]{display:none}
     strip.innerHTML=jfHTML+wnHTML;
   }
 
+  /* Every rated card in the payload, flattened and ranked. The exporter is the ONLY scorer:
+     effectiveScore already applies the override-wins-over-calc rule, so nothing here recomputes
+     it — the same one-scorer property utils/leaderboard.sh relies on. */
+  function rankedCards(data){
+    var rows=[];
+    (data.releases||[]).forEach(function(rel){
+      (rel.detours||[]).concat(rel.roadmap||[]).forEach(function(item){
+        var group=item.type==='marathon',cards=group?item.cards:[item];
+        cards.forEach(function(c){
+          if(!c.metrics) return;
+          rows.push({card:c,release:rel.name,lane:group?'marathon':c.sectionLabel});
+        });
+      });
+    });
+    rows.sort(function(a,b){
+      return (b.card.metrics.effectiveScore-a.card.metrics.effectiveScore)
+          || (a.card.id<b.card.id?-1:a.card.id>b.card.id?1:0);
+    });
+    return rows;
+  }
+
+  function leaderboardHTML(data){
+    var rows=rankedCards(data);
+    if(!rows.length) return '<p class="empty">No rated tasks yet. Add <code>rated N/N/N/N</code> '+
+      'to a ROADMAP.md entry and run <code>releases roadmap sync</code>.</p>';
+    var body=rows.map(function(r,i){
+      var m=r.card.metrics,link=(r.card.links&&r.card.links.issue)
+        ?('<a href="'+esc(r.card.links.issue)+'">'+esc(r.card.id)+'</a>'):esc(r.card.id);
+      return '<tr'+(r.card.override?' data-ovr':'')+'>'+
+        '<td class="n">'+(i+1)+'</td>'+
+        '<td class="n"><span class="sc">'+m.effectiveScore+'</span></td>'+
+        '<td><span class="iid">'+link+'</span> '+esc(r.card.title)+'</td>'+
+        '<td>'+esc(r.release)+'</td><td>'+esc(r.lane)+'</td>'+
+        '<td class="n">'+m.pri+'</td><td class="n">'+m.sev+'</td>'+
+        '<td class="n">'+m.appeal+'</td><td class="n">'+m.effort+'</td>'+
+        '<td class="n">'+m.calc+'</td>'+
+        '<td class="n">'+(r.card.override?r.card.override.value:'—')+'</td></tr>';
+    }).join('');
+    return '<table class="lb"><thead><tr><th class="n">#</th><th class="n">score</th>'+
+      '<th>task</th><th>release</th><th>lane</th><th class="n">pri</th><th class="n">sev</th>'+
+      '<th class="n">appeal</th><th class="n">effort</th><th class="n">calc</th>'+
+      '<th class="n">ovr</th></tr></thead><tbody>'+body+'</tbody></table>';
+  }
+
   function boot(data){
+    /* ONE template, two baked artifacts. The payload's `view` field picks the body; everything
+       above it — chrome, palette, legend, collapse caret — is shared by construction, so there is
+       no second copy of the design system to drift. */
+    var view=data.view==='leaderboard'?'leaderboard':'timeline';
+    document.body.dataset.view=view;
+    var link=document.getElementById('view-link');
+    if(link){
+      link.href=view==='leaderboard'?'./RELEASES-PREVIEW.html':'./LEADERBOARD.html';
+      link.textContent=view==='leaderboard'?'← timeline':'leaderboard →';
+    }
     renderHeader(data);
+    if(view==='leaderboard'){
+      document.getElementById('track').innerHTML=leaderboardHTML(data);
+      return;
+    }
     document.getElementById('track').innerHTML=data.releases.map(columnHTML).join('');
     initInteractions();
   }

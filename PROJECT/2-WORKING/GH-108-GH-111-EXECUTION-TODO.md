@@ -83,13 +83,13 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 ## GH-108 Phase D — leaderboard
 
-- [ ] F1 `utils/leaderboard.sh` consuming `--json`, sorting on `effectiveScore` (one scorer)
-- [ ] F2 Generated `LEADERBOARD.md`, idempotent
-- [ ] F3 `view` field + leaderboard rendering in the shared template; `--leaderboard` bakes
+- [x] F1 `utils/leaderboard.sh` consuming `--json`, sorting on `effectiveScore` (one scorer)
+- [x] F2 Generated `LEADERBOARD.md`, idempotent
+- [x] F3 `view` field + leaderboard rendering in the shared template; `--leaderboard` bakes
       `LEADERBOARD.html`
-- [ ] F4 Two-way cross-link in `.top` (never `#fbar` — it collapses)
-- [ ] F5 GH-106 hook refreshes both artifacts
-- [ ] F6 Tests: ranking matches the pinned `--json` command exactly; a rated detour ranks
+- [x] F4 Two-way cross-link in `.top` (never `#fbar` — it collapses)
+- [x] F5 GH-106 hook refreshes both artifacts
+- [x] F6 Tests: ranking matches the pinned `--json` command exactly; a rated detour ranks
 
 ## Closeout
 

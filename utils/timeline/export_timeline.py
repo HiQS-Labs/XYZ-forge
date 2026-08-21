@@ -551,6 +551,9 @@ def main(argv=None):
     ap.add_argument("--preview", nargs="?", const=Path("RELEASES-PREVIEW.html"), default=None,
                     type=Path, metavar="PATH",
                     help="bake current DB state into one self-contained HTML (default: ./RELEASES-PREVIEW.html)")
+    ap.add_argument("--leaderboard", nargs="?", const=Path("LEADERBOARD.html"), default=None,
+                    type=Path, metavar="PATH",
+                    help="bake the ranked view from the SAME template (default: ./LEADERBOARD.html)")
     args = ap.parse_args(argv)
 
     if not args.db.is_file():
@@ -576,6 +579,19 @@ def main(argv=None):
             print(f"DRIFT ({sync['rowsDiffer']}): {sync['message']}")
             sys.exit(1)
         print("releases.db and RELEASES.md agree (releases present on both sides, shipped-status aligned)")
+        return
+
+    if args.leaderboard:
+        # ONE template, TWO baked artifacts. The only difference is the payload's `view` field —
+        # no second copy of the design system, no second baker, one data contract, and both
+        # files stay standalone and openable from a plain git checkout with no server.
+        args.leaderboard.write_text(
+            bake_static(args.template.read_text(), dict(payload, view="leaderboard")))
+        rated = sum(1 for r in payload["releases"]
+                    for item in r["detours"] + r["roadmap"]
+                    for c in (item["cards"] if item.get("type") == "marathon" else [item])
+                    if c.get("metrics"))
+        print(f"wrote {args.leaderboard} ({rated} rated task(s), self-contained)")
         return
 
     if args.preview:

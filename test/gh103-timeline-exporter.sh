@@ -180,6 +180,37 @@ if [ -s "$WORK/preview.html" ] && grep -q 'id="ledger-data"' "$WORK/preview.html
 if [ "$(md5 -q "$R/releases.db")" = "$DB_HASH" ] && [ "$(md5 -q "$R/releases.sql")" = "$DUMP_HASH" ]; then ok "the exporter wrote no DB bytes (opened read-only; the page never writes back)" 0; else ok "exporter read-only" 1; fi
 if ra check >/dev/null 2>&1; then ok "the ledger still checks clean after every projection" 0; else ok "check clean" 1; fi
 
+# ── the leaderboard pipeline (GH-108 Phase D) ───────────────────────────────────────────────────
+# ONE SCORER, proven rather than asserted: the shell script's ranking must match the exporter's
+# `--json` ordering exactly. A script that re-derived calc or reapplied the override rule would be
+# the same drift class the "calc is never stored" rule prevents, one layer up.
+echo "-- the leaderboard pipeline"
+LB_MD="$WORK/LEADERBOARD.md"
+LEADERBOARD_DB="$R/releases.db" LEADERBOARD_OUTPUT="$LB_MD" bash "$HERE/../utils/leaderboard.sh" >/dev/null 2>&1
+ok "leaderboard.sh renders LEADERBOARD.md from the exporter's JSON" "$([ -s "$LB_MD" ]; echo $?)"
+if head -1 "$LB_MD" | grep -q 'GENERATED'; then ok "the file announces itself as generated (never hand-edited)" 0; else ok "generated header" 1; fi
+SCRIPT_ORDER="$(rg -o '^\| [0-9]+ \| \*\*[0-9]+\*\* \| \[?(GH-[0-9]+)' -r '$1' "$LB_MD" | tr '\n' ' ' | sed 's/ $//')"
+ok "the script's ranking matches the pinned --json ordering EXACTLY (one scorer, proven)" \
+   "$(is "$SCRIPT_ORDER" "$(printf '%s' "$TOP" | sed 's/:[0-9]*//g')"; echo $?)"
+if grep -q 'Top of the line:\*\* GH-805' "$LB_MD"; then ok "the highest-scoring task is called out by name, override included" 0; else ok "top of the line" 1; fi
+if grep -q 'GH-900' "$LB_MD"; then ok "a rated DETOUR ranks too — not just manifest cards" 0; else ok "detour ranks" 1; fi
+CP="$WORK/lb-first.md"; cp "$LB_MD" "$CP"
+LEADERBOARD_DB="$R/releases.db" LEADERBOARD_OUTPUT="$LB_MD" bash "$HERE/../utils/leaderboard.sh" >/dev/null 2>&1
+ok "regeneration is idempotent — a second run is byte-identical" "$(cmp -s "$CP" "$LB_MD"; echo $?)"
+LEADERBOARD_DB="$R/releases.db" LEADERBOARD_OUTPUT="$LB_MD" bash "$HERE/../utils/leaderboard.sh" --check >/dev/null 2>&1
+ok "--check passes when the committed copy is in sync" "$?"
+printf '\nstale hand edit\n' >> "$LB_MD"
+LEADERBOARD_DB="$R/releases.db" LEADERBOARD_OUTPUT="$LB_MD" bash "$HERE/../utils/leaderboard.sh" --check >/dev/null 2>&1
+ok "--check FAILS on drift (a stale checked-in copy is a review signal)" "$([ $? -ne 0 ]; echo $?)"
+
+LB_HTML="$WORK/LEADERBOARD.html"
+python3 "$EXPORTER" --db "$R/releases.db" --leaderboard "$LB_HTML" >/dev/null 2>&1
+ok "--leaderboard bakes a self-contained page from the SAME template" "$([ -s "$LB_HTML" ]; echo $?)"
+if grep -q '"view": *"leaderboard"\|"view":"leaderboard"' "$LB_HTML"; then ok "the payload carries view=leaderboard — one template, two baked artifacts" 0; else ok "view field" 1; fi
+if grep -q 'leaderboardHTML' "$WORK/preview.html" && grep -q 'columnHTML' "$LB_HTML"; then ok "both artifacts share ONE renderer bundle (no second copy of the design system)" 0; else ok "shared bundle" 1; fi
+if grep -q 'id="view-link"' "$TEMPLATE"; then ok "the cross-link lives in .top, which never collapses" 0; else ok "cross-link placement" 1; fi
+if ! rg -q 'id="fbar"[^>]*>[^<]*<a id="view-link"' "$TEMPLATE"; then ok "and NOT in #fbar, which disappears with the header caret" 0; else ok "cross-link not in fbar" 1; fi
+
 echo
 echo "== gh103-timeline-exporter: $pass passed, $fail failed =="
 [ "$fail" -eq 0 ]
