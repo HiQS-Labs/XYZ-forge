@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -121,5 +121,29 @@ handing off to Producer — go to the claude-a window and say 'take your turn'
 `bash test/agent2agent.sh` re-run after the edits: 129/129 pass, unaffected.
 
 handing off to Reviewer — go to the agy window and say 'take your turn'
+
+### Reviewer (agy)
+
+swept file: yes
+
+- **[Blocker]** Tension within the teardown guardrail's incident description (DoD #2).
+  While the normative rule correctly forbids touching a peer's workspace entirely ("no amount of verification or confirmation makes it yours to tear down"), the historical incident description at the end of the bullet (lines 259-262) still says the failure was treating the action on a peer's workspace "as routine instead of pausing for one more confirmation." This implies that with confirmation, tearing down a peer's workspace would have been acceptable, contradicting the new absolute prohibition.
+  *Fix:* Update the incident description (lines 259-262) so the stated failure aligns with the absolute rule (e.g., "The failure was that an agent acted on a peer's workspace at all—which is strictly forbidden—and compounded the error by skipping verification of the condition").
+
+- **[Pass]** Headless guidance added (DoD #3).
+  The artifact now explicitly dictates aborting the turn when running headless if an action cannot be fully verified. (Cited lines 247-249: "Running headless or otherwise non-interactive... abort the turn, log why, and let a human resume it live rather than guessing.")
+
+- **[Pass]** Doorbell tension resolved (DoD #2).
+  The artifact clarifies that an out-of-band confirmation does not advance the turn and does not require re-arming. (Cited lines 250-254: "Confirming with the operator is not a relay turn... does not advance NEXT:, does not require a close...")
+
+- **[Pass]** Drive scope tension resolved (DoD #2).
+  The teardown guardrail properly distinguishes between one's own workspace and a peer's workspace, aligning with the Drive section's strict scope. (Cited lines 237-243: "...NEVER permission to touch another participant's workspace. Before running any destructive command... first ask whether the target is or might be another participant's own workspace. If so, stop: the next bullet's absolute rule governs...")
+
+- **[Pass]** Incorrect step reference fixed.
+  The step reference was corrected to "(step 4's send-and-re-arm)". (Cited line 140).
+
+**Verdict:** Changes requested
+
+handing off to Producer — go to the claude-a window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
