@@ -37,7 +37,7 @@ trap 'rm -rf "$WORK"' EXIT
 
 # Test 1: Usage & Help
 out="$(python3 "$RECONCILE_PY" --help 2>&1)"
-if echo "$out" | grep -q "Post-Merge Wave & Marathon Lifecycle Reconciler"; then
+if grep -q "Post-Merge Wave & Marathon Lifecycle Reconciler" <<< "$out"; then
   pass "Top-level help lists canonical purpose"
 else
   fail "Top-level help lists canonical purpose" "$out" "Post-Merge Wave..."
