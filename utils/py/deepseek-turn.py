@@ -96,12 +96,14 @@ def main():
     me = os.environ.get("RELAY_AGENT", "")
     f = os.environ.get("RELAY_FILE", "")
     t = os.environ.get("RELAY_TASK", "RELAY-TURN")
-    deepseek_agent = os.environ.get("DEEPSEEK_AGENT", "deepseek")
+    deepseek_agent = os.environ.get("DEEPSEEK_AGENT", "")
 
     if not me:
         die("RELAY_AGENT required")
     if not f:
         die("RELAY_FILE required")
+    if not deepseek_agent:
+        die("DEEPSEEK_AGENT required")
 
     if me != deepseek_agent:
         print(
