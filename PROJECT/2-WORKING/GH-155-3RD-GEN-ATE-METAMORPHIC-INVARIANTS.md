@@ -1,8 +1,8 @@
 ---
 gh_issue: 155
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/155
-title: "3rd Gen ATE & Fuzzing: Phase 1 Metamorphic Invariants & Sandbox Hardening"
-status: Active (2-WORKING — Phase 1 in progress)
+title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants & Differential Oracles"
+status: Active (2-WORKING — Phase 1 & 2 complete, Phase 3 next)
 created: 2026-08-22
 updated: 2026-08-22
 owner: noelsaw1
@@ -18,20 +18,20 @@ related:
   - https://github.com/HiQS-Suite/XYZ-forge/issues/156
   - https://github.com/HiQS-Suite/XYZ-forge/pull/150
   - https://github.com/HiQS-Suite/XYZ-forge/pull/157
+  - https://github.com/HiQS-Suite/XYZ-forge/pull/160
 goal: >
-  Execute Phase 1 of 3rd Gen Agentic ATE & Fuzzing (#155): build deterministic $0 metamorphic
-  invariant assertion oracles (zero-mutation on read-only/help/dry-run invocations, idempotence over
-  repeated sequential/parallel executions, and strict canonical use-boundary sandbox containment per
-  GH-567) before introducing autonomous explorer loops.
+  Execute 3rd Gen Agentic ATE & Fuzzing (#155): build deterministic $0 metamorphic
+  invariant assertion oracles (Phase 1) and differential multi-harness cross-testing oracles (Phase 2)
+  before introducing hermetic delta-minimizers (Phase 3) and autonomous self-healing loops (Phase 4).
 ---
 
-# GH-155: 3rd Gen ATE & Fuzzing — Phase 1 Metamorphic Invariants & Sandbox Hardening
+# GH-155: 3rd Gen ATE & Fuzzing — Phases 1 & 2
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| **Intake & Plan Ratification (2026-08-22)**: Umbrella issue #155 opened, brainstormed, and refined via GLM/operator review into a 5-phase execution plan anchored on deterministic ground first. Dedicated standalone clone `xyz-gh155-3rd-gen-ate-p1` provisioned. | **Phase 1 Implementation**: Author `utils/py/metamorphic_oracle.py`, harden `test/lib/fixture-guard.sh` with resolved canonical path assertions (GH-567), and author regression suite `test/gh155-phase1-metamorphic-invariants.sh`. |
+| **Phase 1 & Phase 2 Built (2026-08-22)**: (1) `utils/py/metamorphic_oracle.py` (29/29 assertions) & `test/gh155-phase1-metamorphic-invariants.sh` (8/8 pass) asserting zero-mutation, idempotence, and canonical realpath containment (GH-567). (2) `utils/py/differential_oracle.py` (7/7 vectors across 7 shims) & `test/gh155-phase2-differential-oracle.sh` (3/3 pass) validating cross-runner contract consensus and failure-mode parity. Full pre-push test gate 100% green. | **Phase 3 (Hermetic Reproducer & Delta Minimization)**: Author `utils/py/repro_builder.py` to ingest failing telemetry records, generate standalone executable `repro.sh` test cases, and perform automated hierarchical delta minimization. |
 
 ## Architectural Bets & Invariants
 
@@ -43,25 +43,8 @@ goal: >
 
 ## 5-Phase Roadmap Summary
 
-- **Phase 1 (Active — This Work)**: Metamorphic Invariant Assertions & Sandbox Hardening (Zero-Mutation, Idempotence, Realpath Containment).
-- **Phase 2**: Differential Multi-Harness Cross-Testing Oracle (`agy`, `codex`, `claude`, `pi`, `commandcode`, `deepseek`).
-- **Phase 3**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
+- **Phase 1 (Completed)**: Metamorphic Invariant Assertions & Sandbox Hardening (Zero-Mutation, Idempotence, Realpath Containment).
+- **Phase 2 (Completed)**: Differential Multi-Harness Cross-Testing Oracle (`agy`, `codex`, `claude`, `aider`, `pi`, `commandcode`, `deepseek`).
+- **Phase 3 (Active Next)**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
 - **Phase 4**: Gated Autonomous Self-Healing Builder Loop (`deepseek-v4-pro` in disposable full clones).
 - **Phase 5**: 4-Family Active Explorer Agent (Argv Grammar, Env Presence, Path Canonicalization, Process Limits).
-
-## Phase 1 Execution Plan
-
-### 1. Zero-Mutation Oracle (`utils/py/metamorphic_oracle.py`)
-- Evaluates entry points (`validate.sh`, `utils/py/*.py`, `relay-automation/*.sh`) under read-only / diagnostic invocations (`--help`, `-h`, `--version`, `--print-mode`, `--check`, `--dry-run`).
-- Snapshot before & after: git status, untracked files, SHA-256 tree digest, `.git/config` hash.
-- Invariant: Byte delta == 0.
-
-### 2. Idempotence & Anti-Flakiness Oracle
-- Executes deterministic probes sequentially and concurrently across workers.
-- Invariant: Exit codes, stdout semantics, and telemetry digests must be identical across repeated runs, detecting nondeterministic `mktemp` races.
-
-### 3. Use-Boundary Realpath Containment (`test/lib/fixture-guard.sh`)
-- Hardens `require_fixture` to resolve canonical paths (`realpath "$p"` must start with `realpath "$WORK"/`), preventing traversal escapes like `$WORK/../../repo`.
-
-### 4. Verification Suite
-- `test/gh155-phase1-metamorphic-invariants.sh`: Asserts zero-mutation, idempotence, and containment invariants against all core entry points.
