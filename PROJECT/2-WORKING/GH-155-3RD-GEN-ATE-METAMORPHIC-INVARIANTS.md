@@ -1,8 +1,8 @@
 ---
 gh_issue: 155
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/155
-title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants & Differential Oracles"
-status: Active (2-WORKING — Phase 1 & 2 complete, Phase 3 next)
+title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants, Differential Oracles & Hermetic Reproducers"
+status: Active (2-WORKING — Phases 1, 2, 3 complete, Phase 4 next)
 created: 2026-08-22
 updated: 2026-08-22
 owner: noelsaw1
@@ -21,17 +21,17 @@ related:
   - https://github.com/HiQS-Suite/XYZ-forge/pull/160
 goal: >
   Execute 3rd Gen Agentic ATE & Fuzzing (#155): build deterministic $0 metamorphic
-  invariant assertion oracles (Phase 1) and differential multi-harness cross-testing oracles (Phase 2)
-  before introducing hermetic delta-minimizers (Phase 3) and autonomous self-healing loops (Phase 4).
+  invariant assertion oracles (Phase 1), differential multi-harness cross-testing oracles (Phase 2),
+  and hermetic delta-minimizers (Phase 3) before introducing autonomous self-healing loops (Phase 4).
 ---
 
-# GH-155: 3rd Gen ATE & Fuzzing — Phases 1 & 2
+# GH-155: 3rd Gen ATE & Fuzzing — Phases 1, 2 & 3
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 & Phase 2 Built (2026-08-22)**: (1) `utils/py/metamorphic_oracle.py` (29/29 assertions) & `test/gh155-phase1-metamorphic-invariants.sh` (8/8 pass) asserting zero-mutation, idempotence, and canonical realpath containment (GH-567). (2) `utils/py/differential_oracle.py` (7/7 vectors across 7 shims) & `test/gh155-phase2-differential-oracle.sh` (3/3 pass) validating cross-runner contract consensus and failure-mode parity. Full pre-push test gate 100% green. | **Phase 3 (Hermetic Reproducer & Delta Minimization)**: Author `utils/py/repro_builder.py` to ingest failing telemetry records, generate standalone executable `repro.sh` test cases, and perform automated hierarchical delta minimization. |
+| **Phases 1, 2 & 3 Built (2026-08-22)**: (1) `utils/py/metamorphic_oracle.py` (29/29 assertions) & `test/gh155-phase1-metamorphic-invariants.sh` (8/8 pass). (2) `utils/py/differential_oracle.py` (7/7 vectors across 7 shims) & `test/gh155-phase2-differential-oracle.sh` (5/5 pass) with QA signoff via OpenRouter `stealth/ox-alpha`. (3) `utils/py/repro_builder.py` (6/6 internal assertions) & `test/gh155-phase3-repro-builder.sh` (6/6 pass) providing deterministic ddmin and hermetic `repro.sh` test synthesis. Pre-push test gate 100% green. | **Phase 4 (Gated Autonomous Self-Healing Builder Loop)**: Connect `dsh` (DeepSeek Harness / `deepseek-v4-pro`) to execute autonomous patch generation against synthesized `repro.sh` test cases in disposable full clones. |
 
 ## Architectural Bets & Invariants
 
@@ -45,6 +45,6 @@ goal: >
 
 - **Phase 1 (Completed)**: Metamorphic Invariant Assertions & Sandbox Hardening (Zero-Mutation, Idempotence, Realpath Containment).
 - **Phase 2 (Completed)**: Differential Multi-Harness Cross-Testing Oracle (`agy`, `codex`, `claude`, `aider`, `pi`, `commandcode`, `deepseek`).
-- **Phase 3 (Active Next)**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
-- **Phase 4**: Gated Autonomous Self-Healing Builder Loop (`deepseek-v4-pro` in disposable full clones).
+- **Phase 3 (Completed)**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
+- **Phase 4 (Active Next)**: Gated Autonomous Self-Healing Builder Loop (`deepseek-v4-pro` in disposable full clones).
 - **Phase 5**: 4-Family Active Explorer Agent (Argv Grammar, Env Presence, Path Canonicalization, Process Limits).

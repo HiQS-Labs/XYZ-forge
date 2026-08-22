@@ -11,7 +11,7 @@ while the four axes keep their honest values underneath.
 | # | score | task | release | lane | pri | sev | appeal | effort | calc | ovr |
 |--:|------:|------|---------|------|----:|----:|-------:|-------:|-----:|----:|
 | 1 | **340** | [GH-67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) — Commandcode builder default widened to `--yolo` — closer evaluation → possible build | — | Queue / parked intake | 88 | 80 | 45 | 70 | 283 | 340 |
-| 2 | **295** | [GH-155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing — Phase 1 & 2 Metamorphic Invariants & Differential Oracles | Daybreak | ad-hoc detour | 85 | 70 | 90 | 50 | 295 | — |
+| 2 | **295** | [GH-155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing — Phases 1, 2 & 3 Metamorphic Invariants, Differential Oracles & Hermetic Reproducers | Daybreak | ad-hoc detour | 85 | 70 | 90 | 50 | 295 | — |
 | 3 | **290** | [GH-148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) — DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | Daybreak | ad-hoc detour | 85 | 75 | 90 | 40 | 290 | — |
 | 4 | **285** | [GH-141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | Daybreak | ad-hoc detour | 80 | 65 | 85 | 55 | 285 | — |
 | 5 | **280** | [GH-77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) — `/standup` — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | In progress | 95 | 70 | 85 | 30 | 280 | — |
