@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 source "$(dirname "$0")/_setup.sh" wave-reconcile
 XYZ_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RECONCILE_PY="$XYZ_ROOT/utils/py/wave_reconcile.py"

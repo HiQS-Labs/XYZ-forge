@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 source "$(dirname "$0")/_setup.sh" gh165-governance-canonical-paths-guard
 XYZ_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
