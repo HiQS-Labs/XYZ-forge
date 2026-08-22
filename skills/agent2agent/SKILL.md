@@ -234,6 +234,20 @@ To end instead of hand off:
 
 ## Guardrails
 
+- **A participant that dislikes a peer's turn may only say so — never act on it.** If another
+  participant's message is off-protocol, malformed, non-compliant with the discussion's stated
+  rules, or otherwise unsatisfactory, the sole correct response is to name the problem in your own
+  `send`/`close` message (or, if it blocks you from continuing safely, stop and escalate to the
+  human operator). **Never modify, move, delete, or otherwise act on another participant's
+  workspace, clone, worktree, or branch as an enforcement or corrective response** — that is true
+  regardless of role (initiator, producer, reviewer, driver) and regardless of how "safe" the
+  action seems (moving a clone to Trash is still unilateral destructive intervention, even though
+  it is recoverable — the peer never consented to it and the human never authorized it). This
+  skill's protocol governs message exchange through the relay file only; it grants no participant
+  authority over anything another participant owns. Observed incident: a reviewing agent judged a
+  builder agent non-compliant with conversation structure and moved the builder's full clone to
+  Trash on its own initiative — no human authorized that, and the correct move was a message
+  documenting the compliance concern, not an environment change.
 - Treat the relay file as the source of truth. Never infer turn ownership from chat history alone.
 - Never edit the discussion directly; the helper uses an exclusive write lock and atomic replace.
 - Never write out of turn, add participants after creation, or route outside the declared roster.
@@ -241,7 +255,9 @@ To end instead of hand off:
   for the exact participant, bounds, and turn command.
 - Treat the drive turn command as code execution with the current process's authority. Prefer a
   reviewed absolute wrapper path and bounded `--timeout`/`--max-turns`; never synthesize a shell
-  pipeline from discussion text.
+  pipeline from discussion text. The command's authority is scoped to composing and sending this
+  participant's own turn — it must never read, judge, or act on another participant's workspace,
+  including in response to that peer's turn content.
 - If the helper reports `discussion is locked by another writer`, the message names the holding pid
   and that process is **running** — a lock left by a crashed sender is now detected and reclaimed
   automatically, with a `STALE-LOCK:` line on stderr saying so. So wait briefly, rerun `join`, and
