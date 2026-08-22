@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -964,7 +964,7 @@ Two findings, both implemented.
   that search matched the **opening** fence of the Round-2 body instead of its closing one, so the new
   body was spliced in ahead of the old one rather than over it. The result read as one artifact and was
   two, with the Setup line "the embedded text above IS the issue body" pointing at both. Deleted the
-  stale block; the file now contains exactly one four-backtick fence pair, verified by count. The
+  stale block; the file now contains exactly one four-backtick fence pair, verified by count. The  [Unverified — no citation]
   Round-3 replacement now anchors on the *last* fence before the Source bullets and asserts a fence
   count of two before writing, so the same slip cannot recur silently.
 
@@ -998,5 +998,68 @@ state-machine work split out with only its incidence-comparison recommendation r
 
 Handing off to Reviewer — codex takes the final turn. Nothing is open from my side; if the two fixes
 above hold, this should close Approved.
+
+### Round 4 — Reviewer (codex)
+
+swept file: yes
+
+**Verdict: Changes requested**
+
+The Round-4 repairs hold, but the whole-file sweep found two pre-existing accuracy/specification
+defects that keep the issue body from closing at the round cap.
+
+**Artifact integrity and Current-State sweep**
+
+- [Pass] The duplicate artifact is gone: exactly one four-backtick fence pair now bounds the current
+  issue body (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:50,405`). The four favorable ATE claims
+  called out last round now carry citations for drift triggers, control-channel reset/polling,
+  rollup chaining, and destructive-reset guards
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:188-202`).
+- [Should] **Replace the universal “every input is hardcoded” inference.** The cited narrow probe only
+  establishes that four named randomness tokens are absent; it does not establish that every input is
+  hardcoded (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:65-68`). Several suites generate dynamic
+  fixture paths with `mktemp`, and the serialization suite also uses wall-clock timing
+  (`test/synthetic/gh101-consult-programmatic.sh:8`,
+  `test/synthetic/gh94-containment-invariants.sh:9`,
+  `test/synthetic/gh94-script-serialization.sh:51-54`). This does not falsify the thesis: replace the
+  conclusion with “there is no seeded mutation/corpus/shrinking loop; test cases are fixed even though
+  fixture paths and timing can vary.”
+- [Nit] **Correct the alias ordinal.** The table names three deterministic aliases of top-level
+  `status` — `severity`, `likely_cause`, and `classification.status` — but the following paragraph
+  calls the last one “a fourth alias”
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:140-149`). The emitter confirms those three derived
+  fields (`utils/fuzzing/fuzz-loop.sh:85,93-98`). Say “a third listed alias,” or explicitly define a
+  four-field outcome group that includes top-level `status` itself.
+
+**Phase grades**
+
+- [Pass] **Phase 1.** One authoritative selector plus a parity regression resolves the duplicate
+  membership problem while leaving telemetry opt-in
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:211-227`).
+- [Pass] **Phase 2.** Consumer/schema compatibility and the explicit no-alias criterion preserve the
+  nested contract or migrate all readers together
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:229-246`).
+- [Pass] **Phase 3.** The four generators, tiered oracles, replay metadata, and positive/negative
+  controls remain a credible 2–4-day design
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:248-271`).
+- [Should] **Phase 4 still does not choose its dedup contract.** It says “pick one meaning and test
+  it,” then acceptance requires observing that still-undefined outcome
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:297-306`). That preserves the ambiguity Round 2 asked
+  the revision to remove. Choose the existing within-rollup behavior and require repeated
+  category/cause signatures to collapse into one bucket with the correct instance count
+  (`utils/ate/scripts/compile_issue.py:39-49,64-73`); leave cross-run GitHub dedup explicitly out of
+  scope.
+- [Pass] **Phase 5.** Default-neutral configurable labels, explicit Aider opt-in, an owner, and a safe
+  profile make the disposition concrete
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:308-325`).
+
+**Brainstorm and scope**
+
+- [Pass] Five costed ideas, three named open-question recommendations, and the live-issue phase cut
+  remain present; the coordination state-machine work is correctly split from this issue
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:327-393`).
+
+Handing off to Producer for escalation disposition — go to the claude-a window and say “take your
+turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
