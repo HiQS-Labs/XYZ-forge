@@ -1,0 +1,46 @@
+# Variations Grid: #141 Phase 5 — turn-shim CLI-contract soak (diagnostic; NOT wired to any runner)
+#
+# WHAT THIS GRID IS: a declared target for the generic ATE matrix runner. Each variation invokes
+# one relay turn shim with one argument shape and records its exit class — the argv-grammar
+# family from #141's Why table (GH-322's parser-rejection parity, at the shim surface).
+#
+# SAFE EXECUTION PROFILE (read before wiring this to anything):
+# - Every variation here is a USAGE-path invocation: no relay env (RELAY_AGENT/RELAY_FILE/...), no
+#   token, no worktree. The shims exit 2/usage in well under a second without touching a repo.
+# - It is `expects_edits: false` — exit-0-or-usage with an unchanged tree is the PASSING shape;
+#   the #146 soak's 17 false HIGH `no_edit` verdicts came from exactly this probe class being
+#   graded by the Aider edit-oracle. Do not flip this key for a grid that never edits.
+# - To extend beyond the usage surface (real driven turns), point command_template at STUB
+#   binaries in a disposable full clone (GH-564) — never at live shims with real credentials,
+#   and never with --repo pointed at a clone whose state you care about (the runner hard-resets
+#   --repo every variation; the GH-195 guard will refuse remote-having repos without
+#   --allow-destructive-reset, which is working as intended).
+model: "stub"
+message: "turn-shim CLI contract probe"
+per_variation_timeout_seconds: 20
+
+expects_edits: false
+
+command_template:
+  - "bash"
+  - "{harness_root}/relay-automation/{shim}"
+  - "{flag}"
+
+variation_keys:
+  - shim
+  - flag
+
+shim:
+  - "agy-turn.sh"
+  - "codex-turn.sh"
+  - "claude-turn.sh"
+  - "aider-turn.sh"
+  - "pi-turn.sh"
+
+flag:
+  - "--help"
+  - "--definitely-not-a-flag"
+
+# Rollup labels: this grid files under the neutral default ('bug') — pass
+#   --issue-label turn-shim-soak
+# to tag it, or add aider-pipeline ONLY for the stock Aider grid.
