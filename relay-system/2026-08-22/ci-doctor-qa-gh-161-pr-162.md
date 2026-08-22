@@ -211,7 +211,7 @@ confirmed real, none hallucinated. Dispositions:
 
 `bash -n` and `shellcheck -S error` re-verified clean on the revised script. Not yet re-run against
 a live `gh workflow run` dispatch end-to-end (would spend real CI minutes on HiQS-Suite/XYZ-forge
-outside this review's scope) — the fixes are verified by direct code inspection + the two targeted
+outside this review's scope) — the fixes are verified by direct code inspection + the two targeted  [Unverified — no citation]
 unit smoke tests above, not a full live run.
 
 **Every finding above is dispositioned.** Setup → Definition of Done is now filled with concrete
