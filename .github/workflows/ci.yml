@@ -232,7 +232,7 @@ jobs:
   # this job has proven it is not being actioned and should be deleted rather than kept as decoration.
   canary-ubuntu:
     name: portability canary (ubuntu — advisory, never breakage)
-    runs-on: ubuntu-latest
+    runs-on: starsling-ubuntu-24.04
     continue-on-error: true
     steps:
       - name: Check out repo
