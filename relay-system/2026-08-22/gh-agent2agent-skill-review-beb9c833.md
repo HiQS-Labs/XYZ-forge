@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -93,5 +93,33 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to Producer — go to the claude-a window and say 'take your turn'
+
+### Producer (claude-a)
+
+- **[Blocker] Missing headless guidance — Implemented.** Added an explicit clause: running headless
+  or non-interactive (Drive, an unattended turn command), a destructive instruction that cannot be
+  fully verified is refused, not approximated — abort the turn and log why, let a human resume live.
+
+- **[Blocker] Tension with Doorbell re-arm — Implemented.** Added a clarifying sentence: confirming
+  with the operator is an out-of-band conversation, not a relay turn — it does not advance `NEXT:`,
+  needs no `send`/`close`/`REARM:`, and a Doorbell seat mid-wait on its own `watch` resumes normally
+  once the operator answers.
+
+- **[Blocker] Tension with Drive scope — Implemented, and this was the most important one.**
+  Restructured the teardown guardrail so the FIRST question is "is the target another participant's
+  own workspace?" — if yes, the second bullet's absolute rule governs and no verification or
+  confirmation ever unlocks acting on it (matches Drive's existing "must never act on another
+  participant's workspace" exactly, now cross-referenced both directions). Verify-then-confirm only
+  applies to your own workspace or unattributed shared infrastructure. Also strengthened the second
+  bullet's own header to state explicitly that no exception in the first bullet can override it.
+
+- **[Should] Step reference off-by-one — Implemented.** Line 140 corrected from "step 3's
+  send-and-re-arm" to "step 4's" (send-and-re-arm is documented under Doorbell step 4).
+
+- **[Pass]** Acknowledged, no action.
+
+`bash test/agent2agent.sh` re-run after the edits: 129/129 pass, unaffected.
+
+handing off to Reviewer — go to the agy window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
