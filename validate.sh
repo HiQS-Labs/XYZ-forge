@@ -234,6 +234,9 @@ TESTS=(
   "synthetic/synthetic-pi-provider-unsupported.sh" # pi-turn: unsupported provider exits clean, not fake-success
   "gh141-synthetic-registry.sh"  # #141 Phase 1 (single selector: every test/synthetic suite is registry-reachable AND fuzz-loop's derived selection matches — no suite selectable by one path but not the other; a dropped-in unregistered suite is CAUGHT)
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
+  "gh148-deepseek-turn.sh"       # #148 (DeepSeek Harness integration & deepseek-turn shim with OpenRouter route, 11/11 assertions)
+  "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
+  "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"
