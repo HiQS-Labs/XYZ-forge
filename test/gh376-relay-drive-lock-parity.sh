@@ -247,11 +247,11 @@ rm -rf "$VEND/.git"
 hold_lock "$VEND/.relay-driver.lock"
 
 vend_py="$(run_driver "$VEND" py)"
-refused "$vend_py" && printf '%s' "$vend_py" | grep -q '\.relay-driver\.lock' \
+grep -q '\.relay-driver\.lock' <<<"$(refused "$vend_py" && printf '%s' "$vend_py")" \
   && pass "CONTROL (python): vendored copy resolves the hidden lock beside the scripts" \
   || fail "CONTROL (python): vendored fallback changed; got: $(printf '%s' "$vend_py" | head -1)"
 vend_sh="$(run_driver "$VEND" sh)"
-refused "$vend_sh" && printf '%s' "$vend_sh" | grep -q '\.relay-driver\.lock' \
+grep -q '\.relay-driver\.lock' <<<"$(refused "$vend_sh" && printf '%s' "$vend_sh")" \
   && pass "CONTROL (bash): vendored copy resolves the hidden lock beside the scripts" \
   || fail "CONTROL (bash): vendored fallback changed; got: $(printf '%s' "$vend_sh" | head -1)"
 

@@ -202,9 +202,26 @@ def main():
             try: os.remove(attempts_file)
             except: pass
 
+    # #129/#136: resolve TICK_REPO_ROOT ONCE, here, silently. The lane-attempt gate just below
+    # is the first consumer — with the env unset on a vendored-.xyz drive it used to count
+    # attempts in the HARNESS root's .tick while the token lives in the caller repo's log, so
+    # LANE_MAX_ATTEMPTS enforcement fragmented across two locations (the #129 family: the two
+    # halves of one coordination disagreeing about where state lives). An explicit TICK_REPO_ROOT
+    # still wins, unchanged. The NOTE announcing a self-resolution prints later, after the
+    # driver lock — gh376's twin-parity pin requires a held lock to stay the first printable
+    # line — which is why resolution (side-effect-free, ahead of every consumer) and
+    # announcement are split.
+    tick_repo_root = get_env("TICK_REPO_ROOT")
+    self_resolved = not tick_repo_root
+    if self_resolved:
+        try:
+            tick_repo_root = resolve_turn_root(None, root_dir)
+        except RuntimeError:
+            tick_repo_root = root_dir
+        os.environ["TICK_REPO_ROOT"] = tick_repo_root
+
     # check lane attempt
     if not args.dry_run and not args.review_once:
-        tick_repo_root = get_env("TICK_REPO_ROOT", root_dir)
         lane_attempt_gate(tick_repo_root, args.relay_task, args.force)
 
     if "RELAY_WORKTREE_ISOLATION" not in os.environ:
@@ -458,26 +475,18 @@ def main():
         import atexit
         atexit.register(_relay_drive_on_exit)
 
-    # #129: a driving shell that never ran `eval "$(find-harness.sh --env)"` silently fell back to
-    # the harness root, so the driver queried a DIFFERENT tick event log than the seeding shell
-    # wrote the token into and reported the miss as "token missing" — a misdiagnosis, since the
-    # token is alive in the log the seeder used. Self-resolve the way the turn shims root
-    # themselves (resolve_turn_root: the CWD's git toplevel — which for a vendored `.xyz/` install
-    # is the repo the seeder also resolved to — else the harness root) and EXPORT it, so the
-    # driver, `tick`, and the turn shim all read one log by construction. An explicit
-    # TICK_REPO_ROOT still wins, unchanged.
+    # #129/#136: the announcement half of the self-resolution computed above the lane gate.
+    # Printed HERE, after the lock, because a held lock must stay the FIRST thing this driver
+    # can print, byte-identical to the frozen Bash twin — gh376's twin-parity pin, observed live
+    # in the Wave-1 run when the NOTE printed first and parity went red.
     #
-    # Deliberately AFTER the driver-lock block above: a held lock must stay the FIRST thing this
-    # driver can print, byte-identical to the frozen Bash twin, or gh376's twin-parity pin sees
-    # the NOTE where the refusal belongs (observed live in the Wave-1 run). Still ahead of every
-    # token-state query, which live in the loop below — the ordering #129 actually requires.
-    tick_repo_root = get_env("TICK_REPO_ROOT")
-    if not tick_repo_root:
-        try:
-            tick_repo_root = resolve_turn_root(None, root_dir)
-        except RuntimeError:
-            tick_repo_root = root_dir
-        os.environ["TICK_REPO_ROOT"] = tick_repo_root
+    # BASH/PYTHON DIVERGENCE, deliberate and pinned (#138): the frozen twin
+    # (relay-automation/relay-drive.sh, GH-308) has none of this — no self-resolution, and its
+    # not-found diagnostic still reads "token missing". The twin is not to be taught this fix
+    # without a `Frozen-twin-exception:` trailer; recorded here so a `XYZ_PYTHON=0` run is not
+    # misread as a regression (the #379/#380 lesson: undocumented divergences generate false
+    # bug reports against the dead half).
+    if self_resolved:
         eprint(f"relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to {tick_repo_root} (#129)")
 
     round_idx = 0
@@ -593,7 +602,7 @@ def main():
                 if not os.path.isabs(cv_out_base): cv_out_base = os.path.join(root_dir, cv_out_base)
             
             import datetime
-            today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+            today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")   # #140: utcnow() deprecated
             cv_out_dir = os.path.join(cv_out_base, today)
             
             import tempfile

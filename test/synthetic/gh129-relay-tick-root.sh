@@ -164,5 +164,29 @@ rc5=$?
 grep -q "close mismatch" "$WORK/c5.err" && pass "close mismatch names itself" \
   || fail "close mismatch diagnostic missing: $(cat "$WORK/c5.err")"
 
+echo "=== 5. #136: the lane-attempt gate counts attempts where the token lives ==="
+# A non-dry-run drive with the env unset: the gate must append to the SELF-RESOLVED repo's
+# .tick/attempts (the caller repo), not silently to the harness clone's — pre-#136 the two
+# halves of the cap enforcement fragmented across two locations.
+R6="$(mk_fixture r6)"; require_fixture "$R6" || exit 1
+TASK6="RELAY-GH129-ATTEMPTS-$$"
+mk_relay "$R6/$TASK6.md" Open
+( unset TICK_REPO_ROOT; cd "$R6" && RELAY_DRIVER_LOCKED=1 XYZ_HARNESS_CONTEXT=gh129-test \
+    "$PY" "$DRIVE_PY" --relay-file "$R6/$TASK6.md" --relay-task "$TASK6" \
+    --agent-cmd /bin/true ) >/dev/null 2>"$WORK/c6.err"
+rc6=$?
+[ "$rc6" -eq 4 ] && pass "unseeded-token drive escalates exit 4 (gate ran first)" \
+  || fail "attempts-scenario rc=$rc6 (expected 4)"
+if [ -f "$R6/.tick/attempts/$TASK6" ]; then
+  pass "attempt counted in the self-resolved repo's .tick/attempts (#136)"
+else
+  fail "attempts file not in $R6/.tick/attempts — the gate still counts elsewhere (#136)"
+fi
+if [ ! -f "$ROOT_DIR/.tick/attempts/$TASK6" ]; then
+  pass "no attempt row leaked into the harness clone's .tick"
+else
+  fail "attempt leaked to the harness clone's .tick/attempts (pre-#136 behavior)"
+fi
+
 echo "gh129: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

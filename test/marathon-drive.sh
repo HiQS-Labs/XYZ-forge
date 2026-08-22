@@ -70,10 +70,10 @@ run_driver() {  # <extra-args…>
 # assertion moves to the fenced render on stdout and gains its true complement — nothing on disk.
 out="$(run_driver --dry-run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "dry-run exits 0" || fail "dry-run exit=$rc"
-printf '%s' "$out" | grep -q '^--- BEGIN RENDERED RELAY ---$' \
+grep -q '^--- BEGIN RENDERED RELAY ---$' <<<"$(printf '%s' "$out")" \
   && pass "dry-run emits the rendered relay on stdout" \
   || fail "dry-run produced no render: $out"
-printf '%s' "$out" | grep -q 'TAKE YOUR TURN' \
+grep -q 'TAKE YOUR TURN' <<<"$(printf '%s' "$out")" \
   && pass "the emitted render is the real relay body, not just a banner" \
   || fail "render fence present but the body is missing"
 [ ! -e "$A/phases" ] \
@@ -105,7 +105,7 @@ git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 # ── (3) tick token seeded: task created + handed to builder ──────────────
 RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1 || true
 # Verify task exists by checking the tick events dir directly (most reliable).
-ls "$A/.tick/events/" 2>/dev/null | grep -q "MARATHON-P1-TURN" \
+grep -q "MARATHON-P1-TURN" <<<"$(ls "$A/.tick/events/" 2>/dev/null)" \
   && pass "MARATHON-P1-TURN tick task created (event file present)" \
   || fail "MARATHON-P1-TURN tick task not found — no event file in .tick/events/"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -116,17 +116,17 @@ tick_a log task.created MARATHON-P1-TURN --agent seed >/dev/null
 tick_a claim MARATHON-P1-TURN --agent seed --paths "phases/p1/RELAY.md" >/dev/null
 tick_a release MARATHON-P1-TURN --agent seed --to claude >/dev/null
 LEAK_INFO="$(tick_a info MARATHON-P1-TURN 2>&1 || true)"
-printf '%s\n' "$LEAK_INFO" | grep -qE '^status:[[:space:]]+open$' \
-  && printf '%s\n' "$LEAK_INFO" | grep -qE '^handoff-to:[[:space:]]+claude$' \
+grep -qE '^status:[[:space:]]+open$' <<<"$(printf '%s\n' "$LEAK_INFO")" \
+  && grep -qE '^handoff-to:[[:space:]]+claude$' <<<"$(printf '%s\n' "$LEAK_INFO")" \
   && pass "seeded the leaked open handoff fixture" \
   || fail "expected leaked open handoff fixture, got: $LEAK_INFO"
 RERUN_OUT="$(RELAY_DRIVE_EXIT=0 run_driver 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "driver reconciles leaked handoff and re-seeds cleanly" \
   || fail "driver should succeed after reconciling leaked handoff: $RERUN_OUT"
-printf '%s\n' "$RERUN_OUT" | grep -q "task MARATHON-P1-TURN is open" \
+grep -q "task MARATHON-P1-TURN is open" <<<"$(printf '%s\n' "$RERUN_OUT")" \
   && fail "driver hit the old leaked-token collision: $RERUN_OUT" \
   || pass "driver avoids the old 'task ... is open' collision"
-tick_a info MARATHON-P1-TURN | grep -qE '^handoff-to:[[:space:]]+claude$' \
+grep -qE '^handoff-to:[[:space:]]+claude$' <<<"$(tick_a info MARATHON-P1-TURN)" \
   && pass "driver re-seeds the token back to the builder handoff" \
   || fail "driver did not restore the builder handoff: $(tick_a info MARATHON-P1-TURN)"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -138,10 +138,10 @@ tick_a claim MARATHON-P1-TURN --agent claude --paths "phases/p1/RELAY.md" >/dev/
 LIVE_OUT="$(RELAY_DRIVE_EXIT=0 run_driver 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && pass "live claim blocks re-seed instead of being reaped" \
   || fail "re-seed should refuse a live claim, not reap it"
-printf '%s\n' "$LIVE_OUT" | grep -q "refusing to reap a live claim" \
+grep -q "refusing to reap a live claim" <<<"$(printf '%s\n' "$LIVE_OUT")" \
   && pass "live-claim refusal is explicit" \
   || fail "expected explicit live-claim refusal, got: $LIVE_OUT"
-tick_a info MARATHON-P1-TURN | grep -qE '^claimer:[[:space:]]+claude$' \
+grep -qE '^claimer:[[:space:]]+claude$' <<<"$(tick_a info MARATHON-P1-TURN)" \
   && pass "live claude claim survives the failed re-seed" \
   || fail "live claim was disturbed by re-seed attempt: $(tick_a info MARATHON-P1-TURN)"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -175,7 +175,7 @@ ls "$A/relay-system"/*/marathon-p1-*.md >/dev/null 2>&1 \
   && pass "transcript saved under relay-system/<date>/" \
   || fail "transcript not found in relay-system/"
 # marathon.phase.approved event emitted (check events dir directly)
-ls "$A/.tick/events/" 2>/dev/null | grep -q "marathon.phase.approved" \
+grep -q "marathon.phase.approved" <<<"$(ls "$A/.tick/events/" 2>/dev/null)" \
   && pass "marathon.phase.approved event emitted" \
   || fail "marathon.phase.approved not found in tick events"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -262,7 +262,7 @@ chmod +x "$POST_APPROVE_FAIL"
 
 for runtime in 0 1; do
   HELP_OUT="$(MARATHON_ROOT="$A" XYZ_PYTHON="$runtime" bash "$DRIVER" --help 2>&1)"; rc=$?
-  [ "$rc" -eq 0 ] && printf '%s\n' "$HELP_OUT" | grep -q -- '--post-approve-cmd' \
+  grep -q -- '--post-approve-cmd' <<<"$([ "$rc" -eq 0 ] && printf '%s\n' "$HELP_OUT")" \
     && pass "GH-273: XYZ_PYTHON=$runtime help documents --post-approve-cmd" \
     || fail "GH-273: XYZ_PYTHON=$runtime help omitted --post-approve-cmd: $HELP_OUT"
 
@@ -299,7 +299,7 @@ for runtime in 0 1; do
   grep -q '^reason: post-approve-failed$' "$A/phases/p1/ESCALATION.md" 2>/dev/null \
     && pass "GH-273: XYZ_PYTHON=$runtime failing hook records post-approve-failed" \
     || fail "GH-273: XYZ_PYTHON=$runtime failing hook escalation reason missing"
-  ls "$A/.tick/events/" 2>/dev/null | grep -q 'marathon.phase.approved' \
+  grep -q 'marathon.phase.approved' <<<"$(ls "$A/.tick/events/" 2>/dev/null)" \
     && pass "GH-273: XYZ_PYTHON=$runtime approval remains logged when closeout fails" \
     || fail "GH-273: XYZ_PYTHON=$runtime closeout failure retroactively lost approval"
   rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -457,10 +457,10 @@ RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd 
 [ "$rc" -eq 0 ] && pass "GH-207: first namespaced render succeeds" || fail "GH-207: first namespaced render exit=$rc"
 RERENDER_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "GH-207: identical re-render does not HALT" || fail "GH-207: identical re-render exit=$rc (expected 0): $RERENDER_OUT"
-printf '%s\n' "$RERENDER_OUT" | grep -q "relay file unchanged" \
+grep -q "relay file unchanged" <<<"$(printf '%s\n' "$RERENDER_OUT")" \
   && pass "GH-207: identical re-render is explicitly treated as unchanged" \
   || fail "GH-207: expected unchanged-relay log on identical re-render"
-printf '%s\n' "$RERENDER_OUT" | grep -q "nothing to commit" \
+grep -q "nothing to commit" <<<"$(printf '%s\n' "$RERENDER_OUT")" \
   && fail "GH-207: identical re-render still hit a nothing-to-commit failure: $RERENDER_OUT" \
   || pass "GH-207: identical re-render avoids the old nothing-to-commit halt"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -509,7 +509,7 @@ SAT_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_SAT" MARATHON_LANE_NS="s
 grep -q '^STATUS: Approved' "$A/phases/satisfied-plan--p1/RELAY.md" \
   && pass "GH-207: reviewer approval lands in the namespaced relay file" \
   || fail "GH-207: satisfied-lane relay was not approved"
-printf '%s\n' "$SAT_OUT" | grep -q "lane_already_satisfied" \
+grep -q "lane_already_satisfied" <<<"$(printf '%s\n' "$SAT_OUT")" \
   && pass "GH-207: satisfied path is explicitly marked lane_already_satisfied" \
   || fail "GH-207: missing lane_already_satisfied marker in satisfied-path output"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -632,7 +632,7 @@ FIRST_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_GH274" \
 grep -q '^STATUS: Approved' "$A/phases/p1/RELAY.md" \
   && pass "GH-274: RELAY.md already shows STATUS: Approved after the gate-failed escalation" \
   || fail "GH-274: RELAY.md should show STATUS: Approved: $(cat "$A/phases/p1/RELAY.md" 2>/dev/null)"
-tick_a info MARATHON-P1-TURN | grep -qE '^status:[[:space:]]+done$' \
+grep -qE '^status:[[:space:]]+done$' <<<"$(tick_a info MARATHON-P1-TURN)" \
   && pass "GH-274: tick token is already done after the gate-failed escalation" \
   || fail "GH-274: tick token should be done: $(tick_a info MARATHON-P1-TURN)"
 BEFORE_RETRY_RELAY="$(cat "$A/phases/p1/RELAY.md")"
@@ -645,7 +645,7 @@ RETRY_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_GH274" \
     --pre-advance-cmd "test -f '$GATE_FILE'" --builder claude 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "GH-274: retrying after the gate is fixed exits 0" \
   || fail "GH-274: retry should exit 0, got $rc: $RETRY_OUT"
-printf '%s\n' "$RETRY_OUT" | grep -q "skipping render/reseed" \
+grep -q "skipping render/reseed" <<<"$(printf '%s\n' "$RETRY_OUT")" \
   && pass "GH-274: retry explicitly takes the satisfied-lane short-circuit" \
   || fail "GH-274: expected an explicit satisfied-lane short-circuit log: $RETRY_OUT"
 [ "$(cat "$A/phases/p1/RELAY.md")" = "$BEFORE_RETRY_RELAY" ] \
@@ -686,7 +686,7 @@ WT_OUT="$(
 )"; rc=$?
 [ "$rc" -eq 0 ] && pass "--require-clean passes inside a linked worktree (no self-trip on the driver lock)" \
   || fail "--require-clean should stay clean in a linked worktree (exit=$rc): $WT_OUT"
-printf '%s\n' "$WT_OUT" | grep -q '\.relay-driver\.lock' \
+grep -q '\.relay-driver\.lock' <<<"$(printf '%s\n' "$WT_OUT")" \
   && fail "linked worktree run still reported the driver's own lock as dirt: $WT_OUT" \
   || pass "linked worktree run does not report the driver's own lock as dirt"
 [ -f "$WT/phases/p1/RELAY.md" ] && pass "linked worktree + --require-clean still seeds the phase" \
@@ -716,7 +716,7 @@ GATE_PREFLIGHT_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --builder claude 2>&1)"; rc=$?
 [ "$rc" -eq 2 ] && pass "GH-238: missing default gate exits before dispatch" \
   || fail "GH-238: missing default gate exit=$rc (expected 2): $GATE_PREFLIGHT_OUT"
-printf '%s\n' "$GATE_PREFLIGHT_OUT" | grep -q "pre-advance gate not runnable" \
+grep -q "pre-advance gate not runnable" <<<"$(printf '%s\n' "$GATE_PREFLIGHT_OUT")" \
   && pass "GH-238: missing default gate names the fail-fast condition" \
   || fail "GH-238: missing required fail-fast phrase: $GATE_PREFLIGHT_OUT"
 printf '%s\n' "$GATE_PREFLIGHT_OUT" | grep -Fq -- "--pre-advance-cmd" \
@@ -737,7 +737,7 @@ git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 # task.created/claim/release already ran (that used to leave a permanently spent relay task).
 BUILD_OUT="$(CLAUDE_BIN="$MISSING_BIN" run_driver 2>&1)"; rc=$?
 [ "$rc" -eq 2 ] && pass "GH-117: missing builder binary exits 2" || fail "GH-117: missing builder exit=$rc (expected 2): $BUILD_OUT"
-printf '%s\n' "$BUILD_OUT" | grep -qi "not found on PATH" \
+grep -qi "not found on PATH" <<<"$(printf '%s\n' "$BUILD_OUT")" \
   && pass "GH-117: missing builder error names the missing binary" \
   || fail "GH-117: expected a clear 'not found on PATH' message, got: $BUILD_OUT"
 [ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-117: missing builder — relay file never rendered" \
@@ -751,7 +751,7 @@ git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 # ── (15) GH-117: missing reviewer binary fails clean BEFORE any tick mutation ─
 REV_OUT="$(AGY_BIN="$MISSING_BIN" run_driver 2>&1)"; rc=$?
 [ "$rc" -eq 2 ] && pass "GH-117: missing reviewer binary exits 2" || fail "GH-117: missing reviewer exit=$rc (expected 2): $REV_OUT"
-printf '%s\n' "$REV_OUT" | grep -qi "not found on PATH" \
+grep -qi "not found on PATH" <<<"$(printf '%s\n' "$REV_OUT")" \
   && pass "GH-117: missing reviewer error names the missing binary" \
   || fail "GH-117: expected a clear 'not found on PATH' message, got: $REV_OUT"
 [ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-117: missing reviewer — relay file never rendered" \
@@ -770,7 +770,7 @@ BOTH_OUT="$(CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" run_driver --d
 # This one is a --dry-run, which no longer writes at all — so an on-disk check here would pass no
 # matter what the probe did. Assert the render itself instead: that is the property this case is
 # about (the probe is a no-op when both binaries exist).
-printf '%s' "$BOTH_OUT" | grep -q '^--- BEGIN RENDERED RELAY ---$' \
+grep -q '^--- BEGIN RENDERED RELAY ---$' <<<"$(printf '%s' "$BOTH_OUT")" \
   && pass "GH-117: both-present — relay still rendered" \
   || fail "GH-117: render missing when both binaries are present: $BOTH_OUT"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -848,7 +848,7 @@ chmod +x "$VAGY"
 rc=$?
 [ "$rc" -eq 4 ] && pass "GH-171: vendored full chain advances twice and exits on cap, not no-progress" \
   || fail "GH-171: vendored full chain should exit 4 after two advancing turns, got $rc"
-TICK_REPO_ROOT="$V" "$V/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^handoff-to:[[:space:]]+codex$' \
+grep -qE '^handoff-to:[[:space:]]+codex$' <<<"$(TICK_REPO_ROOT="$V" "$V/.xyz/bin/tick" info MARATHON-P1-TURN)" \
   && pass "GH-171: final handoff stays in the consumer repo tick log" \
   || fail "GH-171: consumer repo tick log missing final codex handoff"
 find "$V/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
@@ -881,7 +881,7 @@ setup_vendored_consumer_fixture "$VP"
 rc=$?
 [ "$rc" -eq 4 ] && pass "GH-172: vendored XYZ_PYTHON=1 full chain advances twice and exits on cap, not no-progress" \
   || fail "GH-172: vendored XYZ_PYTHON=1 full chain should exit 4 after two advancing turns, got $rc"
-TICK_REPO_ROOT="$VP" "$VP/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^handoff-to:[[:space:]]+codex$' \
+grep -qE '^handoff-to:[[:space:]]+codex$' <<<"$(TICK_REPO_ROOT="$VP" "$VP/.xyz/bin/tick" info MARATHON-P1-TURN)" \
   && pass "GH-172: XYZ_PYTHON=1 final handoff stays in the consumer repo tick log" \
   || fail "GH-172: consumer repo tick log missing final codex handoff in XYZ_PYTHON=1 mode"
 find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
@@ -949,7 +949,7 @@ setup_vendored_consumer_fixture "$VA"
 rc=$?
 [ "$rc" -eq 0 ] && pass "GH-172: vendored Bash approval path exits 0 after reviewer approval" \
   || fail "GH-172: vendored Bash approval path should exit 0, got $rc"
-TICK_REPO_ROOT="$VA" "$VA/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^status:[[:space:]]+done$' \
+grep -qE '^status:[[:space:]]+done$' <<<"$(TICK_REPO_ROOT="$VA" "$VA/.xyz/bin/tick" info MARATHON-P1-TURN)" \
   && pass "GH-172: vendored Bash approval path closes the consumer repo token" \
   || fail "GH-172: vendored Bash approval path should end with a done token"
 assert_vendored_tick_event "$VA" '"type":"task.created"' \
@@ -989,7 +989,7 @@ setup_vendored_consumer_fixture "$VAP"
 rc=$?
 [ "$rc" -eq 0 ] && pass "GH-172: vendored XYZ_PYTHON=1 approval path exits 0 after reviewer approval" \
   || fail "GH-172: vendored XYZ_PYTHON=1 approval path should exit 0, got $rc"
-TICK_REPO_ROOT="$VAP" "$VAP/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^status:[[:space:]]+done$' \
+grep -qE '^status:[[:space:]]+done$' <<<"$(TICK_REPO_ROOT="$VAP" "$VAP/.xyz/bin/tick" info MARATHON-P1-TURN)" \
   && pass "GH-172: vendored XYZ_PYTHON=1 approval path closes the consumer repo token" \
   || fail "GH-172: vendored XYZ_PYTHON=1 approval path should end with a done token"
 assert_vendored_tick_event "$VAP" '"type":"task.created"' \
@@ -1070,7 +1070,7 @@ PI_BASH_OUT="$(RELAY_DRIVE_EXIT=0 XYZ_PYTHON=0 MARATHON_ROOT="$A" MARATHON_RELAY
 [ "$rc" -ne 0 ] \
   && pass "GH-414 control: the frozen Bash driver REJECTS --builder pi (divergence is real, not assumed)" \
   || fail "GH-414 control: XYZ_PYTHON=0 accepted --builder pi — Bash gained Pi support; retire the divergence note"
-printf '%s' "$PI_BASH_OUT" | grep -q "must start with claude/codex/agy/aider" \
+grep -q "must start with claude/codex/agy/aider" <<<"$(printf '%s' "$PI_BASH_OUT")" \
   && pass "GH-414 control: the Bash rejection names the agent set that omits pi" \
   || fail "GH-414 control: expected the claude/codex/agy/aider rejection message, got: $PI_BASH_OUT"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
@@ -1085,7 +1085,7 @@ PI_MISSING_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$S
 [ "$rc" -eq 2 ] \
   && pass "GH-451: missing Pi builder binary exits 2" \
   || fail "GH-451: missing Pi builder exit=$rc (expected 2): $PI_MISSING_OUT"
-printf '%s\n' "$PI_MISSING_OUT" | grep -qi "not found on PATH" \
+grep -qi "not found on PATH" <<<"$(printf '%s\n' "$PI_MISSING_OUT")" \
   && pass "GH-451: missing Pi builder error names the missing binary" \
   || fail "GH-451: expected a clear 'not found on PATH' message, got: $PI_MISSING_OUT"
 [ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-451: missing Pi builder — relay file never rendered" \

@@ -76,7 +76,7 @@ grep -q "edited by agent" "$TGT/$ART_REL" \
   && pass "spaced/nested target: nested artifact edited via copy-back" || fail "nested artifact not edited in target"
 
 # 4. The edit is actually committed (file-scoped commit routed to the foreign root), not just left dirty.
-git -C "$TGT" show HEAD:"$ART_REL" 2>/dev/null | grep -q "edited by agent" \
+grep -q "edited by agent" <<<"$(git -C "$TGT" show HEAD:"$ART_REL" 2>/dev/null)" \
   && pass "spaced/nested target: edit is committed at the foreign root" || fail "edit not committed at foreign root"
 
 # 5. .tick coordination stayed in the harness; the target tree has none.

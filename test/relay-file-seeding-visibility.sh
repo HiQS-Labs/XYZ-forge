@@ -44,7 +44,7 @@ printf 'STATUS: In progress\nUNCOMMITTED CONTENT IN B %s\n' "$$" >"$RELAY_B"
 rtl_init "$A" "$RELAY_B" ""
 wt2="$(rtl_worktree_begin)"; rc2=$?
 if [ "$rc2" -eq 0 ] && [ -n "$wt2" ]; then
-  if [ -f "$wt2$B/relay-system/2026-07-08/archive-test.md" ] || find "$wt2" -name archive-test.md 2>/dev/null | grep -q .; then
+  if grep -q . <<<"$([ -f "$wt2$B/relay-system/2026-07-08/archive-test.md" ] || find "$wt2" -name archive-test.md 2>/dev/null)"; then
     fail "cross-repo relay file unexpectedly seeded into the worktree — B2's cross-repo warning is now wrong"
   else
     pass "cross-repo relay file NOT seeded — confirms the archive-routed case genuinely needs the strong warning"

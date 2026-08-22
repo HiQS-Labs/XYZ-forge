@@ -81,9 +81,9 @@ fi
 CARD="$(bash "$HQ" status acme-app)"; rc=$?
 [ "$rc" = 0 ] && pass "status acme-app rc=0" || fail "status rc=$rc"
 printf '%s\n' "$CARD" | grep -q "Tier A" && pass "card shows Tier A" || fail "card tier: $(printf '%s\n' "$CARD" | grep -i capability)"
-printf '%s\n' "$CARD" | grep -q "active docs:  2 " && pass "active docs = 2 (blank.md excluded, marathon counted)" \
+grep -q "active docs:  2 " <<<"$(printf '%s\n' "$CARD")" && pass "active docs = 2 (blank.md excluded, marathon counted)" \
   || fail "active-doc count: $(printf '%s\n' "$CARD" | grep -i 'active docs')"
-printf '%s\n' "$CARD" | grep -q "MARATHON-PLAN-2026-07-04.md" && pass "marathon plan surfaced" \
+grep -q "MARATHON-PLAN-2026-07-04.md" <<<"$(printf '%s\n' "$CARD")" && pass "marathon plan surfaced" \
   || fail "marathon line: $(printf '%s\n' "$CARD" | grep -i marathon)"
 
 # ---- 3. filesystem-fallback resolution (repo in NO registry, only on disk) ----
@@ -92,7 +92,7 @@ R2="$(bash "$HQ" resolve fsonly-app)"; rc=$?
 [ "$(printf '%s\n' "$R2" | field REPO_PATH_SOURCE)" = "filesystem" ] \
   && pass "path source = filesystem" || fail "fsonly source: $(printf '%s\n' "$R2" | field REPO_PATH_SOURCE)"
 # fsonly has no PDDA + no XYZ -> Tier C
-bash "$HQ" status fsonly-app | grep -q "Tier C" && pass "fsonly is Tier C" \
+grep -q "Tier C" <<<"$(bash "$HQ" status fsonly-app)" && pass "fsonly is Tier C" \
   || fail "fsonly tier: $(bash "$HQ" status fsonly-app | grep -i capability)"
 
 # ---- 4. Tier B: PDDA-registered but no XYZ install and no path on disk -> unresolved-but-known ----
@@ -103,7 +103,7 @@ bash "$HQ" resolve orphan-pdda >/dev/null 2>&1; rc=$?
 # ---- 5. unresolved: unknown name -> rc=1 + helpful recipe ----
 bash "$HQ" status nope-not-here >/dev/null 2>&1; rc=$?
 [ "$rc" = 1 ] && pass "unknown name rc=1" || fail "unknown rc=$rc"
-bash "$HQ" status nope-not-here 2>&1 | grep -q "UNRESOLVED" && pass "unresolved card shown" \
+grep -q "UNRESOLVED" <<<"$(bash "$HQ" status nope-not-here 2>&1)" && pass "unresolved card shown" \
   || fail "no UNRESOLVED marker"
 
 # ---- 5b. fuzzy resolution: a loose name normalizes to the canonical repo ----

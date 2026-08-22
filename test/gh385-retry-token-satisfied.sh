@@ -72,7 +72,7 @@ seed_relay "${BASE}-2"
 mk_token "$BASE" claimed      # the dead attempt, exactly as a crashed run leaves it
 mk_token "${BASE}-2" done     # where the phase actually completed
 out="$(run_driver)"; rc=$?
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "a phase completed on a --retry token is recognized as satisfied" \
   || fail "GH-385 is back: the Approved phase rebuilt because the BASE token was read: $out"
 [ ! -s "$RD_CALLS" ] \
@@ -88,7 +88,7 @@ seed_relay "${BASE}-2"
 mk_token "$BASE" claimed
 mk_token "${BASE}-2" claimed  # recorded task exists but never completed
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "a phase whose recorded token never reached done was skipped — satisfied is now unfalsifiable" \
   || pass "an un-completed recorded token does NOT satisfy the lane (the check can still fail)"
 
@@ -97,7 +97,7 @@ reset_state
 seed_relay "$BASE"
 mk_token "$BASE" done
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "the plain base-token satisfied path still works" \
   || fail "regressed the ordinary satisfied path: $out"
 
@@ -108,7 +108,7 @@ mkdir -p "$A/phases/p1"
 printf '# Marathon Phase p1\nSTATUS: Approved\nNEXT: agy\n\nbody\n' > "$A/phases/p1/RELAY.md"
 mk_token "$BASE" done
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "a directive-less relay still resolves against the base token" \
   || fail "a pre-directive relay stopped being recognized as satisfied: $out"
 
@@ -128,7 +128,7 @@ seed_relay "MARATHON-P0-TURN"    # a different lane's token, or any stale/invent
 mk_token "$BASE" claimed         # this lane never completed
 mk_token "MARATHON-P0-TURN" done # ...but the named token is legitimately done
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "a builder-written directive naming an unrelated done token satisfied the lane — a builder can now skip its own review: $out" \
   || pass "an out-of-family directive does NOT satisfy the lane"
 # ...and it must not report the phase COMPLETE either. Not asserted via RD_CALLS: this fixture leaves
@@ -136,7 +136,7 @@ printf '%s' "$out" | grep -q "already reached a terminal relay" \
 # at reconcile_relay_task before relay-drive is reached. "Did the builder run" is therefore the wrong
 # observable here; "did the harness announce success having changed nothing" is the one the issue is
 # about, and it is what the pre-fix code did — it exited 0 with the success line.
-printf '%s' "$out" | grep -q "complete — " \
+grep -q "complete — " <<<"$(printf '%s' "$out")" \
   && fail "the harness reported the phase COMPLETE off a forged directive: $out" \
   || pass "the phase is not reported complete — the lane halts honestly instead"
 
@@ -144,7 +144,7 @@ printf '%s' "$out" | grep -q "complete — " \
 # A silent fallback is indistinguishable from a directive that was honored, and this repo has shipped
 # three checks that could not fail (#333, #348, #351). A lane that rebuilds because its directive was
 # refused has to say so, or nobody can tell the guard from a bug.
-printf '%s' "$out" | grep -q "not $BASE or a retry derivative" \
+grep -q "not $BASE or a retry derivative" <<<"$(printf '%s' "$out")" \
   && pass "the ignored directive is named in the log" \
   || fail "the directive was refused silently: $out"
 
@@ -157,7 +157,7 @@ seed_relay "${BASE}X"
 mk_token "$BASE" claimed
 mk_token "${BASE}X" done
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "'${BASE}X' was accepted as family — the check is a prefix match, not a suffix rule: $out" \
   || pass "a name that merely starts with the base token is not a retry derivative"
 
@@ -169,7 +169,7 @@ seed_relay "${BASE}-11"
 mk_token "$BASE" claimed
 mk_token "${BASE}-11" done
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "a two-digit retry suffix is still recognized as this lane's token" \
   || fail "the family rule is too tight — GH-385 is back for lanes retried 10+ times: $out"
 
@@ -181,7 +181,7 @@ reset_state
 seed_relay "${BASE}-2"
 mk_token "${BASE}-2" done        # the previous attempt genuinely completed
 out="$(run_driver --relay-task "${BASE}-3")"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "--retry was satisfied by the attempt it was retrying — the operator's fresh token was ignored: $out" \
   || pass "an explicit --relay-task overrides the directive (--retry still forces a real re-run)"
 
@@ -199,13 +199,13 @@ reset_state
 seed_relay "$BASE"            # directive names the BASE token — no retry involved
 mk_token "$BASE" claimed      # terminal relay, but the token is NOT done: the contradiction
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "a not-done token must NOT satisfy the lane: $out" \
   || pass "a terminal relay with a not-done token still rebuilds (unchanged)"
-printf '%s' "$out" | grep -q "relay is terminal .* but token .* not done — rebuilding" \
+grep -q "relay is terminal .* but token .* not done — rebuilding" <<<"$(printf '%s' "$out")" \
   && pass "GH-385: the token/relay disagreement is logged before the rebuild" \
   || fail "the rebuild is still silent — GH-385's 'log the disagreement' ask is unmet: $out"
-printf '%s' "$out" | grep -q "GH-385" \
+grep -q "GH-385" <<<"$(printf '%s' "$out")" \
   && pass "the disagreement line points at GH-385 so the next reader can find the mechanism" \
   || fail "disagreement line does not cite GH-385: $out"
 
@@ -221,13 +221,13 @@ reset_state
 seed_relay "$BASE"
 mk_token "$BASE" done            # terminal AND done: a plain re-fire would have been gate-only
 out="$(run_driver --relay-task "${BASE}-2")"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "advisory case regressed into an actual short-circuit — --retry must still rebuild: $out" \
   || pass "GH-491 advisory does not change --retry's behaviour (it still rebuilds)"
-printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && pass "GH-491: --retry on a satisfied lane says a plain re-fire would have skipped both turns" \
   || fail "no advisory — the cheaper path stays invisible at the one moment it applies: $out"
-printf '%s' "$out" | grep -q "GH-491" \
+grep -q "GH-491" <<<"$(printf '%s' "$out")" \
   && pass "the advisory cites GH-491 so the next reader can find the mechanism" \
   || fail "advisory does not cite GH-491: $out"
 
@@ -239,7 +239,7 @@ reset_state
 seed_relay "$BASE"
 mk_token "$BASE" claimed         # terminal relay, token NOT done: a plain re-fire would ALSO rebuild
 out="$(run_driver --relay-task "${BASE}-2")"
-printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && fail "control: the advisory fired on a lane a plain re-fire would ALSO have rebuilt — it is unconditional, so it carries no information: $out" \
   || pass "control: no advisory when the recorded token is not done (the cheap path genuinely did not apply)"
 

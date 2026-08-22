@@ -121,24 +121,24 @@ out="$(lanes rollup --milestone Quicksilver --trunk "$TRUNK" 2>&1)"; rc=$?
   || fail "explicit --milestone failed (rc=$rc): $out"
 
 out="$(lanes rollup --release Quicksilver --trunk "$TRUNK" 2>&1)"; rc=$?
-printf '%s' "$out" | grep -q 'milestone: Quicksilver' && [ "$rc" -eq 0 ] \
+grep -q 'milestone: Quicksilver' <<<"$(printf '%s' "$out")" && [ "$rc" -eq 0 ] \
   && pass "--release resolves via Codename:" || fail "--release by codename failed (rc=$rc): $out"
 
 out="$(lanes rollup --release 1.0.0 --trunk "$TRUNK" 2>&1)"; rc=$?
-printf '%s' "$out" | grep -q 'milestone: Quicksilver' && [ "$rc" -eq 0 ] \
+grep -q 'milestone: Quicksilver' <<<"$(printf '%s' "$out")" && [ "$rc" -eq 0 ] \
   && pass "--release resolves via Release:" || fail "--release by version failed (rc=$rc): $out"
 
 # Auto-resolve must pick the ONE in-progress block with a join key. The Shipped block also has a
 # Milestone:, so if history were not excluded this would be ambiguous and fail.
 out="$(lanes rollup --trunk "$TRUNK" 2>&1)"; rc=$?
-printf '%s' "$out" | grep -q 'milestone: Quicksilver' && [ "$rc" -eq 0 ] \
+grep -q 'milestone: Quicksilver' <<<"$(printf '%s' "$out")" && [ "$rc" -eq 0 ] \
   && pass "auto-resolve picks the single in-progress release, excluding Shipped history" \
   || fail "auto-resolve failed (rc=$rc): $out"
 
 # A release with a blank Milestone: must fail loudly. An empty seed list would be indistinguishable
 # from a milestone that simply has no open issues — the whole point of Phase 3's join key.
 out="$(lanes seed --release 0.1.0 2>&1)"; rc=$?
-[ "$rc" -eq 3 ] && printf '%s' "$out" | grep -q 'cannot resolve to an issue set' \
+grep -q 'cannot resolve to an issue set' <<<"$([ "$rc" -eq 3 ] && printf '%s' "$out")" \
   && pass "a release with no Milestone: fails loudly rather than seeding nothing" \
   || fail "blank Milestone: should exit 3 with a named reason (rc=$rc): $out"
 
@@ -208,26 +208,26 @@ cat > "$WORK/all-prefix.json" <<'EOF'
 [{"number":10,"title":"must not match GH-101 by prefix","state":"OPEN","url":"u/10"}]
 EOF
 out="$(ALL_JSON="$WORK/all-prefix.json" lanes rollup --milestone Quicksilver --trunk "$TRUNK" 2>&1)"
-printf '%s' "$out" | grep -qE '^ +ABSENT +#10 ' \
+grep -qE '^ +ABSENT +#10 ' <<<"$(printf '%s' "$out")" \
   && pass "GH-10 is not matched by GH-101 (no prefix bleed)" \
   || fail "prefix bleed: issue 10 matched a GH-10x commit: $out"
 
 # ── the headline and the mentioned bucket ───────────────────────────────────────────────────────
-printf '%s' "$ROLL" | grep -q "Quicksilver: 3/9 landed on $TRUNK" \
+grep -q "Quicksilver: 3/9 landed on $TRUNK" <<<"$(printf '%s' "$ROLL")" \
   && pass "headline reports the correct landed/total against the named trunk" \
   || fail "expected '3/9 landed on $TRUNK': $ROLL"
 # The in-flight count must be named, not folded into the denominator silently. #332 shipped as a
 # confident "1/1 landed" precisely because nothing distinguished this bucket.
-printf '%s' "$ROLL" | grep -q 'claimed by a commit but still OPEN' \
+grep -q 'claimed by a commit but still OPEN' <<<"$(printf '%s' "$ROLL")" \
   && pass "the IN FLIGHT bucket is surfaced explicitly in the summary" \
   || fail "in-flight count was not surfaced: $ROLL"
-printf '%s' "$ROLL" | grep -q 'mentioned on trunk but claimed by no commit' \
+grep -q 'mentioned on trunk but claimed by no commit' <<<"$(printf '%s' "$ROLL")" \
   && pass "the MENTIONED bucket is surfaced explicitly, not folded into a not-landed tally" \
   || fail "mentioned count was not surfaced: $ROLL"
-printf '%s' "$ROLL" | grep -q 'trunk (derived)' \
+grep -q 'trunk (derived)' <<<"$(printf '%s' "$ROLL")" \
   && pass "the rollup states which trunk it measured against" \
   || fail "rollup did not name its trunk: $ROLL"
-printf '%s' "$ROLL" | grep -q '└─ .*fix(GH-101)' \
+grep -q '└─ .*fix(GH-101)' <<<"$(printf '%s' "$ROLL")" \
   && pass "each landed row cites the commit that claimed it" \
   || fail "no evidence line for a landed issue: $ROLL"
 
@@ -268,16 +268,16 @@ out="$(lanes rollup --milestone Empty --trunk "$TRUNK" 2>&1)"; rc=$?
   || fail "empty rollup returned rc=$rc: $out"
 # It must bail BEFORE rendering: the first cut printed "Empty: 0/0 landed on main" and only then
 # exited 4, which is a report that reads like a fact about a milestone that may not exist.
-printf '%s' "$out" | grep -q '0/0 landed' \
+grep -q '0/0 landed' <<<"$(printf '%s' "$out")" \
   && fail "empty rollup printed a 0/0 report before failing: $out" \
   || pass "an empty rollup prints no report at all before exiting"
 
 printf '1\n' > "$GH_AUTH_RC"
 out="$(lanes seed --milestone Quicksilver 2>&1)"; rc=$?
-[ "$rc" -eq 3 ] && printf '%s' "$out" | grep -q 'not authenticated' \
+grep -q 'not authenticated' <<<"$([ "$rc" -eq 3 ] && printf '%s' "$out")" \
   && pass "an unauthenticated gh exits 3 with a named reason" \
   || fail "unauthenticated gh gave rc=$rc: $out"
-printf '%s' "$out" | grep -q '^{' \
+grep -q '^{' <<<"$(printf '%s' "$out")" \
   && fail "unauthenticated run emitted issue JSON anyway: $out" \
   || pass "an unauthenticated run emits no partial list that could look complete"
 printf '0\n' > "$GH_AUTH_RC"
@@ -296,7 +296,7 @@ else
   pass "the gh-absent fixture really resolves no gh (the case is not vacuous)"
 fi
 out="$(PATH="$NOGH" RELEASES_FILE="$REL" bash "$LANES" seed --milestone Quicksilver 2>&1)"; rc=$?
-[ "$rc" -eq 3 ] && printf '%s' "$out" | grep -q 'gh CLI not found' \
+grep -q 'gh CLI not found' <<<"$([ "$rc" -eq 3 ] && printf '%s' "$out")" \
   && pass "a missing gh exits 3 with a named reason" \
   || fail "missing gh gave rc=$rc: $out"
 

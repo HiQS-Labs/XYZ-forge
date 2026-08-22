@@ -126,8 +126,8 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-good aider good; rc=$?
 [ "$rc" -eq 0 ] && pass "aider turn (good) exits 0" || fail "good turn rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "aider turn committed (file-scoped)" || fail "expected a commit"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
-git -C "$A" log -1 --format='%s' | grep -q "aider headless" && pass "commit message names the aider tool" || fail "commit msg should say aider"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "commit touched the relay file" || fail "commit should include relay.md"
+grep -q "aider headless" <<<"$(git -C "$A" log -1 --format='%s')" && pass "commit message names the aider tool" || fail "commit msg should say aider"
 [ "$(tok_field RELAY-TURN-good status)" = "open" ] && [ "$(tok_field RELAY-TURN-good handoff-to)" = "claude-a" ] \
   && pass "shim handed the token to the peer (rtl_enforce GH-67, non-terminal STATUS)" \
   || fail "token not handed to peer: status=$(tok_field RELAY-TURN-good status) handoff=$(tok_field RELAY-TURN-good handoff-to)"

@@ -48,11 +48,11 @@ FAILED="$(printf '%s\n' "$OUT" | sed -n '/^failed:/,$p' | grep -E '^[[:space:]]*
 NFAIL="$(printf '%s\n' "$FAILED" | grep -c . )"
 [ "$NFAIL" = "1" ] \
   || fail "expected exactly ONE failing check, got $NFAIL: $(printf '%s' "$FAILED" | tr '\n' ' ')"
-printf '%s\n' "$FAILED" | grep -q 'path-overlap' \
+grep -q 'path-overlap' <<<"$(printf '%s\n' "$FAILED")" \
   || fail "the single failing check is not path-overlap: $FAILED"
 
 # Belt-and-suspenders: confirm it failed on the expected assertion, not some unrelated path-overlap break.
-printf '%s\n' "$OUT" | grep -qiE 'FAIL.*bob got TASK-008 even though it overlaps' \
+grep -qiE 'FAIL.*bob got TASK-008 even though it overlaps' <<<"$(printf '%s\n' "$OUT")" \
   || fail "path-overlap failed, but not on the expected claim-routing assertion"
 
 echo

@@ -79,7 +79,7 @@ fi
 
 # 3. Containment Root Rejection Gate
 out=$(python3 "$RUNNER" --workdir "$WORK/.." --containment-root "$WORK" --code "print('ESCAPE')" --json 2>&1 || true)
-echo "$out" | grep -q '"status": "error"' || {
+grep -q '"status": "error"' <<<"$(echo "$out")" || {
   echo "FAIL: Expected runner to reject workdir outside containment root. Got: $out"
   exit 1
 }
@@ -90,7 +90,7 @@ echo "SECRET_PAYLOAD" > "$SENTINEL"
 
 # Run a python script that tries to overwrite surrounding files outside containment
 out=$(python3 "$RUNNER" --workdir "$FIXTURE" --containment-root "$FIXTURE" --file "$SENTINEL" --json 2>&1 || true)
-echo "$out" | grep -q '"status": "error"' || {
+grep -q '"status": "error"' <<<"$(echo "$out")" || {
   echo "FAIL: Expected runner to reject execution of script outside containment-root. Got: $out"
   exit 1
 }
@@ -136,7 +136,7 @@ assert 'OS sandbox backend unavailable' in res['stderr'], f'Expected fail-closed
 print('FAIL_CLOSED_VERIFIED')
 " 2>&1 || true)
 
-echo "$out" | grep -q "FAIL_CLOSED_VERIFIED" || {
+grep -q "FAIL_CLOSED_VERIFIED" <<<"$(echo "$out")" || {
   echo "FAIL: Expected runner to fail closed when sandbox backend is missing. Got: $out"
   exit 1
 }

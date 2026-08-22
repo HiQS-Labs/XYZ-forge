@@ -188,7 +188,7 @@ echo "-- the leaderboard pipeline"
 LB_MD="$WORK/LEADERBOARD.md"
 LEADERBOARD_DB="$R/releases.db" LEADERBOARD_OUTPUT="$LB_MD" bash "$HERE/../utils/leaderboard.sh" >/dev/null 2>&1
 ok "leaderboard.sh renders LEADERBOARD.md from the exporter's JSON" "$([ -s "$LB_MD" ]; echo $?)"
-if head -1 "$LB_MD" | grep -q 'GENERATED'; then ok "the file announces itself as generated (never hand-edited)" 0; else ok "generated header" 1; fi
+if grep -q 'GENERATED' <<<"$(head -1 "$LB_MD")"; then ok "the file announces itself as generated (never hand-edited)" 0; else ok "generated header" 1; fi
 SCRIPT_ORDER="$(rg -o '^\| [0-9]+ \| \*\*[0-9]+\*\* \| \[?(GH-[0-9]+)' -r '$1' "$LB_MD" | tr '\n' ' ' | sed 's/ $//')"
 ok "the script's ranking matches the pinned --json ordering EXACTLY (one scorer, proven)" \
    "$(is "$SCRIPT_ORDER" "$(printf '%s' "$TOP" | sed 's/:[0-9]*//g')"; echo $?)"

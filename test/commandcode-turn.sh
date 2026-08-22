@@ -74,7 +74,7 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-good commandcode good RELAY_PEER=claude-a; rc=$?
 [ "$rc" -eq 0 ] && pass "Commandcode turn (good) exits 0" || fail "good turn rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "Commandcode turn committed (file-scoped)" || fail "expected a commit"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "commit touched the relay file" || fail "commit should include relay.md"
 [ "$(tok_field RELAY-TURN-good status)" = "open" ] && [ "$(tok_field RELAY-TURN-good handoff-to)" = "claude-a" ] \
   && pass "good turn handed token to peer" || fail "token not handed off: status=$(tok_field RELAY-TURN-good status) handoff=$(tok_field RELAY-TURN-good handoff-to)"
 grep -q -- "--no-session" "$WORK/cmd-args" && pass "default COMMANDCODE_FLAGS reaches cmd" || fail "default flags missing"
@@ -126,7 +126,7 @@ RELAY_WORKTREE_ISOLATION=1 run_shim RELAY-TURN-badwt commandcode badwt RELAY_PEE
   || fail "isolated containment stranded token: status=$(tok_field RELAY-TURN-badwt status) handoff=$(tok_field RELAY-TURN-badwt handoff-to)"
 
 # --- (7) default timeout is 900s ------------------------------------------------
-grep -q 'RELAY_TURN_TIMEOUT_S:-900' "$SHIM" 2>/dev/null || grep -q 'RELAY_TURN_TIMEOUT_S", 900' "$(cd "$(dirname "$0")/.." && pwd)/utils/py/commandcode-turn.py" \
+grep -q 'RELAY_TURN_TIMEOUT_S", 900' <<<"$(grep -q 'RELAY_TURN_TIMEOUT_S:-900' "$SHIM" 2>/dev/null |)" "$(cd "$(dirname "$0")/.." && pwd)/utils/py/commandcode-turn.py" \
   && pass "default RELAY_TURN_TIMEOUT_S is 900s" || fail "expected 900s default"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"

@@ -76,7 +76,7 @@ out="$(run_driver src/doomed.js)"; rc=$?
 [ "$rc" -eq 0 ] \
   && pass "a lane whose deliverable is a removal can complete (exit 0)" \
   || fail "GH-438 is back: removing the artifact read as no progress, exit=$rc: $out"
-printf '%s' "$out" | grep -q "lane_already_satisfied" \
+grep -q "lane_already_satisfied" <<<"$(printf '%s' "$out")" \
   && pass "the removal is recognized as a real phase delta" \
   || fail "removal did not register as a delta: $out"
 [ ! -e "$A/src/doomed.js" ] && pass "the artifact really is gone" || fail "fixture did not delete the artifact"
@@ -87,7 +87,7 @@ git -C "$A" checkout -- src/doomed.js 2>/dev/null || git -C "$A" reset -q --hard
 # waved through as satisfied — a strictly worse bug than the one being fixed.
 mk_stub 'true'
 out="$(run_driver src/kept.js)"; rc=$?
-printf '%s' "$out" | grep -q "lane_already_satisfied" \
+grep -q "lane_already_satisfied" <<<"$(printf '%s' "$out")" \
   && fail "an untouched artifact was reported as satisfied — the delta check is now unfalsifiable" \
   || pass "an untouched artifact is still NOT progress (the check can fail)"
 [ "$rc" -ne 0 ] && pass "a lane that did nothing does not exit 0 (rc=$rc)" \
@@ -98,7 +98,7 @@ printf '%s' "$out" | grep -q "lane_already_satisfied" \
 # existence test was protecting, and narrowing it must not have dropped it.
 mk_stub ': > "'"$A"'/src/hollow.js"'
 out="$(run_driver src/hollow.js)"
-printf '%s' "$out" | grep -q "lane_already_satisfied" \
+grep -q "lane_already_satisfied" <<<"$(printf '%s' "$out")" \
   && fail "a newly created EMPTY artifact counted as a deliverable" \
   || pass "a newly created empty artifact is still rejected"
 rm -f "$A/src/hollow.js"

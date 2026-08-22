@@ -63,10 +63,10 @@ bash "$DRIVE" --relay-file "$B/relay.md" --relay-task RELAY-TURN-newfile \
 
 # 2. The NEW file must be committed (tracked at HEAD), not just sitting untracked.
 git -C "$B" cat-file -e "HEAD:newfile.txt" 2>/dev/null && pass "GH-29: new untracked file is committed (tracked at HEAD)" || fail "GH-29: newfile.txt not committed"
-git -C "$B" show "HEAD:newfile.txt" 2>/dev/null | grep -q "brand new detector" && pass "GH-29: committed new file has the build content" || fail "GH-29: newfile.txt content missing at HEAD"
+grep -q "brand new detector" <<<"$(git -C "$B" show "HEAD:newfile.txt" 2>/dev/null)" && pass "GH-29: committed new file has the build content" || fail "GH-29: newfile.txt content missing at HEAD"
 
 # 3. The modified tracked file must also be committed (proves the whole batch wasn't aborted).
-git -C "$B" show "HEAD:existing.txt" 2>/dev/null | grep -q "modified by builder" && pass "GH-29: modified tracked file committed alongside the new file" || fail "GH-29: existing.txt change not committed"
+grep -q "modified by builder" <<<"$(git -C "$B" show "HEAD:existing.txt" 2>/dev/null)" && pass "GH-29: modified tracked file committed alongside the new file" || fail "GH-29: existing.txt change not committed"
 
 # 4. The never-created allowlist entry must NOT block the commit and must not exist.
 ! git -C "$B" cat-file -e "HEAD:never-created.txt" 2>/dev/null && pass "GH-29: non-matching allowlist entry tolerated (not committed)" || fail "GH-29: never-created.txt unexpectedly committed"

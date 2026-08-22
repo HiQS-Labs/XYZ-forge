@@ -52,7 +52,7 @@ find_transcript() { find "$OUT" -name "$1" | head -1; }
 # ── (1) codex ATTESTATION header on the default lane ─────────────────────────────────────
 CONSULT_ROOT="$REPO" CODEX_BIN="$CODEX" bash "$CONSULT" --prompt "q" --models codex --out "$OUT" --label cx >/dev/null 2>&1; rc_cx=$?
 cx="$(find_transcript 'cx.codex.md')"
-if [ -n "$cx" ] && head -1 "$cx" | grep -qF '> **ATTESTATION**' \
+if grep -qF '> **ATTESTATION**' <<<"$([ -n "$cx" ] && head -1 "$cx")" \
    && grep -qF '> Model: gpt-stub-9' "$cx" && grep -qF '> Provider: openai-stub' "$cx" && grep -qF '> Sandbox: read-only' "$cx"; then
   pass "consult default lane: codex transcript is stamped with the ATTESTATION provenance header"
 else

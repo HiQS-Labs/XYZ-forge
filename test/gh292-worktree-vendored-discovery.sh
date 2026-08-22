@@ -73,7 +73,7 @@ printf '%s\n' "$linked_env" | grep -Fq "export TICK=$MAIN/.xyz/bin/tick" \
   || bad "linked worktree: selects the vendored tick and its lock root"
 
 linked_check="$(cd "$LINKED" && bash "$FH" --check 2>&1)"
-printf '%s' "$linked_check" | grep -q 'CENTRALIZED harness' \
+grep -q 'CENTRALIZED harness' <<<"$(printf '%s' "$linked_check")" \
   && bad "linked worktree: does not fall back to the centralized-harness warning" \
   || ok "linked worktree: does not fall back to the centralized-harness warning"
 
@@ -90,7 +90,7 @@ printf '%s' "$fallback_check" | grep -Fq "vendored .xyz found in the main checko
   && ok "unusable vendor: readiness names the main-checkout .xyz path" \
   || bad "unusable vendor: readiness names the main-checkout .xyz path"
 
-printf '%s' "$fallback_check" | grep -q 'CENTRALIZED harness' \
+grep -q 'CENTRALIZED harness' <<<"$(printf '%s' "$fallback_check")" \
   && ok "unusable vendor: readiness warns about centralized fallback" \
   || bad "unusable vendor: readiness warns about centralized fallback"
 

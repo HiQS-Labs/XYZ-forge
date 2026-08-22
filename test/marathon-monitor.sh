@@ -236,7 +236,7 @@ relay_for() {
 # trusting that the duplicated loop stayed in sync.
 DETAIL="$HERE/../relay-automation/marathon-detail.sh"
 detail_out="$(bash "$DETAIL" "$REPO_LEGACY" 2>/dev/null || true)"
-printf '%s' "$detail_out" | grep -q 'RELAY.md: p1/RELAY.md' \
+grep -q 'RELAY.md: p1/RELAY.md' <<<"$(printf '%s' "$detail_out")" \
   && pass "GH-484: marathon-detail.sh finds the legacy relay file too" \
   || fail "GH-484: marathon-detail.sh missed the legacy relay file: [$detail_out]"
 

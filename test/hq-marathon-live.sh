@@ -99,7 +99,7 @@ grep -q -- '- Live claims: 1' "$OUT" \
 
 # Read-only: marathon-live must never write into a target repo (only .tick/STATE.md regen, which the
 # no-op stub leaves untouched here — assert no report/aggregate leaked into any fixture repo).
-if find "$WORK/repos" -name 'HQ-MARATHON-LIVE-*' | grep -q .; then
+if grep -q . <<<"$(find "$WORK/repos" -name 'HQ-MARATHON-LIVE-*')"; then
   fail "marathon-live wrote an aggregate inside a target repo"
 else
   pass "marathon-live stayed read-only over target repos"

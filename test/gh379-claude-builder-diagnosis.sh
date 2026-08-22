@@ -56,11 +56,11 @@ JSON_EOF
 run_driver --phase-id p1 --relay-task MARATHON-P1-TURN > "$WORK/p1.log" 2>&1 || true
 
 bdiag="$(esc_field p1 builder-diagnostic)"
-printf '%s' "$bdiag" | grep -q "subtype=error_max_budget_usd" \
+grep -q "subtype=error_max_budget_usd" <<<"$(printf '%s' "$bdiag")" \
   && pass "GH-379: builder diagnostic subtype reached ESCALATION.md" \
   || fail "builder diagnostic missing subtype: $bdiag"
 
-printf '%s' "$bdiag" | grep -q "terminal_reason=budget_exhausted" \
+grep -q "terminal_reason=budget_exhausted" <<<"$(printf '%s' "$bdiag")" \
   && pass "GH-379: builder diagnostic terminal_reason reached ESCALATION.md" \
   || fail "builder diagnostic missing terminal_reason: $bdiag"
 
