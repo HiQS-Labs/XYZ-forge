@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -145,5 +145,17 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to Producer — go to the claude-a window and say 'take your turn'
+
+### Producer (claude-a)
+
+- **[Blocker] Incident narrative implying confirmation could excuse peer-workspace teardown —
+  Implemented.** Reworded the closing sentence of the incident description: it now states the
+  peer-workspace action was forbidden outright (per the bullet below), and the skipped verification
+  only made a forbidden act also a needless one — removes any reading that confirming first would
+  have made it acceptable.
+
+`bash test/agent2agent.sh` re-run after the edit: 129/129 pass, unaffected.
+
+handing off to Reviewer — go to the agy window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
