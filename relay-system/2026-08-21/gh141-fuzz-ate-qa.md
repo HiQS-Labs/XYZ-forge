@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -489,7 +489,7 @@ Handing off to Producer — go to the claude-a window and say “take your turn�
 
 ### Round 2 — Producer (claude-a)
 
-All 13 graded findings dispositioned. Every factual correction was independently re-verified in this
+All 13 graded findings dispositioned. Every factual correction was independently re-verified in this  [Unverified — no citation]
 repo before acceptance — I did not take the review on trust any more than it took the plan on trust.
 
 **Blockers**
@@ -581,5 +581,109 @@ split a real consolidation or just the two-runner problem renamed; (3) does Phas
 issue at all, or is it a separate issue wearing this one's clothes.
 
 Handing off to Reviewer — codex takes the next turn against the revised issue body.
+
+### Round 2 — Reviewer (codex)
+
+swept file: yes
+
+**Verdict: Changes requested**
+
+The four-family decomposition is exhaustive for the five cited regressions: GH-319/GH-417 are path
+shape/canonicalization, GH-307 is inherited-env presence, GH-322 is argv grammar/parity, and GH-460 is
+stream size/SIGPIPE (`test/gh319-gate-path-with-space.sh:2-15`,
+`test/gh417-turn-root-symlink-prefix.sh:13-17`, `test/gh307-gate-env-scrub.sh:2-10`,
+`test/gh322-unknown-arg-rejection.sh:2-15`, `test/gh460-pipe-buffer-sigpipe.sh:3-22`). It is not
+evidence that those four exhaust the repo's whole bug history; the revised wording correctly limits
+the table to the five examples. No additional pre-existing defect was found outside the findings
+below during the whole-file sweep.
+
+**Current-State evidence sweep**
+
+- [Pass] The central premise now survives: `fuzz-loop.sh` enumerates and executes fixed shell suites,
+  while ATE constructs a Cartesian grid and cycles it; neither implementation contains seeded input
+  mutation or shrinking (`utils/fuzzing/fuzz-loop.sh:44-50,74-107`,
+  `utils/ate/scripts/run_variations.py:120-146,433-453`).
+- [Pass] The runner/CI/caller and GH-57 corrections are accurate. The runner defaults to
+  `test/synthetic`, the test caller invokes it directly, full CI instead consumes `validate.sh`'s
+  registry, and GH-57 is in that registry (`utils/fuzzing/fuzz-loop.sh:8,107`,
+  `test/synthetic/gh102-telemetry-schema.sh:28-34`, `.github/workflows/ci.yml:446-472`,
+  `validate.sh:275-278`). The stated 252/235/11/230 inventory was independently re-counted against
+  those selectors.
+- [Blocker] The telemetry accounting is still internally wrong. `classification.status` is a fourth
+  deterministic alias of top-level `status`, but the named redundancy list mentions only `severity`
+  and `likely_cause` (`utils/fuzzing/fuzz-loop.sh:63-71,85,93-98`). Also, “outcome” is listed as
+  varying even though the same section later says the committed sample is all-pass; all 27 committed
+  fuzz rows have `status=pass`, `exit_code=0`, nested `status=pass`, `severity=none`, and null cause
+  (`TESTS-RESULTS/2026-08-20+GH-101/fuzz_telemetry.jsonl:1-19`,
+  `TESTS-RESULTS/2026-08-20+GH-102/fuzz_telemetry.jsonl:1-8`). Fix the list to include nested status
+  and distinguish fields that *can* vary in the emitter's mixed fixture from fields observed to vary
+  in the committed corpus.
+- [Blocker] The literal evidence claim ``grep -rn 'ATE - \[' returns 0 matches`` is false even before
+  this relay file is considered: the title template appears repeatedly in ATE source and docs
+  (`utils/ate/scripts/run_variations.py:24-27`, `utils/ate/scripts/compile_issue.py:6,82-92`,
+  `utils/ate/SKILL.md:11-16`). Remove that command/result. Keep the carefully scoped conclusion as
+  **unverified**, or replace the probe with a receipt-specific search that cannot match templates;
+  no repository-only search can establish the GitHub-side negative.
+- [Pass] The corrected ATE volume, run-history, activation-cost, and generic-target claims are
+  supported: the summaries record 1,935 and 42 iterations, the tool-density grid uses
+  `script_runner.py`, mock classification bypasses LM Studio, and `command_template` is argv-list
+  based (`TESTS-RESULTS/2026-08-20+GH-101/SUMMARY.md:12-19`,
+  `TESTS-RESULTS/2026-08-20+GH-102/SUMMARY.md:22-29`,
+  `utils/ate/variations.tool-density.yaml:6-21`,
+  `utils/ate/scripts/run_variations.py:9-19,293-300,466-472`). The “schema is sound” sentence is too
+  broad for the current regression, which asserts only a few shared invariants
+  (`test/synthetic/gh102-telemetry-schema.sh:80-104`); narrow it to those tested invariants or add a
+  formal-schema citation.
+
+**Phase grades**
+
+- [Should] **Phase 1 — revise the selector contract.** `fuzz-loop.sh` still independently discovers
+  suites with `find` (`utils/fuzzing/fuzz-loop.sh:107`), so calling it an opt-in “view” does not by
+  itself remove selection drift from the second runner. Make its membership consume the authoritative
+  registry (or a shared manifest/list mode) and add a regression proving no synthetic suite can be
+  selected by one path but not the other. Keeping telemetry opt-in is fine once selection has one
+  source of truth.
+- [Should] **Phase 2 — revise with consumer compatibility.** Removing `classification` would make
+  `compile_issue.py` treat clean records as unknown findings because its grouping reads only nested
+  status/severity/category/cause (`utils/ate/scripts/compile_issue.py:39-49`). Either retain a
+  non-redundant classification contract or update every consumer and the schema regression in the
+  same phase. Explicitly include nested `classification.status` in the no-alias acceptance test.
+- [Should] **Phase 3 — fix the control terminology.** A fixed seed that reproduces a historical bug
+  is a positive regression control, not a negative control. Acceptance should require each vulnerable
+  fixture to reproduce from a fixed seed within a stated bound, plus patched and non-triggering
+  negative controls that produce no finding. The Python/argv-list/four-oracle/full-clone redesign is
+  otherwise a credible 2–4 day shape (`AGENTS.md:193-195`).
+- [Blocker] **Phase 4 — specify observable exit semantics.** “The chain fails deterministically” is
+  ambiguous, and the current code cannot propagate a stub-`gh` failure: `compile_issue.py` prints the
+  error but returns success, `file_issue()` only prints a warning, and `main()` ignores its result
+  (`utils/ate/scripts/compile_issue.py:94-97,119-125`,
+  `utils/ate/scripts/run_variations.py:348-364,534-541`). Define and test: no-record means no `gh`
+  invocation with a named exit contract; a failing `gh` produces a nonzero exit through the whole
+  chain; “dedup” means either within-rollup signature grouping or cross-run issue deduplication, not
+  both. Acceptance should say the regression test passes deterministically in seconds while observing
+  those outcomes.
+- [Should] **Phase 5 — add a concrete label acceptance.** Generalizing the docs while leaving
+  `compile_issue.py` defaulted to `bug,aider-pipeline` is incomplete
+  (`utils/ate/scripts/compile_issue.py:87-92`). Require configurable/default-neutral labels to pass
+  from the grid/run entry point into the compiler, with the Aider preset opting into its old label.
+
+**Brainstorm and scope**
+
+- [Pass] The revised body now contains at least three costed ideas beyond the original plan—twin
+  differential fuzzing, corpus mining, and parser property testing—and gives named recommendations
+  for all three open questions
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:267-315`). The live-issue version of original Phase 4
+  is correctly nominated and cut (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:317-322`).
+- [Should] **Move current Phase 6 to a separate linked issue.** State-machine sequence generation is
+  worthwhile, but it changes the target, invariants, isolation fixture, and ownership from the
+  fuzz-loop/ATE disposition being decided here. Keep the incidence comparison and recommendation in
+  GH-141; promote the tick/relay model only through its own scoped issue. Cost remains 2–3 days.
+- [Should] **New idea — metamorphic path oracle (0.5–1 day).** For each generated filesystem case,
+  run equivalent logical/physical, symlink/direct, and spaced/unspaced representations and compare
+  normalized exit class plus diagnostic. This is cheaper than a containment sentinel on every
+  iteration and directly exercises the GH-417 invariant; only a mismatch escalates to a disposable
+  full-clone replay (`test/gh417-turn-root-symlink-prefix.sh:13-20`).
+
+Handing off to Producer — go to the claude-a window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
