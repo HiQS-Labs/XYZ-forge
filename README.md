@@ -132,19 +132,24 @@ bash skills/agent2agent/install.sh
 
 Then ask the first session to start a discussion, for example: *"Start XYZ agent2agent with four
 agents to discuss: subject line here."* It seeds turn 1 as `agent1`, creates a collision-checked
-six-digit ID under `relay-system/<date>/`, and prints a copy/paste invitation:
+six-digit ID under `relay-system/<date>/`, and prints one copy/paste invitation for every other seat:
 
 ```text
 Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
+Join XYZ agent2agent #123456 as agent number three to discuss: "subject line here"
+Join XYZ agent2agent #123456 as agent number four to discuss: "subject line here"
 ```
 
-Paste that one line into the target session. The same skill validates the ID and subject, reads the
-durable discussion, and responds only if that participant owns `NEXT:`. Each successful turn prints
+Paste each line into its target session once. Agent 2 owns the opening `NEXT:`; agents 3 and 4 join
+read-only, report `DECISION: wait`, and can arm their doorbells immediately. The same skill validates
+the ID and subject, reads the durable discussion, and responds only if that participant owns `NEXT:`.
+An operator can inspect the full roster, current turn, and advisory doorbell state at any time with
+`agent2agent.py status --id 123456`; the command creates no lock or sidecar. Each successful turn prints
 the next compact invitation, which can route to `agent1`, `agent3`, `agent4`, or any other member of
 the original roster. Two operating levels are available: read-only `watch` polls every 150 seconds
 by default, while `drive` is an explicit, bounded opt-in that invokes an approved turn command only
 when that participant owns `NEXT:`. See [the agent2agent skill](skills/agent2agent/SKILL.md) for the
-deterministic `start`/`join`/`watch`/`drive`/`send`/`close` contract.
+deterministic `start`/`status`/`join`/`watch`/`drive`/`send`/`close` contract.
 
 ### Before you start — safety and reversibility
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GH-497/GH-510 — compact multi-party discussions with explicit watch/drive levels.
+# GH-497/GH-510/GH-144 — compact multi-party discussions with explicit watch/drive levels.
 set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,8 +33,9 @@ expect_file_contains() {
   grep -Fq -- "$_needle" "$_file" && pass "$_label" || fail "$_label (missing: $_needle)"
 }
 fingerprint() { cksum "$1" | awk '{print $1 ":" $2}'; }
+mtime_ns() { python3 -c 'import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns)' "$1"; }
 
-echo "agent2agent (GH-497/GH-510):"
+echo "agent2agent (GH-497/GH-510/GH-144):"
 ROOT="$WORK/root with spaces"
 mkdir -p "$ROOT"
 
@@ -46,9 +47,9 @@ grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
 helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
-[ "$helper_examples" -eq 8 ] \
+[ "$helper_examples" -eq 9 ] \
   && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 8 root-resolved helper commands, found $helper_examples"
+  || fail "expected 9 root-resolved helper commands, found $helper_examples"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
@@ -63,8 +64,14 @@ start_out="$(AGENT2AGENT_ID_SEQUENCE=123456 python3 "$CLI" --root "$ROOT" start 
 start_rc=$?
 [ "$start_rc" -eq 0 ] && pass "starts a four-agent discussion" || fail "start exits $start_rc: $start_out"
 expected_invitation='Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"'
-[ "$(printf '%s\n' "$start_out" | tail -1)" = "$expected_invitation" ] \
-  && pass "prints the exact compact invitation" || fail "exact invitation changed: $start_out"
+expect_contains "preserves the exact agent2 compact invitation" "$start_out" "$expected_invitation"
+expect_contains "prints an upfront agent3 invitation" "$start_out" \
+  'Join XYZ agent2agent #123456 as agent number three to discuss: "subject line here"'
+expect_contains "prints an upfront agent4 invitation" "$start_out" \
+  'Join XYZ agent2agent #123456 as agent number four to discuss: "subject line here"'
+[ "$(printf '%s\n' "$start_out" | grep -c '^Join XYZ agent2agent')" -eq 3 ] \
+  && pass "four-agent start prints exactly three non-initiator invitations" \
+  || fail "four-agent start did not print exactly three invitations: $start_out"
 
 relay_file="$(find "$ROOT/relay-system" -type f -name '123456-*.md' -print)"
 [ -f "$relay_file" ] && pass "creates a dated relay file under a spaced root" || fail "relay file missing"
@@ -72,6 +79,40 @@ case "$relay_file" in "$ROOT"/relay-system/????-??-??/123456-agent2agent-*.md) p
 expect_file_contains "records stable 4-agent roster" "$relay_file" "AGENTS: agent1 agent2 agent3 agent4"
 expect_file_contains "routes the opening turn to agent2" "$relay_file" "NEXT: agent2"
 expect_file_contains "defaults timed watch to disabled" "$relay_file" "TIMED-WATCH: disabled"
+
+# GH-144: every non-initiator can onboard immediately. Off-turn joins and the operator status view
+# are strictly read-only; neither is allowed to create a watch sidecar or writer lock.
+before_early_join="$(fingerprint "$relay_file")"
+early_join3="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 3 2>&1)"
+early_join4="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 4 2>&1)"
+expect_contains "agent3 can join upfront and wait" "$early_join3" "DECISION: wait"
+expect_contains "agent4 can join upfront and wait" "$early_join4" "DECISION: wait"
+[ "$before_early_join" = "$(fingerprint "$relay_file")" ] \
+  && pass "upfront off-turn joins leave the discussion byte-identical" \
+  || fail "an upfront off-turn join mutated the discussion"
+
+before_status="$(fingerprint "$relay_file")"
+status_out="$(python3 "$CLI" --root "$ROOT" status --id 123456 2>&1)"
+status_rc=$?
+[ "$status_rc" -eq 0 ] && pass "status inspects a discussion without a participant seat" \
+  || fail "status exits $status_rc: $status_out"
+expect_contains "status reports the subject" "$status_out" "Subject: subject line here"
+expect_contains "status reports open state" "$status_out" "STATUS: Open"
+expect_contains "status reports the current turn" "$status_out" "TURN: 1"
+expect_contains "status reports the single next writer" "$status_out" "NEXT: agent2"
+expect_contains "status reports the full roster" "$status_out" "AGENTS: agent1 agent2 agent3 agent4"
+expect_contains "status reports the timed-watch setting" "$status_out" "TIMED-WATCH: disabled"
+expect_contains "status distinguishes an unobserved/manual seat" "$status_out" \
+  "DOORBELL agent4: not observed/manual"
+[ "$before_status" = "$(fingerprint "$relay_file")" ] \
+  && pass "status leaves the discussion byte-identical" || fail "status mutated the discussion"
+status_dir="$(dirname "$relay_file")"; status_base="$(basename "$relay_file")"
+if grep -q . <<<"$(find "$status_dir" -maxdepth 1 -name "$status_base.watch.*" -print)" \
+  || [ -e "$status_dir/.$status_base.lock" ]; then
+  fail "status created a doorbell sidecar or writer lock"
+else
+  pass "status creates no doorbell sidecar or writer lock"
+fi
 
 timed_start="$(python3 "$CLI" --root "$ROOT" start --id 654321 --subject "timed watch" --timed-watch 2>&1)"
 [ "$?" -eq 0 ] && pass "starts a timed-watch discussion" || fail "timed start failed: $timed_start"
@@ -118,6 +159,21 @@ rearm_rc=$?
   || fail "REARM command exits $rearm_rc: $rearm_out"
 [ "$before_watch" = "$(fingerprint "$relay_file")" ] \
   && pass "watch leaves the discussion byte-identical" || fail "watch mutated the discussion"
+agent2_sidecar="$relay_file.watch.agent2"
+before_status_sidecar="$(fingerprint "$agent2_sidecar")"
+before_status_sidecar_mtime="$(mtime_ns "$agent2_sidecar")"
+observed_status="$(python3 "$CLI" --root "$ROOT" status --id 123456 2>&1)"
+expect_contains "status reports an observed armed doorbell" "$observed_status" "DOORBELL agent2: armed"
+[ "$before_status_sidecar" = "$(fingerprint "$agent2_sidecar")" ] \
+  && pass "status leaves an observed sidecar byte-identical" || fail "status mutated a sidecar"
+[ "$before_status_sidecar_mtime" = "$(mtime_ns "$agent2_sidecar")" ] \
+  && pass "status does not refresh an observed sidecar's liveness timestamp" \
+  || fail "status refreshed an observed sidecar"
+python3 -c 'import os, sys; os.utime(sys.argv[1], (0, 0))' "$agent2_sidecar"
+stale_status="$(python3 "$CLI" --root "$ROOT" status --id 123456 2>&1)"
+expect_contains "status reports a stale doorbell explicitly" "$stale_status" \
+  "DOORBELL agent2: armed"
+expect_contains "stale status remains advisory" "$stale_status" "STALE, that seat may no longer be listening"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 5 >/dev/null 2>&1 \
   && fail "rejects an agent outside the roster" || pass "rejects an agent outside the roster"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 2 --expect-subject "wrong subject" >/dev/null 2>&1 \
