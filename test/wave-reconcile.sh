@@ -1,9 +1,5 @@
-#!/usr/bin/env bash
-# test/wave-reconcile.sh (GH-165) — Hermetic regression suite for wave_reconcile.py
-set -uo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-XYZ_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$(dirname "$0")/_setup.sh" wave-reconcile
+XYZ_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RECONCILE_PY="$XYZ_ROOT/utils/py/wave_reconcile.py"
 
 PASS=0
@@ -31,9 +27,6 @@ assert_eq() {
 }
 
 echo "=== Running wave-reconcile.sh test suite ==="
-
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/wave-reconcile-test.XXXXXX")"
-trap 'rm -rf "$WORK"' EXIT
 
 # Test 1: Usage & Help
 out="$(python3 "$RECONCILE_PY" --help 2>&1)"

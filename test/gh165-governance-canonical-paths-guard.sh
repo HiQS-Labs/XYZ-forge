@@ -1,9 +1,5 @@
-#!/usr/bin/env bash
-# test/gh165-governance-canonical-paths-guard.sh (GH-165) — Static Anti-Sprawl & Canonical Governance Guard
-set -uo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-XYZ_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$(dirname "$0")/_setup.sh" gh165-governance-canonical-paths-guard
+XYZ_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 PASS=0
 FAIL=0
