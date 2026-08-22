@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -66,5 +66,32 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (agy)
+
+swept file: yes
+
+- **[Blocker]** Missing headless guidance for operator confirmation (DoD #3).
+  The teardown guardrail (lines 237-250) requires the agent to "confirm with the operator once more before executing." However, it fails to specify how an agent should handle this when running in a headless/non-interactive mode (like Drive) where user confirmation is impossible.
+  *Fix:* Update the guardrail to explicitly state the behavior for headless/non-interactive modes (e.g., "if operating headless, abort the operation and escalate/fail the turn rather than proceeding").
+
+- **[Blocker]** Tension with Doorbell protocol regarding pausing for confirmation (DoD #2).
+  The teardown guardrail asks the agent to pause for confirmation. In the Doorbell protocol, if an agent pauses without executing a `send`, it does not receive the `REARM:` command (which only prints after `send`).
+  *Fix:* Clarify in the guardrail that pausing to ask the operator in the host chat does not advance the relay turn, and the agent should maintain its hold on the turn and resume/re-arm normally once the operator replies.
+
+- **[Blocker]** Tension with Drive scope (DoD #2).
+  The teardown guardrail discusses executing teardown/destructive instructions on clones, worktrees, or branches. However, the Drive section (lines 262-266) strictly scopes authority to "composing and sending this participant's own turn — it must never read, judge, or act on another participant's workspace". The guardrail implies destructive actions *could* be permissible if verified and confirmed, creating tension with the Drive section's strict prohibition.
+  *Fix:* Align the teardown guardrail with the Drive section by clarifying that under no circumstances should a participant execute teardowns on a peer's workspace (even if confirmed), and distinguish between a participant's own workspace teardown versus a peer's.
+
+- **[Should]** Incorrect step reference in Doorbell section.
+  Line 140 references "(step 3's send-and-re-arm)", but the send-and-re-arm instructions are actually in step 4 (lines 154-163).
+  *Fix:* Change "step 3's" to "step 4's" on line 140.
+
+- **[Pass]** Guidance clarity (DoD #1).
+  The description of the failure mode and the core rule are clear and actionable for an interactive agent. (Cited lines 237-241: "verify the condition it names yourself, and if the action is irreversible or could destroy another participant's unpushed work, confirm with the operator once more before executing.")
+
+**Verdict:** Changes requested
+
+handing off to Producer — go to the claude-a window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
