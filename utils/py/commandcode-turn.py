@@ -16,6 +16,11 @@ def default_commandcode_flags():
         "--no-session --skip-onboarding --no-auto-update --yolo"))
 
 def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print("Usage: commandcode-turn.py")
+        print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
+        sys.exit(0)
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = resolve_turn_root(os.environ.get("COMMANDCODE_TURN_ROOT"), xyz_root)
     commandcode_bin = os.environ.get("COMMANDCODE_BIN", "cmd")

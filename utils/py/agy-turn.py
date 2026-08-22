@@ -254,6 +254,11 @@ def agy_validate_model(agy_bin):
     return False
 
 def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print("Usage: agy-turn.py")
+        print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
+        sys.exit(0)
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     # GH-296 follow-up: mirror codex-turn.py's fix — an explicit AGY_TURN_ROOT still wins (so the
     # CROSS-REPO warning below can still fire for a genuinely different target), but the unset

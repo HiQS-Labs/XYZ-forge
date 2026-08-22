@@ -17,6 +17,11 @@ def default_codex_flags():
     return os.environ.get("CODEX_FLAGS", "-s workspace-write -c approval_policy=never").split()
 
 def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print("Usage: codex-turn.py")
+        print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
+        sys.exit(0)
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = resolve_turn_root(os.environ.get("CODEX_TURN_ROOT"), xyz_root)
     codex_bin = os.environ.get("CODEX_BIN", "codex")
