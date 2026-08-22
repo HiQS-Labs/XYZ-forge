@@ -7,6 +7,9 @@
 
 This document outlines the standard operating procedure for designing, executing, verifying, and committing evidence from automated testing campaigns, harness evaluations, and ATE variation matrices.
 
+> Picking a skill to run a step of this SOP (e.g. a diagnostic pass before a campaign, or a relay
+> to synthesize a fix)? See `ARCHITECTURE.md` → "Skills Index" for the full one-line inventory.
+
 ---
 
 ## 1. Governance & Principles

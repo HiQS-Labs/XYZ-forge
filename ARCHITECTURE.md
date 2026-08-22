@@ -27,6 +27,37 @@ shared artifacts on disk:
 - the `RELAY-TURN` task in `tick`, which answers "whose turn is it?"
 - the relay thread Markdown file, which holds the human-readable review state
 
+## Skills Index
+
+One-line pointer to every skill in `skills/`. Follow the link to a skill's `SKILL.md` for its
+full trigger conditions and usage — this table exists so a task can be routed to the right skill
+without reading all of them first.
+
+| Skill | Purpose |
+|---|---|
+| [10days](skills/10days/SKILL.md) | Sweep recent GitHub issues, verify still-valid, build a marathon plan from survivors. |
+| [agent2agent](skills/agent2agent/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID. |
+| [ci-doctor](skills/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
+| [consult](skills/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
+| [file-xyz-bug](skills/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
+| [hq](skills/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
+| [marathon-cleanup](skills/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
+| [marathon-triage](skills/marathon-triage/SKILL.md) | Triage intake into a ranked, preflight-checked marathon candidate queue. |
+| [open-router](skills/open-router/SKILL.md) | Resolve a colloquial model name to its canonical OpenRouter slug. |
+| [ponytail](skills/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
+| [radar](skills/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
+| [relay-automation](skills/relay-automation/SKILL.md) | Tick-backed automation library behind the `/relay` review loop. |
+| [relay-to-issue](skills/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
+| [relay-xyz](skills/relay-xyz/SKILL.md) | Drive an automated relay review loop with the shipped harness. |
+| [releases](skills/releases/SKILL.md) | Read/author/publish the optional RELEASES.md planning ledger. |
+| [review-xyz](skills/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
+| [skills-sync-trinity](skills/skills-sync-trinity/SKILL.md) | Keep a skill's PDDA doc, SKILL.md, and helper scripts aligned. |
+| [standup](skills/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
+| [swe](skills/swe/SKILL.md) | Software-engineering governance lens for build/spec/PRD docs. |
+| [vendor-stack](skills/vendor-stack/SKILL.md) | Install the XYZ harness + optional PDDA runtime into a target repo. |
+| [weekly-shipped](skills/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
+| [xyz](skills/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
+
 ## Verified Scope
 
 This document is based on the current code in:
