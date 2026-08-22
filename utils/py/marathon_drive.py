@@ -1637,7 +1637,7 @@ relay-file: {rel_relay}
             return False
 
         import datetime
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)   # #140: utcnow() is deprecated, scheduled for removal
         date_dir = os.path.join(ts_base, now.strftime("%Y-%m-%d"))
         os.makedirs(date_dir, exist_ok=True)
         dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
@@ -2381,7 +2381,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             # swallow — silently disabling the whole check while every test still passed.
             _probe_name = "marathon-%s-000000.md" % args.phase_id
             _transcript_write_set.append(os.path.join(
-                _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+                _ts_base, _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d"), _probe_name))   # #140: utcnow() deprecated
     except Exception as _exc:
         # Deliberately NOT fail-closed, and this is the one place worth arguing about.
         #

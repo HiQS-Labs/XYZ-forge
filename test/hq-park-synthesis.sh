@@ -90,7 +90,7 @@ printf '# Roadmap\n\n### Queue / parked intake\n\n### In progress\n' > "$BETA/RO
 OUT="$(bash "$HQ" park --create beta-app "a second unrelated idea" 2>&1)"; rc=$?
 [ "$rc" = 0 ] && pass "--create still succeeds when utils/roadmap-dashboard.sh is absent" || fail "create failed without dashboard script: $OUT (rc=$rc)"
 [ -f "$BETA/ROADMAP-DASHBOARD.md" ] && fail "a dashboard file appeared despite the script being absent" || pass "no phantom dashboard file when the script is absent"
-printf '%s\n' "$OUT" | grep -qi 'dashboard' && fail "claimed dashboard action with no script present" || pass "no false dashboard claim when the script is absent"
+grep -qi 'dashboard' <<<"$(printf '%s\n' "$OUT")" && fail "claimed dashboard action with no script present" || pass "no false dashboard claim when the script is absent"
 
 # ── (4) synthesis passthrough via HQ_PARK_* env vars populates the real fields ─────────────────────
 rm -rf "$BETA/PROJECT"; mkdir -p "$BETA/PROJECT/1-INBOX"

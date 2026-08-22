@@ -107,7 +107,7 @@ expect_contains "status distinguishes an unobserved/manual seat" "$status_out" \
 [ "$before_status" = "$(fingerprint "$relay_file")" ] \
   && pass "status leaves the discussion byte-identical" || fail "status mutated the discussion"
 status_dir="$(dirname "$relay_file")"; status_base="$(basename "$relay_file")"
-if find "$status_dir" -maxdepth 1 -name "$status_base.watch.*" -print | grep -q . \
+if grep -q . <<<"$(find "$status_dir" -maxdepth 1 -name "$status_base.watch.*" -print)" \
   || [ -e "$status_dir/.$status_base.lock" ]; then
   fail "status created a doorbell sidecar or writer lock"
 else

@@ -139,14 +139,14 @@ grep -q '"goal"' "$BROKEN" && fail "model-declines run edited the doc" || pass "
 seed_broken
 L3="$WORK/log3"; STUB_MODE=unsafe run_preflight "$L3" "$STUB"
 has BROKEN.md warn "$L3" && pass "unsafe-edit: rejected and logged as warn" || fail "unsafe-edit: not warned"
-logline BROKEN.md "$L3" | grep -q 'unsafe edit reverted' && pass "unsafe-edit: summary records the revert" || fail "unsafe-edit: revert not recorded"
+grep -q 'unsafe edit reverted' <<<"$(logline BROKEN.md "$L3")" && pass "unsafe-edit: summary records the revert" || fail "unsafe-edit: revert not recorded"
 grep -q '"goal"' "$BROKEN" && fail "unsafe-edit was NOT reverted (doc changed)" || pass "unsafe-edit: doc reverted to original"
 
 # ── Case 4: safe edit — applied + logged ─────────────────────────────────────
 seed_broken
 L4="$WORK/log4"; STUB_MODE=fix run_preflight "$L4" "$STUB"
 has BROKEN.md edit "$L4" && pass "safe-edit: logged as edit" || fail "safe-edit: not logged as edit"
-logline BROKEN.md "$L4" | grep -q '"safe": true' && pass "safe-edit: marked safe" || fail "safe-edit: not marked safe"
+grep -q '"safe": true' <<<"$(logline BROKEN.md "$L4")" && pass "safe-edit: marked safe" || fail "safe-edit: not marked safe"
 grep -q '^goal: added by preflight' "$BROKEN" && pass "safe-edit: contract fix applied to the doc" || fail "safe-edit: fix not written"
 
 # ── every telemetry line is valid JSON ───────────────────────────────────────

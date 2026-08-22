@@ -24,34 +24,34 @@ HUMAN=$(tick_a analyze)
 echo "$HUMAN" >"$WORK/human.txt"
 
 # Event counts.
-echo "$HUMAN" | grep -q "created:3" \
+grep -q "created:3" <<<"$(echo "$HUMAN")" \
   && pass "event count: 3 created" \
   || fail "expected created:3 in: $(echo "$HUMAN" | head -3)"
 
-echo "$HUMAN" | grep -q "claimed:3" \
+grep -q "claimed:3" <<<"$(echo "$HUMAN")" \
   && pass "event count: 3 claimed" \
   || fail "expected claimed:3"
 
-echo "$HUMAN" | grep -q "done:2" \
+grep -q "done:2" <<<"$(echo "$HUMAN")" \
   && pass "event count: 2 done" \
   || fail "expected done:2"
 
-echo "$HUMAN" | grep -q "circuit_break:1" \
+grep -q "circuit_break:1" <<<"$(echo "$HUMAN")" \
   && pass "event count: 1 circuit_break" \
   || fail "expected circuit_break:1"
 
 # Per-agent stats.
-echo "$HUMAN" | grep -A2 "\[alice\]" | grep -q "claims: 2, done: 1" \
+grep -q "claims: 2, done: 1" <<<"$(echo "$HUMAN" | grep -A2 "\[alice\]")" \
   && pass "alice: 2 claims, 1 done" \
   || fail "alice per-agent stats unexpected: $(echo "$HUMAN" | grep -A3 '\[alice\]')"
 
-echo "$HUMAN" | grep -A2 "\[bob\]" | grep -q "claims: 1, done: 1" \
+grep -q "claims: 1, done: 1" <<<"$(echo "$HUMAN" | grep -A2 "\[bob\]")" \
   && pass "bob: 1 claim, 1 done" \
   || fail "bob per-agent stats unexpected: $(echo "$HUMAN" | grep -A3 '\[bob\]')"
 
 # Concurrent-claim time: alice (10:01-10:15) overlaps bob (10:05-10:30).
 # Overlap = 10:05-10:15 = 10 min > 0. Expect a percentage like (24%).
-if echo "$HUMAN" | grep "concurrent-claim time" | grep -qE "\([1-9][0-9]*%\)"; then
+if grep -qE "\([1-9][0-9]*%\)" <<<"$(echo "$HUMAN" | grep "concurrent-claim time")"; then
   pass "concurrent-claim time is non-zero (overlapping claim windows detected)"
 else
   fail "expected non-zero concurrent-claim time; got: $(echo "$HUMAN" | grep concurrent)"
@@ -60,7 +60,7 @@ fi
 # GH-4: verdict + collisions on this board. TASK-003 was circuit_broken (not done) and the two lanes
 # never path-overlap, so: 0 collisions, and VERDICT FAIL because a claimed lane didn't reach done
 # (proves the verdict counts a broken/undone lane as a failure — and is not fooled by the 2 done).
-echo "$HUMAN" | grep -q "collisions (overlapping concurrent claims): 0" \
+grep -q "collisions (overlapping concurrent claims): 0" <<<"$(echo "$HUMAN")" \
   && pass "verdict: 0 collisions on disjoint lanes" \
   || fail "expected 0 collisions in: $(echo "$HUMAN" | grep -i collision)"
 echo "$HUMAN" | grep -qE "VERDICT: FAIL" && echo "$HUMAN" | grep -q "TASK-003" \
@@ -109,34 +109,34 @@ TICK_TS=2026-12-31T00:00:00.000Z tick_in "$GH93" log task.commented TASK-101 --a
 GH93_HUMAN=$(tick_in "$GH93" analyze)
 echo "$GH93_HUMAN" >"$WORK/gh93-human.txt"
 
-echo "$GH93_HUMAN" | grep -q "window (whole log): 2026-01-01T00:00:00.000Z → 2026-12-31T00:00:00.000Z" \
+grep -q "window (whole log): 2026-01-01T00:00:00.000Z → 2026-12-31T00:00:00.000Z" <<<"$(echo "$GH93_HUMAN")" \
   && pass "GH-93: whole-log window still reported (wide, ~1 year, informational)" \
   || fail "expected whole-log window to remain visible: $(echo "$GH93_HUMAN" | grep 'whole log')"
 
-echo "$GH93_HUMAN" | grep -q "window (work-bounded, first claimed → last done): 2026-07-01T10:00:00.000Z → 2026-07-01T10:01:05.000Z" \
+grep -q "window (work-bounded, first claimed → last done): 2026-07-01T10:00:00.000Z → 2026-07-01T10:01:05.000Z" <<<"$(echo "$GH93_HUMAN")" \
   && pass "GH-93: work-bounded window is the narrow claimed->done span, not the whole log" \
   || fail "expected narrow work-bounded window: $(echo "$GH93_HUMAN" | grep 'work-bounded')"
 
 # The printed percentage must reflect the narrow 65s window (~85%), not the ~1-year whole-log span
 # (which would round to 0%) — this is the exact regression GH-93 reports.
-echo "$GH93_HUMAN" | grep "concurrent-claim time" | grep -qE "\(8[0-9]%\)" \
+grep -qE "\(8[0-9]%\)" <<<"$(echo "$GH93_HUMAN" | grep "concurrent-claim time")" \
   && pass "GH-93: concurrent-claim percentage reflects the narrow work-bounded window (~85%), not the wide whole-log span" \
   || fail "expected ~85% concurrent-claim time (work-bounded), got: $(echo "$GH93_HUMAN" | grep concurrent)"
 
 # A genuinely concurrent, fully-done, collision-free run must PASS — not FAIL due to a span bug.
-echo "$GH93_HUMAN" | grep -qE "VERDICT: PASS" \
+grep -qE "VERDICT: PASS" <<<"$(echo "$GH93_HUMAN")" \
   && pass "GH-93: genuinely concurrent run now PASSES (was misreporting FAIL/0% before the fix)" \
   || fail "expected VERDICT: PASS, got: $(echo "$GH93_HUMAN" | grep -i verdict)"
 
 # JSON output carries both fields too (the report object, not just the text renderer).
 GH93_JSON=$(tick_in "$GH93" analyze --format json)
-echo "$GH93_JSON" | grep -q '"work_bound_start": "2026-07-01T10:00:00.000Z"' \
+grep -q '"work_bound_start": "2026-07-01T10:00:00.000Z"' <<<"$(echo "$GH93_JSON")" \
   && pass "GH-93: JSON report includes work_bound_start" \
   || fail "expected work_bound_start in JSON: $(echo "$GH93_JSON" | grep -A1 window)"
-echo "$GH93_JSON" | grep -q '"work_bound_end": "2026-07-01T10:01:05.000Z"' \
+grep -q '"work_bound_end": "2026-07-01T10:01:05.000Z"' <<<"$(echo "$GH93_JSON")" \
   && pass "GH-93: JSON report includes work_bound_end" \
   || fail "expected work_bound_end in JSON: $(echo "$GH93_JSON" | grep -A1 window)"
-echo "$GH93_JSON" | grep -q '"earliest_event": "2026-01-01T00:00:00.000Z"' \
+grep -q '"earliest_event": "2026-01-01T00:00:00.000Z"' <<<"$(echo "$GH93_JSON")" \
   && pass "GH-93: JSON report still includes the whole-log earliest_event (unchanged, informational)" \
   || fail "expected earliest_event preserved in JSON: $(echo "$GH93_JSON" | grep -A1 window)"
 

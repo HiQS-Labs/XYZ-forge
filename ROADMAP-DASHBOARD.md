@@ -25,21 +25,24 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-144 · Agent2Agent 3+ participant onboarding + read-only status quick wins | — | [GH-144-AGENT2AGENT-3PLUS-UX.md](PROJECT/2-WORKING/GH-144-AGENT2AGENT-3PLUS-UX.md) · [#144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) |
+| GH-132 · feat(skills): formal /review-xyz code review skill & multi-model harness | — | [GH-132-REVIEW-XYZ-SKILL.md](PROJECT/2-WORKING/GH-132-REVIEW-XYZ-SKILL.md) · [#132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) |
+| GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | [#135](https://github.com/HiQS-Suite/XYZ-forge/issues/135) · [#136](https://github.com/HiQS-Suite/XYZ-forge/issues/136) · [#137](https://github.com/HiQS-Suite/XYZ-forge/issues/137) · [#138](https://github.com/HiQS-Suite/XYZ-forge/issues/138) · [#139](https://github.com/HiQS-Suite/XYZ-forge/issues/139) · [#140](https://github.com/HiQS-Suite/XYZ-forge/issues/140) · [GH-135-CONSULT-AGY-PREFLIGHT.md](PROJECT/2-WORKING/GH-135-CONSULT-AGY-PREFLIGHT.md) · [GH-136-ATTEMPTS-GATE-ROOT.md](PROJECT/2-WORKING/GH-136-ATTEMPTS-GATE-ROOT.md) · [GH-137-SUITE-REGISTRATION.md](PROJECT/2-WORKING/GH-137-SUITE-REGISTRATION.md) · [GH-138-TWIN-DIVERGENCE-RECORD.md](PROJECT/2-WORKING/GH-138-TWIN-DIVERGENCE-RECORD.md) · [GH-139-SIGPIPE-SWEEP-GUARD.md](PROJECT/2-WORKING/GH-139-SIGPIPE-SWEEP-GUARD.md) · [GH-140-UTCNOW-DEPRECATION.md](PROJECT/2-WORKING/GH-140-UTCNOW-DEPRECATION.md) |
 | GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | — | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 
 ## Completed
 
-Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 16 · 🔮 0 · 🔲 0
+Summary: 17 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 17 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| #129/#130/#131 · Wave 1 of the Harness Driver & Relay Seam Hardening marathon — three preflighted driver/relay fixes | ✅ | [#129](https://github.com/HiQS-Suite/XYZ-forge/issues/129) · [#130](https://github.com/HiQS-Suite/XYZ-forge/issues/130) · [#131](https://github.com/HiQS-Suite/XYZ-forge/issues/131) |
 | GH-111 · retire manifest FREEZE; tasks and marathons are DIALED IN to exactly one release, as a database state | ✅ | [GH-111-DIALED-IN.md](PROJECT/3-COMPLETED/GH-111-DIALED-IN.md) · [#111](https://github.com/HiQS-Suite/XYZ-forge/issues/111) |
 | GH-108 · pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | ✅ | [GH-108-RATING-SYSTEM.md](PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md) · [#108](https://github.com/HiQS-Suite/XYZ-forge/issues/108) |
 | Execution checklist for GH-111 + GH-108 | ✅ | [GH-108-GH-111-EXECUTION-TODO.md](PROJECT/3-COMPLETED/GH-108-GH-111-EXECUTION-TODO.md) · [#111](https://github.com/HiQS-Suite/XYZ-forge/issues/111) |

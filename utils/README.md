@@ -110,7 +110,7 @@ Both `utils/fuzzing/` and `utils/ate/` emit newline-delimited JSON (`JSONL`) adh
 
 | Subdirectory | Description |
 |---|---|
-| [`utils/py/`](py/) | **Authoritative Python Twin Runtimes:** Authoritative implementations for Tier-A entry points (`marathon_drive.py`, `relay_drive.py`, `agy-turn.py`, `consult.py`, `releases_app.py`, `workspace_manager.py`, `script_runner.py`, `gate_receipt.py`). |
+| [`utils/py/`](py/) | **Authoritative Python Twin Runtimes:** Authoritative implementations for Tier-A entry points (`marathon_drive.py`, `relay_drive.py`, `agy-turn.py`, `consult.py`, `releases_app.py`, `review_xyz.py`, `workspace_manager.py`, `script_runner.py`, `gate_receipt.py`). |
 | [`utils/hq/`](hq/) | **Multi-Repo Command Center:** CLI (`hq.sh`) driving multi-repo resolution, PDDA cross-repo task landing, and `/hq` skill execution. |
 | [`utils/pdda/`](pdda/) | **PDDA Governance & Hygiene:** Doc lifecycle validation (`pdda.sh`), link checks, roadmap-to-working sync, and doc invariant enforcement (`pdda-local-checks.sh`). |
 | [`utils/timeline/`](timeline/) | **Interactive Ledger Viewer:** Exporter (`export_timeline.py`) projecting SQLite `releases.db` into liquid HTML timeline views (`RELEASES.html`, `RELEASES-PREVIEW.html`). |

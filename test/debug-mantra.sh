@@ -58,10 +58,10 @@ render() {  # <extra-args…> → the rendered relay body for one dry-run fire
 R="$(render)"
 [ -n "$R" ] || { echo "DEBUG driver output:" >&2; run_driver 2>&1 >&2; }
 [ -n "$R" ] && pass "first fire: dry-run emits a render" || fail "first fire: dry-run emitted no render at all"
-printf '%s' "$R" | grep -q "## Debug mantra" \
+grep -q "## Debug mantra" <<<"$(printf '%s' "$R")" \
   && fail "first fire should NOT carry a debug-mantra note (no prior attempts)" \
   || pass "first fire: relay file has no debug-mantra note"
-printf '%s' "$R" | grep -q "Implement a hello-world" \
+grep -q "Implement a hello-world" <<<"$(printf '%s' "$R")" \
   && pass "first fire: phase brief still rendered normally" \
   || fail "first fire: phase brief missing — render broke"
 [ ! -e "$A/phases" ] \
@@ -73,10 +73,10 @@ rm -rf "$A/phases" "$A/.tick"
 mkdir -p "$A/.tick/attempts"
 printf 'fire\n' > "$A/.tick/attempts/p1"
 R="$(render)"
-printf '%s' "$R" | grep -q "## Debug mantra" \
+grep -q "## Debug mantra" <<<"$(printf '%s' "$R")" \
   && pass "one prior attempt: debug-mantra note appears" \
   || fail "one prior attempt: debug-mantra note missing"
-printf '%s' "$R" | grep -q "relay-automation/DEBUG-MANTRA.md" \
+grep -q "relay-automation/DEBUG-MANTRA.md" <<<"$(printf '%s' "$R")" \
   && pass "note references the DEBUG-MANTRA.md file by name" \
   || fail "note does not reference DEBUG-MANTRA.md"
 # GH-410: the RENDERED note must not carry the repo root. The old form inlined a full absolute path
@@ -84,14 +84,14 @@ printf '%s' "$R" | grep -q "relay-automation/DEBUG-MANTRA.md" \
 # dirname(dirname(...)) — "given once" is not "not given" (caught in agy's QA round). Asserted on the
 # rendered artifact, not on the source string, because a source grep proves what the code says rather
 # than what it emits — the same substitution GH-410 is about.
-if printf '%s' "$R" | grep -q "## Debug mantra"; then
-  if printf '%s' "$R" | sed -n '/## Debug mantra/,/^$/p' | grep -qF "$A"; then
+if grep -q "## Debug mantra" <<<"$(printf '%s' "$R")"; then
+  if grep -qF "$A" <<<"$(printf '%s' "$R" | sed -n '/## Debug mantra/,/^$/p')"; then
     fail "GH-410: the rendered debug-mantra note still embeds the repo root ($A)"
   else
     pass "GH-410: the rendered note carries no absolute repo root"
   fi
 fi
-printf '%s' "$R" | grep -q "1 prior attempt" \
+grep -q "1 prior attempt" <<<"$(printf '%s' "$R")" \
   && pass "note states the prior-attempt count (1)" \
   || fail "note missing the prior-attempt count"
 # read-only: dry-run must never mutate the attempts file itself
@@ -113,10 +113,10 @@ reason: pre-advance-failed
 relay-file: phases/p1/RELAY.md
 ESC_EOF
 R="$(render)"
-printf '%s' "$R" | grep -q "## Debug mantra" \
+grep -q "## Debug mantra" <<<"$(printf '%s' "$R")" \
   && pass "with ESCALATION.md: debug-mantra note appears" \
   || fail "with ESCALATION.md: debug-mantra note missing"
-printf '%s' "$R" | grep -q 'pre-advance-failed' \
+grep -q 'pre-advance-failed' <<<"$(printf '%s' "$R")" \
   && pass "note cites the last recorded ESCALATION.md reason (pre-advance-failed)" \
   || fail "note does not cite the ESCALATION.md reason"
 rm -rf "$A/phases" "$A/.tick"
@@ -125,7 +125,7 @@ rm -rf "$A/phases" "$A/.tick"
 mkdir -p "$A/.tick/attempts"
 printf 'fire\nfire\n' > "$A/.tick/attempts/p1"
 R="$(render)"
-printf '%s' "$R" | grep -q "2 prior attempt" \
+grep -q "2 prior attempt" <<<"$(printf '%s' "$R")" \
   && pass "two prior attempts: note states count (2)" \
   || fail "two prior attempts: count not reflected"
 rm -rf "$A/phases" "$A/.tick"

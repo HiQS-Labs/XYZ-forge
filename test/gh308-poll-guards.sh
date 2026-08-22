@@ -50,7 +50,7 @@ printf 'STATUS: Open\nNEXT: claude*reb\n' >"$A/gh92.md"
 GH92_ARGS=(--mode relay --agent me --turn-source file --relay-file "$A/gh92.md" --dry-run)
 py92="$(bash "$POLL" "${GH92_ARGS[@]}" 2>&1)"
 sh92="$(XYZ_PYTHON=0 bash "$POLL" "${GH92_ARGS[@]}" 2>&1)"
-if printf '%s' "$py92" | grep -qF 'WARNING (GH-92)' && [ "$py92" = "$sh92" ]; then
+if grep -qF 'WARNING (GH-92)' <<<"$(printf '%s' "$py92")" && [ "$py92" = "$sh92" ]; then
   pass "poll [GH-92 residue]: default lane warns, byte-identical to Bash"
 else
   fail "poll [GH-92 residue]: default lane missing the GH-92 warning or diverged from Bash:

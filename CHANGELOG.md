@@ -12,6 +12,30 @@ All notable changes to this repo. Newest first. Dates are PDT.
   doorbell state (`armed`, `STALE`, or `not observed/manual`) without creating or refreshing a lock
   or sidecar. The relay format and serialized `NEXT:` protocol are unchanged. Focused suite 129/0;
   recorded pre-fix control proves four-seat start emitted one invitation and `status` exited 2.
+- **GH-132: formal `/review-xyz` code review skill & multi-model harness.** Shipped `skills/review-xyz/`
+  and deterministic Python review engine `utils/py/review_xyz.py` supporting throwaway-worktree isolated
+  code review dispatch for frontier Chinese models (Command Code -> Qwen 3.8-Max, GLM-5.3) alongside
+  Codex, Agy, and Aider/OpenRouter.
+- Standardized finding extraction (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), citation checking to
+  prevent hallucinated passes, and automated GitHub PR (`--post-pr`) and linked issue (`--post-issues`)
+  comment posting via `gh`.
+- Comprehensive regression test suite `test/gh132-review-xyz-skill.sh` (19/19 pass) verifying dry-run,
+  worktree isolation, citation checks, absent-verdict fail-closed semantics, and mock review verdicts.
+- Conducted dual dogfood code reviews with Command Code -> `Qwen/Qwen3.8-Max` and OpenRouter -> `stealth/ox-alpha`,
+  incorporating adversarial feedback into engine robustness and updating `HARNESS-MODELS-REGISTRY.md`.
+
+## [1.2.1] - 2026-08-22
+
+### Fixed
+- **#129 — relay-drive misdiagnosed an unset `TICK_REPO_ROOT` and could report escalation as exit 0.** When the env is unset the driver now self-resolves it the way the turn shims root themselves (`resolve_turn_root`: CWD's git toplevel, else the harness root) and exports it, so the driver, `tick`, and the turn shim read one event log by construction in the vendored-`.xyz` layout. A token not found in the resolved log now prints the resolved root, the searched `.tick/events/` dir, and the `find-harness.sh --env` hint instead of the misleading "token missing"; every escalation path is pinned at exit 4 — never 0 — by test. The NOTE announcing self-resolution prints after the driver lock: a held lock must stay the first printable line, byte-identical to the frozen Bash twin (gh376's parity pin — the first full-gate run went red exactly on this ordering). The lane-attempt gate consumes the resolved root too (#136), so attempts and token live in one repo.
+- **#130 — an agy CLI without a `whoami` subcommand killed lanes as an auth failure.** `AGY_AUTH_USAGE_MARKERS` in `rtl.py` classify usage/CLI-syntax errors (`unexpected argument`, `unknown command`, …) as `unverifiable`, checked after the TTY markers and before the `error:` prefix (clap prints usage errors with that prefix). The non-zero probe exit routes its captured output through the same verdict on both callers (`agy-turn.py`, and `consult.py` per #135): usage errors proceed with a single NOTE; genuine credentials errors and silent non-zero exits still exit 5 with the `agy login` remedy.
+- **#131 — `--target-root` with a separate harness repo was a catch-22.** New `phase_commit_root()` routes the relay-file render and `ESCALATION.md` commits to the repo containing `phase_dir` — the TARGET under `--target-root` + a target `--phases-dir` (the layout relay-drive's containment advice prescribes), byte-identically `root` in every in-repo shape. The GH-514 write-set preflight probes each file against the repo that actually receives it. Transcripts deliberately stay with the harness root.
+- **#139 — GH-460's SIGPIPE shape swept out of the suite.** 369 of 482 pipe-into-`grep -q` assertions converted to the capture-then-match form (`grep -q PAT <<<"$(producer)"` — the substitution completes before grep starts, so no reader can vanish under a writer); the 113 unconvertible-by-mechanical-pass sites (function bodies, grouped conditions, lookalike prose) are inventoried in a baseline that may only shrink, enforced by the new `gh139-pipe-grep-guard.sh` suite, which fails on any new occurrence. Two live flakes during this work confirmed the class again (a first-line `git log | grep -q` match in the new gh131 suite; gh322 on a pristine clone).
+- **#140 — `datetime.utcnow()` deprecation warnings** no longer pollute captured driver output: the three sites (marathon transcript save, write-set probe, consult-verify archive day) now use timezone-aware `now(timezone.utc)` with byte-identical `strftime` output.
+- **#138 — the post-#129 Bash/Python twin divergence is pinned at the divergence site** (`relay_drive.py`'s post-lock block, the `marathon_drive.py` GH-414 style), so a `XYZ_PYTHON=0` run is not misread as a regression.
+
+### Changed
+- **#137 — the Wave-1 suites are registered in `validate.sh`'s TESTS array** (gh129/gh130/gh131, 40 assertions total, plus the gh139 guard) via the GH-124 wrapper pattern, so the push gate and CI execute them; previously nothing ran them after the lane landed.
 
 ## [1.2.0] - 2026-08-20
 

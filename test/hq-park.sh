@@ -57,8 +57,8 @@ REQ="add a CI status badge to the README"
 # ---- 1. preview writes nothing ----
 OUT="$(bash "$HQ" park beta-app "$REQ")"; rc=$?
 [ "$rc" = 0 ] && pass "park preview rc=0" || fail "preview rc=$rc"
-printf '%s\n' "$OUT" | grep -q "PREVIEW (writes nothing)" && pass "preview labeled" || fail "no preview label"
-printf '%s\n' "$OUT" | grep -q "CI-STATUS-BADGE-README" && pass "slug drops stopwords (add/a)" \
+grep -q "PREVIEW (writes nothing)" <<<"$(printf '%s\n' "$OUT")" && pass "preview labeled" || fail "no preview label"
+grep -q "CI-STATUS-BADGE-README" <<<"$(printf '%s\n' "$OUT")" && pass "slug drops stopwords (add/a)" \
   || fail "slug: $(printf '%s\n' "$OUT" | grep -i 'capture doc')"
 [ -z "$(ls -A "$BETA/PROJECT/1-INBOX")" ] && pass "1-INBOX still empty after preview" || fail "preview wrote files"
 grep -q 'GH-' "$BETA/ROADMAP.md" && fail "preview mutated ROADMAP" || pass "ROADMAP untouched by preview"
@@ -75,7 +75,7 @@ grep -q 'GH-777 · ' "$BETA/ROADMAP.md" && pass "ROADMAP pointer inserted" || fa
 # pointer landed under the Queue heading, not the In-progress heading
 awk '/### Queue/{q=NR} /GH-777/{g=NR} /### In progress/{p=NR} END{exit !(q<g && g<p)}' "$BETA/ROADMAP.md" \
   && pass "pointer placed under Queue heading" || fail "pointer misplaced"
-printf '%s\n' "$OUT" | grep -q "NOT committed" && pass "reports files left uncommitted" || fail "no uncommitted notice"
+grep -q "NOT committed" <<<"$(printf '%s\n' "$OUT")" && pass "reports files left uncommitted" || fail "no uncommitted notice"
 
 # ---- 2b. --title overrides the derived (truncated) title; slug + filename follow the title ----
 bash "$HQ" park --create --title "focus5: clean custom title" beta-app "$REQ" >/dev/null 2>&1
@@ -92,13 +92,13 @@ grep -q 'CI status badge' "$DOCT" && pass "full request preserved as body under 
 rm -f "$BETA/PROJECT/1-INBOX/GH-778-"*.md
 OUT="$(HQ_TEST_DUP=1 bash "$HQ" park --create beta-app "a different new request here" 2>&1)"; rc=$?
 [ "$rc" = 1 ] && pass "dup-guard aborts rc=1" || fail "dup rc=$rc"
-printf '%s\n' "$OUT" | grep -qi "duplicate" && pass "dup message shown" || fail "no dup message"
+grep -qi "duplicate" <<<"$(printf '%s\n' "$OUT")" && pass "dup message shown" || fail "no dup message"
 
 # ---- 4. Tier C: plain issue only, no capture doc ----
 OUT="$(bash "$HQ" park gamma-bare "$REQ")"; rc=$?
 [ "$rc" = 0 ] && pass "Tier C preview rc=0" || fail "tierC rc=$rc"
-printf '%s\n' "$OUT" | grep -q "Tier C" && pass "Tier C detected" || fail "not Tier C: $OUT"
-printf '%s\n' "$OUT" | grep -qi "plain GitHub issue only" && pass "Tier C = plain issue only" || fail "tierC wording"
+grep -q "Tier C" <<<"$(printf '%s\n' "$OUT")" && pass "Tier C detected" || fail "not Tier C: $OUT"
+grep -qi "plain GitHub issue only" <<<"$(printf '%s\n' "$OUT")" && pass "Tier C = plain issue only" || fail "tierC wording"
 
 # ---- 5. unresolved target ----
 bash "$HQ" park nope-not-here "$REQ" >/dev/null 2>&1; rc=$?

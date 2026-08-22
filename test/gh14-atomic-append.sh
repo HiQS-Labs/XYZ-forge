@@ -206,7 +206,7 @@ else
   fail "concurrent reader observed a torn/partial event: $(cat "$WORK/reader.out")"
 fi
 
-if find "$A/.tick/events" -name '*.tmp' 2>/dev/null | grep -q .; then
+if grep -q . <<<"$(find "$A/.tick/events" -name '*.tmp' 2>/dev/null)"; then
   fail "temp-file residue left in the events directory after the stress run"
 else
   pass "no .tmp residue in the events directory after the stress run"

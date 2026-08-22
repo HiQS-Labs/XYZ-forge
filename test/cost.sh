@@ -102,7 +102,7 @@ TICK_REPO_ROOT="$P2" "$TICK" analyze --format json | node -e 'let s="";process.s
 [ "$(p2j cost.tokens.coverage)" = "1/2" ]        && pass "coverage reads 1/2 (done-tasks)" || fail "coverage=$(p2j cost.tokens.coverage)"
 [ "$(p2j cost.per_unit.tokens_per_done)" = "5" ] && pass "tokens_per_done = 10/2 = 5 (floor)" || fail "per-done=$(p2j cost.per_unit.tokens_per_done)"
 [ "$(p2j cost.run_type)" = "unspecified" ]       && pass "run_type defaults to unspecified" || fail "run_type=$(p2j cost.run_type)"
-TICK_REPO_ROOT="$P2" "$TICK" analyze --format md | grep -q "PARTIAL (floor only)" && pass "md renders the loud-partial floor marker" || fail "md missing partial marker"
+grep -q "PARTIAL (floor only)" <<<"$(TICK_REPO_ROOT="$P2" "$TICK" analyze --format md)" && pass "md renders the loud-partial floor marker" || fail "md missing partial marker"
 
 # --- (9) run_type honors TICK_RUN_TYPE; invalid -> unspecified -----------
 [ "$(TICK_RUN_TYPE=symmetric p2j cost.run_type)" = "symmetric" ] && pass "TICK_RUN_TYPE=symmetric honored" || fail "run_type env not honored"

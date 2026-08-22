@@ -170,7 +170,7 @@ bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-vendored \
   && pass "GH-160: vendored-subdir TURN_ROOT commits (relay file no longer off-lane)" \
   || fail "GH-160: vendored-subdir TURN_ROOT reverted the turn off-lane (no commit)"
 # The relay-file edit landed (this round's append, not an earlier round's).
-tail -5 "$A/relay.md" | grep -q "Round 1 · Agent" \
+grep -q "Round 1 · Agent" <<<"$(tail -5 "$A/relay.md")" \
   && pass "GH-160: vendored-subdir TURN_ROOT — relay-file edit landed" \
   || fail "GH-160: vendored-subdir TURN_ROOT — relay-file edit lost"
 # The artifact GREW by this round's append (proves the worktree seed step did NOT wrongly delete

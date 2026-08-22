@@ -55,6 +55,6 @@ node -e '
   || fail "verdict/agent-count assertions failed (see ASSERT above)"
 
 # The balance report surfaces the idle tail (imbalance signal, fix 3).
-tick_a analyze | grep -qE "lane balance:" && pass "analyze surfaces a lane-balance line (idle-tail imbalance signal)" || fail "no lane balance line in human output"
+grep -qE "lane balance:" <<<"$(tick_a analyze)" && pass "analyze surfaces a lane-balance line (idle-tail imbalance signal)" || fail "no lane balance line in human output"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
