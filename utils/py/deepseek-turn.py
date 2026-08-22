@@ -81,6 +81,11 @@ def _kill_turn_group(proc):
 
 
 def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print("Usage: deepseek-turn.py")
+        print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
+        sys.exit(0)
+
     xyz_root = os.environ.get(
         "XYZ_ROOT",
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),

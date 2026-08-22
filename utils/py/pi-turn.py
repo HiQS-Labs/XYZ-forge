@@ -40,6 +40,11 @@ def parse_pi_usage(log_path):
     return tin, tout
 
 def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print("Usage: pi-turn.py")
+        print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
+        sys.exit(0)
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     # GH-308 port (GH-296): fall back to the CWD's git toplevel (not xyz_root) when PI_TURN_ROOT is
     # unset, matching pi-turn.sh and codex/claude-turn.py. pi has no native sandbox — its containment
