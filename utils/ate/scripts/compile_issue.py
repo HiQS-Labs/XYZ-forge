@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
@@ -123,6 +124,7 @@ def main():
     else:
         print(f"gh issue create failed:\n{result.stderr}")
         print(f"Issue body was written to {body_path} — you can file it manually.")
+        sys.exit(result.returncode or 1)
 
 
 if __name__ == "__main__":

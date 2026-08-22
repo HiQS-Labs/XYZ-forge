@@ -5,6 +5,18 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-08-21
 
 ### Added
+- **GH-148: DeepSeek Harness (`dsh`) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro.**
+  Integrated the modular Cordis-based DeepSeek Harness (`dsh`) into XYZ-forge with authoritative
+  Python twin `utils/py/deepseek-turn.py` and shim `relay-automation/deepseek-turn.sh`. Configured
+  dynamic OpenRouter Cordis patch routing for `deepseek/deepseek-v4-pro` with throwaway worktree
+  isolation, process-group session management, and `rtl.enforce`.
+- Evaluated DeepSeek Harness -> OpenRouter -> DeepSeek V4 Pro across 3 real repository bugs in an
+  isolated clone (`/tmp/xyz-deepseek-eval`), resolving all 3 with zero human intervention:
+  - **GH-142 (`utils/ate/scripts/compile_issue.py`):** Added `import sys` and error exit code propagation `sys.exit(result.returncode or 1)` when `gh issue create` fails.
+  - **GH-68 (`HARNESS-MODELS-REGISTRY.md`):** Fixed Table 1 schema alignment.
+  - **GH-65 (`test/gh32-releases-artifacts.sh`, `test/gh69-roadmap-shadow.sh`):** Replaced hardcoded `shasum -a 256` with portable 3-tier artifact hashing (`sha256sum` → `shasum -a 256` → `md5`).
+- New regression suite `test/gh148-deepseek-turn.sh` (11/11 pass) verifying existence, deferrals, good turns, token handoffs, empty output traps, and worktree containment.
+- Updated `HARNESS-MODELS-REGISTRY.md` with Grade **A** for Autonomous Headless Builder role.
 - **GH-144: Agent2Agent's existing 3+ roster is now practical to onboard and inspect.**
   `start --agents N` prints a paste-ready invitation for every non-initiator seat so later seats can
   join once, wait, and arm their doorbells immediately. New seat-agnostic, strictly read-only

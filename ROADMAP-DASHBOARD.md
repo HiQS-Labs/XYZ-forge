@@ -25,10 +25,11 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/2-WORKING/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) |
 | GH-144 · Agent2Agent 3+ participant onboarding + read-only status quick wins | — | [GH-144-AGENT2AGENT-3PLUS-UX.md](PROJECT/2-WORKING/GH-144-AGENT2AGENT-3PLUS-UX.md) · [#144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) |
 | GH-132 · feat(skills): formal /review-xyz code review skill & multi-model harness | — | [GH-132-REVIEW-XYZ-SKILL.md](PROJECT/2-WORKING/GH-132-REVIEW-XYZ-SKILL.md) · [#132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) |
 | GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | [#135](https://github.com/HiQS-Suite/XYZ-forge/issues/135) · [#136](https://github.com/HiQS-Suite/XYZ-forge/issues/136) · [#137](https://github.com/HiQS-Suite/XYZ-forge/issues/137) · [#138](https://github.com/HiQS-Suite/XYZ-forge/issues/138) · [#139](https://github.com/HiQS-Suite/XYZ-forge/issues/139) · [#140](https://github.com/HiQS-Suite/XYZ-forge/issues/140) · [GH-135-CONSULT-AGY-PREFLIGHT.md](PROJECT/2-WORKING/GH-135-CONSULT-AGY-PREFLIGHT.md) · [GH-136-ATTEMPTS-GATE-ROOT.md](PROJECT/2-WORKING/GH-136-ATTEMPTS-GATE-ROOT.md) · [GH-137-SUITE-REGISTRATION.md](PROJECT/2-WORKING/GH-137-SUITE-REGISTRATION.md) · [GH-138-TWIN-DIVERGENCE-RECORD.md](PROJECT/2-WORKING/GH-138-TWIN-DIVERGENCE-RECORD.md) · [GH-139-SIGPIPE-SWEEP-GUARD.md](PROJECT/2-WORKING/GH-139-SIGPIPE-SWEEP-GUARD.md) · [GH-140-UTCNOW-DEPRECATION.md](PROJECT/2-WORKING/GH-140-UTCNOW-DEPRECATION.md) |
