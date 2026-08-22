@@ -2,6 +2,18 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.2.2] - 2026-08-22
+
+### Fixed
+- **#142 — an ATE run whose `gh issue create` fails now exits nonzero.** `compile_issue.py` gained a real exit contract (0 filed/dry-run · 3 no-records · 1 gh-failed, documented in `utils/ate/SKILL.md`), and `run_variations.py` propagates it through `file_issue`/`main` — previously the code was dropped at four separate points and a multi-hour soak reported success with its findings stranded in `issue_body.md`. Hermetic regression `test/gh142-ate-exit-contract.sh` (23 assertions: all terminal codes, chain propagation, signature dedup with `seen Nx`, and the Phase-5 items below).
+- **#141 Phase 1 — one selector owns the synthetic suites.** `validate.sh` gained `--list` (the registry as a shared manifest); all 14 `test/synthetic/` suites are registry-reachable (10 direct entries added; the GH-124/#145 wrapper forms resolve too); `fuzz-loop.sh` consumes the registry instead of its own `find` (announced fallback if unavailable), closing the two-runner divergence where a suite could be gated but never fuzzed. Regression `test/gh141-synthetic-registry.sh` pins set-equality, wrapper resolution, and that a dropped-in unregistered suite is caught.
+- **#141 Phase 2 — fuzz-loop telemetry carries derived signal, not aliases.** The nested `classification.status` (a pure alias of top-level status — the third alias the issue's review counted) is removed; `severity` now grades the documented harness exit classes (2 low · 3/4/5 medium · 6/7 high) and `likely_cause` classifies the captured output (traceback/timeout/invariant). Consumers updated in-phase: `compile_issue.py` keys the clean-pass skip on top-level status (both producer shapes coexist); `checkin.py` needed no change. `gh102-telemetry-schema.sh` extended to a five-outcome mixed corpus with rendered-group assertions and the no-pure-alias negative.
+- **#141 Phase 5 — ATE decoupled from Aider.** Rollup labels default to the neutral `bug` (the Aider preset opts back in via `issue_labels` in its grid; `--issue-label` passes through run → compiler → gh); the classifier's "always an edit task" premise became an `expects_edits` grid key, fixing the exact oracle mismatch that produced #146's 17 false HIGH `no_edit` verdicts on diagnostic probes; new `variations.turn-shims.yaml` declares the turn-shim CLI-contract soak (diagnostic, safe-execution profile documented inline); `SKILL.md` reframed to the generic matrix runner with Aider as one preset.
+- **#141 Phase 4 — the hermetic chain test** is `test/gh142-ate-exit-contract.sh` cases 1–5 (stub `gh`, the three terminal outcomes, dedup), replacing the original "run it live" phase: a live GitHub issue is an external side effect, not a stronger oracle.
+
+### Deferred
+- **#141 Phase 3 (generative boundary fuzzing) is deliberately not scheduled** — per the issue's own recommendation, #143's counted incidence comparison (coordination-kernel vs input-boundary defects) picks the higher-value target first. Recorded in `PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md` with the other plan assumptions (RELEASES.md untouched per its optional-ledger contract; the Aider presets are NOT archived because the #146 soak is evidence of active use — the decoupling shipped instead).
+
 ## [1.2.1] - 2026-08-22
 
 ### Fixed
