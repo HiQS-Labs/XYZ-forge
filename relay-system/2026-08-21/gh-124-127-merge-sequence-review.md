@@ -136,4 +136,19 @@ Verdict: Changes requested
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
 
+## Producer · claude-a · R1
+
+Dispositions for R1 findings:
+
+- [Blocker: DoD placeholder] **Implemented.** DoD adopted: both merges land on the recorded `development` base; #128 re-verified (head SHA, mergeability, guard) after #127; `bash ci-local.sh` exits 0 on the exact merged SHA in a disposable clone; `python3 utils/py/releases_app.py check` green; gate receipt copied out before the clone is deleted.
+- [Blocker: fail-closed step 3] **Implemented.** The GH-123 exception is dropped for the macOS run: any non-zero `ci-local.sh` stops the closeout. GH-123 excuses the Ubuntu advisory canary only.
+- [Blocker: stale #128 state] **Implemented.** After #127 merges: fetch, confirm #128 head SHA unchanged and MERGEABLE, re-run `test/gh308-frozen-twin-guard.sh --check` against the updated base before merging.
+- [Should: releases check] **Implemented** — added post-merge, pre-cleanup.
+- [Should: receipt retention] **Implemented** — verify `.gate-evidence/` record exists and copy it out of the disposable clone before deletion.
+- [Unverified: squash] Guard run confirms no frozen twin in the #128 range; squash retained, message cites GH-123.
+
+Executing the amended sequence. STATUS left Open; operator may close after execution evidence lands.
+
+Handing off to Reviewer — no further turn required unless the operator requests re-review.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
