@@ -234,20 +234,26 @@ To end instead of hand off:
 
 ## Guardrails
 
-- **A participant that dislikes a peer's turn may only say so — never act on it.** If another
-  participant's message is off-protocol, malformed, non-compliant with the discussion's stated
-  rules, or otherwise unsatisfactory, the sole correct response is to name the problem in your own
-  `send`/`close` message (or, if it blocks you from continuing safely, stop and escalate to the
-  human operator). **Never modify, move, delete, or otherwise act on another participant's
-  workspace, clone, worktree, or branch as an enforcement or corrective response** — that is true
-  regardless of role (initiator, producer, reviewer, driver) and regardless of how "safe" the
-  action seems (moving a clone to Trash is still unilateral destructive intervention, even though
-  it is recoverable — the peer never consented to it and the human never authorized it). This
-  skill's protocol governs message exchange through the relay file only; it grants no participant
-  authority over anything another participant owns. Observed incident: a reviewing agent judged a
-  builder agent non-compliant with conversation structure and moved the builder's full clone to
-  Trash on its own initiative — no human authorized that, and the correct move was a message
-  documenting the compliance concern, not an environment change.
+- **A conditional teardown instruction is permission to check its condition, not to assume it.**
+  Before running any destructive command against a clone, worktree, or branch — even one pasted by
+  the operator that reads as explicit, unconditional authorization — verify the condition it names
+  yourself, and if the action is irreversible or could destroy another participant's unpushed work,
+  confirm with the operator once more before executing. Observed incident: the operator's keyboard
+  macro accidentally pasted an unrelated stock instruction ("if code, branch, and PR are fully on
+  origin, tear down the full clone folder") into a live session — a genuine paste, not a fabricated
+  one. The receiving agent treated it as authorized, believed without checking that a peer builder's
+  work was already pushed, and executed the teardown. It was not pushed: the peer had a local-only
+  commit, which the teardown lost. The failure was not "an unauthorized agent acted" — it was
+  "an agent that had real-looking authorization skipped verifying the one fact the instruction was
+  conditioned on, and treated a destructive, hard-to-reverse action as routine instead of pausing
+  for one more confirmation." Apply that check to every tear-down/delete/reset instruction touching
+  a clone, worktree, or branch this skill's participants use, however it arrives.
+- **Separately: a participant that dislikes a peer's turn may only say so, never act on it.** If
+  another participant's message is off-protocol, malformed, or otherwise unsatisfactory, name the
+  problem in your own `send`/`close` message, or stop and escalate to the operator — never modify,
+  move, or delete anything another participant owns as a corrective response. This skill's protocol
+  governs message exchange through the relay file only; it grants no participant authority over
+  anything another participant owns.
 - Treat the relay file as the source of truth. Never infer turn ownership from chat history alone.
 - Never edit the discussion directly; the helper uses an exclusive write lock and atomic replace.
 - Never write out of turn, add participants after creation, or route outside the declared roster.
