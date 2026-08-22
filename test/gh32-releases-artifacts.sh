@@ -42,10 +42,21 @@ ARTIFACTS="releases.db releases.sql"
 digest_live() { # hash the clone's artifacts so we can prove we did not touch them
   local f out=""
   for f in $ARTIFACTS; do
-    [ -f "$ROOT_DIR/$f" ] && out="$out$(shasum -a 256 "$ROOT_DIR/$f" | cut -d' ' -f1) $f
+    [ -f "$ROOT_DIR/$f" ] && out="$out$(file_hash "$ROOT_DIR/$f") $f
 "
   done
   printf '%s' "$out"
+}
+
+file_hash() { # portable: sha256sum -> shasum -a 256 -> md5 (GH-65)
+  local f="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$f" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$f" | awk '{print $1}'
+  else
+    md5 -q "$f"
+  fi
 }
 
 seed_fixture() { # <dir> — copy the clone's artifacts into an isolated fixture

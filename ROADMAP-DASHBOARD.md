@@ -25,10 +25,11 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/2-WORKING/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
 | GH-144 · Agent2Agent 3+ participant onboarding + read-only status quick wins | — | [GH-144-AGENT2AGENT-3PLUS-UX.md](PROJECT/2-WORKING/GH-144-AGENT2AGENT-3PLUS-UX.md) · [#144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) |
 | GH-132 · feat(skills): formal /review-xyz code review skill & multi-model harness | — | [GH-132-REVIEW-XYZ-SKILL.md](PROJECT/2-WORKING/GH-132-REVIEW-XYZ-SKILL.md) · [#132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) |

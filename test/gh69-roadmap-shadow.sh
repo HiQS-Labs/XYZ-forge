@@ -42,7 +42,17 @@ git -C "$R" config user.email gh69@test.invalid
 git -C "$R" config user.name gh69
 ra() { require_fixture "$R" "shadow fixture"; python3 "$APP" --root "$R" "$@"; }
 gen_now() { sqlite3 "$R/releases.db" "SELECT value FROM settings WHERE key='generation'"; }
-sha() { shasum -a 256 "$1" | awk '{print $1}'; }
+sha() { file_hash "$1"; }
+file_hash() { # portable: sha256sum -> shasum -a 256 -> md5 (GH-65)
+  local f="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$f" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$f" | awk '{print $1}'
+  else
+    md5 -q "$f"
+  fi
+}
 
 ra init --slug gh69 >/dev/null
 
