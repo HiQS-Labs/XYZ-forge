@@ -25,10 +25,11 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 5 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-132 · feat(skills): formal /review-xyz code review skill & multi-model harness | — | [GH-132-REVIEW-XYZ-SKILL.md](PROJECT/2-WORKING/GH-132-REVIEW-XYZ-SKILL.md) · [#132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) |
 | GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | [#135](https://github.com/HiQS-Suite/XYZ-forge/issues/135) · [#136](https://github.com/HiQS-Suite/XYZ-forge/issues/136) · [#137](https://github.com/HiQS-Suite/XYZ-forge/issues/137) · [#138](https://github.com/HiQS-Suite/XYZ-forge/issues/138) · [#139](https://github.com/HiQS-Suite/XYZ-forge/issues/139) · [#140](https://github.com/HiQS-Suite/XYZ-forge/issues/140) · [GH-135-CONSULT-AGY-PREFLIGHT.md](PROJECT/2-WORKING/GH-135-CONSULT-AGY-PREFLIGHT.md) · [GH-136-ATTEMPTS-GATE-ROOT.md](PROJECT/2-WORKING/GH-136-ATTEMPTS-GATE-ROOT.md) · [GH-137-SUITE-REGISTRATION.md](PROJECT/2-WORKING/GH-137-SUITE-REGISTRATION.md) · [GH-138-TWIN-DIVERGENCE-RECORD.md](PROJECT/2-WORKING/GH-138-TWIN-DIVERGENCE-RECORD.md) · [GH-139-SIGPIPE-SWEEP-GUARD.md](PROJECT/2-WORKING/GH-139-SIGPIPE-SWEEP-GUARD.md) · [GH-140-UTCNOW-DEPRECATION.md](PROJECT/2-WORKING/GH-140-UTCNOW-DEPRECATION.md) |
 | GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | — | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
