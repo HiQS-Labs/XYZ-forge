@@ -48,3 +48,14 @@ goal: >
 - **Phase 3 (Completed)**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
 - **Phase 4 (Active Next)**: Gated Autonomous Self-Healing Builder Loop (`deepseek-v4-pro` in disposable full clones).
 - **Phase 5**: 4-Family Active Explorer Agent (Argv Grammar, Env Presence, Path Canonicalization, Process Limits).
+
+## Lessons Learned (For Future Agents)
+
+The Phase 2 differential oracle (`test/gh155-phase2-differential-oracle.sh`) was the first thing to ever
+test all 7 turn shims together, and it caught a real, pre-existing cross-shim inconsistency the moment
+this PR's post-merge reconcile ran against current `development`: `deepseek-turn.py` had no validation
+for `DEEPSEEK_AGENT` (defaulted to `"deepseek"` and silently deferred instead of erroring like the other
+6 shims). Fixed with a 1-line parity fix matching `codex-turn.py`'s existing pattern rather than inventing
+new validation logic. Takeaway: a new cross-cutting oracle like this one is likely to surface latent bugs
+in code it has never exercised before — expect that on first run against a wider surface, not just on the
+oracle's own new code.
