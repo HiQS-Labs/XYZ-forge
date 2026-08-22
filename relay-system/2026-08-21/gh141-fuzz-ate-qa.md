@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -45,117 +45,269 @@ ROUND: 1 / 4
 - Started: 2026-08-21
 
 ### Artifact — issue-body.md
+*(revised in Round 2 — this is the current issue #141 body)*
+
 ````
+> **Revised 2026-08-21 after cross-model QA.** The first version of this issue contained three
+> factually wrong claims about ATE's telemetry volume and run history, an over-broad claim about
+> `fuzz-loop.sh`'s callers, and a Phase 3 design that violated the repo's no-new-Bash rail. All are
+> corrected below; the review that caught them is at
+> [`relay-system/2026-08-21/gh141-fuzz-ate-qa.md`](relay-system/2026-08-21/gh141-fuzz-ate-qa.md)
+> (Codex `gpt-5.6-sol`, reasoning effort high, review-only, worktree-isolated). Struck claims are
+> marked inline so the record shows what was wrong, not just what is right.
+
 ## Why
 
-The repo has two subsystems named for fuzzing. Neither fuzzes.
+Neither subsystem named for fuzzing performs fuzzing.
 
-`utils/fuzzing/fuzz-loop.sh` is a second test runner: it `find`s `test/synthetic/*.sh`, runs each with `bash`, and emits JSONL. There is no random input generation, no seed, no corpus, no mutation, no shrinking, and no coverage feedback. `grep -rn 'RANDOM\|shuf\|seed\|urandom' test/synthetic/` returns **0 matches** — every input in the suite is hardcoded.
+`utils/fuzzing/fuzz-loop.sh` is a deterministic script enumerator: it `find`s shell files under
+`test/synthetic/`, runs each with `bash`, and emits JSONL (`utils/fuzzing/fuzz-loop.sh:44-50,107`).
+Across all 113 lines there is no input generator, corpus, mutator, seed, shrinker, or coverage loop.
+`grep -rn 'RANDOM\|shuf\|seed\|urandom' test/synthetic/` returns 0 matches — every input is hardcoded.
 
-`utils/ate/` (ATE) is a deterministic Cartesian-product walk over Aider CLI flags, driven by a local Gemma model. `SKILL.md` explicitly instructs keeping the task message "short and deterministic." That is combinatorial variation testing — a legitimate technique, but not fuzzing, and it is aimed at a third-party tool rather than at this harness.
+`utils/ate/` builds and cycles a Cartesian product of configurations
+(`utils/ate/scripts/run_variations.py:120-146,433-452`). `SKILL.md` explicitly instructs keeping the
+task message "short and deterministic." That is bounded variation testing — a legitimate and
+complementary technique, but not fuzzing.
 
-This matters because the repo's actual bug history is fuzz-shaped. Bugs found by hand that a real fuzzer would have found mechanically:
+### What the bug history actually shows
 
-| Issue | Bug class | Fuzzable input |
-|---|---|---|
-| GH-319 | gate path containing a space | path strings |
-| GH-417 | turn-root symlink prefix | path strings |
-| GH-307 | gate env scrub leak | environment variables |
-| GH-322 | unknown-arg not rejected | argv |
-| GH-460 | pipe buffer / SIGPIPE | stream sizes |
+The original version of this issue claimed all five cited defects were one bug class ("hostile string
+in argv, env, or path") and that this was "the single highest-value fuzz surface." **That is wrong.**
+They are four structurally different boundary families, and they need four different generators and
+oracles:
 
-Every one of those is "the harness receives a hostile string in argv, env, or a path." That is the single highest-value fuzz surface in this repo, and it is the one surface not being fuzzed.
+| Family | Issue | What actually varies | Evidence |
+|---|---|---|---|
+| Path canonicalization / quoting | GH-319 | a path containing a space | `test/gh319-gate-path-with-space.sh:2-15` |
+| Path canonicalization / quoting | GH-417 | a symlinked root prefix | `test/gh417-turn-root-symlink-prefix.sh:13-17` |
+| Env allow / scrub | GH-307 | *presence* of an inherited variable, not its content | `test/gh307-gate-env-scrub.sh:2-10` |
+| Argv grammar | GH-322 | parser rejection and cross-runtime parity | `test/gh322-unknown-arg-rejection.sh:2-15` |
+| Stream / process limits | GH-460 | payload size against pipe buffer, SIGPIPE race | `test/gh460-pipe-buffer-sigpipe.sh:3-22` |
+
+A single string-mutation alphabet cannot honestly represent GH-307 (a presence bit) or GH-460 (a
+size/timing race). Any claim that this is the *highest*-value surface also needs an incidence
+comparison against state-machine and coordination defects before it can be made — see Phase 6, which
+argues the coordination kernel may be the better target.
 
 ## Key Concepts
 
-**Fuzzing** — generating semi-random inputs to find crashes and invariant violations, with a seed so any finding is replayable.
+**Fuzzing** — generating semi-random inputs to find invariant violations, with a recorded seed so any
+finding replays deterministically, and minimization so the report is a small input rather than a large
+one.
 
-**Invariant assertion** — the property a fuzzer checks. For this harness the invariants already exist as GH-94 containment sentinels: never write outside the declared write-set, never exit 0 on an unknown arg, never orphan a process or worktree, never leak a scrubbed env var to stderr.
+**Oracle** — the property a generated input is checked against. Cheap oracles (exit-class parity, a
+parser round-trip) can run per-iteration; expensive ones (full-clone containment, orphan-process
+sweeps) should run only on a minimized counterexample.
 
-**Variation testing (ATE)** — walking a defined grid of configurations. Complementary to fuzzing, not a substitute.
+**Bounded variation testing (ATE)** — walking a defined grid. Complementary to fuzzing, not a
+substitute, and already generically retargetable in this repo.
 
-**Signal-bearing telemetry** — a field whose value varies with the observation. A constant-valued field is worse than an absent one, because downstream tooling (`checkin.py` percentiles) presents it as if it were signal.
+**Signal-bearing telemetry** — a field whose value varies with the observation *and* is not a pure
+alias of another field. Schema and identity metadata are legitimately constant and are exempt.
 
 ## Current State (evidence)
 
-- `utils/fuzzing/fuzz-loop.sh:1-113` — the whole runner. `find test/synthetic -type f -name '*.sh'` at line 111.
-- Not in CI. `.github/workflows/ci.yml` runs `bash "test/$t"` over an explicit list (lines 430, 472). `fuzz-loop.sh` appears in `ci.yml` only inside a comment at line 50, about a previously missing shebang. Its one live caller is a manual step at `SOP.md:68`.
-- Scope mismatch: `test/` holds ~230 suites; `test/synthetic/` holds 11; the runner scans only the latter. `test/gh57-releases-fuzz.sh` — the 42-assertion suite whose name is "fuzz", built for GH-57 per `HARNESS-MODELS-REGISTRY.md:28` — lives in `test/` and is therefore **never run by fuzz-loop**. Two things named "fuzz" that do not touch each other.
-- Classification is constant. `fuzz-loop.sh:70-76` sets unconditionally: pass → `severity: "none"`; fail → `severity: "high"`, `likely_cause: "synthetic_invariant_failure"`, `category: "deterministic_synthetic_fuzz"`. `category` is the same string on every record; `severity` restates the exit code; `likely_cause` restates `status`. Token fields are always `null` with `tokens_source: "unsupported"`. Of 12 fields, ~4 carry information.
-- Corpus volume: **27 JSONL rows total** on disk, across `TESTS-RESULTS/2026-08-20+GH-101/` and `TESTS-RESULTS/2026-08-20+GH-102/`. Not enough for the percentile tooling GH-102 shipped to say anything.
-- ATE has never produced its output. `grep -rn 'ATE - \['` across the repo: **0 matches**. `compile_issue.py` has never filed an issue. The one `error_log.jsonl` receipt (`TESTS-RESULTS/2026-08-20+GH-94/`) is from telemetry-schema work, not from a real overnight run. Activation cost is high — LM Studio + a 31B local model + an OpenRouter key + aider + hours of wall clock — for output nobody has consumed.
+### fuzz-loop.sh
 
-To be explicit about what is *good* here: the GH-102 telemetry schema is sound, and ATE's design (drift triggers, check-in loop, auto-chained severity-ranked issue, the GH-195 destructive-reset guards) is genuinely well thought out. The problem is not build quality. It is that the fuzz side has no signal flowing through a good schema, and the ATE side has a good engine pointed at the wrong target.
+- The whole runner is `utils/fuzzing/fuzz-loop.sh:1-113`. Default scan root `test/synthetic`
+  (`:8`); the `find` is at **line 107** (the earlier draft said 111).
+- **No CI job executes it.** Fast CI runs a small list plus routed changed tests
+  (`.github/workflows/ci.yml:404-430`); full CI reads `validate.sh`'s registry dynamically and runs
+  that (`.github/workflows/ci.yml:457-472`). `fuzz-loop.sh` appears in `ci.yml` only in a shebang
+  comment (`:47-53`).
+- ~~"Its one live caller is `SOP.md:68`."~~ **Over-broad.** Accurate statement: **one operator
+  workflow caller** (`SOP.md:64-70`), **one test caller**
+  (`test/synthetic/gh102-telemetry-schema.sh:28-34`), **no CI execution of the runner.**
+- Inventory: 252 shell files under `test/`, 235 top-level, 11 under `test/synthetic/`, 230 entries in
+  `validate.sh`'s registry.
+- ~~"`test/gh57-releases-fuzz.sh` is never run."~~ **Wrong.** It is outside `fuzz-loop.sh`'s default
+  root but **is registered in the authoritative gate** (`validate.sh:275`), and its 42 assertions are
+  recorded (`HARNESS-MODELS-REGISTRY.md:28`). Correct statement: unreachable *from fuzz-loop*, fully
+  reachable from `validate.sh` and full CI. Phase 1's original second acceptance criterion was
+  therefore already satisfied.
+- Classification is deterministic aliasing (`utils/fuzzing/fuzz-loop.sh:59-72,78-98`): `severity` and
+  `likely_cause` are computed from pass/fail and carry no information beyond `status`. `category` is a
+  single constant string. `checkin.py` surfaces category and cause as analytics
+  (`utils/ate/scripts/checkin.py:103-124`), so the redundancy is not inert — it is presented as signal.
+- ~~"Of 12 fields, ~4 carry information."~~ **Wrong count.** The record has 15 top-level keys plus 4
+  nested `classification` keys. Constant: `category`, `turn_count`, the three token fields,
+  `tokens_source`, `schema_version`, `engine`. Redundant: `severity`, `likely_cause`. Varying:
+  identity, timing, test name/path, outcome.
+
+### ATE
+
+- ~~"27 JSONL rows total on disk."~~ **Wrong — that was fuzz-loop rows only.** Actual committed
+  volume: **27 fuzz-loop rows** (`TESTS-RESULTS/2026-08-20+GH-101/fuzz_telemetry.jsonl` 19,
+  `.../GH-102/fuzz_telemetry.jsonl` 8) and **2,415 ATE rows**
+  (`.../GH-101/ate_telemetry.jsonl` 1935, `.../GH-102/ate_telemetry.jsonl` 42,
+  `.../GH-94/error_log.jsonl` 438). The defensible signal argument is not volume — it is that the
+  fuzz-loop sample is all-pass and diversity-poor, so it cannot exercise failure classification at all.
+- ~~"ATE has never produced its output."~~ **Wrong.** Committed summaries record 1,935 and 42 ATE
+  iterations (`TESTS-RESULTS/2026-08-20+GH-101/SUMMARY.md:12-19`,
+  `TESTS-RESULTS/2026-08-20+GH-102/SUMMARY.md:22-29`), including a non-Aider `script_runner.py` grid
+  (`utils/ate/variations.tool-density.yaml:6-21`). The engine has been used and has produced results.
+- The narrower claim that survives, marked as **unverified**: no evidence in this repo of a *live
+  auto-filed* `ATE - [...]` issue. `grep -rn 'ATE - \['` returns 0 matches, but that greps this repo,
+  not GitHub — it cannot prove the negative. `CHANGELOG.md:791` does record a stub-Aider + stub-`gh`
+  end-to-end proof, so the chain has been exercised hermetically at least once.
+- ~~"Activation cost is high — LM Studio + 31B model + OpenRouter + aider + hours."~~ **Only true for
+  stock Aider mode** (`utils/ate/SKILL.md:39-67`). Mock classification and `command_template` bypass
+  most of it (`utils/ate/scripts/run_variations.py:376-393,443-452`).
+- ATE is **already model- and target-agnostic** via `command_template` / `variation_keys`
+  (`utils/ate/scripts/run_variations.py:9-19,120-146,293-300`) and already points at repo code in two
+  grids. What is missing is a turn-shim grid, a named owner, a safe execution profile, and generic docs
+  — not new capability.
+
+To be explicit about what is good: the GH-102 telemetry schema is sound, ATE's supervisor design
+(drift triggers, check-in loop, auto-chained rollup, GH-195 destructive-reset guards) is well thought
+out, and the engine's generic retargeting is already built. The problems are narrower than the first
+draft claimed.
 
 ## Proposed Work
 
-Ordered by value/effort. Phases 1–2 are the honesty fixes; Phase 3 is the capability; Phases 4–5 are the ATE decision.
+Phases 1–2 are honesty fixes. Phase 3 is the fuzzing capability. Phases 4–5 settle ATE. Phase 6 is a
+candidate that may outrank Phase 3.
 
-### Phase 1 — Stop the system misrepresenting itself (~20 min)
+### Phase 1 — One registry owns the synthetic suites (~1 hr)
 
-Wire the synthetic suites into CI or retire the separate runner. Recommended: add `test/synthetic/*.sh` to the existing CI test list next to the other 230 suites, and keep `fuzz-loop.sh` only as the JSONL emitter rather than as a parallel runner. If the runner is kept as-is, change its default scan root from `test/synthetic/` to `test/` so `test/gh57-releases-fuzz.sh` stops being orphaned.
+Register the 11 `test/synthetic/*.sh` suites as relative entries in `validate.sh`'s single test
+registry, so full CI and the local gate share ownership. Keep `fuzz-loop.sh` as an **opt-in telemetry
+view** over that subset.
 
-Acceptance: synthetic suites run on every CI job; no suite named "fuzz" is unreachable from any runner.
+Explicitly **do not** change `fuzz-loop.sh`'s default root to all 230 tests. That creates a duplicate
+runner competing with `validate.sh` for ownership, and pays two Python subprocess timestamps per suite
+(`utils/fuzzing/fuzz-loop.sh:49-52`) — negligible at 11, not at 230.
 
-### Phase 2 — Make classification real, or delete it (~1 hr)
+Acceptance: all 11 synthetic suites are registry-reachable; CI selection has a regression test; every
+suite has exactly one authoritative gate owner.
 
-Either derive `likely_cause` from stderr — `timeout`, `permission`, `not found`, `assertion`, `traceback` are five cheap regexes — or remove `likely_cause`, `category`, and `severity` from the fuzz record entirely. Do not keep constants in a schema that feeds percentile tooling.
+### Phase 2 — Remove redundancy, keep metadata (~1-2 hrs)
 
-Acceptance: every field in the emitted record either varies across a mixed pass/fail run, or is gone.
+Keep `schema_version`, `engine`, and identity fields even though they are constant — they are schema
+metadata, not analytics. Remove the `classification` block for deterministic pass/fail records, *or*
+derive genuinely distinct categories from captured failure evidence (stderr shape: timeout /
+permission / not-found / assertion / traceback).
 
-### Phase 3 — Build an actual fuzzer over the harness input surface (~half day)
+Acceptance is **"no analytic field is a pure alias of another field"** — not "every field varies,"
+which would wrongly condemn schema metadata. Add mixed timeout/assertion/permission fixtures and
+assert `checkin.py`'s *rendered groups*, not merely the emitted JSON keys.
 
-New `utils/fuzzing/fuzz-args.sh`, reusing the GH-94 containment sentinels as its oracle.
+### Phase 3 — `utils/py/fuzz_inputs.py`, four target families (2-4 days, or a parser-only slice first)
 
-```
-utils/fuzzing/fuzz-args.sh --seed N --target agy-turn.sh --iterations 200
-```
+Design corrections from review, all load-bearing:
 
-Mutation alphabet drawn from the repo's own bug history: spaces, unicode, `..`, `~`, `$(...)`, backticks, newlines, NUL bytes, very long strings, empty strings, leading dashes, symlinked paths.
+- **Python, not Bash.** A new `utils/fuzzing/fuzz-args.sh` violates the no-new-Bash rail
+  (`AGENTS.md:193-195`): new executables are Python under `utils/py/`. The original Phase 3 would have
+  been rejected by the guard.
+- **argv lists, never shell strings.** Generating a command string and letting a shell re-split it
+  tests the generator's quoting, not the target's.
+- **Drop embedded NUL, or make it an explicit pre-exec rejection case.** A NUL cannot be represented in
+  POSIX argv, env, or a path — the original mutation alphabet listed something unrepresentable.
+- **Four separate generators and oracles**, per the Why table: path canonicalization/quoting, argv
+  grammar, env allow/scrub, stream/process limits. One alphabet cannot cover them.
+- **Tiered oracles.** Cheap checks per iteration; destructive/process oracles (containment sentinels,
+  orphan sweeps) only in a disposable full clone, only on a minimized counterexample.
+- **Record target + seed + iteration + minimized input** on every finding.
+- **Acceptance uses a fixed negative-control seed and a bound per historical defect** — not "caught
+  within N iterations," which is unfalsifiable as written.
 
-Per-iteration invariants (assert properties, not "did it exit 0"):
+~~Half a day.~~ Not credible once isolation, replay, shrinking, and four oracles are counted. Budget
+**2-4 days**, or ship the parser-only slice first and defer the subprocess oracles.
 
-- never writes outside the declared write-set
-- never exits 0 on an unknown argument
-- never leaves an orphaned process or worktree
-- stderr never contains a scrubbed environment variable
+### Phase 4 — Hermetic ATE chain test (~half day) — *replaces the original "run it live"*
 
-The seed is printed on every failure so any finding replays with `--seed <n>`. Findings emit into the existing GH-102 schema, where `severity` and `likely_cause` will finally vary.
+The original Phase 4 proposed a 20-minute production run so ATE would file a real issue. **Cut.** A
+live GitHub issue is an external side effect, not a stronger oracle: it proves permissions, creates
+cleanup work, and adds verification noise to the tracker.
 
-Acceptance: a deliberately reintroduced GH-319-class bug (space in path) is caught by the fuzzer within N iterations, and the failure replays deterministically from the printed seed.
+Instead: a hermetic regression covering `run_variations -> file_issue -> compile_issue` with a stub
+`gh`, including failure, no-record, and dedup behavior. The currently registered test covers only git
+helpers (`test/ate-run-variations.sh:1-12,66-150`), so this is a real coverage gap.
 
-### Phase 4 — Prove the ATE chain end to end (~20 min of wall clock)
+Acceptance: the chain fails deterministically in seconds under stub `gh`, with no network and no issue
+created.
 
-Before changing ATE, run it once with `--minutes 20` against a scratch repo and let it file its issue. `run_variations.py` → `compile_issue.py` → `gh issue create` has never completed in production. This either produces the first `ATE - [...]` issue or exposes where the chain breaks.
+### Phase 5 — ATE disposition, not new capability (~half day)
 
-Acceptance: one `ATE - [...]` issue exists, or a bug report on the chain does.
+Since the engine is already generic (`run_variations.py:9-19,120-146,293-300`), this phase is a
+decision plus a small amount of glue, not a rebuild:
 
-### Phase 5 — Re-point ATE at this harness, or archive it honestly (~half day)
+- Add a turn-shim variations grid (`agy-turn.sh` / `codex-turn.sh` / `claude-turn.sh`).
+- Name an owner and a safe execution profile (stubbed builder, or a disposable full clone).
+- Generalize the docs off Aider.
+- ~~"`compile_issue.py` needs no changes."~~ **False** — it defaults its labels to
+  `["bug", "aider-pipeline"]` (`utils/ate/scripts/compile_issue.py:91`).
 
-The ATE machinery — grid, drift detection, check-in loop, auto-issue rollup — is model-agnostic and is the valuable part. Swap the grid from Aider flags to `agy-turn.sh` / `codex-turn.sh` / `claude-turn.sh` flag combinations and it becomes a long-running soak test for what this repo actually ships. `compile_issue.py` needs no changes.
+Timebox the consumer decision. If no one commits to reading the output on a recurring basis, archive
+the Aider presets and the overnight-supervisor promise while **retaining the generic bounded matrix
+runner**, which has demonstrated value.
 
-If nobody intends to consume ATE's output, archive `utils/ate/` explicitly rather than letting 545 lines of `run_variations.py` decay in place. Either outcome is fine; leaving it ambiguous is not.
+### Phase 6 — Model the tick/relay state machine (2-3 days) — *candidate; may outrank Phase 3*
 
-Acceptance: ATE either has a variations file targeting this repo's turn shims, or is archived with a note saying why.
+Generate short `claim` / `release` / `done` / crash sequences against an isolated tick root and assert
+exclusivity, terminal seals, and replay idempotence.
+
+This attacks the coordination kernel the product exists to protect, and is a plausibly higher-value
+target than raw string mutation. It is listed as a peer to Phase 3, not a successor: whichever is
+scheduled first should be chosen by comparing defect incidence in the two areas, which nobody has done.
+
+## Ideas from review, not yet promoted to phases
+
+- **Differential twin fuzzing (1-2 days).** Feed identical generated argv/env/CWD to the Python
+  default and `XYZ_PYTHON=0`, normalize paths and timestamps, compare exit class plus diagnostic. A
+  cheaper oracle than containment, aimed directly at GH-322-style silent parity drift.
+- **Mine the existing suites into a seed corpus (0.5-1 day).** Statically extract quoted argv, env
+  assignments, spaced/unicode/symlink fixture paths, and boundary sizes from the 230 registered
+  suites; tag each seed by target family; mutate one dimension at a time. Carry the originating
+  `test/<name>.sh:line` into every finding for instant triage. This is the cheapest way to get a
+  non-toy corpus.
+- **Property-test the parser seams before touching subprocesses (1 day).** Identify pure argument
+  parsing and root normalization, then use a shrinking property framework (e.g. Hypothesis) for
+  "unknown rejected," round-trip normalization, and no-exception. Escalate only the minimized
+  counterexample to the expensive full-clone oracle.
+- **Stream/process-limit fuzzing as its own lane (0.5-1 day).** Sweep pipe-buffer-adjacent payloads,
+  stdout/stderr truncation, timeout edges, child-process cleanup. Covers GH-460, which a string
+  alphabet cannot reach.
 
 ## Anti-Goals
 
-- Not building a coverage-guided fuzzer (AFL/libFuzzer style). These are shell scripts; a seeded mutation fuzzer with invariant oracles is the right tier.
-- Not fuzzing the LLM turn content. The target is the harness's argv/env/path handling, which is deterministic and assertable.
-- Not deleting ATE reflexively. Phase 4 exists specifically to test it before judging it.
-- Not expanding the GH-102 telemetry schema. The schema is fine; the problem is the values.
+- Not building a coverage-guided fuzzer (AFL/libFuzzer style).
+- Not fuzzing LLM turn content. Targets are deterministic and assertable.
+- Not creating a second test runner. Phase 1 consolidates ownership rather than splitting it.
+- Not filing GitHub issues as a test oracle (the reason Phase 4 changed).
+- Not deleting ATE. Phase 5 retains the generic engine regardless of the Aider decision.
+- Not expanding the GH-102 telemetry schema. Phase 2 removes redundancy; it adds no fields.
 
-## Open Questions
+## Open Questions — with recommendations
 
-1. Phase 1 — fold the synthetic suites into CI's main list, or keep `fuzz-loop.sh` as a distinct CI job? Folding them in is simpler; a distinct job keeps the JSONL emission path clean.
-2. Phase 3 — should fuzz findings auto-file issues (ATE-style rollup), or only fail CI? Auto-filing risks noise before the invariants are tuned.
-3. Phase 5 — is there a real consumer for an overnight soak test of the turn shims, or is the honest answer to archive ATE?
+1. **Phase 1 — fold synthetic suites into CI's main list, or a distinct `fuzz-loop.sh` CI job?**
+   → **Fold all 11 into `validate.sh` / normal CI ownership.** Keep JSONL emission manual or
+   scheduled; do not add a second required CI job.
+2. **Phase 3 — should fuzz findings auto-file issues, or only fail CI?**
+   → **Fail CI and retain a minimized replay artifact.** Do not auto-file until deduplication,
+   per-target rate limits, and a human promotion step have survived a tuning period.
+3. **Phase 5 — is there a real consumer for an overnight soak of the turn shims?**
+   → **Retain the generic matrix runner; archive the Aider-specific presets, docs, and the
+   overnight-supervisor promise** unless a named owner commits to reading a recurring turn-shim soak.
+   The tool-density grid proves the *engine* has value — not that unattended ATE has a consumer.
+
+## Phase nominated for cutting
+
+**Original Phase 4 (the live 20-minute ATE run).** Worst value-to-effort ratio: it proves permissions
+rather than correctness, produces a real issue that then needs cleanup, and is strictly weaker than
+the hermetic stub-`gh` chain test that replaced it.
 
 ## Notes
 
-- `fuzz_queue.txt` at the repo root is empty (0 bytes). `pop-and-run-agy.sh:14` guards on `-s` so it exits cleanly, but that file plus `fuzz-agy-plan.sh` looks like a stalled workflow inherited from the xyz-3-agents-swarm era. Worth a separate decision.
-- `utils/fuzzing/` and `utils/ate/scripts/` are both in the codebase-memory indexer's exclude list, so graph queries do not see either subsystem.
-- `fuzz-loop.sh` shells out to `python3` twice per test purely to get a millisecond timestamp. Acceptable at 11 tests; not at 230, which Phase 1 may make relevant.
+- `fuzz_queue.txt` at the repo root is empty (0 bytes). `pop-and-run-agy.sh:14` guards on `-s`, so it
+  exits cleanly, but that file plus `fuzz-agy-plan.sh` looks like a stalled workflow inherited from
+  the xyz-3-agents-swarm era. Separate decision.
+- `utils/fuzzing/` and `utils/ate/scripts/` are both in the codebase-memory indexer's exclude list, so
+  graph queries do not see either subsystem.
+- `fuzz-loop.sh` spawns two `python3` processes per test purely for a millisecond timestamp
+  (`utils/fuzzing/fuzz-loop.sh:49-52`). Acceptable at 11 suites; one of the reasons Phase 1 declines
+  to point it at 230.
 ````
 - Source: GitHub issue **#141** (HiQS-Suite/XYZ-forge) — the embedded text above IS the issue body.
 - The repo under discussion is the one you are running in. `utils/fuzzing/fuzz-loop.sh`,
@@ -334,5 +486,100 @@ swept file: yes
   creates cleanup work, while a hermetic chain test gives deterministic failure coverage in seconds.
 
 Handing off to Producer — go to the claude-a window and say “take your turn”.
+
+### Round 2 — Producer (claude-a)
+
+All 13 graded findings dispositioned. Every factual correction was independently re-verified in this
+repo before acceptance — I did not take the review on trust any more than it took the plan on trust.
+
+**Blockers**
+
+- **B1 — thesis over-collapses five defects into one class.** *Implemented.* Rewrote the Why section
+  around **four boundary families** (path canonicalization/quoting, argv grammar, env allow/scrub,
+  stream/process limits) with the per-issue evidence table. Dropped the "single highest-value surface"
+  claim outright; Phase 6 now carries the counter-hypothesis that the coordination kernel may outrank
+  it, and the issue states plainly that the incidence comparison has not been done.
+- **B2 — "27 JSONL rows total on disk" is false.** *Implemented.* Verified: `wc -l` gives
+  `GH-101/ate_telemetry.jsonl` 1935, `GH-102/ate_telemetry.jsonl` 42, `GH-94/error_log.jsonl` 438 —
+  **2,415 committed ATE rows** alongside 27 fuzz-loop rows. The claim was fuzz-loop-scoped and written
+  as repo-wide. Rewritten to the defensible argument: the fuzz-loop sample is all-pass and
+  diversity-poor, so it cannot exercise failure classification at all. Volume was never the real point.
+- **B3 — "ATE has never produced its output" is false.** *Implemented.* Confirmed
+  `TESTS-RESULTS/2026-08-20+GH-101/SUMMARY.md:12-19` and `.../GH-102/SUMMARY.md:22-29` record 1,935 and
+  42 iterations, and `utils/ate/variations.tool-density.yaml:6-21` is a non-Aider grid. I inferred a
+  global negative from a local `grep`. Narrowed to the only claim the evidence supports — no *live
+  auto-filed* issue is evidenced — and marked it **unverified**, since a repo grep cannot prove a
+  GitHub-side negative. Also corrected the activation-cost paragraph: high cost applies to stock Aider
+  mode only (`SKILL.md:39-67`), which `command_template` and mock classification bypass
+  (`run_variations.py:376-393,443-452`).
+- **B4 — Phase 3 violates the no-new-Bash rail.** *Implemented.* Confirmed at `AGENTS.md:193-195`:
+  new executables are Python in `utils/py/`, and the guard rejects a new `.sh` under `utils/` absent a
+  `New-bash-exception:` trailer. `utils/fuzzing/fuzz-args.sh` would have been rejected on arrival.
+  Retargeted to `utils/py/fuzz_inputs.py`. Also took the four sub-corrections: argv **lists** not shell
+  strings, embedded NUL removed as unrepresentable in POSIX argv/env/path, four generators+oracles
+  instead of one alphabet, and tiered oracles so full-clone containment runs only on a minimized
+  counterexample. Estimate raised from half a day to **2-4 days**, with a parser-only slice as the
+  shippable first cut. The "within N iterations" acceptance was unfalsifiable as written and is now a
+  fixed negative-control seed plus a bound per historical defect.
+- **B5 — Phase 4 (live 20-min run) should be cut.** *Implemented, and adopted as the nominated cut.*
+  The reasoning holds: a live issue proves permissions, not correctness, and leaves cleanup plus
+  tracker noise. Replaced with a hermetic `run_variations -> file_issue -> compile_issue` regression
+  under stub `gh`, covering failure, no-record, and dedup. Verified the gap is real —
+  `test/ate-run-variations.sh:1-12,66-150` covers git helpers only.
+- **B6 — Phase 5 should be a disposition, not new capability.** *Implemented.* Confirmed the engine is
+  already generic (`run_variations.py:9-19,120-146,293-300`) and already targets repo code. Rewrote the
+  phase as grid + owner + safe profile + doc generalization. Corrected my "`compile_issue.py` needs no
+  changes" — it hard-defaults `["bug", "aider-pipeline"]` at `compile_issue.py:91`.
+
+**Shoulds**
+
+- **S1 — "one live caller" is over-broad.** *Implemented.* `test/synthetic/gh102-telemetry-schema.sh:28`
+  also invokes it. Restated as: one operator workflow caller, one test caller, no CI execution.
+- **S2 — GH-57 is not orphaned.** *Implemented.* `validate.sh:275` registers it. This one mattered
+  most to me: "two things named fuzz that never touch" was the line I liked best in the draft, and it
+  was wrong. Corrected to "unreachable from `fuzz-loop`, fully reachable from `validate.sh` and full
+  CI," and noted that Phase 1's original second acceptance criterion was already satisfied.
+- **S3 — field count wrong.** *Implemented.* 15 top-level keys plus 4 nested, not 12. Replaced the
+  count with a named constant/redundant/varying breakdown.
+- **S4 — Phase 1 should not repoint the runner at 230 tests.** *Implemented.* Register synthetic
+  suites in `validate.sh`'s registry; keep `fuzz-loop.sh` as an opt-in telemetry view. Ownership
+  consolidates instead of splitting, and the two-`python3`-per-suite timestamp cost
+  (`fuzz-loop.sh:49-52`) stays bounded. Estimate 20 min -> 1 hr.
+- **S5 — Phase 2 acceptance was too strong.** *Implemented.* "Every field varies" would have condemned
+  `schema_version` and `engine`. Now: **no analytic field is a pure alias of another**, with schema and
+  identity metadata explicitly exempt, and the assertion moved onto `checkin.py`'s rendered groups
+  rather than emitted JSON keys.
+- **S6-S10 — five missing ideas.** *Two promoted, three parked as scoped candidates.* Promoted: the
+  tick/relay state-machine model became **Phase 6**, listed as a **peer** to Phase 3 rather than a
+  successor — I am not willing to rank it above the input fuzzer without the incidence data neither of
+  us has. Stream/process-limit fuzzing was absorbed into Phase 3 as its own family, since GH-460 is in
+  the motivating table and a plan that cites it while being unable to reach it is incoherent. Parked
+  with costs: differential twin fuzzing (1-2d), corpus mining from the 230 suites (0.5-1d),
+  property-testing the parser seams (1d). Corpus mining is the one I would schedule first in practice
+  — it is the cheapest path to a non-toy corpus and it carries `test/<name>.sh:line` provenance into
+  every finding.
+- **S11-S13 — open-question recommendations.** *All three adopted as written* (fold into `validate.sh`;
+  fail CI with a minimized replay artifact, no auto-filing until dedup and rate limits are tuned;
+  retain the generic runner and archive the Aider presets absent a named owner). No modifications — the
+  reasoning was better than what the plan had.
+
+**Declined:** none.
+
+**Where I disagree, on the record:** the review treats Phase 6 (state-machine modeling) as
+"a plausible higher-value target." I kept that framing verbatim rather than promoting it above Phase 3,
+because both of us are reasoning from the same absence of evidence. Deciding the order without the
+incidence comparison would repeat exactly the mistake B1 caught me making.
+
+**Landed:** issue #141 body rewritten with every correction above, struck claims marked inline so the
+record shows what was wrong rather than quietly replacing it. Six phases, four parked ideas, three
+answered questions, one nominated cut.
+
+**New work for the Reviewer:** the revised body is the artifact now, not the original. Three things I
+would specifically like attacked: (1) is the four-family decomposition in Why actually exhaustive, or
+does it miss a boundary class the bug history contains; (2) is Phase 1's "opt-in telemetry view"
+split a real consolidation or just the two-runner problem renamed; (3) does Phase 6 belong in this
+issue at all, or is it a separate issue wearing this one's clothes.
+
+Handing off to Reviewer — codex takes the next turn against the revised issue body.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
