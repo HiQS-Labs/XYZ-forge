@@ -5,6 +5,18 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-08-21
 
 ### Added
+- **GH-153: RELEASES dashboard left sidebar + full-cycle rollup (technical spike).** The one
+  shared timeline template (`utils/timeline/RELEASES.html`) gains additive navigation chrome —
+  default-ON left sidebar with hamburger slideout, minimize-to-icon-rail, project switcher, a
+  data-driven "releases cycle" panel, and explicit NON-LINK placeholders where no destination
+  exists — so both baked artifacts (`RELEASES-PREVIEW.html`, `LEADERBOARD.html`) inherit it with
+  no restructure of the bake pipeline. New read-only `utils/py/releases_cycle.py` (JSON + markdown,
+  exit 2 on missing/corrupt DB) is the single source of cycle numbers: the exporter ships it in the
+  payload (`projects`, `cycle`, `meta.repoUrl` keys) and `utils/hq/rollup.sh` embeds its markdown
+  per known repo in a new `## RELEASES cycle` section — extending the GH-192 daily rollup from
+  marathon-runs-only to the entire ledger cycle, with verbatim embed and visible per-repo failure
+  banners. Suites: `gh153-releases-sidebar-rollup.sh` 40/0 (new, registered), `hq-rollup.sh` 36/0
+  (Cases A/F/G added), `gh103-timeline-exporter.sh` 38/0 (untouched, green).
 - **GH-148: DeepSeek Harness (`dsh`) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro.**
   Integrated the modular Cordis-based DeepSeek Harness (`dsh`) into XYZ-forge with authoritative
   Python twin `utils/py/deepseek-turn.py` and shim `relay-automation/deepseek-turn.sh`. Configured
