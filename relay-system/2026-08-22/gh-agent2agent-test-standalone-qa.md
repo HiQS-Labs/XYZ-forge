@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -1650,3 +1650,66 @@ your turn".
 Tokens: 84k sent, 447 received.
 
 ```
+
+### Producer (claude-a)
+
+Note on transcript quality: this round's Reviewer block degraded into a ~1,500-line raw
+chain-of-thought salvage (aider-turn.sh's GH-251 recovery path — a known, documented seam
+failure for this model/harness combination, not a new problem). The substantive review was
+recoverable from it: findings F1-F10, verdict "Changes requested", no blockers.
+
+Dispositions:
+- **F1 [Should] status/rejected-send checked only relay-file bytes, missing sibling
+  artifacts — Implemented.** Added `tree_fp()` (whole-`$ROOT` fingerprint). `status` now
+  asserts full-tree byte-identity (genuinely mutates nothing). The out-of-turn rejection
+  case is different: verifying against source confirmed `append_turn()` acquires the
+  discussion lock *before* checking turn ownership, so a rejected out-of-turn send DOES
+  create/rewrite the lock dotfile — a real, benign side effect. Asserting full-tree
+  identity there would be asserting a false invariant, so instead the suite now asserts
+  (a) the discussion content itself is untouched, and (b) the known lock-dotfile side
+  effect is specifically what changed — turning a previously invisible behavior into a
+  documented, checked one instead of pretending it doesn't happen.
+- **F2 [Should] watch only exercised the already-owns-NEXT fast path — Implemented.**
+  Added a wake-on-handoff case (agent2 watches before owning NEXT; a backgrounded send
+  from agent3 hands it over mid-poll; asserts take-turn before the timeout) and a genuine
+  timeout-expiry case (agent3 watches with nobody handing it the turn; asserts
+  `DECISION: timeout`). Found and fixed a real bug of my own introducing this: the wake
+  test leaves NEXT on agent2, which broke the downstream close (`--agent 3`) — added an
+  explicit restore-turn send before section 7 rather than relying on leftover state.
+- **F3 [Should] lock fixture overwrites the lock file's real payload — Implemented.**
+  Fixture now holds the flock without touching the file's content; readiness is signaled
+  via a separate sentinel file the parent polls, so nothing depends on the payload format
+  agent2agent.py's own doorbell/staleness logic might one day rely on.
+- **F3b [Nit] slow-fail-via-holder-sleep-expiry edge case — Declined.** Reviewer's own
+  grading called this "acceptable for smoke" and optional; the 10s holder sleep is
+  already comfortably longer than any assertion path in this suite, and capping the
+  probe with `timeout` would add a dependency this suite is specifically trying to avoid.
+- **F4 [Should] out-of-turn refusal asserted only exit code — Implemented.** Now also
+  asserts the refusal message contains "out of turn".
+- **F5 [Nit] `drive` silently uncovered — Implemented.** Added a header comment stating
+  it's a deliberate omission (spawns an arbitrary process; out of scope for this suite's
+  size) rather than an accidental gap.
+- **F6 [Nit] unguarded `find` could silently multi-match — Implemented.** Counts matches
+  and fails unless exactly 1 before using the result.
+- **F7 [Nit] lock holder's stdout interleaves into suite output — Implemented.** Holder
+  script's stdout/stderr now redirected to `/dev/null`.
+- **F8 [Nit] `seq` is the least-portable thing in a portability suite — Implemented.**
+  Replaced with a plain `while`/counter loop.
+- **F9 [Nit] undocumented implicit contracts — Implemented.** Header comment now
+  documents `AGENT2AGENT_ID_SEQUENCE` and `--expect-subject`.
+- **F10 [Nit] no negative-ID path — Implemented.** Added: `status` on an unknown
+  discussion ID must fail closed.
+
+Verified: `bash skills/agent2agent/test-standalone.sh` — 36/36 pass, run from both the repo
+root and `/tmp` (CWD-independence unaffected). `bash test/agent2agent.sh` — 129/129 pass,
+unaffected.
+
+Given the verdict carried no blockers and every actionable finding is now implemented and
+independently verified by execution (not just by re-reading), I'm not auto-driving another
+Aider/OpenRouter round given the seam's known cost (two turns already ran ~131k tokens
+through the salvage path) — reporting to the operator instead of looping. `NEXT` is left on
+Reviewer so a round 2 can still be driven on request.
+
+handing off to Reviewer — go to the aider window and say 'take your turn' (optional; operator's call)
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
