@@ -2,6 +2,19 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-08-21
+
+### Added
+- **GH-132: formal `/review-xyz` code review skill & multi-model harness.** Shipped `skills/review-xyz/`
+  and deterministic Python review engine `utils/py/review_xyz.py` supporting throwaway-worktree isolated
+  code review dispatch for frontier Chinese models (Command Code -> Qwen 3.8-Max, GLM-5.3) alongside
+  Codex, Agy, and Aider/OpenRouter.
+- Standardized finding extraction (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), citation checking to
+  prevent hallucinated passes, and automated GitHub PR (`--post-pr`) and linked issue (`--post-issues`)
+  comment posting via `gh`.
+- Comprehensive regression test suite `test/gh132-review-xyz-skill.sh` (17/17 pass) verifying dry-run,
+  worktree isolation, citation checks, and mock review verdicts.
+
 ## [1.2.0] - 2026-08-20
 
 ### Changed
