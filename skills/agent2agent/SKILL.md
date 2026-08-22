@@ -256,10 +256,11 @@ To end instead of hand off:
   clone folder") into a live session — a genuine paste, not a fabricated one. The receiving agent
   treated it as authorized, believed without checking that a peer builder's work was already
   pushed, and executed the teardown. It was not pushed: the peer had a local-only commit, which the
-  teardown lost. The failure was not "an unauthorized agent acted" — it was "an agent that had
-  real-looking authorization skipped verifying the one fact the instruction was conditioned on, and
-  treated a destructive, hard-to-reverse action on a peer's workspace as routine instead of pausing
-  for one more confirmation." Apply that check to every tear-down/delete/reset instruction touching
+  teardown lost. The failure was not merely "an agent skipped verifying the one fact the instruction
+  was conditioned on" — it acted on a peer's workspace at all, which the bullet below forbids
+  outright, with or without verification or confirmation; the missed verification is what made a
+  forbidden action also a needless one, not what would have made it permitted. Apply the
+  verify-then-confirm half of this check to every tear-down/delete/reset instruction touching
   a clone, worktree, or branch this skill's participants use, however it arrives.
 - **Absolute, unconditional, and separate: a participant that dislikes a peer's turn may only say
   so, never act on it — and no verification or confirmation ever unlocks acting on a peer's
