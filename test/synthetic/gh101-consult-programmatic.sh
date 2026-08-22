@@ -41,14 +41,14 @@ chmod +x "$CODEX_STUB"
 
 # 1. Test invalid tool-mode rejection
 INVALID_OUT="$(python3 "$ROOT/utils/py/consult.py" --prompt "test" --tool-mode "invalid_mode" 2>&1 || true)"
-if ! echo "$INVALID_OUT" | grep -qF "invalid --tool-mode 'invalid_mode'"; then
+if ! grep -qF "invalid --tool-mode 'invalid_mode'" <<<"$(echo "$INVALID_OUT")"; then
   echo "FAIL: consult.py failed to reject invalid tool-mode"
   exit 1
 fi
 
 # 2. Test --help displays tool-mode
 HELP_OUT="$(python3 "$ROOT/utils/py/consult.py" --help 2>&1 || true)"
-if ! echo "$HELP_OUT" | grep -qF "[--tool-mode standard|programmatic]"; then
+if ! grep -qF "[--tool-mode standard|programmatic]" <<<"$(echo "$HELP_OUT")"; then
   echo "FAIL: consult.py --help does not document --tool-mode"
   exit 1
 fi

@@ -23,7 +23,7 @@ except RuntimeError as e:
     print(f"REFUSAL_OBSERVED: {e}")
 ' 2>&1)"
 
-printf '%s' "$out" | grep -q "REFUSAL_OBSERVED" \
+grep -q "REFUSAL_OBSERVED" <<<"$(printf '%s' "$out")" \
   && pass "resolve_tick_bin: REFUSAL observed when tick binary is unresolvable" \
   || fail "resolve_tick_bin did not refuse unresolvable binary: $out"
 
@@ -38,7 +38,7 @@ res = rtl.resolve_tick_bin('$WORK', '$WORK')
 print(f'RESOLVED: {res}')
 " 2>&1)"
 
-printf '%s' "$out" | grep -q "RESOLVED: $WORK/bin/tick" \
+grep -q "RESOLVED: $WORK/bin/tick" <<<"$(printf '%s' "$out")" \
   && pass "control 2b: valid tick binary is resolved without error" \
   || fail "control 2b failed: $out"
 
@@ -54,7 +54,7 @@ except RuntimeError as e:
     print(f"REFUSAL_OBSERVED: {e}")
 ' 2>&1)"
 
-printf '%s' "$out" | grep -q "REFUSAL_OBSERVED" \
+grep -q "REFUSAL_OBSERVED" <<<"$(printf '%s' "$out")" \
   && pass "resolve_tick_repo_root: REFUSAL observed when repo root does not exist" \
   || fail "resolve_tick_repo_root did not refuse missing root: $out"
 
@@ -66,7 +66,7 @@ res = rtl.resolve_tick_repo_root('$WORK')
 print(f'RESOLVED: {res}')
 " 2>&1)"
 
-printf '%s' "$out" | grep -q "RESOLVED: $WORK" \
+grep -q "RESOLVED: $WORK" <<<"$(printf '%s' "$out")" \
   && pass "control 3b: existing repo root is resolved without error" \
   || fail "control 3b failed: $out"
 
@@ -81,7 +81,7 @@ except RuntimeError as e:
     print(f"REFUSAL_OBSERVED: {e}")
 ' 2>&1)"
 
-printf '%s' "$out" | grep -q "REFUSAL_OBSERVED" \
+grep -q "REFUSAL_OBSERVED" <<<"$(printf '%s' "$out")" \
   && pass "resolve_turn_root: REFUSAL observed when explicit root does not exist" \
   || fail "resolve_turn_root did not refuse invalid explicit root: $out"
 
@@ -92,7 +92,7 @@ res = rtl.resolve_turn_root('$WORK', '$WORK')
 print(f'RESOLVED: {res}')
 " 2>&1)"
 
-printf '%s' "$out" | grep -q "RESOLVED: $WORK" \
+grep -q "RESOLVED: $WORK" <<<"$(printf '%s' "$out")" \
   && pass "control 4b: existing explicit root is resolved without error" \
   || fail "control 4b failed: $out"
 

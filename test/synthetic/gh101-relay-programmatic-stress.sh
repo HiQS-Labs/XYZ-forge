@@ -34,7 +34,7 @@ git -C "$REPO" -c user.email=test@test.local -c user.name=TestRunner commit -q -
 
 # 1. Test invalid tool-mode rejection
 INVALID_OUT="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$RELAY_FILE" --agent-cmd "echo" --tool-mode "invalid_mode" 2>&1 || true)"
-if ! echo "$INVALID_OUT" | grep -qF "invalid choice: 'invalid_mode'"; then
+if ! grep -qF "invalid choice: 'invalid_mode'" <<<"$(echo "$INVALID_OUT")"; then
   echo "FAIL: relay_drive.py failed to reject invalid tool-mode"
   exit 1
 fi
@@ -44,7 +44,7 @@ MOCK_BIN_DIR="$WORK/empty_bin"
 mkdir -p "$MOCK_BIN_DIR"
 ln -s "$(command -v python3)" "$MOCK_BIN_DIR/python3"
 FAIL_CLOSED_OUT="$(PATH="$MOCK_BIN_DIR" "$MOCK_BIN_DIR/python3" "$ROOT/utils/py/relay_drive.py" --relay-file "$RELAY_FILE" --agent-cmd "echo" --tool-mode "programmatic" 2>&1 || true)"
-if ! echo "$FAIL_CLOSED_OUT" | grep -qF "Containment failure (fail-closed)"; then
+if ! grep -qF "Containment failure (fail-closed)" <<<"$(echo "$FAIL_CLOSED_OUT")"; then
   echo "FAIL: relay_drive.py failed to fail closed when sandbox binaries are absent"
   exit 1
 fi

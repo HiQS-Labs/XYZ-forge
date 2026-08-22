@@ -338,10 +338,24 @@ def agy_auth_preflight(agy_bin, log_file):
                 with open(tmp) as tf: f.write(tf.read())
             f.write(f"\nconsult: agy auth pre-flight timed out after {secs}s; {t_detail}. Run `agy login` in a normal terminal, then retry.\n")
     except subprocess.CalledProcessError as e:
+        # #135: a non-zero probe exit was a credentials failure by definition — but agy 1.1.18
+        # has no `whoami` subcommand (exit 2, `Error: unexpected argument "whoami".`), which
+        # killed the consult's agy seat while auth was never in question and prescribed the
+        # wrong remedy. The captured output is the evidence either way: route it through the
+        # same verdict as the exit-0 path above (the #130 fix in agy-turn.py, same shape). A
+        # usage error means the probe is the wrong instrument -> unverifiable, proceed; a real
+        # error or nothing recognizable stays fatal (the conservative branch).
+        severity, detail = agy_auth_output_verdict(tmp)
+        if severity == "unverifiable":
+            with open(log_file, "a") as f:
+                f.write(f"\nconsult: NOTE — agy auth is unverifiable headless (expected, probe exited "
+                        f"{e.returncode} on a usage error); proceeding. {detail}\n")
+            if os.path.exists(tmp): os.remove(tmp)
+            return True
         with open(log_file, "a") as f:
             if os.path.exists(tmp):
                 with open(tmp) as tf: f.write(tf.read())
-            f.write(f"\nconsult: agy auth pre-flight failed (exit {e.returncode}). Run `agy login` in a normal terminal, then retry.\n")
+            f.write(f"\nconsult: agy auth pre-flight failed (exit {e.returncode}); {detail or 'no recognizable diagnostic'}. Run `agy login` in a normal terminal, then retry.\n")
     except Exception as e:
         pass
 

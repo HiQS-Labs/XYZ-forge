@@ -87,7 +87,7 @@ rc=$?
 # --- (4) dry-run: names the actor, mutates nothing -----------------------
 R4="$A/relay4.md"; seed RELAY-TURN-4 "$R4"
 out="$(bash "$DRIVE" --relay-file "$R4" --relay-task RELAY-TURN-4 --dry-run 2>&1)"; rc=$?
-echo "$out" | grep -q "WOULD drive turn for agent: ra" && pass "dry-run names the actor" || fail "dry-run missing actor: $out"
+grep -q "WOULD drive turn for agent: ra" <<<"$(echo "$out")" && pass "dry-run names the actor" || fail "dry-run missing actor: $out"
 [ "$rc" -eq 0 ] && [ "$(blocks "$R4")" -eq 0 ] && pass "dry-run mutates nothing" || fail "dry-run should not mutate"
 
 # --- (5) bare absolute --agent-cmd path WITH SPACES is invoked, not split (regression) ---

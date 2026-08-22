@@ -75,12 +75,12 @@ MOVED="$REPO/PROJECT/2-WORKING/GH-42-SAMPLE-THING.md"
 
 # ---- 3. the promoted doc passes the REAL pdda frontmatter + status-table checks ----
 FM="$(env PDDA_MODE=observe PDDA_WORKING_DIR="$REPO/PROJECT/2-WORKING" bash "$PDDA" frontmatter 2>&1)"
-printf '%s' "$FM" | grep -q 'errors=0' \
+grep -q 'errors=0' <<<"$(printf '%s' "$FM")" \
   && pass "promoted doc passes pdda frontmatter (title/status/created/updated/owner/goal present)" \
   || fail "pdda frontmatter not clean: $(printf '%s' "$FM" | grep -i error | head -2)"
 
 ST="$(env PDDA_MODE=observe PDDA_WORKING_DIR="$REPO/PROJECT/2-WORKING" bash "$PDDA" status-table 2>&1)"
-printf '%s' "$ST" | grep -q 'errors=0' \
+grep -q 'errors=0' <<<"$(printf '%s' "$ST")" \
   && pass "promoted doc passes pdda status-table (exact header + non-blank cells)" \
   || fail "pdda status-table not clean: $(printf '%s' "$ST" | grep -i error | head -2)"
 

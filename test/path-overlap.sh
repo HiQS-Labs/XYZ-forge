@@ -14,10 +14,10 @@ TICK_TS=2026-05-04T10:00:05.000Z tick_a claim TASK-007 --agent alice --paths "sr
 NEXT_FOR_B=$(tick_b next --agent bob)
 echo "  bob's next: $NEXT_FOR_B"
 
-if echo "$NEXT_FOR_B" | grep -q "TASK-008"; then
+if grep -q "TASK-008" <<<"$(echo "$NEXT_FOR_B")"; then
   fail "bob got TASK-008 even though it overlaps src/auth/** claimed by alice"
 fi
-if echo "$NEXT_FOR_B" | grep -q "TASK-009"; then
+if grep -q "TASK-009" <<<"$(echo "$NEXT_FOR_B")"; then
   pass "bob routed to TASK-009 (non-overlapping) instead of higher-priority TASK-008"
 else
   fail "bob should have received TASK-009 but got: $NEXT_FOR_B"

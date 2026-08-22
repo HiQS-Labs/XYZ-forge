@@ -59,7 +59,7 @@ if git -C "$SC" merge-base --is-ancestor "$PEER" HEAD 2>/dev/null; then
 fi
 
 echo "[4/4] …and recoverable ONLY via the non-branch refs/relay-orphan/ ref…"
-git -C "$SC" for-each-ref refs/relay-orphan/ --format='%(objectname)' | grep -q . \
+grep -q . <<<"$(git -C "$SC" for-each-ref refs/relay-orphan/ --format='%(objectname)')" \
   || fail "expected the orphaned commit under refs/relay-orphan/"
 
 echo

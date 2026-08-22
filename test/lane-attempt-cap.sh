@@ -58,14 +58,14 @@ R="$WORK/repo"; mkdir -p "$R/.tick"
 out="$(LANE_MAX_ATTEMPTS=2 lane_attempt_gate "$R" "LANE-A" 0 2>&1)"; r3=$?
 [ "$r1" = 0 ] && [ "$r2" = 0 ] && pass "first two fires proceed (exit 0)" || fail "early fires blocked (r1=$r1 r2=$r2)"
 [ "$r3" = 8 ] && pass "third fire PARKED with exit 8 (cap reached)" || fail "cap did not fire (r3=$r3)"
-printf '%s' "$out" | grep -q 'PARKED' && pass "park message printed" || fail "no park message: $out"
+grep -q 'PARKED' <<<"$(printf '%s' "$out")" && pass "park message printed" || fail "no park message: $out"
 [ "$(wc -l < "$R/.tick/attempts/LANE-A" | tr -d ' ')" = 2 ] \
   && pass "parked fire seeded NO extra attempt (still 2 recorded)" || fail "parked fire wrongly appended"
 
 # --force bypasses the cap and logs the override, and DOES count
 out="$(LANE_MAX_ATTEMPTS=2 lane_attempt_gate "$R" "LANE-A" 1 2>&1)"; rf=$?
 [ "$rf" = 0 ] && pass "--force proceeds past the cap (exit 0)" || fail "--force blocked (rf=$rf)"
-printf '%s' "$out" | grep -q 'force override' && pass "--force logs the override" || fail "no override log: $out"
+grep -q 'force override' <<<"$(printf '%s' "$out")" && pass "--force logs the override" || fail "no override log: $out"
 [ "$(wc -l < "$R/.tick/attempts/LANE-A" | tr -d ' ')" = 3 ] \
   && pass "--force fire is recorded (now 3 attempts)" || fail "--force fire not recorded"
 

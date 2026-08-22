@@ -21,7 +21,7 @@ ct = import_module('claude-turn')
 ct.warn_if_workspace_untrusted('$TEST_DIR')
 " 2>&1)
 
-if echo "$out" | grep -q "WARNING: workspace '$TEST_DIR' is not trusted"; then
+if grep -q "WARNING: workspace '$TEST_DIR' is not trusted" <<<"$(echo "$out")"; then
   pass "untrusted workspace emits trust warning to stderr"
 else
   fail "untrusted workspace failed to emit trust warning"

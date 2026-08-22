@@ -78,7 +78,7 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-good codex good; rc=$?
 [ "$rc" -eq 0 ] && pass "Codex turn (good) exits 0" || fail "good turn rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "Codex turn committed (file-scoped)" || fail "expected a commit"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "commit touched the relay file" || fail "commit should include relay.md"
 [ "$(git -C "$A" log -1 --format='%s')" != "" ] && [ -z "$(git -C "$A" log -1 --format='%D' | grep -o 'origin/')" ] && pass "no push (no origin ref on the commit)" || pass "no push (local-only fixture)"
 
 # --- (2a) GH-165: stub skips tick entirely -> shim establishes ownership + handoff ---
@@ -139,7 +139,7 @@ printf 'unrelated WIP\n' > "$A/ambient.md"      # off-allowlist, dirty BEFORE th
 run_shim RELAY-TURN-ambient codex good; rc=$?
 [ "$rc" -eq 0 ] && pass "pre-existing dirty file -> turn still succeeds" || fail "ambient WIP must not fail the turn (rc=$rc)"
 [ -f "$A/ambient.md" ] && pass "pre-existing ambient WIP left untouched (not reverted)" || fail "ambient.md was destroyed (regression!)"
-git -C "$A" show --stat HEAD | grep -q "ambient.md" && fail "commit must NOT include ambient WIP" || pass "commit excludes pre-existing ambient WIP"
+grep -q "ambient.md" <<<"$(git -C "$A" show --stat HEAD)" && fail "commit must NOT include ambient WIP" || pass "commit excludes pre-existing ambient WIP"
 rm -f "$A/ambient.md"
 
 # --- (7) autonomy flags: default + override passed to codex exec (MBP16 [3] / GH-106) ---

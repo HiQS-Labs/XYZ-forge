@@ -21,7 +21,7 @@ out="$( cd "$FOREIGN" && env -u TICK_REPO_ROOT "$TICK" release TASK-1 --agent cl
 [ "$rc" -ne 0 ] \
   && pass "foreign-CWD release exits non-zero (no silent success)" \
   || fail "release succeeded-as-noop from foreign CWD (rc=$rc): $out"
-echo "$out" | grep -q "no .tick/events" \
+grep -q "no .tick/events" <<<"$(echo "$out")" \
   && pass "error names the missing .tick/events (actionable, not a bare 'task not found')" \
   || fail "error did not explain the wrong-CWD cause: $out"
 [ "$(claimer_of TASK-1)" = "claude-a" ] \
@@ -50,7 +50,7 @@ out="$( cd "$A" && env -u TICK_REPO_ROOT "$TICK" claim TASK-3 --agent claude-a -
 { [ "$rc" -eq 0 ] && echo "$out" | grep -q "won:"; } \
   && pass "inferred root WITH .tick/ still claims (guard not over-eager)" \
   || fail "guard broke a legit inferred-root claim (rc=$rc): $out"
-echo "$out" | grep -q "resolved repo root" \
+grep -q "resolved repo root" <<<"$(echo "$out")" \
   && pass "resolved root echoed to stderr when inferred (visibility)" \
   || fail "resolved-root echo missing from inferred-root call: $out"
 

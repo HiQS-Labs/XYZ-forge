@@ -197,7 +197,7 @@ EOF
 # codex's QA review found the worst instance of this class, and it is NOT a flaky test:
 #
 #   relay-automation/agy-turn.sh:254   and   relay-automation/consult.sh:224
-#     grep -v -e … "$LOG" | grep -qF "$ROOT"
+grep -qF "$ROOT" <<<"$(#     grep -v -e … "$LOG")"
 #
 # Both set `set -euo pipefail` (:4). On a large transcript the downstream `grep -q` matches and exits,
 # the upstream `grep -v` takes SIGPIPE, pipefail makes the pipeline non-zero, the `if` evaluates FALSE —

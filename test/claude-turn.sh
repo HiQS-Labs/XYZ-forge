@@ -73,8 +73,8 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-good claude-builder good; rc=$?
 [ "$rc" -eq 0 ] && pass "Claude turn (good) exits 0" || fail "good turn rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "Claude turn committed (file-scoped)" || fail "expected a commit"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
-git -C "$A" log -1 --format='%s' | grep -q "claude-builder" && pass "commit message includes agent id" || pass "commit created (no agent-id check for builder)"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "commit touched the relay file" || fail "commit should include relay.md"
+grep -q "claude-builder" <<<"$(git -C "$A" log -1 --format='%s')" && pass "commit message includes agent id" || pass "commit created (no agent-id check for builder)"
 
 # --- (2b) shim's own transcript log inside the tree is ignored, not flagged --
 seed_token RELAY-TURN-log
@@ -115,7 +115,7 @@ printf 'unrelated WIP\n' > "$A/ambient.md"
 run_shim RELAY-TURN-ambient claude-builder good; rc=$?
 [ "$rc" -eq 0 ] && pass "pre-existing dirty file -> turn still succeeds" || fail "ambient WIP must not fail the turn (rc=$rc)"
 [ -f "$A/ambient.md" ] && pass "pre-existing ambient WIP left untouched (not reverted)" || fail "ambient.md was destroyed (regression!)"
-git -C "$A" show --stat HEAD | grep -q "ambient.md" && fail "commit must NOT include ambient WIP" || pass "commit excludes pre-existing ambient WIP"
+grep -q "ambient.md" <<<"$(git -C "$A" show --stat HEAD)" && fail "commit must NOT include ambient WIP" || pass "commit excludes pre-existing ambient WIP"
 rm -f "$A/ambient.md"
 
 # --- (7) flag check: builder allowlist flags reach the claude stub ---------

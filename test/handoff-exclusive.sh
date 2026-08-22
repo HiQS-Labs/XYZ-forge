@@ -13,7 +13,7 @@ TICK_TS=2026-05-04T10:00:02.000Z tick_a release TASK-007 --agent alice --to bob 
 INITIAL_EVENTS=$(ls -1 "$A/.tick/events" | wc -l)
 CLAIM_OUT=$(TICK_TS=2026-05-04T10:00:03.000Z tick_b claim TASK-007 --agent charlie --paths "src/auth/**" 2>&1)
 
-if echo "$CLAIM_OUT" | grep -q "lost: TASK-007 is reserved for another agent"; then
+if grep -q "lost: TASK-007 is reserved for another agent" <<<"$(echo "$CLAIM_OUT")"; then
   pass "wrong-handoff_to claim is refused"
 else
   fail "expected wrong-handoff claim to be refused, got: $CLAIM_OUT"
@@ -29,7 +29,7 @@ fi
 # Now Charlie tries to TAKE (the only task is reserved for bob → no task) — and ZERO events.
 EVENTS_BEFORE_TAKE=$(ls -1 "$A/.tick/events" | wc -l)
 TAKE_OUT=$(TICK_TS=2026-05-04T10:00:04.000Z tick_b take --agent charlie 2>&1)
-if echo "$TAKE_OUT" | grep -q "(no available task)"; then
+if grep -q "(no available task)" <<<"$(echo "$TAKE_OUT")"; then
   pass "wrong-handoff_to take skips the task (returns no tasks)"
 else
   fail "expected take to skip the reserved task and return no tasks, got: $TAKE_OUT"
@@ -43,7 +43,7 @@ fi
 
 # POSITIVE ROUTED CASE — claim: the task reserved for bob (TASK-007) is claimed by bob (handoff_to == caller).
 CLAIM_BOB=$(TICK_TS=2026-05-04T10:00:05.000Z tick_b claim TASK-007 --agent bob --paths "src/auth/**" 2>&1)
-if echo "$CLAIM_BOB" | grep -q "won: TASK-007"; then
+if grep -q "won: TASK-007" <<<"$(echo "$CLAIM_BOB")"; then
   pass "handoff target (bob) can claim the task routed to it"
 else
   fail "expected bob to claim TASK-007 via handoff routing, got: $CLAIM_BOB"
@@ -55,7 +55,7 @@ TICK_TS=2026-05-04T10:00:06.000Z tick_a log task.created TASK-008 --agent dispat
 TICK_TS=2026-05-04T10:00:07.000Z tick_a claim TASK-008 --agent alice --paths "src/api/**" >/dev/null
 TICK_TS=2026-05-04T10:00:08.000Z tick_a release TASK-008 --agent alice --to bob >/dev/null
 TAKE_BOB=$(TICK_TS=2026-05-04T10:00:09.000Z tick_b take --agent bob 2>&1)
-if echo "$TAKE_BOB" | grep -q "won: TASK-008"; then
+if grep -q "won: TASK-008" <<<"$(echo "$TAKE_BOB")"; then
   pass "handoff target (bob) can take the task routed to it"
 else
   fail "expected bob to win TASK-008 via handoff routing, got: $TAKE_BOB"

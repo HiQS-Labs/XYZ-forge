@@ -81,7 +81,7 @@ for entry in "${ENTRYPOINTS[@]}"; do
   # (5) ordering: when a lane prints usage alongside the diagnostic, the diagnostic must come LAST.
   # usage goes to stdout and die() to stderr, so without an explicit flush they interleave wrong
   # under 2>&1 and the error appears above the usage it is meant to follow.
-  if printf '%s\n' "$py_out" | grep -q '^Usage:'; then
+  if grep -q '^Usage:' <<<"$(printf '%s\n' "$py_out")"; then
     if [ "$(printf '%s\n' "$py_out" | tail -1)" = "$py_line" ]; then
       pass "$name: Python lane prints usage before the diagnostic, not after"
     else

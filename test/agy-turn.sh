@@ -112,8 +112,8 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-good agy good; rc=$?
 [ "$rc" -eq 0 ] && pass "agy turn (good) exits 0" || fail "good turn rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "agy turn committed (file-scoped)" || fail "expected a commit"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
-git -C "$A" log -1 --format='%s' | grep -q "agy headless" && pass "commit message names the agy tool" || fail "commit msg should say agy"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "commit touched the relay file" || fail "commit should include relay.md"
+grep -q "agy headless" <<<"$(git -C "$A" log -1 --format='%s')" && pass "commit message names the agy tool" || fail "commit msg should say agy"
 
 # --- (3) off-lane edit -> reverted + fail (exit 6), shared guard ---------
 seed_token RELAY-TURN-bad

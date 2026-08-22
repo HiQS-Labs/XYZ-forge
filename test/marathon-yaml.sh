@@ -91,7 +91,7 @@ run "$WORK/m7.yaml" >/dev/null; rc=$?
   && pass "reviewer must be an accepted prefix -> error" || fail "should reject 'claude' reviewer (rc=$rc)"
 
 # --- (8) json format emits the marathon name ------------------------------
-run "$WORK/m1.yaml" --format json | grep -q '"name": "trinity-sync-refactor"' \
+grep -q '"name": "trinity-sync-refactor"' <<<"$(run "$WORK/m1.yaml" --format json)" \
   && pass "--format json emits the marathon name" || fail "json format broken"
 
 # --- (9) depends_on flow-sequence form -> shape-specific error (GH-241) ----

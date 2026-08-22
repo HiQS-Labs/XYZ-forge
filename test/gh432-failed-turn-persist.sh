@@ -91,7 +91,7 @@ fi
 # unmoved, `git show HEAD` inspects the seed commit — which also touches relay.md — so the naive
 # form reported PASS against the pre-fix tree while nothing had been committed at all.
 if [ "$after" != "$before" ] \
-   && git -C "$A" log "$before"..HEAD --name-only --format= 2>/dev/null | grep -qx 'relay.md'; then
+   && grep -qx 'relay.md' <<<"$(git -C "$A" log "$before"..HEAD --name-only --format= 2>/dev/null)"; then
   pass "the commit contains the relay file the turn actually wrote"
 else
   fail "GH-432: no new commit touching relay.md — the turn's own work was not persisted"
@@ -119,7 +119,7 @@ fi
 seed_token RELAY-GH432-crashbad
 before2="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-GH432-crashbad crashbad; rc2=$?
-if git -C "$A" log "$before2"..HEAD --name-only --format= 2>/dev/null | grep -qx 'offlane.md'; then
+if grep -qx 'offlane.md' <<<"$(git -C "$A" log "$before2"..HEAD --name-only --format= 2>/dev/null)"; then
   fail "GH-432: an off-lane file from a crashed turn was COMMITTED — containment regressed"
 else
   pass "an off-lane edit from a crashed turn is never committed (containment intact)"

@@ -117,10 +117,10 @@ cmp -s <(printf 'lane v2\n') "$R/lane.md" && pass "CONTROL: off-lane turns copy 
 # ── (5) the prompt names the affordance at the point of use ─────────────────────────────────────
 RTL_ROOT="$R"
 out="$(rtl_turn_prompt builder "$R/lane.md" TASK lane.md)"
-printf '%s' "$out" | grep -q '.relay-scratch' \
+grep -q '.relay-scratch' <<<"$(printf '%s' "$out")" \
   && pass "rtl_turn_prompt: the prompt TELLS the builder where scratch goes" \
   || fail "rtl_turn_prompt: scratch affordance not named"
-printf '%s' "$out" | grep -q 'never copied back' \
+grep -q 'never copied back' <<<"$(printf '%s' "$out")" \
   && pass "rtl_turn_prompt: and says what happens to it (never copied back)" \
   || fail "rtl_turn_prompt: scratch disposition not stated"
 # PR #93 review, finding 1: the format string must carry a conversion for EVERY argument —
@@ -133,7 +133,7 @@ printf '%s' "$out" | grep -q 'never copied back' \
 [ "$(printf '%s' "$out" | grep -c '.relay-scratch')" -eq 1 ] \
   && pass "rtl_turn_prompt: the scratch note appears exactly once" \
   || fail "rtl_turn_prompt: scratch note appears $(printf '%s' "$out" | grep -c '.relay-scratch') times"
-printf '%s' "$out" | grep -q 'gate after your turn. Verification output' \
+grep -q 'gate after your turn. Verification output' <<<"$(printf '%s' "$out")" \
   && pass "rtl_turn_prompt: the note lands in its own slot at the end of the template" \
   || fail "rtl_turn_prompt: scratch note is not in the intended position"
 

@@ -12,7 +12,7 @@ TICK_TS=2026-05-04T10:00:05.000Z tick_a claim TASK-007 --agent alice --paths "sr
 # tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
 NEXT1=$(tick_b next --agent bob)
 echo "  before scope expansion, bob's next: $NEXT1"
-if ! echo "$NEXT1" | grep -q "TASK-010"; then
+if ! grep -q "TASK-010" <<<"$(echo "$NEXT1")"; then
   fail "bob should have seen TASK-010 (highest priority, no overlap yet)"
 fi
 
@@ -21,10 +21,10 @@ TICK_TS=2026-05-04T10:00:10.000Z tick_a scope TASK-007 --agent alice --paths "sr
 
 NEXT2=$(tick_b next --agent bob)
 echo "  after scope expansion, bob's next: $NEXT2"
-if echo "$NEXT2" | grep -q "TASK-010"; then
+if grep -q "TASK-010" <<<"$(echo "$NEXT2")"; then
   fail "bob still got TASK-010 after alice expanded scope to src/middleware/**"
 fi
-if echo "$NEXT2" | grep -q "TASK-011"; then
+if grep -q "TASK-011" <<<"$(echo "$NEXT2")"; then
   pass "bob now routed to TASK-011 after alice's scope expansion"
 else
   fail "expected TASK-011, got: $NEXT2"

@@ -33,17 +33,17 @@ set_field() {
 
 # --- exact match: silent/ok, no DRIFT ---
 out="$("$SYNC" check "$REPO1" 2>&1)"
-echo "$out" | grep -q "DRIFT" && fail "exact match wrongly reported drift: $out"
-echo "$out" | grep -q "ok    $REPO1/.xyz" && pass "exact match: ok line, no drift warning" \
+grep -q "DRIFT" <<<"$(echo "$out")" && fail "exact match wrongly reported drift: $out"
+grep -q "ok    $REPO1/.xyz" <<<"$(echo "$out")" && pass "exact match: ok line, no drift warning" \
   || fail "exact match produced no ok line: $out"
 
 # --- tick_version-only drift ---
 set_field "$REPO1/.xyz" 3 "bogus-version-9.9.9"
 out="$("$SYNC" check "$REPO1" 2>&1)"
-echo "$out" | grep -q "DRIFT $REPO1/.xyz (tick_version drifted)" \
+grep -q "DRIFT $REPO1/.xyz (tick_version drifted)" <<<"$(echo "$out")" \
   && pass "tick_version-only drift: detected and named, source_commit not blamed" \
   || fail "tick_version-only drift not reported correctly: $out"
-echo "$out" | grep -q "recorded: tick_version=bogus-version-9.9.9 source_commit=$HEAD" \
+grep -q "recorded: tick_version=bogus-version-9.9.9 source_commit=$HEAD" <<<"$(echo "$out")" \
   && pass "tick_version-only drift: recorded line shows the stale tick_version + matching commit" \
   || fail "tick_version-only drift: recorded line wrong: $out"
 set_field "$REPO1/.xyz" 3 "$CUR_VER"
@@ -51,7 +51,7 @@ set_field "$REPO1/.xyz" 3 "$CUR_VER"
 # --- source_commit-only drift ---
 set_field "$REPO1/.xyz" 4 "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 out="$("$SYNC" check "$REPO1" 2>&1)"
-echo "$out" | grep -q "DRIFT $REPO1/.xyz (source_commit drifted)" \
+grep -q "DRIFT $REPO1/.xyz (source_commit drifted)" <<<"$(echo "$out")" \
   && pass "source_commit-only drift: detected and named, tick_version not blamed" \
   || fail "source_commit-only drift not reported correctly: $out"
 set_field "$REPO1/.xyz" 4 "$HEAD"
@@ -60,10 +60,10 @@ set_field "$REPO1/.xyz" 4 "$HEAD"
 set_field "$REPO1/.xyz" 3 "bogus-version-9.9.9"
 set_field "$REPO1/.xyz" 4 "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 out="$("$SYNC" check "$REPO1" 2>&1)"
-echo "$out" | grep -q "DRIFT $REPO1/.xyz (tick_version,source_commit drifted)" \
+grep -q "DRIFT $REPO1/.xyz (tick_version,source_commit drifted)" <<<"$(echo "$out")" \
   && pass "both fields drifted: both named together" \
   || fail "both-drifted case not reported correctly: $out"
-echo "$out" | grep -q "current:  tick_version=$CUR_VER source_commit=$HEAD" \
+grep -q "current:  tick_version=$CUR_VER source_commit=$HEAD" <<<"$(echo "$out")" \
   && pass "both-drifted: current line shows this harness's live values" \
   || fail "both-drifted: current line wrong: $out"
 set_field "$REPO1/.xyz" 3 "$CUR_VER"
@@ -72,9 +72,9 @@ set_field "$REPO1/.xyz" 4 "$HEAD"
 # --- --all over multiple registered installs: repo1 clean, repo2 drifted ---
 set_field "$REPO2/.xyz" 3 "bogus-version-9.9.9"
 out="$("$SYNC" check --all 2>&1)"
-echo "$out" | grep -q "ok    $REPO1/.xyz" && pass "--all: clean install (repo1) reported ok" \
+grep -q "ok    $REPO1/.xyz" <<<"$(echo "$out")" && pass "--all: clean install (repo1) reported ok" \
   || fail "--all missed repo1's ok line: $out"
-echo "$out" | grep -q "DRIFT $REPO2/.xyz (tick_version drifted)" \
+grep -q "DRIFT $REPO2/.xyz (tick_version drifted)" <<<"$(echo "$out")" \
   && pass "--all: drifted install (repo2) reported DRIFT" \
   || fail "--all missed repo2's drift: $out"
 set_field "$REPO2/.xyz" 3 "$CUR_VER"
@@ -85,7 +85,7 @@ UNREG="$(cd "$WORK/unregistered" && pwd -P)"
 out="$("$SYNC" check "$UNREG" 2>&1)"; rc=$?
 [ "$rc" = 0 ] && pass "check on an unregistered target exits 0 (no new failure mode)" \
   || fail "check on an unregistered target exited $rc"
-echo "$out" | grep -qi "no vendored registry rows matched" \
+grep -qi "no vendored registry rows matched" <<<"$(echo "$out")" \
   && pass "check on an unregistered target: graceful message, same style as update/delete" \
   || fail "check on an unregistered target: unexpected output: $out"
 
@@ -94,7 +94,7 @@ EMPTY_REGISTRY="$WORK/empty-registry.tsv"
 out="$(XYZ_REGISTRY="$EMPTY_REGISTRY" "$SYNC" check --all 2>&1)"; rc=$?
 [ "$rc" = 0 ] && pass "check --all with no registry file exits 0 (no new failure mode)" \
   || fail "check --all with no registry file exited $rc"
-echo "$out" | grep -qi "no vendored registry rows matched" \
+grep -qi "no vendored registry rows matched" <<<"$(echo "$out")" \
   && pass "check --all with no registry file: graceful message" \
   || fail "check --all with no registry file: unexpected output: $out"
 

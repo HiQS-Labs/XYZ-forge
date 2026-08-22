@@ -84,8 +84,8 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-good pi good; rc=$?
 [ "$rc" -eq 0 ] && pass "Pi turn (good) exits 0" || fail "good turn rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "Pi turn committed (file-scoped)" || fail "expected a commit"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
-git -C "$A" log -1 --format='%s' | grep -q "pi headless" && pass "commit message names the pi tool" || fail "commit msg should say pi"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "commit touched the relay file" || fail "commit should include relay.md"
+grep -q "pi headless" <<<"$(git -C "$A" log -1 --format='%s')" && pass "commit message names the pi tool" || fail "commit msg should say pi"
 if grep -rl '"type":"cost.tokens".*"task":"RELAY-TURN-good"' "$A/.tick/events" >/dev/null 2>&1; then
   pass "GH-295: Pi turn emits a real cost.tokens event (unlike agy's cost-blind lane)"
 else

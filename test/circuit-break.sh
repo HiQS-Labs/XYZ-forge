@@ -9,7 +9,7 @@ TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-008 --agent dispat
 # Pre-break: bob would pick TASK-007 (priority 100).
 # tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
 PRE=$(tick_b next --agent bob)
-if ! echo "$PRE" | grep -q "TASK-007"; then
+if ! grep -q "TASK-007" <<<"$(echo "$PRE")"; then
   fail "expected TASK-007 pre-break, got: $PRE"
 fi
 
@@ -19,10 +19,10 @@ TICK_TS=2026-05-04T10:00:05.000Z tick_a break TASK-007 --agent alice --reason "i
 
 POST=$(tick_b next --agent bob)
 echo "  post-break, bob's next: $POST"
-if echo "$POST" | grep -q "TASK-007"; then
+if grep -q "TASK-007" <<<"$(echo "$POST")"; then
   fail "bob still got TASK-007 after circuit break"
 fi
-if echo "$POST" | grep -q "TASK-008"; then
+if grep -q "TASK-008" <<<"$(echo "$POST")"; then
   pass "bob skipped broken TASK-007 and got TASK-008"
 else
   fail "expected TASK-008, got: $POST"

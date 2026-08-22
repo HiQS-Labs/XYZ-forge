@@ -18,7 +18,7 @@ if [ $status -ne 0 ]; then
   echo "FAIL: Escaped newline serialization test failed with status $status"
   exit 1
 fi
-echo "$output" | grep -q "SERIALIZATION_OK" || {
+grep -q "SERIALIZATION_OK" <<<"$(echo "$output")" || {
   echo "FAIL: Output did not contain expected normalized string. Got: $output"
   exit 1
 }
@@ -30,7 +30,7 @@ if [ $status -ne 0 ]; then
   echo "FAIL: Nested quotes test failed with status $status"
   exit 1
 fi
-echo "$output" | grep -q 'RESULT:hello \\"nested\\" \$dollar' || {
+grep -q 'RESULT:hello \\"nested\\" \$dollar' <<<"$(echo "$output")" || {
   echo "FAIL: Output did not preserve nested quotes. Got: $output"
   exit 1
 }
@@ -42,7 +42,7 @@ if [ $status -eq 0 ]; then
   echo "FAIL: Expected non-zero exit code for syntax error, got 0"
   exit 1
 fi
-echo "$output" | grep -q '"status": "fail"' || {
+grep -q '"status": "fail"' <<<"$(echo "$output")" || {
   echo "FAIL: JSON status was not 'fail' for syntax error. Got: $output"
   exit 1
 }
@@ -64,7 +64,7 @@ if [ $elapsed -lt 2 ] || [ $elapsed -gt 5 ]; then
   exit 1
 fi
 
-echo "$output" | grep -q '"timed_out": true' || {
+grep -q '"timed_out": true' <<<"$(echo "$output")" || {
   echo "FAIL: JSON output did not indicate timed_out: true. Got: $output"
   exit 1
 }

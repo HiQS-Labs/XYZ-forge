@@ -21,13 +21,14 @@ while the four axes keep their honest values underneath.
 | 9 | **245** | [GH-108](https://github.com/HiQS-Suite/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 10 | **230** | [GH-105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) — vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on) | Cargo | queue | 75 | 50 | 60 | 45 | 230 | — |
 | 11 | **220** | [GH-32](https://github.com/HiQS-Suite/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Queue / parked intake | 70 | 50 | 65 | 35 | 220 | — |
-| 12 | **210** | [GH-5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Daybreak | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
-| 13 | **195** | [GH-35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Queue / parked intake | 55 | 45 | 50 | 45 | 195 | — |
-| 14 | **190** | [GH-61](https://github.com/HiQS-Suite/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
-| 15 | **185** | [GH-17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
-| 16 | **185** | [GH-42](https://github.com/HiQS-Suite/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Queue / parked intake | 50 | 35 | 55 | 45 | 185 | — |
-| 17 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
-| 18 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
+| 12 | **215** | [GH-135](https://github.com/HiQS-Suite/XYZ-forge/issues/135) — GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | In progress | 60 | 55 | 55 | 45 | 215 | — |
+| 13 | **210** | [GH-5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Daybreak | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
+| 14 | **195** | [GH-35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Queue / parked intake | 55 | 45 | 50 | 45 | 195 | — |
+| 15 | **190** | [GH-61](https://github.com/HiQS-Suite/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
+| 16 | **185** | [GH-17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
+| 17 | **185** | [GH-42](https://github.com/HiQS-Suite/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Queue / parked intake | 50 | 35 | 55 | 45 | 185 | — |
+| 18 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
+| 19 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
 
 **Top of the line:** GH-67 — Commandcode builder default widened to `--yolo` — closer evaluation → possible build (score 340, operator override).
 

@@ -71,7 +71,7 @@ node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))' "$R/packet/run
   && pass "T1 run-candidate.json is valid JSON" || fail "T1 run-candidate.json invalid JSON"
 # GH-75: the generated invocation self-propagates the swarm harness tag — the operator runs it verbatim
 # and the marathon-drive run records harness:"swarm" (not "marathon") in XYZ.json, no extra step.
-head -1 "$R/packet/marathon-invocation.txt" | grep -q '^XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=[^ ]* RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh' \
+grep -q '^XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=[^ ]* RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh' <<<"$(head -1 "$R/packet/marathon-invocation.txt")" \
   && pass "T1 marathon-invocation.txt carries swarm/session/isolation context (GH-75/GH-294)" \
   || fail "T1 invocation missing swarm tag / session id: $(head -1 "$R/packet/marathon-invocation.txt")"
 # GH-294: generated packets must opt every marathon turn into worktree isolation. The packet is

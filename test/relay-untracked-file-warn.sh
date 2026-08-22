@@ -32,14 +32,14 @@ seed_token() {  # <task> <relayfile>
 printf 'STATUS: In progress\n# body\n' >"$A/relayA.md"
 seed_token RELAY-A relayA.md
 outA="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$NOOP_STUB" --round-cap 1 --target-root "$A" 2>&1)"
-printf '%s' "$outA" | grep -q "not committed at HEAD" \
+grep -q "not committed at HEAD" <<<"$(printf '%s' "$outA")" \
   && pass "uncommitted relay file under isolation notes it" || fail "expected untracked note (out: $outA)"
-printf '%s' "$outA" | grep -q "NOTE —" \
+grep -q "NOTE —" <<<"$(printf '%s' "$outA")" \
   && pass "same-repo case is an informational NOTE, not a WARNING" || fail "expected NOTE tone (out: $outA)"
-printf '%s' "$outA" | grep -q "will find nothing" \
+grep -q "will find nothing" <<<"$(printf '%s' "$outA")" \
   && fail "same-repo case should NOT claim the reviewer will find nothing — seeding covers it (out: $outA)" \
   || pass "same-repo case does not make the false 'will find nothing' claim"
-printf '%s' "$outA" | grep -q "RELAY_WORKTREE_ISOLATION=0" \
+grep -q "RELAY_WORKTREE_ISOLATION=0" <<<"$(printf '%s' "$outA")" \
   && pass "note still mentions the isolation-off option" || fail "note missing isolation-off mention (out: $outA)"
 
 # --- Case A2: isolation on + UNCOMMITTED relay file, DIFFERENT repo than ROOT (archive-routed
@@ -47,9 +47,9 @@ printf '%s' "$outA" | grep -q "RELAY_WORKTREE_ISOLATION=0" \
 printf 'STATUS: In progress\n# body in B\n' >"$B/relayA2.md"
 seed_token RELAY-A2 relayA2.md
 outA2="$(bash "$DRIVE" --relay-file "$B/relayA2.md" --relay-task RELAY-A2 --agent-cmd "$NOOP_STUB" --round-cap 1 2>&1)"
-printf '%s' "$outA2" | grep -q "WARNING — relay file is not committed at HEAD" \
+grep -q "WARNING — relay file is not committed at HEAD" <<<"$(printf '%s' "$outA2")" \
   && pass "cross-repo uncommitted relay file still gets the strong WARNING" || fail "expected strong WARNING for cross-repo case (out: $outA2)"
-printf '%s' "$outA2" | grep -q "will find nothing" \
+grep -q "will find nothing" <<<"$(printf '%s' "$outA2")" \
   && pass "cross-repo WARNING keeps the 'will find nothing' claim (still accurate there)" || fail "cross-repo WARNING lost its accurate claim (out: $outA2)"
 
 # --- Case B: isolation on + COMMITTED relay file → no warn (visible at HEAD). ---
@@ -58,7 +58,7 @@ git -C "$A" add relayB.md >/dev/null 2>&1
 git -C "$A" commit -q -m "commit relay file" >/dev/null 2>&1
 seed_token RELAY-B relayB.md
 outB="$(bash "$DRIVE" --relay-file "$A/relayB.md" --relay-task RELAY-B --agent-cmd "$NOOP_STUB" --round-cap 1 2>&1)"
-printf '%s' "$outB" | grep -q "not committed at HEAD" \
+grep -q "not committed at HEAD" <<<"$(printf '%s' "$outB")" \
   && fail "committed relay file should NOT warn (out: $outB)" \
   || pass "committed relay file does not warn"
 
@@ -66,7 +66,7 @@ printf '%s' "$outB" | grep -q "not committed at HEAD" \
 printf 'STATUS: In progress\n# body\n' >"$A/relayC.md"
 seed_token RELAY-C relayC.md
 outC="$(RELAY_WORKTREE_ISOLATION=0 bash "$DRIVE" --relay-file "$A/relayC.md" --relay-task RELAY-C --agent-cmd "$NOOP_STUB" --round-cap 1 2>&1)"
-printf '%s' "$outC" | grep -q "not committed at HEAD" \
+grep -q "not committed at HEAD" <<<"$(printf '%s' "$outC")" \
   && fail "isolation=0 should NOT warn (out: $outC)" \
   || pass "isolation off suppresses the warn"
 

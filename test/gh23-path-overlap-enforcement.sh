@@ -20,7 +20,7 @@ fi
 # 2. Bob attempts direct claim on TASK-102 (src/auth/login.js) -> MUST FAIL due to overlap with Alice
 BOB_OUT=$(tick_b claim TASK-102 --agent bob --paths "src/auth/login.js" 2>&1)
 BOB_STATUS=$?
-if [ $BOB_STATUS -ne 0 ] && echo "$BOB_OUT" | grep -q "paths overlap active claim (TASK-101) held by alice"; then
+if grep -q "paths overlap active claim (TASK-101) held by alice" <<<"$([ $BOB_STATUS -ne 0 ] && echo "$BOB_OUT")"; then
   pass "direct claim on overlapping task TASK-102 rejected (exit $BOB_STATUS): $BOB_OUT"
 else
   fail "direct claim on overlapping task was not rejected! status=$BOB_STATUS out=$BOB_OUT"
@@ -37,7 +37,7 @@ fi
 # 3. Bob uses --force -> MUST SUCCEED
 BOB_FORCE_OUT=$(tick_b claim TASK-102 --agent bob --paths "src/auth/login.js" --force 2>&1)
 BOB_FORCE_STATUS=$?
-if [ $BOB_FORCE_STATUS -eq 0 ] && echo "$BOB_FORCE_OUT" | grep -q "won: TASK-102 claimed by bob"; then
+if grep -q "won: TASK-102 claimed by bob" <<<"$([ $BOB_FORCE_STATUS -eq 0 ] && echo "$BOB_FORCE_OUT")"; then
   pass "direct claim with --force succeeded: $BOB_FORCE_OUT"
 else
   fail "direct claim with --force failed! status=$BOB_FORCE_STATUS out=$BOB_FORCE_OUT"
@@ -64,7 +64,7 @@ fi
 # 5. Bob attempts tick scope on TASK-103 to include "src/auth/oauth.js" -> MUST FAIL due to overlap with Alice
 SCOPE_OUT=$(tick_b scope TASK-103 --agent bob --paths "src/billing/**,src/auth/oauth.js" 2>&1)
 SCOPE_STATUS=$?
-if [ $SCOPE_STATUS -ne 0 ] && echo "$SCOPE_OUT" | grep -q "paths overlap active claim (TASK-101) held by alice"; then
+if grep -q "paths overlap active claim (TASK-101) held by alice" <<<"$([ $SCOPE_STATUS -ne 0 ] && echo "$SCOPE_OUT")"; then
   pass "scope expansion into overlapping paths rejected (exit $SCOPE_STATUS): $SCOPE_OUT"
 else
   fail "scope expansion into overlapping paths was not rejected! status=$SCOPE_STATUS out=$SCOPE_OUT"
@@ -81,7 +81,7 @@ fi
 # 6. Bob uses tick scope --force -> MUST SUCCEED
 SCOPE_FORCE_OUT=$(tick_b scope TASK-103 --agent bob --paths "src/billing/**,src/auth/oauth.js" --force 2>&1)
 SCOPE_FORCE_STATUS=$?
-if [ $SCOPE_FORCE_STATUS -eq 0 ] && echo "$SCOPE_FORCE_OUT" | grep -q "scoped: TASK-103"; then
+if grep -q "scoped: TASK-103" <<<"$([ $SCOPE_FORCE_STATUS -eq 0 ] && echo "$SCOPE_FORCE_OUT")"; then
   pass "scope expansion with --force succeeded: $SCOPE_FORCE_OUT"
 else
   fail "scope expansion with --force failed! status=$SCOPE_FORCE_STATUS out=$SCOPE_FORCE_OUT"
@@ -102,7 +102,7 @@ tick_a done TASK-101 --agent alice --note "auth done" >/dev/null
 TICK_TS=2026-05-04T10:00:10.000Z tick_a log task.created TASK-104 --agent dispatcher --paths "src/auth/register.js" >/dev/null
 CHARLIE_AUTH_OUT=$(tick_b claim TASK-104 --agent charlie --paths "src/auth/register.js" 2>&1)
 CHARLIE_AUTH_STATUS=$?
-if [ $CHARLIE_AUTH_STATUS -eq 0 ] && echo "$CHARLIE_AUTH_OUT" | grep -q "won: TASK-104 claimed by charlie"; then
+if grep -q "won: TASK-104 claimed by charlie" <<<"$([ $CHARLIE_AUTH_STATUS -eq 0 ] && echo "$CHARLIE_AUTH_OUT")"; then
   pass "release unblocking verified: charlie claimed TASK-104 after alice completed TASK-101"
 else
   fail "release unblocking failed! status=$CHARLIE_AUTH_STATUS out=$CHARLIE_AUTH_OUT"
@@ -112,7 +112,7 @@ fi
 TICK_TS=2026-05-04T10:00:12.000Z tick_a log task.created TASK-106 --agent dispatcher --paths "src/auth/oauth.js" >/dev/null
 DAVE_OUT=$(tick_b claim TASK-106 --agent dave --paths "src/auth/oauth.js" 2>&1)
 DAVE_STATUS=$?
-if [ $DAVE_STATUS -ne 0 ] && echo "$DAVE_OUT" | grep -q "paths overlap active claim (TASK-103) held by bob"; then
+if grep -q "paths overlap active claim (TASK-103) held by bob" <<<"$([ $DAVE_STATUS -ne 0 ] && echo "$DAVE_OUT")"; then
   pass "third-party claim rejected against Bob's forced active scope: $DAVE_OUT"
 else
   fail "third-party claim was not rejected against forced scope! status=$DAVE_STATUS out=$DAVE_OUT"
@@ -120,7 +120,7 @@ fi
 
 # 10. Idempotent re-claim: Charlie re-claims own held task (TASK-104) -> MUST SUCCEED (won)
 CHARLIE_RECLAIM=$(tick_b claim TASK-104 --agent charlie --paths "src/auth/register.js" 2>&1)
-if [ $? -eq 0 ] && echo "$CHARLIE_RECLAIM" | grep -q "won: TASK-104 claimed by charlie"; then
+if grep -q "won: TASK-104 claimed by charlie" <<<"$([ $? -eq 0 ] && echo "$CHARLIE_RECLAIM")"; then
   pass "idempotent re-claim by current holder succeeded without self-overlap rejection"
 else
   fail "idempotent re-claim failed! out=$CHARLIE_RECLAIM"

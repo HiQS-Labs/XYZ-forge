@@ -52,7 +52,7 @@ reset_state() { rm -rf "$A/phases" "$A/.tick"; tick_a init >/dev/null 2>&1 || tr
 
 # --- (1) Acceptance criterion 1: marathon.sh --help text states when --retry is the wrong choice ---
 help_out="$(MARATHON_ROOT="$A" bash "$MARATHON_SH" --help 2>&1)"
-printf '%s' "$help_out" | grep -q "GH-491: if the phase's relay is already terminal" \
+grep -q "GH-491: if the phase's relay is already terminal" <<<"$(printf '%s' "$help_out")" \
   && pass "marathon.sh --help explains that satisfied phases should re-fire plainly without --retry" \
   || fail "marathon.sh --help missing GH-491 guidance: $help_out"
 
@@ -61,15 +61,15 @@ reset_state
 seed_relay "Approved" "$BASE"
 mk_token "$BASE" done
 out="$(run_driver --relay-task "${BASE}-2")"
-printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && pass "GH-491: advisory fires when --retry is passed on a terminal/Approved/done phase" \
   || fail "GH-491 advisory missing on satisfied phase under --retry: $out"
-printf '%s' "$out" | grep -q "GH-491" \
+grep -q "GH-491" <<<"$(printf '%s' "$out")" \
   && pass "advisory explicitly cites GH-491" \
   || fail "advisory does not cite GH-491: $out"
 
 # --- (3) Acceptance criterion 3: Advisory does NOT alter --retry's behavior (rebuilds) ---
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "advisory erroneously short-circuited -- --retry must still rebuild: $out" \
   || pass "advisory preserves --retry's rebuild behavior"
 
@@ -79,7 +79,7 @@ reset_state
 seed_relay "Approved" "$BASE"
 mk_token "$BASE" claimed
 out="$(run_driver --relay-task "${BASE}-2")"
-printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && fail "control 4a failed: advisory fired when recorded token was not done: $out" \
   || pass "control 4a: no advisory when recorded token is not done"
 
@@ -88,7 +88,7 @@ reset_state
 seed_relay "Open" "$BASE"
 mk_token "$BASE" done
 out="$(run_driver --relay-task "${BASE}-2")"
-printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && fail "control 4b failed: advisory fired when relay was non-terminal: $out" \
   || pass "control 4b: no advisory when relay status is non-terminal"
 
@@ -97,7 +97,7 @@ reset_state
 seed_relay "Approved" "$BASE"
 mk_token "$BASE" done
 out="$(run_driver)"
-printf '%s' "$out" | grep -q "already reached a terminal relay" \
+grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "plain refire without --retry correctly hits the gate-only already-satisfied short-circuit" \
   || fail "plain refire failed to short-circuit: $out"
 [ ! -s "$RD_CALLS" ] \

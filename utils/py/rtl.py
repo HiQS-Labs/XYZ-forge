@@ -39,6 +39,16 @@ AGY_AUTH_ERROR_PREFIXES = ("cli error:", "error:", "panic:", "fatal:")
 # bubbletea wording; measured on Linux 2026-08-20, `agy whoami` eventually prints
 # "CLI error: error entering raw mode: input/output error" instead. Same cause, same verdict.
 AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty", "error entering raw mode")
+# #130: a CLI that rejects the `whoami` SUBCOMMAND ITSELF is the wrong instrument, not a failed
+# login. agy 1.1.18 (measured 2026-08-21) has no `whoami` and exits 2 with
+# `Error: unexpected argument "whoami".` — which carries the `error:` prefix, so without this
+# earlier check the probe output reads as a credentials failure and kills a lane whose auth was
+# never in question. Same epistemics as the TTY markers: the probe could not run, so it
+# established nothing either way -> unverifiable, non-blocking. Matched as substrings on the
+# lowercased line because clap's wording varies across versions/derivatives; each marker is
+# specific enough that a successful `whoami` (which prints account identity) cannot contain it.
+AGY_AUTH_USAGE_MARKERS = ("unexpected argument", "unexpected subcommand", "unrecognized subcommand",
+                          "unknown command", "invalid subcommand", "unknown flag")
 
 # The control sequences a full-screen TUI writes when it SEIZES the terminal: enable the alternate
 # screen buffer, hide the cursor, enable bracketed paste. Nothing but a terminal takeover emits
@@ -137,6 +147,12 @@ def agy_auth_output_verdict(out_file):
         # error-prefix branch below would otherwise claim it and fail a lane that is perfectly fine.
         if any(m in low for m in AGY_AUTH_TTY_MARKERS):
             return ("unverifiable", f"agy could not run headless, so auth was not verified: {line}")
+        # Usage errors SECOND, for the same structural reason (#130): clap prints them with an
+        # `Error:` prefix, so the error-prefix branch below would classify a probe the CLI itself
+        # rejected as a credentials failure.
+        if any(m in low for m in AGY_AUTH_USAGE_MARKERS):
+            return ("unverifiable",
+                    f"agy rejected the whoami probe itself (usage error), so auth was not verified: {line}")
         if any(low.startswith(p) for p in AGY_AUTH_ERROR_PREFIXES):
             return ("failed", f"agy reported an error: {line}")
     return ("", "")

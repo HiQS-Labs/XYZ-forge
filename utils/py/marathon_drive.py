@@ -328,6 +328,45 @@ def _repo_rel_prefix(path, root):
         return ""
     return rel.rstrip("/") + "/"
 
+def phase_commit_root(root, phase_dir, target_root):
+    """#131: the repo the PHASE write-set (RELAY.md / ESCALATION.md) is committed to.
+
+    `root` while phase_dir stays inside root's worktree — byte-identical to the pre-#131
+    behaviour, so same-repo runs (default phases-dir, vendored `.xyz/`) commit exactly where they
+    always did. Otherwise the repo CONTAINING phase_dir: with `--target-root <T>
+    --phases-dir <T>/marathon-system` — the layout relay-drive's own containment advice
+    prescribes, and the only one its GH-289 guard accepts for a cross-repo turn — that is the
+    TARGET repo, and the old hardwired `git -C root add <relay file>` died "outside repository"
+    (exit 128) at the render, making each side's remedy the other side's crash. Falls back to
+    the existing `target_root or root` idiom (the GH-402/GH-561 branch-cut commit root) when
+    phase_dir sits in no git repository at all.
+
+    Walks up to the first EXISTING ancestor before asking git, because this resolves BEFORE
+    `os.makedirs(phase_dir)` creates it. realpath on both sides, for the same reason as
+    _repo_rel_prefix: `--show-toplevel` reports the PHYSICAL path, and a symlinked ancestor
+    (macOS /var, /tmp) would otherwise split one repo into two seemingly different ones.
+    """
+    def _top(d):
+        try:
+            return os.path.realpath(subprocess.check_output(
+                ["git", "-C", d, "rev-parse", "--show-toplevel"],
+                stderr=subprocess.DEVNULL).decode("utf-8").strip())
+        except Exception:
+            return ""
+    probe = os.path.abspath(phase_dir or ".")
+    while probe and not os.path.isdir(probe):
+        nxt = os.path.dirname(probe)
+        if nxt == probe:
+            break
+        probe = nxt
+    p_top = _top(probe)
+    if not p_top:
+        return target_root or root
+    r_top = _top(root)
+    if r_top and p_top == r_top:
+        return root
+    return p_top
+
 def _probe_bin(bin_name, role_label, agent_id):
     if shutil.which(bin_name):
         return
@@ -1492,6 +1531,13 @@ def main():
     else:
         rel_relay = relay_file
 
+    # #131: resolved once, ahead of the closures below, so escalate() and the render commit the
+    # phase write-set to the repo that actually contains it. Equal to `root` in every in-repo
+    # shape; the TARGET repo under --target-root with a target --phases-dir. Transcripts are
+    # deliberately NOT routed through it — save_transcript resolves rtl_transcript_root against
+    # `root`, so its commit stays here regardless of where the relay thread lives.
+    commit_root = phase_commit_root(root, phase_dir, args.target_root)
+
     # Bound early (moved ahead of Step 3's own copy below) so the GH-274 satisfied-lane check
     # just below — and the escalate/complete_phase_success defs it may call — read/write tick
     # state against the right repo even when a caller invoked us without pre-exporting it.
@@ -1558,10 +1604,10 @@ relay-file: {rel_relay}
 """)
             if builder_diag:
                 f.write(f"builder-diagnostic: {builder_diag}\n")
-        subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
+        subprocess.run(["git", "-C", commit_root, "add", "--", esc_file], check=True)
         # GH-207: an identical escalation record must not HALT on nothing-to-commit.
-        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
-            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
+        if subprocess.run(["git", "-C", commit_root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
+            subprocess.run(["git", "-C", commit_root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
         # Archive the failed phase's relay transcript too — save_transcript otherwise runs only
         # on success, so an escalated/reverted phase leaves no durable record of its rounds. The
         # 2026-07-30 rebalance-OS marathon (GH-382's panic run) reverted its p5 phase twice and
@@ -1591,7 +1637,7 @@ relay-file: {rel_relay}
             return False
 
         import datetime
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)   # #140: utcnow() is deprecated, scheduled for removal
         date_dir = os.path.join(ts_base, now.strftime("%Y-%m-%d"))
         os.makedirs(date_dir, exist_ok=True)
         dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
@@ -2297,9 +2343,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     # record explaining why the run stopped is itself one of the files that cannot be committed, so
     # the run loses its own account of the failure.
     #
-    # Checked against `root`, deliberately, because that is the repo these files are committed to —
-    # under --target-root only CODE changes land elsewhere, and the relay/escalation/transcript stay
-    # here. Checking the target instead would be the plausible-looking wrong answer.
+    # Checked against the repo each file is actually committed to (#131): `commit_root` for the
+    # phase write-set — `root` in every in-repo shape, the TARGET repo under --target-root with a
+    # target --phases-dir, where `root` would probe a repo that never receives these files and an
+    # ignored target marathon-system/ would still halt the phase mid-run. The transcript still
+    # lands under `root` (save_transcript resolves rtl_transcript_root against it), so the probe
+    # path is checked there. One call when the two repos are the same, byte-identical to the
+    # pre-#131 check; two only when they genuinely differ.
     # GH-314: the write set is THREE paths, not two. `save_transcript()` also does a
     # `git add --` with check=True on a file under the transcript root, so an ignored
     # `relay-system/` HALTs the chain after the turn is already spent — the same defect this
@@ -2311,7 +2361,8 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     # relocated install can move it and a hardcoded guess would check a path the run never writes.
     # If it cannot be resolved, the path is simply not added: this guard must not invent a new way
     # for a healthy run to fail, which is the same fail-open contract the docstring above sets.
-    _write_set = [relay_file, os.path.join(phase_dir, "ESCALATION.md")]
+    _phase_write_set = [relay_file, os.path.join(phase_dir, "ESCALATION.md")]
+    _transcript_write_set = []
     try:
         _ts_base = subprocess.check_output(
             "source \"%s\" && rtl_transcript_root \"%s\"" % (
@@ -2329,8 +2380,8 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             # wrong name here raises NameError, which this block's own `except Exception` would
             # swallow — silently disabling the whole check while every test still passed.
             _probe_name = "marathon-%s-000000.md" % args.phase_id
-            _write_set.append(os.path.join(
-                _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+            _transcript_write_set.append(os.path.join(
+                _ts_base, _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d"), _probe_name))   # #140: utcnow() deprecated
     except Exception as _exc:
         # Deliberately NOT fail-closed, and this is the one place worth arguing about.
         #
@@ -2347,7 +2398,14 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         # covered two.
         log("preflight: transcript root unresolved (%s) — write-set check covers RELAY.md and "
             "ESCALATION.md only, not the transcript" % _exc.__class__.__name__)
-    preflight_write_set_trackable(root, _write_set)
+    if os.path.realpath(commit_root) == os.path.realpath(root):
+        preflight_write_set_trackable(root, _phase_write_set + _transcript_write_set)
+    else:
+        log(f"preflight: phase write-set commits to {commit_root}, not the harness root — "
+            f"probing each repo separately (#131)")
+        preflight_write_set_trackable(commit_root, _phase_write_set)
+        if _transcript_write_set:
+            preflight_write_set_trackable(root, _transcript_write_set)
 
     # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.
     #
@@ -2477,13 +2535,16 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     with open(relay_file, 'w') as f:
         f.write(relay_content)
 
-    subprocess.run(["git", "-C", root, "add", "--", relay_file], check=True)
+    # #131: commit_root, not root — with --target-root and a target --phases-dir the relay file
+    # lives in the TARGET repo and `git -C root add` failed "outside repository" (exit 128). In
+    # every in-repo shape commit_root IS root, so these commands are byte-identical to before.
+    subprocess.run(["git", "-C", commit_root, "add", "--", relay_file], check=True)
     # GH-207: only commit when the render actually changed — a byte-identical re-render must not HALT on
     # a "nothing to commit" git error; treat it as unchanged and continue.
-    if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", relay_file]).returncode == 0:
+    if subprocess.run(["git", "-C", commit_root, "diff", "--cached", "--quiet", "--", relay_file]).returncode == 0:
         log(f"relay file unchanged: {relay_file}")
     else:
-        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: render phase {args.phase_id} relay ({relay_task})"], check=True)
+        subprocess.run(["git", "-C", commit_root, "commit", "-q", "-m", f"marathon: render phase {args.phase_id} relay ({relay_task})"], check=True)
         log(f"relay file committed: {relay_file}")
 
     os.environ["TICK_REPO_ROOT"] = root

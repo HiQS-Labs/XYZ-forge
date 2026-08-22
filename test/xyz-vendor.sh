@@ -83,7 +83,7 @@ for rule in '/relay-system' 'phases' '/phases/'; do
   [ "$rc" = 6 ] \
     && pass "GH-314: REFUSES to vendor into a repo ignoring '$rule' (exit 6)" \
     || fail "GH-314: vendored into a repo ignoring '$rule' anyway (exit $rc)"
-  printf '%s' "$out" | grep -q "$rule" \
+  grep -q "$rule" <<<"$(printf '%s' "$out")" \
     && pass "  and names the rule in the way" \
     || fail "  but did not name '$rule' in its refusal"
   # A refusal must leave the target EXACTLY as it was — no half-install, no edited .gitignore.
@@ -179,7 +179,7 @@ else
 fi
 
 # --- xyz-sync list/update/delete ---
-"$SYNC" list 2>/dev/null | grep -q "$REPO/.xyz" && pass "xyz-sync list shows the vendored copy" || fail "xyz-sync list missed the copy"
+grep -q "$REPO/.xyz" <<<"$("$SYNC" list 2>/dev/null)" && pass "xyz-sync list shows the vendored copy" || fail "xyz-sync list missed the copy"
 echo "source_commit=deadbeef" > "$REPO/.xyz/VERSION"
 "$SYNC" update "$REPO" >/dev/null 2>&1
 grep -q "^source_commit=$HEAD$" "$REPO/.xyz/VERSION" && pass "xyz-sync update restamps VERSION to live HEAD" || fail "xyz-sync update didn't restamp"
@@ -192,7 +192,7 @@ grep -q "^source_commit=$HEAD$" "$REPO/.xyz/VERSION" && pass "xyz-sync update re
 # --- reminder hook: fires when a copy exists, silent when none ---
 "$VENDOR" "$REPO" >/dev/null 2>&1   # re-vendor so a copy exists
 out="$(printf '{}' | "$HOOK" 2>/dev/null)"
-printf '%s' "$out" | grep -q "$REPO/.xyz" && pass "reminder hook lists an existing vendored copy" || fail "reminder hook silent when a copy exists"
+grep -q "$REPO/.xyz" <<<"$(printf '%s' "$out")" && pass "reminder hook lists an existing vendored copy" || fail "reminder hook silent when a copy exists"
 out="$(printf '{}' | XYZ_NO_VENDOR_REMINDER=1 "$HOOK" 2>/dev/null)"
 [ -z "$out" ] && pass "reminder hook honors XYZ_NO_VENDOR_REMINDER" || fail "reminder hook ignored opt-out"
 "$SYNC" delete "$REPO" --yes >/dev/null 2>&1

@@ -99,7 +99,7 @@ WITH_LOG_OUT="$(run_driver with-log --log-github 2>&1)"; WITH_LOG_RC=$?
 [ "$NO_LOG_RC" -eq 3 ] && [ "$WITH_LOG_RC" -eq 3 ] \
   && pass "--log-github with gh unavailable preserves the marathon exit code" \
   || fail "expected both runs to exit 3; no-log=$NO_LOG_RC with-log=$WITH_LOG_RC ($WITH_LOG_OUT)"
-printf '%s\n' "$WITH_LOG_OUT" | grep -q 'local telemetry only' \
+grep -q 'local telemetry only' <<<"$(printf '%s\n' "$WITH_LOG_OUT")" \
   && pass "missing gh degrades to local telemetry" \
   || fail "missing-gh degradation was not reported: $WITH_LOG_OUT"
 [ ! -e "$A/.tick/driver-heartbeat.json" ] \
@@ -111,7 +111,7 @@ printf '%s\n' "$WITH_LOG_OUT" | grep -q 'local telemetry only' \
 # the help — failing here for a reason that has nothing to do with --log-github. That ordering is
 # itself a defect (--help should never need the lock); it is filed separately, not worked around
 # by weakening this assertion.
-MARATHON_ROOT="$A" XYZ_PYTHON=0 bash "$DRIVER" --help | grep -q -- '--log-github' \
+grep -q -- '--log-github' <<<"$(MARATHON_ROOT="$A" XYZ_PYTHON=0 bash "$DRIVER" --help)" \
   && pass "--log-github is exposed as an explicit opt-in" \
   || fail "--log-github missing from help"
 
@@ -182,13 +182,13 @@ posts=$(grep -c -- "--method POST" "$GH_CALLS" || true)
 FIRST_CALLS="$(cat "$GH_CALLS")"
 
 # Blocker 1 regression: every gh call must target the RESOLVED repo, not the ambient CWD's.
-if printf '%s\n' "$FIRST_CALLS" | grep -q -- "--repo acme/widgets" \
-   || printf '%s\n' "$FIRST_CALLS" | grep -q "repos/acme/widgets/"; then
+if grep -q -- "--repo acme/widgets" <<<"$(printf '%s\n' "$FIRST_CALLS")" \
+   || grep -q "repos/acme/widgets/" <<<"$(printf '%s\n' "$FIRST_CALLS")"; then
   pass "gh calls are scoped to the resolved repository"
 else
   fail "gh calls were not repo-scoped: $FIRST_CALLS"
 fi
-printf '%s\n' "$FIRST_CALLS" | grep -q -- "--paginate --slurp" \
+grep -q -- "--paginate --slurp" <<<"$(printf '%s\n' "$FIRST_CALLS")" \
   && pass "comment lookup uses --slurp (single well-formed JSON document)" \
   || fail "comment lookup must use --paginate --slurp: $FIRST_CALLS"
 

@@ -8,12 +8,12 @@ NR="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/new-relay.sh"
 
 # --- (1) reference mode: required fields present, artifact referenced at the seed path -------------
 out1="$(bash "$NR" --title "Review My PR" --reviewer codex --artifact-file /tmp/some-pr.diff --print)"
-printf '%s' "$out1" | grep -q '^NEXT: Reviewer$'      && pass "emits NEXT: Reviewer" || fail "missing NEXT (out: $out1)"
-printf '%s' "$out1" | grep -q '^STATUS: Open$'        && pass "emits STATUS: Open" || fail "missing STATUS"
-printf '%s' "$out1" | grep -q '▶ TAKE YOUR TURN'      && pass "emits the TAKE YOUR TURN block" || fail "missing turn block"
-printf '%s' "$out1" | grep -q '.relay-artifacts/some-pr.diff' && pass "references the read-only seed path" || fail "missing seed-path reference"
-printf '%s' "$out1" | grep -q 'Reviewer: codex'       && pass "names the reviewer" || fail "missing reviewer"
-printf '%s' "$out1" | grep -q '## Log'                && pass "emits a Log section" || fail "missing Log"
+grep -q '^NEXT: Reviewer$' <<<"$(printf '%s' "$out1")"      && pass "emits NEXT: Reviewer" || fail "missing NEXT (out: $out1)"
+grep -q '^STATUS: Open$' <<<"$(printf '%s' "$out1")"        && pass "emits STATUS: Open" || fail "missing STATUS"
+grep -q '▶ TAKE YOUR TURN' <<<"$(printf '%s' "$out1")"      && pass "emits the TAKE YOUR TURN block" || fail "missing turn block"
+grep -q '.relay-artifacts/some-pr.diff' <<<"$(printf '%s' "$out1")" && pass "references the read-only seed path" || fail "missing seed-path reference"
+grep -q 'Reviewer: codex' <<<"$(printf '%s' "$out1")"       && pass "names the reviewer" || fail "missing reviewer"
+grep -q '## Log' <<<"$(printf '%s' "$out1")"                && pass "emits a Log section" || fail "missing Log"
 
 # --- (2) slug derived from title; default out path under relay-system/<date>/ ----------------------
 out_path="$(cd "$A" && bash "$NR" --title "Review My PR" --reviewer agy 2>/dev/null)"
@@ -31,8 +31,8 @@ out3="$(bash "$NR" --title "Nested" --reviewer codex --artifact-file "$ART" --em
 fence_line="$(printf '%s\n' "$out3" | grep -E '^`+$' | head -1)"
 flen="${#fence_line}"
 [ "$flen" -ge 4 ] && pass "embed fence ($flen backticks) exceeds the inner 3-backtick run" || fail "fence too short ($flen) — collision risk"
-printf '%s' "$out3" | grep -q 'inner fenced block' && pass "artifact body is embedded" || fail "artifact not embedded"
-printf '%s' "$out3" | grep -q 'embedded below' && pass "Setup marks the artifact embedded" || fail "missing embedded marker"
+grep -q 'inner fenced block' <<<"$(printf '%s' "$out3")" && pass "artifact body is embedded" || fail "artifact not embedded"
+grep -q 'embedded below' <<<"$(printf '%s' "$out3")" && pass "Setup marks the artifact embedded" || fail "missing embedded marker"
 
 # --- (4) a 5-backtick run inside → fence must be >=6 (fence_for scales) ----------------------------
 ART2="$WORK/deep.txt"

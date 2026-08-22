@@ -91,23 +91,23 @@ TICK_REPO_ROOT="$ROOT" "$TICK" cost MARATHON-P1-TURN --agent agy --peak-rss-mb 6
 TICK_REPO_ROOT="$ROOT" "$TICK" cost MARATHON-P1-TURN --agent marathon --compressor-mb 256 --swap-free-mb 4096 >/dev/null
 
 analysis="$(TICK_REPO_ROOT="$ROOT" "$TICK" analyze)"
-printf '%s\n' "$analysis" | grep -q "memory:" \
+grep -q "memory:" <<<"$(printf '%s\n' "$analysis")" \
   && pass "GH-382: tick analyze includes memory section" \
   || { echo "=== analysis ==="; printf '%s\n' "$analysis"; fail "tick analyze missing memory section"; }
 
-printf '%s\n' "$analysis" | grep -qE "compressor peak: [0-9]+MB" \
+grep -qE "compressor peak: [0-9]+MB" <<<"$(printf '%s\n' "$analysis")" \
   && pass "GH-382: tick analyze reports compressor peak" \
   || fail "tick analyze missing compressor peak"
 
-printf '%s\n' "$analysis" | grep -qE "swap free min: [0-9]+MB" \
+grep -qE "swap free min: [0-9]+MB" <<<"$(printf '%s\n' "$analysis")" \
   && pass "GH-382: tick analyze reports swap free min" \
   || fail "tick analyze missing swap free min"
 
-printf '%s\n' "$analysis" | grep -q "codex: 128MB peak RSS" \
+grep -q "codex: 128MB peak RSS" <<<"$(printf '%s\n' "$analysis")" \
   && pass "GH-382: builder and reviewer peak RSS reported separately (codex)" \
   || fail "tick analyze missing codex peak RSS"
 
-printf '%s\n' "$analysis" | grep -q "agy: 64MB peak RSS" \
+grep -q "agy: 64MB peak RSS" <<<"$(printf '%s\n' "$analysis")" \
   && pass "GH-382: builder and reviewer peak RSS reported separately (agy)" \
   || fail "tick analyze missing agy peak RSS"
 
@@ -124,7 +124,7 @@ marathon_drive.subprocess.run = lambda *a, **kw: FakeRes()
 marathon_drive._phase_memory_sample('test-low-swap')
 ")"
 
-printf '%s\n' "$low_swap_out" | grep -q "warn: host free swap is critically low (512MB < 1024MB)" \
+grep -q "warn: host free swap is critically low (512MB < 1024MB)" <<<"$(printf '%s\n' "$low_swap_out")" \
   && pass "GH-382: low-swap warning logged when free swap is below threshold" \
   || fail "low-swap warning missing when free swap is low"
 
@@ -142,7 +142,7 @@ TICK_REPO_ROOT="$EMPTY_WORK" "$TICK" claim T1 --agent codex --paths foo >/dev/nu
 TICK_REPO_ROOT="$EMPTY_WORK" "$TICK" done T1 --agent codex >/dev/null
 empty_analysis="$(TICK_REPO_ROOT="$EMPTY_WORK" "$TICK" analyze)"
 
-if printf '%s\n' "$empty_analysis" | grep -q "memory:"; then
+if grep -q "memory:" <<<"$(printf '%s\n' "$empty_analysis")"; then
   fail "negative control failed: empty repo analyze unexpectedly contained memory section"
 else
   pass "GH-382 (negative control): analyze omits memory section when no memory telemetry recorded"

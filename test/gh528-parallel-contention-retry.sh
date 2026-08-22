@@ -99,7 +99,7 @@ trap '_rc=$?; rm -f "$VP" "$VP2" "$ROOT/test/$PROBE_NAME" "$ROOT/test/$SWALLOWER
 out="$(bash "$VP" --parallel 4 2>&1)"
 
 # (1) the failure is re-run alone rather than believed on the strength of one contended attempt
-if printf '%s' "$out" | grep -q "re-running it alone"; then
+if grep -q "re-running it alone" <<<"$(printf '%s' "$out")"; then
   pass "a parallel failure is re-run serially before it is believed"
 else
   fail "GH-528: a pooled failure was reported without a serial re-run — a lock refusal would read as a real failure"
@@ -107,7 +107,7 @@ fi
 
 # (2) surviving the re-run means it counts as PASSED: sequential is the source of truth, and the
 #     whole promise of --parallel is that it returns the same answer as sequential.
-if printf '%s' "$out" | grep -qE "^  \+ $PROBE_NAME"; then
+if grep -qE "^  \+ $PROBE_NAME" <<<"$(printf '%s' "$out")"; then
   pass "a suite that passes alone is counted as passed, matching the sequential verdict"
 else
   fail "GH-528: a suite that passes when run alone was still reported as failed — --parallel disagrees with sequential"
@@ -124,7 +124,7 @@ fi
 # (4) the lane is an INTERSECTION with TESTS, not the literal list. Iterating the literal ran lane
 #     suites that TESTS did not contain, so --parallel executed suites the sequential path skipped
 #     and the summary counted more results than TOTAL ("passed: 16 / 3", observed 2026-08-13).
-if printf '%s' "$out" | grep -qE "0 in the sequential driver-lock lane"; then
+if grep -qE "0 in the sequential driver-lock lane" <<<"$(printf '%s' "$out")"; then
   pass "the lock lane is derived from TESTS, so both paths run the same set of suites"
 else
   fail "GH-528: the lane ran suites absent from TESTS — --parallel and sequential disagree on WHAT runs"
@@ -138,8 +138,8 @@ fi
 out2="$(bash "$VP2" --parallel 2 2>&1)"; rc2=$?
 
 # (5) the swallowed-after verdict is STILL re-run alone and reported as a real failure
-if printf '%s' "$out2" | grep -q "NO RESULT recorded in parallel: $VICTIM_NAME\|FAILED in parallel (rc=7): $VICTIM_NAME" \
-   && printf '%s' "$out2" | grep -qE "^  - $VICTIM_NAME"; then
+if grep -q "NO RESULT recorded in parallel: $VICTIM_NAME\|FAILED in parallel (rc=7): $VICTIM_NAME" <<<"$(printf '%s' "$out2")" \
+   && grep -qE "^  - $VICTIM_NAME" <<<"$(printf '%s' "$out2")"; then
   pass "a failure recorded after a stdin-reading re-run is still re-run and reported (GH-15)"
 else
   fail "GH-15: the retry lost a pooled failure whose predecessor's re-run read stdin — the results file is not a suite's stdin"
@@ -154,16 +154,16 @@ fi
 
 # (7) the stdin-reading suite itself is still judged by its ALONE verdict: counted as PASSED and
 #     NAMED in the GH-528 contention warning — contention must never read as a failed run.
-if printf '%s' "$out2" | grep -qE "^  \+ $SWALLOWER_NAME" \
-   && printf '%s' "$out2" | grep -q "WARNING (GH-528)" \
-   && printf '%s' "$out2" | grep -q "    $SWALLOWER_NAME"; then
+if grep -qE "^  \+ $SWALLOWER_NAME" <<<"$(printf '%s' "$out2")" \
+   && grep -q "WARNING (GH-528)" <<<"$(printf '%s' "$out2")" \
+   && grep -q "    $SWALLOWER_NAME" <<<"$(printf '%s' "$out2")"; then
   pass "the stdin-reading suite is counted by its alone verdict and named in the contention warning"
 else
   fail "GH-15: a suite that passes alone was not counted as passed and named — contention must never read as failure"
 fi
 
 # (8) the evidence is complete: no INTERNAL ERROR, and both probes reached the summary — nothing lost
-if printf '%s' "$out2" | grep -q "INTERNAL ERROR"; then
+if grep -q "INTERNAL ERROR" <<<"$(printf '%s' "$out2")"; then
   fail "GH-15: the run reported incomplete evidence — the tally guard fired on a case it should handle"
 elif printf '%s' "$out2" | grep -qE "^  \+ $SWALLOWER_NAME" && printf '%s' "$out2" | grep -qE "^  - $VICTIM_NAME"; then
   pass "every pooled suite is classified exactly once — the verdict rests on complete evidence"
@@ -188,9 +188,9 @@ trap '_rc=$?; rm -f "$VP" "$VP2" "$VP3" "$ROOT/test/$PROBE_NAME" "$ROOT/test/$SW
 out3="$(bash "$VP3" --parallel 2 2>&1)"
 
 # (9) the missing line is caught up: named loudly, re-run alone, and classified by the alone verdict
-if printf '%s' "$out3" | grep -q "NO RESULT recorded in parallel: $KILLER_NAME" \
-   && printf '%s' "$out3" | grep -qE "^  \+ $KILLER_NAME" \
-   && ! printf '%s' "$out3" | grep -q "INTERNAL ERROR"; then
+if grep -q "NO RESULT recorded in parallel: $KILLER_NAME" <<<"$(printf '%s' "$out3")" \
+   && grep -qE "^  \+ $KILLER_NAME" <<<"$(printf '%s' "$out3")" \
+   && ! grep -q "INTERNAL ERROR" <<<"$(printf '%s' "$out3")"; then
   pass "a suite with no result line is re-run alone and classified — never silently uncounted"
 else
   fail "GH-15: a suite whose worker died without a result line was lost — the catch-up did not classify it"

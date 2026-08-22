@@ -27,8 +27,8 @@ index 1234567..89abcdef 100644
 EOF
 
 OUT_DRY="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --model "Qwen/Qwen3.8-Max" --dry-run 2>&1)"
-echo "$OUT_DRY" | grep -q "Engine: commandcode" && pass "dry-run selects commandcode for Qwen 3.8-Max" || fail "failed engine selection (out: $OUT_DRY)"
-echo "$OUT_DRY" | grep -q "Diff Size: 7 lines" && pass "dry-run accurately measures diff lines" || fail "failed diff measurement (out: $OUT_DRY)"
+grep -q "Engine: commandcode" <<<"$OUT_DRY" && pass "dry-run selects commandcode for Qwen 3.8-Max" || fail "failed engine selection (out: $OUT_DRY)"
+grep -q "Diff Size: 7 lines" <<<"$OUT_DRY" && pass "dry-run accurately measures diff lines" || fail "failed diff measurement (out: $OUT_DRY)"
 
 # --- 3. Mock Model Execution: Approved Verdict (Exit 0) ---
 MOCK_APPROVED="$WORK/mock_approved.md"
@@ -51,9 +51,9 @@ EOF
 OUT_APP="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --mock-response "$MOCK_APPROVED" 2>&1)"
 RC_APP=$?
 [ "$RC_APP" -eq 0 ] && pass "mock approved review exits 0" || fail "expected exit 0, got $RC_APP (out: $OUT_APP)"
-echo "$OUT_APP" | grep -qE "Verdict:.*Approved" && pass "report outputs Approved verdict" || fail "missing verdict in report"
-echo "$OUT_APP" | grep -q "🛑 \`\[Blocker\]\` | 0" && pass "report counts 0 blockers" || fail "wrong blocker count"
-echo "$OUT_APP" | grep -q "💡 \`\[Nit\]\` | 1" && pass "report counts 1 nit" || fail "wrong nit count"
+grep -qE "Verdict:.*Approved" <<<"$OUT_APP" && pass "report outputs Approved verdict" || fail "missing verdict in report"
+grep -q "🛑 \`\[Blocker\]\` | 0" <<<"$OUT_APP" && pass "report counts 0 blockers" || fail "wrong blocker count"
+grep -q "💡 \`\[Nit\]\` | 1" <<<"$OUT_APP" && pass "report counts 1 nit" || fail "wrong nit count"
 
 # --- 4. Mock Model Execution: Changes Requested (Exit 5) ---
 MOCK_REJECTED="$WORK/mock_rejected.md"
@@ -77,9 +77,9 @@ EOF
 OUT_REJ="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --mock-response "$MOCK_REJECTED" 2>&1)"
 RC_REJ=$?
 [ "$RC_REJ" -eq 5 ] && pass "mock changes-requested review exits 5" || fail "expected exit 5, got $RC_REJ (out: $OUT_REJ)"
-echo "$OUT_REJ" | grep -qE "Verdict:.*Changes requested" && pass "report outputs Changes requested verdict" || fail "missing verdict in report"
-echo "$OUT_REJ" | grep -q "🛑 \`\[Blocker\]\` | 1" && pass "report counts 1 blocker" || fail "wrong blocker count"
-echo "$OUT_REJ" | grep -q "⚠️ \`\[Should\]\` | 1" && pass "report counts 1 should" || fail "wrong should count"
+grep -qE "Verdict:.*Changes requested" <<<"$OUT_REJ" && pass "report outputs Changes requested verdict" || fail "missing verdict in report"
+grep -q "🛑 \`\[Blocker\]\` | 1" <<<"$OUT_REJ" && pass "report counts 1 blocker" || fail "wrong blocker count"
+grep -q "⚠️ \`\[Should\]\` | 1" <<<"$OUT_REJ" && pass "report counts 1 should" || fail "wrong should count"
 
 # --- 5. Throwaway Worktree Isolation Guarantee ---
 # Verify caller repo state is completely unmodified even if the review script runs
@@ -98,8 +98,8 @@ echo "untracked" > "$TEST_GIT/untracked.txt"
 REVIEW_ROOT="$TEST_GIT" python3 "$REVIEW_PY" --base HEAD --mock-response "$MOCK_APPROVED" >/dev/null 2>&1
 STATUS_AFTER="$(git -C "$TEST_GIT" status --porcelain)"
 
-echo "$STATUS_AFTER" | grep -q " M file.txt" && pass "worktree isolation preserved modified tracked file" || fail "tracked file clobbered"
-echo "$STATUS_AFTER" | grep -q "?? untracked.txt" && pass "worktree isolation preserved untracked file" || fail "untracked file clobbered"
+grep -q " M file.txt" <<<"$STATUS_AFTER" && pass "worktree isolation preserved modified tracked file" || fail "tracked file clobbered"
+grep -q "?? untracked.txt" <<<"$STATUS_AFTER" && pass "worktree isolation preserved untracked file" || fail "untracked file clobbered"
 
 # --- 6. Uncited Claims Warning & Strict Verification ---
 MOCK_UNCITED="$WORK/mock_uncited.md"
@@ -110,7 +110,7 @@ Verified and confirmed with no issues found. LGTM.
 EOF
 
 OUT_UNCITED="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --mock-response "$MOCK_UNCITED" 2>&1)"
-echo "$OUT_UNCITED" | grep -q "lacked verified file:line citations" && pass "uncited claim triggers warning banner" || fail "uncited claim did not trigger warning"
+grep -q "lacked verified file:line citations" <<<"$OUT_UNCITED" && pass "uncited claim triggers warning banner" || fail "uncited claim did not trigger warning"
 
 OUT_STRICT="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --mock-response "$MOCK_UNCITED" --strict-citations 2>&1)"
 RC_STRICT=$?

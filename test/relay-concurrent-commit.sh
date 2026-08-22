@@ -47,6 +47,6 @@ printf '\n### Round 1 · Reviewer\n**Verdict:** Changes requested\n' >>"$A/relay
 [ "$rc" -eq 0 ] && pass "worktree turn + concurrent peer commit -> exit 0 (no false violation)" || fail "expected exit 0, got $rc"
 [ -f "$A/peer.md" ] && pass "GH-13: peer file preserved (not orphaned)" || fail "peer.md was orphaned — GH-13 regression"
 git -C "$A" merge-base --is-ancestor "$PEER" HEAD 2>/dev/null && pass "GH-13: peer commit still reachable from HEAD" || fail "peer commit was orphaned from HEAD"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "turn committed the relay file ON TOP of the peer commit" || fail "turn should commit relay.md on top"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "turn committed the relay file ON TOP of the peer commit" || fail "turn should commit relay.md on top"
 
 echo "  relay-concurrent-commit: $PASS pass, $FAIL fail"

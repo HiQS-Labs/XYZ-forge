@@ -355,7 +355,7 @@ else
   fail "K: expected a src/schema seam warning for #920‖#921, got: $(grep -A3 'Contract seams' "$doc" | head -6)"
 fi
 # 922 shares no deep dir with 920/921 → must NOT appear in any seam line.
-if grep -E '^\- \*\*Wave .*share ' "$doc" | grep -q "#922"; then
+if grep -q "#922" <<<"$(grep -E '^\- \*\*Wave .*share ' "$doc")"; then
   fail "K: #922 (utils/report.js) wrongly flagged as a contract seam"
 else
   pass "K: #922 in a disjoint subtree is NOT flagged as coupled (no false seam)"
@@ -378,7 +378,7 @@ cat >"$L/ROADMAP.md" <<EOF
 EOF
 run_qp "$L" >/dev/null 2>&1
 doc="$L/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
-grep -E '^\- \*\*Wave .*share ' "$doc" | grep -q "src/api" \
+grep -q "src/api" <<<"$(grep -E '^\- \*\*Wave .*share ' "$doc")" \
   && pass "L: trailing-slash directory artifact (src/api/) still produces a seam on src/api" \
   || fail "L: trailing-slash dir artifact dropped the seam: $(grep -A3 'Contract seams' "$doc" | head -6)"
 
@@ -732,7 +732,7 @@ u_out="$(run_qp "$U" --bogus 2>"$WORK/u.err")"; u_rc=$?
 grep -q 'unknown argument: --bogus' "$WORK/u.err" \
   && pass "U: the error names the offending flag, on stderr [GH-349]" \
   || fail "U: no 'unknown argument' on stderr: $(head -1 "$WORK/u.err")"
-printf '%s\n' "$u_out" | grep -q '^Usage:' \
+grep -q '^Usage:' <<<"$(printf '%s\n' "$u_out")" \
   && pass "U: usage still goes to stdout (Bash parity: usage stdout, error stderr)" \
   || fail "U: usage block missing from stdout"
 # The failure this pins is specifically that a NON-ZERO exit is reachable. --help must stay 0.
