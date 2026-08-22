@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -1029,7 +1029,7 @@ Handing off to Producer — go to the claude-a window and say “take your turn�
 
 ### Round 3 — Producer (claude-a)
 
-All 9 findings dispositioned. Re-verified each against the code before accepting, same as round 2.
+All 9 findings dispositioned. Re-verified each against the code before accepting, same as round 2.  [Unverified — no citation]
 
 **Blockers**
 
@@ -1115,5 +1115,89 @@ ideas, three answered open questions, one nominated cut, one live defect documen
 is an operator decision, not something this relay should do unilaterally.
 
 Handing off to Reviewer — codex takes the next turn against the twice-revised issue body.
+
+### Round 3 — Reviewer (codex)
+
+swept file: yes
+
+**Verdict: Changes requested**
+
+No additional pre-existing defect was found in the twice-revised issue body beyond the findings
+below. The four-family decomposition remains exhaustive for the five cited regressions, while the
+body correctly avoids claiming it exhausts the repository's full defect history
+(`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:75-94`).
+
+**Artifact integrity**
+
+- [Blocker] **The embedded artifact contains two issue bodies, and the second is a stale version with
+  findings that Round 3 says were fixed.** The current fenced body ends at line 391, but an unlabeled
+  Round-2 body immediately starts at line 392 and runs through line 652; it still says the false
+  `grep ... returns 0` claim, omits `classification.status`, calls the reproducing seed a negative
+  control, leaves Phase 4's failure semantics ambiguous, and retains Phase 6
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:391-392,470-477,491-494,553-570,587-594`). The Setup
+  then says “the embedded text above IS the issue body,” making the stale copy part of the named
+  artifact rather than recognizable history (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:653-656`).
+  Delete the stale lines 392-652 and retain exactly one four-backtick-fenced current body before the
+  Source bullets. Preserve the historical versions in the Log, where their dispositions already live.
+
+**Current-State evidence sweep**
+
+- [Pass] The current runner, selection, caller, inventory, and GH-57 claims are accurate: the runner
+  defaults to `test/synthetic`, executes sorted discovered shell files, and emits the stated record;
+  the regression is the only test invocation; GH-57 is registered; and the registry contains 230
+  entries (`utils/fuzzing/fuzz-loop.sh:8,44-50,74-107`,
+  `test/synthetic/gh102-telemetry-schema.sh:28-34`, `validate.sh:55-278`). The independently counted
+  inventory is 252 shell files under `test/`, 235 top-level, and 11 synthetic.
+- [Pass] The revised telemetry accounting is now internally consistent. The emitter has 15 top-level
+  keys and four nested classification keys; nested status, severity, and cause are deterministic
+  functions of top-level status, while category is constant
+  (`utils/fuzzing/fuzz-loop.sh:63-71,78-98`). Across the cited committed corpus, all 27 rows are pass/0
+  with nested pass/none/null, while run ID, timestamp, test identity/path, and duration vary
+  (`TESTS-RESULTS/2026-08-20+GH-101/fuzz_telemetry.jsonl:1-19`,
+  `TESTS-RESULTS/2026-08-20+GH-102/fuzz_telemetry.jsonl:1-8`).
+- [Pass] The ATE volume, execution-history, activation-cost, generic-grid, and local-receipt claims
+  survive the sweep: the committed files contain 1,935 + 42 + 438 ATE rows; the two summaries record
+  the first two runs; and both repo-code grids use argv-list `command_template` plus generic
+  `variation_keys` (`TESTS-RESULTS/2026-08-20+GH-101/SUMMARY.md:12-19`,
+  `TESTS-RESULTS/2026-08-20+GH-102/SUMMARY.md:22-29`,
+  `utils/ate/variations.tool-calling.yaml:6-20`, `utils/ate/variations.tool-density.yaml:6-21`,
+  `utils/ate/scripts/run_variations.py:120-146,443-452`). The body correctly marks the absence of a
+  live auto-file receipt unverified rather than pretending a repository search proves it.
+- [Should] **Finish the Definition-of-Done citation sweep in the current body.** Its favorable
+  Current-State sentence asserts drift triggers, a check-in loop, auto-chained rollup, and GH-195
+  destructive-reset guards without citations
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:184-190`). Add source citations for those four pieces
+  or narrow the sentence to the already cited generic-retargeting and GH-102 invariant claims. The
+  Definition of Done requires every Current-State claim to be cited or marked wrong
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:678-686`).
+
+**Phase grades**
+
+- [Pass] **Phase 1.** Membership must consume one authoritative selector and the parity regression
+  makes “opt-in telemetry” a real view rather than renamed duplicate discovery
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:197-213`).
+- [Pass] **Phase 2.** The phase now includes consumer/schema compatibility and explicitly covers
+  nested status; the cited consumer really does read only the nested classification contract
+  (`utils/ate/scripts/compile_issue.py:39-49`).
+- [Pass] **Phase 3.** Python placement, argv lists, four generators/oracles, tiered full-clone use,
+  replay metadata, positive reproducing controls, and negative patched controls form a credible
+  2–4-day scope (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:234-257`).
+- [Pass] **Phase 4.** The three observable outcomes now expose the shipped false-success path:
+  `compile_issue.py` falls through after a failed `gh`, while `file_issue()` warns and its caller
+  ignores the result (`utils/ate/scripts/compile_issue.py:94-97,119-125`,
+  `utils/ate/scripts/run_variations.py:348-364,534-541`).
+- [Pass] **Phase 5.** Default-neutral configurable labels plus an explicit Aider opt-in close the
+  genericization gap; the current default is indeed `bug,aider-pipeline`
+  (`utils/ate/scripts/compile_issue.py:87-92`).
+
+**Brainstorm and scope**
+
+- [Pass] The current body contains five costed ideas, named recommendations for all three open
+  questions, and a reasoned cut of the live-issue Phase 4
+  (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:329-351,362-379`). Moving the tick/relay state-machine
+  work to a linked issue keeps the useful incidence comparison without making GH-141 own a second
+  target and isolation model (`relay-system/2026-08-21/gh141-fuzz-ate-qa.md:313-327`).
+
+Handing off to Producer — go to the claude-a window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
