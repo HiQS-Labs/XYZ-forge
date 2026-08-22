@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -44,7 +44,13 @@ ROUND: 1 / 4
   `relay-drive.sh --artifact-file skills/ci-doctor/benchmark-runners.sh` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: stealth-ox-alpha   ·   Producer: claude-a
 - Started: 2026-08-22
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: benchmark-runners.sh (1) does a literal, not regex, find/replace on the
+  workflow's runs-on line(s), verified by a post-substitution assertion before committing; (2)
+  picks up the dispatched run by workflow_dispatch event, never by "most recent run on branch"
+  alone; (3) never aborts the whole benchmark loop on one variant's failure (missing FIND, failed
+  substitution, failed dispatch, unresolved run, missing python3, dirty tree) — it skips that
+  variant and continues; (4) passes `bash -n` and `shellcheck -S error` clean; (5) the two
+  Blockers and all Should/Nit findings from R2 are each dispositioned below.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -162,5 +168,57 @@ explicit rather than reviewer discretion.
 handing off to claude-a (Producer) — go to the Producer window and say "take your turn": disposition
 every finding above (Implemented / Modified / Declined + why), fix at minimum the two Blockers,
 fill the Definition of Done, then flip NEXT back to Reviewer and bump ROUND to 2 / 4.
+
+### R2 · claude-a · Producer · 2026-08-22
+
+Verified every citation against the real file before acting (line numbers, quoted code) — all
+confirmed real, none hallucinated. Dispositions:
+
+- [Blocker] sed-vs-literal mismatch — **Implemented.** Replaced the `sed "s|$FIND|$line|"` with a
+  literal (non-regex) `awk`-based substring replace (`literal_replace()`), plus a post-substitution
+  `grep -qF "$line"` assertion that skips the variant (not commits a no-op) if it didn't apply.
+  Smoke-tested against the reviewer's exact repro (`runs-on: [self-hosted, linux]`) — confirmed the
+  old code's failure mode and the new code's correct literal replace.
+- [Blocker] run pickup had no event filter — **Implemented.** `gh run list` now takes
+  `--event workflow_dispatch`, dropping the ambiguous no-filter lookup entirely (simpler than also
+  matching `headSha`, and sufficient: a workflow_dispatch run's branch+event pair is already unique
+  per invocation given the timestamped branch name).
+- [Should] `git checkout "$BASE"` assumed a local branch — **Implemented.** Extracted to
+  `back_to_base()`: `git checkout -q "$BASE" 2>/dev/null || git checkout -q --detach "origin/$BASE"`,
+  used at all exit points (was 3 call sites, now every skip/continue path routes through it).
+  De-duplicating into one function was not itself requested but follows directly from applying the
+  same fix at every site the reviewer named.
+- [Should] `gh workflow run` failure aborted the loop — **Implemented.** Wrapped in `if ! dispatch_out=...`,
+  logs and skips the variant instead of exiting. (Did not add the suggested `workflow_dispatch`-trigger
+  preflight or origin/`$REPO` correspondence check — declined as a separate, larger concern; the
+  per-variant failure handling this finding actually asked for is in place.)
+- [Should] unchecked python3 — **Implemented.** `command -v python3` preflight alongside the existing
+  `gh`/git checks, fails loud before any CI run is spent.
+- [Should] no dirty-tree/git-identity preflight — **Implemented, via the cheaper of the two suggested
+  fixes.** Added the dirty-tree preflight (`git diff --quiet && git diff --cached --quiet`) and
+  switched the commit to `git -c user.name=ci-doctor -c user.email=ci-doctor@local commit` — sidesteps
+  requiring global git identity rather than validating it, per the finding's own alternative.
+- [Nit] `--variant` without `=` mis-parsed — **Implemented.** Validates `*=*` before splitting;
+  confirmed the fix rejects a bare value with the right message (smoke-tested).
+- [Nit] operand-less flag crash under `set -u` — **Implemented.** Added `need_arg()`, called before
+  every 2-arg flag's `shift 2`.
+- [Nit] empty results array crash on old bash — **Implemented.** Guarded the results loop on
+  `${#RESULT_LABEL[@]} -eq 0`, prints an explicit "(no variant produced a result...)" line instead.
+- [Nit] FIND matching N lines replaces all N — **Implemented.** Usage text now states this
+  explicitly, and a `grep -cF` count > 1 prints a NOTE at run time.
+- [Nit] `--job` exact-match brittleness — **Implemented.** On no match, the inline python now prints
+  the run's actual job names to stderr instead of silently falling through to `?` in the table.
+
+`bash -n` and `shellcheck -S error` re-verified clean on the revised script. Not yet re-run against
+a live `gh workflow run` dispatch end-to-end (would spend real CI minutes on HiQS-Suite/XYZ-forge
+outside this review's scope) — the fixes are verified by direct code inspection + the two targeted
+unit smoke tests above, not a full live run.
+
+**Every finding above is dispositioned.** Setup → Definition of Done is now filled with concrete
+criteria (see above).
+
+handing off to stealth-ox-alpha (Reviewer) — go to the Reviewer window and say "take your turn":
+re-sweep the revised `.relay-artifacts/benchmark-runners.sh` against the filled Definition of Done
+and this round's dispositions; grade whether each Implemented fix actually resolves its finding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
