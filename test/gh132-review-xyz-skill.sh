@@ -116,5 +116,18 @@ OUT_STRICT="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --mock-response "$
 RC_STRICT=$?
 [ "$RC_STRICT" -eq 5 ] && pass "strict citations downgrades approved uncited review to exit 5" || fail "expected exit 5 for strict uncited review, got $RC_STRICT"
 
+# --- 7. Absent Verdict Fails Closed to Changes Requested ---
+MOCK_NO_VERDICT="$WORK/mock_no_verdict.md"
+cat > "$MOCK_NO_VERDICT" <<'EOF'
+# Review
+Looks okay overall.
+- `[Pass]` `src/calc.py:10` division implementation.
+EOF
+
+OUT_NO_VERDICT="$(python3 "$REVIEW_PY" --diff-file "$DIFF_SAMPLE" --mock-response "$MOCK_NO_VERDICT" 2>&1)"
+RC_NO_VERDICT=$?
+[ "$RC_NO_VERDICT" -eq 5 ] && pass "absent verdict fails closed to exit 5" || fail "expected exit 5 for absent verdict, got $RC_NO_VERDICT"
+
 echo "  gh132-review-xyz-skill: $PASS pass, $FAIL fail"
+[ "$FAIL" -eq 0 ] || exit 1
 exit 0

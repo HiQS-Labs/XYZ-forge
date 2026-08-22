@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.request
 from datetime import datetime
 
 # Shared RTL helpers
@@ -37,7 +38,7 @@ _VERDICT_RE = re.compile(
     r"(?:\*{1,2})?Verdict:(?:\*{1,2})?\s*([A-Za-z ]+)", re.IGNORECASE
 )
 _LINKED_ISSUE_RE = re.compile(
-    r"(?:(?:[Ff]ixes|[Cc]loses|[Rr]esolves)\s+#?([0-9]{1,6})|[Gg][Hh]-([0-9]{1,6}))"
+    r"\b(?:[Ff]ixes|[Cc]loses|[Rr]esolves)\s+#?([0-9]{1,6})\b|\b[Gg][Hh]-([0-9]{1,6})\b"
 )
 
 
@@ -70,7 +71,13 @@ def infer_engine(model_name, explicit_engine=None):
     if explicit_engine and explicit_engine != "auto":
         return explicit_engine
     m_lower = model_name.lower()
-    if m_lower.startswith("openrouter/") or m_lower.startswith("aider:"):
+    if (
+        m_lower.startswith("openrouter/")
+        or "stealth" in m_lower
+        or "ox-alpha" in m_lower
+    ):
+        return "openrouter"
+    if m_lower.startswith("aider:"):
         return "aider"
     if m_lower in ("codex", "openai", "gpt-4", "o3", "o1"):
         return "codex"
@@ -220,7 +227,6 @@ def build_review_prompt(diff_text, pr_meta=None, custom_instructions=""):
 
 def parse_review_output(raw_output, strict_citations=False):
     """Extract verdict, graded findings, checklist, and citations from review output."""
-    verdict = "Approved"
     v_match = _VERDICT_RE.search(raw_output)
     if v_match:
         raw_v = v_match.group(1).strip().lower()
@@ -232,6 +238,8 @@ def parse_review_output(raw_output, strict_citations=False):
             verdict = "Approved"
         else:
             verdict = "Changes requested"
+    else:
+        verdict = "Changes requested"
 
     findings = {"Blocker": [], "Should": [], "Nit": [], "Pass": []}
     checklist = []
@@ -280,11 +288,54 @@ def _kill_turn_group(proc):
             return
         except subprocess.TimeoutExpired:
             pass
+    try:
+        proc.wait(timeout=1)
+    except Exception:
+        pass
 
 
 def execute_model_review(engine, model_name, prompt, wt_dir, timeout_s, env):
     """Execute the model review in the throwaway worktree with timeout containment."""
     log_file = os.path.join(wt_dir, "review_transcript.log")
+
+    if engine == "openrouter":
+        api_key = env.get("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError("OPENROUTER_API_KEY is not set in environment")
+        clean_model = model_name
+        if clean_model.startswith("openrouter/"):
+            clean_model = clean_model[len("openrouter/") :]
+        req_data = json.dumps(
+            {
+                "model": clean_model,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/chat/completions",
+            data=req_data,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/HiQS-Suite/XYZ-forge",
+                "X-Title": "XYZ-forge review-xyz",
+            },
+        )
+        start_t = time.time()
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+                res_json = json.loads(resp.read().decode("utf-8"))
+                raw_text = (
+                    res_json.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", "")
+                )
+                with open(log_file, "w") as out_f:
+                    out_f.write(raw_text)
+                return raw_text, time.time() - start_t
+        except Exception as exc:
+            log_err(f"OpenRouter API request failed: {exc}")
+            return None, time.time() - start_t
 
     if engine == "commandcode":
         cmd_bin = env.get("COMMANDCODE_BIN", "cmd")
@@ -294,10 +345,17 @@ def execute_model_review(engine, model_name, prompt, wt_dir, timeout_s, env):
         full_cmd = [cmd_bin, "-p", prompt, "--model", model_name] + cmd_flags
     elif engine == "aider":
         aider_bin = env.get("AIDER_BIN", "aider")
+        aider_model = model_name
+        if not (
+            aider_model.startswith("openrouter/")
+            or aider_model.startswith("openai/")
+            or aider_model.startswith("anthropic/")
+        ):
+            aider_model = f"openrouter/{model_name}"
         full_cmd = [
             aider_bin,
             "--model",
-            model_name,
+            aider_model,
             "--message",
             prompt,
             "--yes-always",
@@ -306,6 +364,8 @@ def execute_model_review(engine, model_name, prompt, wt_dir, timeout_s, env):
             "--no-check-update",
             "--no-analytics",
             "--no-show-model-warnings",
+            "--no-detect-urls",
+            "--no-browser",
             "--no-stream",
             "--map-tokens",
             "0",

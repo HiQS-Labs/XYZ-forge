@@ -12,8 +12,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - Standardized finding extraction (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), citation checking to
   prevent hallucinated passes, and automated GitHub PR (`--post-pr`) and linked issue (`--post-issues`)
   comment posting via `gh`.
-- Comprehensive regression test suite `test/gh132-review-xyz-skill.sh` (17/17 pass) verifying dry-run,
-  worktree isolation, citation checks, and mock review verdicts.
+- Comprehensive regression test suite `test/gh132-review-xyz-skill.sh` (19/19 pass) verifying dry-run,
+  worktree isolation, citation checks, absent-verdict fail-closed semantics, and mock review verdicts.
+- Conducted dual dogfood code reviews with Command Code -> `Qwen/Qwen3.8-Max` and OpenRouter -> `stealth/ox-alpha`,
+  incorporating adversarial feedback into engine robustness and updating `HARNESS-MODELS-REGISTRY.md`.
 
 ## [1.2.0] - 2026-08-20
 

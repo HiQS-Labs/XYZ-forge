@@ -16,12 +16,12 @@ doc_type: feature
 
 | What was just completed | What's next |
 |---|---|
-| Created tracking issue #132, parked in ROADMAP.md, created PDDA working doc, and cut branch `feat/gh132-review-xyz-skill`. | Implement `skills/review-xyz/SKILL.md`, `utils/py/review_xyz.py`, and regression test suite `test/gh132-review-xyz-skill.sh`. |
+| Implemented `skills/review-xyz/`, `utils/py/review_xyz.py`, regression test suite `test/gh132-review-xyz-skill.sh` (19/19 pass), executed dual dogfood reviews with Qwen 3.8-Max and stealth/ox-alpha, and opened PR #133. | Merge PR #133 into `development` and close out issue #132. |
 
 ## Quad Concepts
 - **Deterministic Review Execution:** Standardized, structured finding schema (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with citation verification.
 - **Throwaway Worktree Isolation:** Safe, no-mutation review runs using `git stash create` and disposable worktree checkouts.
-- **Frontier Multi-Model Dispatch:** Direct invocation of Command Code (`Qwen/Qwen3.8-Max`, `zai-org/GLM-5.3`), Aider/OpenRouter, Codex, and Agy.
+- **Frontier Multi-Model Dispatch:** Direct invocation of Command Code (`Qwen/Qwen3.8-Max`, `zai-org/GLM-5.3`), OpenRouter (`openrouter/stealth/ox-alpha`), Codex, and Agy.
 - **Automated GitHub Integration:** Seamless PR diff extraction and structured review/checklist posting to PRs and linked issues via `gh`.
 
 ## Bet and boundary
@@ -31,7 +31,7 @@ Adding a dedicated `/review-xyz` skill and engine formalizes the invocation of n
 ## Phase 1 — Core Review Engine (`utils/py/review_xyz.py`)
 - Diff extraction: support local uncommitted diff, branch vs base, and `gh pr diff <PR#>`.
 - Throwaway worktree isolation: create disposable worktrees to prevent advisor mutation.
-- Model adapters: Command Code (`cmd -p`), Aider/OpenRouter (`aider --message`), Codex (`codex exec -s read-only`), Agy (`agy -p`).
+- Model adapters: Command Code (`cmd -p`), OpenRouter direct API, Aider/OpenRouter (`aider --message`), Codex (`codex exec -s read-only`), Agy (`agy -p`).
 - Citation checking: enforce that claims cite `file:line` or symbols.
 - Finding extraction: parse verdict and findings into structured Markdown/JSON.
 
@@ -41,6 +41,8 @@ Adding a dedicated `/review-xyz` skill and engine formalizes the invocation of n
 - Support `--post-issues` to post checklist follow-ups to linked issues detected in PR body (`Fixes #...`, `Closes #...`).
 
 ## Phase 3 — QA & Dogfooding
-- Author comprehensive test suite `test/gh132-review-xyz-skill.sh`.
-- Execute dogfood review using Command Code -> `Qwen/Qwen3.8-Max`.
+- Authored comprehensive test suite `test/gh132-review-xyz-skill.sh` (19 passing assertions).
+- Executed dual dogfood reviews with Command Code -> `Qwen/Qwen3.8-Max` and OpenRouter -> `stealth/ox-alpha`.
+- Resolved all findings (fail-closed absent verdict, anchored issue regex, process group cleanup, symlink resolution).
+- Opened Pull Request #133 targeting `development`.
 - Validate with `./validate.sh` and `utils/pdda/pdda.sh run`.
