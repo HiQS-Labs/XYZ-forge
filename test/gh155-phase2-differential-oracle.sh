@@ -32,39 +32,66 @@ fi
 # 2. Run full differential multi-harness suite
 rc=0
 out="$(python3 "$ORACLE" --mode suite 2>&1)" || rc=$?
-if [ "$rc" -eq 0 ] && grep -q "7/7 differential vectors passed" <<<"$out"; then
+if [ "$rc" -eq 0 ] && grep -q "SUITE_RESULT=PASS" <<<"$out"; then
   pass "differential_oracle.py --mode suite passes all 7 vectors across all 7 shims"
 else
-  fail "differential_oracle.py failed (rc=$rc, out=$out)"
+  fail "differential_oracle.py --mode suite failed (rc=$rc, out=$out)"
 fi
 
-# 3. Negative control: Falsifiability on injected divergence
+# 3. Test single vector execution mode (--mode vector --vector help)
+rc=0
+out="$(python3 "$ORACLE" --mode vector --vector help 2>&1)" || rc=$?
+if [ "$rc" -eq 0 ] && grep -q "Passed: True" <<<"$out"; then
+  pass "differential_oracle.py --mode vector --vector help successfully evaluates single vector"
+else
+  fail "differential_oracle.py --mode vector failed (rc=$rc, out=$out)"
+fi
+
+# 4. Test structured JSON output mode (--mode suite --json)
+rc=0
+out="$(python3 "$ORACLE" --mode suite --json 2>&1)" || rc=$?
+if [ "$rc" -eq 0 ] && grep -q '"passed": true' <<<"$out" && grep -q '"total_count": 7' <<<"$out"; then
+  pass "differential_oracle.py --mode suite --json returns valid structured JSON payload"
+else
+  fail "differential_oracle.py --mode suite --json failed (rc=$rc, out=$out)"
+fi
+
+# 5. Negative control: Falsifiability on true cross-runner exit code divergence
+MOCK_SHIM="$WORK/mock_divergent.sh"
+cat > "$MOCK_SHIM" <<'SH_EOF'
+#!/usr/bin/env bash
+exit 42
+SH_EOF
+chmod +x "$MOCK_SHIM"
+require_fixture_file "$MOCK_SHIM" "mock-shim"
+
 CONTROL_SCRIPT="$WORK/test_divergence.py"
-cat > "$CONTROL_SCRIPT" <<'PYEOF'
+cat > "$CONTROL_SCRIPT" <<PYEOF
 import sys
 from differential_oracle import evaluate_vector_across_runners, RUNNERS
 
-# Inject a mock divergent runner
+# Inject a mock divergent runner pointing to a shim that exits 42
 RUNNERS["mock_divergent"] = {
-    "shim": "relay-automation/deepseek-turn.sh",
-    "agent_env": "DEEPSEEK_AGENT",
+    "shim": "$MOCK_SHIM",
+    "agent_env": "MOCK_AGENT",
     "name": "mock_divergent"
 }
 
-# Run vector with an expectation of rc=2, but assert on expected rc mismatch
+# Run help vector where other runners exit 0 but mock exits 42
 res = evaluate_vector_across_runners(
-    "Test Divergence",
-    [],
+    "Test Exit Code Divergence",
+    ["--help"],
     lambda r, m: {},
-    repo_root=".",
-    expected_exit_code=99 # Intentionally mismatched
+    repo_root="$ROOT",
+    expected_exit_code=0
 )
 
-if not res["passed"] and len(res["divergences"]) > 0:
-    print("Divergence successfully detected")
+# Must detect divergence across runners
+if not res["passed"] and any("Exit code divergence across runners" in d for d in res["divergences"]):
+    print("DIVERGENCE_CAUGHT")
     sys.exit(0)
 else:
-    print("Failed to detect divergence")
+    print(f"Failed to detect divergence: {res}")
     sys.exit(1)
 PYEOF
 
@@ -72,8 +99,8 @@ require_fixture_file "$CONTROL_SCRIPT" "divergence-script"
 
 rc=0
 out="$(PYTHONPATH="$ROOT/utils/py" python3 "$CONTROL_SCRIPT" 2>&1)" || rc=$?
-if [ "$rc" -eq 0 ] && grep -q "Divergence successfully detected" <<<"$out"; then
-  pass "differential oracle correctly detects and reports divergence across runners (negative control)"
+if [ "$rc" -eq 0 ] && grep -q "DIVERGENCE_CAUGHT" <<<"$out"; then
+  pass "differential oracle detects genuine cross-runner exit code divergence (negative control)"
 else
   fail "differential oracle negative control failed (rc=$rc, out=$out)"
 fi

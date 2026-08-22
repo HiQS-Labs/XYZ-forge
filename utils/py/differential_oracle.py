@@ -18,11 +18,16 @@ import hashlib
 import json
 import os
 import re
-import shlex
 import subprocess
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+try:
+    from metamorphic_oracle import _capture_repo_state
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from metamorphic_oracle import _capture_repo_state
 
 RUNNERS: Dict[str, Dict[str, str]] = {
     "agy": {
@@ -63,6 +68,20 @@ RUNNERS: Dict[str, Dict[str, str]] = {
 }
 
 
+def _diff_repo_states(before: Dict[str, Any], after: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    """Compare before and after repo snapshots for zero-mutation invariant."""
+    deltas = []
+    if before.get("status") != after.get("status"):
+        deltas.append(f"git status changed: before={before.get('status')!r} after={after.get('status')!r}")
+    if before.get("head") != after.get("head"):
+        deltas.append(f"HEAD ref changed: before={before.get('head')} after={after.get('head')}")
+    if before.get("config_hash") != after.get("config_hash"):
+        deltas.append(f".git/config modified: before={before.get('config_hash')} after={after.get('config_hash')}")
+    if before.get("untracked_hash") != after.get("untracked_hash"):
+        deltas.append(f"Untracked files modified: before={before.get('untracked_hash')} after={after.get('untracked_hash')}")
+    return len(deltas) == 0, deltas
+
+
 def normalize_stderr(text: str, runner: str) -> str:
     """Normalize runner-specific prefixes in stderr for differential comparison."""
     # Replace e.g. 'agy-turn:' -> '<runner>-turn:'
@@ -82,10 +101,13 @@ def run_single_vector(
     env_overrides: Dict[str, str],
     repo_root: str,
     timeout: int = 15,
+    assert_zero_mutation: bool = True,
 ) -> Dict[str, Any]:
     """Execute a single vector against a specific runner and capture output & mutation state."""
     meta = RUNNERS[runner]
-    shim_path = os.path.join(repo_root, meta["shim"])
+    shim_path = meta.get("shim", "")
+    if not os.path.isabs(shim_path):
+        shim_path = os.path.join(repo_root, shim_path)
 
     if not os.path.exists(shim_path):
         return {
@@ -102,6 +124,8 @@ def run_single_vector(
         "XYZ_ROOT": repo_root,
     }
     clean_env.update(env_overrides)
+
+    snap_before = _capture_repo_state(repo_root) if assert_zero_mutation else None
 
     cmd = ["bash", shim_path] + argv
     t0 = time.perf_counter()
@@ -132,6 +156,13 @@ def run_single_vector(
         stderr = str(exc)
         timed_out = False
 
+    mutation_delta = None
+    if assert_zero_mutation and snap_before:
+        snap_after = _capture_repo_state(repo_root)
+        zero_mut_ok, mutation_delta = _diff_repo_states(snap_before, snap_after)
+    else:
+        zero_mut_ok = True
+
     norm_err = normalize_stderr(stderr, runner)
 
     return {
@@ -144,32 +175,39 @@ def run_single_vector(
         "stdout_sha256": hashlib.sha256(stdout.encode()).hexdigest()[:16],
         "duration_ms": duration_ms,
         "timed_out": timed_out,
+        "zero_mutation_ok": zero_mut_ok,
+        "mutation_delta": mutation_delta,
     }
 
 
 def evaluate_vector_across_runners(
     name: str,
     argv: List[str],
-    env_builder: Any,  # Callable[[str], Dict[str, str]]
+    env_builder: Any,  # Callable[[str, Dict[str, str]], Dict[str, str]]
     repo_root: str,
     expected_exit_code: Optional[int] = None,
     expected_err_substring: Optional[str] = None,
+    assert_zero_mutation: bool = True,
 ) -> Dict[str, Any]:
     """Run an argument/environment vector across all 7 runners and assert differential consensus."""
     runner_results: Dict[str, Dict[str, Any]] = {}
     exit_codes: Dict[str, int] = {}
     norm_stderrs: Dict[str, str] = {}
+    mutation_failures: Dict[str, Any] = {}
 
     for runner, meta in RUNNERS.items():
         env_for_runner = env_builder(runner, meta) if callable(env_builder) else dict(env_builder)
-        res = run_single_vector(runner, argv, env_for_runner, repo_root)
+        res = run_single_vector(runner, argv, env_for_runner, repo_root, assert_zero_mutation=assert_zero_mutation)
         runner_results[runner] = res
         if res.get("available"):
             exit_codes[runner] = res["exit_code"]
             norm_stderrs[runner] = res["norm_stderr"]
+            if not res.get("zero_mutation_ok", True):
+                mutation_failures[runner] = res.get("mutation_delta")
 
     unique_exit_codes = set(exit_codes.values())
     exit_code_consensus = (len(unique_exit_codes) == 1)
+    consensus_exit_code = list(unique_exit_codes)[0] if exit_code_consensus else None
 
     matches_expected_rc = True
     if expected_exit_code is not None:
@@ -179,7 +217,9 @@ def evaluate_vector_across_runners(
     if expected_err_substring:
         matches_expected_err = all(expected_err_substring in err for err in norm_stderrs.values())
 
-    passed = exit_code_consensus and matches_expected_rc and matches_expected_err
+    zero_mut_passed = (len(mutation_failures) == 0)
+
+    passed = exit_code_consensus and matches_expected_rc and matches_expected_err and zero_mut_passed
 
     divergences: List[str] = []
     if not exit_code_consensus:
@@ -188,114 +228,162 @@ def evaluate_vector_across_runners(
         divergences.append(f"Exit codes {exit_codes} do not match expected {expected_exit_code}")
     if not matches_expected_err:
         divergences.append(f"Normalized stderr missing expected substring '{expected_err_substring}': {norm_stderrs}")
+    if not zero_mut_passed:
+        divergences.append(f"Zero mutation failed on runners: {mutation_failures}")
 
     return {
         "vector_name": name,
         "passed": passed,
+        "consensus_exit_code": consensus_exit_code,
         "divergences": divergences,
         "exit_codes": exit_codes,
         "runner_results": runner_results,
     }
 
 
-def run_differential_suite(repo_root: str) -> int:
-    """Execute the full differential multi-harness parity suite."""
-    print("==================================================")
-    print(" Differential Multi-Harness Parity Suite (GH-155 Phase 2)")
-    print("==================================================")
-
-    vectors: List[Tuple[str, List[str], Any, Optional[int], Optional[str]]] = [
-        # 1. Vector: --help flag
-        (
+def get_standard_vectors() -> Dict[str, Tuple[str, List[str], Callable[[str, Dict[str, str]], Dict[str, str]], Optional[int], Optional[str]]]:
+    """Return dictionary of canonical differential test vectors."""
+    return {
+        "help": (
             "Vector 1: Help flag (--help)",
             ["--help"],
             lambda r, m: {},
             0,
             "",
         ),
-        # 2. Vector: -h flag
-        (
+        "help-short": (
             "Vector 2: Help flag (-h)",
             ["-h"],
             lambda r, m: {},
             0,
             "",
         ),
-        # 3. Vector: Missing RELAY_AGENT
-        (
+        "missing-agent": (
             "Vector 3: Missing RELAY_AGENT",
             [],
             lambda r, m: {},
             2,
             "<runner>-turn: RELAY_AGENT required",
         ),
-        # 4. Vector: Missing RELAY_FILE
-        (
+        "missing-file": (
             "Vector 4: Missing RELAY_FILE",
             [],
             lambda r, m: {"RELAY_AGENT": "tester", m["agent_env"]: "tester"},
             2,
             "<runner>-turn: RELAY_FILE required",
         ),
-        # 5. Vector: Missing Runner-Specific Agent Env
-        (
+        "missing-runner-agent": (
             "Vector 5: Missing <RUNNER>_AGENT",
             [],
             lambda r, m: {"RELAY_AGENT": "tester", "RELAY_FILE": "RELAY.md"},
             2,
             "<runner>-turn: <RUNNER>_AGENT required",
         ),
-        # 6. Vector: Non-matching agent window deferral
-        (
+        # In XYZ multi-agent coordination, turn shims exit 0 on actor mismatch to allow serial
+        # pollers to yield cleanly without process aborts (per GH-308/GH-68 contracts).
+        "deferral": (
             "Vector 6: Window-driven deferral (actor != runner agent)",
             [],
             lambda r, m: {"RELAY_AGENT": "alice", m["agent_env"]: "bob", "RELAY_FILE": "RELAY.md"},
             0,
             "deferring (window-driven)",
         ),
-        # 7. Vector: Unknown arguments under missing env
-        (
+        "unknown-argv": (
             "Vector 7: Unknown flag handling (--unknown-flag-xyz)",
             ["--unknown-flag-xyz"],
             lambda r, m: {},
             2,
             "<runner>-turn: RELAY_AGENT required",
         ),
-    ]
+    }
 
+
+def run_differential_suite(repo_root: str, as_json: bool = False) -> int:
+    """Execute the full differential multi-harness parity suite."""
+    vectors = get_standard_vectors()
     total = len(vectors)
     passed_count = 0
     failed_count = 0
+    results_list: List[Dict[str, Any]] = []
 
-    for name, argv, env_fn, exp_rc, exp_err in vectors:
+    if not as_json:
+        print("==================================================")
+        print(" Differential Multi-Harness Parity Suite (GH-155 Phase 2)")
+        print("==================================================")
+
+    for key, (name, argv, env_fn, exp_rc, exp_err) in vectors.items():
         res = evaluate_vector_across_runners(name, argv, env_fn, repo_root, exp_rc, exp_err)
+        results_list.append(res)
         if res["passed"]:
             passed_count += 1
-            print(f"  PASS: {name} (7/7 runners agreed at rc={res['exit_codes'].get('agy')})")
+            if not as_json:
+                print(f"  PASS: {name} (7/7 runners agreed at rc={res['consensus_exit_code']})")
         else:
             failed_count += 1
-            print(f"  FAIL: {name}")
-            for d in res["divergences"]:
-                print(f"        -> {d}")
+            if not as_json:
+                print(f"  FAIL: {name}")
+                for d in res["divergences"]:
+                    print(f"        -> {d}")
 
-    print("==================================================")
-    print(f" Summary: {passed_count}/{total} differential vectors passed ({failed_count} failed)")
-    print("==================================================")
+    if as_json:
+        payload = {
+            "suite": "differential_oracle",
+            "passed": failed_count == 0,
+            "passed_count": passed_count,
+            "total_count": total,
+            "results": results_list,
+        }
+        print(json.dumps(payload, indent=2))
+    else:
+        print("==================================================")
+        print(f" Summary: {passed_count}/{total} differential vectors passed ({failed_count} failed)")
+        print(" SUITE_RESULT=PASS" if failed_count == 0 else " SUITE_RESULT=FAIL")
+        print("==================================================")
 
     return 0 if failed_count == 0 else 1
 
 
+def run_single_vector_mode(vector_key: str, repo_root: str, as_json: bool = False) -> int:
+    """Execute a single named differential vector."""
+    vectors = get_standard_vectors()
+    if vector_key not in vectors:
+        print(f"Error: Unknown vector key '{vector_key}'. Available: {list(vectors.keys())}", file=sys.stderr)
+        return 2
+
+    name, argv, env_fn, exp_rc, exp_err = vectors[vector_key]
+    res = evaluate_vector_across_runners(name, argv, env_fn, repo_root, exp_rc, exp_err)
+
+    if as_json:
+        print(json.dumps(res, indent=2))
+    else:
+        print(f"Vector: {name}")
+        print(f"Passed: {res['passed']}")
+        print(f"Consensus exit code: {res['consensus_exit_code']}")
+        print(f"Runner exit codes: {res['exit_codes']}")
+        if not res["passed"]:
+            for d in res["divergences"]:
+                print(f"  Divergence: {d}")
+
+    return 0 if res["passed"] else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Differential Multi-Harness Oracle (GH-155 Phase 2)")
-    parser.add_argument("--mode", choices=["suite", "vector"], default="suite")
-    parser.add_argument("--vector", choices=["help", "missing-agent", "missing-file", "missing-runner-agent", "deferral"])
+    parser.add_argument("--mode", choices=["suite", "vector"], default="suite", help="Run full suite or single vector")
+    parser.add_argument("--vector", choices=["help", "help-short", "missing-agent", "missing-file", "missing-runner-agent", "deferral", "unknown-argv"], help="Named vector to run")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
 
     args = parser.parse_args()
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+    if args.mode == "vector":
+        if not args.vector:
+            print("Error: --vector is required when --mode=vector", file=sys.stderr)
+            return 2
+        return run_single_vector_mode(args.vector, repo_root, as_json=args.json)
+
     if args.mode == "suite":
-        return run_differential_suite(repo_root)
+        return run_differential_suite(repo_root, as_json=args.json)
 
     return 0
 
