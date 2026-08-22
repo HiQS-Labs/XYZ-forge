@@ -126,7 +126,7 @@ RELAY_WORKTREE_ISOLATION=1 run_shim RELAY-TURN-badwt commandcode badwt RELAY_PEE
   || fail "isolated containment stranded token: status=$(tok_field RELAY-TURN-badwt status) handoff=$(tok_field RELAY-TURN-badwt handoff-to)"
 
 # --- (7) default timeout is 900s ------------------------------------------------
-grep -q 'RELAY_TURN_TIMEOUT_S", 900' <<<"$(grep -q 'RELAY_TURN_TIMEOUT_S:-900' "$SHIM" 2>/dev/null |)" "$(cd "$(dirname "$0")/.." && pwd)/utils/py/commandcode-turn.py" \
+grep -q 'RELAY_TURN_TIMEOUT_S", 900' "$(cd "$(dirname "$0")/.." && pwd)/utils/py/commandcode-turn.py" \
   && pass "default RELAY_TURN_TIMEOUT_S is 900s" || fail "expected 900s default"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
