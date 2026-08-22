@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-21.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: —
+STATUS: Closed
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -65,7 +65,14 @@ Neither subsystem named for fuzzing performs fuzzing.
 `utils/fuzzing/fuzz-loop.sh` is a deterministic script enumerator: it `find`s shell files under
 `test/synthetic/`, runs each with `bash`, and emits JSONL (`utils/fuzzing/fuzz-loop.sh:44-50,107`).
 Across all 113 lines there is no input generator, corpus, mutator, seed, shrinker, or coverage loop.
-`grep -rn 'RANDOM\|shuf\|seed\|urandom' test/synthetic/` returns 0 matches — every input is hardcoded.
+
+To state that precisely rather than over-claiming: **there is no seeded mutation, corpus, or shrinking
+loop; the test cases are fixed, even though fixture paths and timing do vary.** Several suites create
+dynamic fixture directories with `mktemp` (`test/synthetic/gh101-consult-programmatic.sh:8`,
+`test/synthetic/gh94-containment-invariants.sh:9`) and one measures wall-clock elapsed time
+(`test/synthetic/gh94-script-serialization.sh:51-54`). What none of them do is *generate the inputs
+under test*. (An earlier draft said "every input is hardcoded" on the strength of a
+`RANDOM|shuf|seed|urandom` grep — that probe shows four tokens are absent, which is not the same claim.)
 
 `utils/ate/` builds and cycles a Cartesian product of configurations
 (`utils/ate/scripts/run_variations.py:120-146,433-452`). `SKILL.md` explicitly instructs keeping the
@@ -146,7 +153,8 @@ alias of another field. Schema and identity metadata are legitimately constant a
   | Varies in the **committed** corpus | `run_id`, `timestamp`, `test_name`, `test_path`, `duration_ms` — and **nothing else** |
 
   The first draft listed only `severity` and `likely_cause` as redundant and missed
-  **`classification.status`**, a fourth alias (`utils/fuzzing/fuzz-loop.sh:63-71,85,93-98`). It also
+  **`classification.status`** — the third listed alias, making a four-field outcome group once
+  top-level `status` itself is counted (`utils/fuzzing/fuzz-loop.sh:63-71,85,93-98`). It also
   listed "outcome" as varying, which contradicts the all-pass observation in the same section: all 27
   committed fuzz rows carry `status=pass`, `exit_code=0`, nested `status=pass`, `severity=none`, and
   a null cause (`TESTS-RESULTS/2026-08-20+GH-101/fuzz_telemetry.jsonl:1-19`,
@@ -298,9 +306,12 @@ Specify and test three distinct observable outcomes:
 
 1. **No records** — no `gh` invocation at all, under a named and asserted exit contract.
 2. **Failing `gh`** — a nonzero exit propagates through `compile_issue.py` *and* `run_variations.py`.
-3. **Dedup** — pick one meaning and test it: within-rollup signature grouping (what
-   `compile_issue.py:39-49` actually does today) **or** cross-run issue deduplication. Not both under
-   one word.
+3. **Dedup** — **decided: within-rollup signature grouping**, which is what the code already does.
+   Records sharing a `category :: likely_cause[:60]` signature collapse into one bucket
+   (`compile_issue.py:39-49`) and the rendered checklist reports the instance count as `seen Nx`
+   (`compile_issue.py:64-73`). The test asserts that repeated signatures collapse to one bucket with
+   the **correct instance count**. Cross-run GitHub-side deduplication is explicitly **out of scope**
+   for this phase.
 
 Acceptance: the regression passes deterministically in seconds, with no network and no issue created,
 while observing all three outcomes above.
@@ -1061,5 +1072,59 @@ defects that keep the issue body from closing at the round cap.
 
 Handing off to Producer for escalation disposition — go to the claude-a window and say “take your
 turn”.
+
+### Round 5 — Producer (claude-a) — escalation disposition, thread closed
+
+Round 4 hit the round cap with `STATUS: Escalated`. Reading the escalation honestly: it is not a
+disagreement or a stall. Round 4 graded four of five phases `Pass`, raised no Blocker, and left two
+`[Should]`s and one `[Nit]` — all three narrow, all three correct, none requiring another negotiation
+round. The cap expired mid-repair, not mid-argument. I am applying the three fixes and closing rather
+than raising the cap to buy a round whose only content would be "yes, those three landed."
+
+**All three implemented, each verified against the code first:**
+
+- **S1 — "every input is hardcoded" was an over-claim from a narrow probe.** *Implemented.* Confirmed:
+  `test/synthetic/gh101-consult-programmatic.sh:8` and
+  `test/synthetic/gh94-containment-invariants.sh:9` both build fixture directories with `mktemp -d`,
+  and `test/synthetic/gh94-script-serialization.sh:51-54` measures wall-clock elapsed time. A
+  `RANDOM|shuf|seed|urandom` grep establishes that four tokens are absent — not that nothing varies.
+  Replaced with the precise claim: **no seeded mutation, corpus, or shrinking loop; the test cases are
+  fixed, even though fixture paths and timing do vary**, plus the distinction that matters — none of
+  those suites *generate the inputs under test*. The thesis survives; the sentence that carried it
+  did not deserve to.
+
+  This is the third time in this relay that a probe of mine proved narrower than the conclusion I hung
+  on it (the ATE row count, the `ATE - [` grep, now this). That is the actual pattern worth recording:
+  the errors were never in the reasoning about the code, they were in treating one command's output as
+  a general fact.
+
+- **S2 — Phase 4 still deferred its dedup contract.** *Implemented.* Round 2 asked for one meaning;
+  Round 3 wrote "pick one and test it," which is the same ambiguity phrased as an instruction. Now
+  decided in the body: **within-rollup signature grouping**, matching what the code already does —
+  records sharing `category :: likely_cause[:60]` collapse into one bucket
+  (`compile_issue.py:39-49`) and the checklist renders `seen Nx` (`compile_issue.py:64-73`). The test
+  asserts collapse *with the correct instance count*. Cross-run GitHub-side dedup is explicitly out of
+  scope.
+
+- **S3 (Nit) — alias ordinal wrong.** *Implemented.* The table lists three aliases of top-level
+  `status`; the prose called `classification.status` "a fourth." Corrected to "the third listed alias,
+  making a four-field outcome group once top-level `status` itself is counted."
+
+**Declined:** none, across all five rounds. Twenty-five findings raised, twenty-five implemented.
+
+**Closing state of the artifact:** every Current-State claim cited or struck; five phases graded
+`Pass`; five costed ideas; three answered open questions; one nominated cut carried out; the
+coordination state-machine work split to its own scope with only its incidence-comparison
+recommendation retained here.
+
+**What the relay produced beyond the plan:** one real defect in shipped code — a failing
+`gh issue create` that still exits 0 through `compile_issue.py` and `run_variations.py` — filed
+separately with a hermetic repro and linked from GH-141 as a Phase 4 prerequisite. Worth stating
+plainly: the original version of this plan proposed finding that by running ATE live for 20 minutes,
+which would have shown the chain apparently succeeding.
+
+No findings remain open. Closing the thread.
+
+Relay closed (Closed at round cap, all findings dispositioned) — no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
