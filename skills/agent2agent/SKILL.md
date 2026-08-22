@@ -137,7 +137,7 @@ for bridging two *interactive* terminal sessions hands-free — where `drive` ru
 command per turn, doorbell turns are composed by the ongoing session itself.
 
 1. Join once via the pasted invitation, as normal. If `join` prints `DECISION: take-turn`, the
-   turn is already yours — take it now (step 3's send-and-re-arm); launch the background `watch`
+   turn is already yours — take it now (step 4's send-and-re-arm); launch the background `watch`
    of step 2 only when `join` prints `wait`. On `closed`, report and stop.
 2. Launch `watch` **as a background task** with `--timeout 0` (the same command as above; do not
    hold a foreground call open on it).
@@ -234,26 +234,41 @@ To end instead of hand off:
 
 ## Guardrails
 
-- **A conditional teardown instruction is permission to check its condition, not to assume it.**
-  Before running any destructive command against a clone, worktree, or branch — even one pasted by
-  the operator that reads as explicit, unconditional authorization — verify the condition it names
-  yourself, and if the action is irreversible or could destroy another participant's unpushed work,
-  confirm with the operator once more before executing. Observed incident: the operator's keyboard
-  macro accidentally pasted an unrelated stock instruction ("if code, branch, and PR are fully on
-  origin, tear down the full clone folder") into a live session — a genuine paste, not a fabricated
-  one. The receiving agent treated it as authorized, believed without checking that a peer builder's
-  work was already pushed, and executed the teardown. It was not pushed: the peer had a local-only
-  commit, which the teardown lost. The failure was not "an unauthorized agent acted" — it was
-  "an agent that had real-looking authorization skipped verifying the one fact the instruction was
-  conditioned on, and treated a destructive, hard-to-reverse action as routine instead of pausing
+- **A conditional teardown instruction is permission to check its condition, not to assume it —
+  and it is NEVER permission to touch another participant's workspace.** Before running any
+  destructive command against a clone, worktree, or branch — even one pasted by the operator that
+  reads as explicit, unconditional authorization — first ask whether the target is or might be
+  another participant's own workspace. If so, stop: the next bullet's absolute rule governs, and no
+  amount of verification or confirmation makes it yours to tear down (see Drive's scope note below,
+  which is the same rule from the other direction). Only when the target is your own
+  workspace, or shared infrastructure not attributed to any specific participant, do you proceed to
+  verify: check the condition the instruction names yourself, and if the action is irreversible or
+  could destroy anyone's unpushed work, confirm with the operator once more before executing.
+  **Running headless or otherwise non-interactive (Drive, an unattended turn command): there is no
+  operator to confirm with, so a destructive instruction you cannot fully verify is refused, not
+  approximated** — abort the turn, log why, and let a human resume it live rather than guessing.
+  **Confirming with the operator is not a relay turn and needs no `send`/`REARM`:** pausing to ask
+  is an out-of-band conversation with the human, exactly like any other escalation this skill
+  already asks for elsewhere; it does not advance `NEXT:`, does not require a `close`, and a
+  Doorbell seat that is mid-wait on its own `watch` is unaffected — resume normally once the
+  operator answers. Observed incident: the operator's keyboard macro accidentally pasted an
+  unrelated stock instruction ("if code, branch, and PR are fully on origin, tear down the full
+  clone folder") into a live session — a genuine paste, not a fabricated one. The receiving agent
+  treated it as authorized, believed without checking that a peer builder's work was already
+  pushed, and executed the teardown. It was not pushed: the peer had a local-only commit, which the
+  teardown lost. The failure was not "an unauthorized agent acted" — it was "an agent that had
+  real-looking authorization skipped verifying the one fact the instruction was conditioned on, and
+  treated a destructive, hard-to-reverse action on a peer's workspace as routine instead of pausing
   for one more confirmation." Apply that check to every tear-down/delete/reset instruction touching
   a clone, worktree, or branch this skill's participants use, however it arrives.
-- **Separately: a participant that dislikes a peer's turn may only say so, never act on it.** If
-  another participant's message is off-protocol, malformed, or otherwise unsatisfactory, name the
-  problem in your own `send`/`close` message, or stop and escalate to the operator — never modify,
-  move, or delete anything another participant owns as a corrective response. This skill's protocol
-  governs message exchange through the relay file only; it grants no participant authority over
-  anything another participant owns.
+- **Absolute, unconditional, and separate: a participant that dislikes a peer's turn may only say
+  so, never act on it — and no verification or confirmation ever unlocks acting on a peer's
+  workspace.** If another participant's message is off-protocol, malformed, or otherwise
+  unsatisfactory, name the problem in your own `send`/`close` message, or stop and escalate to the
+  operator — never modify, move, or delete anything another participant owns as a corrective
+  response, and never as a "verified" response either; this bullet has no exception the bullet
+  above can trigger. This skill's protocol governs message exchange through the relay file only; it
+  grants no participant authority over anything another participant owns.
 - Treat the relay file as the source of truth. Never infer turn ownership from chat history alone.
 - Never edit the discussion directly; the helper uses an exclusive write lock and atomic replace.
 - Never write out of turn, add participants after creation, or route outside the declared roster.
