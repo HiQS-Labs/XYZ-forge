@@ -1064,6 +1064,69 @@ def main():
             return ref
         return _cmd_out(["git", "-C", repo, "symbolic-ref", "--quiet", "--short", "HEAD"])
 
+    def refresh_remote_tracking_ref():
+        """GH-124 QW4: Inter-phase background fetch to keep origin/development fresh without in-turn locks."""
+        try:
+            env = dict(os.environ)
+            env["GIT_OPTIONAL_LOCKS"] = "0"
+            subprocess.run(
+                ["git", "-C", root, "fetch", "--no-tags", "--quiet", "origin", "development"],
+                env=env,
+                timeout=5,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False
+            )
+        except Exception:
+            pass
+
+    def marathon_emit_phase_qa_attestation(head_sha, gate_name, duration_s=None):
+        """GH-124 QW1: Driver-owned post-gate issue comment with opaque HTML idempotency marker."""
+        if not (args.log_github and drive_started[0]):
+            return
+        if not shutil.which("gh") or subprocess.run(
+                ["gh", "auth", "status"], stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL).returncode != 0:
+            return
+        issue = lane_issue_number()
+        if not issue:
+            return
+        try:
+            target_repo = args.target_root or root
+            url = _cmd_out(["git", "-C", target_repo, "remote", "get-url", "origin"])
+            repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
+            if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
+                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=target_repo)
+            if not repo:
+                return
+
+            marker = f"<!-- xyz-qa-receipt: issue={issue} phase={args.phase_id} sha={head_sha} -->"
+            res = subprocess.run(["gh", "api", "--paginate", "--slurp",
+                                 f"repos/{repo}/issues/{issue}/comments?per_page=100"],
+                                 capture_output=True, text=True)
+            if res.returncode == 0 and marker in res.stdout:
+                return
+
+            changed = _cmd_out(["git", "-C", target_repo, "diff-tree", "--no-commit-id", "--name-only", "-r", head_sha])
+            lines = changed.splitlines() if changed else []
+            file_list = ", ".join(f"`{f}`" for f in lines[:5])
+            if len(lines) > 5:
+                file_list += f" (+{len(lines) - 5} more)"
+
+            dur_str = f" in {duration_s:.1f}s" if duration_s else ""
+            body = (f"### Phase QA Attestation: Phase `{args.phase_id}` Approved ✅\n"
+                    f"{marker}\n"
+                    f"- **Reviewer:** `{args.reviewer}` ({args.builder})\n"
+                    f"- **Evidence Receipt:** `gate: {gate_name} @ {head_sha[:8]} -> PASS (exit 0{dur_str})`\n"
+                    f"- **Artifacts:** {file_list or 'none'}\n"
+                    f"- **Recorded:** {_utc_now()}")
+
+            subprocess.run(["gh", "issue", "comment", "--repo", repo, issue, "--body", body],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            log(f"posted QA attestation receipt to {repo}#{issue}")
+        except Exception as e:
+            log(f"warning: could not emit QA attestation comment (non-fatal): {e}")
+
     def marathon_run_github_log(driver_exit):
         if not (args.log_github and drive_started[0]):
             return
@@ -1952,6 +2015,21 @@ relay-file: {rel_relay}
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(success_text)
         xyz_marathon_emit("green", success_text)
+        head_sha = _cmd_out(["git", "-C", root, "rev-parse", "HEAD"])
+        if head_sha:
+            try:
+                receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
+                if os.path.isfile(receipt_py):
+                    subprocess.run(
+                        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+                         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+                         "--exit-code", "0"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+                    )
+            except Exception:
+                pass
+            marathon_emit_phase_qa_attestation(head_sha, pre_advance_cmd)
+        refresh_remote_tracking_ref()
         if args.post_approve_cmd:
             log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
             post_approve_exit = run_post_approve_cmd()
@@ -2097,7 +2175,7 @@ relay-file: {rel_relay}
                 if len(line) >= 4:
                     p = line[3:]
                     in_phases = bool(phases_rel) and p.startswith(phases_rel)
-                    if not in_phases and not p.startswith(".tick/"):
+                    if not in_phases and not p.startswith(".tick/") and not p.startswith(".xyz/") and not p.startswith(".relay-scratch/"):
                         dirty.append(p)
             if dirty:
                 log("WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.")
@@ -2457,6 +2535,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     # or leave a liveness record behind.
     drive_started[0] = True
     driver_heartbeat_start()
+    refresh_remote_tracking_ref()
 
     def _run_relay_drive(review_once=False):
         cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,

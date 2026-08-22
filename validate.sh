@@ -210,10 +210,12 @@ TESTS=(
   "gh520-default-reviewer-stub.sh"     # GH-520 (test/_setup.sh gives every fixture a default CODEX_BIN, so a suite tests its subject rather than the reviewer probe) — 11/0; control: with gh402's own stub removed AND this default removed, gh402 fails with the probe's message verbatim (test/baselines/GH-520-default-stub-control.md)
   "gh527-destructive-git-guard.sh"     # GH-527 (a tree-overwriting git command snapshots the tracked files it destroys into .tick/orphan-backups/ first) — 26/0; controls: a no-op guard drops 9 assertions, and a blanket that fires on a CLEAN tree drops exactly the control assertion. Clean-tree silence is defended by TWO conditions, so it takes a combined mutation to falsify — recorded in test/baselines/GH-527-negative-control.md
   "marathon.sh"
+  "marathon-closeout.sh"
   "gh484-phase-dir-default.sh"   # GH-484 (phase-output default is marathon-system/; --phases-dir still overrides; the dirty-tree exclusion tracks the CONFIGURED dir) — 10/0; controls: pre-fix red on both defaults and both containment cases, plus a stray-file control proving the clean check actually ran. Forces XYZ_PYTHON=0 so the Bash twin is really exercised
   "marathon-root-audit.sh"       # GH-209 (static audit: every test/marathon*.sh invocation is MARATHON_ROOT-scoped)
   "rtl-orphan-backup.sh"         # GH-141 (concurrent peer-edit race: revert unchanged, content recoverable)
   "gh91-relay-scratch.sh"          # GH-91 (sanctioned .relay-scratch/ for builder verification output: exempted in rtl_check + rtl_worktree_end, pre-created by begin, named in the turn prompt; never copied back, discarded under ROOT; controls pin that stray writes and lookalike prefixes still go off-lane) — 15/0, driven at the lib-function level, no builder binary needed
+  "gh124-closeout.sh"            # GH-124 (closeout automation, on-disk gate receipts, workspace sweep GC, and early drift alert)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"
@@ -1041,5 +1043,11 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   echo "failed:"
   for t in "${FAILED[@]}"; do echo "  - $t"; done
   exit 1
+fi
+if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] && [ -z "$(git status --porcelain 2>/dev/null)" ]; then
+  _val_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
+  if [ -n "$_val_sha" ] && [ -f "$HERE/utils/py/gate_receipt.py" ]; then
+    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
+  fi
 fi
 exit 0

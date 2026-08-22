@@ -702,6 +702,10 @@ rtl_worktree_begin() {
   if ! git -C "$RTL_ROOT" worktree add --detach "$wt" HEAD >/dev/null 2>&1; then
     rm -rf "$wt" 2>/dev/null; return 1
   fi
+  # GH-124 QW3: Register created worktree in .xyz/workspaces.json manifest
+  if [ -n "${RTL_ROOT:-}" ] && [ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]; then
+    python3 "$RTL_ROOT/utils/py/workspace_manager.py" register --repo "$RTL_ROOT" --path "$wt" --type worktree >/dev/null 2>&1 || true
+  fi
   rtl_trace "rtl_worktree_begin: WT=$wt"
   for a in "${RTL_ALLOW[@]}"; do       # seed current content (overwrite HEAD versions)
     # GH-30 Phase 3: an ABSOLUTE allowlist entry is the archive relay file — it lives in a DIFFERENT
@@ -864,6 +868,9 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
   rm -f "${wt}.seedsig" "${wt}.artifactsig"   # GH-22 + GH-31: clean up the sidecar signature files
   git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
   git -C "$RTL_ROOT" worktree prune >/dev/null 2>&1 || true
+  if [ -n "${RTL_ROOT:-}" ] && [ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]; then
+    python3 "$RTL_ROOT/utils/py/workspace_manager.py" deregister --repo "$RTL_ROOT" --path "$wt" >/dev/null 2>&1 || true
+  fi
   RTL_WT=""
 }
 
@@ -940,6 +947,14 @@ rtl_before() {
   local fld
   while IFS= read -r -d '' fld; do RTL_BEFORE+=("$fld"); done \
     < <(git -C "$RTL_ROOT" status --porcelain -z 2>/dev/null)
+
+  # GH-124 QW4: Early Rebase Drift Alert (Option A: zero-lock local tracking ref inspection)
+  local drift_count
+  drift_count="$(git -C "${RTL_ROOT:-.}" rev-list --count HEAD..refs/remotes/origin/development 2>/dev/null || echo 0)"
+  if [ "${drift_count:-0}" -ge 3 ]; then
+    printf '%s-turn: ⚠️  NOTICE: tracking ref origin/development is %d commits ahead. Consider rebasing between phases.\n' \
+      "${RTL_TOOL:-relay}" "$drift_count" >&2
+  fi
 }
 
 rtl_was_dirty_before() {  # <porcelain-entry> — true if this exact status+path was dirty pre-turn

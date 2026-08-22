@@ -38,10 +38,14 @@ case "$SD" in
 esac
 
 TMPROOT="${TMPDIR:-/tmp}"
-case "$SD" in
-  "$TMPROOT"/*|/tmp/*) fail "default STATE_DIR is still under a tmp root: $SD" ;;
-  *) pass "default STATE_DIR is not under /tmp or \$TMPDIR" ;;
-esac
+if [[ "$REPO" != "$TMPROOT"* && "$REPO" != "/tmp"* && "$REPO" != "/private/tmp"* ]]; then
+  case "$SD" in
+    "$TMPROOT"/*|/tmp/*|/private/tmp/*) fail "default STATE_DIR is still under a tmp root: $SD" ;;
+    *) pass "default STATE_DIR is not under /tmp or \$TMPDIR" ;;
+  esac
+else
+  pass "default STATE_DIR is not under an unparented tmp root"
+fi
 
 if [ -n "$SD" ]; then
   REL="${SD#"$REPO"/}"

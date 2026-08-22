@@ -16,7 +16,7 @@
 # Exit: 0 disjoint (safe) · 9 OVERLAP — the builder could edit the oracle (lists offending pairs) · 2 usage.
 
 set -u
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
 ALLOW="${ALLOW_PATHS:-}" ORACLE="${ORACLE_PATHS:-}"
 while [ $# -gt 0 ]; do
   case "$1" in

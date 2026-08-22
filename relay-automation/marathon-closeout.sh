@@ -11,9 +11,12 @@
 # sequence without invoking git or gh, including read-only discovery commands.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DRY_RUN=0
 OPEN_ONLY=0
 NO_COMMIT=0
+AUTO_PR=0
+SKIP_GATE_CHECK=0
 REPO="."
 BASE_BRANCH="development"
 HEAD_BRANCH=""
@@ -28,10 +31,11 @@ usage: marathon-closeout.sh [options]
 
 Options:
   --dry-run            Print the exact closeout sequence; execute no git/gh command.
+  --auto-pr            One-shot automated PR creation: sets --open-only and --no-commit.
   --open-only          Stop once the pull request is open; do not check, merge, switch, or pull.
-  --no-commit          Push and PR only; do not `git add -A` / commit first (GH-561). Required for
-                       automated calls: the driver has already committed the phase's own work, and a
-                       blanket add would sweep unrelated dirty files in the target into the PR.
+  --no-commit          Push and PR only; do not commit first (GH-561). Required for
+                       automated calls: the driver has already committed the phase's own work.
+  --skip-gate-check    Bypass checking for on-disk local gate receipt in .xyz/receipts/ or .gate-evidence/.
   --repo DIR           Repository to close out (default: current directory).
   --head BRANCH        Feature branch (required for --dry-run; auto-detected live).
   --base BRANCH        Merge target and final local branch (default: development).
@@ -52,8 +56,10 @@ die_usage() {
 while (($#)); do
   case "$1" in
     --dry-run) DRY_RUN=1; shift ;;
+    --auto-pr) AUTO_PR=1; OPEN_ONLY=1; NO_COMMIT=1; shift ;;
     --open-only) OPEN_ONLY=1; shift ;;
     --no-commit) NO_COMMIT=1; shift ;;
+    --skip-gate-check) SKIP_GATE_CHECK=1; shift ;;
     --repo|--head|--base|--remote|--message|--title|--notes)
       (($# >= 2)) || die_usage "$1 requires a value"
       case "$1" in
@@ -75,6 +81,15 @@ done
 [[ -d "$REPO" ]] || die_usage "repository directory not found: $REPO"
 cd -- "$REPO"
 
+if [[ "${XYZ_SKIP_GATE_CHECK:-0}" == "1" ]]; then
+  SKIP_GATE_CHECK=1
+fi
+
+# GH-124 QW2: Hard-lock base branch against main
+if [[ "$BASE_BRANCH" == "main" ]]; then
+  die_usage "refusing to target 'main' directly — 'development' is the required WIP base branch"
+fi
+
 print_command() {
   printf 'DRY-RUN:'
   printf ' %q' "$@"
@@ -94,9 +109,8 @@ if ((DRY_RUN)); then
   [[ "$HEAD_BRANCH" != "$BASE_BRANCH" ]] || die_usage "head branch must differ from base branch"
 
   if ((NO_COMMIT)); then
-    printf 'DRY-RUN: (--no-commit: skipping git add -A / commit)\n'
+    printf 'DRY-RUN: (--no-commit: skipping commit step)\n'
   else
-    print_command git add -A
     print_command git diff --cached --quiet
     print_command git commit -m "$COMMIT_MESSAGE"
   fi
@@ -132,6 +146,21 @@ fi
 [[ -n "$HEAD_BRANCH" ]] || die_usage "detached HEAD is not supported; pass --head"
 [[ "$HEAD_BRANCH" != "$BASE_BRANCH" ]] || die_usage "refusing to close out the base branch itself"
 
+verify_gate_receipt() {
+  local sha="$1"
+  if ((SKIP_GATE_CHECK)); then
+    return 0
+  fi
+  local receipt_tool="$SCRIPT_DIR/utils/py/gate_receipt.py"
+  if [[ -f "$receipt_tool" ]]; then
+    if ! python3 "$receipt_tool" check --repo "$REPO" --sha "$sha" >/dev/null 2>&1; then
+      printf 'marathon-closeout.sh: REFUSED — commit %s has no passing local gate receipt in .xyz/receipts/ or .gate-evidence/\n' "${sha:0:8}" >&2
+      printf 'Run validate.sh or ci-local.sh first, or pass --skip-gate-check to bypass.\n' >&2
+      exit 2
+    fi
+  fi
+}
+
 run_closeout() {
   local label="$1"
   shift
@@ -143,13 +172,19 @@ run_closeout() {
 
 if ((NO_COMMIT)); then
   printf 'marathon-closeout.sh: --no-commit; pushing the branch as committed\n'
+  verify_gate_receipt "$(git rev-parse HEAD)"
 else
-  run_closeout "stage all changes" git add -A
+  # GH-124 QW2: Purge indiscriminate git add -A
   if git diff --cached --quiet; then
-    printf 'marathon-closeout.sh: no staged changes; skipping commit\n'
+    if [[ -n "$(git status --porcelain)" ]]; then
+      die_usage "uncommitted changes exist in working tree. Commit your changes first (blanket git add -A is purged per GH-124)."
+    else
+      printf 'marathon-closeout.sh: no staged changes; skipping commit\n'
+    fi
   else
     run_closeout "commit" git commit -m "$COMMIT_MESSAGE"
   fi
+  verify_gate_receipt "$(git rev-parse HEAD)"
 fi
 run_closeout "push" git push -u "$REMOTE" "$HEAD_BRANCH"
 

@@ -102,4 +102,7 @@ mkdir -p .gate-evidence
   fi
 } > ".gate-evidence/${sha}.txt"
 echo "gate-record: recorded .gate-evidence/${sha:0:8}.txt"
+if [ -f "utils/py/gate_receipt.py" ]; then
+  python3 utils/py/gate_receipt.py write --repo . --sha "$sha" --gate "ci-local.sh" --mode "sequential" --exit-code 0 >/dev/null 2>&1 || true
+fi
 exit 0
