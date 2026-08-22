@@ -7,6 +7,9 @@
 
 This document outlines the standard operating procedure for designing, executing, verifying, and committing evidence from automated testing campaigns, harness evaluations, and ATE variation matrices.
 
+> Picking a skill to run a step of this SOP (e.g. a diagnostic pass before a campaign, or a relay
+> to synthesize a fix)? See `ARCHITECTURE.md` → "Skills Index" for the full one-line inventory.
+
 ---
 
 ## 1. Governance & Principles
@@ -73,6 +76,7 @@ Ensure 100% of test suites pass before proceeding.
 Define the variation matrix in `utils/ate/variations.<name>.yaml`:
 - Always use `{harness_root}` in `command_template` for script paths.
 - Ensure the runner emits structured telemetry fields (`duration_ms`, `turn_count`, `prompt_tokens`, `completion_tokens`, `tokens_source`).
+- **Diagnostic Probes:** Set `expects_edits: false` on diagnostic grids that read/report without modifying the working tree (prevents false `no_edit` classifications).
 
 ### Step 5: Execute Campaign with Supervision
 Provision a disposable scratch repository outside the codebase:
@@ -83,18 +87,22 @@ mkdir -p "$SCRATCH" && git -C "$SCRATCH" init -q
 python3 utils/ate/scripts/run_variations.py \
   --repo "$SCRATCH" \
   --variations utils/ate/variations.<name>.yaml \
-  --lmstudio-model "<local-model-id>" \
-  --minutes 180 \
+  --lmstudio-model "google/gemma-4-31b-qat" \
+  --minutes 60 \
   --log-file "$SCRATCH/error_log.jsonl" \
   --test-name "<topic>-grid" \
   --allow-destructive-reset
 ```
 
 ### Step 6: Monitor & Inspect Drift
-Supervise the running loop using `checkin.py`:
+Supervise the running loop at 5-minute intervals using `checkin.py`:
 ```bash
-python3 utils/ate/scripts/checkin.py --tail 20 --log "$SCRATCH/error_log.jsonl"
+python3 utils/ate/scripts/checkin.py --log "$SCRATCH/error_log.jsonl"
 ```
+Monitor failure clusters, category distributions (`auth_failure`, `config_error`, `env_failure`), and throughput. If a valid defect is identified:
+1. File a GitHub tracking issue.
+2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix and regression test.
+3. If complex, record findings on the issue for architectural planning.
 
 ### Step 7: Commit Artifact Receipts
 Store the campaign output in `TESTS-RESULTS/`:

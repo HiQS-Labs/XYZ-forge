@@ -36,6 +36,8 @@ shim:
   - "claude-turn.sh"
   - "aider-turn.sh"
   - "pi-turn.sh"
+  - "commandcode-turn.sh"
+  - "deepseek-turn.sh"
 
 flag:
   - "--help"

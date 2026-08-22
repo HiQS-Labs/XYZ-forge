@@ -41,6 +41,11 @@ def relay_sig(root, path):
     return "none"
 
 def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print("Usage: aider-turn.py")
+        print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
+        sys.exit(0)
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     # GH-308 port (GH-296): fall back to the CWD's git toplevel (not xyz_root) when AIDER_TURN_ROOT is
     # unset, matching aider-turn.sh and agy-turn.py's resolve_turn_root. Rooting worktree isolation and

@@ -28,10 +28,11 @@
 # asked, just not its validation). Until it adopts the checks too, this file is the contract.
 #
 # Usage:
-#   utils/pdda-local-checks.sh completed-status    # GH-189
-#   utils/pdda-local-checks.sh roadmap-issue-state # GH-189 (ledger side)
-#   utils/pdda-local-checks.sh release-milestone   # GH-284 Phase 3
-#   utils/pdda-local-checks.sh run                 # both (default)
+#   utils/pdda-local-checks.sh completed-status              # GH-189
+#   utils/pdda-local-checks.sh roadmap-issue-state           # GH-189 (ledger side)
+#   utils/pdda-local-checks.sh roadmap-section-duplicates    # same GH item in two lifecycle sections
+#   utils/pdda-local-checks.sh release-milestone             # GH-284 Phase 3
+#   utils/pdda-local-checks.sh run                           # all of the above (default)
 #
 # Exit: 0 clean (warn-only checks never gate) · 2 usage. Honors the same PDDA_* env as pdda.sh.
 
@@ -182,6 +183,72 @@ check_roadmap_issue_state() {
   return "$(pdda_gated_exit "$rc")"
 }
 
+# ── same GH item present as a bullet in more than one lifecycle section ───────────────────────────
+# Motivated by a real, repeated 2026-08-22 incident: a "🚧 In progress" bullet for a GH item survives
+# unchanged while a "✅ Completed/SHIPPED" bullet for the SAME item gets added alongside it — nobody
+# deletes the stale one. It recurred three times in one session, twice through ordinary PR merges and
+# once inside a squash-merge commit itself (the new Completed line landed as a genuine diff addition
+# while the stale In-progress line rode through as unchanged context, so the merge itself looks clean).
+# releases_app.py's `roadmap sync` already refuses on a duplicate GH number (rule=roadmap-duplicate-gh)
+# — but only when someone happens to run that opt-in command. Nothing in the deterministic push gate
+# catches it, so it silently drifts until a human notices by eye or the ledger's own database mirror
+# happens to get resynced. This check makes it visible on every push instead.
+check_roadmap_section_duplicates() {
+  pdda_reset_counts
+  local CHECK_NAME="pdda-local-check-roadmap-section-duplicates" rc=0
+  local PDDA_ROADMAP="${PDDA_ROADMAP:-$PDDA_REPO_ROOT/ROADMAP.md}"
+  local findings line_no tok first_section second_section
+
+  if [ ! -f "$PDDA_ROADMAP" ]; then
+    pdda_record_finding info "$CHECK_NAME" "$PDDA_ROADMAP" 0 "ROADMAP.md not found; nothing to check" "skip"
+    pdda_emit_summary "$CHECK_NAME" 0
+    return "$(pdda_gated_exit 0)"
+  fi
+
+  # A single linear pass: track the current "### " section heading, and for every top-level
+  # `- **GH-<n>` or `- **GH-<n>..<m>` bullet, remember which section first claimed that token. A
+  # second bullet with the SAME token under a DIFFERENT section is the drift this check exists to
+  # catch — reported once, at the second sighting, naming both sections.
+  findings="$(awk '
+    /^[[:space:]]*```/ {
+      if (in_fence) { in_fence=0; fexempt=0 }
+      else {
+        info=$0; sub(/^[[:space:]]*`+/,"",info); gsub(/[[:space:]]/,"",info); info=tolower(info)
+        in_fence=1
+        fexempt=(info=="console"||info=="text"||info=="transcript")?1:0
+      }
+      next
+    }
+    in_fence && fexempt { next }
+    /^[[:space:]]*>/ { next }
+    /^###[[:space:]]+/ { section=$0; sub(/^###[[:space:]]+/,"",section); next }
+    match($0, /^- \*\*GH-[0-9]+(\.\.[0-9]+)?/) {
+      tok = substr($0, RSTART, RLENGTH)
+      sub(/^- \*\*/, "", tok)
+      if (tok in seen_section) {
+        if (seen_section[tok] != section) {
+          print NR "\t" tok "\t" seen_section[tok] "\t" section
+        }
+      } else {
+        seen_section[tok] = section
+      }
+      next
+    }
+  ' "$PDDA_ROADMAP")"
+
+  while IFS=$'\t' read -r line_no tok first_section second_section; do
+    [ -n "$line_no" ] || continue
+    pdda_record_finding warn "$CHECK_NAME" "$PDDA_ROADMAP" "$line_no" \
+      "$tok appears as a bullet under both \"$first_section\" and \"$second_section\" — remove the stale entry from whichever section no longer reflects reality" \
+      "remove-stale-roadmap-duplicate"
+  done <<EOF
+$findings
+EOF
+
+  pdda_emit_summary "$CHECK_NAME" "$rc"
+  return "$(pdda_gated_exit "$rc")"
+}
+
 
 # ── GH-189 · a completed doc whose status never caught up ─────────────────────────────────────────
 # Ported verbatim from pdda.sh direction (c) as it stood at cfd56b0^. The original's reasoning, kept
@@ -260,19 +327,21 @@ EOF
 }
 
 usage() {
-  printf 'Usage: utils/pdda-local-checks.sh [completed-status|release-milestone|run]\n' >&2
+  printf 'Usage: utils/pdda-local-checks.sh [completed-status|roadmap-issue-state|roadmap-section-duplicates|release-milestone|run]\n' >&2
 }
 
 CMD="${1:-run}"
 case "$CMD" in
-  completed-status)    check_completed_status ;;
-  release-milestone)   check_release_milestone ;;
-  roadmap-issue-state) check_roadmap_issue_state ;;
+  completed-status)             check_completed_status ;;
+  release-milestone)            check_release_milestone ;;
+  roadmap-issue-state)          check_roadmap_issue_state ;;
+  roadmap-section-duplicates)   check_roadmap_section_duplicates ;;
   run)
     EXIT_CODE=0
-    check_completed_status     || EXIT_CODE=$?
-    check_roadmap_issue_state  || EXIT_CODE=$?
-    check_release_milestone    || EXIT_CODE=$?
+    check_completed_status              || EXIT_CODE=$?
+    check_roadmap_issue_state           || EXIT_CODE=$?
+    check_roadmap_section_duplicates    || EXIT_CODE=$?
+    check_release_milestone             || EXIT_CODE=$?
     exit "$EXIT_CODE"
     ;;
   -h|--help|help) usage; exit 0 ;;
