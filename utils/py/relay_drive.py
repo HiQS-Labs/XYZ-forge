@@ -13,7 +13,7 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path  # noqa: E402
+from rtl import driver_lock_path, resolve_turn_root  # noqa: E402
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -458,6 +458,28 @@ def main():
         import atexit
         atexit.register(_relay_drive_on_exit)
 
+    # #129: a driving shell that never ran `eval "$(find-harness.sh --env)"` silently fell back to
+    # the harness root, so the driver queried a DIFFERENT tick event log than the seeding shell
+    # wrote the token into and reported the miss as "token missing" — a misdiagnosis, since the
+    # token is alive in the log the seeder used. Self-resolve the way the turn shims root
+    # themselves (resolve_turn_root: the CWD's git toplevel — which for a vendored `.xyz/` install
+    # is the repo the seeder also resolved to — else the harness root) and EXPORT it, so the
+    # driver, `tick`, and the turn shim all read one log by construction. An explicit
+    # TICK_REPO_ROOT still wins, unchanged.
+    #
+    # Deliberately AFTER the driver-lock block above: a held lock must stay the FIRST thing this
+    # driver can print, byte-identical to the frozen Bash twin, or gh376's twin-parity pin sees
+    # the NOTE where the refusal belongs (observed live in the Wave-1 run). Still ahead of every
+    # token-state query, which live in the loop below — the ordering #129 actually requires.
+    tick_repo_root = get_env("TICK_REPO_ROOT")
+    if not tick_repo_root:
+        try:
+            tick_repo_root = resolve_turn_root(None, root_dir)
+        except RuntimeError:
+            tick_repo_root = root_dir
+        os.environ["TICK_REPO_ROOT"] = tick_repo_root
+        eprint(f"relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to {tick_repo_root} (#129)")
+
     round_idx = 0
     while round_idx < args.round_cap:
         s = file_status()
@@ -479,7 +501,19 @@ def main():
             sys.exit(4)
         
         if not actor:
-            eprint(f"relay-drive: {args.relay_task} has no actor (token {tstatus or 'missing'}) but STATUS={s} — escalating")
+            # #129: "token missing" sent operators to inspect the token when the usual cause is
+            # that THIS run resolved a different tick log than whoever seeded the token. An
+            # empty tstatus means the task was not found in the resolved log at all — name the
+            # root actually used and the event dir actually searched, so the misdiagnosis is a
+            # one-line read instead of a twenty-minute hunt.
+            if not tstatus:
+                eprint(f"relay-drive: {args.relay_task} not found in the resolved tick log")
+                eprint(f"  TICK_REPO_ROOT: {tick_repo_root}")
+                eprint(f"  searched:       {os.path.join(tick_repo_root, '.tick', 'events')}/")
+                eprint("  hint: if you seeded the token in another shell, export the same env —")
+                eprint('        eval "$(find-harness.sh --env)"')
+            else:
+                eprint(f"relay-drive: {args.relay_task} has no actor (token {tstatus}) but STATUS={s} — escalating")
             if tstatus == "done":
                 eprint(f"  → '{args.relay_task}' is spent from a prior relay; seed + drive with a fresh --relay-task (e.g. RELAY-{os.path.splitext(os.path.basename(relay_file))[0]})")
             sys.exit(4)
