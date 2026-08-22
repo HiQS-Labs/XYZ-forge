@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **BUILT 2026-08-22 on branch `gh141-fuzz-ate-utility`** — all in-scope phases landed: **#142** exit contract (0/3/1 + propagation; SKILL.md documents it) with `gh142-ate-exit-contract.sh` **23/0** (which also carries Phase 4's three outcomes + dedup, replacing the original live-run phase); **Phase 1** single selector (`validate.sh --list`, 14/14 synthetic suites registry-reachable, fuzz-loop consumes the registry) with `gh141-synthetic-registry.sh` **6/0**; **Phase 2** de-aliased telemetry (nested `classification.status` removed; severity grades exit classes; cause classifies output; both consumer shapes coexist) pinned by the extended `gh102` suite over a five-outcome corpus; **Phase 5** Aider decoupling (neutral labels end-to-end with preset opt-back-in, `expects_edits` oracle key — the #146 fix, `variations.turn-shims.yaml`, SKILL.md generalized). | Full gate green → PR into `development` → merge closes #141 (Phases 1/2/4/5 + #142; Phase 3 remains deferred to #143's comparison). If the gate leaves `.relay-scratch/` at the harness root again (observed once after the gh101 suite runs), file the suite-hygiene follow-up. |
+| **BUILT 2026-08-22 on branch `gh141-fuzz-ate-utility`** — all in-scope phases landed: **#142** exit contract (0/3/1 + propagation; SKILL.md documents it, incl. the launch-failure/hang hardening from the a2a #818589 review) with `gh142-ate-exit-contract.sh` **30/0** (which also carries Phase 4's three outcomes + dedup, replacing the original live-run phase); **Phase 1** single selector (`validate.sh --list`, 14/14 synthetic suites registry-reachable, fuzz-loop consumes the registry) with `gh141-synthetic-registry.sh` **6/0**; **Phase 2** de-aliased telemetry (nested `classification.status` removed; severity grades exit classes; cause classifies output; both consumer shapes coexist) pinned by the extended `gh102` suite over a five-outcome corpus; **Phase 5** Aider decoupling (neutral labels end-to-end with preset opt-back-in, `expects_edits` oracle key — the #146 fix, `variations.turn-shims.yaml`, SKILL.md generalized). | Full gate re-run on the EXACT final commit SHA (a gate cited to any other SHA is not evidence — a2a #818589 turn 3 caught the first PR citing the pre-amend SHA) → push → merge is the operator's call; #141's remaining scope moves with #143's comparison. |
 
 ## Assumptions (the bets, made explicit)
 
@@ -116,8 +116,9 @@ with consumers green.
 
 ### Phase 4 — hermetic ATE chain test (after #142)
 
-- `test/gh141-ate-chain-hermetic.sh`: stub `gh` (records invocations, scriptable rc), tiny
-  variations.yaml with `command_template` stubs, `--mock-classifier`. Asserts the three
+- Landed AS `test/gh142-ate-exit-contract.sh` cases 1–5 (folded into the #142 regression rather
+  than a separate file — one suite, one purpose): stub `gh` (records invocations, scriptable rc),
+  tiny variations.yaml with `command_template` stubs, `--mock-classifier`. Asserts the three
   outcomes the issue names: (1) no records → no `gh` invocation + exit 3; (2) failing `gh` →
   nonzero propagates through BOTH `compile_issue.py` and `run_variations.py`; (3) dedup —
   repeated `category :: likely_cause[:60]` signatures collapse to one bucket with the correct
@@ -149,10 +150,14 @@ no Phase 3 on this branch.
 
 ## Verification ladder
 
-1. Per-step suites green (`gh142-ate-exit-contract.sh`, `gh141-synthetic-registry.sh`,
-   extended `gh102-telemetry-schema.sh`, `gh141-ate-chain-hermetic.sh`, plus
+1. Per-step suites green (`gh142-ate-exit-contract.sh` — which IS the hermetic chain test: its
+   cases 1–5 cover Phase 4's three terminal outcomes, chain propagation, and dedup, replacing
+   the originally planned `gh141-ate-chain-hermetic.sh` (folded, never a separate file);
+   `gh141-synthetic-registry.sh`; extended `gh102-telemetry-schema.sh`; plus
    `ate-run-variations.sh` and `gh124-closeout.sh` as containment neighbors).
-2. `./validate.sh` full gate green on the final tree.
+2. `./validate.sh` full gate green **on the exact final commit SHA, cited with its SHA in the
+   PR** — a gate run cited to any other SHA is not evidence (a2a #818589 turn 3 caught exactly
+   this: the PR first cited the pre-amend SHA).
 3. `utils/pdda/pdda.sh run` — 0 errors.
 4. `releases roadmap sync` after ROADMAP edits; CHANGELOG entry at ship time.
 5. Negative controls recorded per phase (pre-fix behavior pinned in each suite's header).

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from collections import defaultdict
@@ -133,7 +134,25 @@ def main() -> int:
     for label in labels:
         cmd += ["--label", label]
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    # #142 review turn 3: "fails loudly" covers the launch-failure and hang shapes too. A missing
+    # gh used to escape as a Python traceback that only coincidentally landed in the gh-failed
+    # exit class, and an unbounded gh call could hold an ATE run's completion indefinitely — the
+    # exact silent-stall shape this contract exists to end. Both now land in EXIT_GH_FAILED with
+    # a clean message and the body preserved; the cap is env-tunable.
+    gh_timeout = int(os.environ.get("ATE_GH_TIMEOUT_S", "120"))
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=gh_timeout)
+    except subprocess.TimeoutExpired:
+        print(f"gh issue create did not answer within {gh_timeout}s (ATE_GH_TIMEOUT_S overrides) — "
+              f"treated as a failed filing; {body_path} is preserved for manual filing.")
+        return EXIT_GH_FAILED
+    except FileNotFoundError:
+        print(f"gh issue create failed: the `gh` executable was not found on PATH. Install or "
+              f"authenticate it, then re-file from {body_path} (preserved).")
+        return EXIT_GH_FAILED
+    except OSError as exc:
+        print(f"gh issue create failed to launch: {exc}. {body_path} is preserved for manual filing.")
+        return EXIT_GH_FAILED
     if result.returncode == 0:
         print(f"Issue created: {result.stdout.strip()}")
         body_path.unlink()

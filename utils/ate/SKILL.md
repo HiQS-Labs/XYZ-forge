@@ -107,7 +107,9 @@ can branch on. Before #142 every terminal state exited 0 — including a failed 
 
 `run_variations.py` propagates `compile_issue.py`'s code when `--gh-repo` is set: the run's exit
 code IS the filing outcome. Supervisors: treat `0` and `3` as healthy ends, `1`/`2` as needing
-attention, and abort-drift separately via `checkin.py`.
+attention, and abort-drift separately via `checkin.py`. The `gh issue create` call is capped at
+120s (`ATE_GH_TIMEOUT_S` overrides); a hang, a missing `gh`, or a launch failure all land in
+exit `1` with `issue_body.md` preserved — no traceback, no indefinite hold on the run's completion.
 
 ## Targets beyond Aider (#141 Phase 5)
 

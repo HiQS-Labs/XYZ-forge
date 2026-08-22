@@ -205,4 +205,38 @@ PY
 grep -q '"status": "pass"' "$WORK/chain4.jsonl" && pass "mock classifier passes an exit-0 no-edit variation" \
   || fail "mock classifier failed an exit-0 no-edit run"
 
+echo "== 8. review turn 3: launch failure and hang land in the gh-failed class, loudly =="
+# Missing gh: exit 1 with a CLEAN message (pre-hardening: Python traceback, coincidentally rc 1).
+# The stripped PATH still resolves python3 (a lone symlink) so the interpreter runs while gh cannot.
+rm -f "$WORK/issue_body.md"
+mkdir -p "$WORK/nothingbin"
+ln -sf "$(command -v python3)" "$WORK/nothingbin/python3"
+MISSING_OUT="$(cd "$WORK" && PATH="$WORK/nothingbin" python3 "$CI" --log "$LOG" \
+  --repo acme/widgets --test-name gh142 2>&1)"; MRC=$?
+[ "$MRC" -eq 1 ] && pass "missing gh exits 1 (gh-failed class)" || fail "missing-gh rc=$MRC (want 1)"
+case "$MISSING_OUT" in
+  *"was not found on PATH"*) pass "missing gh named cleanly" ;;
+  *) fail "missing-gh message wrong: $MISSING_OUT" ;;
+esac
+if grep -q "Traceback" <<<"$MISSING_OUT"; then fail "missing gh leaked a traceback"; else pass "no traceback on launch failure"; fi
+[ -f "$WORK/issue_body.md" ] && pass "body preserved on launch failure" || fail "body lost on launch failure"
+rm -f "$WORK/issue_body.md"
+
+# Hanging gh: the call is capped (ATE_GH_TIMEOUT_S), exit 1, no indefinite hold.
+mkdir -p "$WORK/hangbin"
+cat >"$WORK/hangbin/gh" <<'EOF'
+#!/usr/bin/env bash
+sleep 30
+EOF
+chmod +x "$WORK/hangbin/gh"
+HANG_OUT="$(cd "$WORK" && PATH="$WORK/hangbin:$PATH" ATE_GH_TIMEOUT_S=2 python3 "$CI" \
+  --log "$LOG" --repo acme/widgets --test-name gh142 2>&1)"; HRC=$?
+[ "$HRC" -eq 1 ] && pass "hanging gh exits 1 via the timeout cap" || fail "hang rc=$HRC (want 1)"
+case "$HANG_OUT" in
+  *"did not answer within 2s"*) pass "timeout named with the cap and the override" ;;
+  *) fail "hang message wrong: $HANG_OUT" ;;
+esac
+[ -f "$WORK/issue_body.md" ] && pass "body preserved on hang" || fail "body lost on hang"
+rm -f "$WORK/issue_body.md"
+
 echo "gh142-ate-exit-contract: $PASS passed, $FAIL failed"
