@@ -142,7 +142,26 @@ def agy_auth_preflight(agy_bin):
         print(f"agy-turn: agy auth pre-flight timed out after {secs}s; {t_detail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = 7
     except subprocess.CalledProcessError as e:
-        print(f"agy-turn: agy auth pre-flight failed (exit {e.returncode}). Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        # #130: a non-zero probe exit used to be a credentials failure by definition — but the
+        # output was already captured (stdout/stderr fold into out_file before the exit status is
+        # even known), and agy 1.1.18 has no `whoami` subcommand: it exits 2 with a usage error,
+        # the lane dies before the turn runs, and the remedy ("run `agy login`") is wrong because
+        # auth was never the question. Route the captured output through the same verdict as the
+        # exit-0 path: a probe the CLI rejected is `unverifiable` and non-blocking; anything the
+        # verdict calls a real error — or nothing recognizable at all — keeps the old fatal branch,
+        # because a non-zero exit WITH no usage/TTY shape is still the conservative failure.
+        severity, detail = agy_auth_output_verdict(out_file)
+        if severity == "unverifiable":
+            _record_auth_unverified(detail)
+            print(f"agy-turn: NOTE — agy auth is unverifiable headless (expected, probe exited "
+                  f"{e.returncode} on a usage error); proceeding. {_AUTH_PROBE_FINDING}",
+                  file=sys.stderr)
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        if severity:
+            print(f"agy-turn: agy auth pre-flight failed (exit {e.returncode}); {detail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        else:
+            print(f"agy-turn: agy auth pre-flight failed (exit {e.returncode}, no recognizable diagnostic). Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = e.returncode
     except Exception as e:
         print(f"agy-turn: agy auth pre-flight failed. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
