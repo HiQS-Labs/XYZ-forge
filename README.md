@@ -22,8 +22,9 @@ Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts 
 
 ```bash
 npm install
+npm run test:unit          # ~1 second — fast proof the kernel logic itself is sound
 bash githooks/install.sh   # contributors: wires the pre-push gate (correctness requirement)
-./validate.sh
+./validate.sh              # the full suite — see timing note below before you run this
 ```
 
 (`npm install` pulls the two parser dependencies the test suite needs — skip it and the
@@ -41,7 +42,9 @@ would gated.)
 
 That runs the full kernel + coordination test suite, with **no accounts or API keys required** —
 the fastest proof the coordination kernel actually works. It's the whole suite, not a smoke test,
-so **budget 5–10 minutes** on a first run. The suite prints its own pass count at the end; if it's
+so **budget 5–10 minutes** on a first run — that figure assumes parallel mode. `validate.sh` forces
+sequential below 4 cores, where a full run measured ~13 minutes; run `./validate.sh --print-mode` to
+see which mode your machine picks and why. The suite prints its own pass count at the end; if it's
 green, you're good.
 
 > **⚠️ Run this un-sandboxed.** Under Claude Code's default Bash sandbox — or any sandboxed agent
