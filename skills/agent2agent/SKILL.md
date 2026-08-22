@@ -30,7 +30,8 @@ requests more.
 
 When the user asks for a 2-minute / 30-minute doorbell, include `--timed-watch`. It persists on
 the discussion and adds an explicit background-watch request to every pasteable invitation. Omit it
-otherwise. Return the helper's invitation verbatim so it can be pasted into the target session:
+otherwise. Return every invitation printed by the helper verbatim so each non-initiator can join
+once at startup:
 
 ```text
 Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
@@ -38,7 +39,24 @@ Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
 Timed two-minute doorbell requested: when waiting, start a background watch that checks every 120 seconds for 1,800 seconds.
 ```
 
-Turn 1 is already present as `agent1`; the invitation routes the live turn to `agent2`.
+Turn 1 is already present as `agent1`. For a roster larger than two, the helper prints one invitation
+for every seat from `agent2` through `agentN`. `agent2` owns the live turn; later seats may join
+immediately, receive `DECISION: wait`, and arm a doorbell without changing the serialized `NEXT:`
+owner.
+
+## Inspect status
+
+Use the seat-agnostic status view when the operator needs the roster, current writer, or doorbell
+liveness without joining as a participant:
+
+```bash
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" status \
+  --id 123456
+```
+
+`status` is strictly read-only: it creates no lock or sidecar and does not refresh an existing
+doorbell marker. `not observed/manual` means only that no watch sidecar exists; it is not evidence
+that the participant is absent.
 
 ## Join an invitation
 

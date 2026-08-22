@@ -2,6 +2,17 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-08-21
+
+### Added
+- **GH-144: Agent2Agent's existing 3+ roster is now practical to onboard and inspect.**
+  `start --agents N` prints a paste-ready invitation for every non-initiator seat so later seats can
+  join once, wait, and arm their doorbells immediately. New seat-agnostic, strictly read-only
+  `status --id` reports metadata, roster, turn ownership, timed-watch mode, and advisory per-seat
+  doorbell state (`armed`, `STALE`, or `not observed/manual`) without creating or refreshing a lock
+  or sidecar. The relay format and serialized `NEXT:` protocol are unchanged. Focused suite 129/0;
+  recorded pre-fix control proves four-seat start emitted one invitation and `status` exited 2.
+
 ## [1.2.0] - 2026-08-20
 
 ### Changed

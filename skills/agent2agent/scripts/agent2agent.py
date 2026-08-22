@@ -565,9 +565,8 @@ def touch_watch_sidecar(path: Path, number: int) -> None:
         pass   # liveness reporting is a nicety; it must never break a watch
 
 
-def peer_doorbell_report(path: Path, number: int, interval: float) -> Optional[str]:
-    """One line describing whether the named seat's doorbell looks armed, or None if it never was.
-    Advisory only: a seat may be participating manually, which is not an error."""
+def doorbell_state(path: Path, number: int, interval: float) -> Optional[str]:
+    """Describe a seat's observed doorbell state, or None when it may be participating manually."""
     marker = watch_sidecar(path, number)
     try:
         age = time.time() - marker.stat().st_mtime
@@ -575,7 +574,13 @@ def peer_doorbell_report(path: Path, number: int, interval: float) -> Optional[s
         return None
     stale = age > max(interval, 1.0) * 2
     suffix = " — STALE, that seat may no longer be listening" if stale else ""
-    return f"peer doorbell ({agent_id(number)}): armed {age:.0f}s ago{suffix}"
+    return f"armed {age:.0f}s ago{suffix}"
+
+
+def peer_doorbell_report(path: Path, number: int, interval: float) -> Optional[str]:
+    """One advisory peer line, or None when no doorbell has been observed for that seat."""
+    state = doorbell_state(path, number, interval)
+    return None if state is None else f"peer doorbell ({agent_id(number)}): {state}"
 
 
 def report_peer_doorbells(path: Path, content: str, self_number: int) -> None:
@@ -588,6 +593,24 @@ def report_peer_doorbells(path: Path, content: str, self_number: int) -> None:
         line = peer_doorbell_report(path, index, DEFAULT_POLL_INTERVAL)
         if line:
             print(line)
+
+
+def report_discussion_status(root: Path, discussion_id: str) -> None:
+    """Print a seat-agnostic overview without changing the discussion or its sidecars."""
+    path = resolve_discussion(root, discussion_id)
+    content = read_discussion(path)
+    roster = parse_roster(content)
+    print(f"XYZ agent2agent #{discussion_id}")
+    print(f"Relay file: {path}")
+    print(f"Subject: {field(content, 'SUBJECT')}")
+    print(f"STATUS: {field(content, 'STATUS')}")
+    print(f"TURN: {field(content, 'TURN')}")
+    print(f"NEXT: {field(content, 'NEXT')}")
+    print(f"AGENTS: {' '.join(roster)}")
+    print(f"TIMED-WATCH: {'enabled' if timed_watch_enabled(content) else 'disabled'}")
+    for number, member in enumerate(roster, start=1):
+        state = doorbell_state(path, number, DEFAULT_POLL_INTERVAL)
+        print(f"DOORBELL {member}: {state or 'not observed/manual'}")
 
 
 def watch_discussion(
@@ -823,6 +846,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     start.add_argument("--id", dest="explicit_id", help=argparse.SUPPRESS)
 
+    status = commands.add_parser("status", help="inspect a discussion without taking a participant seat")
+    status.add_argument("--id", required=True)
+
     join = commands.add_parser("join", help="resolve an invitation without modifying the discussion")
     join.add_argument("--id", required=True)
     join.add_argument("--agent", type=int, required=True, help="plain agent number, such as 2")
@@ -886,7 +912,10 @@ def main(argv: Optional[List[str]] = None) -> int:
             subject = normalize_subject(args.subject)
             print(f"Created XYZ agent2agent #{discussion_id}")
             print(f"Relay file: {path}")
-            print(invitation(discussion_id, 2, subject, args.timed_watch))
+            for number in range(2, args.agents + 1):
+                print(invitation(discussion_id, number, subject, args.timed_watch))
+        elif args.command == "status":
+            report_discussion_status(root, args.id)
         elif args.command == "join":
             path, subject, next_member, decision = join_discussion(
                 root, args.id, args.agent, args.expect_subject
