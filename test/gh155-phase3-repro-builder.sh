@@ -85,7 +85,16 @@ else
   fail "synthesized repro.sh failed (rc=$rc, out=$out)"
 fi
 
-# 6. Falsifiability negative control: Non-reproducing candidate detection
+# 6. Conformance test: Execute repro.sh from foreign external CWD
+rc=0
+out="$(cd /tmp && bash "$REPRO_OUT" 2>&1)" || rc=$?
+if [ "$rc" -eq 0 ] && grep -q "PASS: Failure reproduced successfully with expected signature" <<<"$out"; then
+  pass "synthesized repro.sh executes successfully when invoked from foreign external CWD"
+else
+  fail "synthesized repro.sh failed from foreign CWD (rc=$rc, out=$out)"
+fi
+
+# 7. Falsifiability negative control: Non-reproducing candidate detection
 CONTROL_SCRIPT="$WORK/test_repro_control.py"
 cat > "$CONTROL_SCRIPT" <<PYEOF
 import sys

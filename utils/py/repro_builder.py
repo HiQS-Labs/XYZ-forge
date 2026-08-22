@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """Hermetic Reproducer & Hierarchical Delta Minimization (GH-155 Phase 3).
 
-Ingests failure telemetry from fuzzers, oracles, and test suites, executes deterministic
+Ingests failure telemetry from fuzzers, oracles, and test suites, executes true hierarchical
 delta minimization (ddmin) on environment variables and argument lists, and synthesizes
 hermetic, self-contained standalone `repro.sh` reproduction scripts.
 """
 
 import argparse
-import hashlib
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
-import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
 def parse_failure_telemetry(raw_data: Any) -> Dict[str, Any]:
@@ -31,27 +30,41 @@ def parse_failure_telemetry(raw_data: Any) -> Dict[str, Any]:
     else:
         raise ValueError(f"Unsupported telemetry input type: {type(raw_data)}")
 
-    # Extract or infer standard fields
-    cmd = data.get("cmd") or data.get("command") or []
-    if isinstance(cmd, str):
-        cmd = shlex.split(cmd)
+    # Extract command and arguments
+    cmd_raw = data.get("cmd") if "cmd" in data else data.get("command", [])
+    if isinstance(cmd_raw, str):
+        cmd_raw = shlex.split(cmd_raw)
 
-    argv = data.get("argv") or []
-    if isinstance(argv, str):
-        argv = shlex.split(argv)
+    argv_raw = data.get("argv", [])
+    if isinstance(argv_raw, str):
+        argv_raw = shlex.split(argv_raw)
 
-    full_cmd = list(cmd) + list(argv)
+    full_cmd = list(cmd_raw) + list(argv_raw)
 
-    env = data.get("env") or data.get("env_overrides") or {}
-    exit_code = data.get("exit_code") or data.get("actual_exit_code") or data.get("rc") or 1
-    expected_exit_code = data.get("expected_exit_code") or exit_code
-    stderr = data.get("stderr") or data.get("actual_stderr") or ""
-    stdout = data.get("stdout") or data.get("actual_stdout") or ""
-    err_substring = data.get("err_substring") or data.get("expected_err_substring") or ""
+    env_raw = data.get("env") if "env" in data else data.get("env_overrides", {})
+
+    # Preserve explicit 0 exit codes
+    if "exit_code" in data:
+        exit_code = data["exit_code"]
+    elif "actual_exit_code" in data:
+        exit_code = data["actual_exit_code"]
+    elif "rc" in data:
+        exit_code = data["rc"]
+    else:
+        exit_code = 1
+
+    if "expected_exit_code" in data:
+        expected_exit_code = data["expected_exit_code"]
+    else:
+        expected_exit_code = exit_code
+
+    stderr = data.get("stderr", "") or data.get("actual_stderr", "")
+    stdout = data.get("stdout", "") or data.get("actual_stdout", "")
+    err_substring = data.get("err_substring", "") or data.get("expected_err_substring", "")
 
     return {
         "command": full_cmd,
-        "env": dict(env),
+        "env": dict(env_raw),
         "exit_code": int(exit_code),
         "expected_exit_code": int(expected_exit_code),
         "stderr": str(stderr),
@@ -94,12 +107,78 @@ def test_reproduction(
         if res.returncode != target_rc:
             return False
 
-        if target_err_substring and target_err_substring not in res.stderr and target_err_substring not in res.stdout:
+        if target_err_substring and (target_err_substring not in res.stderr and target_err_substring not in res.stdout):
             return False
 
         return True
+    except subprocess.TimeoutExpired:
+        return False
+    except OSError:
+        return False
     except Exception:
         return False
+
+
+def ddmin_list(
+    items: List[str],
+    test_fn: Callable[[List[str]], bool],
+    preserve_first_n: int = 0,
+) -> List[str]:
+    """Hierarchical delta minimization (Zeller ddmin algorithm) on a list of items."""
+    prefix = items[:preserve_first_n]
+    candidates = items[preserve_first_n:]
+
+    if not candidates:
+        return prefix
+
+    # Verify initial reproduction
+    if not test_fn(prefix + candidates):
+        return items
+
+    n = 2
+    while len(candidates) >= 2:
+        subsets: List[List[str]] = []
+        k = len(candidates) // n
+        for i in range(n):
+            start = i * k
+            end = len(candidates) if i == n - 1 else (i + 1) * k
+            subsets.append(candidates[start:end])
+
+        reduced = False
+        # 1. Test each subset
+        for subset in subsets:
+            if test_fn(prefix + subset):
+                candidates = subset
+                n = max(n - 1, 2)
+                reduced = True
+                break
+
+        if not reduced:
+            # 2. Test each complement
+            for subset in subsets:
+                complement = [item for item in candidates if item not in subset]
+                if complement and test_fn(prefix + complement):
+                    candidates = complement
+                    n = max(n - 1, 2)
+                    reduced = True
+                    break
+
+        if not reduced:
+            if n == len(candidates):
+                break
+            n = min(n * 2, len(candidates))
+
+    # Final 1-by-1 fine sweep
+    i = len(candidates) - 1
+    while i >= 0:
+        test_candidate = candidates[:i] + candidates[i + 1:]
+        if test_fn(prefix + test_candidate):
+            candidates = test_candidate
+            i = min(i, len(candidates) - 1)
+        else:
+            i -= 1
+
+    return prefix + candidates
 
 
 def minimize_environment(
@@ -110,26 +189,23 @@ def minimize_environment(
     target_err_substring: Optional[str] = None,
     essential_keys: Optional[List[str]] = None,
 ) -> Dict[str, str]:
-    """Delta minimize (ddmin) environment variables to find minimal failure trigger."""
+    """Hierarchical delta minimization (ddmin) on environment variables."""
     essential = set(essential_keys or [])
-    current_env = dict(base_env)
+    non_essential_keys = [k for k in sorted(base_env.keys()) if k not in essential]
 
-    # First verify initial reproduction
-    if not test_reproduction(cmd, current_env, repo_root, target_rc, target_err_substring):
-        return current_env
+    def env_test(active_keys: List[str]) -> bool:
+        test_env = {k: base_env[k] for k in active_keys if k in base_env}
+        for ek in essential:
+            if ek in base_env:
+                test_env[ek] = base_env[ek]
+        return test_reproduction(cmd, test_env, repo_root, target_rc, target_err_substring)
 
-    # 1-by-1 pruning
-    keys = list(current_env.keys())
-    for k in keys:
-        if k in essential:
-            continue
-        test_env = dict(current_env)
-        del test_env[k]
-        if test_reproduction(cmd, test_env, repo_root, target_rc, target_err_substring):
-            # Still reproduces without key k -> key k is not required
-            current_env = test_env
-
-    return current_env
+    minimized_keys = ddmin_list(non_essential_keys, env_test, preserve_first_n=0)
+    result = {k: base_env[k] for k in minimized_keys if k in base_env}
+    for ek in essential:
+        if ek in base_env:
+            result[ek] = base_env[ek]
+    return result
 
 
 def minimize_argv(
@@ -140,26 +216,11 @@ def minimize_argv(
     target_err_substring: Optional[str] = None,
     keep_first_n: int = 1,
 ) -> List[str]:
-    """Delta minimize (ddmin) CLI arguments to find minimal failing argument list."""
-    current_cmd = list(base_cmd)
-    if len(current_cmd) <= keep_first_n:
-        return current_cmd
+    """Hierarchical delta minimization (ddmin) on command-line arguments."""
+    def argv_test(candidate_cmd: List[str]) -> bool:
+        return test_reproduction(candidate_cmd, env, repo_root, target_rc, target_err_substring)
 
-    # First verify initial reproduction
-    if not test_reproduction(current_cmd, env, repo_root, target_rc, target_err_substring):
-        return current_cmd
-
-    # Try removing arguments from the end towards the front
-    i = len(current_cmd) - 1
-    while i >= keep_first_n:
-        candidate = current_cmd[:i] + current_cmd[i + 1:]
-        if test_reproduction(candidate, env, repo_root, target_rc, target_err_substring):
-            current_cmd = candidate
-            i = min(i, len(current_cmd) - 1)
-        else:
-            i -= 1
-
-    return current_cmd
+    return ddmin_list(base_cmd, argv_test, preserve_first_n=keep_first_n)
 
 
 def generate_repro_script(
@@ -168,16 +229,18 @@ def generate_repro_script(
     target_rc: int,
     target_err_substring: Optional[str] = None,
     title: str = "Automated Failure Reproducer",
+    repo_root: Optional[str] = None,
 ) -> str:
-    """Synthesize a standalone, hermetic repro.sh test case script."""
+    """Synthesize a standalone, hermetic repro.sh test case script with separate stdout/stderr assertions."""
     cmd_str = " ".join(shlex.quote(arg) for arg in cmd)
     err_check = ""
     if target_err_substring:
         quoted_err = shlex.quote(target_err_substring)
         err_check = f"""
-if ! grep -q {quoted_err} <<<"$OUT"; then
-  echo "FAIL: Expected substring {quoted_err} not found in output"
-  echo "Output was: $OUT"
+if ! grep -q {quoted_err} <<<"$STDERR" && ! grep -q {quoted_err} <<<"$STDOUT"; then
+  echo "FAIL: Expected substring {quoted_err} not found in stdout or stderr"
+  echo "STDOUT was: $STDOUT"
+  echo "STDERR was: $STDERR"
   exit 1
 fi
 """
@@ -186,12 +249,18 @@ fi
     if env_exports:
         env_exports += "\n"
 
+    baked_root = (repo_root or "").strip()
+
     script = f"""#!/usr/bin/env bash
 # {title} (Synthesized by utils/py/repro_builder.py - GH-155 Phase 3)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
-ROOT="$(cd "$HERE/.." && pwd)"
+# Resolve root from explicit environment, baked root, or traversal fallback
+ROOT="${{XYZ_ROOT:-{baked_root}}}"
+if [ -z "$ROOT" ] || [ ! -d "$ROOT" ]; then
+  ROOT="$(cd "$HERE/.." && pwd)"
+fi
 
 # Initialize sandbox and containment (GH-567)
 WORK="$(mktemp -d "${{TMPDIR:-/tmp}}/repro.XXXXXX")"
@@ -206,15 +275,24 @@ fi
 # Minimal reproduction environment
 {env_exports}export XYZ_ROOT="$ROOT"
 
-echo "== Executing minimal reproducer =="
+echo "== Executing minimal reproducer in $ROOT =="
+STDOUT_FILE="$WORK/stdout.log"
+STDERR_FILE="$WORK/stderr.log"
+
+cd "$ROOT"
+
 RC=0
-OUT="$({cmd_str} 2>&1)" || RC=$?
+{cmd_str} > "$STDOUT_FILE" 2> "$STDERR_FILE" || RC=$?
+
+STDOUT="$(cat "$STDOUT_FILE")"
+STDERR="$(cat "$STDERR_FILE")"
 
 echo "Command exited with code: $RC"
 
 if [ "$RC" -ne {target_rc} ]; then
   echo "FAIL: Expected exit code {target_rc}, got $RC"
-  echo "Output was: $OUT"
+  echo "STDOUT: $STDOUT"
+  echo "STDERR: $STDERR"
   exit 1
 fi
 {err_check}
@@ -225,101 +303,126 @@ exit 0
 
 
 def run_repro_builder_suite(repo_root: str, as_json: bool = False) -> int:
-    """Self-test suite validating telemetry parsing, ddmin minimization, and script synthesis."""
+    """Hermetic self-test suite validating telemetry parsing, ddmin minimization, and script synthesis."""
     if not as_json:
         print("==================================================")
         print(" Hermetic Reproducer & Delta Minimization Suite (GH-155 Phase 3)")
         print("==================================================")
 
     assertions: List[Tuple[str, bool, str]] = []
+    tmp_dir = tempfile.mkdtemp(prefix="repro_suite_")
 
-    # 1. Telemetry parsing test
-    sample_telemetry = {
-        "command": ["bash", "relay-automation/agy-turn.sh"],
-        "argv": ["--extra-flag-1", "--extra-flag-2"],
-        "env": {"RELAY_AGENT": "tester", "DUMMY_VAR_1": "abc", "DUMMY_VAR_2": "123"},
-        "exit_code": 2,
-        "stderr": "agy-turn: RELAY_FILE required",
-        "err_substring": "RELAY_FILE required",
-    }
-    rec = parse_failure_telemetry(sample_telemetry)
-    t1 = len(rec["command"]) == 4 and rec["exit_code"] == 2 and rec["err_substring"] == "RELAY_FILE required"
-    assertions.append(("Telemetry parsing correctly normalizes failure record", t1, ""))
+    try:
+        # Create a hermetic test fixture script in tmp_dir
+        fixture_script = os.path.join(tmp_dir, "mock_runner.sh")
+        with open(fixture_script, "w") as f:
+            f.write("""#!/usr/bin/env bash
+if [ -z "${REQUIRED_TRIGGER_ENV:-}" ]; then
+  echo "mock: REQUIRED_TRIGGER_ENV required" >&2
+  exit 2
+fi
+for arg in "$@"; do
+  if [ "$arg" = "--trigger-error" ]; then
+    echo "mock: triggered error flag detected" >&2
+    exit 42
+  fi
+done
+echo "mock: success"
+exit 0
+""")
+        os.chmod(fixture_script, 0o755)
 
-    # 2. Environment Delta Minimization test
-    # Target: agy-turn.sh with missing RELAY_FILE exits 2 with 'RELAY_FILE required'
-    # Start with 5 dummy environment variables + 1 essential (RELAY_AGENT=tester)
-    dirty_env = {
-        "RELAY_AGENT": "tester",
-        "AGY_AGENT": "tester",
-        "DUMMY_ALPHA": "foo",
-        "DUMMY_BETA": "bar",
-        "DUMMY_GAMMA": "baz",
-        "DUMMY_DELTA": "qux",
-    }
-    min_env = minimize_environment(
-        dirty_env,
-        ["bash", os.path.join(repo_root, "relay-automation/agy-turn.sh")],
-        repo_root,
-        target_rc=2,
-        target_err_substring="RELAY_FILE required",
-    )
-    # The minimal env only requires RELAY_AGENT and AGY_AGENT; dummy variables must be pruned
-    t2 = "DUMMY_ALPHA" not in min_env and "DUMMY_BETA" not in min_env and "RELAY_AGENT" in min_env
-    assertions.append((f"Delta minimization pruned extraneous environment variables ({len(dirty_env)} -> {len(min_env)})", t2, f"Result: {min_env}"))
+        # 1. Telemetry parsing test (preserving explicit 0 exit codes)
+        sample_telemetry = {
+            "command": ["bash", fixture_script],
+            "argv": ["--extra-flag-1", "--extra-flag-2"],
+            "env": {"REQUIRED_TRIGGER_ENV": "1", "DUMMY_VAR_1": "abc", "DUMMY_VAR_2": "123"},
+            "exit_code": 0,
+            "expected_exit_code": 0,
+            "stderr": "",
+            "err_substring": "success",
+        }
+        rec = parse_failure_telemetry(sample_telemetry)
+        t1 = len(rec["command"]) == 4 and rec["exit_code"] == 0 and rec["expected_exit_code"] == 0
+        assertions.append(("Telemetry parsing correctly normalizes failure record and preserves explicit 0 exit code", t1, ""))
 
-    # 3. Argv Delta Minimization test
-    # Target: agy-turn.sh with missing RELAY_AGENT exits 2
-    cmd_with_extraneous_args = [
-        "bash",
-        os.path.join(repo_root, "relay-automation/agy-turn.sh"),
-        "--arbitrary-opt-1",
-        "--arbitrary-opt-2",
-        "--arbitrary-opt-3",
-    ]
-    min_cmd = minimize_argv(
-        cmd_with_extraneous_args,
-        {},
-        repo_root,
-        target_rc=2,
-        target_err_substring="RELAY_AGENT required",
-        keep_first_n=2,  # Keep 'bash' and shim script
-    )
-    t3 = len(min_cmd) == 2 and min_cmd[0] == "bash"
-    assertions.append((f"Delta minimization pruned extraneous argv flags ({len(cmd_with_extraneous_args)} -> {len(min_cmd)})", t3, f"Result: {min_cmd}"))
+        # 2. Hierarchical Environment Delta Minimization test (ddmin)
+        dirty_env = {
+            "DUMMY_ALPHA": "foo",
+            "DUMMY_BETA": "bar",
+            "DUMMY_GAMMA": "baz",
+            "DUMMY_DELTA": "qux",
+            "DUMMY_EPSILON": "123",
+            "DUMMY_ZETA": "456",
+        }
+        # Failure occurs when REQUIRED_TRIGGER_ENV is missing -> exits 2 with 'REQUIRED_TRIGGER_ENV required'
+        min_env = minimize_environment(
+            dirty_env,
+            ["bash", fixture_script],
+            repo_root,
+            target_rc=2,
+            target_err_substring="REQUIRED_TRIGGER_ENV required",
+        )
+        # All dummy variables must be pruned (minimal env is empty)
+        t2 = len(min_env) == 0
+        assertions.append((f"Hierarchical ddmin pruned all extraneous environment variables ({len(dirty_env)} -> {len(min_env)})", t2, f"Result: {min_env}"))
 
-    # 4. Reproducer Script Generation and Execution test
-    repro_code = generate_repro_script(
-        ["bash", os.path.join(repo_root, "relay-automation/codex-turn.sh")],
-        {"RELAY_AGENT": "tester", "CODEX_AGENT": "tester"},
-        target_rc=2,
-        target_err_substring="RELAY_FILE required",
-        title="Test Codegen Reproducer",
-    )
-    t4 = "set -euo pipefail" in repro_code and "fixture_guard_init" in repro_code and "RELAY_FILE required" in repro_code
-    assertions.append(("Reproducer script code generation creates compliant syntax", t4, ""))
+        # 3. Hierarchical Argv Delta Minimization test (ddmin)
+        cmd_with_extraneous_args = [
+            "bash",
+            fixture_script,
+            "--dummy-flag-1",
+            "--dummy-flag-2",
+            "--dummy-flag-3",
+            "--trigger-error",  # The load-bearing flag that triggers exit 42
+            "--dummy-flag-4",
+            "--dummy-flag-5",
+        ]
+        min_cmd = minimize_argv(
+            cmd_with_extraneous_args,
+            {"REQUIRED_TRIGGER_ENV": "1"},
+            repo_root,
+            target_rc=42,
+            target_err_substring="triggered error flag detected",
+            keep_first_n=2,
+        )
+        # Minimized command must keep bash, script, and --trigger-error, but prune all dummy flags
+        t3 = len(min_cmd) == 3 and min_cmd[2] == "--trigger-error"
+        assertions.append((f"Hierarchical ddmin pruned extraneous argv flags ({len(cmd_with_extraneous_args)} -> {len(min_cmd)})", t3, f"Result: {min_cmd}"))
 
-    # 5. Standalone Execution of generated repro script in temporary directory
-    tmp_dir = tempfile.mkdtemp(prefix="repro_test_")
-    repro_path = os.path.join(tmp_dir, "repro.sh")
-    with open(repro_path, "w") as f:
-        f.write(repro_code)
-    os.chmod(repro_path, 0o755)
+        # 4. Reproducer Script Generation and Execution test
+        repro_code = generate_repro_script(
+            min_cmd,
+            {"REQUIRED_TRIGGER_ENV": "1"},
+            target_rc=42,
+            target_err_substring="triggered error flag detected",
+            title="Hermetic Fixture Reproducer",
+        )
+        t4 = "set -euo pipefail" in repro_code and "fixture_guard_init" in repro_code and "triggered error flag detected" in repro_code
+        assertions.append(("Reproducer script code generation creates compliant syntax with separate streams", t4, ""))
 
-    res = subprocess.run(["bash", repro_path], cwd=tmp_dir, capture_output=True, text=True)
-    t5 = res.returncode == 0 and "PASS: Failure reproduced successfully" in res.stdout
-    subprocess.run(["rm", "-rf", tmp_dir])
-    assertions.append(("Synthesized repro.sh executes and reproduces failure in isolated sandbox", t5, f"rc={res.returncode}, out={res.stdout}"))
+        # 5. Standalone Execution of generated repro script
+        repro_path = os.path.join(tmp_dir, "repro.sh")
+        with open(repro_path, "w") as f:
+            f.write(repro_code)
+        os.chmod(repro_path, 0o755)
 
-    # 6. Falsifiability Negative Control: Verify that a non-reproducing candidate is rejected
-    non_repro_result = test_reproduction(
-        ["bash", os.path.join(repo_root, "relay-automation/agy-turn.sh"), "--help"],
-        {},
-        repo_root,
-        target_rc=42,  # Intentionally wrong expected rc
-    )
-    t6 = (non_repro_result is False)
-    assertions.append(("Negative control: Non-reproducing candidate correctly rejected", t6, ""))
+        res = subprocess.run(["bash", repro_path], cwd=tmp_dir, capture_output=True, text=True)
+        t5 = res.returncode == 0 and "PASS: Failure reproduced successfully" in res.stdout
+        assertions.append(("Synthesized repro.sh executes and reproduces failure in isolated sandbox", t5, f"rc={res.returncode}, out={res.stdout}"))
+
+        # 6. Falsifiability Negative Control: Verify that a non-reproducing candidate is rejected
+        non_repro_result = test_reproduction(
+            ["bash", fixture_script],
+            {"REQUIRED_TRIGGER_ENV": "1"},
+            repo_root,
+            target_rc=42,  # Intentionally wrong expected rc (script without flag exits 0)
+        )
+        t6 = (non_repro_result is False)
+        assertions.append(("Negative control: Non-reproducing candidate correctly rejected", t6, ""))
+
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
     passed_count = sum(1 for _, ok, _ in assertions if ok)
     total_count = len(assertions)
@@ -386,6 +489,7 @@ def main() -> int:
             record["expected_exit_code"],
             record["err_substring"],
             title=f"Reproducer for {record.get('runner', 'command')}",
+            repo_root=repo_root,
         )
 
         if args.output:
