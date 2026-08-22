@@ -216,6 +216,10 @@ TESTS=(
   "rtl-orphan-backup.sh"         # GH-141 (concurrent peer-edit race: revert unchanged, content recoverable)
   "gh91-relay-scratch.sh"          # GH-91 (sanctioned .relay-scratch/ for builder verification output: exempted in rtl_check + rtl_worktree_end, pre-created by begin, named in the turn prompt; never copied back, discarded under ROOT; controls pin that stray writes and lookalike prefixes still go off-lane) — 15/0, driven at the lib-function level, no builder binary needed
   "gh124-closeout.sh"            # GH-124 (closeout automation, on-disk gate receipts, workspace sweep GC, and early drift alert)
+  "gh129-relay-tick-root.sh"     # #129/#136 (relay-drive self-resolves TICK_REPO_ROOT ahead of the lane-attempt gate, NOTE prints after the lock for gh376 parity; not-found names the root+dir searched; escalate exits 4 never 0; attempts land beside the token) — 17/0; negative control: pre-fix red on self-resolution (recorded in PR #134 + #136's fix PR)
+  "gh130-agy-auth-whoami.sh"     # #130/#135 (agy auth preflight three-state verdict on BOTH agy-turn.py and consult.py: usage-error probes unverifiable+non-blocking, credentials/silent non-zero still fatal) — 11/0
+  "gh131-marathon-target-root.sh" # #131 (cross-repo --target-root + target --phases-dir: render and escalation commits land in the TARGET repo; in-repo control byte-identical; phase_commit_root unit) — 12/0; pool-safe: marathon's fixture-rooted lock + the relay-drive child inherits RELAY_DRIVER_LOCKED=1
+  "gh139-pipe-grep-guard.sh"     # #139 (static inventory guard: no NEW `| grep -q` pipes in test/ — the GH-460 SIGPIPE shape; baseline of unconverted stragglers beside it)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"

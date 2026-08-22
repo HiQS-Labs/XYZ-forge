@@ -150,7 +150,7 @@ check_pattern() {
   printf '%s\n' "$content" > "$tmpf"
   local rc=0 stderr_out
   stderr_out="$(bash "$SCANNER" "$tmpf" 2>&1 >/dev/null)" || rc=$?
-  if [[ "$rc" -ne 0 ]] && echo "$stderr_out" | grep -q "SECURITY:"; then
+  if grep -q "SECURITY:" <<<"$([[ "$rc" -ne 0 ]] && echo "$stderr_out")"; then
     pass "pattern[$label]: detected and flagged"
   else
     fail "pattern[$label]: not detected (rc=$rc)"
@@ -180,7 +180,7 @@ check_clean_pattern() {
   printf '%s\n' "$content" > "$tmpf"
   local rc=0 stderr_out
   stderr_out="$(bash "$SCANNER" "$tmpf" 2>&1 >/dev/null)" || rc=$?
-  if [[ "$rc" -eq 0 ]] && ! echo "$stderr_out" | grep -q "SECURITY:"; then
+  if [[ "$rc" -eq 0 ]] && ! grep -q "SECURITY:" <<<"$(echo "$stderr_out")"; then
     pass "no-fp[$label]: correctly clean"
   else
     fail "no-fp[$label]: false positive (rc=$rc)"
@@ -210,7 +210,7 @@ check_secret_survives_adjacent_ref() {
   printf '%s\n' "$content" > "$tmpf"
   local rc=0 stderr_out
   stderr_out="$(bash "$SCANNER" "$tmpf" 2>&1 >/dev/null)" || rc=$?
-  if [[ "$rc" -ne 0 ]] && echo "$stderr_out" | grep -qF "$real_secret_substr"; then
+  if grep -qF "$real_secret_substr" <<<"$([[ "$rc" -ne 0 ]] && echo "$stderr_out")"; then
     pass "adjacent-ref[$label]: real secret still caught next to an excluded reference"
   else
     fail "adjacent-ref[$label]: real secret NOT caught (rc=$rc) — stderr: $stderr_out"
@@ -268,7 +268,7 @@ check_quoted_value_with_spaces() {
   printf 'password="pw secret"\n' > "$tmpf"
   local rc=0 stderr_out
   stderr_out="$(bash "$SCANNER" --no-baseline "$tmpf" 2>&1 >/dev/null)" || rc=$?
-  if [[ "$rc" -ne 0 ]] && echo "$stderr_out" | grep -qF 'password="pw secret"'; then
+  if grep -qF 'password="pw secret"' <<<"$([[ "$rc" -ne 0 ]] && echo "$stderr_out")"; then
     pass "quoted value with internal space is caught (previously matched nothing)"
   else
     fail "quoted value with internal space NOT caught (rc=$rc): $stderr_out"
@@ -324,7 +324,7 @@ STDERR_NOBASE="$WORK/stderr-nobaseline.txt"
 # paste a row straight in.
 TSV_OUT="$(cd "$BASE_DIR" && bash "$SCANNER" --no-baseline --tsv "mixed.sh" 2>/dev/null || true)"
 TSV_EXPECT="$(printf 'mixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"')"
-printf '%s\n' "$TSV_OUT" | grep -qF "$TSV_EXPECT" \
+grep -qF "$TSV_EXPECT" <<<"$(printf '%s\n' "$TSV_OUT")" \
   && pass "baseline: --tsv emits tab-separated file/rule/text" \
   || fail "baseline: --tsv output malformed: $TSV_OUT"
 

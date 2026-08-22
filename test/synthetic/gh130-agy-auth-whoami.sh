@@ -160,5 +160,39 @@ run_preflight "$STUB_SILENT"
   && pass "agy_auth_preflight(silent exit 3) returns False — unrecognized failures still block" \
   || fail "silent non-zero probe stopped blocking (rc=$RC)"
 
+echo "=== 6. #135: consult.py's preflight routes non-zero exits through the verdict too ==="
+# consult.py had the same fatal CalledProcessError branch #130 fixed in agy-turn.py; its exit-0
+# path already used the shared verdict, so only the non-zero branch is exercised here.
+CONSULT_DRIVER="$WORK/consult_driver.py"
+cat >"$CONSULT_DRIVER" <<EOF
+import importlib.util, os, sys
+
+harness, stub, log = sys.argv[1], sys.argv[2], sys.argv[3]
+sys.path.insert(0, os.path.join(harness, "utils", "py"))
+spec = importlib.util.spec_from_file_location(
+    "consult_mod", os.path.join(harness, "utils", "py", "consult.py"))
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+sys.exit(0 if mod.agy_auth_preflight(stub, log) else 5)
+EOF
+CLOG="$WORK/consult-preflight.log"
+: >"$CLOG"
+AGY_AUTH_TIMEOUT_S=10 "$PY" "$CONSULT_DRIVER" "$ROOT_DIR" "$STUB_USAGE" "$CLOG" >/dev/null 2>&1
+rcu=$?
+[ "$rcu" -eq 0 ] \
+  && pass "consult agy_auth_preflight(usage stub, exit 2) returns True (#135)" \
+  || fail "consult still blocks the lane on a usage-error probe (rc=$rcu) — the #135 defect"
+grep -q "unverifiable headless (expected, probe exited 2" "$CLOG" \
+  && pass "consult records the unverifiable NOTE in its log" \
+  || fail "consult NOTE missing from log: $(cat "$CLOG")"
+AGY_AUTH_TIMEOUT_S=10 "$PY" "$CONSULT_DRIVER" "$ROOT_DIR" "$STUB_CREDS" "$CLOG" >/dev/null 2>&1
+rcc=$?
+[ "$rcc" -eq 5 ] \
+  && pass "consult agy_auth_preflight(credentials error) still returns False" \
+  || fail "consult stopped blocking credentials failures (rc=$rcc) — over-broad unverifiable"
+grep -q "agy login" "$CLOG" \
+  && pass "consult keeps the \`agy login\` remedy on real errors" \
+  || fail "consult lost its remedy text: $(cat "$CLOG")"
+
 echo "gh130: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

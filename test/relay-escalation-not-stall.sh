@@ -34,9 +34,9 @@ chmod +x "$ESC_STUB"
 
 out="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$ESC_STUB" --round-cap 1 2>&1)"; rc=$?
 [ "$rc" -eq 4 ] && pass "by-design Escalated exits 4 (not the stall's 3)" || fail "expected exit 4, got $rc (out: $out)"
-printf '%s' "$out" | grep -q "escalated to human by design" \
+grep -q "escalated to human by design" <<<"$(printf '%s' "$out")" \
   && pass "by-design Escalated reports a clean handback message" || fail "missing by-design message (out: $out)"
-printf '%s' "$out" | grep -qi "no progress" \
+grep -qi "no progress" <<<"$(printf '%s' "$out")" \
   && fail "by-design Escalated still reads as a no-progress stall (out: $out)" \
   || pass "by-design Escalated is NOT reported as no-progress"
 

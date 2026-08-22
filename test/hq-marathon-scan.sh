@@ -170,7 +170,7 @@ grep -q -- '- Ready: 1' "$OUT" \
   && pass "net counts match fixture matrix" \
   || fail "net counts wrong: $(grep -E '^- (Ready|Blocked|Stale|Ambiguous|Held)' "$OUT")"
 
-if find "$WORK/repos" -path '*/PROJECT/2-WORKING/HQ-MARATHON-*' -o -path '*/packet/*' | grep -q .; then
+if grep -q . <<<"$(find "$WORK/repos" -path '*/PROJECT/2-WORKING/HQ-MARATHON-*' -o -path '*/packet/*')"; then
   fail "scanner wrote inside a target repo"
 else
   pass "scanner stayed read-only over target repos"

@@ -22,7 +22,7 @@ LIB="$ROOT/relay-automation/relay-turn-lib.sh"
 unset XYZ_PYTHON
 
 # --- 0. the flag exists on the Python lane at all --------------------------------------------
-python3 "$PY" --help 2>/dev/null | grep -q -- '--log-github' \
+grep -q -- '--log-github' <<<"$(python3 "$PY" --help 2>/dev/null)" \
   && pass "--log-github is documented in the Python lane's help" \
   || fail "--log-github missing from the Python lane's help"
 grep -q 'driver-heartbeat.json' "$PY" \
@@ -109,10 +109,10 @@ WITH_LOG_OUT="$(run_driver with-log --log-github 2>&1)"; WITH_LOG_RC=$?
 [ "$NO_LOG_RC" -eq 3 ] && [ "$WITH_LOG_RC" -eq 3 ] \
   && pass "--log-github on the default lane preserves the marathon exit code" \
   || fail "expected both runs to exit 3; no-log=$NO_LOG_RC with-log=$WITH_LOG_RC ($WITH_LOG_OUT)"
-printf '%s\n' "$WITH_LOG_OUT" | grep -q 'local telemetry only' \
+grep -q 'local telemetry only' <<<"$(printf '%s\n' "$WITH_LOG_OUT")" \
   && pass "missing gh degrades to local telemetry on the default lane" \
   || fail "missing-gh degradation was not reported by the Python lane: $WITH_LOG_OUT"
-printf '%s\n' "$NO_LOG_OUT" | grep -q 'local telemetry only' \
+grep -q 'local telemetry only' <<<"$(printf '%s\n' "$NO_LOG_OUT")" \
   && fail "a run WITHOUT --log-github reported run-log degradation — the feature is not opt-in" \
   || pass "a run without --log-github says nothing about the run log (opt-in preserved)"
 
@@ -205,33 +205,33 @@ posts=$(grep -c -- "--method POST" "$GH_CALLS" || true)
   || fail "expected exactly 1 POST from the Python lane, got $posts — the run log is still inert"
 FIRST_CALLS="$(cat "$GH_CALLS")"
 
-if printf '%s\n' "$FIRST_CALLS" | grep -q -- "--repo acme/widgets" \
-   || printf '%s\n' "$FIRST_CALLS" | grep -q "repos/acme/widgets/"; then
+if grep -q -- "--repo acme/widgets" <<<"$(printf '%s\n' "$FIRST_CALLS")" \
+   || grep -q "repos/acme/widgets/" <<<"$(printf '%s\n' "$FIRST_CALLS")"; then
   pass "the Python lane scopes every gh call to the resolved repository"
 else
   fail "gh calls were not repo-scoped: $FIRST_CALLS"
 fi
-printf '%s\n' "$FIRST_CALLS" | grep -q -- "--paginate --slurp" \
+grep -q -- "--paginate --slurp" <<<"$(printf '%s\n' "$FIRST_CALLS")" \
   && pass "comment lookup uses --slurp (one well-formed JSON document)" \
   || fail "comment lookup must use --paginate --slurp: $FIRST_CALLS"
 
 BODY="$(cat "$MARKER_STORE")"
-printf '%s' "$BODY" | grep -q 'xyz-marathon-run-log:322:gh-log' \
+grep -q 'xyz-marathon-run-log:322:gh-log' <<<"$(printf '%s' "$BODY")" \
   && pass "run-log body carries the lane-scoped idempotency marker" \
   || fail "marker missing or wrong in the posted body: $BODY"
-printf '%s' "$BODY" | grep -q 'driver exit: `3`' \
+grep -q 'driver exit: `3`' <<<"$(printf '%s' "$BODY")" \
   && pass "run-log body records the driver's REAL exit code, not a placeholder" \
   || fail "driver exit not recorded correctly: $BODY"
 
 # GH-333: the exit code is glossed, so a reader does not have to look up what 3 means.
-printf '%s' "$BODY" | grep -q 'driver exit: `3` (no-progress escalation)' \
+grep -q 'driver exit: `3` (no-progress escalation)' <<<"$(printf '%s' "$BODY")" \
   && pass "the exit code carries its plain-language meaning" \
   || fail "exit code was not glossed: $BODY"
 # ...and the constant field it replaced is gone. `driver still running` could only ever say
 # "running": the exit hook asked before clearing the heartbeat, and the PID it tested belonged to the
 # process doing the asking. A line that reads like a measurement but is a constant is worse than no
 # line, so this asserts its ABSENCE — re-adding it must fail here.
-printf '%s' "$BODY" | grep -q 'driver still running' \
+grep -q 'driver still running' <<<"$(printf '%s' "$BODY")" \
   && fail "the constant 'driver still running' field is back — it can only ever say 'running': $BODY" \
   || pass "the always-'running' liveness field is gone from the run log"
 # The heartbeat FILE is the real liveness deliverable and must be untouched by that removal — it is
@@ -239,7 +239,7 @@ printf '%s' "$BODY" | grep -q 'driver still running' \
 grep -q 'driver_heartbeat_write' "$PY" \
   && pass "dropping the field did not remove the heartbeat writer itself" \
   || fail "the driver heartbeat writer went away with the field"
-printf '%s' "$BODY" | grep -q 'per-phase gate: \*\*not-run\*\*' \
+grep -q 'per-phase gate: \*\*not-run\*\*' <<<"$(printf '%s' "$BODY")" \
   && pass "run-log body reports the gate as not-run when the phase never reached it" \
   || fail "gate result not reported honestly: $BODY"
 
@@ -259,7 +259,7 @@ OUT="$(GH_ON_PATH="$GH_STUB_DIR:" run_driver gh-fail --log-github 2>&1)"; RC=$?
 [ "$RC" -eq 3 ] \
   && pass "a FAILING gh write leaves the marathon exit code untouched" \
   || fail "gh failure changed the driven run's exit code to $RC"
-printf '%s\n' "$OUT" | grep -q 'local telemetry only' \
+grep -q 'local telemetry only' <<<"$(printf '%s\n' "$OUT")" \
   && pass "a failed run-log write is reported rather than swallowed" \
   || fail "failed gh write produced no diagnostic: $OUT"
 printf '0\n' > "$GH_API_RC"

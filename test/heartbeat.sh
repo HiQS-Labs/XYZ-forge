@@ -45,7 +45,7 @@ else
 fi
 
 # The heartbeat-covered window must NOT be flagged.
-if echo "$PARKED" | grep -q "TASK-1"; then
+if grep -q "TASK-1" <<<"$(echo "$PARKED")"; then
   fail "TASK-1 wrongly flagged parked despite an in-window heartbeat"
 else
   pass "heartbeat-covered claim window is not flagged parked"

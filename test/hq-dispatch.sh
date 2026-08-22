@@ -42,7 +42,7 @@ PLAN="$BETA/PROJECT/2-WORKING/MARATHON-PLAN-2026-07-04.md"
 # ---- queue: preview writes nothing ----
 OUT="$(bash "$HQ" queue beta-app "wire up the export button")"; rc=$?
 [ "$rc" = 0 ] && pass "queue preview rc=0" || fail "queue preview rc=$rc"
-printf '%s\n' "$OUT" | grep -q "PREVIEW (writes nothing)" && pass "queue preview labeled" || fail "no preview label"
+grep -q "PREVIEW (writes nothing)" <<<"$(printf '%s\n' "$OUT")" && pass "queue preview labeled" || fail "no preview label"
 grep -q 'HQ-queued' "$PLAN" && fail "queue preview mutated the plan" || pass "plan untouched by preview"
 
 # ---- queue --create appends a non-destructive lane ----
@@ -73,9 +73,9 @@ bash "$HQ" fire --gh-issue 5 --risk 2 nope-nope >/dev/null 2>&1; rc=$?
 # ---- fire: gates PASS -> prepares (never executes) ----
 OUT="$(bash "$HQ" fire --gh-issue 5 --risk 2 beta-app)"; rc=$?
 [ "$rc" = 0 ] && pass "fire Tier A + risk 2 rc=0" || fail "fire pass rc=$rc"
-printf '%s\n' "$OUT" | grep -q 'swarm-preflight.sh --gh-issue 5' && pass "emits swarm-preflight command" || fail "no preflight cmd"
-printf '%s\n' "$OUT" | grep -qi 'operator decides' && pass "states operator-decides (no auto-drive)" || fail "no operator-decides note"
-printf '%s\n' "$OUT" | grep -qi 'nothing was executed' && pass "confirms nothing executed" || fail "no not-executed note"
+grep -q 'swarm-preflight.sh --gh-issue 5' <<<"$(printf '%s\n' "$OUT")" && pass "emits swarm-preflight command" || fail "no preflight cmd"
+grep -qi 'operator decides' <<<"$(printf '%s\n' "$OUT")" && pass "states operator-decides (no auto-drive)" || fail "no operator-decides note"
+grep -qi 'nothing was executed' <<<"$(printf '%s\n' "$OUT")" && pass "confirms nothing executed" || fail "no not-executed note"
 
 echo "== hq-dispatch: $PASS passed, $FAIL failed =="
 [ "$FAIL" = 0 ]

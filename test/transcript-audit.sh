@@ -88,21 +88,21 @@ echo "  audit output:"
 echo "$AUDIT_OUTPUT" | sed 's/^/    /'
 
 # ── Test 1: stale-ref finding ─────────────────────────────────────────────────
-if echo "$AUDIT_OUTPUT" | grep -qF 'AUDIT stale-ref'; then
+if grep -qF 'AUDIT stale-ref' <<<"$(echo "$AUDIT_OUTPUT")"; then
   pass "stale-ref: audit emitted stale-ref finding"
 else
   fail "stale-ref: no 'AUDIT stale-ref' line found in output"
 fi
 
 # ── Test 2: repeat-explore finding ───────────────────────────────────────────
-if echo "$AUDIT_OUTPUT" | grep -qE 'AUDIT repeat-explore .+ count=[0-9]+'; then
+if grep -qE 'AUDIT repeat-explore .+ count=[0-9]+' <<<"$(echo "$AUDIT_OUTPUT")"; then
   pass "repeat-explore: audit emitted repeat-explore finding with count"
 else
   fail "repeat-explore: no 'AUDIT repeat-explore ... count=N' line found in output"
 fi
 
 # ── Test 3: unbounded-stall finding ──────────────────────────────────────────
-if echo "$AUDIT_OUTPUT" | grep -qF 'AUDIT unbounded-stall'; then
+if grep -qF 'AUDIT unbounded-stall' <<<"$(echo "$AUDIT_OUTPUT")"; then
   pass "unbounded-stall: audit emitted unbounded-stall finding"
 else
   fail "unbounded-stall: no 'AUDIT unbounded-stall' line found in output"
@@ -140,7 +140,7 @@ else
   fail "non-existent-dir: expected exit 0, got $NODIR_RC"
 fi
 
-if echo "$NODIR_OUTPUT" | grep -qE 'AUDIT (summary:|total )'; then
+if grep -qE 'AUDIT (summary:|total )' <<<"$(echo "$NODIR_OUTPUT")"; then
   pass "non-existent-dir: clean structured report emitted (no crash, no error noise)"
 else
   fail "non-existent-dir: expected a clean structured AUDIT line, got: $NODIR_OUTPUT"

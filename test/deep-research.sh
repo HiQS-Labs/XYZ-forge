@@ -65,13 +65,13 @@ out="$(run good --query q --temperature nope 2>/dev/null)"; rc=$?
 # --- (2) good turn: request construction + response normalization --------------------------------
 out="$(run good --query "what is deep research" --search-context-size high --temperature 0.2 --max-tokens 500)"; rc=$?
 [ "$rc" -eq 0 ] && pass "good turn exits 0" || fail "good turn rc=$rc"
-echo "$out" | grep -q '"provider":"agy"' && pass "provider is agy" || fail "provider field wrong: $out"
-echo "$out" | grep -q '"model":"gemini"' && pass "model field set" || fail "model field wrong: $out"
-echo "$out" | grep -q '"query":"what is deep research"' && pass "query echoed back" || fail "query field wrong: $out"
+grep -q '"provider":"agy"' <<<"$(echo "$out")" && pass "provider is agy" || fail "provider field wrong: $out"
+grep -q '"model":"gemini"' <<<"$(echo "$out")" && pass "model field set" || fail "model field wrong: $out"
+grep -q '"query":"what is deep research"' <<<"$(echo "$out")" && pass "query echoed back" || fail "query field wrong: $out"
 echo "$out" | grep -q 'https://example.com/docs' && echo "$out" | grep -q 'https://example.com/blog' \
   && pass "both citations extracted from a CITATIONS section" || fail "citations missing: $out"
-echo "$out" | grep -q '"title":"Example Docs"' && pass "citation title parsed" || fail "citation title missing: $out"
-echo "$out" | grep -q '"searchContextSize":"high"' && pass "raw.config carries searchContextSize through" || fail "raw config missing searchContextSize: $out"
+grep -q '"title":"Example Docs"' <<<"$(echo "$out")" && pass "citation title parsed" || fail "citation title missing: $out"
+grep -q '"searchContextSize":"high"' <<<"$(echo "$out")" && pass "raw.config carries searchContextSize through" || fail "raw config missing searchContextSize: $out"
 
 # --- (3) fallback citation extraction: no CITATIONS heading, bare inline URLs ---------------------
 out="$(run noformat --query q)"; rc=$?
@@ -197,10 +197,10 @@ or_start good
 out="$(or_run --query "what is deep research" --search-context-size low --temperature 0.3 --max-tokens 256)"; rc=$?
 or_stop
 [ "$rc" -eq 0 ] && pass "openrouter: good turn exits 0" || fail "openrouter good turn rc=$rc"
-echo "$out" | grep -q '"provider":"openrouter"' && pass "openrouter: provider field" || fail "provider field wrong: $out"
-echo "$out" | grep -q '"model":"perplexity/sonar"' && pass "openrouter: default model perplexity/sonar" || fail "model field wrong: $out"
-echo "$out" | grep -q '"url":"https://example.com/anno","title":"Anno Doc"' && pass "openrouter: annotation citation with title" || fail "annotation citation missing: $out"
-echo "$out" | grep -q 'https://example.com/passthrough' && pass "openrouter: citations[] passthrough merged" || fail "passthrough citation missing: $out"
+grep -q '"provider":"openrouter"' <<<"$(echo "$out")" && pass "openrouter: provider field" || fail "provider field wrong: $out"
+grep -q '"model":"perplexity/sonar"' <<<"$(echo "$out")" && pass "openrouter: default model perplexity/sonar" || fail "model field wrong: $out"
+grep -q '"url":"https://example.com/anno","title":"Anno Doc"' <<<"$(echo "$out")" && pass "openrouter: annotation citation with title" || fail "annotation citation missing: $out"
+grep -q 'https://example.com/passthrough' <<<"$(echo "$out")" && pass "openrouter: citations[] passthrough merged" || fail "passthrough citation missing: $out"
 grep -q '"url":"/api/v1/chat/completions"' "$WORK/or-req.json" && pass "openrouter: POSTs to <base>/chat/completions" || fail "request url wrong: $(cat "$WORK/or-req.json")"
 grep -q '"auth":"Bearer test-key"' "$WORK/or-req.json" && pass "openrouter: Authorization bearer header" || fail "auth header wrong: $(cat "$WORK/or-req.json")"
 grep -q '"model":"perplexity/sonar"' "$WORK/or-req.json" && pass "openrouter: request body carries model" || fail "request model wrong: $(cat "$WORK/or-req.json")"
@@ -297,17 +297,17 @@ else
       live_fail "real agy turn rc=$live_rc: $(cat "$WORK/live-err" 2>/dev/null)"
     fi
 
-    if echo "$live_out" | grep -q '"answer":""'; then
+    if grep -q '"answer":""' <<<"$(echo "$live_out")"; then
       live_fail "real agy answer field empty: $live_out"
-    elif echo "$live_out" | grep -q '"answer":"'; then
+    elif grep -q '"answer":"' <<<"$(echo "$live_out")"; then
       live_pass "real agy returned a non-empty answer"
     else
       live_fail "real agy answer field missing: $live_out"
     fi
 
-    if echo "$live_out" | grep -q '"citations":\[\]'; then
+    if grep -q '"citations":\[\]' <<<"$(echo "$live_out")"; then
       live_fail "real agy returned zero citations: $live_out"
-    elif echo "$live_out" | grep -q '"citations":\['; then
+    elif grep -q '"citations":\[' <<<"$(echo "$live_out")"; then
       live_pass "real agy returned at least one citation"
     else
       live_fail "real agy citations field missing: $live_out"

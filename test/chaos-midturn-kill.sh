@@ -53,7 +53,7 @@ else
 fi
 
 # The unrelated task (never claimed) must NOT appear as a suspect.
-if echo "$PARKED" | grep -q "TASK-UNRELATED"; then
+if grep -q "TASK-UNRELATED" <<<"$(echo "$PARKED")"; then
   fail "unclaimed task wrongly flagged as parked"
 else
   pass "unclaimed task not flagged as parked (no false positive)"
@@ -148,7 +148,7 @@ fi
 # (TICK_REPO_ROOT=$A is exported by _setup.sh), so `tick reap` here releases a real claim.
 
 # Precondition sanity: alice still holds TASK-KILL (claimed in setup, never released).
-if tick_a info TASK-KILL | grep -qE 'claimer:[[:space:]]+alice'; then
+if grep -qE 'claimer:[[:space:]]+alice' <<<"$(tick_a info TASK-KILL)"; then
   pass "pre-reap: alice still holds the orphaned TASK-KILL claim"
 else
   fail "pre-reap: expected alice to hold TASK-KILL, got: $(tick_a info TASK-KILL)"
@@ -178,7 +178,7 @@ else
 fi
 
 # alice no longer holds TASK-KILL — the orphaned token is re-offered.
-if tick_a info TASK-KILL | grep -qE 'claimer:[[:space:]]+alice'; then
+if grep -qE 'claimer:[[:space:]]+alice' <<<"$(tick_a info TASK-KILL)"; then
   fail "TASK-KILL still claimed by alice after reap (not re-offered)"
 else
   pass "TASK-KILL no longer held by alice after reap (orphaned token re-offered)"
@@ -208,7 +208,7 @@ else
   fail "expected idempotent no-op on the second reap (exit=$REAP2_EXIT):\n$(cat "$WORK/reap2.stderr")"
 fi
 
-if tick_a info TASK-KILL | grep -qE 'claimer:[[:space:]]+bob'; then
+if grep -qE 'claimer:[[:space:]]+bob' <<<"$(tick_a info TASK-KILL)"; then
   pass "peer's live claim survived the second pass (scoped reap targets alice; never a live claim)"
 else
   fail "bob's live claim was disturbed by the second reap pass: $(tick_a info TASK-KILL)"

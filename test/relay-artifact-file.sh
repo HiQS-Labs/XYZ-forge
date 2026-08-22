@@ -109,7 +109,7 @@ out="$(
     --relay-task RELAY-ART-setup-missing --agent-cmd "$BLOCKED_AGENT" 2>&1
 )"; rc=$?
 [ "$rc" -eq 2 ] && pass "missing Setup artifact path fails fast at dispatch time" || fail "expected exit 2, got $rc — $out"
-printf '%s' "$out" | grep -q "artifact path not found in worktree" \
+grep -q "artifact path not found in worktree" <<<"$(printf '%s' "$out")" \
   && pass "missing Setup artifact path reports the clear GH-198 message" \
   || fail "missing Setup artifact message: $out"
 [ ! -f "$WORK/blocked-agent-ran" ] \

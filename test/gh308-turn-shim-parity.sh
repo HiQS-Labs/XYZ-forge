@@ -64,7 +64,7 @@ RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-nodrif
   CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
   bash "$SHIM" >/dev/null 2>&1
 brief2="$(cat "$WORK/claude-args" 2>/dev/null || true)"
-printf '%s' "$brief2" | grep -qi 'dependency.drift\|dependency-drift\|cross-agent dependency' \
+grep -qi 'dependency.drift\|dependency-drift\|cross-agent dependency' <<<"$(printf '%s' "$brief2")" \
   && fail "claude-turn: emitted a drift block with no drift pending (false positive): $brief2" \
   || pass "claude-turn: no drift block when no peer drift is pending"
 

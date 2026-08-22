@@ -33,11 +33,11 @@ rtl_before
 printf '\n### Round 1 · Builder\ndid the thing\n' >>"$A/relay.md"   # the turn's own allowlisted edit
 ( rtl_enforce "T1" "agent" "$LOG" "test" ) >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "turn with pre-existing staged WIP still exits 0" || fail "expected exit 0, got $rc"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "relay.md is in the new commit" || fail "relay.md missing from the new commit"
-git -C "$A" show --stat HEAD | grep -q "unrelated.md" \
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "relay.md is in the new commit" || fail "relay.md missing from the new commit"
+grep -q "unrelated.md" <<<"$(git -C "$A" show --stat HEAD)" \
   && fail "GH-198 regression: unrelated.md was swept into the relay commit" \
   || pass "GH-198: unrelated.md NOT swept into the relay commit"
-git -C "$A" diff --cached --name-only | grep -qx "unrelated.md" \
+grep -qx "unrelated.md" <<<"$(git -C "$A" diff --cached --name-only)" \
   && pass "unrelated.md remains staged (untouched) after the turn — still the operator's to commit" \
   || fail "unrelated.md should still be staged, not committed or lost"
 [ -f "$A/unrelated.md" ] && pass "unrelated.md still present on disk" || fail "unrelated.md should not have disappeared"
@@ -52,8 +52,8 @@ printf 'built output\n' >"$A/art.txt"
 printf '\n### Round 1 · Builder\nbuilt art.txt\n' >>"$A/relay.md"
 ( rtl_enforce "T2" "agent" "$LOG" "test" ) >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "control: allowlisted artifact turn still exits 0" || fail "control expected exit 0, got $rc"
-git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "control: relay.md committed" || fail "control: relay.md missing"
-git -C "$A" show --stat HEAD | grep -q "art.txt" && pass "control: allowlisted art.txt committed" || fail "control: art.txt missing from commit"
+grep -q "relay.md" <<<"$(git -C "$A" show --stat HEAD)" && pass "control: relay.md committed" || fail "control: relay.md missing"
+grep -q "art.txt" <<<"$(git -C "$A" show --stat HEAD)" && pass "control: allowlisted art.txt committed" || fail "control: art.txt missing from commit"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

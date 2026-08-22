@@ -59,7 +59,7 @@ git -C "$LOCAL_MAIN" push origin development >/dev/null 2>&1
 # Invariant check: Refuse primary repo sweep
 python3 "$ROOT/utils/py/workspace_manager.py" register --repo "$LOCAL_MAIN" --path "$LOCAL_MAIN" --type clone >/dev/null 2>&1
 out="$(python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" 2>&1)"
-echo "$out" | grep -q "REFUSED.*primary repository" || {
+grep -q "REFUSED.*primary repository" <<<"$(echo "$out")" || {
   echo "FAIL: workspace_manager failed to refuse primary repository sweep"
   exit 1
 }
@@ -73,7 +73,7 @@ git -C "$WT_DIR" commit -m "wt change" >/dev/null 2>&1
 
 python3 "$ROOT/utils/py/workspace_manager.py" register --repo "$LOCAL_MAIN" --path "$WT_DIR" --type worktree >/dev/null 2>&1
 out="$(python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" 2>&1)"
-echo "$out" | grep -q "REFUSED.*unpushed commits" || {
+grep -q "REFUSED.*unpushed commits" <<<"$(echo "$out")" || {
   echo "FAIL: workspace_manager failed to refuse worktree with unpushed commits"
   exit 1
 }
@@ -81,7 +81,7 @@ echo "$out" | grep -q "REFUSED.*unpushed commits" || {
 # Push worktree branch -> now eligible
 git -C "$WT_DIR" push origin feature-wt >/dev/null 2>&1
 out="$(python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" 2>&1)"
-echo "$out" | grep -q "ELIGIBLE" || {
+grep -q "ELIGIBLE" <<<"$(echo "$out")" || {
   echo "FAIL: workspace_manager should have marked clean & pushed worktree as eligible"
   exit 1
 }
@@ -105,7 +105,7 @@ git -C "$CLONE_DIR" stash >/dev/null 2>&1
 
 python3 "$ROOT/utils/py/workspace_manager.py" register --repo "$LOCAL_MAIN" --path "$CLONE_DIR" --type clone >/dev/null 2>&1
 out="$(python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" 2>&1)"
-echo "$out" | grep -q "REFUSED.*stashes" || {
+grep -q "REFUSED.*stashes" <<<"$(echo "$out")" || {
   echo "FAIL: workspace_manager failed to refuse clone with stashes"
   exit 1
 }
@@ -138,7 +138,7 @@ git -C "$DETACHED_WT" commit -m "unpushed detached commit" >/dev/null 2>&1
 
 python3 "$ROOT/utils/py/workspace_manager.py" register --repo "$LOCAL_MAIN" --path "$DETACHED_WT" --type worktree >/dev/null 2>&1
 out="$(python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" 2>&1)"
-echo "$out" | grep -q "REFUSED.*detached HEAD.*unpushed commits" || {
+grep -q "REFUSED.*detached HEAD.*unpushed commits" <<<"$(echo "$out")" || {
   echo "FAIL: workspace_manager failed to refuse detached HEAD worktree with unpushed commits"
   echo "Output was: $out"
   exit 1
@@ -172,11 +172,11 @@ fi
 
 # Test --auto-pr dry run output
 auto_out="$(bash "$ROOT/relay-automation/marathon-closeout.sh" --dry-run --auto-pr --head feat-test)"
-echo "$auto_out" | grep -q "\-\-no-commit: skipping commit step" || {
+grep -q "\-\-no-commit: skipping commit step" <<<"$(echo "$auto_out")" || {
   echo "FAIL: marathon-closeout.sh --auto-pr dry run does not contain --no-commit skip"
   exit 1
 }
-echo "$auto_out" | grep -q "gh pr create" || {
+grep -q "gh pr create" <<<"$(echo "$auto_out")" || {
   echo "FAIL: marathon-closeout.sh --auto-pr dry run does not contain gh pr create"
   exit 1
 }

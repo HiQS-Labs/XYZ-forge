@@ -37,7 +37,7 @@ EOF
 chmod +x "$RC_STUB"
 outA="$(bash "$DRIVE" --relay-file "$A/relayRC.md" --relay-task RELAY-RC --agent-cmd "$RC_STUB" --review-once 2>&1)"; rcA=$?
 [ "$rcA" -eq 5 ] && pass "changes-requested single review exits 5 (not the stall's 3)" || fail "expected 5, got $rcA (out: $outA)"
-printf '%s' "$outA" | grep -qi "no progress" && fail "changes-requested read as no-progress (out: $outA)" || pass "changes-requested NOT reported as no-progress"
+grep -qi "no progress" <<<"$(printf '%s' "$outA")" && fail "changes-requested read as no-progress (out: $outA)" || pass "changes-requested NOT reported as no-progress"
 
 # --- Case B: reviewer approves → exit 0. ---
 seed RELAY-AP relayAP.md

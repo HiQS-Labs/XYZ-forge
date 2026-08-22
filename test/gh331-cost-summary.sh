@@ -105,10 +105,10 @@ EOF
 seed RELAY-A relayA.md
 STUB_A="$(approve_stub RELAY-A "$A/relayA.md")"
 outA="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$STUB_A" --review-once 2>&1)"; rcA=$?
-[ "$rcA" -eq 0 ] && printf '%s' "$outA" | grep -qF "$COST_LINE" \
+grep -qF "$COST_LINE" <<<"$([ "$rcA" -eq 0 ] && printf '%s' "$outA")" \
   && pass "relay-drive default lane: driven turn prints the cost summary (exit 0)" \
   || fail "relay-drive default lane: expected exit 0 + cost summary; got rc=$rcA (out: $outA)"
-printf '%s' "$outA" | grep -qF -- '--- cost ---' \
+grep -qF -- '--- cost ---' <<<"$(printf '%s' "$outA")" \
   && pass "relay-drive: the summary carries the real tick analyze cost block" \
   || fail "relay-drive: cost block missing from summary: $outA"
 
@@ -116,7 +116,7 @@ printf '%s' "$outA" | grep -qF -- '--- cost ---' \
 seed RELAY-B relayB.md
 STUB_B="$(approve_stub RELAY-B "$A/relayB.md")"
 outB="$(RELAY_COST_SUMMARY=0 bash "$DRIVE" --relay-file "$A/relayB.md" --relay-task RELAY-B --agent-cmd "$STUB_B" --review-once 2>&1)"; rcB=$?
-[ "$rcB" -eq 0 ] && ! printf '%s' "$outB" | grep -qF "$COST_LINE" \
+[ "$rcB" -eq 0 ] && ! grep -qF "$COST_LINE" <<<"$(printf '%s' "$outB")" \
   && pass "relay-drive: RELAY_COST_SUMMARY=0 opts out of the summary" \
   || fail "relay-drive: RELAY_COST_SUMMARY=0 did not silence the summary (rc=$rcB): $outB"
 
@@ -138,7 +138,7 @@ outD="$(TICK_BIN="$BROKEN_TICK" bash "$DRIVE" --relay-file "$A/relayD.md" --rela
 [ "$rcD" -eq 0 ] \
   && pass "relay-drive: a failed tick analyze does not change the exit code (still 0)" \
   || fail "relay-drive: failed tick analyze changed exit code — expected 0, got $rcD (out: $outD)"
-printf '%s' "$outD" | grep -qF 'tick analyze failed — end-of-run cost summary unavailable' \
+grep -qF 'tick analyze failed — end-of-run cost summary unavailable' <<<"$(printf '%s' "$outD")" \
   && pass "relay-drive: a failed tick analyze degrades with a note, not a crash" \
   || fail "relay-drive: expected the analyze-failed degradation note: $outD"
 
@@ -164,13 +164,13 @@ run_marathon() { # <phase-id> [extra-env-assignments passed via `env`]
 
 # (4a) default lane, cost summary ON → marathon prints its own block, still exits 3.
 mOut="$(run_marathon m1)"; mRc=$?
-[ "$mRc" -eq 3 ] && printf '%s' "$mOut" | grep -qF "$MCOST_LINE" \
+grep -qF "$MCOST_LINE" <<<"$([ "$mRc" -eq 3 ] && printf '%s' "$mOut")" \
   && pass "marathon-drive default lane: driven phase prints the cost summary (exit preserved: 3)" \
   || fail "marathon-drive default lane: expected exit 3 + cost summary; got rc=$mRc (out: $(printf '%s' "$mOut" | tail -5))"
 
 # (4b) MARATHON_COST_SUMMARY=0 silences it (still exits 3).
 mOut0="$(run_marathon m2 MARATHON_COST_SUMMARY=0)"; mRc0=$?
-[ "$mRc0" -eq 3 ] && ! printf '%s' "$mOut0" | grep -qF "$MCOST_LINE" \
+[ "$mRc0" -eq 3 ] && ! grep -qF "$MCOST_LINE" <<<"$(printf '%s' "$mOut0")" \
   && pass "marathon-drive: MARATHON_COST_SUMMARY=0 opts out of the summary" \
   || fail "marathon-drive: MARATHON_COST_SUMMARY=0 did not silence the summary (rc=$mRc0): $(printf '%s' "$mOut0" | tail -5)"
 

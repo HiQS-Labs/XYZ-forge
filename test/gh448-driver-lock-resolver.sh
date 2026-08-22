@@ -226,10 +226,10 @@ mkdir -p "$FOREIGN"
 git init -q "$FOREIGN"
 
 fh_out="$(cd "$FOREIGN" && bash "$HARNESS_WT/skills/relay-xyz/find-harness.sh" --check 2>&1)"
-printf '%s' "$fh_out" | grep -q 'a driver lock is currently HELD' \
+grep -q 'a driver lock is currently HELD' <<<"$(printf '%s' "$fh_out")" \
   && pass "find-harness.sh --check: linked-worktree harness + held common-dir lock -> warns" \
   || fail "find-harness.sh --check: expected a held-lock warning, got: $fh_out"
-printf '%s' "$fh_out" | grep -qF "$HARNESS_COMMON_LOCK" \
+grep -qF "$HARNESS_COMMON_LOCK" <<<"$(printf '%s' "$fh_out")" \
   && pass "find-harness.sh --check: warning names the REAL (common-dir) lock path" \
   || fail "find-harness.sh --check: warning did not name $HARNESS_COMMON_LOCK: $fh_out"
 

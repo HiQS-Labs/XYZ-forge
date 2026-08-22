@@ -30,7 +30,7 @@ cd "$A"
 out="$(bash "$DRIVE" --dry-run --target-root "$B" --relay-file "$REL" 2>&1)"; rc=$?
 
 # 1. It must NOT die on relay-file resolution.
-if printf '%s' "$out" | grep -q "relay file does not exist"; then
+if grep -q "relay file does not exist" <<<"$(printf '%s' "$out")"; then
   fail "repo-relative --relay-file not resolved under --target-root (got: $out)"
 else
   pass "repo-relative --relay-file resolved under --target-root"
@@ -47,7 +47,7 @@ out2="$(bash "$DRIVE" --dry-run --target-root "$B" --relay-file "$B/$REL" 2>&1)"
 
 # 4. Regression guard: a genuinely missing relay-file still dies, even under --target-root.
 out3="$(bash "$DRIVE" --dry-run --target-root "$B" --relay-file "nope/missing.md" 2>&1)"; rc3=$?
-if [ "$rc3" -ne 0 ] && printf '%s' "$out3" | grep -q "relay file does not exist"; then
+if grep -q "relay file does not exist" <<<"$([ "$rc3" -ne 0 ] && printf '%s' "$out3")"; then
   pass "missing relay-file still errors under --target-root"
 else
   fail "missing relay-file should still error (rc=$rc3, out: $out3)"

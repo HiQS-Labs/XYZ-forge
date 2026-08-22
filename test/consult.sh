@@ -44,7 +44,7 @@ gfile="$(ls "$OUT"/t-*/t.gemini.md 2>/dev/null | head -1)"
 { [ -s "$cfile" ] && grep -q "ANSWER from codex" "$cfile"; } && pass "codex transcript captured" || fail "no codex transcript"
 { [ -s "$gfile" ] && grep -q "ANSWER from gemini" "$gfile"; } && pass "gemini transcript captured" || fail "no gemini transcript"
 # GH-178 A2 non-regression: a FULL panel (both requested advisors answered) must never be stamped.
-printf '%s' "$out" | grep -q "SINGLE-MODEL" && fail "full 2/2 panel wrongly stamped degraded: $out" \
+grep -q "SINGLE-MODEL" <<<"$(printf '%s' "$out")" && fail "full 2/2 panel wrongly stamped degraded: $out" \
   || pass "full panel is not stamped"
 
 # --- (2) SAFETY: advisor writes cannot leak; operator WIP preserved -----------------------------
@@ -52,7 +52,7 @@ rm -rf "$OUT"
 STUB_WRITE=1 run >/dev/null 2>&1 || true
 [ "$(cat "$A/tracked.txt")" = "WIP" ] && pass "operator WIP preserved (tracked.txt still WIP)" \
   || fail "operator WIP clobbered: $(cat "$A/tracked.txt")"
-if find "$A" -name 'pwned-by-*.txt' 2>/dev/null | grep -q .; then
+if grep -q . <<<"$(find "$A" -name 'pwned-by-*.txt' 2>/dev/null)"; then
   fail "advisor write leaked into operator tree"
 else
   pass "advisor writes did NOT leak into operator tree"
@@ -68,12 +68,12 @@ porc="$(git -C "$A" status --porcelain)"
 rm -rf "$OUT"
 out="$(CODEX_RC=0 GEMINI_RC=1 STUB_WRITE=0 run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "one-model failure still exits 0 (graceful degrade)" || fail "degrade exit=$rc"
-printf '%s' "$out" | grep -q "1 answered, 1 failed" && pass "degrade reported honestly (1 answered, 1 failed)" \
+grep -q "1 answered, 1 failed" <<<"$(printf '%s' "$out")" && pass "degrade reported honestly (1 answered, 1 failed)" \
   || fail "degrade not reported: $out"
 # GH-178 A2: a 2-requested/1-survived degrade must be MECHANICALLY stamped — in stdout, in the
 # surviving transcript itself, and in a format-agnostic sidecar — not just left as a stdout line an
 # operator could miss.
-printf '%s' "$out" | grep -q "SINGLE-MODEL — NOT RECONCILED" && pass "degrade stamped on stdout" \
+grep -q "SINGLE-MODEL — NOT RECONCILED" <<<"$(printf '%s' "$out")" && pass "degrade stamped on stdout" \
   || fail "stdout missing SINGLE-MODEL stamp: $out"
 cfile3="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 grep -q "SINGLE-MODEL — NOT RECONCILED" "$cfile3" 2>/dev/null && pass "degrade stamped INTO the surviving transcript" \
@@ -100,7 +100,7 @@ CONSULT_ROOT="$WORK/plain" CODEX_BIN="$STUB" GEMINI_BIN="$STUB" \
 rm -rf "$OUT"
 out5b="$(CONSULT_ROOT="$A" CODEX_BIN="$STUB" bash "$CONSULT" --prompt "x" --out "$OUT" --label t --models "codex,nosuchvendor" 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "unknown model alongside a valid one still exits 0" || fail "unknown-model run exit=$rc (expected 0)"
-printf '%s' "$out5b" | grep -q "unknown model 'nosuchvendor' — skipping" \
+grep -q "unknown model 'nosuchvendor' — skipping" <<<"$(printf '%s' "$out5b")" \
   && pass "unknown model name warned and skipped (not treated as a case fallthrough)" \
   || fail "missing unknown-model warning: $out5b"
 [ -f "$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)" ] \
@@ -138,10 +138,10 @@ out="$(CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" OPENROUTER_API_KEY="$FAKE_ORK" 
 [ "$rc" -eq 0 ] && pass "aider advisor answers (exit 0)" || fail "aider exit=$rc ($out)"
 afile="$(ls "$OUT"/t-*/t.aider.md 2>/dev/null | head -1)"
 { [ -s "$afile" ] && grep -q "ANSWER from aider" "$afile"; } && pass "aider transcript captured" || fail "no aider transcript"
-printf '%s' "$out" | grep -q "1 answered, 0 failed" && pass "aider counted as an answered advisor" || fail "aider not counted answered: $out"
+grep -q "1 answered, 0 failed" <<<"$(printf '%s' "$out")" && pass "aider counted as an answered advisor" || fail "aider not counted answered: $out"
 # GH-178 A2 non-regression: a DELIBERATE single-model request (--models aider alone) is not a
 # degrade — it must never get the SINGLE-MODEL stamp.
-printf '%s' "$out" | grep -q "SINGLE-MODEL" && fail "intentional single-model request wrongly stamped: $out" \
+grep -q "SINGLE-MODEL" <<<"$(printf '%s' "$out")" && fail "intentional single-model request wrongly stamped: $out" \
   || pass "intentional single-model request is not stamped"
 grep -q "SINGLE-MODEL" "$afile" 2>/dev/null && fail "intentional single-model transcript wrongly stamped" \
   || pass "intentional single-model transcript not stamped"
@@ -170,7 +170,7 @@ rm -rf "$OUT"
 out="$(CONSULT_ROOT="$A" AIDER_BIN="$AIDER_BADAUTH" OPENROUTER_API_KEY="$FAKE_ORK" \
   bash "$CONSULT" --prompt "x" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
 [ "$rc" -eq 5 ] && pass "aider exit-0 auth-error transcript -> FAILED (all-fail exit 5)" || fail "false-green auth: exit=$rc (expected 5) ($out)"
-printf '%s' "$out" | grep -q "0 answered, 1 failed" && pass "aider auth-error counted as failed, not answered" || fail "auth-error miscounted: $out"
+grep -q "0 answered, 1 failed" <<<"$(printf '%s' "$out")" && pass "aider auth-error counted as failed, not answered" || fail "auth-error miscounted: $out"
 
 # --- (10) AIDER truthfulness: exit 0 with an EMPTY answer (reasoning-only) is counted FAILED ---------
 AIDER_EMPTY="$WORK/aider-empty-stub"
@@ -186,7 +186,7 @@ out="$(env -u OPENROUTER_API_KEY CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" \
   AIDER_OPENAI_API_BASE="http://127.0.0.1:1234/v1" \
   bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "LM Studio base URL answers with no OPENROUTER_API_KEY (exit 0)" || fail "lmstudio seam exit=$rc ($out)"
-printf '%s' "$out" | grep -q "1 answered, 0 failed" && pass "LM Studio-backed aider counted answered" || fail "lmstudio not counted: $out"
+grep -q "1 answered, 0 failed" <<<"$(printf '%s' "$out")" && pass "LM Studio-backed aider counted answered" || fail "lmstudio not counted: $out"
 
 # --- (12) GH-178 A4 (scoped slice): an advisor answer with ZERO file:line/quote citations anywhere ----
 # gets mechanically stamped NO FIRSTHAND VERIFICATION CITED — stdout, prepended-into-transcript, and a
@@ -201,7 +201,7 @@ rm -rf "$OUT"
 out="$(CONSULT_ROOT="$A" CODEX_BIN="$NOCITE_STUB" CODEX_FLAGS=" " \
   bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "uncited-answer run still exits 0 (mechanical stamp only, not a failure)" || fail "uncited-answer exit=$rc"
-printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" && pass "uncited answer warned on stdout" \
+grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" <<<"$(printf '%s' "$out")" && pass "uncited answer warned on stdout" \
   || fail "stdout missing NO FIRSTHAND VERIFICATION CITED warning: $out"
 ncfile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 grep -q "NO FIRSTHAND VERIFICATION CITED" "$ncfile" 2>/dev/null && pass "uncited answer stamped INTO the transcript" \
@@ -223,7 +223,7 @@ chmod +x "$CITE_STUB"
 rm -rf "$OUT"
 out="$(CONSULT_ROOT="$A" CODEX_BIN="$CITE_STUB" CODEX_FLAGS=" " \
   bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
-printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED" && fail "cited answer wrongly stamped: $out" \
+grep -q "NO FIRSTHAND VERIFICATION CITED" <<<"$(printf '%s' "$out")" && fail "cited answer wrongly stamped: $out" \
   || pass "cited answer (quote + file:line) is not stamped"
 cfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 grep -q "NO FIRSTHAND VERIFICATION CITED" "$cfile4" 2>/dev/null && fail "cited transcript wrongly stamped" \
@@ -244,7 +244,7 @@ chmod +x "$PARTIAL_CITE_STUB"
 rm -rf "$OUT"
 out="$(CONSULT_ROOT="$A" CODEX_BIN="$PARTIAL_CITE_STUB" CODEX_FLAGS=" " \
   bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
-printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" \
+grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" <<<"$(printf '%s' "$out")" \
   && pass "a later uncited claim is flagged despite an earlier unrelated citation (per-claim, not whole-transcript)" \
   || fail "later uncited claim NOT flagged despite an earlier citation excusing it: $out"
 pfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
@@ -264,7 +264,7 @@ echo_prompt='Review relay-automation/consult.sh:266 and tell me if it checks out
 out="$(CONSULT_ROOT="$A" CODEX_BIN="$ECHOED_STUB" CODEX_FLAGS=" " \
   bash "$CONSULT" --prompt "$echo_prompt" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "echoed-citation run exits 0" || fail "echoed-citation exit=$rc ($out)"
-printf '%s' "$out" | grep -q "prompt-trace classifier: codex echoed 2 cited claim(s)" \
+grep -q "prompt-trace classifier: codex echoed 2 cited claim(s)" <<<"$(printf '%s' "$out")" \
   && pass "echoed-citation stdout warns once with the echoed count" \
   || fail "missing echoed-citation warning: $out"
 efile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
@@ -294,7 +294,7 @@ rm -rf "$OUT"
 out="$(CONSULT_ROOT="$A" CODEX_BIN="$FIRSTHAND_STUB" CODEX_FLAGS=" " \
   bash "$CONSULT" --prompt "Review relay-automation/consult.sh carefully." --out "$OUT" --label t --models codex 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "firsthand-citation run exits 0" || fail "firsthand-citation exit=$rc ($out)"
-printf '%s' "$out" | grep -q "prompt-trace classifier:" \
+grep -q "prompt-trace classifier:" <<<"$(printf '%s' "$out")" \
   && fail "firsthand-citation run wrongly warned echoed provenance: $out" \
   || pass "firsthand-citation run emits no echoed warning"
 ffile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
@@ -317,7 +317,7 @@ rm -rf "$OUT"
 out="$(XYZ_PYTHON=1 CODEX_RC=0 GEMINI_RC=1 STUB_WRITE=0 run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "XYZ_PYTHON=1 one-model failure still exits 0 (graceful degrade)" \
   || fail "XYZ_PYTHON=1 degrade exit=$rc"
-printf '%s' "$out" | grep -q "SINGLE-MODEL — NOT RECONCILED" && pass "XYZ_PYTHON=1 degrade stamped on stdout" \
+grep -q "SINGLE-MODEL — NOT RECONCILED" <<<"$(printf '%s' "$out")" && pass "XYZ_PYTHON=1 degrade stamped on stdout" \
   || fail "XYZ_PYTHON=1 stdout missing SINGLE-MODEL stamp: $out"
 cfile15="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 grep -q "SINGLE-MODEL — NOT RECONCILED" "$cfile15" 2>/dev/null \
@@ -334,7 +334,7 @@ sidecar15="$(dirname "$cfile15")/DEGRADED-SINGLE-MODEL.txt"
 rm -rf "$OUT"
 out="$(XYZ_PYTHON=1 STUB_WRITE=0 run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "XYZ_PYTHON=1 happy path exits 0" || fail "XYZ_PYTHON=1 happy path exit=$rc ($out)"
-printf '%s' "$out" | grep -q "SINGLE-MODEL" \
+grep -q "SINGLE-MODEL" <<<"$(printf '%s' "$out")" \
   && fail "XYZ_PYTHON=1 full 2/2 panel wrongly stamped degraded: $out" \
   || pass "XYZ_PYTHON=1 full panel is not stamped"
 

@@ -44,7 +44,7 @@ out="$(run_capped --root)"
 rc=$?
 if [ "$rc" -eq 142 ]; then
   fail "case 1: \`--root\` with no value HUNG (rc=142/SIGALRM) — the GH-369 loop is back"
-elif [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -q 'requires a directory argument'; then
+elif grep -q 'requires a directory argument' <<<"$([ "$rc" -eq 2 ] && printf '%s' "$out")"; then
   pass "case 1: \`--root\` with no value exits 2 with a specific message, does not spin"
 else
   fail "case 1: expected rc=2 + 'requires a directory argument', got rc=$rc: $out"
@@ -55,7 +55,7 @@ out="$(TENDAYS_ROOT=/no/such/dir perl -e 'alarm shift; exec @ARGV' 5 bash "$SUT"
 rc=$?
 if [ "$rc" -ne 2 ]; then
   fail "case 2: expected rc=2 for a bad \$TENDAYS_ROOT, got rc=$rc"
-elif printf '%s' "$out" | grep -q -- '--root'; then
+elif grep -q -- '--root' <<<"$(printf '%s' "$out")"; then
   fail "case 2: message blames --root, which was never passed: $out"
 elif printf '%s' "$out" | grep -q 'TENDAYS_ROOT' && printf '%s' "$out" | grep -q '/no/such/dir'; then
   pass "case 2: bad \$TENDAYS_ROOT names its source AND the offending path"

@@ -71,7 +71,7 @@ grep -q "^p2|7|gemini|src/p2.js||1200|chain--p2|$" "$WORK/phases-ran" \
 grep -q "^p1|5|codex||||chain--p1|$" "$WORK/phases-ran" \
   && pass "p1: round-cap=5, no timeout override by default, lane namespace set" || fail "p1 cap/env: [$(grep p1 "$WORK/phases-ran")]"
 cp "$WORK/phases-ran" "$WORK/phases-ran.no-retry-baseline"   # GH-116: reused by test (8) below
-ls "$A/.tick/events/" 2>/dev/null | grep -q "marathon.complete" \
+grep -q "marathon.complete" <<<"$(ls "$A/.tick/events/" 2>/dev/null)" \
   && pass "marathon.complete emitted on full success" || fail "marathon.complete missing"
 
 # --- (2) halt on failure: p2 fails -> p3 NOT started, exit 4, no complete --
@@ -80,7 +80,7 @@ STUB_FAIL_PHASE=p2 run_marathon "$A/PROJECT/2-WORKING/m.yaml" >/dev/null 2>&1; r
 [ "$rc" -eq 4 ] && pass "halt propagates the failing phase's exit (4)" || fail "halt exit=$rc (expected 4)"
 [ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "p1,p2" ] \
   && pass "chain halts after p2 — p3 NOT started" || fail "ran: [$(cat "$WORK/phases-ran")]"
-ls "$A/.tick/events/" 2>/dev/null | grep -q "marathon.complete" \
+grep -q "marathon.complete" <<<"$(ls "$A/.tick/events/" 2>/dev/null)" \
   && fail "marathon.complete must NOT be emitted on halt" || pass "no marathon.complete on halt"
 
 # --- (3) depends_on reorders authored-out-of-order phases -----------------
@@ -282,7 +282,7 @@ vendored_tick_home="$(cd "$(dirname "$vendored_tick")/.." && pwd -P)"
    && "$vendored_tick" != "$vendored_root/bin/tick" ]] \
   && pass "GH-206: vendored run resolves repo-local briefs/phases separately from harness-local tick" \
   || fail "GH-206: vendored root split wrong: [$(cat "$WORK/vendored-drive-ran" 2>/dev/null)]"
-ls "$V/.tick/events/" 2>/dev/null | grep -q "marathon.complete" \
+grep -q "marathon.complete" <<<"$(ls "$V/.tick/events/" 2>/dev/null)" \
   && pass "GH-206: vendored run emits marathon.complete in the consumer repo tick log" \
   || fail "GH-206: vendored run missing consumer repo marathon.complete"
 
@@ -292,7 +292,7 @@ printf 'name: outside\nphases:\n  - id: p1\n    reviewer: codex\n    brief: brie
 OUTSIDE_OUT="$(run_marathon "$A/outside.yaml" 2>&1)"; rc=$?
 [ "$rc" -eq 2 ] && pass "GH-212: plan outside PROJECT/2-WORKING/ is refused by default (exit 2)" \
   || fail "GH-212: expected exit 2 for an outside-PROJECT/2-WORKING plan, got $rc: $OUTSIDE_OUT"
-printf '%s\n' "$OUTSIDE_OUT" | grep -q "resolves outside PROJECT/2-WORKING" \
+grep -q "resolves outside PROJECT/2-WORKING" <<<"$(printf '%s\n' "$OUTSIDE_OUT")" \
   && pass "GH-212: refusal names the plan-location convention" \
   || fail "GH-212: expected a plan-location error message, got: $OUTSIDE_OUT"
 [ ! -f "$WORK/phases-ran" ] && pass "GH-212: refused plan runs zero phases" \

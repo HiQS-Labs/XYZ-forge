@@ -160,7 +160,7 @@ if [ -f "$RELAY_FILE" ]; then
 fi
 
 # --- Assertion (B1): VERDICT: line present and valid ---
-if echo "$log_section" | grep -qE '^VERDICT: (PASS|FAIL|PARKED)$'; then
+if grep -qE '^VERDICT: (PASS|FAIL|PARKED)$' <<<"$(echo "$log_section")"; then
   pass "(B1) VERDICT: field present and valid"
 else
   verdict_val="$(echo "$log_section" | grep -E '^VERDICT:' | head -1 || true)"
@@ -170,7 +170,7 @@ else
 fi
 
 # --- Assertion (B2): Basis: line present and non-empty ---
-if echo "$log_section" | grep -qE '^Basis: .+'; then
+if grep -qE '^Basis: .+' <<<"$(echo "$log_section")"; then
   pass "(B2) Basis: field present and non-empty"
 else
   basis_val="$(echo "$log_section" | grep -E '^Basis:' | head -1 || true)"

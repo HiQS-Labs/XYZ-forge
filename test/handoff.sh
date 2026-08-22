@@ -10,7 +10,7 @@ TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-099 --agent dispat
 # tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
 PRE=$(tick_b next --agent bob)
 echo "  pre-handoff, bob's next: $PRE"
-if ! echo "$PRE" | grep -q "TASK-099"; then
+if ! grep -q "TASK-099" <<<"$(echo "$PRE")"; then
   fail "expected TASK-099 pre-handoff, got: $PRE"
 fi
 
