@@ -1,0 +1,77 @@
+# Question: is this squash-merge + cleanup sequence the safest one, and what is it missing?
+
+You are advising on a repository closeout in `HiQS-Suite/XYZ-forge` (this repo). Be concrete and
+skeptical. Read the repo files you need (`.github/workflows/ci.yml`, `AGENTS.md`, `validate.sh`,
+`ROUTER.md`) rather than reasoning from the summary alone.
+
+## Goal the operator stated
+
+One clean local checkout, a fully safe and updated remote `development` branch, and no leftover
+worktrees or clone folders. "Measure twice, cut once."
+
+## Established facts (verified, not assumed)
+
+**Folders.** Exactly two locations track this remote: the main checkout at
+`~/Documents/GH Repos/XYZ-forge` (clean, on `feat/gh124-closeout-automation`, in sync with origin,
+no stash), and one linked worktree `…/scratchpad/pr128-wt` (clean, detached at `a18432ac`, which is
+already an ancestor of the branch tip — it holds zero unique commits). No agent session is running
+in either; the owning session for the worktree is stopped.
+
+**Open PRs, both targeting `development`:**
+
+- **#127** `docs/gh31-validate-timing` — touches `README.md` only (+5/-2). Ubuntu canary GREEN.
+  Carries a `CHANGES_REQUESTED` review whose single blocking ask ("the timing note the quickstart
+  comment forward-references does not exist") was satisfied by a later commit that adds exactly that
+  note. The review is stale but has not been dismissed or re-approved.
+- **#128** `feat/gh124-closeout-automation` — 28 files: `validate.sh`, `relay-automation/*.sh`,
+  `utils/py/*.py`, `test/*`, `releases.db`/`releases.sql`, several docs. Ubuntu canary RED. Exactly
+  one suite fails: `gh69-roadmap-shadow: 50 pass, 3 fail`. Issue GH-123 documents that same suite,
+  the same count, and the same three assertions as pre-existing Linux-only drift already present on
+  `development`. Locally on macOS that suite is 53 pass / 0 fail. No reviews at all.
+
+**CI shape.** Triggers are `push: [main, development]` and `pull_request: [main, development]`. The
+only macOS job (`boundary-macos`, "promotion boundary") is gated `if: github.event_name == 'push' &&
+github.ref == 'refs/heads/main'` — so it never runs on a PR, and will NOT run when these merge into
+`development`. The Ubuntu job is explicitly advisory ("never breakage"; the repo ships to macOS).
+Consequence: the merge commits land on `development` with no macOS evidence unless it is produced
+locally.
+
+**Other state.** `development` is unprotected (no required checks). Repo allows squash, merge, and
+rebase; `delete_branch_on_merge` is FALSE. `main` is 638 commits behind `development`. The two PRs'
+file sets are disjoint (`README.md` vs. 28 other paths), so neither order creates a conflict.
+`releases.db` is a binary/dump artifact with a documented merge-conflict resolver
+(`utils/releases-merge-resolve.sh`).
+
+## The proposed sequence
+
+1. Squash-merge **#127** (docs-only, Ubuntu-green, review satisfied).
+2. Run `./validate.sh --sequential` locally on macOS; squash-merge **#128** only if green.
+3. `git checkout development && git pull` in the main checkout.
+4. `git worktree remove` the `pr128-wt` worktree, then `git worktree prune`.
+5. Delete only the two now-merged local branches. Leave everything else alone.
+
+## What I want from you
+
+1. **Is this the safest order?** If a different order is safer, say which and why — specifically,
+   does gating the local macOS run on the *pre-merge* branch tip rather than on the *post-merge*
+   `development` state leave a real gap, given the two PRs are disjoint?
+2. **What is missing?** Name concrete omissions. Candidates I want you to accept or reject with
+   reasoning, plus anything I have not listed:
+   - Should the stale `CHANGES_REQUESTED` on #127 be formally dismissed or re-approved before
+     merging, rather than merged around?
+   - Should #128 get a recorded review/approval given it currently has none and is 28 files?
+   - Should the merge of #128 note the known-red advisory canary and reference GH-123 explicitly, so
+     the red is auditable rather than silently accepted?
+   - Does squash-merging #128 lose anything that matters (10 commits including relay/agent2agent
+     transcripts and review-response commits collapsing into one)?
+   - `releases.db` / `releases.sql`: does merging a binary dump via squash risk a silent bad state,
+     and should `releases roadmap sync` / the resolver be run or verified after?
+   - After both merges, should anything be done about `main` being 638 commits behind, or is that
+     correctly out of scope for a cleanup task?
+   - Is there a post-merge verification step missing — e.g. re-running the gate on the merged
+     `development`, or triggering `workflow_dispatch` to get a real hosted run?
+3. **What would make this unsafe?** Name the specific failure mode that would make an operator
+   regret running this sequence, and the cheapest check that would catch it beforehand.
+
+Answer directly. Prioritize by real risk, and say plainly if a step is fine as-is — do not invent
+work to look thorough.
