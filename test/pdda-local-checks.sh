@@ -78,6 +78,35 @@ printf '%s' "$out" | grep -F "issue #602 is still OPEN" >/dev/null \
   && pass "roadmap-issue-state flags a shipped marker on a still-OPEN issue (the inverse direction)" \
   || fail "the shipped-but-open ledger entry was not flagged: $out"
 
+# ── roadmap-section-duplicates ────────────────────────────────────────────────────────────────────
+cat >"$TMP/ROADMAP.md" <<'EOF'
+# Roadmap
+
+## Ledger
+
+### In progress
+- **GH-701 · duplicated item** 🚧 **active** — the stale entry that should have been deleted.
+- **GH-702 · legitimately-mentioned-twice-in-one-section item** 🚧 **active** — first mention.
+
+### Completed
+- **GH-701 · duplicated item** ✅ **SHIPPED** — the real, current status.
+- **GH-703 · single-occurrence item** ✅ **SHIPPED** — no drift here.
+EOF
+
+out="$(run_local roadmap-section-duplicates)"
+printf '%s' "$out" | grep -F 'GH-701 appears as a bullet under both' >/dev/null \
+  && pass "roadmap-section-duplicates flags an item present in two lifecycle sections" \
+  || fail "the cross-section duplicate was not flagged: $out"
+printf '%s' "$out" | grep -F 'both "In progress" and "Completed"' >/dev/null \
+  && pass "roadmap-section-duplicates names both sections in the finding" \
+  || fail "the finding did not name both sections: $out"
+printf '%s' "$out" | grep -F 'GH-702' >/dev/null \
+  && fail "a single-section item was wrongly flagged: $out" \
+  || pass "roadmap-section-duplicates leaves a same-section-only item alone (no false positive)"
+printf '%s' "$out" | grep -F 'GH-703' >/dev/null \
+  && fail "a genuinely single-occurrence item was wrongly flagged: $out" \
+  || pass "roadmap-section-duplicates leaves a single-occurrence item alone (no false positive)"
+
 # ── release-milestone (GH-284 Phase 3) ────────────────────────────────────────────────────────────
 cat >"$TMP/RELEASES.md" <<'EOF'
 Release: 9.0.0
@@ -138,11 +167,11 @@ real_out="$(PDDA_ACTIVITY_LOG=/dev/null bash "$LOCAL" run 2>&1)"; real_rc=$?
 real_out_file="$WORK/real-out.txt"
 printf '%s\n' "$real_out" > "$real_out_file"
 missing=""
-for _c in completed-status roadmap-issue-state release-milestone; do
+for _c in completed-status roadmap-issue-state roadmap-section-duplicates release-milestone; do
   grep -Fq "SUMMARY [pdda-local-check-$_c]" "$real_out_file" || missing="$missing pdda-local-check-$_c"
 done
 if [ -z "$missing" ]; then
-  pass "all three checks execute against the real repository and emit a summary"
+  pass "all four checks execute against the real repository and emit a summary"
 else
   bounded_out="$(grep -E 'SUMMARY|ERROR' "$real_out_file" || tail -n 20 "$real_out_file")"
   fail "check(s) did not run against the real repo:$missing (rc=$real_rc)
