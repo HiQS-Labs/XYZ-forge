@@ -44,6 +44,20 @@ from pathlib import Path
 import requests
 import yaml
 
+# #141 Phase 5 / #146: the no-edit rule is NOT universal — it assumes the target is an EDIT
+# pipeline (the stock Aider grid). On a diagnostic probe (exit-0, no tree change is the expected
+# outcome) it forced 17 false HIGH `no_edit` verdicts in the 2026-08-22 Gemma soak. The grid's
+# `expects_edits: true|false` key (default true = stock Aider grid unchanged) picks the rule.
+_EDIT_RULE_EXPECTS = """EDIT_APPLIED below is a deterministic signal computed from git (whether the \
+harness actually changed the tree). This run EXPECTS an edit: EDIT_APPLIED=False with exit code 0 \
+means the run produced NO change — classify that as "fail"/"no_edit" (severity "high"), NOT a \
+pass, even though nothing crashed. Do not mark a run "pass"/"ok" when EDIT_APPLIED is False."""
+
+_EDIT_RULE_DIAGNOSTIC = """EDIT_APPLIED below is a deterministic signal computed from git. This run \
+is a DIAGNOSTIC probe: it reads and reports, it is NOT expected to change the tree — so \
+EDIT_APPLIED=False with exit code 0 is a PASS ("ok", severity "none"). Only classify as fail on \
+concrete error evidence: non-zero exit, traceback, explicit error/auth message."""
+
 CLASSIFY_PROMPT = """You are triaging the output of a test run for the {pipeline_name} \
 coding pipeline. Given the command, exit code, and truncated stdout/stderr below, \
 classify the result. Respond with ONLY a JSON object, no prose, no markdown fences:
@@ -59,10 +73,7 @@ non-zero exit code is REQUIRED for "critical" or "crash". A cosmetic warning lin
 "Unknown context window size and costs, using sane defaults") with exit code 0 and a \
 successful "Applied edit" line is NOT a failure on its own.
 
-EDIT_APPLIED below is a deterministic signal computed from git (whether aider actually changed \
-the tree). The task is always an edit task, so EDIT_APPLIED=False with exit code 0 means the run \
-produced NO change — classify that as "fail"/"no_edit" (severity "high"), NOT a pass, even though \
-nothing crashed. Do not mark a run "pass"/"ok" when EDIT_APPLIED is False.
+{edit_rule}
 
 COMMAND: {command}
 EXIT_CODE: {exit_code}
@@ -345,9 +356,18 @@ def check_control(control_path: Path) -> dict | None:
     return data
 
 
-def file_issue(log_path: Path, gh_repo: str, test_name: str, dry_run: bool) -> None:
+def file_issue(log_path: Path, gh_repo: str, test_name: str, dry_run: bool,
+               labels: list | None = None) -> int:
     """Chain into compile_issue.py so the run ends with one filed GitHub issue
-    instead of a log that needs a separate manual rollup step."""
+    instead of a log that needs a separate manual rollup step.
+
+    #142: returns the child's exit code so the whole run can fail loudly. The old
+    `-> None` dropped it twice — here and again in main() — which made an ATE run
+    whose `gh issue create` failed end a multi-hour soak at exit 0.
+
+    #141 Phase 5: labels flow from the grid/run entry point; None means compile_issue's
+    neutral default, so a non-Aider soak never files Aider-labelled issues.
+    """
     script = Path(__file__).resolve().parent / "compile_issue.py"
     cmd = [
         sys.executable, str(script),
@@ -355,6 +375,8 @@ def file_issue(log_path: Path, gh_repo: str, test_name: str, dry_run: bool) -> N
         "--repo", gh_repo,
         "--test-name", test_name,
     ]
+    for label in (labels or []):
+        cmd += ["--label", label]
     if dry_run:
         cmd.append("--dry-run")
     print(f"[run_variations] filing rollup issue: {' '.join(cmd)}")
@@ -362,6 +384,7 @@ def file_issue(log_path: Path, gh_repo: str, test_name: str, dry_run: bool) -> N
     if result.returncode != 0:
         print(f"[run_variations] compile_issue.py exited {result.returncode} — issue may not "
               f"have been filed; {log_path} is preserved for a manual rollup.")
+    return result.returncode
 
 
 def main():
@@ -386,11 +409,16 @@ def main():
                      help="slug for the issue title 'ATE - [test-name] yyyy-mm-dd'; "
                           "defaults to the variations file's stem")
     ap.add_argument("--dry-run-issue", action="store_true",
-                     help="build the rollup issue body but don't actually call gh "
-                          "(passed through to compile_issue.py as --dry-run)")
+                    help="build the rollup issue body but don't actually call gh "
+                         "(passed through to compile_issue.py as --dry-run)")
+    ap.add_argument("--issue-label", dest="issue_labels", action="append", default=None,
+                    help="repeatable; label(s) for the rollup issue, passed through to "
+                         "compile_issue.py. Defaults to the neutral 'bug' — the Aider preset "
+                         "opts back into 'aider-pipeline' explicitly (#141 Phase 5: a "
+                         "generalized soak must not file Aider-labelled issues)")
     ap.add_argument("--pipeline-name", default="Aider -> OpenRouter -> GLM 5.2",
-                     help="description of the pipeline under test, used in the classifier "
-                          "prompt (default matches the stock OpenRouter target)")
+                    help="description of the pipeline under test, used in the classifier "
+                         "prompt (default matches the stock OpenRouter target)")
     ap.add_argument("--allow-destructive-reset", action="store_true",
                      help="acknowledge that --repo is disposable and may be hard-reset + "
                           "cleaned every variation, even if it has a git remote. Required only "
@@ -414,6 +442,11 @@ def main():
 
     grid = yaml.safe_load(Path(args.variations).read_text())
     combos = build_variations(grid)
+    # #141 Phase 5 / #146: which no-edit rule the classifier gets. Default true keeps the
+    # stock Aider grid byte-compatible; a diagnostic grid declares expects_edits: false so an
+    # exit-0 no-change run classifies as pass instead of fail/no_edit.
+    expects_edits = bool(grid.get("expects_edits", True))
+    edit_rule = _EDIT_RULE_EXPECTS if expects_edits else _EDIT_RULE_DIAGNOSTIC
     timeout = args.per_variation_timeout or grid.get("per_variation_timeout_seconds", 180)
     test_name = args.test_name or Path(args.variations).stem
 
@@ -473,6 +506,7 @@ def main():
             else:
                 prompt = CLASSIFY_PROMPT.format(
                     pipeline_name=args.pipeline_name,
+                    edit_rule=edit_rule,
                     command=result["command"],
                     exit_code=result["exit_code"],
                     edit_applied=result["edited"],
@@ -533,12 +567,15 @@ def main():
 
     print("[run_variations] done.")
 
+    # #142: propagate the filing outcome — main()'s caller already sys.exit()s on this value,
+    # so a failed chain is now visible to CI/wrappers/supervisors, not just this console.
     if args.gh_repo:
-        file_issue(log_path, args.gh_repo, test_name, args.dry_run_issue)
-    else:
-        print(f"[run_variations] --gh-repo not set; skipping automatic issue filing. "
-              f"To file manually: python3 compile_issue.py --log {log_path} "
-              f"--repo OWNER/REPO --test-name {test_name}")
+        return file_issue(log_path, args.gh_repo, test_name, args.dry_run_issue,
+                          labels=args.issue_labels or grid.get("issue_labels"))
+    print(f"[run_variations] --gh-repo not set; skipping automatic issue filing. "
+          f"To file manually: python3 compile_issue.py --log {log_path} "
+          f"--repo OWNER/REPO --test-name {test_name}")
+    return 0
 
 
 if __name__ == "__main__":

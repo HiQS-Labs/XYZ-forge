@@ -220,6 +220,20 @@ TESTS=(
   "gh130-agy-auth-whoami.sh"     # #130/#135 (agy auth preflight three-state verdict on BOTH agy-turn.py and consult.py: usage-error probes unverifiable+non-blocking, credentials/silent non-zero still fatal) — 11/0
   "gh131-marathon-target-root.sh" # #131 (cross-repo --target-root + target --phases-dir: render and escalation commits land in the TARGET repo; in-repo control byte-identical; phase_commit_root unit) — 12/0; pool-safe: marathon's fixture-rooted lock + the relay-drive child inherits RELAY_DRIVER_LOCKED=1
   "gh139-pipe-grep-guard.sh"     # #139 (static inventory guard: no NEW `| grep -q` pipes in test/ — the GH-460 SIGPIPE shape; baseline of unconverted stragglers beside it)
+  # #141 Phase 1: every test/synthetic/ suite is owned by THIS registry (single selector).
+  # Direct entries — the runner invokes bash test/<entry>, wrappers would only add indirection.
+  "synthetic/gh101-consult-programmatic.sh"   # GH-101 (programmatic tool mode: consult adapters fail closed without a sandbox backend)
+  "synthetic/gh101-relay-programmatic-stress.sh" # GH-101 (relay-drive PGID process cleanup + fail-closed sandbox checks under --tool-mode programmatic)
+  "synthetic/gh102-telemetry-schema.sh"       # GH-102 (Telemetry 1.0 shared schema invariants across fuzz-loop and ATE emitters; #141 Phase 2 extends it with mixed-outcome fixtures + rendered-group assertions)
+  "synthetic/gh94-containment-invariants.sh"  # GH-94 (AST serialization normalization + sandbox containment invariants for script_runner)
+  "synthetic/gh94-script-serialization.sh"    # GH-94 (script_runner serialization round-trip fidelity)
+  "synthetic/synthetic-claude-target-root.sh" # cross-repo claude-turn target-root wiring
+  "synthetic/synthetic-marathon-env-leak.sh"  # marathon child env hygiene (no run-identity tags leak into phases)
+  "synthetic/synthetic-marathon-worktree-guard.sh" # marathon worktree containment guard
+  "synthetic/synthetic-pi-model-unset.sh"     # pi-turn: unset model handled, not silently defaulted
+  "synthetic/synthetic-pi-provider-unsupported.sh" # pi-turn: unsupported provider exits clean, not fake-success
+  "gh141-synthetic-registry.sh"  # #141 Phase 1 (single selector: every test/synthetic suite is registry-reachable AND fuzz-loop's derived selection matches — no suite selectable by one path but not the other; a dropped-in unregistered suite is CAUGHT)
+  "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"
@@ -460,11 +474,19 @@ usage: ./validate.sh [--parallel N | --sequential | --print-mode]
                 --paths-file <file>               tier 2 from a path list — what pre-push hands over
   environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
                 (an explicit flag always beats the environment; a width lever beats a throttle lever)
+  introspection --list                             print the registry this gate runs (test/<entry>
+                per line) and exit 0 — the shared manifest #141 Phase 1 points secondary
+                selectors (fuzz-loop.sh) at, so suite ownership has ONE source of truth
 USAGE
 }
 _err2() { echo "validate.sh: $*" >&2; _usage; exit 2; }
 while [ $# -gt 0 ]; do
   case "$1" in
+    --list)
+      # #141 Phase 1: expose the authoritative registry as a manifest. Prints test/<entry> for
+      # every TESTS member, one per line, before any gate machinery runs. Read-only.
+      for _t in "${TESTS[@]}"; do printf 'test/%s\n' "$_t"; done
+      exit 0 ;;
     --print-mode) PRINT_MODE_ONLY=1; shift ;;
     --parallel|--max-parallel)
       [ $# -ge 2 ] || _err2 "$1 requires an integer >= 1"

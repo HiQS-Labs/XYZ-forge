@@ -3,13 +3,12 @@ name: ate
 description: "ATE (Automated Testing Environment): drive long-running (2-3hr+) unattended variation-test suites against the Aider, OpenRouter, and GLM 5.2 pipeline using a local Gemma model in LM Studio as the worker, with periodic frontier-model check-ins for drift control, ending in a single triaged GitHub issue. Use this whenever the user wants to \"run variation tests overnight/for hours\", \"debug a bunch of small Aider bugs\", \"test Aider flag combinations\", \"fuzz the Aider harness\", mentions LM Studio + Gemma as a local test driver, wants test failures rolled up into one GH issue triaged by severity, or invokes ATE by name. Also trigger if the user asks to set up a check-in loop between a local model and a frontier model for a long-running task."
 ---
 
-# ATE — Automated Testing Environment (Gemma-Driven Aider Variation Tester)
+# ATE — Automated Testing Environment (generic bounded-variation matrix runner)
 
-Local Gemma (via LM Studio) runs many Aider command variations unattended for hours,
-logs every result as structured JSON, and a frontier model (you, Claude) checks in
-every ~5 minutes to catch drift/looping. The full cycle — run Aider, capture the
-error, document it, file it — is chained end to end: when the run ends (time
-limit, abort, or safety cap), `run_variations.py` automatically hands off to
+ATE walks a declared grid of command variations unattended for hours, logs every result as
+structured JSON, and a frontier model (you, Claude) checks in every ~5 minutes to catch
+drift/looping. The full cycle — run, capture, document, file — is chained end to end: when the
+run ends (time limit, abort, or safety cap), `run_variations.py` automatically hands off to
 `compile_issue.py`, which opens **one** GitHub issue titled
 `ATE - [test-name] yyyy-mm-dd` containing every finding from that run as a single
 checklist, ranked by severity (critical first). No manual second step required
@@ -92,6 +91,45 @@ itself crashed before it could chain, or `--gh-repo` was omitted):
 python3 ~/.claude/skills/ate/scripts/compile_issue.py \
   --log error_log.jsonl --repo OWNER/REPO --test-name "aider-flag-fuzz"
 ```
+
+## Exit codes (#142)
+
+Both scripts in the filing chain exit with a contract a wrapper, CI job, or supervising agent
+can branch on. Before #142 every terminal state exited 0 — including a failed `gh issue create`
+— so a multi-hour run's final step could fail invisibly.
+
+| Code | Meaning |
+|---|---|
+| `0` | Issue filed, or `--dry-run` body rendered. |
+| `3` | No records in the log — nothing to file. Distinct from filed so callers can tell "done its job" from "did nothing". |
+| `1` | `gh issue create` failed. `issue_body.md` is preserved in the working directory for manual filing. |
+| `2` | `run_variations.py` only: repo guard refused the run (`--repo` is the harness itself, or carries a remote without `--allow-destructive-reset`). |
+
+`run_variations.py` propagates `compile_issue.py`'s code when `--gh-repo` is set: the run's exit
+code IS the filing outcome. Supervisors: treat `0` and `3` as healthy ends, `1`/`2` as needing
+attention, and abort-drift separately via `checkin.py`. The `gh issue create` call is capped at
+120s (`ATE_GH_TIMEOUT_S` overrides); a hang, a missing `gh`, or a launch failure all land in
+exit `1` with `issue_body.md` preserved — no traceback, no indefinite hold on the run's completion.
+
+## Targets beyond Aider (#141 Phase 5)
+
+The engine is target-agnostic: any grid with a `command_template` (argv-list form — values are
+substituted per-token, never through a shell string) runs against any CLI. Aider is one preset,
+not the subject.
+
+- **Classifier oracle decoupling (`expects_edits`)** — the stock Aider grid expects the tree to
+  change, so exit-0-with-no-edit classifies `fail/no_edit`. A grid that only probes (usage
+  surfaces, read-only diagnostics) declares `expects_edits: false`, and exit-0-no-edit is a
+  PASS. The #146 Gemma soak recorded 17 false HIGH `no_edit` verdicts before this key existed —
+  do not run a non-edit grid without it.
+- **Rollup labels are neutral by default** — `bug`, nothing else. The Aider preset opts back in
+  via `issue_labels: [bug, aider-pipeline]` in its grid; any grid or `--issue-label` overrides.
+  A turn-shim soak must never file Aider-labelled issues.
+- **Declared non-Aider grids shipped here:** `variations.tool-density.yaml` /
+  `variations.tool-calling.yaml` (script_runner benchmarks) and `variations.turn-shims.yaml`
+  (turn-shim CLI-contract usage soak — read its header for the safe execution profile before
+  wiring it to a runner; it is diagnostic, `expects_edits: false`, and must run against stubs or
+  a disposable clone if extended past the usage surface).
 
 ## What counts as drift (abort triggers)
 
