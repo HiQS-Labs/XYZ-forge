@@ -2,6 +2,10 @@
 
 This directory houses the operational toolchain, diagnostic CLIs, and autonomous testing engines for **XYZ-forge**.
 
+> Looking for a repo-level *skill* (`/relay-xyz`, `/ci-doctor`, `/standup`, etc.) rather than a
+> `utils/` script? See `ARCHITECTURE.md` → "Skills Index" for the full one-line inventory of
+> everything under `skills/`.
+
 ---
 
 ## 1. Autonomous Fuzzing & ATE Discovery Flywheel
