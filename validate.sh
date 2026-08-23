@@ -98,6 +98,7 @@ TESTS=(
   "gh391-emit-marathon-yaml.sh" # GH-391 (ranked plan + packets -> runnable MARATHON.yaml; missing-packet control)
   "marathon-drive.sh"
   "gh284-runlog-heartbeat.sh"   # GH-284 (driver heartbeat + opt-in idempotent run log)
+  "gh115-round-cap.sh"
   "gh307-gate-env-scrub.sh"      # GH-307 (pre-advance gate must not inherit run-identity tags)
   "gh319-gate-path-with-space.sh" # GH-319 (default gate must not word-split a spaced repo path)
   "gh320-twin-timeout-parity.sh" # GH-320 (Python twin turn-timeout defaults must match Bash + docs)

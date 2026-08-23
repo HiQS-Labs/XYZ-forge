@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Approved
+STATUS: Open
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=2 -->
@@ -83,17 +83,3 @@ Handing off to agy — agy, take your turn.
 - **`test/gh115-round-cap.sh`**: Added an integration test (Test 5) that seeds a stale reason, fires a cap-stalled marathon run, and asserts that the durable `ESCALATION.md` records the true `cap-stalled` reason rather than picking up the stale data.
 
 Handing off to codex — codex, take your turn.
-
-### Round 3 · Reviewer · codex
-
-**Verdict:** Approved
-
-The two Round 2 blockers are resolved:
-
-1. `relay_drive.py` now routes every relay exit-4 path through `exit_escalate()`, publishing a distinct reason for close mismatch, human escalation, token-state failure, consult-verify divergence, and the two round-cap outcomes. There are no remaining direct `sys.exit(4)` calls outside that helper.
-2. The producer and consumer now resolve `.relay-scratch/escalation-reason` from their source-derived harness root (`root_dir` / `xyz_harness`), which is the same `.xyz` directory in the supported vendored layout. `marathon_drive.py` clears the channel before every relay launch, preventing a prior run's reason from being reused.
-3. Focused Test 5 exercises the Marathon consumer path by seeding `stale-reason`, driving a cap-stalled phase, and requiring the durable `ESCALATION.md` to contain `reason: cap-stalled`; the focused suite also covers the durable extension marker and all three round-cap precedence forms.
-
-Static verification only: I inspected the changed control paths and focused test but did not execute source or tests, as required by this reviewer turn's containment contract. The harness owns the post-turn gate.
-
-Relay closed, no further turn needed.
