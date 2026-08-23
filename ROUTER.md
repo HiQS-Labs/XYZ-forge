@@ -79,7 +79,7 @@ and the reason, so a fallback is never silent.
 
 **GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
 owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
-agent2agent); a push the classifier rates `tier=2` runs only those focused suites at the boundary,
+agent-chorus); a push the classifier rates `tier=2` runs only those focused suites at the boundary,
 `--tier 1` runs the docs gate, and everything else — unknown paths, test edits, kernel surfaces —
 runs the full suite. `--auto` classifies a local diff the same way. Tiers 1 and 2 are pre-push
 speed and are labelled NOT promotion evidence; only `ci-local.sh`'s sequential full run qualifies

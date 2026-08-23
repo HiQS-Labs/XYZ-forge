@@ -64,7 +64,7 @@ green, you're good.
   For phase/status context, the project hub is
   [PROJECT/4-MISC/AUTOMATED-RELAY.md](PROJECT/4-MISC/AUTOMATED-RELAY.md).
 - **Connect live agent sessions by a short ID** — start a serialized discussion with two or more
-  Claude, Codex, or other skill-aware sessions → see [Agent2Agent](#agent2agent--live-sessions-by-compact-id).
+  Claude, Codex, or other skill-aware sessions → see [AgentChorus](#agentchorus--live-sessions-by-compact-id).
 - **Here for the kernel** — how the `tick` coordination primitive works →
   read [What `tick` is](#what-tick-is), then the source in [bin/tick](bin/tick), [src/](src), [test/](test).
 - **Install `tick` into another repo** → see [Install into another repo](#install-into-another-repo).
@@ -116,7 +116,7 @@ How they fit together: **Consult** answers "what do the other models think?", **
 things at once", and **Marathon** answers "do all of today's queued work while I sleep." Consult
 and Relay need only this XYZ repo. Swarm and Marathon are where PDDA earns its setup cost.
 
-### Agent2Agent — live sessions by compact ID
+### AgentChorus — live sessions by compact ID
 
 **Agent2Agent is the general-discussion face of Relay:** it drops Producer/Reviewer vocabulary,
 allows a declared roster of two or more live sessions, and keeps exactly one active writer through
@@ -127,17 +127,17 @@ out of scope.
 Install the repo-backed skill for both Claude Code and Codex (idempotent):
 
 ```bash
-bash skills/agent2agent/install.sh
+bash skills/agent-chorus/install.sh
 ```
 
-Then ask the first session to start a discussion, for example: *"Start XYZ agent2agent with four
+Then ask the first session to start a discussion, for example: *"Start XYZ AgentChorus with four
 agents to discuss: subject line here."* It seeds turn 1 as `agent1`, creates a collision-checked
 six-digit ID under `relay-system/<date>/`, and prints one copy/paste invitation for every other seat:
 
 ```text
-Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
-Join XYZ agent2agent #123456 as agent number three to discuss: "subject line here"
-Join XYZ agent2agent #123456 as agent number four to discuss: "subject line here"
+Join XYZ AgentChorus #123456 as agent number two to discuss: "subject line here"
+Join XYZ AgentChorus #123456 as agent number three to discuss: "subject line here"
+Join XYZ AgentChorus #123456 as agent number four to discuss: "subject line here"
 ```
 
 Paste each line into its target session once. Agent 2 owns the opening `NEXT:`; agents 3 and 4 join
@@ -148,7 +148,7 @@ An operator can inspect the full roster, current turn, and advisory doorbell sta
 the next compact invitation, which can route to `agent1`, `agent3`, `agent4`, or any other member of
 the original roster. Two operating levels are available: read-only `watch` polls every 150 seconds
 by default, while `drive` is an explicit, bounded opt-in that invokes an approved turn command only
-when that participant owns `NEXT:`. See [the agent2agent skill](skills/agent2agent/SKILL.md) for the
+when that participant owns `NEXT:`. See [the AgentChorus skill](skills/agent-chorus/SKILL.md) for the
 deterministic `start`/`status`/`join`/`watch`/`drive`/`send`/`close` contract.
 
 ### Before you start — safety and reversibility
@@ -438,7 +438,7 @@ $$\text{Wave} \longrightarrow \text{Lane} \longrightarrow \text{Execution Plan (
   a marathon and execute it unattended ([`10days`](skills/10days/SKILL.md)). See legacy source issue #240.
 - `skills/file-xyz-bug/` — file a harness bug from **any other repo** into this repo's `PROJECT/1-INBOX/`
   (GH issue + capture doc + ROADMAP park), without touching the repo you're standing in.
-- `skills/agent2agent/` — compact six-digit rendezvous for serialized discussions among two or more
+- `skills/agent-chorus/` — compact six-digit rendezvous (AgentChorus, formerly agent2agent) for serialized discussions among two or more
   live sessions; reuses dated relay files and supports Claude Code plus Codex skill installation.
 - `relay-system/` — relay transcripts, reviews, and dogfood runs.
 - `PROJECT/2-WORKING/` — active project docs and working plans.

@@ -4,9 +4,9 @@ set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-CLI="$REPO/skills/agent2agent/scripts/agent2agent.py"
-SKILL="$REPO/skills/agent2agent/SKILL.md"
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent2agent-test.XXXXXX")" || {
+CLI="$REPO/skills/agent-chorus/scripts/agent_chorus.py"
+SKILL="$REPO/skills/agent-chorus/SKILL.md"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-test.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2
   exit 1
 }
@@ -15,7 +15,7 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent2agent-test.XXXXXX")" || {
   exit 1
 }
 case "$WORK" in
-  "${TMPDIR:-/tmp}"/agent2agent-test.*) ;;
+  "${TMPDIR:-/tmp}"/agent-chorus-test.*) ;;
   *) echo "FAIL: refusing unsafe cleanup target: $WORK" >&2; exit 1 ;;
 esac
 trap 'rm -rf "$WORK"' EXIT
@@ -35,7 +35,7 @@ expect_file_contains() {
 fingerprint() { cksum "$1" | awk '{print $1 ":" $2}'; }
 mtime_ns() { python3 -c 'import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns)' "$1"; }
 
-echo "agent2agent (GH-497/GH-510/GH-144):"
+echo "agent-chorus (GH-497/GH-510/GH-144):"
 ROOT="$WORK/root with spaces"
 mkdir -p "$ROOT"
 STORE="$WORK/Agent2Agent-Transcripts"
@@ -65,11 +65,11 @@ python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_t
 grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
-helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
+helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py"' "$SKILL")"
 [ "$helper_examples" -eq 13 ] \
   && pass "all skill commands resolve and quote the repository helper" \
   || fail "expected 13 root-resolved helper commands, found $helper_examples"
-(cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
+(cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
 expect_file_contains "skill documents stdin message streaming" "$SKILL" \
@@ -82,13 +82,13 @@ start_out="$(AGENT2AGENT_ID_SEQUENCE=123456 python3 "$CLI" --root "$ROOT" start 
   --subject "subject line here" --packet-file "$PACKET" --agents 4 2>&1)"
 start_rc=$?
 [ "$start_rc" -eq 0 ] && pass "starts a four-agent discussion" || fail "start exits $start_rc: $start_out"
-expected_invitation='Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"'
+expected_invitation='Join XYZ AgentChorus #123456 as agent number two to discuss: "subject line here"'
 expect_contains "preserves the exact agent2 compact invitation" "$start_out" "$expected_invitation"
 expect_contains "prints an upfront agent3 invitation" "$start_out" \
-  'Join XYZ agent2agent #123456 as agent number three to discuss: "subject line here"'
+  'Join XYZ AgentChorus #123456 as agent number three to discuss: "subject line here"'
 expect_contains "prints an upfront agent4 invitation" "$start_out" \
-  'Join XYZ agent2agent #123456 as agent number four to discuss: "subject line here"'
-[ "$(printf '%s\n' "$start_out" | grep -c '^Join XYZ agent2agent')" -eq 3 ] \
+  'Join XYZ AgentChorus #123456 as agent number four to discuss: "subject line here"'
+[ "$(printf '%s\n' "$start_out" | grep -c '^Join XYZ AgentChorus')" -eq 3 ] \
   && pass "four-agent start prints exactly three non-initiator invitations" \
   || fail "four-agent start did not print exactly three invitations: $start_out"
 
@@ -256,7 +256,7 @@ watch_later_rc=$?
 [ "$watch_later_rc" -eq 0 ] && grep -Fq "DECISION: take-turn" "$watch_later_file" \
   && pass "watch detects a delayed turn arrival" || fail "delayed watch did not wake for agent3"
 expect_contains "prints an agent3 handoff invitation" "$send2_out" \
-  'Join XYZ agent2agent #123456 as agent number three to discuss: "subject line here"'
+  'Join XYZ AgentChorus #123456 as agent number three to discuss: "subject line here"'
 join3="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 3 2>&1)"
 expect_contains "agent3 can take its routed turn" "$join3" "DECISION: take-turn"
 send3_out="$(printf '%s\n' 'Multiline agent three response.' 'Second line.' | \
@@ -264,7 +264,7 @@ send3_out="$(printf '%s\n' 'Multiline agent three response.' 'Second line.' | \
 send3_rc=$?
 [ "$send3_rc" -eq 0 ] && pass "agent3 routes stdin content to agent4" || fail "agent3 send exits $send3_rc: $send3_out"
 expect_contains "prints an agent4 handoff invitation" "$send3_out" \
-  'Join XYZ agent2agent #123456 as agent number four to discuss: "subject line here"'
+  'Join XYZ AgentChorus #123456 as agent number four to discuss: "subject line here"'
 expect_file_contains "preserves multiline turn content" "$relay_file" "Second line."
 
 # Close is terminal and every later write is refused without a byte change.
@@ -395,7 +395,7 @@ drive_success_rc=$?
   || fail "successful drive exits $drive_success_rc: $drive_success"
 expect_contains "drive stops at its explicit turn bound" "$drive_success" "DECISION: max-turns"
 expect_file_contains "drive supplies the compact invitation prompt" "$PROMPT_CAPTURE" \
-  'Join XYZ agent2agent #556677 as agent number two to discuss: "hands free"'
+  'Join XYZ AgentChorus #556677 as agent number two to discuss: "hands free"'
 expect_file_contains "drive command advances through guarded send" "$drive_file" "NEXT: agent3"
 expect_file_contains "drive preserves 3+ participant routing" "$drive_file" "Driven response from agent2."
 
@@ -432,7 +432,7 @@ PY
 interrupt_rc=$?
 [ "$interrupt_rc" -eq 130 ] && pass "interrupt exits with the conventional 130 status" \
   || fail "interrupt exits $interrupt_rc: $interrupt_out"
-expect_contains "interrupt is reported visibly" "$interrupt_out" "agent2agent: interrupted"
+expect_contains "interrupt is reported visibly" "$interrupt_out" "agent-chorus: interrupted"
 
 # ── GH-38: doorbell hardening — re-arm reliability and crash durability ─────────────────────────
 # Each item below has its own negative control: the defect is REPRODUCED (a killed sender, a
@@ -647,11 +647,19 @@ esac
 CLAUDE_DIR="$WORK/claude-skills"
 CODEX_DIR="$WORK/codex-skills"
 install_out="$(CLAUDE_SKILLS_DIR="$CLAUDE_DIR" CODEX_SKILLS_DIR="$CODEX_DIR" \
-  bash "$REPO/skills/agent2agent/install.sh" 2>&1)"
+  bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
 install_rc=$?
 [ "$install_rc" -eq 0 ] && pass "installer completes for Claude and Codex" || fail "installer exits $install_rc: $install_out"
-[ -L "$CLAUDE_DIR/agent2agent" ] && [ -L "$CODEX_DIR/agent2agent" ] \
+[ -L "$CLAUDE_DIR/agent-chorus" ] && [ -L "$CODEX_DIR/agent-chorus" ] \
   && pass "installer exposes the same skill to both agents" || fail "installer symlinks missing"
 
-printf '  agent2agent: %s pass, %s fail\n' "$PASS" "$FAIL"
+# Deprecated agent2agent.py shim: warns and delegates to agent_chorus.py (Gen 2 Phase 0, #193)
+shim_out="$(python3 "$(dirname "$CLI")/agent2agent.py" --help 2>&1)"; shim_rc=$?
+case "$shim_out" in
+  *"deprecated — use agent_chorus.py"*)
+    [ "$shim_rc" -eq 0 ] && pass "deprecated agent2agent.py shim warns and delegates" || fail "shim exit $shim_rc" ;;
+  *) fail "deprecated shim did not warn+delegate: $shim_out" ;;
+esac
+
+printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

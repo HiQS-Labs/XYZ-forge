@@ -12,7 +12,7 @@ while [ -h "$_src" ]; do
   esac
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-SKILL_NAME="agent2agent"
+SKILL_NAME="agent-chorus"
 
 install_one() {
   _label="$1"

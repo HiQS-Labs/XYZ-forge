@@ -1,41 +1,41 @@
 #!/usr/bin/env bash
-# test-standalone.sh — minimal, dependency-free regression suite for agent2agent.py.
+# test-standalone.sh — minimal, dependency-free regression suite for agent_chorus.py.
 #
-# TEMP HOME: this file lives beside the skill (skills/agent2agent/) rather than under this
+# TEMP HOME: this file lives beside the skill (skills/agent-chorus/) rather than under this
 # repo's test/ tree on purpose — it is a portability proof, not a replacement for the full
-# suite. It exercises ONLY agent2agent.py + bash/python3/git/coreutils: no bin/tick, no
+# suite. It exercises ONLY agent_chorus.py + bash/python3/git/coreutils: no bin/tick, no
 # relay-automation/, no test/_setup.sh or lib/fixture-guard.sh. If a real standalone
 # extraction of this skill ever happens, this file (or its direct descendant) is the one
-# that should move with it; test/agent2agent.sh should stay behind since it also covers
+# that should move with it; test/agent-chorus.sh should stay behind since it also covers
 # this repo's poll.sh interop point.
 #
 # For full coverage (129 assertions incl. doorbell staleness, 3+ roster onboarding, the
-# poll.sh compatibility check, and more) run test/agent2agent.sh from the repo root instead.
+# poll.sh compatibility check, and more) run test/agent-chorus.sh from the repo root instead.
 #
 # Deliberately NOT covered: `drive` (opt-in bounded polling + an operator-supplied turn
 # command) — it spawns an arbitrary process, which is out of scope for this smoke suite;
-# the canonical repository's full test/agent2agent.sh suite exercises it.
+# the canonical repository's full test/agent-chorus.sh suite exercises it.
 #
 # Two implicit contracts a standalone porter should know about, both used below:
 #   AGENT2AGENT_ID_SEQUENCE — env var; a comma-free six-digit override for `start`'s
 #     otherwise-random discussion ID, so tests get a deterministic ID to address.
 #   --expect-subject — `join`'s optional guard against a stale/altered invitation subject.
 #
-# Usage: bash skills/agent2agent/test-standalone.sh
+# Usage: bash skills/agent-chorus/test-standalone.sh
 set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLI="$HERE/scripts/agent2agent.py"
+CLI="$HERE/scripts/agent_chorus.py"
 
 command -v python3 >/dev/null 2>&1 || { echo "FAIL: python3 not found" >&2; exit 1; }
 command -v git >/dev/null 2>&1 || { echo "FAIL: git not found" >&2; exit 1; }
 [ -f "$CLI" ] || { echo "FAIL: $CLI not found" >&2; exit 1; }
 
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent2agent-standalone-test.XXXXXX")" || {
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-standalone-test.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2; exit 1
 }
 case "$WORK" in
-  "${TMPDIR:-/tmp}"/agent2agent-standalone-test.*) ;;
+  "${TMPDIR:-/tmp}"/agent-chorus-standalone-test.*) ;;
   *) echo "FAIL: refusing unsafe cleanup target: $WORK" >&2; exit 1 ;;
 esac
 trap 'rm -rf "$WORK"' EXIT
@@ -47,7 +47,7 @@ export AGENT2AGENT_CONFIG="$WORK/config/agent2agent-home"
 REMOTE="$WORK/origin.git"
 git init -q "$ROOT"
 git -C "$ROOT" config user.name "Agent2Agent Test"
-git -C "$ROOT" config user.email "agent2agent@example.invalid"
+git -C "$ROOT" config user.email "agent-chorus@example.invalid"
 printf '%s\n' 'fixture repository' > "$ROOT/README.md"
 git -C "$ROOT" add README.md
 git -C "$ROOT" commit -qm "fixture root"
@@ -70,13 +70,13 @@ expect_file_contains() {
 }
 fingerprint() { cksum "$1" | awk '{print $1 ":" $2}'; }
 # F1: a relay-file-only fingerprint misses sibling artifacts (lock files, watch sidecars)
-# agent2agent.py may create or rewrite around a call that claims to "mutate nothing" —
+# agent_chorus.py may create or rewrite around a call that claims to "mutate nothing" —
 # notably, even a REJECTED out-of-turn send opens (and so creates, if absent) the lock
 # dotfile before it checks turn ownership. Fingerprint the whole tree, not just one file.
 tree_fp() { find "$ROOT" "$STORE" -type f -exec cksum {} + 2>/dev/null | sort | cksum; }
 run() { python3 "$CLI" --root "$ROOT" "$@"; }
 
-echo "agent2agent standalone smoke suite (no tick, no relay-automation, no repo test harness):"
+echo "agent-chorus standalone smoke suite (no tick, no relay-automation, no repo test harness):"
 
 PACKET="$WORK/context-packet.md"
 cat > "$PACKET" <<'EOF'
@@ -151,9 +151,9 @@ start_out="$(AGENT2AGENT_ID_SEQUENCE=222222 run start --subject "standalone smok
 start_rc=$?
 [ "$start_rc" -eq 0 ] && pass "start creates a discussion" || fail "start exits $start_rc: $start_out"
 expect_contains "start prints the agent2 invitation" "$start_out" \
-  'Join XYZ agent2agent #222222 as agent number two to discuss: "standalone smoke"'
+  'Join XYZ AgentChorus #222222 as agent number two to discuss: "standalone smoke"'
 expect_contains "start prints the agent3 invitation" "$start_out" \
-  'Join XYZ agent2agent #222222 as agent number three to discuss: "standalone smoke"'
+  'Join XYZ AgentChorus #222222 as agent number three to discuss: "standalone smoke"'
 
 # F6: an unguarded `find` assigns a multi-line match list to $relay_file if two files
 # ever collide, and every downstream -f/fingerprint use then degrades silently. Count first.
@@ -283,7 +283,7 @@ send_out="$(run send --id 222222 --agent 2 --next-agent 3 --check-clean \
 [ $? -eq 0 ] && pass "send records a turn and hands off" || fail "send failed: $send_out"
 expect_contains "verified handoff prints its Git receipt" "$send_out" "VERIFIED-GIT: clean; HEAD"
 expect_contains "send prints the next invitation" "$send_out" \
-  'Join XYZ agent2agent #222222 as agent number three to discuss: "standalone smoke"'
+  'Join XYZ AgentChorus #222222 as agent number three to discuss: "standalone smoke"'
 
 # --- 6. watch: the fast path (caller already owns NEXT), the wake-on-handoff path, and
 #         the timeout-expiry path — the polling logic is the part actually worth testing ---
@@ -334,7 +334,7 @@ expect_file_contains "metadata mirrors the extension count" "$metadata_file" '"e
 
 # --- 7. a real writer lock fails a concurrent write closed. The fixture holds the flock
 #         WITHOUT touching the lock file's payload (F3): content is irrelevant to flock
-#         contention, and overwriting it risks colliding with agent2agent.py's own
+#         contention, and overwriting it risks colliding with agent_chorus.py's own
 #         "pid=<n> held-since=<ts>" convention if that payload ever becomes structured.
 #         Readiness is signaled via a separate sentinel file instead. ---
 before_lock="$(tree_fp)"
@@ -462,6 +462,6 @@ run status --id 999999 >/dev/null 2>&1
 [ $? -ne 0 ] && pass "status on an unknown discussion ID fails closed" \
   || fail "status on an unknown discussion ID unexpectedly succeeded"
 
-echo "agent2agent-standalone: $PASS pass, $FAIL fail"
+echo "agent-chorus-standalone: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0

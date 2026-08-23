@@ -49,7 +49,7 @@ if [ "$MODE" = apply ] && [ -n "$(git -C "$SOURCE_REPO" status --porcelain=v1)" 
   exit 1
 fi
 
-allowed_file="$(mktemp "${TMPDIR:-/tmp}/agent2agent-publish-allowed.XXXXXX")"
+allowed_file="$(mktemp "${TMPDIR:-/tmp}/agent-chorus-publish-allowed.XXXXXX")"
 trap 'rm -f "$allowed_file"' EXIT
 printf '%s\n' .xyz-canonical-revision > "$allowed_file"
 

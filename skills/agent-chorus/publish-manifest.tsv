@@ -1,0 +1,13 @@
+# mode<TAB>canonical source<TAB>standalone destination
+644	LICENSE	LICENSE
+644	LICENSE-COMMERCIAL.md	LICENSE-COMMERCIAL.md
+644	skills/agent-chorus/standalone/README.md	README.md
+644	skills/agent-chorus/standalone/gitignore	.gitignore
+644	skills/agent-chorus/standalone/ci.yml	.github/workflows/ci.yml
+644	skills/agent-chorus/README.md	skills/agent-chorus/README.md
+644	skills/agent-chorus/SKILL.md	skills/agent-chorus/SKILL.md
+644	skills/agent-chorus/agents/openai.yaml	skills/agent-chorus/agents/openai.yaml
+755	skills/agent-chorus/scripts/agent_chorus.py	skills/agent-chorus/scripts/agent_chorus.py
+755	skills/agent-chorus/install.sh	skills/agent-chorus/install.sh
+644	skills/agent-chorus/publish-manifest.tsv	skills/agent-chorus/publish-manifest.tsv
+755	skills/agent-chorus/test-standalone.sh	skills/agent-chorus/test-standalone.sh

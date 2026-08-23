@@ -66,7 +66,7 @@ set -e
 # classify from their pushed range exactly as a PR classifies from its diff.
 expect_route "docs-only push uses the docs gate (was blanket full)" push docs true README.md
 expect_route "text documentation uses the docs gate" push docs true docs/guide.txt
-expect_route "Agent2Agent skill instructions use the docs gate" push docs true skills/agent2agent/SKILL.md
+expect_route "AgentChorus skill instructions use the docs gate" push docs true skills/agent-chorus/SKILL.md
 # GH-28 follow-up: consult.sh always writes .txt sidecars (NO-CITATION.txt, PROVENANCE.txt,
 # DEGRADED-SINGLE-MODEL.txt) alongside each relay-system/ transcript. Before this, a lone sidecar
 # fell through to the catch-all `docs_only=false` branch, forcing a transcript-only push onto the
@@ -157,8 +157,8 @@ expect_tier "releases subsystem (incl. the one non-twin utils/py file) is tier 2
 expect_tier "telemetry is tier 2" pull_request 2 utils/telemetry/health-lib.sh
 expect_tier "ATE + fuzzing are tier 2" pull_request 2 utils/ate/install.sh utils/fuzzing/fuzz-loop.sh
 expect_tier "swe-diagram is tier 2" pull_request 2 utils/swe-diagram/assets/renderer.js
-expect_tier "agent2agent skill code is tier 2 (GH-35 subsystem 7)" pull_request 2 skills/agent2agent/scripts/agent2agent.py
-expect_tier "agent2agent SKILL.md stays docs (explanatory markdown)" pull_request 1 skills/agent2agent/SKILL.md
+expect_tier "agent-chorus skill code is tier 2 (GH-35 subsystem 7)" pull_request 2 skills/agent-chorus/scripts/agent_chorus.py
+expect_tier "agent-chorus SKILL.md stays docs (explanatory markdown)" pull_request 1 skills/agent-chorus/SKILL.md
 expect_tier "kernel changes are tier 3" pull_request 3 src/events.js relay-automation/relay-drive.sh
 expect_tier "authoritative Python twins are tier 3" pull_request 3 utils/py/relay_drive.py
 expect_tier "relay-xyz skill surface is tier 3" pull_request 3 skills/relay-xyz/SKILL.md

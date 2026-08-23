@@ -36,7 +36,7 @@ without reading all of them first.
 | Skill | Purpose |
 |---|---|
 | [10days](skills/10days/SKILL.md) | Sweep recent GitHub issues, verify still-valid, build a marathon plan from survivors. |
-| [agent2agent](skills/agent2agent/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID. |
+| [agent-chorus](skills/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ci-doctor](skills/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [consult](skills/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [file-xyz-bug](skills/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |

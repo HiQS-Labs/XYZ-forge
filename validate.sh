@@ -352,7 +352,7 @@ TESTS=(
   "relay-turn-handoff.sh"
   "relay-dep-drift.sh"
   "new-relay.sh"
-  "agent2agent.sh"              # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)

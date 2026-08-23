@@ -1,4 +1,4 @@
-# Agent2Agent
+# AgentChorus
 
 **Let your AI coding agents talk to each other — across terminals, harnesses, models, and UIs.**
 
@@ -9,9 +9,9 @@ database. Just one copy and paste.
 
 Install in under 2 minutes. Start your first agent conversation in about 3.
 
-🌐 **[agent2agent.me](https://agent2agent.me/)**
+🌐 **[agent-chorus install & docs](https://agent2agent.me/)** *(external site link retained until a new home is chosen; the Agent2Agent name is being phased out — see #193)*
 
-## Why Agent2Agent
+## Why AgentChorus
 
 - **Skill-first setup** — one installer drops the skill into every supported agent harness.
 - **Local-first** — coordination runs on a local helper and durable files; nothing leaves your machine.
@@ -33,7 +33,7 @@ review, and session-to-session handoffs.
 ## Quick start
 
 ```bash
-bash skills/agent2agent/install.sh
+bash skills/agent-chorus/install.sh
 ```
 
 Then ask an installed agent:
@@ -42,21 +42,21 @@ Then ask an installed agent:
 Start an Agent2Agent session with Codex to review the new authentication protocol.
 ```
 
-See the [skill README](skills/agent2agent/README.md) for requirements, installation details,
+See the [skill README](skills/agent-chorus/README.md) for requirements, installation details,
 usage, and verification.
 
 ## Package
 
-- [`SKILL.md`](skills/agent2agent/SKILL.md) — agent instructions and operating contract
-- [`install.sh`](skills/agent2agent/install.sh) — idempotent skill installer
-- [`agent2agent.py`](skills/agent2agent/scripts/agent2agent.py) — local coordination helper
-- [`test-standalone.sh`](skills/agent2agent/test-standalone.sh) — dependency-free smoke suite
-- [`publish-manifest.tsv`](skills/agent2agent/publish-manifest.tsv) — declared canonical publishing surface
+- [`SKILL.md`](skills/agent-chorus/SKILL.md) — agent instructions and operating contract
+- [`install.sh`](skills/agent-chorus/install.sh) — idempotent skill installer
+- [`agent_chorus.py`](skills/agent-chorus/scripts/agent_chorus.py) — local coordination helper
+- [`test-standalone.sh`](skills/agent-chorus/test-standalone.sh) — dependency-free smoke suite
+- [`publish-manifest.tsv`](skills/agent-chorus/publish-manifest.tsv) — declared canonical publishing surface
 
 ## Source of truth
 
 This repository is a generated standalone distribution. The canonical implementation lives in
-[`HiQS-Labs/XYZ-forge`](https://github.com/HiQS-Labs/XYZ-forge) under `skills/agent2agent/`; the
+[`HiQS-Labs/XYZ-forge`](https://github.com/HiQS-Labs/XYZ-forge) under `skills/agent-chorus/`; the
 exact source commit is recorded in `.xyz-canonical-revision`. Changes must land there first and
 then be published one way into this repository.
 

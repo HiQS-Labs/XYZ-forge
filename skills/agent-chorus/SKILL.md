@@ -1,19 +1,36 @@
 ---
-name: agent2agent
+name: agent-chorus
 description: >-
   Start or join a local XYZ discussion shared by two or more Claude, Codex, or other agent sessions
-  through a compact six-digit ID. Use when a prompt says “Join XYZ agent2agent #123456 as agent
+  through a compact six-digit ID. Use when a prompt says “Join XYZ AgentChorus #123456 as agent (the legacy phrase “Join XYZ agent2agent #123456…” still refers to this skill — accept both)
   number two…”, when the user asks sessions to talk to each other, or when a participant needs to
-  send, route, inspect, watch, drive, or close a serialized agent2agent turn. Supports read-only
+  send, route, inspect, watch, drive, or close a serialized AgentChorus turn. Supports read-only
   2–3 minute monitoring, a background-watch doorbell that wakes a live session on its turn, and
   explicitly authorized hands-free turn commands. Stores one canonical conversation outside Git
   while retaining legacy relay-system lookup and NEXT: routing; it is not the Producer/Reviewer
   artifact-review relay.
 ---
 
-# Agent2Agent
+# AgentChorus (formerly Agent2Agent)
 
-Use the bundled `scripts/agent2agent.py` for every state change. It keeps a stable `agent1` through
+## Compatibility (Gen 2 Phase 0 rename)
+
+The skill was renamed **Agent2Agent → AgentChorus** (2026-08-23, issue #193 Phase 0; possible legal
+conflict on the old name). Unchanged on purpose — these are stable interfaces, not branding:
+
+- **Invitations:** new invitations print "Join XYZ AgentChorus #ID…". The legacy phrase
+  "Join XYZ agent2agent #ID…" still refers to this skill — accept both; the discussion ID is what
+  routes, not the name.
+- **Deprecated CLI shim:** `scripts/agent2agent.py` still works (warns, delegates to
+  `agent_chorus.py`) for one release.
+- **Store:** the default store directory remains `Agent2Agent-Transcripts/` — live discussions
+  continue in place; no migration in this phase.
+- **Environment variables:** `AGENT2AGENT_HOME`, `AGENT2AGENT_ROOT`, `AGENT2AGENT_CONFIG`, etc.
+  keep their names (stable interface consumed by wrappers and tests).
+- **Transcript format:** the `AGENT2AGENT-ID:` header key inside `conversation.md` is unchanged so
+  existing discussions remain readable.
+
+Use the bundled `scripts/agent_chorus.py` for every state change. It keeps a stable `agent1` through
 `agentN` roster, one active `NEXT:` writer, and one durable `conversation.md` outside the Git
 working tree. By default the store is `Agent2Agent-Transcripts/` beside the canonical repository;
 `--store`, `AGENT2AGENT_HOME`, or the user config file may override it. Never place the store
@@ -24,7 +41,7 @@ When the operator wants one durable store across repositories whose parents diff
 instead of repeating a machine path in every command:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" configure-store \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" configure-store \
   --path /private/path/to/Agent2Agent-Transcripts
 ```
 
@@ -56,7 +73,7 @@ observed results. Do not put secrets, credentials, or unrelated conversation int
 it to a temporary file and pass that file to `start`; the helper validates and embeds it as Turn 1.
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" start \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" start \
   --subject "subject line here" \
   --packet-file /safe/path/to/context-packet.md \
   --agents 2
@@ -68,7 +85,7 @@ otherwise. Return every invitation printed by the helper verbatim so each non-in
 once at startup:
 
 ```text
-Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
+Join XYZ AgentChorus #123456 as agent number two to discuss: "subject line here"
 
 Timed two-minute doorbell requested: when waiting, start a background watch that checks every 120 seconds for 1,800 seconds.
 ```
@@ -90,7 +107,7 @@ Use the seat-agnostic status view when the operator needs the roster, current wr
 liveness without joining as a participant:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" status \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" status \
   --id 123456
 ```
 
@@ -104,7 +121,7 @@ Parse the six-digit ID, plain-language agent number, quoted subject, and any tim
 Do not create a second file. Resolve and validate the existing discussion read-only first:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" join \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" join \
   --id 123456 \
   --agent 2 \
   --expect-subject "subject line here"
@@ -130,7 +147,7 @@ seconds, matching a 2–3 minute check cadence. `--timeout 0` waits indefinitely
 timeout when the host session needs a bounded wait.
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" watch \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" watch \
   --id 123456 \
   --agent 2 \
   --interval 150 \
@@ -153,7 +170,7 @@ either live session to remember to poll. Each participant must launch this comma
 task when it is waiting for the other participant:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" watch \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" watch \
   --id 123456 \
   --agent 2 \
   --interval 120 \
@@ -219,7 +236,7 @@ variables: `AGENT2AGENT_ID`, `AGENT2AGENT_AGENT`, `AGENT2AGENT_MEMBER`,
 `AGENT2AGENT_RELAY_FILE`, `AGENT2AGENT_ROOT`, and `AGENT2AGENT_SUBJECT`.
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" drive \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" drive \
   --id 123456 \
   --agent 2 \
   --interval 150 \
@@ -243,7 +260,7 @@ For multiline content, prefer a UTF-8 message file or stdin rather than interpol
 into an unquoted shell command.
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" send \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" send \
   --id 123456 \
   --agent 2 \
   --next-agent 3 \
@@ -253,7 +270,7 @@ into an unquoted shell command.
 To stream a message through stdin without interpolating its contents into the command:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" send \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" send \
   --id 123456 \
   --agent 2 \
   --next-agent 3 \
@@ -270,7 +287,7 @@ pushed Git handoff, add `--check-clean`; the helper refuses the handoff unless t
 clean, the branch has an upstream, and local `HEAD` exactly matches it:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" send \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" send \
   --id 123456 --agent 2 --next-agent 1 --check-clean \
   --message-file /safe/path/to/verified-handoff.md
 ```
@@ -282,7 +299,7 @@ turn or close against the superseded done condition. The current `NEXT:` owner r
 the replacement done condition, and the participant who should answer next:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" extend \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" extend \
   --id 123456 --agent 2 --next-agent 1 \
   --question "What if the canonical artifact is retired entirely?" \
   --done-condition "Compare retirement with migration and recommend one."
@@ -298,7 +315,7 @@ While the current turn owner is running a long test, build, or review, it may re
 heartbeat without adding a transcript turn:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" ping \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" ping \
   --id 123456 --agent 2
 ```
 
@@ -309,7 +326,7 @@ waiting seats can become stale. The default threshold is 1,800 seconds; change i
 To end instead of hand off:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" close \
+"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" close \
   --id 123456 \
   --agent 2 \
   --message-file /safe/path/to/final-consensus.md
