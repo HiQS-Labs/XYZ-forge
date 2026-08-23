@@ -18,3 +18,4 @@ nemotron ultra 3 free: nvidia/nemotron-3-ultra-550b-a55b:free
 qwen3 coder: qwen/qwen3-coder
 deepseek v4 pro: deepseek/deepseek-v4-pro
 grok 4.6: x-ai/grok-4.6
+stealth ox-alpha: stealth/ox-alpha

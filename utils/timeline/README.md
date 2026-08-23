@@ -27,6 +27,16 @@ python3 utils/timeline/export_timeline.py --check-drift # exit 1 if RELEASES.md 
   template copy).
 - `--db`, `--md`, `--template`, `--out` override the defaults.
 
+## Navigation sidebar (GH-153 spike)
+
+The template ships a left sidebar in both baked views: default ON, hamburger
+(`#sidenav-toggle`) slides it out, the chevron (`#sn-min`) collapses it to an icon rail,
+state persists via `localStorage('ledger-sidenav')`. The project switcher and the
+"releases cycle" panel are filled from the payload's additive `projects`/`cycle` keys —
+the cycle numbers come from `utils/py/releases_cycle.py`, the same module
+`utils/hq/rollup.sh` embeds, so the dashboard and the Obsidian daily rollup cannot
+disagree. Items with no destination yet are deliberate non-link placeholders (`.sn-ph`).
+
 ## Guarantees & limits
 
 - Opens the DB with SQLite's read-only URI (`mode=ro`): no writer lock, no generation

@@ -28,6 +28,11 @@ from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+# GH-153: the cycle-rollup module is shared with utils/hq/rollup.sh, so the sidebar panel and
+# the Obsidian daily rollup read one source of truth. Resolved from this file, not CWD.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "py"))
+from releases_cycle import summary_from_cx  # noqa: E402  (path bootstrap must precede it)
+
 HERE = Path(__file__).resolve().parent
 GH_URL_RE = re.compile(r"https://github\.com/([^/]+/[^/]+)/issues/(\d+)")
 
@@ -464,6 +469,14 @@ def build_payload(cx, today, md_path=None):
     (schema_v,) = cx.execute("SELECT MAX(version) FROM schema_migrations").fetchone()
     last_ago = days_since(last_op, today) if last_op else None
 
+    # GH-153: additive payload keys for the sidebar — the project switcher list and the shared
+    # full-cycle summary (the same module the HQ daily rollup embeds, so the two never disagree).
+    projects = [
+        {"slug": slug, "active": slug == settings.get("repo_slug")}
+        for (slug,) in cx.execute("SELECT slug FROM repos ORDER BY slug")
+    ] or [{"slug": settings.get("repo_slug", "repo"), "active": True}]
+    cycle = summary_from_cx(cx)
+
     # ── the complete ranking set ────────────────────────────────────────────────────────────────
     # The timeline only shows work that is ON a release (manifest members) or in flight beside one
     # (detours). A rated task sitting in the QUEUE appears nowhere — and a high-scoring queued task
@@ -503,6 +516,7 @@ def build_payload(cx, today, md_path=None):
             "subtitle": f"{settings.get('repo_slug', 'repo')} · releases.db · read-only",
             "generatedAtDisplay": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
             "sourceLabel": f"releases.db · schema v{schema_v}",
+            "repoUrl": repo_url,  # GH-153: sidebar repo links (None -> links stay unwired)
         },
         "sync": sync,  # RELEASES.md-vs-DB drift banner; None (no banner) when they agree
         # ROADMAP.md row parity: still out of spike scope
@@ -520,6 +534,9 @@ def build_payload(cx, today, md_path=None):
         "justFinished": jf,
         "whatsNext": wn,
         "releases": columns,
+        # GH-153: sidebar payload — switcher list + the shared full-cycle summary
+        "projects": projects,
+        "cycle": cycle,
     }
 
 

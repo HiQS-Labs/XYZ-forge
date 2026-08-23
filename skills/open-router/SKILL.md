@@ -65,9 +65,19 @@ next time, not repeat the probe.
 
 Many OpenRouter-proxied models aren't in Aider's `model-settings.yml` and default
 to the `whole` edit format, which some models don't reliably produce (confirmed:
-GLM-5.2, Nemotron Ultra 3). If a driven turn reports "no tracked changes" despite
-a seemingly valid model response, set `AIDER_FLAGS=--edit-format diff` — see
-`relay-automation/README.md`'s "Known OpenRouter edit-format quirks" section.
+GLM-5.2, Nemotron Ultra 3, **stealth/ox-alpha** — GH-161 QA relay,
+2026-08-22: the model returned a full, well-formed review in diff-style `+`
+lines under `whole` format, which aider's whole-format parser cannot apply as
+a file replacement; no error, no reflection, the turn just sat idle until the
+900s wall-clock kill with the response already sitting unused in the log).
+If a driven turn reports "no tracked changes" despite a seemingly valid model
+response — or times out with zero applied edit despite a normal-looking
+`Tokens: X sent, Y received` line in the turn's log — set
+`AIDER_FLAGS=--edit-format diff` — see `relay-automation/README.md`'s "Known
+OpenRouter edit-format quirks" section. Any new/unlisted model not yet in
+Aider's `model-settings.yml` (e.g. an anonymized "stealth" preview model) should
+be assumed to need this flag proactively, not discovered reactively after a
+wasted turn.
 
 ## What this skill does NOT do
 

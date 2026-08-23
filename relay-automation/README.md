@@ -586,6 +586,7 @@ Live-confirmed 2026-07-03 against two models with no entry in Aider's
 |---|---|---|
 | `openrouter/z-ai/glm-5.2` | Model chats instead of emitting an edit | `AIDER_FLAGS=--edit-format diff` |
 | `openrouter/nvidia/nemotron-3-ultra-550b-a55b:free` | Model emits a raw unified-diff hunk, unparseable by Aider | `AIDER_FLAGS=--edit-format diff` |
+| `openrouter/stealth/ox-alpha` | Model emits a diff-style (`+`-prefixed) response under `whole` format; no parse error, no reflection — the turn just idles to the 900s wall-clock kill with the response unused in the log (GH-161, 2026-08-22) | `AIDER_FLAGS=--edit-format diff` |
 
 There is no dedicated `AIDER_EDIT_FORMAT` variable — `aider-turn.sh` already
 exposes `AIDER_FLAGS` as a generic passthrough, so set
