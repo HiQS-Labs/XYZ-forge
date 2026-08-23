@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import fcntl
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -24,8 +26,45 @@ FIELD_RE_TEMPLATE = r"^{key}:[ \t]*(.*?)[ \t]*$"
 DISCUSSION_MARKER = "\n## Discussion\n"
 MAX_ID_ATTEMPTS = 1_000
 DEFAULT_POLL_INTERVAL = 150.0
+DEFAULT_STALE_AFTER = 1_800.0
 DEFAULT_DRIVE_TIMEOUT = 3_600.0
 DEFAULT_MAX_DRIVE_TURNS = 6
+STORE_DIRNAME = "Agent2Agent-Transcripts"
+ACTIVE_STORE = None  # type: Optional[Path]
+PACKET_SECTIONS = (
+    "Goal",
+    "Scope",
+    "Context and current state",
+    "Evidence and artifacts",
+    "Constraints and safety boundaries",
+    "Questions for participants",
+    "Requested outcome / done condition",
+)
+CLOSE_SECTIONS = (
+    "Final Consensus & Recommendation",
+    "Decision",
+    "Key Invariants & Rationale",
+    "Recorded Dissent / Falsifiers",
+    "Recommended Next Actions",
+)
+CLOSE_TEMPLATE = """## Final Consensus & Recommendation
+
+### Decision
+
+State the agreed call plainly.
+
+### Key Invariants & Rationale
+
+Record the evidence and reasoning the participants agreed survives the discussion.
+
+### Recorded Dissent / Falsifiers
+
+Name any dissent and the evidence that would change the decision. Write `None` when unanimous.
+
+### Recommended Next Actions
+
+1. Name the next concrete action, or state that no action is required.
+"""
 
 
 class Agent2AgentError(RuntimeError):
@@ -50,6 +89,108 @@ def normalize_root(value: Optional[str]) -> Path:
     return root
 
 
+def _git_value(root: Path, *args: str) -> Optional[str]:
+    try:
+        value = subprocess.check_output(
+            ["git", "-C", str(root), *args], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return value or None
+
+
+def canonical_repository_root(root: Path) -> Path:
+    top = _git_value(root, "rev-parse", "--show-toplevel")
+    common = _git_value(root, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if common:
+        common_path = Path(common).resolve()
+        if common_path.name == ".git":
+            return common_path.parent
+    return Path(top).resolve() if top else root.resolve()
+
+
+def store_config_path() -> Path:
+    config = os.environ.get("AGENT2AGENT_CONFIG")
+    path = Path(config).expanduser() if config else Path.home() / ".config/xyz/agent2agent-home"
+    return path.resolve()
+
+
+def configured_store() -> Optional[str]:
+    path = store_config_path()
+    try:
+        value = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    return value or None
+
+
+def persist_store_default(store: Path) -> Path:
+    config_path = store_config_path()
+    if not config_path.parent.exists():
+        private_mkdir(config_path.parent, parents=True)
+    atomic_write(config_path, f"{store}\n")
+    os.chmod(config_path, 0o600)
+    return config_path
+
+
+def normalize_store(root: Path, value: Optional[str], create: bool = False) -> Path:
+    if value is not None and not value.strip():
+        raise Agent2AgentError("--store must not be empty")
+    if value is None and "AGENT2AGENT_HOME" in os.environ and not os.environ["AGENT2AGENT_HOME"].strip():
+        raise Agent2AgentError("AGENT2AGENT_HOME must not be empty")
+    requested = value or os.environ.get("AGENT2AGENT_HOME") or configured_store()
+    canonical = canonical_repository_root(root)
+    store = (
+        Path(requested).expanduser().resolve()
+        if requested else (canonical.parent / STORE_DIRNAME).resolve()
+    )
+    if store == canonical or _is_within(store, canonical):
+        raise Agent2AgentError(
+            f"session store must be outside the coordinated repository: {store}"
+        )
+    if not store.exists() and not create:
+        return store
+    try:
+        store.mkdir(mode=0o700, parents=True, exist_ok=True)
+    except OSError as exc:
+        raise Agent2AgentError(f"could not create session store {store}: {exc}") from exc
+    if not store.is_dir():
+        raise Agent2AgentError(f"session store is not a directory: {store}")
+    try:
+        os.chmod(store, 0o700)
+    except OSError as exc:
+        raise Agent2AgentError(f"could not enforce private store permissions on {store}: {exc}") from exc
+    if (store.stat().st_mode & 0o077) != 0:
+        raise Agent2AgentError(f"session store is not private (expected mode 0700): {store}")
+    return store
+
+
+def repository_identity(root: Path) -> Tuple[str, str]:
+    canonical = canonical_repository_root(root)
+    remote = _git_value(canonical, "remote", "get-url", "origin")
+    identity = remote.rstrip("/") if remote else str(canonical)
+    if identity.endswith(".git"):
+        identity = identity[:-4]
+    name = identity.rsplit("/", 1)[-1].rsplit(":", 1)[-1] or canonical.name
+    short_id = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
+    return f"{slugify(name)}--{short_id}", identity
+
+
+def private_mkdir(path: Path, parents: bool = False) -> None:
+    path.mkdir(mode=0o700, parents=parents, exist_ok=True)
+    os.chmod(path, 0o700)
+
+
+def legacy_relay_root(root: Path) -> Path:
+    return root / "relay-system"
+
+
+def external_repositories_root(store: Path) -> Path:
+    path = store / "repositories"
+    private_mkdir(path, parents=True)
+    return path
+
+
 def normalize_subject(value: str) -> str:
     subject = " ".join(value.split())
     if not subject:
@@ -62,6 +203,37 @@ def normalize_message(value: str) -> str:
     if not message:
         raise Agent2AgentError("message must not be empty")
     return message
+
+
+def validate_context_packet(value: str) -> str:
+    packet = value.strip()
+    if not packet:
+        raise Agent2AgentError("context packet must not be empty")
+    positions = []
+    for section in PACKET_SECTIONS:
+        heading = f"## {section}"
+        matches = list(re.finditer(rf"(?m)^{re.escape(heading)}[ \t]*$", packet))
+        if len(matches) != 1:
+            raise Agent2AgentError(f"context packet must contain exactly one '{heading}' heading")
+        start = matches[0].end()
+        body = packet[start:]
+        next_heading = re.search(r"(?m)^##[ \t]+", body)
+        body = body[:next_heading.start()] if next_heading else body
+        if not body.strip():
+            raise Agent2AgentError(f"context packet section '{heading}' must not be empty")
+        positions.append(matches[0].start())
+    if positions != sorted(positions):
+        raise Agent2AgentError("context packet headings are out of order")
+    return packet
+
+
+def load_context_packet(path_value: str) -> str:
+    try:
+        if path_value == "-":
+            return validate_context_packet(sys.stdin.read())
+        return validate_context_packet(Path(path_value).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError) as exc:
+        raise Agent2AgentError(f"could not read context packet: {exc}") from exc
 
 
 def slugify(value: str) -> str:
@@ -131,7 +303,8 @@ def invitation(discussion_id: str, number: int, subject: str, timed_watch: bool 
 
 
 def relay_root(root: Path) -> Path:
-    return root / "relay-system"
+    """Legacy repository-local root retained for compatibility."""
+    return legacy_relay_root(root)
 
 
 def _header(content: str) -> str:
@@ -153,6 +326,28 @@ def replace_field(content: str, key: str, value: str) -> str:
     return replaced
 
 
+def optional_field(content: str, key: str, default: str = "") -> str:
+    match = re.search(FIELD_RE_TEMPLATE.format(key=re.escape(key)), _header(content), re.MULTILINE)
+    return match.group(1) if match else default
+
+
+def upsert_field(content: str, key: str, value: str, after: str) -> str:
+    pattern = FIELD_RE_TEMPLATE.format(key=re.escape(key))
+    if re.search(pattern, _header(content), re.MULTILINE):
+        return replace_field(content, key, value)
+    anchor = FIELD_RE_TEMPLATE.format(key=re.escape(after))
+    updated, count = re.subn(
+        anchor,
+        lambda match: f"{match.group(0)}\n{key}: {value}",
+        content,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if count != 1:
+        raise Agent2AgentError(f"discussion is missing required field {after}:")
+    return updated
+
+
 def parse_roster(content: str) -> List[str]:
     roster = field(content, "AGENTS").split()
     if len(roster) < 2 or roster != [f"agent{i}" for i in range(1, len(roster) + 1)]:
@@ -167,32 +362,48 @@ def _is_within(path: Path, parent: Path) -> bool:
         return False
 
 
-def find_discussions(root: Path, discussion_id: str) -> List[Path]:
+def find_discussions(root: Path, discussion_id: str, store: Optional[Path] = None) -> List[Path]:
     if not ID_RE.fullmatch(discussion_id):
         raise Agent2AgentError("discussion ID must be exactly six digits")
-    base = relay_root(root)
-    if not base.is_dir():
-        return []
+    if store is None:
+        store = ACTIVE_STORE
     matches: List[Path] = []
-    for candidate in base.glob(f"**/{discussion_id}-*.md"):
-        if candidate.is_symlink() or not candidate.is_file():
+    roots_and_patterns = [(legacy_relay_root(root), f"**/{discussion_id}-*.md")]
+    if store is not None:
+        external = store / "repositories"
+        if external.is_dir():
+            for session_dir in external.glob(f"**/{discussion_id}--*"):
+                if session_dir.is_dir() and not (session_dir / "conversation.md").exists():
+                    # A crashed creator's directory is a durable reservation. Return its expected
+                    # canonical path so allocation will not reuse the ID and lookup fails loudly
+                    # in read_discussion instead of pretending the ID is free.
+                    matches.append(session_dir / "conversation.md")
+        roots_and_patterns.insert(0, (external, f"**/{discussion_id}--*/conversation.md"))
+    for base, pattern in roots_and_patterns:
+        if not base.is_dir():
             continue
-        resolved = candidate.resolve()
-        if not _is_within(resolved, base.resolve()):
-            continue
-        try:
-            content = candidate.read_text(encoding="utf-8")
-            if field(content, "AGENT2AGENT-ID") == discussion_id:
-                matches.append(candidate)
-        except (Agent2AgentError, OSError, UnicodeError):
-            continue
+        for candidate in base.glob(pattern):
+            if candidate.is_symlink() or not candidate.is_file():
+                continue
+            resolved = candidate.resolve()
+            if not _is_within(resolved, base.resolve()):
+                continue
+            try:
+                content = candidate.read_text(encoding="utf-8")
+                if field(content, "AGENT2AGENT-ID") == discussion_id:
+                    matches.append(candidate)
+            except (Agent2AgentError, OSError, UnicodeError):
+                continue
     return sorted(matches)
 
 
-def resolve_discussion(root: Path, discussion_id: str) -> Path:
-    matches = find_discussions(root, discussion_id)
+def resolve_discussion(root: Path, discussion_id: str, store: Optional[Path] = None) -> Path:
+    if store is None:
+        store = ACTIVE_STORE
+    matches = find_discussions(root, discussion_id, store)
     if not matches:
-        raise Agent2AgentError(f"agent2agent #{discussion_id} was not found under {relay_root(root)}")
+        locations = f"{store} or {legacy_relay_root(root)}" if store else str(legacy_relay_root(root))
+        raise Agent2AgentError(f"agent2agent #{discussion_id} was not found under {locations}")
     if len(matches) > 1:
         rendered = "\n  ".join(str(path) for path in matches)
         raise Agent2AgentError(f"agent2agent #{discussion_id} is ambiguous:\n  {rendered}")
@@ -217,32 +428,19 @@ def id_candidates(explicit_id: Optional[str]) -> Iterable[str]:
         yield str(100_000 + secrets.randbelow(900_000))
 
 
-def reserve_id(root: Path, explicit_id: Optional[str]) -> Tuple[str, Path]:
-    base = relay_root(root)
-    base.mkdir(parents=True, exist_ok=True)
-    for candidate in id_candidates(explicit_id):
-        reservation = base / f".agent2agent-id-{candidate}.lock"
-        try:
-            descriptor = os.open(reservation, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        except FileExistsError:
-            if explicit_id:
-                raise Agent2AgentError(f"agent2agent #{candidate} is currently being created")
-            continue
-        try:
-            os.write(descriptor, f"pid={os.getpid()} created={utc_now()}\n".encode())
-        finally:
-            os.close(descriptor)
-        if find_discussions(root, candidate):
-            reservation.unlink(missing_ok=True)
-            if explicit_id:
-                raise Agent2AgentError(f"agent2agent #{candidate} already exists")
-            continue
-        return candidate, reservation
-    raise Agent2AgentError("could not allocate an unused six-digit discussion ID")
+def allocation_lock(store: Path) -> object:
+    runtime = store / "runtime"
+    private_mkdir(runtime, parents=True)
+    path = runtime / "allocation.lock"
+    handle = path.open("a+", encoding="utf-8")
+    os.chmod(path, 0o600)
+    fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+    return handle
 
 
 def render_initial(
-    discussion_id: str, subject: str, agents: int, timestamp: str, timed_watch: bool
+    discussion_id: str, subject: str, agents: int, timestamp: str, timed_watch: bool,
+    context_packet: str,
 ) -> str:
     roster = " ".join(agent_id(number) for number in range(1, agents + 1))
     return f"""# XYZ agent2agent #{discussion_id}
@@ -254,21 +452,38 @@ NEXT: agent2
 STATUS: Open
 TURN: 1
 TIMED-WATCH: {"enabled" if timed_watch else "disabled"}
+EXTENSIONS: 0
 CREATED: {timestamp}
 UPDATED: {timestamp}
 
+## Attention — Rules for LLMs
+
+- When waiting, if the host supports background-task wake, launch a watch every 120 seconds for up
+  to 1,800 seconds. Re-arm it immediately after sending a turn.
+- If the host cannot wake a dormant session, say so plainly and use manual `watch` instead. Never
+  claim a timer is armed when no observable watch process exists.
+
 ## Protocol
 
+- Read the complete producer packet and every existing turn before responding.
 - Only the participant named by `NEXT:` may append the next turn.
 - After writing, route `NEXT:` to exactly one other participant in `AGENTS:`.
 - Keep turns serialized. Do not broadcast or write in parallel.
+- Stay within the seeded goal, scope, questions, evidence, and safety boundaries.
+- Treat helper-recorded scope extensions as part of the active done condition.
+- Never claim an asynchronous or remote action completed until it exited successfully and its
+  observable final state was verified; include the receipt in the turn.
+- Close with the helper's structured final-consensus template unless the closure is explicitly
+  trivial or administrative.
+- Never ask the human to paste the prepared packet again.
+- Never modify, reset, delete, or clean another participant's workspace.
 - `STATUS: Closed` is terminal.
 
 ## Discussion
 
 ### Turn 1 — agent1 — {timestamp}
 
-{subject}
+{context_packet}
 """
 
 
@@ -290,7 +505,7 @@ def _fsync_dir(directory: Path) -> None:
 
 
 def atomic_write(path: Path, content: str) -> None:
-    mode = path.stat().st_mode & 0o777
+    mode = (path.stat().st_mode & 0o777) if path.exists() else 0o600
     descriptor, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     temp_path = Path(temp_name)
     try:
@@ -300,32 +515,103 @@ def atomic_write(path: Path, content: str) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_path, path)
+        if path.name in ("conversation.md", "metadata.json"):
+            os.chmod(path, 0o600)
         _fsync_dir(path.parent)
     finally:
         temp_path.unlink(missing_ok=True)
 
 
+def sync_metadata(path: Path, content: str) -> None:
+    if path.name != "conversation.md":
+        return
+    metadata_path = path.parent / "metadata.json"
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata.update({
+            "status": field(content, "STATUS"),
+            "next": field(content, "NEXT"),
+            "turn": int(field(content, "TURN")),
+            "extensions": int(optional_field(content, "EXTENSIONS", "0")),
+            "updated": field(content, "UPDATED"),
+        })
+        atomic_write(metadata_path, json.dumps(metadata, indent=2, sort_keys=True) + "\n")
+    except (Agent2AgentError, OSError, UnicodeError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        print(f"agent2agent: warning: conversation advanced but metadata sync failed: {exc}", file=sys.stderr)
+
+
 def create_discussion(
-    root: Path, subject: str, agents: int, explicit_id: Optional[str], timed_watch: bool
+    root: Path, subject: str, agents: int, explicit_id: Optional[str], timed_watch: bool,
+    context_packet: str, store: Path,
 ) -> Tuple[str, Path]:
     if agents < 2:
         raise Agent2AgentError("--agents must be at least 2")
     normalized = normalize_subject(subject)
-    discussion_id, reservation = reserve_id(root, explicit_id)
     timestamp = utc_now()
-    dated = relay_root(root) / timestamp[:10]
-    dated.mkdir(parents=True, exist_ok=True)
-    path = dated / f"{discussion_id}-agent2agent-{slugify(normalized)}.md"
+    namespace, identity = repository_identity(root)
+    canonical_root = canonical_repository_root(root)
+    repository_remote = _git_value(canonical_root, "remote", "get-url", "origin")
+    repository_dir = external_repositories_root(store) / namespace
+    private_mkdir(repository_dir, parents=True)
+    dated = repository_dir / timestamp[:10]
+    private_mkdir(dated, parents=True)
+    allocation = allocation_lock(store)
     try:
-        descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        discussion_id = ""
+        session_dir = None  # type: Optional[Path]
+        for candidate in id_candidates(explicit_id):
+            if find_discussions(root, candidate, store):
+                if explicit_id:
+                    raise Agent2AgentError(f"agent2agent #{candidate} already exists")
+                continue
+            candidate_dir = dated / f"{candidate}--{slugify(normalized)}"
+            try:
+                candidate_dir.mkdir(mode=0o700)
+            except FileExistsError:
+                if explicit_id:
+                    raise Agent2AgentError(f"agent2agent #{candidate} already exists")
+                continue
+            os.chmod(candidate_dir, 0o700)
+            discussion_id, session_dir = candidate, candidate_dir
+            break
+        if not discussion_id or session_dir is None:
+            raise Agent2AgentError("could not allocate an unused six-digit discussion ID")
+        runtime = session_dir / "runtime"
+        private_mkdir(runtime)
+        path = session_dir / "conversation.md"
+        descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(render_initial(discussion_id, normalized, agents, timestamp, timed_watch))
+            handle.write(render_initial(
+                discussion_id, normalized, agents, timestamp, timed_watch, context_packet
+            ))
             handle.flush()
             os.fsync(handle.fileno())
-    except FileExistsError as exc:
-        raise Agent2AgentError(f"discussion path already exists: {path}") from exc
+        os.chmod(path, 0o600)
+        metadata = {
+            "agent2agent_id": discussion_id,
+            "subject": normalized,
+            "repository_identity": identity,
+            "repository_root": str(canonical_root),
+            "repository_remote": repository_remote,
+            "created": timestamp,
+            "status": "Open",
+            "next": "agent2",
+            "turn": 1,
+            "extensions": 0,
+            "updated": timestamp,
+        }
+        metadata_path = session_dir / "metadata.json"
+        descriptor = os.open(metadata_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            json.dump(metadata, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(metadata_path, 0o600)
+        _fsync_dir(session_dir)
     finally:
-        reservation.unlink(missing_ok=True)
+        fcntl.flock(allocation.fileno(), fcntl.LOCK_UN)
+        allocation.close()
     return discussion_id, path
 
 
@@ -363,9 +649,12 @@ class DiscussionLock:
     mid-acquire on). The leftover file is inert: it is a mutex, not a claim."""
 
     def __init__(self, path: Path):
-        # Dotfile, matching DriveLock's convention — the lock sits beside the discussion but never
-        # appears in a listing of it, and `find_discussions` only globs `*.md`.
-        self.path = path.with_name(f".{path.name}.lock")
+        if path.name == "conversation.md":
+            runtime = path.parent / "runtime"
+            private_mkdir(runtime)
+            self.path = runtime / "discussion.lock"
+        else:
+            self.path = path.with_name(f".{path.name}.lock")
         self.handle = None  # type: Optional[object]
 
     def __enter__(self) -> None:
@@ -398,7 +687,12 @@ class DriveLock:
     """Hold one process-owned drive lane; flock releases automatically after a crash."""
 
     def __init__(self, path: Path, member: str):
-        self.path = path.with_name(f".{path.name}.{member}.drive.lock")
+        if path.name == "conversation.md":
+            runtime = path.parent / "runtime"
+            private_mkdir(runtime)
+            self.path = runtime / f"drive-{member}.lock"
+        else:
+            self.path = path.with_name(f".{path.name}.{member}.drive.lock")
         self.handle = None  # type: Optional[object]
 
     def __enter__(self) -> None:
@@ -486,6 +780,16 @@ def nonnegative_timeout(value: str) -> float:
     return timeout
 
 
+def stale_after_default() -> float:
+    raw = os.environ.get("AGENT2AGENT_STALE_AFTER")
+    if raw is None:
+        return DEFAULT_STALE_AFTER
+    try:
+        return positive_interval(raw)
+    except argparse.ArgumentTypeError as exc:
+        raise Agent2AgentError(f"AGENT2AGENT_STALE_AFTER {exc}") from exc
+
+
 def wait_for_turn(
     root: Path,
     discussion_id: str,
@@ -540,12 +844,16 @@ def rearm_command(
         sys.executable or "python3",
         os.path.abspath(__file__),
         "--root", str(root),
+    ]
+    if ACTIVE_STORE is not None:
+        argv.extend(["--store", str(ACTIVE_STORE)])
+    argv.extend([
         "watch",
         "--id", discussion_id,
         "--agent", str(number),
         "--interval", f"{interval:g}",
         "--timeout", f"{timeout:g}",
-    ]
+    ])
     return " ".join(shlex.quote(part) for part in argv)
 
 
@@ -554,48 +862,86 @@ def watch_sidecar(path: Path, number: int) -> Path:
     the relay file: `watch` must leave the discussion byte-identical (the suite pins this), and
     lock/liveness evidence does not belong inside the artifact it describes — the same reasoning
     as GH-32's r4 lock-audit finding."""
+    if path.name == "conversation.md":
+        runtime = path.parent / "runtime"
+        private_mkdir(runtime)
+        return runtime / f"{agent_id(number)}.watch"
     return path.with_name(f"{path.name}.watch.{agent_id(number)}")
 
 
 def touch_watch_sidecar(path: Path, number: int) -> None:
     marker = watch_sidecar(path, number)
     try:
-        marker.write_text(f"pid={os.getpid()} armed={utc_now()}\n", encoding="utf-8")
+        atomic_write(marker, f"pid={os.getpid()} armed={utc_now()}\n")
     except OSError:
         pass   # liveness reporting is a nicety; it must never break a watch
 
 
-def doorbell_state(path: Path, number: int, interval: float) -> Optional[str]:
+def _age_since(timestamp: str) -> Optional[float]:
+    try:
+        parsed = dt.datetime.fromisoformat(timestamp)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=dt.timezone.utc)
+        return max(0.0, (dt.datetime.now(dt.timezone.utc) - parsed).total_seconds())
+    except (TypeError, ValueError):
+        return None
+
+
+def doorbell_state(
+    path: Path,
+    number: int,
+    stale_after: float,
+    active: bool = False,
+    turn_age: Optional[float] = None,
+) -> Optional[str]:
     """Describe a seat's observed doorbell state, or None when it may be participating manually."""
     marker = watch_sidecar(path, number)
     try:
         age = time.time() - marker.stat().st_mtime
     except OSError:
+        if active:
+            duration = f" for {turn_age:.0f}s" if turn_age is not None else ""
+            return f"ACTIVE — owns NEXT{duration}; heartbeat not observed/manual"
         return None
-    stale = age > max(interval, 1.0) * 2
+    if active:
+        duration = f" for {turn_age:.0f}s" if turn_age is not None else ""
+        return f"ACTIVE — owns NEXT{duration}; heartbeat {age:.0f}s ago"
+    stale = age > stale_after
     suffix = " — STALE, that seat may no longer be listening" if stale else ""
     return f"armed {age:.0f}s ago{suffix}"
 
 
-def peer_doorbell_report(path: Path, number: int, interval: float) -> Optional[str]:
+def peer_doorbell_report(
+    path: Path, content: str, number: int, stale_after: float
+) -> Optional[str]:
     """One advisory peer line, or None when no doorbell has been observed for that seat."""
-    state = doorbell_state(path, number, interval)
+    member = agent_id(number)
+    active = field(content, "STATUS").lower() != "closed" and field(content, "NEXT") == member
+    state = doorbell_state(
+        path,
+        number,
+        stale_after,
+        active=active,
+        turn_age=_age_since(field(content, "UPDATED")) if active else None,
+    )
     return None if state is None else f"peer doorbell ({agent_id(number)}): {state}"
 
 
-def report_peer_doorbells(path: Path, content: str, self_number: int) -> None:
+def report_peer_doorbells(
+    path: Path, content: str, self_number: int, stale_after: float
+) -> None:
     """Print one advisory line per OTHER roster seat that has ever armed a doorbell. Silence about
     a seat means it never armed one — which is normal for a manual participant, so this reports and
     never refuses."""
     for index, _ in enumerate(parse_roster(content), start=1):
         if index == self_number:
             continue
-        line = peer_doorbell_report(path, index, DEFAULT_POLL_INTERVAL)
+        line = peer_doorbell_report(path, content, index, stale_after)
         if line:
             print(line)
 
 
-def report_discussion_status(root: Path, discussion_id: str) -> None:
+def report_discussion_status(root: Path, discussion_id: str, stale_after: float) -> None:
     """Print a seat-agnostic overview without changing the discussion or its sidecars."""
     path = resolve_discussion(root, discussion_id)
     content = read_discussion(path)
@@ -606,11 +952,30 @@ def report_discussion_status(root: Path, discussion_id: str) -> None:
     print(f"STATUS: {field(content, 'STATUS')}")
     print(f"TURN: {field(content, 'TURN')}")
     print(f"NEXT: {field(content, 'NEXT')}")
+    print(f"EXTENSIONS: {optional_field(content, 'EXTENSIONS', '0')}")
     print(f"AGENTS: {' '.join(roster)}")
     print(f"TIMED-WATCH: {'enabled' if timed_watch_enabled(content) else 'disabled'}")
+    next_member = field(content, "NEXT")
+    turn_age = _age_since(field(content, "UPDATED"))
     for number, member in enumerate(roster, start=1):
-        state = doorbell_state(path, number, DEFAULT_POLL_INTERVAL)
+        active = field(content, "STATUS").lower() != "closed" and member == next_member
+        state = doorbell_state(
+            path, number, stale_after, active=active,
+            turn_age=turn_age if active else None,
+        )
         print(f"DOORBELL {member}: {state or 'not observed/manual'}")
+
+
+def ping_discussion(root: Path, discussion_id: str, number: int) -> Path:
+    """Refresh one participant heartbeat without touching the canonical conversation."""
+    path = resolve_discussion(root, discussion_id)
+    content = read_discussion(path)
+    member = validate_member(content, number)
+    if field(content, "STATUS").lower() == "closed":
+        raise Agent2AgentError(f"agent2agent #{discussion_id} is closed")
+    touch_watch_sidecar(path, number)
+    print(f"HEARTBEAT: refreshed {member}")
+    return path
 
 
 def watch_discussion(
@@ -741,6 +1106,7 @@ def drive_discussion(
                     "AGENT2AGENT_MEMBER": member,
                     "AGENT2AGENT_RELAY_FILE": str(current_path),
                     "AGENT2AGENT_ROOT": str(root),
+                    "AGENT2AGENT_HOME": str(ACTIVE_STORE) if ACTIVE_STORE else "",
                     "AGENT2AGENT_SUBJECT": subject,
                 }
             )
@@ -783,6 +1149,84 @@ def load_message(args: argparse.Namespace) -> str:
         raise Agent2AgentError(f"could not read message file {source}: {exc}") from exc
 
 
+def load_named_text(args: argparse.Namespace, name: str) -> str:
+    value = getattr(args, name)
+    if value is not None:
+        return normalize_message(value)
+    source = getattr(args, f"{name}_file")
+    if source == "-":
+        return normalize_message(sys.stdin.read())
+    try:
+        return normalize_message(Path(source).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError) as exc:
+        raise Agent2AgentError(f"could not read {name.replace('_', ' ')} file {source}: {exc}") from exc
+
+
+def validate_structured_close(message: str) -> str:
+    positions = []
+    for index, section in enumerate(CLOSE_SECTIONS):
+        level = "##" if index == 0 else "###"
+        heading = f"{level} {section}"
+        matches = list(re.finditer(rf"(?m)^{re.escape(heading)}[ \t]*$", message))
+        if len(matches) != 1:
+            raise Agent2AgentError(
+                f"structured close must contain exactly one '{heading}' heading; "
+                "use `close --print-template` for the scaffold or `--trivial` for an administrative close"
+            )
+        if index:
+            body = message[matches[0].end():]
+            next_heading = re.search(r"(?m)^#{2,3}[ \t]+", body)
+            body = body[:next_heading.start()] if next_heading else body
+            if not body.strip():
+                raise Agent2AgentError(f"structured close section '{heading}' must not be empty")
+        positions.append(matches[0].start())
+    if positions != sorted(positions):
+        raise Agent2AgentError("structured close headings are out of order")
+    return message
+
+
+def render_scope_extension(question: str, done_condition: str) -> str:
+    return (
+        "## Scope Extension — Operator Follow-Up\n\n"
+        f"### New Question\n\n{question}\n\n"
+        f"### Updated Done Condition\n\n{done_condition}"
+    )
+
+
+def verify_git_handoff(root: Path) -> str:
+    repository = canonical_repository_root(root)
+    if _git_value(repository, "rev-parse", "--is-inside-work-tree") != "true":
+        raise Agent2AgentError("--check-clean requires a Git working tree")
+    try:
+        dirty = subprocess.check_output(
+            ["git", "-C", str(repository), "status", "--porcelain=v1"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise Agent2AgentError(f"could not inspect Git working tree: {exc}") from exc
+    if dirty:
+        first = dirty.splitlines()[0]
+        raise Agent2AgentError(f"--check-clean refused: working tree is not clean ({first})")
+    branch = _git_value(repository, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not branch:
+        raise Agent2AgentError("--check-clean refused: detached HEAD has no upstream handoff target")
+    upstream = _git_value(
+        repository, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"
+    )
+    if not upstream:
+        raise Agent2AgentError(f"--check-clean refused: branch {branch} has no upstream")
+    head = _git_value(repository, "rev-parse", "HEAD")
+    upstream_head = _git_value(repository, "rev-parse", "@{upstream}")
+    if not head or not upstream_head:
+        raise Agent2AgentError("--check-clean could not resolve HEAD and its upstream")
+    if head != upstream_head:
+        raise Agent2AgentError(
+            f"--check-clean refused: HEAD {head[:12]} does not match {upstream} {upstream_head[:12]}"
+        )
+    return f"clean; HEAD {head} matches {upstream}"
+
+
 def append_turn(
     root: Path,
     discussion_id: str,
@@ -790,6 +1234,7 @@ def append_turn(
     message: str,
     next_number: Optional[int],
     close: bool,
+    extension: bool = False,
 ) -> Tuple[Path, int, str, str]:
     path = resolve_discussion(root, discussion_id)
     with DiscussionLock(path):
@@ -824,8 +1269,16 @@ def append_turn(
         updated = replace_field(updated, "STATUS", new_status)
         updated = replace_field(updated, "TURN", str(turn))
         updated = replace_field(updated, "UPDATED", timestamp)
+        if extension:
+            raw_extensions = optional_field(content, "EXTENSIONS", "0")
+            try:
+                extension_count = int(raw_extensions) + 1
+            except ValueError as exc:
+                raise Agent2AgentError(f"discussion has invalid EXTENSIONS: {raw_extensions}") from exc
+            updated = upsert_field(updated, "EXTENSIONS", str(extension_count), "TIMED-WATCH")
         updated = updated.rstrip() + f"\n\n### Turn {turn} — {member} — {timestamp}\n\n{message}\n"
         atomic_write(path, updated)
+        sync_metadata(path, updated)
     return path, turn, next_member, field(updated, "SUBJECT")
 
 
@@ -835,16 +1288,33 @@ def build_parser() -> argparse.ArgumentParser:
         description="Create or advance a serialized XYZ discussion shared by two or more agent sessions.",
     )
     parser.add_argument("--root", help="XYZ harness root; defaults to AGENT2AGENT_ROOT or this skill's repository")
+    parser.add_argument(
+        "--store",
+        help="external Agent2Agent transcript store; defaults to AGENT2AGENT_HOME, user config, or a sibling Agent2Agent-Transcripts directory",
+    )
+    parser.add_argument(
+        "--stale-after", type=positive_interval,
+        help="seconds before an inactive waiting heartbeat is STALE (default: 1800 or AGENT2AGENT_STALE_AFTER)",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
 
     start = commands.add_parser("start", help="create a discussion and seed turn 1 from agent1")
     start.add_argument("--subject", required=True)
+    start.add_argument(
+        "--packet-file", required=True,
+        help="prepared UTF-8 context packet, or - for stdin",
+    )
     start.add_argument("--agents", type=int, default=2, help="participant count (default: 2)")
     start.add_argument(
         "--timed-watch", action="store_true",
         help="include a 2-minute / 30-minute background-watch request in every invitation",
     )
     start.add_argument("--id", dest="explicit_id", help=argparse.SUPPRESS)
+
+    configure = commands.add_parser(
+        "configure-store", help="persist a private user-level default transcript store"
+    )
+    configure.add_argument("--path", required=True, help="external directory to persist as the default")
 
     status = commands.add_parser("status", help="inspect a discussion without taking a participant seat")
     status.add_argument("--id", required=True)
@@ -853,6 +1323,10 @@ def build_parser() -> argparse.ArgumentParser:
     join.add_argument("--id", required=True)
     join.add_argument("--agent", type=int, required=True, help="plain agent number, such as 2")
     join.add_argument("--expect-subject", help="reject a stale or altered invitation subject")
+
+    ping = commands.add_parser("ping", help="refresh this participant's heartbeat without changing the transcript")
+    ping.add_argument("--id", required=True)
+    ping.add_argument("--agent", type=int, required=True)
 
     watch = commands.add_parser("watch", help="wait read-only until this participant owns NEXT")
     watch.add_argument("--id", required=True)
@@ -870,6 +1344,10 @@ def build_parser() -> argparse.ArgumentParser:
     send.add_argument("--id", required=True)
     send.add_argument("--agent", type=int, required=True)
     send.add_argument("--next-agent", type=int, required=True)
+    send.add_argument(
+        "--check-clean", action="store_true",
+        help="require a clean Git tree whose HEAD matches its configured upstream before handoff",
+    )
     send_message = send.add_mutually_exclusive_group(required=True)
     send_message.add_argument("--message")
     send_message.add_argument("--message-file", help="UTF-8 file, or - for stdin")
@@ -877,9 +1355,30 @@ def build_parser() -> argparse.ArgumentParser:
     close = commands.add_parser("close", help="append the caller's final turn and close the discussion")
     close.add_argument("--id", required=True)
     close.add_argument("--agent", type=int, required=True)
-    close_message = close.add_mutually_exclusive_group(required=True)
+    close.add_argument("--trivial", action="store_true", help="allow an unstructured administrative close")
+    close.add_argument("--print-template", action="store_true", help="print the structured close scaffold and write nothing")
+    close.add_argument(
+        "--check-clean", action="store_true",
+        help="require a clean Git tree whose HEAD matches its configured upstream before closing",
+    )
+    close_message = close.add_mutually_exclusive_group(required=False)
     close_message.add_argument("--message")
     close_message.add_argument("--message-file", help="UTF-8 file, or - for stdin")
+
+    extend = commands.add_parser("extend", help="record an operator scope extension and route the next turn")
+    extend.add_argument("--id", required=True)
+    extend.add_argument("--agent", type=int, required=True)
+    extend.add_argument("--next-agent", type=int, required=True)
+    extend.add_argument(
+        "--check-clean", action="store_true",
+        help="require a clean Git tree whose HEAD matches its configured upstream before handoff",
+    )
+    extend_question = extend.add_mutually_exclusive_group(required=True)
+    extend_question.add_argument("--question")
+    extend_question.add_argument("--question-file")
+    extend_done = extend.add_mutually_exclusive_group(required=True)
+    extend_done.add_argument("--done-condition")
+    extend_done.add_argument("--done-condition-file")
 
     drive = commands.add_parser("drive", help="opt in to bounded polling plus a turn command")
     drive.add_argument("--id", required=True)
@@ -901,13 +1400,26 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    global ACTIVE_STORE
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
         root = normalize_root(args.root)
-        if args.command == "start":
+        stale_after = args.stale_after if args.stale_after is not None else stale_after_default()
+        context_packet = load_context_packet(args.packet_file) if args.command == "start" else None
+        requested_store = args.path if args.command == "configure-store" else args.store
+        ACTIVE_STORE = normalize_store(
+            root, requested_store, create=args.command in ("start", "configure-store")
+        )
+        os.environ["AGENT2AGENT_HOME"] = str(ACTIVE_STORE)
+        if args.command == "configure-store":
+            config_path = persist_store_default(ACTIVE_STORE)
+            print(f"Configured Agent2Agent store: {ACTIVE_STORE}")
+            print(f"Config file: {config_path}")
+        elif args.command == "start":
             discussion_id, path = create_discussion(
-                root, args.subject, args.agents, args.explicit_id, args.timed_watch
+                root, args.subject, args.agents, args.explicit_id, args.timed_watch, context_packet,
+                ACTIVE_STORE,
             )
             subject = normalize_subject(args.subject)
             print(f"Created XYZ agent2agent #{discussion_id}")
@@ -915,7 +1427,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             for number in range(2, args.agents + 1):
                 print(invitation(discussion_id, number, subject, args.timed_watch))
         elif args.command == "status":
-            report_discussion_status(root, args.id)
+            report_discussion_status(root, args.id, stale_after)
         elif args.command == "join":
             path, subject, next_member, decision = join_discussion(
                 root, args.id, args.agent, args.expect_subject
@@ -925,30 +1437,66 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"Subject: {subject}")
             print(f"You are: {agent_id(args.agent)}")
             print(f"NEXT: {next_member}")
+            print("CONTEXT: read the prepared packet in Turn 1 before responding")
             if timed_watch_enabled(read_discussion(path)):
                 print("TIMED-WATCH: check every 120 seconds for 1,800 seconds while waiting")
-            report_peer_doorbells(path, read_discussion(path), args.agent)
+            report_peer_doorbells(path, read_discussion(path), args.agent, stale_after)
             print(f"DECISION: {decision}")
+        elif args.command == "ping":
+            path = ping_discussion(root, args.id, args.agent)
+            print(f"Relay file: {path}")
         elif args.command == "watch":
             return watch_discussion(root, args.id, args.agent, args.interval, args.timeout)
         elif args.command == "send":
+            receipt = verify_git_handoff(root) if args.check_clean else None
             path, turn, next_member, subject = append_turn(
                 root, args.id, args.agent, load_message(args), args.next_agent, False
             )
             print(f"Recorded turn {turn}: {path}")
-            report_peer_doorbells(path, read_discussion(path), args.agent)
+            if receipt:
+                print(f"VERIFIED-GIT: {receipt}")
+            report_peer_doorbells(path, read_discussion(path), args.agent, stale_after)
             print(invitation(args.id, args.next_agent, subject, timed_watch_enabled(read_discussion(path))))
         elif args.command == "close":
-            path, turn, _, _ = append_turn(root, args.id, args.agent, load_message(args), None, True)
+            if args.print_template:
+                if args.message is not None or args.message_file is not None or args.trivial:
+                    raise Agent2AgentError("--print-template cannot be combined with a message or --trivial")
+                print(CLOSE_TEMPLATE.rstrip())
+                return 0
+            if args.message is None and args.message_file is None:
+                raise Agent2AgentError("close requires --message/--message-file or --print-template")
+            message = load_message(args)
+            if not args.trivial:
+                validate_structured_close(message)
+            receipt = verify_git_handoff(root) if args.check_clean else None
+            path, turn, _, _ = append_turn(root, args.id, args.agent, message, None, True)
             print(f"Closed XYZ agent2agent #{args.id} at turn {turn}")
             print(f"Relay file: {path}")
-        else:
+            if receipt:
+                print(f"VERIFIED-GIT: {receipt}")
+        elif args.command == "extend":
+            receipt = verify_git_handoff(root) if args.check_clean else None
+            message = render_scope_extension(
+                load_named_text(args, "question"),
+                load_named_text(args, "done_condition"),
+            )
+            path, turn, _, subject = append_turn(
+                root, args.id, args.agent, message, args.next_agent, False, extension=True
+            )
+            print(f"Recorded scope extension {optional_field(read_discussion(path), 'EXTENSIONS', '0')} at turn {turn}: {path}")
+            if receipt:
+                print(f"VERIFIED-GIT: {receipt}")
+            report_peer_doorbells(path, read_discussion(path), args.agent, stale_after)
+            print(invitation(args.id, args.next_agent, subject, timed_watch_enabled(read_discussion(path))))
+        elif args.command == "drive":
             if args.max_turns < 1:
                 raise Agent2AgentError("--max-turns must be at least one")
             return drive_discussion(
                 root, args.id, args.agent, args.interval, args.timeout,
                 args.max_turns, args.turn_command,
             )
+        else:
+            raise Agent2AgentError(f"unsupported command: {args.command}")
     except KeyboardInterrupt:
         print("agent2agent: interrupted", file=sys.stderr)
         return 130

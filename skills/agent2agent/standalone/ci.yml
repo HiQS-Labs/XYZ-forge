@@ -1,0 +1,26 @@
+name: Verify standalone distribution
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check recorded canonical revision and byte parity
+        shell: bash
+        run: |
+          revision="$(sed -n '1p' .xyz-canonical-revision)"
+          git clone --filter=blob:none https://github.com/HiQS-Labs/XYZ-forge.git "$RUNNER_TEMP/XYZ-forge"
+          git -C "$RUNNER_TEMP/XYZ-forge" fetch --depth=1 origin "$revision"
+          git -C "$RUNNER_TEMP/XYZ-forge" checkout --detach "$revision"
+          AGENT2AGENT_STANDALONE_REPO="$GITHUB_WORKSPACE" \
+            bash "$RUNNER_TEMP/XYZ-forge/skills/agent2agent/sync-to-standalone.sh" --check
+      - name: Run standalone smoke suite
+        run: bash skills/agent2agent/test-standalone.sh

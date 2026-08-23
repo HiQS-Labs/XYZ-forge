@@ -38,6 +38,25 @@ mtime_ns() { python3 -c 'import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns)
 echo "agent2agent (GH-497/GH-510/GH-144):"
 ROOT="$WORK/root with spaces"
 mkdir -p "$ROOT"
+STORE="$WORK/Agent2Agent-Transcripts"
+export AGENT2AGENT_HOME="$STORE"
+PACKET="$WORK/context-packet.md"
+cat >"$PACKET" <<'PACKET'
+## Goal
+Exercise the canonical Agent2Agent protocol.
+## Scope
+The local test fixture is in scope; external systems are out of scope.
+## Context and current state
+The test creates a fresh discussion and advances serialized turns.
+## Evidence and artifacts
+The generated conversation and runtime files are the evidence.
+## Constraints and safety boundaries
+Only paths below the temporary test root may be changed.
+## Questions for participants
+Does each protocol operation preserve its stated invariants?
+## Requested outcome / done condition
+All assertions pass and the discussion closes cleanly.
+PACKET
 
 python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text(), feature_version=(3, 8))' "$CLI" \
   && pass "helper parses with the repository's Python 3.8 floor" \
@@ -47,9 +66,9 @@ grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
 helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
-[ "$helper_examples" -eq 9 ] \
+[ "$helper_examples" -eq 13 ] \
   && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 9 root-resolved helper commands, found $helper_examples"
+  || fail "expected 13 root-resolved helper commands, found $helper_examples"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
@@ -60,7 +79,7 @@ expect_file_contains "skill documents safe lock-contention recovery" "$SKILL" \
 
 # The start output is the copy/paste API. Turn 1 is durable before agent2 is invited.
 start_out="$(AGENT2AGENT_ID_SEQUENCE=123456 python3 "$CLI" --root "$ROOT" start \
-  --subject "subject line here" --agents 4 2>&1)"
+  --subject "subject line here" --packet-file "$PACKET" --agents 4 2>&1)"
 start_rc=$?
 [ "$start_rc" -eq 0 ] && pass "starts a four-agent discussion" || fail "start exits $start_rc: $start_out"
 expected_invitation='Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"'
@@ -73,15 +92,15 @@ expect_contains "prints an upfront agent4 invitation" "$start_out" \
   && pass "four-agent start prints exactly three non-initiator invitations" \
   || fail "four-agent start did not print exactly three invitations: $start_out"
 
-relay_file="$(find "$ROOT/relay-system" -type f -name '123456-*.md' -print)"
-[ -f "$relay_file" ] && pass "creates a dated relay file under a spaced root" || fail "relay file missing"
-case "$relay_file" in "$ROOT"/relay-system/????-??-??/123456-agent2agent-*.md) pass "uses dated relay storage" ;; *) fail "unexpected relay path: $relay_file" ;; esac
+relay_file="$(find "$STORE/repositories" -path '*/????-??-??/123456--*/conversation.md' -print)"
+[ -f "$relay_file" ] && pass "creates an external canonical conversation for a spaced root" || fail "conversation missing"
+case "$relay_file" in "$STORE"/repositories/*/????-??-??/123456--*/conversation.md) pass "uses the external session store" ;; *) fail "unexpected conversation path: $relay_file" ;; esac
 expect_file_contains "records stable 4-agent roster" "$relay_file" "AGENTS: agent1 agent2 agent3 agent4"
 expect_file_contains "routes the opening turn to agent2" "$relay_file" "NEXT: agent2"
 expect_file_contains "defaults timed watch to disabled" "$relay_file" "TIMED-WATCH: disabled"
 
 # GH-144: every non-initiator can onboard immediately. Off-turn joins and the operator status view
-# are strictly read-only; neither is allowed to create a watch sidecar or writer lock.
+# are strictly read-only; neither is allowed to create a watch sidecar or mutate the conversation.
 before_early_join="$(fingerprint "$relay_file")"
 early_join3="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 3 2>&1)"
 early_join4="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 4 2>&1)"
@@ -107,14 +126,14 @@ expect_contains "status distinguishes an unobserved/manual seat" "$status_out" \
 [ "$before_status" = "$(fingerprint "$relay_file")" ] \
   && pass "status leaves the discussion byte-identical" || fail "status mutated the discussion"
 status_dir="$(dirname "$relay_file")"; status_base="$(basename "$relay_file")"
-if grep -q . <<<"$(find "$status_dir" -maxdepth 1 -name "$status_base.watch.*" -print)" \
-  || [ -e "$status_dir/.$status_base.lock" ]; then
-  fail "status created a doorbell sidecar or writer lock"
+if grep -q . <<<"$(find "$status_dir/runtime" -maxdepth 1 -name '*.watch' -print 2>/dev/null)"; then
+  fail "status created a doorbell sidecar"
 else
-  pass "status creates no doorbell sidecar or writer lock"
+  pass "status creates no doorbell sidecar"
 fi
 
-timed_start="$(python3 "$CLI" --root "$ROOT" start --id 654321 --subject "timed watch" --timed-watch 2>&1)"
+timed_start="$(python3 "$CLI" --root "$ROOT" start --id 654321 --subject "timed watch" \
+  --packet-file "$PACKET" --timed-watch 2>&1)"
 [ "$?" -eq 0 ] && pass "starts a timed-watch discussion" || fail "timed start failed: $timed_start"
 expect_contains "timed invitation tells the target to start its watch" "$timed_start" \
   "Timed two-minute doorbell requested: when waiting, start a background watch that checks every 120 seconds for 1,800 seconds."
@@ -159,11 +178,12 @@ rearm_rc=$?
   || fail "REARM command exits $rearm_rc: $rearm_out"
 [ "$before_watch" = "$(fingerprint "$relay_file")" ] \
   && pass "watch leaves the discussion byte-identical" || fail "watch mutated the discussion"
-agent2_sidecar="$relay_file.watch.agent2"
+agent2_sidecar="$(dirname "$relay_file")/runtime/agent2.watch"
 before_status_sidecar="$(fingerprint "$agent2_sidecar")"
 before_status_sidecar_mtime="$(mtime_ns "$agent2_sidecar")"
 observed_status="$(python3 "$CLI" --root "$ROOT" status --id 123456 2>&1)"
-expect_contains "status reports an observed armed doorbell" "$observed_status" "DOORBELL agent2: armed"
+expect_contains "status reports the active owner's observed heartbeat" "$observed_status" \
+  "DOORBELL agent2: ACTIVE — owns NEXT"
 [ "$before_status_sidecar" = "$(fingerprint "$agent2_sidecar")" ] \
   && pass "status leaves an observed sidecar byte-identical" || fail "status mutated a sidecar"
 [ "$before_status_sidecar_mtime" = "$(mtime_ns "$agent2_sidecar")" ] \
@@ -171,9 +191,9 @@ expect_contains "status reports an observed armed doorbell" "$observed_status" "
   || fail "status refreshed an observed sidecar"
 python3 -c 'import os, sys; os.utime(sys.argv[1], (0, 0))' "$agent2_sidecar"
 stale_status="$(python3 "$CLI" --root "$ROOT" status --id 123456 2>&1)"
-expect_contains "status reports a stale doorbell explicitly" "$stale_status" \
-  "DOORBELL agent2: armed"
-expect_contains "stale status remains advisory" "$stale_status" "STALE, that seat may no longer be listening"
+expect_contains "status still reports an aged active heartbeat" "$stale_status" \
+  "DOORBELL agent2: ACTIVE — owns NEXT"
+expect_contains "active owner is not falsely stale" "$stale_status" "ACTIVE — owns NEXT"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 5 >/dev/null 2>&1 \
   && fail "rejects an agent outside the roster" || pass "rejects an agent outside the roster"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 2 --expect-subject "wrong subject" >/dev/null 2>&1 \
@@ -196,8 +216,8 @@ python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 5 \
 # GH-38: the lock is held by flock, so a merely-EXISTING lock file is not a lock — this holds a real
 # one from a background process, which is the only thing that can now refuse a writer.
 before_lock="$(fingerprint "$relay_file")"
-lock_dir="$(dirname "$relay_file")"; lock_base="$(basename "$relay_file")"
-python3 - "$lock_dir/.$lock_base.lock" <<'PYEOF' &
+lock_dir="$(dirname "$relay_file")/runtime"; lock_file="$lock_dir/discussion.lock"
+python3 - "$lock_file" <<'PYEOF' &
 import fcntl, sys, time
 fh = open(sys.argv[1], "a+")
 fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
@@ -208,7 +228,7 @@ PYEOF
 LOCK_HOLDER=$!
 # Wait for the holder to actually own the flock before contending (no fixed sleep).
 for _ in $(seq 1 100); do
-  grep -q "held-since" "$lock_dir/.$lock_base.lock" 2>/dev/null && break
+  grep -q "held-since" "$lock_file" 2>/dev/null && break
   sleep 0.1
 done
 lock_out="$(python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 3 \
@@ -249,7 +269,7 @@ expect_file_contains "preserves multiline turn content" "$relay_file" "Second li
 
 # Close is terminal and every later write is refused without a byte change.
 close_out="$(python3 "$CLI" --root "$ROOT" close --id 123456 --agent 4 \
-  --message "Agent four closes with consensus." 2>&1)"
+  --trivial --message "Agent four closes with consensus." 2>&1)"
 close_rc=$?
 [ "$close_rc" -eq 0 ] && pass "current participant closes the discussion" || fail "close exits $close_rc: $close_out"
 expect_file_contains "marks terminal status" "$relay_file" "STATUS: Closed"
@@ -280,13 +300,15 @@ python3 "$CLI" --root "$ROOT" send --id 123456 --agent 1 --next-agent 2 \
 # Deterministic candidate injection proves collision retry without weakening production randomness.
 COLLISION_ROOT="$WORK/collision"
 mkdir -p "$COLLISION_ROOT"
-python3 "$CLI" --root "$COLLISION_ROOT" start --id 223344 --subject "first" >/dev/null 2>&1
+python3 "$CLI" --root "$COLLISION_ROOT" start --id 223344 --subject "first" \
+  --packet-file "$PACKET" >/dev/null 2>&1
 collision_out="$(AGENT2AGENT_ID_SEQUENCE=223344,334455 python3 "$CLI" --root "$COLLISION_ROOT" \
-  start --subject "second" 2>&1)"
+  start --subject "second" --packet-file "$PACKET" 2>&1)"
 collision_rc=$?
 [ "$collision_rc" -eq 0 ] && pass "retries after a six-digit ID collision" || fail "collision retry exits $collision_rc: $collision_out"
 expect_contains "selects the next unused deterministic ID" "$collision_out" "#334455"
-python3 "$CLI" --root "$COLLISION_ROOT" start --id 223344 --subject "duplicate" >/dev/null 2>&1 \
+python3 "$CLI" --root "$COLLISION_ROOT" start --id 223344 --subject "duplicate" \
+  --packet-file "$PACKET" >/dev/null 2>&1 \
   && fail "explicit duplicate ID fails loudly" || pass "explicit duplicate ID fails loudly"
 
 # Discovery distinguishes missing from ambiguous IDs.
@@ -294,8 +316,9 @@ python3 "$CLI" --root "$ROOT" join --id 999999 --agent 1 >/dev/null 2>&1 \
   && fail "missing discussion ID fails" || pass "missing discussion ID fails"
 AMBIG="$WORK/ambiguous"
 mkdir -p "$AMBIG/relay-system/2026-08-10" "$AMBIG/relay-system/2026-08-11"
-python3 "$CLI" --root "$AMBIG" start --id 445566 --subject "ambiguous" >/dev/null 2>&1
-ambig_source="$(find "$AMBIG/relay-system" -type f -name '445566-*.md' -print)"
+python3 "$CLI" --root "$AMBIG" start --id 445566 --subject "ambiguous" \
+  --packet-file "$PACKET" >/dev/null 2>&1
+ambig_source="$(find "$STORE/repositories" -path '*/????-??-??/445566--*/conversation.md' -print)"
 cp "$ambig_source" "$AMBIG/relay-system/2026-08-10/445566-agent2agent-duplicate.md"
 ambig_out="$(python3 "$CLI" --root "$AMBIG" join --id 445566 --agent 2 2>&1)"
 ambig_rc=$?
@@ -306,8 +329,9 @@ expect_contains "ambiguous failure is explicit" "$ambig_out" "is ambiguous"
 # the turn command, which must advance through the same send/close helper.
 DRIVE_ROOT="$WORK/drive"
 mkdir -p "$DRIVE_ROOT"
-python3 "$CLI" --root "$DRIVE_ROOT" start --id 556677 --subject "hands free" --agents 4 >/dev/null 2>&1
-drive_file="$(find "$DRIVE_ROOT/relay-system" -type f -name '556677-*.md' -print)"
+python3 "$CLI" --root "$DRIVE_ROOT" start --id 556677 --subject "hands free" \
+  --packet-file "$PACKET" --agents 4 >/dev/null 2>&1
+drive_file="$(find "$STORE/repositories" -path '*/????-??-??/556677--*/conversation.md' -print)"
 before_drive_wait="$(fingerprint "$drive_file")"
 drive_wait="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 3 \
   --interval 0.05 --timeout 0.15 --max-turns 1 -- /usr/bin/true 2>&1)"
@@ -386,7 +410,7 @@ expect_contains "non-advance failure is explicit" "$no_advance" "without advanci
   && pass "drive itself never bypasses send enforcement" || fail "drive wrote around send enforcement"
 
 python3 "$CLI" --root "$DRIVE_ROOT" close --id 556677 --agent 3 \
-  --message "Close before another driver can dispatch." >/dev/null 2>&1
+  --trivial --message "Close before another driver can dispatch." >/dev/null 2>&1
 closed_drive="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 1 \
   --interval 0.05 --timeout 1 --max-turns 1 -- /usr/bin/false 2>&1)"
 closed_drive_rc=$?
@@ -417,7 +441,7 @@ expect_contains "interrupt is reported visibly" "$interrupt_out" "agent2agent: i
 echo "  -- GH-38 doorbell hardening"
 G38="$WORK/gh38 root"
 mkdir -p "$G38"
-a2a_start() { python3 "$CLI" --root "$G38" start "$@"; }
+a2a_start() { python3 "$CLI" --root "$G38" start --packet-file "$PACKET" "$@"; }
 # Every post-start verb needs --id; fold it in so no call site can forget it.
 a2a() { _v="$1"; shift; python3 "$CLI" --root "$G38" "$_v" --id "$G38_ID" "$@"; }
 # Park NEXT on a named seat regardless of where the previous probe left it. Without this the
@@ -432,7 +456,7 @@ route_to() {
 }
 start_out="$(a2a_start --subject "gh38 hardening" --agents 2 2>&1)"
 G38_ID="$(printf '%s\n' "$start_out" | grep -oE '#[0-9]{6}' | head -1 | tr -d '#')"
-G38_FILE="$(find "$G38/relay-system" -name "$G38_ID-agent2agent-*.md" | head -1)"
+G38_FILE="$(find "$STORE/repositories" -path "*/????-??-??/$G38_ID--*/conversation.md" | head -1)"
 [ -n "$G38_ID" ] && [ -f "$G38_FILE" ] && pass "GH-38 fixture discussion created" \
   || fail "GH-38 fixture: id='$G38_ID' file='$G38_FILE'"
 
@@ -441,7 +465,7 @@ G38_FILE="$(find "$G38/relay-system" -name "$G38_ID-agent2agent-*.md" | head -1)
 # only the local process table, and steal-then-claim raced — two contenders could both unlink and
 # both create, the second unlink deleting the first's fresh lock). So the reproduction is the real
 # crash state: a lock FILE left behind by a process that no longer exists, with no flock held.
-G38_LOCK="$(dirname "$G38_FILE")/.$(basename "$G38_FILE").lock"
+G38_LOCK="$(dirname "$G38_FILE")/runtime/discussion.lock"
 DEAD_PID=999999
 while kill -0 "$DEAD_PID" 2>/dev/null; do DEAD_PID=$((DEAD_PID - 1)); done
 printf 'pid=%s held-since=2020-01-01T00:00:00+00:00\n' "$DEAD_PID" > "$G38_LOCK"
@@ -574,13 +598,14 @@ to_run="$(sh -c "$to_cmd" 2>&1)"; to_run_rc=$?
 route_to 1
 before_sidecar="$(fingerprint "$G38_FILE")"
 a2a watch --agent 1 --interval 0.05 --timeout 0.2 >/dev/null 2>&1
-[ -f "$G38_FILE.watch.agent1" ] && pass "watch records its liveness in a per-agent sidecar" \
+[ -f "$(dirname "$G38_FILE")/runtime/agent1.watch" ] && pass "watch records its liveness in a per-agent sidecar" \
   || fail "no watch sidecar written"
 [ "$before_sidecar" = "$(fingerprint "$G38_FILE")" ] \
   && pass "the sidecar leaves the relay file byte-identical (the watch contract is intact)" \
   || fail "the liveness marker mutated the discussion"
 peer_out="$(a2a join --agent 2 2>&1)"
-expect_contains "the other seat sees the peer's doorbell age" "$peer_out" "peer doorbell (agent1): armed"
+expect_contains "the other seat sees the active peer's heartbeat" "$peer_out" \
+  "peer doorbell (agent1): ACTIVE — owns NEXT"
 
 # agy QA r1 [Blocker]: stamping the sidecar ONCE before the poll loop made any seat waiting longer
 # than 2x its interval read as STALE while it was polling perfectly normally — worst for exactly the
@@ -592,7 +617,7 @@ route_to 2   # agent1 must NOT own the turn, or its watch returns take-turn inst
 # assertion vacuous (1.2s truncates to 1, passing a `<= 1` check either way) — caught by reverting
 # the heartbeat and seeing the suite stay green.
 a2a watch --agent 1 --interval 0.1 --timeout 3 >/dev/null 2>&1      # waits ~30 intervals
-SIDECAR_AGE="$(python3 -c "import os,sys,time; print(int(time.time()-os.stat(sys.argv[1]).st_mtime))" "$G38_FILE.watch.agent1" 2>/dev/null)"
+SIDECAR_AGE="$(python3 -c "import os,sys,time; print(int(time.time()-os.stat(sys.argv[1]).st_mtime))" "$(dirname "$G38_FILE")/runtime/agent1.watch" 2>/dev/null)"
 [ -n "$SIDECAR_AGE" ] && [ "$SIDECAR_AGE" -le 1 ] 2>/dev/null \
   && pass "the doorbell marker refreshes on every poll (a long wait is not reported STALE)" \
   || fail "sidecar went stale during an active wait (age=${SIDECAR_AGE}s) — the r1 false positive"

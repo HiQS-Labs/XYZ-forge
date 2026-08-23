@@ -5,6 +5,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-08-21
 
 ### Added
+- **GH-170: Agent2Agent transcript-state and publishing hardening.** Added structured scope
+  extensions and closure, verified Git handoffs, context-aware heartbeat reporting, the Gen-2
+  external canonical session store and required producer packet, plus an explicit one-way
+  standalone publication manifest with drift, mode, revision, and byte-parity checks. This is a
+  Costly protocol change; rollback is a normal XYZ revert followed by a new downstream sync commit.
 - **GH-153: RELEASES dashboard left sidebar + full-cycle rollup (technical spike).** The one
   shared timeline template (`utils/timeline/RELEASES.html`) gains additive navigation chrome —
   default-ON left sidebar with hamburger slideout, minimize-to-icon-rail, project switcher, a
