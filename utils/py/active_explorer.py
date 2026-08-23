@@ -73,6 +73,9 @@ def generate_env_mutations(base_env: Dict[str, str], max_variants: int = 15) -> 
     """Generate corrupted and mutating environment dictionaries."""
     variants: List[Dict[str, str]] = []
 
+    # 0. Fully empty environment
+    variants.append({})
+
     # 1. Missing keys (prune one key at a time)
     for k in list(base_env.keys()):
         mutated = dict(base_env)
@@ -339,9 +342,14 @@ def main() -> int:
             print("Error: --target-cmd is required for explore mode", file=sys.stderr)
             return 2
         cmd = shlex.split(args.target_cmd)
+        base_env = {
+            "RELAY_AGENT": "tester",
+            "RELAY_FILE": "RELAY.md",
+            "RELAY_TASK": "explore",
+        }
         res = run_exploration_campaign(
             target_cmd=cmd,
-            base_env={},
+            base_env=base_env,
             repo_root=repo_root,
             family=args.family,
             max_rounds=args.rounds,
