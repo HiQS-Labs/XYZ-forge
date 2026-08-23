@@ -18,6 +18,13 @@ related:
 
 # GH-168 — wave_reconcile drift-check scope
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| capture doc + preflight contract written (ready, exit 0); queued as Bulkhead wave 2 (2026-08-22, release 0.7.3 "Bulkhead", #179) | Operator fires the marathon lane per MARATHON-PLAN-2026-08-23.md; builder executes ## Plan, reviewer verifies ## Acceptance |
+
+
 Release 0.7.3 "Bulkhead" manifest member. Radar 2026-08-22:
 RADAR-class-roadmap-ledger-drift — the class recurred same-day (f8ea40a1 "(recurrence)")
 because fixes so far are detection plus hand-deletion; this is the writer-side fix.

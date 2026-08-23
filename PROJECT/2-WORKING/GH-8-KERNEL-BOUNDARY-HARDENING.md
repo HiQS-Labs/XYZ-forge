@@ -18,6 +18,13 @@ related:
 
 # GH-8 — kernel boundary hardening
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| capture doc + preflight contract written (ready, exit 0; acceptance copied verbatim from the issue); queued as Bulkhead wave 1 (2026-08-22, release 0.7.3 "Bulkhead", #179) | Operator fires the marathon lane per MARATHON-PLAN-2026-08-23.md; builder executes ## Plan, reviewer verifies ## Acceptance |
+
+
 Release 0.7.3 "Bulkhead" manifest member. Radar 2026-08-22: data-integrity class.
 
 ## Bug
