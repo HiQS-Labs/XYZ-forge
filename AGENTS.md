@@ -291,6 +291,20 @@ local change.
     licence to write failures off as harness noise; the 2026-08-15 incident cost several full-suite
     runs to a single green control run treated as proof, which is one sample from a nondeterministic
     process.
+  - **An audit that recognizes only one invocation shape stops covering the same operation reached a
+    different way (GH-195).** `marathon-root-audit.sh` exists (GH-401) specifically to catch an
+    unscoped marathon-drive invocation writing into the real clone instead of a fixture — but its
+    detector only matches `bash <driver>.sh`. A test that calls `python3 marathon_drive.py` directly
+    is invisible to it. That exact gap let `test/gh115-round-cap.sh` commit a live transcript onto
+    whichever real clone was running `validate.sh`, every single run, reproduced across 4 separate
+    clones including a brand-new one. **If you add or harden an audit that matches on invocation
+    text, ask what it does NOT match, not just what it does.** Diagnosing this cost ~2.5h chasing
+    plausible-but-wrong external causes (a leftover process, a second concurrent agent, a scheduled
+    job) before a one-shot stack-trace at the actual write call site named the real culprit in one
+    run — when a repeatable artifact exists (here: the per-clone `.tick/attempts/<phase>` fire
+    ledger, timestamp-correlated to each gate run), inspect it directly before building a
+    process-hunting hypothesis chain. Full writeup:
+    [GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md).
 - **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
   for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
   `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping

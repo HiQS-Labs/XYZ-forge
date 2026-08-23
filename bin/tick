@@ -59,13 +59,20 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith('--')) {
-      const key = a.slice(2);
-      const next = argv[i + 1];
-      if (next === undefined || next.startsWith('--')) {
-        flags[key] = true;
+      const eqIdx = a.indexOf('=');
+      if (eqIdx >= 0) {
+        const key = a.slice(2, eqIdx);
+        const val = a.slice(eqIdx + 1);
+        flags[key] = val;
       } else {
-        flags[key] = next;
-        i++;
+        const key = a.slice(2);
+        const next = argv[i + 1];
+        if (next === undefined || next.startsWith('--')) {
+          flags[key] = true;
+        } else {
+          flags[key] = next;
+          i++;
+        }
       }
     } else {
       positional.push(a);
@@ -139,8 +146,8 @@ function main(argv) {
         paths: flags.paths ? parsePathsFlag(flags.paths) : undefined,
         to_agent: typeof flags.to === 'string' ? flags.to : undefined,
         reason: typeof flags.reason === 'string' ? flags.reason : undefined,
-        priority: flags.priority !== undefined ? Number(flags.priority) : undefined,
-        epoch: flags.epoch !== undefined ? Number(flags.epoch) : undefined,
+        priority: flags.priority !== undefined ? (flags.priority === true || String(flags.priority).trim() === '' ? flags.priority : (Number.isNaN(Number(flags.priority)) ? flags.priority : Number(flags.priority))) : undefined,
+        epoch: flags.epoch !== undefined ? (flags.epoch === true || String(flags.epoch).trim() === '' ? flags.epoch : (Number.isNaN(Number(flags.epoch)) ? flags.epoch : Number(flags.epoch))) : undefined,
       });
       process.stdout.write(`${path.relative(root, p)}\n`);
       return 0;

@@ -41,8 +41,9 @@ while the four axes keep their honest values underneath.
 | 29 | **190** | [GH-61](https://github.com/HiQS-Suite/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
 | 30 | **185** | [GH-17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
 | 31 | **185** | [GH-42](https://github.com/HiQS-Suite/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Completed | 50 | 35 | 55 | 45 | 185 | — |
-| 32 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
-| 33 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
+| 32 | **170** | GH-195 — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
+| 33 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
+| 34 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
 
 **Top of the line:** GH-67 — Commandcode builder default widened to `--yolo` — closer evaluation → possible build (score 340, operator override).
 
