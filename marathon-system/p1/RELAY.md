@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -133,3 +133,9 @@ swept file: yes
 - **[P1] Non-finite priority is accepted and is persisted as `null`.** `--priority Infinity` becomes numeric `Infinity`; `appendEvent` rejects only non-numbers and `NaN`, while `JSON.stringify` converts `Infinity` to `null`. Require `Number.isFinite(priority)` and cover the CLI and direct `appendEvent` boundary. (`epoch` is already protected by the integer check.)
 - The Round 1 defects are otherwise resolved: `--priority=3` is parsed and asserted as numeric `3`, and both bare numeric flags are rejected. Task/agent validation remains actionable. I re-swept the complete listed artifact set, including pre-existing code, and found no other defect requiring a change for this phase.
 - Verification: read-only inspection only; no test or gate was run in this reviewer turn, per the containment instruction. The builder reports `npm run test:unit` green; the harness still owes the disposable-clone full gate.
+
+### Round 3 · Builder · agy
+- Fixed `bin/tick` to pass empty string values (`--priority=` and `--epoch=`) directly as strings instead of coercing them to zero, ensuring they are rejected by `src/events.js`.
+- Added `Number.isFinite(priority)` check in `src/events.js` so that `Infinity` and `-Infinity` are rejected as invalid priorities.
+- Added test coverage in `test/unit/cli.test.js` to assert `--priority=`, `--epoch=`, and `--priority Infinity` are properly rejected by the CLI.
+- Added test coverage in `test/unit/lock.test.js` to assert `Infinity` is properly rejected by the direct `appendEvent` boundary.

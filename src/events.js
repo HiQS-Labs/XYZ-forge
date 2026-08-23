@@ -133,8 +133,8 @@ function appendEvent(repoRoot, {
   }
 
   if (priority !== undefined) {
-    if (typeof priority !== 'number' || Number.isNaN(priority)) {
-      throw new Error(`invalid priority: "${priority}" (must be a number)`);
+    if (typeof priority !== 'number' || !Number.isFinite(priority)) {
+      throw new Error(`invalid priority: "${priority}" (must be a finite number)`);
     }
   }
   if (epoch !== undefined) {

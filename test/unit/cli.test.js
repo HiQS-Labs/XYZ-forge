@@ -44,6 +44,21 @@ test('cli priority and epoch bounds checking', () => {
       execFileSync(TICK_BIN, ['log', 'task.created', 'T2.7', '--agent', 'A', '--epoch'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
     }, /invalid epoch: "true"/);
 
+    // empty --priority= (reject)
+    assert.throws(() => {
+      execFileSync(TICK_BIN, ['log', 'task.created', 'T2.8', '--agent', 'A', '--priority='], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
+    }, /invalid priority: ""/);
+
+    // empty --epoch= (reject)
+    assert.throws(() => {
+      execFileSync(TICK_BIN, ['log', 'task.created', 'T2.9', '--agent', 'A', '--epoch='], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
+    }, /invalid epoch: ""/);
+
+    // --priority Infinity (reject)
+    assert.throws(() => {
+      execFileSync(TICK_BIN, ['log', 'task.created', 'T2.10', '--agent', 'A', '--priority', 'Infinity'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
+    }, /invalid priority: "Infinity"/);
+
     // --priority=3 (accept)
     execFileSync(TICK_BIN, ['log', 'task.created', 'T3', '--agent', 'A', '--priority=3'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root } });
 

@@ -34,6 +34,10 @@ test('lock rejects malformed task/agent at write time', () => {
     }, /invalid priority: "NaN"/);
 
     assert.throws(() => {
+      appendEvent(root, { type: 'task.created', task: 'T2', agent: 'B', priority: Infinity });
+    }, /invalid priority: "Infinity"/);
+
+    assert.throws(() => {
       appendEvent(root, { type: 'task.created', task: 'T2', agent: 'B', epoch: -1 });
     }, /invalid epoch: "-1"/);
 

@@ -146,8 +146,8 @@ function main(argv) {
         paths: flags.paths ? parsePathsFlag(flags.paths) : undefined,
         to_agent: typeof flags.to === 'string' ? flags.to : undefined,
         reason: typeof flags.reason === 'string' ? flags.reason : undefined,
-        priority: flags.priority !== undefined ? (flags.priority === true ? true : (Number.isNaN(Number(flags.priority)) ? flags.priority : Number(flags.priority))) : undefined,
-        epoch: flags.epoch !== undefined ? (flags.epoch === true ? true : (Number.isNaN(Number(flags.epoch)) ? flags.epoch : Number(flags.epoch))) : undefined,
+        priority: flags.priority !== undefined ? (flags.priority === true || String(flags.priority).trim() === '' ? flags.priority : (Number.isNaN(Number(flags.priority)) ? flags.priority : Number(flags.priority))) : undefined,
+        epoch: flags.epoch !== undefined ? (flags.epoch === true || String(flags.epoch).trim() === '' ? flags.epoch : (Number.isNaN(Number(flags.epoch)) ? flags.epoch : Number(flags.epoch))) : undefined,
       });
       process.stdout.write(`${path.relative(root, p)}\n`);
       return 0;
