@@ -34,8 +34,18 @@ test('cli priority and epoch bounds checking', () => {
       execFileSync(TICK_BIN, ['log', 'task.created', 'T2.5', '--agent', 'A', '--epoch', '1.5'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
     }, /invalid epoch: "1.5"/);
 
-    // --priority 3 (accept)
-    execFileSync(TICK_BIN, ['log', 'task.created', 'T3', '--agent', 'A', '--priority', '3'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root } });
+    // bare --priority (reject)
+    assert.throws(() => {
+      execFileSync(TICK_BIN, ['log', 'task.created', 'T2.6', '--agent', 'A', '--priority'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
+    }, /invalid priority: "true"/);
+
+    // bare --epoch (reject)
+    assert.throws(() => {
+      execFileSync(TICK_BIN, ['log', 'task.created', 'T2.7', '--agent', 'A', '--epoch'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root }, stdio: 'pipe' });
+    }, /invalid epoch: "true"/);
+
+    // --priority=3 (accept)
+    execFileSync(TICK_BIN, ['log', 'task.created', 'T3', '--agent', 'A', '--priority=3'], { cwd: root, env: { ...process.env, TICK_REPO_ROOT: root } });
 
     // verify it wrote T3
     const events = require('../../src/events').readAllEvents(root);

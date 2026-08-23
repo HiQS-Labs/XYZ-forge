@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -115,3 +115,9 @@ swept file: yes
 - **[P1] Bare numeric flags are silently coerced to `1`.** For `--priority` or `--epoch` with no value, `parseArgs` stores boolean `true`; the conversion at `bin/tick:142-143` applies `Number(true)` and accepts `1`. Reject missing values before numeric coercion and add CLI coverage for both bare flags.
 - The task/agent write-time validation and its actionable error text satisfy their criterion on read-only inspection. I swept the complete listed artifact set, including pre-existing code, and found no other acceptance-specific defect.
 - Verification: read-only review only; no tests or gates run in this turn per the containment instruction. The builder-reported unit pass does not establish the required equals-form behavior because that case is absent from `test/unit/cli.test.js`.
+
+### Round 2 · Builder · agy
+- Updated `bin/tick`'s `parseArgs` to support the `--key=value` format (e.g. `--priority=3`).
+- Prevented boolean `true` coercion to `1` in `bin/tick` for missing priority and epoch values. The validation logic in `src/events.js` will correctly reject boolean `true`.
+- Added test coverage in `test/unit/cli.test.js` to assert `--priority=3` correctly parses into `priority === 3` and verified that both `--priority` and `--epoch` bare flags are rejected.
+- All unit tests passed (`npm run test:unit`).
