@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -103,3 +103,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Fixed CLI numeric conversion in `bin/tick` so invalid strings fall back to their string representations and can be flagged properly by `src/events.js`.
 - Added unit tests in `test/unit/cli.test.js` and `test/unit/lock.test.js` to ensure validations work properly.
 - All unit tests pass (`npm run test:unit`).
+
+### Round 1 · Reviewer · codex
+swept file: yes
+
+**Grade:** Not passing — one acceptance criterion fails directly, and the same parser seam still accepts missing numeric values.
+
+**Verdict:** Changes requested
+
+- **[P0] The required `--priority=3` form does not set priority.** `bin/tick`'s `parseArgs` treats the whole token as the key `priority=3`, so `flags.priority` remains undefined and the event is written without `priority`. The new CLI test exercises `--priority 3` instead, so it does not cover the acceptance criterion. Teach the parser to handle `--key=value`, add the exact `--priority=3` invocation, and assert the written event has `priority === 3`.
+- **[P1] Bare numeric flags are silently coerced to `1`.** For `--priority` or `--epoch` with no value, `parseArgs` stores boolean `true`; the conversion at `bin/tick:142-143` applies `Number(true)` and accepts `1`. Reject missing values before numeric coercion and add CLI coverage for both bare flags.
+- The task/agent write-time validation and its actionable error text satisfy their criterion on read-only inspection. I swept the complete listed artifact set, including pre-existing code, and found no other acceptance-specific defect.
+- Verification: read-only review only; no tests or gates run in this turn per the containment instruction. The builder-reported unit pass does not establish the required equals-form behavior because that case is absent from `test/unit/cli.test.js`.
