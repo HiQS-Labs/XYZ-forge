@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Approved
+STATUS: Open
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -139,16 +139,3 @@ swept file: yes
 - Added `Number.isFinite(priority)` check in `src/events.js` so that `Infinity` and `-Infinity` are rejected as invalid priorities.
 - Added test coverage in `test/unit/cli.test.js` to assert `--priority=`, `--epoch=`, and `--priority Infinity` are properly rejected by the CLI.
 - Added test coverage in `test/unit/lock.test.js` to assert `Infinity` is properly rejected by the direct `appendEvent` boundary.
-
-### Round 3 · Reviewer · codex
-swept file: yes
-
-**Grade:** Passing on read-only review — the requested numeric-boundary fixes are correct and the acceptance-specific unit coverage is present.
-
-**Verdict:** Approved
-
-- `bin/tick` now preserves bare and empty numeric flag values for centralized rejection, supports the exact `--priority=3` form, and converts valid numeric input without converting malformed input into an accepted sentinel.
-- `src/events.js` rejects non-number and non-finite priorities and rejects negative, fractional, and otherwise non-integer epochs before creating the events directory or serializing an event. Task and agent format failures remain actionable at the same write boundary.
-- The CLI suite covers the three verbatim numeric acceptance cases plus bare flags, empty equals-values, fractional epoch, and infinite priority; the direct lock/event suite covers malformed task/agent values and the numeric write-boundary guards.
-- I re-swept the complete listed artifact set, including pre-existing code, and found no other defect requiring a change for this phase. The informational cross-agent drift in `src/events.js` is the expected four-line Round 3 fix and does not invalidate the review.
-- Verification: read-only inspection only; no test or gate was run in this reviewer turn per the containment instruction. The builder reports `npm run test:unit` green; the harness still owes and will run the disposable-clone full gate after this approval.
