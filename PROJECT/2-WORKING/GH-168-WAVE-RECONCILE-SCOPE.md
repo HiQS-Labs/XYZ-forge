@@ -51,8 +51,10 @@ PR-specific work was correct. Reproduced 2/2 on real merges (`--pr 162`, `--pr 1
 
 ## Acceptance
 
-Both real repro commands (`--pr 162`, `--pr 160` shapes) succeed with warnings on a drifted
-ledger; PR-attributable drift still rolls back; gh168 suite green and registered.
+- [ ] Both real repro shapes (`--pr 162`, `--pr 160`) succeed with a warning on pre-existing unrelated drift instead of rolling back.
+- [ ] Drift attributable to the reconciled PR's own items still fails and rolls back, unchanged.
+- [ ] Running reconcile twice on the same PR is a no-op (idempotence).
+- [ ] `test/gh168-wave-reconcile-scope.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
 
