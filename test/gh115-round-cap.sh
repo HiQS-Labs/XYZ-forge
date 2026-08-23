@@ -145,9 +145,9 @@ chmod +x "$STUB5"
 
 export STUB_PROGRESS="no"
 export STUB_APPROVE_AT="99"
-export MARATHON_ROOT="$ROOT"
+export MARATHON_ROOT="$A"  # GH-115 self-fix: was $ROOT (the real repo), landing this test's commit on the live clone
 export MARATHON_AGENT_CMD="$STUB5"
-out="$(python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief.md" --reviewer codex --builder agy --phase-id p1 --relay-task TASK6 --phases-dir "$A/phases" --round-cap 1 --force 2>&1)"
+out="$(python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief.md" --reviewer codex --builder agy --phase-id p1 --relay-task TASK6 --phases-dir "$A/phases" --round-cap 1 --force --pre-advance-cmd true 2>&1)"
 rc=$?
 
 if [ "$rc" -eq 4 ]; then
