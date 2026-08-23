@@ -21,7 +21,7 @@ Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 15 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -32,6 +32,11 @@ Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-8 · kernel boundary hardening — CLI numeric validation, task/agent format contract | — | [GH-8-KERNEL-BOUNDARY-HARDENING.md](PROJECT/2-WORKING/GH-8-KERNEL-BOUNDARY-HARDENING.md) · [#8](https://github.com/HiQS-Suite/XYZ-forge/issues/8) |
 | GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | — | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) |
 | GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | — | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) |
+| GH-180 · repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | — | [GH-180-REPRO-TIMEOUT-CRASH.md](PROJECT/2-WORKING/GH-180-REPRO-TIMEOUT-CRASH.md) · [#180](https://github.com/HiQS-Labs/XYZ-forge/issues/180) |
+| GH-181 · repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2) | — | [GH-181-REPRO-ADAPTER-FIDELITY.md](PROJECT/2-WORKING/GH-181-REPRO-ADAPTER-FIDELITY.md) · [#181](https://github.com/HiQS-Labs/XYZ-forge/issues/181) |
+| GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
+| GH-183 · active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | — | [GH-183-EXPLORER-ENV-SOUNDNESS.md](PROJECT/2-WORKING/GH-183-EXPLORER-ENV-SOUNDNESS.md) · [#183](https://github.com/HiQS-Labs/XYZ-forge/issues/183) |
+| GH-184 · committed scratch artifact .relay-scratch/probe_telemetry.json makes every real turn a tracked-file mutation | — | [GH-184-TRACKED-SCRATCH-ARTIFACT.md](PROJECT/2-WORKING/GH-184-TRACKED-SCRATCH-ARTIFACT.md) · [#184](https://github.com/HiQS-Labs/XYZ-forge/issues/184) |
 | GH-174 · Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | — | [GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md](PROJECT/2-WORKING/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md) · [#174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |

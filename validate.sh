@@ -243,6 +243,10 @@ TESTS=(
   "gh155-phase4-self-healer.sh"         # #155 Phase 4 (Gated Autonomous Self-Healing Builder Loop)
   "gh155-phase5-active-explorer.sh"     # #155 Phase 5 (4-Family Generative Active Explorer Agent)
   "gh174-harness-registry.sh"           # #174 (Harness & Models SQLite Registry with Per-Device Config, Reasoning Levels, Grading Hooks & Blog Gen)
+  "gh180-repro-timeout-crash.sh"        # #180 (repro_builder ingests null-exit timeout telemetry without crashing; no fabricated timeout repros)
+  "gh181-repro-adapter-fidelity.sh"     # #181 (telemetry->reproducer fidelity: spaced-path tokenization, signature matching, live-record E2E)
+  "gh183-explorer-env-soundness.sh"     # #183 (explorer env mutations from a declared base over a clean env; ambient runner vars cannot satisfy them)
+  "gh184-no-tracked-scratch.sh"         # #184 (derived guard: nothing under the disposable .relay-scratch/ lane is ever tracked)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"

@@ -1,0 +1,2 @@
+agy-turn: NOTE — agy auth is unverifiable headless (expected, probe exited 2 on a usage error); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: tester turn produced no tracked changes (token-only move?)

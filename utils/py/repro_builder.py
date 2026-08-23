@@ -17,7 +17,7 @@ import tempfile
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
-def parse_failure_telemetry(raw_data: Any) -> Dict[str, Any]:
+def parse_failure_telemetry(raw_data: Any, repo_root: Optional[str] = None) -> Dict[str, Any]:
     """Parse raw telemetry input (JSON string, dict, or filepath) into normalized failure record."""
     if isinstance(raw_data, str):
         if os.path.exists(raw_data):
@@ -33,6 +33,19 @@ def parse_failure_telemetry(raw_data: Any) -> Dict[str, Any]:
     # Extract command and arguments
     cmd_raw = data.get("cmd") if "cmd" in data else data.get("command", [])
     if isinstance(cmd_raw, str):
+        if repo_root:
+            import re
+            match = re.search(r'(/.*?\.(?:sh|py))(?:\s|$)', cmd_raw)
+            if match:
+                abs_path = match.group(1)
+                parts = abs_path.split('/')
+                for i in range(1, len(parts)):
+                    rel_path = '/'.join(parts[i:])
+                    if not rel_path: continue
+                    full_path = os.path.join(repo_root, rel_path)
+                    if os.path.exists(full_path) and not os.path.isdir(full_path):
+                        cmd_raw = cmd_raw.replace(abs_path, rel_path)
+                        break
         cmd_raw = shlex.split(cmd_raw)
 
     argv_raw = data.get("argv", [])
@@ -43,17 +56,17 @@ def parse_failure_telemetry(raw_data: Any) -> Dict[str, Any]:
 
     env_raw = data.get("env") if "env" in data else data.get("env_overrides", {})
 
-    # Preserve explicit 0 exit codes
-    if "exit_code" in data:
+    # Preserve explicit 0 exit codes, handle null
+    if data.get("exit_code") is not None:
         exit_code = data["exit_code"]
-    elif "actual_exit_code" in data:
+    elif data.get("actual_exit_code") is not None:
         exit_code = data["actual_exit_code"]
-    elif "rc" in data:
+    elif data.get("rc") is not None:
         exit_code = data["rc"]
     else:
-        exit_code = 1
+        exit_code = 124  # timeout or missing
 
-    if "expected_exit_code" in data:
+    if data.get("expected_exit_code") is not None:
         expected_exit_code = data["expected_exit_code"]
     else:
         expected_exit_code = exit_code
@@ -468,7 +481,13 @@ def main() -> int:
         if not args.telemetry:
             print("Error: --telemetry is required for build/minimize mode", file=sys.stderr)
             return 2
-        record = parse_failure_telemetry(args.telemetry)
+        record = parse_failure_telemetry(args.telemetry, repo_root=repo_root)
+
+        # Enforce initial signature match (A10/B2)
+        if not test_reproduction(record["command"], record["env"], repo_root, record["expected_exit_code"], record["err_substring"]):
+            print(f"Error: Initial command failed to reproduce expected signature (rc={record['expected_exit_code']})", file=sys.stderr)
+            return 2
+
         min_env = minimize_environment(
             record["env"],
             record["command"],

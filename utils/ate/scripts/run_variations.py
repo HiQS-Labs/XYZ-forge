@@ -327,6 +327,7 @@ def run_harness(cmd: list[str], repo: str, timeout: int) -> dict:
         stdout, stderr = proc.communicate(timeout=timeout)
         return {
             "command": " ".join(cmd),
+            "cmd": cmd,
             "exit_code": proc.returncode,
             "stdout": stdout[-4000:],
             "stderr": stderr[-4000:],
@@ -338,6 +339,7 @@ def run_harness(cmd: list[str], repo: str, timeout: int) -> dict:
         stdout, stderr = proc.communicate()
         return {
             "command": " ".join(cmd),
+            "cmd": cmd,
             "exit_code": None,
             "stdout": (stdout or "")[-4000:],
             "stderr": (stderr or "")[-4000:],
