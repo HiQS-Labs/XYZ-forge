@@ -124,7 +124,24 @@ function appendEvent(repoRoot, {
     throw new Error(`unknown event type: ${type}`);
   }
   if (!task) throw new Error('task is required');
+  if (typeof task !== 'string' || !/^[A-Za-z0-9._-]+$/.test(task)) {
+    throw new Error(`invalid task format: "${task}" (must be alphanumeric, dash, underscore, or dot)`);
+  }
   if (!agent) throw new Error('agent is required');
+  if (typeof agent !== 'string' || !/^[A-Za-z0-9._-]+$/.test(agent)) {
+    throw new Error(`invalid agent format: "${agent}" (must be alphanumeric, dash, underscore, or dot)`);
+  }
+
+  if (priority !== undefined) {
+    if (typeof priority !== 'number' || Number.isNaN(priority)) {
+      throw new Error(`invalid priority: "${priority}" (must be a number)`);
+    }
+  }
+  if (epoch !== undefined) {
+    if (typeof epoch !== 'number' || Number.isNaN(epoch) || epoch < 0 || !Number.isInteger(epoch)) {
+      throw new Error(`invalid epoch: "${epoch}" (must be a non-negative integer)`);
+    }
+  }
 
   ensureEventsDir(repoRoot);
 

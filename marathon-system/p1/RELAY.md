@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -96,3 +96,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+- Validated `task` and `agent` formats in `src/events.js` (alphanumeric, dashes, underscores, dots) to reject malformed strings.
+- Validated `priority` and `epoch` in `src/events.js` to ensure they are valid numeric and integer boundaries respectively.
+- Fixed CLI numeric conversion in `bin/tick` so invalid strings fall back to their string representations and can be flagged properly by `src/events.js`.
+- Added unit tests in `test/unit/cli.test.js` and `test/unit/lock.test.js` to ensure validations work properly.
+- All unit tests pass (`npm run test:unit`).
