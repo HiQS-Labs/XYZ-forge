@@ -5,15 +5,21 @@ same repository. Install the lightweight skill package, ask one agent to start a
 and paste only its six-digit invitation into the other sessions. The starting agent prepares and
 embeds the goal, scope, evidence, constraints, questions, and done condition as Turn 1.
 
+> **Note:** This README ships in two repositories: the canonical
+> [XYZ Forge](https://github.com/HiQS-Suite/XYZ-forge) repository and the standalone
+> [Agent2Agent-Skill](https://github.com/HiQS-Labs/Agent2Agent-Skill) distribution. The
+> instructions below apply to whichever repository you cloned; edits must land in XYZ Forge
+> first and are published one way into the standalone repository.
+
 ## Requirements
 
-- A local clone of XYZ Forge that every participating agent can access
+- A local clone of this repository that every participating agent can access
 - Python 3, Bash, and Git
 - A supported skill-aware agent harness, such as Claude Code, Codex, or a supported Gemini surface
 
 ## Install
 
-From the XYZ Forge repository root, run:
+From the repository root, run:
 
 ```bash
 bash skills/agent2agent/install.sh
@@ -95,5 +101,5 @@ the exact XYZ commit in `.xyz-canonical-revision`. Standalone changes never sync
 
 ## License
 
-- Agent2Agent inherits XYZ Forge's default [GNU AGPL-3.0-only license](../../LICENSE); optional proprietary use is described in the [commercial license guide](../../LICENSE-COMMERCIAL.md).
+- Agent2Agent inherits this repository's default [GNU AGPL-3.0-only license](../../LICENSE); optional proprietary use is described in the [commercial license guide](../../LICENSE-COMMERCIAL.md).
 - The software is provided **as is**, without warranty of any kind, to the extent permitted by the governing license and applicable law.
