@@ -139,8 +139,18 @@ def execute_with_process_limits(
     timeout: float = 10.0,
     stdin_content: Optional[str] = None,
 ) -> Tuple[int, str, str, bool]:
-    """Execute command under strict process limits; returns (rc, out, err, timed_out)."""
-    clean_env = os.environ.copy()
+    """Execute command under strict process limits; returns (rc, out, err, timed_out).
+
+    Env discipline (GH-183): probes run over a CLEAN base (PATH/HOME/TMPDIR/XYZ_ROOT
+    only) plus the passed env — never os.environ.copy() — so ambient runner vars
+    (RELAY_AGENT & friends) cannot silently satisfy "missing key" mutations.
+    """
+    clean_env = {
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        "HOME": os.environ.get("HOME", "/tmp"),
+        "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
+        "XYZ_ROOT": os.environ.get("XYZ_ROOT", cwd),
+    }
     clean_env.update(env)
 
     timed_out = False
@@ -328,6 +338,10 @@ def main() -> int:
     parser.add_argument("--mode", choices=["suite", "explore"], default="suite", help="Execution mode")
     parser.add_argument("--family", choices=["all", "argv", "env", "path", "process"], default="all", help="Mutation family")
     parser.add_argument("--target-cmd", help="Target command to explore (e.g. 'bash relay-automation/deepseek-turn.sh')")
+    parser.add_argument("--base-env", action="append", default=None,
+                        help="Declared base env as KEY=VAL (repeatable). Replaces the default RELAY base; "
+                             "mutations are derived from this base and run over a CLEAN environment "
+                             "(ambient runner vars cannot satisfy them — GH-183).")
     parser.add_argument("--rounds", type=int, default=10, help="Max exploration rounds")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
 
@@ -342,11 +356,20 @@ def main() -> int:
             print("Error: --target-cmd is required for explore mode", file=sys.stderr)
             return 2
         cmd = shlex.split(args.target_cmd)
-        base_env = {
-            "RELAY_AGENT": "tester",
-            "RELAY_FILE": "RELAY.md",
-            "RELAY_TASK": "explore",
-        }
+        if args.base_env:
+            base_env: Dict[str, str] = {}
+            for pair in args.base_env:
+                if "=" not in pair:
+                    print(f"Error: --base-env expects KEY=VAL, got '{pair}'", file=sys.stderr)
+                    return 2
+                k, v = pair.split("=", 1)
+                base_env[k] = v
+        else:
+            base_env = {
+                "RELAY_AGENT": "tester",
+                "RELAY_FILE": "RELAY.md",
+                "RELAY_TASK": "explore",
+            }
         res = run_exploration_campaign(
             target_cmd=cmd,
             base_env=base_env,
