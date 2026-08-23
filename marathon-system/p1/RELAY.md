@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -121,3 +121,15 @@ swept file: yes
 - Prevented boolean `true` coercion to `1` in `bin/tick` for missing priority and epoch values. The validation logic in `src/events.js` will correctly reject boolean `true`.
 - Added test coverage in `test/unit/cli.test.js` to assert `--priority=3` correctly parses into `priority === 3` and verified that both `--priority` and `--epoch` bare flags are rejected.
 - All unit tests passed (`npm run test:unit`).
+
+### Round 2 · Reviewer · codex
+swept file: yes
+
+**Grade:** Not passing — the required equals form now works, but two malformed numeric inputs still cross the write boundary.
+
+**Verdict:** Changes requested
+
+- **[P1] Empty equals-values are silently accepted as zero.** `parseArgs` returns an empty string for `--priority=` / `--epoch=`, and the `log` conversion uses `Number('')`, producing `0`; both events are therefore written. Treat an empty numeric value as missing/invalid and add exact CLI cases for both forms.
+- **[P1] Non-finite priority is accepted and is persisted as `null`.** `--priority Infinity` becomes numeric `Infinity`; `appendEvent` rejects only non-numbers and `NaN`, while `JSON.stringify` converts `Infinity` to `null`. Require `Number.isFinite(priority)` and cover the CLI and direct `appendEvent` boundary. (`epoch` is already protected by the integer check.)
+- The Round 1 defects are otherwise resolved: `--priority=3` is parsed and asserted as numeric `3`, and both bare numeric flags are rejected. Task/agent validation remains actionable. I re-swept the complete listed artifact set, including pre-existing code, and found no other defect requiring a change for this phase.
+- Verification: read-only inspection only; no test or gate was run in this reviewer turn, per the containment instruction. The builder reports `npm run test:unit` green; the harness still owes the disposable-clone full gate.
