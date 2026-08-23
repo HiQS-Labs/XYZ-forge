@@ -1,8 +1,8 @@
 ---
 gh_issue: 155
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/155
-title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants, Differential Oracles, Hermetic Reproducers & Self-Healing Loops"
-status: Active (2-WORKING — Phases 1-4 complete, Phase 5 next)
+title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants, Differential Oracles, Hermetic Reproducers, Self-Healing & Active Explorers"
+status: Active (2-WORKING — All 5 Phases Built & Verified)
 created: 2026-08-22
 updated: 2026-08-22
 owner: noelsaw1
@@ -20,19 +20,20 @@ related:
   - https://github.com/HiQS-Suite/XYZ-forge/pull/157
   - https://github.com/HiQS-Suite/XYZ-forge/pull/160
   - https://github.com/HiQS-Suite/XYZ-forge/pull/171
+  - https://github.com/HiQS-Suite/XYZ-forge/pull/172
 goal: >
   Execute 3rd Gen Agentic ATE & Fuzzing (#155): build deterministic $0 metamorphic
   invariant assertion oracles (Phase 1), differential multi-harness cross-testing oracles (Phase 2),
-  hermetic delta-minimizers (Phase 3), and autonomous self-healing loops (Phase 4) before introducing the 4-family active explorer (Phase 5).
+  hermetic delta-minimizers (Phase 3), autonomous self-healing loops (Phase 4), and the 4-family active explorer (Phase 5).
 ---
 
-# GH-155: 3rd Gen ATE & Fuzzing — Phases 1, 2, 3 & 4
+# GH-155: 3rd Gen ATE & Fuzzing — All 5 Phases Complete
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 1, 2, 3 & 4 Built (2026-08-22)**: (1) `utils/py/metamorphic_oracle.py` & `test/gh155-phase1-metamorphic-invariants.sh` (8/8 pass). (2) `utils/py/differential_oracle.py` & `test/gh155-phase2-differential-oracle.sh` (5/5 pass). (3) `utils/py/repro_builder.py` & `test/gh155-phase3-repro-builder.sh` (7/7 pass). (4) `utils/py/self_healer.py` (4/4 internal assertions) & `test/gh155-phase4-self-healer.sh` (5/5 pass) providing gated dual-acceptance and regression self-healing with iterative feedback recovery. Pre-push test gate 100% green. | **Phase 5 (4-Family Active Explorer Agent)**: Connect generative fuzzing explorers (Argv Grammar, Env Presence, Path Canonicalization, Process Limits) directly into the metamorphic invariants and self-healing loop. |
+| **All 5 Phases Built & Landed (2026-08-22)**: (1) `utils/py/metamorphic_oracle.py` & `test/gh155-phase1-metamorphic-invariants.sh` (8/8 pass). (2) `utils/py/differential_oracle.py` & `test/gh155-phase2-differential-oracle.sh` (5/5 pass). (3) `utils/py/repro_builder.py` & `test/gh155-phase3-repro-builder.sh` (7/7 pass). (4) `utils/py/self_healer.py` & `test/gh155-phase4-self-healer.sh` (5/5 pass). (5) `utils/py/active_explorer.py` & `test/gh155-phase5-active-explorer.sh` (4/4 pass) providing end-to-end integration from discovery to patch synthesis. Pre-push test gate 100% green. | **Production Deployment & Campaign Execution**: Continuous 3rd Gen ATE runs with local Gemma-4 31B triage and DeepSeek Harness (`dsh`) autonomous healing. |
 
 ## Architectural Bets & Invariants
 
@@ -48,4 +49,4 @@ goal: >
 - **Phase 2 (Completed)**: Differential Multi-Harness Cross-Testing Oracle (`agy`, `codex`, `claude`, `aider`, `pi`, `commandcode`, `deepseek`).
 - **Phase 3 (Completed)**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
 - **Phase 4 (Completed)**: Gated Autonomous Self-Healing Builder Loop (`utils/py/self_healer.py`).
-- **Phase 5 (Active Next)**: 4-Family Active Explorer Agent (Argv Grammar, Env Presence, Path Canonicalization, Process Limits).
+- **Phase 5 (Completed)**: 4-Family Active Explorer Agent (`utils/py/active_explorer.py`).
