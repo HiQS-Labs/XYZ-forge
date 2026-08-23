@@ -97,4 +97,19 @@ ledger those runs serve — has no rollup anywhere.
 
 | What was just completed | What's next |
 |------|------|
-| #153 filed 2026-08-22 (duplicate #154 closed same minute); Phases 1+2 built in a standalone throwaway clone off `development` f1d20f6a; focused suites gh153 40/0, hq-rollup 36/0, gh103 38/0; roadmap sync at generation 73 (which also required removing the pre-existing duplicate GH-135..140 entry that blocked all syncs) | full gate + pdda green on the final tree; branch + PR into `development`; merge is the operator's call |
+| #153 filed 2026-08-22 (duplicate #154 closed same minute); Phases 1+2 built in a standalone throwaway clone off `development` f1d20f6a; focused suites gh153 40/0, hq-rollup 36/0, gh103 38/0; roadmap sync at generation 73 (which also required removing the pre-existing duplicate GH-135..140 entry that blocked all syncs); merged as PR #159 (squash 98375b36) into `development`, conflicts hand-resolved against the post-#160 ledger state (ROADMAP.md union, releases.sql/.db via `utils/releases-merge-resolve.sh`, generated views regenerated from resolved source) | none — shipped |
+
+## Lessons Learned (For Future Agents)
+
+Merging this PR required resolving conflicts on `ROADMAP.md`, `releases.sql`, `releases.db`, and the
+baked views (`LEADERBOARD.*`, `ROADMAP-DASHBOARD.md`, `RELEASES-PREVIEW.html`) against `development`,
+since two other PRs (#162, #160) had already landed and advanced the same shared ledger files. Pattern
+that worked: hand-resolve only `ROADMAP.md` (union of both sides' inserted bullets — same insertion
+point each time) and `releases.sql` (generation counter + `roadmap_items` take `development`'s side
+since `roadmap sync` recomputes them anyway; `op_receipts` union both sides — it's an append-only
+audit log, not a fact in dispute), then run `utils/releases-merge-resolve.sh` to rebuild `releases.db`
+and finally regenerate the baked views from the resolved source rather than hand-merging generated
+HTML/Markdown. CI's ubuntu portability canary showed one non-reproducible failure
+(`test/gh103-timeline-exporter.sh`, "legend flipped") not seen on prior merges and not reproducible
+locally against the identical committed content — treated as ubuntu-only test-suite noise per this
+repo's GH-509 advisory-canary policy, not investigated further; worth a second look if it recurs.
