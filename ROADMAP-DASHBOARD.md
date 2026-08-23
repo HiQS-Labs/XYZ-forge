@@ -25,13 +25,12 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-170 · Agent2Agent transcript glitches + standalone publishing hardening | — | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Labs/XYZ-forge/issues/170) |
 | GH-165 · Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | — | [GH-165-POST-MERGE-WAVE-RECONCILER.md](PROJECT/1-INBOX/GH-165-POST-MERGE-WAVE-RECONCILER.md) · [#165](https://github.com/HiQS-Suite/XYZ-forge/issues/165) |
-| GH-155 · 3rd Gen ATE & Fuzzing — Phases 1, 2 & 3 Metamorphic Invariants, Differential Oracles & Hermetic Reproducers | — | [GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md](PROJECT/2-WORKING/GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md) · [#155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) |
 | GH-153 · RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | [GH-153-RELEASES-SIDEBAR-ROLLUP.md](PROJECT/2-WORKING/GH-153-RELEASES-SIDEBAR-ROLLUP.md) · [#153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) |
 | GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/2-WORKING/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
@@ -43,10 +42,11 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 18 · 🔮 0 · 🔲 0
+Summary: 19 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 19 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-155 · 3rd Gen ATE & Fuzzing | ✅ | [GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md](PROJECT/2-WORKING/GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md) · [#155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) |
 | GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | ✅ | [GH-135-CONSULT-AGY-PREFLIGHT.md](PROJECT/3-COMPLETED/GH-135-CONSULT-AGY-PREFLIGHT.md) · [GH-136-ATTEMPTS-GATE-ROOT.md](PROJECT/3-COMPLETED/GH-136-ATTEMPTS-GATE-ROOT.md) · [GH-137-SUITE-REGISTRATION.md](PROJECT/3-COMPLETED/GH-137-SUITE-REGISTRATION.md) · [GH-138-TWIN-DIVERGENCE-RECORD.md](PROJECT/3-COMPLETED/GH-138-TWIN-DIVERGENCE-RECORD.md) · [GH-139-SIGPIPE-SWEEP-GUARD.md](PROJECT/3-COMPLETED/GH-139-SIGPIPE-SWEEP-GUARD.md) · [GH-140-UTCNOW-DEPRECATION.md](PROJECT/3-COMPLETED/GH-140-UTCNOW-DEPRECATION.md) |
 | #129/#130/#131 · Wave 1 of the Harness Driver & Relay Seam Hardening marathon — three preflighted driver/relay fixes | ✅ | [#129](https://github.com/HiQS-Suite/XYZ-forge/issues/129) · [#130](https://github.com/HiQS-Suite/XYZ-forge/issues/130) · [#131](https://github.com/HiQS-Suite/XYZ-forge/issues/131) |
 | GH-111 · retire manifest FREEZE; tasks and marathons are DIALED IN to exactly one release, as a database state | ✅ | [GH-111-DIALED-IN.md](PROJECT/3-COMPLETED/GH-111-DIALED-IN.md) · [#111](https://github.com/HiQS-Suite/XYZ-forge/issues/111) |
