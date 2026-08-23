@@ -599,7 +599,7 @@ def main():
     parser.add_argument("--phase-brief", dest="phase_brief_file")
     parser.add_argument("--builder", dest="builder", default="codex")  # GH-212: no per-call API charge
     parser.add_argument("--reviewer", dest="reviewer")
-    parser.add_argument("--round-cap", dest="round_cap", type=int, default=5)
+    parser.add_argument("--round-cap", dest="round_cap", type=int, default=None)
     parser.add_argument("--pre-advance-cmd", dest="pre_advance_cmd")
     parser.add_argument("--pre-advance-baseline", dest="pre_advance_baseline", help="allow gate failures matching recorded baseline exit code (GH-378)")
     parser.add_argument("--post-approve-cmd", dest="post_approve_cmd")
@@ -2239,6 +2239,15 @@ relay-file: {rel_relay}
     with open(args.phase_brief_file, "r") as f:
         brief_text = f.read()
 
+    cli_round_cap = args.round_cap
+    if cli_round_cap is None:
+        args.round_cap = 5
+        m = re.search(r'^[ \t]*[-*]?[ \t]*round-cap:[ \t]*(\d+)', brief_text, re.MULTILINE | re.IGNORECASE)
+        if m:
+            args.round_cap = int(m.group(1))
+    else:
+        args.round_cap = cli_round_cap
+
     # GH-162: peek at prior attempts BEFORE rendering so a re-fired phase carries the debug-mantra note.
     debug_mantra_prior = debug_mantra_prior_attempts(get_env("TICK_REPO_ROOT", root), lane_state_key)
     debug_mantra_text = debug_mantra_note(
@@ -2599,6 +2608,12 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     refresh_remote_tracking_ref()
 
     def _run_relay_drive(review_once=False):
+        reason_file = os.path.join(xyz_harness, ".relay-scratch", "escalation-reason")
+        if os.path.isfile(reason_file):
+            try:
+                os.remove(reason_file)
+            except OSError:
+                pass
         cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,
                 "--agent-cmd", agent_cmd]
         if review_once:
@@ -2760,9 +2775,14 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay no-progress")
         sys.exit(3)
     elif relay_exit == 4:
-        log("relay escalated: cap/close-mismatch (relay-drive exit 4)")
-        escalate("cap-or-close-mismatch", 4)
-        xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay cap/close-mismatch")
+        reason = "cap-or-close-mismatch"
+        reason_file = os.path.join(xyz_harness, ".relay-scratch", "escalation-reason")
+        if os.path.isfile(reason_file):
+            with open(reason_file, 'r') as f:
+                reason = f.read().strip()
+        log(f"relay escalated: {reason} (relay-drive exit 4)")
+        escalate(reason, 4)
+        xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay {reason}")
         sys.exit(4)
     elif relay_exit == 5:
         # GH-407: `pre-advance-failed` asserts a specific thing — the gate RAN and found a defect in

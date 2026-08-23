@@ -49,8 +49,9 @@ process blocks instead of failing fast.
 
 ## Acceptance
 
-A headless turn with no controlling TTY never logs the bubbletea TTY error; watchdog kills
-carry an attribution block naming the blocker; gh114 suite green and registered.
+- [ ] A headless turn with no controlling TTY never logs the `bubbletea: could not open TTY` error.
+- [ ] A watchdog idle-kill's log carries an attribution block naming the real blocker (TTY vs. network vs. lock).
+- [ ] `test/gh114-headless-tty.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
 

@@ -47,8 +47,9 @@ away; the visible symptom is only a misleading upstream hint.
 
 ## Acceptance
 
-With `.git/config` unwritable, a guarded `switch --track` refuses with a named error and the
-working tree is byte-identical; gh50 suite green and registered.
+- [ ] With `.git/config` unwritable, a guarded `switch --track` refuses with a named error before any tree mutation.
+- [ ] The working tree is byte-identical to its pre-attempt state after the refusal.
+- [ ] `test/gh50-sandboxed-git-guard.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
 
