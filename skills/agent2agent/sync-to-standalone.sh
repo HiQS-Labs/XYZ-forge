@@ -67,7 +67,7 @@ if ! awk -F '\t' '
 fi
 
 file_mode() {
-  stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"
+  stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
 }
 
 while IFS=$'\t' read -r declared_mode source_rel dest_rel; do
