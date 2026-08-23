@@ -54,8 +54,9 @@ temp file is an off-allowlist change and the guard's only move is revert-and-fai
 
 ## Acceptance
 
-Daybreak-wave-2 repro shape (root `tmp.json` during a builder turn) no longer fails the turn;
-containment still refuses tracked-file edits; gh113 suite green and registered.
+- [ ] Daybreak-wave-2 repro shape (root `tmp.json` written during a builder turn) no longer fails the turn — the file relocates to the sanctioned scratch lane instead.
+- [ ] Containment still refuses an off-lane edit to a tracked file (exit 6 unchanged).
+- [ ] `test/gh113-headless-scratch.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
 

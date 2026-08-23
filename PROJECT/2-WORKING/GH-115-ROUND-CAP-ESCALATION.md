@@ -51,8 +51,9 @@ halting automated execution and requiring manual restart.
 
 ## Acceptance
 
-A converging relay passes its cap without escalation (bounded); a stalled one still exits 4;
-gh115 suite green and registered.
+- [ ] A relay that is converging (new commits or resolved review items each round) passes the round cap with a bounded, recorded extension instead of escalating.
+- [ ] A relay that is stalled at the cap (no progress) still escalates exit 4, unchanged.
+- [ ] `test/gh115-round-cap.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
 
