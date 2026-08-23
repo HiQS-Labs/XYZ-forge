@@ -2,9 +2,9 @@
 gh_issue: 155
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/155
 title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants, Differential Oracles, Hermetic Reproducers, Self-Healing & Active Explorers"
-status: Active (2-WORKING — All 5 Phases Built & Verified)
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-23
 owner: noelsaw1
 doc_type: plan
 effort: 3
@@ -50,3 +50,10 @@ goal: >
 - **Phase 3 (Completed)**: Hermetic Reproducer & Delta Minimization (`utils/py/repro_builder.py`).
 - **Phase 4 (Completed)**: Gated Autonomous Self-Healing Builder Loop (`utils/py/self_healer.py`).
 - **Phase 5 (Completed)**: 4-Family Active Explorer Agent (`utils/py/active_explorer.py`).
+
+## Lessons Learned (For Future Agents)
+
+1. **Deterministic Oracles Ground Everything ($0 Cost):** Building deterministic metamorphic invariant oracles and differential multi-runner oracles upfront creates an un-gameable acceptance floor before invoking LLMs.
+2. **True Hierarchical ddmin Over Linear Scanning:** Naive 1-by-1 argument/environment pruning is $O(n^2)$ and fails to discover multi-element interactions; Zeller's subset/complement granularity scaling ($n = \min(2n, |S|)$) achieves minimal failing vectors with far fewer evaluation steps.
+3. **Hermetic Root Resolution Across CWDs:** Synthesized reproduction test scripts must bake the repository root and explicit `$XYZ_ROOT` fallback while executing with `cd "$ROOT"`, ensuring standalone execution from `/tmp` or disposable sandboxes without ambient CWD sensitivity.
+4. **Use-Boundary Physical Realpath Containment (GH-567):** Never rely solely on lexical path prefix checks; always resolve physical paths with `os.path.realpath` to prevent symlink traversal and `..` escape attacks.

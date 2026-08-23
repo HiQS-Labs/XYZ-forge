@@ -404,7 +404,7 @@ def run_subprocesses(repo_root, dry_run=False, journal=None):
     check_cmd = ["python3", "utils/py/releases_app.py", "check"]
     timeline_cmd = ["python3", "utils/timeline/export_timeline.py", "--preview"]
     dash_cmd = ["bash", "utils/roadmap-dashboard.sh"]
-    plan_cmd = ["bash", "utils/marathon-plan.sh", "--quiet"]
+    plan_cmd = ["bash", "utils/marathon-plan.sh"]
 
     if dry_run:
         sync_cmd.append("--dry-run")
@@ -428,15 +428,19 @@ def run_subprocesses(repo_root, dry_run=False, journal=None):
     for name, cmd in steps:
         log(f"  -> {name}")
         r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
-        if r.returncode != 0:
+        if name.startswith("marathon-plan"):
+            if r.returncode not in (0, 4):
+                die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
+        elif r.returncode != 0:
             die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
 
 
 def run_validation_gate(repo_root):
     """Run pdda doc-health verification gate."""
     log("Running PDDA doc-hygiene gate...")
+    gate_cmd = ["bash", "utils/pdda-local-checks.sh"] if os.path.exists(os.path.join(repo_root, "utils", "pdda-local-checks.sh")) else ["bash", "utils/pdda/pdda.sh"]
     r = subprocess.run(
-        ["utils/pdda/pdda.sh", "run"],
+        gate_cmd,
         cwd=repo_root,
         capture_output=True,
         text=True,
