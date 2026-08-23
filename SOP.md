@@ -17,6 +17,7 @@ This document outlines the standard operating procedure for designing, executing
 - **Verified Beats Plausible (Rule 6 / GH-430):** Any model grading, performance claim, or architecture recommendation must be backed by retained, committed telemetry (`error_log.jsonl` / `*.jsonl`) in `TESTS-RESULTS/`.
 - **Full Clone Isolation (GH-564):** Never run destructive suites, resets, or multi-hour variation runs in the primary working tree or a linked worktree. Always provision a standalone clone (e.g. `../XYZ-forge-<topic>`).
 - **Process Group Containment:** All spawned runners must use process-group session isolation (`setsid`) and PGID-targeted cleanup (`SIGTERM` -> `SIGKILL`) to prevent zombie child processes.
+- **Auto-File Confirmed Defects:** When a campaign, probe, or soak produces a finding with a deterministic reproduction, the agent **files the GitHub bug issue immediately — without waiting to be prompted**. Filing an issue is easily reversible and non-destructive (close it if wrong), so asking permission first adds latency without adding safety. Only ambiguous or attribution-unclear findings get *offered* ("want this filed?") rather than silently held. Every filed issue carries the reproduction command, evidence links, and a fix sketch so it is marathon-ready. First applied 2026-08-23: the Gen 3.5 soak findings (#174/#177) became #180–#184 without prompting.
 
 ---
 
@@ -100,7 +101,7 @@ Supervise the running loop at 5-minute intervals using `checkin.py`:
 python3 utils/ate/scripts/checkin.py --log "$SCRATCH/error_log.jsonl"
 ```
 Monitor failure clusters, category distributions (`auth_failure`, `config_error`, `env_failure`), and throughput. If a valid defect is identified:
-1. File a GitHub tracking issue.
+1. **File a GitHub tracking issue immediately (auto-file — §1; do not wait to be prompted).** Ambiguous findings: offer to file rather than holding them silently.
 2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix and regression test.
 3. If complex, record findings on the issue for architectural planning.
 
