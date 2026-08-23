@@ -1,0 +1,13 @@
+# mode<TAB>canonical source<TAB>standalone destination
+644	LICENSE	LICENSE
+644	LICENSE-COMMERCIAL.md	LICENSE-COMMERCIAL.md
+644	skills/agent2agent/standalone/README.md	README.md
+644	skills/agent2agent/standalone/gitignore	.gitignore
+644	skills/agent2agent/standalone/ci.yml	.github/workflows/ci.yml
+644	skills/agent2agent/README.md	skills/agent2agent/README.md
+644	skills/agent2agent/SKILL.md	skills/agent2agent/SKILL.md
+644	skills/agent2agent/agents/openai.yaml	skills/agent2agent/agents/openai.yaml
+755	skills/agent2agent/install.sh	skills/agent2agent/install.sh
+644	skills/agent2agent/publish-manifest.tsv	skills/agent2agent/publish-manifest.tsv
+755	skills/agent2agent/scripts/agent2agent.py	skills/agent2agent/scripts/agent2agent.py
+755	skills/agent2agent/test-standalone.sh	skills/agent2agent/test-standalone.sh

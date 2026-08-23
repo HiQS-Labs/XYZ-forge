@@ -34,3 +34,4 @@
 # It takes either side of the derived file (it is about to be regenerated anyway), rebuilds from
 # the merged `releases.sql`, and verifies `releases check` comes back clean. See RELEASES-DB-FAQS.md.
 releases.db           -diff linguist-generated=true
+harnesses.db          -diff linguist-generated=true

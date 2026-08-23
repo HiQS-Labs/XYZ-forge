@@ -39,10 +39,12 @@ else
   fail "workflow missing or empty"
 fi
 
-if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*ubuntu-latest[[:space:]]*$' "$WORKFLOW"; then
-  pass "workflow runs on ubuntu-latest"
+# PR #151 moved the advisory canary job to a StarSling Ubuntu runner; either Ubuntu runner
+# label satisfies the "this workflow runs on Ubuntu" invariant this assertion pins.
+if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*(ubuntu-latest|starsling-ubuntu-[0-9.]+(-[0-9]+)?)[[:space:]]*$' "$WORKFLOW"; then
+  pass "workflow runs on an Ubuntu runner (ubuntu-latest or starsling-ubuntu-*)"
 else
-  fail "workflow must declare runs-on: ubuntu-latest"
+  fail "workflow must declare runs-on: ubuntu-latest or starsling-ubuntu-*"
 fi
 
 # GH-544 inverted these assertions while the source repo was private. XYZ-forge #16 restores them
