@@ -489,6 +489,35 @@ def main():
     if self_resolved:
         eprint(f"relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to {tick_repo_root} (#129)")
 
+    def get_head_commit():
+        repo = get_env("RELAY_TARGET_ROOT")
+        if not repo:
+            try:
+                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+            except Exception:
+                repo = root_dir
+        if not repo: repo = root_dir
+        try:
+            return subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+        except Exception:
+            return ""
+
+    def count_resolved_items():
+        try:
+            with open(relay_file, 'r') as f:
+                return sum(1 for line in f if '[x]' in line.lower())
+        except Exception:
+            return 0
+
+    def exit_escalate(reason_str):
+        reason_file = os.path.join(root_dir, ".relay-scratch", "escalation-reason")
+        os.makedirs(os.path.dirname(reason_file), exist_ok=True)
+        with open(reason_file, "w") as f:
+            f.write(reason_str)
+        sys.exit(4)
+
+    original_round_cap = args.round_cap
+    hard_cap = args.round_cap * 2
     round_idx = 0
     while round_idx < args.round_cap:
         s = file_status()
@@ -497,7 +526,7 @@ def main():
         if terminal_status(s):
             if actor:
                 eprint(f"relay-drive: STATUS {s} but {args.relay_task} still live ({tstatus}/{actor}) — close mismatch, escalating")
-                sys.exit(4)
+                exit_escalate("close-mismatch")
             print(f"relay-drive: relay terminated (STATUS: {s}, token done) after {round_idx} turn(s)")
             tick_repo_root = get_env("TICK_REPO_ROOT", root_dir)
             lane_attempt_reset(tick_repo_root, args.relay_task)
@@ -507,7 +536,7 @@ def main():
         if escalated_status(s):
             eprint(f"relay-drive: relay escalated to human by design (STATUS: {s}, token {actor or 'done'}) after {round_idx} turn(s)")
             xyz_relay_emit("orange")
-            sys.exit(4)
+            exit_escalate("human-escalation")
         
         if not actor:
             # #129: "token missing" sent operators to inspect the token when the usual cause is
@@ -525,7 +554,7 @@ def main():
                 eprint(f"relay-drive: {args.relay_task} has no actor (token {tstatus}) but STATUS={s} — escalating")
             if tstatus == "done":
                 eprint(f"  → '{args.relay_task}' is spent from a prior relay; seed + drive with a fresh --relay-task (e.g. RELAY-{os.path.splitext(os.path.basename(relay_file))[0]})")
-            sys.exit(4)
+            exit_escalate("token-state")
 
         preflight_setup_artifact_paths()
 
@@ -537,6 +566,8 @@ def main():
         prev = f"{tstatus}:{actor}"
         rfsig = relay_content_sig()   # GH-245: relay-file content signature BEFORE the turn
         nextp = next_pointer()        # GH-245: NEXT: handoff pointer BEFORE the turn
+        head_before = get_head_commit()
+        resolved_before = count_resolved_items()
         os.environ["RELAY_FILE"] = relay_file
         os.environ["RELAY_TASK"] = args.relay_task
         os.environ["RELAY_AGENT"] = actor
@@ -664,7 +695,7 @@ def main():
                 subprocess.run(["git", "-C", cv_relay_repo, "commit", "-m", f"relay-drive: consult-verify divergence escalation (round {round_idx})"], stderr=subprocess.DEVNULL)
                 
                 eprint(f"relay-drive: relay escalated by consult-verify (STATUS: Escalated) after {round_idx} turn(s)")
-                sys.exit(4)
+                exit_escalate("consult-verify-divergence")
             else:
                 eprint(f"relay-drive: consult-verify AGREED after {actor} turn (taker: {taker_verdict})")
 
@@ -676,7 +707,7 @@ def main():
         if escalated_status(ns):
             eprint(f"relay-drive: relay escalated to human by design (STATUS: {ns}, token {ntstatus}:{nactor}) after {round_idx} turn(s)")
             xyz_relay_emit("orange")
-            sys.exit(4)
+            exit_escalate("human-escalation")
             
         if args.review_once:
             if terminal_status(ns):
@@ -698,6 +729,23 @@ def main():
             eprint(f"relay-drive: no progress after {actor} turn (token still {prev}) — escalating")
             xyz_relay_emit("red")
             sys.exit(3)
+            
+        head_after = get_head_commit()
+        resolved_after = count_resolved_items()
+        
+        made_progress = False
+        if head_after and head_before and head_after != head_before:
+            made_progress = True
+        elif resolved_after > resolved_before:
+            made_progress = True
+
+        if round_idx == args.round_cap and round_idx < hard_cap and made_progress:
+            args.round_cap += 1
+            msg = f"relay-drive: round cap ({args.round_cap - 1}) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap {args.round_cap}"
+            eprint(msg)
+            with open(relay_file, 'a') as f:
+                f.write(f"\n### Extension · System\n{msg}\n")
+
 
     s = file_status()
     tstatus, actor = token_state()
@@ -706,9 +754,10 @@ def main():
         xyz_relay_emit("green")
         sys.exit(0)
         
-    eprint(f"relay-drive: round cap ({args.round_cap}) exceeded (STATUS: {s}, token actor: {actor or 'none'}) — escalating")
+    reason = "cap-progressing-extended" if args.round_cap > original_round_cap else "cap-stalled"
+    eprint(f"relay-drive: round cap ({args.round_cap}) exceeded (STATUS: {s}, token actor: {actor or 'none'}) — escalating ({reason})")
     xyz_relay_emit("red")
-    sys.exit(4)
+    exit_escalate(reason)
 
 if __name__ == "__main__":
     main()
