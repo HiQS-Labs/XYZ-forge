@@ -25,11 +25,12 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-170 · Agent2Agent transcript glitches + standalone publishing hardening | — | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Labs/XYZ-forge/issues/170) |
+| GH-170 · Agent2Agent: close transcript glitches and harden publishing | — | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Suite/XYZ-forge/issues/170) |
+| GH-174 · Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | — | [GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md](PROJECT/2-WORKING/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md) · [#174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) |
 | GH-165 · Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | — | [GH-165-POST-MERGE-WAVE-RECONCILER.md](PROJECT/1-INBOX/GH-165-POST-MERGE-WAVE-RECONCILER.md) · [#165](https://github.com/HiQS-Suite/XYZ-forge/issues/165) |
 | GH-153 · RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | [GH-153-RELEASES-SIDEBAR-ROLLUP.md](PROJECT/2-WORKING/GH-153-RELEASES-SIDEBAR-ROLLUP.md) · [#153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) |
 | GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/2-WORKING/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) |
