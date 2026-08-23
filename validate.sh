@@ -391,6 +391,9 @@ TESTS=(
   "mktemp-trap-guard.sh"         # GH-177 (static audit: no unguarded mktemp-into-destructive-rm-rf/cd-recapture pattern anywhere in the repo)
   "hq-marathon-scan.sh"          # GH-158 (cross-repo marathon aggregation + preflight — written, never registered until GH-192)
   "hq-rollup.sh"                 # GH-192 (marathon-scan.sh bridged verbatim into the Obsidian daily rollup)
+  "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
+                                 #   exporter payload keys + baked chrome in both artifacts; the rollup
+                                 #   embed itself lives in hq-rollup.sh cases A/F/G)
   "transcript-audit.sh"
   "security-scan.sh"
   "sentinel-tier1.sh"           # GH-281 (Tier-1 JSONL finding capture)

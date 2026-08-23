@@ -95,6 +95,7 @@ run_rollup() {
   AGY_BIN="${TEST_AGY_BIN:-$AGY_STUB}" \
   MARATHON_SCAN_BIN="${TEST_MARATHON_SCAN_BIN:-$ROOT/utils/hq/marathon-scan.sh}" \
   MARATHON_LIVE_BIN="${TEST_MARATHON_LIVE_BIN:-$ROOT/utils/hq/marathon-live.sh}" \
+  RELEASES_CYCLE_BIN="${TEST_RELEASES_CYCLE_BIN:-$ROOT/utils/py/releases_cycle.py}" \
   bash "$ROLLUP"
 }
 
@@ -138,6 +139,16 @@ grep -q "^### HQ Marathon — Live cross-repo status" "$OUT" \
 grep -q '| repo-a | .* | ⚪ idle | ' "$OUT" \
   && pass "case A: real marathon-live classification embedded verbatim (repo-a idle)" \
   || fail "case A: marathon-live classification missing: $(grep 'repo-a' "$OUT" | grep -i idle)"
+
+# GH-153: the RELEASES-cycle section is a third embedded citizen — heading present, and the
+# default (real) cycle module ran: repo-a has no releases.db, so it reports the explicit
+# no-ledger line rather than being silently skipped.
+grep -q "^## RELEASES cycle (full ledger, per repo)$" "$OUT" \
+  && pass "case A: RELEASES cycle section heading present (GH-153)" \
+  || fail "case A: RELEASES cycle section heading missing"
+grep -q "_no releases ledger (repo-a)" "$OUT" \
+  && pass "case A: repo without a ledger named explicitly, not dropped" \
+  || fail "case A: no-ledger line missing for repo-a"
 
 echo "-- Case B: empty ROADMAP.md, agy must NOT be invoked --"
 rm -f "$AGY_MARKER_FILE" "$OUT"
@@ -219,6 +230,50 @@ grep -q "_marathon live-status failed (exit 4): .*simulated marathon-live crash:
 grep -q '| #101 | .*| ✅ ready (exit 0) |' "$OUT" \
   && pass "case E: marathon-scan section still intact when only live-status failed" \
   || fail "case E: marathon-scan section lost on live-status failure"
+
+echo "-- Case F: RELEASES cycle embed — verbatim, demoted, and failure-visible (GH-153) --"
+CYCLE_STUB="$WORK/releases-cycle-stub"
+cat >"$CYCLE_STUB" <<'EOF'
+#!/usr/bin/env bash
+echo "# RELEASES cycle — STUB-REPO"
+echo ""
+echo "## Releases — 9 total · 1 open (0 overdue)"
+echo ""
+echo "- active: v9.9.9 \"Stub\" — STUB-CYCLE-MARKER"
+EOF
+chmod +x "$CYCLE_STUB"
+
+rm -f "$OUT"
+# a releases.db must EXIST for the cycle bin to be invoked — any file does; the stub
+# ignores its --db argument entirely (the real module's DB handling has its own suite).
+: > "$REPO/releases.db"
+TEST_RELEASES_CYCLE_BIN="$CYCLE_STUB" run_rollup >"$WORK/case-f.log" 2>&1
+rc=$?
+[[ $rc -eq 0 ]] && pass "case F: rollup exits 0" || fail "case F: rollup rc=$rc ($(cat "$WORK/case-f.log"))"
+grep -q "STUB-CYCLE-MARKER" "$OUT" \
+  && pass "case F: cycle output embedded verbatim" \
+  || fail "case F: cycle stub output missing"
+grep -q "^### RELEASES cycle — STUB-REPO$" "$OUT" \
+  && pass "case F: cycle report's H1 demoted to H3 (nests under the H2 section)" \
+  || fail "case F: cycle heading not demoted: $(grep '^#* RELEASES cycle' "$OUT")"
+grep -q "^# RELEASES cycle — STUB-REPO" "$OUT" \
+  && fail "case F: cycle report's H1 leaked through undemoted" \
+  || pass "case F: no bare H1 from the cycle report"
+grep -q "_no releases ledger (repo-a)" "$OUT" \
+  && fail "case F: stub invoked but no-ledger line still appeared" \
+  || pass "case F: existing releases.db routes to the cycle bin"
+
+echo "-- Case G: cycle module fails on a corrupt DB -> visible banner, rollup survives --"
+rm -f "$OUT"
+printf 'definitely not a sqlite database\n' > "$REPO/releases.db"
+run_rollup >"$WORK/case-g.log" 2>&1
+rc=$?
+[[ $rc -eq 0 ]] && pass "case G: rollup still exits 0 despite the cycle module failing" \
+  || fail "case G: rollup rc=$rc ($(cat "$WORK/case-g.log"))"
+grep -q "_releases cycle rollup failed for repo-a (exit 2): " "$OUT" \
+  && pass "case G: visible cycle-failure banner, not a silent drop" \
+  || fail "case G: cycle failure banner missing: $(grep 'releases cycle rollup failed' "$OUT")"
+rm -f "$REPO/releases.db"
 
 echo "== hq-rollup: $PASS passed, $FAIL failed =="
 [ "$FAIL" -eq 0 ]

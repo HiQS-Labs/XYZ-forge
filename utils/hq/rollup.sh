@@ -157,12 +157,43 @@ else
   marathon_live_section="_marathon live-status failed (exit ${marathon_live_rc}): ${marathon_live_log}_"
 fi
 
+# GH-153: the full RELEASES-cycle rollup. The marathon sections above cover RUNS; this covers
+# the ledger they serve — releases by status, roadmap movement, marathon states and manifest
+# outcomes, read-only from each repo's releases.db via the shared releases_cycle module (also
+# the dashboard sidebar's data source, so the two surfaces cannot disagree). Same
+# verbatim-embed rule as the marathon sections: the numbers are deterministic, so no synthesis
+# pass ever touches them. Per-repo failures degrade to a visible line, never a dropped repo.
+RELEASES_CYCLE_BIN="${RELEASES_CYCLE_BIN:-$HERE/../py/releases_cycle.py}"   # test seam
+echo "HQ Rollup: collecting RELEASES cycle summaries..."
+CYCLE_TMP="$(mktemp "${TMPDIR:-/tmp}/hq-rollup-cycle.XXXXXX")"
+trap 'rm -f "$MARATHON_TMP" "$MARATHON_LIVE_TMP" "$CYCLE_TMP"' EXIT
+while IFS= read -r repo; do
+  [ -z "$repo" ] && continue
+  path="$(printf '%s\n' "$(hq_repo_resolve "$repo")" | sed -n 's/^REPO_PATH=//p' | head -1)"
+  if [ -n "$path" ] && [ -f "$path/releases.db" ]; then
+    if cycle_out="$("$RELEASES_CYCLE_BIN" --db "$path/releases.db" --repo-label "$repo" 2>&1)"; then
+      printf '%s\n\n' "$cycle_out" >> "$CYCLE_TMP"
+    else
+      cycle_rc=$?
+      printf '_releases cycle rollup failed for %s (exit %s): %s_\n\n' "$repo" "$cycle_rc" "$cycle_out" >> "$CYCLE_TMP"
+    fi
+  else
+    printf '_no releases ledger (%s) — run releases init there to join the cycle rollup_\n\n' "$repo" >> "$CYCLE_TMP"
+  fi
+done < <(hq_known_repos)
+
 {
   printf '%s\n' "$roadmap_section"
   printf '\n---\n\n## Marathon Readiness (cross-repo preflight)\n\n'
   printf '%s\n' "$marathon_section"
   printf '\n---\n\n## Live Marathons (cross-repo, right now)\n\n'
   printf '%s\n' "$marathon_live_section"
+  printf '\n---\n\n## RELEASES cycle (full ledger, per repo)\n\n'
+  if [ -s "$CYCLE_TMP" ]; then
+    demote_embed "$CYCLE_TMP"
+  else
+    printf '_no repositories known to HQ — nothing to roll up._\n'
+  fi
 } > "$OUT_FILE"
 
 echo "HQ Rollup: ✓ wrote $OUT_FILE"

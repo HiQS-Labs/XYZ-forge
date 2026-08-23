@@ -190,10 +190,70 @@ body[data-view="leaderboard"] #track{display:block;overflow:auto;padding:10px 14
 article[hidden]{display:none}
 .foot{flex:none;border-top:1px solid var(--line);margin:4px 14px 0;padding:6px 0 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:var(--ink3);display:flex;gap:14px;flex-wrap:wrap}
 
+/* ---- GH-153 spike: left sidebar navigation ----
+   Additive chrome shared by both baked views. Three states on <body data-sn=…>:
+   expanded (default ON, 232px), rail (icon strip, 46px), hidden (only the hamburger).
+   The page body is a flex column, so the sidebar is position:fixed and the shift is
+   padding-left — .wrap/.rail/.foot are untouched. */
+#sidenav-toggle{position:fixed;top:8px;left:8px;z-index:60;width:30px;min-height:26px;
+  font-size:13px;line-height:1;cursor:pointer;color:var(--ink2);background:var(--card);
+  border:1px solid var(--line2);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#sidenav-toggle:hover{border-color:var(--blue);color:var(--blue)}
+#sidenav{position:fixed;top:0;left:0;bottom:0;width:232px;z-index:55;display:flex;
+  flex-direction:column;gap:10px;background:var(--sunk);border-right:1px solid var(--line);
+  padding:38px 10px 10px;overflow-y:auto;overscroll-behavior:contain;
+  transition:transform .18s ease,width .18s ease}
+body{transition:padding-left .18s ease}
+body[data-sn="expanded"]{padding-left:232px}
+body[data-sn="rail"]{padding-left:46px}
+body[data-sn="hidden"]{padding-left:0}
+body[data-sn="hidden"] #sidenav{transform:translateX(-100%)}
+.sn-head{display:flex;align-items:center;gap:6px}
+#sn-project{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;color:var(--ink);background:var(--card);border:1px solid var(--line2);
+  padding:3px 4px;min-height:24px}
+#sn-project:focus{outline:none;border-color:var(--blue)}
+#sn-min{width:24px;min-height:24px;font-size:12px;line-height:1;cursor:pointer;color:var(--ink2);
+  background:var(--card);border:1px solid var(--line2)}
+#sn-min:hover{border-color:var(--blue);color:var(--blue)}
+.sn-sec{display:flex;flex-direction:column;gap:2px}
+.sn-sec>.tiny{margin-bottom:1px}
+.sn-item{display:flex;align-items:center;gap:7px;padding:3px 6px;font-size:12px;line-height:1.4;
+  color:var(--ink2);cursor:pointer;background:none;border:1px solid transparent;
+  font-family:inherit;text-align:left;text-decoration:none}
+a.sn-item{border-bottom:1px solid transparent}
+.sn-item:hover{color:var(--blue);border-color:var(--line2);background:var(--card)}
+.sn-item .sn-ico{width:14px;text-align:center;flex:none;color:var(--ink3)}
+.sn-ph{cursor:default;font-style:italic;opacity:.75;color:var(--ink3)}
+.sn-ph:hover{color:var(--ink3);border-color:transparent;background:none}
+.sn-cycle{gap:4px}
+.sn-kv{display:flex;justify-content:space-between;gap:8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;
+  color:var(--ink2);font-variant-numeric:tabular-nums}
+.sn-kv .k{color:var(--ink3)}
+.sn-note{font-size:10px;color:var(--ink3);line-height:1.4}
+.sn-foot{margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+/* rail state: labels, titles, panel and placeholders collapse away; icons stay */
+body[data-sn="rail"] #sidenav{width:46px;padding:38px 4px 8px}
+body[data-sn="rail"] .sn-label,body[data-sn="rail"] .sn-sec>.tiny,
+body[data-sn="rail"] .sn-cycle,body[data-sn="rail"] #sn-project,
+body[data-sn="rail"] .sn-coming{display:none}
+body[data-sn="rail"] .sn-item{justify-content:center;padding:4px 0}
+body[data-sn="rail"] .sn-head{flex-direction:column}
+/* leaderboard view hides the timeline-only focus section (mirrors the #fbar rule) */
+body[data-view="leaderboard"] .sn-focus{display:none}
+/* narrow screens: overlay instead of shifting an already-scarce column */
+@media (max-width:900px){
+  #sidenav{z-index:70;box-shadow:8px 0 24px rgba(0,0,0,.45)}
+  body[data-sn="expanded"],body[data-sn="rail"]{padding-left:0}
+}
+
 @media print{
   :root{--bg:#fff;--card:#fff;--sunk:#fff;--line:#c8c8c8;--line2:#999;--ink:#000;--ink2:#333;--ink3:#555;--red:#8a0f0f;--amber:#6b4a00;--blue:#123a8a;--green:#14502e}
   html,body{background:#fff}
   #fbar,.rail::before,.rail::after,.scrim,#hdr-toggle{display:none}
+  #sidenav,#sidenav-toggle{display:none}
+  body[data-sn="expanded"],body[data-sn="rail"],body[data-sn="hidden"]{padding-left:0}
   body{display:block;min-height:0}
   body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip{display:grid}
   #track{display:block;overflow:visible;padding:0;height:auto;grid-template-rows:auto auto auto}
@@ -211,7 +271,46 @@ article[hidden]{display:none}
 }
 </style>
 </head>
-<body>
+<body data-sn="expanded">
+<!-- GH-153 spike: left sidebar navigation. Default ON; the hamburger (#sidenav-toggle) slides
+     the whole nav out, the chevron (#sn-min) collapses it to an icon rail (state persists via
+     localStorage). Items with no real destination yet are intentionally NON-LINK placeholders
+     (.sn-ph) — do not fake hrefs. The project switcher and the "releases cycle" panel are
+     filled from the payload by window.__snCycle(data) in boot(). -->
+<button id="sidenav-toggle" type="button" aria-controls="sidenav" aria-expanded="true" title="toggle navigation">☰</button>
+<nav id="sidenav" aria-label="Dashboard navigation">
+  <div class="sn-head">
+    <select id="sn-project" aria-label="Project switcher"></select>
+    <button id="sn-min" type="button" title="minimize to icon rail">‹</button>
+  </div>
+  <div class="sn-sec">
+    <div class="tiny">views</div>
+    <a class="sn-item" id="sn-view-a" href="./LEADERBOARD.html"><span class="sn-ico">◫</span><span class="sn-label">leaderboard</span></a>
+    <a class="sn-item" id="sn-view-b" href="#track"><span class="sn-ico">▤</span><span class="sn-label">timeline</span></a>
+  </div>
+  <div class="sn-sec sn-focus">
+    <div class="tiny">focus</div>
+    <button class="sn-item" data-snfocus="all" type="button"><span class="sn-ico">∙</span><span class="sn-label">all</span></button>
+    <button class="sn-item" data-snfocus="rel" type="button"><span class="sn-ico">◧</span><span class="sn-label">releases</span></button>
+    <button class="sn-item" data-snfocus="road" type="button"><span class="sn-ico">⋱</span><span class="sn-label">roadmap</span></button>
+  </div>
+  <div class="sn-sec">
+    <div class="tiny">repo</div>
+    <a class="sn-item" id="sn-gh" target="_blank" rel="noopener"><span class="sn-ico">↗</span><span class="sn-label">github</span></a>
+    <a class="sn-item" id="sn-ms" target="_blank" rel="noopener"><span class="sn-ico">◈</span><span class="sn-label">milestones</span></a>
+  </div>
+  <div class="sn-sec sn-cycle">
+    <div class="tiny">releases cycle</div>
+    <div id="sn-cycle-panel"><div class="sn-note">loading…</div></div>
+  </div>
+  <div class="sn-sec sn-coming">
+    <div class="tiny">coming</div>
+    <span class="sn-item sn-ph" title="placeholder — no destination yet">insights</span>
+    <span class="sn-item sn-ph" title="placeholder — no destination yet">funnels</span>
+    <span class="sn-item sn-ph" title="placeholder — no destination yet">settings</span>
+  </div>
+  <div class="sn-foot meta" id="sn-foot"></div>
+</nav>
 <div class="wrap">
 
   <div class="top">
@@ -291,6 +390,100 @@ article[hidden]{display:none}
     set(!document.body.classList.contains('hdr-collapsed'));});
   var saved=null;try{saved=localStorage.getItem(KEY);}catch(e){}
   if(saved==='1')set(true);
+})();
+</script>
+<script>
+/* ---- GH-153 spike: sidebar state + wiring (pure chrome). The data-dependent half is
+       window.__snCycle(data), called from boot() once the payload arrives — so fetch-mode
+       and baked-inline mode both fill the switcher and cycle panel through one door. ---- */
+(function(){
+  var KEY='ledger-sidenav';
+  var btn=document.getElementById('sidenav-toggle'),
+      min=document.getElementById('sn-min');
+  function set(state){
+    if(state!=='expanded'&&state!=='rail'&&state!=='hidden')state='expanded';
+    document.body.dataset.sn=state;
+    btn.setAttribute('aria-expanded',String(state!=='hidden'));
+    min.textContent=state==='rail'?'›':'‹';
+    min.title=state==='rail'?'restore sidebar':'minimize to icon rail';
+    try{localStorage.setItem(KEY,state);}catch(e){}
+  }
+  /* default ON ('expanded' when nothing persisted); hamburger slides out, chevron rails */
+  var saved=null;try{saved=localStorage.getItem(KEY);}catch(e){}
+  set(saved);
+  btn.addEventListener('click',function(){
+    set(document.body.dataset.sn==='hidden'?'expanded':'hidden');});
+  min.addEventListener('click',function(){
+    set(document.body.dataset.sn==='rail'?'expanded':'rail');});
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    var t=document.activeElement&&document.activeElement.tagName;
+    if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA')return;
+    set('hidden');});
+
+  /* view links mirror #view-link's targets (the two baked artifacts sit side by side) */
+  function viewLinks(){
+    var lb=document.body.dataset.view==='leaderboard';
+    document.getElementById('sn-view-a').href=lb?'#':'./LEADERBOARD.html';
+    document.getElementById('sn-view-b').href=lb?'./RELEASES-PREVIEW.html':'#';
+  }
+  viewLinks();   /* pre-boot paint (template default is the timeline view) */
+
+  /* focus items drive the existing #fbar buttons — display:none buttons still receive
+     programmatic clicks; in leaderboard view this section is CSS-hidden anyway */
+  [].forEach.call(document.querySelectorAll('.sn-item[data-snfocus]'),function(b){
+    b.addEventListener('click',function(){
+      var t=document.querySelector('#fbar .fbtn[data-focus="'+b.dataset.snfocus+'"]');
+      if(t)t.click();});
+  });
+
+  function kv(k,v){return '<div class="sn-kv"><span class="k">'+k+'</span><span>'+v+'</span></div>';}
+
+  window.__snCycle=function(data){
+    viewLinks();
+    var gh=document.getElementById('sn-gh'),ms=document.getElementById('sn-ms'),
+        url=(data.meta||{}).repoUrl;
+    if(url){gh.href=url;ms.href=url+'/milestones';}
+    else{gh.hidden=true;ms.hidden=true;}
+
+    /* project switcher: real rows from the payload; a lone project gets an explicit inert
+       "add project" hint rather than a fake multiplicity */
+    var sel=document.getElementById('sn-project'),projects=data.projects||[];
+    sel.innerHTML='';
+    projects.forEach(function(p){
+      var o=document.createElement('option');
+      o.value=p.slug;o.textContent=p.slug;o.selected=!!p.active;
+      sel.appendChild(o);});
+    if(projects.length<2){
+      var o=document.createElement('option');
+      o.disabled=true;o.selected=false;o.textContent='+ add project…';
+      sel.appendChild(o);
+    }
+    sel.onchange=function(){
+      var slug=sel.value,active=projects.some(function(p){return p.slug===slug&&p.active;});
+      document.getElementById('sn-foot').textContent=active
+        ?'':'“'+slug+'” is not wired to this ledger yet — its cycle rides the HQ daily rollup';
+    };
+
+    /* the rollup panel: same summary the HQ daily rollup embeds (one source of truth) */
+    var c=data.cycle||{},panel=document.getElementById('sn-cycle-panel');
+    if(!c.releases){panel.innerHTML='<div class="sn-note">no cycle data in payload</div>';}
+    else{
+      var r=c.releases,rm=c.roadmap||{},m=c.marathons||{},it=c.items||{};
+      var od=r.overdue?' · <b class="r">'+r.overdue+' overdue</b>':'';
+      var ev=(c.recentEvents&&c.recentEvents.length)
+        ?'<div class="sn-note">last: '+c.recentEvents[0].item+' '+c.recentEvents[0].from+
+          ' → '+c.recentEvents[0].to+'</div>':'';
+      panel.innerHTML=
+        kv('releases',r.open+' open of '+r.total+od)+
+        kv('roadmap',(rm.wip||0)+' wip · '+(rm.done||0)+' done')+
+        kv('marathons',(m.total||0)+' total')+
+        kv('items',(it.shipped||0)+' shipped · '+(it.cut||0)+' cut')+
+        ev;
+      if(c.db)document.getElementById('sn-foot').textContent=
+        'gen '+c.db.generation+' · '+Number(c.db.receipts||0).toLocaleString()+' receipts';
+    }
+  };
 })();
 </script>
 <script>
@@ -495,6 +688,7 @@ article[hidden]{display:none}
       link.textContent=view==='leaderboard'?'← timeline':'leaderboard →';
     }
     renderHeader(data);
+    if(typeof window.__snCycle==='function')window.__snCycle(data);   /* GH-153 sidebar panel */
     if(view==='leaderboard'){
       document.getElementById('track').innerHTML=leaderboardHTML(data);
       return;
