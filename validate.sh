@@ -246,7 +246,8 @@ TESTS=(
   "gh180-repro-timeout-crash.sh"        # #180 (repro_builder ingests null-exit timeout telemetry without crashing; no fabricated timeout repros)
   "gh181-repro-adapter-fidelity.sh"     # #181 (telemetry->reproducer fidelity: spaced-path tokenization, signature matching, live-record E2E)
   "gh183-explorer-env-soundness.sh"     # #183 (explorer env mutations from a declared base over a clean env; ambient runner vars cannot satisfy them)
-  "gh184-no-tracked-scratch.sh"         # #184 (derived guard: nothing under the disposable .relay-scratch/ lane is ever tracked)
+  "gh184-no-tracked-scratch.sh"
+  "gh202-wave-reconcile-issue-state.sh"  # #202 (reconciler tolerates items-held exit 5; OPEN-issue docs stay active with merge evidence)         # #184 (derived guard: nothing under the disposable .relay-scratch/ lane is ever tracked)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"
