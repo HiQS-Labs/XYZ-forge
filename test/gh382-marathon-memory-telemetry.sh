@@ -112,8 +112,16 @@ grep -q "agy: 64MB peak RSS" <<<"$(printf '%s\n' "$analysis")" \
   || fail "tick analyze missing agy peak RSS"
 
 # --- (3) Acceptance criterion 3: Low swap warning in output ---
-# Test low swap warning by invoking memory sampler directly under low swap
-low_swap_out="$(python3 -c "
+# The sampler is Darwin-only by construction: marathon_drive._phase_memory_sample guards the whole
+# swap read with `if sys.platform == "darwin"`, and the fixture below feeds it macOS
+# `sysctl vm.swapusage` output. On any other platform that branch never runs, no warning is emitted,
+# and this assertion failed for a reason that said nothing about the host — the Linux box it was
+# failing on had 8GB of free swap. Skip where the feature does not exist rather than asserting it
+# everywhere. (Implementing the sampler for Linux via /proc/meminfo is tracked separately; until
+# then an unattended Linux marathon genuinely gets no low-swap warning.)
+skip() { echo "  SKIP: $*"; }
+if [ "$(python3 -c 'import sys; print(sys.platform)')" = "darwin" ]; then
+  low_swap_out="$(python3 -c "
 import sys, os
 sys.path.insert(0, '$ROOT_REPO/utils/py')
 import marathon_drive
@@ -124,9 +132,12 @@ marathon_drive.subprocess.run = lambda *a, **kw: FakeRes()
 marathon_drive._phase_memory_sample('test-low-swap')
 ")"
 
-grep -q "warn: host free swap is critically low (512MB < 1024MB)" <<<"$(printf '%s\n' "$low_swap_out")" \
-  && pass "GH-382: low-swap warning logged when free swap is below threshold" \
-  || fail "low-swap warning missing when free swap is low"
+  grep -q "warn: host free swap is critically low (512MB < 1024MB)" <<<"$(printf '%s\n' "$low_swap_out")" \
+    && pass "GH-382: low-swap warning logged when free swap is below threshold" \
+    || fail "low-swap warning missing when free swap is low"
+else
+  skip "GH-382: low-swap warning is darwin-only (sampler guarded by sys.platform == 'darwin')"
+fi
 
 # --- (4) Acceptance criterion 4: Negative controls ---
 # Empty repo without memory events must omit memory section
