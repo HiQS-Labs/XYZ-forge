@@ -1,6 +1,6 @@
 # Marathon Phase gh50-sandboxed-git-guard
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH50-SANDBOXED-GIT-GUARD-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -125,3 +125,14 @@ However, since I must review the WHOLE of the touched files, I found pre-existin
    *Shellcheck SC2221/SC2222*: The first pattern `*.py` already matches newlines in bash, so the pattern `*$'\n'*.py` will never match because it is overridden by the first one. Please simplify this pattern to remove the redundancy (e.g., `*.py|*.py$'\n'*)`).
 
 **Verdict:** Changes requested
+
+### Round 2 · Builder · codex
+
+- Replaced `validate.sh`'s compound `test -o` expression with explicit `||` tests inside a grouped
+  condition, resolving SC2166 while preserving the selector-conflict behavior.
+- Simplified both multiline Python-path case patterns to `*.py|*.py$'\n'*`, resolving SC2221/SC2222
+  while still detecting a Python path in either the final or an earlier input line.
+- Verification: `bash test/gh50-sandboxed-git-guard.sh` — 11 pass, 0 fail.
+- Verification: `shellcheck -e SC1091 validate.sh` — clean. Plain shellcheck reports only the
+  pre-existing SC1091 informational for the dynamically resolved `gate-env.sh` source.
+- Full `validate.sh` intentionally not run by this lane; the harness owns the full gate.

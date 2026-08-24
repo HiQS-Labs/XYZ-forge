@@ -593,8 +593,9 @@ TIER_REQUESTED=0
 if [ "$AUTO_REQUESTED" -eq 1 ] || [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; then
   # The selector flags are mutually exclusive: each of them fully determines the tier, so
   # combining two answers the question twice and one of them is being silently ignored.
-  [ "$AUTO_REQUESTED" -eq 1 ] && [ \( -n "$PATHS_FILE" \) -o \( -n "$SUBSYSTEM" \) ] \
-    && _err2 "--auto cannot be combined with --paths-file/--subsystem"
+  if [ "$AUTO_REQUESTED" -eq 1 ] && { [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; }; then
+    _err2 "--auto cannot be combined with --paths-file/--subsystem"
+  fi
   [ -n "$PATHS_FILE" ] && [ -n "$SUBSYSTEM" ] \
     && _err2 "--paths-file cannot be combined with --subsystem"
 fi
@@ -620,7 +621,7 @@ if [ "$AUTO_REQUESTED" -eq 1 ]; then
     apply_classification "$_cls"
     T2_PATHS="$(_auto_paths 2>/dev/null)"
     echo "validate.sh: --auto classified tier $TIER — ${TIER_REASON:-unspecified} (GH-35)"
-    case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*) T2_PYTEST=1 ;; esac
+    case "$T2_PATHS" in *.py|*.py$'\n'*) T2_PYTEST=1 ;; esac
   else
     echo "validate.sh: --auto could not classify the diff — failing closed to tier 3 (GH-35)" >&2
     TIER=3
@@ -640,7 +641,7 @@ if [ -n "$PATHS_FILE" ]; then
     exit 2
   fi
   T2_PATHS="$(cat "$PATHS_FILE")"
-  case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*) T2_PYTEST=1 ;; esac
+  case "$T2_PATHS" in *.py|*.py$'\n'*) T2_PYTEST=1 ;; esac
   echo "validate.sh: classified tier 2 — ${TIER_REASON:-unspecified} (GH-35)"
 fi
 
