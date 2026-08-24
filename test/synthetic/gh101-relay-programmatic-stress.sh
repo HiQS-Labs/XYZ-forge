@@ -5,6 +5,17 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 
+# relay_drive.py:63-65 fail-closes --tool-mode programmatic when neither sandbox-exec nor bwrap is
+# present. That refusal is correct, so on such a host this suite asserts a clean programmatic turn
+# that the driver rightly refused to start, and reports it as a turn/cleanup defect. bubblewrap is
+# not a documented prerequisite, so a stock Linux box hits this. Skip; the missing dependency is
+# the finding, not this suite.
+if ! command -v bwrap >/dev/null 2>&1 && ! command -v sandbox-exec >/dev/null 2>&1; then
+  echo "  SKIP: gh101-relay-programmatic-stress — no OS sandbox backend (bwrap/sandbox-exec) on this host"
+  echo "== gh101-relay-programmatic-stress: 0 passed, 0 failed =="
+  exit 0
+fi
+
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh101-relay-prog.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
