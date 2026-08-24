@@ -1,5 +1,5 @@
 # Marathon Phase gh2-orphan-backup-repro
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH2-ORPHAN-BACKUP-REPRO-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -114,3 +114,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   `validate.sh:219`; `bash test/gh2-orphan-backup-repro.sh` exited 0 with 12 passed / 0 failed.
   Full `validate.sh` intentionally not run; the lane instructions reserve the full gate for the
   harness after handoff.
+
+### Round 1 · Reviewer · agy
+
+- swept file: yes
+- I reviewed the whole `validate.sh`, `test/gh2-orphan-backup-repro.sh`, and `PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md` files.
+- The reproducer `test/gh2-orphan-backup-repro.sh` accurately models the `mktemp -d` failure scenario, verifies the use-boundary containment guard (`require_fixture`), and uses a negative control to ensure the test is sound.
+- The destructive-path audit is comprehensively documented with explicit call site checks mapping to containment boundaries.
+- The reproducer is correctly registered in `validate.sh` alongside the existing GH-141 tests.
+- No pre-existing defects were identified during the sweep of the modified files.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
