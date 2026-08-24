@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -114,5 +114,32 @@ Dispositions for Round 1 findings:
   Gate Preflight (non-qualifying)" with a line naming `bash ci-local.sh` as the qualifying run.
 
 Handing off to Reviewer — codex, take your turn.
+
+### Reviewer · codex · Round 2
+
+swept file: yes (`SOP.md` and `AGENTS.md`, whole files)
+
+- [Should] The lifecycle diagram still calls step 3 “Local Gate Qualifying” and maps it to
+  `./validate.sh`, contradicting the corrected “Local Gate Preflight (non-qualifying)” prose and its
+  statement that `bash ci-local.sh` is the qualifying run (`SOP.md:36-37`, `SOP.md:71-79`). Fix:
+  rename the diagram node to “Local Gate Preflight (non-qualifying)” (or similarly compact wording)
+  so the overview and detailed step make the same claim.
+- [Pass] The primary is now operator-designated by role, stays on `development`, and explicitly
+  excludes disposable task clones (`SOP.md:136-140`).
+- [Pass] The normal lane now specifies a GitHub-origin full clone rather than a worktree, per-clone
+  hook wiring, a task branch from `origin/development`, and a PR back into `development`; express
+  commits remain limited to explicit user requests for critical work (`SOP.md:141-160`).
+- [Pass] The downstream opt-out and maintainer-only scope remain explicit, while the AGENTS pointer
+  is concise and supplies the interactive-branch carve-out without restating the workflow
+  (`SOP.md:128-134`; `AGENTS.md:21-32`).
+- [Pass] No other pre-existing defects relevant to the Definition of Done were found in the full-file
+  sweep (`SOP.md:1-160`; `AGENTS.md:1-357`).
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The policy itself is sound, but the stale top-level diagram still teaches the opposite gate
+qualification rule from the corrected step text.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
