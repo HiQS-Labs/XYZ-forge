@@ -97,3 +97,6 @@ member does not resolve itself).
 - #10: issue acceptance verbatim + negative control recorded (`test/baselines/GH-1-adoption-ledger.md`).
 - Both: `bash validate.sh` green in the disposable clone; capture-doc Status tables updated;
   ROADMAP pointer lines updated to reflect progress (pointer-only).
+
+## Lessons Learned (For Future Agents)
+- Pre-0.7.0-era wave brief left active past its release; reconciled 2026-08-24 when PR #210's linkage surfaced it (its gh_issue frontmatter matches closed issue #1). Promote-on-closed-issue is correct here — the release shipped 2026-08-19.
