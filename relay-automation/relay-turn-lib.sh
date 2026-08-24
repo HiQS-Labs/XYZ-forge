@@ -808,6 +808,11 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     esac
     rtl_in_allow "$path" && continue
     rtl_is_containment_ignored "$path" && continue   # GH-107: opt-in tool-cache exemption
+    # GH-113: same scratch relocation as rtl_check's non-worktree path — a scratch-shaped untracked
+    # root file in the throwaway worktree is moved into RTL_ROOT's .tick/scratch for inspection
+    # (the worktree itself is destroyed below, which would otherwise destroy the evidence) and the
+    # turn is NOT failed on it.
+    rtl_scratch_relocate "$path" "$wt" "$RTL_ROOT" && continue
     rtl_offlane_hint "$path"                         # GH-90: name a file-vs-directory lane-spec mistake
     rtl_trace "rtl_worktree_end: OFFLANE path=$path"
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
@@ -987,6 +992,43 @@ rtl_orphan_backup() {  # <path> — copy pre-revert content aside; must never bl
   rtl_log_always "rtl_check: orphan-backup path=$p dest=$RTL_ORPHAN_BACKUP"
 }
 
+# GH-113 — relocate, don't fail, the headless builder's root-level scratch.
+#
+# The observed incident (marathon/daybreak-wave-2, 2026-08-20): the agy builder wrote fix_lens1.py /
+# test_lens6.py / tmp.json into the working-tree ROOT while debugging, rtl_check reverted them at
+# exit 6, and a turn whose actual lane work was fine died on incidental scratch. Prose in the prompt
+# is not a guarantee the builder model weights, so this is the mechanical half of the fix: a
+# scratch-SHAPED write is moved into the sanctioned scratch lane and the turn proceeds.
+#
+# Deliberately NARROW — this is a room, not an amnesty (same line GH-91 drew for .relay-scratch):
+#   - ROOT-LEVEL only (no "/" in the path): the incident shape is a transient script dropped in the
+#     tree root; a nested off-lane path is a lane mistake, not scratch, and still violates.
+#   - UNTRACKED only: an edit to a TRACKED file is an off-lane content change whatever its name —
+#     the GH-22 self-escape backstop must keep biting there (GH-113 acceptance pins this).
+#   - NAME must look like transient scratch (tmp*/temp*/scratch*/debug*/test_*/fix_*/repro_*/probe_*
+#     prefix, or *.tmp/*.temp/*.bak/*.orig/~ suffix). "offlane.md" and friends still violate.
+# The destination is .tick/scratch/ (exempted intrinsically, never rides into a commit, recoverable
+# for inspection) — NOT .relay-scratch/, which rtl_enforce sweeps at end of turn and which would
+# therefore destroy the evidence this function exists to preserve.
+rtl_scratch_relocate() {  # <path> <src-root> [dest-root] — 0 = relocated, 1 = not scratch-shaped
+  local p="$1" src_root="$2" dest_root="${3:-$2}" dest
+  [[ -n "$p" && -n "$src_root" ]] || return 1
+  case "$p" in ""|.|..|*/*|.*) return 1 ;; esac
+  [[ "$p" =~ ^(tmp|temp|scratch|debug|test_|fix_|repro_|probe_) ]] \
+    || [[ "$p" =~ \.(tmp|temp|bak|orig)$ ]] \
+    || [[ "$p" == *~ ]] \
+    || return 1
+  git -C "$src_root" ls-files --error-unmatch -- "$p" >/dev/null 2>&1 && return 1
+  [[ -e "$src_root/$p" ]] || return 1
+  dest="${RTL_SCRATCH_DIR:="${dest_root:?}/.tick/scratch/$(date -u +%Y%m%dT%H%M%SZ)-$$"}"
+  mkdir -p "$dest" 2>/dev/null || return 1
+  mv "$src_root/$p" "$dest/$p" 2>/dev/null || return 1
+  printf '%s-turn: SCRATCH RELOCATION (GH-113): untracked root-level %s moved to %s — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.\n' \
+    "${RTL_TOOL:-relay}" "$p" "$dest" >&2
+  rtl_log_always "rtl_scratch_relocate: path=$p src=$src_root dest=$dest (GH-113)"
+  return 0
+}
+
 rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLATION
   local p="$1"
   [[ -n "$p" ]] || return 0
@@ -1015,6 +1057,10 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
     rtl_trace "rtl_check: ALLOW path=$p"
     return 0
   fi
+  # GH-113: scratch-shaped untracked root files relocate instead of violating — AFTER the allowlist
+  # check so an explicitly allowlisted path keeps its normal handling, and BEFORE the revert so the
+  # turn is not failed on transient scratch.
+  rtl_scratch_relocate "$p" "$RTL_ROOT" && return 0
   printf '%s-turn: OFF-ALLOWLIST change: %s — reverting\n' "$RTL_TOOL" "$p" >&2
   rtl_log_always "rtl_check: OFF-ALLOWLIST path=$p tool=$RTL_TOOL — reverting"
   rtl_offlane_hint "$p"    # GH-90: name a file-vs-directory lane-spec mistake before the revert

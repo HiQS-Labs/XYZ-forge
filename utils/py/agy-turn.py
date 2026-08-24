@@ -4,6 +4,8 @@ import sys
 import time
 import signal
 import tempfile
+import threading
+import pty
 import subprocess
 import shutil
 import shlex
@@ -61,6 +63,51 @@ def _kill_turn_group(proc):
             return
         except subprocess.TimeoutExpired:
             continue
+
+def _probe_idle_blocker(proc, log_path):
+    """GH-114: name WHAT an idle turn was blocked on, BEFORE the kill destroys the evidence.
+
+    The observed stall showed `bubbletea: could not open TTY` in the transcript while the
+    watchdog reported only the generic "a lock, a prompt, or a hung network call". Probe in
+    priority order — the CLI's own words about itself first, then the open-file table:
+
+      tty     — the transcript already contains agy's TTY error prefixes
+      lock    — the process tree holds a .lock file open (git index, harness driver lock)
+      network — the process tree has TCP/UDP sockets open (model backend call hung)
+      unknown — nothing probe-able; say so rather than guess
+
+    Returns (blocker, human_detail). Best-effort throughout: a probe failure degrades to
+    "unknown" and can never fail the turn it is describing.
+    """
+    tail = ""
+    try:
+        with open(log_path, "rb") as f:
+            tail = f.read()[-8192:].decode("utf-8", "replace").lower()
+    except OSError:
+        pass
+    if "could not open tty" in tail or "error opening tty" in tail or "open /dev/tty" in tail:
+        return ("tty",
+                "the CLI's terminal UI reported it could not open /dev/tty — the headless turn had "
+                "no usable TTY (bubbletea blocking on terminal setup). If AGY_PTY=0 was set, remove "
+                "it; otherwise investigate why the pty allocation did not reach the child.")
+    open_files = ""
+    try:
+        open_files = subprocess.run(
+            ["lsof", "-nP", "-a", "-g", str(proc.pid), "-w"],
+            capture_output=True, text=True, timeout=5).stdout.lower()
+    except Exception:
+        open_files = ""
+    if ".lock" in open_files:
+        return ("lock",
+                "the process tree held a .lock file open (e.g. a git index or harness driver lock) — "
+                "it was waiting on a lock held by someone else, not working.")
+    if "tcp" in open_files or "udp" in open_files:
+        return ("network",
+                "the process tree had open network sockets — it was waiting on a network call "
+                "(most likely the model backend), not working.")
+    return ("unknown",
+            "no TTY error, no open lock, no open socket in the process tree — the blocker left no "
+            "probe-able trace; the transcript is the remaining evidence.")
 
 def agy_auth_preflight(agy_bin):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
@@ -307,6 +354,15 @@ def main():
         pass
 
     prompt = rtl.turn_prompt(me, t, peer)
+    # GH-113 proposed fix 1: prompt reinforcement. Prose is not a guarantee (that is why the
+    # mechanical rtl_scratch_relocate half exists in relay-turn-lib.sh), but naming the failure
+    # mode and the sanctioned location at the point of use removes the "I didn't know" shape.
+    prompt = (
+        "SCRATCH DISCIPLINE (hard requirement, GH-113): every probe script, test file, or temporary "
+        "output you create must be written under $TMPDIR or the repo's .relay-scratch/ directory — "
+        "NEVER the repository root. A root-level scratch file (tmp.json, fix_*.py, test_*.py, ...) is "
+        "auto-relocated out of the tree by containment and reported; an off-lane edit to a TRACKED "
+        "file still fails the whole turn at exit 6.\n\n" + prompt)
     drift_brief = rtl.drift_brief(me, tick_repo_root)
     if drift_brief:
         prompt = drift_brief + "\n" + prompt
@@ -358,7 +414,10 @@ def main():
     # Sample the turn while it runs so an exit-7 timeout can be attributed to a
     # cause. A reviewer turn hits the same modal-dialog hazard as a builder: it
     # reads the target's files and can trip a credential prompt just as easily.
-    diag = TurnDiagnostics(worktree=run_cwd)
+    # RELAY_DIAG_INTERVAL_S is a test hook (tightens the sample cadence so an
+    # idle kill is reachable in seconds, not at the 10s production cadence).
+    diag = TurnDiagnostics(worktree=run_cwd,
+                           interval=float(os.environ.get("RELAY_DIAG_INTERVAL_S", "0") or 10.0))
     diag.start()
     # GH-492: the wall cap alone cannot contain the observed failure. A 900s hang burned its
     # entire budget at cpu=0.02s/s with worktree-progress=no, and the verdict was unanimous
@@ -372,15 +431,52 @@ def main():
     # rather than by wrapping the command — see the capture doc.
     idle_cap = int(os.environ.get("RELAY_TURN_IDLE_S", RELAY_TURN_IDLE_DEFAULT_S))
     idle_killed = False
+    # GH-114: blocker evidence captured at the moment the idle bound fires, BEFORE the kill —
+    # _probe_idle_blocker reads the transcript tail and the live process tree, and both stop
+    # being readable once the group is signalled. (blocker, detail); None = probe never ran.
+    idle_blocker = None
     # Hoisted out of the try: the exit-7 reporting below reads it, and a launch failure
     # would otherwise raise NameError inside the error path — turning a clean exit 5 into
     # a crash with no attribution, which is this issue's own complaint.
     started = time.monotonic()
+    # GH-114: run `agy -p` under a pty by default. The CLI's bubbletea TUI opens /dev/tty (or
+    # requires a TTY on stdin) even in -p mode; with pipes/DEVNULL it periodically wedged at
+    # ~0 CPU until the idle watchdog killed it, and its own transcript said why: "bubbletea:
+    # could not open TTY". AGY_PTY=0 restores the old pipe behaviour (the fallback the
+    # attribution probe still names, for the case where a pty itself fails or is refused).
+    use_pty = os.environ.get("AGY_PTY", "1") != "0"
+    pty_master = None
+    pty_slave = None
+    pty_reader = None
     try:
-        with open(agy_log, "w") as log_f:
-            proc = subprocess.Popen(cmd, env=run_env, cwd=run_cwd, stdout=log_f,
-                                    stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                    start_new_session=True)
+        log_f = open(agy_log, "w")
+        try:
+            if use_pty:
+                pty_master, pty_slave = pty.openpty()
+                proc = subprocess.Popen(cmd, env=run_env, cwd=run_cwd,
+                                        stdin=pty_slave, stdout=pty_slave, stderr=pty_slave,
+                                        start_new_session=True, close_fds=True)
+                os.close(pty_slave)
+                pty_slave = None
+                def _pty_drain(master=pty_master, sink=log_f):
+                    # Drain the pty master into the transcript, normalizing the ONLCR \r\n
+                    # the tty line discipline inserts back to \n so downstream greps and
+                    # readers see byte-identical content to the old pipe path.
+                    while True:
+                        try:
+                            chunk = os.read(master, 65536)
+                        except (OSError, ValueError):
+                            return
+                        if not chunk:
+                            return
+                        sink.write(chunk.replace(b"\r\n", b"\n").decode("utf-8", "replace"))
+                        sink.flush()
+                pty_reader = threading.Thread(target=_pty_drain, name="agy-pty-drain", daemon=True)
+                pty_reader.start()
+            else:
+                proc = subprocess.Popen(cmd, env=run_env, cwd=run_cwd, stdout=log_f,
+                                        stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                                        start_new_session=True)
             while True:
                 rc = proc.poll()
                 if rc is not None:
@@ -388,6 +484,7 @@ def main():
                     break
                 elapsed = time.monotonic() - started
                 if elapsed >= turn_timeout:
+                    idle_blocker = _probe_idle_blocker(proc, agy_log)
                     _kill_turn_group(proc)
                     bounded_rc = 7
                     break
@@ -395,11 +492,28 @@ def main():
                     _idle = diag.idle_seconds()
                     # `None` is "not measured yet", never "not idle" — see idle_seconds().
                     if _idle is not None and _idle >= idle_cap:
+                        idle_blocker = _probe_idle_blocker(proc, agy_log)
                         _kill_turn_group(proc)
                         bounded_rc = 7
                         idle_killed = True
                         break
                 time.sleep(TURN_POLL_S)
+        finally:
+            # Close the master FIRST: the drain thread's blocking read then returns/raises
+            # and the join below can reap it. Order matters — join-then-close deadlocks.
+            if pty_master is not None:
+                try:
+                    os.close(pty_master)
+                except OSError:
+                    pass
+            if pty_slave is not None:   # only non-None when Popen itself failed post-openpty
+                try:
+                    os.close(pty_slave)
+                except OSError:
+                    pass
+            if pty_reader is not None:
+                pty_reader.join(timeout=3)
+            log_f.close()
     except Exception:
         bounded_rc = 5
     finally:
@@ -454,6 +568,15 @@ def main():
         # different questions — "why did the harness stop it" vs "what was it doing". Three
         # causes and two bounds stay independently readable, as GH-390 established.
         _reason, _detail = diag.classify()
+        if idle_blocker is not None:
+            _blk, _blk_detail = idle_blocker
+            _blk_line = (f"agy-turn: idle-blocker attribution: blocker={_blk} — {_blk_detail}")
+            print(_blk_line, file=sys.stderr)
+            try:
+                with open(agy_log, "a") as log_f:
+                    log_f.write(f"\n[GH-114 idle-blocker] blocker={_blk} — {_blk_detail}\n")
+            except OSError:
+                pass
         if idle_killed:
             print(f"agy-turn: agy -p was IDLE for >={idle_cap}s (no CPU, no worktree progress) — "
                   f"killed early at ~{int(time.monotonic() - started)}s of a {turn_timeout}s wall cap "
