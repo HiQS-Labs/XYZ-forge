@@ -25,6 +25,15 @@ re-run after the reset.
 
 Everything else is green. The eight suites this branch fixes are listed below with their root causes.
 
+**How that number was arrived at, since it moved once.** An earlier full run of mine reported *three*
+failures — the one above plus `roadmap-dashboard.sh` and `clone-identity-invariant`. Both extras were
+self-inflicted: I edited `ROADMAP.md` and committed **while the gate was running**, which is exactly
+the hazard the repo documents (GH-141 — never hand-edit a clone while a run is in flight).
+`roadmap-dashboard` was a real drift I had just introduced and is fixed in this branch;
+`clone-identity-invariant` is the GH-1 identity bracket correctly noticing a tree that changed
+underneath it. The **1** above is from a clean re-run on an untouched tree: **260 suites, one
+failure**, with `clone-identity-invariant` passing. CI is green on this PR.
+
 ---
 
 ## Part 1 — the PR #29 follow-up (`evidence/PR29-MSYS2-FOLLOWUP.md`)
