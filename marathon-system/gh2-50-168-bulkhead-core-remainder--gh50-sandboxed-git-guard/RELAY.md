@@ -1,6 +1,6 @@
 # Marathon Phase gh50-sandboxed-git-guard
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH50-SANDBOXED-GIT-GUARD-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -95,3 +95,19 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Added `utils/git-sandbox-guard.sh`, an executable preflight/wrapper that resolves the repository's
+  common config, probes both the config and `config.lock` write paths, and refuses with a GH-50-named
+  error before executing the supplied branch command.
+- Added `test/gh50-sandboxed-git-guard.sh` with a contained repository fixture: read-only config must
+  preserve payload bytes, HEAD, branch refs, config bytes, and lock cleanliness; the writable-config
+  control proves the wrapper still executes the exact command.
+- Registered the focused suite in `validate.sh` and added the AGENTS.md rail requiring branch-changing
+  harness commands to use the wrapper and retain full git stderr.
+- No current `switch --track` / `branch -D` runtime call site was found in the permitted artifact set;
+  no off-allowlist driver file was edited. The new `utils/*.sh` file requires commit trailer
+  `New-bash-exception: utils/git-sandbox-guard.sh — GH-50 preflight must wrap git branch commands before process launch`.
+- Verification: `bash test/gh50-sandboxed-git-guard.sh` — 11 pass, 0 fail. Full `validate.sh`
+  intentionally not run by this lane.
