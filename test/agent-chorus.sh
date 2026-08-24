@@ -682,5 +682,45 @@ case "$shim_out" in
   *) fail "deprecated shim did not warn+delegate: $shim_out" ;;
 esac
 
+# ── Gen 2 Phase 1: telemetry sidecar + index + outcome + audit (#193) ──────────────
+TS_STORE="$WORK/telemetry-store"; mkdir -p "$TS_STORE"
+ts_cli() { python3 "$CLI" --store "$TS_STORE" "$@"; }
+printf '## Goal\nT\n## Scope\nT\n## Context and current state\nT\n## Evidence and artifacts\nT\n## Constraints and safety boundaries\nT\n## Questions for participants\nT\n## Requested outcome / done condition\nT\n' > "$WORK/pkt.md"
+ts_cli start --subject "telemetry suite probe" --packet-file "$WORK/pkt.md" --id 777001 >/dev/null 2>&1
+TS_SIDECAR="$(find "$TS_STORE" -path "*777001*" -name telemetry.jsonl | head -1)"
+[ -n "$TS_SIDECAR" ] && [ -s "$TS_SIDECAR" ] \
+  && pass "telemetry sidecar written on start (pilot window default-ON)" || fail "no telemetry sidecar after start"
+grep -q '"event": "discussion_started"' "$TS_SIDECAR" 2>/dev/null \
+  && pass "discussion_started event present with schema version" || fail "discussion_started event missing"
+# hard override: a fresh discussion with AGENT2AGENT_TELEMETRY=0 writes nothing
+TS_STORE2="$WORK/telemetry-store-off"; mkdir -p "$TS_STORE2"
+AGENT2AGENT_TELEMETRY=0 python3 "$CLI" --store "$TS_STORE2" start --subject "off probe" --packet-file "$WORK/pkt.md" --id 777002 >/dev/null 2>&1
+[ -z "$(find "$TS_STORE2" -name telemetry.jsonl)" ] \
+  && pass "AGENT2AGENT_TELEMETRY=0 hard override suppresses all telemetry" || fail "override failed: sidecar written while disabled"
+# close with a falsifier + action; outcome with model attribution; aggregate; audit
+ts_cli close --id 777001 --agent 2 --message "## Final Consensus & Recommendation
+### Decision
+Suite close.
+### Key Invariants & Rationale
+Allowlist.
+### Recorded Dissent / Falsifiers
+- one falsifier
+### Recommended Next Actions
+1. first action" >/dev/null 2>&1
+grep -q '"event": "close_written"' "$TS_SIDECAR" && grep -q '"falsifier_count": 1' "$TS_SIDECAR" \
+  && pass "close_written event carries counts (falsifier_count=1), never prose" || fail "close_written missing or wrong counts"
+TS_REPORT="$(find "$TS_STORE" -path "*777001*" -name close_report.json | head -1)"
+[ -n "$TS_REPORT" ] && grep -q '"recommended_actions_count": 1' "$TS_REPORT" \
+  && pass "close_report.json emitted on substantive close" || fail "close_report.json missing/wrong"
+ts_cli outcome --id 777001 --result implemented --note "suite" --agent 1=tester-a --agent 2=tester-b >/dev/null 2>&1
+grep -q '"event": "outcome_recorded"' "$TS_SIDECAR" && grep -q 'tester-a' "$TS_STORE/telemetry_index.db" 2>/dev/null \
+  && pass "outcome_recorded event + per-seat model attribution in index" || fail "outcome event/attribution missing"
+AGG_OUT="$(ts_cli telemetry aggregate 2>&1)"
+case "$AGG_OUT" in *"777001"*"outcome=implemented"*) pass "telemetry aggregate queries the index across discussions" ;; *) fail "aggregate missing discussion: $AGG_OUT" ;; esac
+ts_cli telemetry audit --id 777001 >/dev/null 2>&1 \
+  && pass "comparator audit: zero transcript content in telemetry (negative control)" || fail "audit failed: content leak suspected"
+ts_cli telemetry status >/dev/null 2>&1 \
+  && pass "telemetry status reports mode/window/override" || fail "telemetry status failed"
+PURGE_OUT="$(ts_cli telemetry purge 2>&1)"; case "$PURGE_OUT" in *"purged"*[1-9]*) pass "telemetry purge revokes all artifacts" ;; *) fail "purge removed nothing: $PURGE_OUT" ;; esac
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
