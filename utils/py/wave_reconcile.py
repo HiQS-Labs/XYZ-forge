@@ -171,18 +171,26 @@ def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
         for entry in offline_manifest.get("issues", []):
             if str(entry.get("number")) == str(issue_num):
                 return str(entry.get("state", "")).upper()
-        return None
+        return None  # legacy manifest without an issues key: unknown, promote as before
+    # LIVE reconcile: a failed gh is a failed fact-check, not an unknown state. A transient
+    # error (network, rate limit) must NOT silently fall back to promotion (GH-202 review,
+    # Agy round 1 blocker) — that would mis-promote every open issue on a bad network day.
     try:
         r = subprocess.run(
             ["gh", "issue", "view", str(issue_num), "--json", "state"],
             cwd=repo_root, capture_output=True, text=True, check=False,
         )
-        if r.returncode == 0:
-            import json as _json
-            return str(_json.loads(r.stdout).get("state", "")).upper()
-    except OSError:
-        pass
-    return None
+    except OSError as exc:
+        die(f"gh issue view #{issue_num} could not run ({exc}); refusing to guess issue state — "
+            f"fix gh access or pass --offline with an issues[] manifest", code=6)
+    if r.returncode != 0:
+        die(f"gh issue view #{issue_num} failed (exit {r.returncode}): {r.stderr.strip()}; "
+            f"refusing to guess issue state — fix gh access or pass --offline with an issues[] manifest", code=6)
+    try:
+        import json as _json
+        return str(_json.loads(r.stdout).get("state", "")).upper()
+    except ValueError:
+        die(f"gh issue view #{issue_num} returned unparseable output; refusing to guess issue state", code=6)
 
 
 def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
@@ -192,7 +200,7 @@ def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
     note = "\n## Merge evidence\n\n- PR #" + str(pr_id) + " merged " + (merged_at or "(date unknown)") + " — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).\n"
     with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
         content = f.read()
-    if "PR #" + str(pr_id) + " merged" in content:
+    if ("\n- PR #" + str(pr_id) + " merged ") in content or content.startswith("- PR #" + str(pr_id) + " merged "):
         return  # idempotent
     if not dry_run:
         if journal is not None:

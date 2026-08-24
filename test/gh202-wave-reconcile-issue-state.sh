@@ -16,6 +16,7 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh202-reconcile.XXXXXX")"
 cleanup() { [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
 trap cleanup EXIT
 . "$(dirname "$0")/lib/fixture-guard.sh"
+TODAY="$(date +%Y-%m-%d)"
 fixture_guard_init "$WORK"
 
 REPO="$WORK/fixture-repo"
@@ -24,7 +25,7 @@ git -C "$REPO" init -q -b development
 git -C "$REPO" config user.name "Test Agent"
 git -C "$REPO" config user.email "test@example.com"
 mkdir -p "$REPO/PROJECT/2-WORKING" "$REPO/PROJECT/3-COMPLETED" "$REPO/PROJECT/4-MISC" \
-  "$REPO/utils/py" "$REPO/utils/pdda" "$REPO/utils/timeline" "$REPO/TESTS-RESULTS/2026-08-24"
+  "$REPO/utils/py" "$REPO/utils/pdda" "$REPO/utils/timeline" "$REPO/TESTS-RESULTS/$TODAY"
 cp "$RECONCILE_PY" "$REPO/utils/py/wave_reconcile.py"
 require_fixture_file "$REPO/utils/py/wave_reconcile.py" "reconciler-copy"
 
@@ -32,8 +33,8 @@ cat > "$REPO/ROADMAP.md" <<'ROADMAPEOF'
 # Test Roadmap
 
 ### In progress
-- **GH-3001 · Open-issue umbrella** 🚧 **active 2026-08-24** — phases remain. rated 80/80/80/80. → [GH-3001-OPEN.md](PROJECT/2-WORKING/GH-3001-OPEN.md) · [#3001](https://github.com/HiQS-Labs/XYZ-forge/issues/3001)
-- **GH-3002 · Done work** 🚧 **active 2026-08-24** — complete. rated 80/80/80/80. → [GH-3002-DONE.md](PROJECT/2-WORKING/GH-3002-DONE.md) · [#3002](https://github.com/HiQS-Labs/XYZ-forge/issues/3002)
+- **GH-3001 · Open-issue umbrella** 🚧 **active $TODAY** — phases remain. rated 80/80/80/80. → [GH-3001-OPEN.md](PROJECT/2-WORKING/GH-3001-OPEN.md) · [#3001](https://github.com/HiQS-Labs/XYZ-forge/issues/3001)
+- **GH-3002 · Done work** 🚧 **active $TODAY** — complete. rated 80/80/80/80. → [GH-3002-DONE.md](PROJECT/2-WORKING/GH-3002-DONE.md) · [#3002](https://github.com/HiQS-Labs/XYZ-forge/issues/3002)
 
 ### Completed
 ROADMAPEOF
@@ -43,8 +44,8 @@ cat > "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md" <<'DOCEOF'
 gh_issue: 3001
 title: "GH-3001"
 status: In Progress
-created: 2026-08-24
-updated: 2026-08-24
+created: $TODAY
+updated: $TODAY
 ---
 
 # GH-3001
@@ -58,8 +59,8 @@ cat > "$REPO/PROJECT/2-WORKING/GH-3002-DONE.md" <<'DOCEOF'
 gh_issue: 3002
 title: "GH-3002"
 status: In Progress
-created: 2026-08-24
-updated: 2026-08-24
+created: $TODAY
+updated: $TODAY
 ---
 
 # GH-3002
@@ -68,7 +69,7 @@ updated: 2026-08-24
 - Promote only when the linked issue is actually closed.
 DOCEOF
 
-echo '{"status": "PASS"}' > "$REPO/TESTS-RESULTS/2026-08-24/provenance.jsonl"
+echo '{"status": "PASS"}' > "$REPO/TESTS-RESULTS/$TODAY/provenance.jsonl"
 
 # Subprocess stubs — marathon-plan deliberately exits 5 (items held): the reconcile must CONTINUE.
 printf '#!/usr/bin/env python3\nprint("MOCK: releases_app OK")\n' > "$REPO/utils/py/releases_app.py"
@@ -133,8 +134,8 @@ cat > "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md" <<'DOCEOF'
 gh_issue: 3001
 title: "GH-3001"
 status: In Progress
-created: 2026-08-24
-updated: 2026-08-24
+created: $TODAY
+updated: $TODAY
 ---
 
 # GH-3001
@@ -147,6 +148,53 @@ python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --offline "$
 [ -f "$REPO/PROJECT/3-COMPLETED/GH-3001-OPEN.md" ] \
   && pass "legacy manifest (no issues key): unknown state still promotes — backward compatible" \
   || fail "legacy manifest behavior changed (regression)"
+
+
+# ── LIVE gh path (mock gh on PATH; no --offline) ───────────────────────────────
+mkdir -p "$REPO/bin"
+cat > "$REPO/bin/gh" <<'GHEOF'
+#!/usr/bin/env bash
+case "$1" in
+  pr)
+    # gh pr view 4001 --json ... -> merged PR metadata
+    printf '{"number":4001,"title":"feat: lands 3001 phase + all of 3002","state":"MERGED","mergedAt":"%sT00:00:00Z","baseRefName":"development","headRefName":"feat/x","body":"Closes #3002. Advances GH-3001 (phase 1 of 2).","url":"https://example/pr/4001"}\n' "${FAKE_TODAY:-2026-08-24}"
+    ;;
+  issue)
+    if [ "${GH_MOCK_FAIL:-0}" = "1" ]; then echo "gh: API rate limit exceeded" >&2; exit 1; fi
+    printf '{"state":"OPEN"}\n'
+    ;;
+esac
+GHEOF
+chmod +x "$REPO/bin/gh"
+
+# restore an active 3001 doc for the live tests (and clear the legacy test's promoted copy)
+rm -f "$REPO/PROJECT/3-COMPLETED/GH-3001-OPEN.md"
+cat > "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md" <<'DOCEOF'
+---
+gh_issue: 3001
+title: "GH-3001"
+status: In Progress
+created: $TODAY
+updated: $TODAY
+---
+
+# GH-3001
+
+## Lessons Learned (For Future Agents)
+- Live gh path coverage.
+DOCEOF
+git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: mock gh + restored 3001" 2>/dev/null || true
+
+# Live success: gh answers OPEN -> doc stays active with evidence
+out="$(PATH="$REPO/bin:$PATH" python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --skip-pull 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && grep -q "is OPEN" <<<"$out"   && pass "live gh OPEN answer: reconcile succeeds and keeps the doc active"   || fail "live gh OPEN path broken (rc=$rc): $out"
+[ -f "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md" ] && grep -q "## Merge evidence" "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md"   && pass "live gh OPEN answer: merge evidence recorded" || fail "live path: no evidence"
+
+# Live failure: gh errors -> reconcile DIES, doc untouched (fail-closed, no blind promotion)
+git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: post-live-success" 2>/dev/null || true
+out="$(GH_MOCK_FAIL=1 PATH="$REPO/bin:$PATH" python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --skip-pull 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && grep -q "refusing to guess issue state" <<<"$out"   && pass "live gh FAILURE: reconcile dies loudly instead of promoting blindly (fail-closed)"   || fail "live gh failure was swallowed (rc=$rc): $out"
+[ -f "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md" ] && [ ! -f "$REPO/PROJECT/3-COMPLETED/GH-3001-OPEN.md" ]   && pass "live gh FAILURE: no mis-promotion occurred" || fail "live gh failure caused mis-promotion"
 
 echo "  gh202-wave-reconcile-issue-state: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
