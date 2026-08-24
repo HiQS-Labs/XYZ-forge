@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0 SHIPPED 2026-08-23 (PR #196: rename + shim + compat, gate 258/258) | Phase 1 in flight (telemetry sidecar + index + outcome + data policy + comparator); pause at pilot window per plan |
+| Phases 0-1 SHIPPED (PR #196 2026-08-23; PR #200 2026-08-24 — telemetry/index/outcome/audit/policy, suite 142/142, gate 263/263) | Pilot window running (2026-08-24..09-08); Phase 2 (lifecycle verbs, verify-citations, guardrail reconciliation) may ride during the window; Phase 3 gated on the >=10-discussion baseline review |
 
 Release 0.7.3 "Bulkhead" manifest member. Plan of record: the phased v2 plan + consolidated
 agent2+agent3 position + DeepSeek sharpenings, all on the issue. Phase gates from the plan:
@@ -39,3 +39,10 @@ Phase 1 exit criteria (from the plan): one full real discussion completes with t
 recorded outcome; one aggregate query runs over the pilot corpus via telemetry_index.db; the
 comparator (`telemetry audit`) shows zero transcript content. Pilot window default-ON:
 2026-08-24 .. 2026-09-08 (declared in EXPERIMENTS.md; hard override AGENT2AGENT_TELEMETRY=0).
+
+## Note on wave_reconcile (2026-08-24)
+
+Deliberately NOT promoted to 3-COMPLETED by the PR #200 reconciliation: the reconciler treats a
+merged PR as item completion, but this umbrella continues (phases 2-3). Recorded here instead.
+Improvement candidate for Phase 2: the reconciler should honor the linked issue's open/closed
+state before promoting a doc (it currently moves any doc linked to a merged PR).
