@@ -4,6 +4,9 @@
 > - **`AGENTS.md`** owns repo-wide behavioral governance, core principles (*Verified Beats Plausible*, blast radius sizing, reversibility scale), marathon load rails, role splits, and push boundary gates.
 > - **`SOP.md` (this file)** is a specialized, tactical execution procedure specifically for **testing campaigns, ATE variation matrices, and benchmark telemetry provenance** (`TESTS-RESULTS/`).
 > - **Overlap (~25%)**: This SOP references and enforces `AGENTS.md` invariants (standalone clone isolation GH-564, githooks/pre-push gates, and committed `.jsonl` telemetry GH-430) within its step-by-step campaign workflow rather than redefining general repository policy.
+> - **Exception to this file's scope**: §4 "Opinionated SOPs" is a general **maintainer-workflow
+>   appendix** (branch discipline, express-to-development, fresh-clone-per-task) — it governs all
+>   maintainer development work, not just testing campaigns, and is optional for downstream users.
 
 This document outlines the standard operating procedure for designing, executing, verifying, and committing evidence from automated testing campaigns, harness evaluations, and ATE variation matrices.
 
@@ -65,13 +68,15 @@ cd ../XYZ-forge-<topic>
 bash githooks/install.sh
 ```
 
-### Step 3: Local Gate Qualification
+### Step 3: Local Gate Preflight (non-qualifying)
 Before launching a campaign or spending API tokens:
 ```bash
 ./validate.sh
 bash utils/fuzzing/fuzz-loop.sh
 ```
-Ensure 100% of test suites pass before proceeding.
+Ensure 100% of test suites pass before proceeding. This is a **self-check preflight** — the
+qualifying run that writes the evidence record is `bash ci-local.sh` (see `AGENTS.md`), which
+remains outstanding until run.
 
 ### Step 4: Configure Matrix & Telemetry
 Define the variation matrix in `utils/ate/variations.<name>.yaml`:
@@ -128,11 +133,28 @@ Store the campaign output in `TESTS-RESULTS/`:
 > maintainers to ignore them, or write a script that strips this section on pull from upstream.
 > Nothing in the codebase enforces them.
 
-- **Primary checkout stays on `development`.** The local device's GitHub-mapped primary working
-  tree (this folder) is always kept on the `development` branch. Feature work does not happen
-  here — see the next rule.
-- **Express-to-development is explicit; everything else gets a fresh full clone.** The user must
-  explicitly ask for an express commit + push into `development` for critical work. When the user
-  does not say so, the LLM begins new work by provisioning a **new local full-clone folder**
-  (`git clone . ../XYZ-forge-<topic>` — a full clone, *not* a git worktree, per GH-564), then
-  follows the standard path: `feat/`- or `fix/`-prefixed branch → PR into `development`.
+- **The primary clone stays on `development`.** Each device has exactly one
+  **operator-designated primary clone** — the long-lived checkout the operator opens by default
+  and keeps mapped to GitHub. That clone is always kept on the `development` branch. This rule
+  applies **only** to the primary clone by role; task clones provisioned under the next rule are
+  exempt (they live on their own task branch and are disposable).
+- **Express-to-development is explicit; everything else gets a fresh full clone.** Direct
+  commit + push into `development` happens only when the user **explicitly asks** for an express
+  commit of critical work. In every other case, the LLM begins new work by provisioning a
+  **new local full-clone folder** — a full clone, *not* a git worktree (GH-564) — cloned from
+  the GitHub remote so `origin` points at GitHub, wired with the gate, and branched off
+  `origin/development`:
+
+  ```bash
+  git clone git@github.com:HiQS-Suite/XYZ-forge.git ../XYZ-forge-<topic>
+  cd ../XYZ-forge-<topic>
+  bash githooks/install.sh                       # per-clone; the gate does not travel (GH-549)
+  git checkout -b feat/<topic> origin/development   # or fix/<topic>
+  ```
+
+  Work lands by pushing that task branch and opening a PR into `development`. **This policy is
+  the standing explicit authorization** for that fresh-clone task branch under `AGENTS.md`'s
+  "do not create new git branches automatically" rail — the same carve-out shape as the
+  marathon per-lane branch. It authorizes exactly one `feat/`/`fix/` branch per fresh task
+  clone, and it is *not* a licence to commit directly onto `development` (the express path
+  above remains user-request-only).

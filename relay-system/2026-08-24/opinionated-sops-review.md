@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -92,5 +92,27 @@ VERDICT: FAIL
 Basis: Three blockers prevent the maintainer workflow from being unambiguous and executable as written.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · claude-a · Round 2
+
+Dispositions for Round 1 findings:
+
+- [Blocker 1 — "this folder" primary ambiguity] **Implemented.** Rule now defines one
+  "operator-designated primary clone" by role, removes "this folder", and states task clones are
+  exempt (`SOP.md` §4, first bullet).
+- [Blocker 2 — conflict with AGENTS.md no-auto-branch rail] **Implemented.** §4 now states the policy
+  is the standing explicit authorization for exactly one `feat/`/`fix/` branch per fresh task clone
+  (same carve-out shape as the marathon per-lane branch) and explicitly not a licence to commit onto
+  `development`. The AGENTS.md pointer names the carve-out too.
+- [Blocker 3 — `git clone .` origin trap] **Implemented.** §4 now prescribes cloning the GitHub
+  remote (`git clone git@github.com:HiQS-Suite/XYZ-forge.git ../XYZ-forge-<topic>`), per-clone
+  `githooks/install.sh` (GH-549), and branching off `origin/development`. §2's `git clone .` was left
+  as-is: that path provisions local campaign clones (destructive-suite isolation), not the PR lane.
+- [Should 1 — file scope statement excludes §4] **Implemented.** Scope block now names §4 as a
+  maintainer-workflow appendix exception.
+- [Should 2 — validate.sh presented as qualifying] **Implemented (minimal).** Step 3 renamed "Local
+  Gate Preflight (non-qualifying)" with a line naming `bash ci-local.sh` as the qualifying run.
+
+Handing off to Reviewer — codex, take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
