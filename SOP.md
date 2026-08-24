@@ -117,3 +117,22 @@ Store the campaign output in `TESTS-RESULTS/`:
 3. Update GitHub issue with summary notes.
 4. Verify pre-push gates (`test/gh308-frozen-twin-guard.sh --check --staged`).
 5. Commit, push branch, and open PR against `development`.
+
+---
+
+## 4. Opinionated SOPs (XYZ-maintainer defaults — optional downstream)
+
+> **Who these are for:** These conventions exist to help the **XYZ maintainers** with our own
+> development flow on this repository. They are **not** part of the harness contract.
+> **Public users and downstream forks are free to disable them**, instruct their own LLM
+> maintainers to ignore them, or write a script that strips this section on pull from upstream.
+> Nothing in the codebase enforces them.
+
+- **Primary checkout stays on `development`.** The local device's GitHub-mapped primary working
+  tree (this folder) is always kept on the `development` branch. Feature work does not happen
+  here — see the next rule.
+- **Express-to-development is explicit; everything else gets a fresh full clone.** The user must
+  explicitly ask for an express commit + push into `development` for critical work. When the user
+  does not say so, the LLM begins new work by provisioning a **new local full-clone folder**
+  (`git clone . ../XYZ-forge-<topic>` — a full clone, *not* a git worktree, per GH-564), then
+  follows the standard path: `feat/`- or `fix/`-prefixed branch → PR into `development`.
