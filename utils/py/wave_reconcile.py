@@ -160,6 +160,55 @@ def pull_upstream(repo_root, branch="development"):
         die(f"git pull --ff-only failed: {r.stderr}")
 
 
+def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
+    """Linked issue state, or None when unknowable (GH-202).
+
+    None means PROMOTE as before — backward-compatible for offline manifests that
+    carry no issue list; only a positively-OPEN issue suppresses promotion.
+    Offline manifests may declare {"issues": [{"number": N, "state": "OPEN"}]}.
+    """
+    if offline_manifest:
+        for entry in offline_manifest.get("issues", []):
+            if str(entry.get("number")) == str(issue_num):
+                return str(entry.get("state", "")).upper()
+        return None  # legacy manifest without an issues key: unknown, promote as before
+    # LIVE reconcile: a failed gh is a failed fact-check, not an unknown state. A transient
+    # error (network, rate limit) must NOT silently fall back to promotion (GH-202 review,
+    # Agy round 1 blocker) — that would mis-promote every open issue on a bad network day.
+    try:
+        r = subprocess.run(
+            ["gh", "issue", "view", str(issue_num), "--json", "state"],
+            cwd=repo_root, capture_output=True, text=True, check=False,
+        )
+    except OSError as exc:
+        die(f"gh issue view #{issue_num} could not run ({exc}); refusing to guess issue state — "
+            f"fix gh access or pass --offline with an issues[] manifest", code=6)
+    if r.returncode != 0:
+        die(f"gh issue view #{issue_num} failed (exit {r.returncode}): {r.stderr.strip()}; "
+            f"refusing to guess issue state — fix gh access or pass --offline with an issues[] manifest", code=6)
+    try:
+        import json as _json
+        return str(_json.loads(r.stdout).get("state", "")).upper()
+    except ValueError:
+        die(f"gh issue view #{issue_num} returned unparseable output; refusing to guess issue state", code=6)
+
+
+def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
+    """Open-issue docs stay in 2-WORKING; record the merged-PR evidence in place (GH-202)."""
+    pr_id = pr_meta.get("number", "?")
+    merged_at = (pr_meta.get("mergedAt") or "")[:10]
+    note = "\n## Merge evidence\n\n- PR #" + str(pr_id) + " merged " + (merged_at or "(date unknown)") + " — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).\n"
+    with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
+        content = f.read()
+    if ("\n- PR #" + str(pr_id) + " merged ") in content or content.startswith("- PR #" + str(pr_id) + " merged "):
+        return  # idempotent
+    if not dry_run:
+        if journal is not None:
+            journal.snapshot(doc_path)
+        with open(doc_path, "a", encoding="utf-8") as f:
+            f.write(note)
+
+
 def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
     """Fetch merged PR metadata from GitHub or offline manifest."""
     if offline_manifest:
@@ -429,7 +478,11 @@ def run_subprocesses(repo_root, dry_run=False, journal=None):
         log(f"  -> {name}")
         r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
         if name.startswith("marathon-plan"):
-            if r.returncode not in (0, 4):
+            # Exit 5 = "items held" — a normal planning state (needs-doc/needs-contract
+            # entries), not a reconciliation failure (GH-202). Exit 4 (drift) stays tolerated.
+            if r.returncode == 5:
+                log(f"  marathon-plan reports items held (exit 5) — continuing; held items are planning state, not reconcile failures")
+            elif r.returncode not in (0, 4):
                 die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
         elif r.returncode != 0:
             die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
@@ -564,7 +617,14 @@ def main():
 
                 for issue_num in linked_issues:
                     doc_path = find_active_doc_for_issue(repo_root, issue_num)
-                    if doc_path:
+                    issue_state = fetch_issue_state(repo_root, issue_num, offline_manifest)
+                    if doc_path and issue_state == "OPEN" and is_merged:
+                        # GH-202: a merged PR does not complete an open issue — plan-capture
+                        # PRs and phased umbrellas keep their active doc; evidence recorded in place.
+                        log(f"  Issue #{issue_num} is OPEN — keeping {os.path.basename(doc_path)} active; recording merge evidence")
+                        record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
+                        ship_date = datetime.now().strftime("%Y-%m-%d")
+                    elif doc_path:
                         log(f"  Found active doc: {os.path.basename(doc_path)}")
                         dest_path, ship_date = validate_and_update_doc(
                             doc_path, pr_meta, is_merged=is_merged, dry_run=args.dry_run, journal=journal
