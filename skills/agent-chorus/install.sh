@@ -13,6 +13,33 @@ while [ -h "$_src" ]; do
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 SKILL_NAME="agent-chorus"
+LEGACY_SKILL_NAME="agent2agent"
+
+# Phase 0 rename (#193): machines that installed the old skill hold a
+# ~/.claude/skills/agent2agent symlink whose target directory no longer exists after
+# this rename lands — a dangling link that silently drops the skill with no pointer
+# to the new name. During the one-release deprecation window, repoint that legacy
+# link at the renamed skill dir so `/agent2agent` still resolves; remove this block
+# together with scripts/agent2agent.py.
+migrate_legacy_link() {
+  _label="$1"
+  _dest="$2"
+  _legacy="$_dest/$LEGACY_SKILL_NAME"
+  [ -L "$_legacy" ] || return 0    # only ever touch a symlink, never a real dir/file
+  _target="$(readlink "$_legacy")"
+  case "$_target" in
+    *"/skills/$LEGACY_SKILL_NAME"|*"/skills/$SKILL_NAME")
+      ln -sfn "$SELF_DIR" "$_legacy"
+      echo "$SKILL_NAME: repointed legacy $_legacy -> $SELF_DIR for $_label (deprecation window)"
+      ;;
+    *)
+      if [ ! -e "$_legacy" ]; then
+        rm -f "$_legacy"
+        echo "$SKILL_NAME: removed dangling legacy link $_legacy for $_label"
+      fi
+      ;;
+  esac
+}
 
 install_one() {
   _label="$1"
@@ -24,6 +51,7 @@ install_one() {
     return 1
   fi
   mkdir -p "$_dest"
+  migrate_legacy_link "$_label" "$_dest"
 
   if [ -L "$_link" ]; then
     if [ -e "$_link" ] && [ "$(cd -P "$_link" >/dev/null 2>&1 && pwd)" = "$SELF_DIR" ]; then

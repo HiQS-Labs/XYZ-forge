@@ -653,6 +653,27 @@ install_rc=$?
 [ -L "$CLAUDE_DIR/agent-chorus" ] && [ -L "$CODEX_DIR/agent-chorus" ] \
   && pass "installer exposes the same skill to both agents" || fail "installer symlinks missing"
 
+# Legacy symlink migration (#193 Phase 0): a machine that installed the old agent2agent skill
+# holds a symlink whose target dies with this rename. The installer must repoint it (old-name
+# target), leave real directories alone, and drop links that dangle at something unrelated.
+MIG_DIR="$WORK/legacy-skills"
+mkdir -p "$MIG_DIR"
+ln -s "$REPO/skills/agent2agent" "$MIG_DIR/agent2agent"   # the pre-rename install shape (now dangling)
+mig_out="$(CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
+  bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
+mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
+[ "$mig_target" = "$REPO/skills/agent-chorus" ] \
+  && pass "installer repoints the legacy agent2agent symlink at the renamed skill" \
+  || fail "legacy symlink not repointed (now -> '$mig_target'): $mig_out"
+
+MIG_DIR2="$WORK/legacy-realdir"
+mkdir -p "$MIG_DIR2/agent2agent"
+CLAUDE_SKILLS_DIR="$MIG_DIR2" CODEX_SKILLS_DIR="$WORK/mig2-codex" \
+  bash "$REPO/skills/agent-chorus/install.sh" >/dev/null 2>&1
+[ -d "$MIG_DIR2/agent2agent" ] && [ ! -L "$MIG_DIR2/agent2agent" ] \
+  && pass "installer leaves a real agent2agent directory untouched" \
+  || fail "installer touched a real (non-symlink) agent2agent directory"
+
 # Deprecated agent2agent.py shim: warns and delegates to agent_chorus.py (Gen 2 Phase 0, #193)
 shim_out="$(python3 "$(dirname "$CLI")/agent2agent.py" --help 2>&1)"; shim_rc=$?
 case "$shim_out" in
