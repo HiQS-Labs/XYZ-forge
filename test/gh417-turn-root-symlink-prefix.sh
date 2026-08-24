@@ -71,7 +71,7 @@ STUB="$WORK/agy"
 cat > "$STUB" << 'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-[ "${1:-}" = whoami ] && { printf 'agy@example.test\n'; exit 0; }
+{ [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; } && { printf 'agy@example.test\n'; exit 0; }
 [ "${1:-}" = models ] && { printf 'Gemini 3.5 Flash\n'; exit 0; }
 printf 'agy-stub: model response for %s\n' "$RELAY_AGENT"
 "$TICK_BIN" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1

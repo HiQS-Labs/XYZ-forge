@@ -32,7 +32,7 @@ case "$WORK" in ""|*..*) echo "FAIL: invalid sandbox root"; exit 1 ;; esac
 STUB_USAGE="$WORK/agy-usage"
 cat >"$STUB_USAGE" <<'EOF'
 #!/usr/bin/env bash
-if [ "${1:-}" = whoami ]; then
+if [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; then
   printf 'Error: unexpected argument "whoami".\n'
   printf 'Prompts are read only from -p/--print, -i/--prompt-interactive, or stdin, so this argument would have been ignored.\n'
   exit 2
@@ -45,7 +45,7 @@ chmod +x "$STUB_USAGE"
 STUB_CREDS="$WORK/agy-creds"
 cat >"$STUB_CREDS" <<'EOF'
 #!/usr/bin/env bash
-if [ "${1:-}" = whoami ]; then
+if [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; then
   printf 'Error: not logged in — credentials rejected by the auth server\n'
   exit 1
 fi
@@ -57,7 +57,7 @@ chmod +x "$STUB_CREDS"
 STUB_UNKNOWN_CMD="$WORK/agy-unknown-cmd"
 cat >"$STUB_UNKNOWN_CMD" <<'EOF'
 #!/usr/bin/env bash
-if [ "${1:-}" = whoami ]; then
+if [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; then
   printf 'unknown command "whoami" for "agy"\n'
   exit 2
 fi
@@ -69,7 +69,7 @@ chmod +x "$STUB_UNKNOWN_CMD"
 STUB_SILENT="$WORK/agy-silent"
 cat >"$STUB_SILENT" <<'EOF'
 #!/usr/bin/env bash
-if [ "${1:-}" = whoami ]; then
+if [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; then
   exit 3
 fi
 exit 0

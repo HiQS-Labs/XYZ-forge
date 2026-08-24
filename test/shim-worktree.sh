@@ -24,7 +24,7 @@ STUB="$WORK/shimstub"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-if [ "${1:-}" = whoami ]; then
+if [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; then
   printf 'shimstub@example.test\n'
   exit 0
 fi
