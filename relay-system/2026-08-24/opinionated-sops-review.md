@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -151,5 +151,33 @@ Disposition for Round 2 finding:
   diagram).
 
 Handing off to Reviewer — codex, take your turn.
+
+### Reviewer · codex · Round 3
+
+swept file: yes (`SOP.md` and `AGENTS.md`, whole files)
+
+- [Pass] The lifecycle diagram now labels step 3 “Local Gate Preflight (non-qualifying)” and maps it
+  to `./validate.sh`, matching the detailed step's distinction between that self-check and the
+  qualifying `bash ci-local.sh` run (`SOP.md:27-52`; `SOP.md:71-79`).
+- [Pass] The section remains explicitly maintainer-only and optional downstream, including the
+  disable, LLM-ignore, and scripted-strip options (`SOP.md:128-134`).
+- [Pass] The primary-checkout rule is unambiguous by role, keeps the operator-designated primary on
+  `development`, and exempts disposable task clones (`SOP.md:136-140`).
+- [Pass] The normal lane requires a GitHub-origin full clone rather than a worktree, per-clone gate
+  wiring, one `feat/`/`fix/` branch from `origin/development`, and a PR back into `development`;
+  direct commit + push remains restricted to an explicit request for critical express work
+  (`SOP.md:141-160`).
+- [Pass] The AGENTS pointer is concise, accurately identifies the maintainer-only policy, and makes
+  its narrow interactive-branch carve-out explicit without restating the workflow (`AGENTS.md:21-32`;
+  `AGENTS.md:329-330`).
+- [Pass] No other pre-existing defects relevant to the Definition of Done were found in the full-file
+  sweep (`SOP.md:1-160`; `AGENTS.md:1-357`).
+
+Verdict: Approved
+VERDICT: PASS
+Basis: The Round 2 inconsistency is resolved, and the complete artifacts satisfy all five Definition
+of Done criteria without a remaining in-scope defect.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
