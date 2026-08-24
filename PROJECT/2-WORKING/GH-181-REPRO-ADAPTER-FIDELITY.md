@@ -66,3 +66,14 @@ gh155-phase3 suite stays green.
   "lanes":         { "agy_safe": [ "utils/ate/scripts/run_variations.py", "utils/py/repro_builder.py", "test/gh181-repro-adapter-fidelity.sh" ], "orchestrator_only": [ "validate.sh" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+A reproducer that runs is not a reproducer that reproduces: the adapter mis-tokenized unquoted
+commands from real telemetry, yielding scripts that failed with rc 127 (command not found) instead
+of the recorded rc 2 — a "failing" reproducer for the wrong reason, which is worse than none
+because it silently validates the pipeline. The shipped fix (PR #185) adds signature matching that
+rejects wrong-cause rc coincidence and an end-to-end test against a real committed GH-141
+telemetry record. Lesson: fidelity checks must compare failure *cause* (signature), not just
+failure *presence* (non-zero rc), and the E2E case should be a real historical record, not a
+synthetic one shaped by the same assumptions as the code under test.

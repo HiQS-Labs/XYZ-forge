@@ -63,3 +63,14 @@ gh180 suite green and registered; gh155-phase3 suite stays green.
   "lanes":         { "agy_safe": [ "utils/py/repro_builder.py", "test/gh180-repro-timeout-crash.sh" ], "orchestrator_only": [ "validate.sh" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+The crash class was a schema assumption: telemetry records from timed-out runs carry
+`exit_code: null`, and `repro_builder.py` arithmetic on that field threw before any reproducer was
+built. The fix that shipped in PR #185 pairs the null-tolerant ingest with a negative-control
+baseline (`test/baselines/GH-180-negative-control.md`) proving the pre-fix code actually crashed
+on the same input — without that control, a green test cannot distinguish "fixed" from "never
+exercised the crash path." When ingesting external/telemetry data, treat every field as optional
+until a record proves otherwise, and encode the timeout case as a first-class signature rather
+than a fabricated exit code.

@@ -66,3 +66,13 @@ suite stays green.
   "lanes":         { "agy_safe": [ "utils/py/active_explorer.py", "test/gh183-explorer-env-soundness.sh" ], "orchestrator_only": [ "validate.sh" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+Env-family fuzzing with `base_env={}` hardcoded meant mutations were applied to nothing: vectors
+"deleted" variables that were never set, and ambient runner variables leaked in to satisfy
+mutations the explorer believed it had made. The fix (PR #185) drives all missing/empty/corrupted
+vectors from a declared base env over a clean environment, with a test asserting ambient env
+cannot satisfy a mutation. Lesson: a fuzzer's negative space must be constructed, not inherited —
+any mutation framework that starts from the process's own environment is testing the runner, not
+the target, and will pass everywhere while covering nothing.

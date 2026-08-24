@@ -67,3 +67,17 @@ this issue is the rest of the boundary.
   "lanes":         { "agy_safe": [ "test/gh8-kernel-boundary.sh" ], "orchestrator_only": [ "bin/", ".tick/" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+The relay's static-only reviewer turns earned their keep here: three rounds of read-only codex
+review caught the exact acceptance-criterion gap (`--priority=3` equals-form unparsed), then two
+successively deeper boundary defects (bare flags coerced to `1` via `Number(true)`, empty
+equals-values coerced to `0` via `Number('')`, and `Infinity` surviving to `JSON.stringify` as
+`null`) — none of which the builder's green unit runs surfaced, because the tests exercised only
+the forms the builder had implemented. Lesson: when an acceptance criterion names an exact
+invocation shape, the test must use that verbatim shape, not a semantically-similar one. The run
+also escalated at the fixed round cap 5 while demonstrably converging (each round fixed the prior
+round's real findings); manual resumption of the same relay file/task at cap 6 let the owed
+reviewer turn land a legitimate Approved. That premature-escalation pattern is exactly what
+GH-115 (same wave) then fixed — the two lanes validated each other.

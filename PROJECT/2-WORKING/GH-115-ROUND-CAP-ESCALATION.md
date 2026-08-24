@@ -68,3 +68,19 @@ halting automated execution and requiring manual restart.
   "lanes":         { "agy_safe": [ "test/gh115-round-cap.sh" ], "orchestrator_only": [ "relay-automation/" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+Three durable lessons from this lane. (1) The reviewer caught a real producer/consumer root
+mismatch in the new escalation-reason channel — relay_drive wrote under the harness root while
+marathon_drive read under the marathon root, which silently degrades to the old generic reason in
+the vendored layout; cross-process file channels need one explicitly shared root and an
+integration assertion on the consumer side, not just the producer's stdout. (2) This lane's own
+Test 5 initially set `MARATHON_ROOT="$ROOT"` (the real repo, not the `$A` fixture), committing a
+live transcript onto the working clone during every gate run — the GH-195 incident. The
+`marathon-root-audit.sh` guard missed it because it only recognizes `bash <driver>.sh`
+invocations, not direct `python3 marathon_drive.py` calls. Fixture-scope every driver env var and
+pass an explicit `--pre-advance-cmd` in tests. (3) Both this lane and GH-8 used phase-id `p1`,
+so their `marathon-system/p1/` transcripts collided at merge time; the resolution (relocating one
+lane's transcript to `p1-gh115/`) worked but cost a manual conflict pass — concurrent lanes need
+distinct phase ids up front, per the run-hygiene note in relay-xyz.
