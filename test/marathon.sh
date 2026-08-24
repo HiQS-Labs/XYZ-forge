@@ -4,6 +4,13 @@
 # emits marathon.complete only when every phase is approved. (Phase 4 / M5)
 source "$(dirname "$0")/_setup.sh" marathon
 unset MARATHON_LANE_NS
+# GH-217: this suite's own GH-212 assertions (tests 12-14) must decide the plan-location policy
+# themselves. An ambient MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 inherited from an outer marathon run
+# (legitimate there, via marathon.sh's documented override) flips test 12's expected exit-2 refusal
+# to exit 0 — the gate_env scrub is the primary fix; this unset is defensive hygiene so the suite
+# stays honest even under a hand-rolled --pre-advance-cmd that skips the helper. Test 13 sets the
+# override explicitly per-invocation, which is unaffected by an unset here.
+unset MARATHON_ALLOW_PLAN_OUTSIDE_WORKING
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 MSH="$REPO/relay-automation/marathon.sh"
 YBIN="$REPO/bin/marathon-yaml"
