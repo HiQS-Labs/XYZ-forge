@@ -1,0 +1,58 @@
+{
+  "budget_s": 3600,
+  "elapsed_s": 3612,
+  "iterations": 276,
+  "verdict_counts": {
+    "phase1-suite": {
+      "PASS": 276,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "phase2-suite": {
+      "PASS": 276,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "phase3-suite": {
+      "PASS": 276,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "phase4-suite": {
+      "PASS": 276,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "phase5-suite": {
+      "PASS": 276,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "op-diff-vector-unknown": {
+      "PASS": 56,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "op-explore-argv-aider-shim": {
+      "PASS": 55,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "op-explore-env-agy-shim": {
+      "PASS": 55,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "op-repro-build-real-record": {
+      "PASS": 55,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    },
+    "op-heal-cli-facade": {
+      "PASS": 55,
+      "UNEXPECTED": 0,
+      "TIMEOUT": 0
+    }
+  },
+  "finished_at": "2026-08-22T22:17:19Z"
+}
