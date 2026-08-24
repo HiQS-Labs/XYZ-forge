@@ -1,6 +1,6 @@
 # Marathon Phase gh50-sandboxed-git-guard
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH50-SANDBOXED-GIT-GUARD-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -111,3 +111,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   `New-bash-exception: utils/git-sandbox-guard.sh — GH-50 preflight must wrap git branch commands before process launch`.
 - Verification: `bash test/gh50-sandboxed-git-guard.sh` — 11 pass, 0 fail. Full `validate.sh`
   intentionally not run by this lane.
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The new `utils/git-sandbox-guard.sh` and `test/gh50-sandboxed-git-guard.sh` scripts look correct, pass locally, and properly refuse when the config is read-only. The addition to `AGENTS.md` is correctly placed and follows the brief's requirements. `New-bash-exception` is appropriately noted.
+
+However, since I must review the WHOLE of the touched files, I found pre-existing defects in `validate.sh` that were flagged by shellcheck. These are in scope and need to be fixed before we can approve this lane:
+
+1. `validate.sh:596`: `[ "$AUTO_REQUESTED" -eq 1 ] && [ \( -n "$PATHS_FILE" \) -o \( -n "$SUBSYSTEM" \) ]`
+   *Shellcheck SC2166*: Prefer `[ p ] || [ q ]` as `[ p -o q ]` is not well defined.
+2. `validate.sh:623` and `validate.sh:643`: `case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*)`
+   *Shellcheck SC2221/SC2222*: The first pattern `*.py` already matches newlines in bash, so the pattern `*$'\n'*.py` will never match because it is overridden by the first one. Please simplify this pattern to remove the redundancy (e.g., `*.py|*.py$'\n'*)`).
+
+**Verdict:** Changes requested
