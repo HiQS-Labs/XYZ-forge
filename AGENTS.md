@@ -26,6 +26,10 @@ radius, planning shape, and proof.
 Do not restate routing, roadmap, changelog, or active-doc contracts here. Those live in
 `ROUTER.md` and `PROJECT/PDDA.md`.
 
+After merging any PR into `development`, run `python3 utils/py/wave_reconcile.py --pr <N>` before
+ending the task — the reconciler is single-command but nothing triggers it for you; `pdda.sh
+issue-doc-sync` is the deterministic drift detector when in doubt.
+
 Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
 live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section
 is a standing carve-out from the "do not create new git branches automatically" rail: it
