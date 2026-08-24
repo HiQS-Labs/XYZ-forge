@@ -150,6 +150,7 @@ TESTS=(
                                  #   what a trigger-happy bound looks like.
   "gh432-failed-turn-persist.sh" # GH-432 (a failed turn still reaches rtl_enforce: commit + token handoff; both routes) — 12/0 post-fix, control 5/4 pre-fix
   "gh441-gate-env-contract.sh"   # GH-441 P2 (every driver export is classified scrub-or-pass; custom gates get the same clean env) — 13/0; controls: unhelped gate contaminated, orphaned helper fails loud
+  "gh218-synthetic-nested-driver-lock.sh" # GH-218 (synthetic suites must not contend for the harness clone's driver lock: static sweep rejects RELAY_DRIVER_LOCKED=0 on/above any relay_drive/marathon_drive invocation in test/synthetic; dynamic repro holds the real lock dir+live pid and runs gh101 green — the live marathon pre-advance incident shape) — 2/0; negative control: detector flags the pre-fix gh101 line 101
   "gh217-gate-env-plan-outside.sh"    # GH-217 (MARATHON_ALLOW_PLAN_OUTSIDE_WORKING classified SCRUB in the gate_env registry + mirrored in the driver literal; test/marathon.sh unsets it defensively; the issue's literal repro — full marathon suite under the ambient leak — is green, GH-212 refusal specifically not vacuous) — 4/0
   "gh448-driver-lock-resolver.sh" # GH-448 (shared driver-lock resolver: bash/python parity + linked-worktree LIVE, real worktree fixture; negative control: pre-fix 2-branch logic misses the lock)
   "gh376-relay-drive-lock-parity.sh" # GH-376 (the DRIVER-side half of #448: relay-drive's own two twins
