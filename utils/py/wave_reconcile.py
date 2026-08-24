@@ -361,51 +361,59 @@ def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True
     with open(roadmap_path, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
 
-    # Locate entry block
+    # Locate every matching entry block. Older reconciler runs could leave the same
+    # issue in both an active and terminal section (#163); selecting only the first
+    # match and then inserting it again preserves that duplicate forever.
     entry_pattern = re.compile(rf"^-\s+\*\*GH-{issue_num}\b")
-    start_idx = None
-    end_idx = None
-
-    for i, line in enumerate(lines):
-        if entry_pattern.search(line):
-            start_idx = i
-            break
-
-    if start_idx is None:
+    starts = [i for i, line in enumerate(lines) if entry_pattern.search(line)]
+    if not starts:
         log(f"No entry found in ROADMAP.md for GH-{issue_num} (skipping roadmap move)")
         return False
 
-    # Find end of block (next entry starting with - ** or section header ###)
-    end_idx = len(lines)
-    for j in range(start_idx + 1, len(lines)):
-        if lines[j].startswith("- **") or lines[j].startswith("### ") or lines[j].startswith("## "):
-            end_idx = j
-            break
+    blocks = []
+    for start_idx in starts:
+        end_idx = len(lines)
+        for j in range(start_idx + 1, len(lines)):
+            if lines[j].startswith("- **") or lines[j].startswith("### ") or lines[j].startswith("## "):
+                end_idx = j
+                break
+        blocks.append((start_idx, end_idx, lines[start_idx:end_idx]))
 
-    block_lines = lines[start_idx:end_idx]
+    expected_marker = "SHIPPED" if is_merged else "DECLINED"
+    canonical = next(
+        (block for _, _, block in blocks if expected_marker in block[0]),
+        blocks[0][2],
+    )
+    block_lines = list(canonical)
     first_line = block_lines[0]
 
-    # Already completed?
-    if "✅" in first_line and "SHIPPED" in first_line:
-        log(f"GH-{issue_num} is already marked SHIPPED in ROADMAP.md")
+    # A single canonical terminal entry is a true no-op on a second run.
+    if len(blocks) == 1 and expected_marker in first_line:
+        log(f"GH-{issue_num} is already marked {expected_marker} in ROADMAP.md")
         return True
 
     target_section = "### Completed" if is_merged else "### Deferred / cancelled"
     badge_sub = f"✅ **SHIPPED {ship_date} (PR #{pr_num})**" if is_merged else f"🛑 **DECLINED {ship_date} (PR #{pr_num})**"
 
-    if "—" in first_line:
+    if expected_marker not in first_line and "—" in first_line:
         prefix, rest = first_line.split("—", 1)
         title_part = prefix.split("**")[1] if "**" in prefix else f"GH-{issue_num}"
         new_first_line = f"- **{title_part}** {badge_sub} —{rest}"
-    else:
+    elif expected_marker not in first_line:
         new_first_line = re.sub(
             r"(\*\*[^*]+\*\*)\s+(?:[^\—]+)\s+—", rf"\1 {badge_sub} —", first_line
         )
+    else:
+        new_first_line = first_line
 
     block_lines[0] = new_first_line
 
-    # Remove block from old location
-    new_lines = lines[:start_idx] + lines[end_idx:]
+    # Remove every old occurrence, then insert exactly one canonical block. This
+    # is a move, never an add, and repairs the historical double-listing shape.
+    removed = set()
+    for start_idx, end_idx, _ in blocks:
+        removed.update(range(start_idx, end_idx))
+    new_lines = [line for idx, line in enumerate(lines) if idx not in removed]
 
     # Locate target section header
     target_idx = None
@@ -438,7 +446,98 @@ def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True
     return True
 
 
-def run_subprocesses(repo_root, dry_run=False, journal=None):
+def marathon_plan_findings(output, returncode):
+    """Return exit-driving structured findings emitted by marathon-plan."""
+    drift_types = {"already-landed", "already-closed"}
+    held_types = {
+        "unrated", "needs-doc", "needs-contract", "note-only",
+        "not-ready", "blocked", "blocked-dep",
+    }
+    relevant_types = drift_types if returncode == 4 else held_types
+    findings = []
+    for line in output.splitlines():
+        try:
+            finding = json.loads(line)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        check = str(finding.get("check", ""))
+        finding_type = check.split("/", 1)[1] if "/" in check else check
+        if finding_type in relevant_types:
+            findings.append(finding)
+    return findings
+
+
+def finding_issue_numbers(finding):
+    """Extract issue identities from a planner finding without guessing by title."""
+    file_name = str(finding.get("file", ""))
+    evidence = " ".join(str(finding.get(key, "")) for key in ("file", "message", "action"))
+    numbers = {
+        int(number)
+        for number in re.findall(r"(?:GH-|issue\s+#|#)([0-9]{1,6})\b", evidence, re.IGNORECASE)
+    }
+    # Active-doc lookup also supports the legacy `123-title.md` filename shape.
+    legacy_doc = re.match(r"^(?:GH-)?([0-9]{1,6})(?:[^0-9]|$)", os.path.basename(file_name), re.IGNORECASE)
+    if legacy_doc:
+        numbers.add(int(legacy_doc.group(1)))
+    return numbers
+
+
+def describe_finding(finding):
+    """Produce a stable, operator-readable held-item label."""
+    issue_nums = sorted(finding_issue_numbers(finding))
+    file_name = str(finding.get("file", "")).strip()
+    identity = ", ".join(f"GH-{number}" for number in issue_nums)
+    if identity and file_name:
+        return f"{identity} ({file_name})"
+    if identity:
+        return identity
+    if file_name:
+        return file_name
+    return str(finding.get("message", "")).strip() or "unidentified planner item"
+
+
+def handle_marathon_plan_result(result, reconciled_issues):
+    """Scope planner drift/held failures to the issues reconciled in this run."""
+    if result.returncode == 0:
+        return
+    if result.returncode not in (4, 5):
+        die(
+            f"Subprocess 'marathon-plan.sh' failed with exit {result.returncode}:\n"
+            f"{result.stderr}\n{result.stdout}",
+            code=6,
+        )
+
+    findings = marathon_plan_findings(result.stdout, result.returncode)
+    if not findings:
+        # Preserve GH-202 compatibility with older/stub planners that expose only
+        # the exit-5 contract. Exit 4 must remain attributable and therefore
+        # fails closed when structured evidence is absent.
+        if result.returncode == 5:
+            log("  marathon-plan reports items held (exit 5) without structured findings — continuing (GH-202 compatibility)")
+            return
+        die("marathon-plan reported drift (exit 4) without attributable structured findings", code=6)
+
+    reconciled = {int(issue) for issue in reconciled_issues}
+    owned = [
+        finding for finding in findings
+        if finding_issue_numbers(finding) & reconciled
+    ]
+    unrelated = [finding for finding in findings if finding not in owned]
+
+    if owned:
+        labels = ", ".join(describe_finding(finding) for finding in owned)
+        die(
+            "marathon-plan found drift/held state attributable to the reconciled "
+            f"PR item(s): {labels}",
+            code=6,
+        )
+
+    log("  WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:")
+    for finding in unrelated:
+        log(f"    - {describe_finding(finding)}")
+
+
+def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=None):
     """Orchestrate releases sync, view exports, and marathon replanning with DB rollback protection."""
     log("Running downstream database sync and dashboard regeneration...")
 
@@ -453,11 +552,11 @@ def run_subprocesses(repo_root, dry_run=False, journal=None):
     check_cmd = ["python3", "utils/py/releases_app.py", "check"]
     timeline_cmd = ["python3", "utils/timeline/export_timeline.py", "--preview"]
     dash_cmd = ["bash", "utils/roadmap-dashboard.sh"]
-    plan_cmd = ["bash", "utils/marathon-plan.sh"]
+    plan_cmd = ["bash", "utils/marathon-plan.sh", "--format", "json"]
 
     if dry_run:
         sync_cmd.append("--dry-run")
-        plan_cmd = ["bash", "utils/marathon-plan.sh", "--dry-run"]
+        plan_cmd.append("--dry-run")
 
     steps = [
         ("releases roadmap sync", sync_cmd),
@@ -478,12 +577,7 @@ def run_subprocesses(repo_root, dry_run=False, journal=None):
         log(f"  -> {name}")
         r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
         if name.startswith("marathon-plan"):
-            # Exit 5 = "items held" — a normal planning state (needs-doc/needs-contract
-            # entries), not a reconciliation failure (GH-202). Exit 4 (drift) stays tolerated.
-            if r.returncode == 5:
-                log(f"  marathon-plan reports items held (exit 5) — continuing; held items are planning state, not reconcile failures")
-            elif r.returncode not in (0, 4):
-                die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
+            handle_marathon_plan_result(r, reconciled_issues or set())
         elif r.returncode != 0:
             die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
 
@@ -593,6 +687,7 @@ def main():
             die("No PRs or marathon specified. Pass --pr <N>... or --marathon <name>", code=2)
 
         with ReconcilerLock(lock_file):
+            reconciled_issues = set()
             for pr_id in pr_list:
                 log(f"Processing PR #{pr_id}...")
                 pr_meta = fetch_pr_metadata(repo_root, pr_id, offline_manifest, dry_run=args.dry_run)
@@ -613,6 +708,7 @@ def main():
                     check_provenance_receipts(repo_root, pr_meta)
 
                 linked_issues = extract_linked_issues(pr_meta)
+                reconciled_issues.update(linked_issues)
                 log(f"  PR #{pr_id} linked issues: {linked_issues}")
 
                 for issue_num in linked_issues:
@@ -647,7 +743,12 @@ def main():
                         log(f"  ROADMAP.md entry updated for GH-{issue_num}")
 
             # Subprocess orchestration
-            run_subprocesses(repo_root, dry_run=args.dry_run, journal=journal)
+            run_subprocesses(
+                repo_root,
+                dry_run=args.dry_run,
+                journal=journal,
+                reconciled_issues=reconciled_issues,
+            )
 
             # Final validation gate
             if not args.dry_run:

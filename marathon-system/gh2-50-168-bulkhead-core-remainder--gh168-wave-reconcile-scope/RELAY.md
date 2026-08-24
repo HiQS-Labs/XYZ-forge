@@ -1,6 +1,6 @@
 # Marathon Phase gh168-wave-reconcile-scope
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH168-WAVE-RECONCILE-SCOPE-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -79,3 +79,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Files touched: `utils/py/wave_reconcile.py`, `test/gh168-wave-reconcile-scope.sh`, and `validate.sh`.
+- Switched the trailing planner call to structured JSON findings and attributed exit-driving drift/held items to the linked issues for the PRs reconciled in this run. PR-owned findings remain fatal and trigger `RollbackJournal`; unrelated pre-existing findings emit a warning block naming each item and keep the reconciliation. Unstructured exit 5 remains tolerated for GH-202 compatibility, while unstructured exit 4 fails closed.
+- Made the ROADMAP promotion writer collect all matching issue blocks, move one canonical terminal block, collapse the historical duplicate shape, and return without writing on a clean second run.
+- Added and registered `gh168-wave-reconcile-scope.sh`, including the witnessed-red PR-owned rollback control, unrelated-drift success/warning coverage, and byte-for-byte double-run idempotence.
+- Focused verification: `bash test/gh168-wave-reconcile-scope.sh` — 7 pass, 0 fail; `bash test/gh202-wave-reconcile-issue-state.sh` — 11 pass, 0 fail; Python and Bash syntax checks passed. Full `validate.sh` intentionally not run per turn containment instructions; the harness owns that gate.
