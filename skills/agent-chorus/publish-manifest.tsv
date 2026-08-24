@@ -6,6 +6,8 @@
 644	skills/agent-chorus/standalone/ci.yml	.github/workflows/ci.yml
 644	skills/agent-chorus/README.md	skills/agent-chorus/README.md
 644	skills/agent-chorus/SKILL.md	skills/agent-chorus/SKILL.md
+644	skills/agent-chorus/TELEMETRY.md	skills/agent-chorus/TELEMETRY.md
+644	skills/agent-chorus/EXPERIMENTS.md	skills/agent-chorus/EXPERIMENTS.md
 644	skills/agent-chorus/agents/openai.yaml	skills/agent-chorus/agents/openai.yaml
 755	skills/agent-chorus/scripts/agent_chorus.py	skills/agent-chorus/scripts/agent_chorus.py
 755	skills/agent-chorus/install.sh	skills/agent-chorus/install.sh
