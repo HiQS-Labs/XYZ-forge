@@ -33,7 +33,11 @@ git -C "$REPO" add test-relay.md
 git -C "$REPO" -c user.email=test@test.local -c user.name=TestRunner commit -q -m "add relay file"
 
 # 1. Test invalid tool-mode rejection
-INVALID_OUT="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$RELAY_FILE" --agent-cmd "echo" --tool-mode "invalid_mode" 2>&1 || true)"
+# GH-218: run every relay_drive.py invocation from inside the FIXTURE repo. relay_drive resolves
+# its driver lock (and the turn's working root) from the CWD; invoked from $ROOT it tries to
+# acquire $ROOT/.git/relay-driver.lock — free standalone, but HELD when validate.sh runs as a
+# marathon-drive pre-advance gate, so the programmatic turn failed and escalated a live phase.
+INVALID_OUT="$(cd "$REPO" && python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$RELAY_FILE" --agent-cmd "echo" --tool-mode "invalid_mode" 2>&1 || true)"
 if ! grep -qF "invalid choice: 'invalid_mode'" <<<"$(echo "$INVALID_OUT")"; then
   echo "FAIL: relay_drive.py failed to reject invalid tool-mode"
   exit 1
@@ -43,7 +47,7 @@ fi
 MOCK_BIN_DIR="$WORK/empty_bin"
 mkdir -p "$MOCK_BIN_DIR"
 ln -s "$(command -v python3)" "$MOCK_BIN_DIR/python3"
-FAIL_CLOSED_OUT="$(PATH="$MOCK_BIN_DIR" "$MOCK_BIN_DIR/python3" "$ROOT/utils/py/relay_drive.py" --relay-file "$RELAY_FILE" --agent-cmd "echo" --tool-mode "programmatic" 2>&1 || true)"
+FAIL_CLOSED_OUT="$(cd "$REPO" && PATH="$MOCK_BIN_DIR" "$MOCK_BIN_DIR/python3" "$ROOT/utils/py/relay_drive.py" --relay-file "$RELAY_FILE" --agent-cmd "echo" --tool-mode "programmatic" 2>&1 || true)"
 if ! grep -qF "Containment failure (fail-closed)" <<<"$(echo "$FAIL_CLOSED_OUT")"; then
   echo "FAIL: relay_drive.py failed to fail closed when sandbox binaries are absent"
   exit 1
@@ -85,10 +89,15 @@ STATUS: Approved
 NEXT: None
 LOG_EOF
 
+# Clean up scratch probe before exit
+rm -rf .relay-scratch
+
 echo "TURN_COMPLETED=1" >> "$STRESS_RECORD"
 exit 0
 AGENT_EOF
 chmod +x "$AGENT_SCRIPT"
+
+[ -d "$ROOT/.relay-scratch" ] && : >"$WORK/pre-root-scratch"   # pre-turn snapshot for the leak check below
 
 # Initialize tick token in fixture repository
 TICK_BIN="$ROOT/bin/tick"
@@ -98,12 +107,22 @@ TICK_REPO_ROOT="$REPO" "$ROOT/bin/tick" log task.created RELAY-TURN --agent clau
 TICK_REPO_ROOT="$REPO" "$ROOT/bin/tick" claim RELAY-TURN --agent claude --paths test-relay.md >/dev/null 2>&1
 TICK_REPO_ROOT="$REPO" "$ROOT/bin/tick" release RELAY-TURN --agent claude --to producer >/dev/null 2>&1
 
-RELAY_DRIVER_LOCKED=0 TICK_REPO_ROOT="$REPO" python3 "$ROOT/utils/py/relay_drive.py" \
+# GH-218: two scoping fixes, one measured against the issue's own sketch:
+#   - cd "$REPO": the TURN (agent CWD, scratch writes, containment root) belongs to the fixture, not
+#     the harness clone — pre-fix, the agent's CWD-relative .relay-scratch landed in the REAL repo.
+#   - RELAY_DRIVER_LOCKED=1 (not the sketched `cd`-fixes-the-lock): relay_drive.py resolves its lock
+#     from the SCRIPT's location (utils/py/../.. = the harness clone), NOT the CWD, so a cd cannot
+#     move it and RELAY_DRIVER_LOCKED=0 made this suite try to acquire the harness clone's
+#     .git/relay-driver.lock — free standalone, HELD when validate.sh runs as a marathon-drive
+#     pre-advance gate, failing the turn and escalating a live phase. RELAY_DRIVER_LOCKED=1 is the
+#     documented nested-driver idiom (GH-441 Phase 1, test/driver-lock.sh:11): a suite driving
+#     against its own throwaway fixture skips the parent's lock.
+(cd "$REPO" && RELAY_DRIVER_LOCKED=1 TICK_REPO_ROOT="$REPO" python3 "$ROOT/utils/py/relay_drive.py" \
   --relay-file "$RELAY_FILE" \
   --relay-task RELAY-TURN \
   --agent-cmd "$AGENT_SCRIPT" \
   --tool-mode "programmatic" \
-  --round-cap 1 >/dev/null 2>&1 || true
+  --round-cap 1 >/dev/null 2>&1) || true
 
 # Assert turn completed successfully
 if [ ! -f "$STRESS_RECORD" ] || ! grep -qF "TURN_COMPLETED=1" "$STRESS_RECORD"; then
@@ -111,9 +130,17 @@ if [ ! -f "$STRESS_RECORD" ] || ! grep -qF "TURN_COMPLETED=1" "$STRESS_RECORD"; 
   exit 1
 fi
 
-# Assert probe output did not leak to parent repository root
-if [ -d "$REPO/.relay-scratch" ] || [ -f "$REPO/probe_telemetry.json" ]; then
-  echo "FAIL: scratch probe file leaked to parent repository"
+# Assert probe output did not leak to the PARENT (harness) repository root. Pre-GH-218 the turn
+# ran with CWD=$ROOT, so the agent's CWD-relative .relay-scratch landed in the real clone while this
+# assertion watched the fixture — passing vacuously AND polluting $ROOT. Now the turn runs in $REPO
+# (fixture scratch is sanctioned and dies with $WORK), so this watches the real parent, compared
+# against a pre-turn snapshot so a sibling suite's own scratch cannot flake it.
+if [ -d "$ROOT/.relay-scratch" ] && [ ! -e "$WORK/pre-root-scratch" ]; then
+  echo "FAIL: .relay-scratch leaked to parent repository root"
+  exit 1
+fi
+if [ -f "$ROOT/probe_telemetry.json" ]; then
+  echo "FAIL: probe_telemetry.json leaked to parent repository root"
   exit 1
 fi
 

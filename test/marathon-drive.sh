@@ -826,7 +826,7 @@ cat > "$VAGY" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 case "${1:-}" in
-  whoami) printf 'agy-stub\n'; exit 0 ;;
+  whoami|models) printf 'agy-stub\n'; exit 0 ;;
 esac
 printf 'agy review stub\n'
 printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Changes requested\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/marathon-system/p1/RELAY.md"
@@ -924,7 +924,7 @@ cat > "$VAGY_APPROVE" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 case "${1:-}" in
-  whoami) printf 'agy-stub\n'; exit 0 ;;
+  whoami|models) printf 'agy-stub\n'; exit 0 ;;
 esac
 printf 'agy review stub\n'
 sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$PWD/marathon-system/p1/RELAY.md"; rm -f "$PWD/marathon-system/p1/RELAY.md.bak"

@@ -1,4 +1,23 @@
+---
+title: Lane brief — GH-50: guard sandboxed git branch mutations before they half-apply
+status: Active (2-WORKING)
+created: 2026-08-24
+updated: 2026-08-24
+owner: noel
+branch: development
+doc_type: project
+roadmap_exempt: true
+goal: >
+  Lane brief for marathon phase gh50-sandboxed-git-guard.
+---
+
 # Lane brief — GH-50: guard sandboxed git branch mutations before they half-apply
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Brief authored. | Phase execution. |
 
 Execution surface of record: `PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md`
 (issue: https://github.com/HiQS-Suite/XYZ-forge/issues/50)

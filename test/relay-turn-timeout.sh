@@ -44,7 +44,7 @@ chmod +x "$FAST_STUB"
 AGY_SLOW_STUB="$WORK/agy-slow-cli"
 cat >"$AGY_SLOW_STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
-[ "${1:-}" = whoami ] && { echo ok; exit 0; }
+{ [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; } && { echo ok; exit 0; }
 sleep 5
 exit 0
 STUB_EOF
@@ -53,7 +53,7 @@ chmod +x "$AGY_SLOW_STUB"
 AGY_FAST_STUB="$WORK/agy-fast-cli"
 cat >"$AGY_FAST_STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
-[ "${1:-}" = whoami ] && { echo ok; exit 0; }
+{ [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; } && { echo ok; exit 0; }
 printf 'agy-stub: fast-turn complete\n'   # agy-turn.sh treats an empty AGY_LOG as failure (exit 5)
 export TICK_REPO_ROOT="$A"
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1

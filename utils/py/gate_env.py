@@ -87,6 +87,14 @@ HARNESS_ENV = {
     "XYZ_HARNESS_CONTEXT": (SCRUB, "Read by test/xyz-harness-hooks.sh. Scrubbed since GH-307."),
     "XYZ_SESSION_ID": (SCRUB, "Read by test/xyz-harness-hooks.sh. Scrubbed since GH-307."),
     "MARATHON_LANE_NS": (SCRUB, "Read by test/debug-mantra.sh. Scrubbed since GH-307."),
+    "MARATHON_ALLOW_PLAN_OUTSIDE_WORKING": (
+        SCRUB,
+        "MEASURED (GH-217). An operator-legitimate override on the OUTER marathon.sh run (a plan "
+        "outside PROJECT/2-WORKING/) inherits into the gate, where test/marathon.sh's GH-212 "
+        "default-refusal assertions read it as their own ambient: test 12 expected exit 2 and got 0, "
+        "escalating and halting a live phase. Same defect family as ALLOW_PATHS — a parent's "
+        "configuration answering a suite's question.",
+    ),
     "MARATHON_BUILDER": (
         SCRUB,
         "Suites asserting default builder resolution would read the live marathon's choice as their "

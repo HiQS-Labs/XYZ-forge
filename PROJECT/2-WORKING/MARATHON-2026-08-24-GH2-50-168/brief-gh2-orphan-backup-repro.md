@@ -1,4 +1,23 @@
+---
+title: Lane brief — GH-2: reproduce and contain the orphan-backup relocation
+status: Active (2-WORKING)
+created: 2026-08-24
+updated: 2026-08-24
+owner: noel
+branch: development
+doc_type: project
+roadmap_exempt: true
+goal: >
+  Lane brief for marathon phase gh2-orphan-backup-repro.
+---
+
 # Lane brief — GH-2: reproduce and contain the orphan-backup relocation
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Brief authored. | Phase execution. |
 
 Execution surface of record: `PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md`
 (issue: https://github.com/HiQS-Suite/XYZ-forge/issues/2)
