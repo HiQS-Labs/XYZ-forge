@@ -48,6 +48,9 @@ disambiguate.
 | F-025 | LINUX | med | upstream `development` is RED on this host (9 suites) while hosted CI is green | — |
 | F-026 | WSL | low | background-task notification reported exit 0 for a push that exited 1 (F-021 recurrence) | — |
 | F-027 | LINUX | low | F-001 unchanged — guard still blocks read-only compound commands | `probe-guard-read` |
+| **F-028** | **LINUX** | **high** | **`claude-turn.sh`'s PATH filter strips `node` too — suite cannot pass on an nvm install** | — |
+| F-029 | LINUX | med | `gh103` uses BSD `md5`; the read-only safety assertion passes vacuously | — |
+| F-030 | LINUX | low-med | `gh382` asserts a `darwin`-only feature on every platform | — |
 
 Three are worth an issue each on their own: **F-015**, **F-018**, **F-023**.
 
@@ -602,3 +605,147 @@ the guard cannot fire. Measured on Windows Python 3.12.2. The construct dates to
 (2026-08-15) and **predates PR #29** — it was never a response to it. Two-line fix.
 
 F9 was **not probed** and is claimed neither way.
+
+## F-025 — resolved to root causes (2026-08-24, later the same day)
+
+The 9 suites were diagnosed individually rather than left as "host divergence". **Four are real repo
+bugs, not host quirks** — three of them are macOS-only assumptions that cannot pass on any Linux box.
+
+| Suite | Root cause | Class |
+|---|---|---|
+| `claude-turn.sh` | `filter_claude_from_path` strips `node` along with `claude` | **repo bug** |
+| `gh69-roadmap-shadow.sh` | `sed -i ''` ×2 (`:102`, `:109`) — the [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) bug, in a test | **repo bug** |
+| `gh103-timeline-exporter.sh` | unguarded BSD `md5 -q` (`:177`, `:180`) | **repo bug** (partial) |
+| `gh382-marathon-memory-telemetry.sh` | asserts a `darwin`-only feature unconditionally | **repo bug** |
+| `relay-self-sufficiency.sh` | agy quota exhausted | environmental |
+| `archive-writers.sh` | consult lane; agy unavailable — **not proven** | unresolved |
+| `synthetic/gh101-consult-programmatic.sh` | consult lane; agy unavailable — **not proven** | unresolved |
+| `synthetic/gh101-relay-programmatic-stress.sh` | relay turn incomplete — **not proven** | unresolved |
+| `relay-file-seeding-visibility.sh` | `rtl_worktree_begin` rc=1 — **not diagnosed** | unresolved |
+
+### F-028 — `claude-turn.sh` fails wherever `claude` was installed via nvm
+
+**Tag: LINUX** · Severity: **high** — this suite cannot pass on the documented install path
+
+`test/claude-turn.sh:162-174` removes from `PATH` every directory containing an executable `claude`:
+
+```bash
+filter_claude_from_path() {
+  for dir in "${parts[@]}"; do
+    if [[ ! -x "$dir/claude" ]]; then new_path="$new_path:$dir"; fi
+  done
+}
+```
+
+On a standard nvm install every Node-delivered CLI shares one bin directory:
+
+```console
+$ ls ~/.nvm/versions/node/v22.23.2/bin
+claude  codex  corepack  node  npm  npx
+```
+
+So filtering `claude` also removes **`node`**. `bin/tick` is `#!/usr/bin/env node`, so every `tick`
+call inside the turn dies:
+
+```console
+$ PATH="$filtered" ./bin/tick --help
+/usr/bin/env: 'node': No such file or directory
+$ echo $?
+127
+```
+
+Test 11 (`GH-58: resolves ~/.claude/local/claude -> exit 0`) therefore gets exit **5**, not 0.
+
+**Proof this is the cause, not a correlation.** Symlink `node` into a directory that does *not*
+contain `claude`, prepend it, change nothing else:
+
+```console
+$ mkdir -p /tmp/nodeshim && ln -sf "$(command -v node)" /tmp/nodeshim/node
+$ PATH="/tmp/nodeshim:$PATH" bash test/claude-turn.sh
+  claude-turn: 36 pass, 0 fail
+```
+
+36/0 green. The helper wants "a PATH with no `claude`", but what it builds is "a PATH with no
+`claude` **and no node**". It should shadow `claude` with an empty directory entry, or filter by
+resolved binary rather than dropping the whole directory.
+
+This is adjacent to F-008 but distinct: F-008 was the harness not *finding* an nvm-installed builder;
+this is a test helper *destroying* the Node runtime it still depends on.
+
+### F-029 — `gh103-timeline-exporter.sh` uses BSD `md5`, and a safety assertion passes vacuously
+
+**Tag: LINUX** · Severity: medium
+
+`test/gh103-timeline-exporter.sh:177,180` calls bare `md5 -q`, which is macOS-only; Linux has
+`md5sum`. The suite prints `md5: command not found`.
+
+The consequence is worse than a missing tool. The assertion is a read-only guarantee:
+
+```bash
+DB_HASH="$(md5 -q "$R/releases.db")"; DUMP_HASH="$(md5 -q "$R/releases.sql")"
+...
+if [ "$(md5 -q "$R/releases.db")" = "$DB_HASH" ] && ...; then ok "the exporter wrote no DB bytes" 0
+```
+
+On Linux every `md5` call yields the empty string, so the test compares `"" = ""` and **reports
+PASS** without checking anything:
+
+```
+-- read-only contract
+  PASS: the exporter wrote no DB bytes (opened read-only; the page never writes back)
+```
+
+A guarantee that the exporter never writes to the ledger is silently untested on Linux — the failure
+mode is a false green, not a red.
+
+**The repo already has the fix.** `gh69-roadmap-shadow.sh:46`, `gh32-releases-artifacts.sh:51` and
+`gh57-releases-fuzz.sh:77` each define a portable `file_hash()` with a documented
+`sha256sum → shasum -a 256 → md5` fallback chain marked `(GH-65)`. This suite simply does not use it.
+
+The other 3 failures in this suite (`legend flipped`, `baseline rendered`, ranking-order) are **not**
+explained by `md5` and are **not diagnosed here**.
+
+### F-030 — `gh382-marathon-memory-telemetry.sh` asserts a macOS-only feature on every platform
+
+**Tag: LINUX** · Severity: low-medium
+
+The low-swap warning is implemented for Darwin only —
+`utils/py/marathon_drive.py:539` guards the whole sampler:
+
+```python
+if sys.platform == "darwin":
+    out = subprocess.run(["sysctl", "-n", "vm.swapusage"], ...).stdout
+```
+
+The test fakes a **macOS `sysctl vm.swapusage`** string (`total = 3072.00M used = 2560.00M free =
+512.00M (encrypted)`) and asserts the warning appears. On Linux the guarded branch never runs, no
+warning is emitted, and the assertion fails — on a host that has 8 GB of swap and is nowhere near the
+condition being described.
+
+Either the test should skip on non-Darwin, or the sampler should read `/proc/meminfo` so the feature
+exists on Linux at all. As written the suite can only pass on macOS.
+
+### agy quota — blocks at least one suite until ~2026-08-27
+
+`relay-self-sufficiency.sh` fails with `(C) agy shim exited 5`. Probed directly:
+
+```console
+$ agy -p "Reply with exactly: PROBE-OK"
+Error: Individual quota reached. Please upgrade your subscription to increase your limits.
+Resets in 76h8m40s.
+$ echo $?
+0
+```
+
+Measured 2026-08-24 ~11:45 EAT, so the reset lands ≈**2026-08-27 16:00**, consistent with round 1's
+~166h estimate. The four consult/relay suites cannot be cleared before then and should be re-run
+after the reset rather than diagnosed further now.
+
+**Note the exit code: `agy -p` returned 0 while printing a quota error.** That is the
+"empty output / exit 0" pattern `skills/relay-xyz/SKILL.md` warns about, observed live.
+
+### Disposition
+
+`gh69-roadmap-shadow` is covered by [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204)
+(comment added with the three extra call sites). F-028, F-029 and F-030 are each worth an issue and
+none has been filed yet — awaiting a call on whether to file them.
