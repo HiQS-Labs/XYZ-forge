@@ -51,6 +51,8 @@ disambiguate.
 | **F-028** | **LINUX** | **high** | **`claude-turn.sh`'s PATH filter strips `node` too — suite cannot pass on an nvm install** | — |
 | F-029 | LINUX | med | `gh103` uses BSD `md5`; the read-only safety assertion passes vacuously | — |
 | F-030 | LINUX | low-med | `gh382` asserts a `darwin`-only feature on every platform | — |
+| **F-031** | **LINUX** | **high** | **the fixture remote's HEAD names a branch never created — clones land with no commits** | — |
+| F-032 | DOC | med | `--tool-mode programmatic` requires bubblewrap; listed in no prerequisites table | — |
 
 Three are worth an issue each on their own: **F-015**, **F-018**, **F-023**.
 
@@ -749,3 +751,130 @@ after the reset rather than diagnosed further now.
 `gh69-roadmap-shadow` is covered by [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204)
 (comment added with the three extra call sites). F-028, F-029 and F-030 are each worth an issue and
 none has been filed yet — awaiting a call on whether to file them.
+
+### F-025 — corrected attribution, and the fixes
+
+Two of the attributions above were **wrong**, which is why they were marked "not proven". Working
+each suite to a root cause changed the picture substantially: **eight of the nine were repo bugs or
+undocumented dependencies, not host quirks.** Only one is genuinely environmental.
+
+| Suite | Actual root cause | Fixed? |
+|---|---|---|
+| `claude-turn.sh` | F-028 — PATH filter strips `node` | ✅ 36/0 |
+| `gh69-roadmap-shadow.sh` | `sed -i ''` ×2 (#204) **+ SQLite DQS misfeature** | ✅ 53/0 |
+| `gh103-timeline-exporter.sh` | BSD `md5` **+ SIGPIPE in `has()`** **+ undocumented `rg`** | ✅ 38/0 |
+| `gh382-marathon-memory-telemetry.sh` | F-030 — darwin-only feature asserted everywhere | ✅ skips |
+| `relay-file-seeding-visibility.sh` | **F-031 — fixture remote's HEAD dangles** | ✅ 3/0 |
+| `archive-writers.sh` | **F-031** (was wrongly guessed as agy) | ✅ 8/0 |
+| `synthetic/gh101-consult-programmatic.sh` | **F-032 — no OS sandbox backend** (was wrongly guessed as agy) | ✅ skips |
+| `synthetic/gh101-relay-programmatic-stress.sh` | **F-032** (was wrongly guessed as agy) | ✅ skips |
+| `relay-self-sufficiency.sh` | agy quota — resets ≈2026-08-27 15:30 | ⏳ genuinely blocked |
+
+### F-031 — the fixture remote's HEAD points at a branch that is never created
+
+**Tag: LINUX** · Severity: **high** — two suites, and it looks like a defect in the code under test
+
+`test/_setup.sh:66` built the shared bare fixture remote as `git init -q --bare "$REMOTE"`, letting
+its HEAD follow the machine's `init.defaultBranch`. Git still defaults that to **`master`** when
+unset. The seed then pushes **`main`** and only `main`:
+
+```bash
+git -C "$SEED" branch -M main
+git -C "$SEED" push -q -u origin main
+```
+
+So on any host without `init.defaultBranch=main`, the remote's HEAD names a ref that never comes
+into existence. Every clone warns and lands with an **unborn HEAD and no commits**:
+
+```console
+warning: remote HEAD refers to nonexistent ref, unable to checkout
+$ git -C "$A" rev-parse HEAD
+fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree
+$ git -C "$A" symbolic-ref -q HEAD
+refs/heads/master
+```
+
+Anything downstream that resolves HEAD then dies. `rtl_worktree_begin`
+(`relay-turn-lib.sh:702`) runs `git worktree add --detach "$wt" HEAD`, gets
+`fatal: invalid reference: HEAD`, and returns 1 — which the suite reports as
+
+```
+FAIL: same-repo uncommitted relay file: rtl_worktree_begin failed or file absent (rc=1, wt=)
+```
+
+i.e. as a **worktree-seeding defect in the harness**, when the harness is fine and the fixture never
+had a commit to check out. This host's `git config init.defaultBranch` is unset, git 2.43.0.
+
+Fixed by pinning it: `git init -q --bare -b main "$REMOTE"`. One line, two suites
+(`relay-file-seeding-visibility` 0/1 → 3/0, `archive-writers` → 8/0). It also removes an
+undocumented dependency on a global git setting — the same class as F-012.
+
+### F-032 — `--tool-mode programmatic` needs bubblewrap, which no doc lists
+
+**Tag: LINUX** · Severity: medium
+
+`utils/py/relay_drive.py:63-65` (and the same check in `consult.py`) fail-closes:
+
+```python
+has_sandbox = bool(shutil.which("sandbox-exec") or shutil.which("bwrap"))
+if not has_sandbox:
+    die("Containment failure (fail-closed): OS sandbox backend (sandbox-exec or bwrap) unavailable for --tool-mode programmatic")
+```
+
+**The refusal is correct** — fail-closed is the right behaviour for a containment backend. The
+problem is twofold:
+
+1. `bwrap` / bubblewrap appears nowhere in `README.md`, `AGENTS.md` or `ROUTER.md`. Documented
+   prerequisites are Codex CLI, agy CLI, Node 18+, git, Python 3.8+. Stock Ubuntu 24.04 has no
+   `bwrap`. Same class as F-010 (`sqlite3`) and F-011 (`jq`).
+2. Both GH-101 suites asserted on work the tool had correctly declined to start, so the failure read
+   as a containment/turn defect (`did not pass CONSULT_TOOL_MODE=programmatic to advisor`,
+   `programmatic relay turn did not complete cleanly`) rather than "your host lacks a backend".
+
+Guarded both with the repo's existing `command -v … || SKIP` idiom. Installing bubblewrap and
+re-running would be the stronger evidence; documenting it in the prerequisites table is the real fix.
+
+### Two more found while fixing, neither previously known
+
+**`has()` was unsound under `pipefail`** — `test/gh103-timeline-exporter.sh:31`:
+
+```bash
+has(){ printf '%s' "$1" | grep -Fq -- "$2"; }
+```
+
+with `set -uo pipefail` at the top of the same file. `grep -q` exits the instant it matches, closing
+the pipe while `printf` is still writing; printf dies of **SIGPIPE** and `pipefail` reports the
+pipeline as **141** — indistinguishable from "not found" — for a string that IS present:
+
+```console
+$ has "$TPL" "rel.baseline"; echo $?
+141                       # and grep -Fc on the same input prints 4
+```
+
+Whether it fires depends on how early the match sits in the input and on scheduling, so it presented
+as a flaky, template-size-dependent false negative rather than a bug. Replaced with bash pattern
+matching, which needs no pipe and cannot race.
+
+**SQLite's double-quoted-string misfeature** — `test/gh69-roadmap-shadow.sh` built a separator with
+`||"/"||`. In standard SQL `"/"` is an *identifier*; SQLite's fallback to a string literal is a
+documented misfeature that modern builds reject. SQLite 3.53.4:
+
+```console
+$ sqlite3 :memory: 'SELECT 1||"/"||2;'
+Parse error: no such column: "/" - should this be a string literal in single-quotes?
+```
+
+Replaced with `char(47)`, which needs no nested quoting and is version-independent.
+
+### Two false greens removed
+
+Worth stating separately, because both were **passing** before and passing for no reason:
+
+- `gh103`'s read-only contract (*"the exporter wrote no DB bytes"*) compared `"" = ""` on Linux,
+  since every `md5` call failed. The guarantee that the exporter never writes to the releases ledger
+  was untested on every Linux host.
+- `gh103`'s *"and NOT in #fbar"* assertion is negated and called `rg`; with ripgrep absent `rg -q`
+  returned 127, so `! rg -q` was trivially true.
+
+That suite now runs **two more real assertions** than it did before this round, at 38/0 rather than
+35/3.
