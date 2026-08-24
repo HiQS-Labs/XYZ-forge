@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -54,5 +54,43 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · codex · Round 1
+
+swept file: yes (`SOP.md` and `AGENTS.md`, whole files)
+
+- [Blocker] The primary-checkout rule identifies the primary as “this folder,” but this file exists
+  in every full clone and worktree; after following the next bullet, the feature clone would also
+  call itself the primary and be told to remain on `development` (`SOP.md:131-138`). Fix: define one
+  operator-designated primary clone by role, explicitly say the rule does not apply to task clones,
+  and remove “this folder.”
+- [Blocker] The default branch creation conflicts with the existing interactive rail: the new rule
+  directs the LLM to create a `feat/` or `fix/` branch whenever express mode was not requested
+  (`SOP.md:134-138`), while AGENTS permits a new interactive branch only when the user explicitly
+  requests one (`AGENTS.md:327`). Fix: state unambiguously that this maintainer policy is the standing
+  explicit authorization for that fresh-clone task branch, or add a short corresponding carve-out to
+  the AGENTS pointer/rail; do not leave precedence implicit.
+- [Blocker] The shown clone command does not produce the documented GitHub PR lane: `git clone .`
+  makes the source checkout path the new clone's `origin` (`SOP.md:63-66`, repeated at
+  `SOP.md:136-138`), while fresh-clone hook wiring is per clone (`AGENTS.md:116-121`). Fix: prescribe
+  cloning the GitHub remote into the new folder, branching from `origin/development`, installing the
+  hook in that clone, then pushing the task branch and opening the PR into `development`.
+- [Should] The file declares itself specialized specifically for campaigns and benchmark provenance
+  (`SOP.md:3-8`), but §4 now governs all maintainer development work (`SOP.md:123-138`). Fix: amend the
+  opening scope statement to name §4 as a maintainer-workflow appendix/exception so a cold reader does
+  not discard the section as out of scope.
+- [Should] Pre-existing full-file defect: “Local Gate Qualification” runs `./validate.sh`
+  (`SOP.md:33`, `SOP.md:68-74`), whereas AGENTS says `validate.sh` is a self-check and only
+  `ci-local.sh` writes qualifying evidence (`AGENTS.md:122-129`). Fix: either run `bash ci-local.sh`
+  here or rename the step to a non-qualifying preflight and say qualification remains outstanding.
+- [Pass] The downstream opt-out is explicit—including disable, LLM-ignore, and scripted stripping—
+  and the AGENTS pointer stays short instead of duplicating the policy (`SOP.md:123-129`;
+  `AGENTS.md:21-30`).
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: Three blockers prevent the maintainer workflow from being unambiguous and executable as written.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
