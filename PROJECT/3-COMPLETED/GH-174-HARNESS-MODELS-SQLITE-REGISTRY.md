@@ -2,7 +2,7 @@
 gh_issue: 174
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/174
 title: "Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator"
-status: 2-WORKING (active)
+status: 3-COMPLETED (shipped)
 created: 2026-08-22
 updated: 2026-08-22
 owner: noelsaw1

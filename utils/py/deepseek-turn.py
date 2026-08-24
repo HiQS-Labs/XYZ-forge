@@ -230,6 +230,22 @@ def main():
 
     rc = rtl.enforce(t, me, deepseek_log, "deepseek")
 
+    try:
+        from harness_turn_logger import HarnessTurnLogger
+        with HarnessTurnLogger(
+            harness_id="dsh",
+            shim="deepseek-turn.py",
+            task_scope=t,
+            model_id=deepseek_model,
+            gateway=deepseek_provider,
+            reasoning_effort=os.environ.get("DEEPSEEK_REASONING_EFFORT", "high"),
+            cli_flags=dflags,
+            repo_root=xyz_root,
+        ) as logger:
+            logger.exit_code = bounded_rc or rc
+    except Exception:
+        pass
+
     if rc == 6 or bounded_rc == 6:
         sys.exit(6)
     if bounded_rc == 7:
