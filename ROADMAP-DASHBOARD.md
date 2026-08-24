@@ -24,15 +24,12 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6) | — | [GH-113-HEADLESS-SCRATCH-CONTAINMENT.md](PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md) · [#113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) |
 | GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | — | [GH-114-HEADLESS-TTY-IDLE-HANG.md](PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md) · [#114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) |
-| GH-168 · wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | — | [GH-168-WAVE-RECONCILE-SCOPE.md](PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md) · [#168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) |
-| GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | — | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) |
-| GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | — | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) |
 | GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
 | GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) | — | [GH-201-GEN35-FOLLOWUPS.md](PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md) · [#201](https://github.com/HiQS-Labs/XYZ-forge/issues/201) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
@@ -40,10 +37,13 @@ Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 42 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 42 · 🔮 0 · 🔲 0
+Summary: 45 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 45 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-168 · wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | ✅ | [GH-168-WAVE-RECONCILE-SCOPE.md](PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md) · [#168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) |
+| GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | ✅ | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) |
+| GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | ✅ | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) |
 | GH-202 · wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | ✅ | [GH-202-WAVE-RECONCILER-STATE.md](PROJECT/2-WORKING/GH-202-WAVE-RECONCILER-STATE.md) · [#202](https://github.com/HiQS-Labs/XYZ-forge/issues/202) |
 | GH-197 · two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | ✅ | [GH-197-VENDOR-TIER-SPLIT.md](PROJECT/2-WORKING/GH-197-VENDOR-TIER-SPLIT.md) · [#197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) |
 | GH-193 · AgentChorus Gen 2 | ✅ | [GH-193-AGENTCHORUS-GEN2.md](PROJECT/2-WORKING/GH-193-AGENTCHORUS-GEN2.md) · [#193](https://github.com/HiQS-Labs/XYZ-forge/issues/193) |

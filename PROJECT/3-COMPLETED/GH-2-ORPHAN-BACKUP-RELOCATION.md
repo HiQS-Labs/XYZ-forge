@@ -1,6 +1,6 @@
 ---
 title: "GH-2: test-suite run relocated an untracked file into .tick/orphan-backups/"
-status: active
+status: Complete
 created: 2026-08-22
 updated: 2026-08-24
 owner: orchestrator (Claude Code)

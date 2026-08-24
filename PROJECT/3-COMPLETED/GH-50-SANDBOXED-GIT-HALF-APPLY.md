@@ -1,8 +1,8 @@
 ---
 title: "GH-50: sandboxed git --track / branch -D half-applies — working tree rewritten, .git/config write fails, HEAD left behind"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: make branch operations refuse-or-succeed atomically under a sandbox that blocks .git/config writes, so a half-applied switch can never overwrite uncommitted work
 gh_issue: 50

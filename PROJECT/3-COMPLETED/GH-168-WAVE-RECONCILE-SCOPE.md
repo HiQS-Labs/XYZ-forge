@@ -1,8 +1,8 @@
 ---
 title: "GH-168: wave_reconcile.py hard-fails and rolls back on pre-existing marathon-plan drift unrelated to the PR being reconciled"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: scope wave_reconcile's drift check to the PR being reconciled so unrelated backlog drift downgrades to a warning instead of rolling back correct mutations
 gh_issue: 168
