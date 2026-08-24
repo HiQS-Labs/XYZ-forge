@@ -1,6 +1,6 @@
 ---
 title: "GH-202: wave_reconcile aborts on marathon-plan exit 5 and promotes docs for OPEN issues"
-status: active
+status: Complete
 created: 2026-08-24
 updated: 2026-08-24
 owner: orchestrator (GLM 5.3)

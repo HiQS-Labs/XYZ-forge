@@ -12,7 +12,7 @@ while the four axes keep their honest values underneath.
 |--:|------:|------|---------|------|----:|----:|-------:|-------:|-----:|----:|
 | 1 | **340** | [GH-67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) — Commandcode builder default widened to `--yolo` — closer evaluation → possible build | — | Queue / parked intake | 88 | 80 | 45 | 70 | 283 | 340 |
 | 2 | **315** | GH-181 — repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2) | Bulkhead | queue | 90 | 75 | 90 | 60 | 315 | — |
-| 3 | **305** | GH-202 — wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | Bulkhead | in progress | 85 | 65 | 85 | 70 | 305 | — |
+| 3 | **305** | GH-202 — wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | Bulkhead | queue | 85 | 65 | 85 | 70 | 305 | — |
 | 4 | **300** | [GH-174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) — Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | Bulkhead | queue | 85 | 75 | 95 | 45 | 300 | — |
 | 5 | **295** | [GH-155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing | — | Completed | 85 | 70 | 90 | 50 | 295 | — |
 | 6 | **295** | [GH-165](https://github.com/HiQS-Suite/XYZ-forge/issues/165) — Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | — | Completed | 90 | 80 | 90 | 35 | 295 | — |
@@ -23,7 +23,7 @@ while the four axes keep their honest values underneath.
 | 11 | **280** | [GH-114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | in progress | 80 | 60 | 80 | 60 | 280 | — |
 | 12 | **280** | [GH-115](https://github.com/HiQS-Suite/XYZ-forge/issues/115) — marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | Bulkhead | queue | 75 | 50 | 85 | 70 | 280 | — |
 | 13 | **280** | GH-180 — repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | Bulkhead | queue | 70 | 45 | 85 | 80 | 280 | — |
-| 14 | **280** | GH-193 — AgentChorus Gen 2 — telemetry, decision-quality metrics, measurable experiments (Agent2Agent renamed) | Bulkhead | in progress | 75 | 70 | 85 | 50 | 280 | — |
+| 14 | **280** | GH-193 — AgentChorus Gen 2 | Bulkhead | queue | 75 | 70 | 85 | 50 | 280 | — |
 | 15 | **280** | [GH-77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) — `/standup` — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | Completed | 95 | 70 | 85 | 30 | 280 | — |
 | 16 | **275** | [GH-124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) — eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | — | Completed | 85 | 60 | 90 | 40 | 275 | — |
 | 17 | **275** | [GH-132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) — feat(skills): formal /review-xyz code review skill & multi-model harness | — | Completed | 80 | 70 | 85 | 40 | 275 | — |
@@ -41,7 +41,7 @@ while the four axes keep their honest values underneath.
 | 29 | **255** | [GH-144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) — Agent2Agent 3+ participant onboarding + read-only status quick wins | — | Completed | 55 | 30 | 80 | 90 | 255 | — |
 | 30 | **255** | [GH-91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) — a build turn has nowhere to write verification output — containment kills a complete, green turn | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
 | 31 | **250** | [GH-153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) — RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | Completed | 70 | 55 | 80 | 45 | 250 | — |
-| 32 | **250** | [GH-197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) — two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | Queue / parked intake | 80 | 55 | 65 | 50 | 250 | — |
+| 32 | **250** | [GH-197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) — two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | Completed | 80 | 55 | 65 | 50 | 250 | — |
 | 33 | **245** | [GH-108](https://github.com/HiQS-Suite/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 34 | **230** | [GH-105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) — vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on) | Cargo | queue | 75 | 50 | 60 | 45 | 230 | — |
 | 35 | **220** | [GH-32](https://github.com/HiQS-Suite/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Queue / parked intake | 70 | 50 | 65 | 35 | 220 | — |

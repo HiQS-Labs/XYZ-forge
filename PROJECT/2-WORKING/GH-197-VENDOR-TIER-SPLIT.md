@@ -201,3 +201,7 @@ test either way.
 - `utils/ci-route.sh::subsystem_of()` maps neither `utils/releases-merge-resolve.sh` nor `utils/timeline/*` to `releases` (edits fail closed to tier 3) — separate fix.
 - Registry `tier` column (informational) — later, if ever.
 - #75 dashboard-verb fold-in interaction — unchanged from #105.
+
+## Merge evidence
+
+- PR #210 merged 2026-08-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
