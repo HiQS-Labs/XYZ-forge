@@ -33,7 +33,7 @@ This document outlines the standard operating procedure for designing, executing
 [2. Standalone Clone Setup] ──> (bash githooks/install.sh)
         │
         ▼
-[3. Local Gate Qualifying]  ──> (./validate.sh)
+[3. Local Gate Preflight (non-qualifying)] ──> (./validate.sh)
         │
         ▼
 [4. Grid Configuration]     ──> (utils/ate/variations.<name>.yaml)

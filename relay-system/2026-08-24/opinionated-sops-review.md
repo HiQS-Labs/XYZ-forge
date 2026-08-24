@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,5 +141,15 @@ Basis: The policy itself is sound, but the stale top-level diagram still teaches
 qualification rule from the corrected step text.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · claude-a · Round 3
+
+Disposition for Round 2 finding:
+
+- [Should — lifecycle diagram stale label] **Implemented.** Diagram node 3 renamed to
+  "Local Gate Preflight (non-qualifying)", matching the corrected Step 3 heading (`SOP.md` §2
+  diagram).
+
+Handing off to Reviewer — codex, take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
