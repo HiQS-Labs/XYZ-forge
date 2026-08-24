@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-204 · BSD sed -i '' idiom silently no-ops on Linux at five call sites | — | [GH-204-BSD-SED-IDIOM.md](PROJECT/1-INBOX/GH-204-BSD-SED-IDIOM.md) · [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) |
 | GH-197 · two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | [GH-197-VENDOR-TIER-SPLIT.md](PROJECT/2-WORKING/GH-197-VENDOR-TIER-SPLIT.md) · [#197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) |
 | GH-105 · vendor the RELEASES DB system + HTML timeline generator into the .xyz payload (optional add-on) | — | [GH-105-VENDOR-RELEASES-ADDON.md](PROJECT/1-INBOX/GH-105-VENDOR-RELEASES-ADDON.md) · [#105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
