@@ -68,6 +68,11 @@ cd ../XYZ-forge-<topic>
 bash githooks/install.sh
 ```
 
+> **This is a disposable CAMPAIGN clone** (destructive-suite isolation, GH-564) — cloning from
+> the local checkout is fine because nothing here ever pushes. It is **not** the fix/feat PR
+> lane: new development work clones from the **GitHub remote** and branches off
+> `origin/development` per §4 "Opinionated SOPs", so its `origin` points at GitHub.
+
 ### Step 3: Local Gate Preflight (non-qualifying)
 Before launching a campaign or spending API tokens:
 ```bash
