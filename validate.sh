@@ -212,11 +212,13 @@ TESTS=(
   "gh314-transcript-writeset.sh"       # GH-314 (the write set is THREE paths: the transcript's git add was outside GH-514's preflight, so an ignored relay-system/ was discovered only after paid turns) — 5/0; control: dropping the transcript path spends 2 builder turns before the same refusal (test/baselines/GH-314-negative-control.md)
   "gh520-default-reviewer-stub.sh"     # GH-520 (test/_setup.sh gives every fixture a default CODEX_BIN, so a suite tests its subject rather than the reviewer probe) — 11/0; control: with gh402's own stub removed AND this default removed, gh402 fails with the probe's message verbatim (test/baselines/GH-520-default-stub-control.md)
   "gh527-destructive-git-guard.sh"     # GH-527 (a tree-overwriting git command snapshots the tracked files it destroys into .tick/orphan-backups/ first) — 26/0; controls: a no-op guard drops 9 assertions, and a blanket that fires on a CLEAN tree drops exactly the control assertion. Clean-tree silence is defended by TWO conditions, so it takes a combined mutation to falsify — recorded in test/baselines/GH-527-negative-control.md
+  "gh50-sandboxed-git-guard.sh"        # GH-50 (config writability is proven before a tracking switch can rewrite the tree; writable-config control proves the wrapper is not a blanket ban)
   "marathon.sh"
   "marathon-closeout.sh"
   "gh484-phase-dir-default.sh"   # GH-484 (phase-output default is marathon-system/; --phases-dir still overrides; the dirty-tree exclusion tracks the CONFIGURED dir) — 10/0; controls: pre-fix red on both defaults and both containment cases, plus a stray-file control proving the clean check actually ran. Forces XYZ_PYTHON=0 so the Bash twin is really exercised
   "marathon-root-audit.sh"       # GH-209 (static audit: every test/marathon*.sh invocation is MARATHON_ROOT-scoped)
   "rtl-orphan-backup.sh"         # GH-141 (concurrent peer-edit race: revert unchanged, content recoverable)
+  "gh2-orphan-backup-repro.sh"   # GH-2 (mktemp failure cannot redirect orphan-backup relocation onto caller content; guard-stub control reproduces it)
   "gh91-relay-scratch.sh"          # GH-91 (sanctioned .relay-scratch/ for builder verification output: exempted in rtl_check + rtl_worktree_end, pre-created by begin, named in the turn prompt; never copied back, discarded under ROOT; controls pin that stray writes and lookalike prefixes still go off-lane) — 15/0, driven at the lib-function level, no builder binary needed
   "gh124-closeout.sh"            # GH-124 (closeout automation, on-disk gate receipts, workspace sweep GC, and early drift alert)
   "gh129-relay-tick-root.sh"     # #129/#136 (relay-drive self-resolves TICK_REPO_ROOT ahead of the lane-attempt gate, NOTE prints after the lock for gh376 parity; not-found names the root+dir searched; escalate exits 4 never 0; attempts land beside the token) — 17/0; negative control: pre-fix red on self-resolution (recorded in PR #134 + #136's fix PR)
@@ -244,6 +246,7 @@ TESTS=(
   "gh155-phase3-repro-builder.sh"       # #155 Phase 3 (Hermetic Reproducer & Hierarchical Delta Minimization engine)
   "gh155-phase4-self-healer.sh"         # #155 Phase 4 (Gated Autonomous Self-Healing Builder Loop)
   "gh155-phase5-active-explorer.sh"     # #155 Phase 5 (4-Family Generative Active Explorer Agent)
+  "gh168-wave-reconcile-scope.sh"       # #168 (PR-attributed planner drift stays fatal; unrelated drift warns; ROADMAP move is idempotent)
   "gh174-harness-registry.sh"           # #174 (Harness & Models SQLite Registry with Per-Device Config, Reasoning Levels, Grading Hooks & Blog Gen)
   "gh180-repro-timeout-crash.sh"        # #180 (repro_builder ingests null-exit timeout telemetry without crashing; no fabricated timeout repros)
   "gh181-repro-adapter-fidelity.sh"     # #181 (telemetry->reproducer fidelity: spaced-path tokenization, signature matching, live-record E2E)
@@ -593,8 +596,9 @@ TIER_REQUESTED=0
 if [ "$AUTO_REQUESTED" -eq 1 ] || [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; then
   # The selector flags are mutually exclusive: each of them fully determines the tier, so
   # combining two answers the question twice and one of them is being silently ignored.
-  [ "$AUTO_REQUESTED" -eq 1 ] && [ \( -n "$PATHS_FILE" \) -o \( -n "$SUBSYSTEM" \) ] \
-    && _err2 "--auto cannot be combined with --paths-file/--subsystem"
+  if [ "$AUTO_REQUESTED" -eq 1 ] && { [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; }; then
+    _err2 "--auto cannot be combined with --paths-file/--subsystem"
+  fi
   [ -n "$PATHS_FILE" ] && [ -n "$SUBSYSTEM" ] \
     && _err2 "--paths-file cannot be combined with --subsystem"
 fi
@@ -620,7 +624,7 @@ if [ "$AUTO_REQUESTED" -eq 1 ]; then
     apply_classification "$_cls"
     T2_PATHS="$(_auto_paths 2>/dev/null)"
     echo "validate.sh: --auto classified tier $TIER — ${TIER_REASON:-unspecified} (GH-35)"
-    case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*) T2_PYTEST=1 ;; esac
+    case "$T2_PATHS" in *.py|*.py$'\n'*) T2_PYTEST=1 ;; esac
   else
     echo "validate.sh: --auto could not classify the diff — failing closed to tier 3 (GH-35)" >&2
     TIER=3
@@ -640,7 +644,7 @@ if [ -n "$PATHS_FILE" ]; then
     exit 2
   fi
   T2_PATHS="$(cat "$PATHS_FILE")"
-  case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*) T2_PYTEST=1 ;; esac
+  case "$T2_PATHS" in *.py|*.py$'\n'*) T2_PYTEST=1 ;; esac
   echo "validate.sh: classified tier 2 — ${TIER_REASON:-unspecified} (GH-35)"
 fi
 

@@ -89,6 +89,9 @@ STATUS: Approved
 NEXT: None
 LOG_EOF
 
+# Clean up scratch probe before exit
+rm -rf .relay-scratch
+
 echo "TURN_COMPLETED=1" >> "$STRESS_RECORD"
 exit 0
 AGENT_EOF

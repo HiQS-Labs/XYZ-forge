@@ -142,6 +142,13 @@ local change.
   blast radius is **tracked** modifications; untracked files survive. `relay-automation/hooks/gh527-destructive-git-guard.sh`
   snapshots the doomed tracked files into `.tick/orphan-backups/` before the command runs, so
   this is recoverable rather than prevented — the snapshot is a net, not permission to swing.
+- **Preflight sandboxed branch mutations (GH-50).** A sandbox may let `git switch --track` rewrite
+  the index and working tree, then deny the `.git/config` lock and leave HEAD on the old branch.
+  Before a harness runs a tracking switch or destructive branch mutation such as `git branch -D`,
+  wrap the complete command with `utils/git-sandbox-guard.sh --repo <root> -- <git command>` so it
+  refuses before mutation when the config cannot be written. Never truncate git stderr for branch
+  operations: the decisive `could not lock config file` line can otherwise disappear behind an
+  unrelated upstream hint.
 - `ROUTER.md` owns startup order, canonical files, command rails, and the issue-first SOP.
 - `GUIDING-PRINCIPLES.md` owns the product/runtime priorities: local event-log coordination,
   containment, skill-first relay work, durable fixes, and verified done.
