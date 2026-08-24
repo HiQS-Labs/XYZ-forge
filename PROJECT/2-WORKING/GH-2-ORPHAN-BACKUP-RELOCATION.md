@@ -118,3 +118,13 @@ run the full project gate; the harness owns that post-turn run.
   "lanes":         { "agy_safe": [ "test/gh2-orphan-backup-repro.sh" ], "orchestrator_only": [ ".tick/" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- The trigger is `mktemp` failing under PARALLEL load — a serial re-run reproduces nothing and must
+  not be read as an all-clear (same family as GH-177/GH-1).
+- The fix belongs at the USE boundary: every `mv`/`find -delete`/`rm -rf` on a derived path gets a
+  resolved-containment check (`require_fixture`), recorded as an audit table in this doc. Guarding
+  only the assignment site leaves later derivations unguarded.
+- The reproducer's negative control (guard stubbed out → relocation must be DETECTED) is what makes
+  the suite falsifiable; without it a green run proves only that the test ran.
