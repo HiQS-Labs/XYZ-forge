@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 120
+-- generation: 121
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -9,7 +9,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('4', '2026-08-21T04:21
 INSERT INTO schema_migrations(version, applied_at) VALUES('5', '2026-08-21T05:37:00Z');
 -- table: settings
 INSERT INTO settings(key, value) VALUES('enforcement', 'lenient');
-INSERT INTO settings(key, value) VALUES('generation', '120');
+INSERT INTO settings(key, value) VALUES('generation', '121');
 INSERT INTO settings(key, value) VALUES('repo_slug', 'XYZ-forge');
 -- table: repos
 INSERT INTO repos(global_id, slug) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge');
@@ -473,6 +473,9 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-24T06:07:20Z', '401297859bf64279b1fe78432c34e101', 'default', '64adf160a6848d4f73352d3db99459b369fff30560f5b1c19032c6b2c34d70ba', 'f522c43c3a915b4841c814ec702efb02fa5fd6012c56bedc97fec141872a2c91');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-24T06:08:10Z', '45745ea389724f82a0e7cfc022c76bbb', 'default', 'f522c43c3a915b4841c814ec702efb02fa5fd6012c56bedc97fec141872a2c91', '3a75bc4dc5777a6aa3d20f0802e9521cfe0a99d82f3096b01aab785a3968ffd7');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-24T06:45:08Z', '263b83e0d608452c9067020d925fdb83', 'default', '3a75bc4dc5777a6aa3d20f0802e9521cfe0a99d82f3096b01aab785a3968ffd7', '90f8995fa571239412f2394b14ff0c223853ee23de078bbe80345fd0f3e43328');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-24T16:07:54Z', 'ed116fd1f5084c2db52e2004c5de9e06', 'default', '64adf160a6848d4f73352d3db99459b369fff30560f5b1c19032c6b2c34d70ba', '90f8995fa571239412f2394b14ff0c223853ee23de078bbe80345fd0f3e43328');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-24T15:36:27Z', 'feb7dec0dd3948718f002b76b457842e', 'default', '90f8995fa571239412f2394b14ff0c223853ee23de078bbe80345fd0f3e43328', '6b95eeac63d9a3f0de40583653aa843b7b7a145b57ae2a5c144f1556aafe38d5');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M0T6MY9QSDDAWCTFDMMY2V34', '2026-08-24T15:36:28Z', '48c6f8d6711b4c13bd8be7d7eae8b6c0', 'default', '6b95eeac63d9a3f0de40583653aa843b7b7a145b57ae2a5c144f1556aafe38d5', 'b65d03cb2a07e4c5968b43652f399a7dc2ce8aea1e113c9cf11b737109fef402');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-24T16:32:16Z', '4e53acbf779c40eba2db9b9c2f9af9e9', 'default', '90f8995fa571239412f2394b14ff0c223853ee23de078bbe80345fd0f3e43328', 'b65d03cb2a07e4c5968b43652f399a7dc2ce8aea1e113c9cf11b737109fef402');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-24T16:29:04Z', '5a1b13e53ec447ed95f1ab31846f8933', 'default', 'b65d03cb2a07e4c5968b43652f399a7dc2ce8aea1e113c9cf11b737109fef402', '813a7261b67bcf2c6f252f83faac217a464094f48b12680bc5bf9c9baf87d2ca');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-24T16:40:07Z', '6bd0cb14bcca4a37ae9f82490de797dd', 'default', 'b65d03cb2a07e4c5968b43652f399a7dc2ce8aea1e113c9cf11b737109fef402', '813a7261b67bcf2c6f252f83faac217a464094f48b12680bc5bf9c9baf87d2ca');
