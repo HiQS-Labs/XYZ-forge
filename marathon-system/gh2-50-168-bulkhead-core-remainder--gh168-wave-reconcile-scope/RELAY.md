@@ -1,5 +1,5 @@
 # Marathon Phase gh168-wave-reconcile-scope
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH168-WAVE-RECONCILE-SCOPE-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -87,3 +87,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Made the ROADMAP promotion writer collect all matching issue blocks, move one canonical terminal block, collapse the historical duplicate shape, and return without writing on a clean second run.
 - Added and registered `gh168-wave-reconcile-scope.sh`, including the witnessed-red PR-owned rollback control, unrelated-drift success/warning coverage, and byte-for-byte double-run idempotence.
 - Focused verification: `bash test/gh168-wave-reconcile-scope.sh` — 7 pass, 0 fail; `bash test/gh202-wave-reconcile-issue-state.sh` — 11 pass, 0 fail; Python and Bash syntax checks passed. Full `validate.sh` intentionally not run per turn containment instructions; the harness owns that gate.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the builder's changes and swept `utils/py/wave_reconcile.py` for pre-existing defects. 
+The implementation accurately scopes the `marathon-plan` failure to the reconciled PRs and logs warnings for unrelated drift. Idempotence is correctly handled by collapsing duplicates and returning cleanly on a second run.
+I ran `test/gh168-wave-reconcile-scope.sh` and `test/gh202-wave-reconcile-issue-state.sh`, which both passed successfully.
+
+I noticed a minor pre-existing edge-case in `update_roadmap_entry`: if a ROADMAP entry lacks the `—` character (em dash), the `re.sub` replacement does not match, meaning the `SHIPPED/DECLINED` badge won't be appended. However, since the standard format includes the `—`, it is not a critical defect and does not block this PR.
+
+**Verdict:** Approved
