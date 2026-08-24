@@ -23,7 +23,7 @@ while the four axes keep their honest values underneath.
 | 11 | **280** | [GH-114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | in progress | 80 | 60 | 80 | 60 | 280 | — |
 | 12 | **280** | [GH-115](https://github.com/HiQS-Suite/XYZ-forge/issues/115) — marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | Bulkhead | queue | 75 | 50 | 85 | 70 | 280 | — |
 | 13 | **280** | GH-180 — repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | Bulkhead | queue | 70 | 45 | 85 | 80 | 280 | — |
-| 14 | **280** | GH-193 — AgentChorus Gen 2 | Bulkhead | queue | 75 | 70 | 85 | 50 | 280 | — |
+| 14 | **280** | GH-193 — AgentChorus Gen 2 | Cargo | queue | 75 | 70 | 85 | 50 | 280 | — |
 | 15 | **280** | [GH-77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) — `/standup` — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | Completed | 95 | 70 | 85 | 30 | 280 | — |
 | 16 | **275** | [GH-124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) — eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | — | Completed | 85 | 60 | 90 | 40 | 275 | — |
 | 17 | **275** | [GH-132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) — feat(skills): formal /review-xyz code review skill & multi-model harness | — | Completed | 80 | 70 | 85 | 40 | 275 | — |
@@ -34,7 +34,7 @@ while the four axes keep their honest values underneath.
 | 22 | **270** | GH-184 — committed scratch artifact `.relay-scratch/probe_telemetry.json` makes every real turn a tracked-file mutation | Bulkhead | queue | 60 | 40 | 80 | 90 | 270 | — |
 | 23 | **270** | [GH-75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | Queue / parked intake | 90 | 40 | 85 | 55 | 270 | — |
 | 24 | **265** | [GH-111](https://github.com/HiQS-Suite/XYZ-forge/issues/111) — retire manifest FREEZE; tasks and marathons are DIALED IN to exactly one release, as a database state | — | Completed | 85 | 75 | 70 | 35 | 265 | — |
-| 25 | **265** | GH-182 — self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | Bulkhead | in progress | 75 | 55 | 80 | 55 | 265 | — |
+| 25 | **265** | GH-182 — self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | Cargo | in progress | 75 | 55 | 80 | 55 | 265 | — |
 | 26 | **265** | [GH-50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) — sandboxed git --track / branch -D half-applies and loses uncommitted work | Bulkhead | queue | 65 | 35 | 85 | 80 | 265 | — |
 | 27 | **260** | GH-183 — active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | Bulkhead | queue | 65 | 50 | 75 | 70 | 260 | — |
 | 28 | **255** | [GH-10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) — prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | — | Completed | 55 | 70 | 50 | 80 | 255 | — |

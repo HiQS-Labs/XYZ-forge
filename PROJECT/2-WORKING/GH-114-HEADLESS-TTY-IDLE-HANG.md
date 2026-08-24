@@ -6,7 +6,7 @@ updated: 2026-08-22
 owner: orchestrator (Claude Code)
 goal: stop headless builder turns from dying idle on TTY allocation — no /dev/tty dependency headless, and idle-kill attribution that names the real blocker
 gh_issue: 114
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/114
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/114
 branch: gh-114/headless-tty-idle-hang
 doc_type: bugfix
 effort: 2
