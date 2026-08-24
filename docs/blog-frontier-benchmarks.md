@@ -4,7 +4,7 @@
 
 ## Executive Summary & Empirical Takeaways
 
-This benchmark analysis synthesizes empirical results across 20 verified agent evaluations under load in `XYZ-forge`.
+This benchmark analysis synthesizes empirical results across 21 verified agent evaluations under load in `XYZ-forge`.
 
 ## Evaluated Performance Matrix
 
@@ -29,9 +29,13 @@ This benchmark analysis synthesizes empirical results across 20 verified agent e
 | GH-174 test invocation in sandbox | `commandcode` + `Qwen/Qwen3.8-Max` | `xhigh` | 0.0s | ✅ PASS | **A-** |
 | GH-174 test invocation in sandbox | `commandcode` + `Qwen/Qwen3.8-Max` | `xhigh` | 0.0s | ✅ PASS | **A-** |
 | GH-174 test invocation in sandbox | `commandcode` + `Qwen/Qwen3.8-Max` | `xhigh` | 0.0s | ✅ PASS | **A-** |
+| GH-174 test invocation in sandbox | `commandcode` + `Qwen/Qwen3.8-Max` | `xhigh` | 0.0s | ✅ PASS | **A-** |
 | GH-174 test invocation | `dsh` + `deepseek/deepseek-v4-pro` | `high` | 0.0s | ✅ PASS | **A** |
 
 ## In-Depth Architectural Narratives & Field Notes
+
+### Case Study: `Qwen/Qwen3.8-Max` on `GH-174 test invocation in sandbox`
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
 
 ### Case Study: `Qwen/Qwen3.8-Max` on `GH-174 test invocation in sandbox`
 Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.

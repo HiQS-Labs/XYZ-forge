@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-222 — releases update cannot re-point a release's tracking issue | — | [#222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) · [PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md](PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md) |
 | GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI &gt;=1.1.19 — whoami subcommand removed | — | [#221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) · [PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md](PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md) |
 | GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth | — | [#215](https://github.com/HiQS-Labs/XYZ-forge/issues/215) · [PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md](PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md) |
 | GH-216 — marathon-plan.sh ledger parser rejects link-style ROADMAP.md bullets | — | [Title](path) · [#216](https://github.com/HiQS-Labs/XYZ-forge/issues/216) · [PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md](PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md) |
