@@ -63,7 +63,15 @@ A="$WORK/agent-a"
 B="$WORK/agent-b"
 export REMOTE A B
 
-git init -q --bare "$REMOTE"
+# -b main is load-bearing, not cosmetic. Without it the bare repo's HEAD follows the machine's
+# init.defaultBranch, which git still defaults to `master` when unset. Only `main` is ever pushed
+# below, so on such a host the remote HEAD points at a ref that never comes into existence: every
+# clone warns "remote HEAD refers to nonexistent ref, unable to checkout" and lands with an UNBORN
+# HEAD and no commits. Anything that then asks for HEAD — `git worktree add --detach <p> HEAD` in
+# rtl_worktree_begin, for one — dies with "invalid reference: HEAD", and the suite fails for a
+# reason that has nothing to do with what it is testing. Pinning it here removes the suite's silent
+# dependency on a global git setting no doc mentions.
+git init -q --bare -b main "$REMOTE"
 
 # Seed remote with an empty initial commit so clones have something to track.
 SEED="$WORK/.seed"
