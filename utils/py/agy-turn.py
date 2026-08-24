@@ -301,6 +301,15 @@ def main():
         pass
 
     prompt = rtl.turn_prompt(me, t, peer)
+    # GH-113 proposed fix 1: prompt reinforcement. Prose is not a guarantee (that is why the
+    # mechanical rtl_scratch_relocate half exists in relay-turn-lib.sh), but naming the failure
+    # mode and the sanctioned location at the point of use removes the "I didn't know" shape.
+    prompt = (
+        "SCRATCH DISCIPLINE (hard requirement, GH-113): every probe script, test file, or temporary "
+        "output you create must be written under $TMPDIR or the repo's .relay-scratch/ directory — "
+        "NEVER the repository root. A root-level scratch file (tmp.json, fix_*.py, test_*.py, ...) is "
+        "auto-relocated out of the tree by containment and reported; an off-lane edit to a TRACKED "
+        "file still fails the whole turn at exit 6.\n\n" + prompt)
     drift_brief = rtl.drift_brief(me, tick_repo_root)
     if drift_brief:
         prompt = drift_brief + "\n" + prompt
