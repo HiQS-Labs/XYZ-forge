@@ -1,6 +1,6 @@
 # Marathon Phase gh2-orphan-backup-repro
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH2-ORPHAN-BACKUP-REPRO-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -96,3 +96,21 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Files touched: `test/gh2-orphan-backup-repro.sh`,
+  `PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md`, `validate.sh`, and this relay transcript.
+- Added a six-worker, two-polarity reproducer that forces `mktemp -d` failure and drives the real
+  `rtl_check` orphan-backup/removal path. The active polarity consumes `require_fixture` immediately
+  before the failed-derived-root use; the negative control stubs only that guard and requires the
+  sentinel to be copied beneath `.tick/orphan-backups/` and removed from its original location.
+- Recorded the source audit: 232 suite-side and 40 harness-side destructive-operation matches,
+  classified by derived root and containment proof. Existing GH-1/GH-10 adoption remains the
+  exhaustive suite-side guard; no production behavior edit was needed or permitted in this lane.
+- Registered `gh2-orphan-backup-repro.sh` in `validate.sh` next to the existing GH-141 orphan-backup
+  suite.
+- Verification: `bash -n test/gh2-orphan-backup-repro.sh validate.sh` exited 0; registration is at
+  `validate.sh:219`; `bash test/gh2-orphan-backup-repro.sh` exited 0 with 12 passed / 0 failed.
+  Full `validate.sh` intentionally not run; the lane instructions reserve the full gate for the
+  harness after handoff.
