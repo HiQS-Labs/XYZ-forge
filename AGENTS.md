@@ -26,6 +26,11 @@ radius, planning shape, and proof.
 Do not restate routing, roadmap, changelog, or active-doc contracts here. Those live in
 `ROUTER.md` and `PROJECT/PDDA.md`.
 
+Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
+live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section
+is a standing carve-out from the "do not create new git branches automatically" rail: it
+pre-authorizes one `feat/`/`fix/` branch per fresh task clone, nothing more.
+
 ## Operating principles
 
 ### 1. Lead with the line that survives skimming
