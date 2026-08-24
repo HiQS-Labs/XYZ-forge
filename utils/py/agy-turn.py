@@ -86,7 +86,13 @@ def agy_auth_preflight(agy_bin):
     probe_cwd = tempfile.mkdtemp(prefix="agy-auth-probe.")
     try:
         with open(out_file, "w") as out_f:
-            subprocess.run([agy_bin, "whoami"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT,
+            # GH-221 (2026-08-24): probe `models`, not `whoami`. agy >=1.1.19 removed the `whoami`
+            # subcommand entirely (clap usage error on every run), while `models` exists on every
+            # agy generation this harness has driven, runs headless without a TTY, and requires
+            # live auth + network — the reliable headless probe GH-492 said did not exist at the
+            # time. All GH-130/GH-375 verdict routing below is kept as the safety net for future
+            # CLI drift.
+            subprocess.run([agy_bin, "models"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT,
                            stdin=subprocess.DEVNULL, check=True, cwd=probe_cwd)
         # GH-375: exit status alone cannot decide this. `agy whoami` EXITS 0 while failing to run at
         # all when there is no TTY — `CLI error: bubbletea: error opening TTY ...` — and stdin is
@@ -134,8 +140,8 @@ def agy_auth_preflight(agy_bin):
             _record_auth_unverified(t_detail)
             print(f"agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. {_AUTH_PROBE_FINDING}",
                   file=sys.stderr)
-            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
-                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+            print("agy-turn: continuing; the auth probe could not run headless, so it is not a usable "
+                  "auth check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
                   file=sys.stderr)
             if os.path.exists(out_file): os.remove(out_file)
             return True

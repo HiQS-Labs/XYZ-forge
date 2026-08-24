@@ -141,7 +141,7 @@ AGY_STUB="$WORK/agy"
 cat >"$AGY_STUB" <<'AGY_EOF'
 #!/usr/bin/env bash
 set -u
-[ "${1:-}" = whoami ] && { printf 'agy@example.test\n'; exit 0; }
+{ [ "${1:-}" = whoami ] || [ "${1:-}" = models ]; } && { printf 'agy@example.test\n'; exit 0; }
 [ "${1:-}" = models ] && { printf 'Gemini 3.5 Flash\n'; exit 0; }
 # Do the turn's work, then produce NO stdout at all — the shim's transcript is what stays empty.
 # The relay edit is what makes "did enforce run?" observable as a commit rather than only as a

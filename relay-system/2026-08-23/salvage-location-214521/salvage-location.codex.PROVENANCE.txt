@@ -1,0 +1,15 @@
+FIRSTHAND_COUNT=47
+ECHOED_COUNT=13
+ECHOED "clone-teardown salvage"
+ECHOED `.tick/orphan-backups/`
+ECHOED `relay-system/`
+ECHOED `relay-system/`
+ECHOED `relay-system/`
+ECHOED `.relay-scratch/`
+ECHOED `.relay-scratch/`
+ECHOED `.tick/orphan-backups/`
+ECHOED `.relay-scratch/`
+ECHOED `.relay-scratch/`
+ECHOED `relay-system/`
+ECHOED `harnesses.db`
+ECHOED `harnesses.db`

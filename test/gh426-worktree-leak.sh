@@ -112,7 +112,7 @@ inv_count="$(/usr/bin/grep -c INVOCATION "$INVLOG" 2>/dev/null || echo 0)"
   && pass "the agent binary is invoked more than once per turn ($inv_count) — the auth probe, then the turn" \
   || fail "expected at least 2 invocations (auth probe + turn), saw $inv_count — the fixture no longer reproduces the reported conditions"
 
-probe_cwd="$(/usr/bin/grep 'argv=whoami' "$INVLOG" 2>/dev/null | head -1 | sed 's/^INVOCATION cwd=//; s/ common=.*//')"
+probe_cwd="$(/usr/bin/grep 'argv=whoami\|argv=models' "$INVLOG" 2>/dev/null | head -1 | sed 's/^INVOCATION cwd=//; s/ common=.*//')"
 if [ -z "$probe_cwd" ]; then
   fail "no auth-probe invocation recorded — this suite can no longer observe the real mechanism"
 elif [ "$probe_cwd" = "$ROOT_DIR" ]; then
@@ -123,7 +123,7 @@ fi
 
 # Criterion 3: the worktree's base repo must match AGY_TURN_ROOT when the two differ. Asserted from
 # the turn invocation's own CWD, which is the worktree, rather than from a log line claiming it.
-turn_line="$(/usr/bin/grep -v 'argv=whoami' "$INVLOG" 2>/dev/null | head -1)"
+turn_line="$(/usr/bin/grep -v 'argv=whoami\|argv=models' "$INVLOG" 2>/dev/null | head -1)"
 turn_cwd="$(printf '%s' "$turn_line" | sed 's/^INVOCATION cwd=//; s/ common=.*//')"
 turn_common="$(printf '%s' "$turn_line" | sed 's/.* common=//; s/ argv=.*//')"
 fix_real="$(cd "$FIX" && pwd -P)"

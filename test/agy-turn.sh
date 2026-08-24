@@ -29,6 +29,7 @@ if [ "${1:-}" = whoami ]; then
   exit 0
 fi
 if [ "${1:-}" = models ]; then
+  [ "${STUB_MODE:-good}" = authfail ] && { printf 'login required\n' >&2; exit 1; }
   [ "${STUB_MODE:-good}" = modelsfail ] && { printf 'models unavailable\n' >&2; exit 1; }
   printf '%s\n' "${STUB_MODELS:-Gemini 3.5 Flash}"
   exit 0

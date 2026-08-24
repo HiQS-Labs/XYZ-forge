@@ -95,8 +95,8 @@ AGY_NEW = '''        t_severity, t_detail = agy_auth_timeout_verdict(out_file)
             _record_auth_unverified(t_detail)
             print(f"agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. {_AUTH_PROBE_FINDING}",
                   file=sys.stderr)
-            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
-                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+            print("agy-turn: continuing; the auth probe could not run headless, so it is not a usable "
+                  "auth check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
                   file=sys.stderr)
             if os.path.exists(out_file): os.remove(out_file)
             return True

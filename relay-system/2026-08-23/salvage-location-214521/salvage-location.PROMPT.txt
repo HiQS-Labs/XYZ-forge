@@ -1,0 +1,14 @@
+Question: where should the marathon-cleanup SOP store "clone-teardown salvage" data, and why?
+
+Context (XYZ-forge repo):
+- Disposable marathon clones of this repo accumulate unique UNCOMMITTED per-clone state before deletion: GH-174 turn-telemetry (`harnesses.db` + `harnesses.sql` diffs), regenerated `HARNESS-MODELS-REGISTRY.generated.md` / `docs/blog-frontier-benchmarks.md`, and `.relay-scratch/` probe JSON.
+- This data must survive clone deletion until an operator merges it into the canonical `harnesses.db` in the primary clone, then it is disposable.
+- Today it was salvaged ad hoc to `~/marathon-clones/gh174-telemetry-salvage-2026-08-23/<clone-name>/` (outside any repo).
+
+Candidate locations:
+1. Outside the repo beside the clones (`~/marathon-clones/<salvage-dir>/`) — safe from all repo tooling, but undiscoverable; no session auto-loads it, easy to forget.
+2. Inside the primary repo under `relay-system/` (committed thread storage) or a new top-level `marathon-system/` folder — discoverable and versionable, but: (a) GH-141 hazard — untracked/hand-added files in a clone while a driven turn is in flight can be swept into `.tick/orphan-backups/` or reverted; (b) dirties a working tree that may have pending PR decisions; (c) binary `harnesses.db` blobs in git history if committed.
+3. `.tick/orphan-backups/` — existing backup convention, but gitignored, per-clone, and deleted with the clone: unsuitable for teardown salvage by construction (confirm or refute).
+4. Anything better you can argue for (e.g. XDG data dir like `~/.local/share/xyz/salvage/`, or a gitignored-but-in-repo dir with a README pointer, or "don't salvage — merge before delete as an SOP gate").
+
+What "good" looks like: one recommended location + rationale, an explicit statement on whether "merge-before-delete" should replace salvage entirely, and how discoverability is guaranteed (what pointer, where). Judge the GH-141 sweep hazard seriously: the repo's turn shims revert non-allowlisted new files in the real tree during driven turns.
