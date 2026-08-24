@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-197 · two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | [GH-197-VENDOR-TIER-SPLIT.md](PROJECT/2-WORKING/GH-197-VENDOR-TIER-SPLIT.md) · [#197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) |
 | GH-105 · vendor the RELEASES DB system + HTML timeline generator into the .xyz payload (optional add-on) | — | [GH-105-VENDOR-RELEASES-ADDON.md](PROJECT/1-INBOX/GH-105-VENDOR-RELEASES-ADDON.md) · [#105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
 | GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) | — | [#62](https://github.com/HiQS-Suite/XYZ-forge/issues/62) · [#63](https://github.com/HiQS-Suite/XYZ-forge/issues/63) · [#64](https://github.com/HiQS-Suite/XYZ-forge/issues/64) · [#65](https://github.com/HiQS-Suite/XYZ-forge/issues/65) · [#61](https://github.com/HiQS-Suite/XYZ-forge/issues/61) |
@@ -21,7 +22,7 @@ Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -31,16 +32,16 @@ Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 | GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | — | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) |
 | GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | — | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) |
 | GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
-| GH-174 · Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | — | [GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md](PROJECT/2-WORKING/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md) · [#174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 
 ## Completed
 
-Summary: 38 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 38 · 🔮 0 · 🔲 0
+Summary: 39 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 39 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-174 · Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | ✅ | [GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md](PROJECT/3-COMPLETED/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md) · [#174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) |
 | GH-115 · marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | ✅ | [GH-115-ROUND-CAP-ESCALATION.md](PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md) · [#115](https://github.com/HiQS-Suite/XYZ-forge/issues/115) |
 | GH-8 · kernel boundary hardening — CLI numeric validation, task/agent format contract | ✅ | [GH-8-KERNEL-BOUNDARY-HARDENING.md](PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md) · [#8](https://github.com/HiQS-Suite/XYZ-forge/issues/8) |
 | GH-180 · repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | ✅ | [GH-180-REPRO-TIMEOUT-CRASH.md](PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md) · [#180](https://github.com/HiQS-Labs/XYZ-forge/issues/180) |
