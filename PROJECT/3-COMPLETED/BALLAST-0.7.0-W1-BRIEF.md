@@ -1,8 +1,8 @@
 ---
 title: "Ballast 0.7.0 — Wave 1 phase brief (#4 gate travels with clones · #10 require_fixture adoption)"
-status: active
+status: Complete
 created: 2026-08-16
-updated: 2026-08-17
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 doc_type: project
 goal: >
