@@ -50,7 +50,7 @@ content — silent data loss for anything not under version control. Known trigg
 
 - [ ] Reproducer green with the guard active: nothing outside the fixture moves under simulated `mktemp` failure.
 - [ ] Reproducer green with the guard stubbed out: the relocation is detected (negative control).
-- [ ] Audit table of every `mv`/`find -delete`/`rm -rf` call site on a derived path recorded in this doc, each carrying a resolved-containment check.
+- [ ] Audit table of every `mv`/`find -delete`/`rm -rf` call site on a derived path recorded in the capture doc, each carrying a resolved-containment check.
 - [ ] `test/gh2-orphan-backup-repro.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
