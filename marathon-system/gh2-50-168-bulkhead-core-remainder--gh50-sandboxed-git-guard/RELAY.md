@@ -1,5 +1,5 @@
 # Marathon Phase gh50-sandboxed-git-guard
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH50-SANDBOXED-GIT-GUARD-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -136,3 +136,13 @@ However, since I must review the WHOLE of the touched files, I found pre-existin
 - Verification: `shellcheck -e SC1091 validate.sh` — clean. Plain shellcheck reports only the
   pre-existing SC1091 informational for the dynamically resolved `gate-env.sh` source.
 - Full `validate.sh` intentionally not run by this lane; the harness owns the full gate.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+The fixes applied to `validate.sh` successfully resolve the shellcheck issues (SC2166, SC2221, SC2222) while preserving the script's logic. I have confirmed that `test/gh50-sandboxed-git-guard.sh` passes successfully and `shellcheck -e SC1091 validate.sh` is now completely clean. There are no other defects found in the touched files (`validate.sh`, `utils/git-sandbox-guard.sh`, `test/gh50-sandboxed-git-guard.sh`, and `AGENTS.md`). I also double-checked `utils/git-sandbox-guard.sh` arg parsing: it correctly requires `--` for command evaluation in the catch-all `*)` block which correctly adheres to safe shell usage. 
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
