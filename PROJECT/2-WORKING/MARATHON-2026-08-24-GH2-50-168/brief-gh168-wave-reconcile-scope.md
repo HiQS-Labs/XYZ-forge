@@ -1,4 +1,23 @@
+---
+title: Lane brief — GH-168: scope wave_reconcile's trailing drift check to the reconciled PR
+status: Active (2-WORKING)
+created: 2026-08-24
+updated: 2026-08-24
+owner: noel
+branch: development
+doc_type: project
+roadmap_exempt: true
+goal: >
+  Lane brief for marathon phase gh168-wave-reconcile-scope.
+---
+
 # Lane brief — GH-168: scope wave_reconcile's trailing drift check to the reconciled PR
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Brief authored. | Phase execution. |
 
 Execution surface of record: `PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md`
 (issue: https://github.com/HiQS-Suite/XYZ-forge/issues/168)

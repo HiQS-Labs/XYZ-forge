@@ -2,7 +2,7 @@
 # open members: #168 #50 #2. (#113 and #114 are deliberately EXCLUDED: they share a write-set
 # on utils/py/agy-turn.py and both need live-agy behavioral debugging — routed to a focused
 # solo arc instead; see PROJECT/2-WORKING/GH-113/GH-114 capture docs.)
-# Run with:  relay-automation/marathon.sh --plan marathon-plans/2026-08-24-gh2-50-168/MARATHON.yaml
+# Run with:  relay-automation/marathon.sh --plan PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/MARATHON.yaml
 # Lanes are serialized via depends_on because all three register suites in validate.sh.
 # Lane ids are globally unique (gh<issue>-*) — bare p1/p2 ids collide in shared .tick/attempts/.
 # All three capture docs preflighted ready (swarm-preflight --dry-run, 2026-08-24; GH-2 after
@@ -15,14 +15,14 @@ phases:
   - id: gh168-wave-reconcile-scope
     name: "GH-168: wave_reconcile — unrelated pre-existing drift warns, PR-attributable drift stays fatal, idempotent double-run"
     reviewer: agy
-    brief: marathon-plans/2026-08-24-gh2-50-168/brief-gh168-wave-reconcile-scope.md
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md
     artifact: utils/py/wave_reconcile.py,test/gh168-wave-reconcile-scope.sh,validate.sh
     max_review_rounds: 3
 
   - id: gh50-sandboxed-git-guard
     name: "GH-50: git-sandbox-guard preflight — refuse switch --track/branch -D before tree mutation when .git/config is unwritable"
     reviewer: agy
-    brief: marathon-plans/2026-08-24-gh2-50-168/brief-gh50-sandboxed-git-guard.md
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md
     artifact: utils/git-sandbox-guard.sh,test/gh50-sandboxed-git-guard.sh,AGENTS.md,validate.sh
     depends_on: gh168-wave-reconcile-scope
     max_review_rounds: 3
@@ -30,7 +30,7 @@ phases:
   - id: gh2-orphan-backup-repro
     name: "GH-2: orphan-backup relocation — mktemp-failure reproducer, derived-path call-site audit, containment checks"
     reviewer: agy
-    brief: marathon-plans/2026-08-24-gh2-50-168/brief-gh2-orphan-backup-repro.md
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md
     artifact: test/gh2-orphan-backup-repro.sh,PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md,validate.sh
     depends_on: gh50-sandboxed-git-guard
     max_review_rounds: 3

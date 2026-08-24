@@ -85,6 +85,9 @@ STATUS: Approved
 NEXT: None
 LOG_EOF
 
+# Clean up scratch probe before exit
+rm -rf .relay-scratch
+
 echo "TURN_COMPLETED=1" >> "$STRESS_RECORD"
 exit 0
 AGENT_EOF
@@ -98,12 +101,12 @@ TICK_REPO_ROOT="$REPO" "$ROOT/bin/tick" log task.created RELAY-TURN --agent clau
 TICK_REPO_ROOT="$REPO" "$ROOT/bin/tick" claim RELAY-TURN --agent claude --paths test-relay.md >/dev/null 2>&1
 TICK_REPO_ROOT="$REPO" "$ROOT/bin/tick" release RELAY-TURN --agent claude --to producer >/dev/null 2>&1
 
-RELAY_DRIVER_LOCKED=0 TICK_REPO_ROOT="$REPO" python3 "$ROOT/utils/py/relay_drive.py" \
+(cd "$REPO" && RELAY_DRIVER_LOCKED=1 TICK_REPO_ROOT="$REPO" python3 "$ROOT/utils/py/relay_drive.py" \
   --relay-file "$RELAY_FILE" \
   --relay-task RELAY-TURN \
   --agent-cmd "$AGENT_SCRIPT" \
   --tool-mode "programmatic" \
-  --round-cap 1 >/dev/null 2>&1 || true
+  --round-cap 1 >/dev/null 2>&1 || true)
 
 # Assert turn completed successfully
 if [ ! -f "$STRESS_RECORD" ] || ! grep -qF "TURN_COMPLETED=1" "$STRESS_RECORD"; then

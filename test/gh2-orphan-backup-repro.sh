@@ -10,15 +10,15 @@
 
 set -uo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LIB="$HERE/relay-automation/relay-turn-lib.sh"
-GUARD="$HERE/test/lib/fixture-guard.sh"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB="$HERE/../relay-automation/relay-turn-lib.sh"
+GUARD="$HERE/lib/fixture-guard.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh2-orphan-backup.XXXXXX")" || {
   echo "gh2-orphan-backup-repro: mktemp setup failed" >&2
   exit 1
 }
-. "$GUARD"
+. "$HERE/lib/fixture-guard.sh"
 fixture_guard_init "$WORK"
 cleanup(){
   [ -n "${WORK:-}" ] && [ -d "$WORK" ] && [ "$WORK" != "/" ] || return 0
@@ -53,19 +53,16 @@ exercise_worker() { # <guarded|control> <index>
   local mode="$1" index="$2" outer="$WORK/$mode-$index" derived=""
   cd "$outer" || return 90
 
-  # Deterministic stand-in for the parallel-load mktemp failure.  Keep the failure local to this
-  # worker so the suite's own outer $WORK remains a valid, cleanup-safe sandbox.
-  mktemp(){ return 1; }
-  derived="$(mktemp -d "$WORK/intended-$mode-$index.XXXXXX" 2>/dev/null)" || :
-  unset -f mktemp
+  # Deterministic stand-in for the parallel-load mktemp failure: empty derived path.
+  derived=""
 
-  . "$GUARD"
+  . "$HERE/lib/fixture-guard.sh"
   fixture_guard_init "$WORK"
   if [ "$mode" = control ]; then
     require_fixture(){ :; } # negative control: remove precisely the use-boundary containment check
   fi
 
-  # This call must exit 2 in the active polarity.  In the control it permits the historic failure:
+  # This call must exit 2 in the active polarity. In the control it permits the historic failure:
   # cd "" does not leave the caller repo, so pwd becomes the escaped RTL_ROOT.
   require_fixture "$derived" "mktemp-derived repo"
   cd "$derived" 2>/dev/null || :
