@@ -1,8 +1,8 @@
 ---
 title: "GH-113: headless agy builder writes root scratch files, tripping containment (exit 6)"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: give headless builder turns a sanctioned scratch lane so debugging temp files can never trip the containment guard
 gh_issue: 113

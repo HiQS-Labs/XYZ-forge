@@ -25,12 +25,10 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6) | — | [GH-113-HEADLESS-SCRATCH-CONTAINMENT.md](PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md) · [#113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) |
-| GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | — | [GH-114-HEADLESS-TTY-IDLE-HANG.md](PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md) · [#114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) |
 | GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
 | GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) | — | [GH-201-GEN35-FOLLOWUPS.md](PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md) · [#201](https://github.com/HiQS-Labs/XYZ-forge/issues/201) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
@@ -38,10 +36,13 @@ Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 45 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 45 · 🔮 0 · 🔲 0
+Summary: 47 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 47 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | ✅ | [GH-114-HEADLESS-TTY-IDLE-HANG.md](PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md) · [#114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) |
+| GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6) | ✅ | [GH-113-HEADLESS-SCRATCH-CONTAINMENT.md](PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md) · [#113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) |
+| GH-91 · a build turn has nowhere to write verification output | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) |
 | GH-168 · wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | ✅ | [GH-168-WAVE-RECONCILE-SCOPE.md](PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md) · [#168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) |
 | GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | ✅ | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) |
 | GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | ✅ | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) |
@@ -64,7 +65,6 @@ Summary: 45 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 45 · �
 | GH-165 · Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | ✅ | [GH-165-POST-MERGE-WAVE-RECONCILER.md](PROJECT/1-INBOX/GH-165-POST-MERGE-WAVE-RECONCILER.md) · [#165](https://github.com/HiQS-Suite/XYZ-forge/issues/165) |
 | GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | ✅ | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | ✅ | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
-| GH-91 · a build turn has nowhere to write verification output — containment kills a complete, green turn | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) |
 | GH-153 · RELEASES dashboard sidebar + full-cycle rollup (technical spike) | ✅ | [GH-153-RELEASES-SIDEBAR-ROLLUP.md](PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md) · [#153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) |
 | GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | ✅ | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) |
 | GH-144 · Agent2Agent 3+ participant onboarding + read-only status quick wins | ✅ | [GH-144-AGENT2AGENT-3PLUS-UX.md](PROJECT/3-COMPLETED/GH-144-AGENT2AGENT-3PLUS-UX.md) · [#144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) |

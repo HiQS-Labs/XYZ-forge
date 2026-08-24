@@ -1,8 +1,8 @@
 ---
 title: "GH-114: headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7)"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: stop headless builder turns from dying idle on TTY allocation — no /dev/tty dependency headless, and idle-kill attribution that names the real blocker
 gh_issue: 114

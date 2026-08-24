@@ -16,11 +16,11 @@ while the four axes keep their honest values underneath.
 | 4 | **300** | [GH-174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) — Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | Bulkhead | queue | 85 | 75 | 95 | 45 | 300 | — |
 | 5 | **295** | [GH-155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing | — | Completed | 85 | 70 | 90 | 50 | 295 | — |
 | 6 | **295** | [GH-165](https://github.com/HiQS-Suite/XYZ-forge/issues/165) — Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | — | Completed | 90 | 80 | 90 | 35 | 295 | — |
-| 7 | **290** | [GH-113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) — headless agy builder writes root scratch files, tripping containment (exit 6) | Bulkhead | in progress | 85 | 60 | 85 | 60 | 290 | — |
+| 7 | **290** | [GH-113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) — headless agy builder writes root scratch files, tripping containment (exit 6) | Bulkhead | queue | 85 | 60 | 85 | 60 | 290 | — |
 | 8 | **290** | [GH-148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) — DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | Completed | 85 | 75 | 90 | 40 | 290 | — |
 | 9 | **290** | [GH-168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) — wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | Bulkhead | queue | 80 | 55 | 85 | 70 | 290 | — |
 | 10 | **285** | [GH-141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | Bulkhead | ad-hoc detour | 80 | 65 | 85 | 55 | 285 | — |
-| 11 | **280** | [GH-114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | in progress | 80 | 60 | 80 | 60 | 280 | — |
+| 11 | **280** | [GH-114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | queue | 80 | 60 | 80 | 60 | 280 | — |
 | 12 | **280** | [GH-115](https://github.com/HiQS-Suite/XYZ-forge/issues/115) — marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | Bulkhead | queue | 75 | 50 | 85 | 70 | 280 | — |
 | 13 | **280** | GH-180 — repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | Bulkhead | queue | 70 | 45 | 85 | 80 | 280 | — |
 | 14 | **280** | GH-193 — AgentChorus Gen 2 | Cargo | queue | 75 | 70 | 85 | 50 | 280 | — |
@@ -39,7 +39,7 @@ while the four axes keep their honest values underneath.
 | 27 | **260** | GH-183 — active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | Bulkhead | queue | 65 | 50 | 75 | 70 | 260 | — |
 | 28 | **255** | [GH-10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) — prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | — | Completed | 55 | 70 | 50 | 80 | 255 | — |
 | 29 | **255** | [GH-144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) — Agent2Agent 3+ participant onboarding + read-only status quick wins | — | Completed | 55 | 30 | 80 | 90 | 255 | — |
-| 30 | **255** | [GH-91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) — a build turn has nowhere to write verification output — containment kills a complete, green turn | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
+| 30 | **255** | [GH-91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) — a build turn has nowhere to write verification output | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
 | 31 | **250** | [GH-153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) — RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | Completed | 70 | 55 | 80 | 45 | 250 | — |
 | 32 | **250** | [GH-197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) — two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | Completed | 80 | 55 | 65 | 50 | 250 | — |
 | 33 | **245** | [GH-108](https://github.com/HiQS-Suite/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
