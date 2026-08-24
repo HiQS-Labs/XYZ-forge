@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -54,5 +54,43 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## commandcode (Reviewer) · r1 · 2026-08-24
+
+**Verdict: Approved** — plan is implementable as written. All DoD points checked against the
+artifact and the cited code spans in the primary clone.
+
+swept file: yes
+
+**DoD coverage:**
+1. Deny-list mechanism — sound. Tier 1 stays a full mirror, overlay paths removed pre-swap; new
+   `utils/` files default to shipping, so the GH-77 curated-manifest failure can't recur.
+2. Migration — auto-detect-over-registry is defensible: registry write fails open under lock
+   contention (`xyz-vendor.sh` run_with_advisory_lock path "update skipped … The vendor still
+   succeeds"), so it genuinely cannot be source of truth. `releases.db`-at-root sticky detect keeps
+   LTVera-Pandas safe; other 8 have no root state to lose.
+3. Onboarding SOP faithfully mechanizes ad0d816 incl. shared-tracking-URL refusal with stop-and-report,
+   never auto-filing or committing.
+4. GH-312 analysis correct — verified preserve loop at `xyz-vendor.sh` (~L373) preserves only
+   target-owned root/`.xyz` runtime state; overlay state lives at target root, nothing new joins it;
+   Phase 4 pins the invariant either way.
+5. Preflight JSON coherent — fix_probes match artifacts_new exactly; lanes don't collide with the
+   plan's write set (`relay-automation/`, `test/`, SKILL.md, README all inside lane bounds).
+6. Every acceptance checkbox falsifiable with a named test in Plan step 4. No contradiction with #105
+   supersession as documented.
+
+**Findings (none blocking):**
+- `[Nit]` "grep sweep: no hits" overstates slightly — `utils/marathon-plan.sh:209` mentions
+  `release-lanes.sh` in a comment ("the trunk as the remote declares it (same source
+  release-lanes.sh uses)"). Comment-only, no import/call, conclusion stands. Fix: reword to "no
+  imports/calls (one comment-only mention)" when editing, or leave as-is.
+- `[Nit]` Acceptance line 169 says gate green "in a disposable clone" but doesn't name GH-564's
+  separate-full-clone rule explicitly; step 6 does implicitly. Optional: add "(separate full clone,
+  not a linked worktree — GH-564)".
+
+Pre-existing defects found by sweep of the artifact itself: none beyond the two Nits above.
+
+Handing off to claude-a (Producer) — relay closed on Approved; no further Producer turn needed unless
+the two Nits are worth folding in during Phase 1.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
