@@ -1,0 +1,36 @@
+== probe-msys2 ==
+repo      : C:/xyz-msys2-probe/repo
+head      : 713ba6d11d3d7d762dcdfe2f98e6991176de2dca
+uname     : MINGW64_NT-10.0-22631 DESKTOP-NVQQIAE 3.5.4-395fda67.x86_64 2024-11-25 09:49 UTC x86_64 Msys
+bash      : 5.2.37(1)-release
+python    : Python 3.12.2
+node      : v22.12.0
+git       : git version 2.47.1.windows.1
+out       : /c/xyz-msys2-probe/logs-mingw64
+
+-- F10: signal.SIGHUP on a platform that has none --
+site: utils/py/marathon_drive.py:2862
+  has SIGHUP: False
+  RESULT: AttributeError escaped the guard -> module 'signal' has no attribute 'SIGHUP'
+VERDICT F10    OPEN guard is inside the loop; SIGHUP is dereferenced building the tuple
+
+-- F7: exec a shebang script through subprocess (no shell) --
+site: utils/py/rtl.py:316
+tick shebang: #!/usr/bin/env node
+  tick path: C:/xyz-msys2-probe/repo/bin/tick
+  isfile: True X_OK: True
+  RESULT: OSError -> OSError 193 [WinError 193] %1 is not a valid Win32 application
+VERDICT F7     OPEN subprocess cannot exec the shebang script; no node fallback
+
+-- F8: 'case $x in /*)' vs a Windows absolute path --
+call sites: 27
+  input=C:/Users/example/hooks     -> C:/tmp/repo/C:/Users/example/hooks
+  input=/c/Users/example/hooks     -> /c/Users/example/hooks
+  input=relative/hooks             -> C:/tmp/repo/relative/hooks
+VERDICT F8     OPEN a C:/ path is concatenated onto the repo root
+
+-- F11: re-entrancy guard in validate.sh (static check only) --
+  no re-entrancy guard found in validate.sh
+VERDICT F11    OPEN no guard; the recursion class is still reachable
+
+logs in /c/xyz-msys2-probe/logs-mingw64

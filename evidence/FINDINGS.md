@@ -22,7 +22,7 @@ disambiguate.
 | # | Tag | Sev | Finding | Repro probe |
 |---|---|---|---|---|
 | F-001 | LINUX | low | relay-xyz guard blocks reads inside a compound command | `probe-guard-read` |
-| F-002 | DOC | info | "compute" is not a marathon verb anywhere in the repo | `probe-compute-verb` |
+| F-002 | DOC | info | "compute" is not a marathon verb anywhere in the repo — **closed 2026-08-24**, see [Round 2](#round-2--2026-08-24) | `probe-compute-verb` |
 | F-003 | DOC | low | `marathon-plan.sh --help` advertises its inner Python path | `probe-plan-help-path` |
 | F-004 | DOC | info | exit 8 is "lane parked", not "relay block invalid" | `probe-exit8-meaning` |
 | F-005 | WSL+DOC | med | no builder on PATH; `claude` resolves to the Windows binary | `probe-builders` |
@@ -33,7 +33,7 @@ disambiguate.
 | F-010 | DOC | med | the releases suite needs `sqlite3`, undocumented — **resolved** | — |
 | F-011 | DOC | med | `standup/collect.sh` hard-requires `jq`, undocumented — **resolved** | — |
 | F-012 | LINUX | med | the suite requires a GLOBAL git identity and nothing says so | — |
-| F-013 | LINUX | med | `gh35-test-tiers` asserts `nice` 20, unreachable on Linux | — |
+| F-013 | LINUX | med | `gh35-test-tiers` asserts `nice` 20, unreachable on Linux — **downgraded to latent 2026-08-24**, see [Round 2](#round-2--2026-08-24) | — |
 | F-014 | — | — | methodology: baseline contaminated by a mid-run install | — |
 | **F-015** | **LINUX** | **critical** | **agy 1.1.16 removed `whoami`; the auth preflight hard-blocks the lane — FIXED** | `probe-agy-auth` |
 | F-016 | LINUX | low | `swarm-preflight` decides lane readiness with a bare `command -v` | `probe-lane-cli-probe` |
@@ -44,8 +44,16 @@ disambiguate.
 | F-021 | WSL | med | a background notification reported exit 0 for a run that exited 2 | — |
 | F-022 | LINUX | med | the compute/ranking step cannot run in a vendored repo | — |
 | **F-023** | **LINUX** | **med** | **GH-68 drift watcher fires on every path absent at both revs** | `probe-drift-false-positive` |
+| F-024 | LINUX | med | the gate mutates 4 tracked files on every run; benchmark rows accumulate | — |
+| F-025 | LINUX | med | upstream `development` is RED on this host (9 suites) while hosted CI is green | — |
+| F-026 | WSL | low | background-task notification reported exit 0 for a push that exited 1 (F-021 recurrence) | — |
+| F-027 | LINUX | low | F-001 unchanged — guard still blocks read-only compound commands | `probe-guard-read` |
 
 Three are worth an issue each on their own: **F-015**, **F-018**, **F-023**.
+
+**Round 2 (2026-08-24)** adds F-024 … F-027 and re-verifies PR #29's Windows findings — see
+[Round 2](#round-2--2026-08-24) and `evidence/PR29-MSYS2-FOLLOWUP.md`. F-002 is **closed**; F-013 is
+**downgraded to latent** and routed to GH-35 Phase 3.
 
 ---
 
@@ -437,3 +445,160 @@ Unchanged from the Phase 0–3 record. Full text with commands, exit codes and r
 - **F-009 — partially resolved.** `gh repo set-default HiQS-Suite/XYZ-forge` (exit 0) fixed the
   resolution target, but `gh issue view 544` still exits 1 — that issue does not exist upstream
   either. Warn-only; `errors=0`.
+
+---
+
+# Round 2 — 2026-08-24
+
+Resync to `713ba6d1` (upstream org renamed `HiQS-Suite` → `HiQS-Labs`). Everything below was
+re-verified against that commit, not carried over from round 1.
+
+## F-002 — CLOSED: "compute" maps to `utils/marathon-plan.sh`
+
+Round 1 reported that "compute" is not a literal verb anywhere in the repo. That is still true, and
+`probe-compute-verb` still passes. But leaving it as a bare terminology complaint was the wrong
+disposition — the step exists, it is just named differently in the operator-facing docs than in the
+source.
+
+`utils/marathon-plan.sh:170` calls its own ranking logic exactly that:
+
+```
+# One embedded Node program does the compute (parse ledger → resolve items → signals → score →
+# wave-pack → render).
+```
+
+So the lifecycle's first stage — "compute" — **is** `utils/marathon-plan.sh`: it reads `ROADMAP.md`,
+validates each item is still real, ranks by PDDA cx/risk/effort, and batches collision-safe waves.
+
+**Closed with that mapping.** The residual, if anyone wants it, is a one-line docs change naming the
+script where the lifecycle is described. Not worth an issue on its own.
+
+## F-013 — DOWNGRADED: the `nice` assertion is latent, not currently failing
+
+Round 1 recorded a hard failure: `caller nice=10, worker nice=19, wanted 20`. That specific failure
+**no longer reproduces**, for two independent reasons, both already upstream:
+
+1. `githooks/pre-push` no longer wraps the runner in `nice` (see its comments at lines 128-131 and
+   176) — so the caller is no longer at nice 10 and the stacking that produced the failure is gone
+   at source.
+2. `test/gh35-test-tiers.sh:242-245` now asserts a **delta** (`worker == caller + 10`) rather than an
+   absolute 20.
+
+In today's full-gate run `gh35-test-tiers.sh` failed in parallel but **passed when re-run alone**, and
+the failing assertion was not the `nice` pin.
+
+**But the ceiling is still real and still unsatisfiable.** Re-probed on this host, `713ba6d1`:
+
+```console
+$ nice -n 10 sh -c 'nice -n 10 nice'
+19
+$ nice -n 19 sh -c 'nice'
+19
+```
+
+Linux clamps at 19; BSD/macOS reaches 20. So the delta assertion becomes **unsatisfiable on Linux the
+moment any caller runs `validate.sh` at nice ≥ 10** — the exact condition that existed before the
+pre-push fix, and which any future outer `nice` reintroduces silently.
+
+**Disposition: this belongs to GH-35, not a new issue.** `PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md`
+Phase 3 is still pending and already owns CPU governance and the every-file-classified sweep. The item
+to add there is a clamp-aware assertion (`want = min(caller + 10, 19)` on Linux) so the pin keeps
+detecting real stacking regressions without becoming a false push-blocker again. Filing a separate
+issue would duplicate an existing home.
+
+## F-024 — the gate mutates tracked files on every run
+
+**Tag: LINUX** · Severity: medium · New in round 2
+
+A full `validate.sh` run — invoked here by `githooks/pre-push` on a **pristine `--ff-only` checkout
+with zero local modifications** — left four tracked files dirty:
+
+```
+ M HARNESS-MODELS-REGISTRY.generated.md
+ M docs/blog-frontier-benchmarks.md
+ M harnesses.db
+ M harnesses.sql
+```
+
+The suite appends a benchmark row to the tracked `harnesses.db` / `harnesses.sql` and regenerates the
+tracked blog doc from it. The rows accumulate: `harnesses.sql` at `713ba6d1` already carried three
+identical `GH-174 test invocation in sandbox | commandcode + Qwen/Qwen3.8-Max` entries before this
+run, and now carries four — so this has happened repeatedly, to more than one person.
+
+Consequences: the gate is not idempotent, a clean checkout cannot be re-verified clean, and anyone
+running the gate before a commit risks sweeping generated benchmark rows into an unrelated change.
+Generated artefacts consumed by tests should not be tracked, or the test should write to a temp copy.
+
+## F-025 — upstream `development` is RED on this host while hosted CI is green
+
+**Tag: LINUX** · Severity: medium (divergence, not a regression) · New in round 2
+
+`git push origin development` was **refused by the local pre-push gate** — 1361s, exit 1 — on a
+fast-forward containing only upstream commits and none of this round's work.
+
+```
+failed:
+  - claude-turn.sh
+  - gh382-marathon-memory-telemetry.sh
+  - synthetic/gh101-consult-programmatic.sh
+  - synthetic/gh101-relay-programmatic-stress.sh
+  - gh103-timeline-exporter.sh
+  - gh69-roadmap-shadow.sh
+  - archive-writers.sh
+  - relay-file-seeding-visibility.sh
+  - relay-self-sufficiency.sh
+```
+
+12 suites failed in parallel; 3 passed when re-run alone (`gh426-worktree-leak`, `gh35-test-tiers`,
+`agent-chorus`) and the gate's own GH-528 warning flagged the contention. The 9 above failed alone too.
+
+**Hosted CI is green at the same commit** (`gh run list --branch development` → `success 713ba6d1`).
+So this is a host/CI environment divergence, not an upstream regression. Four of the nine
+(`relay-self-sufficiency`, `relay-file-seeding-visibility`, `archive-writers`,
+`gh382-marathon-memory-telemetry`) are the same suites round 1 attributed to contamination under
+F-014 — they now fail on a **clean** tree, so that attribution was incomplete.
+
+Sampled root cause, `claude-turn.sh`: 30 assertions PASS, the final one fails `expected exit 0, got 5`.
+Exit 5 is the shims' documented "CLI failed / empty output" — consistent with round 1's F-005 / F-008
+(no builder CLI resolvable). Not diagnosed further; recorded rather than guessed at.
+
+**This blocks Phase A's push.** Clearing it needs either a per-suite diagnosis or an explicit,
+disclosed `--no-verify` — not taken unilaterally.
+
+## F-026 — the background-task exit code lied again (F-021 recurrence)
+
+**Tag: WSL** · Severity: low · Recurrence of round 1's F-021
+
+The push above exited **1** and was refused. The agent-facing background-task notification reported
+`completed (exit code 0)`. Round 1 recorded exactly this under F-021 for a marathon that halted with
+`EXIT_CODE: 2`. Worth restating only because acting on the notification alone would have produced a
+confident, wrong "resync complete" report.
+
+## F-027 — F-001 still reproduces, twice, unprompted
+
+**Tag: LINUX** · Severity: low · Confirms round 1's F-001 unchanged
+
+The `relay-xyz` guard hook blocked two **read-only** commands during this round, both times because
+the command was compound and its first token was `echo` rather than an allowlisted reader:
+
+```
+grep -n "sed -i ''" relay-automation/relay-drive.sh utils/build-launch-artifact.sh   # blocked
+```
+
+`relay-automation/hooks/relay-xyz-guard.sh:97-101` allowlists a fixed set of first tokens; anything
+else that merely *mentions* a driver path trips the block. PR #29 reported the same over-broad matcher
+from MSYS2 in a different form. Unchanged at `713ba6d1`.
+
+## MSYS2 — PR #29's findings re-verified
+
+Full report: **`evidence/PR29-MSYS2-FOLLOWUP.md`**. Four of PR #29's five findings still reproduce at
+`713ba6d1` on real MSYS2 (Windows 11 build 22631, `MINGW64_NT`): F7 (`[WinError 193]` execing
+`bin/tick`), F8 (drive-letter path treated as relative; call sites grew 20+ → 27), F10, F11.
+
+**F10 is worse than #29 reported.** `utils/py/marathon_drive.py:2862` guards `signal.signal()` with
+`except (ValueError, OSError, AttributeError)` and a comment reading *"or the platform has no such
+signal"* — but `signal.SIGHUP` is dereferenced building the loop's **tuple**, outside that `try`, so
+the guard cannot fire. Measured on Windows Python 3.12.2. The construct dates to `1f0a5bf1`
+(2026-08-15) and **predates PR #29** — it was never a response to it. Two-line fix.
+
+F9 was **not probed** and is claimed neither way.

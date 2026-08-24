@@ -1,0 +1,23 @@
+$ uname -a
+MSYS_NT-10.0-22631 DESKTOP-NVQQIAE 3.5.4-395fda67.x86_64 2024-11-25 09:49 UTC x86_64 Msys
+
+$ bash --version
+GNU bash, version 5.2.37(1)-release (x86_64-pc-msys)
+
+$ python --version
+Python 3.12.2
+
+$ node --version
+v22.12.0
+
+$ git --version
+git version 2.47.1.windows.1
+
+$ git rev-parse HEAD
+713ba6d11d3d7d762dcdfe2f98e6991176de2dca
+
+$ cmd.exe /c ver
+Microsoft Windows [Version 10.0.22631.6199]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\xyz-msys2-probe\repo>
