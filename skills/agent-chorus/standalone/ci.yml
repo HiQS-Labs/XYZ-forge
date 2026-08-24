@@ -21,6 +21,6 @@ jobs:
           git -C "$RUNNER_TEMP/XYZ-forge" fetch --depth=1 origin "$revision"
           git -C "$RUNNER_TEMP/XYZ-forge" checkout --detach "$revision"
           AGENT2AGENT_STANDALONE_REPO="$GITHUB_WORKSPACE" \
-            bash "$RUNNER_TEMP/XYZ-forge/skills/agent2agent/sync-to-standalone.sh" --check
+            bash "$RUNNER_TEMP/XYZ-forge/skills/agent-chorus/sync-to-standalone.sh" --check
       - name: Run standalone smoke suite
-        run: bash skills/agent2agent/test-standalone.sh
+        run: bash skills/agent-chorus/test-standalone.sh

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create and advance serialized XYZ agent2agent discussions."""
+"""Create and advance serialized XYZ AgentChorus discussions (formerly agent2agent)."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ Name any dissent and the evidence that would change the decision. Write `None` w
 
 
 class Agent2AgentError(RuntimeError):
-    """A user-facing agent2agent failure."""
+    """A user-facing AgentChorus failure."""
 
 
 def utc_now() -> str:
@@ -291,7 +291,7 @@ def quoted_subject(subject: str) -> str:
 
 def invitation(discussion_id: str, number: int, subject: str, timed_watch: bool = False) -> str:
     text = (
-        f"Join XYZ agent2agent #{discussion_id} as agent number {number_word(number)} "
+        f"Join XYZ AgentChorus #{discussion_id} as agent number {number_word(number)} "
         f"to discuss: {quoted_subject(subject)}"
     )
     if timed_watch:
@@ -403,10 +403,10 @@ def resolve_discussion(root: Path, discussion_id: str, store: Optional[Path] = N
     matches = find_discussions(root, discussion_id, store)
     if not matches:
         locations = f"{store} or {legacy_relay_root(root)}" if store else str(legacy_relay_root(root))
-        raise Agent2AgentError(f"agent2agent #{discussion_id} was not found under {locations}")
+        raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} was not found under {locations}")
     if len(matches) > 1:
         rendered = "\n  ".join(str(path) for path in matches)
-        raise Agent2AgentError(f"agent2agent #{discussion_id} is ambiguous:\n  {rendered}")
+        raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is ambiguous:\n  {rendered}")
     return matches[0]
 
 
@@ -443,7 +443,7 @@ def render_initial(
     context_packet: str,
 ) -> str:
     roster = " ".join(agent_id(number) for number in range(1, agents + 1))
-    return f"""# XYZ agent2agent #{discussion_id}
+    return f"""# XYZ AgentChorus #{discussion_id}
 
 AGENT2AGENT-ID: {discussion_id}
 SUBJECT: {subject}
@@ -537,7 +537,7 @@ def sync_metadata(path: Path, content: str) -> None:
         })
         atomic_write(metadata_path, json.dumps(metadata, indent=2, sort_keys=True) + "\n")
     except (Agent2AgentError, OSError, UnicodeError, ValueError, TypeError, json.JSONDecodeError) as exc:
-        print(f"agent2agent: warning: conversation advanced but metadata sync failed: {exc}", file=sys.stderr)
+        print(f"agent-chorus: warning: conversation advanced but metadata sync failed: {exc}", file=sys.stderr)
 
 
 def create_discussion(
@@ -562,14 +562,14 @@ def create_discussion(
         for candidate in id_candidates(explicit_id):
             if find_discussions(root, candidate, store):
                 if explicit_id:
-                    raise Agent2AgentError(f"agent2agent #{candidate} already exists")
+                    raise Agent2AgentError(f"AgentChorus discussion #{candidate} already exists")
                 continue
             candidate_dir = dated / f"{candidate}--{slugify(normalized)}"
             try:
                 candidate_dir.mkdir(mode=0o700)
             except FileExistsError:
                 if explicit_id:
-                    raise Agent2AgentError(f"agent2agent #{candidate} already exists")
+                    raise Agent2AgentError(f"AgentChorus discussion #{candidate} already exists")
                 continue
             os.chmod(candidate_dir, 0o700)
             discussion_id, session_dir = candidate, candidate_dir
@@ -946,7 +946,7 @@ def report_discussion_status(root: Path, discussion_id: str, stale_after: float)
     path = resolve_discussion(root, discussion_id)
     content = read_discussion(path)
     roster = parse_roster(content)
-    print(f"XYZ agent2agent #{discussion_id}")
+    print(f"XYZ AgentChorus #{discussion_id}")
     print(f"Relay file: {path}")
     print(f"Subject: {field(content, 'SUBJECT')}")
     print(f"STATUS: {field(content, 'STATUS')}")
@@ -972,7 +972,7 @@ def ping_discussion(root: Path, discussion_id: str, number: int) -> Path:
     content = read_discussion(path)
     member = validate_member(content, number)
     if field(content, "STATUS").lower() == "closed":
-        raise Agent2AgentError(f"agent2agent #{discussion_id} is closed")
+        raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed")
     touch_watch_sidecar(path, number)
     print(f"HEARTBEAT: refreshed {member}")
     return path
@@ -982,7 +982,7 @@ def watch_discussion(
     root: Path, discussion_id: str, number: int, interval: float, timeout: float
 ) -> int:
     path = resolve_discussion(root, discussion_id)
-    print(f"Watching XYZ agent2agent #{discussion_id} as {agent_id(number)}")
+    print(f"Watching XYZ AgentChorus #{discussion_id} as {agent_id(number)}")
     print(f"Relay file: {path}")
     touch_watch_sidecar(path, number)
     _, _, _, decision = wait_for_turn(
@@ -1010,12 +1010,12 @@ def watch_discussion(
 
 
 def turn_prompt(discussion_id: str, number: int, path: Path, subject: str) -> str:
-    return f"""Join XYZ agent2agent #{discussion_id} as agent number {number_word(number)} to discuss: {quoted_subject(subject)}
+    return f"""Join XYZ AgentChorus #{discussion_id} as agent number {number_word(number)} to discuss: {quoted_subject(subject)}
 
 It is now your turn. Read the complete discussion at:
 {path}
 
-Respond to the discussion, then use the agent2agent helper's send or close command. Do not edit the
+Respond to the discussion, then use the AgentChorus helper's send or close command. Do not edit the
 relay file directly. Route NEXT to exactly one other roster member unless you close the discussion.
 """
 
@@ -1080,7 +1080,7 @@ def drive_discussion(
     completed = 0
     deadline = time.monotonic() + timeout
     with DriveLock(path, member):
-        print(f"Driving XYZ agent2agent #{discussion_id} as {member}")
+        print(f"Driving XYZ AgentChorus #{discussion_id} as {member}")
         print(f"Relay file: {path}")
         while completed < max_turns:
             remaining = max(0.0, deadline - time.monotonic())
@@ -1243,7 +1243,7 @@ def append_turn(
         roster = parse_roster(content)
         status = field(content, "STATUS")
         if status.lower() == "closed":
-            raise Agent2AgentError(f"agent2agent #{discussion_id} is closed")
+            raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed")
         current = field(content, "NEXT")
         if current != member:
             raise Agent2AgentError(f"out of turn: NEXT is {current}, not {member}")
@@ -1284,13 +1284,13 @@ def append_turn(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="agent2agent",
+        prog="agent-chorus",
         description="Create or advance a serialized XYZ discussion shared by two or more agent sessions.",
     )
     parser.add_argument("--root", help="XYZ harness root; defaults to AGENT2AGENT_ROOT or this skill's repository")
     parser.add_argument(
         "--store",
-        help="external Agent2Agent transcript store; defaults to AGENT2AGENT_HOME, user config, or a sibling Agent2Agent-Transcripts directory",
+        help="external AgentChorus transcript store (directory name Agent2Agent-Transcripts retained for compatibility); defaults to AGENT2AGENT_HOME, user config, or a sibling Agent2Agent-Transcripts directory",
     )
     parser.add_argument(
         "--stale-after", type=positive_interval,
@@ -1422,7 +1422,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 ACTIVE_STORE,
             )
             subject = normalize_subject(args.subject)
-            print(f"Created XYZ agent2agent #{discussion_id}")
+            print(f"Created XYZ AgentChorus #{discussion_id}")
             print(f"Relay file: {path}")
             for number in range(2, args.agents + 1):
                 print(invitation(discussion_id, number, subject, args.timed_watch))
@@ -1432,7 +1432,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             path, subject, next_member, decision = join_discussion(
                 root, args.id, args.agent, args.expect_subject
             )
-            print(f"XYZ agent2agent #{args.id}")
+            print(f"XYZ AgentChorus #{args.id}")
             print(f"Relay file: {path}")
             print(f"Subject: {subject}")
             print(f"You are: {agent_id(args.agent)}")
@@ -1470,7 +1470,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 validate_structured_close(message)
             receipt = verify_git_handoff(root) if args.check_clean else None
             path, turn, _, _ = append_turn(root, args.id, args.agent, message, None, True)
-            print(f"Closed XYZ agent2agent #{args.id} at turn {turn}")
+            print(f"Closed XYZ AgentChorus #{args.id} at turn {turn}")
             print(f"Relay file: {path}")
             if receipt:
                 print(f"VERIFIED-GIT: {receipt}")
@@ -1498,10 +1498,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             raise Agent2AgentError(f"unsupported command: {args.command}")
     except KeyboardInterrupt:
-        print("agent2agent: interrupted", file=sys.stderr)
+        print("agent-chorus: interrupted", file=sys.stderr)
         return 130
     except Agent2AgentError as exc:
-        print(f"agent2agent: {exc}", file=sys.stderr)
+        print(f"agent-chorus: {exc}", file=sys.stderr)
         return 2
     return 0
 
