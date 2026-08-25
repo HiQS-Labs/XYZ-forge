@@ -2771,6 +2771,53 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
                   + RATING_COLUMNS
 
 
+
+def cmd_roadmap_add(args):
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        basename = os.path.basename(args.doc_path)
+        raw_text = "- **GH-%d · %s** 🆕 **captured %s via HQ** — [%s](%s) · [#%d](%s)" % (
+            args.issue_num, args.title, args.created, basename, args.doc_path,
+            args.issue_num, args.issue_url
+        )
+        if args.dry_run:
+            print("ROADMAP line: %s" % raw_text)
+            return
+
+        # Dup guard
+        row = conn.execute("SELECT id FROM roadmap_items WHERE issue_url = ?", (args.issue_url,)).fetchone()
+        if row:
+            refuse("roadmap-duplicate", "issue %s is already parked in the roadmap" % args.issue_url)
+        
+        row2 = conn.execute("SELECT id FROM roadmap_items WHERE gh_number = ?", (args.issue_num,)).fetchone()
+        if row2:
+            refuse("roadmap-duplicate", "issue GH-%d is already parked in the roadmap" % args.issue_num)
+
+        gid = new_gid("rmi-")
+        
+        def mutate(conn):
+            ts = now_iso()
+            section = "Queue"
+            max_pos = conn.execute("SELECT MAX(position) FROM roadmap_items WHERE section = ?", (section,)).fetchone()
+            pos = (max_pos[0] or 0) + 1 if max_pos else 1
+            
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            
+            conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section, position,
+                            status_marker, doc_path, issue_url, raw_text, first_seen, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                         (gid, repo["id"], args.issue_num, args.title, section, pos,
+                          "🆕", args.doc_path, args.issue_url, raw_text, ts, ts))
+                          
+        perform_write(root, conn, "roadmap-add", gid, mutate)
+        print("added roadmap entry %s for GH-%d" % (gid, args.issue_num))
+    finally:
+        conn.close()
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
@@ -3659,6 +3706,14 @@ def build_parser():
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
     rsub.add_parser("list", help="print the shadow rows")
 
+    sp_ra = rsub.add_parser("add", help="intake a single issue into the roadmap ledger directly")
+    sp_ra.add_argument("--issue-num", required=True, type=int, help="GH issue number")
+    sp_ra.add_argument("--issue-url", required=True, help="GH issue URL")
+    sp_ra.add_argument("--title", required=True, help="Issue title")
+    sp_ra.add_argument("--created", required=True, help="Created date YYYY-MM-DD")
+    sp_ra.add_argument("--doc-path", required=True, help="Capture doc relpath")
+    sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
     sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
@@ -3683,8 +3738,7 @@ def main(argv=None):
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
         "check": cmd_check, "reconcile": cmd_reconcile,
         "project": lambda a: cmd_project_sync(a) if a.project_cmd == "sync" else None,
-        "roadmap": lambda a: cmd_roadmap_sync(a) if a.roadmap_cmd == "sync"
-        else cmd_roadmap_list(a),
+        "roadmap": lambda a: cmd_roadmap_add(a) if a.roadmap_cmd == "add" else (cmd_roadmap_sync(a) if a.roadmap_cmd == "sync" else cmd_roadmap_list(a)),
     }
     handlers[args.cmd](args)
 

@@ -315,7 +315,11 @@ hq_inspect_repo(){
   [ -f "$p/.pdda-mode" ]        && printf 'LOCAL_PDDA_MODE=%s\n' "$(head -1 "$p/.pdda-mode" | tr -d '[:space:]')"
   [ -f "$p/ROUTER.md" ]         && printf 'LOCAL_ROUTER=yes\n'
   [ -f "$p/AGENTS.md" ]         && printf 'LOCAL_AGENTS=yes\n'
-  [ -f "$p/ROADMAP.md" ]        && printf 'LOCAL_ROADMAP=yes\n'
+  if grep -q "ROADMAP_SOURCE=releases" "$p/.pdda-mode" 2>/dev/null; then
+    [ -f "$p/releases.db" ] && printf "LOCAL_ROADMAP=yes (DB)\n"
+  else
+    [ -f "$p/ROADMAP.md" ] && printf "LOCAL_ROADMAP=yes\n"
+  fi
   [ -f "$p/utils/pdda/pdda.sh" ] && printf 'LOCAL_PDDA_SH=yes\n'
   if [ -d "$p/PROJECT/2-WORKING" ]; then
     local n mp

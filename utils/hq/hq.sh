@@ -113,6 +113,10 @@ cmd_status(){
   # capability tier: PDDA present (registry OR on-disk) AND XYZ install present
   local has_pdda=0 has_xyz=0 tier tierdesc
   { [ -n "$pmode" ] || [ -n "$lpddash" ] || [ -n "$lmode" ]; } && has_pdda=1
+  local is_releases=0
+  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
+    is_releases=1
+  fi
   [ -n "$xyz_path" ] && has_xyz=1
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
   case "$tier" in
@@ -222,6 +226,10 @@ cmd_park(){
   fi
   { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
   [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
+  local is_releases=0
+  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
+    is_releases=1
+  fi
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
 
   local title slug created oslug src
@@ -259,7 +267,11 @@ cmd_park(){
     printf '  target repo:  %s  →  %s  (%s)\n' "$project" "$repo" "$path"
     printf '  GitHub issue: %s\n' "$title"
     printf '  capture doc:  %s\n' "$relpath"
-    printf '  ROADMAP line: %s\n' "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "#")"
+    if [ "$is_releases" = "1" ]; then
+      printf '  ROADMAP sink: releases roadmap add\n'
+    else
+      printf '  ROADMAP line: %s\n' "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "#")"
+    fi
     echo
     echo "  --- capture doc that would be written ---"
     hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
@@ -297,18 +309,35 @@ cmd_park(){
   printf '  ✓ issue:   %s\n' "$url"
   printf '  ✓ capture: %s\n' "$relpath"
 
-  if [ -f "$roadmap" ]; then
-    local where
-    where="$(hq_roadmap_insert "$roadmap" "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")")"
-    printf '  ✓ ROADMAP: pointer added (%s)\n' "$where"
+  if [ "$is_releases" = "1" ]; then
+    local out
+    out="$(cd "$path" && python3 utils/py/releases_app.py roadmap add --issue-num "$num" --issue-url "$url" --title "$title" --created "$created" --doc-path "$relpath" 2>&1)"
+    if [ $? -eq 0 ]; then
+      printf '  ✓ DB: pointer added via releases CLI\n'
+    else
+      echo "  ! releases roadmap add failed: $out" >&2
+      return 1
+    fi
   else
-    echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
+    if [ -f "$roadmap" ]; then
+      local where
+      where="$(hq_roadmap_insert "$roadmap" "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")")"
+      printf '  ✓ ROADMAP: pointer added (%s)\n' "$where"
+    else
+      echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
+    fi
   fi
 
   # GH-164 Phase 1 item 2: regenerate the dashboard right after the ROADMAP write, closing the gap
   # the manual GH-161-164 trace hit twice (forgetting this step is exactly why it is automated here).
   # "Only if present" mirrors the pdda.sh frontmatter check below — never required, never fatal.
-  if [ -f "$path/utils/roadmap-dashboard.sh" ]; then
+  if [ "$is_releases" = "1" ]; then
+    if ( cd "$path" && python3 utils/py/releases_app.py gen >/dev/null 2>&1 ); then
+      echo '  ✓ dashboard: RELEASES.md regenerated'
+    else
+      echo '  ! dashboard: releases gen failed — regenerate manually' >&2
+    fi
+  elif [ -f "$path/utils/roadmap-dashboard.sh" ]; then
     if ( cd "$path" && bash utils/roadmap-dashboard.sh >/dev/null 2>&1 ); then
       echo '  ✓ dashboard: ROADMAP-DASHBOARD.md regenerated'
     else
@@ -427,6 +456,10 @@ cmd_fire(){
   local has_pdda=0 has_xyz=0
   { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
   [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
+  local is_releases=0
+  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
+    is_releases=1
+  fi
   if [ "$(hq_tier "$has_pdda" "$has_xyz")" != A ]; then
     echo "hq fire: $repo is not Tier A (needs PDDA + a vendored XYZ install to run driven lanes) — refusing." >&2
     return 1
