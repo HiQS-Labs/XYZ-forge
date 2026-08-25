@@ -101,7 +101,7 @@ cmd_status(){
 
   # repo-local governance facts (authoritative over the registries)
   local I
-  I="$(hq_inspect_repo "$path")"
+  I="$(hq_inspect_repo "$path" --with-releases)"
   lmode="$(printf '%s\n' "$I"    | val LOCAL_PDDA_MODE)"
   lrouter="$(printf '%s\n' "$I"  | val LOCAL_ROUTER)"
   lagents="$(printf '%s\n' "$I"  | val LOCAL_AGENTS)"
@@ -119,9 +119,7 @@ cmd_status(){
   local has_pdda=0 has_xyz=0 tier tierdesc
   { [ -n "$pmode" ] || [ -n "$lpddash" ] || [ -n "$lmode" ]; } && has_pdda=1
   local is_releases=0
-  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
-    is_releases=1
-  fi
+  hq_is_releases_mode "$path" && is_releases=1
   [ -n "$xyz_path" ] && has_xyz=1
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
   case "$tier" in
@@ -251,9 +249,7 @@ cmd_park(){
   { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
   [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
   local is_releases=0
-  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
-    is_releases=1
-  fi
+  hq_is_releases_mode "$path" && is_releases=1
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
 
   local title slug created oslug src
@@ -292,10 +288,11 @@ cmd_park(){
     printf '  GitHub issue: %s\n' "$title"
     printf '  capture doc:  %s\n' "$relpath"
     if [ "$is_releases" = "1" ]; then
-      printf '  ROADMAP sink: releases roadmap add\n'
-    else
-      printf '  ROADMAP line: %s\n' "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "#")"
+      printf '  ROADMAP sink: releases roadmap add (DB row, not ROADMAP.md text)\n'
     fi
+    # Both sinks store the SAME rendered line (releases-mode passes it via --raw-text), so the
+    # preview shows it unconditionally — what you see is byte-for-byte what either sink records.
+    printf '  ROADMAP line: %s\n' "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "#")"
     echo
     echo "  --- capture doc that would be written ---"
     hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
@@ -333,13 +330,21 @@ cmd_park(){
   printf '  ✓ issue:   %s\n' "$url"
   printf '  ✓ capture: %s\n' "$relpath"
 
+  local r_bin=""
   if [ "$is_releases" = "1" ]; then
-    local out
-    out="$(cd "$path" && python3 utils/py/releases_app.py roadmap add --issue-num "$num" --issue-url "$url" --title "$title" --created "$created" --doc-path "$relpath" 2>&1)"
-    if [ $? -eq 0 ]; then
+    # No fallback to ROADMAP.md here on purpose: in releases-mode the text file is not the
+    # source of truth, so failing loudly beats silently parking where nothing reads.
+    if ! r_bin="$(hq_releases_bin "$path")"; then
+      echo "  ! releases roadmap add failed: no releases_app.py under $path (utils/py/ or .xyz/utils/py/)" >&2
+      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — install the CLI, then run 'releases roadmap add' there manually." >&2
+      return 1
+    fi
+    local db_out
+    if db_out="$(cd "$path" && python3 "$r_bin" roadmap add --issue-num "$num" --issue-url "$url" --title "$title" --created "$created" --doc-path "$relpath" --raw-text "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")" 2>&1)"; then
       printf '  ✓ DB: pointer added via releases CLI\n'
     else
-      echo "  ! releases roadmap add failed: $out" >&2
+      echo "  ! releases roadmap add failed: $db_out" >&2
+      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — fix the DB, then run 'releases roadmap add' there manually." >&2
       return 1
     fi
   else
@@ -356,7 +361,7 @@ cmd_park(){
   # the manual GH-161-164 trace hit twice (forgetting this step is exactly why it is automated here).
   # "Only if present" mirrors the pdda.sh frontmatter check below — never required, never fatal.
   if [ "$is_releases" = "1" ]; then
-    if ( cd "$path" && python3 utils/py/releases_app.py gen >/dev/null 2>&1 ); then
+    if ( cd "$path" && python3 "$r_bin" gen >/dev/null 2>&1 ); then
       echo '  ✓ dashboard: RELEASES.md regenerated'
     else
       echo '  ! dashboard: releases gen failed — regenerate manually' >&2
@@ -480,10 +485,6 @@ cmd_fire(){
   local has_pdda=0 has_xyz=0
   { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
   [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
-  local is_releases=0
-  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
-    is_releases=1
-  fi
   if [ "$(hq_tier "$has_pdda" "$has_xyz")" != A ]; then
     echo "hq fire: $repo is not Tier A (needs PDDA + a vendored XYZ install to run driven lanes) — refusing." >&2
     return 1

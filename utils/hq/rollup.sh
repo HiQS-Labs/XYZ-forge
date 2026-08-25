@@ -32,45 +32,43 @@ while IFS= read -r repo; do
   fields="$(hq_repo_resolve "$repo")"
   path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
   
-  is_releases=0
-  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
-    is_releases=1
-  fi
-
-  if [ "$is_releases" = "1" ]; then
+  if [ -n "$path" ] && hq_is_releases_mode "$path"; then
     echo "  scanning $repo ($path)... [releases DB]"
-    r_bin="$path/utils/py/releases_app.py"
-    [ -f "$r_bin" ] || r_bin="$path/.xyz/utils/py/releases_app.py"
-    if [ -f "$r_bin" ] && [ -f "$path/releases.db" ]; then
-      python3 "$r_bin" roadmap list | python3 - "$repo" >> "$RAW_FILE" <<'PY'
-import sys, re
-repo = sys.argv[1]
-lines = sys.stdin.readlines()
+    if r_bin="$(hq_releases_bin "$path")" && [ -f "$path/releases.db" ]; then
+      # Structured JSON, not the human `roadmap list` rendering — column offsets in that display
+      # shift the moment a field widens. The JSON lands in a temp file passed as argv (mirroring
+      # the node branch below): `python3 -` reads its PROGRAM from stdin via the heredoc, so
+      # piping data to it as well would silently feed the parser nothing.
+      RITEMS_TMP="$(mktemp "${TMPDIR:-/tmp}/hq-rollup-ritems.XXXXXX")"
+      # subshell cd: the CLI resolves its DB from the CWD, not from the script's own path —
+      # without it this reads the ROLLUP HOST's ledger while labeling it "$repo".
+      if ( cd "$path" && python3 "$r_bin" roadmap list --json ) > "$RITEMS_TMP" 2>/dev/null; then
+        python3 - "$repo" "$RITEMS_TMP" >> "$RAW_FILE" <<'PY' || echo "  ! roadmap parse failed for $repo" >&2
+import json, sys
+repo, items_path = sys.argv[1], sys.argv[2]
+try:
+    with open(items_path) as f:
+        items = json.load(f)
+except (OSError, ValueError):
+    items = []
 groups = {}
-for line in lines:
-    if "Completed" in line or len(line) < 80: continue
-    status = line[40:63].strip()
-    m = re.search(r'\bcalc=\S+\s+(.*)', line)
-    if m:
-        title = m.group(1).strip()
-    else:
-        m = re.search(r'\bcre=\S+\s+(.*)', line)
-        if m:
-            title = m.group(1).strip()
-        else:
-            title = line[85:].strip()
-    if not title: continue
-    groups.setdefault(status, []).append(f"- {title}")
-
+for it in items:
+    section = (it.get("section") or "").strip()
+    title = (it.get("title") or "").strip()
+    if not title or section == "Completed":
+        continue
+    groups.setdefault(section or "(unsectioned)", []).append("- " + title)
 if groups:
-    print(f"
-=== REPO: {repo} ===")
-    for status, items in groups.items():
-        print(f"
-Section: {status}")
-        for item in items:
-            print(item)
+    print(f"\n=== REPO: {repo} ===")
+    for section, rows in groups.items():
+        print(f"\nSection: {section}")
+        for row in rows:
+            print(row)
 PY
+      else
+        echo "  ! releases roadmap list failed for $repo" >&2
+      fi
+      rm -f "$RITEMS_TMP"
     else
       echo "  ! releases CLI/DB missing for $repo" >&2
     fi

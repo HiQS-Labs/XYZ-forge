@@ -29,6 +29,14 @@ sqlite3 releases.db "SELECT op FROM op_receipts ORDER BY id DESC LIMIT 1" | grep
 # 5. Dump regenerated
 grep -q "Test 1" releases.sql || fail "releases.sql dump missing written row"
 
+# 6. roadmap sync is a clean no-op in releases-mode (it mirrors ROADMAP.md and would DELETE
+#    rows parked by `roadmap add`; wave_reconcile.py calls it unconditionally post-merge)
+echo "ROADMAP_SOURCE=releases" > .pdda-mode
+out="$(python3 "$root/utils/py/releases_app.py" roadmap sync)"
+echo "$out" | grep -q "skipped — releases-mode" || fail "sync did not skip in releases-mode"
+[ "$(sqlite3 releases.db "SELECT COUNT(*) FROM roadmap_items")" = "1" ] || fail "sync deleted the add-parked row"
+rm .pdda-mode
+
 echo "  PASS: CLI tests"
 
 echo "== test: GH-238 hq.sh releases-mode =="
@@ -77,10 +85,23 @@ echo "$out" | grep -q "DB: pointer added via releases CLI" || fail "releases wri
 # Check DB was written
 sqlite3 "$WORK/repo-releases/releases.db" "SELECT title FROM roadmap_items" | grep -q "test req releases" || fail "releases DB was not written"
 
-# 3. Failure mode (no DB)
+# 3. Vendored .xyz/ layout — hq_releases_bin's fallback must find the CLI there
+mkdir -p "$WORK/repo-vendored/.xyz/utils/py"
+cp "$root/utils/py/releases_app.py" "$WORK/repo-vendored/.xyz/utils/py/"
+cd "$WORK/repo-vendored"
+git init >/dev/null 2>&1
+echo "ROADMAP_SOURCE=releases" > .pdda-mode
+python3 .xyz/utils/py/releases_app.py init >/dev/null
+cd "$root"
+out="$(bash utils/hq/hq.sh park "repo-vendored" "test req vendored" --create)"
+echo "$out" | grep -q "DB: pointer added via releases CLI" || fail "vendored .xyz/ layout write failed"
+sqlite3 "$WORK/repo-vendored/releases.db" "SELECT title FROM roadmap_items" | grep -q "test req vendored" || fail "vendored releases DB was not written"
+
+# 4. Failure mode (no DB) — scratch stays in $WORK, never the repo root (AGENTS.md)
 rm "$WORK/repo-releases/releases.db"
-! bash utils/hq/hq.sh park "repo-releases" "test req fails" --create >out 2>err || fail "failure mode did not abort"
-grep -q "releases roadmap add failed" err || fail "did not print failure error"
+! bash utils/hq/hq.sh park "repo-releases" "test req fails" --create >"$WORK/out" 2>"$WORK/err" || fail "failure mode did not abort"
+grep -q "releases roadmap add failed" "$WORK/err" || fail "did not print failure error"
+! grep -q "ROADMAP: pointer added" "$WORK/out" || fail "failure mode fell back to ROADMAP.md text append"
 
 echo "  PASS: hq.sh tests"
 echo "== GH-238 ALL PASSED =="

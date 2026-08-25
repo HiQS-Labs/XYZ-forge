@@ -308,36 +308,60 @@ hq_resolve(){
   return 1
 }
 
-# hq_inspect_repo <path> -> repo-local governance facts (authoritative over the registries)
+# hq_is_releases_mode <path> -> rc 0 iff the repo's .pdda-mode declares the releases DB as the
+# planning source of truth (GH-238/GH-239). The ONE seam for this probe — status, park, rollup,
+# and inspect all route through here so a marker change can never split-brain the sinks.
+hq_is_releases_mode(){
+  grep -q "ROADMAP_SOURCE=releases" "$1/.pdda-mode" 2>/dev/null
+}
+
+# hq_releases_bin <path> -> prints the repo's releases CLI, preferring the top-level install and
+# falling back to a vendored .xyz/ copy; rc 1 (prints nothing) when neither exists. Shared by
+# inspect, park, and rollup so the resolution ladder cannot diverge between call sites.
+hq_releases_bin(){
+  local b="$1/utils/py/releases_app.py"
+  [ -f "$b" ] || b="$1/.xyz/utils/py/releases_app.py"
+  [ -f "$b" ] || return 1
+  printf '%s\n' "$b"
+}
+
+# hq_inspect_repo <path> [--with-releases] -> repo-local governance facts (authoritative over the
+# registries). The releases-DB probes (next release, open items, dashboard freshness) fork
+# interpreters, so they run only for callers that ask (--with-releases, i.e. cmd_status);
+# LOCAL_MARATHON-only callers (cmd_queue, tests) stay cheap.
 hq_inspect_repo(){
-  local p="$1"
+  local p="$1" with_releases="${2:-}"
   [ -d "$p" ] || return 0
   [ -f "$p/.pdda-mode" ]        && printf 'LOCAL_PDDA_MODE=%s\n' "$(head -1 "$p/.pdda-mode" | tr -d '[:space:]')"
   [ -f "$p/ROUTER.md" ]         && printf 'LOCAL_ROUTER=yes\n'
   [ -f "$p/AGENTS.md" ]         && printf 'LOCAL_AGENTS=yes\n'
-  if grep -q "ROADMAP_SOURCE=releases" "$p/.pdda-mode" 2>/dev/null; then
-    local r_bin="$p/utils/py/releases_app.py"
-    [ -f "$r_bin" ] || r_bin="$p/.xyz/utils/py/releases_app.py"
-    if [ -f "$p/releases.db" ] && [ -f "$r_bin" ]; then
+  if hq_is_releases_mode "$p"; then
+    local r_bin
+    if r_bin="$(hq_releases_bin "$p")" && [ -f "$p/releases.db" ]; then
       printf "LOCAL_ROADMAP=yes (DB)\n"
-      
-      # 1. Next unshipped release
-      local next_out
-      next_out="$(python3 "$r_bin" next 2>&1 || true)"
-      printf "LOCAL_NEXT_RELEASE=%s\n" "$next_out"
-      
-      # 2. Open roadmap/queue item counts
-      local open_count
-      open_count="$(python3 "$r_bin" roadmap list 2>/dev/null | grep -v 'Completed' | wc -l | tr -d ' ')"
-      printf "LOCAL_ROADMAP_OPEN=%s\n" "$open_count"
-      
-      # 3. Dashboard freshness (ROADMAP-DASHBOARD.md vs DB)
-      if [ -f "$p/ROADMAP-DASHBOARD.md" ] && [ "$p/ROADMAP-DASHBOARD.md" -nt "$p/releases.db" ]; then
-        printf "LOCAL_DASHBOARD_STALE=no\n"
-      else
-        printf "LOCAL_DASHBOARD_STALE=yes\n"
+      if [ "$with_releases" = "--with-releases" ]; then
+        # 1. Next unshipped release — first NEXT: line only, stderr dropped: this stream is a
+        #    strict KEY=value contract, and `releases next` emits `then:` continuation lines
+        #    (one per extra unshipped release) plus tracebacks/refusals on stderr.
+        local next_out
+        next_out="$( ( cd "$p" && python3 "$r_bin" next ) 2>/dev/null | sed -n 's/^NEXT: //p' | head -1)"
+        [ -n "$next_out" ] && printf 'LOCAL_NEXT_RELEASE=%s\n' "$next_out"
+
+        # 2. Open roadmap items — count rows, not stdout lines: `roadmap list` prints a human
+        #    hint when the shadow table is missing (that is 0 items, not 1), and a title can
+        #    legitimately contain the word "Completed".
+        local open_count
+        open_count="$(sqlite3 "$p/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE section <> 'Completed'" 2>/dev/null)" || open_count=""
+        printf 'LOCAL_ROADMAP_OPEN=%s\n' "${open_count:-0}"
+
+        # 3. Dashboard freshness (ROADMAP-DASHBOARD.md vs DB)
+        if [ -f "$p/ROADMAP-DASHBOARD.md" ] && [ "$p/ROADMAP-DASHBOARD.md" -nt "$p/releases.db" ]; then
+          printf "LOCAL_DASHBOARD_STALE=no\n"
+        else
+          printf "LOCAL_DASHBOARD_STALE=yes\n"
+        fi
       fi
-    elif [ ! -f "$p/releases.db" ] || [ ! -f "$r_bin" ]; then
+    else
       printf "LOCAL_ROADMAP=broken\n"
     fi
   else
