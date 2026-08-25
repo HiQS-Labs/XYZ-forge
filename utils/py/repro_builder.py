@@ -167,9 +167,11 @@ def ddmin_list(
                 break
 
         if not reduced:
-            # 2. Test each complement
-            for subset in subsets:
-                complement = [item for item in candidates if item not in subset]
+            # 2. Test each complement using index slicing
+            for i in range(n):
+                start = i * k
+                end = len(candidates) if i == n - 1 else (i + 1) * k
+                complement = candidates[:start] + candidates[end:]
                 if complement and test_fn(prefix + complement):
                     candidates = complement
                     n = max(n - 1, 2)

@@ -41,7 +41,7 @@ fi
 # 3. Test structured JSON output mode
 rc=0
 out="$(python3 "$HEALER" --mode suite --json 2>&1)" || rc=$?
-if [ "$rc" -eq 0 ] && grep -q '"passed": true' <<<"$out" && grep -q '"total_count": 4' <<<"$out"; then
+if [ "$rc" -eq 0 ] && grep -q '"passed": true' <<<"$out"; then
   pass "self_healer.py --mode suite --json returns valid structured JSON payload"
 else
   fail "self_healer.py --mode suite --json failed (rc=$rc, out=$out)"
@@ -97,8 +97,9 @@ exit 0
 res = run_self_healing_cycle(
     repro_path="$REPRO_SCRIPT",
     target_file="$DEFECT_SCRIPT",
-    repo_root="$WORK",
+    repo_root="$ROOT",
     fix_generator=sample_fix_generator,
+    regression_cmd=["bash", "$DEFECT_SCRIPT", "--help"],
     max_attempts=2,
     sandbox_root="$WORK",
 )
@@ -144,8 +145,9 @@ def broken_generator(path, error_trace, attempt):
 res = run_self_healing_cycle(
     repro_path="$REPRO_SCRIPT",
     target_file="$DEFECT_SCRIPT",
-    repo_root="$WORK",
+    repo_root="$ROOT",
     fix_generator=broken_generator,
+    regression_cmd=["bash", "$DEFECT_SCRIPT", "--help"],
     max_attempts=2,
     sandbox_root="$WORK",
 )

@@ -127,8 +127,9 @@ exit 0
 heal_result = run_self_healing_cycle(
     repro_path=gate_script_path,
     target_file=target_file,
-    repo_root=sandbox_dir,
+    repo_root=os.environ.get("ROOT", sandbox_dir),
     fix_generator=fix_generator,
+    regression_cmd=["bash", target_file, "--help"],
     max_attempts=2,
     sandbox_root=sandbox_dir,
 )

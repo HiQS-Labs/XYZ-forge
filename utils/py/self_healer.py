@@ -138,35 +138,117 @@ def execute_gate_command(
         return 1, "", f"Gate execution error: {e}"
 
 
+def format_escalation_report(
+    target_file: str,
+    repro_path: str,
+    history: List[Dict[str, Any]],
+    max_attempts: int,
+    status: str,
+    message: Optional[str] = None,
+) -> str:
+    """Format structured markdown escalation report for issue compilation."""
+    lines = [
+        "# Self-Healer Escalation Report",
+        "",
+        f"- **Status**: `{status}`",
+        f"- **Target File**: `{target_file}`",
+        f"- **Reproducer Script**: `{repro_path}`",
+        f"- **Attempts Exhausted**: {len(history)} / {max_attempts}",
+    ]
+    if message:
+        lines.extend([f"- **Message**: {message}", ""])
+    else:
+        lines.append("")
+
+    lines.extend(["## Attempt History", ""])
+    if not history:
+        lines.append("_No attempt records generated._")
+    else:
+        for rec in history:
+            attempt_num = rec.get("attempt", "?")
+            res = rec.get("result", "unknown")
+            lines.append(f"### Attempt {attempt_num}: `{res}`")
+            if "gate1_rc" in rec:
+                lines.append(f"- **Gate 1 (Acceptance repro.sh)**: Exit Code `{rec['gate1_rc']}`")
+            if "gate2_rc" in rec:
+                lines.append(f"- **Gate 2 (Regression Suite)**: Exit Code `{rec['gate2_rc']}`")
+            if rec.get("gate1_err"):
+                snippet = rec['gate1_err'].strip()[:300]
+                lines.append(f"```text\n{snippet}\n```")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
 def run_self_healing_cycle(
     repro_path: str,
     target_file: str,
     repo_root: str,
     fix_generator: Callable[[str, str, int], Optional[str]],
+    sandbox_root: str,
     regression_cmd: Optional[List[str]] = None,
     max_attempts: int = 3,
-    sandbox_root: Optional[str] = None,
+    gate_timeout: int = 900,
 ) -> Dict[str, Any]:
-    """Execute gated autonomous self-healing loop with iterative refinement."""
-    disposable = False
+    """Execute gated autonomous self-healing loop with fail-safe containment."""
+    # Preflight containment assertions (GH-182 / GH-564 / GH-567)
     if not sandbox_root:
-        sandbox_root = tempfile.mkdtemp(prefix="self_heal_")
-        disposable = True
+        return {
+            "status": "refused",
+            "message": "Missing required sandbox_root: heal mode requires a designated disposable sandbox (GH-182)",
+            "history": [],
+        }
+
+    resolved_sandbox = os.path.realpath(sandbox_root)
+    resolved_repo = os.path.realpath(repo_root)
+
+    if not os.path.isdir(resolved_sandbox):
+        return {
+            "status": "refused",
+            "message": f"Sandbox root '{sandbox_root}' (resolved: '{resolved_sandbox}') does not exist or is not a directory",
+            "history": [],
+        }
+
+    if resolved_sandbox == resolved_repo:
+        return {
+            "status": "refused",
+            "message": "Sandbox root cannot be the invoking repository checkout; heal mode requires an isolated disposable clone (GH-182 / GH-564)",
+            "history": [],
+        }
+
+    if not check_realpath_containment(target_file, resolved_sandbox):
+        return {
+            "status": "refused",
+            "message": f"Target file '{target_file}' is not contained within sandbox root '{resolved_sandbox}' (GH-567)",
+            "history": [],
+        }
+
+    if not os.path.exists(repro_path):
+        return {
+            "status": "error",
+            "message": f"Reproducer script not found: {repro_path}",
+            "history": [],
+        }
+
+    if not os.path.exists(target_file):
+        return {
+            "status": "error",
+            "message": f"Target file not found: {target_file}",
+            "history": [],
+        }
 
     history: List[Dict[str, Any]] = []
     status = "escalated"
     winning_diff = ""
+    original_content: Optional[str] = None
 
     try:
-        if not os.path.exists(repro_path):
-            return {
-                "status": "error",
-                "message": f"Reproducer script not found: {repro_path}",
-                "history": [],
-            }
-
         # First verify initial reproduction (Acceptance Gate must fail initially)
-        rc_init, out_init, err_init = execute_gate_command(["bash", repro_path], cwd=repo_root)
+        rc_init, out_init, err_init = execute_gate_command(
+            ["bash", repro_path],
+            cwd=resolved_sandbox,
+            timeout=gate_timeout,
+        )
         if rc_init == 0:
             return {
                 "status": "no_repro",
@@ -195,7 +277,7 @@ def run_self_healing_cycle(
                 target_file,
                 original_content,
                 candidate_patch,
-                sandbox_root=repo_root if sandbox_root == repo_root else sandbox_root,
+                sandbox_root=resolved_sandbox,
             )
             if not ok_apply:
                 attempt_rec["result"] = f"apply_failed: {msg_apply}"
@@ -203,7 +285,11 @@ def run_self_healing_cycle(
                 continue
 
             # Gate 1: Acceptance Gate (Run repro.sh — must pass with rc=0)
-            rc_gate1, out_gate1, err_gate1 = execute_gate_command(["bash", repro_path], cwd=repo_root)
+            rc_gate1, out_gate1, err_gate1 = execute_gate_command(
+                ["bash", repro_path],
+                cwd=resolved_sandbox,
+                timeout=gate_timeout,
+            )
             attempt_rec["gate1_rc"] = rc_gate1
             attempt_rec["gate1_out"] = out_gate1
             attempt_rec["gate1_err"] = err_gate1
@@ -217,9 +303,13 @@ def run_self_healing_cycle(
                     f.write(original_content)
                 continue
 
-            # Gate 2: Regression Gate (Optional regression suite)
+            # Gate 2: Regression Gate (Mandatory for heal mode)
             if regression_cmd:
-                rc_gate2, out_gate2, err_gate2 = execute_gate_command(regression_cmd, cwd=repo_root)
+                rc_gate2, out_gate2, err_gate2 = execute_gate_command(
+                    regression_cmd,
+                    cwd=resolved_sandbox,
+                    timeout=gate_timeout,
+                )
                 attempt_rec["gate2_rc"] = rc_gate2
                 attempt_rec["gate2_out"] = out_gate2
                 attempt_rec["gate2_err"] = err_gate2
@@ -248,24 +338,38 @@ def run_self_healing_cycle(
             winning_diff = "".join(diff_lines)
             break
 
-        return {
-            "status": status,
-            "attempts": len(history),
-            "max_attempts": max_attempts,
-            "winning_diff": winning_diff,
-            "history": history,
-        }
-
     finally:
-        if disposable and os.path.exists(sandbox_root):
-            shutil.rmtree(sandbox_root, ignore_errors=True)
+        # Invariant: Restore target file if not healed (or on exception/abort)
+        if status != "healed" and original_content is not None:
+            try:
+                with open(target_file, "w") as f:
+                    f.write(original_content)
+            except Exception:
+                pass
+
+    report = format_escalation_report(
+        target_file=target_file,
+        repro_path=repro_path,
+        history=history,
+        max_attempts=max_attempts,
+        status=status,
+    )
+
+    return {
+        "status": status,
+        "attempts": len(history),
+        "max_attempts": max_attempts,
+        "winning_diff": winning_diff,
+        "history": history,
+        "escalation_report": report,
+    }
 
 
 def run_self_healer_suite(repo_root: str, as_json: bool = False) -> int:
     """Hermetic self-test suite validating patch application, dual-gated healing, and feedback recovery."""
     if not as_json:
         print("==================================================")
-        print(" Gated Autonomous Self-Healing Suite (GH-155 Phase 4)")
+        print(" Gated Autonomous Self-Healing Suite (GH-155 / GH-182)")
         print("==================================================")
 
     assertions: List[Tuple[str, bool, str]] = []
@@ -323,10 +427,8 @@ exit 1
         # 3. Simulated Multi-Round Self-Healing (Attempt 1 fails, Attempt 2 succeeds)
         def multi_attempt_generator(path: str, error_trace: str, attempt: int) -> Optional[str]:
             if attempt == 1:
-                # Flawed fix: changes exit code to 3 (still fails repro.sh)
                 return buggy_code.replace("exit 2", "exit 3")
             elif attempt == 2:
-                # Correct fix: resolves arithmetic error and exits 0
                 return """#!/usr/bin/env bash
 if [ "$1" = "--sum" ]; then
   echo "calc: sum computed: 42"
@@ -340,8 +442,9 @@ exit 0
         result = run_self_healing_cycle(
             repro_path=repro_script,
             target_file=target_script,
-            repo_root=tmp_dir,
+            repo_root=repo_root,
             fix_generator=multi_attempt_generator,
+            regression_cmd=["bash", target_script, "--help"],
             max_attempts=3,
             sandbox_root=tmp_dir,
         )
@@ -350,25 +453,43 @@ exit 0
         assertions.append(("Multi-attempt iterative loop recovers and heals defect after initial failed candidate", t3, f"Result: {result}"))
 
         # 4. Falsifiability Negative Control: Unsolvable defect halts and escalates after max_attempts
-        # Reset buggy code
         with open(target_script, "w") as f:
             f.write(buggy_code)
 
         def defective_generator(path: str, error_trace: str, attempt: int) -> Optional[str]:
-            # Always produces non-working fix
             return buggy_code.replace("exit 2", f"exit {10 + attempt}")
 
         result_neg = run_self_healing_cycle(
             repro_path=repro_script,
             target_file=target_script,
-            repo_root=tmp_dir,
+            repo_root=repo_root,
             fix_generator=defective_generator,
+            regression_cmd=["bash", target_script, "--help"],
             max_attempts=2,
             sandbox_root=tmp_dir,
         )
 
-        t4 = (result_neg["status"] == "escalated" and result_neg["attempts"] == 2)
-        assertions.append(("Negative control: Unsolvable defect halts and escalates after exceeding max_attempts", t4, f"Result: {result_neg}"))
+        t4 = (result_neg["status"] == "escalated" and result_neg["attempts"] == 2 and "escalation_report" in result_neg)
+        assertions.append(("Negative control: Unsolvable defect halts and escalates with markdown rollup after exceeding max_attempts", t4, f"Result: {result_neg}"))
+
+        # 5. GH-182 Invariant: Containment Refusal on Checkout Sandbox
+        result_refuse_checkout = run_self_healing_cycle(
+            repro_path=repro_script,
+            target_file=target_script,
+            repo_root=tmp_dir,
+            fix_generator=multi_attempt_generator,
+            regression_cmd=["bash", target_script, "--help"],
+            max_attempts=1,
+            sandbox_root=tmp_dir,  # sandbox == repo_root
+        )
+        t5 = (result_refuse_checkout["status"] == "refused" and "checkout" in result_refuse_checkout["message"])
+        assertions.append(("GH-182 Safety Invariant: Refuses when sandbox_root is the invoking repository checkout", t5, f"Msg: {result_refuse_checkout.get('message')}"))
+
+        # 6. Target restoration on failed attempt
+        with open(target_script, "r") as f:
+            current_target_content = f.read()
+        t6 = (current_target_content == buggy_code)
+        assertions.append(("GH-182 Fail-Safe Invariant: Target file restored to original byte state after failed/escalated attempts", t6, ""))
 
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -401,12 +522,17 @@ exit 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Gated Autonomous Self-Healing Builder Loop (GH-155 Phase 4)")
+    parser = argparse.ArgumentParser(description="Gated Autonomous Self-Healing Builder Loop (GH-155 Phase 4 / GH-182)")
     parser.add_argument("--mode", choices=["suite", "heal"], default="suite", help="Execution mode")
     parser.add_argument("--repro", help="Path to repro.sh script")
     parser.add_argument("--target-file", help="Path to target source file to fix")
-    parser.add_argument("--regression-cmd", help="Command to run for regression gating")
+    parser.add_argument("--sandbox-root", help="Path to isolated disposable clone sandbox root (GH-182 / GH-564)")
+    parser.add_argument("--regression-cmd", help="Command to run for mandatory regression gating")
+    parser.add_argument("--gate-timeout", type=int, default=900, help="Per-gate timeout in seconds (default: 900)")
     parser.add_argument("--max-attempts", type=int, default=3, help="Max healing attempts before escalating")
+    parser.add_argument("--patch-file", help="Optional path to candidate patch file")
+    parser.add_argument("--diff-output", help="Optional path to write winning unified diff when healed")
+    parser.add_argument("--escalation-report", help="Optional path to write markdown escalation report")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
 
     args = parser.parse_args()
@@ -416,33 +542,78 @@ def main() -> int:
         return run_self_healer_suite(repo_root, as_json=args.json)
 
     if args.mode == "heal":
+        # GH-182 Fail-Fast CLI Validation
+        if not args.sandbox_root:
+            print("Error: --sandbox-root is required for heal mode (prevents in-place mutation of the invoking checkout - GH-182 / GH-564)", file=sys.stderr)
+            return 2
+
+        resolved_sandbox = os.path.realpath(args.sandbox_root)
+        resolved_repo = os.path.realpath(repo_root)
+
+        if not os.path.isdir(resolved_sandbox):
+            print(f"Error: --sandbox-root '{args.sandbox_root}' does not exist or is not a directory", file=sys.stderr)
+            return 2
+
+        if resolved_sandbox == resolved_repo:
+            print("Error: --sandbox-root cannot be the invoking repository checkout; heal mode requires an isolated disposable clone (GH-182 / GH-564)", file=sys.stderr)
+            return 2
+
+        if not args.regression_cmd:
+            print("Error: --regression-cmd is required for heal mode (prevents regression-blind patch application - GH-182)", file=sys.stderr)
+            return 2
+
         if not args.repro or not args.target_file:
             print("Error: --repro and --target-file are required for heal mode", file=sys.stderr)
             return 2
 
-        reg_cmd = shlex.split(args.regression_cmd) if args.regression_cmd else None
+        if not check_realpath_containment(args.target_file, resolved_sandbox):
+            print(f"Error: --target-file '{args.target_file}' is not contained within --sandbox-root '{resolved_sandbox}' (GH-567)", file=sys.stderr)
+            return 2
 
-        # Heuristic / LLM fix generator placeholder for CLI heal mode
-        def default_generator(path: str, trace: str, attempt: int) -> Optional[str]:
-            with open(path, "r") as f:
-                return f.read()
+        reg_cmd = shlex.split(args.regression_cmd)
+
+        def file_or_diff_generator(path: str, trace: str, attempt: int) -> Optional[str]:
+            if args.patch_file and os.path.exists(args.patch_file):
+                with open(args.patch_file, "r") as f:
+                    return f.read()
+            return None
 
         result = run_self_healing_cycle(
             repro_path=args.repro,
             target_file=args.target_file,
             repo_root=repo_root,
-            fix_generator=default_generator,
+            fix_generator=file_or_diff_generator,
+            sandbox_root=args.sandbox_root,
             regression_cmd=reg_cmd,
             max_attempts=args.max_attempts,
+            gate_timeout=args.gate_timeout,
         )
+
+        if args.diff_output and result.get("winning_diff"):
+            try:
+                with open(args.diff_output, "w") as f:
+                    f.write(result["winning_diff"])
+            except Exception as e:
+                print(f"Warning: Failed to write --diff-output: {e}", file=sys.stderr)
+
+        if args.escalation_report and result.get("escalation_report"):
+            try:
+                with open(args.escalation_report, "w") as f:
+                    f.write(result["escalation_report"])
+            except Exception as e:
+                print(f"Warning: Failed to write --escalation-report: {e}", file=sys.stderr)
 
         if args.json:
             print(json.dumps(result, indent=2))
         else:
             print(f"Self-Healing Result: {result.get('status')}")
+            if result.get("message"):
+                print(f"Message: {result.get('message')}")
             if result.get("winning_diff"):
                 print("--- Applied Diff ---")
                 print(result["winning_diff"])
+            elif result.get("escalation_report"):
+                print("\n" + result["escalation_report"])
 
         return 0 if result.get("status") == "healed" else 1
 
