@@ -2,7 +2,7 @@
 cd "$HOME/XYZ-forge" || exit 1
 . evidence/_env/prelude.sh
 set -x
-gh repo set-default HiQS-Suite/XYZ-forge
+gh repo set-default HiQS-Labs/XYZ-forge
 rc_set=$?
 gh repo set-default --view
 rc_view=$?

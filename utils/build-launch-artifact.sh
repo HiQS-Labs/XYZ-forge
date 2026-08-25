@@ -43,7 +43,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 
 MARKER=".xyz-launch-artifact"
-DEFAULT_REMOTE="https://github.com/HiQS-Suite/XYZ-forge.git"
+DEFAULT_REMOTE="https://github.com/HiQS-Labs/XYZ-forge.git"
 
 DEST=""; REMOTE="$DEFAULT_REMOTE"; DO_COMMIT=1
 while [ $# -gt 0 ]; do

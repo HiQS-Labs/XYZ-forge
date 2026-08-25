@@ -68,12 +68,13 @@ cat > "$R/ROADMAP.md" <<'MD'
 # Fixture roadmap
 ## Ledger
 ### In progress
+# Note: GH-1 intentionally retains legacy HiQS-Suite URL to assert backward compatibility (GH-228).
 - **GH-1 · containment gate** 🆕 **active** — narrative body. cx/risk/eff 2/3/2. → [doc](PROJECT/2-WORKING/GH-1.md) · [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)
 ### Queue / parked intake
-- **GH-32 · releases app** 🚧 — queued body. → [#32](https://github.com/HiQS-Suite/XYZ-forge/issues/32)
+- **GH-32 · releases app** 🚧 — queued body. → [#32](https://github.com/HiQS-Labs/XYZ-forge/issues/32)
 - **Title-keyed entry, no GH number** — keyed by title alone.
 ### Custom section the planner skips
-- **GH-40 · lives under a heading the PLANNER does not read** — the shadow still mirrors it: its job is what the file says, not what the planner sees.
+- **GH-40 · lives under a heading the PLANNER does not read** — the shadow still mirrors it: its job is what the file says, not what the planner sees. → [#40](https://github.com/HiQS-Labs/XYZ-forge/pull/40)
 ## After the ledger
 - **not an entry** — outside ## Ledger, must not be captured.
 MD
@@ -91,8 +92,12 @@ ok "  and nothing outside ## Ledger leaked in" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT COUNT(*) FROM roadmap_items')\" = '4' ]"
 ok "  and cx/risk/eff parsed as integers" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT complexity||risk||effort FROM roadmap_items WHERE gh_number=1')\" = '232' ]"
-ok "  and the doc link + issue url landed" \
-   "[ -n \"\$(sqlite3 '$R/releases.db' \"SELECT doc_path FROM roadmap_items WHERE gh_number=1 AND issue_url LIKE '%issues/1'\")\" ]"
+ok "  and legacy HiQS-Suite doc link + issue url landed" \
+   "[ -n \"\$(sqlite3 '$R/releases.db' \"SELECT doc_path FROM roadmap_items WHERE gh_number=1 AND issue_url='https://github.com/HiQS-Suite/XYZ-forge/issues/1'\")\" ]"
+ok "  and HiQS-Labs issue url landed (GH-228)" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT issue_url FROM roadmap_items WHERE gh_number=32\")\" = 'https://github.com/HiQS-Labs/XYZ-forge/issues/32' ]"
+ok "  and HiQS-Labs pull url landed (GH-228)" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT issue_url FROM roadmap_items WHERE gh_number=40\")\" = 'https://github.com/HiQS-Labs/XYZ-forge/pull/40' ]"
 ok "  and raw_text is the entry verbatim (lossless)" \
    "[ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text LIKE '- **GH-1%narrative body%' FROM roadmap_items WHERE gh_number=1\")\" = '1' ]"
 ok "  and check is clean after the sync" "ra check >/dev/null 2>&1"
