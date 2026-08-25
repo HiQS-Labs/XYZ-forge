@@ -86,3 +86,4 @@ relay-system/**/*.watch.agent*
 
 # Audit probe output when --out is pointed at the worktree (default is a scratch dir).
 audit/out/
+.relay-scratch/

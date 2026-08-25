@@ -30,6 +30,84 @@
 ## 3. Empirical Evaluation History & Qualitative Work Logs
 
 ### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 23:39:21
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 23:22:08
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 22:23:34
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 21:25:41
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 21:18:33
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 17:16:48
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 16:44:12
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 16:36:12
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 16:19:17
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 16:12:19
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 15:57:16
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 15:50:51
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
+**Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 03:33:50
+**Reasoning Effort:** `xhigh`
+
+Qwen 3.8-Max executed thorough systems refactoring with extra high reasoning effort.
+
+### `Qwen/Qwen3.8-Max` on `commandcode` — Grade **A-**
 **Evaluated by:** `stealth/ox-alpha` (Systems Reviewer) | **Date:** 2026-08-24 03:28:51
 **Reasoning Effort:** `xhigh`
 

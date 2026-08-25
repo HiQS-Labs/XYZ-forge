@@ -6,7 +6,7 @@ export LC_ALL=C
 SKILL_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_REPO="$(git -C "$SKILL_DIR" rev-parse --show-toplevel)"
 MANIFEST="$SKILL_DIR/publish-manifest.tsv"
-DEFAULT_DEST_REPO="$(dirname "$SOURCE_REPO")/Agent2Agent-Skill"
+DEFAULT_DEST_REPO="$(dirname "$SOURCE_REPO")/AgentChorus-Skill"
 DEST_REPO="${AGENT2AGENT_STANDALONE_REPO:-$DEFAULT_DEST_REPO}"
 MODE=preview
 

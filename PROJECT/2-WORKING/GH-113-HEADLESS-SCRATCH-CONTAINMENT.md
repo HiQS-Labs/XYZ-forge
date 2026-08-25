@@ -6,7 +6,7 @@ updated: 2026-08-22
 owner: orchestrator (Claude Code)
 goal: give headless builder turns a sanctioned scratch lane so debugging temp files can never trip the containment guard
 gh_issue: 113
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/113
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/113
 branch: gh-113/headless-scratch-containment
 doc_type: bugfix
 effort: 2

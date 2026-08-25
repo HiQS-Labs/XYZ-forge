@@ -1695,7 +1695,8 @@ relay-file: {rel_relay}
     # correct). See gate_env.py's docstring for the measured matrix.
     GATE_SCRUBBED_ENV = (
         "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
-        "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_BUILDER",
+        "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_ALLOW_PLAN_OUTSIDE_WORKING",
+        "MARATHON_BUILDER",
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
         "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         "SMALLCODE_AGENT",

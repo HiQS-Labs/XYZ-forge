@@ -1,8 +1,8 @@
 ---
 title: "GH-168: wave_reconcile.py hard-fails and rolls back on pre-existing marathon-plan drift unrelated to the PR being reconciled"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: scope wave_reconcile's drift check to the PR being reconciled so unrelated backlog drift downgrades to a warning instead of rolling back correct mutations
 gh_issue: 168
@@ -69,3 +69,13 @@ PR-specific work was correct. Reproduced 2/2 on real merges (`--pr 162`, `--pr 1
   "lanes":         { "agy_safe": [ "test/gh168-wave-reconcile-scope.sh", "utils/py/wave_reconcile.py" ], "orchestrator_only": [ ".tick/" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- Scope a reconciler's failure to the thing it reconciles: PR-attributable drift stays fatal
+  (rollback), pre-existing unrelated drift downgrades to a named warning. Blanket tolerance and
+  blanket fatality are both wrong — the first hides real breakage, the second blocks every merge.
+- The attribution split fired correctly on its own closeout: reconciling PR #220 before issues
+  #2/#50/#168 were closed was refused as PR-attributable drift — the new fatal path, doing its job.
+- Idempotence lives in the promotion WRITER (move-not-add between lifecycle sections), which is
+  what makes double-running reconcile a no-op instead of a duplicate-entry generator (#163 shape).

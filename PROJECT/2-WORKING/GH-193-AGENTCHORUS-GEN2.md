@@ -46,3 +46,7 @@ Deliberately NOT promoted to 3-COMPLETED by the PR #200 reconciliation: the reco
 merged PR as item completion, but this umbrella continues (phases 2-3). Recorded here instead.
 Improvement candidate for Phase 2: the reconciler should honor the linked issue's open/closed
 state before promoting a doc (it currently moves any doc linked to a merged PR).
+
+## Merge evidence
+
+- PR #210 merged 2026-08-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

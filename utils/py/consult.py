@@ -293,7 +293,10 @@ def agy_auth_preflight(agy_bin, log_file):
     tmp = f"{log_file}.auth"
     try:
         with open(tmp, "w") as f:
-            subprocess.run([agy_bin, "whoami"], stdout=f, stderr=subprocess.STDOUT, timeout=secs, check=True)
+            # GH-221 (2026-08-24): probe `models`, not `whoami` — agy >=1.1.19 removed `whoami`
+            # entirely, while `models` runs headless and requires live auth on every agy
+            # generation this harness has driven. Verdict routing below kept as the safety net.
+            subprocess.run([agy_bin, "models"], stdout=f, stderr=subprocess.STDOUT, timeout=secs, check=True)
         # GH-375: `agy whoami` exits 0 while failing to run at all without a TTY, so exit status
         # cannot decide this — see agy_auth_output_verdict in rtl.py. Same hole as agy-turn.py, so
         # the same verdict function; a consult that proceeds on unestablished auth burns the panel.
