@@ -173,8 +173,50 @@ def execute_with_process_limits(
 
 
 # ==========================================
-# Active Exploration Execution Engine
+# Active Exploration Execution Engine & Closed Data Path
 # ==========================================
+
+def synthesize_reproducers_from_anomalies(
+    anomalies: List[Dict[str, Any]],
+    repo_root: str,
+    output_dir: str,
+) -> List[str]:
+    """Synthesize standalone hermetic repro.sh scripts for all detected anomalies via repro_builder."""
+    from repro_builder import generate_repro_script, minimize_argv, minimize_environment
+
+    os.makedirs(output_dir, exist_ok=True)
+    generated_scripts: List[str] = []
+
+    for idx, anomaly in enumerate(anomalies, 1):
+        if anomaly.get("type") == "zero_mutation_violation":
+            continue
+        target_rc = int(anomaly.get("rc", 1))
+        cmd = list(anomaly.get("cmd", []))
+        env = dict(anomaly.get("env", {}))
+        raw_err = str(anomaly.get("err_sample", ""))
+        err_lines = [line.strip() for line in raw_err.splitlines() if line.strip()]
+        err_sub = err_lines[0][:60] if err_lines else None
+
+        min_env = minimize_environment(env, cmd, repo_root, target_rc, err_sub)
+        min_cmd = minimize_argv(cmd, min_env, repo_root, target_rc, err_sub)
+
+        repro_content = generate_repro_script(
+            cmd=min_cmd,
+            env=min_env,
+            target_rc=target_rc,
+            target_err_substring=err_sub,
+            title=f"Reproducer for Active Explorer Anomaly {idx}",
+            repo_root=repo_root,
+        )
+
+        repro_path = os.path.join(output_dir, f"repro_anomaly_{idx}.sh")
+        with open(repro_path, "w") as f:
+            f.write(repro_content)
+        os.chmod(repro_path, 0o755)
+        generated_scripts.append(repro_path)
+
+    return generated_scripts
+
 
 def run_exploration_campaign(
     target_cmd: List[str],
@@ -182,8 +224,9 @@ def run_exploration_campaign(
     repo_root: str,
     family: str = "all",
     max_rounds: int = 10,
+    check_zero_mutation: bool = True,
 ) -> Dict[str, Any]:
-    """Execute active exploration across selected mutation families."""
+    """Execute active exploration across selected mutation families with zero-mutation checks."""
     records: List[Dict[str, Any]] = []
     anomalies: List[Dict[str, Any]] = []
 
@@ -191,13 +234,45 @@ def run_exploration_campaign(
     argv_vectors = generate_argv_mutations(target_cmd, max_variants=max_rounds) if family in ("all", "argv") else [target_cmd]
     env_vectors = generate_env_mutations(base_env, max_variants=max_rounds) if family in ("all", "env") else [base_env]
 
+    # Pre-campaign state check if .git present
+    git_dir = os.path.join(repo_root, ".git")
+    has_git = os.path.exists(git_dir)
+
     for cmd_vec, env_vec in itertools.islice(itertools.product(argv_vectors, env_vectors), max_rounds):
+        status_before = ""
+        if check_zero_mutation and has_git:
+            try:
+                res_st = subprocess.run(
+                    ["git", "-C", repo_root, "status", "--porcelain=v1"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5.0,
+                )
+                status_before = res_st.stdout.strip()
+            except Exception:
+                pass
+
         rc, out, err, timed_out = execute_with_process_limits(
             cmd=cmd_vec,
             cwd=repo_root,
             env=env_vec,
             timeout=5.0,
         )
+
+        mutation_detected = False
+        if check_zero_mutation and has_git:
+            try:
+                res_st2 = subprocess.run(
+                    ["git", "-C", repo_root, "status", "--porcelain=v1"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5.0,
+                )
+                status_after = res_st2.stdout.strip()
+                if status_before != status_after:
+                    mutation_detected = True
+            except Exception:
+                pass
 
         rec = {
             "cmd": cmd_vec,
@@ -206,10 +281,11 @@ def run_exploration_campaign(
             "stdout_len": len(out),
             "stderr_len": len(err),
             "timed_out": timed_out,
+            "mutated": mutation_detected,
         }
         records.append(rec)
 
-        # Flag anomalies: unhandled Python tracebacks, core dumps, unexpected exit 134/139/SIGSEGV
+        # Flag anomalies: unhandled Python tracebacks, core dumps, unexpected exit 134/139/SIGSEGV, or zero-mutation violations
         if "Traceback (most recent call last):" in err or rc in (134, 139) or "Segmentation fault" in err:
             anomalies.append({
                 "type": "crash_or_traceback",
@@ -218,13 +294,21 @@ def run_exploration_campaign(
                 "rc": rc,
                 "err_sample": err[:300],
             })
+        elif mutation_detected:
+            anomalies.append({
+                "type": "zero_mutation_violation",
+                "cmd": cmd_vec,
+                "env": env_vec,
+                "rc": rc,
+                "err_sample": "Read-only probe caused unauthorized working tree mutation",
+            })
 
     return {
         "family": family,
         "total_probes": len(records),
         "anomalies_detected": len(anomalies),
         "anomalies": anomalies,
-        "records": records[:5],  # Sample records
+        "records": records[:5],
     }
 
 
@@ -232,7 +316,7 @@ def run_active_explorer_suite(repo_root: str, as_json: bool = False) -> int:
     """Self-test suite validating all 4 mutation families, anomaly detection, and pipeline integration."""
     if not as_json:
         print("==================================================")
-        print(" 4-Family Active Explorer Agent Suite (GH-155 Phase 5)")
+        print(" 4-Family Active Explorer Agent Suite (GH-155 Phase 5 / Task 4 & 6)")
         print("==================================================")
 
     assertions: List[Tuple[str, bool, str]] = []
@@ -279,7 +363,7 @@ sys.exit(0)
             cmd=["python3", "-c", "import time; time.sleep(10)"],
             cwd=tmp_dir,
             env={},
-            timeout=0.2,  # Intentional timeout
+            timeout=0.2,
         )
         t4 = timed_out is True and rc_lim == 124
         assertions.append(("Family 4 (Process Limits): Accurately enforces process timeouts and signal bounds", t4, f"rc={rc_lim}"))
@@ -291,17 +375,24 @@ sys.exit(0)
             repo_root=tmp_dir,
             family="all",
             max_rounds=5,
+            check_zero_mutation=False,
         )
         t5 = campaign["total_probes"] > 0 and campaign["anomalies_detected"] > 0
         assertions.append(("Active Explorer Campaign detects crashes and unhandled tracebacks", t5, f"Anomalies: {campaign['anomalies_detected']}"))
 
-        # 6. End-to-End Pipeline Bridge (Explorer Anomaly -> Telemetry Schema)
-        if campaign["anomalies"]:
-            first_anomaly = campaign["anomalies"][0]
-            t6 = "cmd" in first_anomaly and "err_sample" in first_anomaly and "rc" in first_anomaly
-        else:
-            t6 = False
-        assertions.append(("End-to-End Pipeline Bridge: Emits standardized telemetry records for Phase 3/4 consumers", t6, ""))
+        # 6. Task 4: Closed Data Path (Anomaly -> repro_builder -> executable repro.sh)
+        repro_dir = os.path.join(tmp_dir, "repro_out")
+        repro_scripts = synthesize_reproducers_from_anomalies(
+            campaign["anomalies"],
+            repo_root=tmp_dir,
+            output_dir=repro_dir,
+        )
+        t6 = len(repro_scripts) > 0 and os.path.exists(repro_scripts[0])
+        # Execute generated repro.sh to assert it faithfully reproduces the anomaly
+        if t6:
+            rc_rep = subprocess.run(["bash", repro_scripts[0]], cwd=tmp_dir, capture_output=True).returncode
+            t6 = (rc_rep == 0)
+        assertions.append(("Task 4 Closed Data Path: Synthesizes and executes hermetic repro.sh from detected anomaly", t6, f"Repros: {len(repro_scripts)}"))
 
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -334,7 +425,7 @@ sys.exit(0)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="4-Family Active Explorer Agent (GH-155 Phase 5)")
+    parser = argparse.ArgumentParser(description="4-Family Active Explorer Agent (GH-155 Phase 5 / Task 4 & 6)")
     parser.add_argument("--mode", choices=["suite", "explore"], default="suite", help="Execution mode")
     parser.add_argument("--family", choices=["all", "argv", "env", "path", "process"], default="all", help="Mutation family")
     parser.add_argument("--target-cmd", help="Target command to explore (e.g. 'bash relay-automation/deepseek-turn.sh')")
@@ -342,6 +433,7 @@ def main() -> int:
                         help="Declared base env as KEY=VAL (repeatable). Replaces the default RELAY base; "
                              "mutations are derived from this base and run over a CLEAN environment "
                              "(ambient runner vars cannot satisfy them — GH-183).")
+    parser.add_argument("--repro-out", help="Directory path to synthesize standalone repro.sh test cases for detected anomalies")
     parser.add_argument("--rounds", type=int, default=10, help="Max exploration rounds")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
 
@@ -377,6 +469,17 @@ def main() -> int:
             family=args.family,
             max_rounds=args.rounds,
         )
+
+        if args.repro_out and res.get("anomalies"):
+            repro_files = synthesize_reproducers_from_anomalies(
+                anomalies=res["anomalies"],
+                repo_root=repo_root,
+                output_dir=args.repro_out,
+            )
+            res["synthesized_repros"] = repro_files
+            if not args.json:
+                print(f"Synthesized {len(repro_files)} hermetic reproducer scripts in {args.repro_out}")
+
         if args.json:
             print(json.dumps(res, indent=2))
         else:

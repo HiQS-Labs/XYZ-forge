@@ -151,5 +151,36 @@ else
   fail "3rd Gen ATE Pipeline E2E failed (rc=$rc, out=$out)"
 fi
 
+# 5. CLI explore mode with --repro-out synthesis
+REPRO_OUT_DIR="$WORK/cli_repros"
+mkdir -p "$REPRO_OUT_DIR"
+require_fixture "$REPRO_OUT_DIR" "cli repro output dir"
+
+TARGET_PY="$WORK/cli_target.py"
+cat > "$TARGET_PY" << 'PYEOF'
+#!/usr/bin/env python3
+import sys
+if "--unknown-fuzz-flag-xyz" in sys.argv:
+    raise RuntimeError("unhandled_fuzz_crash")
+print("ok")
+PYEOF
+chmod +x "$TARGET_PY"
+require_fixture_file "$TARGET_PY" "cli target script"
+
+rc=0
+out="$(PYTHONPATH="$ROOT/utils/py" python3 "$EXPLORER" --mode explore --family argv --rounds 25 --target-cmd "python3 $TARGET_PY" --repro-out "$REPRO_OUT_DIR" 2>&1)" || rc=$?
+if [ "$rc" -eq 0 ] && [ -f "$REPRO_OUT_DIR/repro_anomaly_1.sh" ]; then
+  # Verify that the generated reproducer script runs and passes (faithfully reproduces)
+  rc_rep=0
+  out_rep="$(bash "$REPRO_OUT_DIR/repro_anomaly_1.sh" 2>&1)" || rc_rep=$?
+  if [ "$rc_rep" -eq 0 ] && grep -q "PASS: Failure reproduced" <<<"$out_rep"; then
+    pass "active_explorer.py --repro-out synthesizes verified runnable repro.sh"
+  else
+    fail "Synthesized repro.sh execution failed (rc=$rc_rep, out=$out_rep)"
+  fi
+else
+  fail "active_explorer.py --mode explore with --repro-out failed (rc=$rc, out=$out)"
+fi
+
 echo "  gh155-phase5-active-explorer: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

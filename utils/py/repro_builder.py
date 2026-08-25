@@ -71,9 +71,9 @@ def parse_failure_telemetry(raw_data: Any, repo_root: Optional[str] = None) -> D
     else:
         expected_exit_code = exit_code
 
-    stderr = data.get("stderr", "") or data.get("actual_stderr", "")
+    stderr = data.get("stderr", "") or data.get("actual_stderr", "") or data.get("err_sample", "")
     stdout = data.get("stdout", "") or data.get("actual_stdout", "")
-    err_substring = data.get("err_substring", "") or data.get("expected_err_substring", "")
+    err_substring = data.get("err_substring", "") or data.get("expected_err_substring", "") or data.get("err_sample", "")
 
     return {
         "command": full_cmd,
@@ -250,8 +250,10 @@ def generate_repro_script(
     cmd_str = " ".join(shlex.quote(arg) for arg in cmd)
     err_check = ""
     if target_err_substring:
-        quoted_err = shlex.quote(target_err_substring)
-        err_check = f"""
+        clean_err = target_err_substring.splitlines()[0].strip() if target_err_substring else ""
+        if clean_err:
+            quoted_err = shlex.quote(clean_err)
+            err_check = f"""
 if ! grep -q {quoted_err} <<<"$STDERR" && ! grep -q {quoted_err} <<<"$STDOUT"; then
   echo "FAIL: Expected substring {quoted_err} not found in stdout or stderr"
   echo "STDOUT was: $STDOUT"
