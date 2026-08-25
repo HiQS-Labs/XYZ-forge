@@ -109,6 +109,11 @@ cmd_status(){
   lpddash="$(printf '%s\n' "$I"  | val LOCAL_PDDA_SH)"
   ldocs="$(printf '%s\n' "$I"    | val LOCAL_ACTIVE_DOCS)"
   lmara="$(printf '%s\n' "$I"    | val LOCAL_MARATHON)"
+  
+  local lnext lroadmap_open ldash_stale
+  lnext="$(printf '%s\n' "$I" | val LOCAL_NEXT_RELEASE)"
+  lroadmap_open="$(printf '%s\n' "$I" | val LOCAL_ROADMAP_OPEN)"
+  ldash_stale="$(printf '%s\n' "$I" | val LOCAL_DASHBOARD_STALE)"
 
   # capability tier: PDDA present (registry OR on-disk) AND XYZ install present
   local has_pdda=0 has_xyz=0 tier tierdesc
@@ -141,10 +146,29 @@ cmd_status(){
     echo   '  PDDA rails:   (not in any git-pulse registry)'
   fi
   printf '  local mode:   %s\n' "${lmode:-– (no .pdda-mode)}"
-  printf '  startup docs: ROUTER %s  AGENTS %s  ROADMAP %s\n' \
+  local rmap_label="ROADMAP"
+  local rmap_check="$([ -n "$lroadmap" ] && echo ✓ || echo ✗)"
+  if [ "$is_releases" = "1" ]; then
+    rmap_label="RELEASES-DB"
+    if [ "$lroadmap" = "broken" ]; then
+      rmap_check="✗ (releases-mode declared, but releases.db or CLI missing)"
+    elif [ -n "$lroadmap" ]; then
+      rmap_check="✓"
+      local dash_txt="dashboard ✓"
+      [ "$ldash_stale" = "yes" ] && dash_txt="dashboard ✗ stale"
+      rmap_check="$rmap_check ($dash_txt, $lroadmap_open open roadmap items)"
+    fi
+  fi
+  
+  printf '  startup docs: ROUTER %s  AGENTS %s  %s %s\n' \
     "$([ -n "$lrouter" ] && echo ✓ || echo ✗)" \
     "$([ -n "$lagents" ] && echo ✓ || echo ✗)" \
-    "$([ -n "$lroadmap" ] && echo ✓ || echo ✗)"
+    "$rmap_label" "$rmap_check"
+    
+  if [ "$is_releases" = "1" ] && [ "$lroadmap" != "broken" ] && [ -n "$lnext" ]; then
+    printf '  next release: %s\n' "$lnext"
+  fi
+  
   printf '  active docs:  %s in PROJECT/2-WORKING\n' "${ldocs:-0}"
   printf '  marathon:     %s\n' "${lmara:-(none open)}"
   if [ -n "$xyz_path" ]; then

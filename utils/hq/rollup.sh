@@ -32,7 +32,49 @@ while IFS= read -r repo; do
   fields="$(hq_repo_resolve "$repo")"
   path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
   
-  if [ -n "$path" ] && [ -f "$path/ROADMAP.md" ]; then
+  is_releases=0
+  if grep -q "ROADMAP_SOURCE=releases" "$path/.pdda-mode" 2>/dev/null; then
+    is_releases=1
+  fi
+
+  if [ "$is_releases" = "1" ]; then
+    echo "  scanning $repo ($path)... [releases DB]"
+    r_bin="$path/utils/py/releases_app.py"
+    [ -f "$r_bin" ] || r_bin="$path/.xyz/utils/py/releases_app.py"
+    if [ -f "$r_bin" ] && [ -f "$path/releases.db" ]; then
+      python3 "$r_bin" roadmap list | python3 - "$repo" >> "$RAW_FILE" <<'PY'
+import sys, re
+repo = sys.argv[1]
+lines = sys.stdin.readlines()
+groups = {}
+for line in lines:
+    if "Completed" in line or len(line) < 80: continue
+    status = line[40:63].strip()
+    m = re.search(r'\bcalc=\S+\s+(.*)', line)
+    if m:
+        title = m.group(1).strip()
+    else:
+        m = re.search(r'\bcre=\S+\s+(.*)', line)
+        if m:
+            title = m.group(1).strip()
+        else:
+            title = line[85:].strip()
+    if not title: continue
+    groups.setdefault(status, []).append(f"- {title}")
+
+if groups:
+    print(f"
+=== REPO: {repo} ===")
+    for status, items in groups.items():
+        print(f"
+Section: {status}")
+        for item in items:
+            print(item)
+PY
+    else
+      echo "  ! releases CLI/DB missing for $repo" >&2
+    fi
+  elif [ -n "$path" ] && [ -f "$path/ROADMAP.md" ]; then
     echo "  scanning $repo ($path)..."
     
     node - "$path/ROADMAP.md" "$repo" >> "$RAW_FILE" <<'NODE'

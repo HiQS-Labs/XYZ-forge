@@ -316,7 +316,30 @@ hq_inspect_repo(){
   [ -f "$p/ROUTER.md" ]         && printf 'LOCAL_ROUTER=yes\n'
   [ -f "$p/AGENTS.md" ]         && printf 'LOCAL_AGENTS=yes\n'
   if grep -q "ROADMAP_SOURCE=releases" "$p/.pdda-mode" 2>/dev/null; then
-    [ -f "$p/releases.db" ] && printf "LOCAL_ROADMAP=yes (DB)\n"
+    local r_bin="$p/utils/py/releases_app.py"
+    [ -f "$r_bin" ] || r_bin="$p/.xyz/utils/py/releases_app.py"
+    if [ -f "$p/releases.db" ] && [ -f "$r_bin" ]; then
+      printf "LOCAL_ROADMAP=yes (DB)\n"
+      
+      # 1. Next unshipped release
+      local next_out
+      next_out="$(python3 "$r_bin" next 2>&1 || true)"
+      printf "LOCAL_NEXT_RELEASE=%s\n" "$next_out"
+      
+      # 2. Open roadmap/queue item counts
+      local open_count
+      open_count="$(python3 "$r_bin" roadmap list 2>/dev/null | grep -v 'Completed' | wc -l | tr -d ' ')"
+      printf "LOCAL_ROADMAP_OPEN=%s\n" "$open_count"
+      
+      # 3. Dashboard freshness (ROADMAP-DASHBOARD.md vs DB)
+      if [ -f "$p/ROADMAP-DASHBOARD.md" ] && [ "$p/ROADMAP-DASHBOARD.md" -nt "$p/releases.db" ]; then
+        printf "LOCAL_DASHBOARD_STALE=no\n"
+      else
+        printf "LOCAL_DASHBOARD_STALE=yes\n"
+      fi
+    elif [ ! -f "$p/releases.db" ] || [ ! -f "$r_bin" ]; then
+      printf "LOCAL_ROADMAP=broken\n"
+    fi
   else
     [ -f "$p/ROADMAP.md" ] && printf "LOCAL_ROADMAP=yes\n"
   fi
