@@ -26,10 +26,13 @@ Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-204 · BSD sed -i '' no-ops on Linux at production call sites | — | [GH-204-BSD-SED-PORTABILITY.md](PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md) · [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) |
+| GH-205 · validate.sh mutates four tracked files per run — gate not idempotent | — | [GH-205-GATE-IDEMPOTENCY.md](PROJECT/2-WORKING/GH-205-GATE-IDEMPOTENCY.md) · [#205](https://github.com/HiQS-Labs/XYZ-forge/issues/205) |
+| GH-123 · Linux portability canary — remainder: gh358 lock contention on shared runners | — | [GH-123-LINUX-CANARY-REMAINDER.md](PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md) · [#123](https://github.com/HiQS-Labs/XYZ-forge/issues/123) |
 | GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
 | GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) | — | [GH-201-GEN35-FOLLOWUPS.md](PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md) · [#201](https://github.com/HiQS-Labs/XYZ-forge/issues/201) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
