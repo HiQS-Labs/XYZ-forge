@@ -248,6 +248,7 @@ TESTS=(
   "gh155-phase3-repro-builder.sh"       # #155 Phase 3 (Hermetic Reproducer & Hierarchical Delta Minimization engine)
   "gh155-phase4-self-healer.sh"         # #155 Phase 4 (Gated Autonomous Self-Healing Builder Loop)
   "gh182-healer-facade-safety.sh"       # #182 (self_healer CLI safety: mandatory sandbox containment, regression gate, 900s timeout, restoration)
+  "gh201-bounded-autonomy-governor.sh"   # #201 (Bounded Autonomy, Governor Control & Advisory Blast Radius Sensor)
   "gh155-phase5-active-explorer.sh"     # #155 Phase 5 (4-Family Generative Active Explorer Agent)
   "gh168-wave-reconcile-scope.sh"       # #168 (PR-attributed planner drift stays fatal; unrelated drift warns; ROADMAP move is idempotent)
   "gh174-harness-registry.sh"           # #174 (Harness & Models SQLite Registry with Per-Device Config, Reasoning Levels, Grading Hooks & Blog Gen)

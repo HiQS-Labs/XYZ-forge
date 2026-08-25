@@ -98,6 +98,7 @@ swept file: yes
 **[Pass]** `active_explorer.py` governor integration breaks cleanly at the top of the probe loop; partial records are preserved in the returned payload.
 
 **Verdict: Approved**
-All Round 1 findings resolved or acknowledged. Implementation satisfies the Definition of Done.
+VERDICT: PASS
+Basis: All Round 1 findings resolved or acknowledged. Implementation satisfies the Definition of Done.
 
 <!-- APPEND NEW TURNS ABOVE THIS LINE -->

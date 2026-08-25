@@ -144,7 +144,7 @@ PYEOF
 require_fixture_file "$INTEGRATION_SCRIPT" "integration-script"
 
 rc=0
-out="$(PYTHONPATH="$ROOT/utils/py" python3 "$INTEGRATION_SCRIPT" 2>&1)" || rc=$?
+out="$(ROOT="$ROOT" PYTHONPATH="$ROOT/utils/py" python3 "$INTEGRATION_SCRIPT" 2>&1)" || rc=$?
 if [ "$rc" -eq 0 ] && grep -q "3RD_GEN_PIPELINE_COMPLETE" <<<"$out"; then
   pass "3rd Gen ATE Pipeline E2E (Explorer -> Reproducer ddmin -> Self-Healer) verified"
 else

@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
@@ -138,6 +139,51 @@ def execute_gate_command(
         return 1, "", f"Gate execution error: {e}"
 
 
+def check_governor(governor_path: Optional[str]) -> Optional[Dict[str, Any]]:
+    """Check control.json governor for operator pause / abort / halt directives."""
+    if not governor_path or not os.path.exists(governor_path):
+        return None
+    try:
+        with open(governor_path, "r") as f:
+            return json.loads(f.read())
+    except Exception:
+        return None
+
+
+def advisory_blast_radius_sensor(
+    original_content: str,
+    candidate_patch: str,
+    target_file: str,
+    max_diff_lines: int = 500,
+) -> Tuple[bool, str, Dict[str, Any]]:
+    """Evaluate candidate patch against advisory blast radius invariants (Task 8b / GH-201)."""
+    diff_lines = list(difflib.unified_diff(
+        original_content.splitlines(keepends=True),
+        candidate_patch.splitlines(keepends=True),
+    ))
+    total_diff_lines = len(diff_lines)
+    added_lines = sum(1 for l in diff_lines if l.startswith("+") and not l.startswith("+++"))
+    removed_lines = sum(1 for l in diff_lines if l.startswith("-") and not l.startswith("---"))
+
+    metrics = {
+        "total_diff_lines": total_diff_lines,
+        "lines_added": added_lines,
+        "lines_removed": removed_lines,
+        "target_file": target_file,
+    }
+
+    if total_diff_lines > max_diff_lines:
+        return False, f"Diff size ({total_diff_lines} lines) exceeds maximum allowed blast radius ({max_diff_lines} lines)", metrics
+
+    # Protected repo infrastructure checks
+    base_name = os.path.basename(target_file)
+    rel_parts = os.path.normpath(target_file).split(os.sep)
+    if ".git" in rel_parts or "githooks" in rel_parts or base_name == "validate.sh":
+        return False, f"Target file '{target_file}' matches protected infrastructure pattern", metrics
+
+    return True, "Approved by advisory blast radius sensor", metrics
+
+
 def format_escalation_report(
     target_file: str,
     repro_path: str,
@@ -189,6 +235,8 @@ def run_self_healing_cycle(
     regression_cmd: Optional[List[str]] = None,
     max_attempts: int = 3,
     gate_timeout: int = 900,
+    governor_file: Optional[str] = None,
+    max_diff_lines: int = 500,
 ) -> Dict[str, Any]:
     """Execute gated autonomous self-healing loop with fail-safe containment."""
     # Preflight containment assertions (GH-182 / GH-564 / GH-567)
@@ -237,6 +285,33 @@ def run_self_healing_cycle(
             "history": [],
         }
 
+    # Pre-flight governor check prior to initial reproduction probe (Task 7 / control.json)
+    gov_pre = check_governor(governor_file)
+    if gov_pre and gov_pre.get("action") in ("abort", "stop", "halt"):
+        reason = gov_pre.get("reason", "Operator requested abort via governor")
+        return {
+            "status": "aborted_by_governor",
+            "message": f"Halted by governor prior to initial reproduction: {reason}",
+            "attempts": 0,
+            "max_attempts": max_attempts,
+            "winning_diff": "",
+            "history": [],
+            "calibration": {
+                "attempts_executed": 0,
+                "final_status": "aborted_by_governor",
+                "total_duration_ms": 0,
+                "history": [],
+            },
+            "escalation_report": format_escalation_report(
+                target_file=target_file,
+                repro_path=repro_path,
+                history=[],
+                max_attempts=max_attempts,
+                status="aborted_by_governor",
+                message=reason,
+            ),
+        }
+
     history: List[Dict[str, Any]] = []
     status = "escalated"
     winning_diff = ""
@@ -264,11 +339,37 @@ def run_self_healing_cycle(
 
         for attempt in range(1, max_attempts + 1):
             attempt_rec: Dict[str, Any] = {"attempt": attempt}
+            t_att_start = time.time()
+
+            # Governor check (Task 7 / control.json)
+            gov = check_governor(governor_file)
+            if gov and gov.get("action") in ("abort", "stop", "halt"):
+                status = "aborted_by_governor"
+                attempt_rec["result"] = f"aborted_by_governor: {gov.get('reason', 'Halted by operator governor')}"
+                attempt_rec["duration_ms"] = 0
+                history.append(attempt_rec)
+                break
 
             # Generate candidate fix from generator
             candidate_patch = fix_generator(target_file, current_error_context, attempt)
             if not candidate_patch:
                 attempt_rec["result"] = "no_patch_generated"
+                attempt_rec["duration_ms"] = int((time.time() - t_att_start) * 1000)
+                history.append(attempt_rec)
+                continue
+
+            # Advisory blast radius sensor (Task 8b / GH-201)
+            sensor_ok, sensor_msg, diff_metrics = advisory_blast_radius_sensor(
+                original_content=original_content,
+                candidate_patch=candidate_patch,
+                target_file=target_file,
+                max_diff_lines=max_diff_lines,
+            )
+            attempt_rec["diff_metrics"] = diff_metrics
+            attempt_rec["advisory_sensor"] = {"approved": sensor_ok, "message": sensor_msg}
+            if not sensor_ok:
+                attempt_rec["result"] = f"advisory_sensor_rejected: {sensor_msg}"
+                attempt_rec["duration_ms"] = int((time.time() - t_att_start) * 1000)
                 history.append(attempt_rec)
                 continue
 
@@ -281,6 +382,7 @@ def run_self_healing_cycle(
             )
             if not ok_apply:
                 attempt_rec["result"] = f"apply_failed: {msg_apply}"
+                attempt_rec["duration_ms"] = int((time.time() - t_att_start) * 1000)
                 history.append(attempt_rec)
                 continue
 
@@ -296,6 +398,7 @@ def run_self_healing_cycle(
 
             if rc_gate1 != 0:
                 attempt_rec["result"] = "gate1_failed"
+                attempt_rec["duration_ms"] = int((time.time() - t_att_start) * 1000)
                 current_error_context = err_gate1 or out_gate1
                 history.append(attempt_rec)
                 # Revert to original content before next iteration
@@ -316,6 +419,7 @@ def run_self_healing_cycle(
 
                 if rc_gate2 != 0:
                     attempt_rec["result"] = "gate2_regression_failed"
+                    attempt_rec["duration_ms"] = int((time.time() - t_att_start) * 1000)
                     current_error_context = err_gate2 or out_gate2
                     history.append(attempt_rec)
                     # Revert to original content before next iteration
@@ -326,6 +430,7 @@ def run_self_healing_cycle(
             # Both gates passed!
             status = "healed"
             attempt_rec["result"] = "passed"
+            attempt_rec["duration_ms"] = int((time.time() - t_att_start) * 1000)
             history.append(attempt_rec)
 
             # Compute winning diff
@@ -355,12 +460,20 @@ def run_self_healing_cycle(
         status=status,
     )
 
+    calibration = {
+        "attempts_executed": len(history),
+        "final_status": status,
+        "total_duration_ms": sum(h.get("duration_ms", 0) for h in history),
+        "history": history,
+    }
+
     return {
         "status": status,
         "attempts": len(history),
         "max_attempts": max_attempts,
         "winning_diff": winning_diff,
         "history": history,
+        "calibration": calibration,
         "escalation_report": report,
     }
 
@@ -491,6 +604,45 @@ exit 0
         t6 = (current_target_content == buggy_code)
         assertions.append(("GH-182 Fail-Safe Invariant: Target file restored to original byte state after failed/escalated attempts", t6, ""))
 
+        # 7. Task 7 Invariant: Governor Control Abort (control.json integration)
+        ctrl_file = os.path.join(tmp_dir, "control.json")
+        with open(ctrl_file, "w") as f:
+            f.write(json.dumps({"action": "abort", "reason": "Operator test abort"}))
+
+        result_gov = run_self_healing_cycle(
+            repro_path=repro_script,
+            target_file=target_script,
+            repo_root=repo_root,
+            fix_generator=multi_attempt_generator,
+            regression_cmd=["bash", target_script, "--help"],
+            max_attempts=3,
+            sandbox_root=tmp_dir,
+            governor_file=ctrl_file,
+        )
+        t7 = (result_gov["status"] == "aborted_by_governor" and result_gov["attempts"] == 0)
+        assertions.append(("Task 7 Governor Invariant: Governor abort signal immediately halts self-healing cycle", t7, f"Status: {result_gov.get('status')}"))
+
+        # 8. Task 8b Invariant: Advisory Blast Radius Sensor Rejection
+        def oversized_patch_generator(path: str, trace: str, attempt: int) -> Optional[str]:
+            return buggy_code + "\n" + "\n".join(f"# bloated line {i}" for i in range(600))
+
+        result_sensor = run_self_healing_cycle(
+            repro_path=repro_script,
+            target_file=target_script,
+            repo_root=repo_root,
+            fix_generator=oversized_patch_generator,
+            regression_cmd=["bash", target_script, "--help"],
+            max_attempts=1,
+            sandbox_root=tmp_dir,
+            max_diff_lines=500,
+        )
+        t8 = (result_sensor["status"] == "escalated" and "advisory_sensor_rejected" in str(result_sensor["history"]))
+        assertions.append(("Task 8b Advisory Sensor: Rejects oversized candidate patches exceeding blast radius limit", t8, f"History: {result_sensor.get('history')}"))
+
+        # 9. Task 8 Invariant: Calibration Telemetry Integrity
+        t9 = ("calibration" in result and "total_duration_ms" in result["calibration"] and result["calibration"]["attempts_executed"] == 2)
+        assertions.append(("Task 8 Calibration Telemetry: Structured calibration payload aggregates attempt execution metrics", t9, f"Calibration: {result.get('calibration')}"))
+
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
@@ -522,13 +674,15 @@ exit 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Gated Autonomous Self-Healing Builder Loop (GH-155 Phase 4 / GH-182)")
+    parser = argparse.ArgumentParser(description="Gated Autonomous Self-Healing Builder Loop (GH-155 Phase 4 / GH-182 / Task 7 & 8)")
     parser.add_argument("--mode", choices=["suite", "heal"], default="suite", help="Execution mode")
     parser.add_argument("--repro", help="Path to repro.sh script")
     parser.add_argument("--target-file", help="Path to target source file to fix")
     parser.add_argument("--sandbox-root", help="Path to isolated disposable clone sandbox root (GH-182 / GH-564)")
     parser.add_argument("--regression-cmd", help="Command to run for mandatory regression gating")
     parser.add_argument("--gate-timeout", type=int, default=900, help="Per-gate timeout in seconds (default: 900)")
+    parser.add_argument("--governor", help="Path to control.json governor file for operator abort/stop/halt directives")
+    parser.add_argument("--max-diff-lines", type=int, default=500, help="Maximum allowed diff lines for advisory blast radius sensor (default: 500)")
     parser.add_argument("--max-attempts", type=int, default=3, help="Max healing attempts before escalating")
     parser.add_argument("--patch-file", help="Optional path to candidate patch file")
     parser.add_argument("--diff-output", help="Optional path to write winning unified diff when healed")
@@ -587,6 +741,8 @@ def main() -> int:
             regression_cmd=reg_cmd,
             max_attempts=args.max_attempts,
             gate_timeout=args.gate_timeout,
+            governor_file=args.governor,
+            max_diff_lines=args.max_diff_lines,
         )
 
         if args.diff_output and result.get("winning_diff"):

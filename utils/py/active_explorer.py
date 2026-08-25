@@ -218,6 +218,17 @@ def synthesize_reproducers_from_anomalies(
     return generated_scripts
 
 
+def check_governor(governor_path: Optional[str]) -> Optional[Dict[str, Any]]:
+    """Check control.json governor for operator pause / abort / halt directives."""
+    if not governor_path or not os.path.exists(governor_path):
+        return None
+    try:
+        with open(governor_path, "r") as f:
+            return json.loads(f.read())
+    except Exception:
+        return None
+
+
 def run_exploration_campaign(
     target_cmd: List[str],
     base_env: Dict[str, str],
@@ -225,8 +236,9 @@ def run_exploration_campaign(
     family: str = "all",
     max_rounds: int = 10,
     check_zero_mutation: bool = True,
+    governor_file: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Execute active exploration across selected mutation families with zero-mutation checks."""
+    """Execute active exploration across selected mutation families with zero-mutation and governor checks."""
     records: List[Dict[str, Any]] = []
     anomalies: List[Dict[str, Any]] = []
 
@@ -239,6 +251,10 @@ def run_exploration_campaign(
     has_git = os.path.exists(git_dir)
 
     for cmd_vec, env_vec in itertools.islice(itertools.product(argv_vectors, env_vectors), max_rounds):
+        gov = check_governor(governor_file)
+        if gov and gov.get("action") in ("abort", "stop", "halt"):
+            break
+
         status_before = ""
         if check_zero_mutation and has_git:
             try:
@@ -434,6 +450,7 @@ def main() -> int:
                              "mutations are derived from this base and run over a CLEAN environment "
                              "(ambient runner vars cannot satisfy them — GH-183).")
     parser.add_argument("--repro-out", help="Directory path to synthesize standalone repro.sh test cases for detected anomalies")
+    parser.add_argument("--governor", help="Path to control.json governor file for operator abort/stop/halt directives")
     parser.add_argument("--rounds", type=int, default=10, help="Max exploration rounds")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
 
@@ -468,6 +485,7 @@ def main() -> int:
             repo_root=repo_root,
             family=args.family,
             max_rounds=args.rounds,
+            governor_file=args.governor,
         )
 
         if args.repro_out and res.get("anomalies"):
