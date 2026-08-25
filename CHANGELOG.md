@@ -2,7 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
-## [Unreleased] - 2026-08-21
+## [Unreleased] - 2026-08-24
+
+### Fixed
+- **GH-226: xyz-vendor.sh transcript gate refuses repos that gitignore transcripts.** Downgraded `ensure_gitignore()`'s `phases/` and `relay-system/` ignore check from a hard `exit 6` refusal to an advisory `WARNING` banner. Allows downstream repos that choose to withhold local transcript trees from public remotes to vendor `.xyz/` cleanly, while preserving marathon transcript trackability via `marathon_drive.py`'s runtime preflight (`preflight_write_set_trackable`). Rebuilt `skills/relay-automation/relay-pkg.tar.gz` and expanded `test/xyz-vendor.sh` assertions.
+- **GH-228: Org rename HiQS-Suite → HiQS-Labs regex widening in roadmap sync.** Widened `parse_roadmap_ledger()`'s issue/pull URL extractor in `utils/py/releases_app.py:2748` from `HiQS-Suite` to non-capturing `HiQS-(?:Suite|Labs)` so new `HiQS-Labs` issue URLs are not silently dropped as `None` in `releases.db`'s `roadmap_items` shadow, while retaining backward compatibility with legacy `HiQS-Suite` links. Updated default repo in `evidence/_env/fix-gh-default.sh` and default remote in `utils/build-launch-artifact.sh`. Added dual-org regression test coverage in `test/gh69-roadmap-shadow.sh`.
 
 ### Added
 - **GH-170: Agent2Agent transcript-state and publishing hardening.** Added structured scope
