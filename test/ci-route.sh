@@ -185,8 +185,8 @@ set -e
   && pass "an unknown subsystem fails loudly (exit 2)" \
   || fail "unknown subsystem result: rc=$rc out=$out"
 out="$(bash "$ROUTER" subsystems hq)"
-[[ "$(wc -w <<<"$out")" -eq 12 ]] \
-  && pass "subsystems hq lists its 12 suites" \
+[[ "$(wc -w <<<"$out")" -eq 14 ]] \
+  && pass "subsystems hq lists its 14 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
 
 echo "  ci-route: $PASS pass, $FAIL fail"

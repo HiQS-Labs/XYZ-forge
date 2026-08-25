@@ -2771,8 +2771,72 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
                   + RATING_COLUMNS
 
 
+
+def cmd_roadmap_add(args):
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        basename = os.path.basename(args.doc_path)
+        # hq park passes the hq_roadmap_line rendering via --raw-text so preview and stored row
+        # share ONE template; the inline fallback exists only for direct CLI use.
+        raw_text = args.raw_text or "- **GH-%d · %s** 🆕 **captured %s via HQ** — [%s](%s) · [#%d](%s)" % (
+            args.issue_num, args.title, args.created, basename, args.doc_path,
+            args.issue_num, args.issue_url
+        )
+        if args.dry_run:
+            print("ROADMAP line: %s" % raw_text)
+            return
+
+        # Dup guard — only when the shadow table exists; a pre-migration ledger gets the schema
+        # installed inside mutate (mirrors cmd_roadmap_sync) instead of a raw OperationalError.
+        if _table_exists(conn, "roadmap_items"):
+            row = conn.execute("SELECT id FROM roadmap_items WHERE issue_url = ?", (args.issue_url,)).fetchone()
+            if row:
+                refuse("roadmap-duplicate", "issue %s is already parked in the roadmap" % args.issue_url)
+
+            row2 = conn.execute("SELECT id FROM roadmap_items WHERE gh_number = ?", (args.issue_num,)).fetchone()
+            if row2:
+                refuse("roadmap-duplicate", "issue GH-%d is already parked in the roadmap" % args.issue_num)
+
+        gid = new_gid("rmi-")
+
+        def mutate(conn):
+            _ensure_roadmap_schema(conn)
+            ts = now_iso()
+            section = "Queue"
+            max_pos = conn.execute("SELECT MAX(position) FROM roadmap_items WHERE section = ?", (section,)).fetchone()
+            pos = (max_pos[0] or 0) + 1 if max_pos else 1
+            
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            
+            conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section, position,
+                            status_marker, doc_path, issue_url, raw_text, first_seen, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                         (gid, repo["id"], args.issue_num, args.title, section, pos,
+                          "🆕", args.doc_path, args.issue_url, raw_text, ts, ts))
+                          
+        perform_write(root, conn, "roadmap-add", gid, mutate)
+        print("added roadmap entry %s for GH-%d" % (gid, args.issue_num))
+    finally:
+        conn.close()
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
+    # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
+    # repo the DB is canonical and rows arrive via `roadmap add` with no markdown source line, so
+    # mirroring would destroy parked intake. Skip cleanly (exit 0): wave_reconcile.py calls sync
+    # unconditionally post-merge and must stay green in both modes.
+    try:
+        with open(os.path.join(root, ".pdda-mode")) as f:
+            if "ROADMAP_SOURCE=releases" in f.read():
+                print("roadmap sync: skipped — releases-mode repo (the DB is canonical; sync only "
+                      "mirrors ROADMAP.md in legacy mode, and would delete rows parked by `roadmap add`)")
+                return
+    except OSError:
+        pass
     conn = connect(artifact_paths(root)["db"])
     try:
         md_path = os.path.join(root, ROADMAP_NAME)
@@ -2879,6 +2943,18 @@ def cmd_roadmap_list(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
     try:
+        if getattr(args, "as_json", False):
+            # Machine-readable contract for consumers (hq rollup): the human rendering below is
+            # a display, not an API — its column offsets shift whenever a field widens.
+            rows = []
+            if _table_exists(conn, "roadmap_items"):
+                for r in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position"):
+                    rows.append({"global_id": r["global_id"], "gh_number": r["gh_number"],
+                                 "title": r["title"], "section": r["section"],
+                                 "position": r["position"], "status_marker": r["status_marker"],
+                                 "doc_path": _col(r, "doc_path"), "issue_url": _col(r, "issue_url")})
+            print(json.dumps(rows, ensure_ascii=False))
+            return
         if not _table_exists(conn, "roadmap_items"):
             print("(no roadmap shadow yet — run `releases roadmap sync`)")
             return
@@ -3657,7 +3733,21 @@ def build_parser():
     sp_rs = rsub.add_parser("sync", help="mirror ROADMAP.md's ledger into roadmap_items (one-way; "
                                          "ROADMAP.md stays the source of truth)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
-    rsub.add_parser("list", help="print the shadow rows")
+    sp_rl = rsub.add_parser("list", help="print the shadow rows")
+    sp_rl.add_argument("--json", dest="as_json", action="store_true",
+                       help="emit rows as a JSON array (machine-readable; the default rendering "
+                            "is a display, not an API)")
+
+    sp_ra = rsub.add_parser("add", help="intake a single issue into the roadmap ledger directly")
+    sp_ra.add_argument("--issue-num", required=True, type=int, help="GH issue number")
+    sp_ra.add_argument("--issue-url", required=True, help="GH issue URL")
+    sp_ra.add_argument("--title", required=True, help="Issue title")
+    sp_ra.add_argument("--created", required=True, help="Created date YYYY-MM-DD")
+    sp_ra.add_argument("--doc-path", required=True, help="Capture doc relpath")
+    sp_ra.add_argument("--raw-text", default=None,
+                       help="pre-rendered ROADMAP line (hq park passes hq_roadmap_line output so "
+                            "preview and stored row share one template)")
+    sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
@@ -3683,8 +3773,7 @@ def main(argv=None):
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
         "check": cmd_check, "reconcile": cmd_reconcile,
         "project": lambda a: cmd_project_sync(a) if a.project_cmd == "sync" else None,
-        "roadmap": lambda a: cmd_roadmap_sync(a) if a.roadmap_cmd == "sync"
-        else cmd_roadmap_list(a),
+        "roadmap": lambda a: cmd_roadmap_add(a) if a.roadmap_cmd == "add" else (cmd_roadmap_sync(a) if a.roadmap_cmd == "sync" else cmd_roadmap_list(a)),
     }
     handlers[args.cmd](args)
 

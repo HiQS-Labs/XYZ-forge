@@ -407,6 +407,8 @@ TESTS=(
   "mktemp-trap-guard.sh"         # GH-177 (static audit: no unguarded mktemp-into-destructive-rm-rf/cd-recapture pattern anywhere in the repo)
   "hq-marathon-scan.sh"          # GH-158 (cross-repo marathon aggregation + preflight — written, never registered until GH-192)
   "hq-rollup.sh"                 # GH-192 (marathon-scan.sh bridged verbatim into the Obsidian daily rollup)
+  "gh238-hq-releases-mode.sh"    # GH-238 (releases-mode park: roadmap add verb + hq park DB sink + sync no-op)
+  "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
                                  #   exporter payload keys + baked chrome in both artifacts; the rollup
                                  #   embed itself lives in hq-rollup.sh cases A/F/G)
