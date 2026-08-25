@@ -79,27 +79,29 @@ mkignore_repo() {  # <ignore-line> -> prints a fresh repo whose .gitignore carri
 for rule in '/relay-system' 'phases' '/phases/'; do
   BR="$(mkignore_repo "$rule")"
   before="$(cat "$BR/.gitignore")"
-  out="$( "$VENDOR" "$BR" 2>&1 )"; rc=$?
-  [ "$rc" = 6 ] \
-    && pass "GH-314: REFUSES to vendor into a repo ignoring '$rule' (exit 6)" \
-    || fail "GH-314: vendored into a repo ignoring '$rule' anyway (exit $rc)"
+  out="$( "$VENDOR" --no-register "$BR" 2>&1 )"; rc=$?
+  [ "$rc" = 0 ] \
+    && pass "GH-226: VENDORS into a repo ignoring '$rule' (exit 0, marathon check deferred to runtime)" \
+    || fail "GH-226: failed to vendor into a repo ignoring '$rule' (exit $rc)"
   grep -q "$rule" <<<"$(printf '%s' "$out")" \
     && pass "  and names the rule in the way" \
-    || fail "  but did not name '$rule' in its refusal"
-  # A refusal must leave the target EXACTLY as it was — no half-install, no edited .gitignore.
-  # Refusing while having already mutated the repo is worse than either outcome alone.
-  [ "$before" = "$(cat "$BR/.gitignore")" ] \
-    && pass "  and left the target's .gitignore untouched" \
-    || fail "  but edited the target's .gitignore while refusing"
-  [ ! -d "$BR/.xyz" ] \
-    && pass "  and left no half-installed .xyz/" \
-    || fail "  but left .xyz/ behind after refusing"
+    || fail "  but did not name '$rule' in its warning"
+  grep -q "WARNING" <<<"$(printf '%s' "$out")" \
+    && pass "  and emitted the advisory warning banner" \
+    || fail "  but did not emit WARNING banner"
+  # Vendoring must add .xyz/ and /.tick/ to .gitignore, but NEVER un-ignore or add negation rules.
+  ! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
+    && pass "  and left ignored paths un-negated (never un-ignores for you)" \
+    || fail "  but wrote a negation rule to un-ignore '$rule'"
+  [ -d "$BR/.xyz" ] \
+    && pass "  and successfully materialized .xyz/" \
+    || fail "  but failed to materialize .xyz/"
 done
 
 # It must NOT auto-un-ignore: doing so would publish builder/reviewer transcripts the repo chose to
 # withhold, irreversibly on a public target. This assertion is what stops a future "helpful" fix.
 BR="$(mkignore_repo '/relay-system')"
-"$VENDOR" "$BR" >/dev/null 2>&1 || true
+"$VENDOR" --no-register "$BR" >/dev/null 2>&1 || true
 ! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
   && pass "GH-314: never writes a negation rule to un-ignore for you" \
   || fail "GH-314: silently un-ignored a path the target deliberately excluded"

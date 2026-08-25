@@ -263,21 +263,19 @@ reconcile_ignore_state() {
 
   if [ -n "$_blocked" ]; then
   {
-    printf 'xyz-vendor.sh: this repo IGNORES paths the harness must be able to commit.\n\n'
+    printf 'xyz-vendor.sh: WARNING — this repo IGNORES paths marathon runs must commit.\n\n'
     printf '  A marathon writes its relay thread under phases/ and archives transcripts under\n'
     printf '  relay-system/, then git-adds both. An ignore rule on either makes that add fail and\n'
     printf '  HALT the chain mid-run — including after a phase has already passed its gate, which\n'
     printf '  destroys the record of why it stopped.\n\n'
     printf '  The rules in the way (file:line:pattern <TAB> path):\n'
     printf '%s' "$_blocked" | sed 's/^/    /'
-    printf '\n  REFUSING to vendor rather than editing your .gitignore for you. Un-ignoring these\n'
-    printf '  would publish builder and reviewer transcripts this repo evidently chose to withhold,\n'
-    printf '  and on a public repo that is not undoable. `git add -f` is the same mistake.\n\n'
-    printf '  Two ways forward, both yours to pick:\n'
-    printf '    1. Remove or narrow the rules above, then re-run this command.\n'
-    printf '    2. Keep them, and do not run marathons in this repo — driven relays need those paths.\n'
+    printf '\n  NOT editing your .gitignore for you. Un-ignoring these would publish builder and\n'
+    printf '  reviewer transcripts this repo evidently chose to withhold, and on a public repo that\n'
+    printf '  is not undoable. `git add -f` is the same mistake.\n\n'
+    printf '  Vendoring will proceed, but note that marathon runs in this repo will refuse before\n'
+    printf '  dispatch (GH-514 preflight) until those rules are narrowed or transcripts are permitted.\n\n'
   } >&2
-  exit 6
   fi
 
   # --- direction 1: paths that MUST be ignored ------------------------------------------------
