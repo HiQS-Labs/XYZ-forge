@@ -29,6 +29,7 @@ Metadata-only observability for discussions. Two artifacts, one guarantee:
 | `extension_added` | `extension_number, question_bytes, done_condition_bytes` |
 | `watch_transition` | `agent, transition, rearm_count` |
 | `outcome_recorded` | `result, note_bytes, agents_json` |
+| `seat_joined` | `agent, decision, model` |
 
 Subjects are stored only as truncated SHA-256. Decisions only as byte counts. Timestamps,
 paths, and enum strings are the permitted coincidental-metadata classes (`telemetry audit`
@@ -56,6 +57,10 @@ agent_chorus.py telemetry purge                  # delete all telemetry under th
 agent_chorus.py outcome --id N --result R [--note S] [--agent SEAT=MODEL ...]
 #   R ∈ implemented | partial | not_implemented | superseded (closed discussions only)
 ```
+
+`seat_joined` is emitted on every `join` (including repeat joins and `DECISION: wait`), so time
+from invitation to first response and per-seat participation can be reconstructed; `model` is the
+operator-supplied `join --model` value or absent.
 
 `outcome` never touches `conversation.md` and never changes `STATUS`. `--agent SEAT=MODEL`
 records per-seat model attribution so decision-durability can be analyzed per participating

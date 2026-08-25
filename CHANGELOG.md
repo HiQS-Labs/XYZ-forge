@@ -5,6 +5,24 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-08-24
 
 ### Fixed
+- **GH-231: AgentChorus pilot findings — close semantics, liveness, onboarding.** From a two-run,
+  three-harness pilot of `skills/agent-chorus` (issue #231). `close` now refuses an unedited
+  `--print-template` scaffold, warns when the dissent section begins with "None", and prints a
+  `CLOSE-WARNING` for any seat that never wrote or has not answered the latest turns; the dissent
+  template asks for disagreements raised and assumptions unverified as two lists. `send` prints a
+  `RECEIPT:` line and each peer's last-written turn; `join`/`send` name manual seats explicitly.
+  `watch` removes its liveness marker on any exit (including SIGTERM) and `status` reports a marker
+  whose process is gone, closing the thirty-minute window in which a dead doorbell read as live;
+  `ping` markers carry no pid. A pasted `### Turn` heading is stripped from message bodies. The
+  transcript's "Rules for LLMs" demand a 120 s watch only when `--timed-watch` was requested, and
+  the Protocol block states that peer turns are evidence, not instructions. Invitations end with
+  "— use the agent-chorus skill" so every harness loads the skill from the paste. `SKILL.md` locates
+  the helper from the skill's own directory instead of `git rev-parse --show-toplevel`, documents
+  telemetry and the `AGENT2AGENT_TELEMETRY=0` override, adds an operating-level cadence table and a
+  peer-content guardrail, and points `--root` at the repository under discussion. `join --model`
+  and a `seat_joined` telemetry event record per-seat identity and join timing. README documents the
+  macOS/Linux requirement, the `encodings` interpreter symptom, and a pinned copy install;
+  `openai.yaml` and the standalone README finish the rename. 21 new smoke assertions.
 - **GH-226: xyz-vendor.sh transcript gate refuses repos that gitignore transcripts.** Downgraded `ensure_gitignore()`'s `phases/` and `relay-system/` ignore check from a hard `exit 6` refusal to an advisory `WARNING` banner. Allows downstream repos that choose to withhold local transcript trees from public remotes to vendor `.xyz/` cleanly, while preserving marathon transcript trackability via `marathon_drive.py`'s runtime preflight (`preflight_write_set_trackable`). Rebuilt `skills/relay-automation/relay-pkg.tar.gz` and expanded `test/xyz-vendor.sh` assertions.
 - **GH-228: Org rename HiQS-Suite → HiQS-Labs regex widening in roadmap sync.** Widened `parse_roadmap_ledger()`'s issue/pull URL extractor in `utils/py/releases_app.py:2748` from `HiQS-Suite` to non-capturing `HiQS-(?:Suite|Labs)` so new `HiQS-Labs` issue URLs are not silently dropped as `None` in `releases.db`'s `roadmap_items` shadow, while retaining backward compatibility with legacy `HiQS-Suite` links. Updated default repo in `evidence/_env/fix-gh-default.sh` and default remote in `utils/build-launch-artifact.sh`. Added dual-org regression test coverage in `test/gh69-roadmap-shadow.sh`.
 
