@@ -78,18 +78,26 @@ mkignore_repo() {  # <ignore-line> -> prints a fresh repo whose .gitignore carri
 
 for rule in '/relay-system' 'phases' '/phases/'; do
   BR="$(mkignore_repo "$rule")"
-  before="$(cat "$BR/.gitignore")"
   out="$( "$VENDOR" --no-register "$BR" 2>&1 )"; rc=$?
   [ "$rc" = 0 ] \
     && pass "GH-226: VENDORS into a repo ignoring '$rule' (exit 0, marathon check deferred to runtime)" \
     || fail "GH-226: failed to vendor into a repo ignoring '$rule' (exit $rc)"
-  grep -q "$rule" <<<"$(printf '%s' "$out")" \
+  grep -Fq "$rule" <<<"$(printf '%s' "$out")" \
     && pass "  and names the rule in the way" \
     || fail "  but did not name '$rule' in its warning"
-  grep -q "WARNING" <<<"$(printf '%s' "$out")" \
+  grep -Fq "WARNING" <<<"$(printf '%s' "$out")" \
     && pass "  and emitted the advisory warning banner" \
     || fail "  but did not emit WARNING banner"
-  # Vendoring must add .xyz/ and /.tick/ to .gitignore, but NEVER un-ignore or add negation rules.
+  # Vendoring must preserve the original rule and add .xyz/ and /.tick/ to .gitignore, never un-ignore.
+  grep -Fqx "$rule" "$BR/.gitignore" \
+    && pass "  and preserved original ignore rule '$rule'" \
+    || fail "  but original rule '$rule' was lost from .gitignore"
+  grep -Fqx '.xyz/' "$BR/.gitignore" \
+    && pass "  and added .xyz/ to .gitignore" \
+    || fail "  but .xyz/ was not added to .gitignore"
+  grep -Fqx '/.tick/' "$BR/.gitignore" \
+    && pass "  and added /.tick/ to .gitignore" \
+    || fail "  but /.tick/ was not added to .gitignore"
   ! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
     && pass "  and left ignored paths un-negated (never un-ignores for you)" \
     || fail "  but wrote a negation rule to un-ignore '$rule'"
