@@ -1,0 +1,3 @@
+tick path: C:/xyz-msys2-probe/repo/bin/tick
+isfile: True X_OK: True
+RESULT: OSError -> OSError 193 [WinError 193] %1 is not a valid Win32 application

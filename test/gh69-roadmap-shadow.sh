@@ -43,6 +43,14 @@ git -C "$R" config user.name gh69
 ra() { require_fixture "$R" "shadow fixture"; python3 "$APP" --root "$R" "$@"; }
 gen_now() { sqlite3 "$R/releases.db" "SELECT value FROM settings WHERE key='generation'"; }
 sha() { file_hash "$1"; }
+# Portable in-place sed. `sed -i ''` is the BSD spelling; GNU sed wants the suffix attached
+# (-i.bak), so it parses the '' as the SCRIPT and then reads the real script as a FILENAME —
+# exiting 2 and leaving the file untouched. That silently skipped the fixture edits below and
+# failed every assertion that depended on them.
+sed_i() { # sed_i <script> <file>
+  local _script="$1" _file="$2"
+  sed "$_script" "$_file" > "$_file.tmp" && mv "$_file.tmp" "$_file"
+}
 file_hash() { # portable: sha256sum -> shasum -a 256 -> md5 (GH-65)
   local f="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -99,14 +107,14 @@ ok "  and the dump is byte-identical (no churn for clones to conflict over)" \
    "[ \"\$(sha '$R/releases.sql')\" = \"$DUMP_HASH\" ]"
 
 # ── 3. dry run reports the diff and writes nothing ──────────────────────────────────────────────
-sed -i '' 's/queued body\./queued body, EDITED./' "$R/ROADMAP.md"
+sed_i 's/queued body\./queued body, EDITED./' "$R/ROADMAP.md"
 out="$(ra roadmap sync --dry-run 2>&1)"; rc=$?
 ok "dry run names the pending update (rc=$rc)" "[ $rc -eq 0 ] && has \"\$out\" 'DRY RUN' && has \"\$out\" '~1 updated'"
 ok "  and wrote nothing" "[ \"\$(gen_now)\" = \"$G1\" ] && [ \"\$(sha '$R/releases.sql')\" = \"$DUMP_HASH\" ]"
 
 # ── 4. update keeps the GID; removal deletes the row ────────────────────────────────────────────
 GID32="$(sqlite3 "$R/releases.db" "SELECT global_id FROM roadmap_items WHERE gh_number=32")"
-sed -i '' '/Title-keyed entry/d' "$R/ROADMAP.md"
+sed_i '/Title-keyed entry/d' "$R/ROADMAP.md"
 out="$(ra roadmap sync 2>&1)"; rc=$?
 ok "edit+removal sync applies both (rc=$rc)" "[ $rc -eq 0 ] && has \"\$out\" '~1 updated' && has \"\$out\" '1 removed,'"
 ok "  and GH-32's GID is stable across the update" \
@@ -154,7 +162,7 @@ write_ledger '- **GH-1 · rated entry** 🆕 — body. rated 70/40/55/60 → [#1
 out="$(ra roadmap sync 2>&1)"; rc=$?
 ok "a rated entry syncs (rc=$rc)" "[ $rc -eq 0 ]"
 ok "  and the four axes land in the rating_ columns, in pri/sev/appeal/effort order" \
-   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri||\"/\"||rating_sev||\"/\"||rating_appeal||\"/\"||rating_effort FROM roadmap_items WHERE gh_number=1')\" = '70/40/55/60' ]"
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri||char(47)||rating_sev||char(47)||rating_appeal||char(47)||rating_effort FROM roadmap_items WHERE gh_number=1')\" = '70/40/55/60' ]"
 ok "  and no override is implied by its absence" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr IS NULL FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
 ok "  and calc is DERIVED at read time, never stored (roadmap list shows the sum)" \

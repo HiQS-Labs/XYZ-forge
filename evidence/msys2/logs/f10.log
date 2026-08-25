@@ -1,0 +1,2 @@
+has SIGHUP: False
+RESULT: AttributeError escaped the guard -> module 'signal' has no attribute 'SIGHUP'

@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 152
+-- generation: 153
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -9,7 +9,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('4', '2026-08-21T04:21
 INSERT INTO schema_migrations(version, applied_at) VALUES('5', '2026-08-21T05:37:00Z');
 -- table: settings
 INSERT INTO settings(key, value) VALUES('enforcement', 'lenient');
-INSERT INTO settings(key, value) VALUES('generation', '152');
+INSERT INTO settings(key, value) VALUES('generation', '153');
 INSERT INTO settings(key, value) VALUES('repo_slug', 'XYZ-forge');
 -- table: repos
 INSERT INTO repos(global_id, slug) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge');
@@ -550,3 +550,7 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M0V6HCHW8ZE0Y2VG6ARM35XR', '2026-08-25T00:53:46Z', 'bb56c3ca7fbe412f84e59654c891e977', 'default', '353aaaa09e1354d6a61a7a9e060d92f89bfc3d7b5567dd31aaf9dff5b2a0c8a4', '3acb56197f2ddf71493b743e8d9a4ef69346df85fdd44808222363a77ee570c9');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M0V6HCYDY36TSAEYSEB8QA64', '2026-08-25T00:53:46Z', 'e32f2432050840c195db045b7a0b5187', 'default', '3acb56197f2ddf71493b743e8d9a4ef69346df85fdd44808222363a77ee570c9', 'c5f7ac7dceb2580e6b424e34ab1cb2516ed59ea5ebbf79e6d6a7002cff39d777');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-25T01:02:43Z', '81385de8ca554fc4b314cdab0f8670d4', 'default', 'c5f7ac7dceb2580e6b424e34ab1cb2516ed59ea5ebbf79e6d6a7002cff39d777', 'fd551971d30d8ad6bc52330bee7bf8cd142235a27ddf2af95b901d343433af37');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-25T00:02:16Z', '98b39c3e1e56474fb369d3f441e74cad', 'default', 'ef34eb353750995def8ee321c1fa08f688887c9d83ce0f040eea624c72f8e210', '78c435093c10bf60b2b23c54d569d60d2b5516647120a4bfb6340161853f4693');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-25T01:28:35Z', 'b408433cc0bb4602b44079622bb7cc18', 'default', '78c435093c10bf60b2b23c54d569d60d2b5516647120a4bfb6340161853f4693', '97f80fcdb266d56814082e3670ed8b15bc0c6fc8b843162bf8bb5a7871286bce');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-25T01:29:08Z', 'fde026770b0446ae9e527e76be975802', 'default', '97f80fcdb266d56814082e3670ed8b15bc0c6fc8b843162bf8bb5a7871286bce', '108256e7cd7ab03fb04af0d89e6fb4f4bdaf60c1e0557530d32c413fb6616c14');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', NULL, '2026-08-25T01:42:44Z', 'd33a2b11c1ec43e08dfcde033b120421', 'default', 'fd551971d30d8ad6bc52330bee7bf8cd142235a27ddf2af95b901d343433af37', 'fd551971d30d8ad6bc52330bee7bf8cd142235a27ddf2af95b901d343433af37');

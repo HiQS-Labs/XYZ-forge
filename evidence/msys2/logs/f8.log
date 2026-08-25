@@ -1,0 +1,3 @@
+input=C:/Users/example/hooks     -> C:/tmp/repo/C:/Users/example/hooks
+input=/c/Users/example/hooks     -> /c/Users/example/hooks
+input=relative/hooks             -> C:/tmp/repo/relative/hooks
