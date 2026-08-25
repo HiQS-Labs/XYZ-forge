@@ -612,6 +612,22 @@ def main():
     # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.
     rc = rtl.enforce(t, me, agy_log, "agy")
 
+    try:
+        from harness_turn_logger import HarnessTurnLogger
+        with HarnessTurnLogger(
+            harness_id="agy",
+            shim="agy-turn.py",
+            task_scope=t,
+            model_id=os.environ.get("AGY_MODEL", "antigravity/gemini-2.5-pro"),
+            gateway=os.environ.get("AGY_GATEWAY", "google"),
+            reasoning_effort=os.environ.get("AGY_REASONING_EFFORT", "high"),
+            cli_flags=os.environ.get("AGY_FLAGS", "").split(),
+            repo_root=xyz_root,
+        ) as logger:
+            logger.exit_code = bounded_rc or rc
+    except Exception:
+        pass
+
     if bounded_rc == 7:
         sys.exit(7)
     if bounded_rc != 0:

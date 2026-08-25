@@ -189,6 +189,22 @@ def main():
     except Exception:
         pass
 
+    try:
+        from harness_turn_logger import HarnessTurnLogger
+        with HarnessTurnLogger(
+            harness_id="pi",
+            shim="pi-turn.py",
+            task_scope=t,
+            model_id=os.environ.get("PI_MODEL", "pi-native"),
+            gateway=os.environ.get("PI_GATEWAY", "pi"),
+            reasoning_effort=os.environ.get("PI_REASONING_EFFORT", "high"),
+            cli_flags=pflags,
+            repo_root=xyz_root,
+        ) as logger:
+            logger.exit_code = bounded_rc or rc
+    except Exception:
+        pass
+
     if bounded_rc == 7:
         sys.exit(7)
     if bounded_rc != 0:

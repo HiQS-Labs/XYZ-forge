@@ -119,6 +119,22 @@ def main():
 
     rc = rtl.enforce(t, me, commandcode_log, "commandcode")
 
+    try:
+        from harness_turn_logger import HarnessTurnLogger
+        with HarnessTurnLogger(
+            harness_id="commandcode",
+            shim="commandcode-turn.py",
+            task_scope=t,
+            model_id=os.environ.get("COMMANDCODE_MODEL", "Qwen/Qwen3.8-Max"),
+            gateway=os.environ.get("COMMANDCODE_GATEWAY", "openrouter"),
+            reasoning_effort=os.environ.get("COMMANDCODE_REASONING_EFFORT", "xhigh"),
+            cli_flags=cflags,
+            repo_root=xyz_root,
+        ) as logger:
+            logger.exit_code = bounded_rc or rc
+    except Exception:
+        pass
+
     # In-root enforcement violations take priority over a subprocess result.
     if rc == 6:
         sys.exit(6)
