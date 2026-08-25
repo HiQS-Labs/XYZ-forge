@@ -18,7 +18,7 @@ touch .pdda-mode ROADMAP.md
 cd "$root"
 
 out="$(bash utils/hq/hq.sh status "repo-legacy")"
-echo "$out" | grep -q "ROADMAP ✓" || fail "legacy repo missing ROADMAP ✓"
+grep -q "ROADMAP ✓" <<<"$out" || fail "legacy repo missing ROADMAP ✓"
 
 # 2. Releases-mode repo (healthy)
 mkdir -p "$WORK/repo-healthy/utils/py"
@@ -33,7 +33,7 @@ touch ROADMAP-DASHBOARD.md
 cd "$root"
 
 out="$(bash utils/hq/hq.sh status "repo-healthy")"
-echo "$out" | grep -q "RELEASES-DB ✓ (dashboard ✓" || fail "healthy repo missing RELEASES-DB ✓ or dashboard ✓"
+grep -q "RELEASES-DB ✓ (dashboard ✓" <<<"$out" || fail "healthy repo missing RELEASES-DB ✓ or dashboard ✓"
 
 # 3. Releases-mode repo (broken DB)
 mkdir -p "$WORK/repo-broken"
@@ -44,7 +44,7 @@ echo "ROADMAP_SOURCE=releases" > .pdda-mode
 cd "$root"
 
 out="$(bash utils/hq/hq.sh status "repo-broken")"
-echo "$out" | grep -q "RELEASES-DB ✗ (releases-mode declared, but releases.db or CLI missing)" || fail "broken repo missing degrade message"
+grep -q "RELEASES-DB ✗ (releases-mode declared, but releases.db or CLI missing)" <<<"$out" || fail "broken repo missing degrade message"
 
 echo "  PASS: status tests"
 
@@ -71,8 +71,8 @@ cd "$root"
 rollup_rc=0
 out="$(bash utils/hq/rollup.sh 2>&1)" || rollup_rc=$?
 [ "$rollup_rc" -eq 0 ] || fail "rollup exited $rollup_rc: $out"
-echo "$out" | grep -q "scanning repo-healthy" || fail "rollup did not scan repo-healthy"
-echo "$out" | grep -q "\[releases DB\]" || fail "rollup did not use releases DB for repo-healthy"
+grep -q "scanning repo-healthy" <<<"$out" || fail "rollup did not scan repo-healthy"
+grep -q "\[releases DB\]" <<<"$out" || fail "rollup did not use releases DB for repo-healthy"
 [ -f "$WORK/vault/HQ-Daily-Rollup.md" ] || fail "rollup did not write HQ-Daily-Rollup.md"
 grep -q "=== REPO: repo-healthy ===" "$WORK/vault/HQ-Daily-Rollup.md" || fail "rollup output missing repo-healthy roadmap block"
 grep -q "Rollup item seven" "$WORK/vault/HQ-Daily-Rollup.md" || fail "rollup output missing the seeded roadmap item"
