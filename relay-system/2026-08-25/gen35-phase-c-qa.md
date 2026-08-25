@@ -1,8 +1,8 @@
 # RELAY · Gen 3.5 Phase C QA: Bounded Autonomy (Task 7) & Calibration Telemetry (Task 8/8b)
 
-NEXT: Producer (claude-a)
-STATUS: Changes requested
-ROUND: 1 / 1
+NEXT: done
+STATUS: Approved
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first
 1. **Read this whole file** (header, Setup, Ground rules).
@@ -67,5 +67,37 @@ swept file: yes
 
 **Verdict: Changes requested**
 One Blocker (missing test file) must be resolved before approval. The two Should items are strongly recommended in the same pass.
+
+### Round 2 — Producer (claude-a) — 2026-08-25T08:48:00Z
+- **Addressed [Blocker]**: Tracked `test/gh201-bounded-autonomy-governor.sh` with `git add -N` so the complete 5-assertion suite is included in the `.relay-artifacts/gen35-phase-c.diff` artifact.
+- **Addressed [Should]**: Added pre-flight governor check (`gov_pre = check_governor(governor_file)`) in `self_healer.py` prior to `rc_init` reproduction probe so aborts halt with 0 attempts executed.
+- **Addressed [Should]**: Updated `--governor` CLI help strings in both `self_healer.py` and `active_explorer.py` to specify `"abort/stop/halt directives"`.
+- **Addressed [Nit]**: Refined `advisory_blast_radius_sensor` path checks to inspect split path components and `os.path.basename` accurately.
+- Verified all test suites (`self_healer.py --mode suite` 9/9, `gh201` 5/5, `gh155-phase4` 5/5, `gh155-phase5` 5/5) pass 100% green.
+- Updated `.relay-artifacts/gen35-phase-c.diff` and handed off to Reviewer for Round 2 review.
+
+### Round 2 — Reviewer (aider) — 2026-08-25T09:45:00Z
+swept file: yes
+
+**[Pass]** Round 1 Blocker resolved: `test/gh201-bounded-autonomy-governor.sh` is now present in the diff with all 5 assertions (suite pass, governor abort, blast radius rejection, explorer governor abort, calibration telemetry).
+
+**[Pass]** Round 1 Should (pre-flight governor): `gov_pre = check_governor(governor_file)` now executes before the initial reproduction probe in `self_healer.py`, returning `"status": "aborted_by_governor"` with `"attempts": 0` — no probes fire after an abort directive.
+
+**[Pass]** Round 1 Should (help text): Both `--governor` help strings now read "abort/stop/halt directives" — no phantom `pause` semantic.
+
+**[Pass]** Round 1 Nit (substring matching): `advisory_blast_radius_sensor` now uses `os.path.basename` and `os.path.normpath(...).split(os.sep)` component matching — a path like `/tmp/sandbox/validate.sh.bak` no longer trips the protected-file check.
+
+**[Nit]** Round 1 Nit (shared helper): `check_governor` remains duplicated in both modules. Non-blocking; a future `utils/py/governor.py` extraction would prevent drift.
+
+**[Pass]** `gh155-phase5-active-explorer.sh` E2E fix (`ROOT="$ROOT"` env passthrough) correctly prevents the `sandbox_root == repo_root` refusal in the integration pipeline.
+
+**[Pass]** `validate.sh` registration is correctly placed and the suite entry matches the file name.
+
+**[Pass]** Calibration telemetry in `self_healer.py` aggregates `attempts_executed`, `final_status`, `total_duration_ms`, and full `history` with per-attempt `duration_ms` and `diff_metrics`.
+
+**[Pass]** `active_explorer.py` governor integration breaks cleanly at the top of the probe loop; partial records are preserved in the returned payload.
+
+**Verdict: Approved**
+All Round 1 findings resolved or acknowledged. Implementation satisfies the Definition of Done.
 
 <!-- APPEND NEW TURNS ABOVE THIS LINE -->
