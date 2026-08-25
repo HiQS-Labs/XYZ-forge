@@ -10,50 +10,50 @@ while the four axes keep their honest values underneath.
 
 | # | score | task | release | lane | pri | sev | appeal | effort | calc | ovr |
 |--:|------:|------|---------|------|----:|----:|-------:|-------:|-----:|----:|
-| 1 | **340** | [GH-67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) — Commandcode builder default widened to `--yolo` — closer evaluation → possible build | — | Ad-hoc detours | 88 | 80 | 45 | 70 | 283 | 340 |
-| 2 | **315** | GH-181 — repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2) | Bulkhead | queue | 90 | 75 | 90 | 60 | 315 | — |
-| 3 | **305** | GH-202 — wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | Bulkhead | queue | 85 | 65 | 85 | 70 | 305 | — |
-| 4 | **300** | [GH-174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) — Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | Bulkhead | queue | 85 | 75 | 95 | 45 | 300 | — |
+| 1 | **340** | [GH-67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) — Commandcode builder default widened to `--yolo` — closer evaluation → possible build | — | Queue / parked intake | 88 | 80 | 45 | 70 | 283 | 340 |
+| 2 | **315** | GH-181 — repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2) | Bulkhead | completed | 90 | 75 | 90 | 60 | 315 | — |
+| 3 | **305** | GH-202 — wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | Bulkhead | completed | 85 | 65 | 85 | 70 | 305 | — |
+| 4 | **300** | [GH-174](https://github.com/HiQS-Suite/XYZ-forge/issues/174) — Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | Bulkhead | completed | 85 | 75 | 95 | 45 | 300 | — |
 | 5 | **295** | [GH-155](https://github.com/HiQS-Suite/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing | — | Completed | 85 | 70 | 90 | 50 | 295 | — |
 | 6 | **295** | [GH-165](https://github.com/HiQS-Suite/XYZ-forge/issues/165) — Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | — | Completed | 90 | 80 | 90 | 35 | 295 | — |
-| 7 | **290** | [GH-113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) — headless agy builder writes root scratch files, tripping containment (exit 6) | Bulkhead | in progress | 85 | 60 | 85 | 60 | 290 | — |
+| 7 | **290** | [GH-113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) — headless agy builder writes root scratch files, tripping containment (exit 6) | Bulkhead | completed | 85 | 60 | 85 | 60 | 290 | — |
 | 8 | **290** | [GH-148](https://github.com/HiQS-Suite/XYZ-forge/issues/148) — DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | Completed | 85 | 75 | 90 | 40 | 290 | — |
-| 9 | **290** | [GH-168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) — wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | Bulkhead | queue | 80 | 55 | 85 | 70 | 290 | — |
-| 10 | **290** | GH-204 — BSD `sed -i ''` idiom silently no-ops on Linux at five call sites | — | Ad-hoc detours | 60 | 70 | 75 | 85 | 290 | — |
-| 11 | **285** | [GH-141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | Bulkhead | ad-hoc detour | 80 | 65 | 85 | 55 | 285 | — |
-| 12 | **280** | [GH-114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | in progress | 80 | 60 | 80 | 60 | 280 | — |
-| 13 | **280** | [GH-115](https://github.com/HiQS-Suite/XYZ-forge/issues/115) — marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | Bulkhead | queue | 75 | 50 | 85 | 70 | 280 | — |
-| 14 | **280** | GH-180 — repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | Bulkhead | queue | 70 | 45 | 85 | 80 | 280 | — |
+| 9 | **290** | [GH-168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) — wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | Bulkhead | completed | 80 | 55 | 85 | 70 | 290 | — |
+| 10 | **290** | GH-204 — BSD `sed -i ''` idiom silently no-ops on Linux at five call sites | — | Queue / parked intake | 60 | 70 | 75 | 85 | 290 | — |
+| 11 | **285** | [GH-141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | In progress | 80 | 65 | 85 | 55 | 285 | — |
+| 12 | **280** | [GH-114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | completed | 80 | 60 | 80 | 60 | 280 | — |
+| 13 | **280** | [GH-115](https://github.com/HiQS-Suite/XYZ-forge/issues/115) — marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | Bulkhead | completed | 75 | 50 | 85 | 70 | 280 | — |
+| 14 | **280** | GH-180 — repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | Bulkhead | completed | 70 | 45 | 85 | 80 | 280 | — |
 | 15 | **280** | GH-193 — AgentChorus Gen 2 | Cargo | queue | 75 | 70 | 85 | 50 | 280 | — |
 | 16 | **280** | [GH-77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) — `/standup` — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | Completed | 95 | 70 | 85 | 30 | 280 | — |
 | 17 | **275** | [GH-124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) — eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | — | Completed | 85 | 60 | 90 | 40 | 275 | — |
 | 18 | **275** | [GH-132](https://github.com/HiQS-Suite/XYZ-forge/issues/132) — feat(skills): formal /review-xyz code review skill & multi-model harness | — | Completed | 80 | 70 | 85 | 40 | 275 | — |
 | 19 | **275** | [GH-170](https://github.com/HiQS-Suite/XYZ-forge/issues/170) — Agent2Agent: close transcript glitches and harden publishing | — | Completed | 75 | 60 | 85 | 55 | 275 | — |
-| 20 | **275** | [GH-2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) — test-suite run relocated an untracked file into .tick/orphan-backups/ | Bulkhead | queue | 80 | 55 | 85 | 55 | 275 | — |
+| 20 | **275** | [GH-2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) — test-suite run relocated an untracked file into .tick/orphan-backups/ | Bulkhead | completed | 80 | 55 | 85 | 55 | 275 | — |
 | 21 | **275** | GH-201 — Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) | Cargo | in progress | 80 | 70 | 80 | 45 | 275 | — |
-| 22 | **275** | [GH-8](https://github.com/HiQS-Suite/XYZ-forge/issues/8) — kernel boundary hardening — CLI numeric validation, task/agent format contract | Bulkhead | queue | 75 | 55 | 80 | 65 | 275 | — |
-| 23 | **270** | GH-184 — committed scratch artifact `.relay-scratch/probe_telemetry.json` makes every real turn a tracked-file mutation | Bulkhead | queue | 60 | 40 | 80 | 90 | 270 | — |
-| 24 | **270** | [GH-75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | Ad-hoc detours | 90 | 40 | 85 | 55 | 270 | — |
+| 22 | **275** | [GH-8](https://github.com/HiQS-Suite/XYZ-forge/issues/8) — kernel boundary hardening — CLI numeric validation, task/agent format contract | Bulkhead | completed | 75 | 55 | 80 | 65 | 275 | — |
+| 23 | **270** | GH-184 — committed scratch artifact `.relay-scratch/probe_telemetry.json` makes every real turn a tracked-file mutation | Bulkhead | completed | 60 | 40 | 80 | 90 | 270 | — |
+| 24 | **270** | [GH-75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | Queue / parked intake | 90 | 40 | 85 | 55 | 270 | — |
 | 25 | **265** | [GH-111](https://github.com/HiQS-Suite/XYZ-forge/issues/111) — retire manifest FREEZE; tasks and marathons are DIALED IN to exactly one release, as a database state | — | Completed | 85 | 75 | 70 | 35 | 265 | — |
 | 26 | **265** | GH-182 — self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | Cargo | in progress | 75 | 55 | 80 | 55 | 265 | — |
-| 27 | **265** | [GH-50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) — sandboxed git --track / branch -D half-applies and loses uncommitted work | Bulkhead | queue | 65 | 35 | 85 | 80 | 265 | — |
-| 28 | **260** | GH-183 — active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | Bulkhead | queue | 65 | 50 | 75 | 70 | 260 | — |
+| 27 | **265** | [GH-50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) — sandboxed git --track / branch -D half-applies and loses uncommitted work | Bulkhead | completed | 65 | 35 | 85 | 80 | 265 | — |
+| 28 | **260** | GH-183 — active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | Bulkhead | completed | 65 | 50 | 75 | 70 | 260 | — |
 | 29 | **255** | [GH-10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) — prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | — | Completed | 55 | 70 | 50 | 80 | 255 | — |
 | 30 | **255** | [GH-144](https://github.com/HiQS-Suite/XYZ-forge/issues/144) — Agent2Agent 3+ participant onboarding + read-only status quick wins | — | Completed | 55 | 30 | 80 | 90 | 255 | — |
-| 31 | **255** | [GH-91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) — a build turn has nowhere to write verification output — containment kills a complete, green turn | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
+| 31 | **255** | [GH-91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) — a build turn has nowhere to write verification output | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
 | 32 | **250** | [GH-153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) — RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | Completed | 70 | 55 | 80 | 45 | 250 | — |
 | 33 | **250** | [GH-197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) — two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | Completed | 80 | 55 | 65 | 50 | 250 | — |
 | 34 | **245** | [GH-108](https://github.com/HiQS-Suite/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 35 | **230** | [GH-105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) — vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on) | Cargo | queue | 75 | 50 | 60 | 45 | 230 | — |
-| 36 | **220** | [GH-32](https://github.com/HiQS-Suite/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Ad-hoc detours | 70 | 50 | 65 | 35 | 220 | — |
-| 37 | **210** | [GH-5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Bulkhead | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
+| 36 | **220** | [GH-32](https://github.com/HiQS-Suite/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Queue / parked intake | 70 | 50 | 65 | 35 | 220 | — |
+| 37 | **210** | [GH-5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | — | In progress | 45 | 40 | 45 | 80 | 210 | — |
 | 38 | **195** | [GH-35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
-| 39 | **190** | [GH-61](https://github.com/HiQS-Suite/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Ad-hoc detours | 45 | 55 | 40 | 50 | 190 | — |
-| 40 | **185** | [GH-17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Ad-hoc detours | 45 | 30 | 50 | 60 | 185 | — |
+| 39 | **190** | [GH-61](https://github.com/HiQS-Suite/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
+| 40 | **185** | [GH-17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
 | 41 | **185** | [GH-42](https://github.com/HiQS-Suite/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Completed | 50 | 35 | 55 | 45 | 185 | — |
 | 42 | **170** | GH-195 — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
-| 43 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Ad-hoc detours | 40 | 35 | 40 | 55 | 170 | — |
-| 44 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Ad-hoc detours | 35 | 25 | 45 | 55 | 160 | — |
+| 43 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
+| 44 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
 
 **Top of the line:** GH-67 — Commandcode builder default widened to `--yolo` — closer evaluation → possible build (score 340, operator override).
 

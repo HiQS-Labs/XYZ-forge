@@ -1,8 +1,8 @@
 ---
 title: "GH-114: headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7)"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: stop headless builder turns from dying idle on TTY allocation — no /dev/tty dependency headless, and idle-kill attribution that names the real blocker
 gh_issue: 114
@@ -66,3 +66,14 @@ process blocks instead of failing fast.
   "lanes":         { "agy_safe": [ "test/gh114-headless-tty.sh" ], "orchestrator_only": [ "relay-automation/" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- A TUI layer that wants /dev/tty does not fail fast headless — it BLOCKS at ~0 CPU until the
+  idle watchdog kills it, which misreads as a network stall. Provision the pty (or force the
+  no-TTY path) at invocation time rather than diagnosing the hang after the fact.
+- Attribution beats retries: an idle-kill log that names the blocker (TTY vs network vs lock)
+  turns a 900s mystery into a one-line diagnosis; capture the child's last stderr and open fds
+  at watchdog fire.
+- The Bash lib and the Python lane must land the same behavior together — a fix in one lane
+  with a frozen twin is a fix that vanishes on the fallback path.
