@@ -78,35 +78,39 @@ SCRIPT
 require_fixture_file "$PATCH" "patch script"
 
 # 1. Missing --sandbox-root refuses with exit code 2 and named requirement
-OUT_1="$(python3 "$HEALER" --mode heal --repro "$REPRO" --target-file "$TARGET" --regression-cmd "bash $TARGET --help" 2>&1 || true)"
-if grep -q "sandbox-root is required for heal mode" <<< "$OUT_1"; then
-  pass "Missing --sandbox-root refuses with named requirement"
+RC_1=0
+OUT_1="$(python3 "$HEALER" --mode heal --repro "$REPRO" --target-file "$TARGET" --regression-cmd "bash $TARGET --help" 2>&1)" || RC_1=$?
+if [ "$RC_1" -eq 2 ] && grep -q "sandbox-root is required for heal mode" <<< "$OUT_1"; then
+  pass "Missing --sandbox-root refuses with exit code 2"
 else
-  fail "Missing --sandbox-root did not refuse as expected: $OUT_1"
+  fail "Missing --sandbox-root did not refuse as expected (rc=$RC_1, out=$OUT_1)"
 fi
 
 # 2. --sandbox-root equal to invoking checkout refuses with exit code 2
-OUT_2="$(python3 "$HEALER" --mode heal --sandbox-root "$REPO" --repro "$REPRO" --target-file "$TARGET" --regression-cmd "bash $TARGET --help" 2>&1 || true)"
-if grep -q "cannot be the invoking repository checkout" <<< "$OUT_2"; then
-  pass "--sandbox-root matching invoking checkout refuses immediately"
+RC_2=0
+OUT_2="$(python3 "$HEALER" --mode heal --sandbox-root "$REPO" --repro "$REPRO" --target-file "$TARGET" --regression-cmd "bash $TARGET --help" 2>&1)" || RC_2=$?
+if [ "$RC_2" -eq 2 ] && grep -q "cannot be the invoking repository checkout" <<< "$OUT_2"; then
+  pass "--sandbox-root matching invoking checkout refuses immediately with exit code 2"
 else
-  fail "--sandbox-root matching checkout did not refuse as expected: $OUT_2"
+  fail "--sandbox-root matching checkout did not refuse as expected (rc=$RC_2, out=$OUT_2)"
 fi
 
 # 3. Missing --regression-cmd refuses with exit code 2
-OUT_3="$(python3 "$HEALER" --mode heal --sandbox-root "$SANDBOX" --repro "$REPRO" --target-file "$TARGET" 2>&1 || true)"
-if grep -q "regression-cmd is required for heal mode" <<< "$OUT_3"; then
-  pass "Missing --regression-cmd refuses with mandatory gate requirement"
+RC_3=0
+OUT_3="$(python3 "$HEALER" --mode heal --sandbox-root "$SANDBOX" --repro "$REPRO" --target-file "$TARGET" 2>&1)" || RC_3=$?
+if [ "$RC_3" -eq 2 ] && grep -q "regression-cmd is required for heal mode" <<< "$OUT_3"; then
+  pass "Missing --regression-cmd refuses with exit code 2"
 else
-  fail "Missing --regression-cmd did not refuse as expected: $OUT_3"
+  fail "Missing --regression-cmd did not refuse as expected (rc=$RC_3, out=$OUT_3)"
 fi
 
 # 4. Target file outside sandbox root refuses (GH-567 containment)
-OUT_4="$(python3 "$HEALER" --mode heal --sandbox-root "$SANDBOX" --repro "$REPRO" --target-file "$REPO/validate.sh" --regression-cmd "bash $TARGET --help" 2>&1 || true)"
-if grep -q "not contained within --sandbox-root" <<< "$OUT_4"; then
-  pass "Target file outside sandbox-root is rejected (GH-567 containment)"
+RC_4=0
+OUT_4="$(python3 "$HEALER" --mode heal --sandbox-root "$SANDBOX" --repro "$REPRO" --target-file "$REPO/validate.sh" --regression-cmd "bash $TARGET --help" 2>&1)" || RC_4=$?
+if [ "$RC_4" -eq 2 ] && grep -q "not contained within --sandbox-root" <<< "$OUT_4"; then
+  pass "Target file outside sandbox-root is rejected with exit code 2 (GH-567 containment)"
 else
-  fail "Target outside sandbox was not rejected: $OUT_4"
+  fail "Target outside sandbox was not rejected (rc=$RC_4, out=$OUT_4)"
 fi
 
 # 5. Successful heal in fixture sandbox with valid patch and regression gate
