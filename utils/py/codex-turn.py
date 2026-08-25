@@ -134,6 +134,22 @@ def main():
     # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.
     rc = rtl.enforce(t, me, codex_log, "codex")
 
+    try:
+        from harness_turn_logger import HarnessTurnLogger
+        with HarnessTurnLogger(
+            harness_id="codex",
+            shim="codex-turn.py",
+            task_scope=t,
+            model_id=os.environ.get("CODEX_MODEL", "openai/gpt-5-codex"),
+            gateway=os.environ.get("CODEX_GATEWAY", "openai"),
+            reasoning_effort=os.environ.get("CODEX_REASONING_EFFORT", "high"),
+            cli_flags=flags,
+            repo_root=xyz_root,
+        ) as logger:
+            logger.exit_code = bounded_rc or rc
+    except Exception:
+        pass
+
     if bounded_rc == 7:
         sys.exit(7)
     if bounded_rc != 0:

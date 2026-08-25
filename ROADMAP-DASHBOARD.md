@@ -40,10 +40,12 @@ Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 47 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 47 · 🔮 0 · 🔲 0
+Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-228 · Org rename HiQS-Suite → HiQS-Labs: a hardcoded regex silently drops issue URLs from the roadmap shadow | ✅ | [GH-228-ROADMAP-ORG-RENAME-REGEX.md](PROJECT/3-COMPLETED/GH-228-ROADMAP-ORG-RENAME-REGEX.md) · [#228](https://github.com/HiQS-Labs/XYZ-forge/issues/228) |
+| GH-226 · xyz-vendor.sh transcript gate refuses repos that gitignore transcripts | ✅ | [GH-226-VENDOR-TRANSCRIPT-GATE.md](PROJECT/3-COMPLETED/GH-226-VENDOR-TRANSCRIPT-GATE.md) · [#226](https://github.com/HiQS-Labs/XYZ-forge/issues/226) |
 | GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | ✅ | [GH-114-HEADLESS-TTY-IDLE-HANG.md](PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md) · [#114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) |
 | GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6) | ✅ | [GH-113-HEADLESS-SCRATCH-CONTAINMENT.md](PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md) · [#113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) |
 | GH-91 · a build turn has nowhere to write verification output | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) |
