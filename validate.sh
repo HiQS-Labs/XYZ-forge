@@ -252,6 +252,7 @@ TESTS=(
   "gh174-harness-registry.sh"           # #174 (Harness & Models SQLite Registry with Per-Device Config, Reasoning Levels, Grading Hooks & Blog Gen)
   "gh180-repro-timeout-crash.sh"        # #180 (repro_builder ingests null-exit timeout telemetry without crashing; no fabricated timeout repros)
   "gh181-repro-adapter-fidelity.sh"     # #181 (telemetry->reproducer fidelity: spaced-path tokenization, signature matching, live-record E2E)
+  "gh182-healer-facade-safety.sh"       # #182 (self_healer fail-fast sandbox requirements, mandatory regression gate, restore on exit)
   "gh183-explorer-env-soundness.sh"     # #183 (explorer env mutations from a declared base over a clean env; ambient runner vars cannot satisfy them)
   "gh184-no-tracked-scratch.sh"
   "gh202-wave-reconcile-issue-state.sh"  # #202 (reconciler tolerates items-held exit 5; OPEN-issue docs stay active with merge evidence)         # #184 (derived guard: nothing under the disposable .relay-scratch/ lane is ever tracked)

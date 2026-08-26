@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -93,3 +93,27 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+- **Summary**: Implemented GH-182 self_healer CLI safety requirements and fail-fast sandboxing.
+- **Files touched**:
+  - `utils/py/self_healer.py`:
+    - Heal mode CLI requires `--sandbox-root` that exists, is not the invoking checkout repo root, and contains `--target-file` under resolved realpath containment; refuses with exit code 2 and explicit error messages.
+    - Deleted the no-op placeholder generator (`default_generator`) from CLI heal mode; supports `--generator-cmd` for external fix generation or returns clean `no_patch_generated` on missing generator.
+    - Made `--regression-cmd` mandatory for heal mode, failing fast if missing.
+    - Raised default gate timeout to 900s (`--gate-timeout` flag configurable).
+    - Hardened `run_self_healing_cycle` target restoration using `try ... finally` so target file is reliably restored to original content on ANY exit, gate failure, or mid-attempt exception/crash unless fully healed.
+    - Emits markdown issue-rollup artifact for `compile_issue.py` on escalation (`issue_body.md`), and writes `winning_diff.patch` file when healed.
+  - `test/gh182-healer-facade-safety.sh`:
+    - Added comprehensive hermetic test suite covering all 10 safety and lifecycle assertions (missing/invalid sandbox-root refusals, checkout collision refusal, mandatory regression cmd, successful heal in fixture sandbox with winning diff, escalation issue rollup emission, and target restoration after mid-attempt crash / exception).
+  - `validate.sh`:
+    - Registered `gh182-healer-facade-safety.sh` in the `TESTS` array.
+- **Verification**:
+  - `bash test/gh182-healer-facade-safety.sh` -> 10 pass, 0 fail.
+  - `bash test/gh155-phase4-self-healer.sh` -> 5 pass, 0 fail.
+  - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
+  - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
+
