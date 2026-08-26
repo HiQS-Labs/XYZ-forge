@@ -198,13 +198,15 @@ def external_repositories_root(store: Path) -> Path:
 TELEMETRY_SCHEMA_VERSION = 1
 TELEMETRY_PILOT_WINDOW = ("2026-08-24", "2026-09-08")  # default-ON pilot (EXPERIMENTS.md)
 TELEMETRY_EVENT_FIELDS = {
-    "discussion_started": {"schema", "agents", "timed_watch", "store", "created_at", "subject_sha256"},
+    "discussion_started": {"schema", "agents", "timed_watch", "store", "created_at", "subject_sha256", "supersedes"},
     "turn_written": {"turn", "agent", "next_agent", "message_bytes", "line_count",
                      "citation_count", "unique_citation_count",
                      "contains_falsifier_section", "contains_dissent_section"},
     "close_written": {"close_type", "decision_bytes", "dissent_present",
-                      "falsifier_count", "recommended_actions_count", "turn_count"},
+                      "falsifier_count", "recommended_actions_count", "turn_count", "superseded_by"},
     "extension_added": {"extension_number", "question_bytes", "done_condition_bytes"},
+    "roster_widened": {"old_agents", "new_agents", "agent_added", "reason_bytes"},
+    "citations_verified": {"total", "verified", "unresolvable", "files_total", "commits_total"},
     "watch_transition": {"agent", "transition", "rearm_count"},
     "outcome_recorded": {"result", "note_bytes", "agents_json"},
 }
@@ -272,8 +274,18 @@ def index_connect(store: Optional[Path]):
         "CREATE TABLE IF NOT EXISTS discussions ("
         " id TEXT PRIMARY KEY, subject_sha256 TEXT, agents INTEGER, opened_at TEXT,"
         " closed_at TEXT, close_type TEXT, turn_count INTEGER,"
-        " outcome TEXT, outcome_note TEXT, outcome_agents TEXT)"
+        " outcome TEXT, outcome_note TEXT, outcome_agents TEXT,"
+        " supersedes TEXT, superseded_by TEXT)"
     )
+    cur = conn.cursor()
+    try:
+        cols = [r[1] for r in cur.execute("PRAGMA table_info(discussions)").fetchall()]
+        if "supersedes" not in cols:
+            cur.execute("ALTER TABLE discussions ADD COLUMN supersedes TEXT")
+        if "superseded_by" not in cols:
+            cur.execute("ALTER TABLE discussions ADD COLUMN superseded_by TEXT")
+    except Exception:
+        pass
     conn.execute("CREATE TABLE IF NOT EXISTS outcomes_log ("
                  " id TEXT, result TEXT, note TEXT, agents TEXT, recorded_at TEXT)")
     return conn, db_path
@@ -580,9 +592,10 @@ def allocation_lock(store: Path) -> object:
 
 def render_initial(
     discussion_id: str, subject: str, agents: int, timestamp: str, timed_watch: bool,
-    context_packet: str,
+    context_packet: str, supersedes: Optional[str] = None,
 ) -> str:
     roster = " ".join(agent_id(number) for number in range(1, agents + 1))
+    supersedes_hdr = f"SUPERSEDES: {supersedes}\n" if supersedes else ""
     return f"""# XYZ AgentChorus #{discussion_id}
 
 AGENT2AGENT-ID: {discussion_id}
@@ -590,7 +603,7 @@ SUBJECT: {subject}
 AGENTS: {roster}
 NEXT: agent2
 STATUS: Open
-TURN: 1
+{supersedes_hdr}TURN: 1
 TIMED-WATCH: {"enabled" if timed_watch else "disabled"}
 EXTENSIONS: 0
 CREATED: {timestamp}
@@ -675,6 +688,12 @@ def sync_metadata(path: Path, content: str) -> None:
             "extensions": int(optional_field(content, "EXTENSIONS", "0")),
             "updated": field(content, "UPDATED"),
         })
+        superseded_by = optional_field(content, "SUPERSEDED-BY")
+        if superseded_by:
+            metadata["superseded_by"] = superseded_by
+        supersedes = optional_field(content, "SUPERSEDES")
+        if supersedes:
+            metadata["supersedes"] = supersedes
         atomic_write(metadata_path, json.dumps(metadata, indent=2, sort_keys=True) + "\n")
     except (Agent2AgentError, OSError, UnicodeError, ValueError, TypeError, json.JSONDecodeError) as exc:
         print(f"agent-chorus: warning: conversation advanced but metadata sync failed: {exc}", file=sys.stderr)
@@ -682,10 +701,20 @@ def sync_metadata(path: Path, content: str) -> None:
 
 def create_discussion(
     root: Path, subject: str, agents: int, explicit_id: Optional[str], timed_watch: bool,
-    context_packet: str, store: Path,
+    context_packet: str, store: Path, supersedes: Optional[str] = None,
 ) -> Tuple[str, Path]:
     if agents < 2:
         raise Agent2AgentError("--agents must be at least 2")
+    old_path = None  # type: Optional[Path]
+    old_content = None  # type: Optional[str]
+    if supersedes is not None:
+        if not ID_RE.fullmatch(supersedes):
+            raise Agent2AgentError("--supersedes must be exactly six digits")
+        old_path = resolve_discussion(root, supersedes, store)
+        old_content = read_discussion(old_path)
+        existing_sup = optional_field(old_content, "SUPERSEDED-BY")
+        if existing_sup:
+            raise Agent2AgentError(f"AgentChorus discussion #{supersedes} is already superseded by #{existing_sup}")
     normalized = normalize_subject(subject)
     timestamp = utc_now()
     namespace, identity = repository_identity(root)
@@ -716,13 +745,42 @@ def create_discussion(
             break
         if not discussion_id or session_dir is None:
             raise Agent2AgentError("could not allocate an unused six-digit discussion ID")
+
+        # If superseding, close old discussion atomically first
+        if supersedes is not None and old_path is not None and old_content is not None:
+            with DiscussionLock(old_path):
+                old_cur = read_discussion(old_path)
+                existing_sup = optional_field(old_cur, "SUPERSEDED-BY")
+                if existing_sup:
+                    raise Agent2AgentError(f"AgentChorus discussion #{supersedes} is already superseded by #{existing_sup}")
+                old_turn = int(field(old_cur, "TURN")) + 1
+                old_updated = replace_field(old_cur, "STATUS", "Closed")
+                old_updated = replace_field(old_updated, "NEXT", "none")
+                old_updated = replace_field(old_updated, "TURN", str(old_turn))
+                old_updated = replace_field(old_updated, "UPDATED", timestamp)
+                old_updated = upsert_field(old_updated, "SUPERSEDED-BY", discussion_id, "STATUS")
+                old_updated = old_updated.rstrip() + f"\n\n### Turn {old_turn} — agent1 — {timestamp}\n\nDiscussion superseded by #{discussion_id}.\n"
+                atomic_write(old_path, old_updated)
+                sync_metadata(old_path, old_updated)
+                # Invalidate doorbells on old discussion
+                old_runtime = old_path.parent / "runtime"
+                if old_runtime.is_dir():
+                    for watch_file in old_runtime.glob("*.watch"):
+                        try:
+                            atomic_write(watch_file, f"pid={os.getpid()} terminal=superseded superseded_by={discussion_id} closed_at={timestamp}\n")
+                        except OSError:
+                            pass
+                emit_telemetry(old_path, "close_written", close_type="superseded", superseded_by=discussion_id, turn_count=old_turn)
+                index_upsert(store, supersedes, closed_at=timestamp, close_type="superseded", superseded_by=discussion_id, turn_count=old_turn)
+
         runtime = session_dir / "runtime"
         private_mkdir(runtime)
         path = session_dir / "conversation.md"
         descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(render_initial(
-                discussion_id, normalized, agents, timestamp, timed_watch, context_packet
+                discussion_id, normalized, agents, timestamp, timed_watch, context_packet,
+                supersedes=supersedes,
             ))
             handle.flush()
             os.fsync(handle.fileno())
@@ -740,6 +798,8 @@ def create_discussion(
             "extensions": 0,
             "updated": timestamp,
         }
+        if supersedes:
+            metadata["supersedes"] = supersedes
         metadata_path = session_dir / "metadata.json"
         descriptor = os.open(metadata_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
@@ -756,9 +816,10 @@ def create_discussion(
         path, "discussion_started", agents=agents, timed_watch=timed_watch,
         store=str(store), created_at=timestamp,
         subject_sha256=hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16],
+        supersedes=supersedes,
     )
     index_upsert(store, discussion_id, subject_sha256=hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16],
-                 agents=agents, opened_at=timestamp)
+                 agents=agents, opened_at=timestamp, supersedes=supersedes)
     return discussion_id, path
 
 
@@ -1097,6 +1158,12 @@ def report_discussion_status(root: Path, discussion_id: str, stale_after: float)
     print(f"Relay file: {path}")
     print(f"Subject: {field(content, 'SUBJECT')}")
     print(f"STATUS: {field(content, 'STATUS')}")
+    superseded_by = optional_field(content, "SUPERSEDED-BY")
+    if superseded_by:
+        print(f"SUPERSEDED-BY: {superseded_by}")
+    supersedes = optional_field(content, "SUPERSEDES")
+    if supersedes:
+        print(f"SUPERSEDES: {supersedes}")
     print(f"TURN: {field(content, 'TURN')}")
     print(f"NEXT: {field(content, 'NEXT')}")
     print(f"EXTENSIONS: {optional_field(content, 'EXTENSIONS', '0')}")
@@ -1119,6 +1186,9 @@ def ping_discussion(root: Path, discussion_id: str, number: int) -> Path:
     content = read_discussion(path)
     member = validate_member(content, number)
     if field(content, "STATUS").lower() == "closed":
+        superseded_by = optional_field(content, "SUPERSEDED-BY")
+        if superseded_by:
+            raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed (superseded by #{superseded_by})")
         raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed")
     touch_watch_sidecar(path, number)
     print(f"HEARTBEAT: refreshed {member}")
@@ -1136,6 +1206,10 @@ def watch_discussion(
         root, discussion_id, number, interval, timeout, announce=True,
         heartbeat=lambda p: touch_watch_sidecar(p, number),
     )
+    content = read_discussion(path)
+    superseded_by = optional_field(content, "SUPERSEDED-BY")
+    if superseded_by:
+        print(f"SUPERSEDED-BY: {superseded_by}")
     print(f"DECISION: {decision}")
     # GH-510 doorbell: re-arming after a turn is protocol, not discipline — hand the waking
     # session the exact relaunch command at the moment it needs it. Printed ONLY on take-turn:
@@ -1390,6 +1464,9 @@ def append_turn(
         roster = parse_roster(content)
         status = field(content, "STATUS")
         if status.lower() == "closed":
+            superseded_by = optional_field(content, "SUPERSEDED-BY")
+            if superseded_by:
+                raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed (superseded by #{superseded_by})")
             raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed")
         current = field(content, "NEXT")
         if current != member:
@@ -1426,6 +1503,14 @@ def append_turn(
         updated = updated.rstrip() + f"\n\n### Turn {turn} — {member} — {timestamp}\n\n{message}\n"
         atomic_write(path, updated)
         sync_metadata(path, updated)
+        if close:
+            runtime = path.parent / "runtime"
+            if runtime.is_dir():
+                for watch_file in runtime.glob("*.watch"):
+                    try:
+                        atomic_write(watch_file, f"pid={os.getpid()} terminal=closed closed_at={timestamp}\n")
+                    except OSError:
+                        pass
     citations, unique_citations = _citation_counts(message)
     if telemetry_enabled():
         emit_telemetry(
@@ -1453,6 +1538,253 @@ def append_turn(
             emit_telemetry(path, "extension_added", extension_number=raw_ext,
                            question_bytes=len(message.encode("utf-8")), done_condition_bytes=0)
     return path, turn, next_member, field(updated, "SUBJECT")
+
+
+def invite_participant(
+    root: Path,
+    discussion_id: str,
+    new_number: int,
+    reason: Optional[str] = None,
+) -> Tuple[Path, str, str, int]:
+    path = resolve_discussion(root, discussion_id)
+    reason_text = (reason or "Operator widened discussion roster").strip()
+    with DiscussionLock(path):
+        content = read_discussion(path)
+        status = field(content, "STATUS")
+        if status.lower() == "closed":
+            superseded_by = optional_field(content, "SUPERSEDED-BY")
+            if superseded_by:
+                raise Agent2AgentError(
+                    f"AgentChorus discussion #{discussion_id} is closed (superseded by #{superseded_by})"
+                )
+            raise Agent2AgentError(f"AgentChorus discussion #{discussion_id} is closed")
+        roster = parse_roster(content)
+        new_member = agent_id(new_number)
+        if new_member in roster:
+            raise Agent2AgentError(
+                f"{new_member} is already in this discussion's roster ({' '.join(roster)})"
+            )
+        expected_next = len(roster) + 1
+        if new_number != expected_next:
+            raise Agent2AgentError(
+                f"invalid new agent number {new_number}: expected next sequential seat {expected_next}"
+            )
+        new_roster = list(roster) + [new_member]
+        timestamp = utc_now()
+        last_turn_text = field(content, "TURN")
+        try:
+            turn = int(last_turn_text) + 1
+        except ValueError as exc:
+            raise Agent2AgentError(f"discussion has invalid TURN: {last_turn_text}") from exc
+        updated = replace_field(content, "AGENTS", " ".join(new_roster))
+        updated = replace_field(updated, "TURN", str(turn))
+        updated = replace_field(updated, "UPDATED", timestamp)
+        message = (
+            "## Roster Widened — Operator Invite\n\n"
+            f"Added `{new_member}` to the discussion roster.\n\n"
+            f"Reason: {reason_text}\n\n"
+            f"Active roster is now: `{' '.join(new_roster)}`."
+        )
+        updated = updated.rstrip() + f"\n\n### Turn {turn} — operator — {timestamp}\n\n{message}\n"
+        atomic_write(path, updated)
+        sync_metadata(path, updated)
+    if telemetry_enabled():
+        emit_telemetry(
+            path, "roster_widened",
+            old_agents=len(roster), new_agents=len(new_roster),
+            agent_added=new_member, reason_bytes=len(reason_text.encode("utf-8")),
+        )
+        index_upsert(ACTIVE_STORE, discussion_id, agents=len(new_roster))
+    return path, field(updated, "SUBJECT"), new_member, turn
+
+
+def parse_turns(content: str) -> List[Tuple[int, str, str, str]]:
+    """Parse all turns in conversation.md, returning (turn_num, member, timestamp, body)."""
+    turns = []
+    turn_pattern = re.compile(r"(?m)^### Turn (\d+) — ([^—\n]+) — ([^\n]+)\n")
+    matches = list(turn_pattern.finditer(content))
+    for i, match in enumerate(matches):
+        turn_num = int(match.group(1))
+        member = match.group(2).strip()
+        ts = match.group(3).strip()
+        start = match.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
+        body = content[start:end].strip()
+        turns.append((turn_num, member, ts, body))
+    return turns
+
+
+def extract_citations(text: str) -> List[Dict[str, object]]:
+    """Extract file paths and git commit references from text."""
+    citations = []
+    seen = set()
+    # 1. Match markdown file links: [label](path/to/file#L1-L2) or [label](file:///path...)
+    md_link_re = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+    for match in md_link_re.finditer(text):
+        target = match.group(2).strip()
+        if target.startswith("file://"):
+            target = target[7:]
+        if target.startswith(("http://", "https://", "conversation://", "#")):
+            continue
+        line_num = None
+        if "#L" in target:
+            base, _, line_part = target.partition("#L")
+            target = base
+            m_line = re.match(r'^(\d+)', line_part)
+            if m_line:
+                line_num = int(m_line.group(1))
+        elif ":" in target:
+            base, _, line_part = target.partition(":")
+            if line_part.isdigit():
+                target = base
+                line_num = int(line_part)
+        key = ("file", target, line_num)
+        if key not in seen:
+            seen.add(key)
+            citations.append({"type": "file", "target": target, "line": line_num, "raw": match.group(0)})
+
+    # 2. Match standard relative paths: e.g. path/to/file.ext[:line]
+    path_re = re.compile(
+        r'(?:^|[\s`(\["\'])'
+        r'((?:[a-zA-Z0-9_.-]+/)+[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)'
+        r'(?::(?:L)?(\d+)(?:-(?:L)?\d+)?)?'
+        r'(?:$|[\s`)\]"\':,])'
+    )
+    for match in path_re.finditer(text):
+        target = match.group(1).strip()
+        if target.startswith(("http://", "https://", "file://")):
+            continue
+        line_num = int(match.group(2)) if match.group(2) else None
+        key = ("file", target, line_num)
+        if key not in seen:
+            seen.add(key)
+            citations.append({"type": "file", "target": target, "line": line_num, "raw": match.group(0).strip()})
+
+    # 3. Match commit SHAs (7 to 40 hex digits)
+    commit_re = re.compile(r'\b([0-9a-f]{7,40})\b')
+    for match in commit_re.finditer(text):
+        sha = match.group(1).lower()
+        key = ("commit", sha, None)
+        if key not in seen:
+            seen.add(key)
+            citations.append({"type": "commit", "target": sha, "line": None, "raw": sha})
+    return citations
+
+
+def verify_citations_for_discussion(root: Path, discussion_id: str) -> Dict[str, object]:
+    path = resolve_discussion(root, discussion_id)
+    content = read_discussion(path)
+    canonical_root = canonical_repository_root(root)
+    turns = parse_turns(content)
+
+    agent_reports = {}  # type: Dict[str, Dict[str, List[object]]]
+    total_citations = 0
+    total_verified = 0
+    total_unresolvable = 0
+    files_count = 0
+    commits_count = 0
+
+    for turn_num, member, ts, body in turns:
+        if member not in agent_reports:
+            agent_reports[member] = {
+                "verified": [],
+                "unresolvable": [],
+            }
+        citations = extract_citations(body)
+        for cite in citations:
+            c_type = cite["type"]
+            target = str(cite["target"])
+            if c_type == "file":
+                target_path = Path(target)
+                if not target_path.is_absolute():
+                    target_path = canonical_root / target_path
+                else:
+                    try:
+                        target_path = target_path.resolve()
+                    except OSError:
+                        pass
+
+                files_count += 1
+                total_citations += 1
+                if target_path.is_file():
+                    line = cite.get("line")
+                    if line is not None:
+                        try:
+                            lines = target_path.read_text(encoding="utf-8", errors="replace").splitlines()
+                            line_count = len(lines)
+                            if 1 <= int(line) <= line_count:
+                                total_verified += 1
+                                agent_reports[member]["verified"].append(f"{target}:{line}")
+                            else:
+                                total_unresolvable += 1
+                                agent_reports[member]["unresolvable"].append(
+                                    f"{target}:{line} (line {line} exceeds file line count {line_count})"
+                                )
+                        except OSError:
+                            total_verified += 1
+                            agent_reports[member]["verified"].append(f"{target}:{line}")
+                    else:
+                        total_verified += 1
+                        agent_reports[member]["verified"].append(target)
+                else:
+                    total_unresolvable += 1
+                    agent_reports[member]["unresolvable"].append(f"{target} (file not found)")
+            elif c_type == "commit":
+                obj_type = _git_value(canonical_root, "cat-file", "-t", target)
+                if obj_type == "commit":
+                    commits_count += 1
+                    total_citations += 1
+                    total_verified += 1
+                    agent_reports[member]["verified"].append(f"commit {target[:8]}")
+
+    status = "PASS" if total_unresolvable == 0 else "FAIL"
+    report = {
+        "discussion_id": discussion_id,
+        "repository_root": str(canonical_root),
+        "total_citations": total_citations,
+        "verified_count": total_verified,
+        "unresolvable_count": total_unresolvable,
+        "files_count": files_count,
+        "commits_count": commits_count,
+        "agents": agent_reports,
+        "status": status,
+    }
+    if telemetry_enabled():
+        emit_telemetry(
+            path, "citations_verified",
+            total=total_citations, verified=total_verified, unresolvable=total_unresolvable,
+            files_total=files_count, commits_total=commits_count,
+        )
+    return report
+
+
+def command_verify_citations(args: argparse.Namespace) -> int:
+    root = normalize_root(args.root)
+    report = verify_citations_for_discussion(root, args.id)
+    if args.format == "json":
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if report["status"] == "PASS" else 1
+
+    print(f"Citation Verification for XYZ AgentChorus #{args.id}")
+    print(f"Repository: {report['repository_root']}")
+    print(f"Total Citations: {report['total_citations']} (Files: {report['files_count']}, Commits: {report['commits_count']})")
+    print(f"Verified: {report['verified_count']} | Unresolvable: {report['unresolvable_count']}")
+    print()
+    agents = report["agents"]
+    for member, data in sorted(agents.items()):
+        verified = data["verified"]
+        unresolvable = data["unresolvable"]
+        print(f"  {member}:")
+        print(f"    Verified ({len(verified)}): {', '.join(str(x) for x in verified) if verified else 'none'}")
+        if unresolvable:
+            print(f"    Unresolvable ({len(unresolvable)}):")
+            for item in unresolvable:
+                print(f"      - {item}")
+        else:
+            print("    Unresolvable: 0")
+    print()
+    print(f"STATUS: {report['status']}")
+    return 0 if report["status"] == "PASS" else 1
 
 
 # ── Telemetry commands (Gen 2 Phase 1) ──────────────────────────────────────────
@@ -1614,7 +1946,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--timed-watch", action="store_true",
         help="include a 2-minute / 30-minute background-watch request in every invitation",
     )
+    start.add_argument("--supersedes", help="six-digit ID of previous discussion to supersede atomically")
     start.add_argument("--id", dest="explicit_id", help=argparse.SUPPRESS)
+
+    invite = commands.add_parser("invite", help="widen an active discussion roster with a new participant")
+    invite.add_argument("--id", required=True)
+    invite.add_argument("--agent", type=int, required=True, help="new participant number to invite, e.g. 3")
+    invite.add_argument("--reason", help="reason for adding the seat")
 
     configure = commands.add_parser(
         "configure-store", help="persist a private user-level default transcript store"
@@ -1717,6 +2055,12 @@ def build_parser() -> argparse.ArgumentParser:
     telemetry.add_argument("telemetry_action", choices=["status", "purge", "aggregate", "audit"])
     telemetry.add_argument("--id", help="discussion id (audit)")
 
+    verify_cit = commands.add_parser(
+        "verify-citations", help="lint and verify file and commit citations in a discussion",
+    )
+    verify_cit.add_argument("--id", required=True)
+    verify_cit.add_argument("--format", choices=["text", "json"], default="text")
+
     return parser
 
 
@@ -1741,13 +2085,22 @@ def main(argv: Optional[List[str]] = None) -> int:
         elif args.command == "start":
             discussion_id, path = create_discussion(
                 root, args.subject, args.agents, args.explicit_id, args.timed_watch, context_packet,
-                ACTIVE_STORE,
+                ACTIVE_STORE, supersedes=args.supersedes,
             )
             subject = normalize_subject(args.subject)
             print(f"Created XYZ AgentChorus #{discussion_id}")
             print(f"Relay file: {path}")
+            if args.supersedes:
+                print(f"SUPERSEDES: {args.supersedes}")
             for number in range(2, args.agents + 1):
                 print(invitation(discussion_id, number, subject, args.timed_watch))
+        elif args.command == "invite":
+            path, subject, new_member, turn = invite_participant(
+                root, args.id, args.agent, args.reason
+            )
+            print(f"Invited {new_member} to XYZ AgentChorus #{args.id} (turn {turn})")
+            print(f"Relay file: {path}")
+            print(invitation(args.id, args.agent, subject, timed_watch_enabled(read_discussion(path))))
         elif args.command == "status":
             report_discussion_status(root, args.id, stale_after)
         elif args.command == "join":
@@ -1762,6 +2115,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             print("CONTEXT: read the prepared packet in Turn 1 before responding")
             if timed_watch_enabled(read_discussion(path)):
                 print("TIMED-WATCH: check every 120 seconds for 1,800 seconds while waiting")
+            superseded_by = optional_field(read_discussion(path), "SUPERSEDED-BY")
+            if superseded_by:
+                print(f"SUPERSEDED-BY: {superseded_by}")
             report_peer_doorbells(path, read_discussion(path), args.agent, stale_after)
             print(f"DECISION: {decision}")
         elif args.command == "ping":
@@ -1814,6 +2170,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             return command_outcome(args)
         elif args.command == "telemetry":
             return command_telemetry(args)
+        elif args.command == "verify-citations":
+            return command_verify_citations(args)
         elif args.command == "drive":
             if args.max_turns < 1:
                 raise Agent2AgentError("--max-turns must be at least one")

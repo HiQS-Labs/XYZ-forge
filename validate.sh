@@ -371,6 +371,7 @@ TESTS=(
   "relay-dep-drift.sh"
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
