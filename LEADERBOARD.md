@@ -11,7 +11,7 @@ while the four axes keep their honest values underneath.
 | # | score | task | release | lane | pri | sev | appeal | effort | calc | ovr |
 |--:|------:|------|---------|------|----:|----:|-------:|-------:|-----:|----:|
 | 1 | **340** | [GH-67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) — Commandcode builder default widened to `--yolo` — closer evaluation → possible build | — | Queue / parked intake | 88 | 80 | 45 | 70 | 283 | 340 |
-| 2 | **325** | [GH-249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) — ubuntu canary: EUID=0 defeats chmod-based assertions | — | Queue / parked intake | 90 | 85 | 80 | 70 | 325 | — |
+| 2 | **325** | [GH-249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) — ubuntu canary: EUID=0 defeats chmod-based assertions | Linux-RC | queue | 90 | 85 | 80 | 70 | 325 | — |
 | 3 | **315** | [GH-181](https://github.com/HiQS-Labs/XYZ-forge/issues/181) — repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2) | Bulkhead | completed | 90 | 75 | 90 | 60 | 315 | — |
 | 4 | **308** | [GH-204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) — BSD `sed -i ''` no-ops on Linux at production call sites | Linux-RC | in progress | 88 | 85 | 70 | 65 | 308 | — |
 | 5 | **305** | [GH-202](https://github.com/HiQS-Labs/XYZ-forge/issues/202) — wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | Bulkhead | completed | 85 | 65 | 85 | 70 | 305 | — |
