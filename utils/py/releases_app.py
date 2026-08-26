@@ -2982,6 +2982,66 @@ def cmd_roadmap_repoint(args):
         conn.close()
 
 
+def cmd_roadmap_update(args):
+    """GH-257: update an existing parked roadmap row's raw_text.
+
+    `roadmap add` refuses duplicates, `rate` scores an existing row, and `repoint` moves doc_path.
+    Nothing edited `raw_text` directly without manually editing releases.sql.
+    This command closes that gap with a validated, receipt-backed update path.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "roadmap_items"):
+            refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        if (args.issue_num is None) == (args.gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        if args.issue_num is not None:
+            where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
+        else:
+            where, param, label = "global_id = ?", args.gid, args.gid
+        row = conn.execute(
+            "SELECT global_id, gh_number, title, raw_text, rating_pri, complexity, risk, effort "
+            "FROM roadmap_items WHERE " + where, (param,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
+
+        new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
+        old_raw_text = row["raw_text"] or ""
+        if new_raw_text == old_raw_text.strip():
+            print("roadmap update: %s raw_text unchanged; nothing written" % label)
+            return
+
+        rating = parse_rating(new_raw_text, row["title"])
+        has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
+
+        if args.dry_run:
+            print("raw_text: %s -> %s" % (old_raw_text, new_raw_text))
+            if rating["rating_pri"] is not None:
+                print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+                if rating["rating_ovr"] is not None:
+                    print("ovr: %d" % rating["rating_ovr"])
+            return
+
+        def mutate(conn):
+            ts = now_iso()
+            if has_rating_cols and rating["rating_pri"] is not None:
+                conn.execute(
+                    "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
+                    % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
+                    [new_raw_text, ts] + [rating[c] for c in RATING_COLUMNS] + [param])
+            else:
+                conn.execute(
+                    "UPDATE roadmap_items SET raw_text = ?, updated_at = ? WHERE %s" % where,
+                    [new_raw_text, ts, param])
+
+        perform_write(root, conn, "roadmap-update", row["global_id"], mutate)
+        print("updated %s raw_text" % label)
+    finally:
+        conn.close()
+
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
     # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
@@ -3931,6 +3991,12 @@ def build_parser():
     sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
     sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
+    sp_ru = rsub.add_parser("update", help="update an existing roadmap row's raw_text (GH-257)")
+    sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
+    sp_ru.add_argument("--gid", help="the row's rmi- global id")
+    sp_ru.add_argument("--raw-text", required=True, help="new raw_text for the row")
+    sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
     sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
@@ -3959,7 +4025,7 @@ def main(argv=None):
         # form was already one subcommand past readable.
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
-                              "repoint": cmd_roadmap_repoint}[a.roadmap_cmd](a),
+                              "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update}[a.roadmap_cmd](a),
     }
     handlers[args.cmd](args)
 
