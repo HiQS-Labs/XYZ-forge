@@ -26,44 +26,49 @@ REPO="${1:-}"; shift || true
 
 grep -q "ROADMAP_SOURCE=releases" "$REPO/.pdda-mode" 2>/dev/null || exit 0
 
-touched_ledger=0
-touched_dashboard=0
 while [ "$#" -ge 2 ]; do
   local_sha="$1"; remote_sha="$2"; shift 2
   case "$remote_sha" in
     ''|0000000000000000000000000000000000000000) continue ;;   # new branch: no range to inspect
   esac
   git -C "$REPO" cat-file -e "${remote_sha}^{commit}" 2>/dev/null || continue
+
+  touched_ledger=0
+  touched_dashboard=0
   while IFS= read -r path; do
     case "$path" in
       releases.sql|releases.db) touched_ledger=1 ;;
       ROADMAP-DASHBOARD.md)     touched_dashboard=1 ;;
     esac
   done < <(git -C "$REPO" diff --no-renames --name-only "$remote_sha" "$local_sha" 2>/dev/null)
-done
 
-if [ "$touched_ledger" -eq 1 ] && [ "$touched_dashboard" -eq 0 ]; then
-  # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md produces drift or no diff.
-  # Run the diagnosis against a commit-pinned temporary projection of local_sha so uncommitted
-  # working-tree modifications do not skew the classification.
-  drift_detected=0
-  TMP_PROJ="$(mktemp -d "${TMPDIR:-/tmp}/dashboard-guard-proj.XXXXXX")"
-  if git -C "$REPO" archive "${local_sha:-HEAD}" | tar -x -C "$TMP_PROJ" 2>/dev/null \
-     && [ -f "$TMP_PROJ/utils/roadmap-dashboard.sh" ]; then
-    if ! bash "$TMP_PROJ/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
-      drift_detected=1
-    fi
-  elif [ -f "$REPO/utils/roadmap-dashboard.sh" ]; then
-    if ! bash "$REPO/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
-      drift_detected=1
-    fi
-  else
+  if [ "$touched_ledger" -eq 1 ] && [ "$touched_dashboard" -eq 0 ]; then
+    # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md produces drift or no diff.
+    # Run the diagnosis against a commit-pinned temporary projection of local_sha so uncommitted
+    # working-tree modifications do not skew the classification.
+    TMP_ROOT="${TMPDIR:-/tmp}"
+    TMP_PROJ="$(mktemp -d "$TMP_ROOT/dashboard-guard-proj.XXXXXX")"
+    [ -n "$TMP_PROJ" ] && [ -d "$TMP_PROJ" ] || { echo "dashboard-staleness-guard: failed to create temp projection" >&2; exit 1; }
+    case "$TMP_PROJ" in
+      "$TMP_ROOT"/*) ;;
+      *) echo "dashboard-staleness-guard: invalid temp projection path $TMP_PROJ" >&2; exit 1 ;;
+    esac
+    trap 'rm -rf "$TMP_PROJ"' EXIT INT TERM
+
     drift_detected=1
-  fi
-  rm -rf "$TMP_PROJ"
+    if git -C "$REPO" archive "$local_sha" 2>/dev/null | tar -x -C "$TMP_PROJ" 2>/dev/null \
+       && [ -f "$TMP_PROJ/utils/roadmap-dashboard.sh" ]; then
+      if bash "$TMP_PROJ/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
+        drift_detected=0
+      else
+        drift_detected=1
+      fi
+    fi
+    rm -rf "$TMP_PROJ"
+    trap - EXIT INT TERM
 
-  if [ "$drift_detected" -eq 1 ]; then
-    cat >&2 <<'EOF'
+    if [ "$drift_detected" -eq 1 ]; then
+      cat >&2 <<'EOF'
 dashboard-staleness-guard: REFUSING the push — this range writes the roadmap ledger
 (releases.sql / releases.db) without regenerating ROADMAP-DASHBOARD.md, so the human-readable
 view would ship stale against the data under it (GH-243 / GH-169 item 3).
@@ -73,8 +78,8 @@ Fix (one command, then commit the result into the same push):
 
 Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
 EOF
-  else
-    cat >&2 <<'EOF'
+    else
+      cat >&2 <<'EOF'
 dashboard-staleness-guard: REFUSING the push — this range writes the roadmap ledger
 (releases.sql / releases.db) without modifying ROADMAP-DASHBOARD.md, but regenerating the
 dashboard produces NO diff (GH-243 / GH-257).
@@ -89,7 +94,9 @@ then regenerate and commit:
 
 Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
 EOF
+    fi
+    exit 1
   fi
-  exit 1
-fi
+done
+
 exit 0

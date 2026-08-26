@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # test/gh257-roadmap-ledger-fixes.sh — regression suite for GH-257:
-# 1. validate --raw-text on roadmap add and update against renderer bold bullet shape
+# 1. validate --raw-text on roadmap add and update against renderer bold bullet shape (single line)
 # 2. emit warning on dropped unparseable rows in roadmap-dashboard.sh
 # 3. roadmap update subcommand for parked raw_text with auditable receipt and rating sync
 # 4. staleness guard diagnostic guidance when regeneration yields no diff
@@ -32,7 +32,9 @@ for bad_input in \
   "-   **GH-255 · repeated spaces** 🆕" \
   "-	**GH-255 · tab after dash** 🆕" \
   "- **GH-255 unclosed bold" \
-  "- **** empty title GH-255"
+  "- **** empty title GH-255" \
+  $'- **GH-255 · title**\n- [ ] #999 smuggled row' \
+  $'- **GH-255 · title**\r\nmalformed continuation'
 do
   rc=0
   out="$(app --root "$R" roadmap add --issue-num 255 --issue-url "https://github.com/org/repo/issues/255" \
@@ -76,7 +78,9 @@ for bad_input in \
   "-   **GH-255 · extra spaces**" \
   "-	**GH-255 · tab after dash**" \
   "- **GH-255 unclosed title" \
-  "- **** empty title GH-255"
+  "- **** empty title GH-255" \
+  $'- **GH-255 · title**\n- [ ] #999 bad line' \
+  $'- **GH-255 · title**\r\ncontinuation'
 do
   rc=0
   out="$(app --root "$R" roadmap update --issue-num 255 --raw-text "$bad_input" 2>&1)" || rc=$?
@@ -234,17 +238,34 @@ BAD_COMMIT="$(git rev-parse HEAD)"
 cd "$root"
 
 # 3. Staleness guard catches it and outputs no-diff diagnosis:
+# Add uncommitted modification in working tree to PROVE guard is isolated to commit projection
+echo "dirty working tree modification" >> "$R/ROADMAP-DASHBOARD.md"
+
 rc=0
 guard_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "guard should refuse bad commit, got $rc"
 case "$guard_out" in
   *"produces NO diff (GH-243 / GH-257)"*"releases roadmap update"*)
-    pass "end-to-end: staleness guard accurately diagnosed no-diff dropped row"
+    pass "end-to-end: staleness guard accurately diagnosed no-diff dropped row (even with dirty working tree)"
     ;;
   *) fail "expected no-diff diagnostic output from guard, got: $guard_out" ;;
 esac
 
-# 4. Remediation: use roadmap update to fix raw_text
+# Restore working tree
+git -C "$R" checkout ROADMAP-DASHBOARD.md
+
+# 4. Multi-ref push test: Ref 1 is clean, Ref 2 has the bad commit -> guard catches Ref 2
+rc=0
+guard_multi_out="$(bash "$GUARD" "$R" "$BASE_COMMIT" "$BASE_COMMIT" "$BAD_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "guard should refuse multi-ref push containing bad commit, got $rc"
+case "$guard_multi_out" in
+  *"produces NO diff (GH-243 / GH-257)"*)
+    pass "end-to-end: multi-ref push correctly evaluates per-ref and catches bad commit"
+    ;;
+  *) fail "expected no-diff refusal in multi-ref push, got: $guard_multi_out" ;;
+esac
+
+# 5. Remediation: use roadmap update to fix raw_text
 cd "$R"
 app --root "$R" roadmap update --issue-num 256 --raw-text "- **GH-256 · fixed title** 🆕 — [#256](https://github.com/org/repo/issues/256)"
 bash "$R/utils/roadmap-dashboard.sh"
@@ -256,7 +277,7 @@ git -c user.email=t@t -c user.name=t commit -q -m "remediated row #256 and regen
 REMEDIATED_COMMIT="$(git rev-parse HEAD)"
 cd "$root"
 
-# 5. Staleness guard now passes cleanly:
+# 6. Staleness guard now passes cleanly:
 bash "$GUARD" "$R" "$REMEDIATED_COMMIT" "$BASE_COMMIT"
 pass "end-to-end: staleness guard passes after roadmap update and dashboard regeneration"
 

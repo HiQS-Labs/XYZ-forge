@@ -2781,6 +2781,9 @@ def validate_raw_text(raw_text, issue_num=None):
     """
     if not isinstance(raw_text, str):
         refuse("invalid-raw-text", "raw_text must be a string")
+    if "\r" in raw_text or "\n" in raw_text:
+        refuse("invalid-raw-text",
+               "malformed --raw-text: raw_text must be a single line (no newlines permitted)")
     stripped = raw_text.strip()
     if not re.match(r'^- \*\*[^\r\n*]+?\*\*', stripped):
         refuse("invalid-raw-text",
