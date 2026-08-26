@@ -520,17 +520,22 @@ def main() -> int:
 
     if args.mode == "heal":
         # 1. Missing --repro or --target-file
-        if not args.repro or not args.target_file:
+        if not args.repro or not args.repro.strip() or not args.target_file or not args.target_file.strip():
             print("Error: --repro and --target-file are required for heal mode", file=sys.stderr)
             return 2
 
         # 2. Mandatory --regression-cmd (GH-182 Plan §2)
-        if not args.regression_cmd:
+        if not args.regression_cmd or not args.regression_cmd.strip():
+            print("Error: --regression-cmd is required for heal mode (mandatory regression gate per GH-182)", file=sys.stderr)
+            return 2
+
+        reg_cmd = shlex.split(args.regression_cmd)
+        if not reg_cmd:
             print("Error: --regression-cmd is required for heal mode (mandatory regression gate per GH-182)", file=sys.stderr)
             return 2
 
         # 3. Mandatory --sandbox-root (GH-182 Plan §1)
-        if not args.sandbox_root:
+        if not args.sandbox_root or not args.sandbox_root.strip():
             print("Error: --sandbox-root is required for heal mode (must be an existing disposable directory outside invoking checkout)", file=sys.stderr)
             return 2
 
@@ -564,19 +569,22 @@ def main() -> int:
             print(f"Error: --issue-rollup-out ({args.issue_rollup_out}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
             return 2
 
-        reg_cmd = shlex.split(args.regression_cmd) if args.regression_cmd else None
-
         # Build fix generator (placeholder deleted per GH-182 Plan §1)
-        if args.generator_cmd:
-            def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
-                cmd = shlex.split(args.generator_cmd) + [path, trace, str(attempt)]
-                try:
-                    res = subprocess.run(cmd, capture_output=True, text=True, timeout=args.gate_timeout)
-                    if res.returncode == 0:
-                        return res.stdout
+        if args.generator_cmd and args.generator_cmd.strip():
+            gen_cmd_parts = shlex.split(args.generator_cmd)
+            if not gen_cmd_parts:
+                def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
                     return None
-                except Exception:
-                    return None
+            else:
+                def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
+                    cmd = gen_cmd_parts + [path, trace, str(attempt)]
+                    try:
+                        res = subprocess.run(cmd, capture_output=True, text=True, timeout=args.gate_timeout)
+                        if res.returncode == 0:
+                            return res.stdout
+                        return None
+                    except Exception:
+                        return None
         else:
             def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
                 return None

@@ -112,6 +112,26 @@ else
   fail "missing --regression-cmd did not refuse as expected (rc=$rc, out=$out)"
 fi
 
+# ── 3b. Whitespace-only --regression-cmd refusal (GH-182) ───────────────────────────────────────
+SENTINEL_FLAG="$WORK/sentinel_should_not_run.txt"
+rm -f "$SENTINEL_FLAG"
+POISON_GEN="$WORK/poison_generator.sh"
+cat > "$POISON_GEN" <<EOF_PG
+#!/usr/bin/env bash
+touch "$SENTINEL_FLAG"
+echo "poison"
+EOF_PG
+chmod +x "$POISON_GEN"
+require_fixture_file "$POISON_GEN" "poison-gen"
+
+rc=0
+out="$(python3 "$HEALER" --mode heal --sandbox-root "$FIXTURE_SANDBOX" --target-file "$TARGET_SCRIPT" --repro "$REPRO_SCRIPT" --regression-cmd "   " --generator-cmd "bash $POISON_GEN" 2>&1)" || rc=$?
+if [ "$rc" -eq 2 ] && grep -q "\-\-regression-cmd is required" <<<"$out" && [ ! -f "$SENTINEL_FLAG" ]; then
+  pass "whitespace-only --regression-cmd refuses with exit 2 before generator or gate runs"
+else
+  fail "whitespace-only --regression-cmd did not refuse as expected (rc=$rc, out=$out)"
+fi
+
 # ── 4. Target file outside --sandbox-root refuses loudly (GH-182 Plan §1b) ───────────────────────
 OUTSIDE_TARGET="$WORK/outside_target.sh"
 cp "$TARGET_SCRIPT" "$OUTSIDE_TARGET"

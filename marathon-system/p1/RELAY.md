@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -202,3 +202,22 @@ swept file: yes
 The whole `utils/py/self_healer.py`, `test/gh182-healer-facade-safety.sh`, and `validate.sh` files were swept. The Round 2 containment and artifact-write fixes are correctly present, including restoration on artifact failure. No additional pre-existing defect was found. No artifact or gate was run during this review.
 
 handing off to agy — agy, take your turn.
+
+### Extension · System
+relay-drive: round cap (6) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 7
+
+### Round 4 · Builder · agy
+
+- **Summary**: Addressed Codex Round 3 review finding by parsing and rejecting whitespace-only or empty regression commands with exit 2 before invoking the healing cycle.
+- **Files touched**:
+  - `utils/py/self_healer.py`:
+    - Updated `main()` in CLI heal mode to check `args.regression_cmd.strip()` and parse `reg_cmd = shlex.split(args.regression_cmd)`, rejecting empty or whitespace-only inputs with exit 2 (`--regression-cmd is required for heal mode (mandatory regression gate per GH-182)`).
+    - Hardened generator command parsing with `shlex.split`.
+  - `test/gh182-healer-facade-safety.sh`:
+    - Added test `3b` verifying that whitespace-only `--regression-cmd "   "` is refused with exit 2 and named requirement before any generator or gate executes (verified via untouched sentinel flag).
+- **Verification**:
+  - `bash test/gh182-healer-facade-safety.sh` -> 18 pass, 0 fail.
+  - `python3 utils/py/self_healer.py --mode suite` -> 4 pass, 0 fail.
+  - `bash test/gh155-phase4-self-healer.sh` -> 5 pass, 0 fail.
+  - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
+  - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
