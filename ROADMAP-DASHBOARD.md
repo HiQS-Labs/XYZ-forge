@@ -24,6 +24,14 @@ Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-17 · SOP for evaluating new agent harnesses and frontier models | — | [GH-17-SOP-HARNESS-MODEL-EVAL.md](PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md) · [#17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) |
 | GH-18 · Harness evaluation: Command Code (cmd) and model matrix | — | [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
 
+## Queue
+
+Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+
+| Item | Status | Links |
+| --- | --- | --- |
+| GH-243 · GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | [GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md](PROJECT/1-INBOX/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md) · [#243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) |
+
 ## In progress
 
 Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0

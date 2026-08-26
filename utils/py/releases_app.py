@@ -2804,7 +2804,7 @@ def cmd_roadmap_add(args):
         def mutate(conn):
             _ensure_roadmap_schema(conn)
             ts = now_iso()
-            section = "Queue"
+            section = "Queue / parked intake"   # the canonical ledger queue heading (GH-243)
             max_pos = conn.execute("SELECT MAX(position) FROM roadmap_items WHERE section = ?", (section,)).fetchone()
             pos = (max_pos[0] or 0) + 1 if max_pos else 1
             
@@ -2952,7 +2952,8 @@ def cmd_roadmap_list(args):
                     rows.append({"global_id": r["global_id"], "gh_number": r["gh_number"],
                                  "title": r["title"], "section": r["section"],
                                  "position": r["position"], "status_marker": r["status_marker"],
-                                 "doc_path": _col(r, "doc_path"), "issue_url": _col(r, "issue_url")})
+                                 "doc_path": _col(r, "doc_path"), "issue_url": _col(r, "issue_url"),
+                                 "raw_text": _col(r, "raw_text")})
             print(json.dumps(rows, ensure_ascii=False))
             return
         if not _table_exists(conn, "roadmap_items"):

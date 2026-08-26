@@ -80,6 +80,19 @@ if [ "${XYZ_SKIP_PREPUSH:-0}" != "0" ]; then
   exit 0
 fi
 
+# GH-243: deterministic dashboard-staleness guard — a roadmap-ledger write (releases.sql/.db)
+# without a ROADMAP-DASHBOARD.md regeneration is refused before any suite spends a second.
+# Releases-mode scoping, the range walk, and the refusal text live in the guard script (testable
+# on its own); it only ever ADDS a refusal and never substitutes for the gate below.
+if [ -x "$REPO/githooks/dashboard-staleness-guard.sh" ] && [ "${#_real_ref_pairs[@]}" -gt 0 ]; then
+  _guard_args=()
+  for _pair in "${_real_ref_pairs[@]}"; do
+    IFS='|' read -r _gl _gr <<<"$_pair"
+    _guard_args+=("$_gl" "${_gr:-0000000000000000000000000000000000000000}")
+  done
+  bash "$REPO/githooks/dashboard-staleness-guard.sh" "$REPO" "${_guard_args[@]}" || exit 1
+fi
+
 # A docs-only commit is still checked, but by the deterministic documentation gate instead of the
 # full runtime suite. Reuse the CI classifier rather than growing a second definition of "docs".
 # These routes are intentionally narrow: a new branch, force push, unavailable remote base, missing
