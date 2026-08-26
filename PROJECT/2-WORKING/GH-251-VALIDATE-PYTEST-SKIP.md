@@ -1,17 +1,31 @@
 ---
-issue: 251
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/251
-title: "validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent"
+title: "GH-251: validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent"
+status: Active
 created: 2026-08-25
-type: bug
-status: 2-WORKING
-complexity: 1
-risk: 1
-effort: 1
-phases: 1
+updated: 2026-08-26
+owner: orchestrator (Claude Code)
+goal: an absent pytest reads as a named SKIP, never as a failure, so a green run claim can be read honestly
+gh_issue: 251
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/251
+branch: gh-251/validate-pytest-skip
+doc_type: bugfix
+effort: 2
+complexity: 2
+risk: 2
+release: 0.7.4 Linux-RC (dialed in 2026-08-26)
+non_goals:
+  - Changing test/test_python_layer.py itself
+  - Vendoring pytest into the repo
 ---
 
 # GH-251 · validate.sh miscounts an absent pytest as a failure
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| capture doc authored with a preflight contract; dialed into 0.7.4 | Operator fires the lane; builder adds the import probe, reviewer verifies a real pytest failure still lands in FAILED |
+
 
 ## Why
 

@@ -1,17 +1,31 @@
 ---
-issue: 249
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/249
-title: "CI: ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions in gh50-sandboxed-git-guard + security-scan"
+title: "GH-249: ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions"
+status: Active
 created: 2026-08-25
-type: bug
-status: 2-WORKING
+updated: 2026-08-26
+owner: orchestrator (Claude Code)
+goal: the ubuntu canary is green and therefore readable again — chmod-dependent assertions name a SKIP under root instead of failing, and the production guards stay capability-based
+gh_issue: 249
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/249
+branch: gh-249/canary-euid-root-assertions
+doc_type: bugfix
+effort: 2
 complexity: 2
 risk: 2
-effort: 2
-phases: 1
+release: 0.7.4 Linux-RC (dialed in 2026-08-26)
+non_goals:
+  - Changing utils/git-sandbox-guard.sh or relay-automation/hooks/security-scan.sh — both correct as written; two models graded a mode-bit change a Blocker
+  - Promoting the canary to a required gate — test/ci-workflow.sh:242 asserts it declares continue-on-error
 ---
 
 # GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| capture doc promoted to 2-WORKING with a preflight contract; dialed into 0.7.4 | Operator fires the lane; builder adds EUID=0 skips, reviewer verifies guards are byte-unchanged |
+
 
 ## Why
 

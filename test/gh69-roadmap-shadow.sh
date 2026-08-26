@@ -357,6 +357,26 @@ out="$(ra roadmap rate --dry-run --rated 10/20/30/40 2>&1)"; rc=$?
 ok "  passing NEITHER selector is refused by name" \
    "[ $rc -ne 0 ] && has \"\$out\" 'selector'"
 
+# repoint: `roadmap add` records doc_path once and nothing else rewrote it, so promoting a doc
+# 1-INBOX -> 2-WORKING left the row pointing at a vanished path with no supported way to fix it.
+ra roadmap add --issue-num 2600 --issue-url "https://x.invalid/2600" --title "repoint target" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2600** at [d](PROJECT/1-INBOX/d.md)' >/dev/null 2>&1
+mkdir -p "$R/PROJECT/2-WORKING" && : > "$R/PROJECT/2-WORKING/d.md"
+out="$(ra roadmap repoint --dry-run --issue-num 2600 --doc-path PROJECT/2-WORKING/d.md 2>&1)"
+ok "repoint --dry-run previews both the path and the rewritten line" \
+   "has \"\$out\" 'PROJECT/1-INBOX/d.md -> PROJECT/2-WORKING/d.md'"
+ok "  and --dry-run writes nothing" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT doc_path FROM roadmap_items WHERE gh_number=2600\")\" = 'PROJECT/1-INBOX/d.md' ]"
+ra roadmap repoint --issue-num 2600 --doc-path PROJECT/2-WORKING/d.md >/dev/null 2>&1
+ok "  repoint moves doc_path" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT doc_path FROM roadmap_items WHERE gh_number=2600\")\" = 'PROJECT/2-WORKING/d.md' ]"
+# The ledger line embeds the path too; rewriting one without the other just relocates the drift.
+ok "  and rewrites the embedded path in raw_text (no half-move)" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text NOT LIKE '%1-INBOX%' AND raw_text LIKE '%2-WORKING/d.md%' FROM roadmap_items WHERE gh_number=2600\")\" = '1' ]"
+out="$(ra roadmap repoint --issue-num 2600 --doc-path PROJECT/2-WORKING/nope.md 2>&1)"; rc=$?
+ok "  NEGATIVE CONTROL: re-pointing at a nonexistent doc is refused by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'no-such-doc'"
+
 ra check --rebuild >/dev/null 2>&1
 ok "  backfilled ratings survive a dump -> rebuild round trip" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '10' ]"

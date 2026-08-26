@@ -2919,6 +2919,42 @@ def cmd_roadmap_rate(args):
         conn.close()
 
 
+def cmd_roadmap_repoint(args):
+    """Re-point a parked row's capture doc after the doc moves between PROJECT stages.
+
+    `roadmap add` records doc_path once and refuses duplicates, and nothing else rewrites it — so
+    promoting a doc 1-INBOX -> 2-WORKING left the row pointing at a path that no longer exists, and
+    pdda-check-roadmap-coverage fails on it with no supported way to fix it.
+    """
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        row = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
+                           "WHERE gh_number = ?", (args.issue_num,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for GH-%d" % args.issue_num)
+        new = args.doc_path
+        if not os.path.isfile(os.path.join(root, new)):
+            refuse("no-such-doc", "%s does not exist under %s — re-point to a real doc, never a "
+                                  "path that merely looks right" % (new, root))
+        old = row["doc_path"]
+        # The ledger line embeds the path too; rewriting one without the other just moves the drift.
+        raw_text = row["raw_text"].replace(old, new) if old else row["raw_text"]
+        if args.dry_run:
+            print("doc_path: %s -> %s" % (old, new))
+            print("ROADMAP line: %s" % raw_text)
+            return
+
+        def mutate(conn):
+            conn.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? "
+                         "WHERE gh_number = ?", (new, raw_text, now_iso(), args.issue_num))
+
+        perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
+        print("repointed GH-%d -> %s" % (args.issue_num, new))
+    finally:
+        conn.close()
+
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
     # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
@@ -3863,6 +3899,11 @@ def build_parser():
                        help="replace an existing rating (refused by default)")
     sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
+    sp_rp = rsub.add_parser("repoint", help="re-point a parked row's capture doc after the doc moves")
+    sp_rp.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
+    sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
     sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
@@ -3890,7 +3931,8 @@ def main(argv=None):
         # A lookup, not a ternary chain: `rate` (GH-253) was the fourth branch, and the nested
         # form was already one subcommand past readable.
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
-                              "rate": cmd_roadmap_rate, "list": cmd_roadmap_list}[a.roadmap_cmd](a),
+                              "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
+                              "repoint": cmd_roadmap_repoint}[a.roadmap_cmd](a),
     }
     handlers[args.cmd](args)
 

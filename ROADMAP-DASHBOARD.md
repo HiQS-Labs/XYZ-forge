@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 15 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -24,7 +24,8 @@ Summary: 15 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-17 · SOP for evaluating new agent harnesses and frontier models | — | [GH-17-SOP-HARNESS-MODEL-EVAL.md](PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md) · [#17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) |
 | GH-18 · Harness evaluation: Command Code (cmd) and model matrix | — | [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
 | GH-246 · relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | [GH-246-RELAY-XYZ-QA-TEMPLATE.md](PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md) · [#246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) |
-| GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions | — | [GH-249-CANARY-EUID-ROOT-ASSERTIONS.md](PROJECT/1-INBOX/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md) · [#249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) |
+| GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions | — | [GH-249-CANARY-EUID-ROOT-ASSERTIONS.md](PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md) · [#249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) |
+| GH-251 · validate.sh miscounts an absent pytest as FAILED | — | [GH-251-VALIDATE-PYTEST-SKIP.md](PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md) · [#251](https://github.com/HiQS-Labs/XYZ-forge/issues/251) |
 
 ## Queue
 
