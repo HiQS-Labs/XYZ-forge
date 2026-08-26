@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -137,3 +137,21 @@ Implemented the GH-197 two-tier vendoring architecture and onboarding SOP across
 
 6. **`test/gh197-vendor-tier-split.sh`** (new):
    - Added comprehensive suite covering all 10 acceptance criteria: Tier 1 default, Tier 2 `--with-releases`, sticky auto-detection, GH-312 root isolation pin, onboarding happy path, gitignore carve-out, shared-tracking-URL collision detection, and re-vendor adoption preservation.
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+Reviewed the complete contents of all six scoped artifacts, including the pre-existing code. No additional pre-existing defects were found outside the findings below. No tests were run, per the phase containment instruction.
+
+1. **Critical — a collision leaves a target permanently half-onboarded.** `xyz-releases-onboard.sh` creates/imports `releases.db` at lines 87–93 and mutates `.gitignore`/`RELEASES.md` at lines 95–129 before collision detection at lines 145–218. The collision branch tells the operator to fix the duplicate and retry, but the next invocation immediately refuses because `releases.db` now exists (lines 64–67). Detect collisions before any target mutation, or make the partial state recoverable and provide a supported resume path. The collision test must pin that recovery/atomicity contract.
+
+2. **High — Tier 1 still ships a Tier-2-only onboarding script, violating “zero overlay files.”** The unconditional full copy of `relay-automation/` (`xyz-vendor.sh:342,351–356`) retains `xyz-releases-onboard.sh`, although that script is a releases-overlay feature and cannot operate in Tier 1 because `releases_app.py` is deliberately removed. Add it to the Tier-1 deny-list (or otherwise relocate/package it solely with Tier 2), document the resulting manifest, and assert its absence in both vendor tests.
+
+3. **High — the GH-312 test does not pin “writes nothing under `.xyz/`.”** `test/gh197-vendor-tier-split.sh:88–92` checks only `releases.db` and `releases.sql`. A future release command could emit any other runtime file under `.xyz/` and this test would remain green. Snapshot `.xyz/` immediately after vendoring and compare it after init/import/check, allowing no additions or changes to vendor contents.
+
+4. **Medium — the “idempotent” gitignore assertion tests an inline reimplementation, not onboarding.** `test/gh197-vendor-tier-split.sh:160–167` manually executes the same grep/append logic after onboarding, so it cannot catch a regression in `xyz-releases-onboard.sh`. Use a fresh first-time target whose `.gitignore` already contains `!releases.db`, run onboarding, and assert it remains exactly once; preserve the one-time precondition rather than attempting to rerun against the already-created DB.
+
+5. **Medium — ignored ledgers can remain untrackable when `.gitignore` is absent.** The effective-ignore check is gated by `[ -f "$GITIGNORE" ]` (`xyz-releases-onboard.sh:98–104`), so a `*.db` rule in `.git/info/exclude` or the global excludes file is missed when the target lacks a root `.gitignore`. Query `git check-ignore` independently of the file’s existence, create `.gitignore` only when the carve-out is required, and cover that fixture.
+
+**Verdict:** Changes requested
