@@ -132,6 +132,7 @@ python3 utils/py/releases_app.py check          # trio consistency, receipt chai
 python3 utils/py/releases_app.py next           # the next unshipped release, by target date
 python3 utils/py/releases_app.py add|ship ...   # RELEASE writes — never hand-edit releases.sql
 python3 utils/py/releases_app.py roadmap add ... # GH-238: park one issue as a roadmap row (the intake write path)
+                                                #   GH-249: put `rated N/N/N/N [ovr N]` in --raw-text to score it
 python3 utils/py/releases_app.py roadmap list   # read the roadmap rows (--json for machine consumers)
 python3 utils/py/releases_app.py roadmap sync   # LEGACY-mode only (mirrors ROADMAP.md); a guarded no-op in this repo
 ```

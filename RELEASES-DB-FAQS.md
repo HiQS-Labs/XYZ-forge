@@ -476,7 +476,7 @@ schema change is worth stopping the world for.
 
 ## Q: What are the pri/sev/appeal/effort scores? (GH-108)
 
-Four axes, 1–100 each, authored on a `ROADMAP.md` entry line as `rated 70/40/55/60` with an optional
+Four axes, 1–100 each, authored on the ledger entry line as `rated 70/40/55/60` with an optional
 ` ovr 350`. **Higher is better on every axis**, effort included — it scores *cheapness*, not cost, so
 all four combine without sign-flipping and a 90/90/90/90 item reads as what it is: a screaming quick
 win.
@@ -488,6 +488,23 @@ to the front of the line, while the four axes keep their honest values underneat
 
 A malformed `rated` or `ovr` token is REFUSED by name — never read as "unrated". Silently dropping a
 mistyped score would look exactly like the operator never scored the task.
+
+**Where that line lives depends on the repo's `ROADMAP_SOURCE` (GH-169/GH-249).** In a legacy repo
+the line is a `ROADMAP.md` entry and `releases roadmap sync` parses it. In a **releases-mode** repo
+— `ROADMAP_SOURCE=releases`, which XYZ-forge itself is — `ROADMAP.md` is frozen and `sync` is a
+no-op, so the line is the `--raw-text` handed to `releases roadmap add`:
+
+```bash
+$R roadmap add --issue-num 249 --issue-url URL --title T --created YYYY-MM-DD \
+  --doc-path PROJECT/1-INBOX/GH-249-….md \
+  --raw-text '- **GH-249 · title** 🆕 **captured …** (rated 90/85/80/70) — […](…) · [#249](URL)'
+```
+
+Both paths run the SAME `parse_rating()` — one grammar, one parser. Add `--dry-run` to see the
+parsed scores before writing. A rated line meeting a ledger with no rating columns is refused as
+`schema-behind`: run `releases migrate` first, because intake stores scores and never installs
+schema. Between the GH-169 flip and GH-249 this path dropped ratings silently, so rows parked in
+that window are unrated and must be re-scored by hand.
 
 Read the ranking with `bash utils/leaderboard.sh` (writes `LEADERBOARD.md`) or open
 `LEADERBOARD.html`. Both consume `export_timeline.py --json` and sort on the `effectiveScore` the

@@ -249,6 +249,52 @@ ok "  and survive a dump -> rebuild round trip" \
 ok "  and check is clean afterwards" "ra check >/dev/null 2>&1"
 rm -f "$R/releases.db.bak"
 
+# --- GH-249: `roadmap add` stores the rating -----------------------------------------------------
+# The regression this pins: GH-169 made `roadmap sync` a no-op in releases-mode repos, and sync was
+# parse_rating()'s ONLY caller. Intake therefore wrote every row unrated while the grammar, the
+# columns and the leaderboard all still worked — a silent drop, indistinguishable from "never
+# scored". These cases pin the score onto the intake path itself.
+RA_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2490"
+RA_LINE='- **GH-2490 - rated intake** (rated 90/85/80/70) - [d](PROJECT/1-INBOX/d.md) · [#2490]('"$RA_URL"')'
+out="$(ra roadmap add --dry-run --issue-num 2490 --issue-url "$RA_URL" --title "rated intake" \
+        --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text "$RA_LINE" 2>&1)"
+ok "GH-249: --dry-run reports the parsed rating before any write" \
+   "has \"\$out\" 'rating: 90/85/80/70'"
+ok "  and --dry-run writes nothing" \
+   "[ -z \"\$(sqlite3 '$R/releases.db' 'SELECT 1 FROM roadmap_items WHERE gh_number=2490')\" ]"
+
+ra roadmap add --issue-num 2490 --issue-url "$RA_URL" --title "rated intake" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text "$RA_LINE" >/dev/null 2>&1
+ok "  a rated line handed to \`roadmap add\` STORES the four axes (GH-169 dropped them silently)" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2490\")\" = '90/85/80/70' ]"
+ok "  and leaves ovr NULL when the line carries no override" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr IS NULL FROM roadmap_items WHERE gh_number=2490')\" = '1' ]"
+
+RB_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2491"
+ra roadmap add --issue-num 2491 --issue-url "$RB_URL" --title "ovr intake" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md \
+   --raw-text '- **GH-2491** (rated 90/85/80/70 ovr 350) x' >/dev/null 2>&1
+ok "  an \`ovr\` override on the intake line is stored too" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr FROM roadmap_items WHERE gh_number=2491')\" = '350' ]"
+
+# NEGATIVE CONTROL: the assertions above are falsifiable only if an UNRATED line really stores NULL.
+RC_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2492"
+ra roadmap add --issue-num 2492 --issue-url "$RC_URL" --title "unrated intake" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2492** no score here' >/dev/null 2>&1
+ok "  NEGATIVE CONTROL: an unrated intake line still stores NULL (the pass above is earned)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri IS NULL FROM roadmap_items WHERE gh_number=2492')\" = '1' ]"
+
+# A mistyped score must be refused BY NAME, never read as unrated — same contract sync already has.
+out="$(ra roadmap add --dry-run --issue-num 2493 --issue-url 'https://x.invalid/2493' --title 'bad' \
+        --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2493** (rated 90/85/80) x' 2>&1)"; rc=$?
+ok "  a malformed \`rated\` token on intake is REFUSED by name, not read as unrated" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'rating-shape'"
+
+ra check --rebuild >/dev/null 2>&1
+ok "  intake-stored ratings survive a dump -> rebuild round trip" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2490\")\" = '90/85/80/70' ]"
+rm -f "$R/releases.db.bak"
+
 echo
 echo "  gh69-roadmap-shadow: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

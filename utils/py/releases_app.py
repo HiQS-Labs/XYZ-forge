@@ -2784,8 +2784,18 @@ def cmd_roadmap_add(args):
             args.issue_num, args.title, args.created, basename, args.doc_path,
             args.issue_num, args.issue_url
         )
+        # GH-249: the rating rides in the ledger line, parsed by the SAME parse_rating() the
+        # markdown sync uses — one grammar, one parser, never a second scorer. Before this, ratings
+        # could only enter through `roadmap sync`, which GH-169 turned into a no-op in releases-mode
+        # repos, so every row parked after the flip was silently unrated.
+        rating = parse_rating(raw_text, args.title)
+
         if args.dry_run:
             print("ROADMAP line: %s" % raw_text)
+            if rating["rating_pri"] is not None:
+                print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+                if rating["rating_ovr"] is not None:
+                    print("ovr: %d" % rating["rating_ovr"])
             return
 
         # Dup guard — only when the shadow table exists; a pre-migration ledger gets the schema
@@ -2812,11 +2822,25 @@ def cmd_roadmap_add(args):
             if not repo:
                 refuse("no-repo", "the DB has no repos row; run `releases init` first")
             
-            conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section, position,
-                            status_marker, doc_path, issue_url, raw_text, first_seen, updated_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                         (gid, repo["id"], args.issue_num, args.title, section, pos,
-                          "🆕", args.doc_path, args.issue_url, raw_text, ts, ts))
+            # Mirrors cmd_roadmap_sync: feature commands never self-migrate. A rated line meeting
+            # a ledger with no rating columns is refused BY NAME rather than written with its
+            # scores silently dropped — an unrated row is indistinguishable from "never scored".
+            rating_ok = _has_column(conn, "roadmap_items", "rating_pri")
+            if not rating_ok and rating["rating_pri"] is not None:
+                refuse("schema-behind",
+                       "GH-%d carries `rated` scores but this ledger has no rating columns. Run "
+                       "`releases migrate` first — intake stores scores, it never installs schema."
+                       % args.issue_num)
+
+            cols = ["global_id", "repo_id", "gh_number", "title", "section", "position",
+                    "status_marker", "doc_path", "issue_url", "raw_text", "first_seen", "updated_at"]
+            vals = [gid, repo["id"], args.issue_num, args.title, section, pos,
+                    "🆕", args.doc_path, args.issue_url, raw_text, ts, ts]
+            if rating_ok:
+                cols += list(RATING_COLUMNS)
+                vals += [rating[c] for c in RATING_COLUMNS]
+            conn.execute("INSERT INTO roadmap_items(%s) VALUES (%s)"
+                         % (", ".join(cols), ", ".join("?" * len(cols))), vals)
                           
         perform_write(root, conn, "roadmap-add", gid, mutate)
         print("added roadmap entry %s for GH-%d" % (gid, args.issue_num))
@@ -3747,7 +3771,10 @@ def build_parser():
     sp_ra.add_argument("--doc-path", required=True, help="Capture doc relpath")
     sp_ra.add_argument("--raw-text", default=None,
                        help="pre-rendered ROADMAP line (hq park passes hq_roadmap_line output so "
-                            "preview and stored row share one template)")
+                            "preview and stored row share one template). GH-249: a `rated "
+                            "N/N/N/N [ovr N]` token in this line is parsed and stored — in a "
+                            "releases-mode repo this is the ONLY way to score an entry, since "
+                            "`roadmap sync` is a no-op there")
     sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
