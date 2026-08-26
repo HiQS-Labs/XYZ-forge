@@ -34,9 +34,11 @@ relay_repo=$(find "$ROOT/relay-automation" -name '*.sh' 2>/dev/null | wc -l | tr
 relay_van=$(find "$REPO/.xyz/relay-automation" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 test_repo=$(find "$ROOT/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 test_van=$(find "$REPO/.xyz/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
-{ [ "$relay_van" = "$relay_repo" ] && [ "$test_van" = "$test_repo" ] && [ "$relay_van" -gt 0 ]; } \
-  && pass "full mirror matches harness ($relay_van relay-automation + $test_van test *.sh)" \
-  || fail "vendor mirror incomplete: relay-automation $relay_van/$relay_repo, test $test_van/$test_repo"
+# Under GH-197 Tier 1 excludes xyz-releases-onboard.sh from relay-automation/
+expected_relay_sh=$((relay_repo - 1))
+{ [ "$relay_van" = "$expected_relay_sh" ] && [ "$test_van" = "$test_repo" ] && [ "$relay_van" -gt 0 ]; } \
+  && pass "full mirror matches harness ($relay_van relay-automation + $test_van test *.sh, excluding 1 overlay script)" \
+  || fail "vendor mirror incomplete: relay-automation $relay_van/$expected_relay_sh, test $test_van/$test_repo"
 src_repo=$(find "$ROOT/src" -name '*.js' | wc -l | tr -d ' ')
 src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
@@ -53,6 +55,7 @@ expected_utils_sh=$((utils_repo - 2))
   && pass "vendored marathon-plan.sh parses" || fail "vendored marathon-plan.sh missing or parse-fail"
 [ -f "$REPO/.xyz/utils/py/rtl.py" ] && pass "utils/py/rtl.py vendored in Tier 1" || fail "utils/py/rtl.py missing in Tier 1"
 [ -f "$REPO/.xyz/utils/py/marathon_plan.py" ] && pass "utils/py/marathon_plan.py vendored in Tier 1" || fail "utils/py/marathon_plan.py missing in Tier 1"
+[ ! -e "$REPO/.xyz/relay-automation/xyz-releases-onboard.sh" ] && pass "Tier 1: xyz-releases-onboard.sh excluded" || fail "Tier 1: xyz-releases-onboard.sh unexpectedly present"
 [ ! -e "$REPO/.xyz/utils/py/releases_app.py" ] && pass "Tier 1: releases_app.py excluded" || fail "Tier 1: releases_app.py unexpectedly present"
 [ ! -e "$REPO/.xyz/utils/py/releases_cycle.py" ] && pass "Tier 1: releases_cycle.py excluded" || fail "Tier 1: releases_cycle.py unexpectedly present"
 [ ! -e "$REPO/.xyz/utils/releases-merge-resolve.sh" ] && pass "Tier 1: releases-merge-resolve.sh excluded" || fail "Tier 1: releases-merge-resolve.sh unexpectedly present"

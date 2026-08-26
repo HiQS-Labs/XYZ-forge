@@ -126,6 +126,7 @@ Heartbeat cadence:
   - `utils/releases-merge-resolve.sh`
   - `utils/release-lanes.sh`
   - `utils/timeline/` (`export_timeline.py`, `RELEASES.html`, `README.md`)
+  - `relay-automation/xyz-releases-onboard.sh`
   - `RELEASES-DB-FAQS.md` (staged into `.xyz/`)
 
 ### Tier 2 onboarding SOP (`xyz-releases-onboard.sh`)

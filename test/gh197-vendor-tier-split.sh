@@ -35,6 +35,7 @@ mkdir -p "$WORK/tier1"; git init -q "$WORK/tier1"; T1_REPO="$(cd "$WORK/tier1" &
 [ -f "$T1_REPO/.xyz/utils/py/rtl.py" ] && pass "Tier 1: utils/py/rtl.py present" || fail "Tier 1: utils/py/rtl.py missing"
 
 # Assert zero overlay files land in Tier 1
+[ ! -e "$T1_REPO/.xyz/relay-automation/xyz-releases-onboard.sh" ] && pass "Tier 1: xyz-releases-onboard.sh excluded" || fail "Tier 1: xyz-releases-onboard.sh present"
 [ ! -e "$T1_REPO/.xyz/utils/py/releases_app.py" ] && pass "Tier 1: releases_app.py excluded" || fail "Tier 1: releases_app.py present"
 [ ! -e "$T1_REPO/.xyz/utils/py/releases_cycle.py" ] && pass "Tier 1: releases_cycle.py excluded" || fail "Tier 1: releases_cycle.py present"
 [ ! -e "$T1_REPO/.xyz/utils/releases-merge-resolve.sh" ] && pass "Tier 1: releases-merge-resolve.sh excluded" || fail "Tier 1: releases-merge-resolve.sh present"
@@ -47,6 +48,7 @@ grep -Fqx 'tier=1' "$T1_REPO/.xyz/VERSION" && pass "Tier 1: VERSION has tier=1" 
 mkdir -p "$WORK/tier2"; git init -q "$WORK/tier2"; T2_REPO="$(cd "$WORK/tier2" && pwd -P)"
 "$VENDOR" "$T2_REPO" --with-releases >/dev/null 2>&1 || fail "Tier 2 vendor exited non-zero"
 
+[ -f "$T2_REPO/.xyz/relay-automation/xyz-releases-onboard.sh" ] && pass "Tier 2: xyz-releases-onboard.sh present" || fail "Tier 2: xyz-releases-onboard.sh missing"
 [ -f "$T2_REPO/.xyz/utils/py/releases_app.py" ] && pass "Tier 2: releases_app.py present" || fail "Tier 2: releases_app.py missing"
 [ -f "$T2_REPO/.xyz/utils/py/releases_cycle.py" ] && pass "Tier 2: releases_cycle.py present" || fail "Tier 2: releases_cycle.py missing"
 [ -f "$T2_REPO/.xyz/utils/releases-merge-resolve.sh" ] && pass "Tier 2: releases-merge-resolve.sh present" || fail "Tier 2: releases-merge-resolve.sh missing"
@@ -64,6 +66,7 @@ out="$("$VENDOR" "$STICKY_REPO" 2>&1)"; rc=$?
 grep -Fq "releases.db detected at target root" <<< "$out" \
   && pass "Sticky Tier 2: emitted auto-detect notification on stdout" \
   || fail "Sticky Tier 2: missing stdout notification"
+[ -f "$STICKY_REPO/.xyz/relay-automation/xyz-releases-onboard.sh" ] && pass "Sticky Tier 2: landed xyz-releases-onboard.sh" || fail "Sticky Tier 2: missing xyz-releases-onboard.sh"
 [ -f "$STICKY_REPO/.xyz/utils/py/releases_app.py" ] && pass "Sticky Tier 2: landed releases_app.py without --with-releases flag" || fail "Sticky Tier 2: missing overlay"
 [ -f "$STICKY_REPO/.xyz/RELEASES-DB-FAQS.md" ] && pass "Sticky Tier 2: landed RELEASES-DB-FAQS.md" || fail "Sticky Tier 2: missing FAQ doc"
 grep -Fqx 'tier=2' "$STICKY_REPO/.xyz/VERSION" && pass "Sticky Tier 2: VERSION has tier=2" || fail "Sticky Tier 2: VERSION missing tier=2"
@@ -71,6 +74,10 @@ grep -Fqx 'tier=2' "$STICKY_REPO/.xyz/VERSION" && pass "Sticky Tier 2: VERSION h
 # --- 4. GH-312 pin: RELEASES overlay runtime state lives at target root, writing nothing under .xyz/ ---
 mkdir -p "$WORK/gh312_pin"; git init -q "$WORK/gh312_pin"; PIN_REPO="$(cd "$WORK/gh312_pin" && pwd -P)"
 "$VENDOR" "$PIN_REPO" --with-releases >/dev/null 2>&1
+
+# Snapshot .xyz/ tree structure and file checksums before releases operations
+( cd "$PIN_REPO/.xyz" && find . | sort ) > "$WORK/xyz_tree_before.txt"
+( cd "$PIN_REPO/.xyz" && find . -type f -exec cksum {} + | sort ) > "$WORK/xyz_cksum_before.txt"
 
 cat > "$PIN_REPO/RELEASES.md" <<'EOF'
 Release: 0.1.0
@@ -87,13 +94,22 @@ python3 "$PIN_REPO/.xyz/utils/py/releases_app.py" --root "$PIN_REPO" check >/dev
 
 [ -f "$PIN_REPO/releases.db" ] && pass "GH-312 pin: releases.db lives at target root" || fail "GH-312 pin: releases.db not at root"
 [ -f "$PIN_REPO/releases.sql" ] && pass "GH-312 pin: releases.sql lives at target root" || fail "GH-312 pin: releases.sql not at root"
-# Verify nothing new was created directly in .xyz/ as runtime output
-[ ! -e "$PIN_REPO/.xyz/releases.db" ] && pass "GH-312 pin: no releases.db under .xyz/" || fail "GH-312 pin: releases.db leaked into .xyz/"
-[ ! -e "$PIN_REPO/.xyz/releases.sql" ] && pass "GH-312 pin: no releases.sql under .xyz/" || fail "GH-312 pin: releases.sql leaked into .xyz/"
+
+# Snapshot .xyz/ tree structure and file checksums after releases operations
+( cd "$PIN_REPO/.xyz" && find . | sort ) > "$WORK/xyz_tree_after.txt"
+( cd "$PIN_REPO/.xyz" && find . -type f -exec cksum {} + | sort ) > "$WORK/xyz_cksum_after.txt"
+
+diff -u "$WORK/xyz_tree_before.txt" "$WORK/xyz_tree_after.txt" \
+  && pass "GH-312 pin: .xyz/ directory tree unchanged by releases operations (no additions/removals)" \
+  || fail "GH-312 pin: .xyz/ directory tree changed by releases operations"
+diff -u "$WORK/xyz_cksum_before.txt" "$WORK/xyz_cksum_after.txt" \
+  && pass "GH-312 pin: .xyz/ file contents byte-identical after releases operations" \
+  || fail "GH-312 pin: .xyz/ file contents mutated by releases operations"
 
 # --- 5. xyz-releases-onboard.sh happy path ---
 mkdir -p "$WORK/onboard_happy"; git init -q "$WORK/onboard_happy"; OB_REPO="$(cd "$WORK/onboard_happy" && pwd -P)"
 git -C "$OB_REPO" remote add origin "https://github.com/test-org/happy-repo.git"
+"$VENDOR" "$OB_REPO" >/dev/null 2>&1 || fail "Initial Tier 1 vendor of OB_REPO failed"
 
 cat > "$OB_REPO/RELEASES.md" <<'EOF'
 Release: 0.1.0
@@ -157,16 +173,48 @@ grep -Fqx '!releases.db' "$GI_REPO/.gitignore" \
 carve_count=$(grep -c '^\!releases\.db$' "$GI_REPO/.gitignore")
 [ "$carve_count" = 1 ] && pass "Gitignore carve-out: present exactly once" || fail "Gitignore carve-out: count is $carve_count (expected 1)"
 
-# Re-audit: ensure idempotent
-GITIGNORE="$GI_REPO/.gitignore"
-needs_carveout=1
-if ! grep -Fqx '!releases.db' "$GITIGNORE" 2>/dev/null; then
-  printf '!releases.db\n' >> "$GITIGNORE"
-fi
-carve_count2=$(grep -c '^\!releases\.db$' "$GI_REPO/.gitignore")
-[ "$carve_count2" = 1 ] && pass "Gitignore carve-out: idempotent (still 1 entry)" || fail "Gitignore carve-out: duplicate added ($carve_count2)"
+# 6b. Idempotent assertion: onboarding a repo that ALREADY has !releases.db in .gitignore preserves it exactly once
+mkdir -p "$WORK/pre_carved_repo"; git init -q "$WORK/pre_carved_repo"; PC_REPO="$(cd "$WORK/pre_carved_repo" && pwd -P)"
+git -C "$PC_REPO" remote add origin "https://github.com/test-org/pc-repo.git"
+printf '*.db\n!releases.db\nbuild/\n' > "$PC_REPO/.gitignore"
+cat > "$PC_REPO/RELEASES.md" <<'EOF'
+Release: 0.1.0
+Status: draft
+Codename: PreCarved
+Target Date: 2026-03-01
+Tracking Issue: #401
+Description: Pre-carved release.
+EOF
 
-# Negative case: repo without *.db ignore rule does NOT get !releases.db appended
+"$ONBOARD" "$PC_REPO" >/dev/null 2>&1 || fail "Pre-carved repo onboard failed"
+carve_count_pc=$(grep -c '^\!releases\.db$' "$PC_REPO/.gitignore" || echo 0)
+[ "$carve_count_pc" = 1 ] && pass "Gitignore carve-out: preserved exactly once when already present in .gitignore" || fail "Gitignore carve-out: duplicate added ($carve_count_pc)"
+
+# 6c. Missing .gitignore with .git/info/exclude rule creates .gitignore with carve-out
+mkdir -p "$WORK/exclude_repo"; git init -q "$WORK/exclude_repo"; EX_REPO="$(cd "$WORK/exclude_repo" && pwd -P)"
+git -C "$EX_REPO" remote add origin "https://github.com/test-org/ex-repo.git"
+mkdir -p "$EX_REPO/.git/info"
+printf '*.db\n' >> "$EX_REPO/.git/info/exclude"
+cat > "$EX_REPO/RELEASES.md" <<'EOF'
+Release: 0.1.0
+Status: draft
+Codename: Exclude
+Target Date: 2026-03-01
+Tracking Issue: #402
+Description: Exclude release.
+EOF
+
+[ ! -f "$EX_REPO/.gitignore" ] || fail "Exclude repo: .gitignore should not exist prior to onboard"
+"$ONBOARD" "$EX_REPO" >/dev/null 2>&1 || fail "Exclude repo onboard failed"
+[ -f "$EX_REPO/.gitignore" ] && pass "Gitignore carve-out: .gitignore created when rule lives in info/exclude" || fail "Gitignore carve-out: .gitignore was not created"
+grep -Fqx '!releases.db' "$EX_REPO/.gitignore" \
+  && pass "Gitignore carve-out: !releases.db added to newly-created .gitignore" \
+  || fail "Gitignore carve-out: !releases.db missing from newly-created .gitignore"
+! git -C "$EX_REPO" check-ignore -q releases.db \
+  && pass "Gitignore carve-out: releases.db is now trackable despite info/exclude rule" \
+  || fail "Gitignore carve-out: releases.db remains ignored"
+
+# 6d. Negative case: repo without *.db ignore rule does NOT get !releases.db appended
 mkdir -p "$WORK/no_gi_repo"; git init -q "$WORK/no_gi_repo"; NGI_REPO="$(cd "$WORK/no_gi_repo" && pwd -P)"
 git -C "$NGI_REPO" remote add origin "https://github.com/test-org/no-gi-repo.git"
 printf 'node_modules/\n' > "$NGI_REPO/.gitignore"
@@ -184,7 +232,7 @@ EOF
   && pass "Gitignore carve-out: NOT added when *.db rule is absent" \
   || fail "Gitignore carve-out: unexpectedly added without *.db rule"
 
-# --- 7. Shared-tracking-URL collision detection ---
+# --- 7. Shared-tracking-URL collision detection & recovery ---
 mkdir -p "$WORK/collide_repo"; git init -q "$WORK/collide_repo"; COL_REPO="$(cd "$WORK/collide_repo" && pwd -P)"
 git -C "$COL_REPO" remote add origin "https://github.com/test-org/col-repo.git"
 cat > "$COL_REPO/RELEASES.md" <<'EOF'
@@ -216,12 +264,48 @@ grep -Fq "https://github.com/test-org/col-repo/issues/555" <<< "$col_out" \
   && pass "Shared-tracking-URL collision: names colliding URL in report" \
   || fail "Shared-tracking-URL collision: colliding URL not named"
 
-# Ensure no issues auto-filed or unexpected mutations
-pass "Shared-tracking-URL collision: refused without auto-filing issues"
+# Ensure target repo was NOT mutated and left half-onboarded
+[ ! -e "$COL_REPO/releases.db" ] \
+  && pass "Shared-tracking-URL collision: releases.db was NOT created at root" \
+  || fail "Shared-tracking-URL collision: releases.db leaked to target root"
+[ ! -e "$COL_REPO/releases.sql" ] \
+  && pass "Shared-tracking-URL collision: releases.sql was NOT created at root" \
+  || fail "Shared-tracking-URL collision: releases.sql leaked to target root"
+! grep -q "<!-- This file is app-managed" "$COL_REPO/RELEASES.md" \
+  && pass "Shared-tracking-URL collision: RELEASES.md was NOT mutated" \
+  || fail "Shared-tracking-URL collision: RELEASES.md was mutated"
+
+# Verify recovery / retry path: fix the collision in RELEASES.md and re-run onboarding
+cat > "$COL_REPO/RELEASES.md" <<'EOF'
+Release: 0.1.0
+Status: shipped
+Codename: First
+Target Date: 2026-01-01
+Tracking Issue: #555
+Description: First release.
+
+Release: 0.2.0
+Status: draft
+Codename: Second
+Target Date: 2026-02-01
+Tracking Issue: #556
+Description: Second release with fixed tracking issue.
+EOF
+
+col_retry_out="$("$ONBOARD" "$COL_REPO" 2>&1)"; col_retry_rc=$?
+[ "$col_retry_rc" = 0 ] \
+  && pass "Shared-tracking-URL collision: recovery succeeds on retry after fixing duplicate" \
+  || fail "Shared-tracking-URL collision: retry failed after fixing duplicate ($col_retry_out)"
+[ -f "$COL_REPO/releases.db" ] \
+  && pass "Shared-tracking-URL collision: releases.db created on successful retry" \
+  || fail "Shared-tracking-URL collision: releases.db missing on retry"
 
 # --- 8. Re-vendor preserves adoption (sticky Tier 2 across update) ---
 # Use the onboarded happy repo (which has releases.db at root)
 "$SYNC" update "$OB_REPO" >/dev/null 2>&1 || fail "Re-vendor sync update failed"
+[ -f "$OB_REPO/.xyz/relay-automation/xyz-releases-onboard.sh" ] \
+  && pass "Re-vendor preserves adoption: xyz-releases-onboard.sh preserved" \
+  || fail "Re-vendor preserves adoption: xyz-releases-onboard.sh lost"
 [ -f "$OB_REPO/.xyz/utils/py/releases_app.py" ] \
   && pass "Re-vendor preserves adoption: Tier 2 overlay preserved after sync update" \
   || fail "Re-vendor preserves adoption: overlay lost after sync update"

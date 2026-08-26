@@ -172,8 +172,8 @@ so each gets its own lock, `.tick/`, and worktrees:
 | Install path / Tier | Ships | Relay capability | Releases ledger? | Lock |
 |---|---|---|---|---|
 | `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | ❌ no | shared (serializes) |
-| **Tier 1 (default)**: `xyz-vendor.sh <target-repo> [--no-register]` | full core harness (`relay-automation/`, `bin/`, `src/`, `test/`, `skills/`, `utils/` minus overlay) into gitignored `.xyz/` | ✅ per-repo | ❌ no overlay | **own** `.xyz/.relay-driver.lock` |
-| **Tier 2 (opt-in)**: `xyz-vendor.sh <target-repo> --with-releases` (or auto-detected via `releases.db` at root) | full core harness + RELEASES overlay (`releases_app.py`, `releases_cycle.py`, `releases-merge-resolve.sh`, `release-lanes.sh`, `utils/timeline/`, `RELEASES-DB-FAQS.md`) | ✅ per-repo | ✅ opt-in overlay | **own** `.xyz/.relay-driver.lock` |
+| **Tier 1 (default)**: `xyz-vendor.sh <target-repo> [--no-register]` | full core harness (`relay-automation/` minus `xyz-releases-onboard.sh`, `bin/`, `src/`, `test/`, `skills/`, `utils/` minus overlay) into gitignored `.xyz/` | ✅ per-repo | ❌ no overlay | **own** `.xyz/.relay-driver.lock` |
+| **Tier 2 (opt-in)**: `xyz-vendor.sh <target-repo> --with-releases` (or auto-detected via `releases.db` at root) | full core harness + RELEASES overlay (`releases_app.py`, `releases_cycle.py`, `releases-merge-resolve.sh`, `release-lanes.sh`, `utils/timeline/`, `xyz-releases-onboard.sh`, `RELEASES-DB-FAQS.md`) | ✅ per-repo | ✅ opt-in overlay | **own** `.xyz/.relay-driver.lock` |
 
 Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
 `.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,

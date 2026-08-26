@@ -335,12 +335,13 @@ register_vendor() {
 #
 # Vendoring tiers (GH-197):
 #   Tier 1 (default): core harness only. Full mirror minus the RELEASES_OVERLAY manifest
-#                     (releases_app.py, releases_cycle.py, releases-merge-resolve.sh, release-lanes.sh, timeline/).
+#                     (releases_app.py, releases_cycle.py, releases-merge-resolve.sh, release-lanes.sh, timeline/,
+#                      relay-automation/xyz-releases-onboard.sh).
 #                     Uses a deny-list mechanism to prevent the GH-77 curated-manifest drop failure.
 #   Tier 2 (opt-in):  --with-releases (or auto-detected when releases.db is present at target root).
 #                     Retains the full overlay and stages RELEASES-DB-FAQS.md into .xyz/.
 VENDOR_DIRS="relay-automation bin src utils test skills"
-RELEASES_OVERLAY="utils/py/releases_app.py utils/py/releases_cycle.py utils/releases-merge-resolve.sh utils/release-lanes.sh utils/timeline"
+RELEASES_OVERLAY="utils/py/releases_app.py utils/py/releases_cycle.py utils/releases-merge-resolve.sh utils/release-lanes.sh utils/timeline relay-automation/xyz-releases-onboard.sh"
 
 materialize_vendor() {
   local d

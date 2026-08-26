@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -155,3 +155,31 @@ Reviewed the complete contents of all six scoped artifacts, including the pre-ex
 5. **Medium — ignored ledgers can remain untrackable when `.gitignore` is absent.** The effective-ignore check is gated by `[ -f "$GITIGNORE" ]` (`xyz-releases-onboard.sh:98–104`), so a `*.db` rule in `.git/info/exclude` or the global excludes file is missed when the target lacks a root `.gitignore`. Query `git check-ignore` independently of the file’s existence, create `.gitignore` only when the carve-out is required, and cover that fixture.
 
 **Verdict:** Changes requested
+ 
+### Round 2 · Builder · agy
+
+Addressed all 5 review items from Round 1 across the scoped artifacts:
+
+1. **Collision Atomicity & Recovery (`xyz-releases-onboard.sh`, `test/gh197-vendor-tier-split.sh`)**:
+   - Staged all ledger creation, import, and tracking-reference reconciliation in an isolated temporary directory (`STAGE_DIR`) prior to any target repository mutations.
+   - Initialized `STAGE_DIR` with `git init` and propagated target repo slug to ensure correct writer lock acquisition.
+   - On collision detection, aborts with report without creating `releases.db` / `releases.sql` or mutating `.gitignore` / `RELEASES.md` at the target root.
+   - Added collision atomicity and retry recovery assertions to `test/gh197-vendor-tier-split.sh`.
+
+2. **Tier 1 Zero-Overlay Compliance (`xyz-vendor.sh`, `skills/relay-xyz/SKILL.md`, `relay-automation/README.md`, `test/xyz-vendor.sh`, `test/gh197-vendor-tier-split.sh`)**:
+   - Added `relay-automation/xyz-releases-onboard.sh` to `RELEASES_OVERLAY` manifest in `xyz-vendor.sh` so Tier 1 deny-list removal strips it.
+   - Updated documentation and manifest tables in `skills/relay-xyz/SKILL.md` and `relay-automation/README.md`.
+   - Updated `test/xyz-vendor.sh` and `test/gh197-vendor-tier-split.sh` to assert `xyz-releases-onboard.sh` is absent in Tier 1 and present in Tier 2 / sticky / sync update.
+
+3. **GH-312 Snapshot Pinning (`test/gh197-vendor-tier-split.sh`)**:
+   - Added strict directory tree (`find . | sort`) and POSIX checksum (`find . -type f -exec cksum {} + | sort`) snapshots before and after release ledger operations.
+   - Asserted that `.xyz/` remains byte-identical with zero additions, modifications, or file removals.
+
+4. **Gitignore Idempotency Pre-Carve Test (`test/gh197-vendor-tier-split.sh`)**:
+   - Replaced inline shell check with an end-to-end onboarding test on a fresh repository whose `.gitignore` already contains `!releases.db` and `*.db`.
+   - Asserted that `xyz-releases-onboard.sh` preserves the carve-out exactly once without duplicating.
+
+5. **Excludes Audit Without Root `.gitignore` (`xyz-releases-onboard.sh`, `test/gh197-vendor-tier-split.sh`)**:
+   - Decoupled `git check-ignore -q releases.db` from root `.gitignore` file existence in `xyz-releases-onboard.sh`.
+   - Creates `.gitignore` with `!releases.db` whenever ignore rules match (e.g. from `.git/info/exclude` or global config).
+   - Added a dedicated test fixture in `test/gh197-vendor-tier-split.sh` verifying that a repo with no `.gitignore` and `*.db` in `.git/info/exclude` creates `.gitignore` and unblocks `releases.db` tracking.

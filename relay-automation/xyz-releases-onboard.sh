@@ -84,51 +84,22 @@ for cand in \
 done
 [ -n "$RELEASES_APP" ] || die "releases_app.py not found in target repo or harness"
 
+STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/xyz-onboard.XXXXXX")"
+cleanup_stage() {
+  if [ -n "${STAGE_DIR:-}" ] && [ -d "$STAGE_DIR" ]; then
+    rm -rf "$STAGE_DIR"
+  fi
+}
+trap cleanup_stage EXIT INT TERM HUP
+git init -q "$STAGE_DIR"
+
 note "== Step 1: Initializing ledger and importing legacy RELEASES.md =="
-init_args=(--root "$TARGET_REPO")
-if [ -n "$SLUG" ]; then
-  init_args+=(--slug "$SLUG")
-fi
-python3 "$RELEASES_APP" init "${init_args[@]}" || die "releases init failed"
-python3 "$RELEASES_APP" --root "$TARGET_REPO" import "$TARGET_REPO/RELEASES.md" || die "releases import failed"
+EFFECTIVE_SLUG="${SLUG:-$(basename "$TARGET_REPO")}"
+init_args=(--slug "$EFFECTIVE_SLUG")
+python3 "$RELEASES_APP" --root "$STAGE_DIR" init "${init_args[@]}" || die "releases init failed"
+python3 "$RELEASES_APP" --root "$STAGE_DIR" import "$TARGET_REPO/RELEASES.md" || die "releases import failed"
 
-note "== Step 2: Auditing .gitignore for database carve-outs =="
-GITIGNORE="$TARGET_REPO/.gitignore"
-needs_carveout=0
-if [ -f "$GITIGNORE" ]; then
-  if git -C "$TARGET_REPO" check-ignore -q releases.db 2>/dev/null; then
-    needs_carveout=1
-  elif grep -qE '(\*\.db|releases\.db|\*\.sqlite)' "$GITIGNORE" 2>/dev/null; then
-    needs_carveout=1
-  fi
-fi
-
-if [ "$needs_carveout" -eq 1 ]; then
-  if ! grep -Fqx '!releases.db' "$GITIGNORE" 2>/dev/null; then
-    printf '\n# RELEASES ledger DB (app-managed; committed per-repo)\n!releases.db\n' >> "$GITIGNORE"
-    note "Appended !releases.db carve-out to .gitignore"
-  else
-    note "!releases.db carve-out already present in .gitignore"
-  fi
-else
-  note "No *.db ignore rule detected in .gitignore; carve-out not required"
-fi
-
-note "== Step 3: Prepending app-managed banner to RELEASES.md =="
-BANNER_TEXT="<!-- This file is app-managed (GH-32). Do not edit directly; use the releases CLI (utils/py/releases_app.py). -->"
-if ! grep -Fq "<!-- This file is app-managed" "$TARGET_REPO/RELEASES.md"; then
-  TMP_LEDGER="$TARGET_REPO/RELEASES.md.tmp.$$"
-  {
-    printf '%s\n\n' "$BANNER_TEXT"
-    cat "$TARGET_REPO/RELEASES.md"
-  } > "$TMP_LEDGER"
-  mv "$TMP_LEDGER" "$TARGET_REPO/RELEASES.md"
-  note "Prepended app-managed banner to RELEASES.md"
-else
-  note "App-managed banner already present in RELEASES.md"
-fi
-
-note "== Step 4: Reconciling MIG- tracking references =="
+note "== Step 2: Checking for tracking reference collisions =="
 GH_BASE=""
 ORIGIN_URL="$(git -C "$TARGET_REPO" config --get remote.origin.url 2>/dev/null || true)"
 if [ -n "$ORIGIN_URL" ]; then
@@ -142,9 +113,10 @@ if [ -z "$GH_BASE" ] && [ -n "$SLUG" ]; then
   esac
 fi
 
-DB_PATH="$TARGET_REPO/releases.db"
+DB_PATH="$STAGE_DIR/releases.db"
 MAP_ENTRIES="$(sqlite3 "$DB_PATH" "SELECT supplied_value, source_value, release_gid FROM grandfather_entries WHERE rule='tracking-issue-missing' AND disposition IS NULL ORDER BY id;" 2>/dev/null || true)"
 
+MAP_ARGS=()
 if [ -n "$MAP_ENTRIES" ]; then
   RECON_RESULT="$(python3 - "$DB_PATH" "${GH_BASE:-}" <<'PYEOF'
 import sys, sqlite3, re
@@ -217,7 +189,6 @@ PYEOF
     printf 'No issues have been filed. Fix duplicate tracking references before onboarding.\n' >&2
     exit 1
   elif [ "$STATUS_LINE" = "OK" ]; then
-    MAP_ARGS=()
     while IFS= read -r line; do
       if [[ "$line" =~ ^MAP:(.*)$ ]]; then
         MAP_ARGS+=(--map "${BASH_REMATCH[1]}")
@@ -225,15 +196,58 @@ PYEOF
         note "Note: unmapped placeholder: ${BASH_REMATCH[1]}"
       fi
     done <<< "$RECON_RESULT"
-
-    if [ "${#MAP_ARGS[@]}" -gt 0 ]; then
-      python3 "$RELEASES_APP" --root "$TARGET_REPO" reconcile "${MAP_ARGS[@]}" || die "reconcile failed"
-    fi
   fi
 fi
 
-note "== Step 5: Running releases check consistency verification =="
-python3 "$RELEASES_APP" --root "$TARGET_REPO" check || die "releases check failed"
+note "== Step 3: Reconciling tracking references in staged ledger =="
+if [ "${#MAP_ARGS[@]}" -gt 0 ]; then
+  python3 "$RELEASES_APP" --root "$STAGE_DIR" reconcile "${MAP_ARGS[@]}" || die "reconcile failed"
+fi
+python3 "$RELEASES_APP" --root "$STAGE_DIR" check || die "staged releases check failed"
+
+note "== Step 4: Auditing .gitignore for database carve-outs =="
+GITIGNORE="$TARGET_REPO/.gitignore"
+needs_carveout=0
+if git -C "$TARGET_REPO" check-ignore -q releases.db 2>/dev/null; then
+  needs_carveout=1
+elif [ -f "$GITIGNORE" ] && grep -qE '(\*\.db|releases\.db|\*\.sqlite)' "$GITIGNORE" 2>/dev/null; then
+  needs_carveout=1
+fi
+
+if [ "$needs_carveout" -eq 1 ]; then
+  if [ ! -f "$GITIGNORE" ] || ! grep -Fqx '!releases.db' "$GITIGNORE" 2>/dev/null; then
+    if [ -f "$GITIGNORE" ] && [ -s "$GITIGNORE" ]; then
+      printf '\n# RELEASES ledger DB (app-managed; committed per-repo)\n!releases.db\n' >> "$GITIGNORE"
+    else
+      printf '# RELEASES ledger DB (app-managed; committed per-repo)\n!releases.db\n' > "$GITIGNORE"
+    fi
+    note "Appended !releases.db carve-out to .gitignore"
+  else
+    note "!releases.db carve-out already present in .gitignore"
+  fi
+else
+  note "No *.db ignore rule detected in .gitignore; carve-out not required"
+fi
+
+note "== Step 5: Prepending app-managed banner to RELEASES.md =="
+BANNER_TEXT="<!-- This file is app-managed (GH-32). Do not edit directly; use the releases CLI (utils/py/releases_app.py). -->"
+if ! grep -Fq "<!-- This file is app-managed" "$TARGET_REPO/RELEASES.md"; then
+  TMP_LEDGER="$TARGET_REPO/RELEASES.md.tmp.$$"
+  {
+    printf '%s\n\n' "$BANNER_TEXT"
+    cat "$TARGET_REPO/RELEASES.md"
+  } > "$TMP_LEDGER"
+  mv "$TMP_LEDGER" "$TARGET_REPO/RELEASES.md"
+  note "Prepended app-managed banner to RELEASES.md"
+else
+  note "App-managed banner already present in RELEASES.md"
+fi
+
+note "== Step 6: Materializing ledger into repository =="
+cp -p "$STAGE_DIR/releases.db" "$TARGET_REPO/releases.db"
+cp -p "$STAGE_DIR/releases.sql" "$TARGET_REPO/releases.sql"
+
+python3 "$RELEASES_APP" --root "$TARGET_REPO" check || die "target releases check failed"
 
 note ""
 note "== Onboarding Complete =="
