@@ -59,7 +59,7 @@ while the four axes keep their honest values underneath.
 | 47 | **255** | [GH-91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) — a build turn has nowhere to write verification output | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
 | 48 | **250** | [GH-153](https://github.com/HiQS-Suite/XYZ-forge/issues/153) — RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | Completed | 70 | 55 | 80 | 45 | 250 | — |
 | 49 | **250** | [GH-197](https://github.com/HiQS-Suite/XYZ-forge/issues/197) — two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | Completed | 80 | 55 | 65 | 50 | 250 | — |
-| 50 | **250** | [GH-232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) — wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | Linux-RC | in progress | 70 | 55 | 65 | 60 | 250 | — |
+| 50 | **250** | [GH-232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) — wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | Linux-RC | completed | 70 | 55 | 65 | 60 | 250 | — |
 | 51 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Queue | 70 | 55 | 65 | 60 | 250 | — |
 | 52 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Queue / parked intake | 60 | 35 | 70 | 85 | 250 | — |
 | 53 | **245** | [GH-108](https://github.com/HiQS-Suite/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
@@ -71,7 +71,7 @@ while the four axes keep their honest values underneath.
 | 59 | **220** | [GH-32](https://github.com/HiQS-Suite/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Queue / parked intake | 70 | 50 | 65 | 35 | 220 | — |
 | 60 | **220** | [GH-57](https://github.com/HiQS-Suite/XYZ-forge/issues/57) — test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | — | Completed | 60 | 45 | 65 | 50 | 220 | — |
 | 61 | **218** | GH-135 — GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | Completed | 58 | 45 | 60 | 55 | 218 | — |
-| 62 | **215** | [GH-233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) — AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | Linux-RC | in progress | 65 | 45 | 75 | 30 | 215 | — |
+| 62 | **215** | [GH-233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) — AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | Linux-RC | completed | 65 | 45 | 75 | 30 | 215 | — |
 | 63 | **210** | [GH-5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Linux-RC | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
 | 64 | **195** | [GH-35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
 | 65 | **190** | [GH-39](https://github.com/HiQS-Suite/XYZ-forge/issues/39) — RELEASES app: one-way GitHub Project release-card projection | — | Completed | 50 | 30 | 65 | 45 | 190 | — |

@@ -1,8 +1,8 @@
 ---
 title: "GH-233: AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter"
-status: Active
+status: Complete
 created: 2026-08-25
-updated: 2026-08-25
+updated: 2026-08-26
 owner: orchestrator (Claude Code)
 goal: implement Phase 2 lifecycle verbs, operator-mediated invite, atomic supersession, watch invalidation, concurrency stress testing, and citation verification linter
 gh_issue: 233
