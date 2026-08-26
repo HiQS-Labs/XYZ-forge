@@ -2847,6 +2847,70 @@ def cmd_roadmap_add(args):
     finally:
         conn.close()
 
+def cmd_roadmap_rate(args):
+    """GH-253: score a roadmap row that is already parked.
+
+    GH-249 taught intake to STORE a rating, but rows parked between the GH-169 flip and that fix
+    were written unrated and had no path back — `roadmap add` only inserts, `roadmap sync` is a
+    no-op in releases-mode, and nothing else writes the columns. That made "unrated" permanent for
+    exactly the rows the bug created. This is the way back.
+
+    The rating is rendered into the SAME `rated N/N/N/N [ovr N]` token the ledger line carries and
+    handed to the SAME parse_rating() — the token in raw_text and the five columns are written in
+    one transaction so the lossless shadow can never disagree with the scores derived from it.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "roadmap_items"):
+            refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        row = conn.execute(
+            "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
+            "FROM roadmap_items WHERE gh_number = ?", (args.issue_num,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for GH-%d; park it with `roadmap add` first"
+                   % args.issue_num)
+        if not _has_column(conn, "roadmap_items", "rating_pri"):
+            refuse("schema-behind",
+                   "this ledger has no rating columns. Run `releases migrate` first — rating "
+                   "stores scores, it never installs schema.")
+        if row["rating_pri"] is not None and not args.force:
+            refuse("already-rated",
+                   "GH-%d is already rated. Re-scoring is a deliberate act, not a retry: pass "
+                   "--force if you mean to replace the existing scores." % args.issue_num)
+        if any(_col(row, c) is not None for c in ("complexity", "risk", "effort")):
+            refuse("rating-vocabulary-clash",
+                   "GH-%d carries legacy `cx/risk/eff`. The two vocabularies measure different "
+                   "things and never share a row; convert the entry deliberately rather than "
+                   "stacking a `rated` score on top of it." % args.issue_num)
+
+        token = "(rated %s%s)" % (args.rated, "" if args.ovr is None else " ovr %d" % args.ovr)
+        # parse_rating is the ONE parser and the ONE validator: a malformed --rated is refused by
+        # name here, exactly as it is on the intake path, rather than reaching the columns.
+        rating = parse_rating(token, row["title"])
+        raw_text = _RATED_TOKEN_RE.sub("", row["raw_text"]).rstrip()
+        raw_text = "%s %s" % (raw_text, token)
+
+        if args.dry_run:
+            print("ROADMAP line: %s" % raw_text)
+            print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+            if rating["rating_ovr"] is not None:
+                print("ovr: %d" % rating["rating_ovr"])
+            return
+
+        def mutate(conn):
+            conn.execute(
+                "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE gh_number = ?"
+                % ", ".join("%s = ?" % c for c in RATING_COLUMNS),
+                [raw_text, now_iso()] + [rating[c] for c in RATING_COLUMNS] + [args.issue_num])
+
+        perform_write(root, conn, "roadmap-rate", row["global_id"], mutate)
+        print("rated GH-%d %s" % (args.issue_num, args.rated))
+    finally:
+        conn.close()
+
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
     # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
@@ -3777,6 +3841,18 @@ def build_parser():
                             "`roadmap sync` is a no-op there")
     sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
+    sp_rr = rsub.add_parser("rate", help="score a roadmap row that is already parked (GH-253)")
+    sp_rr.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rr.add_argument("--rated", required=True,
+                       help="the four axes as N/N/N/N (pri/sev/appeal/effort, 1-100, higher is "
+                            "better on every axis — effort scores CHEAPNESS)")
+    sp_rr.add_argument("--ovr", type=int, default=None,
+                       help="operator override (4-400) replacing the derived calc for ranking; "
+                            "the four axes keep their honest values underneath")
+    sp_rr.add_argument("--force", action="store_true",
+                       help="replace an existing rating (refused by default)")
+    sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
     sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
@@ -3801,7 +3877,10 @@ def main(argv=None):
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
         "check": cmd_check, "reconcile": cmd_reconcile,
         "project": lambda a: cmd_project_sync(a) if a.project_cmd == "sync" else None,
-        "roadmap": lambda a: cmd_roadmap_add(a) if a.roadmap_cmd == "add" else (cmd_roadmap_sync(a) if a.roadmap_cmd == "sync" else cmd_roadmap_list(a)),
+        # A lookup, not a ternary chain: `rate` (GH-253) was the fourth branch, and the nested
+        # form was already one subcommand past readable.
+        "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
+                              "rate": cmd_roadmap_rate, "list": cmd_roadmap_list}[a.roadmap_cmd](a),
     }
     handlers[args.cmd](args)
 

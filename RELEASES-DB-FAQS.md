@@ -503,8 +503,17 @@ $R roadmap add --issue-num 249 --issue-url URL --title T --created YYYY-MM-DD \
 Both paths run the SAME `parse_rating()` — one grammar, one parser. Add `--dry-run` to see the
 parsed scores before writing. A rated line meeting a ledger with no rating columns is refused as
 `schema-behind`: run `releases migrate` first, because intake stores scores and never installs
-schema. Between the GH-169 flip and GH-249 this path dropped ratings silently, so rows parked in
-that window are unrated and must be re-scored by hand.
+schema. Between the GH-169 flip and GH-249 this path dropped ratings silently. **Score an
+already-parked row with `roadmap rate` (GH-253)** — the only write path that reaches an existing
+row's scores:
+
+```bash
+$R roadmap rate --issue-num 243 --rated 70/55/65/60 [--ovr 350] [--force]
+```
+
+It rewrites the `rated` token in `raw_text` and the five columns in ONE transaction, so the
+lossless shadow can never disagree with the scores derived from it. Re-scoring an already-rated row
+is refused unless `--force` is passed — a re-score is a deliberate act, not a retry.
 
 Read the ranking with `bash utils/leaderboard.sh` (writes `LEADERBOARD.md`) or open
 `LEADERBOARD.html`. Both consume `export_timeline.py --json` and sort on the `effectiveScore` the

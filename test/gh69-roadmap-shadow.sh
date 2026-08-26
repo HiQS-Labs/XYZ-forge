@@ -295,6 +295,57 @@ ok "  intake-stored ratings survive a dump -> rebuild round trip" \
    "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2490\")\" = '90/85/80/70' ]"
 rm -f "$R/releases.db.bak"
 
+# --- GH-253: `roadmap rate` scores an ALREADY-PARKED row ----------------------------------------
+# GH-249 taught intake to store a rating, but rows parked before it had no way back: `roadmap add`
+# only inserts, `roadmap sync` is a no-op in releases-mode, and nothing else wrote the columns.
+# "Unrated" was permanent for exactly the rows the bug produced. These pin the way back.
+RT_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2500"
+ra roadmap add --issue-num 2500 --issue-url "$RT_URL" --title "parked unrated" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2500** parked with no score' >/dev/null 2>&1
+ok "GH-253: a row parked unrated starts NULL (the state the backfill has to reach)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri IS NULL FROM roadmap_items WHERE gh_number=2500')\" = '1' ]"
+
+out="$(ra roadmap rate --dry-run --issue-num 2500 --rated 70/55/65/60 2>&1)"
+ok "  --dry-run previews the rewritten line and the parsed scores" \
+   "has \"\$out\" 'rating: 70/55/65/60' && has \"\$out\" '(rated 70/55/65/60)'"
+ok "  and --dry-run writes nothing" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri IS NULL FROM roadmap_items WHERE gh_number=2500')\" = '1' ]"
+
+ra roadmap rate --issue-num 2500 --rated 70/55/65/60 >/dev/null 2>&1
+ok "  rating a parked row stores the four axes" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2500\")\" = '70/55/65/60' ]"
+# The load-bearing one: raw_text is the LOSSLESS shadow. If the token and the columns disagree, a
+# later rebuild or a legacy-mode sync would resurrect the old score and silently overwrite the new.
+ok "  and rewrites raw_text so the ledger line and the columns cannot disagree" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text LIKE '%(rated 70/55/65/60)%' FROM roadmap_items WHERE gh_number=2500\")\" = '1' ]"
+
+out="$(ra roadmap rate --issue-num 2500 --rated 10/10/10/10 2>&1)"; rc=$?
+ok "  re-rating without --force is REFUSED (re-scoring is deliberate, not a retry)" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'already-rated'"
+ok "  NEGATIVE CONTROL: the refused re-rate left the original score intact" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '70' ]"
+
+ra roadmap rate --issue-num 2500 --rated 10/20/30/40 --force >/dev/null 2>&1
+ok "  --force replaces the score, and leaves exactly ONE rated token behind (no stacking)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '10' ] && [ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text NOT LIKE '%70/55/65/60%' FROM roadmap_items WHERE gh_number=2500\")\" = '1' ]"
+
+ra roadmap rate --issue-num 2500 --rated 10/20/30/40 --ovr 350 --force >/dev/null 2>&1
+ok "  an --ovr override is stored alongside the honest axes" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr FROM roadmap_items WHERE gh_number=2500')\" = '350' ]"
+
+out="$(ra roadmap rate --dry-run --issue-num 2500 --rated 10/20/30 --force 2>&1)"; rc=$?
+ok "  a malformed --rated is refused by the SAME parser, by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'rating-shape'"
+out="$(ra roadmap rate --dry-run --issue-num 99999 --rated 10/20/30/40 2>&1)"; rc=$?
+ok "  rating a row that was never parked is refused by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'no-such-row'"
+
+ra check --rebuild >/dev/null 2>&1
+ok "  backfilled ratings survive a dump -> rebuild round trip" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '10' ]"
+ok "  and check is clean afterwards" "ra check >/dev/null 2>&1"
+rm -f "$R/releases.db.bak"
+
 echo
 echo "  gh69-roadmap-shadow: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
