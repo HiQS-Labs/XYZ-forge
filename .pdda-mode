@@ -5,3 +5,7 @@
 #   full    : errors block with a non-zero exit (fully on PDDA rails)
 # This repo is the PDDA reference implementation and is on rails, so: full.
 full
+# GH-169/GH-238/GH-239: releases.db (via releases.sql) is the planning source of truth.
+# ROADMAP.md is legacy — hq park writes via `releases roadmap add`, status/rollup read the DB,
+# and `releases roadmap sync` is a no-op while this marker is present.
+ROADMAP_SOURCE=releases
