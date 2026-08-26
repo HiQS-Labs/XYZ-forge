@@ -66,3 +66,18 @@ Write your verdict below. Set `STATUS: Approved` if sound as written, or leave i
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+**Verdict:** Changes requested
+
+1. **Diagnosis is incorrect:** The builder's isolated worktree IS in fact cut from the target root, not the harness clone. `relay-drive.py` exports `RELAY_TARGET_ROOT="$TARGET_ROOT"` (line 120 / 254). `relay-turn-lib.sh`'s `rtl_init` explicitly overrides `$1` with this variable: `RTL_ROOT="${RELAY_TARGET_ROOT:-$1}"`. Then `rtl_worktree_begin` runs `git -C "$RTL_ROOT" worktree add ...`, which correctly cuts the worktree from the target repo. The real cause of the silent failure is likely that `utils/py/agy-turn.py` (and `agy-turn.sh`) resolves its internal `root` variable to the harness clone (because `AGY_TURN_ROOT` is not exported by `marathon-drive.sh`), which causes it to pass an absolute `f_rel` path to the agent. The agent then likely resolves the relative artifact paths against the absolute relay file's directory (`TARGET_ROOT/marathon-system/...`) rather than its `wt` CWD, finding nothing.
+
+2. **Unimplementable preflight:** Plan item 1 is unimplementable as described. The builder's effective working directory is a throwaway worktree created dynamically inside the turn by `rtl_worktree_begin` (using `mktemp -d .../rtl-wt.XXXXXX`). It does not exist at preflight time before dispatch, so you cannot resolve it "the same way the turn shim will".
+
+3. **Wrong assertion:** "Artifact paths must exist" will produce false refusals for any phase designed to create new files. The correct assertion would be that the artifact path's parent directory exists and is writable, or simply that the path resides within the bounds of the target repository.
+
+4. **Unsafe escalation:** Escalating after two consecutive no-op builder turns is unsafe. A builder might legitimately produce no tracked changes if it is asking a clarifying question, reporting findings without writing code, or if the lane is already satisfied but the reviewer hasn't approved it yet.
+
+5. **Insufficient block counting:** Counting builder blocks is a poor proxy for "the builder could not act." A builder can append a block (e.g., "I couldn't find the file") without making tracked changes, or it could fail to append a block due to formatting errors even when it did act.
+
+6. **Cosmetic churn:** Splitting the "preflight" label (plan item 4) is cosmetic churn. "Preflight" is an appropriate umbrella term for all checks running prior to dispatch; renaming them adds no operational value.
+
+7. **Missing context:** The plan completely overlooks the `f_rel` path resolution in `agy-turn.py`. Because `rtl.root` is the harness clone, `f_rel` becomes absolute, breaking the target-root abstraction for the prompt. It also overlooks the `RTL_ROOT="${RELAY_TARGET_ROOT:-$1}"` assignment which invalidates the foundational claim of the plan.
