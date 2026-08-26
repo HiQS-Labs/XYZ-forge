@@ -1,8 +1,8 @@
 ---
 title: "GH-182: self_healer --mode heal is a facade — containment refuses any real target, the CLI can never heal"
-status: active
+status: Completed
 created: 2026-08-23
-updated: 2026-08-23
+updated: 2026-08-26
 owner: orchestrator (Claude Code)
 goal: heal mode either refuses with named requirements or runs safely in a disposable clone — no reachable in-place patch path, ever
 gh_issue: 182

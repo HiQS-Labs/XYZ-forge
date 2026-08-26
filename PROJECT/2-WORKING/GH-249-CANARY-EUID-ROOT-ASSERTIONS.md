@@ -1,17 +1,31 @@
 ---
-issue: 249
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/249
-title: "CI: ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions in gh50-sandboxed-git-guard + security-scan"
+title: "GH-249: ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions"
+status: Active
 created: 2026-08-25
-type: bug
-status: 1-INBOX
+updated: 2026-08-26
+owner: orchestrator (Claude Code)
+goal: the ubuntu canary is green and therefore readable again — chmod-dependent assertions name a SKIP under root instead of failing, and the production guards stay capability-based
+gh_issue: 249
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/249
+branch: gh-249/canary-euid-root-assertions
+doc_type: bugfix
+effort: 2
 complexity: 2
 risk: 2
-effort: 2
-phases: 1
+release: 0.7.4 Linux-RC (dialed in 2026-08-26)
+non_goals:
+  - Changing utils/git-sandbox-guard.sh or relay-automation/hooks/security-scan.sh — both correct as written; two models graded a mode-bit change a Blocker
+  - Promoting the canary to a required gate — test/ci-workflow.sh:242 asserts it declares continue-on-error
 ---
 
 # GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| capture doc promoted to 2-WORKING with a preflight contract; dialed into 0.7.4 | Operator fires the lane; builder adds EUID=0 skips, reviewer verifies guards are byte-unchanged |
+
 
 ## Why
 
@@ -59,3 +73,18 @@ cannot hold — root writes a `0444` file and reads a `0000` file regardless of 
 - [ ] Also resolve the three unrelated FAILs in the same job, or the canary stays red:
       `agy` not on PATH (marathon-drive), worktree-isolation case 2, concurrent-lock race
 - [ ] Witness a green hosted canary run before claiming the signal is restored
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target":        { "repo": ".", "ref": "development" },
+  "gate":          "bash validate.sh",
+  "fix_probes":    [ { "type": "grep_absent", "path": "test/gh50-sandboxed-git-guard.sh", "pattern": "EUID" },
+                     { "type": "grep_absent", "path": "test/security-scan.sh", "pattern": "running as root" } ],
+  "artifacts":     [ "test/gh50-sandboxed-git-guard.sh", "test/security-scan.sh" ],
+  "artifacts_new": [],
+  "remediation":   { "source": "self#plan", "criteria": "chmod-dependent assertions emit a named SKIP under EUID=0 (gh342 precedent); writable-control cases still run; production guards unchanged; hosted Ubuntu canary green" },
+  "lanes":         { "agy_safe": [ "test/gh50-sandboxed-git-guard.sh", "test/security-scan.sh" ], "orchestrator_only": [ "relay-automation/", ".tick/", "utils/git-sandbox-guard.sh", "relay-automation/hooks/security-scan.sh" ] }
+}
+```

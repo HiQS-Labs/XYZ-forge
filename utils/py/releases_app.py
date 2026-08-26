@@ -2865,25 +2865,33 @@ def cmd_roadmap_rate(args):
     try:
         if not _table_exists(conn, "roadmap_items"):
             refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        # A row imported from a multi-issue ROADMAP bullet ("#129/#130/#131 · Wave 1 …") carries NO
+        # gh_number, so --issue-num cannot address it and it would be unscorable forever — the same
+        # permanence bug this command exists to end. --gid is the escape hatch for those rows.
+        if (args.issue_num is None) == (args.gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        if args.issue_num is not None:
+            where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
+        else:
+            where, param, label = "global_id = ?", args.gid, args.gid
         row = conn.execute(
             "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
-            "FROM roadmap_items WHERE gh_number = ?", (args.issue_num,)).fetchone()
+            "FROM roadmap_items WHERE " + where, (param,)).fetchone()
         if not row:
-            refuse("no-such-row", "no roadmap row for GH-%d; park it with `roadmap add` first"
-                   % args.issue_num)
+            refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
         if not _has_column(conn, "roadmap_items", "rating_pri"):
             refuse("schema-behind",
                    "this ledger has no rating columns. Run `releases migrate` first — rating "
                    "stores scores, it never installs schema.")
         if row["rating_pri"] is not None and not args.force:
             refuse("already-rated",
-                   "GH-%d is already rated. Re-scoring is a deliberate act, not a retry: pass "
-                   "--force if you mean to replace the existing scores." % args.issue_num)
+                   "%s is already rated. Re-scoring is a deliberate act, not a retry: pass "
+                   "--force if you mean to replace the existing scores." % label)
         if any(_col(row, c) is not None for c in ("complexity", "risk", "effort")):
             refuse("rating-vocabulary-clash",
-                   "GH-%d carries legacy `cx/risk/eff`. The two vocabularies measure different "
+                   "%s carries legacy `cx/risk/eff`. The two vocabularies measure different "
                    "things and never share a row; convert the entry deliberately rather than "
-                   "stacking a `rated` score on top of it." % args.issue_num)
+                   "stacking a `rated` score on top of it." % label)
 
         token = "(rated %s%s)" % (args.rated, "" if args.ovr is None else " ovr %d" % args.ovr)
         # parse_rating is the ONE parser and the ONE validator: a malformed --rated is refused by
@@ -2901,12 +2909,48 @@ def cmd_roadmap_rate(args):
 
         def mutate(conn):
             conn.execute(
-                "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE gh_number = ?"
-                % ", ".join("%s = ?" % c for c in RATING_COLUMNS),
-                [raw_text, now_iso()] + [rating[c] for c in RATING_COLUMNS] + [args.issue_num])
+                "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
+                % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
+                [raw_text, now_iso()] + [rating[c] for c in RATING_COLUMNS] + [param])
 
         perform_write(root, conn, "roadmap-rate", row["global_id"], mutate)
-        print("rated GH-%d %s" % (args.issue_num, args.rated))
+        print("rated %s %s" % (label, args.rated))
+    finally:
+        conn.close()
+
+
+def cmd_roadmap_repoint(args):
+    """Re-point a parked row's capture doc after the doc moves between PROJECT stages.
+
+    `roadmap add` records doc_path once and refuses duplicates, and nothing else rewrites it — so
+    promoting a doc 1-INBOX -> 2-WORKING left the row pointing at a path that no longer exists, and
+    pdda-check-roadmap-coverage fails on it with no supported way to fix it.
+    """
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        row = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
+                           "WHERE gh_number = ?", (args.issue_num,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for GH-%d" % args.issue_num)
+        new = args.doc_path
+        if not os.path.isfile(os.path.join(root, new)):
+            refuse("no-such-doc", "%s does not exist under %s — re-point to a real doc, never a "
+                                  "path that merely looks right" % (new, root))
+        old = row["doc_path"]
+        # The ledger line embeds the path too; rewriting one without the other just moves the drift.
+        raw_text = row["raw_text"].replace(old, new) if old else row["raw_text"]
+        if args.dry_run:
+            print("doc_path: %s -> %s" % (old, new))
+            print("ROADMAP line: %s" % raw_text)
+            return
+
+        def mutate(conn):
+            conn.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? "
+                         "WHERE gh_number = ?", (new, raw_text, now_iso(), args.issue_num))
+
+        perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
+        print("repointed GH-%d -> %s" % (args.issue_num, new))
     finally:
         conn.close()
 
@@ -3842,7 +3886,9 @@ def build_parser():
     sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rr = rsub.add_parser("rate", help="score a roadmap row that is already parked (GH-253)")
-    sp_rr.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rr.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
+    sp_rr.add_argument("--gid", help="the row's rmi- global id — for a multi-issue row that has no "
+                                     "gh_number and cannot be addressed any other way")
     sp_rr.add_argument("--rated", required=True,
                        help="the four axes as N/N/N/N (pri/sev/appeal/effort, 1-100, higher is "
                             "better on every axis — effort scores CHEAPNESS)")
@@ -3852,6 +3898,11 @@ def build_parser():
     sp_rr.add_argument("--force", action="store_true",
                        help="replace an existing rating (refused by default)")
     sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
+    sp_rp = rsub.add_parser("repoint", help="re-point a parked row's capture doc after the doc moves")
+    sp_rp.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
+    sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
@@ -3880,7 +3931,8 @@ def main(argv=None):
         # A lookup, not a ternary chain: `rate` (GH-253) was the fourth branch, and the nested
         # form was already one subcommand past readable.
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
-                              "rate": cmd_roadmap_rate, "list": cmd_roadmap_list}[a.roadmap_cmd](a),
+                              "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
+                              "repoint": cmd_roadmap_repoint}[a.roadmap_cmd](a),
     }
     handlers[args.cmd](args)
 

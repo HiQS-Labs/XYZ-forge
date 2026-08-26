@@ -169,17 +169,20 @@ cannot tell one run from another).
 To run relays in **different repos at the same time on one machine**, give each repo its **own harness**
 so each gets its own lock, `.tick/`, and worktrees:
 
-| Install path | Ships | Relay capability | Lock |
-|---|---|---|---|
-| `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | shared (serializes) |
-| **`xyz-vendor.sh <target-repo> [--no-register]`** | full harness (`relay-automation/` + tick + src) into a gitignored `.xyz/` | ✅ per-repo | **own** `.xyz/.relay-driver.lock` |
+| Install path / Tier | Ships | Relay capability | Releases ledger? | Lock |
+|---|---|---|---|---|
+| `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | ❌ no | shared (serializes) |
+| **Tier 1 (default)**: `xyz-vendor.sh <target-repo> [--no-register]` | full core harness (`relay-automation/` minus `xyz-releases-onboard.sh`, `bin/`, `src/`, `test/`, `skills/`, `utils/` minus overlay) into gitignored `.xyz/` | ✅ per-repo | ❌ no overlay | **own** `.xyz/.relay-driver.lock` |
+| **Tier 2 (opt-in)**: `xyz-vendor.sh <target-repo> --with-releases` (or auto-detected via `releases.db` at root) | full core harness + RELEASES overlay (`releases_app.py`, `releases_cycle.py`, `releases-merge-resolve.sh`, `release-lanes.sh`, `utils/timeline/`, `xyz-releases-onboard.sh`, `RELEASES-DB-FAQS.md`) | ✅ per-repo | ✅ opt-in overlay | **own** `.xyz/.relay-driver.lock` |
 
 Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
 `.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,
-`.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312). This
-matters because `.xyz/` is gitignored: state lost there is unrecoverable, with no reflog or stash
-behind it. A new runtime artifact under `.xyz/` must be added to the preserve list in
-`xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
+`.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312).
+Note that RELEASES ledger runtime state (`releases.db`, `releases.sql`, `RELEASES.md`,
+`RELEASES-PREVIEW.html`) lives at the target repository root, outside `.xyz/`, while `.xyz/`-resident
+runtime state is preserved across swaps. This matters because `.xyz/` is gitignored: state lost there
+is unrecoverable, with no reflog or stash behind it. A new runtime artifact under `.xyz/` must be added
+to the preserve list in `xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
 
 So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
 `.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and

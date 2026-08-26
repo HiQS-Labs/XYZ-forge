@@ -4,10 +4,14 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  xyz-vendor.sh <target-repo> [--no-register]
+  xyz-vendor.sh <target-repo> [--no-register] [--with-releases]
   xyz-vendor.sh -h | --help
 
 Materialize a vendored xyz harness snapshot into <target-repo>/.xyz/.
+
+Options:
+  --no-register    Skip recording this install in the registry.
+  --with-releases  Include the Tier 2 RELEASES overlay (releases_app.py, timeline, etc.).
 
 Safety note: `xyz-sync update` refuses a dirty or non-canonical harness source by default before
 calling this script. For an intentional reviewed override, set XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1.
@@ -30,12 +34,14 @@ SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 HARNESS_ROOT="$(cd "$SELF_DIR/.." >/dev/null 2>&1 && pwd)"
 
 REGISTER=1
+WITH_RELEASES=0
 TARGET_REPO=""
 XYZ_REGISTRY="${XYZ_REGISTRY:-${XDG_CONFIG_HOME:-$HOME/.config}/xyz/registry.tsv}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --no-register) REGISTER=0; shift ;;
+    --with-releases) WITH_RELEASES=1; shift ;;
     -h|--help) usage; exit 0 ;;
     -*) printf 'xyz-vendor.sh: unknown option %q\n\n' "$1" >&2; usage >&2; exit 2 ;;
     *)
@@ -56,6 +62,15 @@ done
 [ -d "$HARNESS_ROOT/src" ] || die "missing src/ under $HARNESS_ROOT"
 
 TARGET_REPO="$(cd "$TARGET_REPO" >/dev/null 2>&1 && pwd)"
+
+# Auto-detect Tier 2 adoption: if releases.db exists at target root, treat as Tier 2 (sticky).
+if [ -f "$TARGET_REPO/releases.db" ]; then
+  if [ "$WITH_RELEASES" -eq 0 ]; then
+    note "releases.db detected at target root — enabling Tier 2 RELEASES overlay"
+  fi
+  WITH_RELEASES=1
+fi
+
 VENDOR_DIR="$TARGET_REPO/.xyz"
 STAGE_DIR="$TARGET_REPO/.xyz.tmp.$$"
 
@@ -309,19 +324,24 @@ register_vendor() {
   return 0
 }
 
-# Directories mirrored VERBATIM into the vendored copy. This is a full mirror, not a curated
-# manifest: the old make-pkg-derived list silently dropped any newly-added lane (e.g. the aider ↔
-# OpenRouter gateway shipped in GH-77 but was never added to the manifest, so vendored repos never
-# got it). Copying whole dirs makes the vendored .xyz a COMPLETE, drift-free XYZ install — every
-# relay / marathon / consult / aider / self-improve feature runs standalone, per repo, with no
-# dependency on the central xyz-3-agents-swarm checkout.
+# Directories mirrored into the vendored copy.
 #   relay-automation/  all turn shims (codex/agy/aider/gemini/claude), consult, marathon runtime,
 #                      the self-improve loop, hooks/, docs, example configs
 #   bin/               tick, validate-relay-block, marathon-yaml
 #   src/               the tick/marathon JS core
+#   utils/             helper scripts, preflights, and planning utilities (in Tier 1, minus the RELEASES overlay)
 #   test/              the shim + feature tests, so a vendored repo can self-verify
 #   skills/            the consult / relay-xyz / xyz skill definitions travel with the harness
+#
+# Vendoring tiers (GH-197):
+#   Tier 1 (default): core harness only. Full mirror minus the RELEASES_OVERLAY manifest
+#                     (releases_app.py, releases_cycle.py, releases-merge-resolve.sh, release-lanes.sh, timeline/,
+#                      relay-automation/xyz-releases-onboard.sh).
+#                     Uses a deny-list mechanism to prevent the GH-77 curated-manifest drop failure.
+#   Tier 2 (opt-in):  --with-releases (or auto-detected when releases.db is present at target root).
+#                     Retains the full overlay and stages RELEASES-DB-FAQS.md into .xyz/.
 VENDOR_DIRS="relay-automation bin src utils test skills"
+RELEASES_OVERLAY="utils/py/releases_app.py utils/py/releases_cycle.py utils/releases-merge-resolve.sh utils/release-lanes.sh utils/timeline relay-automation/xyz-releases-onboard.sh"
 
 materialize_vendor() {
   local d
@@ -341,6 +361,18 @@ materialize_vendor() {
   # new dependency, stays consistent with the existing cp -Rp pattern above).
   find "$STAGE_DIR" -name '.DS_Store' -delete
 
+  # Tier split (GH-197): deny-list removal for Tier 1; Tier 2 retains overlay and includes RELEASES-DB-FAQS.md.
+  if [ "$WITH_RELEASES" -eq 1 ]; then
+    if [ -f "$HARNESS_ROOT/RELEASES-DB-FAQS.md" ]; then
+      cp -p "$HARNESS_ROOT/RELEASES-DB-FAQS.md" "$STAGE_DIR/RELEASES-DB-FAQS.md"
+    fi
+  else
+    for _overlay_item in $RELEASES_OVERLAY; do
+      rm -rf "$STAGE_DIR/$_overlay_item"
+    done
+    rm -f "$STAGE_DIR/RELEASES-DB-FAQS.md"
+  fi
+
   # Runnability sanity — the two files every feature ultimately depends on.
   [ -f "$STAGE_DIR/bin/tick" ] || die "vendor incomplete: bin/tick missing after mirror"
   [ -f "$STAGE_DIR/relay-automation/relay-turn-lib.sh" ] \
@@ -350,6 +382,7 @@ materialize_vendor() {
     printf 'source_commit=%s\n' "$(git -C "$HARNESS_ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"
     printf 'tick_version=%s\n' "$(tick_version)"
     printf 'vendored_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf 'tier=%s\n' "$([ "$WITH_RELEASES" -eq 1 ] && echo 2 || echo 1)"
   } > "$STAGE_DIR/VERSION"
 
   # GH-312: carry TARGET-owned runtime state across the swap. $STAGE_DIR is mirrored purely from

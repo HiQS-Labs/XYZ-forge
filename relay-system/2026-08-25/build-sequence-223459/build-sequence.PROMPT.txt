@@ -1,0 +1,67 @@
+# Question
+
+Sequence the next THREE releases for this repo, using the RELEASES DB as the planning source of
+truth. ADVISORY ONLY — do not modify anything. Read `releases.db` via
+`python3 utils/py/releases_app.py list` / `show --gid <gid>`, plus `LEADERBOARD.md`, `ROADMAP.md`,
+and `RELEASES.md`.
+
+## Current state
+
+Shipped: 0.1.0 Quicksilver, 0.2.0 Litmus, 0.3.0 Nightwatch, 0.7.0 Ballast, 0.7.1 Bulwark,
+0.7.2 Daybreak, 0.7.3 Bulkhead.
+
+ACTIVE: **0.7.4 Linux-RC** (target 2026-09-05, 7 items; #204 #205 #123 #232 #233 dialed in,
+#226 #228 shipped). Exit criterion: a 100% green hosted Ubuntu CI run on Linux-MVP-RC.
+
+DRAFTS, all with **zero manifest items** and targets that do not follow their version order:
+- 0.4.0 **Plumbline** (target 2026-11-14) — assisted reflection + a bounded self-improvement loop, measured before trusted
+- 0.5.0 **Lantern** (target 2026-12-12) — diagnosability: make the harness say what it already knows. Gate `test/lantern-release.sh` NOT BUILT
+- 0.6.0 **Meter** (target 2026-09-26) — a stranger can clone and reach a documented happy path unauthenticated. Gate `test/meter-release.sh` NOT BUILT
+- 0.8.0 **Sundown** (target 2026-10-17) — retire the twelve frozen Bash twins. Exit criterion NOT WRITTEN
+
+DRAFT with items: 0.9.0 **Cargo** (target 2026-09-19, 7 items) — the harness travels with its
+ledger; releases DB + timeline generator ship inside every vendored `.xyz/`.
+
+## Highest-scoring work with NO release assigned (calc = pri+sev+appeal+effort, 4–400, higher better)
+
+- 325 **#249** ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions
+- 285 **#141** make Fuzzing and ATE actually useful (Phases 1–…)
+- 283 **#67** Commandcode builder default widened to `--yolo`
+- 280 **#216** marathon-plan.sh ledger parser rejects link-style ROADMAP bullets — reconciler never sees them
+- 270 **#75** single-page HTML dashboard for releases
+- 257 **#215** vendored `.xyz/` reconciler hardcodes paths
+- 250 **#243** GH-169 items 3–4: repoint agent docs + dashboard-staleness push guard
+- plus two just filed: **#251** validate.sh reports pytest-absent as FAILED; **#252** `hq park` emits no rated token so the documented intake path cannot score
+
+## What I am inclined to do (challenge this)
+
+1. Insert a new **0.7.5** immediately after Linux-RC for CI signal health: #249, #251, and the three
+   other unrelated failures in the same canary job (`agy` not on PATH, worktree-isolation case 2,
+   concurrent-lock race). Rationale: #249 is the #2 item on the whole leaderboard, and while that
+   job is red nobody can trust any Linux result — including 0.7.4's own exit criterion.
+2. Then **0.9.0 Cargo** (already themed and populated).
+3. Then repurpose **0.8.0** into ledger/intake integrity: #252, #216, #243, #215, #222.
+
+## Questions
+
+1. Is inserting 0.7.5 right, or should #249/#251 fold into 0.7.4 itself, given 0.7.4's exit
+   criterion is *"a 100% green hosted Ubuntu CI run"* — which the red canary arguably already
+   blocks? Argue from the exit criterion as written.
+2. Three of the four empty drafts (Lantern, Meter, Sundown) say their release GATE IS NOT BUILT,
+   and note that writing the gate first is the ordering Litmus and Nightwatch both used. Does that
+   ordering rule mean none of those three can be scheduled next? What is the cheapest honest way to
+   respect it?
+3. Is repurposing 0.8.0 Sundown (retire the Bash twins) into a ledger-integrity release a mistake?
+   It has a real, distinct theme. Better to leave Sundown alone and create a new version for the
+   ledger work — and if so, what number, given 0.9.0 is taken and the version/target ordering is
+   already inconsistent?
+4. Version numbering and targets are incoherent (0.6.0 targets 2026-09-26 but 0.5.0 targets
+   2026-12-12; 0.9.0 targets 2026-09-19, before both). Should the next three be renumbered/retargeted
+   into a consistent sequence, or is churning version numbers in a shipped-history ledger worse than
+   the inconsistency? Recommend one.
+5. Are the codenames worth changing? Renaming is permitted. Say so only if a rename buys real
+   clarity, not because a new name sounds better.
+6. What is MISSING from my plan — work that outranks something I scheduled, a dependency I have
+   inverted, or a release that should be cut entirely rather than carried?
+
+Grade findings [Blocker]/[Should]/[Nit] and cite `file:line` or the exact CLI output you relied on.

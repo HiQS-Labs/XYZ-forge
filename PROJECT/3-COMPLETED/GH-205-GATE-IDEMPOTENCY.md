@@ -1,8 +1,8 @@
 ---
 title: "GH-205: validate.sh mutates four tracked files on every run — clean checkouts cannot stay clean"
-status: Active
+status: Completed
 created: 2026-08-24
-updated: 2026-08-24
+updated: 2026-08-26
 owner: orchestrator (Claude Code)
 goal: a full gate run on a pristine checkout leaves `git status --porcelain` completely clean — verification never dirties the tree it verifies
 gh_issue: 205
