@@ -67,9 +67,17 @@ fi
 
 echo "-- case 2: a PHASE file is blocked → XYZ_ARCHIVE_ROOT must NOT lead (it cannot fix this)"
 out2="$(run_case 0 2>&1)"
+# Codex QA: --target-root ALONE does not clear a phase-file block. phases_dir defaults to
+# <harness-root>/marathon-system regardless of the target (marathon_drive.py:929), so the same
+# ignored RELAY.md is probed again and the re-run blocks again. A remedy that does not work is the
+# defect this issue is about, so the assertion is on the COMPLETE invocation, not the flag name.
 case "$out2" in
-  *"1. Run with --target-root"*) pass "--target-root stays the primary remedy" ;;
-  *) fail "GH-255: phase-file block no longer leads with --target-root — output was: $out2" ;;
+  *"--phases-dir <T>/marathon-system"*) pass "the phase-file remedy names BOTH flags" ;;
+  *) fail "GH-255: phase-file remedy omits --phases-dir, so following it blocks again — output was: $out2" ;;
+esac
+case "$out2" in
+  *"--target-root alone does NOT fix this"*) pass "it says outright that --target-root alone is insufficient" ;;
+  *) fail "GH-255: the remedy still implies --target-root alone is enough" ;;
 esac
 # THE discriminating assertion. Offering the archive knob here is the fix overshooting into the
 # same class of misdirection it was written to remove.

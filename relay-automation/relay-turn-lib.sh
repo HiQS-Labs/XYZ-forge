@@ -723,13 +723,6 @@ rtl_worktree_begin() {
       rm -rf "$wt/$a"                  # allowlisted path ALREADY deleted in the host tree → mirror the
                                        # deletion, else the HEAD checkout would resurrect it on copy-back
       rtl_trace "rtl_worktree_begin: SEED-DELETE $a (already absent in ROOT)"
-      # GH-256: the legitimate case is a path the turn is about to CREATE, or one genuinely deleted
-      # in the host tree. The pathological case is identical from here — a WRONG RTL_ROOT, where
-      # every artifact is "absent" and the agent is handed a worktree with none of its own files.
-      # That failure was silent: four builder turns wrote nothing and the phase burned its round cap
-      # before anyone could see why. rtl_trace only fires under XYZ_DEBUG, so say it on stderr where
-      # a normal run will show it. Not an error — a create-new-file phase hits this legitimately.
-      printf 'rtl: artifact not seeded into worktree: %s (absent under %s)\n' "$a" "$RTL_ROOT" >&2
     fi                                 # (Codex review r2, 2026-06-20 — symmetric to the in-turn delete)
   done
   # GH-22: snapshot each seeded allowlist path's signature so rtl_worktree_end copies back ONLY paths

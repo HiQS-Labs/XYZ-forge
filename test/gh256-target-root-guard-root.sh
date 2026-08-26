@@ -23,35 +23,51 @@ PASS=0; FAIL=0
 pass() { echo "  ok  $1"; PASS=$((PASS+1)); }
 fail() { echo "  FAIL  $1"; FAIL=$((FAIL+1)); }
 
-echo "-- case 1: --target-root exports every shim's guard root to the target"
-# Read the source directly rather than booting a full marathon: the export is a static contract,
-# and a live run would need two repos, two CLIs and a network round trip to assert one assignment.
-block="$(/usr/bin/sed -n '/^if \[\[ -n "\$TARGET_ROOT" \]\]; then$/,/^fi$/p' "$ROOT/relay-automation/marathon-drive.sh")"
-for v in AGY_TURN_ROOT CODEX_TURN_ROOT COMMANDCODE_TURN_ROOT; do
+echo "-- case 1: --target-root sets every routed shim's guard root, in the AUTHORITATIVE driver"
+# The fix must live in utils/py/marathon_drive.py, NOT relay-automation/marathon-drive.sh. That
+# Bash file is frozen (GH-308) and unreachable by default — its own header execs Python whenever
+# XYZ_PYTHON is unset or 1. A first cut of this fix went into the Bash twin and was dead code;
+# codex QA caught it. Asserting against the Bash file would have passed while nothing changed,
+# which is precisely the bug class GH-256 is about.
+py="$ROOT/utils/py/marathon_drive.py"
+block="$(/usr/bin/sed -n '/if args.target_root:/,/env2\[f"{_shim}_TURN_ROOT"\]/p' "$py")"
+if [ -n "$block" ]; then
+  pass "the guard-root export lives in the Python driver"
+else
+  fail "GH-256: no target_root guard-root export in utils/py/marathon_drive.py — the fix is not on the default path"
+fi
+
+# Every prefix route_agent accepts must have a guard root, or that builder silently reintroduces
+# the bug. Derived from the router rather than hardcoded, so adding a route without a guard root
+# fails here instead of in a 29-minute marathon.
+routes="$(/usr/bin/sed -n 's/.*agent_id.startswith("\([a-z]*\)").*/\1/p' "$py" | sort -u)"
+[ -n "$routes" ] || fail "GH-256: could not read route_agent's accepted prefixes"
+for r in $routes; do
+  up="$(echo "$r" | tr '[:lower:]' '[:upper:]')"
   case "$block" in
-    *"$v=\"\$TARGET_ROOT\""*) pass "$v is exported to the target root" ;;
-    *) fail "GH-256: $v is not exported under --target-root — the shim would guard the harness while the worktree is the target" ;;
+    *"\"$up\","*|*"\"$up\")"*) pass "$up has a guard root" ;;
+    *) fail "GH-256: route '$r' is accepted by route_agent but has no ${up}_TURN_ROOT — that builder gets a worktree without its own files" ;;
   esac
 done
 
-echo "-- case 2: the same-repo default is untouched (no --target-root)"
-if [ -n "$block" ]; then
-  pass "the export is gated on TARGET_ROOT being set"
-else
-  fail "GH-256: the export is unconditional — a same-repo run would have its guard root rewritten"
-fi
+echo "-- case 2: it is scoped to the relay-drive child, not the whole process"
+# os.environ would leak the guard root into anything else this process spawns; env2 is the child.
+case "$block" in
+  *env2*) pass "the export targets env2 (the relay-drive child), not os.environ" ;;
+  *) fail "GH-256: the guard root is set process-wide and can leak into unrelated children" ;;
+esac
 
-echo "-- case 3: an unseeded artifact is reported on stderr, not only under XYZ_DEBUG"
-# The silence is what made this cost 29 minutes. rtl_trace is debug-gated; a normal run must say it.
-if /usr/bin/grep -q 'artifact not seeded into worktree' "$ROOT/relay-automation/relay-turn-lib.sh"; then
-  pass "rtl_worktree_begin warns when an allowlisted artifact is not seeded"
+echo "-- case 3: the same-repo default is untouched"
+case "$block" in
+  *"if args.target_root:"*) pass "gated on --target-root being supplied" ;;
+  *) fail "GH-256: unconditional — a same-repo run would have its guard root rewritten" ;;
+esac
+
+echo "-- case 4: the frozen Bash twin was NOT taught this (GH-308)"
+if /usr/bin/grep -q 'TURN_ROOT="\$TARGET_ROOT"' "$ROOT/relay-automation/marathon-drive.sh"; then
+  fail "GH-256: the frozen Bash twin carries a behaviour change — GH-308 forbids it, and it is dead code besides"
 else
-  fail "GH-256: an artifact missing from the worktree is still silent on a normal run"
-fi
-if /usr/bin/grep -q 'artifact not seeded into worktree.*>&2' "$ROOT/relay-automation/relay-turn-lib.sh"; then
-  pass "the warning goes to stderr where a normal run shows it"
-else
-  fail "GH-256: the warning is not on stderr"
+  pass "the frozen twin carries only a pointer, no behaviour"
 fi
 
 echo "gh256-target-root-guard-root: $PASS passed, $FAIL failed"

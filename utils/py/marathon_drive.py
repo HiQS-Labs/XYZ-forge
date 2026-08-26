@@ -326,9 +326,13 @@ def preflight_write_set_trackable(repo_root, paths, transcript_paths=None):
     else:
         eprint("    At least one blocked path above is a PHASE file (RELAY.md / ESCALATION.md).")
         eprint("    XYZ_ARCHIVE_ROOT will NOT clear this — it redirects transcripts only.")
-        eprint("    1. Run with --target-root <code-repo>. Harness output (relay, escalation,")
-        eprint("       transcripts) then stays in THIS repo and only code changes land in the target —")
-        eprint("       which is what --target-root is for, per marathon.sh's own usage text.")
+        eprint("    1. Re-run with BOTH flags — --target-root alone does NOT fix this:")
+        eprint("         --target-root <T> --phases-dir <T>/marathon-system")
+        eprint("       --target-root moves the CODE, but the phases dir defaults to")
+        eprint("       <harness-root>/marathon-system regardless (see phases_dir below), so the")
+        eprint("       same ignored RELAY.md is probed again and the re-run blocks again.")
+        eprint("       phase_commit_root()'s own docstring names the two-flag shape as the only")
+        eprint("       layout a cross-repo turn accepts.")
     eprint("    3. Or un-ignore the path above in the rule named beside it, if this repo is meant")
     eprint("       to track harness output.")
     eprint("  Not doing it for you: a repo that ignores harness output usually means it, and")
@@ -2659,6 +2663,29 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
         env2["RELAY_COST_SUMMARY"] = "0"
         env2["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root)
+        # GH-256: under --target-root the turn shim must GUARD the repo the worktree is cut FROM.
+        #
+        # relay-drive exports RELAY_TARGET_ROOT and relay-turn-lib.sh:251 reads
+        # RTL_ROOT="${RELAY_TARGET_ROOT:-$1}", so the WORKTREE is correct. But each shim resolves
+        # its own containment root from <AGENT>_TURN_ROOT (utils/py/agy-turn.py:321,
+        # utils/py/codex-turn.py:26), which nothing set — so the shim guarded the harness while the
+        # worktree was the target, the per-artifact seed check resolved every path against the
+        # wrong root and found nothing, and the agent got a worktree without its own files.
+        # relay-turn-lib.sh:283 already stated the gap: "marathon-drive/relay-drive don't export
+        # CODEX_TURN_ROOT/AGY_TURN_ROOT — they never do".
+        #
+        # Measured: four builder turns wrote nothing, appended no builder block, and the phase
+        # escalated cap-stalled after 29 minutes with zero lines of code. No error anywhere.
+        #
+        # Set on env2 (the relay-drive child) rather than os.environ, so the guard root is scoped
+        # to the drive that actually has a foreign target and cannot leak into anything else in
+        # this process. The name set matches route_agent's accepted prefixes above — claude, codex,
+        # agy, aider, pi, smallcode — plus commandcode, whose shim reads the var. Keeping the two
+        # lists together is deliberate: a new builder route added above without a guard root here
+        # silently reintroduces this bug.
+        if args.target_root:
+            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE"):
+                env2[f"{_shim}_TURN_ROOT"] = args.target_root
         return subprocess.run(cmd2, env=env2, cwd=root).returncode
 
     # GH-75: write liveness before the drive; clear it on ANY terminal path via atexit (registered only
