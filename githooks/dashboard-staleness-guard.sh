@@ -26,6 +26,21 @@ REPO="${1:-}"; shift || true
 
 grep -q "ROADMAP_SOURCE=releases" "$REPO/.pdda-mode" 2>/dev/null || exit 0
 
+cleanup_projection() {
+  local target="${1:-}"
+  [ -n "$target" ] || return 0
+  [ -e "$target" ] || return 0
+  local parent_phys
+  parent_phys="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || parent_phys="/tmp"
+  local target_phys
+  target_phys="$(cd -P "$target" 2>/dev/null && pwd -P)" || return 0
+  [ -n "$target_phys" ] && [ -d "$target_phys" ] || return 0
+  case "$target_phys" in
+    "$parent_phys"/*) rm -rf "$target_phys" ;;
+    *) echo "dashboard-staleness-guard: refusing to clean non-descendant path $target_phys" >&2 ;;
+  esac
+}
+
 while [ "$#" -ge 2 ]; do
   local_sha="$1"; remote_sha="$2"; shift 2
   case "$remote_sha" in
@@ -49,7 +64,7 @@ while [ "$#" -ge 2 ]; do
     TMP_PARENT="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || TMP_PARENT="/tmp"
     TMP_PROJ="$(mktemp -d "$TMP_PARENT/dashboard-guard-proj.XXXXXX")"
     [ -n "$TMP_PROJ" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
-    trap 'rm -rf "$TMP_PROJ"' EXIT INT TERM
+    trap 'cleanup_projection "$TMP_PROJ"' EXIT INT TERM
 
     PROJ_PHYS="$(cd -P "$TMP_PROJ" 2>/dev/null && pwd -P)" || PROJ_PHYS=""
     [ -n "$PROJ_PHYS" ] && [ -d "$PROJ_PHYS" ] || { echo "dashboard-staleness-guard: failed to resolve projection directory" >&2; exit 1; }
@@ -67,7 +82,7 @@ while [ "$#" -ge 2 ]; do
         drift_detected=1
       fi
     fi
-    rm -rf "$TMP_PROJ"
+    cleanup_projection "$TMP_PROJ"
     trap - EXIT INT TERM
 
     if [ "$drift_detected" -eq 1 ]; then

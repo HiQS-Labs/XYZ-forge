@@ -286,7 +286,29 @@ case "$guard_cross_out" in
   *) fail "expected refusal on cross-ref push, got: $guard_cross_out" ;;
 esac
 
-# 5. Remediation: use roadmap update to fix raw_text
+# 5. Projection failure test:
+# Create a commit where ledger is touched, but utils/roadmap-dashboard.sh is missing from that commit.
+# The projection fails to run the script and must fail closed (drift_detected=1), refusing the push
+# and cleaning up temporary directory without consulting working tree.
+cd "$R"
+git checkout -q -b branch-proj-fail "$BAD_COMMIT"
+git rm -q utils/roadmap-dashboard.sh
+git -c user.email=t@t -c user.name=t commit -q -m "commit without renderer script"
+PROJ_FAIL_COMMIT="$(git rev-parse HEAD)"
+git checkout -q -
+cd "$root"
+
+rc=0
+guard_fail_out="$(bash "$GUARD" "$R" "$PROJ_FAIL_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "guard should refuse when commit projection fails renderer lookup, got $rc"
+case "$guard_fail_out" in
+  *"without regenerating ROADMAP-DASHBOARD.md"*)
+    pass "end-to-end: projection failure fails closed as drift and refuses without working tree fallback"
+    ;;
+  *) fail "expected drift refusal on projection failure, got: $guard_fail_out" ;;
+esac
+
+# 6. Remediation: use roadmap update to fix raw_text
 cd "$R"
 app --root "$R" roadmap update --issue-num 256 --raw-text "- **GH-256 · fixed title** 🆕 — [#256](https://github.com/org/repo/issues/256)"
 bash "$R/utils/roadmap-dashboard.sh"
