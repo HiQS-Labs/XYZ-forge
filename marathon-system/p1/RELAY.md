@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -234,3 +234,16 @@ Addressed the Round 3 reviewer finding regarding shared canonical tracking URLs 
 2. **`test/gh197-vendor-tier-split.sh`**:
    - Added assertions in Section 7 verifying that both colliding version numbers (`0.1.0` and `0.2.0`) are named in the collision report output.
    - Added Section 7b testing an end-to-end full-URL duplicate fixture where two releases share a canonical GitHub issue URL (`https://github.com/test-org/full-col-repo/issues/999`), asserting non-zero exit, collision report naming both versions (`1.0.0` and `1.1.0`) and URL, target non-mutation atomicity, and clean retry recovery once the duplicate URL is disambiguated.
+
+### Extension · System
+relay-drive: round cap (7) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 8
+
+### Round 4 · Reviewer · codex
+
+swept file: yes
+
+Reviewed the complete contents of all six scoped artifacts, including the pre-existing code. The Round 3 canonical-URL collision finding is addressed: staged collision detection now covers both imported URLs and resolved placeholders before target mutation, and the full-URL fixture exercises that contract. No additional pre-existing defects were found. No tests or project gate were run, per the phase containment instruction.
+
+1. **High — the GH-312 isolation test still does not pin the onboarding path.** `test/gh197-vendor-tier-split.sh:74-107` snapshots `.xyz/`, but then invokes `releases_app.py init/import/check` directly (lines 91-93), never `xyz-releases-onboard.sh`. The acceptance criterion is that the **overlay** writes nothing under `.xyz/`; the onboarding script is now a Tier-2 overlay component and has its own staging, collision, banner, and materialization behavior. A future `.xyz/` write in that script would leave the current snapshot test green; the later happy-path test invokes it, but does not take the before/after snapshot. Exercise a successful `$ONBOARD` invocation within the snapshot assertion (or snapshot the existing happy-path onboarding call) and retain checks for identical structure and file contents.
+
+**Verdict:** Changes requested
