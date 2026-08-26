@@ -46,14 +46,17 @@ while [ "$#" -ge 2 ]; do
     # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md produces drift or no diff.
     # Run the diagnosis against a commit-pinned temporary projection of local_sha so uncommitted
     # working-tree modifications do not skew the classification.
-    TMP_ROOT="${TMPDIR:-/tmp}"
-    TMP_PROJ="$(mktemp -d "$TMP_ROOT/dashboard-guard-proj.XXXXXX")"
-    [ -n "$TMP_PROJ" ] && [ -d "$TMP_PROJ" ] || { echo "dashboard-staleness-guard: failed to create temp projection" >&2; exit 1; }
-    case "$TMP_PROJ" in
-      "$TMP_ROOT"/*) ;;
-      *) echo "dashboard-staleness-guard: invalid temp projection path $TMP_PROJ" >&2; exit 1 ;;
-    esac
+    TMP_PARENT="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || TMP_PARENT="/tmp"
+    TMP_PROJ="$(mktemp -d "$TMP_PARENT/dashboard-guard-proj.XXXXXX")"
+    [ -n "$TMP_PROJ" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
     trap 'rm -rf "$TMP_PROJ"' EXIT INT TERM
+
+    PROJ_PHYS="$(cd -P "$TMP_PROJ" 2>/dev/null && pwd -P)" || PROJ_PHYS=""
+    [ -n "$PROJ_PHYS" ] && [ -d "$PROJ_PHYS" ] || { echo "dashboard-staleness-guard: failed to resolve projection directory" >&2; exit 1; }
+    case "$PROJ_PHYS" in
+      "$TMP_PARENT"/*) ;;
+      *) echo "dashboard-staleness-guard: projection dir $PROJ_PHYS is not a resolved descendant of $TMP_PARENT" >&2; exit 1 ;;
+    esac
 
     drift_detected=1
     if git -C "$REPO" archive "$local_sha" 2>/dev/null | tar -x -C "$TMP_PROJ" 2>/dev/null \

@@ -254,15 +254,36 @@ esac
 # Restore working tree
 git -C "$R" checkout ROADMAP-DASHBOARD.md
 
-# 4. Multi-ref push test: Ref 1 is clean, Ref 2 has the bad commit -> guard catches Ref 2
+# 4. Multi-ref push test with BAD_COMMIT FIRST and clean BASE_COMMIT LAST
+# Proves per-ref evaluation does not merely inspect the last ref in the list
 rc=0
-guard_multi_out="$(bash "$GUARD" "$R" "$BASE_COMMIT" "$BASE_COMMIT" "$BAD_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
-[ "$rc" -eq 1 ] || fail "guard should refuse multi-ref push containing bad commit, got $rc"
+guard_multi_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" "$BASE_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "guard should refuse multi-ref push with bad commit first, got $rc"
 case "$guard_multi_out" in
   *"produces NO diff (GH-243 / GH-257)"*)
-    pass "end-to-end: multi-ref push correctly evaluates per-ref and catches bad commit"
+    pass "end-to-end: multi-ref push correctly evaluates bad ref first and clean ref last"
     ;;
   *) fail "expected no-diff refusal in multi-ref push, got: $guard_multi_out" ;;
+esac
+
+# Cross-ref test: Ref 1 touches ledger only (BAD_COMMIT), Ref 2 touches dashboard only
+cd "$R"
+git checkout -q -b branch-dash-only "$BASE_COMMIT"
+echo "# modified dashboard" >> ROADMAP-DASHBOARD.md
+git add ROADMAP-DASHBOARD.md
+git -c user.email=t@t -c user.name=t commit -q -m "dashboard only commit"
+DASH_ONLY_COMMIT="$(git rev-parse HEAD)"
+git checkout -q -
+cd "$root"
+
+rc=0
+guard_cross_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" "$DASH_ONLY_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "cross-ref push should refuse bad ledger ref despite separate dashboard ref, got $rc"
+case "$guard_cross_out" in
+  *"produces NO diff (GH-243 / GH-257)"*)
+    pass "end-to-end: cross-ref push enforces per-ref consistency and refuses stale ledger ref"
+    ;;
+  *) fail "expected refusal on cross-ref push, got: $guard_cross_out" ;;
 esac
 
 # 5. Remediation: use roadmap update to fix raw_text
