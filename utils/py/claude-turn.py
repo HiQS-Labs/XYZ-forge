@@ -260,6 +260,22 @@ def main():
         except Exception:
             pass
             
+    try:
+        from harness_turn_logger import HarnessTurnLogger
+        with HarnessTurnLogger(
+            harness_id="claude",
+            shim="claude-turn.py",
+            task_scope=t,
+            model_id=os.environ.get("CLAUDE_MODEL", "anthropic/claude-3-7-sonnet"),
+            gateway=os.environ.get("CLAUDE_GATEWAY", "anthropic"),
+            reasoning_effort=os.environ.get("CLAUDE_REASONING_EFFORT", "high"),
+            cli_flags=cflags,
+            repo_root=xyz_root,
+        ) as logger:
+            logger.exit_code = bounded_rc or rc
+    except Exception:
+        pass
+
     sys.exit(rc)
 
 if __name__ == "__main__":

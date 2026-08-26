@@ -21,26 +21,44 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "== test: gh174-harness-registry =="
 
+# Capture root file baseline checksums to verify zero-pollution
+BEFORE_DB_CKSUM="$(cksum "$ROOT/harnesses.db")"
+BEFORE_SQL_CKSUM="$(cksum "$ROOT/harnesses.sql")"
+BEFORE_GEN_MD_CKSUM="$(cksum "$ROOT/HARNESS-MODELS-REGISTRY.generated.md")"
+BEFORE_BLOG_CKSUM="$(cksum "$ROOT/docs/blog-frontier-benchmarks.md")"
+
+# Hermetic sandbox setup: isolated db, sql, generated docs, and config
+mkdir -p "$WORK/docs"
+cp "$ROOT/harnesses.db" "$WORK/harnesses.db"
+cp "$ROOT/harnesses.sql" "$WORK/harnesses.sql"
+cp "$ROOT/HARNESS-MODELS-REGISTRY.generated.md" "$WORK/HARNESS-MODELS-REGISTRY.generated.md"
+
 export PYTHONPATH="$ROOT/utils/py:${PYTHONPATH:-}"
+export XYZ_DEVICE_CONFIG_PATH="$WORK/isolated_device_config.json"
+export XYZ_HARNESS_DB="$WORK/harnesses.db"
+export XYZ_HARNESS_SQL="$WORK/harnesses.sql"
+export XYZ_HARNESS_GENERATED_MD="$WORK/HARNESS-MODELS-REGISTRY.generated.md"
+export XYZ_HARNESS_DOCS_DIR="$WORK/docs"
 
 HARNESS_APP="$ROOT/utils/py/harness_app.py"
+HARNESS_ALIAS="$ROOT/utils/py/harness.py"
 DEVICE_CONFIG="$ROOT/utils/py/device_config.py"
 TURN_LOGGER="$ROOT/utils/py/harness_turn_logger.py"
 
 # 1. Executables exist
-if [ -x "$HARNESS_APP" ] && [ -x "$DEVICE_CONFIG" ] && [ -x "$TURN_LOGGER" ]; then
-  pass "All GH-174 Python executables exist and are executable"
+if [ -x "$HARNESS_APP" ] && [ -x "$HARNESS_ALIAS" ] && [ -x "$DEVICE_CONFIG" ] && [ -x "$TURN_LOGGER" ]; then
+  pass "All GH-174 Python executables and alias entry points exist and are executable"
 else
   fail "GH-174 Python executables missing or not executable"
 fi
 
 # 2. Database integrity & schema checks
 rc=0
-out="$(python3 "$HARNESS_APP" check 2>&1)" || rc=$?
+out="$(python3 "$HARNESS_ALIAS" check 2>&1)" || rc=$?
 if [ "$rc" -eq 0 ] && grep -q "harness check: clean" <<<"$out"; then
-  pass "harness_app.py check verifies foreign_keys and SQLite integrity"
+  pass "harness.py check verifies foreign_keys and SQLite integrity"
 else
-  fail "harness_app.py check failed (rc=$rc, out=$out)"
+  fail "harness.py check failed (rc=$rc, out=$out)"
 fi
 
 # 3. 3-Tier Per-Device Config Resolution
@@ -77,7 +95,7 @@ else
   fail "device_config.py failed (rc=$rc, out=$out)"
 fi
 
-# 4. Turn execution telemetry logging & grading hook
+# 4. Turn execution telemetry logging & grading hook (off by default, opt-in with XYZ_HARNESS_LOGGING=1)
 TEST_LOGGER="$WORK/test_logger.py"
 cat > "$TEST_LOGGER" <<PYEOF
 import json
@@ -86,6 +104,19 @@ import sys
 
 from harness_turn_logger import HarnessTurnLogger
 
+# 4a. Verify OFF by default
+with HarnessTurnLogger(
+    harness_id="commandcode",
+    shim="commandcode-turn.sh",
+    task_scope="GH-174 test invocation off by default",
+    model_id="Qwen/Qwen3.8-Max",
+    reasoning_effort="xhigh",
+) as logger:
+    logger.tokens = 100
+assert logger.invocation_id is None, "Harness logging must be OFF by default"
+
+# 4b. Verify OPT-IN logging with XYZ_HARNESS_LOGGING=1
+os.environ["XYZ_HARNESS_LOGGING"] = "1"
 with HarnessTurnLogger(
     harness_id="commandcode",
     shim="commandcode-turn.sh",
@@ -120,10 +151,10 @@ else
   fail "HarnessTurnLogger failed (rc=$rc, out=$out)"
 fi
 
-# 5. Blog generation synthesis
+# 5. Blog generation synthesis into isolated output dir
 rc=0
 out="$(python3 "$HARNESS_APP" blog gen --theme "Frontier AI Benchmarks in XYZ" --slug "frontier-benchmarks" 2>&1)" || rc=$?
-BLOG_FILE="$ROOT/docs/blog-frontier-benchmarks.md"
+BLOG_FILE="$WORK/docs/blog-frontier-benchmarks.md"
 if [ "$rc" -eq 0 ] && [ -f "$BLOG_FILE" ] && grep -q "Frontier AI Benchmarks in XYZ" "$BLOG_FILE"; then
   pass "harness_app.py blog gen synthesizes publishable Markdown case study"
 else
@@ -159,6 +190,31 @@ if [ "$rc" -eq 0 ] && grep -q "CHECK_CONSTRAINT_REJECTED_OK" <<<"$out"; then
   pass "Negative control: Invalid evaluation grade correctly rejected by SQLite CHECK constraint"
 else
   fail "Negative control failed (rc=$rc, out=$out)"
+fi
+
+# 7. Novel model lab auto-derivation on log
+rc=0
+out="$(python3 "$HARNESS_APP" log --device-id "test-box" --harness-id "agy" --model-id "experimental-lab/custom-model-v1" --shim "test.sh" --task-scope "test-lab-infer" 2>&1)" || rc=$?
+LAB_INFERRED="$(sqlite3 "$WORK/harnesses.db" "SELECT lab FROM models WHERE model_id='experimental-lab/custom-model-v1';")"
+if [ "$rc" -eq 0 ] && [ "$LAB_INFERRED" = "Experimental-lab" ]; then
+  pass "harness_app.py log automatically derives lab name for novel model IDs"
+else
+  fail "Novel model lab inference failed (rc=$rc, out=$out, lab=$LAB_INFERRED)"
+fi
+
+# 8. Negative control: Tracked root files must be 100% byte-unchanged
+AFTER_DB_CKSUM="$(cksum "$ROOT/harnesses.db")"
+AFTER_SQL_CKSUM="$(cksum "$ROOT/harnesses.sql")"
+AFTER_GEN_MD_CKSUM="$(cksum "$ROOT/HARNESS-MODELS-REGISTRY.generated.md")"
+AFTER_BLOG_CKSUM="$(cksum "$ROOT/docs/blog-frontier-benchmarks.md")"
+
+if [ "$BEFORE_DB_CKSUM" = "$AFTER_DB_CKSUM" ] && \
+   [ "$BEFORE_SQL_CKSUM" = "$AFTER_SQL_CKSUM" ] && \
+   [ "$BEFORE_GEN_MD_CKSUM" = "$AFTER_GEN_MD_CKSUM" ] && \
+   [ "$BEFORE_BLOG_CKSUM" = "$AFTER_BLOG_CKSUM" ]; then
+  pass "Negative control: tracked harnesses.db, harnesses.sql, and docs remain 100% byte-unchanged"
+else
+  fail "Negative control failed: test wrote into tracked root database or doc files"
 fi
 
 echo "gh174-harness-registry: $PASS pass, $FAIL fail"

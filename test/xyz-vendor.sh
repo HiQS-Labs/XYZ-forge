@@ -34,21 +34,35 @@ relay_repo=$(find "$ROOT/relay-automation" -name '*.sh' 2>/dev/null | wc -l | tr
 relay_van=$(find "$REPO/.xyz/relay-automation" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 test_repo=$(find "$ROOT/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 test_van=$(find "$REPO/.xyz/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
-{ [ "$relay_van" = "$relay_repo" ] && [ "$test_van" = "$test_repo" ] && [ "$relay_van" -gt 0 ]; } \
-  && pass "full mirror matches harness ($relay_van relay-automation + $test_van test *.sh)" \
-  || fail "vendor mirror incomplete: relay-automation $relay_van/$relay_repo, test $test_van/$test_repo"
+# Under GH-197 Tier 1 excludes xyz-releases-onboard.sh from relay-automation/
+expected_relay_sh=$((relay_repo - 1))
+{ [ "$relay_van" = "$expected_relay_sh" ] && [ "$test_van" = "$test_repo" ] && [ "$relay_van" -gt 0 ]; } \
+  && pass "full mirror matches harness ($relay_van relay-automation + $test_van test *.sh, excluding 1 overlay script)" \
+  || fail "vendor mirror incomplete: relay-automation $relay_van/$expected_relay_sh, test $test_van/$test_repo"
 src_repo=$(find "$ROOT/src" -name '*.js' | wc -l | tr -d ' ')
 src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
 utils_repo=$(find "$ROOT/utils" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 utils_van=$(find "$REPO/.xyz/utils" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
-{ [ "$utils_van" = "$utils_repo" ] && [ "$utils_van" -gt 0 ]; } \
-  && pass "utils/ vendored ($utils_van *.sh)" \
-  || fail "utils/ vendor incomplete: vendored $utils_van vs harness $utils_repo"
+# Under GH-197 Tier 1 excludes the 2 overlay scripts (releases-merge-resolve.sh, release-lanes.sh)
+expected_utils_sh=$((utils_repo - 2))
+{ [ "$utils_van" = "$expected_utils_sh" ] && [ "$utils_van" -gt 0 ]; } \
+  && pass "Tier 1 utils/*.sh vendored ($utils_van *.sh, excluding 2 overlay scripts)" \
+  || fail "utils/ vendor incomplete: vendored $utils_van vs expected $expected_utils_sh (repo total $utils_repo)"
 [ -f "$REPO/.xyz/utils/swarm-preflight.sh" ] && bash -n "$REPO/.xyz/utils/swarm-preflight.sh" 2>/dev/null \
   && pass "vendored swarm-preflight.sh parses" || fail "vendored swarm-preflight.sh missing or parse-fail"
 [ -f "$REPO/.xyz/utils/marathon-plan.sh" ] && bash -n "$REPO/.xyz/utils/marathon-plan.sh" 2>/dev/null \
   && pass "vendored marathon-plan.sh parses" || fail "vendored marathon-plan.sh missing or parse-fail"
+[ -f "$REPO/.xyz/utils/py/rtl.py" ] && pass "utils/py/rtl.py vendored in Tier 1" || fail "utils/py/rtl.py missing in Tier 1"
+[ -f "$REPO/.xyz/utils/py/marathon_plan.py" ] && pass "utils/py/marathon_plan.py vendored in Tier 1" || fail "utils/py/marathon_plan.py missing in Tier 1"
+[ ! -e "$REPO/.xyz/relay-automation/xyz-releases-onboard.sh" ] && pass "Tier 1: xyz-releases-onboard.sh excluded" || fail "Tier 1: xyz-releases-onboard.sh unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/py/releases_app.py" ] && pass "Tier 1: releases_app.py excluded" || fail "Tier 1: releases_app.py unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/py/releases_cycle.py" ] && pass "Tier 1: releases_cycle.py excluded" || fail "Tier 1: releases_cycle.py unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/releases-merge-resolve.sh" ] && pass "Tier 1: releases-merge-resolve.sh excluded" || fail "Tier 1: releases-merge-resolve.sh unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/release-lanes.sh" ] && pass "Tier 1: release-lanes.sh excluded" || fail "Tier 1: release-lanes.sh unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/timeline" ] && pass "Tier 1: utils/timeline excluded" || fail "Tier 1: utils/timeline unexpectedly present"
+[ ! -e "$REPO/.xyz/RELEASES-DB-FAQS.md" ] && pass "Tier 1: RELEASES-DB-FAQS.md excluded" || fail "Tier 1: RELEASES-DB-FAQS.md unexpectedly present"
+grep -Fqx 'tier=1' "$REPO/.xyz/VERSION" && pass "Tier 1: stamped tier=1 in VERSION" || fail "Tier 1: missing or wrong tier in VERSION"
 [ -x "$REPO/.xyz/bin/tick" ] && pass "bin/tick vendored + executable" || fail "bin/tick missing or not executable"
 [ -x "$REPO/.xyz/bin/validate-relay-block" ] && pass "bin/validate-relay-block vendored + executable" || fail "bin/validate-relay-block missing or not executable"
 # GH-49b: the marathon runtime is vendored too (so the copy can run marathons, not just relays).
@@ -57,8 +71,8 @@ for mf in marathon-drive.sh marathon.sh marathon-agent.sh claude-turn.sh; do
   [ -f "$REPO/.xyz/relay-automation/$mf" ] && bash -n "$REPO/.xyz/relay-automation/$mf" 2>/dev/null && mcount=$((mcount+1))
 done
 [ "$mcount" = 4 ] && pass "GH-49b: marathon runtime vendored + parses (4 files)" || fail "marathon runtime incomplete ($mcount/4)"
-vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc)=' "$REPO/.xyz/VERSION" 2>/dev/null)
-[ "$vfields" = 3 ] && pass "VERSION has all 3 fields" || fail "VERSION malformed ($vfields/3 fields)"
+vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc|tier)=' "$REPO/.xyz/VERSION" 2>/dev/null)
+[ "$vfields" = 4 ] && pass "VERSION has all 4 fields (incl. tier)" || fail "VERSION malformed ($vfields/4 fields)"
 grep -Fqx '.xyz/' "$REPO/.gitignore" && pass ".xyz/ gitignored" || fail ".xyz/ not in .gitignore"
 grep -Fqx '/.tick/' "$REPO/.gitignore" && pass "/.tick/ gitignored (GH-440)" || fail "/.tick/ not in .gitignore"
 [ "$(grep -vc '^#' "$XYZ_REGISTRY")" = 1 ] && pass "registry has 1 vendored row" || fail "registry row count wrong"
@@ -78,28 +92,38 @@ mkignore_repo() {  # <ignore-line> -> prints a fresh repo whose .gitignore carri
 
 for rule in '/relay-system' 'phases' '/phases/'; do
   BR="$(mkignore_repo "$rule")"
-  before="$(cat "$BR/.gitignore")"
-  out="$( "$VENDOR" "$BR" 2>&1 )"; rc=$?
-  [ "$rc" = 6 ] \
-    && pass "GH-314: REFUSES to vendor into a repo ignoring '$rule' (exit 6)" \
-    || fail "GH-314: vendored into a repo ignoring '$rule' anyway (exit $rc)"
-  grep -q "$rule" <<<"$(printf '%s' "$out")" \
+  out="$( "$VENDOR" --no-register "$BR" 2>&1 )"; rc=$?
+  [ "$rc" = 0 ] \
+    && pass "GH-226: VENDORS into a repo ignoring '$rule' (exit 0, marathon check deferred to runtime)" \
+    || fail "GH-226: failed to vendor into a repo ignoring '$rule' (exit $rc)"
+  grep -Fq "$rule" <<<"$(printf '%s' "$out")" \
     && pass "  and names the rule in the way" \
-    || fail "  but did not name '$rule' in its refusal"
-  # A refusal must leave the target EXACTLY as it was — no half-install, no edited .gitignore.
-  # Refusing while having already mutated the repo is worse than either outcome alone.
-  [ "$before" = "$(cat "$BR/.gitignore")" ] \
-    && pass "  and left the target's .gitignore untouched" \
-    || fail "  but edited the target's .gitignore while refusing"
-  [ ! -d "$BR/.xyz" ] \
-    && pass "  and left no half-installed .xyz/" \
-    || fail "  but left .xyz/ behind after refusing"
+    || fail "  but did not name '$rule' in its warning"
+  grep -Fq "WARNING" <<<"$(printf '%s' "$out")" \
+    && pass "  and emitted the advisory warning banner" \
+    || fail "  but did not emit WARNING banner"
+  # Vendoring must preserve the original rule and add .xyz/ and /.tick/ to .gitignore, never un-ignore.
+  grep -Fqx "$rule" "$BR/.gitignore" \
+    && pass "  and preserved original ignore rule '$rule'" \
+    || fail "  but original rule '$rule' was lost from .gitignore"
+  grep -Fqx '.xyz/' "$BR/.gitignore" \
+    && pass "  and added .xyz/ to .gitignore" \
+    || fail "  but .xyz/ was not added to .gitignore"
+  grep -Fqx '/.tick/' "$BR/.gitignore" \
+    && pass "  and added /.tick/ to .gitignore" \
+    || fail "  but /.tick/ was not added to .gitignore"
+  ! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
+    && pass "  and left ignored paths un-negated (never un-ignores for you)" \
+    || fail "  but wrote a negation rule to un-ignore '$rule'"
+  [ -d "$BR/.xyz" ] \
+    && pass "  and successfully materialized .xyz/" \
+    || fail "  but failed to materialize .xyz/"
 done
 
 # It must NOT auto-un-ignore: doing so would publish builder/reviewer transcripts the repo chose to
 # withhold, irreversibly on a public target. This assertion is what stops a future "helpful" fix.
 BR="$(mkignore_repo '/relay-system')"
-"$VENDOR" "$BR" >/dev/null 2>&1 || true
+"$VENDOR" --no-register "$BR" >/dev/null 2>&1 || true
 ! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
   && pass "GH-314: never writes a negation rule to un-ignore for you" \
   || fail "GH-314: silently un-ignored a path the target deliberately excluded"

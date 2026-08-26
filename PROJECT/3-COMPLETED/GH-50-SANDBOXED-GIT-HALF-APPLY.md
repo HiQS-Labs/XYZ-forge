@@ -1,8 +1,8 @@
 ---
 title: "GH-50: sandboxed git --track / branch -D half-applies — working tree rewritten, .git/config write fails, HEAD left behind"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: make branch operations refuse-or-succeed atomically under a sandbox that blocks .git/config writes, so a half-applied switch can never overwrite uncommitted work
 gh_issue: 50
@@ -65,3 +65,13 @@ away; the visible symptom is only a misleading upstream hint.
   "lanes":         { "agy_safe": [ "utils/git-sandbox-guard.sh", "test/gh50-sandboxed-git-guard.sh" ], "orchestrator_only": [ "AGENTS.md" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- A sandboxed `git switch --track` HALF-APPLIES: index and working tree move, the `.git/config`
+  write fails, HEAD stays behind — the tree silently holds another branch's content. Probe
+  `.git/config` writability BEFORE any branch mutation (`utils/git-sandbox-guard.sh`), not after.
+- The fatal line (`could not lock config file .git/config`) is easy to truncate away; never trim
+  git stderr on branch operations — the visible symptom without it is a misleading upstream hint.
+- The suite simulates a read-only `.git/config` and asserts refusal happens before any tree
+  mutation (byte-identical tree after), which is the property that actually protects uncommitted work.

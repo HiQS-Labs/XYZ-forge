@@ -1,12 +1,12 @@
 ---
 title: "GH-113: headless agy builder writes root scratch files, tripping containment (exit 6)"
-status: active
+status: Complete
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: give headless builder turns a sanctioned scratch lane so debugging temp files can never trip the containment guard
 gh_issue: 113
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/113
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/113
 branch: gh-113/headless-scratch-containment
 doc_type: bugfix
 effort: 2
@@ -71,3 +71,13 @@ temp file is an off-allowlist change and the guard's only move is revert-and-fai
   "lanes":         { "agy_safe": [ "test/gh113-headless-scratch.sh" ], "orchestrator_only": [ "relay-automation/", ".tick/" ] }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- Prose rules in a builder prompt ("no root scratch files") are not containment: models ignore
+  them under debugging pressure. Give the turn a sanctioned scratch lane and relocate strays
+  into it (`rtl_scratch_relocate` → `.tick/scratch/<ts>-$$/`) instead of failing the turn.
+- Keep the relocation a room, not an amnesty (GH-91's line): only untracked, root-level,
+  scratch-NAMED files qualify; nested paths, dotfiles, and tracked off-lane edits still exit 6.
+- Wire the same relocation into BOTH containment paths (`rtl_check` and `rtl_worktree_end`) —
+  the non-worktree path is where the daybreak-wave-2 shape actually fired.

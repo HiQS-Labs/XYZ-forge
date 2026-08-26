@@ -1,0 +1,32 @@
+# Marathon: 0.7.4 Linux-RC exit-gate closers (#204 #205 #123-remainder) — umbrella #224 Phase 2.
+# Run with:  relay-automation/marathon.sh --plan marathon-plans/2026-08-24-linux-rc/MARATHON.yaml
+# NOT FIRED — operator fires marathons (GUIDING-PRINCIPLES §8). Computed 2026-08-24, all three
+# lanes preflight-READY (swarm-preflight --gh-issue N --dry-run, exit 0).
+# gh204 and gh205 both register suites in validate.sh (shared write-set) → serialized via
+# depends_on. gh123 touches only test/gh358-lock-instrumentation.sh — disjoint, first wave.
+# Builder is codex, so every reviewer must be agy (builder != reviewer).
+# SOP: fire from a fresh full clone of origin/development (SOP.md §4, GH-564 — no worktrees).
+
+name: linux-rc-exit-gate-closers
+phases:
+  - id: gh204-sed-portability
+    name: "GH-204: portable in-place edits — production sed sites + content-asserted regression"
+    reviewer: agy
+    brief: marathon-plans/2026-08-24-linux-rc/brief-gh204-sed-portability.md
+    artifact: utils/build-launch-artifact.sh,test/meter-release.sh,utils/py/relay_drive.py,test/gh204-sed-portability.sh,validate.sh
+    max_review_rounds: 3
+
+  - id: gh205-gate-idempotency
+    name: "GH-205: fixture-isolate gh174 registry suite — porcelain-clean gate"
+    reviewer: agy
+    brief: marathon-plans/2026-08-24-linux-rc/brief-gh205-gate-idempotency.md
+    artifact: test/gh174-harness-registry.sh,utils/py/harness_app.py,test/gh205-gate-idempotency.sh,validate.sh
+    depends_on: gh204-sed-portability
+    max_review_rounds: 3
+
+  - id: gh123-canary-remainder
+    name: "GH-123 remainder: gh358 lock contention deterministic under shared-runner CPU load"
+    reviewer: agy
+    brief: marathon-plans/2026-08-24-linux-rc/brief-gh123-canary-remainder.md
+    artifact: test/gh358-lock-instrumentation.sh
+    max_review_rounds: 3

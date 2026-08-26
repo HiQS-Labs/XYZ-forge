@@ -21,18 +21,40 @@ def get_repo_root() -> str:
 
 
 def get_db_path(repo_root: Optional[str] = None) -> str:
+    if "XYZ_HARNESS_DB" in os.environ:
+        return os.environ["XYZ_HARNESS_DB"]
     root = repo_root or get_repo_root()
     return os.path.join(root, "harnesses.db")
 
 
 def get_sql_path(repo_root: Optional[str] = None) -> str:
+    if "XYZ_HARNESS_SQL" in os.environ:
+        return os.environ["XYZ_HARNESS_SQL"]
+    if "XYZ_HARNESS_DB" in os.environ:
+        base = os.path.splitext(os.environ["XYZ_HARNESS_DB"])[0]
+        return base + ".sql"
     root = repo_root or get_repo_root()
     return os.path.join(root, "harnesses.sql")
 
 
 def get_generated_md_path(repo_root: Optional[str] = None) -> str:
+    if "XYZ_HARNESS_GENERATED_MD" in os.environ:
+        return os.environ["XYZ_HARNESS_GENERATED_MD"]
+    if "XYZ_HARNESS_DB" in os.environ:
+        db_dir = os.path.dirname(os.path.abspath(os.environ["XYZ_HARNESS_DB"]))
+        return os.path.join(db_dir, "HARNESS-MODELS-REGISTRY.generated.md")
     root = repo_root or get_repo_root()
     return os.path.join(root, "HARNESS-MODELS-REGISTRY.generated.md")
+
+
+def get_blog_doc_path(slug: str, repo_root: Optional[str] = None) -> str:
+    if "XYZ_HARNESS_DOCS_DIR" in os.environ:
+        return os.path.join(os.environ["XYZ_HARNESS_DOCS_DIR"], f"blog-{slug}.md")
+    if "XYZ_HARNESS_DB" in os.environ:
+        db_dir = os.path.dirname(os.path.abspath(os.environ["XYZ_HARNESS_DB"]))
+        return os.path.join(db_dir, "docs", f"blog-{slug}.md")
+    root = repo_root or get_repo_root()
+    return os.path.join(root, "docs", f"blog-{slug}.md")
 
 
 def init_db(db_path: str) -> sqlite3.Connection:
@@ -231,8 +253,19 @@ def generate_markdown(conn: sqlite3.Connection, md_path: str):
         "|---|---|:---:|:---:|:---:|",
     ])
     for m in models:
-        prices = f"${m['prompt_price_per_m']:.2f} / ${m['completion_price_per_m']:.2f} / ${m['cache_read_price_per_m']:.4f}"
-        levels = ", ".join(json.loads(m['supported_reasoning_levels'] or '[]')) or "—"
+        p_in = f"${m['prompt_price_per_m']:.2f}" if m['prompt_price_per_m'] is not None else "—"
+        p_out = f"${m['completion_price_per_m']:.2f}" if m['completion_price_per_m'] is not None else "—"
+        p_cache = f"${m['cache_read_price_per_m']:.4f}" if m['cache_read_price_per_m'] is not None else "—"
+        prices = f"{p_in} / {p_out} / {p_cache}"
+        raw_levels = m['supported_reasoning_levels'] or ""
+        if raw_levels.startswith("["):
+            try:
+                levels = ", ".join(json.loads(raw_levels))
+            except Exception:
+                levels = raw_levels
+        else:
+            levels = raw_levels
+        levels = levels or "—"
         lines.append(f"| **{m['lab']}** | `{m['canonical_name']}` | {m['context_window']:,} | `{levels}` | {prices} |")
 
     lines.extend([
@@ -367,6 +400,16 @@ def main() -> int:
     if args.subcommand == "log":
         conn = init_db(db_p)
         inv_id = f"inv-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}-{os.urandom(4).hex()}"
+        # Auto-infer lab from model identifier (e.g., 'anthropic/claude-3-7-sonnet' -> 'Anthropic')
+        lab = "Auto"
+        if "/" in args.model_id:
+            parts = [p.strip() for p in args.model_id.split("/") if p.strip()]
+            if parts:
+                if parts[0].lower() == "openrouter" and len(parts) >= 2:
+                    lab = parts[1].capitalize()
+                else:
+                    lab = parts[0].capitalize()
+
         with conn:
             conn.execute("""
             INSERT OR IGNORE INTO devices (device_id, user_name, os_version, cpu_cores, ram_gb)
@@ -375,8 +418,8 @@ def main() -> int:
 
             conn.execute("""
             INSERT OR IGNORE INTO models (model_id, lab, canonical_name, gateway, context_window, prompt_price_per_m, completion_price_per_m, cache_read_price_per_m, supported_reasoning_levels)
-            VALUES (?, 'Auto', ?, ?, 1000000, 0.0, 0.0, 0.0, '["none"]');
-            """, (args.model_id, args.model_id, args.gateway))
+            VALUES (?, ?, ?, ?, 1000000, 0.0, 0.0, 0.0, '["none"]');
+            """, (args.model_id, lab, args.model_id, args.gateway or "auto"))
 
             conn.execute("""
             INSERT INTO invocation_logs (
@@ -462,8 +505,8 @@ def main() -> int:
             """, (story_id, title, args.slug, args.theme, json.dumps([]), story_md))
 
         dump_sql(conn, sql_p)
-        out_path = os.path.join(root, "docs", f"blog-{args.slug}.md")
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        out_path = get_blog_doc_path(args.slug, root)
+        os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(story_md)
         print(f"Generated blog story {story_id} -> {out_path}")

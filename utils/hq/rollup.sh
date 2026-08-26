@@ -32,7 +32,47 @@ while IFS= read -r repo; do
   fields="$(hq_repo_resolve "$repo")"
   path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
   
-  if [ -n "$path" ] && [ -f "$path/ROADMAP.md" ]; then
+  if [ -n "$path" ] && hq_is_releases_mode "$path"; then
+    echo "  scanning $repo ($path)... [releases DB]"
+    if r_bin="$(hq_releases_bin "$path")" && [ -f "$path/releases.db" ]; then
+      # Structured JSON, not the human `roadmap list` rendering — column offsets in that display
+      # shift the moment a field widens. The JSON lands in a temp file passed as argv (mirroring
+      # the node branch below): `python3 -` reads its PROGRAM from stdin via the heredoc, so
+      # piping data to it as well would silently feed the parser nothing.
+      RITEMS_TMP="$(mktemp "${TMPDIR:-/tmp}/hq-rollup-ritems.XXXXXX")"
+      # subshell cd: the CLI resolves its DB from the CWD, not from the script's own path —
+      # without it this reads the ROLLUP HOST's ledger while labeling it "$repo".
+      if ( cd "$path" && python3 "$r_bin" roadmap list --json ) > "$RITEMS_TMP" 2>/dev/null; then
+        python3 - "$repo" "$RITEMS_TMP" >> "$RAW_FILE" <<'PY' || echo "  ! roadmap parse failed for $repo" >&2
+import json, sys
+repo, items_path = sys.argv[1], sys.argv[2]
+try:
+    with open(items_path) as f:
+        items = json.load(f)
+except (OSError, ValueError):
+    items = []
+groups = {}
+for it in items:
+    section = (it.get("section") or "").strip()
+    title = (it.get("title") or "").strip()
+    if not title or section == "Completed":
+        continue
+    groups.setdefault(section or "(unsectioned)", []).append("- " + title)
+if groups:
+    print(f"\n=== REPO: {repo} ===")
+    for section, rows in groups.items():
+        print(f"\nSection: {section}")
+        for row in rows:
+            print(row)
+PY
+      else
+        echo "  ! releases roadmap list failed for $repo" >&2
+      fi
+      rm -f "$RITEMS_TMP"
+    else
+      echo "  ! releases CLI/DB missing for $repo" >&2
+    fi
+  elif [ -n "$path" ] && [ -f "$path/ROADMAP.md" ]; then
     echo "  scanning $repo ($path)..."
     
     node - "$path/ROADMAP.md" "$repo" >> "$RAW_FILE" <<'NODE'

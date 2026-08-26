@@ -101,7 +101,7 @@ cmd_status(){
 
   # repo-local governance facts (authoritative over the registries)
   local I
-  I="$(hq_inspect_repo "$path")"
+  I="$(hq_inspect_repo "$path" --with-releases)"
   lmode="$(printf '%s\n' "$I"    | val LOCAL_PDDA_MODE)"
   lrouter="$(printf '%s\n' "$I"  | val LOCAL_ROUTER)"
   lagents="$(printf '%s\n' "$I"  | val LOCAL_AGENTS)"
@@ -109,10 +109,17 @@ cmd_status(){
   lpddash="$(printf '%s\n' "$I"  | val LOCAL_PDDA_SH)"
   ldocs="$(printf '%s\n' "$I"    | val LOCAL_ACTIVE_DOCS)"
   lmara="$(printf '%s\n' "$I"    | val LOCAL_MARATHON)"
+  
+  local lnext lroadmap_open ldash_stale
+  lnext="$(printf '%s\n' "$I" | val LOCAL_NEXT_RELEASE)"
+  lroadmap_open="$(printf '%s\n' "$I" | val LOCAL_ROADMAP_OPEN)"
+  ldash_stale="$(printf '%s\n' "$I" | val LOCAL_DASHBOARD_STALE)"
 
   # capability tier: PDDA present (registry OR on-disk) AND XYZ install present
   local has_pdda=0 has_xyz=0 tier tierdesc
   { [ -n "$pmode" ] || [ -n "$lpddash" ] || [ -n "$lmode" ]; } && has_pdda=1
+  local is_releases=0
+  hq_is_releases_mode "$path" && is_releases=1
   [ -n "$xyz_path" ] && has_xyz=1
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
   case "$tier" in
@@ -137,10 +144,29 @@ cmd_status(){
     echo   '  PDDA rails:   (not in any git-pulse registry)'
   fi
   printf '  local mode:   %s\n' "${lmode:-– (no .pdda-mode)}"
-  printf '  startup docs: ROUTER %s  AGENTS %s  ROADMAP %s\n' \
+  local rmap_label="ROADMAP"
+  local rmap_check="$([ -n "$lroadmap" ] && echo ✓ || echo ✗)"
+  if [ "$is_releases" = "1" ]; then
+    rmap_label="RELEASES-DB"
+    if [ "$lroadmap" = "broken" ]; then
+      rmap_check="✗ (releases-mode declared, but releases.db or CLI missing)"
+    elif [ -n "$lroadmap" ]; then
+      rmap_check="✓"
+      local dash_txt="dashboard ✓"
+      [ "$ldash_stale" = "yes" ] && dash_txt="dashboard ✗ stale"
+      rmap_check="$rmap_check ($dash_txt, $lroadmap_open open roadmap items)"
+    fi
+  fi
+  
+  printf '  startup docs: ROUTER %s  AGENTS %s  %s %s\n' \
     "$([ -n "$lrouter" ] && echo ✓ || echo ✗)" \
     "$([ -n "$lagents" ] && echo ✓ || echo ✗)" \
-    "$([ -n "$lroadmap" ] && echo ✓ || echo ✗)"
+    "$rmap_label" "$rmap_check"
+    
+  if [ "$is_releases" = "1" ] && [ "$lroadmap" != "broken" ] && [ -n "$lnext" ]; then
+    printf '  next release: %s\n' "$lnext"
+  fi
+  
   printf '  active docs:  %s in PROJECT/2-WORKING\n' "${ldocs:-0}"
   printf '  marathon:     %s\n' "${lmara:-(none open)}"
   if [ -n "$xyz_path" ]; then
@@ -222,6 +248,8 @@ cmd_park(){
   fi
   { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
   [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
+  local is_releases=0
+  hq_is_releases_mode "$path" && is_releases=1
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
 
   local title slug created oslug src
@@ -259,6 +287,11 @@ cmd_park(){
     printf '  target repo:  %s  →  %s  (%s)\n' "$project" "$repo" "$path"
     printf '  GitHub issue: %s\n' "$title"
     printf '  capture doc:  %s\n' "$relpath"
+    if [ "$is_releases" = "1" ]; then
+      printf '  ROADMAP sink: releases roadmap add (DB row, not ROADMAP.md text)\n'
+    fi
+    # Both sinks store the SAME rendered line (releases-mode passes it via --raw-text), so the
+    # preview shows it unconditionally — what you see is byte-for-byte what either sink records.
     printf '  ROADMAP line: %s\n' "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "#")"
     echo
     echo "  --- capture doc that would be written ---"
@@ -297,18 +330,43 @@ cmd_park(){
   printf '  ✓ issue:   %s\n' "$url"
   printf '  ✓ capture: %s\n' "$relpath"
 
-  if [ -f "$roadmap" ]; then
-    local where
-    where="$(hq_roadmap_insert "$roadmap" "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")")"
-    printf '  ✓ ROADMAP: pointer added (%s)\n' "$where"
+  local r_bin=""
+  if [ "$is_releases" = "1" ]; then
+    # No fallback to ROADMAP.md here on purpose: in releases-mode the text file is not the
+    # source of truth, so failing loudly beats silently parking where nothing reads.
+    if ! r_bin="$(hq_releases_bin "$path")"; then
+      echo "  ! releases roadmap add failed: no releases_app.py under $path (utils/py/ or .xyz/utils/py/)" >&2
+      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — install the CLI, then run 'releases roadmap add' there manually." >&2
+      return 1
+    fi
+    local db_out
+    if db_out="$(cd "$path" && python3 "$r_bin" roadmap add --issue-num "$num" --issue-url "$url" --title "$title" --created "$created" --doc-path "$relpath" --raw-text "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")" 2>&1)"; then
+      printf '  ✓ DB: pointer added via releases CLI\n'
+    else
+      echo "  ! releases roadmap add failed: $db_out" >&2
+      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — fix the DB, then run 'releases roadmap add' there manually." >&2
+      return 1
+    fi
   else
-    echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
+    if [ -f "$roadmap" ]; then
+      local where
+      where="$(hq_roadmap_insert "$roadmap" "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")")"
+      printf '  ✓ ROADMAP: pointer added (%s)\n' "$where"
+    else
+      echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
+    fi
   fi
 
   # GH-164 Phase 1 item 2: regenerate the dashboard right after the ROADMAP write, closing the gap
   # the manual GH-161-164 trace hit twice (forgetting this step is exactly why it is automated here).
   # "Only if present" mirrors the pdda.sh frontmatter check below — never required, never fatal.
-  if [ -f "$path/utils/roadmap-dashboard.sh" ]; then
+  if [ "$is_releases" = "1" ]; then
+    if ( cd "$path" && python3 "$r_bin" gen >/dev/null 2>&1 ); then
+      echo '  ✓ dashboard: RELEASES.md regenerated'
+    else
+      echo '  ! dashboard: releases gen failed — regenerate manually' >&2
+    fi
+  elif [ -f "$path/utils/roadmap-dashboard.sh" ]; then
     if ( cd "$path" && bash utils/roadmap-dashboard.sh >/dev/null 2>&1 ); then
       echo '  ✓ dashboard: ROADMAP-DASHBOARD.md regenerated'
     else

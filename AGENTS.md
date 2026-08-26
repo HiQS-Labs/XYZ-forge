@@ -26,6 +26,15 @@ radius, planning shape, and proof.
 Do not restate routing, roadmap, changelog, or active-doc contracts here. Those live in
 `ROUTER.md` and `PROJECT/PDDA.md`.
 
+After merging any PR into `development`, run `python3 utils/py/wave_reconcile.py --pr <N>` before
+ending the task — the reconciler is single-command but nothing triggers it for you; `pdda.sh
+issue-doc-sync` is the deterministic drift detector when in doubt.
+
+Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
+live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section
+is a standing carve-out from the "do not create new git branches automatically" rail: it
+pre-authorizes one `feat/`/`fix/` branch per fresh task clone, nothing more.
+
 ## Operating principles
 
 ### 1. Lead with the line that survives skimming
@@ -81,9 +90,10 @@ local change.
   Four rules follow, and they are load-bearing:
 
   1. **Exactly one long-horizon marathon is in flight at a time.** When one lands, choosing the next
-     is a real decision, not a default. It is named in `ROADMAP.md`'s **Immediate next-up** as the
-     marathon, so an agent arriving cold can tell which item is the load and which items are riding
-     alongside it.
+     is a real decision, not a default. It is named in the roadmap ledger's **Immediate next-up**
+     (read `ROADMAP-DASHBOARD.md`; the RELEASES DB is the source of truth since the
+     `ROADMAP_SOURCE=releases` flip) as the marathon, so an agent arriving cold can tell which item
+     is the load and which items are riding alongside it.
   2. **Prefer the marathon-shaped candidate.** *Marathon-shaped* means: decomposable into many items
      with an identical transform, a per-item pass condition a machine can check, and a plausible way
      to break the harness. GH-10 (73 unaudited suites, one mechanical adoption each) is the
@@ -98,11 +108,14 @@ local change.
      weaker result than one that escalates and names a defect. Report what broke; do not smooth it.
 
 - **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
-  release ledger and the GH-69 ROADMAP shadow (`roadmap sync` mirrors `ROADMAP.md`'s ledger into
-  `roadmap_items`, one-way and lossless). Never hand-edit `releases.sql` or `releases.db`; after
-  editing `ROADMAP.md`'s ledger, run `releases roadmap sync`. Merge conflicts on the dump have a
-  one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a
-  real merge conflict looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+  release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
+  flip (GH-169/GH-238/GH-243) the DB is the roadmap's source of truth in THIS repo: park intake
+  with `releases roadmap add` (or `hq park`), read with `roadmap list` / `ROADMAP-DASHBOARD.md`,
+  and never edit `ROADMAP.md` (frozen legacy). `roadmap sync` is for legacy-mode repos only and
+  no-ops here — it mirrors markdown and would delete `add`-parked rows. Never hand-edit
+  `releases.sql` or `releases.db`. Merge conflicts on the dump have a one-command resolver
+  (`utils/releases-merge-resolve.sh`). The whole contract, including what a real merge conflict
+  looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
 
 - **The local gate runs at the push boundary; hosted CI independently attests public-repo changes
   (GH-544, XYZ-forge #16).** The private-phase bridge ended when this repository became public on
@@ -137,6 +150,13 @@ local change.
   blast radius is **tracked** modifications; untracked files survive. `relay-automation/hooks/gh527-destructive-git-guard.sh`
   snapshots the doomed tracked files into `.tick/orphan-backups/` before the command runs, so
   this is recoverable rather than prevented — the snapshot is a net, not permission to swing.
+- **Preflight sandboxed branch mutations (GH-50).** A sandbox may let `git switch --track` rewrite
+  the index and working tree, then deny the `.git/config` lock and leave HEAD on the old branch.
+  Before a harness runs a tracking switch or destructive branch mutation such as `git branch -D`,
+  wrap the complete command with `utils/git-sandbox-guard.sh --repo <root> -- <git command>` so it
+  refuses before mutation when the config cannot be written. Never truncate git stderr for branch
+  operations: the decisive `could not lock config file` line can otherwise disappear behind an
+  unrelated upstream hint.
 - `ROUTER.md` owns startup order, canonical files, command rails, and the issue-first SOP.
 - `GUIDING-PRINCIPLES.md` owns the product/runtime priorities: local event-log coordination,
   containment, skill-first relay work, durable fixes, and verified done.

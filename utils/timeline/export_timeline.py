@@ -194,7 +194,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
     rows.sort(
         key=lambda r: (
             (0, r[5] or r[4] or "") if r[3] in ("shipped", "cut") else (1, r[4] or "9999-12-31"),
-            r[1],
+            r[1] or "",  # version is nullable (codename-only releases); None breaks the tuple compare
         )
     )
     for (rid, version, codename, status, target, shipped, descr, exit_c, milestone, mar_id,
@@ -274,7 +274,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
 
         columns.append(
             {
-                "id": "c-" + version.replace(".", "-"),
+                "id": "c-" + (version or codename or "untitled").lower().replace(".", "-").replace(" ", "-"),
                 "slug": (codename or version).lower(),
                 "name": codename or version,
                 "version": version,
@@ -379,7 +379,7 @@ def parse_releases_md(path):
 def _ver(v):
     try:
         return tuple(int(p) for p in v.split("."))
-    except ValueError:
+    except (ValueError, AttributeError):  # AttributeError: version is NULL for codename-only releases
         return None
 
 
@@ -421,7 +421,10 @@ def md_drift(md, columns):
         return None
     parts = []
     if db_only:
-        names = ", ".join(f"{v} ({db[v]['codename']})" for v in sorted(db_only))
+        # v can be None (codename-only release): sorted() on mixed None/str raises, and
+        # "None (Falcon)" is not a name — lead with the codename for those rows.
+        names = ", ".join(f"{v} ({db[v]['codename']})" if v else str(db[v]["codename"])
+                          for v in sorted(db_only, key=lambda v: v or ""))
         parts.append(f"{len(db_only)} release(s) exist only in releases.db, outside every RELEASES.md Iterations band: {names}.")
     if md_only:
         parts.append(f"{len(md_only)} release(s) exist only in RELEASES.md: {', '.join(sorted(md_only))}.")

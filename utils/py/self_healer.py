@@ -54,68 +54,12 @@ def apply_patch_content(
         return False, f"Failed to apply patch: {e}"
 
 
-def apply_unified_diff(
-    target_file: str,
-    diff_text: str,
-    sandbox_root: str,
-) -> Tuple[bool, str]:
-    """Apply unified diff text to target_file within sandbox_root."""
-    if not check_realpath_containment(target_file, sandbox_root):
-        return False, f"Refusing diff: {target_file} is outside sandbox root {sandbox_root} (GH-567 containment)"
-
-    if not os.path.exists(target_file):
-        return False, f"Target file does not exist: {target_file}"
-
-    try:
-        with open(target_file, "r") as f:
-            lines = f.readlines()
-
-        # Parse simple unified diff hunk
-        diff_lines = diff_text.splitlines(keepends=True)
-        new_lines: List[str] = []
-        i = 0
-        in_hunk = False
-
-        for dl in diff_lines:
-            if dl.startswith("---") or dl.startswith("+++"):
-                continue
-            if dl.startswith("@@"):
-                in_hunk = True
-                continue
-            if not in_hunk:
-                continue
-
-            prefix = dl[:1]
-            content = dl[1:]
-
-            if prefix == " ":
-                if i < len(lines):
-                    new_lines.append(lines[i])
-                    i += 1
-                else:
-                    new_lines.append(content)
-            elif prefix == "-":
-                i += 1  # Skip original line
-            elif prefix == "+":
-                new_lines.append(content)
-
-        while i < len(lines):
-            new_lines.append(lines[i])
-            i += 1
-
-        with open(target_file, "w") as f:
-            f.writelines(new_lines)
-
-        return True, "Unified diff applied successfully"
-    except Exception as e:
-        return False, f"Failed to apply unified diff: {e}"
-
 
 def execute_gate_command(
     cmd: List[str],
     cwd: str,
     env_overrides: Optional[Dict[str, str]] = None,
-    timeout: int = 30,
+    timeout: int = 900,
 ) -> Tuple[int, str, str]:
     """Execute gate command in specified CWD with timeout protection."""
     env = os.environ.copy()
@@ -138,6 +82,42 @@ def execute_gate_command(
         return 1, "", f"Gate execution error: {e}"
 
 
+def generate_issue_rollup(
+    target_file: str,
+    repro_path: str,
+    history: List[Dict[str, Any]],
+    status: str,
+    error_context: str = "",
+) -> str:
+    """Generate Markdown issue rollup body for compile_issue.py (GH-182)."""
+    lines = [
+        f"Automated Self-Healing Escalation Report: `{target_file}`",
+        f"Status: `{status}` after {len(history)} attempt(s).",
+        "",
+        "## Findings & Escalation Checklist",
+        f"- [ ] **Defect unresolved in `{target_file}`** — self-healing escalated after {len(history)} attempt(s)",
+        f"  - reproducer: `{repro_path}`",
+        f"  - target file: `{target_file}`",
+        "",
+        "## Attempt History",
+    ]
+    for h in history:
+        att = h.get("attempt", "?")
+        res = h.get("result", "unknown")
+        g1 = h.get("gate1_rc", "N/A")
+        g2 = h.get("gate2_rc", "N/A")
+        lines.append(f"- **Attempt {att}**: `{res}` (Acceptance Gate rc={g1}, Regression Gate rc={g2})")
+
+    if error_context:
+        lines.append("")
+        lines.append("## Final Error Context")
+        lines.append("```")
+        lines.append(error_context.strip()[:1000])
+        lines.append("```")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def run_self_healing_cycle(
     repro_path: str,
     target_file: str,
@@ -146,6 +126,9 @@ def run_self_healing_cycle(
     regression_cmd: Optional[List[str]] = None,
     max_attempts: int = 3,
     sandbox_root: Optional[str] = None,
+    gate_timeout: int = 900,
+    diff_out_path: Optional[str] = None,
+    escalation_out_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Execute gated autonomous self-healing loop with iterative refinement."""
     disposable = False
@@ -156,8 +139,40 @@ def run_self_healing_cycle(
     history: List[Dict[str, Any]] = []
     status = "escalated"
     winning_diff = ""
+    winning_diff_file = ""
+    issue_rollup = ""
+    issue_rollup_file = ""
+    original_content: Optional[str] = None
 
     try:
+        if sandbox_root and not os.path.isdir(sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Sandbox root is not a directory: {sandbox_root}",
+                "history": [],
+            }
+
+        if sandbox_root and not check_realpath_containment(target_file, sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Target file {target_file} is outside sandbox root {sandbox_root}",
+                "history": [],
+            }
+
+        if diff_out_path and sandbox_root and not check_realpath_containment(diff_out_path, sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Diff output path {diff_out_path} is outside sandbox root {sandbox_root}",
+                "history": [],
+            }
+
+        if escalation_out_path and sandbox_root and not check_realpath_containment(escalation_out_path, sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Escalation output path {escalation_out_path} is outside sandbox root {sandbox_root}",
+                "history": [],
+            }
+
         if not os.path.exists(repro_path):
             return {
                 "status": "error",
@@ -165,12 +180,10 @@ def run_self_healing_cycle(
                 "history": [],
             }
 
-        # First verify initial reproduction (Acceptance Gate must fail initially)
-        rc_init, out_init, err_init = execute_gate_command(["bash", repro_path], cwd=repo_root)
-        if rc_init == 0:
+        if not os.path.exists(target_file):
             return {
-                "status": "no_repro",
-                "message": "Initial reproducer script already exits 0 (defect is not reproducing)",
+                "status": "error",
+                "message": f"Target file not found: {target_file}",
                 "history": [],
             }
 
@@ -178,13 +191,28 @@ def run_self_healing_cycle(
         with open(target_file, "r") as f:
             original_content = f.read()
 
+        # First verify initial reproduction (Acceptance Gate must fail initially)
+        rc_init, out_init, err_init = execute_gate_command(["bash", repro_path], cwd=repo_root, timeout=gate_timeout)
+        if rc_init == 0:
+            return {
+                "status": "no_repro",
+                "message": "Initial reproducer script already exits 0 (defect is not reproducing)",
+                "history": [],
+            }
+
         current_error_context = err_init or out_init
 
         for attempt in range(1, max_attempts + 1):
             attempt_rec: Dict[str, Any] = {"attempt": attempt}
 
             # Generate candidate fix from generator
-            candidate_patch = fix_generator(target_file, current_error_context, attempt)
+            try:
+                candidate_patch = fix_generator(target_file, current_error_context, attempt)
+            except Exception as gen_err:
+                attempt_rec["result"] = f"generator_error: {gen_err}"
+                history.append(attempt_rec)
+                continue
+
             if not candidate_patch:
                 attempt_rec["result"] = "no_patch_generated"
                 history.append(attempt_rec)
@@ -195,7 +223,7 @@ def run_self_healing_cycle(
                 target_file,
                 original_content,
                 candidate_patch,
-                sandbox_root=repo_root if sandbox_root == repo_root else sandbox_root,
+                sandbox_root=sandbox_root,
             )
             if not ok_apply:
                 attempt_rec["result"] = f"apply_failed: {msg_apply}"
@@ -203,7 +231,9 @@ def run_self_healing_cycle(
                 continue
 
             # Gate 1: Acceptance Gate (Run repro.sh — must pass with rc=0)
-            rc_gate1, out_gate1, err_gate1 = execute_gate_command(["bash", repro_path], cwd=repo_root)
+            rc_gate1, out_gate1, err_gate1 = execute_gate_command(
+                ["bash", repro_path], cwd=repo_root, timeout=gate_timeout
+            )
             attempt_rec["gate1_rc"] = rc_gate1
             attempt_rec["gate1_out"] = out_gate1
             attempt_rec["gate1_err"] = err_gate1
@@ -219,7 +249,9 @@ def run_self_healing_cycle(
 
             # Gate 2: Regression Gate (Optional regression suite)
             if regression_cmd:
-                rc_gate2, out_gate2, err_gate2 = execute_gate_command(regression_cmd, cwd=repo_root)
+                rc_gate2, out_gate2, err_gate2 = execute_gate_command(
+                    regression_cmd, cwd=repo_root, timeout=gate_timeout
+                )
                 attempt_rec["gate2_rc"] = rc_gate2
                 attempt_rec["gate2_out"] = out_gate2
                 attempt_rec["gate2_err"] = err_gate2
@@ -234,10 +266,6 @@ def run_self_healing_cycle(
                     continue
 
             # Both gates passed!
-            status = "healed"
-            attempt_rec["result"] = "passed"
-            history.append(attempt_rec)
-
             # Compute winning diff
             diff_lines = list(difflib.unified_diff(
                 original_content.splitlines(keepends=True),
@@ -246,17 +274,87 @@ def run_self_healing_cycle(
                 tofile=target_file,
             ))
             winning_diff = "".join(diff_lines)
+
+            # Write winning diff to file if requested or if sandbox_root is set
+            target_diff_path = diff_out_path or (os.path.join(sandbox_root, "winning_diff.patch") if sandbox_root else None)
+            if target_diff_path:
+                try:
+                    parent_dir = os.path.dirname(target_diff_path)
+                    if parent_dir:
+                        os.makedirs(parent_dir, exist_ok=True)
+                    with open(target_diff_path, "w") as df:
+                        df.write(winning_diff)
+                    winning_diff_file = target_diff_path
+                except Exception as write_err:
+                    status = "error"
+                    attempt_rec["result"] = f"artifact_write_failed: {write_err}"
+                    history.append(attempt_rec)
+                    return {
+                        "status": "error",
+                        "message": f"Failed to write winning diff to {target_diff_path}: {write_err}",
+                        "attempts": len(history),
+                        "max_attempts": max_attempts,
+                        "winning_diff": winning_diff,
+                        "history": history,
+                    }
+
+            status = "healed"
+            attempt_rec["result"] = "passed"
+            history.append(attempt_rec)
             break
 
-        return {
+        if status != "healed":
+            # Generate issue rollup artifact on escalation
+            issue_rollup = generate_issue_rollup(
+                target_file=target_file,
+                repro_path=repro_path,
+                history=history,
+                status=status,
+                error_context=current_error_context,
+            )
+            target_rollup_path = escalation_out_path or (os.path.join(sandbox_root, "issue_body.md") if sandbox_root else None)
+            if target_rollup_path:
+                try:
+                    parent_dir = os.path.dirname(target_rollup_path)
+                    if parent_dir:
+                        os.makedirs(parent_dir, exist_ok=True)
+                    with open(target_rollup_path, "w") as ef:
+                        ef.write(issue_rollup)
+                    issue_rollup_file = target_rollup_path
+                except Exception as ef_err:
+                    status = "error"
+                    return {
+                        "status": "error",
+                        "message": f"Failed to write issue rollup to {target_rollup_path}: {ef_err}",
+                        "attempts": len(history),
+                        "max_attempts": max_attempts,
+                        "history": history,
+                        "issue_rollup": issue_rollup,
+                    }
+
+        res_dict: Dict[str, Any] = {
             "status": status,
             "attempts": len(history),
             "max_attempts": max_attempts,
             "winning_diff": winning_diff,
             "history": history,
         }
+        if winning_diff_file:
+            res_dict["winning_diff_file"] = winning_diff_file
+        if issue_rollup:
+            res_dict["issue_rollup"] = issue_rollup
+        if issue_rollup_file:
+            res_dict["issue_rollup_file"] = issue_rollup_file
+        return res_dict
 
     finally:
+        # Restore target on ANY exit (try/finally) unless healed (GH-182)
+        if status != "healed" and original_content is not None:
+            try:
+                with open(target_file, "w") as f:
+                    f.write(original_content)
+            except Exception:
+                pass
         if disposable and os.path.exists(sandbox_root):
             shutil.rmtree(sandbox_root, ignore_errors=True)
 
@@ -401,12 +499,17 @@ exit 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Gated Autonomous Self-Healing Builder Loop (GH-155 Phase 4)")
+    parser = argparse.ArgumentParser(description="Gated Autonomous Self-Healing Builder Loop (GH-155 Phase 4 / GH-182)")
     parser.add_argument("--mode", choices=["suite", "heal"], default="suite", help="Execution mode")
     parser.add_argument("--repro", help="Path to repro.sh script")
     parser.add_argument("--target-file", help="Path to target source file to fix")
-    parser.add_argument("--regression-cmd", help="Command to run for regression gating")
+    parser.add_argument("--sandbox-root", help="Path to disposable sandbox root (required for heal mode)")
+    parser.add_argument("--regression-cmd", help="Command to run for regression gating (required for heal mode)")
+    parser.add_argument("--generator-cmd", help="External command to generate candidate fixes")
+    parser.add_argument("--gate-timeout", type=int, default=900, help="Gate command execution timeout in seconds (default: 900)")
     parser.add_argument("--max-attempts", type=int, default=3, help="Max healing attempts before escalating")
+    parser.add_argument("--diff-out", help="Path to write winning diff file when healed")
+    parser.add_argument("--issue-rollup-out", help="Path to write issue rollup markdown when escalated")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
 
     args = parser.parse_args()
@@ -416,33 +519,103 @@ def main() -> int:
         return run_self_healer_suite(repo_root, as_json=args.json)
 
     if args.mode == "heal":
-        if not args.repro or not args.target_file:
+        # 1. Missing --repro or --target-file
+        if not args.repro or not args.repro.strip() or not args.target_file or not args.target_file.strip():
             print("Error: --repro and --target-file are required for heal mode", file=sys.stderr)
             return 2
 
-        reg_cmd = shlex.split(args.regression_cmd) if args.regression_cmd else None
+        # 2. Mandatory --regression-cmd (GH-182 Plan §2)
+        if not args.regression_cmd or not args.regression_cmd.strip():
+            print("Error: --regression-cmd is required for heal mode (mandatory regression gate per GH-182)", file=sys.stderr)
+            return 2
 
-        # Heuristic / LLM fix generator placeholder for CLI heal mode
-        def default_generator(path: str, trace: str, attempt: int) -> Optional[str]:
-            with open(path, "r") as f:
-                return f.read()
+        reg_cmd = shlex.split(args.regression_cmd)
+        if not reg_cmd:
+            print("Error: --regression-cmd is required for heal mode (mandatory regression gate per GH-182)", file=sys.stderr)
+            return 2
+
+        # 3. Mandatory --sandbox-root (GH-182 Plan §1)
+        if not args.sandbox_root or not args.sandbox_root.strip():
+            print("Error: --sandbox-root is required for heal mode (must be an existing disposable directory outside invoking checkout)", file=sys.stderr)
+            return 2
+
+        # 3a. sandbox-root exists
+        if not os.path.exists(args.sandbox_root):
+            print(f"Error: --sandbox-root does not exist: {args.sandbox_root}", file=sys.stderr)
+            return 2
+
+        # 3b. sandbox-root is a directory
+        if not os.path.isdir(args.sandbox_root):
+            print(f"Error: --sandbox-root is not a directory: {args.sandbox_root}", file=sys.stderr)
+            return 2
+
+        # 3c. sandbox-root is NOT the invoking checkout or nested within it
+        if check_realpath_containment(args.sandbox_root, repo_root):
+            print(f"Error: --sandbox-root cannot be the invoking checkout repository or nested within it ({repo_root})", file=sys.stderr)
+            return 2
+
+        # 3d. sandbox-root contains target-file after realpath resolution
+        if not check_realpath_containment(args.target_file, args.sandbox_root):
+            print(f"Error: --target-file ({args.target_file}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
+            return 2
+
+        # 3e. diff-out must be contained within sandbox-root if specified
+        if args.diff_out and not check_realpath_containment(args.diff_out, args.sandbox_root):
+            print(f"Error: --diff-out ({args.diff_out}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
+            return 2
+
+        # 3f. issue-rollup-out must be contained within sandbox-root if specified
+        if args.issue_rollup_out and not check_realpath_containment(args.issue_rollup_out, args.sandbox_root):
+            print(f"Error: --issue-rollup-out ({args.issue_rollup_out}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
+            return 2
+
+        # Build fix generator (placeholder deleted per GH-182 Plan §1)
+        if args.generator_cmd and args.generator_cmd.strip():
+            gen_cmd_parts = shlex.split(args.generator_cmd)
+            if not gen_cmd_parts:
+                def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
+                    return None
+            else:
+                def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
+                    cmd = gen_cmd_parts + [path, trace, str(attempt)]
+                    try:
+                        res = subprocess.run(cmd, capture_output=True, text=True, timeout=args.gate_timeout)
+                        if res.returncode == 0:
+                            return res.stdout
+                        return None
+                    except Exception:
+                        return None
+        else:
+            def fix_gen(path: str, trace: str, attempt: int) -> Optional[str]:
+                return None
 
         result = run_self_healing_cycle(
             repro_path=args.repro,
             target_file=args.target_file,
-            repo_root=repo_root,
-            fix_generator=default_generator,
+            repo_root=args.sandbox_root,
+            fix_generator=fix_gen,
             regression_cmd=reg_cmd,
             max_attempts=args.max_attempts,
+            sandbox_root=args.sandbox_root,
+            gate_timeout=args.gate_timeout,
+            diff_out_path=args.diff_out,
+            escalation_out_path=args.issue_rollup_out,
         )
 
         if args.json:
             print(json.dumps(result, indent=2))
         else:
             print(f"Self-Healing Result: {result.get('status')}")
+            if result.get("message"):
+                print(f"Error: {result['message']}", file=sys.stderr)
             if result.get("winning_diff"):
                 print("--- Applied Diff ---")
                 print(result["winning_diff"])
+                if result.get("winning_diff_file"):
+                    print(f"Winning diff written to: {result['winning_diff_file']}")
+            if result.get("status") == "escalated":
+                if result.get("issue_rollup_file"):
+                    print(f"Issue rollup written to: {result['issue_rollup_file']}")
 
         return 0 if result.get("status") == "healed" else 1
 

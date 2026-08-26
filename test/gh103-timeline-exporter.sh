@@ -28,7 +28,25 @@ TEMPLATE="$HERE/../utils/timeline/RELEASES.html"
 pass=0; fail=0
 ok(){ if [ "$2" = "0" ]; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 is(){ [ "$1" = "$2" ]; }
-has(){ printf '%s' "$1" | grep -Fq -- "$2"; }
+# Fixed-string containment, done in-process.
+#
+# This was `printf '%s' "$1" | grep -Fq -- "$2"`, which is unsound under the `set -o pipefail` above:
+# `grep -q` exits the moment it matches, closing the pipe while `printf` is still writing, so printf
+# dies of SIGPIPE and pipefail reports the pipeline as 141 — i.e. "not found" — even though the
+# string IS present. Whether it fires depends on how early the match sits in the input and on
+# scheduling, so it read as a flaky, template-size-dependent false negative rather than a bug.
+# Bash pattern matching needs no pipe and cannot race.
+has(){ case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac; }
+file_hash() { # portable: sha256sum -> shasum -a 256 -> md5 (GH-65)
+  local f="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$f" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$f" | awk '{print $1}'
+  else
+    md5 -q "$f"
+  fi
+}
 
 echo "== test: gh103-timeline-exporter =="
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
@@ -174,10 +192,10 @@ if has "$TPL" "rel.baseline"; then ok "the release node renders the baseline/gro
 
 # ── read-only: the page is a pure consumer ──────────────────────────────────────────────────────
 echo "-- read-only contract"
-DB_HASH="$(md5 -q "$R/releases.db")"; DUMP_HASH="$(md5 -q "$R/releases.sql")"
+DB_HASH="$(file_hash "$R/releases.db")"; DUMP_HASH="$(file_hash "$R/releases.sql")"
 python3 "$EXPORTER" --db "$R/releases.db" --preview "$WORK/preview.html" >/dev/null 2>&1
 if [ -s "$WORK/preview.html" ] && grep -q 'id="ledger-data"' "$WORK/preview.html"; then ok "--preview bakes a self-contained page with the payload inline" 0; else ok "preview bakes" 1; fi
-if [ "$(md5 -q "$R/releases.db")" = "$DB_HASH" ] && [ "$(md5 -q "$R/releases.sql")" = "$DUMP_HASH" ]; then ok "the exporter wrote no DB bytes (opened read-only; the page never writes back)" 0; else ok "exporter read-only" 1; fi
+if [ -n "$DB_HASH" ] && [ "$(file_hash "$R/releases.db")" = "$DB_HASH" ] && [ "$(file_hash "$R/releases.sql")" = "$DUMP_HASH" ]; then ok "the exporter wrote no DB bytes (opened read-only; the page never writes back)" 0; else ok "exporter read-only" 1; fi
 if ra check >/dev/null 2>&1; then ok "the ledger still checks clean after every projection" 0; else ok "check clean" 1; fi
 
 # ── the leaderboard pipeline (GH-108 Phase D) ───────────────────────────────────────────────────
@@ -189,7 +207,11 @@ LB_MD="$WORK/LEADERBOARD.md"
 LEADERBOARD_DB="$R/releases.db" LEADERBOARD_OUTPUT="$LB_MD" bash "$HERE/../utils/leaderboard.sh" >/dev/null 2>&1
 ok "leaderboard.sh renders LEADERBOARD.md from the exporter's JSON" "$([ -s "$LB_MD" ]; echo $?)"
 if grep -q 'GENERATED' <<<"$(head -1 "$LB_MD")"; then ok "the file announces itself as generated (never hand-edited)" 0; else ok "generated header" 1; fi
-SCRIPT_ORDER="$(rg -o '^\| [0-9]+ \| \*\*[0-9]+\*\* \| \[?(GH-[0-9]+)' -r '$1' "$LB_MD" | tr '\n' ' ' | sed 's/ $//')"
+# POSIX sed rather than `rg`: ripgrep is not a documented prerequisite (README lists Codex CLI, agy
+# CLI, Node 18+, git, Python 3.8+) and this suite was the only thing in test/ or utils/ that needed
+# it, so the whole suite failed on any host without it. Handles both the linked `[GH-n](url)` and
+# bare `GH-n` row forms, same as the regex it replaces.
+SCRIPT_ORDER="$(sed -n 's/^| [0-9][0-9]* | \*\*[0-9][0-9]*\*\* | \[\{0,1\}\(GH-[0-9][0-9]*\).*/\1/p' "$LB_MD" | tr '\n' ' ' | sed 's/ $//')"
 ok "the script's ranking matches the pinned --json ordering EXACTLY (one scorer, proven)" \
    "$(is "$SCRIPT_ORDER" "$(printf '%s' "$TOP" | sed 's/:[0-9]*//g')"; echo $?)"
 if grep -q 'Top of the line:\*\* GH-805' "$LB_MD"; then ok "the highest-scoring task is called out by name, override included" 0; else ok "top of the line" 1; fi
@@ -209,10 +231,41 @@ ok "--leaderboard bakes a self-contained page from the SAME template" "$([ -s "$
 if grep -q '"view": *"leaderboard"\|"view":"leaderboard"' "$LB_HTML"; then ok "the payload carries view=leaderboard — one template, two baked artifacts" 0; else ok "view field" 1; fi
 if grep -q 'leaderboardHTML' "$WORK/preview.html" && grep -q 'columnHTML' "$LB_HTML"; then ok "both artifacts share ONE renderer bundle (no second copy of the design system)" 0; else ok "shared bundle" 1; fi
 if grep -q 'id="view-link"' "$TEMPLATE"; then ok "the cross-link lives in .top, which never collapses" 0; else ok "cross-link placement" 1; fi
-if ! rg -q 'id="fbar"[^>]*>[^<]*<a id="view-link"' "$TEMPLATE"; then ok "and NOT in #fbar, which disappears with the header caret" 0; else ok "cross-link not in fbar" 1; fi
+# grep -E rather than `rg` (see the SCRIPT_ORDER note above). This assertion is negated, so with
+# ripgrep absent `rg -q` returned 127 and the test passed without checking anything.
+if ! grep -qE 'id="fbar"[^>]*>[^<]*<a id="view-link"' "$TEMPLATE"; then ok "and NOT in #fbar, which disappears with the header caret" 0; else ok "cross-link not in fbar" 1; fi
 # The leaderboard view never calls initInteractions(), so #fbar's search + focus + prev/next are
 # all inert there — a search box that looks broken (aider/qwen3.8-max QA r1).
 if grep -q 'body\[data-view="leaderboard"\] #fbar' "$TEMPLATE"; then ok "the leaderboard view hides #fbar rather than shipping an inert search box" 0; else ok "leaderboard hides fbar" 1; fi
+
+# ── GH-250: codename-only releases (version NULL) must not crash the bake ───────────────────────
+# `releases add` accepts a codename with no version, and release_columns() already fell back to
+# the codename for slug/name — but not for id, and _ver() only caught ValueError. So ONE
+# NULL-version row killed --preview and --leaderboard outright, and refresh_preview()'s warn-only
+# path turned that into artifacts that silently stop tracking the ledger. The versioned-no-target
+# row below is deliberate: it ties with the codename-only rows on the sort's primary key, pinning
+# the None-vs-str tiebreaker compare too.
+echo "-- GH-250: codename-only releases (version NULL)"
+rq add --version 9.9.9 --codename Tiebreak --status draft --description "Versioned, no target." --tracking-issue "$GH/910"
+rq add --codename "Night Owl" --status draft --description "Codename-only one." --tracking-issue "$GH/911"
+rq add --codename Falcon --status draft --description "Codename-only two." --tracking-issue "$GH/912"
+NO_VER="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM releases WHERE version IS NULL")"
+ok "fixture holds codename-only rows (version IS NULL in the ledger)" "$([ "$NO_VER" -ge 2 ]; echo $?)"
+J250="$WORK/gh250.json"
+if python3 "$EXPORTER" --db "$R/releases.db" --json > "$J250" 2>/dev/null; then ok "--json succeeds on a ledger with NULL-version releases" 0; else ok "--json on NULL-version ledger" 1; fi
+python3 "$EXPORTER" --db "$R/releases.db" --preview "$WORK/gh250-preview.html" >/dev/null 2>&1
+ok "--preview bakes (the crash refresh_preview's warn-only path used to hide)" "$([ -s "$WORK/gh250-preview.html" ]; echo $?)"
+python3 "$EXPORTER" --db "$R/releases.db" --leaderboard "$WORK/gh250-lb.html" >/dev/null 2>&1
+ok "--leaderboard bakes on the same ledger" "$([ -s "$WORK/gh250-lb.html" ]; echo $?)"
+IDS="$(python3 - "$J250" 2>/dev/null <<'PY'
+import json, sys
+cols = [c for c in json.load(open(sys.argv[1]))["releases"] if c["version"] is None]
+ids = [c["id"] for c in cols]
+print("unique" if ids and len(ids) == len(set(ids)) and all(ids) else "collide", *sorted(ids))
+PY
+)"
+ok "codename-only releases carry stable, unique, non-empty ids" "$(has "$IDS" "unique"; echo $?)"
+ok "the id derives from the codename, lowercased with spaces dashed (c-night-owl)" "$(has "$IDS" "c-night-owl"; echo $?)"
 
 echo
 echo "== gh103-timeline-exporter: $pass passed, $fail failed =="

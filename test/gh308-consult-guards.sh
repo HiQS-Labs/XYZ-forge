@@ -41,7 +41,7 @@ chmod +x "$CODEX"
 AGY="$WORK/agy.sh"
 cat >"$AGY" <<'EOF'
 #!/usr/bin/env bash
-case "$1" in whoami) echo "agystub"; exit 0 ;; esac
+case "$1" in whoami|models) echo "agystub"; exit 0 ;; esac
 printf 'I inspected files under %s and here is my take. [Pass] confirmed.\n' "$CONSULT_ROOT"
 exit 0
 EOF
@@ -77,7 +77,7 @@ fi
 CLEAN_AGY="$WORK/agy-clean.sh"
 cat >"$CLEAN_AGY" <<'EOF'
 #!/usr/bin/env bash
-case "$1" in whoami) echo "agystub"; exit 0 ;; esac
+case "$1" in whoami|models) echo "agystub"; exit 0 ;; esac
 printf 'Reviewed the worktree copy. [Pass] verified via "the quoted span at line 4".\n'
 exit 0
 EOF

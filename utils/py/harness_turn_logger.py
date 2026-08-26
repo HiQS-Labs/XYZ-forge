@@ -50,6 +50,9 @@ class HarnessTurnLogger:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.cfg.get("logging_enabled", False):
+            return
+
         duration = time.time() - self.start_time
         if exc_type is not None:
             self.exit_code = 1

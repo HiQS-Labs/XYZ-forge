@@ -159,6 +159,13 @@ run_shim RELAY-TURN-tickexempt claude-builder good; rc=$?
 [ "$rc" -eq 0 ] && pass ".tick writes exempted when host doesn't gitignore .tick (turn succeeds)" || fail "unignored .tick must not fail the turn (rc=$rc)"
 [ -d "$A/.tick" ] && pass ".tick state dir preserved (not rm-rf'd)" || fail ".tick was destroyed"
 
+# Build a PATH on which `claude` is not resolvable — and on which nothing else has changed.
+#
+# Dropping every directory that holds `claude` also drops whatever lives beside it. On a stock nvm
+# install that is the same directory as `node` (claude/codex/corepack/node/npm/npx), and `bin/tick`
+# is `#!/usr/bin/env node` — so filtering claude silently removed the Node runtime, every tick call
+# in the turn exited 127, and the turn failed with 5 instead of the 0 the test expects. Restore node
+# through a shim dir so this helper expresses "no claude" and not "no Node runtime either".
 filter_claude_from_path() {
   local new_path="" dir
   IFS=: read -ra parts <<< "$PATH"
@@ -172,6 +179,14 @@ filter_claude_from_path() {
       fi
     fi
   done
+  local node_bin
+  node_bin="$(command -v node 2>/dev/null || true)"
+  if [[ -n "$node_bin" ]] && ! PATH="$new_path" command -v node >/dev/null 2>&1; then
+    local shim="$WORK/node-shim"
+    mkdir -p "$shim"
+    ln -sf "$node_bin" "$shim/node"
+    new_path="$shim:$new_path"
+  fi
   echo "$new_path"
 }
 

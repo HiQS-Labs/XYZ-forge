@@ -20,12 +20,13 @@ GLOBAL_DEFAULTS = {
     "default_gateway": "openrouter",
     "default_model": "deepseek/deepseek-v4-pro",
     "default_reasoning_effort": "high",
+    "logging_enabled": False,
 }
 
 
 def get_device_config_path() -> str:
     """Return canonical path to local user device configuration file."""
-    return os.path.expanduser("~/.xyz/device_config.json")
+    return os.environ.get("XYZ_DEVICE_CONFIG_PATH") or os.path.expanduser("~/.xyz/device_config.json")
 
 
 def load_local_device_config() -> Dict[str, Any]:
@@ -57,6 +58,12 @@ def resolve_device_setting(key: str, env_var: Optional[str] = None) -> Any:
 
 def get_effective_runtime_config() -> Dict[str, Any]:
     """Return dictionary of all active resolved runtime settings."""
+    raw_logging = resolve_device_setting("logging_enabled", "XYZ_HARNESS_LOGGING")
+    logging_enabled = (
+        raw_logging in (True, 1, "1", "true", "True", "yes", "on")
+        if raw_logging is not None
+        else False
+    )
     return {
         "device_id": resolve_device_setting("device_id", "XYZ_DEVICE_ID"),
         "user_name": resolve_device_setting("user_name", "XYZ_USER_NAME"),
@@ -64,6 +71,7 @@ def get_effective_runtime_config() -> Dict[str, Any]:
         "gateway": resolve_device_setting("default_gateway", "XYZ_GATEWAY"),
         "model": resolve_device_setting("default_model", "XYZ_MODEL"),
         "reasoning_effort": resolve_device_setting("default_reasoning_effort", "XYZ_REASONING_EFFORT"),
+        "logging_enabled": logging_enabled,
     }
 
 

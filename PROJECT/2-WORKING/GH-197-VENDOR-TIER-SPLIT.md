@@ -185,7 +185,9 @@ test either way.
     "relay-automation/xyz-vendor.sh",
     "test/xyz-vendor.sh",
     "skills/relay-xyz/SKILL.md",
-    "relay-automation/README.md"
+    "relay-automation/README.md",
+    "relay-automation/xyz-releases-onboard.sh",
+    "test/gh197-vendor-tier-split.sh"
   ],
   "artifacts_new": [
     "relay-automation/xyz-releases-onboard.sh",
