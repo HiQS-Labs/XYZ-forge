@@ -1,8 +1,8 @@
 ---
 title: "GH-197: two-tier xyz-vendor.sh — Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP"
-status: active
+status: Completed
 created: 2026-08-23
-updated: 2026-08-23
+updated: 2026-08-26
 owner: orchestrator (Claude Code)
 goal: >
   Make xyz-vendor.sh two-tier (core harness by default, RELEASES machinery as an
