@@ -538,3 +538,44 @@ Run the shim test matching the worker you'll drive (both are first-class). Run t
 Open with a human sentence ("Driving a headless Codex or agy review of `<artifact>` — round cap 4…") and
 close with the result + exit code. The structured thread lives in the relay file; the operator gets a
 sentence and a verdict, not a wall of transcript.
+
+## QA / Consult Template Formatting
+
+Since agents often scaffold relay threads manually (when the `/relay` slash command isn't used or available), it is critical to structure QA / consultation threads correctly. **Do not** write open-ended instructions like "QA this codebase against the requirements."
+
+Headless agents (Codex, agy, Aider) perform best when given **explicit questions to adjudicate**. A proper QA thread must include:
+1. The goal and files to read.
+2. A numbered list of concrete, specific questions to answer.
+3. Instructions on what the agent should output (e.g. file:line citations).
+
+**Example format:**
+```markdown
+---
+Goal: QA Phase 3 Implementation (Semantic Layer)
+Date: 2026-08-25
+NEXT: Reviewer
+STATUS: Open
+---
+
+# Context
+
+Adjudicate the implementation of Phase 3 Semantic Layer against its plan in PROJECT/2-WORKING/GH-1-firebase-ai-reports-plan.md.
+
+Read the plan doc in full, plus the code it references:
+- api/src/indexer.ts
+- api/src/semantic.ts
+
+Questions:
+
+1. Are the requirements for soft-failing met? Does it gracefully continue if the vector index is missing or empty?
+2. Are limits capped properly? The plan says "findNearest capped at top-K <= 10". Is this enforced securely?
+3. Is the Indexer idempotent? Review `processItem` in `indexer.ts` which uses a hash check. Does this prevent unnecessary re-embedding?
+
+Flag anything wrong, missing, incorrectly scoped, or over/under-engineered. Be concrete and cite file:line where you disagree with a specific claim.
+
+Write your verdict below and change the STATUS to Approved/Closed if it passes.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+```
