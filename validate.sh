@@ -410,6 +410,7 @@ TESTS=(
   "gh238-hq-releases-mode.sh"    # GH-238 (releases-mode park: roadmap add verb + hq park DB sink + sync no-op)
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
+  "gh205-gate-idempotency.sh"    # GH-205 (telemetry writes land off-tree; the gate never dirties tracked files)
   "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
                                  #   exporter payload keys + baked chrome in both artifacts; the rollup
                                  #   embed itself lives in hq-rollup.sh cases A/F/G)
@@ -857,9 +858,23 @@ fi
 # (the GH-564 incident: core.bare / origin / user identity / HEAD) fails the run HERE, detectably,
 # instead of leaving a clone whose every subsequent green run is unattributable (GH-567). Covers
 # the suites that have not yet adopted require_fixture; it detects rather than prevents.
+# GH-205: the gate must be idempotent. Suites and shims append benchmark/telemetry rows through
+# harness_app.py, whose every artifact path (db, dump, registry md, blog docs) follows
+# XYZ_HARNESS_DB — so point the whole run at a throwaway COPY and the four tracked artifacts
+# (harnesses.db/.sql, HARNESS-MODELS-REGISTRY.generated.md, docs/blog-*.md) stay untouched.
+# Regenerating them is an explicit harness_app.py command, never a gate side effect. A pre-set
+# XYZ_HARNESS_DB (an operator's or a hermetic suite's own) is respected and wins.
+HARNESS_SCRATCH=""
+if [ -z "${XYZ_HARNESS_DB:-}" ]; then
+  HARNESS_SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/validate-harness.XXXXXX")"
+  cp "$HERE/harnesses.db"  "$HARNESS_SCRATCH/harnesses.db"  2>/dev/null || true
+  cp "$HERE/harnesses.sql" "$HARNESS_SCRATCH/harnesses.sql" 2>/dev/null || true
+  export XYZ_HARNESS_DB="$HARNESS_SCRATCH/harnesses.db"
+fi
+
 IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/validate-identity.XXXXXX")"
 [ -n "$IDENTITY_SNAPSHOT" ] && [ -f "$IDENTITY_SNAPSHOT" ] || { echo "validate.sh: mktemp for identity snapshot failed" >&2; exit 1; }
-trap 'rm -f "$IDENTITY_SNAPSHOT"' EXIT
+trap 'rm -f "$IDENTITY_SNAPSHOT"; [ -n "$HARNESS_SCRATCH" ] && rm -rf "$HARNESS_SCRATCH"' EXIT
 bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" || {
   echo "validate.sh: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
   exit 1

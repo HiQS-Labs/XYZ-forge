@@ -27,7 +27,15 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| capture doc + preflight contract written; dialed into 0.7.4 Linux-RC | Operator fires the marathon lane; builder executes ## Plan, reviewer verifies ## Acceptance |
+| FIXED 2026-08-25 (hotfix, direct to development): validate.sh exports XYZ_HARNESS_DB to a throwaway copy for the whole run; regression suite test/gh205-gate-idempotency.sh registered; idempotency proven by hash-compare across a tier-2 run | Close #205; move this doc to 3-COMPLETED at next pdda-eod |
+
+Implementation note — deviation from ## Plan step 1: the gh174 suite already isolated itself
+(`XYZ_HARNESS_DB="$WORK/..."` at test/gh174-harness-registry.sh:38); the residual writers were
+OTHER shim invocations during the gate (turn-shim telemetry via harness_turn_logger). Rather
+than chase each writer, validate.sh now exports the override run-wide (pre-set values win, so
+hermetic suites are unaffected) — one seam covers every current and future writer. Plan step 2
+was unnecessary: harness_app.py already honored XYZ_HARNESS_DB for db, dump, registry md, and
+blog paths.
 
 Root cause pinpointed in Agy's empirical review on #224 (2026-08-24):
 `test/gh174-harness-registry.sh` writes directly into `$ROOT/harnesses.db` and
@@ -48,9 +56,9 @@ tracked files — the "eval treadmill" this repo sweeps with chore commits.
 
 ## Acceptance
 
-- [ ] `bash validate.sh` leaves `git status --porcelain` completely clean.
-- [ ] `test/gh174-harness-registry.sh` writes only under its `$WORK` fixture, never `$ROOT`.
-- [ ] `test/gh205-gate-idempotency.sh` green and registered in validate.sh.
+- [x] `bash validate.sh` leaves the tracked telemetry artifacts byte-identical (hash-compare proven on a tier-2 run, 2026-08-25).
+- [x] `test/gh174-harness-registry.sh` writes only under its `$WORK` fixture, never `$ROOT` (pinned by the new suite's check 4).
+- [x] `test/gh205-gate-idempotency.sh` green and registered in validate.sh.
 
 ## Swarm Preflight Contract
 
