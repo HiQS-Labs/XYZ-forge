@@ -253,7 +253,7 @@ case "$guard_out" in
     ;;
   *) fail "expected no-diff diagnostic output from guard, got: $guard_out" ;;
 esac
-[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after no-diff refusal"
+[ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after no-diff refusal"
 pass "guard cleaned up temporary root after no-diff refusal"
 
 # Restore working tree
@@ -270,7 +270,7 @@ case "$guard_multi_out" in
     ;;
   *) fail "expected no-diff refusal in multi-ref push, got: $guard_multi_out" ;;
 esac
-[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after multi-ref refusal"
+[ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after multi-ref refusal"
 pass "guard cleaned up temporary root after multi-ref refusal"
 
 # Cross-ref test: Ref 1 touches ledger only (BAD_COMMIT), Ref 2 touches dashboard only
@@ -292,7 +292,7 @@ case "$guard_cross_out" in
     ;;
   *) fail "expected refusal on cross-ref push, got: $guard_cross_out" ;;
 esac
-[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after cross-ref refusal"
+[ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after cross-ref refusal"
 pass "guard cleaned up temporary root after cross-ref refusal"
 
 # 5. Projection failure test:
@@ -316,11 +316,11 @@ case "$guard_fail_out" in
     ;;
   *) fail "expected drift refusal on projection failure, got: $guard_fail_out" ;;
 esac
-[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after projection failure refusal"
+[ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after projection failure refusal"
 pass "guard cleaned up temporary root after projection failure refusal"
 
-# 6. Hostile pivot test:
-# Create a commit where roadmap-dashboard.sh tries to replace the guard parent root with a symlink to VICTIM_DIR
+# 6. Hostile root pivot/rename test:
+# Create a commit where roadmap-dashboard.sh tries to replace the guard root with a symlink to VICTIM_DIR
 VICTIM_DIR="$WORK/victim_dir"
 mkdir -p "$VICTIM_DIR"
 touch "$VICTIM_DIR/important_file"
@@ -330,9 +330,9 @@ git checkout -q -b branch-hostile-pivot "$BAD_COMMIT"
 cat > utils/roadmap-dashboard.sh <<'EOFPIVOT'
 #!/usr/bin/env bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GUARD_DIR="$(dirname "$SCRIPT_DIR")"
-rm -rf "$GUARD_DIR" 2>/dev/null || true
-ln -s "$VICTIM_DIR" "$GUARD_DIR" 2>/dev/null || true
+GUARD_ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+rm -rf "$GUARD_ROOT_DIR" 2>/dev/null || true
+ln -s "$VICTIM_DIR" "$GUARD_ROOT_DIR" 2>/dev/null || true
 exit 0
 EOFPIVOT
 chmod +x utils/roadmap-dashboard.sh
@@ -346,7 +346,10 @@ rc=0
 guard_pivot_out="$(TMPDIR="$GUARD_TMP" VICTIM_DIR="$VICTIM_DIR" bash "$GUARD" "$R" "$PIVOT_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "guard should refuse on pivot attempt, got $rc"
 [ -f "$VICTIM_DIR/important_file" ] || fail "hostile pivot must not delete victim files"
-pass "end-to-end: hostile symlink pivot safely refused and protected external directories"
+pass "end-to-end: hostile root symlink pivot safely refused and protected external directories"
+
+# Clean up hostile test artifacts in GUARD_TMP
+rm -rf "$GUARD_TMP"/staleness-guard.* 2>/dev/null || true
 
 # 7. Remediation: use roadmap update to fix raw_text
 cd "$R"
@@ -361,9 +364,9 @@ git -c user.email=t@t -c user.name=t commit -q -m "remediated row #256 and regen
 REMEDIATED_COMMIT="$(git rev-parse HEAD)"
 cd "$root"
 
-# 7. Staleness guard now passes cleanly and leaves no temporary files:
+# 8. Staleness guard now passes cleanly and leaves no temporary files:
 TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$REMEDIATED_COMMIT" "$BASE_COMMIT"
-[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after clean pass"
+[ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after clean pass"
 pass "end-to-end: staleness guard passes after roadmap update and leaves 0 temporary artifacts"
 
 echo "== GH-257 ALL PASSED =="

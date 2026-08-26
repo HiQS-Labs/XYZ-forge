@@ -27,10 +27,10 @@ REPO="${1:-}"; shift || true
 grep -q "ROADMAP_SOURCE=releases" "$REPO/.pdda-mode" 2>/dev/null || exit 0
 
 SYS_TMP="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || SYS_TMP="/tmp"
-GUARD_ROOT="$(mktemp -d "$SYS_TMP/staleness-guard.XXXXXX")"
-[ -n "$GUARD_ROOT" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
-
-GUARD_ROOT_PHYS="$(cd -P "$GUARD_ROOT" 2>/dev/null && pwd -P)" || GUARD_ROOT_PHYS=""
+GUARD_ROOT=""
+GUARD_ROOT_PHYS=""
+GUARD_INODE=""
+GUARD_DEV=""
 
 cleanup_guard() {
   local exit_code=$?
@@ -49,6 +49,17 @@ cleanup_guard() {
     echo "dashboard-staleness-guard: refusing cleanup — guard root path drifted ($cur_phys != $GUARD_ROOT_PHYS)" >&2
     exit 1
   fi
+  local cur_inode cur_dev
+  cur_inode="$(stat -f "%i" "$cur_phys" 2>/dev/null || stat -c "%i" "$cur_phys" 2>/dev/null || true)"
+  cur_dev="$(stat -f "%d" "$cur_phys" 2>/dev/null || stat -c "%d" "$cur_phys" 2>/dev/null || true)"
+  if [ -n "$GUARD_INODE" ] && [ "$cur_inode" != "$GUARD_INODE" ]; then
+    echo "dashboard-staleness-guard: refusing cleanup — guard root inode changed ($cur_inode != $GUARD_INODE)" >&2
+    exit 1
+  fi
+  if [ -n "$GUARD_DEV" ] && [ "$cur_dev" != "$GUARD_DEV" ]; then
+    echo "dashboard-staleness-guard: refusing cleanup — guard root device changed ($cur_dev != $GUARD_DEV)" >&2
+    exit 1
+  fi
   case "$cur_phys" in
     "$SYS_TMP"/*) rm -rf "$cur_phys" || exit 1 ;;
     *) echo "dashboard-staleness-guard: refusing cleanup of non-descendant $cur_phys" >&2; exit 1 ;;
@@ -57,11 +68,18 @@ cleanup_guard() {
 }
 trap cleanup_guard EXIT INT TERM
 
+GUARD_ROOT="$(mktemp -d "$SYS_TMP/staleness-guard.XXXXXX")"
+[ -n "$GUARD_ROOT" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
+
+GUARD_ROOT_PHYS="$(cd -P "$GUARD_ROOT" 2>/dev/null && pwd -P)" || GUARD_ROOT_PHYS=""
 [ -n "$GUARD_ROOT_PHYS" ] && [ -d "$GUARD_ROOT_PHYS" ] || { echo "dashboard-staleness-guard: failed to resolve guard root" >&2; exit 1; }
 case "$GUARD_ROOT_PHYS" in
   "$SYS_TMP"/*) ;;
   *) echo "dashboard-staleness-guard: guard root $GUARD_ROOT_PHYS is not a resolved descendant of $SYS_TMP" >&2; exit 1 ;;
 esac
+
+GUARD_INODE="$(stat -f "%i" "$GUARD_ROOT_PHYS" 2>/dev/null || stat -c "%i" "$GUARD_ROOT_PHYS" 2>/dev/null || true)"
+GUARD_DEV="$(stat -f "%d" "$GUARD_ROOT_PHYS" 2>/dev/null || stat -c "%d" "$GUARD_ROOT_PHYS" 2>/dev/null || true)"
 
 while [ "$#" -ge 2 ]; do
   local_sha="$1"; remote_sha="$2"; shift 2
