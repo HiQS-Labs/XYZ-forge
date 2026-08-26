@@ -241,8 +241,11 @@ cd "$root"
 # Add uncommitted modification in working tree to PROVE guard is isolated to commit projection
 echo "dirty working tree modification" >> "$R/ROADMAP-DASHBOARD.md"
 
+GUARD_TMP="$WORK/guard_isolated_tmp"
+mkdir -p "$GUARD_TMP"
+
 rc=0
-guard_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+guard_out="$(TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "guard should refuse bad commit, got $rc"
 case "$guard_out" in
   *"produces NO diff (GH-243 / GH-257)"*"releases roadmap update"*)
@@ -250,6 +253,8 @@ case "$guard_out" in
     ;;
   *) fail "expected no-diff diagnostic output from guard, got: $guard_out" ;;
 esac
+[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after no-diff refusal"
+pass "guard cleaned up temporary root after no-diff refusal"
 
 # Restore working tree
 git -C "$R" checkout ROADMAP-DASHBOARD.md
@@ -257,7 +262,7 @@ git -C "$R" checkout ROADMAP-DASHBOARD.md
 # 4. Multi-ref push test with BAD_COMMIT FIRST and clean BASE_COMMIT LAST
 # Proves per-ref evaluation does not merely inspect the last ref in the list
 rc=0
-guard_multi_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" "$BASE_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+guard_multi_out="$(TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" "$BASE_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "guard should refuse multi-ref push with bad commit first, got $rc"
 case "$guard_multi_out" in
   *"produces NO diff (GH-243 / GH-257)"*)
@@ -265,6 +270,8 @@ case "$guard_multi_out" in
     ;;
   *) fail "expected no-diff refusal in multi-ref push, got: $guard_multi_out" ;;
 esac
+[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after multi-ref refusal"
+pass "guard cleaned up temporary root after multi-ref refusal"
 
 # Cross-ref test: Ref 1 touches ledger only (BAD_COMMIT), Ref 2 touches dashboard only
 cd "$R"
@@ -277,7 +284,7 @@ git checkout -q -
 cd "$root"
 
 rc=0
-guard_cross_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" "$DASH_ONLY_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+guard_cross_out="$(TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" "$DASH_ONLY_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "cross-ref push should refuse bad ledger ref despite separate dashboard ref, got $rc"
 case "$guard_cross_out" in
   *"produces NO diff (GH-243 / GH-257)"*)
@@ -285,6 +292,8 @@ case "$guard_cross_out" in
     ;;
   *) fail "expected refusal on cross-ref push, got: $guard_cross_out" ;;
 esac
+[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after cross-ref refusal"
+pass "guard cleaned up temporary root after cross-ref refusal"
 
 # 5. Projection failure test:
 # Create a commit where ledger is touched, but utils/roadmap-dashboard.sh is missing from that commit.
@@ -299,7 +308,7 @@ git checkout -q -
 cd "$root"
 
 rc=0
-guard_fail_out="$(bash "$GUARD" "$R" "$PROJ_FAIL_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+guard_fail_out="$(TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$PROJ_FAIL_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
 [ "$rc" -eq 1 ] || fail "guard should refuse when commit projection fails renderer lookup, got $rc"
 case "$guard_fail_out" in
   *"without regenerating ROADMAP-DASHBOARD.md"*)
@@ -307,6 +316,8 @@ case "$guard_fail_out" in
     ;;
   *) fail "expected drift refusal on projection failure, got: $guard_fail_out" ;;
 esac
+[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after projection failure refusal"
+pass "guard cleaned up temporary root after projection failure refusal"
 
 # 6. Remediation: use roadmap update to fix raw_text
 cd "$R"
@@ -320,8 +331,9 @@ git -c user.email=t@t -c user.name=t commit -q -m "remediated row #256 and regen
 REMEDIATED_COMMIT="$(git rev-parse HEAD)"
 cd "$root"
 
-# 6. Staleness guard now passes cleanly:
-bash "$GUARD" "$R" "$REMEDIATED_COMMIT" "$BASE_COMMIT"
-pass "end-to-end: staleness guard passes after roadmap update and dashboard regeneration"
+# 7. Staleness guard now passes cleanly and leaves no temporary files:
+TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$REMEDIATED_COMMIT" "$BASE_COMMIT"
+[ "$(find "$GUARD_TMP" -mindepth 1 | wc -l)" -eq 0 ] || fail "expected GUARD_TMP to be clean after clean pass"
+pass "end-to-end: staleness guard passes after roadmap update and leaves 0 temporary artifacts"
 
 echo "== GH-257 ALL PASSED =="

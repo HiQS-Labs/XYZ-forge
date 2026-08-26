@@ -26,20 +26,30 @@ REPO="${1:-}"; shift || true
 
 grep -q "ROADMAP_SOURCE=releases" "$REPO/.pdda-mode" 2>/dev/null || exit 0
 
-cleanup_projection() {
-  local target="${1:-}"
-  [ -n "$target" ] || return 0
-  [ -e "$target" ] || return 0
-  local parent_phys
-  parent_phys="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || parent_phys="/tmp"
-  local target_phys
-  target_phys="$(cd -P "$target" 2>/dev/null && pwd -P)" || return 0
-  [ -n "$target_phys" ] && [ -d "$target_phys" ] || return 0
-  case "$target_phys" in
-    "$parent_phys"/*) rm -rf "$target_phys" ;;
-    *) echo "dashboard-staleness-guard: refusing to clean non-descendant path $target_phys" >&2 ;;
-  esac
+SYS_TMP="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || SYS_TMP="/tmp"
+GUARD_ROOT="$(mktemp -d "$SYS_TMP/staleness-guard.XXXXXX")"
+[ -n "$GUARD_ROOT" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
+
+GUARD_ROOT_PHYS="$(cd -P "$GUARD_ROOT" 2>/dev/null && pwd -P)" || GUARD_ROOT_PHYS=""
+[ -n "$GUARD_ROOT_PHYS" ] && [ -d "$GUARD_ROOT_PHYS" ] || { echo "dashboard-staleness-guard: failed to resolve guard root" >&2; exit 1; }
+case "$GUARD_ROOT_PHYS" in
+  "$SYS_TMP"/*) ;;
+  *) echo "dashboard-staleness-guard: guard root $GUARD_ROOT_PHYS is not a resolved descendant of $SYS_TMP" >&2; exit 1 ;;
+esac
+
+cleanup_guard() {
+  [ -n "$GUARD_ROOT_PHYS" ] || return 0
+  [ -d "$GUARD_ROOT_PHYS" ] || return 0
+  [ ! -L "$GUARD_ROOT_PHYS" ] || return 0
+  local cur_phys
+  cur_phys="$(cd -P "$GUARD_ROOT_PHYS" 2>/dev/null && pwd -P)" || return 0
+  if [ "$cur_phys" = "$GUARD_ROOT_PHYS" ]; then
+    case "$GUARD_ROOT_PHYS" in
+      "$SYS_TMP"/*) rm -rf "$GUARD_ROOT_PHYS" ;;
+    esac
+  fi
 }
+trap cleanup_guard EXIT INT TERM
 
 while [ "$#" -ge 2 ]; do
   local_sha="$1"; remote_sha="$2"; shift 2
@@ -59,19 +69,10 @@ while [ "$#" -ge 2 ]; do
 
   if [ "$touched_ledger" -eq 1 ] && [ "$touched_dashboard" -eq 0 ]; then
     # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md produces drift or no diff.
-    # Run the diagnosis against a commit-pinned temporary projection of local_sha so uncommitted
-    # working-tree modifications do not skew the classification.
-    TMP_PARENT="$(cd -P "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P)" || TMP_PARENT="/tmp"
-    TMP_PROJ="$(mktemp -d "$TMP_PARENT/dashboard-guard-proj.XXXXXX")"
-    [ -n "$TMP_PROJ" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
-    trap 'cleanup_projection "$TMP_PROJ"' EXIT INT TERM
-
-    PROJ_PHYS="$(cd -P "$TMP_PROJ" 2>/dev/null && pwd -P)" || PROJ_PHYS=""
-    [ -n "$PROJ_PHYS" ] && [ -d "$PROJ_PHYS" ] || { echo "dashboard-staleness-guard: failed to resolve projection directory" >&2; exit 1; }
-    case "$PROJ_PHYS" in
-      "$TMP_PARENT"/*) ;;
-      *) echo "dashboard-staleness-guard: projection dir $PROJ_PHYS is not a resolved descendant of $TMP_PARENT" >&2; exit 1 ;;
-    esac
+    # Run the diagnosis against a commit-pinned temporary projection of local_sha inside the
+    # private GUARD_ROOT_PHYS so uncommitted working-tree modifications do not skew the classification.
+    TMP_PROJ="$GUARD_ROOT_PHYS/proj-$local_sha"
+    mkdir -p "$TMP_PROJ"
 
     drift_detected=1
     if git -C "$REPO" archive "$local_sha" 2>/dev/null | tar -x -C "$TMP_PROJ" 2>/dev/null \
@@ -82,8 +83,7 @@ while [ "$#" -ge 2 ]; do
         drift_detected=1
       fi
     fi
-    cleanup_projection "$TMP_PROJ"
-    trap - EXIT INT TERM
+    rm -rf "$TMP_PROJ"
 
     if [ "$drift_detected" -eq 1 ]; then
       cat >&2 <<'EOF'
