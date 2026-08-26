@@ -251,7 +251,11 @@ Tracking Issue: #555
 Description: Second release reusing the same tracking issue.
 EOF
 
-col_out="$("$ONBOARD" "$COL_REPO" 2>&1)"; col_rc=$?
+if col_out="$("$ONBOARD" "$COL_REPO" 2>&1)"; then
+  col_rc=0
+else
+  col_rc=$?
+fi
 [ "$col_rc" -ne 0 ] \
   && pass "Shared-tracking-URL collision: non-zero exit on collision ($col_rc)" \
   || fail "Shared-tracking-URL collision: unexpectedly succeeded (exit $col_rc)"
@@ -292,7 +296,11 @@ Tracking Issue: #556
 Description: Second release with fixed tracking issue.
 EOF
 
-col_retry_out="$("$ONBOARD" "$COL_REPO" 2>&1)"; col_retry_rc=$?
+if col_retry_out="$("$ONBOARD" "$COL_REPO" 2>&1)"; then
+  col_retry_rc=0
+else
+  col_retry_rc=$?
+fi
 [ "$col_retry_rc" = 0 ] \
   && pass "Shared-tracking-URL collision: recovery succeeds on retry after fixing duplicate" \
   || fail "Shared-tracking-URL collision: retry failed after fixing duplicate ($col_retry_out)"

@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -193,3 +193,15 @@ Reviewed the complete contents of all six scoped artifacts, including pre-existi
 1. **High — the collision test aborts before it can assert the collision contract.** `test/gh197-vendor-tier-split.sh:254` assigns the deliberately failing onboarding command substitution directly while the script is under `set -e`. Bash exits at that assignment (the probe exits 1 before its following command), so lines 255–301 never run and the test itself fails instead of checking the nonzero result, report, target atomicity, and retry recovery. Put the expected-failure invocation in an `if`/`else` construct (or another `errexit`-safe form) that captures the exit code, then retain the existing assertions.
 
 **Verdict:** Changes requested
+
+### Extension · System
+relay-drive: round cap (4) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 5
+
+### Round 3 · Builder · agy
+
+Addressed the Round 2 reviewer finding regarding `errexit` control flow in the collision test suite:
+
+1. **`test/gh197-vendor-tier-split.sh`**:
+   - Replaced direct command-substitution variable assignment with an `errexit`-safe `if ... then ... else ... fi` construct around the intentionally-failing `$ONBOARD "$COL_REPO"` probe (and the subsequent retry probe).
+   - Captured the non-zero exit code (`col_rc`) and output without prematurely triggering `set -e` script termination.
+   - All downstream assertions (non-zero exit code, error report message, colliding URL citation, root ledger non-mutation atomicity, and recovery upon resolving the collision) now execute and verify cleanly.
