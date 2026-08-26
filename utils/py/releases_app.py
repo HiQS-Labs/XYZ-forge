@@ -2772,6 +2772,30 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
 
 
 
+def validate_raw_text(raw_text, issue_num=None):
+    """GH-257: validate that raw_text matches the markdown shape the renderer requires.
+
+    The renderer (utils/roadmap-dashboard.sh) parses bullets starting with `- **`. An unparseable
+    line (e.g. `- [ ] #255 ...`) is silently dropped by the dashboard renderer. Validating at write
+    time catches malformed input immediately instead of producing a silent drop downstream.
+    """
+    if not isinstance(raw_text, str):
+        refuse("invalid-raw-text", "raw_text must be a string")
+    stripped = raw_text.strip()
+    match = re.match(r'^-\s+\*\*(.+?)\*\*', stripped)
+    if not match:
+        refuse("invalid-raw-text",
+               "malformed --raw-text %r: expected markdown bullet starting with '- **<title>**' "
+               "(e.g. '- **GH-%s · <title>** ...')" % (raw_text, str(issue_num) if issue_num else "<num>"))
+    if issue_num is not None:
+        gh_patterns = [r'\bGH-%d\b' % issue_num, r'#%d\b' % issue_num]
+        if not any(re.search(p, raw_text) for p in gh_patterns):
+            refuse("invalid-raw-text",
+                   "malformed --raw-text: does not reference issue GH-%d / #%d" % (issue_num, issue_num))
+    return stripped
+
+
+
 def cmd_roadmap_add(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -2780,10 +2804,13 @@ def cmd_roadmap_add(args):
         basename = os.path.basename(args.doc_path)
         # hq park passes the hq_roadmap_line rendering via --raw-text so preview and stored row
         # share ONE template; the inline fallback exists only for direct CLI use.
-        raw_text = args.raw_text or "- **GH-%d · %s** 🆕 **captured %s via HQ** — [%s](%s) · [#%d](%s)" % (
-            args.issue_num, args.title, args.created, basename, args.doc_path,
-            args.issue_num, args.issue_url
-        )
+        if args.raw_text:
+            raw_text = validate_raw_text(args.raw_text, args.issue_num)
+        else:
+            raw_text = "- **GH-%d · %s** 🆕 **captured %s via HQ** — [%s](%s) · [#%d](%s)" % (
+                args.issue_num, args.title, args.created, basename, args.doc_path,
+                args.issue_num, args.issue_url
+            )
         # GH-249: the rating rides in the ledger line, parsed by the SAME parse_rating() the
         # markdown sync uses — one grammar, one parser, never a second scorer. Before this, ratings
         # could only enter through `roadmap sync`, which GH-169 turned into a no-op in releases-mode
