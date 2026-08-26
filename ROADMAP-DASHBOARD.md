@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -26,6 +26,8 @@ Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-246 · relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | [GH-246-RELAY-XYZ-QA-TEMPLATE.md](PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md) · [#246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) |
 | GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions | — | [GH-249-CANARY-EUID-ROOT-ASSERTIONS.md](PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md) · [#249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) |
 | GH-251 · validate.sh miscounts an absent pytest as FAILED | — | [GH-251-VALIDATE-PYTEST-SKIP.md](PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md) · [#251](https://github.com/HiQS-Labs/XYZ-forge/issues/251) |
+| GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | — | [#255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) · [PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md](PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md) |
+| GH-256 — no preflight checks the builder can reach a phase's artifact paths | — | [#256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) · [PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md](PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md) |
 
 ## Queue
 
