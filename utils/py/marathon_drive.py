@@ -243,7 +243,7 @@ def run_tick_loud(cmd_args):
                 eprint(f"  {line}")
         sys.exit(res.returncode)
 
-def preflight_write_set_trackable(repo_root, paths):
+def preflight_write_set_trackable(repo_root, paths, transcript_paths=None):
     """GH-514: BLOCK before dispatch if the repo cannot track a path this run must commit.
 
     `git check-ignore -v` is the authority rather than a hand-rolled read of `.gitignore`: it
@@ -297,11 +297,39 @@ def preflight_write_set_trackable(repo_root, paths):
     eprint("  surfaces as a phase HALT after the turn, and on the escalation path the record")
     eprint("  explaining the halt is itself one of the files that cannot be committed.")
     eprint("")
+    # GH-255: order the remedies by WHAT IS BLOCKED, not by a fixed ranking.
+    #
+    # XYZ_ARCHIVE_ROOT (GH-30) redirects the TRANSCRIPT write-set only. `_phase_write_set` —
+    # RELAY.md and ESCALATION.md under the phases dir — is not redirected by it, so offering it
+    # for a phase-file block sends the operator into a SECOND failure. That is the same defect
+    # this branch exists to fix, one level down, so the condition is load-bearing rather than
+    # cosmetic.
+    #
+    # On the split call path (commit_root != root) each call already carries one kind, so
+    # per-call knowledge is enough and no global view is needed: a phase-set call has no
+    # transcripts, and a transcript-set call has nothing else.
+    _transcripts = set(transcript_paths or ())
+    only_transcripts = bool(_transcripts) and all(p in _transcripts for p, _ in blocked)
+
     eprint("  Remedy, in the order they are usually right:")
-    eprint("    1. Run with --target-root <code-repo>. Harness output (relay, escalation,")
-    eprint("       transcripts) then stays in THIS repo and only code changes land in the target —")
-    eprint("       which is what --target-root is for, per marathon.sh's own usage text.")
-    eprint("    2. Or un-ignore the path above in the rule named beside it, if this repo is meant")
+    if only_transcripts:
+        eprint("    Every blocked path above is a TRANSCRIPT, which is exactly the case")
+        eprint("    XYZ_ARCHIVE_ROOT was built for (GH-30).")
+        eprint("    1. Redirect transcripts to a separate archive repo and re-run:")
+        eprint("         export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive")
+        eprint("       Must be absolute, exist, and be a git repo. The transcript commits into the")
+        eprint("       archive while the code artifact and the .tick token stay anchored here, so")
+        eprint("       this repo's tree stays free of relay-system/ and its history carries no")
+        eprint("       transcript commit. See relay-automation/CONSUMING.md.")
+        eprint("    2. Or run with --target-root <code-repo>, which moves ALL harness output here")
+        eprint("       and lands only code changes in the target.")
+    else:
+        eprint("    At least one blocked path above is a PHASE file (RELAY.md / ESCALATION.md).")
+        eprint("    XYZ_ARCHIVE_ROOT will NOT clear this — it redirects transcripts only.")
+        eprint("    1. Run with --target-root <code-repo>. Harness output (relay, escalation,")
+        eprint("       transcripts) then stays in THIS repo and only code changes land in the target —")
+        eprint("       which is what --target-root is for, per marathon.sh's own usage text.")
+    eprint("    3. Or un-ignore the path above in the rule named beside it, if this repo is meant")
     eprint("       to track harness output.")
     eprint("  Not doing it for you: a repo that ignores harness output usually means it, and")
     eprint("  silently rewriting someone's ignore rules is a worse failure than this one (GH-514).")
@@ -2409,13 +2437,15 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         log("preflight: transcript root unresolved (%s) — write-set check covers RELAY.md and "
             "ESCALATION.md only, not the transcript" % _exc.__class__.__name__)
     if os.path.realpath(commit_root) == os.path.realpath(root):
-        preflight_write_set_trackable(root, _phase_write_set + _transcript_write_set)
+        preflight_write_set_trackable(root, _phase_write_set + _transcript_write_set,
+                                      transcript_paths=_transcript_write_set)
     else:
         log(f"preflight: phase write-set commits to {commit_root}, not the harness root — "
             f"probing each repo separately (#131)")
         preflight_write_set_trackable(commit_root, _phase_write_set)
         if _transcript_write_set:
-            preflight_write_set_trackable(root, _transcript_write_set)
+            preflight_write_set_trackable(root, _transcript_write_set,
+                                          transcript_paths=_transcript_write_set)
 
     # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.
     #
