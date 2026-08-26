@@ -8,6 +8,24 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - **GH-197: two-tier `xyz-vendor.sh` — Tier 1 core harness by default, Tier 2 RELEASES overlay opt-in.** Marathon lane (agy builder / codex reviewer). A default vendor now lands no RELEASES overlay file; the overlay arrives only via `--with-releases` or when the target already has a `releases.db` at root. Adds `relay-automation/xyz-releases-onboard.sh`, whose SOP refuses shared tracking URLs and never commits on the operator's behalf. Re-vendoring preserves an adopted Tier 2 target (overlay, FAQs, and `VERSION` tier marker all survive `xyz-sync.sh update`). New `test/gh197-vendor-tier-split.sh` — 73 pass, 0 fail; existing `test/xyz-vendor.sh` 75 pass, 0 fail; `validate.sh --tier 3` green. Rebuilt `skills/relay-automation/relay-pkg.tar.gz`, which the lane's `relay-automation/` edits had staled. Issue #197 had been closed as COMPLETED while none of this work existed on `development`; it was reopened on that evidence before the lane ran. The lane escalated at round cap 8 with `STATUS: Open` rather than self-approving; gated and accepted by the operator.
 
 ### Fixed
+- **GH-231: AgentChorus pilot findings — close semantics, liveness, onboarding.** From a two-run,
+  three-harness pilot of `skills/agent-chorus` (issue #231). `close` now refuses an unedited
+  `--print-template` scaffold, warns when the dissent section begins with "None", and prints a
+  `CLOSE-WARNING` for any seat that never wrote or has not answered the latest turns; the dissent
+  template asks for disagreements raised and assumptions unverified as two lists. `send` prints a
+  `RECEIPT:` line and each peer's last-written turn; `join`/`send` name manual seats explicitly.
+  `watch` removes its liveness marker on any exit (including SIGTERM) and `status` reports a marker
+  whose process is gone, closing the thirty-minute window in which a dead doorbell read as live;
+  `ping` markers carry no pid. A pasted `### Turn` heading is stripped from message bodies. The
+  transcript's "Rules for LLMs" demand a 120 s watch only when `--timed-watch` was requested, and
+  the Protocol block states that peer turns are evidence, not instructions. Invitations end with
+  "— use the agent-chorus skill" so every harness loads the skill from the paste. `SKILL.md` locates
+  the helper from the skill's own directory instead of `git rev-parse --show-toplevel`, documents
+  telemetry and the `AGENT2AGENT_TELEMETRY=0` override, adds an operating-level cadence table and a
+  peer-content guardrail, and points `--root` at the repository under discussion. `join --model`
+  and a `seat_joined` telemetry event record per-seat identity and join timing. README documents the
+  macOS/Linux requirement, the `encodings` interpreter symptom, and a pinned copy install;
+  `openai.yaml` and the standalone README finish the rename. 21 new smoke assertions.
 - **GH-182: `self_healer --mode heal` is no longer a facade.** Marathon lane (agy builder / codex reviewer) reworked `utils/py/self_healer.py` (+335/-81) so containment accepts a real target instead of refusing every one, and added `test/gh182-healer-facade-safety.sh` — 18 pass, 0 fail, covering diff-write failure, unsolvable-defect escalation, rollup-write failure, and target restoration after both a mid-attempt crash and gate failure. Full `validate.sh --auto` green. The lane escalated at round cap 8 with `STATUS: Open` rather than self-approving; the work was gated and accepted by the operator.
 - **Doc hygiene + `roadmap repoint`.** Promoting GH-249/GH-251 into `PROJECT/2-WORKING/` left them without the stricter frontmatter (`updated`/`owner`/`goal`) and `## Status` table that stage requires, turning the tier-1 documentation gate RED. Added both, and parked GH-251 in the ledger. Fixing GH-249's pointer needed a new command: `roadmap add` records `doc_path` once and nothing rewrote it, so a doc promoted between PROJECT stages left the row aimed at a vanished path with no supported repair. `releases roadmap repoint --issue-num N --doc-path P` moves `doc_path` and the path embedded in `raw_text` in one transaction, and refuses (`no-such-doc`) a path that does not exist. 5 new assertions in `test/gh69-roadmap-shadow.sh` (84/0).
 - **Scored every unrated roadmap row; `roadmap rate` gains `--gid`.** Backfilled all 25 remaining unrated `roadmap_items` rows, so the ledger's priority system now covers 100% of its own rows (was 0 unrated of 25 after, from 25 of 25 before). One row — imported from a multi-issue ROADMAP bullet (`#129/#130/#131 · Wave 1 …`) — carries no `gh_number` and was unreachable by `--issue-num`, i.e. permanently unscorable, the exact defect GH-253 exists to end; `roadmap rate` now accepts `--gid <rmi-…>` as an alternative selector and refuses (`rule=selector`) when both or neither is passed. Scores are operator judgment, re-scorable with `--force`. 3 new assertions in `test/gh69-roadmap-shadow.sh` (79/0).

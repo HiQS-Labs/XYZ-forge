@@ -65,10 +65,16 @@ python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_t
 grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
-helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py"' "$SKILL")"
+# GH-231: commands resolve the helper from the skill's own directory via a quoted $AGENT_CHORUS,
+# not from `git rev-parse --show-toplevel` (which fails outside an XYZ-forge clone). The Phase 2
+# `start --supersedes`, `invite`, and `verify-citations` examples now follow the same rule.
+helper_examples="$(grep -c '^"\$AGENT_CHORUS" ' "$SKILL")"
 [ "$helper_examples" -eq 16 ] \
-  && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 16 root-resolved helper commands, found $helper_examples"
+  && pass "all skill commands use the quoted skill-relative helper variable" \
+  || fail "expected 16 \$AGENT_CHORUS helper commands, found $helper_examples"
+grep -Fq -- '$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py' "$SKILL" \
+  && pass "skill still documents the in-repo helper path for XYZ-forge clones" \
+  || fail "skill lost the in-repo helper path note"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
@@ -597,9 +603,17 @@ to_run="$(sh -c "$to_cmd" 2>&1)"; to_run_rc=$?
 # ── item 6: doorbell liveness is visible to the other seat, WITHOUT touching the relay file ──────
 route_to 1
 before_sidecar="$(fingerprint "$G38_FILE")"
-a2a watch --agent 1 --interval 0.05 --timeout 0.2 >/dev/null 2>&1
-[ -f "$(dirname "$G38_FILE")/runtime/agent1.watch" ] && pass "watch records its liveness in a per-agent sidecar" \
+# GH-231 finding 6: the marker exists only while the watch process lives — it is removed on any
+# exit so a dead doorbell can never read as armed. Observe it mid-watch, then confirm removal.
+# agent2 does not own NEXT here, so its watch genuinely waits until the 1 s timeout.
+a2a watch --agent 2 --interval 0.05 --timeout 1 >/dev/null 2>&1 &
+G38_WATCH_PID=$!
+sleep 0.3
+[ -f "$(dirname "$G38_FILE")/runtime/agent2.watch" ] && pass "watch records its liveness in a per-agent sidecar while running" \
   || fail "no watch sidecar written"
+wait "$G38_WATCH_PID" 2>/dev/null
+[ ! -e "$(dirname "$G38_FILE")/runtime/agent2.watch" ] && pass "watch removes its liveness sidecar on exit" \
+  || fail "watch left its sidecar behind after exiting"
 [ "$before_sidecar" = "$(fingerprint "$G38_FILE")" ] \
   && pass "the sidecar leaves the relay file byte-identical (the watch contract is intact)" \
   || fail "the liveness marker mutated the discussion"
@@ -616,8 +630,11 @@ route_to 2   # agent1 must NOT own the turn, or its watch returns take-turn inst
 # non-refreshing marker ages ~3s while a refreshing one ages ~0s. A shorter window made this
 # assertion vacuous (1.2s truncates to 1, passing a `<= 1` check either way) — caught by reverting
 # the heartbeat and seeing the suite stay green.
-a2a watch --agent 1 --interval 0.1 --timeout 3 >/dev/null 2>&1      # waits ~30 intervals
+a2a watch --agent 1 --interval 0.1 --timeout 3 >/dev/null 2>&1 &     # waits ~30 intervals
+G38_LONG_WATCH_PID=$!
+sleep 2.5   # measure while the watch is still polling (the marker is removed on exit, GH-231)
 SIDECAR_AGE="$(python3 -c "import os,sys,time; print(int(time.time()-os.stat(sys.argv[1]).st_mtime))" "$(dirname "$G38_FILE")/runtime/agent1.watch" 2>/dev/null)"
+wait "$G38_LONG_WATCH_PID" 2>/dev/null
 [ -n "$SIDECAR_AGE" ] && [ "$SIDECAR_AGE" -le 1 ] 2>/dev/null \
   && pass "the doorbell marker refreshes on every poll (a long wait is not reported STALE)" \
   || fail "sidecar went stale during an active wait (age=${SIDECAR_AGE}s) — the r1 false positive"
