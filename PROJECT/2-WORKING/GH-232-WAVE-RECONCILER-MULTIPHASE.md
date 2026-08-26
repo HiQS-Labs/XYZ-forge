@@ -42,3 +42,9 @@ When a PR merging a single phase of a multi-phase umbrella issue lands (e.g. PR 
 - [ ] Merge evidence is appended to the active doc in `PROJECT/2-WORKING/` without file relocation.
 - [ ] Automated regression tests verify multi-phase umbrella preservation and closed-issue promotion.
 - [ ] Full gate pass.
+
+## Lessons Learned (For Future Agents)
+
+- **Merge evidence is not completion evidence.** Phase 1 of an umbrella (#193) merged while the linked issue stayed OPEN, and promotion on merge evidence alone left PROJECT/ and the issue tracker disagreeing about whether the work was done. Promotion now requires the linked issue to be positively CLOSED.
+- **A failed fact-check aborts; it never defaults to promote.** A transient `gh` failure (network, rate limit) during reconcile exits 6 instead of silently promoting — one bad network day must not mis-promote a whole wave of open issues (GH-202 review, Agy round-1 blocker).
+- **Linked-issue extraction is mention-greedy.** Reconciling PR #247 (2026-08-26) failed live because prose citations to a foreign tracker (GH-368/375/492/551 — not issues in this repo) were extracted as linked issues. Sanctioned workaround: `--offline` with an `issues[]` manifest — unlisted numbers read as unknown (promote as before); only positively-OPEN suppresses promotion. Follow-up worth filing: distinguish closing keywords ("Closes/Resolves #N") from incidental mentions.

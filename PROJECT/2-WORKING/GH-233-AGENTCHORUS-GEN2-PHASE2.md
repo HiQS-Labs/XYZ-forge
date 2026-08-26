@@ -57,3 +57,10 @@ related:
 - [ ] `verify-citations` baseline recorded over pilot corpus.
 - [ ] `skills/agent-chorus/SKILL.md` rules reconciled.
 - [ ] Full gate pass.
+
+## Lessons Learned (For Future Agents)
+
+- **Roster widening is one atomic unit under DiscussionLock.** `invite --id <ID> --agent <N>` updates the `AGENTS:` header, relay state, `metadata.json`, and telemetry together; four separate edits is a race, not an invite.
+- **Supersession is ordered cross-discussion closure.** `start --supersedes` stamps `SUPERSEDED-BY:` on the predecessor *before* seeding the successor — reversing that order orphans the old discussion's readers.
+- **Verbs and their SKILL.md invariants land together.** Lifecycle verbs without reconciling the invariant list (rule 382) leave agents following stale rules; both shipped in one PR deliberately.
+- **Land open fixes against a shared subsystem before the next phase rewrites it.** Phase 2 merged while pilot-findings fix #236 was still open against the same four agent-chorus files, so #236 now carries the full rebase burden (CHANGELOG.md plus the phase-2 rewrites). Order future waves: fixes first, phases second.
