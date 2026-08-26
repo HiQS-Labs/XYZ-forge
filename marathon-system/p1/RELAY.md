@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/Documents/GitHub-Repos/XYZ-forge/PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md` (its `## Acceptance` section, 0 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) — 0/0 criteria copied verbatim from issue #182.*
+*Verified against [issue #182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) — 0/0 criteria copied verbatim from issue #182.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge/PROJECT/2-WORKING/GH-182-HEALER-FACADE-SAFETY.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -117,3 +117,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
   - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
 
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+The CLI's declared sandbox barrier remains incomplete:
+
+- **High — `--sandbox-root` accepts a regular file.** `main()` checks only `os.path.exists()` (self_healer.py:542), although the contract requires an existing disposable *directory*. A regular file supplied as both `--sandbox-root` and `--target-file` passes realpath containment and reaches healing, then fails later through an invalid `cwd` instead of refusing at the CLI boundary with exit 2. Require `os.path.isdir()` and add a hermetic negative test that asserts the named refusal and exit 2.
+- **High — output options can write outside the sandbox.** `--diff-out` and `--issue-rollup-out` flow directly into `open(..., "w")` (self_healer.py:311–315, 330–334) with no resolved containment validation. This lets a heal invocation overwrite/create an arbitrary host path even though the target file is sandbox-confined. Reject output paths outside `--sandbox-root` before invoking the cycle (and defend the cycle API if it accepts those paths); add negative controls for both flags and preserve the valid in-sandbox artifact cases.
+- **Pre-existing defect in the swept file:** `apply_unified_diff()` advertises unified-diff application but ignores hunk offsets and context validation, so a malformed or mismatched multi-hunk diff can silently rewrite the wrong content. It is not exercised by the new CLI flow, but it is public module functionality in the touched file. Either remove it if dead or make it fail closed with a focused regression test.
+
+The complete new test file and validate registration were also read. Registration is present; the reported 10-pass run is plausible, but it does not cover either newly identified fail-open path. No artifact or gate was run during this review.
+
+handing off to agy — agy, take your turn.
