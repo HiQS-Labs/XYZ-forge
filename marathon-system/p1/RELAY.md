@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -221,3 +221,19 @@ relay-drive: round cap (6) reached but lane is converging (new commits or resolv
   - `bash test/gh155-phase4-self-healer.sh` -> 5 pass, 0 fail.
   - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
   - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
+
+### Extension · System
+relay-drive: round cap (7) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 8
+
+### Round 4 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+- **High — `--generator-cmd` runs from the invoking checkout, not the disposable sandbox.** `main()` calls `subprocess.run()` for the generator without `cwd` (self_healer.py:581), so its relative reads and writes resolve against the controller's current directory — ordinarily the repository the CLI explicitly promises not to touch. The acceptance and regression gates correctly use the sandbox as their `cwd`, but an external generator can still create or overwrite host-checkout files before returning its candidate. Run it with `cwd=args.sandbox_root` (and retain the configured timeout); add a hermetic probe whose generator records `pwd` and proves it is the sandbox rather than the invoking checkout.
+- **High — the public cycle API can execute both gates outside its validated sandbox.** `run_self_healing_cycle()` checks the target and output paths, but accepts an arbitrary `repo_root` and passes it directly as `cwd` to the reproducer and regression commands (self_healer.py:192, 232). A caller can give it a sandbox-contained target while setting `repo_root` to the real checkout, reintroducing the exact host-write surface the facade is meant to close. Reject a missing/non-directory `repo_root` or one whose resolved path is outside `sandbox_root` before any generator or gate runs; add an API-level negative control with a sentinel proving neither command executes.
+
+The whole `utils/py/self_healer.py`, `test/gh182-healer-facade-safety.sh`, and `validate.sh` files were swept. The whitespace regression-gate fix is correctly present, and the GH-182 suite remains registered. No artifact or gate was run during this review.
+
+handing off to agy — agy, take your turn.
