@@ -348,10 +348,46 @@ guard_pivot_out="$(TMPDIR="$GUARD_TMP" VICTIM_DIR="$VICTIM_DIR" bash "$GUARD" "$
 [ -f "$VICTIM_DIR/important_file" ] || fail "hostile pivot must not delete victim files"
 pass "end-to-end: hostile root symlink pivot safely refused and protected external directories"
 
-# Clean up hostile test artifacts in GUARD_TMP
 rm -rf "$GUARD_TMP"/staleness-guard.* 2>/dev/null || true
 
-# 7. Remediation: use roadmap update to fix raw_text
+# 7. Hostile root rename replacement test (directory swap / inode mismatch):
+# Create a commit where roadmap-dashboard.sh moves guard root aside and replaces it with a new real directory
+VICTIM_DIR2="$WORK/victim_dir2"
+mkdir -p "$VICTIM_DIR2"
+touch "$VICTIM_DIR2/safe_file"
+
+cd "$R"
+git checkout -q -b branch-hostile-rename "$BAD_COMMIT"
+cat > utils/roadmap-dashboard.sh <<'EOFRENAME'
+#!/usr/bin/env bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GUARD_ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+mv "$GUARD_ROOT_DIR" "$GUARD_ROOT_DIR.aside" 2>/dev/null || true
+mv "$VICTIM_DIR2" "$GUARD_ROOT_DIR" 2>/dev/null || true
+exit 0
+EOFRENAME
+chmod +x utils/roadmap-dashboard.sh
+git add utils/roadmap-dashboard.sh
+git -c user.email=t@t -c user.name=t commit -q -m "commit with hostile rename script"
+RENAME_COMMIT="$(git rev-parse HEAD)"
+git checkout -q "$BASE_COMMIT"
+cd "$root"
+
+rc=0
+guard_rename_out="$(TMPDIR="$GUARD_TMP" VICTIM_DIR2="$VICTIM_DIR2" bash "$GUARD" "$R" "$RENAME_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "guard should refuse on rename attempt, got $rc"
+case "$guard_rename_out" in
+  *"identity mismatch"*) pass "end-to-end: hostile directory rename detected by device/inode mismatch" ;;
+  *) fail "expected identity mismatch refusal, got: $guard_rename_out" ;;
+esac
+
+# Prove victim file was NOT deleted by the guard (it is preserved in the refused root)
+[ -f "$GUARD_TMP"/staleness-guard.*/safe_file ] || fail "victim file was deleted by guard"
+pass "end-to-end: victim directory preserved and undeleted during hostile rename replacement attempt"
+
+rm -rf "$GUARD_TMP"/staleness-guard.* "$GUARD_TMP"/staleness-guard.*.aside 2>/dev/null || true
+
+# 8. Remediation: use roadmap update to fix raw_text
 cd "$R"
 git checkout -q "$BAD_COMMIT"
 app --root "$R" roadmap update --issue-num 256 --raw-text "- **GH-256 · fixed title** 🆕 — [#256](https://github.com/org/repo/issues/256)"

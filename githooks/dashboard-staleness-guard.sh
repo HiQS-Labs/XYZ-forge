@@ -32,6 +32,11 @@ GUARD_ROOT_PHYS=""
 GUARD_INODE=""
 GUARD_DEV=""
 
+get_dev_inode() {
+  local target="$1"
+  stat -f "%d %i" "$target" 2>/dev/null || stat -c "%d %i" "$target" 2>/dev/null || true
+}
+
 cleanup_guard() {
   local exit_code=$?
   [ -n "$GUARD_ROOT" ] || return "$exit_code"
@@ -49,15 +54,13 @@ cleanup_guard() {
     echo "dashboard-staleness-guard: refusing cleanup — guard root path drifted ($cur_phys != $GUARD_ROOT_PHYS)" >&2
     exit 1
   fi
-  local cur_inode cur_dev
-  cur_inode="$(stat -f "%i" "$cur_phys" 2>/dev/null || stat -c "%i" "$cur_phys" 2>/dev/null || true)"
-  cur_dev="$(stat -f "%d" "$cur_phys" 2>/dev/null || stat -c "%d" "$cur_phys" 2>/dev/null || true)"
-  if [ -n "$GUARD_INODE" ] && [ "$cur_inode" != "$GUARD_INODE" ]; then
-    echo "dashboard-staleness-guard: refusing cleanup — guard root inode changed ($cur_inode != $GUARD_INODE)" >&2
-    exit 1
-  fi
-  if [ -n "$GUARD_DEV" ] && [ "$cur_dev" != "$GUARD_DEV" ]; then
-    echo "dashboard-staleness-guard: refusing cleanup — guard root device changed ($cur_dev != $GUARD_DEV)" >&2
+  local cur_dev_inode
+  cur_dev_inode="$(get_dev_inode "$cur_phys")"
+  local cur_dev="${cur_dev_inode%% *}"
+  local cur_inode="${cur_dev_inode##* }"
+  if [ -z "$GUARD_DEV" ] || [ -z "$GUARD_INODE" ] || [ -z "$cur_dev" ] || [ -z "$cur_inode" ] || \
+     [ "$cur_dev" != "$GUARD_DEV" ] || [ "$cur_inode" != "$GUARD_INODE" ]; then
+    echo "dashboard-staleness-guard: refusing cleanup — guard root identity mismatch ($cur_dev:$cur_inode != $GUARD_DEV:$GUARD_INODE)" >&2
     exit 1
   fi
   case "$cur_phys" in
@@ -78,8 +81,13 @@ case "$GUARD_ROOT_PHYS" in
   *) echo "dashboard-staleness-guard: guard root $GUARD_ROOT_PHYS is not a resolved descendant of $SYS_TMP" >&2; exit 1 ;;
 esac
 
-GUARD_INODE="$(stat -f "%i" "$GUARD_ROOT_PHYS" 2>/dev/null || stat -c "%i" "$GUARD_ROOT_PHYS" 2>/dev/null || true)"
-GUARD_DEV="$(stat -f "%d" "$GUARD_ROOT_PHYS" 2>/dev/null || stat -c "%d" "$GUARD_ROOT_PHYS" 2>/dev/null || true)"
+init_dev_inode="$(get_dev_inode "$GUARD_ROOT_PHYS")"
+GUARD_DEV="${init_dev_inode%% *}"
+GUARD_INODE="${init_dev_inode##* }"
+if [ -z "$GUARD_DEV" ] || [ -z "$GUARD_INODE" ]; then
+  echo "dashboard-staleness-guard: failed to establish guard root device/inode identity" >&2
+  exit 1
+fi
 
 while [ "$#" -ge 2 ]; do
   local_sha="$1"; remote_sha="$2"; shift 2
