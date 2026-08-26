@@ -783,6 +783,29 @@ route_agent() {  # <agent-id> → export the matching *_AGENT var marathon-agent
     *)       die "agent '$1' not recognized — must start with claude/codex/agy/aider" ;;
   esac
 }
+# GH-256: under --target-root the turn shim must GUARD the same repo the worktree is cut FROM.
+#
+# relay-drive.sh exports RELAY_TARGET_ROOT, and relay-turn-lib.sh:251 reads
+# RTL_ROOT="${RELAY_TARGET_ROOT:-$1}" — so the worktree is correctly cut from the target. But each
+# shim resolves its own containment root separately, from <AGENT>_TURN_ROOT
+# (utils/py/agy-turn.py:321, utils/py/codex-turn.py:26), which nothing here ever set.
+# relay-turn-lib.sh:283 already states the gap outright — "marathon-drive/relay-drive don't export
+# CODEX_TURN_ROOT/AGY_TURN_ROOT — they never do" — and names the symptom: the per-artifact seed
+# check resolves against the wrong root, finds nothing, and hands the agent a worktree with its own
+# artifact missing. GH-160 closed that for the vendored-.xyz shape; this closes it for --target-root.
+#
+# Measured before the fix: four consecutive builder turns produced no tracked changes and appended
+# no builder block, the reviewer (given absolute paths) reviewed the correct unchanged files, and
+# the phase ran to its round cap and escalated cap-stalled after 29 minutes with zero lines written.
+# The builder was telling the truth — the files were not in the worktree it was handed.
+#
+# CONSUMING.md:41 already documents <AGENT>_TURN_ROOT as what a cross-repo turn requires. This
+# honours that contract instead of leaving every caller to discover it. Only set when the operator
+# actually asked for a foreign target; the same-repo default is untouched.
+if [[ -n "$TARGET_ROOT" ]]; then
+  export AGY_TURN_ROOT="$TARGET_ROOT" CODEX_TURN_ROOT="$TARGET_ROOT" \
+         COMMANDCODE_TURN_ROOT="$TARGET_ROOT"
+fi
 [[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
 route_agent "$BUILDER"
 route_agent "$REVIEWER"
