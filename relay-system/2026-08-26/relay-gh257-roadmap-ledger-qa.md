@@ -2,7 +2,7 @@
 Goal: QA Roadmap Ledger Fixes (GH-257)
 Date: 2026-08-26
 NEXT: Producer
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -663,3 +663,64 @@ All 279 tests in `validate.sh` pass cleanly. Handing back for final review.
 
 **Verification:** `bash test/gh257-roadmap-ledger-fixes.sh` passed, with output captured at
 `.relay-scratch/gh257-r17-test.log`. No full project gate or direct Git command was run.
+
+## Producer response — 2026-08-26 (Turn 18)
+
+Addressed all blocking and additional findings from Codex re-review (Turn 17):
+
+1. **Strict identity establishment & fail-closed comparisons (Finding 1)**:
+   - Updated `githooks/dashboard-staleness-guard.sh` with `get_dev_inode` helper.
+   - Requires non-empty `GUARD_DEV` and `GUARD_INODE` at initial allocation, immediately exiting 1 with `failed to establish guard root device/inode identity` if either value is empty.
+   - In `cleanup_guard()`, requires non-empty current dev/inode values and asserts exact match against initial identity, refusing cleanup and exiting 1 otherwise.
+
+2. **Hostile directory rename replacement regression test (Finding 2)**:
+   - Added case 7 in `test/gh257-roadmap-ledger-fixes.sh` testing directory rename/replacement (moving guard root aside and swapping with an actual directory containing `safe_file`).
+   - Verified that the push is refused (`rc=1`), device/inode mismatch is diagnosed on stderr, and the victim file is preserved completely intact.
+
+All 279 tests in `validate.sh` pass cleanly. Handing back for final review.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex final review — 2026-08-26 (Turn 19)
+
+**Grade:** B+
+
+**Verdict:** Approved
+
+### Findings
+
+1. **[Pass] Both write paths now enforce the renderer-compatible, single-line bold-bullet
+   contract.** `validate_raw_text()` rejects CR/LF anywhere and requires the exact `- **<title>**`
+   prefix at `utils/py/releases_app.py:2775-2797`; `roadmap add` and `roadmap update` both route
+   through it at `:2809-2810` and `:3014`. The focused suite pins checkbox, repeated-space, tab,
+   unclosed/empty title, LF, and CRLF failures symmetrically at
+   `test/gh257-roadmap-ledger-fixes.sh:30-49` and `:76-92`.
+
+2. **[Pass] Dropped-row reporting and update semantics satisfy the GH-257 contract.** The renderer
+   applies the same complete opening predicate, records clear issue IDs, and emits its summary only
+   to stderr at `utils/roadmap-dashboard.sh:189-210`. `roadmap update` is dry-run safe, no-ops
+   idempotently, refuses rated writes against a schema that cannot store them, synchronizes or
+   clears all five rating columns, and writes through the `roadmap-update` receipt at
+   `utils/py/releases_app.py:3007-3048`.
+
+3. **[Pass] The staleness guard now diagnoses the pushed state per ref and fails closed.** Each ref
+   pair gets independent touch state at `githooks/dashboard-staleness-guard.sh:92-108`; diagnosis
+   runs from that pair's commit projection at `:112-123`, so dirty working-tree state and another
+   pushed ref cannot select or excuse the result. The run-owned root is physically contained and
+   device/inode pinned at `:72-90`, while cleanup revalidates path and identity immediately before
+   deletion at `:40-70`. The focused test exercises the previously failing bad-first multi-ref and
+   cross-ref cases, projection failure, symlink pivot, and same-filesystem directory replacement at
+   `test/gh257-roadmap-ledger-fixes.sh:240-388`.
+
+4. **[Non-blocking follow-up] The initial device/inode capture failure branch has no deterministic
+   regression seam.** The implementation correctly refuses empty initial or current identity data
+   at `githooks/dashboard-staleness-guard.sh:61-64` and `:84-90`, and the directory-replacement test
+   reaches the mismatch comparison. A future focused control that forces `stat` failure would pin
+   the remaining establishment branch, but this does not block the four requested GH-257 behaviors
+   or the cleanup safety proof exercised here.
+
+**Verification:** `bash test/gh257-roadmap-ledger-fixes.sh` passed with
+`== GH-257 ALL PASSED ==`; output is captured at `.relay-scratch/gh257-r19-test.log`. No full
+project gate or direct Git command was run.
