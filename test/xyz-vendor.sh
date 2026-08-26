@@ -42,13 +42,24 @@ src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
 utils_repo=$(find "$ROOT/utils" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 utils_van=$(find "$REPO/.xyz/utils" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
-{ [ "$utils_van" = "$utils_repo" ] && [ "$utils_van" -gt 0 ]; } \
-  && pass "utils/ vendored ($utils_van *.sh)" \
-  || fail "utils/ vendor incomplete: vendored $utils_van vs harness $utils_repo"
+# Under GH-197 Tier 1 excludes the 2 overlay scripts (releases-merge-resolve.sh, release-lanes.sh)
+expected_utils_sh=$((utils_repo - 2))
+{ [ "$utils_van" = "$expected_utils_sh" ] && [ "$utils_van" -gt 0 ]; } \
+  && pass "Tier 1 utils/*.sh vendored ($utils_van *.sh, excluding 2 overlay scripts)" \
+  || fail "utils/ vendor incomplete: vendored $utils_van vs expected $expected_utils_sh (repo total $utils_repo)"
 [ -f "$REPO/.xyz/utils/swarm-preflight.sh" ] && bash -n "$REPO/.xyz/utils/swarm-preflight.sh" 2>/dev/null \
   && pass "vendored swarm-preflight.sh parses" || fail "vendored swarm-preflight.sh missing or parse-fail"
 [ -f "$REPO/.xyz/utils/marathon-plan.sh" ] && bash -n "$REPO/.xyz/utils/marathon-plan.sh" 2>/dev/null \
   && pass "vendored marathon-plan.sh parses" || fail "vendored marathon-plan.sh missing or parse-fail"
+[ -f "$REPO/.xyz/utils/py/rtl.py" ] && pass "utils/py/rtl.py vendored in Tier 1" || fail "utils/py/rtl.py missing in Tier 1"
+[ -f "$REPO/.xyz/utils/py/marathon_plan.py" ] && pass "utils/py/marathon_plan.py vendored in Tier 1" || fail "utils/py/marathon_plan.py missing in Tier 1"
+[ ! -e "$REPO/.xyz/utils/py/releases_app.py" ] && pass "Tier 1: releases_app.py excluded" || fail "Tier 1: releases_app.py unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/py/releases_cycle.py" ] && pass "Tier 1: releases_cycle.py excluded" || fail "Tier 1: releases_cycle.py unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/releases-merge-resolve.sh" ] && pass "Tier 1: releases-merge-resolve.sh excluded" || fail "Tier 1: releases-merge-resolve.sh unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/release-lanes.sh" ] && pass "Tier 1: release-lanes.sh excluded" || fail "Tier 1: release-lanes.sh unexpectedly present"
+[ ! -e "$REPO/.xyz/utils/timeline" ] && pass "Tier 1: utils/timeline excluded" || fail "Tier 1: utils/timeline unexpectedly present"
+[ ! -e "$REPO/.xyz/RELEASES-DB-FAQS.md" ] && pass "Tier 1: RELEASES-DB-FAQS.md excluded" || fail "Tier 1: RELEASES-DB-FAQS.md unexpectedly present"
+grep -Fqx 'tier=1' "$REPO/.xyz/VERSION" && pass "Tier 1: stamped tier=1 in VERSION" || fail "Tier 1: missing or wrong tier in VERSION"
 [ -x "$REPO/.xyz/bin/tick" ] && pass "bin/tick vendored + executable" || fail "bin/tick missing or not executable"
 [ -x "$REPO/.xyz/bin/validate-relay-block" ] && pass "bin/validate-relay-block vendored + executable" || fail "bin/validate-relay-block missing or not executable"
 # GH-49b: the marathon runtime is vendored too (so the copy can run marathons, not just relays).
@@ -57,8 +68,8 @@ for mf in marathon-drive.sh marathon.sh marathon-agent.sh claude-turn.sh; do
   [ -f "$REPO/.xyz/relay-automation/$mf" ] && bash -n "$REPO/.xyz/relay-automation/$mf" 2>/dev/null && mcount=$((mcount+1))
 done
 [ "$mcount" = 4 ] && pass "GH-49b: marathon runtime vendored + parses (4 files)" || fail "marathon runtime incomplete ($mcount/4)"
-vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc)=' "$REPO/.xyz/VERSION" 2>/dev/null)
-[ "$vfields" = 3 ] && pass "VERSION has all 3 fields" || fail "VERSION malformed ($vfields/3 fields)"
+vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc|tier)=' "$REPO/.xyz/VERSION" 2>/dev/null)
+[ "$vfields" = 4 ] && pass "VERSION has all 4 fields (incl. tier)" || fail "VERSION malformed ($vfields/4 fields)"
 grep -Fqx '.xyz/' "$REPO/.gitignore" && pass ".xyz/ gitignored" || fail ".xyz/ not in .gitignore"
 grep -Fqx '/.tick/' "$REPO/.gitignore" && pass "/.tick/ gitignored (GH-440)" || fail "/.tick/ not in .gitignore"
 [ "$(grep -vc '^#' "$XYZ_REGISTRY")" = 1 ] && pass "registry has 1 vendored row" || fail "registry row count wrong"

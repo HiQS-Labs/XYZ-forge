@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -102,3 +102,38 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+Implemented the GH-197 two-tier vendoring architecture and onboarding SOP across all 6 scoped artifacts:
+
+1. **`relay-automation/xyz-vendor.sh`**:
+   - Added `--with-releases` option to the CLI argument loop and usage documentation.
+   - Added sticky Tier 2 auto-detection when `releases.db` is present at the target repository root (with stdout notification).
+   - Defined `RELEASES_OVERLAY` manifest and implemented deny-list removal in `materialize_vendor()` for Tier 1 default vendoring (retaining overlay and staging `RELEASES-DB-FAQS.md` for Tier 2).
+   - Stamped `tier=1` or `tier=2` into `.xyz/VERSION`.
+   - Updated `VENDOR_DIRS` comment to explicitly list `utils/` and document the deny-list mechanism.
+
+2. **`relay-automation/xyz-releases-onboard.sh`** (new):
+   - Mechanized the legacy `RELEASES.md` -> `releases.db` onboarding SOP (LTVera-Pandas `ad0d816`).
+   - Verifies preconditions (`releases.db` absent, `RELEASES.md` present).
+   - Executes `releases init` and `releases import`.
+   - Audits `.gitignore` and appends `!releases.db` carve-out only when `*.db`-style ignore rules exist (appended idempotently exactly once).
+   - Prepends app-managed banner comment to `RELEASES.md`.
+   - Reconciles `MIG-` placeholders to GitHub issue URLs (`reconcile --map`) with shared-tracking-URL collision detection (stops with non-zero exit report, never auto-files issues).
+   - Executes `releases check` for consistency.
+   - Prints the exact commit command without committing.
+
+3. **`skills/relay-xyz/SKILL.md`**:
+   - Replaced install-path table with comprehensive tier table (install.sh tick-only / Tier 1 default / Tier 2 opt-in).
+   - Refreshed GH-312 description clarifying that ledger state resides at the target repository root while `.xyz/`-resident state is preserved across rebuilds.
+
+4. **`relay-automation/README.md`**:
+   - Updated `Components` table row for `xyz-vendor.sh` / `xyz-sync.sh` and added `xyz-releases-onboard.sh`.
+   - Added dedicated `## Vendoring tiers` section documenting Tier 1 vs Tier 2 architecture, overlay manifest, and the onboarding SOP.
+
+5. **`test/xyz-vendor.sh`**:
+   - Updated `utils/` verification to account for Tier 1 overlay removal (asserting non-overlay tools present, overlay absent, and `tier=1` in `VERSION`).
+
+6. **`test/gh197-vendor-tier-split.sh`** (new):
+   - Added comprehensive suite covering all 10 acceptance criteria: Tier 1 default, Tier 2 `--with-releases`, sticky auto-detection, GH-312 root isolation pin, onboarding happy path, gitignore carve-out, shared-tracking-URL collision detection, and re-vendor adoption preservation.
