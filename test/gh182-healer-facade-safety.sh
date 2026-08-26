@@ -91,6 +91,18 @@ else
   fail "nonexistent --sandbox-root did not refuse as expected (rc=$rc, out=$out)"
 fi
 
+# ── 2b. Regular file as --sandbox-root refuses loudly (GH-182) ──────────────────────────────────
+REG_FILE_ROOT="$WORK/regular_file_not_a_dir"
+touch "$REG_FILE_ROOT"
+require_fixture_file "$REG_FILE_ROOT" "reg-file-root"
+rc=0
+out="$(python3 "$HEALER" --mode heal --sandbox-root "$REG_FILE_ROOT" --target-file "$REG_FILE_ROOT" --repro "$REPRO_SCRIPT" --regression-cmd "bash $REGRESSION_SCRIPT" 2>&1)" || rc=$?
+if [ "$rc" -eq 2 ] && grep -q "\-\-sandbox-root is not a directory" <<<"$out"; then
+  pass "regular file --sandbox-root refuses with exit 2 and named requirement"
+else
+  fail "regular file --sandbox-root did not refuse as expected (rc=$rc, out=$out)"
+fi
+
 # ── 3. Mandatory --regression-cmd refusal (GH-182 Plan §2) ───────────────────────────────────────
 rc=0
 out="$(python3 "$HEALER" --mode heal --sandbox-root "$FIXTURE_SANDBOX" --target-file "$TARGET_SCRIPT" --repro "$REPRO_SCRIPT" 2>&1)" || rc=$?
@@ -120,6 +132,86 @@ if [ "$rc" -eq 2 ] && grep -q "cannot be the invoking checkout" <<<"$out"; then
   pass "sandbox == invoking checkout refuses with exit 2 (no in-place patch on host repo)"
 else
   fail "sandbox == invoking checkout did not refuse as expected (rc=$rc, out=$out)"
+fi
+
+# ── 5b. --diff-out outside --sandbox-root refuses loudly (GH-182) ──────────────────────────────
+OUTSIDE_DIFF="$WORK/outside_diff.patch"
+rc=0
+out="$(python3 "$HEALER" --mode heal --sandbox-root "$FIXTURE_SANDBOX" --target-file "$TARGET_SCRIPT" --repro "$REPRO_SCRIPT" --regression-cmd "bash $REGRESSION_SCRIPT" --diff-out "$OUTSIDE_DIFF" 2>&1)" || rc=$?
+if [ "$rc" -eq 2 ] && grep -q "is outside --sandbox-root" <<<"$out"; then
+  pass "diff-out outside --sandbox-root refuses with exit 2"
+else
+  fail "diff-out outside --sandbox-root did not refuse as expected (rc=$rc, out=$out)"
+fi
+
+# ── 5c. --issue-rollup-out outside --sandbox-root refuses loudly (GH-182) ──────────────────────
+OUTSIDE_ROLLUP="$WORK/outside_rollup.md"
+rc=0
+out="$(python3 "$HEALER" --mode heal --sandbox-root "$FIXTURE_SANDBOX" --target-file "$TARGET_SCRIPT" --repro "$REPRO_SCRIPT" --regression-cmd "bash $REGRESSION_SCRIPT" --issue-rollup-out "$OUTSIDE_ROLLUP" 2>&1)" || rc=$?
+if [ "$rc" -eq 2 ] && grep -q "is outside --sandbox-root" <<<"$out"; then
+  pass "issue-rollup-out outside --sandbox-root refuses with exit 2"
+else
+  fail "issue-rollup-out outside --sandbox-root did not refuse as expected (rc=$rc, out=$out)"
+fi
+
+# ── 5d. run_self_healing_cycle API directly defends against out-of-sandbox paths ─────────────
+API_TEST_DRIVER="$WORK/driver_api_containment.py"
+cat > "$API_TEST_DRIVER" <<PYEOF
+import sys
+from self_healer import run_self_healing_cycle
+
+# 1. Non-directory sandbox_root
+r1 = run_self_healing_cycle(
+    repro_path="$REPRO_SCRIPT",
+    target_file="$TARGET_SCRIPT",
+    repo_root="$WORK",
+    fix_generator=lambda p, e, a: None,
+    sandbox_root="$REG_FILE_ROOT",
+)
+assert r1["status"] == "error" and "not a directory" in r1["message"], f"r1 failed: {r1}"
+
+# 2. Target file outside sandbox_root
+r2 = run_self_healing_cycle(
+    repro_path="$REPRO_SCRIPT",
+    target_file="$OUTSIDE_TARGET",
+    repo_root="$FIXTURE_SANDBOX",
+    fix_generator=lambda p, e, a: None,
+    sandbox_root="$FIXTURE_SANDBOX",
+)
+assert r2["status"] == "error" and "Target file" in r2["message"], f"r2 failed: {r2}"
+
+# 3. Diff out outside sandbox_root
+r3 = run_self_healing_cycle(
+    repro_path="$REPRO_SCRIPT",
+    target_file="$TARGET_SCRIPT",
+    repo_root="$FIXTURE_SANDBOX",
+    fix_generator=lambda p, e, a: None,
+    sandbox_root="$FIXTURE_SANDBOX",
+    diff_out_path="$OUTSIDE_DIFF",
+)
+assert r3["status"] == "error" and "Diff output path" in r3["message"], f"r3 failed: {r3}"
+
+# 4. Escalation out outside sandbox_root
+r4 = run_self_healing_cycle(
+    repro_path="$REPRO_SCRIPT",
+    target_file="$TARGET_SCRIPT",
+    repo_root="$FIXTURE_SANDBOX",
+    fix_generator=lambda p, e, a: None,
+    sandbox_root="$FIXTURE_SANDBOX",
+    escalation_out_path="$OUTSIDE_ROLLUP",
+)
+assert r4["status"] == "error" and "Escalation output path" in r4["message"], f"r4 failed: {r4}"
+
+print("API_CONTAINMENT_SUCCESS")
+PYEOF
+require_fixture_file "$API_TEST_DRIVER" "api-test-driver"
+
+rc=0
+out="$(PYTHONPATH="$ROOT/utils/py" python3 "$API_TEST_DRIVER" 2>&1)" || rc=$?
+if [ "$rc" -eq 0 ] && grep -q "API_CONTAINMENT_SUCCESS" <<<"$out"; then
+  pass "run_self_healing_cycle API directly defends against out-of-sandbox paths"
+else
+  fail "run_self_healing_cycle API containment defense failed (rc=$rc, out=$out)"
 fi
 
 # ── 6. Fixture sandbox heals fixture defect with mandatory gate & emits winning diff (GH-182 §1, §3) ─

@@ -54,62 +54,6 @@ def apply_patch_content(
         return False, f"Failed to apply patch: {e}"
 
 
-def apply_unified_diff(
-    target_file: str,
-    diff_text: str,
-    sandbox_root: str,
-) -> Tuple[bool, str]:
-    """Apply unified diff text to target_file within sandbox_root."""
-    if not check_realpath_containment(target_file, sandbox_root):
-        return False, f"Refusing diff: {target_file} is outside sandbox root {sandbox_root} (GH-567 containment)"
-
-    if not os.path.exists(target_file):
-        return False, f"Target file does not exist: {target_file}"
-
-    try:
-        with open(target_file, "r") as f:
-            lines = f.readlines()
-
-        # Parse simple unified diff hunk
-        diff_lines = diff_text.splitlines(keepends=True)
-        new_lines: List[str] = []
-        i = 0
-        in_hunk = False
-
-        for dl in diff_lines:
-            if dl.startswith("---") or dl.startswith("+++"):
-                continue
-            if dl.startswith("@@"):
-                in_hunk = True
-                continue
-            if not in_hunk:
-                continue
-
-            prefix = dl[:1]
-            content = dl[1:]
-
-            if prefix == " ":
-                if i < len(lines):
-                    new_lines.append(lines[i])
-                    i += 1
-                else:
-                    new_lines.append(content)
-            elif prefix == "-":
-                i += 1  # Skip original line
-            elif prefix == "+":
-                new_lines.append(content)
-
-        while i < len(lines):
-            new_lines.append(lines[i])
-            i += 1
-
-        with open(target_file, "w") as f:
-            f.writelines(new_lines)
-
-        return True, "Unified diff applied successfully"
-    except Exception as e:
-        return False, f"Failed to apply unified diff: {e}"
-
 
 def execute_gate_command(
     cmd: List[str],
@@ -201,6 +145,34 @@ def run_self_healing_cycle(
     original_content: Optional[str] = None
 
     try:
+        if sandbox_root and not os.path.isdir(sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Sandbox root is not a directory: {sandbox_root}",
+                "history": [],
+            }
+
+        if sandbox_root and not check_realpath_containment(target_file, sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Target file {target_file} is outside sandbox root {sandbox_root}",
+                "history": [],
+            }
+
+        if diff_out_path and sandbox_root and not check_realpath_containment(diff_out_path, sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Diff output path {diff_out_path} is outside sandbox root {sandbox_root}",
+                "history": [],
+            }
+
+        if escalation_out_path and sandbox_root and not check_realpath_containment(escalation_out_path, sandbox_root):
+            return {
+                "status": "error",
+                "message": f"Escalation output path {escalation_out_path} is outside sandbox root {sandbox_root}",
+                "history": [],
+            }
+
         if not os.path.exists(repro_path):
             return {
                 "status": "error",
@@ -543,6 +515,11 @@ def main() -> int:
             print(f"Error: --sandbox-root does not exist: {args.sandbox_root}", file=sys.stderr)
             return 2
 
+        # 3b. sandbox-root is a directory
+        if not os.path.isdir(args.sandbox_root):
+            print(f"Error: --sandbox-root is not a directory: {args.sandbox_root}", file=sys.stderr)
+            return 2
+
         # 3c. sandbox-root is NOT the invoking checkout
         resolved_sandbox = os.path.realpath(args.sandbox_root)
         resolved_checkout = os.path.realpath(repo_root)
@@ -550,9 +527,19 @@ def main() -> int:
             print(f"Error: --sandbox-root cannot be the invoking checkout repository ({repo_root})", file=sys.stderr)
             return 2
 
-        # 3b. sandbox-root contains target-file after realpath resolution
+        # 3d. sandbox-root contains target-file after realpath resolution
         if not check_realpath_containment(args.target_file, args.sandbox_root):
             print(f"Error: --target-file ({args.target_file}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
+            return 2
+
+        # 3e. diff-out must be contained within sandbox-root if specified
+        if args.diff_out and not check_realpath_containment(args.diff_out, args.sandbox_root):
+            print(f"Error: --diff-out ({args.diff_out}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
+            return 2
+
+        # 3f. issue-rollup-out must be contained within sandbox-root if specified
+        if args.issue_rollup_out and not check_realpath_containment(args.issue_rollup_out, args.sandbox_root):
+            print(f"Error: --issue-rollup-out ({args.issue_rollup_out}) is outside --sandbox-root ({args.sandbox_root})", file=sys.stderr)
             return 2
 
         reg_cmd = shlex.split(args.regression_cmd) if args.regression_cmd else None

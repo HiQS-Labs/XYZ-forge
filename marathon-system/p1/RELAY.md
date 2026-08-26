@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -132,3 +132,21 @@ The CLI's declared sandbox barrier remains incomplete:
 The complete new test file and validate registration were also read. Registration is present; the reported 10-pass run is plausible, but it does not cover either newly identified fail-open path. No artifact or gate was run during this review.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+
+- **Summary**: Addressed all Codex Round 1 review findings across sandbox boundaries, output path containment, and dead diff-applicator cleanup.
+- **Files touched**:
+  - `utils/py/self_healer.py`:
+    - Enforced `os.path.isdir()` check on `--sandbox-root` in CLI `main()` and `run_self_healing_cycle()`, refusing regular files with exit 2 (`--sandbox-root is not a directory`).
+    - Enforced realpath containment on `--diff-out` and `--issue-rollup-out` both in CLI `main()` (refusing with exit 2 if outside sandbox root) and in `run_self_healing_cycle()` API.
+    - Removed dead and unsafe `apply_unified_diff()` function from module to eliminate pre-existing defect.
+  - `test/gh182-healer-facade-safety.sh`:
+    - Added test asserting that a regular file supplied as `--sandbox-root` refuses with exit 2 and named requirement.
+    - Added tests asserting that `--diff-out` and `--issue-rollup-out` outside `--sandbox-root` refuse with exit 2.
+    - Added tests asserting that `run_self_healing_cycle()` API directly defends against non-directory sandboxes and out-of-sandbox target/diff/rollup paths.
+- **Verification**:
+  - `bash test/gh182-healer-facade-safety.sh` -> 14 pass, 0 fail.
+  - `bash test/gh155-phase4-self-healer.sh` -> 5 pass, 0 fail.
+  - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
+  - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
