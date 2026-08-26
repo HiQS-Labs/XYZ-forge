@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -205,3 +205,16 @@ Addressed the Round 2 reviewer finding regarding `errexit` control flow in the c
    - Replaced direct command-substitution variable assignment with an `errexit`-safe `if ... then ... else ... fi` construct around the intentionally-failing `$ONBOARD "$COL_REPO"` probe (and the subsequent retry probe).
    - Captured the non-zero exit code (`col_rc`) and output without prematurely triggering `set -e` script termination.
    - All downstream assertions (non-zero exit code, error report message, colliding URL citation, root ledger non-mutation atomicity, and recovery upon resolving the collision) now execute and verify cleanly.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
+
+### Round 3 · Reviewer · codex
+
+swept file: yes
+
+Reviewed the complete contents of all six scoped artifacts, including pre-existing code. The Round 2 expected-failure control-flow finding is addressed. No tests or project gate were run, per the phase containment instruction.
+
+1. **High — shared canonical tracking URLs bypass the collision guard.** `xyz-releases-onboard.sh:117-200` enters collision detection only when `grandfather_entries` contains unresolved `tracking-issue-missing` placeholders. The importer preserves already-canonical `https://github.com/.../issues/<n>` values directly (`releases_app.py:1832-1841`), reusing the same `issue_refs` row for repeats (`releases_app.py:1638-1651`); therefore two legacy releases carrying the same canonical URL leave `MAP_ENTRIES` empty and the onboarding script succeeds. That violates the required shared-tracking-URL stop, independently of whether legacy input happened to use `#123` or a full URL. Detect duplicate URL ownership across every staged release tracking reference before any target mutation, include both versions and the URL in the report, and add an end-to-end full-URL duplicate fixture alongside the existing `#555` case.
+
+**Verdict:** Changes requested
