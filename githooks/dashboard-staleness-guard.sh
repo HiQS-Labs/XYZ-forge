@@ -31,25 +31,37 @@ GUARD_ROOT="$(mktemp -d "$SYS_TMP/staleness-guard.XXXXXX")"
 [ -n "$GUARD_ROOT" ] || { echo "dashboard-staleness-guard: mktemp failed" >&2; exit 1; }
 
 GUARD_ROOT_PHYS="$(cd -P "$GUARD_ROOT" 2>/dev/null && pwd -P)" || GUARD_ROOT_PHYS=""
+
+cleanup_guard() {
+  local exit_code=$?
+  [ -n "$GUARD_ROOT" ] || return "$exit_code"
+  [ -e "$GUARD_ROOT" ] || return "$exit_code"
+  if [ -L "$GUARD_ROOT" ]; then
+    echo "dashboard-staleness-guard: refusing cleanup — guard root is a symlink" >&2
+    exit 1
+  fi
+  local cur_phys
+  cur_phys="$(cd -P "$GUARD_ROOT" 2>/dev/null && pwd -P)" || {
+    echo "dashboard-staleness-guard: failed to resolve guard root physical path" >&2
+    exit 1
+  }
+  if [ -n "$GUARD_ROOT_PHYS" ] && [ "$cur_phys" != "$GUARD_ROOT_PHYS" ]; then
+    echo "dashboard-staleness-guard: refusing cleanup — guard root path drifted ($cur_phys != $GUARD_ROOT_PHYS)" >&2
+    exit 1
+  fi
+  case "$cur_phys" in
+    "$SYS_TMP"/*) rm -rf "$cur_phys" || exit 1 ;;
+    *) echo "dashboard-staleness-guard: refusing cleanup of non-descendant $cur_phys" >&2; exit 1 ;;
+  esac
+  return "$exit_code"
+}
+trap cleanup_guard EXIT INT TERM
+
 [ -n "$GUARD_ROOT_PHYS" ] && [ -d "$GUARD_ROOT_PHYS" ] || { echo "dashboard-staleness-guard: failed to resolve guard root" >&2; exit 1; }
 case "$GUARD_ROOT_PHYS" in
   "$SYS_TMP"/*) ;;
   *) echo "dashboard-staleness-guard: guard root $GUARD_ROOT_PHYS is not a resolved descendant of $SYS_TMP" >&2; exit 1 ;;
 esac
-
-cleanup_guard() {
-  [ -n "$GUARD_ROOT_PHYS" ] || return 0
-  [ -d "$GUARD_ROOT_PHYS" ] || return 0
-  [ ! -L "$GUARD_ROOT_PHYS" ] || return 0
-  local cur_phys
-  cur_phys="$(cd -P "$GUARD_ROOT_PHYS" 2>/dev/null && pwd -P)" || return 0
-  if [ "$cur_phys" = "$GUARD_ROOT_PHYS" ]; then
-    case "$GUARD_ROOT_PHYS" in
-      "$SYS_TMP"/*) rm -rf "$GUARD_ROOT_PHYS" ;;
-    esac
-  fi
-}
-trap cleanup_guard EXIT INT TERM
 
 while [ "$#" -ge 2 ]; do
   local_sha="$1"; remote_sha="$2"; shift 2
@@ -83,7 +95,6 @@ while [ "$#" -ge 2 ]; do
         drift_detected=1
       fi
     fi
-    rm -rf "$TMP_PROJ"
 
     if [ "$drift_detected" -eq 1 ]; then
       cat >&2 <<'EOF'
