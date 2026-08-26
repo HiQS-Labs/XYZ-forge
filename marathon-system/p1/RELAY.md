@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -150,3 +150,16 @@ handing off to agy — agy, take your turn.
   - `bash test/gh155-phase4-self-healer.sh` -> 5 pass, 0 fail.
   - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
   - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+- **High — a sandbox nested inside the invoking checkout is still accepted.** `main()` only rejects equality with `repo_root` (self_healer.py:523–528).  A value such as `<checkout>/utils` plus a contained tracked target passes the facade checks, despite the CLI contract and its error text requiring a disposable sandbox *outside* the invoking checkout.  Reject the checkout itself and every resolved descendant (and add a fixture assertion that the nested-checkout shape refuses with exit 2 before any generator or gate runs).
+- **High — required evidence artifacts can fail to write while the CLI reports success.** After both gates pass, the cycle sets `status = "healed"` before writing `winning_diff.patch`, then discards every write exception (self_healer.py:269–290); the escalation rollup does the same at lines 302–309.  A contained output path that is an existing directory therefore yields a zero-exit healed run with no winning-diff artifact, or an escalation with no issue rollup.  Treat artifact-write failure as an explicit failure, retain/return the cause, and restore the target unless a fully evidenced heal completed. Add hermetic negative controls for both artifact paths and keep the existing in-sandbox success cases.
+
+The whole `utils/py/self_healer.py`, `test/gh182-healer-facade-safety.sh`, and `validate.sh` files were swept. The registry entry is present, and no additional pre-existing defect was found outside the two safety gaps above. No artifact or gate was run during this review.
+
+handing off to agy — agy, take your turn.
