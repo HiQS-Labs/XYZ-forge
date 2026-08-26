@@ -69,12 +69,14 @@ app --root "$R" roadmap add --issue-num 255 --issue-url "https://github.com/org/
 pass "roadmap add succeeded with valid raw_text"
 
 # -----------------------------------------------------------------------------
-# Case 4: roadmap update with malformed --raw-text is REFUSED
+# Case 4: roadmap update with symmetric negative controls is REFUSED
 # -----------------------------------------------------------------------------
 for bad_input in \
   "- [ ] #255 bad update" \
   "-   **GH-255 · extra spaces**" \
-  "- **GH-255 unclosed title"
+  "-	**GH-255 · tab after dash**" \
+  "- **GH-255 unclosed title" \
+  "- **** empty title GH-255"
 do
   rc=0
   out="$(app --root "$R" roadmap update --issue-num 255 --raw-text "$bad_input" 2>&1)" || rc=$?
@@ -86,8 +88,9 @@ do
 done
 
 # -----------------------------------------------------------------------------
-# Case 5: roadmap update --dry-run prints changes and mutates nothing
+# Case 5: roadmap update --dry-run prints changes and PROVABLY mutates nothing
 # -----------------------------------------------------------------------------
+raw_before="$(sqlite3 "$R/releases.db" "SELECT raw_text FROM roadmap_items WHERE gh_number = 255")"
 out="$(app --root "$R" roadmap update --issue-num 255 \
   --raw-text "- **GH-255 · dry run title** 🆕 — [doc](PROJECT/1-INBOX/GH-255-test.md) · [#255](https://github.com/org/repo/issues/255)" \
   --dry-run)"
@@ -95,6 +98,9 @@ case "$out" in
   *"raw_text: "*"- **GH-255 · dry run title**"*) pass "roadmap update --dry-run reported planned diff" ;;
   *) fail "expected dry-run diff output, got: $out" ;;
 esac
+raw_after="$(sqlite3 "$R/releases.db" "SELECT raw_text FROM roadmap_items WHERE gh_number = 255")"
+[ "$raw_before" = "$raw_after" ] || fail "dry-run must not mutate database"
+pass "dry-run verified non-mutating against database"
 
 # -----------------------------------------------------------------------------
 # Case 6: roadmap update SUCCEEDS and generates roadmap-update receipt
@@ -126,26 +132,57 @@ receipt_count_after="$(grep -c "roadmap-update" "$R/releases.sql" || true)"
 pass "idempotent update wrote zero additional receipts"
 
 # -----------------------------------------------------------------------------
-# Case 8: roadmap update synchronizes rating columns (unrated -> rated -> unrated)
+# Case 8: roadmap update synchronizes ALL FIVE rating columns
 # -----------------------------------------------------------------------------
 # Unrated -> Rated
 RATED_TEXT="- **GH-255 · rated title** 🆕 (rated 80/70/90/60 ovr 320) — [#255](https://github.com/org/repo/issues/255)"
 app --root "$R" roadmap update --issue-num 255 --raw-text "$RATED_TEXT"
-pri="$(sqlite3 "$R/releases.db" "SELECT rating_pri FROM roadmap_items WHERE gh_number = 255")"
-ovr="$(sqlite3 "$R/releases.db" "SELECT rating_ovr FROM roadmap_items WHERE gh_number = 255")"
-[ "$pri" = "80" ] || fail "expected rating_pri=80, got '$pri'"
-[ "$ovr" = "320" ] || fail "expected rating_ovr=320, got '$ovr'"
-pass "roadmap update correctly populated rating columns"
+read pri sev app_score eff ovr <<<"$(sqlite3 "$R/releases.db" "SELECT rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr FROM roadmap_items WHERE gh_number = 255" | tr '|' ' ')"
+[ "$pri" = "80" ] && [ "$sev" = "70" ] && [ "$app_score" = "90" ] && [ "$eff" = "60" ] && [ "$ovr" = "320" ] \
+  || fail "expected rating columns (80 70 90 60 320), got ($pri $sev $app_score $eff $ovr)"
+pass "roadmap update correctly populated all 5 rating columns"
 
-# Rated -> Unrated (must reset rating columns to NULL, not leave old scores)
+# Rated -> Unrated (must reset all 5 rating columns to NULL, not leave old scores)
 UNRATED_TEXT="- **GH-255 · unrated again** 🆕 — [#255](https://github.com/org/repo/issues/255)"
 app --root "$R" roadmap update --issue-num 255 --raw-text "$UNRATED_TEXT"
-pri_cleared="$(sqlite3 "$R/releases.db" "SELECT rating_pri FROM roadmap_items WHERE gh_number = 255")"
-[ -z "$pri_cleared" ] || fail "expected rating_pri to be cleared/NULL, got '$pri_cleared'"
-pass "roadmap update correctly cleared rating columns to NULL on unrated line"
+cleared_counts="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE gh_number = 255 AND (rating_pri IS NOT NULL OR rating_sev IS NOT NULL OR rating_appeal IS NOT NULL OR rating_effort IS NOT NULL OR rating_ovr IS NOT NULL)")"
+[ "$cleared_counts" = "0" ] || fail "expected all rating columns to be NULL, found non-null values"
+pass "roadmap update correctly cleared all 5 rating columns to NULL on unrated line"
 
 # -----------------------------------------------------------------------------
-# Case 9: renderer (utils/roadmap-dashboard.sh) emits stderr warning on dropped rows
+# Case 9: schema-behind refusal on pre-migration ledger without rating columns
+# -----------------------------------------------------------------------------
+R_OLD="$WORK/pre_migration_repo"
+mkdir -p "$R_OLD/utils/py"
+cp -r "$root/utils/"* "$R_OLD/utils/"
+cd "$R_OLD"
+git init -q .
+echo "ROADMAP_SOURCE=releases" > .pdda-mode
+mkdir -p PROJECT/1-INBOX
+touch PROJECT/1-INBOX/GH-100-test.md
+app --root "$R_OLD" init --slug "old-repo"
+app --root "$R_OLD" roadmap add --issue-num 100 --issue-url "https://github.com/org/repo/issues/100" \
+  --title "old 100" --created "2026-08-26" --doc-path "PROJECT/1-INBOX/GH-100-test.md" \
+  --raw-text "- **GH-100 · old initial** 🆕 — [#100](https://github.com/org/repo/issues/100)"
+
+# Simulate pre-migration schema by dropping rating columns
+sqlite3 "$R_OLD/releases.db" <<'EOSQL'
+CREATE TABLE roadmap_items_old AS SELECT id, global_id, repo_id, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at FROM roadmap_items;
+DROP TABLE roadmap_items;
+ALTER TABLE roadmap_items_old RENAME TO roadmap_items;
+EOSQL
+
+rc=0
+out="$(app --root "$R_OLD" roadmap update --issue-num 100 \
+  --raw-text "- **GH-100 · rated line on old ledger** 🆕 (rated 80/70/90/60) — [#100](https://github.com/org/repo/issues/100)" 2>&1)" || rc=$?
+[ "$rc" -ne 0 ] || fail "rated update against pre-migration ledger should be refused, got rc=0"
+case "$out" in
+  *"rule=schema-behind"*) pass "roadmap update refused rated line on pre-migration ledger with schema-behind" ;;
+  *) fail "expected schema-behind refusal, got: $out" ;;
+esac
+
+# -----------------------------------------------------------------------------
+# Case 10: renderer (utils/roadmap-dashboard.sh) emits stderr warning on dropped rows
 # -----------------------------------------------------------------------------
 MOCK_SRC="$WORK/mock_roadmap.md"
 cat > "$MOCK_SRC" <<'EOFMOCK'
@@ -168,54 +205,59 @@ case "$err_out" in
 esac
 
 # -----------------------------------------------------------------------------
-# Case 10: staleness guard outputs diagnostic guidance when regeneration produces no diff
+# Case 11: End-to-end historical reproduction of malformed row diagnosis & fix
 # -----------------------------------------------------------------------------
-# Base commit with clean dashboard and ledger
 cd "$R"
 bash "$R/utils/roadmap-dashboard.sh"
 git add .pdda-mode releases.db releases.sql ROADMAP-DASHBOARD.md utils/ PROJECT/
-git -c user.email=t@t -c user.name=t commit -q -m "v1 clean"
+git -c user.email=t@t -c user.name=t commit -q -m "v1 clean base"
 BASE_COMMIT="$(git rev-parse HEAD)"
 
-# Simulate a commit where ledger is touched but dashboard did not drift (e.g. dropped row)
-touch releases.sql
-echo "-- simulated extra comment" >> releases.sql
-git add releases.sql
-git -c user.email=t@t -c user.name=t commit -q -m "ledger touched without dashboard drift"
-TOUCHED_COMMIT="$(git rev-parse HEAD)"
+# Simulate the historical bug: a malformed row (- [ ] #256 ...) is directly injected into ledger
+sqlite3 "$R/releases.db" <<'EOSQL'
+INSERT INTO roadmap_items (global_id, repo_id, gh_number, title, section, position, status_marker, doc_path, issue_url, raw_text, first_seen, updated_at)
+VALUES ('rmi-01M0ZVV0000000000000000256', 1, 256, 'bad 256', 'Queue / parked intake', 99, '🆕', 'PROJECT/1-INBOX/GH-255-test.md', 'https://github.com/org/repo/issues/256', '- [ ] #256 historical malformed row', datetime('now'), datetime('now'));
+EOSQL
+python3 -c "import sys; sys.path.insert(0, '$root/utils/py'); import releases_app as rel; root = rel.resolve_root('$R'); conn = rel.connect(rel.artifact_paths(root)['db']); gen = rel.get_generation(conn); open(rel.artifact_paths(root)['dump'], 'w').write(rel.dump_text(conn, gen)); conn.close()"
+
+# 1. Regenerating dashboard yields warnings and dropped row:
+dash_warn="$(bash "$R/utils/roadmap-dashboard.sh" 2>&1 >/dev/null)" || true
+case "$dash_warn" in
+  *"warning: dropped 1 unparseable row(s): #256"*) pass "end-to-end: renderer detected injected malformed row #256" ;;
+  *) fail "expected dropped row warning for #256, got: $dash_warn" ;;
+esac
+
+# 2. Commit the ledger change only (dashboard unchanged because row was dropped)
+git add releases.db releases.sql
+git -c user.email=t@t -c user.name=t commit -q -m "ledger has bad row #256, dashboard unchanged"
+BAD_COMMIT="$(git rev-parse HEAD)"
 cd "$root"
 
+# 3. Staleness guard catches it and outputs no-diff diagnosis:
 rc=0
-guard_out="$(bash "$GUARD" "$R" "$TOUCHED_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
-[ "$rc" -eq 1 ] || fail "guard should refuse push when ledger is touched without dashboard, got $rc"
+guard_out="$(bash "$GUARD" "$R" "$BAD_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "guard should refuse bad commit, got $rc"
 case "$guard_out" in
   *"produces NO diff (GH-243 / GH-257)"*"releases roadmap update"*)
-    pass "staleness guard provided dropped-row diagnostic explanation when dashboard had no diff"
+    pass "end-to-end: staleness guard accurately diagnosed no-diff dropped row"
     ;;
-  *) fail "expected no-diff diagnostic explanation in guard output, got: $guard_out" ;;
+  *) fail "expected no-diff diagnostic output from guard, got: $guard_out" ;;
 esac
 
-# -----------------------------------------------------------------------------
-# Case 11: staleness guard outputs standard fix when drift IS detected
-# -----------------------------------------------------------------------------
+# 4. Remediation: use roadmap update to fix raw_text
 cd "$R"
-# Add a new row to ledger that will cause dashboard drift
-app --root "$R" roadmap add --issue-num 256 --issue-url "https://github.com/org/repo/issues/256" \
-  --title "test 256" --created "2026-08-26" --doc-path "PROJECT/1-INBOX/GH-255-test.md" \
-  --raw-text "- **GH-256 · new drift row** 🆕 — [#256](https://github.com/org/repo/issues/256)"
-git add releases.db releases.sql
-git -c user.email=t@t -c user.name=t commit -q -m "ledger changed with real dashboard drift"
-DRIFT_COMMIT="$(git rev-parse HEAD)"
+app --root "$R" roadmap update --issue-num 256 --raw-text "- **GH-256 · fixed title** 🆕 — [#256](https://github.com/org/repo/issues/256)"
+bash "$R/utils/roadmap-dashboard.sh"
+grep -q "GH-256 · fixed title" "$R/ROADMAP-DASHBOARD.md" || fail "remediated row not in dashboard"
+pass "end-to-end: roadmap update remediated row and dashboard now includes it"
+
+git add releases.db releases.sql ROADMAP-DASHBOARD.md
+git -c user.email=t@t -c user.name=t commit -q -m "remediated row #256 and regenerated dashboard"
+REMEDIATED_COMMIT="$(git rev-parse HEAD)"
 cd "$root"
 
-rc=0
-guard_drift_out="$(bash "$GUARD" "$R" "$DRIFT_COMMIT" "$BASE_COMMIT" 2>&1)" || rc=$?
-[ "$rc" -eq 1 ] || fail "guard should refuse drifted range, got $rc"
-case "$guard_drift_out" in
-  *"Fix (one command, then commit the result into the same push):"*)
-    pass "staleness guard provided standard fix when drift was present"
-    ;;
-  *) fail "expected standard fix text, got: $guard_drift_out" ;;
-esac
+# 5. Staleness guard now passes cleanly:
+bash "$GUARD" "$R" "$REMEDIATED_COMMIT" "$BASE_COMMIT"
+pass "end-to-end: staleness guard passes after roadmap update and dashboard regeneration"
 
 echo "== GH-257 ALL PASSED =="

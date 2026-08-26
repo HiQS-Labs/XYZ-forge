@@ -3000,9 +3000,11 @@ def cmd_roadmap_update(args):
             where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
         else:
             where, param, label = "global_id = ?", args.gid, args.gid
+
+        has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
+        select_cols = ["global_id", "gh_number", "title", "raw_text"]
         row = conn.execute(
-            "SELECT global_id, gh_number, title, raw_text, rating_pri, complexity, risk, effort "
-            "FROM roadmap_items WHERE " + where, (param,)).fetchone()
+            "SELECT %s FROM roadmap_items WHERE %s" % (", ".join(select_cols), where), (param,)).fetchone()
         if not row:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
 
@@ -3013,7 +3015,6 @@ def cmd_roadmap_update(args):
             return
 
         rating = parse_rating(new_raw_text, row["title"])
-        has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
 
         if not has_rating_cols and rating["rating_pri"] is not None:
             refuse("schema-behind",

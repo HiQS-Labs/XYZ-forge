@@ -43,15 +43,24 @@ while [ "$#" -ge 2 ]; do
 done
 
 if [ "$touched_ledger" -eq 1 ] && [ "$touched_dashboard" -eq 0 ]; then
-  # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md currently produces drift or no diff
+  # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md produces drift or no diff.
+  # Run the diagnosis against a commit-pinned temporary projection of local_sha so uncommitted
+  # working-tree modifications do not skew the classification.
   drift_detected=0
-  if [ -f "$REPO/utils/roadmap-dashboard.sh" ]; then
+  TMP_PROJ="$(mktemp -d "${TMPDIR:-/tmp}/dashboard-guard-proj.XXXXXX")"
+  if git -C "$REPO" archive "${local_sha:-HEAD}" | tar -x -C "$TMP_PROJ" 2>/dev/null \
+     && [ -f "$TMP_PROJ/utils/roadmap-dashboard.sh" ]; then
+    if ! bash "$TMP_PROJ/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
+      drift_detected=1
+    fi
+  elif [ -f "$REPO/utils/roadmap-dashboard.sh" ]; then
     if ! bash "$REPO/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
       drift_detected=1
     fi
   else
     drift_detected=1
   fi
+  rm -rf "$TMP_PROJ"
 
   if [ "$drift_detected" -eq 1 ]; then
     cat >&2 <<'EOF'
