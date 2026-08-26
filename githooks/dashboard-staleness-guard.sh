@@ -43,7 +43,18 @@ while [ "$#" -ge 2 ]; do
 done
 
 if [ "$touched_ledger" -eq 1 ] && [ "$touched_dashboard" -eq 0 ]; then
-  cat >&2 <<'EOF'
+  # GH-257 Task 4: check whether regenerating ROADMAP-DASHBOARD.md currently produces drift or no diff
+  drift_detected=0
+  if [ -f "$REPO/utils/roadmap-dashboard.sh" ]; then
+    if ! bash "$REPO/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
+      drift_detected=1
+    fi
+  else
+    drift_detected=1
+  fi
+
+  if [ "$drift_detected" -eq 1 ]; then
+    cat >&2 <<'EOF'
 dashboard-staleness-guard: REFUSING the push — this range writes the roadmap ledger
 (releases.sql / releases.db) without regenerating ROADMAP-DASHBOARD.md, so the human-readable
 view would ship stale against the data under it (GH-243 / GH-169 item 3).
@@ -53,6 +64,23 @@ Fix (one command, then commit the result into the same push):
 
 Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
 EOF
+  else
+    cat >&2 <<'EOF'
+dashboard-staleness-guard: REFUSING the push — this range writes the roadmap ledger
+(releases.sql / releases.db) without modifying ROADMAP-DASHBOARD.md, but regenerating the
+dashboard produces NO diff (GH-243 / GH-257).
+
+This happens when a parked row was dropped by the renderer (e.g. malformed raw_text).
+To diagnose:
+    bash utils/roadmap-dashboard.sh
+and inspect stderr for warnings on dropped rows. Correct the row with:
+    releases roadmap update --issue-num <N> --raw-text "- **GH-<N> · <title>** ..."
+then regenerate and commit:
+    bash utils/roadmap-dashboard.sh && git add releases.db releases.sql ROADMAP-DASHBOARD.md && git commit -m "docs: fix roadmap row and regenerate dashboard"
+
+Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
+EOF
+  fi
   exit 1
 fi
 exit 0
