@@ -66,9 +66,9 @@ grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
 helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py"' "$SKILL")"
-[ "$helper_examples" -eq 13 ] \
+[ "$helper_examples" -eq 16 ] \
   && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 13 root-resolved helper commands, found $helper_examples"
+  || fail "expected 16 root-resolved helper commands, found $helper_examples"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
@@ -722,5 +722,75 @@ ts_cli telemetry audit --id 777001 >/dev/null 2>&1 \
 ts_cli telemetry status >/dev/null 2>&1 \
   && pass "telemetry status reports mode/window/override" || fail "telemetry status failed"
 PURGE_OUT="$(ts_cli telemetry purge 2>&1)"; case "$PURGE_OUT" in *"purged"*[1-9]*) pass "telemetry purge revokes all artifacts" ;; *) fail "purge removed nothing: $PURGE_OUT" ;; esac
+
+# ── Gen 2 Phase 2: Roster Widening, Supersession & Citations (#233) ──────────────
+P2_STORE="$WORK/p2-store"; mkdir -p "$P2_STORE"
+p2_cli() { python3 "$CLI" --store "$P2_STORE" "$@"; }
+
+# 1. Supersession
+p2_cli start --subject "supersession base" --packet-file "$WORK/pkt.md" --id 888001 >/dev/null 2>&1
+p2_start_out="$(p2_cli start --subject "supersession replacement" --packet-file "$WORK/pkt.md" --id 888002 --supersedes 888001 2>&1)"
+p2_start_rc=$?
+[ "$p2_start_rc" -eq 0 ] && pass "start --supersedes 888001 creates new discussion" || fail "start --supersedes failed: $p2_start_out"
+
+# Check old discussion is closed with pointer
+p2_old_status="$(p2_cli status --id 888001 2>&1)"
+expect_contains "old discussion status is Closed" "$p2_old_status" "STATUS: Closed"
+expect_contains "old discussion points to new discussion" "$p2_old_status" "SUPERSEDED-BY: 888002"
+
+# Check join on old discussion reports closed and pointer
+p2_old_join="$(p2_cli join --id 888001 --agent 2 2>&1)"
+expect_contains "join on superseded discussion reports pointer" "$p2_old_join" "SUPERSEDED-BY: 888002"
+expect_contains "join on superseded discussion decides closed" "$p2_old_join" "DECISION: closed"
+
+# Check turns on superseded discussion are refused
+p2_old_send="$(p2_cli send --id 888001 --agent 2 --next-agent 1 --message "turn" 2>&1)"
+expect_contains "send on superseded discussion is refused" "$p2_old_send" "closed (superseded by #888002)"
+
+# Check superseding an already-superseded discussion is refused
+p2_re_sup="$(p2_cli start --subject "attempt 3" --packet-file "$WORK/pkt.md" --supersedes 888001 2>&1)"
+p2_re_rc=$?
+[ "$p2_re_rc" -ne 0 ] && pass "re-superseding already superseded discussion is refused" || fail "re-superseding succeeded unexpectedly: $p2_re_sup"
+
+# 2. Operator-mediated roster widening (invite)
+p2_cli start --subject "invite test" --packet-file "$WORK/pkt.md" --id 888003 --agents 2 >/dev/null 2>&1
+p2_invite_out="$(p2_cli invite --id 888003 --agent 3 --reason "Add third reviewer seat" 2>&1)"
+p2_invite_rc=$?
+[ "$p2_invite_rc" -eq 0 ] && pass "invite adds agent3 to 2-agent discussion" || fail "invite failed: $p2_invite_out"
+expect_contains "invite outputs formatted invitation" "$p2_invite_out" 'Join XYZ AgentChorus #888003 as agent number three'
+
+p2_inv_status="$(p2_cli status --id 888003 2>&1)"
+expect_contains "status reflects widened roster" "$p2_inv_status" "AGENTS: agent1 agent2 agent3"
+
+# Check duplicate seat invite is refused
+p2_dup_invite="$(p2_cli invite --id 888003 --agent 3 2>&1)"
+[ $? -ne 0 ] && pass "inviting existing seat is refused" || fail "duplicate invite succeeded unexpectedly"
+
+# Check non-sequential seat invite is refused
+p2_gap_invite="$(p2_cli invite --id 888003 --agent 5 2>&1)"
+[ $? -ne 0 ] && pass "inviting non-sequential seat is refused" || fail "gap invite succeeded unexpectedly"
+
+# Check invite on closed discussion is refused
+p2_cli close --id 888003 --agent 2 --trivial --message "closing" >/dev/null 2>&1
+p2_closed_invite="$(p2_cli invite --id 888003 --agent 4 2>&1)"
+[ $? -ne 0 ] && pass "inviting on closed discussion is refused" || fail "invite on closed discussion succeeded unexpectedly"
+
+# 3. Citation verification (verify-citations)
+p2_cli start --subject "citations test" --packet-file "$WORK/pkt.md" --id 888004 --agents 2 >/dev/null 2>&1
+HEAD_SHA="$(git rev-parse HEAD)"
+p2_cli send --id 888004 --agent 2 --next-agent 1 --message "Referencing skills/agent-chorus/SKILL.md:10 and commit $HEAD_SHA" >/dev/null 2>&1
+
+p2_cit_pass="$(p2_cli verify-citations --id 888004 --format json 2>&1)"
+p2_cit_rc=$?
+[ "$p2_cit_rc" -eq 0 ] && pass "verify-citations passes on valid file and commit references" || fail "verify-citations failed on valid refs: $p2_cit_pass"
+expect_contains "verify-citations reports PASS status" "$p2_cit_pass" '"status": "PASS"'
+
+# Append bad citation
+p2_cli send --id 888004 --agent 1 --next-agent 2 --message "Referencing bogus/path/to/missing_file.ext:99" >/dev/null 2>&1
+p2_cit_fail="$(p2_cli verify-citations --id 888004 2>&1)"
+p2_cit_fail_rc=$?
+[ "$p2_cit_fail_rc" -ne 0 ] && pass "verify-citations fails on unresolvable file citation" || fail "verify-citations passed on invalid refs: $p2_cit_fail"
+expect_contains "verify-citations text output lists unresolvable count" "$p2_cit_fail" "STATUS: FAIL"
+
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
