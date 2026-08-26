@@ -2775,15 +2775,14 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
 def validate_raw_text(raw_text, issue_num=None):
     """GH-257: validate that raw_text matches the markdown shape the renderer requires.
 
-    The renderer (utils/roadmap-dashboard.sh) parses bullets starting with `- **`. An unparseable
-    line (e.g. `- [ ] #255 ...`) is silently dropped by the dashboard renderer. Validating at write
-    time catches malformed input immediately instead of producing a silent drop downstream.
+    The renderer (utils/roadmap-dashboard.sh) parses bullets starting with an exact `- **<title>**`
+    prefix. An unparseable line (e.g. `- [ ] #255 ...`, `-   **`, or unclosed bold) is dropped by
+    the dashboard renderer. Validating at write time catches malformed input immediately.
     """
     if not isinstance(raw_text, str):
         refuse("invalid-raw-text", "raw_text must be a string")
     stripped = raw_text.strip()
-    match = re.match(r'^-\s+\*\*(.+?)\*\*', stripped)
-    if not match:
+    if not re.match(r'^- \*\*[^\r\n*]+?\*\*', stripped):
         refuse("invalid-raw-text",
                "malformed --raw-text %r: expected markdown bullet starting with '- **<title>**' "
                "(e.g. '- **GH-%s · <title>** ...')" % (raw_text, str(issue_num) if issue_num else "<num>"))
@@ -3016,6 +3015,11 @@ def cmd_roadmap_update(args):
         rating = parse_rating(new_raw_text, row["title"])
         has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
 
+        if not has_rating_cols and rating["rating_pri"] is not None:
+            refuse("schema-behind",
+                   "this ledger has no rating columns. Run `releases migrate` first — rating "
+                   "stores scores, it never installs schema.")
+
         if args.dry_run:
             print("raw_text: %s -> %s" % (old_raw_text, new_raw_text))
             if rating["rating_pri"] is not None:
@@ -3026,7 +3030,7 @@ def cmd_roadmap_update(args):
 
         def mutate(conn):
             ts = now_iso()
-            if has_rating_cols and rating["rating_pri"] is not None:
+            if has_rating_cols:
                 conn.execute(
                     "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
                     % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),

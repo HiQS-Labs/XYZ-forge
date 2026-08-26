@@ -186,7 +186,7 @@ for (let i = 0; i < lines.length; i++) {
   const trimmed = line.trim();
   if (!trimmed || trimmed.startsWith("<!--") || trimmed.startsWith("#")) continue;
 
-  if (!/^- \*\*/.test(line)) {
+  if (!/^- \*\*[^\r\n*]+?\*\*/.test(line)) {
     // GH-257: track non-empty dropped/unparseable line under an active ledger section
     const issueMatch = trimmed.match(/(?:GH-?|#)(\d+)/i);
     const id = issueMatch ? `#${issueMatch[1]}` : JSON.stringify(trimmed.length > 30 ? trimmed.slice(0, 30) + "..." : trimmed);

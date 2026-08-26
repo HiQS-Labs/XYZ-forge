@@ -2,7 +2,7 @@
 # test/gh257-roadmap-ledger-fixes.sh — regression suite for GH-257:
 # 1. validate --raw-text on roadmap add and update against renderer bold bullet shape
 # 2. emit warning on dropped unparseable rows in roadmap-dashboard.sh
-# 3. roadmap update subcommand for parked raw_text with auditable receipt
+# 3. roadmap update subcommand for parked raw_text with auditable receipt and rating sync
 # 4. staleness guard diagnostic guidance when regeneration yields no diff
 set -euo pipefail
 source test/_setup.sh "GH-257" || { echo "setup failed"; exit 1; }
@@ -27,16 +27,24 @@ app --root "$R" init --slug "test-repo"
 # -----------------------------------------------------------------------------
 # Case 1: roadmap add with malformed --raw-text is REFUSED at step 1
 # -----------------------------------------------------------------------------
-rc=0
-out="$(app --root "$R" roadmap add --issue-num 255 --issue-url "https://github.com/org/repo/issues/255" \
-  --title "test 255" --created "2026-08-26" --doc-path "PROJECT/1-INBOX/GH-255-test.md" \
-  --raw-text "- [ ] #255 malformed checkbox" 2>&1)" || rc=$?
+for bad_input in \
+  "- [ ] #255 malformed checkbox" \
+  "-   **GH-255 · repeated spaces** 🆕" \
+  "-	**GH-255 · tab after dash** 🆕" \
+  "- **GH-255 unclosed bold" \
+  "- **** empty title GH-255"
+do
+  rc=0
+  out="$(app --root "$R" roadmap add --issue-num 255 --issue-url "https://github.com/org/repo/issues/255" \
+    --title "test 255" --created "2026-08-26" --doc-path "PROJECT/1-INBOX/GH-255-test.md" \
+    --raw-text "$bad_input" 2>&1)" || rc=$?
 
-[ "$rc" -ne 0 ] || fail "malformed --raw-text should be refused on add, got rc=0"
-case "$out" in
-  *"rule=invalid-raw-text"*"- **"*) pass "roadmap add refused malformed raw_text with invalid-raw-text rule" ;;
-  *) fail "expected invalid-raw-text rule mentioning '- **', got: $out" ;;
-esac
+  [ "$rc" -ne 0 ] || fail "malformed raw_text '$bad_input' should be refused on add, got rc=0"
+  case "$out" in
+    *"rule=invalid-raw-text"*) pass "roadmap add refused malformed raw_text: '$bad_input'" ;;
+    *) fail "expected invalid-raw-text rule for '$bad_input', got: $out" ;;
+  esac
+done
 
 # -----------------------------------------------------------------------------
 # Case 2: roadmap add with mismatched issue number in --raw-text is REFUSED
@@ -63,13 +71,19 @@ pass "roadmap add succeeded with valid raw_text"
 # -----------------------------------------------------------------------------
 # Case 4: roadmap update with malformed --raw-text is REFUSED
 # -----------------------------------------------------------------------------
-rc=0
-out="$(app --root "$R" roadmap update --issue-num 255 --raw-text "- [ ] #255 bad update" 2>&1)" || rc=$?
-[ "$rc" -ne 0 ] || fail "malformed raw_text on update should be refused, got rc=0"
-case "$out" in
-  *"rule=invalid-raw-text"*) pass "roadmap update refused malformed raw_text" ;;
-  *) fail "expected invalid-raw-text on roadmap update, got: $out" ;;
-esac
+for bad_input in \
+  "- [ ] #255 bad update" \
+  "-   **GH-255 · extra spaces**" \
+  "- **GH-255 unclosed title"
+do
+  rc=0
+  out="$(app --root "$R" roadmap update --issue-num 255 --raw-text "$bad_input" 2>&1)" || rc=$?
+  [ "$rc" -ne 0 ] || fail "malformed raw_text '$bad_input' on update should be refused, got rc=0"
+  case "$out" in
+    *"rule=invalid-raw-text"*) pass "roadmap update refused malformed raw_text: '$bad_input'" ;;
+    *) fail "expected invalid-raw-text on roadmap update for '$bad_input', got: $out" ;;
+  esac
+done
 
 # -----------------------------------------------------------------------------
 # Case 5: roadmap update --dry-run prints changes and mutates nothing
@@ -99,7 +113,39 @@ grep -q "roadmap-update" "$R/releases.sql" || fail "releases.sql missing roadmap
 pass "releases.sql carries roadmap-update receipt"
 
 # -----------------------------------------------------------------------------
-# Case 7: renderer (utils/roadmap-dashboard.sh) emits stderr warning on dropped rows
+# Case 7: roadmap update is IDEMPOTENT (no-op on unchanged text)
+# -----------------------------------------------------------------------------
+receipt_count_before="$(grep -c "roadmap-update" "$R/releases.sql" || true)"
+out="$(app --root "$R" roadmap update --issue-num 255 --raw-text "$NEW_TEXT")"
+case "$out" in
+  *"unchanged; nothing written"*) pass "roadmap update idempotent when text unchanged" ;;
+  *) fail "expected unchanged text report, got: $out" ;;
+esac
+receipt_count_after="$(grep -c "roadmap-update" "$R/releases.sql" || true)"
+[ "$receipt_count_before" -eq "$receipt_count_after" ] || fail "idempotent update must not write extra receipts"
+pass "idempotent update wrote zero additional receipts"
+
+# -----------------------------------------------------------------------------
+# Case 8: roadmap update synchronizes rating columns (unrated -> rated -> unrated)
+# -----------------------------------------------------------------------------
+# Unrated -> Rated
+RATED_TEXT="- **GH-255 · rated title** 🆕 (rated 80/70/90/60 ovr 320) — [#255](https://github.com/org/repo/issues/255)"
+app --root "$R" roadmap update --issue-num 255 --raw-text "$RATED_TEXT"
+pri="$(sqlite3 "$R/releases.db" "SELECT rating_pri FROM roadmap_items WHERE gh_number = 255")"
+ovr="$(sqlite3 "$R/releases.db" "SELECT rating_ovr FROM roadmap_items WHERE gh_number = 255")"
+[ "$pri" = "80" ] || fail "expected rating_pri=80, got '$pri'"
+[ "$ovr" = "320" ] || fail "expected rating_ovr=320, got '$ovr'"
+pass "roadmap update correctly populated rating columns"
+
+# Rated -> Unrated (must reset rating columns to NULL, not leave old scores)
+UNRATED_TEXT="- **GH-255 · unrated again** 🆕 — [#255](https://github.com/org/repo/issues/255)"
+app --root "$R" roadmap update --issue-num 255 --raw-text "$UNRATED_TEXT"
+pri_cleared="$(sqlite3 "$R/releases.db" "SELECT rating_pri FROM roadmap_items WHERE gh_number = 255")"
+[ -z "$pri_cleared" ] || fail "expected rating_pri to be cleared/NULL, got '$pri_cleared'"
+pass "roadmap update correctly cleared rating columns to NULL on unrated line"
+
+# -----------------------------------------------------------------------------
+# Case 9: renderer (utils/roadmap-dashboard.sh) emits stderr warning on dropped rows
 # -----------------------------------------------------------------------------
 MOCK_SRC="$WORK/mock_roadmap.md"
 cat > "$MOCK_SRC" <<'EOFMOCK'
@@ -109,19 +155,20 @@ cat > "$MOCK_SRC" <<'EOFMOCK'
 - **GH-1 · valid row** 🟢 — [doc](doc.md)
 - [ ] #999 malformed row
 - #1000 another dropped bullet
+- **GH-1001 unclosed bold
 EOFMOCK
 
 MOCK_OUT="$WORK/mock_dashboard.md"
 err_out="$(ROADMAP_DASHBOARD_SOURCE="$MOCK_SRC" ROADMAP_DASHBOARD_OUTPUT="$MOCK_OUT" bash "$RENDERER" 2>&1 >/dev/null)" || true
 case "$err_out" in
-  *"roadmap-dashboard: warning: dropped 2 unparseable row(s): #999, #1000"*)
-    pass "renderer warned on dropped unparseable rows on stderr"
+  *"roadmap-dashboard: warning: dropped 3 unparseable row(s): #999, #1000, #1001"*)
+    pass "renderer warned on dropped unparseable rows (including unclosed bold) on stderr"
     ;;
-  *) fail "expected warning naming dropped rows #999, #1000, got: $err_out" ;;
+  *) fail "expected warning naming dropped rows #999, #1000, #1001, got: $err_out" ;;
 esac
 
 # -----------------------------------------------------------------------------
-# Case 8: staleness guard outputs diagnostic guidance when regeneration produces no diff
+# Case 10: staleness guard outputs diagnostic guidance when regeneration produces no diff
 # -----------------------------------------------------------------------------
 # Base commit with clean dashboard and ledger
 cd "$R"
@@ -149,7 +196,7 @@ case "$guard_out" in
 esac
 
 # -----------------------------------------------------------------------------
-# Case 9: staleness guard outputs standard fix when drift IS detected
+# Case 11: staleness guard outputs standard fix when drift IS detected
 # -----------------------------------------------------------------------------
 cd "$R"
 # Add a new row to ledger that will cause dashboard drift
