@@ -238,6 +238,35 @@ if ! grep -qE 'id="fbar"[^>]*>[^<]*<a id="view-link"' "$TEMPLATE"; then ok "and 
 # all inert there — a search box that looks broken (aider/qwen3.8-max QA r1).
 if grep -q 'body\[data-view="leaderboard"\] #fbar' "$TEMPLATE"; then ok "the leaderboard view hides #fbar rather than shipping an inert search box" 0; else ok "leaderboard hides fbar" 1; fi
 
+# ── GH-250: codename-only releases (version NULL) must not crash the bake ───────────────────────
+# `releases add` accepts a codename with no version, and release_columns() already fell back to
+# the codename for slug/name — but not for id, and _ver() only caught ValueError. So ONE
+# NULL-version row killed --preview and --leaderboard outright, and refresh_preview()'s warn-only
+# path turned that into artifacts that silently stop tracking the ledger. The versioned-no-target
+# row below is deliberate: it ties with the codename-only rows on the sort's primary key, pinning
+# the None-vs-str tiebreaker compare too.
+echo "-- GH-250: codename-only releases (version NULL)"
+rq add --version 9.9.9 --codename Tiebreak --status draft --description "Versioned, no target." --tracking-issue "$GH/910"
+rq add --codename "Night Owl" --status draft --description "Codename-only one." --tracking-issue "$GH/911"
+rq add --codename Falcon --status draft --description "Codename-only two." --tracking-issue "$GH/912"
+NO_VER="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM releases WHERE version IS NULL")"
+ok "fixture holds codename-only rows (version IS NULL in the ledger)" "$([ "$NO_VER" -ge 2 ]; echo $?)"
+J250="$WORK/gh250.json"
+if python3 "$EXPORTER" --db "$R/releases.db" --json > "$J250" 2>/dev/null; then ok "--json succeeds on a ledger with NULL-version releases" 0; else ok "--json on NULL-version ledger" 1; fi
+python3 "$EXPORTER" --db "$R/releases.db" --preview "$WORK/gh250-preview.html" >/dev/null 2>&1
+ok "--preview bakes (the crash refresh_preview's warn-only path used to hide)" "$([ -s "$WORK/gh250-preview.html" ]; echo $?)"
+python3 "$EXPORTER" --db "$R/releases.db" --leaderboard "$WORK/gh250-lb.html" >/dev/null 2>&1
+ok "--leaderboard bakes on the same ledger" "$([ -s "$WORK/gh250-lb.html" ]; echo $?)"
+IDS="$(python3 - "$J250" 2>/dev/null <<'PY'
+import json, sys
+cols = [c for c in json.load(open(sys.argv[1]))["releases"] if c["version"] is None]
+ids = [c["id"] for c in cols]
+print("unique" if ids and len(ids) == len(set(ids)) and all(ids) else "collide", *sorted(ids))
+PY
+)"
+ok "codename-only releases carry stable, unique, non-empty ids" "$(has "$IDS" "unique"; echo $?)"
+ok "the id derives from the codename, lowercased with spaces dashed (c-night-owl)" "$(has "$IDS" "c-night-owl"; echo $?)"
+
 echo
 echo "== gh103-timeline-exporter: $pass passed, $fail failed =="
 [ "$fail" -eq 0 ]
