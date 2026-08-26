@@ -1,0 +1,10 @@
+FIRSTHAND_COUNT=12
+ECHOED_COUNT=8
+ECHOED `test/gh50-sandboxed-git-guard.sh`
+ECHOED `development`
+ECHOED `test/security-scan.sh`
+ECHOED `development`
+ECHOED `development`
+ECHOED `test/security-scan.sh`
+ECHOED `test/security-scan.sh`
+ECHOED `test/security-scan.sh`

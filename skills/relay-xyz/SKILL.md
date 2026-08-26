@@ -169,17 +169,20 @@ cannot tell one run from another).
 To run relays in **different repos at the same time on one machine**, give each repo its **own harness**
 so each gets its own lock, `.tick/`, and worktrees:
 
-| Install path | Ships | Relay capability | Lock |
-|---|---|---|---|
-| `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | shared (serializes) |
-| **`xyz-vendor.sh <target-repo> [--no-register]`** | full harness (`relay-automation/` + tick + src) into a gitignored `.xyz/` | ✅ per-repo | **own** `.xyz/.relay-driver.lock` |
+| Install path / Tier | Ships | Relay capability | Releases ledger? | Lock |
+|---|---|---|---|---|
+| `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | ❌ no | shared (serializes) |
+| **Tier 1 (default)**: `xyz-vendor.sh <target-repo> [--no-register]` | full core harness (`relay-automation/` minus `xyz-releases-onboard.sh`, `bin/`, `src/`, `test/`, `skills/`, `utils/` minus overlay) into gitignored `.xyz/` | ✅ per-repo | ❌ no overlay | **own** `.xyz/.relay-driver.lock` |
+| **Tier 2 (opt-in)**: `xyz-vendor.sh <target-repo> --with-releases` (or auto-detected via `releases.db` at root) | full core harness + RELEASES overlay (`releases_app.py`, `releases_cycle.py`, `releases-merge-resolve.sh`, `release-lanes.sh`, `utils/timeline/`, `xyz-releases-onboard.sh`, `RELEASES-DB-FAQS.md`) | ✅ per-repo | ✅ opt-in overlay | **own** `.xyz/.relay-driver.lock` |
 
 Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
 `.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,
-`.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312). This
-matters because `.xyz/` is gitignored: state lost there is unrecoverable, with no reflog or stash
-behind it. A new runtime artifact under `.xyz/` must be added to the preserve list in
-`xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
+`.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312).
+Note that RELEASES ledger runtime state (`releases.db`, `releases.sql`, `RELEASES.md`,
+`RELEASES-PREVIEW.html`) lives at the target repository root, outside `.xyz/`, while `.xyz/`-resident
+runtime state is preserved across swaps. This matters because `.xyz/` is gitignored: state lost there
+is unrecoverable, with no reflog or stash behind it. A new runtime artifact under `.xyz/` must be added
+to the preserve list in `xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
 
 So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
 `.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and
@@ -538,3 +541,44 @@ Run the shim test matching the worker you'll drive (both are first-class). Run t
 Open with a human sentence ("Driving a headless Codex or agy review of `<artifact>` — round cap 4…") and
 close with the result + exit code. The structured thread lives in the relay file; the operator gets a
 sentence and a verdict, not a wall of transcript.
+
+## QA / Consult Template Formatting
+
+Since agents often scaffold relay threads manually (when the `/relay` slash command isn't used or available), it is critical to structure QA / consultation threads correctly. **Do not** write open-ended instructions like "QA this codebase against the requirements."
+
+Headless agents (Codex, agy, Aider) perform best when given **explicit questions to adjudicate**. A proper QA thread must include:
+1. The goal and files to read.
+2. A numbered list of concrete, specific questions to answer.
+3. Instructions on what the agent should output (e.g. file:line citations).
+
+**Example format:**
+```markdown
+---
+Goal: QA Phase 3 Implementation (Semantic Layer)
+Date: 2026-08-25
+NEXT: Reviewer
+STATUS: Open
+---
+
+# Context
+
+Adjudicate the implementation of Phase 3 Semantic Layer against its plan in PROJECT/2-WORKING/GH-1-firebase-ai-reports-plan.md.
+
+Read the plan doc in full, plus the code it references:
+- api/src/indexer.ts
+- api/src/semantic.ts
+
+Questions:
+
+1. Are the requirements for soft-failing met? Does it gracefully continue if the vector index is missing or empty?
+2. Are limits capped properly? The plan says "findNearest capped at top-K <= 10". Is this enforced securely?
+3. Is the Indexer idempotent? Review `processItem` in `indexer.ts` which uses a hash check. Does this prevent unnecessary re-embedding?
+
+Flag anything wrong, missing, incorrectly scoped, or over/under-engineered. Be concrete and cite file:line where you disagree with a specific claim.
+
+Write your verdict below and change the STATUS to Approved/Closed if it passes.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+```

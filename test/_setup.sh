@@ -43,6 +43,9 @@ do
   unset "$_var"
 done
 
+export XYZ_HARNESS_LOGGING=0
+export XYZ_DEVICE_CONFIG_PATH="/dev/null"
+
 TEST_NAME="${1:-unnamed}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TICK="$(cd "$HERE/.." && pwd)/bin/tick"

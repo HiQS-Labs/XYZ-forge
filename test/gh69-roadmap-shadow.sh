@@ -249,6 +249,140 @@ ok "  and survive a dump -> rebuild round trip" \
 ok "  and check is clean afterwards" "ra check >/dev/null 2>&1"
 rm -f "$R/releases.db.bak"
 
+# --- GH-249: `roadmap add` stores the rating -----------------------------------------------------
+# The regression this pins: GH-169 made `roadmap sync` a no-op in releases-mode repos, and sync was
+# parse_rating()'s ONLY caller. Intake therefore wrote every row unrated while the grammar, the
+# columns and the leaderboard all still worked — a silent drop, indistinguishable from "never
+# scored". These cases pin the score onto the intake path itself.
+RA_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2490"
+RA_LINE='- **GH-2490 - rated intake** (rated 90/85/80/70) - [d](PROJECT/1-INBOX/d.md) · [#2490]('"$RA_URL"')'
+out="$(ra roadmap add --dry-run --issue-num 2490 --issue-url "$RA_URL" --title "rated intake" \
+        --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text "$RA_LINE" 2>&1)"
+ok "GH-249: --dry-run reports the parsed rating before any write" \
+   "has \"\$out\" 'rating: 90/85/80/70'"
+ok "  and --dry-run writes nothing" \
+   "[ -z \"\$(sqlite3 '$R/releases.db' 'SELECT 1 FROM roadmap_items WHERE gh_number=2490')\" ]"
+
+ra roadmap add --issue-num 2490 --issue-url "$RA_URL" --title "rated intake" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text "$RA_LINE" >/dev/null 2>&1
+ok "  a rated line handed to \`roadmap add\` STORES the four axes (GH-169 dropped them silently)" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2490\")\" = '90/85/80/70' ]"
+ok "  and leaves ovr NULL when the line carries no override" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr IS NULL FROM roadmap_items WHERE gh_number=2490')\" = '1' ]"
+
+RB_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2491"
+ra roadmap add --issue-num 2491 --issue-url "$RB_URL" --title "ovr intake" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md \
+   --raw-text '- **GH-2491** (rated 90/85/80/70 ovr 350) x' >/dev/null 2>&1
+ok "  an \`ovr\` override on the intake line is stored too" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr FROM roadmap_items WHERE gh_number=2491')\" = '350' ]"
+
+# NEGATIVE CONTROL: the assertions above are falsifiable only if an UNRATED line really stores NULL.
+RC_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2492"
+ra roadmap add --issue-num 2492 --issue-url "$RC_URL" --title "unrated intake" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2492** no score here' >/dev/null 2>&1
+ok "  NEGATIVE CONTROL: an unrated intake line still stores NULL (the pass above is earned)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri IS NULL FROM roadmap_items WHERE gh_number=2492')\" = '1' ]"
+
+# A mistyped score must be refused BY NAME, never read as unrated — same contract sync already has.
+out="$(ra roadmap add --dry-run --issue-num 2493 --issue-url 'https://x.invalid/2493' --title 'bad' \
+        --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2493** (rated 90/85/80) x' 2>&1)"; rc=$?
+ok "  a malformed \`rated\` token on intake is REFUSED by name, not read as unrated" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'rating-shape'"
+
+ra check --rebuild >/dev/null 2>&1
+ok "  intake-stored ratings survive a dump -> rebuild round trip" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2490\")\" = '90/85/80/70' ]"
+rm -f "$R/releases.db.bak"
+
+# --- GH-253: `roadmap rate` scores an ALREADY-PARKED row ----------------------------------------
+# GH-249 taught intake to store a rating, but rows parked before it had no way back: `roadmap add`
+# only inserts, `roadmap sync` is a no-op in releases-mode, and nothing else wrote the columns.
+# "Unrated" was permanent for exactly the rows the bug produced. These pin the way back.
+RT_URL="https://github.com/HiQS-Labs/XYZ-forge/issues/2500"
+ra roadmap add --issue-num 2500 --issue-url "$RT_URL" --title "parked unrated" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2500** parked with no score' >/dev/null 2>&1
+ok "GH-253: a row parked unrated starts NULL (the state the backfill has to reach)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri IS NULL FROM roadmap_items WHERE gh_number=2500')\" = '1' ]"
+
+out="$(ra roadmap rate --dry-run --issue-num 2500 --rated 70/55/65/60 2>&1)"
+ok "  --dry-run previews the rewritten line and the parsed scores" \
+   "has \"\$out\" 'rating: 70/55/65/60' && has \"\$out\" '(rated 70/55/65/60)'"
+ok "  and --dry-run writes nothing" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri IS NULL FROM roadmap_items WHERE gh_number=2500')\" = '1' ]"
+
+ra roadmap rate --issue-num 2500 --rated 70/55/65/60 >/dev/null 2>&1
+ok "  rating a parked row stores the four axes" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=2500\")\" = '70/55/65/60' ]"
+# The load-bearing one: raw_text is the LOSSLESS shadow. If the token and the columns disagree, a
+# later rebuild or a legacy-mode sync would resurrect the old score and silently overwrite the new.
+ok "  and rewrites raw_text so the ledger line and the columns cannot disagree" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text LIKE '%(rated 70/55/65/60)%' FROM roadmap_items WHERE gh_number=2500\")\" = '1' ]"
+
+out="$(ra roadmap rate --issue-num 2500 --rated 10/10/10/10 2>&1)"; rc=$?
+ok "  re-rating without --force is REFUSED (re-scoring is deliberate, not a retry)" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'already-rated'"
+ok "  NEGATIVE CONTROL: the refused re-rate left the original score intact" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '70' ]"
+
+ra roadmap rate --issue-num 2500 --rated 10/20/30/40 --force >/dev/null 2>&1
+ok "  --force replaces the score, and leaves exactly ONE rated token behind (no stacking)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '10' ] && [ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text NOT LIKE '%70/55/65/60%' FROM roadmap_items WHERE gh_number=2500\")\" = '1' ]"
+
+ra roadmap rate --issue-num 2500 --rated 10/20/30/40 --ovr 350 --force >/dev/null 2>&1
+ok "  an --ovr override is stored alongside the honest axes" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr FROM roadmap_items WHERE gh_number=2500')\" = '350' ]"
+
+out="$(ra roadmap rate --dry-run --issue-num 2500 --rated 10/20/30 --force 2>&1)"; rc=$?
+ok "  a malformed --rated is refused by the SAME parser, by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'rating-shape'"
+out="$(ra roadmap rate --dry-run --issue-num 99999 --rated 10/20/30/40 2>&1)"; rc=$?
+ok "  rating a row that was never parked is refused by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'no-such-row'"
+
+# A row imported from a multi-issue bullet has NO gh_number, so --issue-num cannot address it.
+# Without --gid such a row is unscorable forever — the exact permanence this command exists to end.
+NG="$(sqlite3 "$R/releases.db" "SELECT global_id FROM roadmap_items WHERE gh_number IS NULL LIMIT 1")"
+if [ -n "$NG" ]; then
+  ra roadmap rate --gid "$NG" --rated 40/30/50/60 >/dev/null 2>&1
+  ok "  --gid scores a row with NO gh_number (unreachable by --issue-num)" \
+     "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri FROM roadmap_items WHERE global_id='$NG'\")\" = '40' ]"
+else
+  ok "  --gid path: fixture has no gh_number-less row; selector guards below cover the flag" "true"
+fi
+out="$(ra roadmap rate --dry-run --issue-num 2500 --gid rmi-x --rated 10/20/30/40 2>&1)"; rc=$?
+ok "  passing BOTH selectors is refused by name (no ambiguous target)" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'selector'"
+out="$(ra roadmap rate --dry-run --rated 10/20/30/40 2>&1)"; rc=$?
+ok "  passing NEITHER selector is refused by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'selector'"
+
+# repoint: `roadmap add` records doc_path once and nothing else rewrote it, so promoting a doc
+# 1-INBOX -> 2-WORKING left the row pointing at a vanished path with no supported way to fix it.
+ra roadmap add --issue-num 2600 --issue-url "https://x.invalid/2600" --title "repoint target" \
+   --created 2026-08-25 --doc-path PROJECT/1-INBOX/d.md --raw-text '- **GH-2600** at [d](PROJECT/1-INBOX/d.md)' >/dev/null 2>&1
+mkdir -p "$R/PROJECT/2-WORKING" && : > "$R/PROJECT/2-WORKING/d.md"
+out="$(ra roadmap repoint --dry-run --issue-num 2600 --doc-path PROJECT/2-WORKING/d.md 2>&1)"
+ok "repoint --dry-run previews both the path and the rewritten line" \
+   "has \"\$out\" 'PROJECT/1-INBOX/d.md -> PROJECT/2-WORKING/d.md'"
+ok "  and --dry-run writes nothing" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT doc_path FROM roadmap_items WHERE gh_number=2600\")\" = 'PROJECT/1-INBOX/d.md' ]"
+ra roadmap repoint --issue-num 2600 --doc-path PROJECT/2-WORKING/d.md >/dev/null 2>&1
+ok "  repoint moves doc_path" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT doc_path FROM roadmap_items WHERE gh_number=2600\")\" = 'PROJECT/2-WORKING/d.md' ]"
+# The ledger line embeds the path too; rewriting one without the other just relocates the drift.
+ok "  and rewrites the embedded path in raw_text (no half-move)" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT raw_text NOT LIKE '%1-INBOX%' AND raw_text LIKE '%2-WORKING/d.md%' FROM roadmap_items WHERE gh_number=2600\")\" = '1' ]"
+out="$(ra roadmap repoint --issue-num 2600 --doc-path PROJECT/2-WORKING/nope.md 2>&1)"; rc=$?
+ok "  NEGATIVE CONTROL: re-pointing at a nonexistent doc is refused by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'no-such-doc'"
+
+ra check --rebuild >/dev/null 2>&1
+ok "  backfilled ratings survive a dump -> rebuild round trip" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '10' ]"
+ok "  and check is clean afterwards" "ra check >/dev/null 2>&1"
+rm -f "$R/releases.db.bak"
+
 echo
 echo "  gh69-roadmap-shadow: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

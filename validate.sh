@@ -87,6 +87,7 @@ TESTS=(
   "aider-turn.sh"
   "gh278-turn-timeout-parity.sh" # GH-278 (Aider Python/Bash/doc timeout default must stay aligned)
   "gh308-frozen-twin-guard.sh"  # GH-308 (Python-authoritative twins: banner + committed-change guard)
+  "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
@@ -182,6 +183,8 @@ TESTS=(
   "gh402-branch-enforcement.sh"   # GH-402 (a marathon refuses to commit to the RECEIVING repo's shared trunk; --allow-trunk-commit and preflight's risk=1 carve-out are the two documented ways past) — 13/0; control in test/baselines/GH-402-negative-control.md: 8 red pre-fix, with the pre-fix run observed COMMITTING to trunk. Fires only when origin/HEAD resolves — a repo with no remote shares nothing and `git reset` undoes it, asserted as an explicit non-block
   "gh386-turn-budget-honesty.sh"  # GH-386 (one wall-clock default across all five builders on both lanes; the packet's budget names turn_timeout_s, the field marathon.sh actually reads) — 10/0; control in test/baselines/GH-386-negative-control.md: 9 red pre-fix. Part C EXERCISES the shipped sizing ladder and requires every suggestion to be >= the default — the assertion a partial fix (raise the cap, forget the ladder) fails
   "gh514-write-set-trackable.sh"  # GH-514 (the target is proven able to TRACK the run's write-set before dispatch; a hostile ignore rule gets an actionable refusal naming the rule and the remedy, not an unhandled CalledProcessError traceback) — 12/0; control in test/baselines/GH-514-negative-control.md: 6 red pre-fix. Note the corrected framing recorded there: "no dispatch" does NOT discriminate (the render's own git add already dies first) — the traceback assertion does
+  "gh255-remedy-ordering.sh"  # GH-255 (the blocked-before-dispatch refusal offers the remedy that FITS what is blocked: XYZ_ARCHIVE_ROOT leads for a transcripts-only block, --target-root leads when a phase file is blocked because the archive knob cannot clear that) — 6/0; control: force only_transcripts=False → 2 red
+  "gh256-target-root-guard-root.sh"  # GH-256 (under --target-root the turn shim guards the same repo the worktree is cut from: marathon-drive exports AGY_/CODEX_/COMMANDCODE_TURN_ROOT, and an unseeded artifact warns on stderr instead of silently handing the agent a worktree without its own files) — 6/0; control: drop the export + the warn → 5 red
   "gh426-worktree-leak.sh"       # GH-426 (an isolated turn's creation is absent from BOTH the target and the harness) — 7/0; control in test/baselines/GH-426-negative-control.md: 2 red here + 1 red in gh410's C4c. The reported cause (worktree teardown) is FALSIFIED and the suite pins the real one: the agent binary is invoked twice, and the GH-375 auth probe ran with the caller's CWD, outside containment
   "gh384-crash-recovery.sh"      # GH-384 (marathon-recover.sh actually DISTINGUISHES a gated phase from an ungated one, in one repo, one run) — 19/0; control in test/baselines/GH-384-negative-control.md is a MUTATION pair (the tool already shipped, so there is no pre-fix revision): detection removed → 2 red, verdict decoupled from the approval event → 1 red. Also pins read-only (tree byte-identical) and the STALE/LIVE lock distinction
   "gh388-run-log-durability.sh"  # GH-388 (the harness owns a durable chain run log; a phase KILLED mid-run leaves a content-bearing record; rtl_default_log refuses rather than silently relocating to volatile storage) — 24/0; control in test/baselines/GH-388-negative-control.md: 9 red pre-fix. Part C/D actually kill a running phase and a running chain — a green success path proves nothing on this issue
@@ -252,9 +255,11 @@ TESTS=(
   "gh174-harness-registry.sh"           # #174 (Harness & Models SQLite Registry with Per-Device Config, Reasoning Levels, Grading Hooks & Blog Gen)
   "gh180-repro-timeout-crash.sh"        # #180 (repro_builder ingests null-exit timeout telemetry without crashing; no fabricated timeout repros)
   "gh181-repro-adapter-fidelity.sh"     # #181 (telemetry->reproducer fidelity: spaced-path tokenization, signature matching, live-record E2E)
+  "gh182-healer-facade-safety.sh"       # #182 (self_healer fail-fast sandbox requirements, mandatory regression gate, restore on exit)
   "gh183-explorer-env-soundness.sh"     # #183 (explorer env mutations from a declared base over a clean env; ambient runner vars cannot satisfy them)
-  "gh184-no-tracked-scratch.sh"
-  "gh202-wave-reconcile-issue-state.sh"  # #202 (reconciler tolerates items-held exit 5; OPEN-issue docs stay active with merge evidence)         # #184 (derived guard: nothing under the disposable .relay-scratch/ lane is ever tracked)
+  "gh184-no-tracked-scratch.sh"         # #184 (derived guard: nothing under the disposable .relay-scratch/ lane is ever tracked)
+  "gh202-wave-reconcile-issue-state.sh" # #202 (reconciler tolerates items-held exit 5; OPEN-issue docs stay active with merge evidence)
+  "gh232-wave-reconcile-multiphase.sh"  # #232 (wave_reconcile honors linked issue state & frontmatter umbrella/multiphase sentinels; --force-promote)
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"
@@ -366,6 +371,7 @@ TESTS=(
   "relay-dep-drift.sh"
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
@@ -407,6 +413,11 @@ TESTS=(
   "mktemp-trap-guard.sh"         # GH-177 (static audit: no unguarded mktemp-into-destructive-rm-rf/cd-recapture pattern anywhere in the repo)
   "hq-marathon-scan.sh"          # GH-158 (cross-repo marathon aggregation + preflight — written, never registered until GH-192)
   "hq-rollup.sh"                 # GH-192 (marathon-scan.sh bridged verbatim into the Obsidian daily rollup)
+  "gh238-hq-releases-mode.sh"    # GH-238 (releases-mode park: roadmap add verb + hq park DB sink + sync no-op)
+  "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
+  "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
+  "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
+  "gh205-gate-idempotency.sh"    # GH-205 (telemetry writes land off-tree; the gate never dirties tracked files)
   "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
                                  #   exporter payload keys + baked chrome in both artifacts; the rollup
                                  #   embed itself lives in hq-rollup.sh cases A/F/G)
@@ -854,9 +865,23 @@ fi
 # (the GH-564 incident: core.bare / origin / user identity / HEAD) fails the run HERE, detectably,
 # instead of leaving a clone whose every subsequent green run is unattributable (GH-567). Covers
 # the suites that have not yet adopted require_fixture; it detects rather than prevents.
+# GH-205: the gate must be idempotent. Suites and shims append benchmark/telemetry rows through
+# harness_app.py, whose every artifact path (db, dump, registry md, blog docs) follows
+# XYZ_HARNESS_DB — so point the whole run at a throwaway COPY and the four tracked artifacts
+# (harnesses.db/.sql, HARNESS-MODELS-REGISTRY.generated.md, docs/blog-*.md) stay untouched.
+# Regenerating them is an explicit harness_app.py command, never a gate side effect. A pre-set
+# XYZ_HARNESS_DB (an operator's or a hermetic suite's own) is respected and wins.
+HARNESS_SCRATCH=""
+if [ -z "${XYZ_HARNESS_DB:-}" ]; then
+  HARNESS_SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/validate-harness.XXXXXX")"
+  cp "$HERE/harnesses.db"  "$HARNESS_SCRATCH/harnesses.db"  2>/dev/null || true
+  cp "$HERE/harnesses.sql" "$HARNESS_SCRATCH/harnesses.sql" 2>/dev/null || true
+  export XYZ_HARNESS_DB="$HARNESS_SCRATCH/harnesses.db"
+fi
+
 IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/validate-identity.XXXXXX")"
 [ -n "$IDENTITY_SNAPSHOT" ] && [ -f "$IDENTITY_SNAPSHOT" ] || { echo "validate.sh: mktemp for identity snapshot failed" >&2; exit 1; }
-trap 'rm -f "$IDENTITY_SNAPSHOT"' EXIT
+trap 'rm -f "$IDENTITY_SNAPSHOT"; [ -n "$HARNESS_SCRATCH" ] && rm -rf "$HARNESS_SCRATCH"' EXIT
 bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" || {
   echo "validate.sh: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
   exit 1

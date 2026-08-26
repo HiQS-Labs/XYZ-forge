@@ -114,6 +114,17 @@ it to a temporary file and pass that file to `start`; the helper validates and e
   --agents 2
 ```
 
+To supersede a previous discussion atomically, pass `--supersedes <old_id>`. The helper acquires the
+old discussion's lock, sets its status to `Closed` with `SUPERSEDED-BY: <new_id>`, appends an atomic
+supersession turn, invalidates any active watchers, and seeds the new discussion with `SUPERSEDES: <old_id>`:
+
+```bash
+"$AGENT_CHORUS" start \
+  --subject "revised architecture proposal" \
+  --packet-file /safe/path/to/context-packet.md \
+  --supersedes 123456
+```
+
 When the user asks for a 2-minute / 30-minute doorbell, include `--timed-watch`. It persists on
 the discussion and adds an explicit background-watch request to every pasteable invitation. Omit it
 otherwise. Return every invitation printed by the helper verbatim so each non-initiator can join
@@ -399,6 +410,29 @@ records agreement it never gave. Prefer routing to that seat once more over clos
 termination; do not use it to bypass synthesis of a multi-turn decision. `--check-clean` is also
 available on `close` and `extend` when their messages make a verified Git handoff claim.
 
+## Widen roster (invite participant)
+
+If the operator decides to expand the discussion roster while it is active, do not edit headers manually.
+Use `invite` to atomically add the next sequential seat, record an operator invite turn, and output the new
+invitation line:
+
+```bash
+"$AGENT_CHORUS" invite \
+  --id 123456 \
+  --agent 3 \
+  --reason "Add third reviewer seat for concurrency testing"
+```
+
+## Verify citations
+
+To check and lint factual references made by participants across all turns, run `verify-citations`. It verifies
+repo-relative file paths and line ranges against the repository tree and git commit SHAs against the object store:
+
+```bash
+"$AGENT_CHORUS" verify-citations \
+  --id 123456
+```
+
 ## Guardrails
 
 - **A conditional teardown instruction is permission to check its condition, not to assume it —
@@ -443,7 +477,7 @@ available on `close` and `extend` when their messages make a verified Git handof
   This applies with full force when the host is in an auto-approve mode.
 - Treat the relay file as the source of truth. Never infer turn ownership from chat history alone.
 - Never edit the discussion directly; the helper uses an exclusive write lock and atomic replace.
-- Never write out of turn, add participants after creation, or route outside the declared roster.
+- Never write out of turn, bypass operator-mediated roster widening (use `invite` rather than manual header edits), or route outside the declared roster.
 - Treat `watch` as the default operating level. Enter `drive` only with explicit user authorization
   for the exact participant, bounds, and turn command.
 - Treat the drive turn command as code execution with the current process's authority. Prefer a

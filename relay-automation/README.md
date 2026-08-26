@@ -29,8 +29,8 @@ the loop still degrades to the existing manual nudge. For the current headless p
 | `pi-turn.sh` | **GH-295** headless turn-taker for **Pi** (`pi.dev`, package `@earendil-works/pi-coding-agent`; `pi --provider … --model … --mode json -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Same posture as agy (no built-in sandbox — containment is worktree isolation + `rtl_enforce`), but genuinely better on cost visibility: `--mode json`'s JSONL stream carries real per-call `usage`/`cost` fields, so this is the first non-Claude lane with actual `tick cost --tool pi` capture. `PI_MODEL` has **no default** by design (GH-280/aider#5486 class of bug); the operator must set it explicitly. |
 | `aider-turn.sh` | Headless turn-taker for **Aider ↔ OpenRouter** (`aider --model openrouter/… --message`) — an OpenAI-standard lane discrete from Codex. Same `relay-turn-lib.sh` containment; because Aider is a file-editor (no mid-turn shell), the SHIM performs the tick token ops itself and runs Aider with `--no-auto-commits` (the harness owns the commit). Set `OPENROUTER_API_KEY` + `AIDER_MODEL` (e.g. `openrouter/anthropic/claude-3.5-sonnet`, `openrouter/openai/gpt-4o`, `openrouter/deepseek/deepseek-chat`). Works in **both** a marathon `--builder aider` lane AND a plain `/relay` — it routes through the shared `marathon-agent.sh` dispatcher (`relay-drive.sh`'s `--agent-cmd`), so a driven relay with `RELAY_AGENT=aider` fires it just like Codex/agy. |
 | `deep-research.mjs` | **Provider-agnostic grounded web search** (GH-87/GH-129): one normalized `{answer, citations, query, provider, model, raw}` contract over two backends — **Agy Gemini Search** (default; `agy` CLI in a throwaway tmpdir, side-effect free) and **Perplexity Sonar via OpenRouter** (`--provider openrouter`; same `OPENROUTER_API_KEY` gateway convention as the Aider lane, model `perplexity/sonar` overridable via `DEEP_RESEARCH_OPENROUTER_MODEL`, `--search-context-size` → Perplexity's native `web_search_options.search_context_size`). Fail-closed typed errors (`binary_missing`/`missing_api_key`/`timeout`/`backend_error`/`empty_output`) — never a silent cross-provider fallback. Run sandbox-OFF; prefer `--search-context-size medium` with focused single-intent queries (`high` risks runaway grounding near the 120s `DEEP_RESEARCH_TIMEOUT_MS` cap — see #124). Wall-clock cap is `DEEP_RESEARCH_TIMEOUT_MS`, default `120000` (120s); override upward (e.g. `DEEP_RESEARCH_TIMEOUT_MS=180000`) when a thorough `high`-context, multi-claim query genuinely needs more headroom — the default itself is unchanged. |
-| `consult.sh` | Parallel read-only consult: asks the same question to **Codex, agy, and (opt-in) Aider↔OpenRouter** (`--models codex,agy,aider`), captures each transcript, and leaves synthesis to the caller. Advisory-only; also the engine behind `relay-drive.sh --consult-verify`. |
-| `xyz-vendor.sh` / `xyz-sync.sh` | Vendoring pair for `.xyz/` copies materialized into another repo. `xyz-vendor.sh <target-repo>` mirrors this harness into `<target-repo>/.xyz/` and stamps a row in the local `registry.tsv` (`install_dir`, `last_install_utc`, `tick_version`, `source_commit`, `coordinated_repo`) at that moment. `xyz-sync.sh list \| update \| delete \| check` manages those registered rows: `list` shows them, `update <dir>\|--all` re-vendors, `delete <dir>\|--all [--yes]` removes a copy and prunes its row. **`check <dir>\|--all`** (GH-96) is report-only drift detection: it recomputes the CURRENT `tick_version`/`source_commit` this harness ships and compares against each row's recorded pair — a mismatch in **either** field counts as drift. Exact match on both → a silent `ok` line; drift → a warning naming the drifted field(s) and both recorded/current values. Never a hard error, never an auto-pull — updates land only via an explicit `update`/`xyz-vendor.sh` re-run (pinned + manual by design). This is the harness-side "is this install stale?" signal a downstream consumer (e.g. rebalance-OS) can poll instead of guessing. |
+| `xyz-vendor.sh` / `xyz-sync.sh` | Vendoring pair for `.xyz/` copies materialized into another repo. `xyz-vendor.sh <target-repo> [--with-releases]` mirrors this harness into `<target-repo>/.xyz/` (Tier 1 core harness by default; Tier 2 with RELEASES overlay via `--with-releases` or sticky auto-detection when `releases.db` is present at target root) and stamps a row in the local `registry.tsv` (`install_dir`, `last_install_utc`, `tick_version`, `source_commit`, `coordinated_repo`) at that moment. `xyz-sync.sh list \| update \| delete \| check` manages those registered rows: `list` shows them, `update <dir>\|--all` re-vendors, `delete <dir>\|--all [--yes]` removes a copy and prunes its row, `check <dir>\|--all` reports drift. |
+| `xyz-releases-onboard.sh` | **GH-197** onboarding SOP script to migrate a legacy `RELEASES.md` into the Tier 2 SQLite ledger (`releases.db` + `releases.sql`), auditing `.gitignore` for `!releases.db` carve-outs, prepending the app-managed banner, reconciling `MIG-` references to GitHub issue URLs with shared-tracking-URL collision detection, and running validation without auto-committing. |
 
 ## Adding a new consult advisor (GH-178 A1)
 
@@ -114,6 +114,37 @@ Heartbeat cadence:
 | [CONSUMING.md](CONSUMING.md) | How another repo consumes this harness (`--target-root`, cross-machine `.tick/` limits). |
 | [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md) | The Option-A cross-model headless turn-taker plan (Codex / agy shims). |
 | [MARATHON.example.yaml](MARATHON.example.yaml) | Example multi-build marathon manifest for `marathon.sh`. |
+
+## Vendoring tiers (GH-197)
+
+`xyz-vendor.sh` provides a two-tier vendoring architecture:
+
+- **Tier 1 (core harness default)**: `xyz-vendor.sh <target-repo> [--no-register]`. Mirrors `relay-automation/`, `bin/`, `src/`, `test/`, `skills/`, and `utils/` **minus** the `RELEASES_OVERLAY` manifest. Uses a deny-list mechanism so newly added `utils/` tools ship by default without requiring manual manifest updates (avoiding the GH-77 curated-manifest drop failure).
+- **Tier 2 (opt-in RELEASES overlay)**: `xyz-vendor.sh <target-repo> --with-releases` (or auto-detected when `releases.db` is present at the target repo root). Ships the complete core harness plus the `RELEASES_OVERLAY` files:
+  - `utils/py/releases_app.py`
+  - `utils/py/releases_cycle.py`
+  - `utils/releases-merge-resolve.sh`
+  - `utils/release-lanes.sh`
+  - `utils/timeline/` (`export_timeline.py`, `RELEASES.html`, `README.md`)
+  - `relay-automation/xyz-releases-onboard.sh`
+  - `RELEASES-DB-FAQS.md` (staged into `.xyz/`)
+
+### Tier 2 onboarding SOP (`xyz-releases-onboard.sh`)
+
+To onboard an existing repository with a legacy `RELEASES.md` to the Tier 2 SQLite ledger:
+
+```bash
+relay-automation/xyz-releases-onboard.sh /path/to/target-repo
+```
+
+The script mechanizes the proven onboarding SOP (LTVera-Pandas `ad0d816`):
+1. **Preconditions**: verifies `releases.db` does not already exist and `RELEASES.md` is present.
+2. **Init & Import**: runs `releases init` and `releases import` from the legacy `RELEASES.md`.
+3. **Gitignore audit**: appends `!releases.db` carve-out only when a `*.db`-style ignore pattern exists (appended exactly once).
+4. **App-managed banner**: prepends the `<!-- This file is app-managed (GH-32)... -->` banner comment to `RELEASES.md`.
+5. **Reconcile**: maps legacy `MIG-` placeholders to target repository GitHub issue URLs (`reconcile --map`), detecting shared-tracking-URL collisions and stopping with a report without auto-filing issues.
+6. **Verification**: executes `releases check` to ensure ledger consistency.
+7. **Commit command**: prints the exact `git add` and `git commit` command for the operator without making the commit.
 
 ## `marathon.sh` roots
 

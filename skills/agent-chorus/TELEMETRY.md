@@ -23,10 +23,12 @@ Metadata-only observability for discussions. Two artifacts, one guarantee:
 
 | Event | Allowed fields (exhaustive) |
 |---|---|
-| `discussion_started` | `schema, agents, timed_watch, store, created_at, subject_sha256` |
+| `discussion_started` | `schema, agents, timed_watch, store, created_at, subject_sha256, supersedes` |
 | `turn_written` | `turn, agent, next_agent, message_bytes, line_count, citation_count, unique_citation_count, contains_falsifier_section, contains_dissent_section` |
-| `close_written` | `close_type, decision_bytes, dissent_present, falsifier_count, recommended_actions_count, turn_count` |
+| `close_written` | `close_type, decision_bytes, dissent_present, falsifier_count, recommended_actions_count, turn_count, superseded_by` |
 | `extension_added` | `extension_number, question_bytes, done_condition_bytes` |
+| `roster_widened` | `old_agents, new_agents, agent_added, reason_bytes` |
+| `citations_verified` | `total, verified, unresolvable, files_total, commits_total` |
 | `watch_transition` | `agent, transition, rearm_count` |
 | `outcome_recorded` | `result, note_bytes, agents_json` |
 | `seat_joined` | `agent, decision, model` |

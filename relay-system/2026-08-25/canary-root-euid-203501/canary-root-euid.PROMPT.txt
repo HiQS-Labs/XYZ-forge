@@ -1,0 +1,52 @@
+# Question
+
+In this repo, the CI job **"portability canary (ubuntu — advisory, never breakage)"** in
+`.github/workflows/ci.yml` has been RED for a while — on `development` itself, not just on PRs.
+It is marked advisory, so the overall run still reports success. That means the canary now signals
+nothing: a real Linux portability regression would be invisible in the noise.
+
+Two suites account for the failures, and BOTH fail for the same environmental reason — **GitHub's
+ubuntu runner executes the job as root (EUID=0)**, so `chmod`-based negative assertions do not hold
+(root writes a 0444 file and reads a 0000 file anyway):
+
+1. `test/gh50-sandboxed-git-guard.sh` — **3 pass, 8 fail**. It makes a git config read-only and
+   asserts the guard refuses (exit 2), that the refusal is named, that the working tree and config
+   bytes are unchanged, that HEAD stays on main, and that no branch was created. Under root the
+   write succeeds, so the guard never refuses and every downstream assertion collapses.
+2. `test/security-scan.sh` — **33 pass, 2 fail**. Both failures are the "unreadable file" case:
+   it chmods a file to 0000 and expects exactly one `[scan-error]` finding. Root reads it fine, so
+   zero scan-error lines are emitted.
+
+(There are also a few unrelated scattered FAILs in that job — `agy` not on PATH for marathon-drive,
+a worktree-isolation case that does not reproduce, and a concurrent-lock race. Treat those as
+out of scope background, but say so if you think they change the answer.)
+
+## The decision
+
+Which of these is the better engineering call for THIS repo, and why?
+
+**Option A — fix at the root:** make the guards genuinely fail-closed under EUID=0, so the
+production behavior the tests assert is actually true for a root user, and the tests then pass
+honestly on both macOS and Linux.
+
+**Option B — skip when EUID=0:** detect root and skip those specific assertions (or whole suites)
+with an explicit, named SKIP, so the canary goes green and regains signal, while documenting that
+the root case is untested.
+
+## What a good answer looks like
+
+- A clear pick (A, B, or a specific hybrid), with the reasoning that actually decides it.
+- Consider: is the root case a REAL production scenario for this harness (does anyone run these
+  guards as root — containers, CI, Docker), or is it purely a test-environment artifact? That
+  distinction should drive the answer. Please check how the guards are actually invoked in the repo
+  before assuming.
+- The cost/benefit of each: what does Option A actually require in code, and what does Option B
+  cost in lost coverage?
+- The risk of the status quo (a permanently-red advisory job) versus either fix.
+- Whether "advisory, never breakage" is even the right posture for this job, or whether a
+  green-and-required canary would serve better.
+- Anything either option would break or mislead about.
+
+Please read the actual files (`test/gh50-sandboxed-git-guard.sh`, `test/security-scan.sh`,
+`.github/workflows/ci.yml`, and whatever guard implementation they exercise) before answering.
+This is ADVISORY ONLY — do not modify anything.

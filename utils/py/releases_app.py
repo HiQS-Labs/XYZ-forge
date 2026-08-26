@@ -2771,8 +2771,299 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
                   + RATING_COLUMNS
 
 
+
+def validate_raw_text(raw_text, issue_num=None):
+    """GH-257: validate that raw_text matches the markdown shape the renderer requires.
+
+    The renderer (utils/roadmap-dashboard.sh) parses bullets starting with an exact `- **<title>**`
+    prefix. An unparseable line (e.g. `- [ ] #255 ...`, `-   **`, or unclosed bold) is dropped by
+    the dashboard renderer. Validating at write time catches malformed input immediately.
+    """
+    if not isinstance(raw_text, str):
+        refuse("invalid-raw-text", "raw_text must be a string")
+    if "\r" in raw_text or "\n" in raw_text:
+        refuse("invalid-raw-text",
+               "malformed --raw-text: raw_text must be a single line (no newlines permitted)")
+    stripped = raw_text.strip()
+    if not re.match(r'^- \*\*[^\r\n*]+?\*\*', stripped):
+        refuse("invalid-raw-text",
+               "malformed --raw-text %r: expected markdown bullet starting with '- **<title>**' "
+               "(e.g. '- **GH-%s · <title>** ...')" % (raw_text, str(issue_num) if issue_num else "<num>"))
+    if issue_num is not None:
+        gh_patterns = [r'\bGH-%d\b' % issue_num, r'#%d\b' % issue_num]
+        if not any(re.search(p, raw_text) for p in gh_patterns):
+            refuse("invalid-raw-text",
+                   "malformed --raw-text: does not reference issue GH-%d / #%d" % (issue_num, issue_num))
+    return stripped
+
+
+
+def cmd_roadmap_add(args):
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        basename = os.path.basename(args.doc_path)
+        # hq park passes the hq_roadmap_line rendering via --raw-text so preview and stored row
+        # share ONE template; the inline fallback exists only for direct CLI use.
+        if args.raw_text:
+            raw_text = validate_raw_text(args.raw_text, args.issue_num)
+        else:
+            raw_text = "- **GH-%d · %s** 🆕 **captured %s via HQ** — [%s](%s) · [#%d](%s)" % (
+                args.issue_num, args.title, args.created, basename, args.doc_path,
+                args.issue_num, args.issue_url
+            )
+        # GH-249: the rating rides in the ledger line, parsed by the SAME parse_rating() the
+        # markdown sync uses — one grammar, one parser, never a second scorer. Before this, ratings
+        # could only enter through `roadmap sync`, which GH-169 turned into a no-op in releases-mode
+        # repos, so every row parked after the flip was silently unrated.
+        rating = parse_rating(raw_text, args.title)
+
+        if args.dry_run:
+            print("ROADMAP line: %s" % raw_text)
+            if rating["rating_pri"] is not None:
+                print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+                if rating["rating_ovr"] is not None:
+                    print("ovr: %d" % rating["rating_ovr"])
+            return
+
+        # Dup guard — only when the shadow table exists; a pre-migration ledger gets the schema
+        # installed inside mutate (mirrors cmd_roadmap_sync) instead of a raw OperationalError.
+        if _table_exists(conn, "roadmap_items"):
+            row = conn.execute("SELECT id FROM roadmap_items WHERE issue_url = ?", (args.issue_url,)).fetchone()
+            if row:
+                refuse("roadmap-duplicate", "issue %s is already parked in the roadmap" % args.issue_url)
+
+            row2 = conn.execute("SELECT id FROM roadmap_items WHERE gh_number = ?", (args.issue_num,)).fetchone()
+            if row2:
+                refuse("roadmap-duplicate", "issue GH-%d is already parked in the roadmap" % args.issue_num)
+
+        gid = new_gid("rmi-")
+
+        def mutate(conn):
+            _ensure_roadmap_schema(conn)
+            ts = now_iso()
+            section = "Queue / parked intake"   # the canonical ledger queue heading (GH-243)
+            max_pos = conn.execute("SELECT MAX(position) FROM roadmap_items WHERE section = ?", (section,)).fetchone()
+            pos = (max_pos[0] or 0) + 1 if max_pos else 1
+            
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            
+            # Mirrors cmd_roadmap_sync: feature commands never self-migrate. A rated line meeting
+            # a ledger with no rating columns is refused BY NAME rather than written with its
+            # scores silently dropped — an unrated row is indistinguishable from "never scored".
+            rating_ok = _has_column(conn, "roadmap_items", "rating_pri")
+            if not rating_ok and rating["rating_pri"] is not None:
+                refuse("schema-behind",
+                       "GH-%d carries `rated` scores but this ledger has no rating columns. Run "
+                       "`releases migrate` first — intake stores scores, it never installs schema."
+                       % args.issue_num)
+
+            cols = ["global_id", "repo_id", "gh_number", "title", "section", "position",
+                    "status_marker", "doc_path", "issue_url", "raw_text", "first_seen", "updated_at"]
+            vals = [gid, repo["id"], args.issue_num, args.title, section, pos,
+                    "🆕", args.doc_path, args.issue_url, raw_text, ts, ts]
+            if rating_ok:
+                cols += list(RATING_COLUMNS)
+                vals += [rating[c] for c in RATING_COLUMNS]
+            conn.execute("INSERT INTO roadmap_items(%s) VALUES (%s)"
+                         % (", ".join(cols), ", ".join("?" * len(cols))), vals)
+                          
+        perform_write(root, conn, "roadmap-add", gid, mutate)
+        print("added roadmap entry %s for GH-%d" % (gid, args.issue_num))
+    finally:
+        conn.close()
+
+def cmd_roadmap_rate(args):
+    """GH-253: score a roadmap row that is already parked.
+
+    GH-249 taught intake to STORE a rating, but rows parked between the GH-169 flip and that fix
+    were written unrated and had no path back — `roadmap add` only inserts, `roadmap sync` is a
+    no-op in releases-mode, and nothing else writes the columns. That made "unrated" permanent for
+    exactly the rows the bug created. This is the way back.
+
+    The rating is rendered into the SAME `rated N/N/N/N [ovr N]` token the ledger line carries and
+    handed to the SAME parse_rating() — the token in raw_text and the five columns are written in
+    one transaction so the lossless shadow can never disagree with the scores derived from it.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "roadmap_items"):
+            refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        # A row imported from a multi-issue ROADMAP bullet ("#129/#130/#131 · Wave 1 …") carries NO
+        # gh_number, so --issue-num cannot address it and it would be unscorable forever — the same
+        # permanence bug this command exists to end. --gid is the escape hatch for those rows.
+        if (args.issue_num is None) == (args.gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        if args.issue_num is not None:
+            where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
+        else:
+            where, param, label = "global_id = ?", args.gid, args.gid
+        row = conn.execute(
+            "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
+            "FROM roadmap_items WHERE " + where, (param,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
+        if not _has_column(conn, "roadmap_items", "rating_pri"):
+            refuse("schema-behind",
+                   "this ledger has no rating columns. Run `releases migrate` first — rating "
+                   "stores scores, it never installs schema.")
+        if row["rating_pri"] is not None and not args.force:
+            refuse("already-rated",
+                   "%s is already rated. Re-scoring is a deliberate act, not a retry: pass "
+                   "--force if you mean to replace the existing scores." % label)
+        if any(_col(row, c) is not None for c in ("complexity", "risk", "effort")):
+            refuse("rating-vocabulary-clash",
+                   "%s carries legacy `cx/risk/eff`. The two vocabularies measure different "
+                   "things and never share a row; convert the entry deliberately rather than "
+                   "stacking a `rated` score on top of it." % label)
+
+        token = "(rated %s%s)" % (args.rated, "" if args.ovr is None else " ovr %d" % args.ovr)
+        # parse_rating is the ONE parser and the ONE validator: a malformed --rated is refused by
+        # name here, exactly as it is on the intake path, rather than reaching the columns.
+        rating = parse_rating(token, row["title"])
+        raw_text = _RATED_TOKEN_RE.sub("", row["raw_text"]).rstrip()
+        raw_text = "%s %s" % (raw_text, token)
+
+        if args.dry_run:
+            print("ROADMAP line: %s" % raw_text)
+            print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+            if rating["rating_ovr"] is not None:
+                print("ovr: %d" % rating["rating_ovr"])
+            return
+
+        def mutate(conn):
+            conn.execute(
+                "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
+                % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
+                [raw_text, now_iso()] + [rating[c] for c in RATING_COLUMNS] + [param])
+
+        perform_write(root, conn, "roadmap-rate", row["global_id"], mutate)
+        print("rated %s %s" % (label, args.rated))
+    finally:
+        conn.close()
+
+
+def cmd_roadmap_repoint(args):
+    """Re-point a parked row's capture doc after the doc moves between PROJECT stages.
+
+    `roadmap add` records doc_path once and refuses duplicates, and nothing else rewrites it — so
+    promoting a doc 1-INBOX -> 2-WORKING left the row pointing at a path that no longer exists, and
+    pdda-check-roadmap-coverage fails on it with no supported way to fix it.
+    """
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        row = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
+                           "WHERE gh_number = ?", (args.issue_num,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for GH-%d" % args.issue_num)
+        new = args.doc_path
+        if not os.path.isfile(os.path.join(root, new)):
+            refuse("no-such-doc", "%s does not exist under %s — re-point to a real doc, never a "
+                                  "path that merely looks right" % (new, root))
+        old = row["doc_path"]
+        # The ledger line embeds the path too; rewriting one without the other just moves the drift.
+        raw_text = row["raw_text"].replace(old, new) if old else row["raw_text"]
+        if args.dry_run:
+            print("doc_path: %s -> %s" % (old, new))
+            print("ROADMAP line: %s" % raw_text)
+            return
+
+        def mutate(conn):
+            conn.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? "
+                         "WHERE gh_number = ?", (new, raw_text, now_iso(), args.issue_num))
+
+        perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
+        print("repointed GH-%d -> %s" % (args.issue_num, new))
+    finally:
+        conn.close()
+
+
+def cmd_roadmap_update(args):
+    """GH-257: update an existing parked roadmap row's raw_text.
+
+    `roadmap add` refuses duplicates, `rate` scores an existing row, and `repoint` moves doc_path.
+    Nothing edited `raw_text` directly without manually editing releases.sql.
+    This command closes that gap with a validated, receipt-backed update path.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "roadmap_items"):
+            refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        if (args.issue_num is None) == (args.gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        if args.issue_num is not None:
+            where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
+        else:
+            where, param, label = "global_id = ?", args.gid, args.gid
+
+        has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
+        select_cols = ["global_id", "gh_number", "title", "raw_text"]
+        row = conn.execute(
+            "SELECT %s FROM roadmap_items WHERE %s" % (", ".join(select_cols), where), (param,)).fetchone()
+        if not row:
+            refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
+
+        new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
+        old_raw_text = row["raw_text"] or ""
+        if new_raw_text == old_raw_text.strip():
+            print("roadmap update: %s raw_text unchanged; nothing written" % label)
+            return
+
+        rating = parse_rating(new_raw_text, row["title"])
+
+        if not has_rating_cols and rating["rating_pri"] is not None:
+            refuse("schema-behind",
+                   "this ledger has no rating columns. Run `releases migrate` first — rating "
+                   "stores scores, it never installs schema.")
+
+        if args.dry_run:
+            print("raw_text: %s -> %s" % (old_raw_text, new_raw_text))
+            if rating["rating_pri"] is not None:
+                print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+                if rating["rating_ovr"] is not None:
+                    print("ovr: %d" % rating["rating_ovr"])
+            return
+
+        def mutate(conn):
+            ts = now_iso()
+            if has_rating_cols:
+                conn.execute(
+                    "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
+                    % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
+                    [new_raw_text, ts] + [rating[c] for c in RATING_COLUMNS] + [param])
+            else:
+                conn.execute(
+                    "UPDATE roadmap_items SET raw_text = ?, updated_at = ? WHERE %s" % where,
+                    [new_raw_text, ts, param])
+
+        perform_write(root, conn, "roadmap-update", row["global_id"], mutate)
+        print("updated %s raw_text" % label)
+    finally:
+        conn.close()
+
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
+    # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
+    # repo the DB is canonical and rows arrive via `roadmap add` with no markdown source line, so
+    # mirroring would destroy parked intake. Skip cleanly (exit 0): wave_reconcile.py calls sync
+    # unconditionally post-merge and must stay green in both modes.
+    try:
+        with open(os.path.join(root, ".pdda-mode")) as f:
+            if "ROADMAP_SOURCE=releases" in f.read():
+                print("roadmap sync: skipped — releases-mode repo (the DB is canonical; sync only "
+                      "mirrors ROADMAP.md in legacy mode, and would delete rows parked by `roadmap add`)")
+                return
+    except OSError:
+        pass
     conn = connect(artifact_paths(root)["db"])
     try:
         md_path = os.path.join(root, ROADMAP_NAME)
@@ -2879,6 +3170,19 @@ def cmd_roadmap_list(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
     try:
+        if getattr(args, "as_json", False):
+            # Machine-readable contract for consumers (hq rollup): the human rendering below is
+            # a display, not an API — its column offsets shift whenever a field widens.
+            rows = []
+            if _table_exists(conn, "roadmap_items"):
+                for r in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position"):
+                    rows.append({"global_id": r["global_id"], "gh_number": r["gh_number"],
+                                 "title": r["title"], "section": r["section"],
+                                 "position": r["position"], "status_marker": r["status_marker"],
+                                 "doc_path": _col(r, "doc_path"), "issue_url": _col(r, "issue_url"),
+                                 "raw_text": _col(r, "raw_text")})
+            print(json.dumps(rows, ensure_ascii=False))
+            return
         if not _table_exists(conn, "roadmap_items"):
             print("(no roadmap shadow yet — run `releases roadmap sync`)")
             return
@@ -3657,7 +3961,49 @@ def build_parser():
     sp_rs = rsub.add_parser("sync", help="mirror ROADMAP.md's ledger into roadmap_items (one-way; "
                                          "ROADMAP.md stays the source of truth)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
-    rsub.add_parser("list", help="print the shadow rows")
+    sp_rl = rsub.add_parser("list", help="print the shadow rows")
+    sp_rl.add_argument("--json", dest="as_json", action="store_true",
+                       help="emit rows as a JSON array (machine-readable; the default rendering "
+                            "is a display, not an API)")
+
+    sp_ra = rsub.add_parser("add", help="intake a single issue into the roadmap ledger directly")
+    sp_ra.add_argument("--issue-num", required=True, type=int, help="GH issue number")
+    sp_ra.add_argument("--issue-url", required=True, help="GH issue URL")
+    sp_ra.add_argument("--title", required=True, help="Issue title")
+    sp_ra.add_argument("--created", required=True, help="Created date YYYY-MM-DD")
+    sp_ra.add_argument("--doc-path", required=True, help="Capture doc relpath")
+    sp_ra.add_argument("--raw-text", default=None,
+                       help="pre-rendered ROADMAP line (hq park passes hq_roadmap_line output so "
+                            "preview and stored row share one template). GH-249: a `rated "
+                            "N/N/N/N [ovr N]` token in this line is parsed and stored — in a "
+                            "releases-mode repo this is the ONLY way to score an entry, since "
+                            "`roadmap sync` is a no-op there")
+    sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
+    sp_rr = rsub.add_parser("rate", help="score a roadmap row that is already parked (GH-253)")
+    sp_rr.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
+    sp_rr.add_argument("--gid", help="the row's rmi- global id — for a multi-issue row that has no "
+                                     "gh_number and cannot be addressed any other way")
+    sp_rr.add_argument("--rated", required=True,
+                       help="the four axes as N/N/N/N (pri/sev/appeal/effort, 1-100, higher is "
+                            "better on every axis — effort scores CHEAPNESS)")
+    sp_rr.add_argument("--ovr", type=int, default=None,
+                       help="operator override (4-400) replacing the derived calc for ranking; "
+                            "the four axes keep their honest values underneath")
+    sp_rr.add_argument("--force", action="store_true",
+                       help="replace an existing rating (refused by default)")
+    sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
+    sp_rp = rsub.add_parser("repoint", help="re-point a parked row's capture doc after the doc moves")
+    sp_rp.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
+    sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
+    sp_ru = rsub.add_parser("update", help="update an existing roadmap row's raw_text (GH-257)")
+    sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
+    sp_ru.add_argument("--gid", help="the row's rmi- global id")
+    sp_ru.add_argument("--raw-text", required=True, help="new raw_text for the row")
+    sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
@@ -3683,8 +4029,11 @@ def main(argv=None):
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
         "check": cmd_check, "reconcile": cmd_reconcile,
         "project": lambda a: cmd_project_sync(a) if a.project_cmd == "sync" else None,
-        "roadmap": lambda a: cmd_roadmap_sync(a) if a.roadmap_cmd == "sync"
-        else cmd_roadmap_list(a),
+        # A lookup, not a ternary chain: `rate` (GH-253) was the fourth branch, and the nested
+        # form was already one subcommand past readable.
+        "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
+                              "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
+                              "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update}[a.roadmap_cmd](a),
     }
     handlers[args.cmd](args)
 

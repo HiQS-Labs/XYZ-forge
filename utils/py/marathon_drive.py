@@ -243,7 +243,7 @@ def run_tick_loud(cmd_args):
                 eprint(f"  {line}")
         sys.exit(res.returncode)
 
-def preflight_write_set_trackable(repo_root, paths):
+def preflight_write_set_trackable(repo_root, paths, transcript_paths=None):
     """GH-514: BLOCK before dispatch if the repo cannot track a path this run must commit.
 
     `git check-ignore -v` is the authority rather than a hand-rolled read of `.gitignore`: it
@@ -297,11 +297,43 @@ def preflight_write_set_trackable(repo_root, paths):
     eprint("  surfaces as a phase HALT after the turn, and on the escalation path the record")
     eprint("  explaining the halt is itself one of the files that cannot be committed.")
     eprint("")
+    # GH-255: order the remedies by WHAT IS BLOCKED, not by a fixed ranking.
+    #
+    # XYZ_ARCHIVE_ROOT (GH-30) redirects the TRANSCRIPT write-set only. `_phase_write_set` —
+    # RELAY.md and ESCALATION.md under the phases dir — is not redirected by it, so offering it
+    # for a phase-file block sends the operator into a SECOND failure. That is the same defect
+    # this branch exists to fix, one level down, so the condition is load-bearing rather than
+    # cosmetic.
+    #
+    # On the split call path (commit_root != root) each call already carries one kind, so
+    # per-call knowledge is enough and no global view is needed: a phase-set call has no
+    # transcripts, and a transcript-set call has nothing else.
+    _transcripts = set(transcript_paths or ())
+    only_transcripts = bool(_transcripts) and all(p in _transcripts for p, _ in blocked)
+
     eprint("  Remedy, in the order they are usually right:")
-    eprint("    1. Run with --target-root <code-repo>. Harness output (relay, escalation,")
-    eprint("       transcripts) then stays in THIS repo and only code changes land in the target —")
-    eprint("       which is what --target-root is for, per marathon.sh's own usage text.")
-    eprint("    2. Or un-ignore the path above in the rule named beside it, if this repo is meant")
+    if only_transcripts:
+        eprint("    Every blocked path above is a TRANSCRIPT, which is exactly the case")
+        eprint("    XYZ_ARCHIVE_ROOT was built for (GH-30).")
+        eprint("    1. Redirect transcripts to a separate archive repo and re-run:")
+        eprint("         export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive")
+        eprint("       Must be absolute, exist, and be a git repo. The transcript commits into the")
+        eprint("       archive while the code artifact and the .tick token stay anchored here, so")
+        eprint("       this repo's tree stays free of relay-system/ and its history carries no")
+        eprint("       transcript commit. See relay-automation/CONSUMING.md.")
+        eprint("    2. Or run with --target-root <code-repo>, which moves ALL harness output here")
+        eprint("       and lands only code changes in the target.")
+    else:
+        eprint("    At least one blocked path above is a PHASE file (RELAY.md / ESCALATION.md).")
+        eprint("    XYZ_ARCHIVE_ROOT will NOT clear this — it redirects transcripts only.")
+        eprint("    1. Re-run with BOTH flags — --target-root alone does NOT fix this:")
+        eprint("         --target-root <T> --phases-dir <T>/marathon-system")
+        eprint("       --target-root moves the CODE, but the phases dir defaults to")
+        eprint("       <harness-root>/marathon-system regardless (see phases_dir below), so the")
+        eprint("       same ignored RELAY.md is probed again and the re-run blocks again.")
+        eprint("       phase_commit_root()'s own docstring names the two-flag shape as the only")
+        eprint("       layout a cross-repo turn accepts.")
+    eprint("    3. Or un-ignore the path above in the rule named beside it, if this repo is meant")
     eprint("       to track harness output.")
     eprint("  Not doing it for you: a repo that ignores harness output usually means it, and")
     eprint("  silently rewriting someone's ignore rules is a worse failure than this one (GH-514).")
@@ -2409,13 +2441,15 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         log("preflight: transcript root unresolved (%s) — write-set check covers RELAY.md and "
             "ESCALATION.md only, not the transcript" % _exc.__class__.__name__)
     if os.path.realpath(commit_root) == os.path.realpath(root):
-        preflight_write_set_trackable(root, _phase_write_set + _transcript_write_set)
+        preflight_write_set_trackable(root, _phase_write_set + _transcript_write_set,
+                                      transcript_paths=_transcript_write_set)
     else:
         log(f"preflight: phase write-set commits to {commit_root}, not the harness root — "
             f"probing each repo separately (#131)")
         preflight_write_set_trackable(commit_root, _phase_write_set)
         if _transcript_write_set:
-            preflight_write_set_trackable(root, _transcript_write_set)
+            preflight_write_set_trackable(root, _transcript_write_set,
+                                          transcript_paths=_transcript_write_set)
 
     # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.
     #
@@ -2629,6 +2663,29 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
         env2["RELAY_COST_SUMMARY"] = "0"
         env2["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root)
+        # GH-256: under --target-root the turn shim must GUARD the repo the worktree is cut FROM.
+        #
+        # relay-drive exports RELAY_TARGET_ROOT and relay-turn-lib.sh:251 reads
+        # RTL_ROOT="${RELAY_TARGET_ROOT:-$1}", so the WORKTREE is correct. But each shim resolves
+        # its own containment root from <AGENT>_TURN_ROOT (utils/py/agy-turn.py:321,
+        # utils/py/codex-turn.py:26), which nothing set — so the shim guarded the harness while the
+        # worktree was the target, the per-artifact seed check resolved every path against the
+        # wrong root and found nothing, and the agent got a worktree without its own files.
+        # relay-turn-lib.sh:283 already stated the gap: "marathon-drive/relay-drive don't export
+        # CODEX_TURN_ROOT/AGY_TURN_ROOT — they never do".
+        #
+        # Measured: four builder turns wrote nothing, appended no builder block, and the phase
+        # escalated cap-stalled after 29 minutes with zero lines of code. No error anywhere.
+        #
+        # Set on env2 (the relay-drive child) rather than os.environ, so the guard root is scoped
+        # to the drive that actually has a foreign target and cannot leak into anything else in
+        # this process. The name set matches route_agent's accepted prefixes above — claude, codex,
+        # agy, aider, pi, smallcode — plus commandcode, whose shim reads the var. Keeping the two
+        # lists together is deliberate: a new builder route added above without a guard root here
+        # silently reintroduces this bug.
+        if args.target_root:
+            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE"):
+                env2[f"{_shim}_TURN_ROOT"] = args.target_root
         return subprocess.run(cmd2, env=env2, cwd=root).returncode
 
     # GH-75: write liveness before the drive; clear it on ANY terminal path via atexit (registered only

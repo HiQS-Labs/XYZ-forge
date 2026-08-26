@@ -297,6 +297,27 @@ def find_active_doc_for_issue(repo_root, issue_num):
     return None
 
 
+def parse_doc_frontmatter(doc_path):
+    """Parse key-value pairs from document YAML frontmatter."""
+    if not doc_path or not os.path.isfile(doc_path):
+        return {}
+    try:
+        with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+        if not lines or lines[0].strip() != "---":
+            return {}
+        fm = {}
+        for line in lines[1:]:
+            if line.strip() == "---":
+                break
+            if ":" in line:
+                k, v = line.split(":", 1)
+                fm[k.strip().lower()] = v.strip().strip("'\"").lower()
+        return fm
+    except Exception:
+        return {}
+
+
 def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, journal=None):
     """Assert ## Lessons Learned, update frontmatter, and compute destination path."""
     with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
@@ -644,6 +665,11 @@ def main():
         help="Allow dirty working tree (for test fixtures only)",
     )
     parser.add_argument(
+        "--force-promote",
+        action="store_true",
+        help="Force promotion of active docs and roadmap entries to Completed regardless of linked issue OPEN state",
+    )
+    parser.add_argument(
         "--gate",
         "--require-receipts",
         action="store_true",
@@ -714,33 +740,55 @@ def main():
                 for issue_num in linked_issues:
                     doc_path = find_active_doc_for_issue(repo_root, issue_num)
                     issue_state = fetch_issue_state(repo_root, issue_num, offline_manifest)
-                    if doc_path and issue_state == "OPEN" and is_merged:
-                        # GH-202: a merged PR does not complete an open issue — plan-capture
-                        # PRs and phased umbrellas keep their active doc; evidence recorded in place.
+                    fm = parse_doc_frontmatter(doc_path) if doc_path else {}
+                    is_multiphase = (
+                        fm.get("umbrella") in ("true", "1", "yes")
+                        or fm.get("multiphase") in ("true", "1", "yes")
+                        or fm.get("multi_phase") in ("true", "1", "yes")
+                    )
+
+                    is_open = (issue_state == "OPEN") or (issue_state is None and is_multiphase)
+
+                    if doc_path and is_open and is_merged and not args.force_promote:
+                        # GH-202/GH-232: a merged PR does not complete an open issue or multi-phase umbrella.
+                        # Phased umbrellas and open issues keep their active doc; evidence recorded in place.
                         log(f"  Issue #{issue_num} is OPEN — keeping {os.path.basename(doc_path)} active; recording merge evidence")
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
-                        ship_date = datetime.now().strftime("%Y-%m-%d")
+                        log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
                     elif doc_path:
                         log(f"  Found active doc: {os.path.basename(doc_path)}")
                         dest_path, ship_date = validate_and_update_doc(
                             doc_path, pr_meta, is_merged=is_merged, dry_run=args.dry_run, journal=journal
                         )
                         log(f"  Moved -> {os.path.basename(dest_path)} (destination: {os.path.basename(os.path.dirname(dest_path))})")
+                        updated = update_roadmap_entry(
+                            repo_root,
+                            issue_num,
+                            pr_id,
+                            ship_date,
+                            is_merged=is_merged,
+                            dry_run=args.dry_run,
+                            journal=journal,
+                        )
+                        if updated:
+                            log(f"  ROADMAP.md entry updated for GH-{issue_num}")
                     else:
                         log(f"  No active doc in 2-WORKING for GH-{issue_num}")
                         ship_date = datetime.now().strftime("%Y-%m-%d")
-
-                    updated = update_roadmap_entry(
-                        repo_root,
-                        issue_num,
-                        pr_id,
-                        ship_date,
-                        is_merged=is_merged,
-                        dry_run=args.dry_run,
-                        journal=journal,
-                    )
-                    if updated:
-                        log(f"  ROADMAP.md entry updated for GH-{issue_num}")
+                        if not is_open or args.force_promote:
+                            updated = update_roadmap_entry(
+                                repo_root,
+                                issue_num,
+                                pr_id,
+                                ship_date,
+                                is_merged=is_merged,
+                                dry_run=args.dry_run,
+                                journal=journal,
+                            )
+                            if updated:
+                                log(f"  ROADMAP.md entry updated for GH-{issue_num}")
+                        else:
+                            log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
 
             # Subprocess orchestration
             run_subprocesses(

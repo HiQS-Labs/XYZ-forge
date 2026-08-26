@@ -123,6 +123,13 @@ else
 fi
 
 # --- Case 9: section counts match ROADMAP.md ---------------------------------------------------
+# GH-243: in a releases-mode repo the dashboard renders from the RELEASES DB and ROADMAP.md is
+# frozen legacy — the DB legitimately gains rows the frozen file never will, so text-parity is
+# no longer an invariant. Cases 1/3/4/6 already pin artifact-vs-live-source fidelity via --check
+# (which regenerates from the real source, DB included); this case guards legacy repos only.
+if grep -q "ROADMAP_SOURCE=releases" "$ROOT/.pdda-mode" 2>/dev/null; then
+  pass "case 9 skipped: releases-mode — dashboard parity is against the DB (covered by --check), not the frozen ROADMAP.md"
+else
 counts_out="$(SOURCE_PATH="$SOURCE" ARTIFACT_PATH="$ARTIFACT" node <<'NODE' 2>&1
 const fs = require("fs");
 
@@ -193,6 +200,7 @@ if [[ $rc -eq 0 ]]; then
   pass "section counts match ROADMAP.md"
 else
   fail "section counts drifted — $counts_out"
+fi
 fi
 
 else

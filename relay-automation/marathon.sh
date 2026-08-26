@@ -99,6 +99,12 @@ Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-ad
                           and relay-system/ on purpose): without it, marathon-drive's `git add` of
                           RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs.
                           Plan and brief paths resolve against DIR when set.
+                          GH-255 — pick the right knob for what is actually ignored: if the target
+                          ignores ONLY relay-system/, prefer XYZ_ARCHIVE_ROOT (GH-30), which
+                          redirects just the transcripts and leaves the code artifact and the
+                          .tick token anchored to the target. --target-root is the answer when
+                          marathon-system/ is ignored too, because XYZ_ARCHIVE_ROOT does not
+                          redirect RELAY.md / ESCALATION.md and will leave that run blocked.
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh, per phase).
   --dry-run               Render each phase's relay file and print the tick seed; exit without running.
   --force                 GH-45: bypass the per-lane attempt cap for this run.

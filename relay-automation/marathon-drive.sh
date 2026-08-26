@@ -783,6 +783,11 @@ route_agent() {  # <agent-id> → export the matching *_AGENT var marathon-agent
     *)       die "agent '$1' not recognized — must start with claude/codex/agy/aider" ;;
   esac
 }
+# GH-256 is fixed in utils/py/marathon_drive.py (_run_relay_drive), not here. This twin is FROZEN
+# under GH-308 and, more to the point, unreachable by default: the exec at the top of this file
+# routes to Python whenever XYZ_PYTHON is unset or 1. A first cut of the fix lived here and was
+# therefore dead code — caught by codex QA before it shipped, which is the same "reports success
+# while changing nothing" failure GH-256 itself is about.
 [[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
 route_agent "$BUILDER"
 route_agent "$REVIEWER"
