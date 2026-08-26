@@ -2865,25 +2865,33 @@ def cmd_roadmap_rate(args):
     try:
         if not _table_exists(conn, "roadmap_items"):
             refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        # A row imported from a multi-issue ROADMAP bullet ("#129/#130/#131 · Wave 1 …") carries NO
+        # gh_number, so --issue-num cannot address it and it would be unscorable forever — the same
+        # permanence bug this command exists to end. --gid is the escape hatch for those rows.
+        if (args.issue_num is None) == (args.gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        if args.issue_num is not None:
+            where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
+        else:
+            where, param, label = "global_id = ?", args.gid, args.gid
         row = conn.execute(
             "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
-            "FROM roadmap_items WHERE gh_number = ?", (args.issue_num,)).fetchone()
+            "FROM roadmap_items WHERE " + where, (param,)).fetchone()
         if not row:
-            refuse("no-such-row", "no roadmap row for GH-%d; park it with `roadmap add` first"
-                   % args.issue_num)
+            refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
         if not _has_column(conn, "roadmap_items", "rating_pri"):
             refuse("schema-behind",
                    "this ledger has no rating columns. Run `releases migrate` first — rating "
                    "stores scores, it never installs schema.")
         if row["rating_pri"] is not None and not args.force:
             refuse("already-rated",
-                   "GH-%d is already rated. Re-scoring is a deliberate act, not a retry: pass "
-                   "--force if you mean to replace the existing scores." % args.issue_num)
+                   "%s is already rated. Re-scoring is a deliberate act, not a retry: pass "
+                   "--force if you mean to replace the existing scores." % label)
         if any(_col(row, c) is not None for c in ("complexity", "risk", "effort")):
             refuse("rating-vocabulary-clash",
-                   "GH-%d carries legacy `cx/risk/eff`. The two vocabularies measure different "
+                   "%s carries legacy `cx/risk/eff`. The two vocabularies measure different "
                    "things and never share a row; convert the entry deliberately rather than "
-                   "stacking a `rated` score on top of it." % args.issue_num)
+                   "stacking a `rated` score on top of it." % label)
 
         token = "(rated %s%s)" % (args.rated, "" if args.ovr is None else " ovr %d" % args.ovr)
         # parse_rating is the ONE parser and the ONE validator: a malformed --rated is refused by
@@ -2901,12 +2909,12 @@ def cmd_roadmap_rate(args):
 
         def mutate(conn):
             conn.execute(
-                "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE gh_number = ?"
-                % ", ".join("%s = ?" % c for c in RATING_COLUMNS),
-                [raw_text, now_iso()] + [rating[c] for c in RATING_COLUMNS] + [args.issue_num])
+                "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
+                % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
+                [raw_text, now_iso()] + [rating[c] for c in RATING_COLUMNS] + [param])
 
         perform_write(root, conn, "roadmap-rate", row["global_id"], mutate)
-        print("rated GH-%d %s" % (args.issue_num, args.rated))
+        print("rated %s %s" % (label, args.rated))
     finally:
         conn.close()
 
@@ -3842,7 +3850,9 @@ def build_parser():
     sp_ra.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rr = rsub.add_parser("rate", help="score a roadmap row that is already parked (GH-253)")
-    sp_rr.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rr.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
+    sp_rr.add_argument("--gid", help="the row's rmi- global id — for a multi-issue row that has no "
+                                     "gh_number and cannot be addressed any other way")
     sp_rr.add_argument("--rated", required=True,
                        help="the four axes as N/N/N/N (pri/sev/appeal/effort, 1-100, higher is "
                             "better on every axis — effort scores CHEAPNESS)")

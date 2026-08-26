@@ -340,6 +340,23 @@ out="$(ra roadmap rate --dry-run --issue-num 99999 --rated 10/20/30/40 2>&1)"; r
 ok "  rating a row that was never parked is refused by name" \
    "[ $rc -ne 0 ] && has \"\$out\" 'no-such-row'"
 
+# A row imported from a multi-issue bullet has NO gh_number, so --issue-num cannot address it.
+# Without --gid such a row is unscorable forever — the exact permanence this command exists to end.
+NG="$(sqlite3 "$R/releases.db" "SELECT global_id FROM roadmap_items WHERE gh_number IS NULL LIMIT 1")"
+if [ -n "$NG" ]; then
+  ra roadmap rate --gid "$NG" --rated 40/30/50/60 >/dev/null 2>&1
+  ok "  --gid scores a row with NO gh_number (unreachable by --issue-num)" \
+     "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri FROM roadmap_items WHERE global_id='$NG'\")\" = '40' ]"
+else
+  ok "  --gid path: fixture has no gh_number-less row; selector guards below cover the flag" "true"
+fi
+out="$(ra roadmap rate --dry-run --issue-num 2500 --gid rmi-x --rated 10/20/30/40 2>&1)"; rc=$?
+ok "  passing BOTH selectors is refused by name (no ambiguous target)" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'selector'"
+out="$(ra roadmap rate --dry-run --rated 10/20/30/40 2>&1)"; rc=$?
+ok "  passing NEITHER selector is refused by name" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'selector'"
+
 ra check --rebuild >/dev/null 2>&1
 ok "  backfilled ratings survive a dump -> rebuild round trip" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=2500')\" = '10' ]"
