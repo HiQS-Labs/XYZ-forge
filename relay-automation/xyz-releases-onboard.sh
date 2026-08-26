@@ -114,11 +114,8 @@ if [ -z "$GH_BASE" ] && [ -n "$SLUG" ]; then
 fi
 
 DB_PATH="$STAGE_DIR/releases.db"
-MAP_ENTRIES="$(sqlite3 "$DB_PATH" "SELECT supplied_value, source_value, release_gid FROM grandfather_entries WHERE rule='tracking-issue-missing' AND disposition IS NULL ORDER BY id;" 2>/dev/null || true)"
-
 MAP_ARGS=()
-if [ -n "$MAP_ENTRIES" ]; then
-  RECON_RESULT="$(python3 - "$DB_PATH" "${GH_BASE:-}" <<'PYEOF'
+RECON_RESULT="$(python3 - "$DB_PATH" "${GH_BASE:-}" <<'PYEOF'
 import sys, sqlite3, re
 
 db_path = sys.argv[1]
@@ -126,77 +123,92 @@ gh_base = sys.argv[2] if len(sys.argv) > 2 else ""
 
 conn = sqlite3.connect(db_path)
 conn.row_factory = sqlite3.Row
-rows = conn.execute("""
-    SELECT ge.supplied_value, ge.source_value, ge.release_gid, r.version
-    FROM grandfather_entries ge
-    LEFT JOIN releases r ON r.global_id = ge.release_gid
-    WHERE ge.rule = 'tracking-issue-missing' AND ge.disposition IS NULL
+
+releases = conn.execute("""
+    SELECT r.global_id, r.version, r.tracking_ref_id, ir.url, ir.temp_id
+    FROM releases r
+    LEFT JOIN issue_refs ir ON ir.id = r.tracking_ref_id
+    ORDER BY r.id
 """).fetchall()
 
-existing_urls = {}
-for r in conn.execute("SELECT ir.url, rel.version FROM issue_refs ir JOIN releases rel ON rel.tracking_ref_id = ir.id WHERE ir.url IS NOT NULL"):
-    existing_urls[r["url"]] = r["version"]
+gf_rows = conn.execute("""
+    SELECT release_gid, supplied_value, source_value
+    FROM grandfather_entries
+    WHERE rule = 'tracking-issue-missing' AND disposition IS NULL
+""").fetchall()
+gf_by_gid = {row["release_gid"]: row for row in gf_rows}
+gf_by_temp = {row["supplied_value"]: row for row in gf_rows if row["supplied_value"]}
 
 url_to_releases = {}
 mig_to_url = {}
 unmapped = []
 
-for row in rows:
-    mig = row["supplied_value"]
-    src = (row["source_value"] or "").strip()
-    ver = row["version"] or row["release_gid"]
-    
-    url = None
-    if re.match(r"^https://github\.com/[^/]+/[^/]+/issues/\d+$", src):
-        url = src
-    elif src and gh_base:
-        m = re.search(r"(\d+)", src)
-        if m:
-            url = f"{gh_base}/issues/{m.group(1)}"
-    
-    if url:
-        mig_to_url[mig] = url
-        url_to_releases.setdefault(url, []).append((ver, mig))
+for rel in releases:
+    ver = rel["version"] or rel["global_id"]
+    gid = rel["global_id"]
+    url = rel["url"]
+    temp_id = rel["temp_id"]
+
+    if url and url.strip():
+        canon_url = url.strip()
+        url_to_releases.setdefault(canon_url, []).append(ver)
+    elif temp_id:
+        gf = gf_by_gid.get(gid) or gf_by_temp.get(temp_id)
+        if gf:
+            mig = gf["supplied_value"]
+            src = (gf["source_value"] or "").strip()
+            resolved_url = None
+            if re.match(r"^https://github\.com/[^/]+/[^/]+/issues/\d+$", src):
+                resolved_url = src
+            elif src and gh_base:
+                m = re.search(r"(\d+)", src)
+                if m:
+                    resolved_url = f"{gh_base}/issues/{m.group(1)}"
+
+            if resolved_url:
+                mig_to_url[mig] = resolved_url
+                url_to_releases.setdefault(resolved_url, []).append(ver)
+            else:
+                unmapped.append((ver, mig, src))
+        else:
+            unmapped.append((ver, temp_id, ""))
     else:
-        unmapped.append((ver, mig, src))
+        unmapped.append((ver, "none", ""))
 
 collisions = []
-for url, releases in url_to_releases.items():
-    if len(releases) > 1:
-        collisions.append((url, [r[0] for r in releases]))
-    elif url in existing_urls:
-        collisions.append((url, [existing_urls[url], releases[0][0]]))
+for target_url, vers in url_to_releases.items():
+    if len(vers) > 1:
+        collisions.append((target_url, vers))
 
 if collisions:
     print("COLLISION")
-    for url, vers in collisions:
-        print(f"Collision on URL {url} shared by releases: {', '.join(vers)}")
+    for target_url, vers in sorted(collisions, key=lambda x: x[0]):
+        vers_str = ", ".join(vers)
+        print(f"Collision on URL {target_url} shared by releases: {vers_str}")
     sys.exit(0)
 
 print("OK")
-for mig, url in mig_to_url.items():
-    print(f"MAP:{mig}={url}")
-if unmapped:
-    for ver, mig, src in unmapped:
-        print(f"UNMAPPED:{ver}:{mig}:{src}")
+for mig, target_url in sorted(mig_to_url.items()):
+    print(f"MAP:{mig}={target_url}")
+for ver, mig, src in unmapped:
+    print(f"UNMAPPED:{ver}:{mig}:{src}")
 PYEOF
 )"
 
-  STATUS_LINE="$(printf '%s\n' "$RECON_RESULT" | head -1)"
-  if [ "$STATUS_LINE" = "COLLISION" ]; then
-    printf 'xyz-releases-onboard.sh: STOPPED — shared-tracking-URL collision detected:\n' >&2
-    printf '%s\n' "$RECON_RESULT" | tail -n +2 >&2
-    printf 'No issues have been filed. Fix duplicate tracking references before onboarding.\n' >&2
-    exit 1
-  elif [ "$STATUS_LINE" = "OK" ]; then
-    while IFS= read -r line; do
-      if [[ "$line" =~ ^MAP:(.*)$ ]]; then
-        MAP_ARGS+=(--map "${BASH_REMATCH[1]}")
-      elif [[ "$line" =~ ^UNMAPPED:(.*)$ ]]; then
-        note "Note: unmapped placeholder: ${BASH_REMATCH[1]}"
-      fi
-    done <<< "$RECON_RESULT"
-  fi
+STATUS_LINE="$(printf '%s\n' "$RECON_RESULT" | head -1)"
+if [ "$STATUS_LINE" = "COLLISION" ]; then
+  printf 'xyz-releases-onboard.sh: STOPPED — shared-tracking-URL collision detected:\n' >&2
+  printf '%s\n' "$RECON_RESULT" | tail -n +2 >&2
+  printf 'No issues have been filed. Fix duplicate tracking references before onboarding.\n' >&2
+  exit 1
+elif [ "$STATUS_LINE" = "OK" ]; then
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^MAP:(.*)$ ]]; then
+      MAP_ARGS+=(--map "${BASH_REMATCH[1]}")
+    elif [[ "$line" =~ ^UNMAPPED:(.*)$ ]]; then
+      note "Note: unmapped placeholder: ${BASH_REMATCH[1]}"
+    fi
+  done <<< "$RECON_RESULT"
 fi
 
 note "== Step 3: Reconciling tracking references in staged ledger =="

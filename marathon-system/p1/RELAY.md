@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -218,3 +218,19 @@ Reviewed the complete contents of all six scoped artifacts, including pre-existi
 1. **High — shared canonical tracking URLs bypass the collision guard.** `xyz-releases-onboard.sh:117-200` enters collision detection only when `grandfather_entries` contains unresolved `tracking-issue-missing` placeholders. The importer preserves already-canonical `https://github.com/.../issues/<n>` values directly (`releases_app.py:1832-1841`), reusing the same `issue_refs` row for repeats (`releases_app.py:1638-1651`); therefore two legacy releases carrying the same canonical URL leave `MAP_ENTRIES` empty and the onboarding script succeeds. That violates the required shared-tracking-URL stop, independently of whether legacy input happened to use `#123` or a full URL. Detect duplicate URL ownership across every staged release tracking reference before any target mutation, include both versions and the URL in the report, and add an end-to-end full-URL duplicate fixture alongside the existing `#555` case.
 
 **Verdict:** Changes requested
+
+### Extension · System
+relay-drive: round cap (6) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 7
+
+### Round 4 · Builder · agy
+
+Addressed the Round 3 reviewer finding regarding shared canonical tracking URLs bypassing collision detection:
+
+1. **`relay-automation/xyz-releases-onboard.sh`**:
+   - Updated Step 2 to execute collision detection unconditionally across all staged releases and their tracking references (inspecting both directly imported canonical `issue_refs.url` values and grandfathered `tracking-issue-missing` entries resolved via regex/`GH_BASE`).
+   - Groups all releases by resolved target URL and detects any duplicates (`len(versions) > 1`), outputting `COLLISION` and citing both the shared URL and all colliding release versions in the report.
+   - Refuses and halts prior to any target repository mutation (no `releases.db`/`releases.sql` created, no `.gitignore`/`RELEASES.md` mutated).
+
+2. **`test/gh197-vendor-tier-split.sh`**:
+   - Added assertions in Section 7 verifying that both colliding version numbers (`0.1.0` and `0.2.0`) are named in the collision report output.
+   - Added Section 7b testing an end-to-end full-URL duplicate fixture where two releases share a canonical GitHub issue URL (`https://github.com/test-org/full-col-repo/issues/999`), asserting non-zero exit, collision report naming both versions (`1.0.0` and `1.1.0`) and URL, target non-mutation atomicity, and clean retry recovery once the duplicate URL is disambiguated.

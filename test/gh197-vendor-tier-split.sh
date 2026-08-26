@@ -268,6 +268,10 @@ grep -Fq "https://github.com/test-org/col-repo/issues/555" <<< "$col_out" \
   && pass "Shared-tracking-URL collision: names colliding URL in report" \
   || fail "Shared-tracking-URL collision: colliding URL not named"
 
+grep -Fq "0.1.0" <<< "$col_out" && grep -Fq "0.2.0" <<< "$col_out" \
+  && pass "Shared-tracking-URL collision: names both colliding versions in report" \
+  || fail "Shared-tracking-URL collision: colliding versions not named in report"
+
 # Ensure target repo was NOT mutated and left half-onboarded
 [ ! -e "$COL_REPO/releases.db" ] \
   && pass "Shared-tracking-URL collision: releases.db was NOT created at root" \
@@ -307,6 +311,85 @@ fi
 [ -f "$COL_REPO/releases.db" ] \
   && pass "Shared-tracking-URL collision: releases.db created on successful retry" \
   || fail "Shared-tracking-URL collision: releases.db missing on retry"
+
+# --- 7b. Full-URL duplicate fixture: two releases using the same canonical URL directly ---
+mkdir -p "$WORK/collide_full_url_repo"; git init -q "$WORK/collide_full_url_repo"; FULL_COL_REPO="$(cd "$WORK/collide_full_url_repo" && pwd -P)"
+git -C "$FULL_COL_REPO" remote add origin "https://github.com/test-org/full-col-repo.git"
+cat > "$FULL_COL_REPO/RELEASES.md" <<'EOF'
+Release: 1.0.0
+Status: shipped
+Codename: FullOne
+Target Date: 2026-01-01
+Tracking Issue: https://github.com/test-org/full-col-repo/issues/999
+Description: First canonical release.
+
+Release: 1.1.0
+Status: draft
+Codename: FullTwo
+Target Date: 2026-02-01
+Tracking Issue: https://github.com/test-org/full-col-repo/issues/999
+Description: Second canonical release reusing the same full URL.
+EOF
+
+if full_col_out="$("$ONBOARD" "$FULL_COL_REPO" 2>&1)"; then
+  full_col_rc=0
+else
+  full_col_rc=$?
+fi
+[ "$full_col_rc" -ne 0 ] \
+  && pass "Full-URL collision: non-zero exit on full URL collision ($full_col_rc)" \
+  || fail "Full-URL collision: unexpectedly succeeded (exit $full_col_rc)"
+
+grep -qi "collision" <<< "$full_col_out" \
+  && pass "Full-URL collision: reports collision on stderr/stdout" \
+  || fail "Full-URL collision: collision message not found ($full_col_out)"
+
+grep -Fq "https://github.com/test-org/full-col-repo/issues/999" <<< "$full_col_out" \
+  && pass "Full-URL collision: names colliding URL in report" \
+  || fail "Full-URL collision: colliding URL not named"
+
+grep -Fq "1.0.0" <<< "$full_col_out" && grep -Fq "1.1.0" <<< "$full_col_out" \
+  && pass "Full-URL collision: names both colliding versions in report" \
+  || fail "Full-URL collision: colliding versions not named in report"
+
+[ ! -e "$FULL_COL_REPO/releases.db" ] \
+  && pass "Full-URL collision: releases.db was NOT created at root" \
+  || fail "Full-URL collision: releases.db leaked to target root"
+[ ! -e "$FULL_COL_REPO/releases.sql" ] \
+  && pass "Full-URL collision: releases.sql was NOT created at root" \
+  || fail "Full-URL collision: releases.sql leaked to target root"
+! grep -q "<!-- This file is app-managed" "$FULL_COL_REPO/RELEASES.md" \
+  && pass "Full-URL collision: RELEASES.md was NOT mutated" \
+  || fail "Full-URL collision: RELEASES.md was mutated"
+
+# Verify recovery for full URL duplicate
+cat > "$FULL_COL_REPO/RELEASES.md" <<'EOF'
+Release: 1.0.0
+Status: shipped
+Codename: FullOne
+Target Date: 2026-01-01
+Tracking Issue: https://github.com/test-org/full-col-repo/issues/999
+Description: First canonical release.
+
+Release: 1.1.0
+Status: draft
+Codename: FullTwo
+Target Date: 2026-02-01
+Tracking Issue: https://github.com/test-org/full-col-repo/issues/1000
+Description: Second canonical release with distinct URL.
+EOF
+
+if full_col_retry_out="$("$ONBOARD" "$FULL_COL_REPO" 2>&1)"; then
+  full_col_retry_rc=0
+else
+  full_col_retry_rc=$?
+fi
+[ "$full_col_retry_rc" = 0 ] \
+  && pass "Full-URL collision: recovery succeeds on retry after fixing duplicate URL" \
+  || fail "Full-URL collision: retry failed after fixing duplicate URL ($full_col_retry_out)"
+[ -f "$FULL_COL_REPO/releases.db" ] \
+  && pass "Full-URL collision: releases.db created on successful retry" \
+  || fail "Full-URL collision: releases.db missing on retry"
 
 # --- 8. Re-vendor preserves adoption (sticky Tier 2 across update) ---
 # Use the onboarded happy repo (which has releases.db at root)
