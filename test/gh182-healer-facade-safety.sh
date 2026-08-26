@@ -134,6 +134,16 @@ else
   fail "sandbox == invoking checkout did not refuse as expected (rc=$rc, out=$out)"
 fi
 
+# ── 5a2. Sandbox nested inside invoking checkout repository refuses loudly (GH-182) ──────────────
+NESTED_SANDBOX="$ROOT/utils"
+rc=0
+out="$(python3 "$HEALER" --mode heal --sandbox-root "$NESTED_SANDBOX" --target-file "$HEALER" --repro "$REPRO_SCRIPT" --regression-cmd "bash $REGRESSION_SCRIPT" 2>&1)" || rc=$?
+if [ "$rc" -eq 2 ] && grep -q "cannot be the invoking checkout" <<<"$out"; then
+  pass "sandbox nested inside invoking checkout refuses with exit 2 (no in-place patch on host repo)"
+else
+  fail "sandbox nested inside invoking checkout did not refuse as expected (rc=$rc, out=$out)"
+fi
+
 # ── 5b. --diff-out outside --sandbox-root refuses loudly (GH-182) ──────────────────────────────
 OUTSIDE_DIFF="$WORK/outside_diff.patch"
 rc=0
@@ -201,6 +211,36 @@ r4 = run_self_healing_cycle(
     escalation_out_path="$OUTSIDE_ROLLUP",
 )
 assert r4["status"] == "error" and "Escalation output path" in r4["message"], f"r4 failed: {r4}"
+
+# 5. Diff output write failure in API restores target and returns error
+api_diff_dir = "$FIXTURE_SANDBOX/api_diff_dir"
+import os
+os.makedirs(api_diff_dir, exist_ok=True)
+orig_target_data = open("$TARGET_SCRIPT").read()
+r5 = run_self_healing_cycle(
+    repro_path="$REPRO_SCRIPT",
+    target_file="$TARGET_SCRIPT",
+    repo_root="$FIXTURE_SANDBOX",
+    fix_generator=lambda p, e, a: "#!/usr/bin/env bash\nexit 0\n",
+    sandbox_root="$FIXTURE_SANDBOX",
+    diff_out_path=api_diff_dir,
+)
+assert r5["status"] == "error" and "Failed to write winning diff" in r5["message"], f"r5 failed: {r5}"
+assert open("$TARGET_SCRIPT").read() == orig_target_data, "target not restored after api diff write error"
+
+# 6. Issue rollup output write failure in API restores target and returns error
+api_rollup_dir = "$FIXTURE_SANDBOX/api_rollup_dir"
+os.makedirs(api_rollup_dir, exist_ok=True)
+r6 = run_self_healing_cycle(
+    repro_path="$REPRO_SCRIPT",
+    target_file="$TARGET_SCRIPT",
+    repo_root="$FIXTURE_SANDBOX",
+    fix_generator=lambda p, e, a: None,
+    sandbox_root="$FIXTURE_SANDBOX",
+    escalation_out_path=api_rollup_dir,
+)
+assert r6["status"] == "error" and "Failed to write issue rollup" in r6["message"], f"r6 failed: {r6}"
+assert open("$TARGET_SCRIPT").read() == orig_target_data, "target not restored after api rollup write error"
 
 print("API_CONTAINMENT_SUCCESS")
 PYEOF
@@ -295,6 +335,73 @@ else
   fail "heal mode failed to repair fixture defect (rc=$rc, out=$out)"
 fi
 
+# ── 6b. Winning diff write failure fails cycle and restores target (GH-182) ─────────────────────
+DIFF_FAIL_SANDBOX="$WORK/diff_fail_sandbox"
+mkdir -p "$DIFF_FAIL_SANDBOX"
+require_fixture "$DIFF_FAIL_SANDBOX" "diff-fail-sandbox"
+
+DF_TARGET="$DIFF_FAIL_SANDBOX/service.sh"
+cat > "$DF_TARGET" <<'EOF_DFT'
+#!/usr/bin/env bash
+if [ "${1:-}" = "--check" ]; then
+  echo "service: broken" >&2
+  exit 5
+fi
+if [ "${1:-}" = "--regression" ]; then
+  echo "service: base feature ok"
+  exit 0
+fi
+echo "service: ok"
+exit 0
+EOF_DFT
+chmod +x "$DF_TARGET"
+require_fixture_file "$DF_TARGET" "df-target"
+ORIGINAL_DF_CONTENT="$(cat "$DF_TARGET")"
+
+DF_REPRO="$DIFF_FAIL_SANDBOX/repro.sh"
+cat > "$DF_REPRO" <<EOF_DFR
+#!/usr/bin/env bash
+set -euo pipefail
+RC=0
+OUT="\$(bash "$DF_TARGET" --check 2>&1)" || RC=\$?
+if [ "\$RC" -eq 0 ]; then
+  exit 0
+fi
+exit 1
+EOF_DFR
+chmod +x "$DF_REPRO"
+require_fixture_file "$DF_REPRO" "df-repro"
+
+DF_REG="$DIFF_FAIL_SANDBOX/regression.sh"
+cat > "$DF_REG" <<EOF_DFREG
+#!/usr/bin/env bash
+set -euo pipefail
+bash "$DF_TARGET" --regression
+EOF_DFREG
+chmod +x "$DF_REG"
+require_fixture_file "$DF_REG" "df-reg"
+
+# Create a DIRECTORY at diff-out path so writing the patch file raises IsADirectoryError
+UNWRITABLE_DIFF="$DIFF_FAIL_SANDBOX/unwritable_diff_dir"
+mkdir -p "$UNWRITABLE_DIFF"
+require_fixture "$UNWRITABLE_DIFF" "unwritable-diff-dir"
+
+rc=0
+out="$(python3 "$HEALER" --mode heal \
+  --sandbox-root "$DIFF_FAIL_SANDBOX" \
+  --target-file "$DF_TARGET" \
+  --repro "$DF_REPRO" \
+  --regression-cmd "bash $DF_REG" \
+  --generator-cmd "bash $GENERATOR_SCRIPT" \
+  --diff-out "$UNWRITABLE_DIFF" 2>&1)" || rc=$?
+
+DF_CONTENT_AFTER="$(cat "$DF_TARGET")"
+if [ "$rc" -eq 1 ] && [ "$DF_CONTENT_AFTER" = "$ORIGINAL_DF_CONTENT" ] && grep -q "Failed to write winning diff" <<<"$out"; then
+  pass "winning diff write failure fails cycle (exit 1), reports error, and restores target file"
+else
+  fail "winning diff write failure was not handled safely (rc=$rc, out=$out)"
+fi
+
 # ── 7. Escalation emits issue-rollup artifact (GH-182 Plan §3) ──────────────────────────────────
 ESCALATE_SANDBOX="$WORK/escalate_sandbox"
 mkdir -p "$ESCALATE_SANDBOX"
@@ -343,6 +450,62 @@ if [ "$rc" -eq 1 ] && [ -f "$ROLLUP_FILE" ] && grep -q "Automated Self-Healing E
   pass "unsolvable defect escalates with exit 1 and writes issue-rollup markdown artifact"
 else
   fail "escalation failed to produce issue-rollup artifact (rc=$rc, out=$out)"
+fi
+
+# ── 7b. Issue rollup write failure fails cycle and restores target (GH-182) ─────────────────────
+ROLLUP_FAIL_SANDBOX="$WORK/rollup_fail_sandbox"
+mkdir -p "$ROLLUP_FAIL_SANDBOX"
+require_fixture "$ROLLUP_FAIL_SANDBOX" "rollup-fail-sandbox"
+
+RF_TARGET="$ROLLUP_FAIL_SANDBOX/unsolvable.sh"
+cat > "$RF_TARGET" <<'EOF_RFT'
+#!/usr/bin/env bash
+exit 9
+EOF_RFT
+chmod +x "$RF_TARGET"
+require_fixture_file "$RF_TARGET" "rf-target"
+ORIGINAL_RF_CONTENT="$(cat "$RF_TARGET")"
+
+RF_REPRO="$ROLLUP_FAIL_SANDBOX/repro.sh"
+cat > "$RF_REPRO" <<EOF_RFR
+#!/usr/bin/env bash
+set -euo pipefail
+RC=0
+OUT="\$(bash "$RF_TARGET" 2>&1)" || RC=\$?
+if [ "\$RC" -eq 0 ]; then
+  exit 0
+fi
+exit 1
+EOF_RFR
+chmod +x "$RF_REPRO"
+require_fixture_file "$RF_REPRO" "rf-repro"
+
+RF_REG="$ROLLUP_FAIL_SANDBOX/reg.sh"
+cat > "$RF_REG" <<'EOF_RFREG'
+#!/usr/bin/env bash
+exit 0
+EOF_RFREG
+chmod +x "$RF_REG"
+require_fixture_file "$RF_REG" "rf-reg"
+
+# Create a DIRECTORY at issue-rollup-out path so writing the rollup file raises IsADirectoryError
+UNWRITABLE_ROLLUP="$ROLLUP_FAIL_SANDBOX/unwritable_rollup_dir"
+mkdir -p "$UNWRITABLE_ROLLUP"
+require_fixture "$UNWRITABLE_ROLLUP" "unwritable-rollup-dir"
+
+rc=0
+out="$(python3 "$HEALER" --mode heal \
+  --sandbox-root "$ROLLUP_FAIL_SANDBOX" \
+  --target-file "$RF_TARGET" \
+  --repro "$RF_REPRO" \
+  --regression-cmd "bash $RF_REG" \
+  --issue-rollup-out "$UNWRITABLE_ROLLUP" 2>&1)" || rc=$?
+
+RF_CONTENT_AFTER="$(cat "$RF_TARGET")"
+if [ "$rc" -eq 1 ] && [ "$RF_CONTENT_AFTER" = "$ORIGINAL_RF_CONTENT" ] && grep -q "Failed to write issue rollup" <<<"$out"; then
+  pass "issue rollup write failure fails cycle (exit 1), reports error, and restores target file"
+else
+  fail "issue rollup write failure was not handled safely (rc=$rc, out=$out)"
 fi
 
 # ── 8. Crash mid-attempt restores target file on ANY exit (GH-182 Plan §2, §4d) ─────────────────

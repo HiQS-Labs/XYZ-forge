@@ -266,10 +266,6 @@ def run_self_healing_cycle(
                     continue
 
             # Both gates passed!
-            status = "healed"
-            attempt_rec["result"] = "passed"
-            history.append(attempt_rec)
-
             # Compute winning diff
             diff_lines = list(difflib.unified_diff(
                 original_content.splitlines(keepends=True),
@@ -283,11 +279,28 @@ def run_self_healing_cycle(
             target_diff_path = diff_out_path or (os.path.join(sandbox_root, "winning_diff.patch") if sandbox_root else None)
             if target_diff_path:
                 try:
+                    parent_dir = os.path.dirname(target_diff_path)
+                    if parent_dir:
+                        os.makedirs(parent_dir, exist_ok=True)
                     with open(target_diff_path, "w") as df:
                         df.write(winning_diff)
                     winning_diff_file = target_diff_path
-                except Exception:
-                    pass
+                except Exception as write_err:
+                    status = "error"
+                    attempt_rec["result"] = f"artifact_write_failed: {write_err}"
+                    history.append(attempt_rec)
+                    return {
+                        "status": "error",
+                        "message": f"Failed to write winning diff to {target_diff_path}: {write_err}",
+                        "attempts": len(history),
+                        "max_attempts": max_attempts,
+                        "winning_diff": winning_diff,
+                        "history": history,
+                    }
+
+            status = "healed"
+            attempt_rec["result"] = "passed"
+            history.append(attempt_rec)
             break
 
         if status != "healed":
@@ -302,11 +315,22 @@ def run_self_healing_cycle(
             target_rollup_path = escalation_out_path or (os.path.join(sandbox_root, "issue_body.md") if sandbox_root else None)
             if target_rollup_path:
                 try:
+                    parent_dir = os.path.dirname(target_rollup_path)
+                    if parent_dir:
+                        os.makedirs(parent_dir, exist_ok=True)
                     with open(target_rollup_path, "w") as ef:
                         ef.write(issue_rollup)
                     issue_rollup_file = target_rollup_path
-                except Exception:
-                    pass
+                except Exception as ef_err:
+                    status = "error"
+                    return {
+                        "status": "error",
+                        "message": f"Failed to write issue rollup to {target_rollup_path}: {ef_err}",
+                        "attempts": len(history),
+                        "max_attempts": max_attempts,
+                        "history": history,
+                        "issue_rollup": issue_rollup,
+                    }
 
         res_dict: Dict[str, Any] = {
             "status": status,
@@ -520,11 +544,9 @@ def main() -> int:
             print(f"Error: --sandbox-root is not a directory: {args.sandbox_root}", file=sys.stderr)
             return 2
 
-        # 3c. sandbox-root is NOT the invoking checkout
-        resolved_sandbox = os.path.realpath(args.sandbox_root)
-        resolved_checkout = os.path.realpath(repo_root)
-        if resolved_sandbox == resolved_checkout:
-            print(f"Error: --sandbox-root cannot be the invoking checkout repository ({repo_root})", file=sys.stderr)
+        # 3c. sandbox-root is NOT the invoking checkout or nested within it
+        if check_realpath_containment(args.sandbox_root, repo_root):
+            print(f"Error: --sandbox-root cannot be the invoking checkout repository or nested within it ({repo_root})", file=sys.stderr)
             return 2
 
         # 3d. sandbox-root contains target-file after realpath resolution
@@ -576,6 +598,8 @@ def main() -> int:
             print(json.dumps(result, indent=2))
         else:
             print(f"Self-Healing Result: {result.get('status')}")
+            if result.get("message"):
+                print(f"Error: {result['message']}", file=sys.stderr)
             if result.get("winning_diff"):
                 print("--- Applied Diff ---")
                 print(result["winning_diff"])

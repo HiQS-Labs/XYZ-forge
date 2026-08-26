@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -163,3 +163,27 @@ swept file: yes
 The whole `utils/py/self_healer.py`, `test/gh182-healer-facade-safety.sh`, and `validate.sh` files were swept. The registry entry is present, and no additional pre-existing defect was found outside the two safety gaps above. No artifact or gate was run during this review.
 
 handing off to agy — agy, take your turn.
+
+### Extension · System
+relay-drive: round cap (4) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 5
+
+### Round 3 · Builder · agy
+
+- **Summary**: Addressed all Codex Round 2 review findings regarding nested checkout rejection, evidence artifact write safety, and full failure restoration.
+- **Files touched**:
+  - `utils/py/self_healer.py`:
+    - Hardened CLI `--sandbox-root` check in `main()` using `check_realpath_containment(args.sandbox_root, repo_root)` to reject both the checkout itself and any resolved nested descendants inside it with exit 2 (`--sandbox-root cannot be the invoking checkout repository or nested within it`).
+    - Enforced strict artifact-write error handling for both `winning_diff.patch` (on heal) and `issue_body.md` (on escalation): if writing evidence artifacts fails (e.g. unwritable or directory conflict), the cycle status transitions to `"error"`, the failure message is retained/returned, target file restoration to original content is guaranteed via `try ... finally`, and the CLI reports failure (exit 1).
+    - Preserved in-sandbox success cases while preventing zero-exit runs without artifacts.
+  - `test/gh182-healer-facade-safety.sh`:
+    - Added test `5a2` asserting that a sandbox directory nested inside the invoking checkout is rejected loudly with exit 2 before any generator or gate runs.
+    - Added test `6b` asserting that a winning diff write failure (directory collision at diff-out path) fails the cycle (exit 1), reports the error, and restores the target file.
+    - Added test `7b` asserting that an issue rollup write failure (directory collision at issue-rollup-out path) fails the cycle (exit 1), reports the error, and restores the target file.
+    - Added API-level assertions to `driver_api_containment.py` asserting that `run_self_healing_cycle()` returns error status and restores the target file when diff or rollup artifact writing fails.
+- **Verification**:
+  - `bash test/gh182-healer-facade-safety.sh` -> 17 pass, 0 fail.
+  - `python3 utils/py/self_healer.py --mode suite` -> 4 pass, 0 fail.
+  - `bash test/gh155-phase4-self-healer.sh` -> 5 pass, 0 fail.
+  - `bash test/gh1-adoption-guard.sh` -> 11 pass, 0 fail.
+  - `bash test/gh139-pipe-grep-guard.sh` -> 3 pass, 0 fail.
+
