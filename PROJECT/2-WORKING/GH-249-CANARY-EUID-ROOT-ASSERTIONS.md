@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/249
 title: "CI: ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions in gh50-sandboxed-git-guard + security-scan"
 created: 2026-08-25
 type: bug
-status: 1-INBOX
+status: 2-WORKING
 complexity: 2
 risk: 2
 effort: 2
@@ -59,3 +59,18 @@ cannot hold — root writes a `0444` file and reads a `0000` file regardless of 
 - [ ] Also resolve the three unrelated FAILs in the same job, or the canary stays red:
       `agy` not on PATH (marathon-drive), worktree-isolation case 2, concurrent-lock race
 - [ ] Witness a green hosted canary run before claiming the signal is restored
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target":        { "repo": ".", "ref": "development" },
+  "gate":          "bash validate.sh",
+  "fix_probes":    [ { "type": "grep_absent", "path": "test/gh50-sandboxed-git-guard.sh", "pattern": "EUID" },
+                     { "type": "grep_absent", "path": "test/security-scan.sh", "pattern": "running as root" } ],
+  "artifacts":     [ "test/gh50-sandboxed-git-guard.sh", "test/security-scan.sh" ],
+  "artifacts_new": [],
+  "remediation":   { "source": "self#plan", "criteria": "chmod-dependent assertions emit a named SKIP under EUID=0 (gh342 precedent); writable-control cases still run; production guards unchanged; hosted Ubuntu canary green" },
+  "lanes":         { "agy_safe": [ "test/gh50-sandboxed-git-guard.sh", "test/security-scan.sh" ], "orchestrator_only": [ "relay-automation/", ".tick/", "utils/git-sandbox-guard.sh", "relay-automation/hooks/security-scan.sh" ] }
+}
+```
