@@ -162,6 +162,7 @@ for (const heading of ledgerSections) sections.set(heading, []);
 
 let inLedger = false;
 let currentSection = null;
+const droppedRows = [];
 
 for (let i = 0; i < lines.length; i++) {
   const line = lines[i];
@@ -180,16 +181,32 @@ for (let i = 0; i < lines.length; i++) {
     continue;
   }
 
-  if (!currentSection || !/^- \*\*/.test(line)) continue;
+  if (!currentSection) continue;
+
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith("<!--") || trimmed.startsWith("#")) continue;
+
+  if (!/^- \*\*/.test(line)) {
+    // GH-257: track non-empty dropped/unparseable line under an active ledger section
+    const issueMatch = trimmed.match(/(?:GH-?|#)(\d+)/i);
+    const id = issueMatch ? `#${issueMatch[1]}` : JSON.stringify(trimmed.length > 30 ? trimmed.slice(0, 30) + "..." : trimmed);
+    droppedRows.push({ section: currentSection, id, line: trimmed });
+    continue;
+  }
 
   const block = [line];
   while (i + 1 < lines.length) {
     const next = lines[i + 1];
-    if (/^###\s+/.test(next) || /^##\s+/.test(next) || /^- \*\*/.test(next)) break;
+    if (/^###\s+/.test(next) || /^##\s+/.test(next) || /^\s*[-*+]\s+/.test(next)) break;
     block.push(next);
     i += 1;
   }
   sections.get(currentSection).push(parseBullet(block));
+}
+
+if (droppedRows.length > 0) {
+  const ids = droppedRows.map((d) => d.id).join(", ");
+  process.stderr.write(`roadmap-dashboard: warning: dropped ${droppedRows.length} unparseable row(s): ${ids}\n`);
 }
 
 const output = [];
