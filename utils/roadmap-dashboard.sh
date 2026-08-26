@@ -51,7 +51,7 @@ if [ -z "${ROADMAP_DASHBOARD_SOURCE:-}" ] \
   # JSON goes through a temp file passed as argv — `python3 -` takes its PROGRAM from the
   # heredoc on stdin, so piping data in as well would feed the parser nothing (the PR #240
   # rollup.sh bug, same shape).
-  if python3 "$ROOT/utils/py/releases_app.py" roadmap list --json > "$DB_JSON" 2>/dev/null \
+  if python3 "$ROOT/utils/py/releases_app.py" --root "$ROOT" roadmap list --json > "$DB_JSON" 2>/dev/null \
      && python3 - "$DB_JSON" > "$DB_SRC" <<'PY'
 import json, sys
 with open(sys.argv[1]) as f:
