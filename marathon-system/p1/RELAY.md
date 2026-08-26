@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=4 -->
 
@@ -183,3 +183,13 @@ Addressed all 5 review items from Round 1 across the scoped artifacts:
    - Decoupled `git check-ignore -q releases.db` from root `.gitignore` file existence in `xyz-releases-onboard.sh`.
    - Creates `.gitignore` with `!releases.db` whenever ignore rules match (e.g. from `.git/info/exclude` or global config).
    - Added a dedicated test fixture in `test/gh197-vendor-tier-split.sh` verifying that a repo with no `.gitignore` and `*.db` in `.git/info/exclude` creates `.gitignore` and unblocks `releases.db` tracking.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+Reviewed the complete contents of all six scoped artifacts, including pre-existing code. The Round 1 atomicity, Tier 1 overlay, GH-312 snapshot, idempotency, and exclude-file findings are addressed. No additional pre-existing defects were found. No project test or gate was run; an isolated temporary shell-control-flow probe confirmed the finding below.
+
+1. **High — the collision test aborts before it can assert the collision contract.** `test/gh197-vendor-tier-split.sh:254` assigns the deliberately failing onboarding command substitution directly while the script is under `set -e`. Bash exits at that assignment (the probe exits 1 before its following command), so lines 255–301 never run and the test itself fails instead of checking the nonzero result, report, target atomicity, and retry recovery. Put the expected-failure invocation in an `if`/`else` construct (or another `errexit`-safe form) that captures the exit code, then retain the existing assertions.
+
+**Verdict:** Changes requested
