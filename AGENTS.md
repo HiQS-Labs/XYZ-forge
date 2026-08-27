@@ -1,6 +1,26 @@
 # AGENTS.md
 
-Read `WORKTREE-SAFETY.md` for important Git Worktree Dangerous actions to avoid.
+## Danger: commands agents must not run
+
+- Never run `git reset --hard`, `git checkout -- <path>`, or a tree-wide `git stash` in a checkout
+  whose state matters; they overwrite tracked work or hide shared worktree-family state.
+- Never run `rm -rf`, `find ... -delete`, or equivalent recursive cleanup through an empty,
+  unresolved, relative, root, home, workspace, or otherwise unproven target path.
+- Never remove or move a linked worktree with `rm -rf` or `mv`, and never hand-delete
+  `.git/worktrees/*`; use `git worktree remove` / `move` / `prune` / `repair`.
+- Never run sandboxed `git switch --track` or `git branch -D` directly; wrap the complete command
+  with `utils/git-sandbox-guard.sh --repo <root> -- <git command>`.
+- Never delete or move a full-clone folder until its working tree, stashes, local refs, and registered
+  worktrees prove that it contains no unique or depended-on state.
+- Never run `validate.sh` or `test/*.sh` from a linked worktree or a full clone whose state matters;
+  run mutation-heavy gates only in a separate disposable full clone.
+
+Read [`WORKTREE-SAFETY.md`](WORKTREE-SAFETY.md) for the rationale, recovery paths, and safe patterns.
+
+> **Safety and warranty:** XYZ Forge is provided **“AS IS,” without warranty**, under the applicable
+> license. Coding models may choose commands through their own runtimes and safety controls, outside
+> the intended harness workflow. XYZ Forge cannot guarantee model behavior or data integrity; maintain
+> tested, independent backups and follow industry-standard backup and recovery practices.
 
 Read `ROUTER.md` first for startup order and canonical files.
 
