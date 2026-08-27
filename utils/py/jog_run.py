@@ -509,7 +509,10 @@ def jog_run_main(args=None):
             preflight_py = os.path.join(root, "utils", "py", "swarm_preflight.py")
             if os.path.isfile(preflight_py) and not getattr(args, "simulate", False):
                 pf_res = subprocess.run(
-                    [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--root", root],
+                    # swarm_preflight.py has no --root flag (it resolves the repo from cwd,
+                    # which this subprocess already pins below); passing one is a usage error
+                    # that parked every queue item on the first real run.
+                    [sys.executable, preflight_py, "--gh-issue", str(gh_num)],
                     cwd=root,
                     capture_output=True,
                     text=True,

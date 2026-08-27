@@ -18,6 +18,8 @@ non_goals:
   - Log rotation — records are size-capped; revisit past ~10MB.
 related:
   - GH-260 (improvement-opportunities parent; observability weakness this retires)
+fix_probes:
+  - test -f test/write-ops-log.sh
 ---
 
 # GH-275 — Medium-level write-ops logging of agent disk-write commands
@@ -43,3 +45,47 @@ Source of truth for scope: https://github.com/HiQS-Labs/XYZ-forge/issues/275
 | Field | Value |
 | --- | --- |
 | Stage | 1-INBOX capture; plan two-model verified; implementation not started |
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "path_absent",
+      "path": "test/write-ops-log.sh"
+    },
+    {
+      "type": "path_absent",
+      "path": "relay-automation/hooks/write-ops-log.sh"
+    },
+    {
+      "type": "grep_absent",
+      "path": "relay-automation/relay-turn-lib.sh",
+      "pattern": "write-ops"
+    }
+  ],
+  "artifacts": [
+    "relay-automation/hooks/write-ops-log.sh",
+    "relay-automation/relay-turn-lib.sh",
+    "relay-automation/xyz-sync.sh",
+    "utils/py/consult.py",
+    "utils/py/review_xyz.py",
+    "test/write-ops-log.sh",
+    "validate.sh"
+  ],
+  "remediation": {
+    "source": "issue#275 (Consult-sharpened plan v2 + agy amendments)",
+    "criteria": "Repo-shipped hook relay-automation/hooks/write-ops-log.sh logs destructive Bash commands (pattern family per v2.3 incl. rm -f) as JSONL to ~/.local/state/xyz/write-ops.jsonl (atomic 0600, O_APPEND, size-capped, swallow-errors); rtl_worktree_end(), xyz-sync delete_rows, consult.py and review_xyz.py removal sites append the same records; test/write-ops-log.sh registered in validate.sh covers every pattern family, silence for ls, malformed JSON, truncation, and the rm -rf fallback path."
+  },
+  "artifacts_new": [
+    "relay-automation/hooks/write-ops-log.sh",
+    "test/write-ops-log.sh"
+  ]
+}
+```

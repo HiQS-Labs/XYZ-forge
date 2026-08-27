@@ -17,6 +17,8 @@ non_goals:
 related:
   - GH-243 (items 3-4 — repoint agent docs + dashboard-staleness push, subsumed by this arc)
   - GH-141 (ATE/fuzzing is the verification backbone for the switchover)
+fix_probes:
+  - test ! -f ROADMAP.md
 ---
 
 # GH-269 — Full switchover to Releases DB: retire ROADMAP.md
@@ -37,3 +39,44 @@ https://github.com/HiQS-Labs/XYZ-forge/issues/269
 | Field | Value |
 | --- | --- |
 | Stage | 1-INBOX capture; 6 issue checkboxes open, none started |
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "path_present",
+      "path": "ROADMAP.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh269-roadmap-retired.sh"
+    }
+  ],
+  "artifacts": [
+    "ROADMAP.md",
+    "SOP.md",
+    "ROUTER.md",
+    "AGENTS.md",
+    "utils/py/releases_app.py",
+    "utils/py/wave_reconcile.py",
+    "utils/py/marathon_plan.py",
+    "utils/roadmap-dashboard.sh",
+    "test/gh269-roadmap-retired.sh",
+    "validate.sh"
+  ],
+  "remediation": {
+    "source": "issue#269 (6-phase switchover checklist)",
+    "criteria": "Every reader/writer/gate/canary that consumed ROADMAP.md reads releases.db instead; ROADMAP.md is deleted; a regression test proves no tool recreates or requires it; RELEASES-PREVIEW.html remains the human-readable view."
+  },
+  "artifacts_new": [
+    "test/gh269-roadmap-retired.sh"
+  ]
+}
+```
