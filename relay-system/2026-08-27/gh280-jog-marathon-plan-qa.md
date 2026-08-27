@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: codex
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,23 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## agy r1
+
+swept file: yes
+
+- `[Pass]` The Jog/Preflight/Marathon/wave-reconcile ownership split aligns with the Recon Map. Verified via "Marathon becomes the only owner of reviewed execution... Jog records a receipt-backed projection" (`GH-280-JOG-MARATHON-RECALIBRATION.md:55-57`).
+- `[Pass]` `marathon-invocation@1` and `marathon-drive/result@1` are sufficient. Verified via "add opt-in `--result-file <path>` support... emit `marathon-drive/result@1` atomically" (`GH-280-JOG-MARATHON-RECALIBRATION.md:130-134`).
+- `[Pass]` Cold-start behavior prevents duplication. Verified via "On restart, inspect the recorded result... Re-project a valid terminal result idempotently" (`GH-280-JOG-MARATHON-RECALIBRATION.md:161-163`).
+- `[Pass]` Resume, retry, and land are well-defined. Verified via "Replace ambiguous retry intent with three explicit operations" (`GH-280-JOG-MARATHON-RECALIBRATION.md:178-183`) and "Use `(repo identity, queue global ID, execution ID, merged SHA)` as the landing idempotency key" (`GH-280-JOG-MARATHON-RECALIBRATION.md:189-192`).
+- `[Pass]` Staged rollout and fallback are safe. Verified via "Make Marathon the Jog default only after Phase 4 evidence... Keep `--executor relay` explicit for one documented compatibility window" (`GH-280-JOG-MARATHON-RECALIBRATION.md:229-231`).
+- `[Pass]` Falsifiable QA is present. Verified via "Run all runtime tests in a disposable **separate full clone**" (`GH-280-JOG-MARATHON-RECALIBRATION.md:96`) and Phase 4's root/vendored dogfood runs (`GH-280-JOG-MARATHON-RECALIBRATION.md:207-211`).
+- `[Pass]` No weakening of separation, caps, history, branches, or frozen twins. Verified via "Keep Marathon's distinct builder/reviewer requirement" (`GH-280-JOG-MARATHON-RECALIBRATION.md:86-87`), "Rebuild uses a fresh token and never deletes prior Tick history" (`GH-280-JOG-MARATHON-RECALIBRATION.md:90-91`), and "Do not edit the frozen Bash twins" (`GH-280-JOG-MARATHON-RECALIBRATION.md:68-69`).
+
+No pre-existing defects found in the file. All Recon Map unknowns have been addressed in the plan.
+
+**Verdict**: Approved
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
