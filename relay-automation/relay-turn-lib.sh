@@ -753,6 +753,37 @@ rtl_worktree_begin() {
   printf '%s\n' "$wt"
 }
 
+
+xyz_write_ops_log_append() {
+  [ "${XYZ_WRITE_OPS_LOG:-}" = "0" ] && return 0
+  local dest="${XYZ_WRITE_OPS_LOG:-$HOME/.local/state/xyz/write-ops.jsonl}"
+  local pattern="$1"
+  local cmd="$2"
+  local stamp; stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+  local host; host="$(hostname)"
+  local cwd; cwd="$(pwd)"
+  python3 -c '
+import sys, json, os
+record = {
+    "timestamp": sys.argv[1],
+    "host": sys.argv[2],
+    "session": os.environ.get("TERM_SESSION_ID", ""),
+    "cwd": sys.argv[3],
+    "pattern": sys.argv[4],
+    "command": sys.argv[5],
+    "stage": "run"
+}
+log_path = sys.argv[6]
+try:
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    fd = os.open(log_path, os.O_CREAT | os.O_WRONLY | os.O_APPEND, 0o600)
+    with os.fdopen(fd, "a") as f:
+        f.write(json.dumps(record) + "\n")
+except Exception:
+    pass
+' "$stamp" "$host" "$cwd" "$pattern" "$cmd" "$dest" || true
+}
+
 rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist back unless off-lane found
   # Contain + DETECT: if the agent touched anything outside {allowlist, .tick} in the worktree, that's
   # an off-lane attempt — do NOT copy anything back (the turn must fail like an in-ROOT exit-6), set
@@ -871,8 +902,14 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     done
   fi
   rm -f "${wt}.seedsig" "${wt}.artifactsig"   # GH-22 + GH-31: clean up the sidecar signature files
-  git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
+  if git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1; then
+    xyz_write_ops_log_append "git worktree remove" "git -C $RTL_ROOT worktree remove --force $wt"
+  else
+    rm -rf "$wt"
+    xyz_write_ops_log_append "rm force" "rm -rf $wt"
+  fi
   git -C "$RTL_ROOT" worktree prune >/dev/null 2>&1 || true
+  xyz_write_ops_log_append "git worktree prune" "git -C $RTL_ROOT worktree prune" 
   if [ -n "${RTL_ROOT:-}" ] && [ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]; then
     python3 "$RTL_ROOT/utils/py/workspace_manager.py" deregister --repo "$RTL_ROOT" --path "$wt" >/dev/null 2>&1 || true
   fi

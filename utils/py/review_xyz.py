@@ -17,6 +17,34 @@ import sys
 import tempfile
 import time
 import urllib.request
+
+def xyz_write_ops_log_append(pattern, cmd):
+    if os.environ.get("XYZ_WRITE_OPS_LOG") == "0":
+        return
+    import json
+    import time
+    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    host = os.uname().nodename
+    session = os.environ.get("TERM_SESSION_ID", "")
+    cwd = os.getcwd()
+    record = {
+        "timestamp": stamp,
+        "host": host,
+        "session": session,
+        "cwd": cwd,
+        "pattern": pattern,
+        "command": cmd,
+        "stage": "run"
+    }
+    log_path = os.environ.get("XYZ_WRITE_OPS_LOG", os.path.expanduser("~/.local/state/xyz/write-ops.jsonl"))
+    try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        fd = os.open(log_path, os.O_CREAT | os.O_WRONLY | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a") as f:
+            f.write(json.dumps(record) + "\n")
+    except Exception:
+        pass
+
 from datetime import datetime
 
 # Shared RTL helpers
@@ -685,14 +713,16 @@ def main():
         # 6. Teardown Worktree
         if wt_created:
             try:
-                subprocess.run(
+                if subprocess.run(
                     ["git", "-C", root, "worktree", "remove", "--force", wt_dir],
                     capture_output=True,
-                )
+                ).returncode == 0:
+                    xyz_write_ops_log_append("git worktree remove", f"git -C {root} worktree remove --force {wt_dir}")
             except Exception:
                 pass
         if os.path.exists(wt_dir):
             shutil.rmtree(wt_dir, ignore_errors=True)
+            xyz_write_ops_log_append("rm force", f"rm -rf {wt_dir}")
 
     if not raw_response or not raw_response.strip():
         die("model execution failed to return a review transcript", code=2)

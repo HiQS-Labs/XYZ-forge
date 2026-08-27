@@ -9,6 +9,34 @@ import shlex
 import time
 from datetime import datetime
 import shutil
+
+def xyz_write_ops_log_append(pattern, cmd):
+    if os.environ.get("XYZ_WRITE_OPS_LOG") == "0":
+        return
+    import json
+    import time
+    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    host = os.uname().nodename
+    session = os.environ.get("TERM_SESSION_ID", "")
+    cwd = os.getcwd()
+    record = {
+        "timestamp": stamp,
+        "host": host,
+        "session": session,
+        "cwd": cwd,
+        "pattern": pattern,
+        "command": cmd,
+        "stage": "run"
+    }
+    log_path = os.environ.get("XYZ_WRITE_OPS_LOG", os.path.expanduser("~/.local/state/xyz/write-ops.jsonl"))
+    try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        fd = os.open(log_path, os.O_CREAT | os.O_WRONLY | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a") as f:
+            f.write(json.dumps(record) + "\n")
+    except Exception:
+        pass
+
 from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
                  agy_auth_timeout_verdict, AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
@@ -745,10 +773,13 @@ def main():
                         warn("gemini tokens not captured (no parseable stats)")
                 
     finally:
-        subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        if subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL).returncode == 0:
+            xyz_write_ops_log_append("git worktree remove", f"git -C {root} worktree remove --force {wt}")
         subprocess.run(["git", "-C", root, "worktree", "prune"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        xyz_write_ops_log_append("git worktree prune", f"git -C {root} worktree prune")
         if os.path.exists(wt):
             shutil.rmtree(wt, ignore_errors=True)
+            xyz_write_ops_log_append("rm force", f"rm -rf {wt}")
         
     print(f"consult: {answered} answered, {failed} failed -> {run_dir}{summary}")
     if degraded:
