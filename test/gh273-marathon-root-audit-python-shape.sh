@@ -174,5 +174,45 @@ out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass 'same-command env prefix passes for variable spellings too' \
   || fail "variable invocation wrongly failed: $out"
 
+# ── 9: Codex consult — interpreter shapes and the multi-invocation Blocker ─────────────────────
+D="$(new_scenario_dir flag-shapes)"
+printf '%s\n' \
+  'DRIVER="/real/harness-repo/utils/py/marathon_''drive.py"' \
+  'MARATHON_ROOT="$WORK/mroot" python3 -u $DRIVER --phase-brief b.md --round-cap 2' \
+  'MARATHON_ROOT="$WORK/mroot" python3.12 $DRIVER --phase-brief b.md --round-cap 2' \
+  > "$D/p9-flags-ok.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass 'interpreter short flags (-u) and version suffixes (python3.12) pass scoped' \
+  || fail "flag/version spelling failed the audit: $out"
+
+D="$(new_scenario_dir flags-unsafe)"
+printf '%s\n' \
+  'ROOT="/real/harness-repo"' \
+  'python3 -u $ROOT/utils/py/marathon_''drive.py --phase-brief b.md' \
+  > "$D/p9b-flags-unsafe.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && pass 'unscoped flag-prefixed python3 invocation FAILS (flags do not hide it)' \
+  || fail "flag-prefixed unscoped invocation bypassed the audit"
+
+# The Codex Blocker: a rooted FIRST call on a multi-invocation line must not whitelist an
+# unrooted SECOND call after the ';'.
+D="$(new_scenario_dir multi-invocation)"
+printf '%s\n' \
+  'DRIVER="/real/harness-repo/utils/py/marathon_''drive.py"' \
+  'MARATHON_ROOT="$WORK/mroot" python3 $DRIVER --phase-brief a.md; python3 $DRIVER --phase-brief b.md' \
+  > "$D/p10-multi.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && pass 'multi-invocation line: the unrooted SECOND call is not whitelisted (Codex Blocker)' \
+  || fail "rooted first call whitelisted an unrooted second call on the same line"
+
+D="$(new_scenario_dir multi-ok)"
+printf '%s\n' \
+  'DRIVER="/real/harness-repo/utils/py/marathon_''drive.py"' \
+  'MARATHON_ROOT="$WORK/mroot" python3 $DRIVER --phase-brief a.md && MARATHON_ROOT="$WORK/mroot" python3 $DRIVER --phase-brief b.md' \
+  > "$D/p10b-multi-ok.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass 'multi-invocation line with EACH call scoped passes' \
+  || fail "fully-scoped multi-invocation failed: $out"
+
 echo "  gh273-marathon-root-audit-python-shape: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

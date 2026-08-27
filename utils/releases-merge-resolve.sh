@@ -217,8 +217,19 @@ fi
 for f in $TOOK_SIDE; do
   say "resolving $f in the index now that the rebuild verified clean"
 done
+# One `git add` for the whole handled set (codex consult: per-path adds could stage a subset
+# when a later add fails), gated on existence, then a postcondition: nothing we handled may
+# still be unmerged.
+ADD_PATHS=""
 for f in $DERIVED releases.sql $REGEN; do
-  [ -f "$ROOT/$f" ] && git -C "$ROOT" add -- "$f"
+  [ -f "$ROOT/$f" ] && ADD_PATHS="${ADD_PATHS:+$ADD_PATHS }$f"
+done
+[ -n "$ADD_PATHS" ] && git -C "$ROOT" add -- $ADD_PATHS
+LEFT_UNMERGED="$(git -C "$ROOT" diff --name-only --diff-filter=U 2>/dev/null || true)"
+for f in $ADD_PATHS; do
+  if printf '%s\n' "$LEFT_UNMERGED" | grep -qx "$f"; then
+    die "$f is still unmerged after staging — refusing to claim success. Inspect the index."
+  fi
 done
 
 say "artifacts are consistent and staged. Review, then commit the merge yourself —"

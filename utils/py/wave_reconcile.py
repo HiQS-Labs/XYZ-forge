@@ -154,6 +154,7 @@ def verify_rollback_completeness(repo_root, baseline):
     cmd = ["git", "-C", repo_root, "status", "--porcelain"]
     r = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if r.returncode != 0:
+        log_err(f"Rollback completeness could not be verified: git status failed: {r.stderr}")
         return
     current = r.stdout.strip()
     if current != baseline:
@@ -300,13 +301,15 @@ def check_provenance_receipts(repo_root, pr_meta):
 # ref, so a title ending in "fixed" cannot capture a body that opens with "#123".
 CLOSING_KEYWORD_CLAUSE = re.compile(
     r"\b(?:closes?|closed|fix(?:es|ed)?|resolves?|resolved)[ \t]*:?[ \t]+"
-    r"((?:#|GH-)[0-9]{1,6}\b(?:[ \t]*,[ \t]*(?:and[ \t]+)?(?:#|GH-)[0-9]{1,6}\b)*)",
+    r"((?:#|GH-)[0-9]{1,6}\b"
+    r"(?:(?:[ \t]*,[ \t]*(?:and[ \t]+)?|[ \t]+and[ \t]+)(?:#|GH-)[0-9]{1,6}\b)*)",
     re.IGNORECASE,
 )
 REF_IN_CLAUSE = re.compile(r"(?:#|GH-)([0-9]{1,6})\b", re.IGNORECASE)
-# A `#N`/`GH-N` inside a URL (fragment `/#123`, path `/GH-123`, query `?#123`) is part of the
-# link, not a reference — GH-271 QA round 1. The lookbehind is one fixed-width character class.
-MENTION = re.compile(r"(?<![A-Za-z0-9_/?.])(?:[Gg][Hh]-|#)([0-9]{1,6})\b")
+# A `#N`/`GH-N` inside a URL (fragment `/#123`, path `/GH-123`, query `?#123`, `?issue=#123`,
+# `&#123`) is part of the link, not a reference — GH-271 QA rounds 1+3. The lookbehind is one
+# fixed-width character class.
+MENTION = re.compile(r"(?<![A-Za-z0-9_/?.=&])(?:[Gg][Hh]-|#)([0-9]{1,6})\b")
 TITLE_TRAILER = re.compile(
     r"\([ \t]*((?:(?:#|GH-)[0-9]{1,6}\b[ \t]*(?:[,;][ \t]*)?)+)[ \t]*\)[ \t]*$",
     re.IGNORECASE,
@@ -338,7 +341,7 @@ def extract_linked_issues(pr_meta):
 
     Both lists are deduplicated and sorted.
     """
-    title = (pr_meta.get("title") or "").strip()
+    title = _strip_code_blocks(pr_meta.get("title") or "").strip()
     body = _strip_code_blocks(pr_meta.get("body") or "")
     closers, mentions = set(), set()
 
@@ -669,6 +672,11 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
         return found
 
     pre_plan_docs = _plan_docs() if not dry_run else set()
+    if journal and not dry_run:
+        # Codex consult: a same-dated plan doc that already exists gets OVERWRITTEN by the
+        # replan, and tracking-only-created would leave rollback no bytes to restore.
+        for existing_doc in pre_plan_docs:
+            journal.snapshot(existing_doc)
 
     sync_cmd = ["python3", "utils/py/releases_app.py", "roadmap", "sync"]
     check_cmd = ["python3", "utils/py/releases_app.py", "check"]

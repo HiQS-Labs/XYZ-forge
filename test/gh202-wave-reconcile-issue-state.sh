@@ -218,6 +218,9 @@ check_ext "GH-271: keyword at title end cannot capture body ref (same-line rule)
 check_ext "GH-271: closer + mention split (the GH-202 convention)" '[271]' '[260]' 'feat: x' 'Closes GH-271. Advances GH-260 (phase 1 of 2).'
 check_ext "GH-271 QA r1: URL fragments/paths are not mentions" '[]' '[]' 'feat: x' 'see https://example.com/#123 and https://example.com/GH-99 and ?#7'
 check_ext "GH-271 QA r1: plain refs still count after the lookbehind" '[]' '[123, 124, 125]' 'feat: x' 'see #123 and (GH-124) and —GH-125.'
+check_ext "GH-271 QA r3: and-joined refs close together" '[1, 2]' '[]' 'feat: x' 'Fixes #1 and #2.'
+check_ext "GH-271 QA r3: query-string equals and amp excluded from mentions" '[]' '[]' 'feat: x' 'see https://x.test/?issue=#123 and ?a=1 and &#77'
+check_ext "GH-271 QA r3: inline code in the TITLE is stripped" '[]' '[]' 'feat: `see #123` done' 'nothing here'
 [ "$ext_fail" -eq 0 ] || fail "one or more GH-271 extraction unit checks failed"
 
 # ── GH-271 Part B: rollback completeness ───────────────────────────────────────
@@ -276,6 +279,22 @@ grep -q "Rollback INCOMPLETE" <<<"$out" \
 porcelain="$(git -C "$REPO" status --porcelain)"
 [ -z "$porcelain" ] && pass "GH-271: porcelain empty after rollback (tree fully restored)" \
   || fail "GH-271: porcelain dirty after rollback: $porcelain"
+# Positive control (Codex consult): a mutation the journal never tracked makes the tripwire
+# FIRE and name the leftover — otherwise the silence above proves nothing.
+git -C "$REPO" add -A >/dev/null 2>&1 || true
+git -C "$REPO" commit -qm "fixture: clean base for tripwire positive control" >/dev/null 2>&1 || true
+printf '#!/usr/bin/env bash\ntouch "%s/STRAY-UNTRACKED.md"\necho "MOCK: marathon-plan hard failure" >&2\nexit 1\n' "$REPO" > "$REPO/utils/marathon-plan.sh"
+chmod +x "$REPO/utils/marathon-plan.sh"
+git -C "$REPO" add utils/marathon-plan.sh && git -C "$REPO" commit -qm "fixture: stray-writing plan stub"
+out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --offline "$REPO/manifest_rollback.json" --skip-pull 2>&1)"; rc=$?
+[ "$rc" -eq 6 ] && pass "tripwire positive-control run still dies rc=6" || fail "tripwire control rc=$rc"
+grep -q "Rollback INCOMPLETE" <<<"$out" \
+  && pass "GH-271 QA r3: tripwire FIRES when a restore is incomplete" \
+  || fail "GH-271 QA r3: tripwire silent over an incomplete rollback"
+grep -q "STRAY-UNTRACKED.md" <<<"$out" \
+  && pass "  and names the exact stray path" \
+  || fail "  leftover path not named: $out"
+rm -f "$REPO/STRAY-UNTRACKED.md"
 # restore the standard stubs for the live-gh section below
 printf '#!/usr/bin/env bash\necho "MOCK: roadmap-dashboard OK"\n' > "$REPO/utils/roadmap-dashboard.sh"
 printf '#!/usr/bin/env bash\necho "MOCK: marathon-plan reports items held"\nexit 5\n' > "$REPO/utils/marathon-plan.sh"
