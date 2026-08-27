@@ -24,6 +24,7 @@ import signal
 import sqlite3
 import subprocess
 import sys
+import tempfile
 
 # Ensure utils/py is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -335,6 +336,24 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
     env = dict(os.environ)
     env["RELAY_DRIVER_LOCKED"] = "1"
     env["XYZ_ROOT"] = root
+    # Turn-taker shim env contract (relay-xyz Path A): <BUILDER>_AGENT selects the
+    # dispatching actor (must match the tick token's handoff target above), ALLOW_PATHS
+    # (comma-separated) grants the contract's artifact paths for a build turn, and
+    # <BUILDER>_LOG keeps concurrent runs from sharing one log. Without these the shim
+    # dies at startup ("AGY_AGENT required") before any turn runs.
+    env[f"{builder.upper()}_AGENT"] = builder
+    env.setdefault(f"{builder.upper()}_LOG",
+                   os.path.join(tempfile.gettempdir(), f"{builder}-turn-jog-{os.getpid()}.log"))
+    doc = find_issue_doc(root, gh_num)
+    artifacts = []
+    if doc:
+        m = re.search(r"##\s*Swarm Preflight Contract\s*\n+```json\n(.*?)\n```", open(doc).read(), re.S)
+        if m:
+            try:
+                artifacts = [a for a in json.loads(m.group(1)).get("artifacts", []) if isinstance(a, str)]
+            except Exception:
+                pass
+    env["ALLOW_PATHS"] = ",".join(artifacts)
 
     proc = subprocess.run(cmd, cwd=root, env=env)
     return proc.returncode
