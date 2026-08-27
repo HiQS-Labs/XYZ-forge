@@ -1,6 +1,6 @@
 ---
 title: "Jog: serial immediate-queue execution engine and skill (Phase 1)"
-status: Active (2-WORKING — promoted 2026-08-26 after PR #261 intake QA)
+status: Active
 created: 2026-08-26
 updated: 2026-08-26
 owner: noel
@@ -11,13 +11,15 @@ complexity: 3
 risk: 2
 effort: 3
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 related:
   - GH-259 (parent issue: User Guide and Skills)
   - GH-27 (Roadmap Dashboard)
   - GH-32 (Releases App / SQLite Ledger)
   - GH-354 (Driver Lock Matrix)
   - GH-564 (Fixture Containment & Clone Isolation)
+fix_probes:
+  - bash test/jog-queue.sh
 goal: >
   Implement jog (Phase 1) as a strictly serial immediate execution queue reusing the releases DB,
   driver lock, single-phase drive, and swarm-preflight without wave planning or concurrency tax.
@@ -29,7 +31,16 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan intake merged (PR #261) after Codex QA (F→revised, all 8 findings adjudicated) plus maintainer re-review (probe linting, operator-pause landing default); doc promoted to 2-WORKING 2026-08-26 | Implement Phase 1: `jog_queue` schema + CLI verbs in releases_app.py, `skills/jog/` capture skill, `jog run` serial driver, `jog to-marathon` export, registered test suite |
+| Phase 1 implementation merged (PR #268) after plan intake + Codex QA (PR #261, all 8 findings adjudicated) and a two-round maintainer review (receipt-backed runner writes, hermetic dry-run, real relay-drive invocation, honest landing boundary) | Fire the first real `jog run`; follow-ups: no-PR landing warning, interactive merge rc check, SKILL.md HEAD-on-development note |
+
+## Table of contents
+
+- [Why & Structural Speed Rationale](#why)
+- [Architectural Boundaries](#architectural-boundaries-re-use-vs-new-surface)
+- [Key Concepts & Review Adjudications](#key-concepts--review-adjudications)
+- [Phase 1 Implementation Plan](#phase-1-implementation-plan)
+- [Phase 1 QA Acceptance Gate](#phase-1-qa-acceptance-gate)
+- [Non-goals](#non-goals-deliberately-out-of-scope-for-phase-1)
 
 ## Why
 
@@ -129,7 +140,7 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
 
 ### 1. State as a Dedicated `jog_queue` Schema in Releases DB
 - Add `jog_queue` relation to `releases.db` and dump schema in `utils/py/releases_app.py`:
-  - Fields: `id`, `repo_id`, `gh_number`, `position` (integer order), `status` (`pending`, `running`, `completed`, `parked`, `failed`), `created_at`, `updated_at`, `attempt_count`, `lease_pid`, `failure_reason`.
+  - Fields: `id`, `repo_id`, `gh_number`, `position` (integer order), `status` (`pending`, `running`, `completed`, `parked`, `failed`, `dropped`, `archived`), `created_at`, `updated_at`, `attempt_count`, `lease_pid`, `failure_reason`.
 - CLI verbs in `releases_app.py` / `jog` subcommands:
   - `jog add <issue-or-capture>`: inserts item at end of queue (or specified position).
   - `jog list`: renders active queue ordered by position with status, attempts, and lease state.
@@ -167,15 +178,22 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
   single-day serial execution. Ranking, wave planning, and concurrency zoning are delegated to marathon tools.
 
 ### 5. Automated Test Suite
-- Registered test suite (`test/jog-queue.sh` or `test/gh259-jog.sh`) covering:
+- Registered test suite (`test/jog-queue.sh`):
   - Queue CRUD, ordering overrides (`jog bump`), and retry/skip controls.
-  - Schema integrity, dump, and rebuild consistency.
+  - Schema integrity, dump, and rebuild consistency with `releases check`.
   - Startup orphan-lease recovery and signal traps.
   - 1-INBOX fire-time promotion, probe linting, and `already-landed` auto-drop handling.
   - Landing pause behavior (default) vs `--auto-merge` opt-in.
   - Outer driver-lock mutual exclusion against concurrent marathons/relays.
   - Serial execution with seam overlap and re-anchoring.
   - `jog to-marathon` queue export.
+
+## Phase 1 QA Acceptance Gate
+
+- `bash test/jog-queue.sh` passes 100% green and is registered in `validate.sh`.
+- `python3 utils/py/releases_app.py check` reports clean state with `jog_queue` schema present in `releases.sql` and `releases.db`.
+- `skills/jog/SKILL.md` documents conversational capture and runner CLI options.
+- DeepSeek `/relay-xyz` QA pass adjudicates and approves the Phase 1 implementation.
 
 ## Non-goals (Deliberately Out of Scope for Phase 1)
 
