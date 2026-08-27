@@ -20,6 +20,11 @@ related:
   - GH-260 (improvement-opportunities parent; observability weakness this retires)
 fix_probes:
   - test -f test/write-ops-log.sh
+goal: >
+  Ship a durable JSONL receipt trail for the destructive disk-writes agents
+  execute — worktree teardowns, clone deletions, rm -rf/-f, destructive git —
+  across Claude Code and every harness turn-taker, so "what deleted that?"
+  has a timestamped answer, without building a parallel exec-auditing system.
 ---
 
 # GH-275 — Medium-level write-ops logging of agent disk-write commands
@@ -42,9 +47,9 @@ Source of truth for scope: https://github.com/HiQS-Labs/XYZ-forge/issues/275
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Stage | 1-INBOX capture; plan two-model verified; implementation not started |
+| What was just completed | What's next |
+|---|---|
+| Built via jog's first real run (single agy turn): hook + all four teardown-seam instrumentation sites + `test/write-ops-log.sh` (110 lines, registered in `validate.sh`), independently re-run green. | Landed on `development`; close #275 on GitHub and move this doc to 3-COMPLETED. |
 
 ## Swarm Preflight Contract
 

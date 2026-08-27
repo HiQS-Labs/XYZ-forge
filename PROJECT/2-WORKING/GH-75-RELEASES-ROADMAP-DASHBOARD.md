@@ -19,6 +19,11 @@ related:
   - GH-269 (switchover makes the DB the only roadmap truth this page renders)
 fix_probes:
   - python3 utils/py/releases_app.py dashboard --help
+goal: >
+  Render one self-contained, read-only HTML page carrying both ledgers in
+  releases.db — release cards and roadmap cards grouped by section, with a
+  trust header — by extending the existing RELEASES-PREVIEW.html generator
+  rather than building a parallel renderer.
 ---
 
 # GH-75 — Single-page HTML dashboard: releases + roadmap in one view
@@ -41,9 +46,9 @@ DB. Source of truth: https://github.com/HiQS-Labs/XYZ-forge/issues/75
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Stage | 1-INBOX capture; scanned 2026-08-27 — not started, scope repointed at existing preview generator |
+| What was just completed | What's next |
+|---|---|
+| Built via jog's first real run: `releases dashboard` verb added to `releases_app.py` rendering both panels + trust header, `test/gh75-dashboard.sh` registered and independently re-run green. | Landed on `development`; follow-up nit recorded in its relay thread — issue asked for `--out PATH`/`--open` flags and a `docs/dashboard.html` default; verb currently prints to stdout only. |
 
 ## Swarm Preflight Contract
 
