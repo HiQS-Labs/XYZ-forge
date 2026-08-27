@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Merged in PR #270. Post-merge Codex review (PR #270 comments): 2 BLOCKER + 3 HIGH findings — all accepted and fixed (`fix/gh270-express-post-merge-review`), suite grown to 28 checks incl. a hermetic end-to-end `run` happy path. DeepSeek QA relay (13 findings) previously fixed pre-merge. | First live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
+| Merged in PR #270. PR #278 carries the post-merge review fixes plus a production-path re-review: full generated-output projection, clean two-transaction closeout, canonical gate identity, content-level TOCTOU checks, and failure receipts; suite now 38/38. | First live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
 
 ## Why
 
@@ -77,8 +77,9 @@ foreign-tracker PR-body citations).
 
 ## Acceptance Criteria
 
-- [x] `test/gh267-express-skill.sh` green (15/15): refusal predicates, happy
-      path, born-complete scaffolding, CHANGELOG insertion, tick telemetry.
+- [x] `test/gh267-express-skill.sh` green (38/38): refusal predicates, faithful
+      projection writes, two-transaction closeout, path/content TOCTOU, gate
+      identity before and after the suite, and failure receipts.
 - [x] Suite registered in `validate.sh` TESTS; skill indexed in ARCHITECTURE.md.
 - [x] Roadmap row parked via `releases roadmap add` (rated 3/3/3, provisional).
 - [x] QA relay review — deepseek-v4-pro via relay-xyz (`relay-system/2026-08-27/gh267-express-qa.md`):
@@ -93,15 +94,15 @@ foreign-tracker PR-body citations).
 
 ## Post-merge review (Codex, PR #270) — dispositions
 
-1. **[Blocker] `run` self-refuses after its own ledger writes — ACCEPTED, fixed.** `releases.db`/`releases.sql` became core paths at landing requalification (multi-subsystem refusal). Landing now requalifies against the operator's qualified diff PLUS an exact expected-driver-outputs set (capture doc, CHANGELOG, the two ledger artifacts); `run` completes end-to-end (pinned by a hermetic happy-path test).
-2. **[Blocker] ship/reconcile from the dirty task branch, failures downgraded, state never persisted — ACCEPTED, fixed.** The closeout now runs from clean, current `development`, commits and pushes everything it wrote, and fails closed (`express-reconcile-failed` tick + non-zero exit) on any fault. The success line prints only after persistence.
-3. **[High] full gate assumed, not enforced — ACCEPTED, fixed.** `cmd_check` now refuses `gate-unwired` when `.git/hooks/pre-push` is missing (hooks do not travel with a clone, GH-549); pinned by a regression case.
-4. **[High] suite-time TOCTOU into `git add -A` — ACCEPTED, fixed.** The tree is re-snapshotted after the suite runs; anything beyond the qualified diff + driver projections refuses as `tree-drift`, and staging is by explicit pathspec, never `-A`. Pinned by a drift-writing-suite case.
+1. **[Blocker] `run` self-refuses after its own ledger writes — ACCEPTED, fixed.** Requalification now accepts the exact adopted write surface: DB/dump, optional generated ledger, release preview, HTML/Markdown leaderboards, roadmap dashboard, capture doc, and CHANGELOG. Generated artifacts cannot enter as operator hand-edits.
+2. **[Blocker] ship/reconcile from a dirty tree, failures downgraded, state never persisted — ACCEPTED, fixed.** Closeout commits and pushes the ship transaction first, runs `wave_reconcile` from clean `development`, then commits and pushes reconciliation separately. Every post-merge exit path writes `express-reconcile-failed` and returns non-zero.
+3. **[High] full gate assumed, not enforced — ACCEPTED, fixed.** Both before and after the suite, `bash githooks/install.sh --check` must prove the canonical GH-549 stub; an executable no-op impostor refuses.
+4. **[High] suite-time TOCTOU into `git add -A` — ACCEPTED, fixed.** Path sets and content fingerprints must remain identical across the suite; new files, changed qualified bytes, and gate replacement all refuse. Every commit stages explicit pathspecs.
 5. **[High] blanket .md exemption on a no-review lane — ACCEPTED in substance, one framing note.** The exemption is now exactly the lane's own paperwork (`CHANGELOG.md`, `PROJECT/**`); operator .md edits (governance, skills, README) count against every bound. Framing push-back: the hard-refusal loop was never actually reachable for kernel surfaces via the .md exemption (none of `.tick/`, `src/project.js`, or Bash-twin surfaces are .md paths) — the real exposure was unbounded size/subsystem escape for governance and skill rewrites, which the narrowing closes. Replied on the PR.
 
 ## Merge evidence
 
-- PR #270 merged 2026-08-27 (06:34Z). Post-merge review fixes ride `fix/gh270-express-post-merge-review`.
+- PR #270 merged 2026-08-27 (06:34Z). Post-merge review fixes ride PR #278 (`fix/gh270-express-post-merge-review`).
 
 ## Lessons Learned (For Future Agents)
 
