@@ -525,7 +525,9 @@ if [ "$MODE" = mutate ]; then
   else
     mut_bad "a planted private path was NOT detected [$ART_FAILED_IDS]"
   fi
-  /usr/bin/sed -i '' '/secret-notes/d' "$FIX/README.md"
+  # GH-204: portable in-place delete (GNU + BSD); the BSD-only `sed -i ''` form left the planted
+  # marker in place under GNU sed, so the next mutation ran against a dirty fixture.
+  /usr/bin/sed -i.bak '/secret-notes/d' "$FIX/README.md"; rm -f "$FIX/README.md.bak"
 
   echo "-- mutation 2: remove CHANGELOG.md"
   mv "$FIX/CHANGELOG.md" "$TMP/CHANGELOG.keep"
