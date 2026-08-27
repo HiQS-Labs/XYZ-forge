@@ -39,6 +39,7 @@ without reading all of them first.
 | [agent-chorus](skills/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ci-doctor](skills/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [consult](skills/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
+| [express](skills/express/SKILL.md) | Hotfix fast lane — one motion: fix + suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
 | [file-xyz-bug](skills/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
 | [hq](skills/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [marathon-cleanup](skills/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
