@@ -873,7 +873,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260826160819-9dded48f','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260826160822-d13a63bf','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-TURN-tickexempt',0.0,0,0,NULL,NULL,0.0,' 8 files changed, 103 insertions(+), 58 deletions(-)','2026-08-26 16:08:22');
 INSERT INTO "invocation_logs" VALUES('inv-20260827044304-10663062','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh259-jog-implementation-qa-deepseek',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-27 04:43:04');
 INSERT INTO "invocation_logs" VALUES('inv-20260827051117-94504257','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh267-express-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-27 05:11:17');
-
+INSERT INTO "invocation_logs" VALUES('inv-20260827180919-f0f86575','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh275-jog-drive',0.0,0,0,NULL,NULL,0.0,' 4 files changed, 17 insertions(+), 8 deletions(-)','2026-08-27 18:09:19');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,

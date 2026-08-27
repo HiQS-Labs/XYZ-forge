@@ -356,6 +356,21 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
     env["ALLOW_PATHS"] = ",".join(artifacts)
 
     proc = subprocess.run(cmd, cwd=root, env=env)
+    if proc.returncode != 0:
+        # relay-drive speaks the multi-round protocol: a builder that finishes in one
+        # turn sets STATUS: Done and releases its token to 'done', which the driver
+        # reads as a spent task and escalates (exit 4). For jog's single-phase drives a
+        # terminal STATUS on the relay file IS success; the landing boundary still
+        # verifies before anything merges.
+        try:
+            head = open(relay_file, encoding="utf-8").read(2048)
+            m = re.search(r"^STATUS:\s*(\S+)", head, re.M)
+            if m and m.group(1).lower() in ("done", "approved"):
+                print(f"jog: drive escalated (exit {proc.returncode}) but relay STATUS is "
+                      f"{m.group(1)} — treating single-phase drive as complete.")
+                return 0
+        except OSError:
+            pass
     return proc.returncode
 
 
