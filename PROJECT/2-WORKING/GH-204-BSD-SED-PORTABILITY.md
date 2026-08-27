@@ -2,7 +2,7 @@
 title: "GH-204: BSD `sed -i ''` idiom silently no-ops on Linux at production call sites"
 status: Active
 created: 2026-08-24
-updated: 2026-08-24
+updated: 2026-08-27
 owner: orchestrator (Claude Code)
 goal: no production write is silently lost on Linux — every in-place edit uses a portable idiom and a regression test asserts on destination-file CONTENT, not exit code
 gh_issue: 204
@@ -26,7 +26,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| capture doc + preflight contract written; dialed into 0.7.4 Linux-RC | Operator fires the marathon lane; builder executes ## Plan, reviewer verifies ## Acceptance |
+| all 7 acceptance items landed on `fix/gh204-production-sed`: portable idioms at both production sed sites, content-asserted escalation write in the authoritative Python lane, and `test/gh204-sed-portability.sh` green + registered in validate.sh | reviewer merges the PR into `development`; #224 Phase 2 exit item closes |
 
 Scoped per Agy's empirical review on #224 (2026-08-24): PR #209 already fixed the test-side
 call sites; the remaining sites are production/runtime. `git grep "sed -i ''"` at f3400b61:
@@ -52,13 +52,13 @@ call sites; the remaining sites are production/runtime. `git grep "sed -i ''"` a
 
 ## Acceptance
 
-- [ ] Neither call site uses the BSD-only `sed -i ''` form; both work on GNU and BSD sed.
-- [ ] The escalation path **fails loudly** if the `STATUS:` rewrite does not land in the authoritative Python lane (`utils/py/relay_drive.py`) — it must not print "escalated" or exit 4 when the file was not changed.
-- [ ] `build-launch-artifact.sh` reports a redaction failure distinguishably from "nothing to redact".
-- [ ] The residual check no longer depends on a hardcoded username.
-- [ ] A regression test covers the escalation path asserting on **file content**, not exit code alone.
-- [ ] `test/gh204-sed-portability.sh` green and registered in validate.sh.
-- [ ] `test/meter-release.sh:528` rewritten portably.
+- [x] Neither call site uses the BSD-only `sed -i ''` form; both work on GNU and BSD sed.
+- [x] The escalation path **fails loudly** if the `STATUS:` rewrite does not land in the authoritative Python lane (`utils/py/relay_drive.py`) — it must not print "escalated" or exit 4 when the file was not changed.
+- [x] `build-launch-artifact.sh` reports a redaction failure distinguishably from "nothing to redact".
+- [x] The residual check no longer depends on a hardcoded username.
+- [x] A regression test covers the escalation path asserting on **file content**, not exit code alone.
+- [x] `test/gh204-sed-portability.sh` green and registered in validate.sh.
+- [x] `test/meter-release.sh:528` rewritten portably.
 
 ## Acceptance — deviations from the issue
 

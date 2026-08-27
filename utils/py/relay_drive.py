@@ -679,12 +679,23 @@ def main():
                 with open(relay_file, 'a') as f:
                     f.write(f"\n### consult-verify advisory — divergence detected (round {round_idx})\n\nVERDICT: FAIL\nBasis: consult disagreed with turn-taker verdict \"{taker_verdict}\" (see transcripts)\n{cv_advisor_summary}\nTurn-taker self-reported: {taker_verdict}\n")
                 
-                # set STATUS: Escalated
+                # set STATUS: Escalated -- GH-204: the write must be PROVEN to land. A no-match
+                # substitution rewrites the file byte-identically, so reporting "escalated" off the
+                # exit code alone lets a genuinely failed review read as still open.
                 with open(relay_file, 'r') as f:
                     content = f.read()
-                content = re.sub(r'^STATUS:\s*.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
+                content, n_subs = re.subn(r'^STATUS:\s*.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
+                if n_subs == 0:
+                    eprint(f"relay-drive: no STATUS: line in {relay_file} -- the escalation write did not land.")
+                    eprint("relay-drive: refusing to report an escalation that was never written (GH-204).")
+                    sys.exit(1)
                 with open(relay_file, 'w') as f:
                     f.write(content)
+                with open(relay_file, 'r') as f:
+                    if 'STATUS: Escalated' not in f.read():
+                        eprint(f"relay-drive: escalation write did not persist to {relay_file}.")
+                        eprint("relay-drive: refusing to report an escalation that is not on disk (GH-204).")
+                        sys.exit(1)
                 
                 try:
                     cv_relay_repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
