@@ -26,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implementation complete (commit 61e01775): closers/mentions split with evidence-only mention path + force-promote widening; rollback snapshots views + plan docs (try/finally), destination overwrite snapshot, porcelain tripwire. gh202 29/0, gh232 13/0, gh168 7/0, wave-reconcile 11/0 | Agy relay QA on the PR diff, then full validate.sh; PR into development |
+| Implementation + QA complete: Agy relay rounds 1-2 findings implemented (URL-fragment lookbehind pinned; gh202 31/0); full validate.sh green 283/283 | PR into development (fix/gh271-273-quick-wins); merge closes the issue |
 
 Spun off from the #260 assessment (improvement items 2 and 3). Both defects live in
 `utils/py/wave_reconcile.py` and ship as one fix.

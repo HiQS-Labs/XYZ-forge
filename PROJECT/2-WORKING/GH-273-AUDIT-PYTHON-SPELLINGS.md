@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implementation complete (commit b593b03c): .py alias registration + program-position python3 matching + group-span safety; four gh322 parse probes scoped; gh273 pinning test 9/0; audit 139 invocations, 0 failures | Agy relay QA on the PR diff, then full validate.sh; PR into development |
+| Implementation + QA complete: Agy relay rounds 1-2 delivered 2 Blockers + 1 Should (unquoted spellings, segment scoping, variable spellings — all implemented + pinned, gh273 16/0, audit 142/0); full validate.sh green 283/283; relay escalated at round 3 on a contained reviewer overreach, documented in relay-system/2026-08-27/gh271-273-qa.md | PR into development (fix/gh271-273-quick-wins); merge closes the issue |
 
 Spun off from the #260 assessment (improvement item 5), scoped to the known-live instance.
 The AGENTS.md rail ("an audit that recognizes only one invocation shape stops covering the same

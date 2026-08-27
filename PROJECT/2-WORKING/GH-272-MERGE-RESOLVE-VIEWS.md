@@ -26,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implementation complete (commit 7e1a7baf): step-5 view regeneration (take-ours → regen → verify → stage, hard-fail posture), ROADMAP_DASHBOARD_ROOT target-driving seam. gh57-live 53/0 incl. both-sides-conflicted views scenario; gh57-fuzz 42/0; dashboard-adjacent suites green | Agy relay QA on the PR diff, then full validate.sh; PR into development |
+| Implementation + QA complete: Agy relay round 1 Q3 verdict Pass (ordering airtight); full validate.sh green 283/283 | PR into development (fix/gh271-273-quick-wins); merge closes the issue |
 
 Spun off from the #260 assessment (improvement item 7). `utils/releases-merge-resolve.sh`
 finishes a ledger merge by rebuilding `releases.db` and staging two artifacts (the
