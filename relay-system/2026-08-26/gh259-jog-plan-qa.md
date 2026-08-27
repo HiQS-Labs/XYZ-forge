@@ -129,10 +129,15 @@ Write your verdict below. Set `STATUS: Approved` if sound as written, or leave i
 
 ## Producer Synthesis · 2026-08-26
 
-All actionable findings from the Codex QA review have been accepted and incorporated into `PROJECT/1-INBOX/GH-259-JOG-SERIAL-QUEUE.md`:
+All blocking findings from the Codex QA review have been adjudicated and incorporated into `PROJECT/1-INBOX/GH-259-JOG-SERIAL-QUEUE.md`:
 
-1. **Dedicated `jog_queue` schema:** Rejected ad-hoc `roadmap_items` marker overloading due to `(repo_id, gh_number)` unique constraint and portfolio section-order semantics. Adopted dedicated `jog_queue` SQLite relation.
-2. **Short writer transactions & leasing:** Adopted short atomic transactions for state transitions (`pending -> running -> completed|parked|failed`) with crash-recovery journaling.
-3. **Outer driver lock composition:** Specified `RELAY_DRIVER_LOCKED=1` environment propagation for nested single-phase runs.
-4. **Preflight exit mapping & landing boundaries:** Integrated `swarm-preflight` exit code mappings (`ready` -> fire, `already-landed` -> drop with receipt, `not-ready` -> park/prompt) and clean worktree teardown assertions between serial tasks.
+1. **Artifact visibility (Finding 1):** Worktree isolation initially prevented access to untracked capture files; resolved by committing the plan document to git before driving the review.
+2. **Dedicated `jog_queue` schema (Finding 2):** Rejected ad-hoc `roadmap_items` marker overloading due to `(repo_id, gh_number)` unique constraints and portfolio section-ordering semantics. Adopted dedicated `jog_queue` SQLite relation with dump/rebuild migration.
+3. **Leasing, short transactions & crash recovery (Finding 3):** Adopted short atomic writer transactions with durable `pending -> running -> completed|parked|failed` states. Added startup reconciliation of orphan `running` leases (PID liveness check), `SIGINT`/`SIGTERM` cleanup traps, operator `retry`/`skip` CLI verbs, and audit archival on `jog clear`.
+4. **Outer driver lock composition (Finding 4):** Supervisor acquires `relay-driver.lock`, exports `RELAY_DRIVER_LOCKED=1`, and registers trap cleanup so child single-phase `relay-drive` invocations proceed without lock refusal.
+5. **Fire-time contract promotion & preflight mapping (Finding 5):** Resolved the `1-INBOX` vs `swarm-preflight` contract barrier: `jog run` automatically promotes `1-INBOX` captures to `2-WORKING/` (scaffolding status table and probes) before invoking `swarm-preflight`; mapped exits (`ready` -> fire, `already-landed` -> drop with receipt, `not-ready` -> park/prompt).
+6. **Serial landing boundary & re-anchoring (Finding 6):** Resolved the conflict between serial safety rationale and landing boundary: adopted `merge-before-advance` re-anchoring on `development` as default for same-seam/overlapping tasks to eliminate deferred merge conflicts; independent tasks branch off `origin/development`; stacked branches deferred as explicit future opt-in.
+7. **Two-stage capture triggers (Finding 7):** Conversational enqueue (`"jog task above"`) creates issue via `gh issue create`, immediately parks roadmap row via `releases roadmap add`, echoes resolved issue/title for confirmation, and enqueues row; full preflight deferred to fire time.
+8. **Outer review & verification boundary (Finding 8):** Requires owned task branches/PRs targeting `development`, diff size sanity checks, clean worktree teardown, and gate pass receipts before advancing the queue.
+
 
