@@ -4,7 +4,10 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$HERE/.." && pwd)"
+# GH-272: releases-merge-resolve.sh drives this renderer against a --root TARGET repo —
+# the ledger it renders and the dashboard it writes must follow the target, not this
+# script's own checkout. Self-location stays the default for every other caller.
+ROOT="${ROADMAP_DASHBOARD_ROOT:-$(cd "$HERE/.." && pwd)}"
 SOURCE_FILE="${ROADMAP_DASHBOARD_SOURCE:-"$ROOT/ROADMAP.md"}"
 OUTPUT_FILE="${ROADMAP_DASHBOARD_OUTPUT:-"$ROOT/ROADMAP-DASHBOARD.md"}"
 
@@ -50,8 +53,10 @@ if [ -z "${ROADMAP_DASHBOARD_SOURCE:-}" ] \
   DB_JSON="$TMP_DIR/roadmap-rows.json"
   # JSON goes through a temp file passed as argv — `python3 -` takes its PROGRAM from the
   # heredoc on stdin, so piping data in as well would feed the parser nothing (the PR #240
-  # rollup.sh bug, same shape).
-  if python3 "$ROOT/utils/py/releases_app.py" --root "$ROOT" roadmap list --json > "$DB_JSON" 2>/dev/null \
+  # rollup.sh bug, same shape). The APP resolves from HERE (this script's own checkout) while
+  # --root follows $ROOT: under ROADMAP_DASHBOARD_ROOT (GH-272) the target repo may ship the
+  # ledger without a utils/ tree at all.
+  if python3 "$HERE/py/releases_app.py" --root "$ROOT" roadmap list --json > "$DB_JSON" 2>/dev/null \
      && python3 - "$DB_JSON" > "$DB_SRC" <<'PY'
 import json, sys
 with open(sys.argv[1]) as f:

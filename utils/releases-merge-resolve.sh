@@ -13,7 +13,12 @@
 #   2. take either side of the derived artifacts — they are about to be regenerated anyway
 #   3. `releases check --rebuild`  — dump -> DB, atomic, .bak of the displaced DB
 #   4. `releases check`           — must come back clean, or we refuse and leave the merge open
-#   5. stage the regenerated artifacts
+#   5. regenerate adopted views   — ROADMAP-DASHBOARD.md / RELEASES-PREVIEW.html /
+#                                  LEADERBOARD.html / LEADERBOARD.md are all rendered from
+#                                  ledger state, so the resolved dump staled every one of
+#                                  them (GH-272; until now each was hand-regenerated after
+#                                  every concurrent merge)
+#   6. stage the regenerated artifacts
 #
 # It deliberately does NOT commit. The merge message and whether the merge is right at all remain
 # the operator's call; this only guarantees the artifacts are self-consistent before that decision.
@@ -145,11 +150,74 @@ if ! python3 "$APP" --root "$ROOT" check; then
   releases.db.bak if you need to compare."
 fi
 
-# ── 5. stage what the rebuild regenerated — the FIRST point at which anything is resolved ───────
+# ── 5. regenerate the adopted derived views (GH-272) ───────────────────────────────────────────
+# Adoption is opt-in by presence, mirroring refresh_preview in releases_app.py: a repo that
+# never baked a view (a fixture, a fresh install) is a silent no-op. A view that exists is
+# stale the moment the dump merged — regenerate it from the rebuilt ledger, and if the
+# generator fails, refuse and leave the merge open rather than warn-and-continue: the
+# write path can afford best-effort refreshes, a merge resolver cannot (a stale view is
+# exactly the hand-regen tax this step exists to end).
+VIEWS="ROADMAP-DASHBOARD.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md"
+REGEN=""
+for f in $VIEWS; do
+  if printf '%s\n' "$UNMERGED" | grep -qx "$f"; then
+    # --ours is arbitrary and that is the point: both sides are stale the moment the dump
+    # merged. The working-tree copy is replaced because the generators write in place; the
+    # index stays unmerged until the regen below has succeeded, same discipline as releases.db.
+    git -C "$ROOT" checkout --ours -- "$f" 2>/dev/null || true
+    say "took either side of $f in the working tree (it is regenerated below, so the choice cannot matter)"
+    REGEN="${REGEN:+$REGEN }$f"
+  elif [ -f "$ROOT/$f" ]; then
+    REGEN="${REGEN:+$REGEN }$f"
+  fi
+done
+
+if [ -n "$REGEN" ]; then
+  say "regenerating adopted views: $REGEN"
+  case " $REGEN " in
+    *" ROADMAP-DASHBOARD.md "*)
+      say "  -> roadmap-dashboard.sh"
+      if ! ROADMAP_DASHBOARD_ROOT="$ROOT" bash "$HERE/roadmap-dashboard.sh"; then
+        die "roadmap-dashboard.sh failed. The merge is left open on purpose — staging the
+  stale dashboard against a rebuilt ledger would commit exactly the divergence this
+  resolver exists to prevent."
+      fi
+      ;;
+  esac
+  case " $REGEN " in
+    *" RELEASES-PREVIEW.html "*)
+      say "  -> export_timeline.py --preview"
+      if ! python3 "$HERE/timeline/export_timeline.py" --db "$ROOT/releases.db" --preview "$ROOT/RELEASES-PREVIEW.html"; then
+        die "export_timeline.py --preview failed. The merge is left open on purpose; the stale
+  RELEASES-PREVIEW.html has not been staged."
+      fi
+      ;;
+  esac
+  case " $REGEN " in
+    *" LEADERBOARD.html "*)
+      say "  -> export_timeline.py --leaderboard"
+      if ! python3 "$HERE/timeline/export_timeline.py" --db "$ROOT/releases.db" --leaderboard "$ROOT/LEADERBOARD.html"; then
+        die "export_timeline.py --leaderboard failed. The merge is left open on purpose; the stale
+  LEADERBOARD.html has not been staged."
+      fi
+      ;;
+  esac
+  case " $REGEN " in
+    *" LEADERBOARD.md "*)
+      say "  -> leaderboard.sh"
+      if ! LEADERBOARD_DB="$ROOT/releases.db" LEADERBOARD_OUTPUT="$ROOT/LEADERBOARD.md" bash "$HERE/leaderboard.sh"; then
+        die "leaderboard.sh failed. The merge is left open on purpose; the stale LEADERBOARD.md
+  has not been staged."
+      fi
+      ;;
+  esac
+fi
+
+# ── 6. stage what the rebuild regenerated — the FIRST point at which anything is resolved ───────
 for f in $TOOK_SIDE; do
   say "resolving $f in the index now that the rebuild verified clean"
 done
-for f in $DERIVED releases.sql; do
+for f in $DERIVED releases.sql $REGEN; do
   [ -f "$ROOT/$f" ] && git -C "$ROOT" add -- "$f"
 done
 

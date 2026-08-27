@@ -234,6 +234,69 @@ ok "  and says it will not fall back to the current repository" \
 ok "  and this repo's ledger is byte-identical after that call" \
    "[ \"\$(shasum -a 256 \"$ROOT_DIR/releases.db\" \"$ROOT_DIR/releases.sql\" | awk '{print \$1}' | tr '\n' ' ')\" = \"$LEDGER_BEFORE\" ]"
 
+# ── 8. GH-272: adopted derived views are regenerated and staged, not left for hand-regen ────────
+# releases.db is not the only artifact a ledger merge stales: ROADMAP-DASHBOARD.md,
+# RELEASES-PREVIEW.html, LEADERBOARD.html and LEADERBOARD.md are all rendered from ledger
+# state. Until GH-272 the resolver finished with those views still conflicted or stale, and
+# the operator regenerated each by hand before `git merge --continue`. A repo that never
+# adopted a view must remain a silent no-op (scenario 3's bare fixture already pins that).
+echo "-- 8: adopted views are regenerated + staged (GH-272)"
+R8="$WORK/c8"
+mkdir -p "$R8"
+require_fixture "$R8" "views merge fixture"
+git -C "$R8" init -q -b main
+git -C "$R8" config user.email gh57live@test.invalid
+git -C "$R8" config user.name gh57live
+ra "$R8" init --slug c8 >/dev/null
+printf 'ROADMAP_SOURCE=releases\n' > "$R8/.pdda-mode"
+bake_views() {  # <repo> — render every adopted view from that repo's CURRENT ledger
+  local r="$1"
+  ROADMAP_DASHBOARD_ROOT="$r" bash "$ROOT_DIR/utils/roadmap-dashboard.sh"
+  python3 "$ROOT_DIR/utils/timeline/export_timeline.py" --db "$r/releases.db" --preview "$r/RELEASES-PREVIEW.html"
+  python3 "$ROOT_DIR/utils/timeline/export_timeline.py" --db "$r/releases.db" --leaderboard "$r/LEADERBOARD.html"
+  LEADERBOARD_DB="$r/releases.db" LEADERBOARD_OUTPUT="$r/LEADERBOARD.md" bash "$ROOT_DIR/utils/leaderboard.sh"
+}
+bake_views "$R8"
+V8="ROADMAP-DASHBOARD.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md"
+for f in $V8; do ok "fixture adopted $f before the merge" "[ -f '$R8/$f' ]"; done
+git -C "$R8" add -A; git -C "$R8" commit -qm base
+git -C "$R8" branch side
+git -C "$R8" checkout -q side
+ra "$R8" add --version 1.0.0 --status draft --description 'side one.' --tracking-issue TMP-SIDE01 >/dev/null
+for f in $V8; do printf 'side touched %s\n' "$f" >> "$R8/$f"; done
+git -C "$R8" commit -qam side
+git -C "$R8" checkout -q main
+ra "$R8" add --version 2.0.0 --status draft --description 'main one.' --tracking-issue TMP-MAIN01 >/dev/null
+for f in $V8; do printf 'main touched %s\n' "$f" >> "$R8/$f"; done
+git -C "$R8" commit -qam main
+git -C "$R8" merge side -m merge >/dev/null 2>&1 || true
+ok "the adopted views really conflicted (both sides wrote them)" \
+   "git -C '$R8' diff --name-only --diff-filter=U | grep -qx ROADMAP-DASHBOARD.md"
+resolve_dump "$R8"
+out="$(resolver "$R8")"; rc=$?
+ok "resolver completes with adopted views in play (rc=$rc)" "[ $rc -eq 0 ]"
+ok "  and says it regenerated them" "has \"\$out\" 'regenerating adopted views'"
+ok "  and left no unmerged paths (views included)" \
+   "[ -z \"\$(git -C '$R8' diff --name-only --diff-filter=U)\" ]"
+STAGED="$(git -C "$R8" diff --cached --name-only)"
+for f in $V8; do
+  ok "  $f is staged resolved" "has \"\$STAGED\" '$f'"
+  ok "  $f carries no conflict markers" "[ \"\$(grep -c '^<<<<<<< ' '$R8/$f')\" -eq 0 ]"
+  ok "  $f carries neither side's stale touch" "! grep -q 'touched $f' '$R8/$f'"
+done
+# Idempotence: re-rendering from the resolved ledger reproduces the staged bytes, and the
+# dashboard/leaderboard --check modes agree the staged copies are in sync.
+ok "staged dashboard matches a fresh render (--check in sync)" \
+   "ROADMAP_DASHBOARD_ROOT='$R8' bash '$ROOT_DIR/utils/roadmap-dashboard.sh' --check"
+ok "staged LEADERBOARD.md matches a fresh render (--check in sync)" \
+   "LEADERBOARD_DB='$R8/releases.db' LEADERBOARD_OUTPUT='$R8/LEADERBOARD.md' bash '$ROOT_DIR/utils/leaderboard.sh' --check"
+# The staged preview was rendered from the MERGED ledger, not the stale ours-side: the bake
+# embeds the ledger's telemetry, and byte-comparing two bakes is wrong by design (each embeds
+# its own generatedAtDisplay timestamp). Ours-side-only would say releasesTotal 1; the merge
+# carried both sides' releases, so the regenerated bake must say 2.
+ok "staged RELEASES-PREVIEW.html reflects the MERGED ledger (both sides' releases present)" \
+   "grep -q '\"releasesTotal\": 2' '$R8/RELEASES-PREVIEW.html'"
+
 echo
 echo "  gh57-live-merge-resolve: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
