@@ -144,18 +144,19 @@ find_invocation_target() {
     return 0
   fi
 
-  # GH-273: direct `python3 "<path>/marathon_drive.py"` / relay_drive.py — PROGRAM
-  # position only (the quoted path must be the token right after the interpreter), so
+  # GH-273: direct `python3 <path>/marathon_drive.py` / relay_drive.py — PROGRAM
+  # position only (the path must be the token right after the interpreter), so
   # the `python3 - "<path>" <<'PY'` heredoc-argv shape that merely READS the driver
-  # (gh390/gh322/gh342) never matches.
-  if [[ "$line" =~ python3?[[:space:]]+\"[^\"]*(utils/py/|/|^)(marathon_drive|relay_drive)\.py\" ]]; then
-    printf '%s\n' "${BASH_REMATCH[2]}"
+  # (gh390/gh322/gh342) never matches. Quotes are OPTIONAL (GH-273 QA round 1:
+  # `python3 utils/py/marathon_drive.py` unquoted bypassed the audit entirely).
+  if [[ "$line" =~ python3?[[:space:]]+[^[:space:]]*/(marathon_drive|relay_drive)\.py ]]; then
+    printf '%s\n' "${BASH_REMATCH[1]}"
     return 0
   fi
 
-  # GH-273: same for a direct `bash "<path>/relay-automation/<driver>.sh` beyond the
+  # GH-273: same for a direct `bash <path>/relay-automation/<driver>.sh` beyond the
   # vendored ./.xyz literals above (gh376 drives "$WT/relay-automation/relay-drive.sh").
-  if [[ "$line" =~ bash[[:space:]]+\"[^\"]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh\" ]]; then
+  if [[ "$line" =~ bash[[:space:]]+[^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; then
     printf '%s\n' "${BASH_REMATCH[1]}"
     return 0
   fi
@@ -173,6 +174,27 @@ find_invocation_target() {
   rest="${line#*python3 \"\$}"
   if [ "$rest" != "$line" ]; then
     var="${rest%%\"*}"
+    target="$(get_alias_target "$var" || true)"
+    if [ -n "$target" ]; then
+      printf '%s\n' "$target"
+      return 0
+    fi
+  fi
+
+  # GH-273 QA round 1: unquoted spellings — `python3 $DRIVER`, `bash $DRIVE`.
+  rest="${line#*bash \$}"
+  if [ "$rest" != "$line" ] && [[ "$rest" != *\"* ]]; then
+    var="${rest%%[[:space:]]*}"
+    target="$(get_alias_target "$var" || true)"
+    if [ -n "$target" ]; then
+      printf '%s\n' "$target"
+      return 0
+    fi
+  fi
+
+  rest="${line#*python3 \$}"
+  if [ "$rest" != "$line" ] && [[ "$rest" != *\"* ]]; then
+    var="${rest%%[[:space:]]*}"
     target="$(get_alias_target "$var" || true)"
     if [ -n "$target" ]; then
       printf '%s\n' "$target"
@@ -207,11 +229,31 @@ group_has_safe_cwd() {  # <group-text>
   return 1
 }
 
+# GH-273 QA round 1: `;`, `&&`, and `||` separate shell commands — an env prefix binds only
+# to ITS command (`MARATHON_ROOT="$W" foo; python3 driver.py` scopes foo, not python3).
+# Evaluate the rooted-ness rules on the SEGMENT that carries the invocation, not the whole
+# continuation group. cwd is the exception: a cd persists for the rest of the shell.
+invocation_segment() {  # <group-text> -> the command segment carrying the driver token
+  local g="$1" seg
+  # Split on command separators — pure bash (BSD sed refuses a literal newline in a
+  # substitute pattern).
+  local chopped="${g//;/$'\n'}"
+  chopped="${chopped//&&/$'\n'}"
+  chopped="${chopped//||/$'\n'}"
+  while IFS= read -r seg || [ -n "$seg" ]; do
+    if [[ "$seg" =~ (python3?[[:space:]][^[:space:]]*/(marathon_drive|relay_drive)\.py|bash[[:space:]][^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh|bash[[:space:]]+\"\$) ]]; then
+      printf '%s\n' "$seg"
+      return 0
+    fi
+  done <<< "${chopped}"
+  printf '%s\n' "$g"  # driver token not re-found after splitting — keep whole-group semantics
+}
+
 # A driver flag whose value anchors the run's outputs to a $WORK-derived fixture
 # (gh115's `--relay-file "$A/relay.md"`, gh438's `--phases-dir "$A/phases"`).
 group_has_safe_anchor_arg() {  # <group-text>
   local g="$1" var
-  while [[ "$g" =~ --(phase-brief|phases-dir|relay-file|artifact|target-root)[[:space:]]+\"\$([A-Z][A-Z0-9_]*) ]]; do
+  while [[ "$g" =~ --(phase-brief|phases-dir|relay-file|artifact|target-root)[[:space:]]+\"?\$([A-Z][A-Z0-9_]*) ]]; do
     var="${BASH_REMATCH[2]}"
     is_safe_var "$var" && return 0
     g="${g#*${BASH_REMATCH[0]}}"
@@ -223,7 +265,7 @@ group_has_safe_anchor_arg() {  # <group-text>
 # $WORK fixture repo, gh115's file-scope `export MARATHON_ROOT="$A"`).
 group_has_safe_scoping_env() {  # <group-text>
   local g="$1" var
-  while [[ "$g" =~ (MARATHON_ROOT|RELAY_TARGET_ROOT|TICK_REPO_ROOT)[[:space:]]*=[[:space:]]*\"\$([A-Z][A-Z0-9_]*) ]]; do
+  while [[ "$g" =~ (MARATHON_ROOT|RELAY_TARGET_ROOT|TICK_REPO_ROOT)[[:space:]]*=[[:space:]]*\"?\$([A-Z][A-Z0-9_]*) ]]; do
     var="${BASH_REMATCH[2]}"
     is_safe_var "$var" && return 0
     g="${g#*${BASH_REMATCH[0]}}"
@@ -236,12 +278,12 @@ group_has_safe_scoping_env() {  # <group-text>
 # repo from its own location, so the run is fixture-local by construction.
 line_invokes_fixture_resident_driver() {  # <line>
   local line="$1" var
-  while [[ "$line" =~ \"\$([A-Z][A-Z0-9_]*)[^\"]*(marathon_drive|relay_drive)\.py\" ]]; do
+  while [[ "$line" =~ \"?\$([A-Z][A-Z0-9_]*)[^[:space:]]*(marathon_drive|relay_drive)\.py ]]; do
     var="${BASH_REMATCH[1]}"
     is_safe_var "$var" && return 0
     line="${line#*${BASH_REMATCH[0]}}"
   done
-  while [[ "$line" =~ \"\$([A-Z][A-Z0-9_]*)[^\"]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh\" ]]; do
+  while [[ "$line" =~ \"?\$([A-Z][A-Z0-9_]*)[^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; do
     var="${BASH_REMATCH[1]}"
     is_safe_var "$var" && return 0
     line="${line#*${BASH_REMATCH[0]}}"
@@ -266,14 +308,13 @@ check_invocation_safety() {
     group_text+="${lines[$j]} "
   done
 
-  if [[ "$line" == *'MARATHON_ROOT='* ]]; then
-    return 0
-  fi
-
-  # GH-273: a bare MARATHON_ROOT= anywhere in the continuation group — the original
+  # GH-273: a bare MARATHON_ROOT= in the invocation's own command SEGMENT — the original
   # continuation rule, extended to the args that follow the program token (gh402's
-  # subshell env-prefix blocks, gh391's `if MARATHON_ROOT=... \` lines).
-  if [[ "$group_text" == *'MARATHON_ROOT='* ]]; then
+  # subshell env-prefix blocks, gh391's `if MARATHON_ROOT=... \` lines) but NOT across
+  # `;`/`&&`/`||` boundaries, where the prefix binds to a different command (QA round 1).
+  local seg_text
+  seg_text="$(invocation_segment "$group_text")"
+  if [[ "$seg_text" == *'MARATHON_ROOT='* ]]; then
     return 0
   fi
 
@@ -282,8 +323,8 @@ check_invocation_safety() {
   fi
 
   if group_has_safe_cwd "$group_text" \
-     || group_has_safe_scoping_env "$group_text" \
-     || group_has_safe_anchor_arg "$group_text" \
+     || group_has_safe_scoping_env "$seg_text" \
+     || group_has_safe_anchor_arg "$seg_text" \
      || line_invokes_fixture_resident_driver "$line"; then
     return 0
   fi
@@ -328,7 +369,7 @@ check_invocation_safety() {
 audit_file() {
   local file="$1"
   local -a lines=()
-  local line target idx
+  local line target idx first_string
 
   discover_file_metadata "$file"
 
@@ -337,7 +378,24 @@ audit_file() {
   done < "$file"
 
   for ((idx = 0; idx < ${#lines[@]}; idx++)); do
-    target="$(find_invocation_target "${lines[$idx]}" || true)"
+    line="${lines[$idx]}"
+    # Comments are not invocations — GH-273 QA round 1 made path quotes optional, so a
+    # comment or prose string saying "python3 utils/py/marathon_drive.py" would otherwise
+    # match in program position.
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    # A driver spelling inside the first QUOTED STRING of an assignment is payload, not a
+    # command (relay-xyz-skill-guard.sh builds event strings like
+    # DRIVE="bash relay-automation/relay-drive.sh ..."). An env-prefix invocation
+    # (MARATHON_ROOT="$W" python3 ...driver.py) keeps its driver OUTSIDE that first
+    # string, so it is still audited.
+    if [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*=\" ]]; then
+      first_string="${line#*\"}"
+      first_string="${first_string%%\"*}"
+      if [[ "$first_string" =~ (marathon_drive|relay_drive)\.py|relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; then
+        continue
+      fi
+    fi
+    target="$(find_invocation_target "$line" || true)"
     [ -z "$target" ] && continue
     checked=$((checked + 1))
     if check_invocation_safety "$idx" "${lines[@]}"; then

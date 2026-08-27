@@ -216,6 +216,8 @@ Closes #99
 Advances GH-77.'
 check_ext "GH-271: keyword at title end cannot capture body ref (same-line rule)" '[]' '[123]' 'fixed' '#123 started'
 check_ext "GH-271: closer + mention split (the GH-202 convention)" '[271]' '[260]' 'feat: x' 'Closes GH-271. Advances GH-260 (phase 1 of 2).'
+check_ext "GH-271 QA r1: URL fragments/paths are not mentions" '[]' '[]' 'feat: x' 'see https://example.com/#123 and https://example.com/GH-99 and ?#7'
+check_ext "GH-271 QA r1: plain refs still count after the lookbehind" '[]' '[123, 124, 125]' 'feat: x' 'see #123 and (GH-124) and —GH-125.'
 [ "$ext_fail" -eq 0 ] || fail "one or more GH-271 extraction unit checks failed"
 
 # ── GH-271 Part B: rollback completeness ───────────────────────────────────────

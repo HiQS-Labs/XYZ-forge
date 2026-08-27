@@ -48,7 +48,7 @@ printf '%s\n' \
   'python3 "$ROOT/utils/py/marathon_''drive.py" --phase-brief brief.md --round-cap 2' \
   > "$D/p1-unsafe.sh"
 out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
-[ "$rc" -ne 0 ] && pass "unscoped python3 marathon_drive.py FAILS the audit (the GH-195 pin)" \
+[ "$rc" -ne 0 ] && pass 'unscoped python3 driver invocation FAILS the audit (the GH-195 pin)' \
   || fail "unscoped python3 invocation passed the audit"
 grep -q "p1-unsafe.sh.*marathon_drive" <<<"$out" \
   && pass "  and the failure names the file and the python driver" \
@@ -60,7 +60,7 @@ ROOT="/real/harness-repo"
 MARATHON_ROOT="$WORK/mroot" python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief brief.md --round-cap 2
 PROBE
 out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] && pass "the same invocation with MARATHON_ROOT passes" \
+[ "$rc" -eq 0 ] && pass 'the same invocation with MARATHON_ROOT passes' \
   || fail "MARATHON_ROOT-scoped python3 invocation failed the audit: $out"
 grep -q "PASS: p2-scoped.sh.*marathon_drive" <<<"$out" \
   && pass "  and is reported as rooted" \
@@ -110,6 +110,48 @@ out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
 grep -q "PASS: p5-resident.sh.*relay_drive" <<<"$out" \
   && pass "  and is reported as checked" \
   || fail "  fixture-resident invocation not reported: $out"
+
+# ── 6: QA round 1 — unquoted spellings must not bypass the audit ──────────────────────────────
+D="$(new_scenario_dir unquoted)"
+# Split-token assembly again: the unsafe unquoted literal must not appear in THIS file.
+printf '%s\n' \
+  'ROOT="/real/harness-repo"' \
+  'python3 $ROOT/utils/py/marathon_''drive.py --phase-brief brief.md --round-cap 2' \
+  > "$D/p6-unquoted.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && pass 'unquoted python3 <driver-path> spelling FAILS the audit (QA r1 Blocker)' \
+  || fail "unquoted python3 invocation bypassed the audit"
+grep -q "p6-unquoted.sh.*marathon_drive" <<<"$out" \
+  && pass "  and the failure names the unquoted python driver" \
+  || fail "  failure did not name the unquoted driver: $out"
+
+D="$(new_scenario_dir unquoted-var)"
+printf '%s\n' \
+  'DRIVER="/real/harness-repo/utils/py/marathon_''drive.py"' \
+  'MARATHON_ROOT="$WORK/mroot" python3 $DRIVER --phase-brief b.md --round-cap 2' \
+  > "$D/p6b-unquoted-var.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass 'unquoted var-alias python3 invocation with MARATHON_ROOT on line passes' \
+  || fail "unquoted var-alias scoped invocation failed the audit: $out"
+
+# ── 7: QA round 1 — an env prefix binds to ITS command, not the next one after ';'/&&' ─────────
+D="$(new_scenario_dir segment)"
+printf '%s\n' \
+  'ROOT="/real/harness-repo"' \
+  'MARATHON_ROOT="$WORK/mroot" true; python3 $ROOT/utils/py/marathon_''drive.py --phase-brief b.md' \
+  > "$D/p7-segment.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && pass "scoping env in a ';'-separated OTHER command does not whitelist (QA r1)" \
+  || fail "segment boundary hole: foreign-command env prefix whitelisted the invocation"
+
+D="$(new_scenario_dir segment-ok)"
+printf '%s\n' \
+  'ROOT="/real/harness-repo"' \
+  'MARATHON_ROOT="$WORK/mroot" python3 $ROOT/utils/py/marathon_''drive.py --phase-brief b.md --round-cap 2' \
+  > "$D/p7b-segment-ok.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "same-command env prefix still passes" \
+  || fail "same-command env prefix wrongly failed: $out"
 
 echo "  gh273-marathon-root-audit-python-shape: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

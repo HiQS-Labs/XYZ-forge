@@ -304,7 +304,9 @@ CLOSING_KEYWORD_CLAUSE = re.compile(
     re.IGNORECASE,
 )
 REF_IN_CLAUSE = re.compile(r"(?:#|GH-)([0-9]{1,6})\b", re.IGNORECASE)
-MENTION = re.compile(r"(?:\b[Gg][Hh]-|#)([0-9]{1,6})\b")
+# A `#N`/`GH-N` inside a URL (fragment `/#123`, path `/GH-123`, query `?#123`) is part of the
+# link, not a reference — GH-271 QA round 1. The lookbehind is one fixed-width character class.
+MENTION = re.compile(r"(?<![A-Za-z0-9_/?.])(?:[Gg][Hh]-|#)([0-9]{1,6})\b")
 TITLE_TRAILER = re.compile(
     r"\([ \t]*((?:(?:#|GH-)[0-9]{1,6}\b[ \t]*(?:[,;][ \t]*)?)+)[ \t]*\)[ \t]*$",
     re.IGNORECASE,
