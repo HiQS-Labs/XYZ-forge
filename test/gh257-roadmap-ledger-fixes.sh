@@ -382,7 +382,13 @@ case "$guard_rename_out" in
 esac
 
 # Prove victim file was NOT deleted by the guard (it is preserved in the refused root)
-[ -f "$GUARD_TMP"/staleness-guard.*/safe_file ] || fail "victim file was deleted by guard"
+# SC2144: -f does not work with a glob -- the shell expands it to N words and `[` sees too many
+# arguments (or, with no match, tests the literal pattern). Iterate the expansion instead.
+victim_preserved=0
+for _safe in "$GUARD_TMP"/staleness-guard.*/safe_file; do
+  if [ -f "$_safe" ]; then victim_preserved=1; break; fi
+done
+[ "$victim_preserved" -eq 1 ] || fail "victim file was deleted by guard"
 pass "end-to-end: victim directory preserved and undeleted during hostile rename replacement attempt"
 
 rm -rf "$GUARD_TMP"/staleness-guard.* "$GUARD_TMP"/staleness-guard.*.aside 2>/dev/null || true
