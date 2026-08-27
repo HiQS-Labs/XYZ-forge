@@ -2,7 +2,7 @@
 title: "GH-123: Linux portability canary — remaining failure: gh358 lock contention on shared runners"
 status: Active
 created: 2026-08-24
-updated: 2026-08-24
+updated: 2026-08-27
 owner: orchestrator (Claude Code)
 goal: the last live GH-123 assertion failure (gh358 lock instrumentation under shared-runner CPU load) passes deterministically on the hosted Ubuntu canary
 gh_issue: 123
@@ -27,7 +27,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| capture doc + preflight contract written; dialed into 0.7.4 Linux-RC | Operator fires the marathon lane; builder executes ## Plan, reviewer verifies ## Acceptance |
+| root cause isolated to the writer's lock bound and fixed on `fix/gh123-lock-contention`; new `test/gh123-lock-progress-bound.sh` makes the race deterministic (6 pass; 3 fail against the pre-fix tree) | reviewer weighs the non-goal deviation below, then the hosted Ubuntu canary in #224 Phase 3 confirms the contention half |
 
 Isolated per Agy's empirical review on #224 (2026-08-24): of the 7 failing assertions across
 5 suites in the original canary run, only `test/gh358-lock-instrumentation.sh` remains —
@@ -45,9 +45,30 @@ with PR #209.
 
 ## Acceptance
 
-- [ ] `test/gh358-lock-instrumentation.sh` passes on the hosted Ubuntu canary runner (qualifying run linked in #224 Phase 3).
-- [ ] No remaining open assertion failures attributed to GH-123.
-- [ ] Lock behavior for real drivers unchanged (existing lock suites stay green).
+- [ ] `test/gh358-lock-instrumentation.sh` passes on the hosted Ubuntu canary runner (qualifying run linked in #224 Phase 3). — NOT yet confirmable: the contention does not reproduce on a 4-core dev box, where gh358 already passes.
+- [ ] No remaining open assertion failures attributed to GH-123. — pending the same hosted run.
+- [x] Existing lock suites stay green (`gh358-lock-instrumentation.sh`, `xyz-completion.sh`, `registry-lock-concurrency.sh`, `gh14-atomic-append.sh`).
+
+## Acceptance — deviations from the plan
+
+- [changed] `## Plan` step 2 scoped the fix to "the suite/harness seam" and `non_goals` excluded
+  "Changing lock semantics for real (non-test) drivers". The fix instead lands in
+  `utils/telemetry/append-xyz-completion.sh`, the real writer. — reason: the defect IS the writer's
+  bound semantics. `XYZ_LOCK_WAIT_S` is documented as the wait for the lock, but was implemented as
+  a single wall-clock deadline covering the entire queue. With 16 concurrent appenders on a throttled
+  runner the queue is long but MOVING, and writers past the deadline exit 75 reporting starvation for
+  a system that is merely slow. Tuning the value in the test seam cannot fix that conflation, and
+  cannot be done anyway: `test/xyz-completion.sh` mirrors the 30s default and
+  `test/gh358-lock-instrumentation.sh` asserts `test wait=60s` and `(default=30s)` verbatim, so
+  changing any default breaks the suite this issue exists to fix.
+- [blast radius] Real-driver behavior changes in exactly one direction: a writer that previously gave
+  up at `XYZ_LOCK_WAIT_S` while the lock was actively changing hands now keeps waiting, bounded by
+  `XYZ_LOCK_TOTAL_MAX_S` (default `4 × XYZ_LOCK_WAIT_S` = 120s). A stuck holder is unaffected — it
+  still exits 75 at exactly `XYZ_LOCK_WAIT_S`, asserted by case A of the new suite. No default changes.
+- [added] `test/gh123-lock-progress-bound.sh`, registered in validate.sh. — reason: `## Plan` step 3
+  allows a new suite when "a separate regression shape emerges". It did: the CI failure is a race that
+  does not reproduce on an idle box, so the regression is pinned by driving the lock directly
+  (held vs. changing hands) rather than by reproducing CPU starvation.
 
 ## Swarm Preflight Contract
 

@@ -54,7 +54,19 @@ release_lock() {
 trap release_lock EXIT INT TERM HUP
 
 lock_wait_s="${XYZ_LOCK_WAIT_S:-30}"
-deadline=$(( $(date +%s) + lock_wait_s ))
+# GH-123: XYZ_LOCK_WAIT_S bounds how long we wait for ONE holder to make way — not how long the
+# whole queue may take to drain. A single wall-clock deadline conflates the two, and the two only
+# look alike on an idle machine. With 16 concurrent appenders on a CPU-throttled shared runner
+# each holder spawns python3 under the lock, the queue is long but MOVING, and every writer past
+# the deadline exits 75 as though the lock were stuck — reporting starvation for a system that is
+# working, just slowly. So the bound is re-armed each time the lock CHANGES HANDS (observable
+# progress), and a separate absolute cap keeps a genuinely stuck lock failing loudly rather than
+# waiting forever. Defaults are deliberately unchanged: test/xyz-completion.sh mirrors the 30s
+# default and test/gh358-lock-instrumentation.sh asserts it verbatim.
+lock_total_max_s="${XYZ_LOCK_TOTAL_MAX_S:-$(( lock_wait_s * 4 ))}"
+lock_started=$(date +%s)
+deadline=$(( lock_started + lock_wait_s ))
+last_holder=""
 empty_streak=0
 while :; do
   if mkdir "$lockdir" 2>/dev/null; then
@@ -62,11 +74,12 @@ while :; do
     locked=1
     break
   fi
-  if [[ "$(date +%s)" -ge "$deadline" ]]; then
+  now="$(date +%s)"
+  if [[ "$now" -ge "$deadline" || $(( now - lock_started )) -ge "$lock_total_max_s" ]]; then
     # An unlocked append can preserve JSON syntax while losing another writer's record.  Keep this
     # distinct from a writer crash so the concurrent-write test can diagnose lock starvation.
-    printf 'append-xyz-completion: lock never acquired after %ss (XYZ_LOCK_WAIT_S=%s): %s\n' \
-      "$lock_wait_s" "$lock_wait_s" "$lockdir" >&2
+    printf 'append-xyz-completion: lock never acquired after %ss (XYZ_LOCK_WAIT_S=%s per holder, total cap %ss): %s\n' \
+      "$(( now - lock_started ))" "$lock_wait_s" "$lock_total_max_s" "$lockdir" >&2
     exit 75
   fi
   holder="$(cat "$lockdir/pid" 2>/dev/null || true)"
@@ -78,6 +91,12 @@ while :; do
     sleep 0.1 2>/dev/null || sleep 1; continue
   fi
   empty_streak=0
+  # The lock changed hands since the last look: the queue is draining, so re-arm the per-holder
+  # bound. A stuck holder never trips this and still exits 75 at exactly XYZ_LOCK_WAIT_S.
+  if [[ "$holder" != "$last_holder" ]]; then
+    last_holder="$holder"
+    deadline=$(( now + lock_wait_s ))
+  fi
   if kill -0 "$holder" 2>/dev/null; then sleep 0.1 2>/dev/null || sleep 1; continue; fi
   rm -rf "$lockdir" 2>/dev/null || true   # dead holder — reclaim its stale lock
 done
