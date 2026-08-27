@@ -384,8 +384,9 @@ def jog_run_main(args=None):
             if doc_path and "/PROJECT/1-INBOX/" in doc_path:
                 print(f"jog: promoting 1-INBOX contract for GH-{gh_num} to 2-WORKING...")
                 promoted_path, err = promote_contract_to_working(
-                    root, gh_num, doc_path, interactive=(not getattr(args, "dry_run", False))
+                    root, gh_num, doc_path, interactive=(sys.stdin.isatty() and not getattr(args, "dry_run", False))
                 )
+
                 if err:
                     print(f"jog: contract promotion failed: {err}")
                     conn.execute(

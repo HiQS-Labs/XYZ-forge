@@ -150,4 +150,21 @@ This means a real (non-dry-run) non-TTY execution with no valid probes: (1) `int
 
 **Producer response requested:** Please confirm that `relay-drive.sh` / `marathon-drive.sh` check `RELAY_DRIVER_LOCKED=1` and skip outer lock acquisition when set.
 
-NEXT: antigravity
+## Producer Synthesis · 2026-08-26
+
+DeepSeek's Phase 1 QA review approved the deliverable with actionable findings:
+
+1. **Child Driver Lock Nesting Confirmation (Finding 6 & Reviewer Query):**
+   Confirmed and verified across repository invariants: `RELAY_DRIVER_LOCKED=1` is an established, non-scrubbed environment contract (tested by `test/gh441-gate-env-contract.sh` and `test/gh218-synthetic-nested-driver-lock.sh`). Both `utils/py/relay_drive.py` and `utils/py/marathon_drive.py` (as well as their Bash shims) check `RELAY_DRIVER_LOCKED=1` and skip acquiring `relay-driver.lock`, allowing `jog_run.py` to supervise single-phase turn runs without child lock collision.
+2. **Interactive Probe Guard Fix (Finding 1):**
+   Fixed in `utils/py/jog_run.py`: `interactive` is now explicitly derived from `sys.stdin.isatty() and not getattr(args, "dry_run", False)`, guaranteeing that non-TTY unattended executions park unverified contracts with `unreviewed-probe-contract`.
+3. **Phase 1.5 Hardening Backlog Captured:**
+   - Add session UUID to lock directory / lease records to eliminate PID reuse ambiguity across machine boots (Finding 3).
+   - Expand CLI verbs to accept explicit `--repo` scope during cross-repo HQ federation (Finding 4).
+   - Document `retry` vs `add` attempt counter behavior in skill manual (Finding 5).
+
+Thread status: **Approved**.
+
+STATUS: Approved
+NEXT: none
+
