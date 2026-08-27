@@ -32,12 +32,12 @@ WORK="$(mktemp -d /tmp/gh267-express.XXXXXX)" || { echo "FAIL: mktemp"; exit 1; 
 BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"
 mkdir -p "$BIN" "$GH_STATE"
 
+# GH-1 adoption: the central fixture guard (GH-564 kill conditions + GH-567
+# use-boundary resolution), armed at source time — no private copies.
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
+
 case "$WORK" in /tmp/gh267-express.*) ;; *) echo "FAIL: unsafe WORK=$WORK"; exit 1;; esac
-require_fixture() {
-  local p="$1"
-  [ -n "$p" ] || { echo "FAIL: empty fixture path"; exit 1; }
-  case "$p" in "$WORK"|"$WORK"/*) return 0;; *) echo "FAIL: fixture escaped sandbox: $p"; exit 1;; esac
-}
 
 PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); echo "  pass: $1"; }
@@ -88,17 +88,23 @@ git -C "$FX" add -A && git -C "$FX" commit -qm base
 git -C "$FX" branch -m development
 git -C "$FX" push -q origin development
 git -C "$FX" fetch -q origin
+require_fixture "$FX"
+require_fixture "$REMOTE"
 echo "fixture ready"
 
 new_task_branch() {
   # reset to a pristine task branch: discard tracked mods, untracked files, and
   # any stray commits, so each case starts from the exact base state
+  require_fixture "$FX"
   git -C "$FX" checkout -q development
   git -C "$FX" reset -q --hard origin/development
   git -C "$FX" clean -fdq
   git -C "$FX" checkout -q -B task/gh-999 origin/development
 }
-run_check() { python3 "$DRIVER" --root "$FX" check --issue "${1:-999}" --suite "${2:-test/gh999-demo.sh}" ; }
+run_check() {
+  require_fixture "$FX"
+  python3 "$DRIVER" --root "$FX" check --issue "${1:-999}" --suite "${2:-test/gh999-demo.sh}" ;
+}
 
 echo "== refusals =="
 ERR="$WORK/err"; : > "$ERR"
@@ -138,7 +144,7 @@ run_check 888 > /dev/null 2> "$ERR" && bad "closed issue must refuse" || { check
 echo "== happy path =="
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
 OUT="$(run_check 999)"
-echo "$OUT" | grep -q "express-check: PASS" && ok "legal fix passes" || bad "legal fix refused: $OUT"
+grep -q "express-check: PASS" <<<"$OUT" && ok "legal fix passes" || bad "legal fix refused: $OUT"
 
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && ok "docs (.md) exempt from the file bound (QA F5)" || bad "README counted against bounds: $(tail -1 "$ERR")"
@@ -151,14 +157,16 @@ grep -q "## Lessons Learned (For Future Agents)" "$DOC" 2>/dev/null && ok "Lesso
 grep -q "^## Status$" "$DOC" && grep -q "^## Acceptance Criteria$" "$DOC" && ok "Status + Acceptance present" || bad "doc sections incomplete"
 TODAY="$(date +%F)"
 grep -q "## \[Unreleased\] - $TODAY" "$FX/CHANGELOG.md" && ok "CHANGELOG dated section inserted" || bad "CHANGELOG section missing"
-awk "/## \[Unreleased\] - $TODAY/,0" "$FX/CHANGELOG.md" | grep -q "GH-999" && ok "CHANGELOG entry present" || bad "CHANGELOG entry missing"
+CH_TODAY="$(awk "/## \[Unreleased\] - $TODAY/,0" "$FX/CHANGELOG.md")"
+grep -q "GH-999" <<<"$CH_TODAY" && ok "CHANGELOG entry present" || bad "CHANGELOG entry missing"
 
 # QA F3: a today-section WITHOUT a ### Fixed heading must not silently drop the entry
 new_task_branch
 printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - %s\n\n### Added\n- someone added something\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' "$TODAY" > "$FX/CHANGELOG.md"
 rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold (no-Fixed-heading) failed: $(cat "$ERR")"
-awk "/## \[Unreleased\] - $TODAY/,/## \[Unreleased\] - 2026-01-01/" "$FX/CHANGELOG.md" | grep -q "GH-999" && ok "CHANGELOG entry survives a Fixed-less today-section (QA F3)" || bad "CHANGELOG entry silently dropped (QA F3 regression)"
+CH_F3="$(awk "/## \[Unreleased\] - $TODAY/,/## \[Unreleased\] - 2026-01-01/" "$FX/CHANGELOG.md")"
+grep -q "GH-999" <<<"$CH_F3" && ok "CHANGELOG entry survives a Fixed-less today-section (QA F3)" || bad "CHANGELOG entry silently dropped (QA F3 regression)"
 
 echo "== source audit (QA F1) =="
 LAND_BODY="$(awk '/^def cmd_land/,/^def [a-z_]+\(/' "$DRIVER"; true)"
@@ -167,6 +175,7 @@ grep -q "def build_offline_manifest(root, repo, pr_number)" "$DRIVER" && ok "bui
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"
-require_fixture "$WORK"
-rm -rf "$WORK"
+# cleanup mirrors gh1-adoption-guard: the guard refuses the bare sandbox root
+# by design, so teardown uses the plain -d check
+[ -n "$WORK" ] && [ -d "$WORK" ] && rm -rf "$WORK"
 [ "$FAIL" -eq 0 ]
