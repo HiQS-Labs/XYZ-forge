@@ -1,4 +1,26 @@
+---
+title: "Recon Map — Jog ↔ Marathon recalibration"
+status: "Complete — feeds the active GH-280 implementation plan"
+created: 2026-08-27
+updated: 2026-08-27
+owner: noel
+doc_type: research
+gh_issue: 280
+roadmap_exempt: true
+related:
+  - PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md
+goal: >
+  Preserve the end-to-end trace, authority boundaries, contracts, failure paths, and evidence that
+  constrain the GH-280 Jog-to-Marathon recalibration plan.
+---
+
 # Recon Map — Jog ↔ Marathon recalibration
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| The existing Jog, Swarm Preflight, Marathon, Relay, Tick, Releases, Git/PR, and PDDA paths were traced and tested at the mapped commit. | Use these findings as fixed inputs to the GH-280 implementation plan; update this map only if implementation discovers a materially different path or contract. |
 
 Commit: `65efea9fae8e4680e78743b4a752d2f538d6eac8` (`origin/development`) · Mode: grep-only + direct reads · Lanes: A, B, C, D
 
