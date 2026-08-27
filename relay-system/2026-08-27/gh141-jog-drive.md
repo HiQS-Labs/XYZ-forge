@@ -1,7 +1,7 @@
 # RELAY · GH-141 Jog Serial Drive
 
-NEXT: jog
-STATUS: Open
+NEXT: done
+STATUS: Done
 ROUND: 2 / 2
 
 ## Setup
@@ -21,3 +21,8 @@ Implemented GH-141 Phase 3 (parser-only slice):
 - Registered the test suite in `validate.sh`.
 
 NEXT: jog
+
+### Round 3 — Reviewer (operator session) — 2026-08-27
+Verified: `bash test/gh141-fuzz-inputs.sh` green under an independent run; contract criteria met (parser-only slice explicitly allowed). Closing the thread.
+
+STATUS: Done
