@@ -37,10 +37,10 @@ releases jog list [--all] [--json]
     Display active queue items (or all historical items with --all).
 
 releases jog bump <GH-NUM>
-    Move a task to position 1 (head of line).
+    Move an active task to position 1 (head of line). Refuses terminal rows.
 
-releases jog drop <GH-NUM> --reason "<text>"
-    Mark a task as dropped with an auditable reason and compact remaining positions.
+releases jog drop <GH-NUM> --reason "<text>" [--force]
+    Mark a task as dropped with an auditable reason. Refuses already-completed items without --force.
 
 releases jog retry <GH-NUM>
     Reset a failed, parked, or dropped task back to pending.
@@ -54,33 +54,42 @@ releases jog clear
 releases jog to-marathon
     Export active jog items to marathon format.
 
-releases jog run [--auto-merge] [--builder agy|codex|aider] [--max-tasks N] [--dry-run]
+releases jog run [--auto-merge] [--builder agy|codex|aider] [--max-tasks N] [--simulate] [--dry-run]
     Execute the serial jog runner loop.
 ```
 
 ## Runner Execution Lifecycle (`jog run`)
 
-1. **Outer Driver Lock:**
-   Acquires `relay-driver.lock` via `rtl.driver_lock_path()`, sets `RELAY_DRIVER_LOCKED=1`, and registers a clean exit handler. Concurrently running marathons or relays in the same clone are safely excluded (GH-42 / GH-354).
+1. **Outer Driver Lock & Hermetic Dry-Run:**
+   - `--dry-run`: Hermetic simulation with zero locks and zero mutations (leaves queue and DB untouched).
+   - Real run: Acquires `relay-driver.lock` via `rtl.driver_lock_path()`, sets `RELAY_DRIVER_LOCKED=1`, and registers a clean exit handler. Concurrently running marathons or relays in the same clone are safely excluded (GH-42 / GH-354).
 
-2. **Startup Lease Reconciliation:**
+2. **Receipt-Backed State Transitions:**
+   Every runner transition (lease acquisition, status changes, orphan reconciliation) goes strictly through `perform_write` in `releases_app.py`, ensuring full journal, receipt-chain, and dump integrity. `lease_pid` is excluded from the committed `releases.sql` dump to eliminate merge conflicts.
+
+3. **Startup Lease Reconciliation:**
    Inspects `jog_queue` for orphaned `running` rows (dead `lease_pid`). Resets them to `pending` (or `parked` if `attempt_count >= 3`).
 
-3. **Fire-Time Promotion & Probe Linting:**
+4. **Fire-Time Promotion & Probe Linting:**
    If a task's capture doc is in `PROJECT/1-INBOX/`, `jog run` promotes it to `PROJECT/2-WORKING/`, formats the status table, and lints its `fix_probes`:
    - Rejects trivial or dummy probe patterns (e.g. `exit 0`, `true`).
+   - Requires referenced probe scripts/globs to resolve to actual files.
    - In interactive mode, prompts operator to approve drafted probes before running preflight.
    - In unattended mode, unreviewed auto-scaffolding without verified probes is parked with `unreviewed-probe-contract` to prevent false-green runs.
 
-4. **Swarm Preflight:**
+5. **Swarm Preflight:**
    Runs `swarm-preflight --gh-issue <n>`:
    - `ready` (exit 0) -> fires single-phase drive.
    - `already-landed` (exit 4) -> marks `completed` with auto-drop receipt.
    - `not-ready` -> marks `parked`, records error, and prompts operator.
 
-5. **Landing Boundary & `--auto-merge`:**
-   - **Default:** Pauses at each landing boundary for human confirmation before merging PRs into `development` and advancing.
-   - **`--auto-merge`:** Opt-in CLI flag allowing unattended automatic merging of passing PRs on same-seam tasks before advancing.
+6. **Single-Phase Drive Dispatch:**
+   Scaffolds `relay-system/<date>/gh<n>-jog-drive.md`, claims and releases the task token via `bin/tick`, and invokes `relay-drive.sh --relay-file <file> --agent-cmd <shim> --relay-task <task>` with nested driver lock protection.
 
-6. **Teardown Cleanliness:**
+7. **Landing Boundary & `--auto-merge`:**
+   - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
+   - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
+   - **`--auto-merge`:** Automatically merges passing PRs on same-seam tasks into `development` and re-anchors the checkout before advancing.
+
+8. **Teardown Cleanliness:**
    Verifies clean worktree disposal, clean working tree status, and gate receipts between serial items.

@@ -5,10 +5,13 @@
 #   - jog_queue schema creation and migration in releases_app.py
 #   - queue CRUD operations: add, list, bump, drop, retry, skip, clear, to-marathon
 #   - duplicate enqueue rejection (jog-duplicate)
+#   - terminal item guard on bump (jog-terminal)
+#   - completed item drop guard without --force (jog-already-completed)
 #   - canonical dump and check --rebuild roundtrip preserving jog_queue
+#   - hermetic --dry-run: zero mutations to DB, zero receipt drift, items stay pending
+#   - receipt-backed jog run execution via perform_write (releases check passes)
 #   - outer driver lock mutual exclusion (relay-driver.lock)
-#   - startup orphan lease reconciliation (dead PID reset to pending/parked)
-#   - jog run dry-run supervisor execution loop
+#   - startup orphan lease reconciliation via perform_write (dead PID reset to pending)
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -111,6 +114,11 @@ out_all="$(ra "$R" jog list --all)"
 has "$out_all" "GH-101" && has "$out_all" "dropped"
 ok "jog list --all includes dropped item" $?
 
+# Refuse bump on dropped/terminal item
+out_bump_term="$(ra "$R" jog bump 101 2>&1 || true)"
+has "$out_bump_term" "jog-terminal"
+ok "jog bump refuses terminal row" $?
+
 # 7. Skip / Park item
 ra "$R" jog skip 103 --reason "blocked on PR" >/dev/null 2>&1
 ok "jog skip 103 succeeds" $?
@@ -148,33 +156,57 @@ out_post_rebuild="$(ra "$R" jog list)"
 has "$out_post_rebuild" "GH-102"
 ok "jog queue items survive dump rebuild" $?
 
-# 12. Driver lock mutual exclusion
+# 12. Hermetic --dry-run: zero mutation
+out_dry="$(ra "$R" jog run --dry-run 2>&1)"
+has "$out_dry" "would process"
+ok "jog run --dry-run reports simulated execution plan" $?
+
+status_pre="$(sqlite3 "$R/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 102;")"
+same "$status_pre" "pending"
+ok "jog run --dry-run leaves pending item pending (zero mutation)" $?
+
+out_dry_check="$(ra "$R" check 2>&1)"
+ok "releases check remains clean after --dry-run" $?
+
+# 13. Driver lock mutual exclusion
 mkdir -p "$R/.git/relay-driver.lock"
 printf '%s\n' "$$" > "$R/.git/relay-driver.lock/pid"
-out_lock="$(ra "$R" jog run --dry-run 2>&1 || true)"
+out_lock="$(ra "$R" jog run --simulate 2>&1 || true)"
 has "$out_lock" "another driver is active"
 ok "jog run refuses when relay-driver.lock is held by live PID" $?
 rm -rf "$R/.git/relay-driver.lock"
 
-# 13. Startup orphan lease reconciliation
-# Inject dead PID into a running row
+# 14. Startup orphan lease reconciliation via perform_write
+# Simulate crash recovery with perform_write
 sqlite3 "$R/releases.db" "UPDATE jog_queue SET status = 'running', lease_pid = 999999 WHERE gh_number = 102;"
-out_recon="$(ra "$R" jog run --dry-run --max-tasks 0 2>&1)"
-has "$out_recon" "orphan lease"
-ok "jog run reconciles dead orphan lease on startup" $?
-
+python3 -c "
+import sys; sys.path.insert(0, '$ROOT/utils/py')
+from releases_app import jog_reconcile_orphan_leases
+jog_reconcile_orphan_leases('$R')
+"
 status_after="$(sqlite3 "$R/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 102;")"
 same "$status_after" "pending"
-ok "orphan row reset to pending" $?
+ok "orphan lease reconciled back to pending" $?
 
-# 14. Jog run execution loop (dry-run)
-out_run="$(ra "$R" jog run --dry-run --max-tasks 2 2>&1)"
+out_recon_check="$(ra "$R" check 2>&1)"
+ok "releases check clean after orphan lease reconciliation" $?
+
+# 15. Receipt-backed jog run execution loop (--simulate)
+out_run="$(ra "$R" jog run --simulate --auto-merge --max-tasks 1 2>&1)"
 has "$out_run" "simulated single-phase drive on GH-102"
-ok "jog run processes queue items in dry-run mode" $?
+ok "jog run processes queue items in simulate mode" $?
 
 status_done="$(sqlite3 "$R/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 102;")"
 same "$status_done" "completed"
 ok "processed item is marked completed" $?
+
+out_final_check="$(ra "$R" check 2>&1)"
+ok "releases check 100% clean after jog run (receipt chain & dump intact)" $?
+
+# Refusal to drop completed item without --force
+out_drop_comp="$(ra "$R" jog drop 102 --reason "done" 2>&1 || true)"
+has "$out_drop_comp" "jog-already-completed"
+ok "jog drop refuses already-completed item without --force" $?
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -1083,10 +1083,11 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                    "created_at", "updated_at", "attempt_count", "lease_pid", "failure_reason"]
         jq_select = """SELECT jq.global_id, r.global_id AS repo_gid, jq.gh_number,
                        jq.position, jq.status, jq.created_at, jq.updated_at,
-                       jq.attempt_count, jq.lease_pid, jq.failure_reason
+                       jq.attempt_count, NULL AS lease_pid, jq.failure_reason
                        FROM jog_queue jq JOIN repos r ON r.id = jq.repo_id
                        ORDER BY jq.position, jq.id"""
         _emit(w, "jog_queue", jq_cols, _rows(conn, jq_select))
+
 
     if include_receipts:
 
@@ -3399,14 +3400,21 @@ def cmd_jog_bump(args):
 
         def mutate(conn):
             _ensure_jog_schema(conn)
-            row = conn.execute("SELECT id, global_id, position, status FROM jog_queue WHERE gh_number = ?", (gh_num,)).fetchone()
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            row = conn.execute("SELECT id, global_id, position, status FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
+                               (repo["id"], gh_num)).fetchone()
             if not row:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
+            if row["status"] not in ("pending", "running"):
+                refuse("jog-terminal", "GH-%d is %s; retry or re-add it first" % (gh_num, row["status"]))
             cur_pos = row["position"]
-            if cur_pos == 1 and row["status"] in ("pending", "running"):
+            if cur_pos == 1:
                 return
-            conn.execute("UPDATE jog_queue SET position = position + 1 WHERE status IN ('pending', 'running') AND position < ?", (cur_pos,))
-            conn.execute("UPDATE jog_queue SET position = 1, status = 'pending', updated_at = ? WHERE id = ?", (now_iso(), row["id"]))
+            conn.execute("UPDATE jog_queue SET position = position + 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position < ?",
+                         (repo["id"], cur_pos))
+            conn.execute("UPDATE jog_queue SET position = 1, updated_at = ? WHERE id = ?", (now_iso(), row["id"]))
 
         perform_write(root, conn, "jog-bump", "GH-%d" % gh_num, mutate)
         print("jog: bumped GH-%d to position 1" % gh_num)
@@ -3427,13 +3435,20 @@ def cmd_jog_drop(args):
 
         def mutate(conn):
             _ensure_jog_schema(conn)
-            row = conn.execute("SELECT id, position FROM jog_queue WHERE gh_number = ?", (gh_num,)).fetchone()
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            row = conn.execute("SELECT id, position, status FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
+                               (repo["id"], gh_num)).fetchone()
             if not row:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
+            if row["status"] == "completed" and not getattr(args, "force", False):
+                refuse("jog-already-completed", "GH-%d is already completed (pass --force to drop anyway)" % gh_num)
             cur_pos = row["position"]
             conn.execute("""UPDATE jog_queue SET status = 'dropped', failure_reason = ?, lease_pid = NULL,
                             updated_at = ? WHERE id = ?""", (args.reason, now_iso(), row["id"]))
-            conn.execute("UPDATE jog_queue SET position = position - 1 WHERE status IN ('pending', 'running') AND position > ?", (cur_pos,))
+            conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
+                         (repo["id"], cur_pos))
 
         perform_write(root, conn, "jog-drop", "GH-%d" % gh_num, mutate)
         print("jog: dropped GH-%d (reason: %s)" % (gh_num, args.reason))
@@ -3454,10 +3469,15 @@ def cmd_jog_retry(args):
 
         def mutate(conn):
             _ensure_jog_schema(conn)
-            row = conn.execute("SELECT id FROM jog_queue WHERE gh_number = ?", (gh_num,)).fetchone()
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            row = conn.execute("SELECT id FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
+                               (repo["id"], gh_num)).fetchone()
             if not row:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
-            max_pos = conn.execute("SELECT MAX(position) FROM jog_queue WHERE status IN ('pending', 'running')").fetchone()[0]
+            max_pos = conn.execute("SELECT MAX(position) FROM jog_queue WHERE repo_id = ? AND status IN ('pending', 'running')",
+                                   (repo["id"],)).fetchone()[0]
             new_pos = (max_pos or 0) + 1
             conn.execute("""UPDATE jog_queue SET status = 'pending', position = ?, lease_pid = NULL,
                             failure_reason = NULL, updated_at = ? WHERE id = ?""",
@@ -3467,7 +3487,6 @@ def cmd_jog_retry(args):
         print("jog: reset GH-%d to pending" % gh_num)
     finally:
         conn.close()
-
 
 
 def cmd_jog_skip(args):
@@ -3483,13 +3502,18 @@ def cmd_jog_skip(args):
 
         def mutate(conn):
             _ensure_jog_schema(conn)
-            row = conn.execute("SELECT id, position FROM jog_queue WHERE gh_number = ?", (gh_num,)).fetchone()
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+            row = conn.execute("SELECT id, position FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
+                               (repo["id"], gh_num)).fetchone()
             if not row:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
             cur_pos = row["position"]
             conn.execute("""UPDATE jog_queue SET status = 'parked', failure_reason = ?, lease_pid = NULL,
                             updated_at = ? WHERE id = ?""", (args.reason, now_iso(), row["id"]))
-            conn.execute("UPDATE jog_queue SET position = position - 1 WHERE status IN ('pending', 'running') AND position > ?", (cur_pos,))
+            conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
+                         (repo["id"], cur_pos))
 
         perform_write(root, conn, "jog-skip", "GH-%d" % gh_num, mutate)
         print("jog: skipped GH-%d (status: parked)" % gh_num)
@@ -3535,6 +3559,99 @@ def cmd_jog_to_marathon(args):
         conn.close()
 
 
+def jog_acquire_lease(root, gh_num, pid):
+    """Acquire a lease on an enqueued item via perform_write (receipt-backed)."""
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        def mutate(conn):
+            _ensure_jog_schema(conn)
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "no repos row")
+            row = conn.execute("SELECT id, status, attempt_count FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
+                               (repo["id"], gh_num)).fetchone()
+            if not row:
+                refuse("jog-not-found", "GH-%d not in jog queue" % gh_num)
+            ts = now_iso()
+            att = row["attempt_count"] + 1
+            conn.execute("""UPDATE jog_queue SET status = 'running', lease_pid = ?, attempt_count = ?, updated_at = ?
+                            WHERE id = ?""", (pid, att, ts, row["id"]))
+
+        perform_write(root, conn, "jog-lease", "GH-%d" % gh_num, mutate)
+    finally:
+        conn.close()
+
+
+def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
+    """Transition a jog queue item to a new status via perform_write (receipt-backed)."""
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        def mutate(conn):
+            _ensure_jog_schema(conn)
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "no repos row")
+            row = conn.execute("SELECT id, position FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
+                               (repo["id"], gh_num)).fetchone()
+            if not row:
+                refuse("jog-not-found", "GH-%d not in jog queue" % gh_num)
+            ts = now_iso()
+            pid_clause = ", lease_pid = NULL" if clear_lease else ""
+            conn.execute(f"""UPDATE jog_queue SET status = ?, failure_reason = ?, updated_at = ?{pid_clause}
+                            WHERE id = ?""", (status, failure_reason, ts, row["id"]))
+            if status in ("completed", "dropped", "archived", "parked", "failed"):
+                conn.execute("""UPDATE jog_queue SET position = position - 1
+                                WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?""",
+                             (repo["id"], row["position"]))
+
+        perform_write(root, conn, f"jog-{status}", "GH-%d" % gh_num, mutate)
+    finally:
+        conn.close()
+
+
+def jog_reconcile_orphan_leases(root):
+    """Inspect and reconcile orphan running rows whose lease_pid is dead via perform_write."""
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "jog_queue"):
+            return []
+        rows = conn.execute("SELECT id, gh_number, attempt_count, lease_pid FROM jog_queue WHERE status = 'running'").fetchall()
+        orphans = []
+        for r in rows:
+            pid = r["lease_pid"]
+            alive = False
+            if pid and isinstance(pid, int):
+                try:
+                    os.kill(pid, 0)
+                    alive = True
+                except OSError:
+                    pass
+            if not alive:
+                orphans.append(r)
+
+        if not orphans:
+            return []
+
+        def mutate(conn):
+            ts = now_iso()
+            for r in orphans:
+                att = r["attempt_count"]
+                if att >= 3:
+                    conn.execute("""UPDATE jog_queue SET status = 'parked', failure_reason = 'orphan lease: max attempts exceeded',
+                                    lease_pid = NULL, updated_at = ? WHERE id = ?""", (ts, r["id"]))
+                else:
+                    conn.execute("""UPDATE jog_queue SET status = 'pending', lease_pid = NULL, updated_at = ?
+                                    WHERE id = ?""", (ts, r["id"]))
+
+        perform_write(root, conn, "jog-reconcile", "jog_queue", mutate)
+        return [r["gh_number"] for r in orphans]
+    finally:
+        conn.close()
+
+
 def cmd_jog_run(args):
     """Execute the serial jog queue supervisor."""
     try:
@@ -3543,6 +3660,7 @@ def cmd_jog_run(args):
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from jog_run import jog_run_main
     jog_run_main(args)
+
 
 
 
@@ -4381,6 +4499,7 @@ def build_parser():
     sp_jd = jsub.add_parser("drop", help="mark a jog queue item as dropped with a reason")
     sp_jd.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jd.add_argument("--reason", required=True, help="reason for dropping from the queue")
+    sp_jd.add_argument("--force", action="store_true", help="force dropping an already completed item")
     sp_jd.add_argument("--dry-run", action="store_true", help="report what would be dropped, write nothing")
 
     sp_jr = jsub.add_parser("retry", help="retry a parked or failed jog item (resets to pending)")
@@ -4401,7 +4520,8 @@ def build_parser():
     sp_jrun.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge passing PRs on same-seam tasks")
     sp_jrun.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
     sp_jrun.add_argument("--max-tasks", type=int, default=None, help="maximum tasks to process in this run")
-    sp_jrun.add_argument("--dry-run", action="store_true", help="simulate execution without firing model turns")
+    sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
+    sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
 
     return p
 
