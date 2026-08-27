@@ -581,8 +581,8 @@ CREATE INDEX idx_gf_import ON grandfather_entries(import_run);
 
 
 MIGRATION_002_DDL = """
-CREATE TABLE IF NOT EXISTS roadmap_items (  -- GH-69 shadow: mirrors ROADMAP.md's ledger. During
-  id INTEGER PRIMARY KEY,                   -- the shadow phase ROADMAP.md is the ONLY thing humans
+CREATE TABLE IF NOT EXISTS roadmap_items (  -- GH-69/GH-269: roadmap ledger.
+  id INTEGER PRIMARY KEY,                   --
   global_id TEXT NOT NULL UNIQUE {rmi_gid}, -- edit; `releases roadmap sync` mirrors it here. Rows
   repo_id INTEGER NOT NULL REFERENCES repos(id),  -- follow the GH-32 grammar (GID-keyed, no
   gh_number INTEGER,                        -- integer ids as dump values), so merges and rebuilds
@@ -2650,8 +2650,8 @@ def cmd_project_sync(args):
         conn.close()
 
 
-# ── GH-69: ROADMAP.md shadow (`releases roadmap sync` / `list`) ────────────────────────────────
-# Shadow phase contract, mirroring GH-32 Phase 0 exactly: ROADMAP.md is the ONLY thing humans and
+# ── GH-269: roadmap ledger (`releases roadmap sync` / `list`) ────────────────────────────────
+# Ledger contract: the database is the ONLY thing humans and
 # agents edit; this code only READS it and mirrors the ledger into roadmap_items. The parser is a
 # twin of the marathon planner's (utils/py/_marathon_plan.py) with one deliberate difference: the
 # planner recognises only its four SECTIONS and skips the rest silently, while the shadow captures
@@ -3060,41 +3060,54 @@ def cmd_roadmap_update(args):
         if not row:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
 
-        new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
-        old_raw_text = row["raw_text"] or ""
-        if new_raw_text == old_raw_text.strip():
-            print("roadmap update: %s raw_text unchanged; nothing written" % label)
-            return
+        if args.raw_text is None and args.section is None:
+            refuse("no-update", "pass at least one of --raw-text or --section")
 
-        rating = parse_rating(new_raw_text, row["title"])
-
-        if not has_rating_cols and rating["rating_pri"] is not None:
-            refuse("schema-behind",
-                   "this ledger has no rating columns. Run `releases migrate` first — rating "
-                   "stores scores, it never installs schema.")
+        new_raw_text = None
+        rating = None
+        if args.raw_text is not None:
+            new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
+            old_raw_text = row["raw_text"] or ""
+            if new_raw_text == old_raw_text.strip() and args.section is None:
+                print("roadmap update: %s raw_text unchanged; nothing written" % label)
+                return
+            rating = parse_rating(new_raw_text, row["title"])
+            if not has_rating_cols and rating["rating_pri"] is not None:
+                refuse("schema-behind",
+                       "this ledger has no rating columns. Run `releases migrate` first — rating "
+                       "stores scores, it never installs schema.")
 
         if args.dry_run:
-            print("raw_text: %s -> %s" % (old_raw_text, new_raw_text))
-            if rating["rating_pri"] is not None:
-                print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
-                if rating["rating_ovr"] is not None:
-                    print("ovr: %d" % rating["rating_ovr"])
+            if args.raw_text is not None:
+                print("raw_text: %s -> %s" % (old_raw_text, new_raw_text))
+                if rating["rating_pri"] is not None:
+                    print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+                    if rating["rating_ovr"] is not None:
+                        print("ovr: %d" % rating["rating_ovr"])
+            if args.section:
+                print("section: -> %s" % args.section)
             return
 
         def mutate(conn):
             ts = now_iso()
-            if has_rating_cols:
-                conn.execute(
-                    "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
-                    % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
-                    [new_raw_text, ts] + [rating[c] for c in RATING_COLUMNS] + [param])
-            else:
-                conn.execute(
-                    "UPDATE roadmap_items SET raw_text = ?, updated_at = ? WHERE %s" % where,
-                    [new_raw_text, ts, param])
+            updates = ["updated_at = ?"]
+            params = [ts]
+            if args.raw_text is not None:
+                updates.append("raw_text = ?")
+                params.append(new_raw_text)
+                if has_rating_cols:
+                    for c in RATING_COLUMNS:
+                        updates.append("%s = ?" % c)
+                        params.append(rating[c])
+            if args.section is not None:
+                updates.append("section = ?")
+                params.append(args.section)
+            
+            params.append(param)
+            conn.execute("UPDATE roadmap_items SET %s WHERE %s" % (", ".join(updates), where), params)
 
         perform_write(root, conn, "roadmap-update", row["global_id"], mutate)
-        print("updated %s raw_text" % label)
+        print("updated %s" % label)
     finally:
         conn.close()
 
@@ -4268,6 +4281,105 @@ def _rebuild(root, conn):
     print("rebuilt %s from %s (generation %d -> %d); displaced DB backed up at %s"
           % (DB_NAME, DUMP_NAME, old_gen, new_gen, paths["bak"]))
 
+def cmd_dashboard(args):
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    db_path = paths["db"]
+    
+    if not os.path.exists(db_path):
+        refuse("not-initialized", "no %s here" % DB_NAME)
+
+    # read-only connection
+    conn = sqlite3.connect("file:%s?mode=ro" % db_path, uri=True)
+    conn.row_factory = sqlite3.Row
+
+    try:
+        # Trust header info
+        db_gen = get_generation(conn)
+        receipts = conn.execute("SELECT COUNT(*) FROM op_receipts").fetchone()[0]
+        
+        # Staleness: dump vs DB
+        dump_path = paths["dump"]
+        dump_gen = -1
+        if os.path.exists(dump_path):
+            with open(dump_path, "r", encoding="utf-8") as f:
+                dump_gen = dump_generation_from_text(f.read())
+        
+        staleness_banner = ""
+        if dump_gen != db_gen:
+            staleness_banner = "<div style='background: red; color: white; padding: 10px; font-weight: bold;'>STALE SYNC: DB generation (%d) != Dump generation (%d)</div>" % (db_gen, dump_gen)
+            
+        # Releases panel
+        releases = conn.execute("""
+            SELECT version, codename, status, target_date, shipped_date, description, exit_criterion, id
+            FROM releases ORDER BY target_date IS NULL, target_date, version
+        """).fetchall()
+
+        releases_html = "<h2>Releases</h2><div style='display: flex; gap: 1rem; overflow-x: auto;'>"
+        for r in releases:
+            open_items = conn.execute("SELECT COUNT(*) FROM manifest_items WHERE release_id = ? AND state != 'cut' AND state != 'shipped'", (r["id"],)).fetchone()[0]
+            closed_items = conn.execute("SELECT COUNT(*) FROM manifest_items WHERE release_id = ? AND state = 'shipped'", (r["id"],)).fetchone()[0]
+            
+            # calculate days to target
+            target = r["target_date"]
+            days_str = ""
+            if target:
+                try:
+                    today = _dt.date.today()
+                    t_date = _dt.date.fromisoformat(target)
+                    delta = (t_date - today).days
+                    days_str = " | %d days %s" % (abs(delta), 'overdue' if delta < 0 else 'to target')
+                except ValueError:
+                    pass
+            
+            releases_html += f"""
+            <div style='border: 1px solid #ccc; padding: 1rem; min-width: 250px;'>
+                <h3>{r['version'] or ''} {r['codename'] or ''}</h3>
+                <p>Status: {r['status']}{days_str}</p>
+                <p>Manifest: {open_items} open / {closed_items} closed</p>
+                <p>Exit: {r['exit_criterion'] or 'None'}</p>
+            </div>
+            """
+        releases_html += "</div>"
+
+        # Roadmap panel
+        roadmap_items = conn.execute("""
+            SELECT section, gh_number, title, status_marker 
+            FROM roadmap_items 
+            ORDER BY position
+        """).fetchall()
+        
+        roadmap_by_section = {}
+        for item in roadmap_items:
+            roadmap_by_section.setdefault(item["section"], []).append(item)
+            
+        roadmap_html = "<h2>Roadmap</h2>"
+        for section, items in roadmap_by_section.items():
+            roadmap_html += f"<h3>{section}</h3><ul>"
+            for i in items:
+                gh = f"GH-{i['gh_number']} " if i['gh_number'] else ""
+                roadmap_html += f"<li>{i['status_marker'] or ''} {gh}{i['title']}</li>"
+            roadmap_html += "</ul>"
+
+        html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Releases Dashboard</title></head>
+<body style="font-family: sans-serif; padding: 2rem;">
+    <h1>Releases Dashboard</h1>
+    <div style='background: #eee; padding: 10px; margin-bottom: 20px;'>
+        <strong>Trust Header</strong> | Generation: {db_gen} | Receipts: {receipts}
+    </div>
+    {staleness_banner}
+    {releases_html}
+    <hr>
+    {roadmap_html}
+</body>
+</html>
+"""
+        print(html)
+    finally:
+        conn.close()
+
 
 def cmd_reconcile(args):
     root = resolve_root(args.root)
@@ -4424,10 +4536,11 @@ def build_parser():
     sp.add_argument("--map", action="append", metavar="TMP-X=URL",
                     help="placeholder -> real issue URL (repeatable)")
 
-    sp = sub.add_parser("roadmap", help="ROADMAP.md shadow (GH-69): sync/list the ledger mirror")
+    sp = sub.add_parser("dashboard", help="render the releases and roadmap dashboard HTML")
+
+    sp = sub.add_parser("roadmap", help="Roadmap ledger (GH-269): sync/list the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
-    sp_rs = rsub.add_parser("sync", help="mirror ROADMAP.md's ledger into roadmap_items (one-way; "
-                                         "ROADMAP.md stays the source of truth)")
+    sp_rs = rsub.add_parser("sync", help="mirror legacy ROADMAP.md's ledger into roadmap_items (one-way)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
     sp_rl = rsub.add_parser("list", help="print the shadow rows")
     sp_rl.add_argument("--json", dest="as_json", action="store_true",
@@ -4470,7 +4583,8 @@ def build_parser():
     sp_ru = rsub.add_parser("update", help="update an existing roadmap row's raw_text (GH-257)")
     sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
-    sp_ru.add_argument("--raw-text", required=True, help="new raw_text for the row")
+    sp_ru.add_argument("--raw-text", help="new raw_text for the row")
+    sp_ru.add_argument("--section", help="move the row to a new section (e.g. Completed/Deferred)")
     sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
@@ -4545,6 +4659,7 @@ def main(argv=None):
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update}[a.roadmap_cmd](a),
+        "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,
                           "retry": cmd_jog_retry, "skip": cmd_jog_skip,
