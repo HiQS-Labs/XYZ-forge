@@ -28,7 +28,7 @@ Summary: 19 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-251 · validate.sh miscounts an absent pytest as FAILED | — | [GH-251-VALIDATE-PYTEST-SKIP.md](PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md) · [#251](https://github.com/HiQS-Labs/XYZ-forge/issues/251) |
 | GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | — | [#255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) · [PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md](PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md) |
 | GH-256 — no preflight checks the builder can reach a phase's artifact paths | — | [#256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) · [PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md](PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md) |
-| GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1) | — | [doc](PROJECT/1-INBOX/GH-259-JOG-SERIAL-QUEUE.md) · [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) |
+| GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1) | — | [doc](PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md) · [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) |
 
 ## Queue
 
