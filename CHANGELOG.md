@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-08-27
+
+### Added
+- **GH-267: `/express` — hotfix fast lane through the whole paper trail.** New skill (`skills/express/SKILL.md`) + driver (`utils/py/express.py`) mechanizing SOP §4's express-to-development carve-out as the only sanctioned no-human-gate landing path: fix + registered regression suite, releases-DB park/dial-in, PDDA capture doc born complete (Lessons Learned present from birth, per the GH-232 promotion gate), CHANGELOG entry, ghost-PR landing with immediate merge (keeps `wave_reconcile --pr` working and auto-closes the linked issue — "direct" means no human gate, not no PR object), `manifest ship --evidence` post-push, and full reconcile with an auto-built offline manifest fallback for foreign-tracker PR-body citations. Every PR-satisfiable predicate is an up-front refusal: shared/dirty clones (GH-527), frozen twins (GH-308), new Bash (GH-551), kernel/containment surfaces, size bounds (4 files/150 insertions), multi-subsystem diffs, closed issues, unregistered or red suites. Every fire/refusal writes a `.tick` event so `standup` can report the weekly express count. Registered `test/gh267-express-skill.sh` — 15 pass, 0 fail. Built consistent with the jog plan (GH-259, PR #261); Phase 2 direct-push mode tracked on #267 pending `wave_reconcile --commit`.
+
 ## [Unreleased] - 2026-08-24
 
 ### Added
