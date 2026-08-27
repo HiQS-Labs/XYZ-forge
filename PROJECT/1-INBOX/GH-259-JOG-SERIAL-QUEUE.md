@@ -64,8 +64,8 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
 ## Key Concepts & Review Adjudications
 
 > **Revised after Codex QA (`relay-system/2026-08-26/gh259-jog-plan-qa.md`) and maintainer review.**
-> Addresses all blocking findings from the review relay, resolving the contract promotion path and
-> serial landing boundary.
+> Addresses all blocking findings from the review relay, resolving contract promotion, probe quality,
+> and the landing confirmation boundary.
 
 1. **Dedicated `jog_queue` relation over roadmap overload (Codex Finding 2):**
    `roadmap_items` enforces a unique constraint on `(repo_id, gh_number)` and owns portfolio display
@@ -88,24 +88,35 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
    The `jog run` supervisor acquires `relay-driver.lock` via `rtl.driver_lock_path()`, exports
    `RELAY_DRIVER_LOCKED=1`, and registers trap cleanup. Subordinate `relay-drive` invocations inherit
    the environment variable and recognize the outer supervisor, proceeding without lock refusal.
-4. **Two-stage capture & fire-time contract promotion (Codex Findings 5 & 7):**
+4. **Two-stage capture, fire promotion & probe hardening (Codex Findings 5 & 7):**
    - **Capture Stage:** Natural conversational capture (`"jog GH-123"`, `"jog task above"`).
      `"jog task above"` extracts session context, opens the tracking issue via `gh issue create`
      (issue-first SOP), parks a roadmap row immediately (`releases roadmap add`), echoes the resolved
      issue number/title for operator confirmation, and enqueues the `jog_queue` row.
-   - **Fire Stage Promotion:** `swarm-preflight` requires an active doc in `PROJECT/2-WORKING/` with
-     `fix_probes`. When popping a head item still in `PROJECT/1-INBOX/`, `jog run` executes an automated
-     promotion step: drafts `PROJECT/2-WORKING/GH-<n>-<slug>.md` with frontmatter, `## Status` table, and
-     initial probes before running `swarm-preflight`. Already promoted `2-WORKING` docs proceed directly
-     to preflight.
+   - **Fire Stage Promotion & Probe Hardening:** `swarm-preflight` requires an active doc in `PROJECT/2-WORKING/` with
+     `fix_probes`. However, auto-scaffolded probes from an LLM are an acute failure mode (a trivially passing
+     probe like `exit 0` lets preflight go green on garbage). Jog hardens this boundary:
+     - **Probe linting:** Static assertion verifying probe commands are non-trivial, syntactically valid,
+       and target genuine test/gate surfaces.
+     - **Default operator confirmation:** In interactive mode, `jog run` presents the auto-promoted contract
+       and drafted probes for operator approval before dispatching preflight.
+     - **Unattended guard:** In non-interactive runs, auto-scaffolding is refused unless the capture already
+       carried validated probe definitions, parking the item with `unreviewed-probe-contract`. Already promoted
+       `2-WORKING` docs with existing verified contracts proceed directly.
    - **Preflight Exit Mapping:**
      - `ready` -> proceed to single-phase drive.
      - `already-landed` (exit 4) -> mark `completed` / auto-drop with recorded receipt.
      - `not-ready` / probe failure -> mark `parked` with diagnostic reason, skip item, and prompt operator.
-5. **Serial landing boundary & re-anchoring (Codex Findings 6 & 8):**
-   - **Default Landing Policy (`merge-before-advance`):** For overlapping/same-seam tasks, task N's PR
-     targeting `development` is gated and merged (or re-anchored on `development`) before task N+1
-     branches, ensuring task N+1 truly executes against task N's committed state without deferred merge conflicts.
+5. **Landing confirmation boundary & re-anchoring (Codex Findings 6 & 8):**
+   - **Default Landing Policy (Pause for Operator Confirmation):** Consistent with repository governance
+     and the orchestrator role split (`AGENTS.md` GH-221), `jog run` **defaults to pausing at each landing
+     boundary** to prompt the operator for confirmation (outer review of base branch, diff size sanity,
+     and gate pass receipts) before merging PRs into `development` and advancing.
+   - **`--auto-merge` Opt-In:** An explicit CLI flag for unattended runs where the operator intentionally
+     authorizes automatic merging of passing PRs on same-seam tasks before advancing.
+   - **Same-Seam Re-anchoring (`merge-before-advance`):** For overlapping/adjacent tasks, task N's PR
+     is merged into `development` before task N+1 branches, guaranteeing task N+1 builds directly on
+     task N's committed state and eliminating deferred merge conflicts.
    - **Disjoint Tasks:** Independent tasks touching non-overlapping paths branch from current `origin/development`.
    - **Teardown Cleanliness:** Between serial items, the supervisor verifies throwaway worktree cleanup,
      clean working tree status, and gate pass receipts before advancing.
@@ -136,13 +147,15 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
 - Reconciles any orphan `running` leases on startup.
 - Pops head of the queue (`pending` -> `running` lease).
 - Acquires outer driver lock and exports `RELAY_DRIVER_LOCKED=1`.
-- **Contract Promotion:** If capture is in `1-INBOX/`, promotes to `2-WORKING/` with scaffolded status table and probes.
+- **Contract Promotion & Probe Linting:** If capture is in `1-INBOX/`, promotes to `2-WORKING/` with scaffolded status table,
+  lints probes, and prompts operator for confirmation (or parks if unattended without prior probe definitions).
 - Executes `swarm-preflight --gh-issue <n>`:
   - `ready` -> fires single-phase drive (`relay-drive` / turn shim).
   - `already-landed` -> marks `completed` / auto-drops with receipt.
   - `not-ready` / error -> marks `parked` with error reason, reports diagnostic, and prompts operator.
-- **Landing & Verification:** Verifies PR targeting `development`, runs gate verification, and applies `merge-before-advance`
-  re-anchoring for overlapping tasks before teardown.
+- **Landing & Verification:** Generates PR targeting `development`, verifies gate pass receipts, and **pauses for operator
+  confirmation by default** before merging into `development` (or auto-merges if `--auto-merge` is passed) and re-anchoring
+  same-seam tasks.
 - Verifies clean worktree teardown before selecting the next queue item.
 - Loops until queue is empty or a task escalates.
 
@@ -155,7 +168,8 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
   - Queue CRUD, ordering overrides (`jog bump`), and retry/skip controls.
   - Schema integrity, dump, and rebuild consistency.
   - Startup orphan-lease recovery and signal traps.
-  - 1-INBOX fire-time promotion and `already-landed` auto-drop handling.
+  - 1-INBOX fire-time promotion, probe linting, and `already-landed` auto-drop handling.
+  - Landing pause behavior (default) vs `--auto-merge` opt-in.
   - Outer driver-lock mutual exclusion against concurrent marathons/relays.
   - Serial execution with seam overlap and re-anchoring.
   - `jog to-marathon` queue export.
