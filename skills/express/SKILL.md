@@ -58,13 +58,15 @@ python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summa
 What each phase asserts (all refusals write `.tick/events/*-express-refused-*.jsonl`):
 
 0. **Tree of execution** — task branch, HEAD == origin/development, no scratch
-   paths. Express never commits over peer work (GH-527).
-1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem. Docs
-   (any `.md`, `PROJECT/`, `docs/`, governance files) never count against the
-   bounds. Defaults are operator-tunable via `--max-files` / `--max-insertions`
-   (the *bounds themselves* are load-bearing, not the specific numbers — tune
-   them to your lane's risk posture, don't tune them away); the refusals are
-   never optional.
+   paths, and the **pre-push hook provably installed** (`gate-unwired`
+   refusal — hooks do not travel with a clone, GH-549). Express never commits
+   over peer work (GH-527). Hand-edits to `releases.db`/`releases.sql` are
+   refused (`ledger-hand-edit` — verbs only).
+1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem. Only the
+   lane's OWN paperwork (`CHANGELOG.md`, `PROJECT/**`) is exempt — operator
+   .md edits (README, governance, skills) COUNT (a gateless merge never
+   rewrites policy unbounded). Defaults are operator-tunable via
+   `--max-files` / `--max-insertions`; the refusals are never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any
    new/edited `.sh` under `utils/` or `relay-automation/` (GH-551),
    coordination-kernel and containment surfaces (AGENTS: at least Costly).
@@ -78,19 +80,25 @@ What each phase asserts (all refusals write `.tick/events/*-express-refused-*.js
    plus the CHANGELOG entry appended in the same motion.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason.
-7. **Gate** — the fix's suite runs green; the push rides the normal
+7. **Gate** — the fix's suite runs green, the tree is RE-SNAPSHOTTED afterwards
+   (`tree-drift` refusal: anything the suite generated never rides the commit —
+   staging is by explicit pathspec, never `-A`), and the push rides the normal
    `githooks/pre-push` boundary (express never sets `XYZ_SKIP_PREPUSH`).
-8. **Land** — one commit; push; ghost PR into `development`; immediate merge.
+8. **Land** — one commit of exactly the qualified paths; push; ghost PR into
+   `development`; immediate merge. The closeout then switches to clean,
+   current `development` (ship/reconcile state never rides the task branch).
 9. **Ship with evidence** — `manifest ship --gid <rel> --evidence "<sha>; <suite>
    green; PR #<m> merged"` — post-merge, so the sha and receipts exist when the
    evidence is written. The GH-205 trap (dialed_in while closed) is structurally
    impossible in this order.
 10. **Close the issue** — the ghost PR body says `Closes #<N>`, so GitHub
     auto-closes it; the driver verifies and closes explicitly if it did not.
-11. **Reconcile** — `wave_reconcile.py --pr <m>`; if the PR body cites
-    foreign-tracker numbers (GH-368/375/492/551-class) the driver auto-builds
-    the offline `issues[]` manifest and retries, so one prose citation cannot
-    wedge the lane.
+11. **Reconcile, then persist — fail closed.** From `development`:
+    `wave_reconcile.py --pr <m>` (offline-manifest fallback for foreign-tracker
+    citations), then the closeout COMMITS AND PUSHES everything it wrote (DB,
+    dump, doc promotion, ROADMAP, views) — unpushed ledger state is unshipped
+    state. Any closeout fault exits non-zero with an `express-reconcile-failed`
+    tick event; a success line is printed only after persistence.
 
 ## After the run
 

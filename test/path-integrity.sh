@@ -131,7 +131,7 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # (`test/gh999b-unreg.sh`), and the new-Bash refusal probe (`relay-automation/new-thing.sh`) are
 # files the DRIVER's check verdicts are asserted against inside that temp repo. All three exist
 # solely there and can never exist in this tree, so skipping them cannot mask a real path break.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999b-unreg.sh relay-automation/new-thing.sh "
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

@@ -49,16 +49,21 @@ check_rule() { # check_rule <expected-rule> <stderr-file>
 # ── fake gh ──────────────────────────────────────────────────────────────────
 cat > "$BIN/gh" <<'GH'
 #!/usr/bin/env bash
-# gh267 suite stub: serves `issue view <N> --json ...` from $GH_STATE/issue-<N>.json
+# gh267 suite stub: issue view from $GH_STATE; pr create/merge simulated (PR #777).
 set -u
 if [ "$1 $2" = "issue view" ]; then
-  n=""
-  prev=""
+  n=""; prev=""
   for a in "$@"; do
     [ "$prev" = "view" ] && n="$a"
     prev="$a"
   done
   cat "$GH_STATE/issue-$n.json" && exit 0
+fi
+if [ "$1 $2" = "pr create" ]; then echo "https://github.com/H/H/pull/777"; exit 0; fi
+if [ "$1 $2" = "pr merge" ]; then
+  # merge closes the linked issue (development is the default branch)
+  printf '{"state":"CLOSED","title":"Demo hotfix","url":"https://github.com/H/H/issues/999","createdAt":"2026-08-27T00:00:00Z"}\n' > "$GH_STATE/issue-999.json"
+  exit 0
 fi
 echo "gh-stub: unsupported invocation: $*" >&2; exit 1
 GH
@@ -76,13 +81,31 @@ git init -q "$FX"
 git -C "$FX" remote add origin "$REMOTE"
 git -C "$FX" config user.email t@t; git -C "$FX" config user.name t
 mkdir -p "$FX/utils/py" "$FX/test" "$FX/relay-automation" "$FX/PROJECT/2-WORKING" "$FX/CHANGELOG.d"
-printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "other.sh"\n)\n' > "$FX/validate.sh"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "gh999-drift.sh"\n  "other.sh"\n)\n' > "$FX/validate.sh"
 printf 'old\n' > "$FX/utils/py/foo.py"
 printf 'twin body\n' > "$FX/relay-automation/consult.sh"
 printf 'shared runtime\n' > "$FX/relay-automation/relay-turn-lib.sh"
 printf 'readme\n' > "$FX/README.md"
 printf '# demo suite\n' > "$FX/test/gh999-demo.sh"
+printf '# suite that writes a stray file at run time (TOCTOU probe)\nprintf stray > stray-suite-artifact.txt\n' > "$FX/test/gh999-drift.sh"
 printf '# unregistered suite\n' > "$FX/test/gh999b-unreg.sh"
+# stubs so `run` completes hermetically: releases verbs echo a parseable gid;
+# wave_reconcile succeeds; releases.db is a real sqlite ledger (empty roadmap_items)
+cat > "$FX/utils/py/releases_app.py" <<'RA'
+#!/usr/bin/env python3
+import sys
+a = sys.argv[1:]
+if a[:1] == ["next"]:
+    print("NEXT: stub gid=rel-STUB000000000000000000000008")
+print("stub-releases:", " ".join(a[:2]))
+RA
+cat > "$FX/utils/py/wave_reconcile.py" <<'WR'
+#!/usr/bin/env python3
+# stub: reconcile always succeeds, writes nothing
+WR
+python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)'); c.commit(); c.close()"
+# the gate-wiring preflight requires an executable pre-push hook (GH-549)
+mkdir -p "$FX/.git/hooks" && printf '#!/bin/sh\nexit 0\n' > "$FX/.git/hooks/pre-push" && chmod +x "$FX/.git/hooks/pre-push"
 printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' > "$FX/CHANGELOG.md"
 git -C "$FX" add -A && git -C "$FX" commit -qm base
 git -C "$FX" branch -m development
@@ -141,13 +164,23 @@ run_check 999 test/gh999b-unreg.sh > /dev/null 2> "$ERR" && bad "unregistered su
 new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"
 run_check 888 > /dev/null 2> "$ERR" && bad "closed issue must refuse" || { check_rule issue-closed "$ERR" && ok "issue-closed refusal (already-landed guard)" || bad "issue-closed rule"; }
 
+new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; rm -f "$FX/.git/hooks/pre-push"
+run_check > /dev/null 2> "$ERR" && bad "unwired gate must refuse" || { check_rule gate-unwired "$ERR" && ok "gate-unwired refusal (finding 3: hooks do not travel)" || bad "gate-unwired rule"; }
+printf '#!/bin/sh\nexit 0\n' > "$FX/.git/hooks/pre-push" && chmod +x "$FX/.git/hooks/pre-push"
+
+new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; printf 'hand edit\n' > "$FX/releases.sql"
+run_check > /dev/null 2> "$ERR" && bad "hand-edited ledger must refuse" || { check_rule ledger-hand-edit "$ERR" && ok "ledger-hand-edit refusal (verbs only)" || bad "ledger-hand-edit rule"; }
+
 echo "== happy path =="
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
 OUT="$(run_check 999)"
 grep -q "express-check: PASS" <<<"$OUT" && ok "legal fix passes" || bad "legal fix refused: $OUT"
 
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
-run_check > /dev/null 2> "$ERR" && ok "docs (.md) exempt from the file bound (QA F5)" || bad "README counted against bounds: $(tail -1 "$ERR")"
+run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"
+run_check > /dev/null 2> "$ERR" && ok "the lane's own paperwork (CHANGELOG) stays exempt" || bad "CHANGELOG counted against bounds: $(tail -1 "$ERR")"
 
 echo "== docs born complete =="
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold failed: $(cat "$ERR")"
@@ -167,6 +200,26 @@ rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold (no-Fixed-heading) failed: $(cat "$ERR")"
 CH_F3="$(awk "/## \[Unreleased\] - $TODAY/,/## \[Unreleased\] - 2026-01-01/" "$FX/CHANGELOG.md")"
 grep -q "GH-999" <<<"$CH_F3" && ok "CHANGELOG entry survives a Fixed-less today-section (QA F3)" || bad "CHANGELOG entry silently dropped (QA F3 regression)"
+
+echo "== run: end-to-end happy path (hermetic — stubbed gh/releases/reconcile) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
+issue_json OPEN "Demo hotfix" 999
+RUNOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary demo 2>"$ERR")"
+if grep -q "express-land: PR #777 merged" <<<"$RUNOUT"; then
+  ok "run completes end-to-end: ledger writes survive landing requalification (finding 1)"
+else
+  bad "run failed: $(tail -2 "$ERR")"
+fi
+grep -q "task-branch\|task-clone\|development" <<<"$(git -C "$FX" branch --show-current)" && ok "closeout left the clone on development (finding 2)" || bad "clone not on development after run"
+FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
+[ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
+
+echo "== run: TOCTOU — suite-generated drift never rides the commit (finding 4) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-drift.sh --summary demo >/dev/null 2>"$ERR" \
+  && bad "drift-writing suite must refuse" \
+  || { check_rule tree-drift "$ERR" && ok "tree-drift refusal (finding 4: stage exactly what was qualified)" || bad "tree-drift rule: $(tail -1 "$ERR")"; }
 
 echo "== source audit (QA F1) =="
 LAND_BODY="$(awk '/^def cmd_land/,/^def [a-z_]+\(/' "$DRIVER"; true)"

@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Driver (`utils/py/express.py`), skill (`skills/express/`), regression suite (21/21), registrations (validate.sh TESTS, Skills Index, roadmap row, CHANGELOG). DeepSeek QA relay (`relay-system/2026-08-27/gh267-express-qa.md`, deepseek-v4-pro): 13 findings — 1 BLOCKER + 3 MAJOR + 3 MINOR fixed and pinned; 6 NOTE incl. explicit ✅ on ghost-PR honesty, test non-vacuity, order integrity | PR into `development`; first live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
+| Merged in PR #270. Post-merge Codex review (PR #270 comments): 2 BLOCKER + 3 HIGH findings — all accepted and fixed (`fix/gh270-express-post-merge-review`), suite grown to 28 checks incl. a hermetic end-to-end `run` happy path. DeepSeek QA relay (13 findings) previously fixed pre-merge. | First live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
 
 ## Why
 
@@ -91,9 +91,17 @@ foreign-tracker PR-body citations).
 - No Costly/one-way-door work, ever.
 - No scoring/ranking (that is marathon's and jog's concern; express is single-shot).
 
+## Post-merge review (Codex, PR #270) — dispositions
+
+1. **[Blocker] `run` self-refuses after its own ledger writes — ACCEPTED, fixed.** `releases.db`/`releases.sql` became core paths at landing requalification (multi-subsystem refusal). Landing now requalifies against the operator's qualified diff PLUS an exact expected-driver-outputs set (capture doc, CHANGELOG, the two ledger artifacts); `run` completes end-to-end (pinned by a hermetic happy-path test).
+2. **[Blocker] ship/reconcile from the dirty task branch, failures downgraded, state never persisted — ACCEPTED, fixed.** The closeout now runs from clean, current `development`, commits and pushes everything it wrote, and fails closed (`express-reconcile-failed` tick + non-zero exit) on any fault. The success line prints only after persistence.
+3. **[High] full gate assumed, not enforced — ACCEPTED, fixed.** `cmd_check` now refuses `gate-unwired` when `.git/hooks/pre-push` is missing (hooks do not travel with a clone, GH-549); pinned by a regression case.
+4. **[High] suite-time TOCTOU into `git add -A` — ACCEPTED, fixed.** The tree is re-snapshotted after the suite runs; anything beyond the qualified diff + driver projections refuses as `tree-drift`, and staging is by explicit pathspec, never `-A`. Pinned by a drift-writing-suite case.
+5. **[High] blanket .md exemption on a no-review lane — ACCEPTED in substance, one framing note.** The exemption is now exactly the lane's own paperwork (`CHANGELOG.md`, `PROJECT/**`); operator .md edits (governance, skills, README) count against every bound. Framing push-back: the hard-refusal loop was never actually reachable for kernel surfaces via the .md exemption (none of `.tick/`, `src/project.js`, or Bash-twin surfaces are .md paths) — the real exposure was unbounded size/subsystem escape for governance and skill rewrites, which the narrowing closes. Replied on the PR.
+
 ## Merge evidence
 
-- (recorded at landing)
+- PR #270 merged 2026-08-27 (06:34Z). Post-merge review fixes ride `fix/gh270-express-post-merge-review`.
 
 ## Lessons Learned (For Future Agents)
 
