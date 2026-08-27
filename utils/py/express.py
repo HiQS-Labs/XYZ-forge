@@ -21,6 +21,7 @@ Every refusal and every fired run appends a .tick event under .tick/events/
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -52,18 +53,28 @@ FROZEN_TWINS = [
 # AGENTS.md: "Changes to .tick/events/, src/project.js, relay containment, or
 # event/verb shape are usually broader than they look. Treat them as at least
 # Costly until proven otherwise." Express never lands Costly work.
-KERNEL_SURFACES = [".tick/", "src/project.js", "relay-automation/hooks/"]
+KERNEL_SURFACES = [".tick/", "src/project.js", "relay-automation/hooks/", "githooks/"]
 # Shared (non-twin) Bash runtime the whole relay surface depends on — refused
 # under its own rule name so a reader never sees "frozen twin" for a file the
 # repo explicitly says is not one (AGENTS.md, QA finding 4).
 SHARED_RUNTIME = "relay-automation/relay-turn-lib.sh"
-# Docs/paper paths never count against the size bounds — they are required by
-# the flow itself, not part of the fix's blast radius.
-DOC_PREFIXES = ("CHANGELOG.md", "PROJECT/", "ROADMAP.md", "ROADMAP-DASHBOARD.md",
-                "RELEASES.generated.md", "LEADERBOARD", "RELEASES-PREVIEW", "docs/",
-                "README", "AGENTS.md", "GUIDING-PRINCIPLES.md", "ROUTER.md", "SOP.md",
-                "ARCHITECTURE", "WORKTREE-SAFETY.md", "HARNESS-MODELS-REGISTRY",
-                "RELEASES-DB-FAQS.md", "UPGRADE.md")
+# The lane's OWN paperwork — the only doc exemptions. A blanket .md exemption
+# (the first draft, per deepseek QA F5) would let a gateless merge rewrite
+# governance and skills unbounded (PR #270 review finding 5), so this list is
+# exactly what the flow itself generates.
+# Ledger artifacts: driver-written during the ledger/ship phases and expected
+# at landing requalification. An operator hand-edit is refused — verbs only.
+DRIVER_LEDGER = ("releases.db", "releases.sql")
+# Every adopted projection refreshed by a releases write. Presence is the
+# releases app's opt-in signal, so only files already adopted by this checkout
+# are accepted as driver output. The dashboard is rendered explicitly below.
+RELEASES_PROJECTIONS = (
+    "RELEASES.generated.md",
+    "RELEASES-PREVIEW.html",
+    "LEADERBOARD.html",
+    "LEADERBOARD.md",
+)
+DRIVER_GENERATED = RELEASES_PROJECTIONS + ("ROADMAP-DASHBOARD.md",)
 DEFAULT_MAX_FILES = 4
 DEFAULT_MAX_INSERTIONS = 150
 
@@ -127,6 +138,15 @@ def run_releases(root, *args, check=True):
     return r
 
 
+def gate_check(root):
+    installer = os.path.join(root, "githooks", "install.sh")
+    if not os.path.isfile(installer):
+        return False, "githooks/install.sh is missing"
+    r = subprocess.run(["bash", installer, "--check"], cwd=root,
+                       capture_output=True, text=True)
+    return r.returncode == 0, (r.stderr or r.stdout).strip()
+
+
 # ── change-set plumbing ──────────────────────────────────────────────────────
 
 def change_paths(root):
@@ -145,17 +165,59 @@ def change_paths(root):
     return sorted(paths)
 
 
+def path_fingerprint(path):
+    """Content identity for a qualified path, including untracked trees.
+
+    The suite is arbitrary code. Comparing status paths alone cannot detect it
+    rewriting an already-qualified file, so landing snapshots bytes and shape
+    immediately before and after the suite runs.
+    """
+    if not os.path.lexists(path):
+        return "missing"
+    if os.path.islink(path):
+        return "link:" + os.readlink(path)
+    if os.path.isfile(path):
+        digest = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return "file:" + digest.hexdigest()
+    if os.path.isdir(path):
+        digest = hashlib.sha256()
+        for name in sorted(os.listdir(path)):
+            child = os.path.join(path, name)
+            digest.update(name.encode("utf-8", "surrogateescape"))
+            digest.update(b"\0")
+            digest.update(path_fingerprint(child).encode("utf-8", "surrogateescape"))
+            digest.update(b"\0")
+        return "dir:" + digest.hexdigest()
+    st = os.lstat(path)
+    return "other:%d:%d" % (st.st_mode, st.st_size)
+
+
+def snapshot_paths(root, paths):
+    return {p: path_fingerprint(os.path.join(root, p)) for p in paths}
+
+
+def driver_projection_paths(root):
+    paths = set(DRIVER_LEDGER)
+    paths.update(p for p in RELEASES_PROJECTIONS if os.path.lexists(os.path.join(root, p)))
+    if os.path.isfile(os.path.join(root, "utils", "roadmap-dashboard.sh")):
+        paths.add("ROADMAP-DASHBOARD.md")
+    return paths
+
+
 def core_paths(paths):
     return [p for p in paths if not is_doc_path(p)]
 
 
 def is_doc_path(p):
-    """Docs never count against the size bounds: they are required by the flow
-    itself, not part of the fix's blast radius (QA finding 5)."""
-    return p.startswith(DOC_PREFIXES) or p.endswith(".md") or p.endswith(".MD")
+    """The lane's own paperwork never counts against the size bounds; every
+    other path — including operator-supplied .md — counts (finding 5)."""
+    return p == "CHANGELOG.md" or p.startswith("PROJECT/")
 
 
-def insertions(root, paths):
+def insertions(root, paths, expect_driver=frozenset()):
     total = 0
     numstat = git(root, "diff", "origin/development", "--numstat", check=False).stdout
     tracked = {}
@@ -164,7 +226,7 @@ def insertions(root, paths):
         if len(parts) == 3 and parts[0] != "-":
             tracked[parts[2]] = int(parts[0])
     for p in paths:
-        if is_doc_path(p):
+        if is_doc_path(p) or p in expect_driver:
             continue
         if p in tracked:
             total += tracked[p]
@@ -176,7 +238,7 @@ def insertions(root, paths):
 
 # ── step 0–3: check ──────────────────────────────────────────────────────────
 
-def cmd_check(args):
+def cmd_check(args, expect_driver=frozenset()):
     root = args.root
 
     if not os.path.isdir(os.path.join(root, ".git")):
@@ -198,11 +260,31 @@ def cmd_check(args):
                "express lands exactly one fix from a fresh task clone (GH-527: peer work "
                "hides behind unexplained commits)", issue=args.issue)
 
+    # Gate wiring is proven, not assumed (PR #270 review finding 3): hooks do
+    # not travel with a clone, and an unwired push boundary would merge on the
+    # focused suite alone.
+    wired, detail = gate_check(root)
+    if not wired:
+        refuse(root, "gate-unwired",
+               "`bash githooks/install.sh --check` did not prove the canonical gate stub; "
+               "run `bash githooks/install.sh` first (GH-549: wiring is per clone): %s" % detail,
+               issue=args.issue)
+
     paths = change_paths(root)
     if not paths:
         refuse(root, "empty", "no changes present — nothing to express", issue=args.issue)
 
-    core = core_paths(paths)
+    for p in paths:
+        if p in DRIVER_LEDGER and p not in expect_driver:
+            refuse(root, "ledger-hand-edit",
+                   "%s is a releases-ledger artifact — never hand-edited (verbs only); only "
+                   "the driver's own ledger phase may carry it" % p, issue=args.issue)
+        if p in DRIVER_GENERATED and p not in expect_driver:
+            refuse(root, "driver-output-hand-edit",
+                   "%s is generated by releases/roadmap verbs; only the driver's own "
+                   "projection refresh may carry it" % p, issue=args.issue)
+
+    core = [p for p in paths if not is_doc_path(p) and p not in expect_driver]
 
     # Step 2 — hard refusals. Frozen twins, kernel surfaces, containment.
     for p in core:
@@ -231,7 +313,7 @@ def cmd_check(args):
         refuse(root, "too-many-files",
                "%d core files > bound %d — route to the normal PR lane" % (len(core), args.max_files),
                issue=args.issue)
-    ins = insertions(root, paths)
+    ins = insertions(root, paths, expect_driver)
     if ins > args.max_insertions:
         refuse(root, "too-large",
                "%d insertions > bound %d — route to the normal PR lane" % (ins, args.max_insertions),
@@ -417,6 +499,12 @@ def cmd_ledger(args):
         rel = m.group(1)
     run_releases(root, "manifest", "dial-in", meta["url"], "--gid", rel,
                  "--reason", "express hotfix %s (GH-267 lane)" % datetime.date.today().isoformat())
+    dashboard = os.path.join(root, "utils", "roadmap-dashboard.sh")
+    if os.path.isfile(dashboard):
+        r = subprocess.run(["bash", dashboard], cwd=root, capture_output=True, text=True)
+        if r.returncode != 0:
+            die("roadmap dashboard refresh failed: %s" %
+                ((r.stderr or r.stdout).strip() or "exit %d" % r.returncode))
     print("express-ledger: dialed into %s" % rel)
     return dict(release=rel)
 
@@ -452,8 +540,11 @@ def args_repo():
 
 def cmd_land(args):
     root = args.root
-    state = cmd_check(args)  # re-qualify at landing time, not at capture time
+    expect = set(getattr(args, "_expect_driver", ()))
+    state = cmd_check(args, expect_driver=expect)  # re-qualify at landing time
     suite = state["suite"]
+    before_paths = set(state["paths"])
+    before_content = snapshot_paths(root, before_paths)
 
     # Step 7 — the fix's own suite must be green right now.
     r = subprocess.run(["bash", os.path.join(root, suite)], cwd=root)
@@ -461,8 +552,28 @@ def cmd_land(args):
         refuse(root, "suite-red", "%s exited %d — no red suite rides the express lane" % (suite, r.returncode),
                issue=args.issue)
 
-    # Step 8 — commit the one-motion change set.
-    git(root, "add", "-A")
+    wired, detail = gate_check(root)
+    if not wired:
+        refuse(root, "gate-unwired",
+               "the suite changed or disabled the canonical pre-push gate: %s" % detail,
+               issue=args.issue)
+
+    # TOCTOU close (PR #270 review finding 4): the suite just ran arbitrary
+    # code — re-snapshot and require the tree to still be exactly the qualified
+    # diff plus the driver's own projections, then stage ONLY those paths.
+    after = set(change_paths(root))
+    drift = sorted(before_paths ^ after)
+    content_drift = sorted(p for p in before_paths & after
+                           if before_content[p] != path_fingerprint(os.path.join(root, p)))
+    drift.extend(p for p in content_drift if p not in drift)
+    if drift:
+        refuse(root, "tree-drift",
+               "qualified paths or content changed after the suite ran (%s) — express stages "
+               "exactly the bytes it qualified, nothing the suite generated" % ", ".join(drift),
+               issue=args.issue)
+
+    # Step 8 — commit the one-motion change set (explicit pathspecs, never -A).
+    git(root, "add", "--", *sorted(after))
     msg = ("fix(GH-%d): %s [express]\n\nExpress lane (GH-267): fix + suite + born-complete doc + "
            "CHANGELOG in one motion.\n\nCloses #%d\n" % (args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
@@ -482,12 +593,44 @@ def cmd_land(args):
     pr_number = int(m.group(1)) if m else -1
     gh(["pr", "merge", str(pr_number), "-R", args.repo, "--merge"])
 
+    # ── post-merge closeout — from clean, current development (finding 2) ──
+    try:
+        # The task branch is done; ship/reconcile state must never ride it, and
+        # wave_reconcile requires a clean development tree.
+        git(root, "checkout", "-q", "development")
+        git(root, "pull", "--ff-only", "origin", "development")
+        dirty = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
+        if dirty:
+            die("development is not clean after pull — refusing closeout over: %s" %
+                dirty.replace("\n", "; "))
+        closeout(root, args, sha, pr_number, suite, state)
+    except BaseException as exc:  # every post-merge failure leaves a receipt
+        if isinstance(exc, SystemExit):
+            reason = "SystemExit(%s)" % exc.code
+        else:
+            reason = "%s: %s" % (type(exc).__name__, exc)
+        write_tick(root, "express-reconcile-failed", issue=args.issue, pr=pr_number,
+                   sha=sha, reason=reason[:300])
+        sys.stderr.write("express-reconcile-failed: %s\n" % reason)
+        if isinstance(exc, (SystemExit, KeyboardInterrupt)):
+            raise
+        sys.exit(EXIT_ENV)
+
+
+def active_release(root):
+    nxt = run_releases(root, "next").stdout
+    mrel = re.search(r"gid=(rel-[0-9A-Z]+)", nxt)
+    return mrel.group(1) if mrel else None
+
+
+def closeout(root, args, sha, pr_number, suite, state):
+    """Steps 9–11 from development: ship, close, reconcile, PERSIST — fail closed.
+
+    A downgraded failure here would leave a closed issue with an active doc and
+    a remote manifest still dialed_in — the GH-205 trap with extra steps — so
+    every fault exits non-zero with an express-reconcile-failed tick instead."""
     # Step 9 — ship with evidence (post-merge, so sha + receipts exist).
-    rel = args.release
-    if not rel:
-        nxt = run_releases(root, "next").stdout
-        mrel = re.search(r"gid=(rel-[0-9A-Z]+)", nxt)
-        rel = mrel.group(1) if mrel else None
+    rel = args.release or active_release(root)
     if rel:
         iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "url"])
         url = json.loads(iv.stdout)["url"]
@@ -501,38 +644,79 @@ def cmd_land(args):
         gh(["issue", "close", str(args.issue), "-R", args.repo,
             "--comment", "Express hotfix landed: %s (PR #%d, suite %s green)" % (sha, pr_number, suite)])
 
+    # wave_reconcile refuses a dirty tree. Persist the ship transaction first,
+    # then reconcile from the clean committed development state.
+    persist_closeout(root,
+                     "chore(releases): express ship GH-%d (PR #%d)" %
+                     (args.issue, pr_number))
+
     # Step 11 — reconcile. Live first; foreign-tracker mentions fall back to
-    # the offline manifest (auto-built above) so one PR body can't wedge the lane.
-    wr = [sys.executable, os.path.join(root, "utils", "py", "wave_reconcile.py"), "--pr", str(pr_number)]
-    r = subprocess.run(wr + ["--root", root], cwd=root, capture_output=True, text=True)
+    # the offline manifest. BOTH failing is fatal — never a stderr footnote.
+    wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
+    if not os.path.isfile(wr):
+        die("wave_reconcile.py missing under %s — cannot reconcile PR #%d" % (root, pr_number))
+    base = [sys.executable, wr, "--pr", str(pr_number), "--root", root]
+    r = subprocess.run(base, cwd=root, capture_output=True, text=True)
     if r.returncode != 0:
+        ok = False
         manifest = build_offline_manifest(root, args.repo, pr_number)
         if manifest:
             mpath = os.path.join(root, ".tick", "express-reconcile-manifest.json")
             os.makedirs(os.path.dirname(mpath), exist_ok=True)
             with open(mpath, "w", encoding="utf-8") as f:
                 json.dump(manifest, f)
-            r2 = subprocess.run(wr + ["--root", root, "--offline", mpath],
-                                cwd=root, capture_output=True, text=True)
-            if r2.returncode != 0:
-                sys.stderr.write("express: reconcile failed even offline — run "
-                                 "`wave_reconcile.py --pr %d` manually:\n%s\n" % (pr_number, r2.stderr[-500:]))
+            r2 = subprocess.run(base + ["--offline", mpath], cwd=root, capture_output=True, text=True)
+            ok = r2.returncode == 0
+            err = r2.stderr or r2.stdout
         else:
-            sys.stderr.write("express: reconcile failed — run `wave_reconcile.py --pr %d` "
-                             "manually:\n%s\n" % (pr_number, r.stderr[-500:]))
+            err = r.stderr or r.stdout
+        if not ok:
+            die("reconcile FAILED for PR #%d after the ship transaction was persisted. "
+                "Fix and run `wave_reconcile.py --pr %d` on development:\n%s" %
+                (pr_number, pr_number, err[-500:]))
+
+    persist_closeout(root,
+                     "chore(pdda): express reconcile GH-%d (PR #%d)" %
+                     (args.issue, pr_number))
 
     write_tick(root, "express-fired", issue=args.issue, sha=sha, pr=pr_number,
                suite=suite, release=rel, files=len(state["paths"]), insertions=state["insertions"])
-    print("express-land: PR #%d merged, issue #%d closed, mfi shipped against %s" %
-          (pr_number, args.issue, rel or "(none)"))
+    print("express-land: PR #%d merged, issue #%d closed, mfi shipped against %s, reconcile persisted"
+          % (pr_number, args.issue, rel or "(none)"))
     return dict(pr=pr_number, sha=sha, release=rel)
 
 
+def persist_closeout(root, message):
+    """Persist one cleanly delimited closeout transaction."""
+    paths = change_paths(root)
+    if not paths:
+        return False
+    git(root, "add", "--", *paths)
+    git(root, "commit", "-m", message)
+    git(root, "push", "origin", "development")
+    return True
+
+
+def capture_doc_path(root, issue):
+    wd = os.path.join(root, "PROJECT", "2-WORKING")
+    if os.path.isdir(wd):
+        cands = sorted(p for p in os.listdir(wd) if p.startswith("GH-%d-" % issue))
+        if cands:
+            return "PROJECT/2-WORKING/" + cands[0]
+    return None
+
+
 def cmd_run(args):
-    cmd_check(args)
+    root = args.root
+    cmd_check(args)  # first qualification: the operator's diff, nothing else
     cmd_docs(args)
-    ledger_args = argparse.Namespace(**vars(args))
-    cmd_ledger(ledger_args)
+    cmd_ledger(args)
+    doc = capture_doc_path(root, args.issue)
+    if not doc:
+        refuse(root, "no-doc", "express docs did not produce a capture doc", issue=args.issue)
+    # Landing requalification must accept exactly what the driver itself wrote
+    # (finding 1) — never a blanket exemption.
+    args._expect_driver = {doc, "CHANGELOG.md"} | driver_projection_paths(root)
     cmd_land(args)
 
 
@@ -572,6 +756,7 @@ def main():
     p = sub.add_parser("run", help="the whole motion in order")
     common(p)
     p.add_argument("--release")
+    p.add_argument("--doc-path")
     p.add_argument("--slug")
     p.add_argument("--summary")
     p.set_defaults(fn=cmd_run)

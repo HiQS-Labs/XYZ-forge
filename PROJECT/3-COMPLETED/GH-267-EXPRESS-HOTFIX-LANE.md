@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Driver (`utils/py/express.py`), skill (`skills/express/`), regression suite (21/21), registrations (validate.sh TESTS, Skills Index, roadmap row, CHANGELOG). DeepSeek QA relay (`relay-system/2026-08-27/gh267-express-qa.md`, deepseek-v4-pro): 13 findings — 1 BLOCKER + 3 MAJOR + 3 MINOR fixed and pinned; 6 NOTE incl. explicit ✅ on ghost-PR honesty, test non-vacuity, order integrity | PR into `development`; first live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
+| Merged in PR #270. PR #278 carries the post-merge review fixes plus a production-path re-review: full generated-output projection, clean two-transaction closeout, canonical gate identity, content-level TOCTOU checks, and failure receipts; suite now 38/38. | First live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
 
 ## Why
 
@@ -77,8 +77,9 @@ foreign-tracker PR-body citations).
 
 ## Acceptance Criteria
 
-- [x] `test/gh267-express-skill.sh` green (15/15): refusal predicates, happy
-      path, born-complete scaffolding, CHANGELOG insertion, tick telemetry.
+- [x] `test/gh267-express-skill.sh` green (38/38): refusal predicates, faithful
+      projection writes, two-transaction closeout, path/content TOCTOU, gate
+      identity before and after the suite, and failure receipts.
 - [x] Suite registered in `validate.sh` TESTS; skill indexed in ARCHITECTURE.md.
 - [x] Roadmap row parked via `releases roadmap add` (rated 3/3/3, provisional).
 - [x] QA relay review — deepseek-v4-pro via relay-xyz (`relay-system/2026-08-27/gh267-express-qa.md`):
@@ -91,9 +92,17 @@ foreign-tracker PR-body citations).
 - No Costly/one-way-door work, ever.
 - No scoring/ranking (that is marathon's and jog's concern; express is single-shot).
 
+## Post-merge review (Codex, PR #270) — dispositions
+
+1. **[Blocker] `run` self-refuses after its own ledger writes — ACCEPTED, fixed.** Requalification now accepts the exact adopted write surface: DB/dump, optional generated ledger, release preview, HTML/Markdown leaderboards, roadmap dashboard, capture doc, and CHANGELOG. Generated artifacts cannot enter as operator hand-edits.
+2. **[Blocker] ship/reconcile from a dirty tree, failures downgraded, state never persisted — ACCEPTED, fixed.** Closeout commits and pushes the ship transaction first, runs `wave_reconcile` from clean `development`, then commits and pushes reconciliation separately. Every post-merge exit path writes `express-reconcile-failed` and returns non-zero.
+3. **[High] full gate assumed, not enforced — ACCEPTED, fixed.** Both before and after the suite, `bash githooks/install.sh --check` must prove the canonical GH-549 stub; an executable no-op impostor refuses.
+4. **[High] suite-time TOCTOU into `git add -A` — ACCEPTED, fixed.** Path sets and content fingerprints must remain identical across the suite; new files, changed qualified bytes, and gate replacement all refuse. Every commit stages explicit pathspecs.
+5. **[High] blanket .md exemption on a no-review lane — ACCEPTED in substance, one framing note.** The exemption is now exactly the lane's own paperwork (`CHANGELOG.md`, `PROJECT/**`); operator .md edits (governance, skills, README) count against every bound. Framing push-back: the hard-refusal loop was never actually reachable for kernel surfaces via the .md exemption (none of `.tick/`, `src/project.js`, or Bash-twin surfaces are .md paths) — the real exposure was unbounded size/subsystem escape for governance and skill rewrites, which the narrowing closes. Replied on the PR.
+
 ## Merge evidence
 
-- (recorded at landing)
+- PR #270 merged 2026-08-27 (06:34Z). Post-merge review fixes ride PR #278 (`fix/gh270-express-post-merge-review`).
 
 ## Lessons Learned (For Future Agents)
 

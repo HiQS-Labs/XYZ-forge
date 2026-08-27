@@ -18,6 +18,9 @@
 #         CHANGELOG entry NOT silently dropped when today's section lacks a
 #         ### Fixed heading (deepseek QA finding 3)
 #   telemetry: every refusal writes a .tick express-refused event carrying the rule
+#   production projections: every adopted releases view + the roadmap dashboard
+#   TOCTOU: both new paths and mutations of already-qualified bytes refuse
+#   closeout: ship is persisted before clean-tree reconciliation; every failure ticks
 #   source audit: cmd_land/build_offline_manifest never call args_repo() — the
 #             --repo flag must thread through every landing gh call (QA finding 1)
 #
@@ -43,22 +46,34 @@ PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); echo "  pass: $1"; }
 bad()  { FAIL=$((FAIL+1)); echo "  FAIL: $1"; }
 check_rule() { # check_rule <expected-rule> <stderr-file>
-  grep -q "express-refused: rule=$1" "$2" || echo "    [stderr was: $(tail -1 "$2" 2>/dev/null)]"
+  if grep -q "express-refused: rule=$1" "$2"; then
+    return 0
+  fi
+  echo "    [stderr was: $(tail -1 "$2" 2>/dev/null)]"
+  return 1
 }
 
 # ── fake gh ──────────────────────────────────────────────────────────────────
 cat > "$BIN/gh" <<'GH'
 #!/usr/bin/env bash
-# gh267 suite stub: serves `issue view <N> --json ...` from $GH_STATE/issue-<N>.json
+# gh267 suite stub: issue view from $GH_STATE; pr create/merge simulated (PR #777).
 set -u
 if [ "$1 $2" = "issue view" ]; then
-  n=""
-  prev=""
+  n=""; prev=""
   for a in "$@"; do
     [ "$prev" = "view" ] && n="$a"
     prev="$a"
   done
   cat "$GH_STATE/issue-$n.json" && exit 0
+fi
+if [ "$1 $2" = "pr create" ]; then echo "https://github.com/H/H/pull/777"; exit 0; fi
+if [ "$1 $2" = "pr merge" ]; then
+  # Simulate GitHub's merge into the remote development branch.
+  git -C "$EXPRESS_FX" checkout -q development || exit 1
+  git -C "$EXPRESS_FX" merge -q --no-ff task/gh-999 -m "merge express fixture" || exit 1
+  git -C "$EXPRESS_FX" push -q origin development || exit 1
+  printf '{"state":"CLOSED","title":"Demo hotfix","url":"https://github.com/H/H/issues/999","createdAt":"2026-08-27T00:00:00Z"}\n' > "$GH_STATE/issue-999.json"
+  exit 0
 fi
 echo "gh-stub: unsupported invocation: $*" >&2; exit 1
 GH
@@ -71,23 +86,80 @@ issue_json CLOSED "Already done" 888
 
 # ── fixture repo ─────────────────────────────────────────────────────────────
 FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+export EXPRESS_FX="$FX"
 git init -q --bare "$REMOTE"
 git init -q "$FX"
 git -C "$FX" remote add origin "$REMOTE"
 git -C "$FX" config user.email t@t; git -C "$FX" config user.name t
-mkdir -p "$FX/utils/py" "$FX/test" "$FX/relay-automation" "$FX/PROJECT/2-WORKING" "$FX/CHANGELOG.d"
-printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "other.sh"\n)\n' > "$FX/validate.sh"
+mkdir -p "$FX/utils/py" "$FX/utils" "$FX/test" "$FX/relay-automation" "$FX/src" "$FX/PROJECT/2-WORKING" "$FX/CHANGELOG.d" "$FX/githooks"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "gh999-drift.sh"\n  "gh999-content-drift.sh"\n  "gh999-hook-drift.sh"\n  "other.sh"\n)\n' > "$FX/validate.sh"
 printf 'old\n' > "$FX/utils/py/foo.py"
 printf 'twin body\n' > "$FX/relay-automation/consult.sh"
 printf 'shared runtime\n' > "$FX/relay-automation/relay-turn-lib.sh"
+printf 'kernel\n' > "$FX/src/project.js"
 printf 'readme\n' > "$FX/README.md"
+printf '.tick/\n' > "$FX/.gitignore"
 printf '# demo suite\n' > "$FX/test/gh999-demo.sh"
+printf '# suite that writes a stray file at run time (TOCTOU probe)\nprintf stray > stray-suite-artifact.txt\n' > "$FX/test/gh999-drift.sh"
+printf '# suite that rewrites a qualified path (content TOCTOU probe)\nprintf suite-mutated > utils/py/foo.py\n' > "$FX/test/gh999-content-drift.sh"
+printf '# suite that replaces the untracked git-metadata hook\nprintf "#!/bin/sh\\nexit 0\\n" > .git/hooks/pre-push\nchmod +x .git/hooks/pre-push\n' > "$FX/test/gh999-hook-drift.sh"
 printf '# unregistered suite\n' > "$FX/test/gh999b-unreg.sh"
+# Use the real installer contract with a tiny fixture gate. A foreign executable
+# hook must not satisfy `install.sh --check`.
+cp "$HERE/../githooks/install.sh" "$FX/githooks/install.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$FX/githooks/pre-push"
+chmod +x "$FX/githooks/install.sh" "$FX/githooks/pre-push"
+
+# Faithful write-surface stub: every mutating releases verb changes the DB/dump
+# and every adopted projection that production refresh_preview owns.
+cat > "$FX/utils/py/releases_app.py" <<'RA'
+#!/usr/bin/env python3
+import os, sqlite3, sys
+a = sys.argv[1:]
+if a[:1] == ["next"]:
+    print("NEXT: stub gid=rel-STUB000000000000000000000008")
+if a[:2] in (["roadmap", "add"], ["manifest", "dial-in"], ["manifest", "ship"]):
+    c = sqlite3.connect("releases.db")
+    c.execute("CREATE TABLE IF NOT EXISTS fixture_writes (id INTEGER PRIMARY KEY, verb TEXT)")
+    c.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
+    c.commit(); c.close()
+    for name in ("releases.sql", "RELEASES.generated.md", "RELEASES-PREVIEW.html",
+                 "LEADERBOARD.html", "LEADERBOARD.md"):
+        with open(name, "a", encoding="utf-8") as f:
+            f.write("stub-release-write: %s\n" % " ".join(a[:2]))
+print("stub-releases:", " ".join(a[:2]))
+RA
+cat > "$FX/utils/py/wave_reconcile.py" <<'WR'
+#!/usr/bin/env python3
+import os, subprocess, sys
+if os.environ.get("WR_FAIL") == "1":
+    print("forced reconcile failure", file=sys.stderr); sys.exit(9)
+if subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout.strip():
+    print("reconcile requires a clean tree", file=sys.stderr); sys.exit(8)
+if subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip() != "development":
+    print("reconcile requires development", file=sys.stderr); sys.exit(7)
+src = "PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+dst = "PROJECT/3-COMPLETED/GH-999-DEMO-HOTFIX.md"
+if os.path.exists(src):
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    os.replace(src, dst)
+WR
+cat > "$FX/utils/roadmap-dashboard.sh" <<'RD'
+#!/usr/bin/env bash
+printf 'stub-dashboard-refresh\n' >> ROADMAP-DASHBOARD.md
+RD
+chmod +x "$FX/utils/roadmap-dashboard.sh"
+python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)'); c.commit(); c.close()"
+printf 'base dump\n' > "$FX/releases.sql"
+for projection in RELEASES.generated.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md ROADMAP-DASHBOARD.md; do
+  printf 'base projection\n' > "$FX/$projection"
+done
 printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' > "$FX/CHANGELOG.md"
 git -C "$FX" add -A && git -C "$FX" commit -qm base
 git -C "$FX" branch -m development
 git -C "$FX" push -q origin development
 git -C "$FX" fetch -q origin
+(cd "$FX" && bash githooks/install.sh) >/dev/null
 require_fixture "$FX"
 require_fixture "$REMOTE"
 echo "fixture ready"
@@ -100,6 +172,10 @@ new_task_branch() {
   git -C "$FX" reset -q --hard origin/development
   git -C "$FX" clean -fdq
   git -C "$FX" checkout -q -B task/gh-999 origin/development
+  # The production prerequisite is per clone; restore the canonical fixture
+  # stub after every destructive sandbox reset so cases cannot contaminate it.
+  rm -f "$FX/.git/hooks/pre-push"
+  (cd "$FX" && bash githooks/install.sh) >/dev/null || exit 1
 }
 run_check() {
   require_fixture "$FX"
@@ -129,8 +205,11 @@ run_check > /dev/null 2> "$ERR" && bad ".orig artifact must refuse" || { check_r
 new_task_branch; printf 'x\n' >> "$FX/relay-automation/new-thing.sh"
 run_check > /dev/null 2> "$ERR" && bad "new bash must refuse" || { check_rule no-new-bash "$ERR" && ok "no-new-bash refusal (GH-551)" || bad "no-new-bash rule"; }
 
-new_task_branch; mkdir -p "$FX/.tick/events"; printf '{}' > "$FX/.tick/events/evil.json"
+new_task_branch; printf 'x\n' >> "$FX/src/project.js"
 run_check > /dev/null 2> "$ERR" && bad "kernel surface must refuse" || { check_rule kernel-surface "$ERR" && ok "kernel-surface refusal" || bad "kernel-surface rule"; }
+
+new_task_branch; printf 'x\n' >> "$FX/githooks/pre-push"
+run_check > /dev/null 2> "$ERR" && bad "gate source edit must refuse" || { check_rule kernel-surface "$ERR" && ok "gate source is a refused safety surface" || bad "gate-source kernel rule"; }
 
 new_task_branch; for i in 1 2 3 4 5; do printf 'x\n' > "$FX/utils/py/f$i.py"; done
 run_check > /dev/null 2> "$ERR" && bad "5 files must refuse" || { check_rule too-many-files "$ERR" && ok "too-many-files refusal" || bad "too-many-files rule"; }
@@ -141,13 +220,28 @@ run_check 999 test/gh999b-unreg.sh > /dev/null 2> "$ERR" && bad "unregistered su
 new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"
 run_check 888 > /dev/null 2> "$ERR" && bad "closed issue must refuse" || { check_rule issue-closed "$ERR" && ok "issue-closed refusal (already-landed guard)" || bad "issue-closed rule"; }
 
+new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; rm -f "$FX/.git/hooks/pre-push"
+run_check > /dev/null 2> "$ERR" && bad "unwired gate must refuse" || { check_rule gate-unwired "$ERR" && ok "gate-unwired refusal (finding 3: hooks do not travel)" || bad "gate-unwired rule"; }
+printf '#!/bin/sh\nexit 0\n' > "$FX/.git/hooks/pre-push" && chmod +x "$FX/.git/hooks/pre-push"
+run_check > /dev/null 2> "$ERR" && bad "foreign no-op hook must not prove the gate" || { check_rule gate-unwired "$ERR" && ok "gate-unwired rejects an executable no-op impostor" || bad "gate identity rule"; }
+rm -f "$FX/.git/hooks/pre-push" && (cd "$FX" && bash githooks/install.sh) >/dev/null
+
+new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; printf 'hand edit\n' > "$FX/releases.sql"
+run_check > /dev/null 2> "$ERR" && bad "hand-edited ledger must refuse" || { check_rule ledger-hand-edit "$ERR" && ok "ledger-hand-edit refusal (verbs only)" || bad "ledger-hand-edit rule"; }
+
+new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; printf 'hand edit\n' > "$FX/RELEASES-PREVIEW.html"
+run_check > /dev/null 2> "$ERR" && bad "hand-edited generated view must refuse" || { check_rule driver-output-hand-edit "$ERR" && ok "driver-output-hand-edit refusal (generated views are verb-owned)" || bad "driver-output-hand-edit rule"; }
+
 echo "== happy path =="
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
 OUT="$(run_check 999)"
 grep -q "express-check: PASS" <<<"$OUT" && ok "legal fix passes" || bad "legal fix refused: $OUT"
 
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
-run_check > /dev/null 2> "$ERR" && ok "docs (.md) exempt from the file bound (QA F5)" || bad "README counted against bounds: $(tail -1 "$ERR")"
+run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"
+run_check > /dev/null 2> "$ERR" && ok "the lane's own paperwork (CHANGELOG) stays exempt" || bad "CHANGELOG counted against bounds: $(tail -1 "$ERR")"
 
 echo "== docs born complete =="
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold failed: $(cat "$ERR")"
@@ -167,6 +261,51 @@ rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold (no-Fixed-heading) failed: $(cat "$ERR")"
 CH_F3="$(awk "/## \[Unreleased\] - $TODAY/,/## \[Unreleased\] - 2026-01-01/" "$FX/CHANGELOG.md")"
 grep -q "GH-999" <<<"$CH_F3" && ok "CHANGELOG entry survives a Fixed-less today-section (QA F3)" || bad "CHANGELOG entry silently dropped (QA F3 regression)"
+
+echo "== run: end-to-end happy path (hermetic — stubbed gh/releases/reconcile) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
+issue_json OPEN "Demo hotfix" 999
+RUNOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary demo 2>"$ERR")"
+if grep -q "express-land: PR #777 merged" <<<"$RUNOUT"; then
+  ok "run accepts the full production projection set"
+else
+  bad "run failed: $(tail -2 "$ERR")"
+fi
+[ "$(git -C "$FX" branch --show-current)" = development ] && ok "closeout left the clone on development" || bad "clone not on development after run"
+RECENT_LOG="$(git -C "$FX" log --format=%s -3)"
+grep -q "express ship GH-999" <<<"$RECENT_LOG" && ok "ship transaction persisted before reconciliation" || bad "ship commit missing"
+grep -q "express reconcile GH-999" <<<"$RECENT_LOG" && ok "reconcile persisted as a separate clean-tree transaction" || bad "reconcile commit missing"
+[ -z "$(git -C "$FX" status --porcelain)" ] && ok "successful closeout leaves development clean" || bad "successful closeout left drift: $(git -C "$FX" status --short | tr '\n' ';')"
+FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
+[ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
+
+echo "== run: TOCTOU — suite-generated drift never rides the commit (finding 4) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-drift-probe\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-drift.sh --summary demo >/dev/null 2>"$ERR" \
+  && bad "drift-writing suite must refuse" \
+  || { check_rule tree-drift "$ERR" && ok "tree-drift refusal (finding 4: stage exactly what was qualified)" || bad "tree-drift rule: $(tail -1 "$ERR")"; }
+
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-content-probe\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-content-drift.sh --summary demo >/dev/null 2>"$ERR" \
+  && bad "suite mutation of a qualified file must refuse" \
+  || { check_rule tree-drift "$ERR" && ok "tree-drift detects changed bytes on an existing path" || bad "content tree-drift rule: $(tail -1 "$ERR")"; }
+
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-hook-probe\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-hook-drift.sh --summary demo >/dev/null 2>"$ERR" \
+  && bad "suite replacement of the gate must refuse" \
+  || { check_rule gate-unwired "$ERR" && ok "post-suite gate identity is re-proven before push" || bad "post-suite gate identity rule: $(tail -1 "$ERR")"; }
+
+echo "== closeout failure receipt =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v3\n' > "$FX/test/gh999-demo.sh"
+issue_json OPEN "Demo hotfix" 999
+WR_FAIL=1 python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary demo >/dev/null 2>"$ERR" \
+  && bad "forced reconcile failure must fail closed" \
+  || { grep -q "express-reconcile-failed" "$ERR" && ok "SystemExit closeout failure is reported" || bad "closeout failure not reported"; }
+FAILED_TICK="$(ls -t "$FX/.tick/events/"*express-reconcile-failed*.jsonl 2>/dev/null | head -1)"
+[ -n "$FAILED_TICK" ] && grep -q '"verb": "express-reconcile-failed"' "$FAILED_TICK" && ok "every closeout failure writes its receipt" || bad "closeout failure tick missing"
 
 echo "== source audit (QA F1) =="
 LAND_BODY="$(awk '/^def cmd_land/,/^def [a-z_]+\(/' "$DRIVER"; true)"
