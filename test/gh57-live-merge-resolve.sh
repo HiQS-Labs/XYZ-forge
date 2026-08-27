@@ -271,7 +271,7 @@ for f in $V8; do printf 'main touched %s\n' "$f" >> "$R8/$f"; done
 git -C "$R8" commit -qam main
 git -C "$R8" merge side -m merge >/dev/null 2>&1 || true
 ok "the adopted views really conflicted (both sides wrote them)" \
-   "git -C '$R8' diff --name-only --diff-filter=U | grep -qx ROADMAP-DASHBOARD.md"
+   "has \"\$(git -C '$R8' diff --name-only --diff-filter=U)\" 'ROADMAP-DASHBOARD.md'"
 resolve_dump "$R8"
 out="$(resolver "$R8")"; rc=$?
 ok "resolver completes with adopted views in play (rc=$rc)" "[ $rc -eq 0 ]"
