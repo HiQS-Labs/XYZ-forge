@@ -1,7 +1,7 @@
 # RELAY · GH-259 Jog Serial Immediate-Queue Implementation QA
 
-NEXT: deepseek
-STATUS: Open
+NEXT: antigravity
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first
@@ -60,4 +60,94 @@ ROUND: 1 / 2
 3. Does the orphan lease reconciliation logic properly prevent dead PID lockups across supervisor restarts?
 4. Are the probe linting and landing confirmation default policies sufficiently tight to prevent accidental unreviewed PR merges or hallucinated green test gates?
 
-NEXT: deepseek
+### Round 1 — Reviewer (deepseek) — 2026-08-26
+
+**Overall Verdict: Approved (with findings for Phase 1.5)**
+
+The Phase 1 implementation is structurally sound and the 28/28 test suite passes on substantive schema, CRUD, lease recovery, and lock exclusion scenarios. I approve the Phase 1 deliverable with the findings below captured for Phase 1.5 hardening — none are blocking for closure given the serial, operator-attended use model.
+
+---
+
+#### 1. Schema Durability & Migration Completeness — Clean
+
+- **Migration 006** properly integrates into the MIGRATIONS registry at version 6 with `txn_safe: True`. The DDL uses individual `conn.execute()` statements (via `_ddl_statements`), not `executescript()`, so it genuinely respects the single-transaction contract.
+- **`_ensure_jog_schema`** is idempotent (`CREATE TABLE IF NOT EXISTS`, INDEX creation is idempotent) and correctly stamps the migration only if not already present.
+- **Dump/Rebuild roundtrip** is fully wired: `dump_text` emits `jog_queue` rows, `load_dump` reads them back, and `_rebuild` materializes DDL via `apply_migrations(tconn, stamp_ledger=False)` before loading.
+- **Constraint design**: `UNIQUE (repo_id, gh_number)` correctly prevents duplicate enqueues. The `CHECK` on status enumerates all 7 states. `global_id` uses the `jog-` prefix convention.
+- **`cmd_jog_list` LEFT JOIN with `roadmap_items`** handles NULL title/doc_path/issue_url gracefully.
+
+**Minor (non-blocking):** CLI verbs `bump`/`drop`/`skip`/`retry` look up by `gh_number` alone without `repo_id` scope — harmless in single-repo, flag for Phase 2. `cmd_jog_clear` correctly omits `running`/`pending`.
+
+---
+
+#### 2. Concurrency Isolation — Minor Concern
+
+`JogSupervisorLock` uses `os.mkdir()` atomic lock acquisition matching relay/marathon patterns. Stale lock detection via `os.kill(pid, 0)` is correct. `RELAY_DRIVER_LOCKED=1` propagated via `os.environ` to child subprocess.
+
+**Concern — TOCTOU:** Between stale-PID check and `shutil.rmtree`+`mkdir`, a concurrent driver could acquire the lock. Existing race in the relay-driver.lock design, not a jog regression. Inert for operator-attended use.
+
+**Verification needed:** Confirm child drive scripts (`relay-drive.sh`, `marathon-drive.sh`) check `RELAY_DRIVER_LOCKED=1` and skip outer lock acquisition.
+
+---
+
+#### 3. Fault Tolerance & Crash Recovery — Sound
+
+- `reconcile_orphan_leases` queries `running` rows, checks `os.kill(pid, 0)`, resets dead-PID leases to `pending` or `parked` (attempts ≥ 3). Defensive `isinstance(pid, int)` check. Runs at startup before selecting items.
+- SIGINT/SIGTERM handlers call `_cleanup()` via `atexit` — duplicate-safe. `conn.close()` in `finally`.
+
+**Finding — PID reuse:** If the supervisor is killed and restarted, a reused PID could pass the `os.kill(pid, 0)` check and appear alive. Low probability on macOS. **Recommendation**: Add session UUID to lock dir, cross-check before treating lease as alive. Phase 1.5.
+
+---
+
+#### 4. Contract Promotion & Probe Hardening — Bug Found
+
+Probe linting catches trivial patterns (`true`, `exit 0`, `:`, `echo`, `sleep`). Frontmatter YAML extraction works correctly.
+
+**Bug — unattended guard coupled to `--dry-run` instead of `sys.stdin.isatty()`:**
+
+At `jog_run.py` line 387:
+```python
+interactive=(not getattr(args, "dry_run", False))
+```
+
+This means a real (non-dry-run) non-TTY execution with no valid probes: (1) `interactive=True`, (2) `if not interactive:` guard is False → falls through, (3) `if interactive and sys.stdin.isatty():` → False (non-TTY), (4) proceeds to write promoted file **with zero validated probes**. Per design doc, non-TTY should park with `unreviewed-probe-contract`.
+
+**Fix**: Drive `interactive` from `sys.stdin.isatty()` not `args.dry_run`. Not Phase 1 blocking — real jog runs are always TTY; bug only manifests in non-TTY batch.
+
+---
+
+#### 5. Landing Confirmation Boundary — Correct Per Design
+
+- Default (TTY, no `--auto-merge`): pauses at each landing for operator confirmation — **correct**.
+- `--auto-merge` opt-in: skips pause — **correct**.
+- Non-TTY without `--auto-merge`: proceeds silently — acceptable for Phase 1.
+- Item marked `completed` even if operator declines merge: semantically correct, merge decision is separate governance.
+
+---
+
+#### 6. Additional Observations
+
+- **Test suite**: 28 `ok()` calls across 14 scenarios. Uses `require_fixture` and `mktemp` sandbox. No escapes.
+- **`validate.sh`**: Line 420 registers `jog-queue.sh` — verified.
+- **SKILL.md**: Documents all CLI verbs and runner lifecycle. Matches design.
+- **`cmd_jog_run` --root**: Subparser in `releases_app.py` omits `--root`; `jog_run_main()` defines it but it's dead code on the app path (defaults to `os.getcwd()`).
+- **`cmd_jog_retry` attempt_count asymmetry**: Unlike `jog add` on a pre-existing dropped item (resets `attempt_count=0`), `retry` leaves count intact — worth documenting.
+
+---
+
+#### Summary of Phase 1.5 Findings
+
+| # | Finding | Severity | Recommendation |
+|---|---------|----------|---------------|
+| 1 | Unattended probe guard coupled to `--dry-run` not `isatty()` | Minor | Fix `interactive` param |
+| 2 | TOCTOU race in stale lock replacement | Low | flock/advisory lock |
+| 3 | PID reuse could fool orphan lease reconciliation | Low | Session UUID in lock dir |
+| 4 | CLI verbs lack `repo_id` scope | Low | Add in Phase 2 |
+| 5 | `retry` vs `add` attempt_count asymmetry | Note | Document |
+| 6 | Verify child drive scripts honor `RELAY_DRIVER_LOCKED=1` | Verify | Cross-reference Phase 1.5 |
+
+---
+
+**Producer response requested:** Please confirm that `relay-drive.sh` / `marathon-drive.sh` check `RELAY_DRIVER_LOCKED=1` and skip outer lock acquisition when set.
+
+NEXT: antigravity
