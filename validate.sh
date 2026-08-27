@@ -245,6 +245,7 @@ TESTS=(
   "synthetic/synthetic-pi-model-unset.sh"     # pi-turn: unset model handled, not silently defaulted
   "synthetic/synthetic-pi-provider-unsupported.sh" # pi-turn: unsupported provider exits clean, not fake-success
   "gh141-synthetic-registry.sh"  # #141 Phase 1 (single selector: every test/synthetic suite is registry-reachable AND fuzz-loop's derived selection matches — no suite selectable by one path but not the other; a dropped-in unregistered suite is CAUGHT)
+  "gh141-fuzz-inputs.sh"         # #141 Phase 3 (fuzz_inputs.py parser-only slice positive/negative controls)
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 (DeepSeek Harness integration & deepseek-turn shim with OpenRouter route, 11/11 assertions)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
@@ -328,7 +329,7 @@ TESTS=(
                                  #   first run — a failed resolve left the merge half-closed, a rewound generation
                                  #   header was accepted silently, releases.db.bak was committable, and `--root ""`
                                  #   retargeted the resolver at the current repo. 27/0
-  "gh69-roadmap-shadow.sh"        # GH-69 (ROADMAP.md shadow: `releases roadmap sync` mirrors the ledger into
+  "gh69-roadmap-shadow.sh"        # GH-69 (roadmap ledger: `releases roadmap sync` mirrors the ledger into
                                  #   roadmap_items, GH-32 Phase-0 pattern) — 24/0; pins that the shadow never
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
@@ -420,6 +421,7 @@ TESTS=(
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
+  "gh269-roadmap-retired.sh"          # GH-269 (ROADMAP.md is completely retired, tools do not recreate it)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh205-gate-idempotency.sh"    # GH-205 (telemetry writes land off-tree; the gate never dirties tracked files)
   "gh204-sed-portability.sh"     # GH-204 (in-place edits portable AND content-asserted; exit code masks the loss)
