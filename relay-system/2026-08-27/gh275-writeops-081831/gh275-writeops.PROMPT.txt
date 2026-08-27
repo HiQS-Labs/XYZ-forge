@@ -1,0 +1,58 @@
+Review the implementation plan below (GitHub issue #275 in this repo) for medium-level logging of agent disk-write/teardown commands. The full issue body follows after the questions.
+
+Context to verify against actual repo code:
+- relay-automation/hooks/gh527-destructive-git-guard.sh (existing PreToolUse guard the plan sits beside)
+- utils/py/marathon_drive.py lines ~97-160 (the XYZ_DEBUG_LOG Sentinel JSONL contract the plan reuses)
+- relay-automation/xyz-sync.sh line ~359 (the rm -rf teardown site)
+- utils/py/relay_drive.py / utils/py/marathon_drive.py worktree remove sites
+
+Questions:
+1. Is the 3-checkbox plan sound and genuinely minimal, or is anything over-built / under-built for a "medium level" logging goal?
+2. Sharper seam choices: is a separate user-level PreToolUse hook the right seam, or should the existing gh527 guard be extended instead? Trade-offs?
+3. What's missing that would bite in practice? (hook JSON parsing pitfalls, ~/.zshenv inheritance assumptions, multi-machine log sync, concurrent append safety, debug.log landing inside repos vs. home dir)
+4. Pattern-list gaps in the destructive-command regex family (rm -rf, git worktree remove/prune, git clean, git branch -D, git reset --hard, xyz-sync delete)?
+5. Is the skip list right (eslogger/Endpoint Security, codex/agy internal execs, log rotation)?
+
+Be concrete; cite file:line where you disagree. Advisory only — propose, don't edit.
+
+--- ISSUE #275 BODY ---
+## Goal
+
+Medium-level durable logging of the **disk-write commands agents execute** — worktree teardowns, clone deletions, `rm -rf`, destructive git — across Claude Code and the harnesses, so "what deleted that?" has an answer with a timestamp. Not full exec auditing; a receipts trail for destructive writes.
+
+## Recon (grounded, each point directly observed 2026-08-27 — not inferred)
+
+**Where agent disk-writes actually originate, and what already sees them:**
+
+| Chokepoint | Coverage today |
+|---|---|
+| Claude Code Bash tool (the dominant agent surface) | PreToolUse hooks demonstrably intercept every command — `gh177-sandbox-test-guard.sh` and `gh527-destructive-git-guard.sh` fired on this session's own calls. GH-527's guard **already parses the command JSON and regex-matches destructive git patterns** (`reset --hard`, `checkout --`, `stash`, `clean`) — it snapshots, but does not log non-git teardowns. |
+| Harness drivers (`relay_drive.py` / `marathon_drive.py`) | `git worktree remove` sites exist; the Sentinel JSONL journal (`XYZ_DEBUG_LOG=1`, `marathon_drive.py:97-160`) defines the exact timestamped record shape and swallow-errors contract, but is opt-in and not armed at teardown sites. |
+| `xyz-sync.sh:359` | The one `rm -rf` that deletes vendored installs. Unlogged. |
+| codex/agy CLI internals | Shims already bound their writes (containment reverts off-lane edits; `CODEX_LOG`/`AGY_LOG` per-PID). Internal execs invisible — accepted gap. |
+| Interactive terminal | `.zsh_history` now timestamped (`EXTENDED_HISTORY`, verified live) — but captures **only human typing**; every agent shell is non-interactive and writes nothing there. This gap is what motivates this issue. |
+| macOS system level | True every-exec capture requires Endpoint Security (`eslogger exec`) — heavyweight, noisy, out of scope for "medium". |
+
+## Plan (ponytail pass — extend existing seams, build nothing new)
+
+- [ ] **1. One new PreToolUse hook, user-level (`~/.claude/`): `write-ops-log.sh` (~25 lines).** Reads the same tool-call JSON GH-527's guard already parses; regex-matches the teardown family (`rm -rf`, `git worktree remove|prune`, `git clean`, `git branch -D`, `git reset --hard`, `xyz-sync.sh delete`); appends one Sentinel-shape JSONL line (`timestamp`, cwd, matched pattern, full command) to `~/.claude/write-ops.jsonl`. Never blocks, never fails the call (mirror the XYZ_DEBUG_LOG swallow-errors contract). User-level placement covers **every repo and session on the Mac**, not just XYZ-forge.
+- [ ] **2. Harness teardown sites: arm the journal that already exists.** `export XYZ_DEBUG_LOG=1` in `~/.zshenv` (inherits into all non-interactive shells), plus `xyz_debug_log_append(...)` calls at the driver worktree-remove sites and an echo-append at `xyz-sync.sh:359` (~10 lines total). Both machines.
+- [ ] **3. One registered test**: hook emits a line for `git worktree remove`, stays silent for `ls`; harness append fires at a fixture teardown.
+
+Skipped, with re-entry triggers: **eslogger/Endpoint Security daemon** (add only when a forensic question the two logs can't answer actually occurs); **codex/agy internal-exec capture** (containment + shim logs bound the blast radius; revisit if an unattributed deletion appears with no hook/journal line); **log rotation** (single JSONL; revisit past ~10MB).
+
+Est: under an hour of work, zero new dependencies, two files touched + one hook file added.
+
+-Reviewed by Fable 5 (ponytail pass; recon grounded in-session)
+
+## Turn-taker coverage clarification (all harness CLIs: aider, DeepSeek, CommandCode, codex, agy)
+
+Layer 2 covers **all turn-takers identically**: worktree creation/teardown, clone hygiene, and `xyz-sync` deletes are performed by the *drivers* (`relay-drive`/`marathon-drive`/jog), never by the CLIs themselves — so the journal lines fire the same whether the turn is aider, DeepSeek (gh148 shim), CommandCode, codex, or agy. The `~/.zshenv` export inherits into every non-interactive shell, so any XYZ-system invocation is armed.
+
+What is NOT logged: commands those CLIs run *internally* during turns. That gap is structurally **bounded rather than watched** — turns execute in isolated worktrees under the `ALLOW_PATHS` containment contract, and off-lane writes are reverted and fail the turn (GH-441 mechanism). The one true residual blind spot: a CLI writing *outside* the repo with an absolute path (e.g. in `$HOME`) — only the Endpoint Security tier sees that, which is exactly the skipped item's re-entry trigger below.
+
+Layer 1 additionally logs the *launch* of every drive from a Claude Code session, giving each harness run a timestamped start record that ties journal lines back to a session.
+
+## Overhead note
+
+Negligible on SSD/NVMe. The hook appends one ~200-byte line only on matched destructive patterns (a handful per day); the journal appends small JSONL lines per harness event, not per I/O operation. The measurable cost is the hook's process spawn per Bash tool call (single-digit ms against commands that run seconds-to-minutes), not disk. No fsync in the append path; best-effort writes that swallow their own errors, per the existing Sentinel contract.

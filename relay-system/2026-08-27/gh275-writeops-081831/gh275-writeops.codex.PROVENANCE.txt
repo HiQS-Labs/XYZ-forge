@@ -1,0 +1,9 @@
+FIRSTHAND_COUNT=15
+ECHOED_COUNT=7
+ECHOED `.zsh_history`
+ECHOED `xyz-sync.sh delete`
+ECHOED `xyz-sync`
+ECHOED `xyz-sync`
+ECHOED `xyz-sync.sh delete`
+ECHOED `xyz-sync`
+ECHOED `xyz-sync`
