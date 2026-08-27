@@ -1,8 +1,8 @@
 ---
 Goal: QA Phase 1 Plan for Jog Skill and Serial Queue
 Date: 2026-08-26
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Closed
 ---
 
 # Context
@@ -126,3 +126,13 @@ Write your verdict below. Set `STATUS: Approved` if sound as written, or leave i
 4. Specify outer driver-lock ownership plus `RELAY_DRIVER_LOCKED=1` nesting and cleanup.
 5. Define promotion, dedupe, closed/open-PR, preflight-exit, branch/landing, re-anchor, and
    verification policies before advancing the queue.
+
+## Producer Synthesis · 2026-08-26
+
+All actionable findings from the Codex QA review have been accepted and incorporated into `PROJECT/1-INBOX/GH-259-JOG-SERIAL-QUEUE.md`:
+
+1. **Dedicated `jog_queue` schema:** Rejected ad-hoc `roadmap_items` marker overloading due to `(repo_id, gh_number)` unique constraint and portfolio section-order semantics. Adopted dedicated `jog_queue` SQLite relation.
+2. **Short writer transactions & leasing:** Adopted short atomic transactions for state transitions (`pending -> running -> completed|parked|failed`) with crash-recovery journaling.
+3. **Outer driver lock composition:** Specified `RELAY_DRIVER_LOCKED=1` environment propagation for nested single-phase runs.
+4. **Preflight exit mapping & landing boundaries:** Integrated `swarm-preflight` exit code mappings (`ready` -> fire, `already-landed` -> drop with receipt, `not-ready` -> park/prompt) and clean worktree teardown assertions between serial tasks.
+
