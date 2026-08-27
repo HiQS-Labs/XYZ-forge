@@ -540,7 +540,12 @@ def args_repo():
 
 def cmd_land(args):
     root = args.root
-    expect = set(getattr(args, "_expect_driver", ()))
+    # `run` sets `_expect_driver` in-process; a bare `land` invocation never has
+    # it (fresh argparse Namespace) and must recompute the same allowlist itself
+    # so the documented four-step flow isn't refused for what its own earlier
+    # `docs`/`ledger` steps wrote (GH-278 review finding — see expect_driver_paths).
+    supplied = getattr(args, "_expect_driver", None)
+    expect = set(supplied) if supplied is not None else expect_driver_paths(root, args.issue)
     state = cmd_check(args, expect_driver=expect)  # re-qualify at landing time
     suite = state["suite"]
     before_paths = set(state["paths"])
@@ -706,6 +711,21 @@ def capture_doc_path(root, issue):
     return None
 
 
+def expect_driver_paths(root, issue):
+    """Driver-written outputs express may already have produced for this issue:
+    the capture doc (if born), the lane's CHANGELOG entry, and any adopted
+    releases/roadmap projections. `run` computes this in-process before calling
+    `cmd_land`; a standalone `land` invocation (SKILL.md's documented four-step
+    form: check / docs / ledger / land, each its own process) has no other way
+    to learn what an earlier standalone `docs`/`ledger` step wrote, so `cmd_land`
+    falls back to recomputing the same set itself (GH-278 review finding)."""
+    paths = {"CHANGELOG.md"} | driver_projection_paths(root)
+    doc = capture_doc_path(root, issue)
+    if doc:
+        paths.add(doc)
+    return paths
+
+
 def cmd_run(args):
     root = args.root
     cmd_check(args)  # first qualification: the operator's diff, nothing else
@@ -716,7 +736,7 @@ def cmd_run(args):
         refuse(root, "no-doc", "express docs did not produce a capture doc", issue=args.issue)
     # Landing requalification must accept exactly what the driver itself wrote
     # (finding 1) — never a blanket exemption.
-    args._expect_driver = {doc, "CHANGELOG.md"} | driver_projection_paths(root)
+    args._expect_driver = expect_driver_paths(root, args.issue)
     cmd_land(args)
 
 

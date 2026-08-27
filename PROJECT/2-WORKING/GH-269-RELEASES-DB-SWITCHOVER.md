@@ -19,6 +19,11 @@ related:
   - GH-141 (ATE/fuzzing is the verification backbone for the switchover)
 fix_probes:
   - test ! -f ROADMAP.md
+goal: >
+  Retire ROADMAP.md as a physical file: migrate every reader, writer, gate,
+  and canary onto releases.db so the frozen legacy file cannot be hand-edited
+  again, verified by ATE/fuzzing, with RELEASES-PREVIEW.html as the surviving
+  human-readable artifact.
 ---
 
 # GH-269 — Full switchover to Releases DB: retire ROADMAP.md
@@ -36,9 +41,9 @@ https://github.com/HiQS-Labs/XYZ-forge/issues/269
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Stage | 1-INBOX capture; 6 issue checkboxes open, none started |
+| What was just completed | What's next |
+|---|---|
+| Captured with a preflight contract; queued in jog (position 2), but its 900s-idle build turn was parked as marathon-scale — a single-turn build cannot cover the 6-phase reader/writer/gate migration. | Route via marathon rather than jog; none of the 6 issue checkboxes have started. |
 
 ## Swarm Preflight Contract
 

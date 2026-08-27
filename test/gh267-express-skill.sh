@@ -279,6 +279,25 @@ grep -q "express reconcile GH-999" <<<"$RECENT_LOG" && ok "reconcile persisted a
 FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
 
+echo "== four-step standalone flow (check / docs / ledger / land, each its own process) =="
+# GH-278 review finding: SKILL.md documents this as an equally-valid alternative
+# to `run` (steps 0-4 / 5 / 6 / 7-11), but `_expect_driver` only ever existed as
+# an in-process attribute `run` set before calling cmd_land directly — a bare
+# `land` process, invoked after separately-invoked `docs`/`ledger` steps, had no
+# way to learn what those steps wrote and refused with ledger-hand-edit on its
+# own driver's output. Pins that `cmd_land` recomputes the same allowlist itself.
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-standalone-probe\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2 standalone\n' > "$FX/test/gh999-demo.sh"
+issue_json OPEN "Demo hotfix" 999
+python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh >/dev/null 2>"$ERR" || bad "standalone check failed: $(cat "$ERR")"
+python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary demo >/dev/null 2>"$ERR" || bad "standalone docs failed: $(cat "$ERR")"
+python3 "$DRIVER" --root "$FX" ledger --issue 999 >/dev/null 2>"$ERR" || bad "standalone ledger failed: $(cat "$ERR")"
+LANDOUT="$(python3 "$DRIVER" --root "$FX" land --issue 999 --suite test/gh999-demo.sh 2>"$ERR")"
+if grep -q "express-land: PR #777 merged" <<<"$LANDOUT"; then
+  ok "standalone land accepts what standalone docs/ledger already wrote (GH-278 review fix)"
+else
+  bad "standalone land refused its own driver's earlier docs/ledger output: $(tail -3 "$ERR")"
+fi
+
 echo "== run: TOCTOU — suite-generated drift never rides the commit (finding 4) =="
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-drift-probe\n' > "$FX/utils/py/foo.py"
 issue_json OPEN "Demo hotfix" 999
