@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 19 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -28,6 +28,7 @@ Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-251 · validate.sh miscounts an absent pytest as FAILED | — | [GH-251-VALIDATE-PYTEST-SKIP.md](PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md) · [#251](https://github.com/HiQS-Labs/XYZ-forge/issues/251) |
 | GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | — | [#255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) · [PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md](PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md) |
 | GH-256 — no preflight checks the builder can reach a phase's artifact paths | — | [#256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) · [PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md](PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md) |
+| GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1) | — | [doc](PROJECT/1-INBOX/GH-259-JOG-SERIAL-QUEUE.md) · [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) |
 
 ## Queue
 
@@ -43,8 +44,8 @@ Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-232 · wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | — | [GH-232-WAVE-RECONCILER-MULTIPHASE.md](PROJECT/2-WORKING/GH-232-WAVE-RECONCILER-MULTIPHASE.md) · [#232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) |
-| GH-233 · AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | — | [GH-233-AGENTCHORUS-GEN2-PHASE2.md](PROJECT/2-WORKING/GH-233-AGENTCHORUS-GEN2-PHASE2.md) · [#233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) |
+| GH-232 · wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | — | [GH-232-WAVE-RECONCILER-MULTIPHASE.md](PROJECT/3-COMPLETED/GH-232-WAVE-RECONCILER-MULTIPHASE.md) · [#232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) |
+| GH-233 · AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | — | [GH-233-AGENTCHORUS-GEN2-PHASE2.md](PROJECT/3-COMPLETED/GH-233-AGENTCHORUS-GEN2-PHASE2.md) · [#233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) |
 | GH-204 · BSD sed -i '' no-ops on Linux at production call sites | — | [GH-204-BSD-SED-PORTABILITY.md](PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md) · [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) |
 | GH-205 · validate.sh mutates four tracked files per run — gate not idempotent | — | [GH-205-GATE-IDEMPOTENCY.md](PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md) · [#205](https://github.com/HiQS-Labs/XYZ-forge/issues/205) |
 | GH-123 · Linux portability canary — remainder: gh358 lock contention on shared runners | — | [GH-123-LINUX-CANARY-REMAINDER.md](PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md) · [#123](https://github.com/HiQS-Labs/XYZ-forge/issues/123) |

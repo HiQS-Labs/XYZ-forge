@@ -83,8 +83,9 @@ while the four axes keep their honest values underneath.
 | 71 | **170** | [GH-195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
 | 72 | **170** | [GH-28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
 | 73 | **160** | [GH-18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
-| 74 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Linux-RC | queue | 3 | 2 | 2 | 1 | 8 | — |
-| 75 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Linux-RC | queue | 1 | 1 | 1 | 1 | 4 | — |
+| 74 | **11** | [GH-259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) — Jog: serial immediate-queue execution engine and skill (Phase 1) | — | Queue / parked intake | 3 | 3 | 2 | 3 | 11 | — |
+| 75 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Linux-RC | queue | 3 | 2 | 2 | 1 | 8 | — |
+| 76 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Linux-RC | queue | 1 | 1 | 1 | 1 | 4 | — |
 
 **Top of the line:** GH-67 — Commandcode builder default widened to `--yolo` — closer evaluation → possible build (score 340, operator override).
 
