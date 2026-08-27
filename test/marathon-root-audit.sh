@@ -241,10 +241,17 @@ invocation_segment() {  # <group-text> -> the command segment carrying the drive
   chopped="${chopped//&&/$'\n'}"
   chopped="${chopped//||/$'\n'}"
   while IFS= read -r seg || [ -n "$seg" ]; do
-    if [[ "$seg" =~ (python3?[[:space:]][^[:space:]]*/(marathon_drive|relay_drive)\.py|bash[[:space:]][^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh|bash[[:space:]]+\"\$) ]]; then
-      printf '%s\n' "$seg"
-      return 0
+    if [[ "$seg" =~ (python3?[[:space:]][^[:space:]]*/(marathon_drive|relay_drive)\.py|bash[[:space:]][^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh) ]]; then
+      :  # literal driver path
+    elif [[ "$seg" =~ (python3?[[:space:]][^[:space:]]*\$[^[:space:]]*|bash[[:space:]][^[:space:]]*\$[^[:space:]]*) ]]; then
+      :  # interpreter + variable spelling (quoted or bare) — QA round 2: without this,
+      # invocation_segment fell back to whole-group semantics and a foreign-command env
+      # prefix could whitelist a variable invocation.
+    else
+      continue
     fi
+    printf '%s\n' "$seg"
+    return 0
   done <<< "${chopped}"
   printf '%s\n' "$g"  # driver token not re-found after splitting — keep whole-group semantics
 }

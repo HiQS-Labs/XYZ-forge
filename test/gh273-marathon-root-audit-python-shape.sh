@@ -153,5 +153,26 @@ out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "same-command env prefix still passes" \
   || fail "same-command env prefix wrongly failed: $out"
 
+# ── 8: QA round 2 — the segment finder must recognize VARIABLE spellings too ──────────────────
+# Without this, invocation_segment fell back to whole-group semantics and a foreign-command
+# env prefix could whitelist a 'python3 $DRIVER' invocation.
+D="$(new_scenario_dir segment-var)"
+printf '%s\n' \
+  'DRIVER="/real/harness-repo/utils/py/marathon_''drive.py"' \
+  'MARATHON_ROOT="$WORK/mroot" true; python3 $DRIVER --phase-brief b.md' \
+  > "$D/p8-segment-var.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && pass 'foreign-command env prefix does not whitelist a variable-spelled invocation (QA r2)' \
+  || fail "segment fallback hole: variable invocation whitelisted by foreign-command prefix"
+
+D="$(new_scenario_dir segment-var-ok)"
+printf '%s\n' \
+  'DRIVER="/real/harness-repo/utils/py/marathon_''drive.py"' \
+  'MARATHON_ROOT="$WORK/mroot" python3 $DRIVER --phase-brief b.md --round-cap 2' \
+  > "$D/p8b-segment-var-ok.sh"
+out="$(bash "$D/audit.sh" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass 'same-command env prefix passes for variable spellings too' \
+  || fail "variable invocation wrongly failed: $out"
+
 echo "  gh273-marathon-root-audit-python-shape: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
