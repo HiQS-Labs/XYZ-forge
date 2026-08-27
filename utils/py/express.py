@@ -52,11 +52,18 @@ FROZEN_TWINS = [
 # AGENTS.md: "Changes to .tick/events/, src/project.js, relay containment, or
 # event/verb shape are usually broader than they look. Treat them as at least
 # Costly until proven otherwise." Express never lands Costly work.
-KERNEL_SURFACES = [".tick/", "src/project.js", "relay-automation/hooks/", "src/project.js.orig"]
+KERNEL_SURFACES = [".tick/", "src/project.js", "relay-automation/hooks/"]
+# Shared (non-twin) Bash runtime the whole relay surface depends on — refused
+# under its own rule name so a reader never sees "frozen twin" for a file the
+# repo explicitly says is not one (AGENTS.md, QA finding 4).
+SHARED_RUNTIME = "relay-automation/relay-turn-lib.sh"
 # Docs/paper paths never count against the size bounds — they are required by
 # the flow itself, not part of the fix's blast radius.
 DOC_PREFIXES = ("CHANGELOG.md", "PROJECT/", "ROADMAP.md", "ROADMAP-DASHBOARD.md",
-                "RELEASES.generated.md", "LEADERBOARD", "RELEASES-PREVIEW")
+                "RELEASES.generated.md", "LEADERBOARD", "RELEASES-PREVIEW", "docs/",
+                "README", "AGENTS.md", "GUIDING-PRINCIPLES.md", "ROUTER.md", "SOP.md",
+                "ARCHITECTURE", "WORKTREE-SAFETY.md", "HARNESS-MODELS-REGISTRY",
+                "RELEASES-DB-FAQS.md", "UPGRADE.md")
 DEFAULT_MAX_FILES = 4
 DEFAULT_MAX_INSERTIONS = 150
 
@@ -81,7 +88,8 @@ def write_tick(root, verb, **fields):
     try:
         os.makedirs(events, exist_ok=True)
         ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
-        path = os.path.join(events, "%s-express-%s.jsonl" % (ts, verb))
+        target = "gh-%s" % fields.get("issue") if fields.get("issue") else "lane"
+        path = os.path.join(events, "%s-%s-%s.jsonl" % (ts, verb, target))
         rec = dict(at=now_iso(), actor="express", verb=verb)
         rec.update({k: v for k, v in fields.items() if v is not None})
         with open(path, "w", encoding="utf-8") as f:
@@ -125,7 +133,7 @@ def change_paths(root):
     """Every path the fix touches vs a fresh task branch: uncommitted tracked
     changes plus untracked files. HEAD must still equal origin/development
     (checked elsewhere), so this diff IS the fix and nothing else."""
-    porcelain = git(root, "status", "--porcelain", check=False).stdout
+    porcelain = git(root, "status", "--porcelain=v1", check=False).stdout
     paths = set()
     for line in porcelain.splitlines():
         if not line.strip():
@@ -138,7 +146,13 @@ def change_paths(root):
 
 
 def core_paths(paths):
-    return [p for p in paths if not p.startswith(DOC_PREFIXES)]
+    return [p for p in paths if not is_doc_path(p)]
+
+
+def is_doc_path(p):
+    """Docs never count against the size bounds: they are required by the flow
+    itself, not part of the fix's blast radius (QA finding 5)."""
+    return p.startswith(DOC_PREFIXES) or p.endswith(".md") or p.endswith(".MD")
 
 
 def insertions(root, paths):
@@ -150,7 +164,7 @@ def insertions(root, paths):
         if len(parts) == 3 and parts[0] != "-":
             tracked[parts[2]] = int(parts[0])
     for p in paths:
-        if p.startswith(DOC_PREFIXES):
+        if is_doc_path(p):
             continue
         if p in tracked:
             total += tracked[p]
@@ -192,10 +206,14 @@ def cmd_check(args):
 
     # Step 2 — hard refusals. Frozen twins, kernel surfaces, containment.
     for p in core:
-        if p in FROZEN_TWINS or p == "relay-automation/relay-turn-lib.sh":
+        if p in FROZEN_TWINS:
             refuse(root, "frozen-twin",
-                   "%s is a frozen Bash twin / shared runtime (GH-308) — the trailer flow "
+                   "%s is a frozen Bash twin (GH-308) — the trailer flow "
                    "needs human judgment, not an express lane" % p, issue=args.issue)
+        if p == SHARED_RUNTIME:
+            refuse(root, "shared-runtime",
+                   "%s is the shared Bash runtime dependency (not a twin, AGENTS.md) — "
+                   "too load-bearing for an express lane" % p, issue=args.issue)
         if p.endswith(".sh") and (p.startswith("utils/") or p.startswith("relay-automation/")):
             refuse(root, "no-new-bash",
                    "%s — new/edited .sh under utils/ or relay-automation/ is rejected by the "
@@ -205,8 +223,8 @@ def cmd_check(args):
                 refuse(root, "kernel-surface",
                        "%s is a coordination-kernel / containment surface (AGENTS: at least "
                        "Costly) — express lands risk-bounded work only" % p, issue=args.issue)
-        if p.startswith("scratch/") or p.startswith("temp/") or p.endswith(".bak"):
-            refuse(root, "scratch", "%s is scratch output — commit-worthy paths only" % p, issue=args.issue)
+        if p.startswith("scratch/") or p.startswith("temp/") or p.endswith((".bak", ".orig", ".rej")):
+            refuse(root, "scratch", "%s is scratch/editor output — commit-worthy paths only" % p, issue=args.issue)
 
     # Step 1 — bounds. Docs never count; code+test do.
     if len(core) > args.max_files:
@@ -322,14 +340,26 @@ goal: >
 
     # CHANGELOG — newest-first under a fresh dated Unreleased section.
     cl = os.path.join(root, "CHANGELOG.md")
-    entry = ("## [Unreleased] - %s\n\n### Fixed\n- **GH-%d: %s.** (express hotfix, GH-267 lane; "
-             "suite %s green.)\n\n" % (today, args.issue, meta["title"], args.suite))
+    bullet = ("- **GH-%d: %s.** (express hotfix, GH-267 lane; "
+              "suite %s green.)\n" % (args.issue, meta["title"], args.suite))
+    entry = "## [Unreleased] - %s\n\n### Fixed\n%s\n" % (today, bullet)
     with open(cl, encoding="utf-8", errors="replace") as f:
         cbody = f.read()
     m = re.search(r"^## \[", cbody, re.M)
-    if m and cbody[m.start():m.start() + 40].find(today) >= 0:
-        # today's section exists: insert the bullet under its Fixed list
-        cbody = cbody[:m.start()] + re.sub(r"^(### Fixed\n)", r"\1- **GH-%d: %s.** (express hotfix, GH-267 lane; suite %s green.)\n" % (args.issue, meta["title"], args.suite), cbody[m.start():], count=1)
+    if m and today in cbody[m.start():m.start() + 40]:
+        # Today's section exists: append under its Fixed list, or create the
+        # Fixed list if the section lacks one — the entry is never silently
+        # dropped (QA finding 3).
+        hdr_nl = cbody.index("\n", m.start()) + 1
+        nxt = re.search(r"^## \[", cbody[hdr_nl:], re.M)
+        section_end = hdr_nl + nxt.start() if nxt else len(cbody)
+        fx = re.search(r"^### Fixed[^\n]*\n", cbody[hdr_nl:section_end], re.M)
+        if fx:
+            insert_at = hdr_nl + fx.end()
+        else:
+            insert_at = hdr_nl
+            bullet = "\n### Fixed\n" + bullet
+        cbody = cbody[:insert_at] + bullet + cbody[insert_at:]
     elif m:
         cbody = cbody[:m.start()] + entry + cbody[m.start():]
     else:
@@ -393,13 +423,13 @@ def cmd_ledger(args):
 
 # ── steps 7–11: land + reconcile ─────────────────────────────────────────────
 
-def build_offline_manifest(root, pr_number):
+def build_offline_manifest(root, repo, pr_number):
     """Fallback reconcile path: PR bodies citing foreign-tracker numbers
     (GH-368/375/492/551-class) make live wave_reconcile die on unresolvable
     linked issues. Build the sanctioned offline manifest: resolvable in-repo
     numbers carry live state; unresolvable ones are omitted (unknown =>
     promote-as-before per wave_reconcile's GH-202 contract)."""
-    pv = gh(["pr", "view", str(pr_number), "-R", args_repo(), "--json",
+    pv = gh(["pr", "view", str(pr_number), "-R", repo, "--json",
              "number,title,state,mergedAt,baseRefName,headRefName,body,url"], check=False)
     if pv.returncode != 0:
         return None
@@ -410,7 +440,7 @@ def build_offline_manifest(root, pr_number):
         if num in seen or num == pr_number:
             continue
         seen.add(num)
-        iv = gh(["issue", "view", str(num), "-R", args_repo(), "--json", "state"], check=False)
+        iv = gh(["issue", "view", str(num), "-R", repo, "--json", "state"], check=False)
         if iv.returncode == 0:
             manifest["issues"].append({"number": num, "state": json.loads(iv.stdout)["state"]})
     return manifest
@@ -443,14 +473,14 @@ def cmd_land(args):
     # Ghost PR: opened and merged by the driver. The operator's /express
     # invocation is the authorization — this is the documented deviation from
     # jog's pause-at-landing default (#267), not an oversight.
-    pr_url = gh(["pr", "create", "-R", args_repo(), "--base", "development", "--head", branch,
+    pr_url = gh(["pr", "create", "-R", args.repo, "--base", "development", "--head", branch,
                  "--title", "fix(GH-%d): %s [express]" % (args.issue, state["title"]),
                  "--body", "Closes #%d.\n\nExpress hotfix (GH-267): suite `%s` green; merge "
                            "authorization is the operator's /express invocation." % (args.issue, suite)]
                 ).stdout.strip()
     m = re.search(r"/pull/(\d+)", pr_url)
     pr_number = int(m.group(1)) if m else -1
-    gh(["pr", "merge", str(pr_number), "-R", args_repo(), "--merge"])
+    gh(["pr", "merge", str(pr_number), "-R", args.repo, "--merge"])
 
     # Step 9 — ship with evidence (post-merge, so sha + receipts exist).
     rel = args.release
@@ -459,16 +489,16 @@ def cmd_land(args):
         mrel = re.search(r"gid=(rel-[0-9A-Z]+)", nxt)
         rel = mrel.group(1) if mrel else None
     if rel:
-        iv = gh(["issue", "view", str(args.issue), "-R", args_repo(), "--json", "url"])
+        iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "url"])
         url = json.loads(iv.stdout)["url"]
         run_releases(root, "manifest", "ship", url, "--gid", rel,
                      "--evidence", "%s; %s green in gate; PR #%d merged (express)" % (sha, suite, pr_number))
 
     # Step 10 — the merge said "Closes #N" so the issue auto-closed; verify,
     # and close explicitly if GitHub did not.
-    iv = gh(["issue", "view", str(args.issue), "-R", args_repo(), "--json", "state"], check=False)
+    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout)["state"] != "CLOSED":
-        gh(["issue", "close", str(args.issue), "-R", args_repo(),
+        gh(["issue", "close", str(args.issue), "-R", args.repo,
             "--comment", "Express hotfix landed: %s (PR #%d, suite %s green)" % (sha, pr_number, suite)])
 
     # Step 11 — reconcile. Live first; foreign-tracker mentions fall back to
@@ -476,7 +506,7 @@ def cmd_land(args):
     wr = [sys.executable, os.path.join(root, "utils", "py", "wave_reconcile.py"), "--pr", str(pr_number)]
     r = subprocess.run(wr + ["--root", root], cwd=root, capture_output=True, text=True)
     if r.returncode != 0:
-        manifest = build_offline_manifest(root, pr_number)
+        manifest = build_offline_manifest(root, args.repo, pr_number)
         if manifest:
             mpath = os.path.join(root, ".tick", "express-reconcile-manifest.json")
             os.makedirs(os.path.dirname(mpath), exist_ok=True)

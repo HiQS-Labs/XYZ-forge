@@ -8,12 +8,18 @@
 #
 # WHAT IS CHECKED (all hermetic — a fake `gh` on PATH serves issue state, a
 # local bare remote serves origin/development; no network, no real GitHub):
-#   refusals: task-branch, task-clone, frozen-twin, no-new-bash, kernel-surface,
-#             too-many-files, suite-unregistered, issue-closed
-#   happy path: check PASS on a legal single-subsystem fix with a registered suite
+#   refusals: task-branch, task-clone, frozen-twin, shared-runtime, no-new-bash,
+#             kernel-surface, scratch (.orig editor artifact), too-many-files,
+#             suite-unregistered, issue-closed
+#   happy path: check PASS on a legal single-subsystem fix with a registered suite;
+#               docs (.md) never count against the file bound
 #   docs: capture doc born complete (Lessons Learned present from birth) +
-#         CHANGELOG entry inserted under a fresh dated Unreleased section
+#         CHANGELOG entry inserted under a fresh dated Unreleased section +
+#         CHANGELOG entry NOT silently dropped when today's section lacks a
+#         ### Fixed heading (deepseek QA finding 3)
 #   telemetry: every refusal writes a .tick express-refused event carrying the rule
+#   source audit: cmd_land/build_offline_manifest never call args_repo() — the
+#             --repo flag must thread through every landing gh call (QA finding 1)
 #
 # CONTAINMENT (GH-567): every path derived from $WORK is asserted non-empty and
 # lexically under $WORK at the point of use, not just at mktemp time. The suite
@@ -73,6 +79,8 @@ mkdir -p "$FX/utils/py" "$FX/test" "$FX/relay-automation" "$FX/PROJECT/2-WORKING
 printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "other.sh"\n)\n' > "$FX/validate.sh"
 printf 'old\n' > "$FX/utils/py/foo.py"
 printf 'twin body\n' > "$FX/relay-automation/consult.sh"
+printf 'shared runtime\n' > "$FX/relay-automation/relay-turn-lib.sh"
+printf 'readme\n' > "$FX/README.md"
 printf '# demo suite\n' > "$FX/test/gh999-demo.sh"
 printf '# unregistered suite\n' > "$FX/test/gh999b-unreg.sh"
 printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' > "$FX/CHANGELOG.md"
@@ -106,6 +114,12 @@ run_check > /dev/null 2> "$ERR" && bad "HEAD-ahead must refuse" || { check_rule 
 new_task_branch; printf 'x\n' >> "$FX/relay-automation/consult.sh"
 run_check > /dev/null 2> "$ERR" && bad "twin edit must refuse" || { check_rule frozen-twin "$ERR" && ok "frozen-twin refusal (GH-308)" || bad "frozen-twin rule"; }
 
+new_task_branch; printf 'x\n' >> "$FX/relay-automation/relay-turn-lib.sh"
+run_check > /dev/null 2> "$ERR" && bad "shared runtime edit must refuse" || { check_rule shared-runtime "$ERR" && ok "shared-runtime refusal (QA F4: not mislabeled frozen-twin)" || bad "shared-runtime rule"; }
+
+new_task_branch; printf 'x\n' > "$FX/utils/py/leftover.py.orig"
+run_check > /dev/null 2> "$ERR" && bad ".orig artifact must refuse" || { check_rule scratch "$ERR" && ok "scratch refusal for .orig (QA F2)" || bad ".orig scratch rule"; }
+
 new_task_branch; printf 'x\n' >> "$FX/relay-automation/new-thing.sh"
 run_check > /dev/null 2> "$ERR" && bad "new bash must refuse" || { check_rule no-new-bash "$ERR" && ok "no-new-bash refusal (GH-551)" || bad "no-new-bash rule"; }
 
@@ -126,6 +140,9 @@ new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite 
 OUT="$(run_check 999)"
 echo "$OUT" | grep -q "express-check: PASS" && ok "legal fix passes" || bad "legal fix refused: $OUT"
 
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
+run_check > /dev/null 2> "$ERR" && ok "docs (.md) exempt from the file bound (QA F5)" || bad "README counted against bounds: $(tail -1 "$ERR")"
+
 echo "== docs born complete =="
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold failed: $(cat "$ERR")"
 DOC="$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
@@ -135,6 +152,18 @@ grep -q "^## Status$" "$DOC" && grep -q "^## Acceptance Criteria$" "$DOC" && ok 
 TODAY="$(date +%F)"
 grep -q "## \[Unreleased\] - $TODAY" "$FX/CHANGELOG.md" && ok "CHANGELOG dated section inserted" || bad "CHANGELOG section missing"
 awk "/## \[Unreleased\] - $TODAY/,0" "$FX/CHANGELOG.md" | grep -q "GH-999" && ok "CHANGELOG entry present" || bad "CHANGELOG entry missing"
+
+# QA F3: a today-section WITHOUT a ### Fixed heading must not silently drop the entry
+new_task_branch
+printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - %s\n\n### Added\n- someone added something\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' "$TODAY" > "$FX/CHANGELOG.md"
+rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold (no-Fixed-heading) failed: $(cat "$ERR")"
+awk "/## \[Unreleased\] - $TODAY/,/## \[Unreleased\] - 2026-01-01/" "$FX/CHANGELOG.md" | grep -q "GH-999" && ok "CHANGELOG entry survives a Fixed-less today-section (QA F3)" || bad "CHANGELOG entry silently dropped (QA F3 regression)"
+
+echo "== source audit (QA F1) =="
+LAND_BODY="$(awk '/^def cmd_land/,/^def [a-z_]+\(/' "$DRIVER"; true)"
+[ -z "$(printf '%s' "$LAND_BODY" | grep -n "args_repo()")" ] && ok "cmd_land threads --repo (no args_repo fallback)" || bad "cmd_land still calls args_repo() — --repo split-brain (QA F1)"
+grep -q "def build_offline_manifest(root, repo, pr_number)" "$DRIVER" && ok "build_offline_manifest takes repo explicitly" || bad "build_offline_manifest lost its repo param (QA F1)"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"

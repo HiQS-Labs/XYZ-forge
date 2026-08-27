@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Driver (`utils/py/express.py`), skill (`skills/express/`), regression suite (`test/gh267-express-skill.sh`, 15/15), registrations (validate.sh TESTS, Skills Index, roadmap row, CHANGELOG) | PR into `development`; QA relay review pending; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
+| Driver (`utils/py/express.py`), skill (`skills/express/`), regression suite (21/21), registrations (validate.sh TESTS, Skills Index, roadmap row, CHANGELOG). DeepSeek QA relay (`relay-system/2026-08-27/gh267-express-qa.md`, deepseek-v4-pro): 13 findings — 1 BLOCKER + 3 MAJOR + 3 MINOR fixed and pinned; 6 NOTE incl. explicit ✅ on ghost-PR honesty, test non-vacuity, order integrity | PR into `development`; first live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
 
 ## Why
 
@@ -81,7 +81,8 @@ foreign-tracker PR-body citations).
       path, born-complete scaffolding, CHANGELOG insertion, tick telemetry.
 - [x] Suite registered in `validate.sh` TESTS; skill indexed in ARCHITECTURE.md.
 - [x] Roadmap row parked via `releases roadmap add` (rated 3/3/3, provisional).
-- [ ] QA relay review (pattern: `relay-system/<date>/gh267-express-qa.md`).
+- [x] QA relay review — deepseek-v4-pro via relay-xyz (`relay-system/2026-08-27/gh267-express-qa.md`):
+      Changes Requested → all 7 actionable findings fixed + pinned in the suite (now 21 checks).
 - [ ] First live `/express` run on a real hotfix.
 
 ## Non-goals

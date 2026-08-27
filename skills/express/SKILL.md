@@ -60,7 +60,11 @@ What each phase asserts (all refusals write `.tick/events/*-express-refused-*.js
 0. **Tree of execution** — task branch, HEAD == origin/development, no scratch
    paths. Express never commits over peer work (GH-527).
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem. Docs
-   (CHANGELOG, PROJECT/) never count against the bounds.
+   (any `.md`, `PROJECT/`, `docs/`, governance files) never count against the
+   bounds. Defaults are operator-tunable via `--max-files` / `--max-insertions`
+   (the *bounds themselves* are load-bearing, not the specific numbers — tune
+   them to your lane's risk posture, don't tune them away); the refusals are
+   never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any
    new/edited `.sh` under `utils/` or `relay-automation/` (GH-551),
    coordination-kernel and containment surfaces (AGENTS: at least Costly).
