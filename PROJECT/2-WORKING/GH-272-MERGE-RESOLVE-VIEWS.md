@@ -26,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake: issue filed, capture promoted to 2-WORKING, ledger row parked and repointed | Extend the resolver's derived set (take-ours → regen → verify → stage); extend test/gh57-live-merge-resolve.sh; validate |
+| Implementation complete (commit 7e1a7baf): step-5 view regeneration (take-ours → regen → verify → stage, hard-fail posture), ROADMAP_DASHBOARD_ROOT target-driving seam. gh57-live 53/0 incl. both-sides-conflicted views scenario; gh57-fuzz 42/0; dashboard-adjacent suites green | Agy relay QA on the PR diff, then full validate.sh; PR into development |
 
 Spun off from the #260 assessment (improvement item 7). `utils/releases-merge-resolve.sh`
 finishes a ledger merge by rebuilding `releases.db` and staging two artifacts (the

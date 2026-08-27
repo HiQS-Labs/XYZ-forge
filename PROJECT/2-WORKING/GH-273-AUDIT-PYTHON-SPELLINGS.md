@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake: issue filed, capture promoted to 2-WORKING, ledger row parked and repointed | Extend alias discovery + invocation matcher to .py spellings (program position only); add pinning test; validate |
+| Implementation complete (commit b593b03c): .py alias registration + program-position python3 matching + group-span safety; four gh322 parse probes scoped; gh273 pinning test 9/0; audit 139 invocations, 0 failures | Agy relay QA on the PR diff, then full validate.sh; PR into development |
 
 Spun off from the #260 assessment (improvement item 5), scoped to the known-live instance.
 The AGENTS.md rail ("an audit that recognizes only one invocation shape stops covering the same

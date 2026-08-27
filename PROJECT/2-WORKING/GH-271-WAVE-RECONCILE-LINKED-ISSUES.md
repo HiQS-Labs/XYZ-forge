@@ -26,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake: issue filed, capture promoted to 2-WORKING, ledger row parked and repointed | Implement closing-keyword extraction + porcelain-empty rollback assert; extend test/gh202-wave-reconcile-issue-state.sh; validate |
+| Implementation complete (commit 61e01775): closers/mentions split with evidence-only mention path + force-promote widening; rollback snapshots views + plan docs (try/finally), destination overwrite snapshot, porcelain tripwire. gh202 29/0, gh232 13/0, gh168 7/0, wave-reconcile 11/0 | Agy relay QA on the PR diff, then full validate.sh; PR into development |
 
 Spun off from the #260 assessment (improvement items 2 and 3). Both defects live in
 `utils/py/wave_reconcile.py` and ship as one fix.
