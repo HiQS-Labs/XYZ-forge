@@ -1,6 +1,6 @@
 ---
 title: "GH-267: /express — hotfix fast lane through the whole paper trail"
-status: Active
+status: Complete
 created: 2026-08-27
 updated: 2026-08-27
 owner: orchestrator (ZCode)
