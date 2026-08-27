@@ -1,7 +1,8 @@
 ---
 title: "Jog: serial immediate-queue execution engine and skill (Phase 1)"
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING — promoted 2026-08-26 after PR #261 intake QA)
 created: 2026-08-26
+updated: 2026-08-26
 owner: noel
 gh_issue: 259
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/259#issuecomment-5433577198
@@ -24,9 +25,11 @@ goal: >
 
 # GH-259 · Jog: Serial Immediate-Queue Execution Engine and Skill (Phase 1)
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan intake merged (PR #261) after Codex QA (F→revised, all 8 findings adjudicated) plus maintainer re-review (probe linting, operator-pause landing default); doc promoted to 2-WORKING 2026-08-26 | Implement Phase 1: `jog_queue` schema + CLI verbs in releases_app.py, `skills/jog/` capture skill, `jog run` serial driver, `jog to-marathon` export, registered test suite |
 
 ## Why
 
