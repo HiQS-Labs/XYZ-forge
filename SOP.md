@@ -58,8 +58,30 @@ This document outlines the standard operating procedure for designing, executing
 ### Step 1: Intake & Working Doc
 1. File the tracking GitHub issue.
 2. Scaffold the active doc in `PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
-3. Add the ledger row to `ROADMAP.md` and sync via `python3 utils/py/releases_app.py roadmap sync`.
+3. Park the ledger row **in the RELEASES DB** — never by editing `ROADMAP.md`, which is frozen
+   since the `ROADMAP_SOURCE=releases` flip (GH-169/GH-243):
+   `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P`
+   (`hq park` routes there automatically). Note `roadmap sync` is a **legacy-mode-only** verb — in
+   this repo it refuses with "releases-mode repo" and is never part of the flow.
 4. Verify document hygiene with `utils/pdda/pdda.sh run`.
+
+### Step 1b: Promoting a capture from 1-INBOX to 2-WORKING (releases-mode)
+
+Observed 2026-08-26 (GH-259 promotion): an agent following the pre-flip habit hand-edited
+`ROADMAP.md` and lost time to two avoidable gate failures. The whole procedure is four DB/file
+steps, none of which touch `ROADMAP.md`:
+
+1. `git mv PROJECT/1-INBOX/GH-<n>-<SLUG>.md PROJECT/2-WORKING/GH-<n>-<SLUG>.md`, then bring the
+   doc up to the 2-WORKING contract: full frontmatter **including the `updated:` key**
+   (`pdda-check-frontmatter` hard-fails without it — this is what actually turned the push gate
+   red, not any missing ROADMAP pointer), the exact two-column `## Status` table, and QA gates
+   when phased.
+2. Repoint the parked row: `python3 utils/py/releases_app.py roadmap repoint --issue-num <n> --doc-path PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
+3. Refresh the row text: `python3 utils/py/releases_app.py roadmap update --issue-num <n> --raw-text '- **GH-<n> · <title>** ...'`
+   — the value **must be a markdown bullet starting `- **<title>**`** or the verb refuses.
+4. Regenerate the views (`bash utils/roadmap-dashboard.sh`; ledger writes auto-refresh the baked
+   HTML) and verify: `releases check` clean + `utils/pdda/pdda.sh run` zero errors. pdda's
+   coverage check reads the DB in releases-mode — a promoted doc needs **no** `ROADMAP.md` line.
 
 ### Step 2: Isolated Full Clone Provisioning
 ```bash

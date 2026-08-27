@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 plan intake, Releases DB registration, and Codex QA review merged (PR #261) | Implement `jog_queue` schema, CLI verbs in `releases_app.py`, `skills/jog/`, runner, and test suite |
+| Phase 1 implementation merged (PR #268) after plan intake + Codex QA (PR #261, all 8 findings adjudicated) and a two-round maintainer review (receipt-backed runner writes, hermetic dry-run, real relay-drive invocation, honest landing boundary) | Fire the first real `jog run`; follow-ups: no-PR landing warning, interactive merge rc check, SKILL.md HEAD-on-development note |
 
 ## Table of contents
 
