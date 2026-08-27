@@ -872,6 +872,11 @@ INSERT INTO "invocation_logs" VALUES('inv-20260826160816-6baae560','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260826160819-9dded48f','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-TURN-offprompt',0.0,0,0,NULL,NULL,0.0,' 8 files changed, 102 insertions(+), 58 deletions(-)','2026-08-26 16:08:19');
 INSERT INTO "invocation_logs" VALUES('inv-20260826160822-d13a63bf','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-TURN-tickexempt',0.0,0,0,NULL,NULL,0.0,' 8 files changed, 103 insertions(+), 58 deletions(-)','2026-08-26 16:08:22');
 INSERT INTO "invocation_logs" VALUES('inv-20260827044304-10663062','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh259-jog-implementation-qa-deepseek',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-27 04:43:04');
+INSERT INTO "invocation_logs" VALUES('inv-20260827073740-bc1f3982','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa',0.0,0,0,NULL,NULL,0.0,' 1 file changed, 1 insertion(+)','2026-08-27 07:37:40');
+INSERT INTO "invocation_logs" VALUES('inv-20260827080556-2bfea107','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 2 insertions(+)','2026-08-27 08:05:56');
+INSERT INTO "invocation_logs" VALUES('inv-20260827081457-701525ca','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 3 insertions(+)','2026-08-27 08:14:57');
+INSERT INTO "invocation_logs" VALUES('inv-20260827082037-b4a556a0','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa-r3',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 4 insertions(+)','2026-08-27 08:20:37');
+INSERT INTO "invocation_logs" VALUES('inv-20260827083100-7eab0808','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa-r3d',0.0,6,0,NULL,NULL,0.0,' 4 files changed, 20 insertions(+)','2026-08-27 08:31:00');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
