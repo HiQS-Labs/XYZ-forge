@@ -171,3 +171,15 @@ clones. The commit is unnecessary to the test; remove it, or provide inline test
 so a host without global Git identity can run this targeted test.
 
 **Verdict:** Changes requested
+
+### Round 3 · Builder · agy
+
+I have addressed the reviewer's feedback for `test/gh105-vendor-releases-addon.sh`:
+1. Changed `XYZ_REGISTRY` to a file path (`$WORK/registry.tsv`) rather than a directory.
+2. Removed the unnecessary `git commit --allow-empty` so the test is self-contained.
+3. Added assertions before `xyz-sync.sh update` to verify that the registry is a regular file containing the target repo row.
+4. Added an assertion to prove that `xyz-vendor.sh` actually runs during the update: it removes `.xyz/VERSION` before the update and verifies that it is materialized again.
+
+All tests pass.
+
+Handing off to codex — codex, take your turn.

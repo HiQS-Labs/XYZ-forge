@@ -3,13 +3,11 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_setup.sh" gh105-vendor-re
 export XYZ_HARNESS_LOGGING=0
 
 # Isolate the registry
-export XYZ_REGISTRY="$WORK/registry"
-mkdir -p "$XYZ_REGISTRY"
+export XYZ_REGISTRY="$WORK/registry.tsv"
 
 # Test Tier 2 vendoring (GH-105)
 TEST_REPO="$WORK/target_repo"
 git init -q "$TEST_REPO"
-git -C "$TEST_REPO" commit --allow-empty -m "initial commit"
 
 # Materialize with RELEASES (register it, no --no-register)
 bash "$HERE/../relay-automation/xyz-vendor.sh" --with-releases "$TEST_REPO" >/dev/null
@@ -33,8 +31,18 @@ touch "$TEST_REPO/.xyz/relay-system/dummy.md"
 touch "$TEST_REPO/.xyz/.relay-driver.lock"
 touch "$TEST_REPO/.xyz/XYZ.json"
 
+# Assert registry is a regular file with the target row
+[ -f "$XYZ_REGISTRY" ] || fail "registry is not a regular file"
+grep -q "$TEST_REPO" "$XYZ_REGISTRY" || fail "registry missing target row"
+
+# Remove VERSION to prove update materialized it
+rm -f "$TEST_REPO/.xyz/VERSION"
+
 # Update via xyz-sync.sh without re-supplying the tier flag
 bash "$HERE/../relay-automation/xyz-sync.sh" update "$TEST_REPO" >/dev/null
+
+# Assert update materialized VERSION (proving xyz-vendor.sh ran)
+[ -f "$TEST_REPO/.xyz/VERSION" ] || fail "update did not materialize VERSION"
 
 # Assert the Tier 2 payload remains present
 [ -f "$TEST_REPO/.xyz/utils/py/releases_app.py" ] || fail "lost releases_app.py on update"
