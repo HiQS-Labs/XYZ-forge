@@ -419,3 +419,6 @@ materialize_vendor
 register_vendor
 
 note "vendored harness -> $VENDOR_DIR"
+if [ "$WITH_RELEASES" -eq 1 ]; then
+  note "RELEASES add-on included: run 'releases init' to enable (see RELEASES-DB-FAQS.md)"
+fi

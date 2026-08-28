@@ -1,3 +1,6 @@
+# PARKED Format
+
+Parked items may carry a standup lens-8 read-only `check:` field (e.g. `check: gh issue view ...` or `check: grep ...`). This convention ensures that parked-but-finished rot is machine-detectable.
 
 ## Parked 2026-08-25 — release/ledger session
 - #141 Fuzz/ATE arc (calc 285) has no release home — decide a home or cut it.

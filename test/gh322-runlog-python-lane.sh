@@ -22,7 +22,7 @@ LIB="$ROOT/relay-automation/relay-turn-lib.sh"
 unset XYZ_PYTHON
 
 # --- 0. the flag exists on the Python lane at all --------------------------------------------
-grep -q -- '--log-github' <<<"$(python3 "$PY" --help 2>/dev/null)" \
+grep -q -- '--log-github' <<<"$(MARATHON_ROOT="$WORK/mroot-parse" python3 "$PY" --help 2>/dev/null)" \
   && pass "--log-github is documented in the Python lane's help" \
   || fail "--log-github missing from the Python lane's help"
 grep -q 'driver-heartbeat.json' "$PY" \
@@ -30,7 +30,7 @@ grep -q 'driver-heartbeat.json' "$PY" \
   || fail "the Python lane has no driver heartbeat — GH-284 Phase 2 is still Bash-only"
 
 # Unknown flags must STILL be rejected (#324 must not regress now that --log-github is real).
-python3 "$PY" --not-a-real-flag >/dev/null 2>&1; rc=$?
+MARATHON_ROOT="$WORK/mroot-parse" python3 "$PY" --not-a-real-flag >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "an unrecognised flag still exits 2 on the Python lane" \
   || fail "unknown-flag rejection regressed: exit $rc"
 

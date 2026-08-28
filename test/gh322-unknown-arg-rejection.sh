@@ -97,7 +97,7 @@ done
 # flag must be ACCEPTED there; a lane that still refused it would be the bug now. Behaviour under
 # test here is only "the parser recognises it"; whether it posts is
 # test/gh322-runlog-python-lane.sh's job.
-py_out="$(bash "$ROOT/relay-automation/marathon-drive.sh" --log-github 2>&1)"; py_rc=$?
+py_out="$(MARATHON_ROOT="$WORK/mroot-parse" bash "$ROOT/relay-automation/marathon-drive.sh" --log-github 2>&1)"; py_rc=$?
 printf '%s' "$py_out" | grep -Fq "unknown argument" \
   && fail "--log-github is still rejected as unknown by the Python lane — the port regressed: $py_out" \
   || pass "--log-github is a recognised flag on the Python lane (GH-284 P2 ported)"
@@ -112,7 +112,7 @@ printf '%s' "$py_out" | grep -Fq "XYZ_PYTHON=0" \
 
 # ── --help must keep working ─────────────────────────────────────────────────────────────
 # The rejection is deliberately checked AFTER --help, so a bad flag cannot make help unreachable.
-help_out="$(bash "$ROOT/relay-automation/relay-drive.sh" --help 2>&1)"; help_rc=$?
+help_out="$(MARATHON_ROOT="$WORK/mroot-parse" bash "$ROOT/relay-automation/relay-drive.sh" --help 2>&1)"; help_rc=$?
 [ "$help_rc" -eq 0 ] && pass "--help still exits 0 on the Python lane" \
   || fail "--help regressed (exit $help_rc): $help_out"
 

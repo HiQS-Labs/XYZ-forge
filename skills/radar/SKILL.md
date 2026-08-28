@@ -3,7 +3,7 @@ name: radar
 description: >-
   Per-repo strategic compass over the last 2-3 weeks of activity. Reports the Run/Grow/Transform
   flow distribution (are we treading water or moving the needle), clusters recurring defects into
-  high-value fix targets ranked by what one durable fix would retire, and flags where RELEASES.md
+  high-value fix targets ranked by what one durable fix would retire, and flags where the release plan
   planning has drifted from what the repo is actually doing. Analysis is read-only; findings persist
   to two sinks (an immutable dated report doc + one live radar-labeled issue checklist) so they
   survive across sittings. Use when the operator asks "what have we actually been doing", "are we
@@ -22,7 +22,7 @@ Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
 - **Analysis reads; only the report writes.** The two report sinks (Step 5) are the *only* writes.
   Never edit an existing doc, never edit ROADMAP.md, never commit, never push.
-- **Never edit RELEASES.md.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
+- **Never edit releases.db or RELEASES.md.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
   topping it up). Report drift; stop there.
 - **Transform is declared, never inferred.** No commit prefix promotes work to Transform — only an
   explicit `rgt: transform` frontmatter key on the governing `PROJECT/**` doc. Auto-promoting
@@ -207,19 +207,17 @@ merge it, unblock it, close it, or deliberately schedule a non-duplicate follow-
 
 ## Step 3 — Lens 3: release recalibration
 
-Skip silently if `RELEASES.md` is absent, has no unshipped blocks, or **contains only the
-installer's seed block** — a block whose `Description:` says EXAMPLE / "replace this", or that has
-an empty `Target Date:` and `GH_URL:`, is a placeholder, not a plan. Reporting drift against a seed
-is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
-(Second calibration run: the target repo's only block was the seed; correct output is silence.)
+Read the DB using `releases check`, `releases roadmap sync --dry-run`, and the `python3 utils/timeline/export_timeline.py --json` payload instead of hand-parsing `RELEASES.md`. Cite the DB generation numbers in the report.
 
-Otherwise, for each unshipped block: join its `Milestone:` to its issue set
+Skip silently if the DB is absent, has no unshipped releases, or contains only the installer's seed block (e.g., a release whose description says EXAMPLE / "replace this", or that has an empty target date and tracking issue). Reporting drift against a seed is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
+
+Otherwise, for each unshipped release in the payload: join its `milestoneRef` (or `milestone`) to its issue set
 (`gh issue list --milestone "<title>" --state open`).
 
-**If `Milestone:` is empty, or the repo has no milestones at all, the join is impossible — fall
-back to reading claim status from the block's `Description:` prose and say that is what you did.**
+**If `milestoneRef` is empty, or the repo has no milestones at all, the join is impossible — fall
+back to reading claim status from the release's `blurb` or `exit` prose and say that is what you did.**
 Do not report a 100% orphan share as backlog drift in that case: with no milestones to belong to,
-that number measures a **missing binding**, and the actionable finding is "bind `Milestone:` (or
+that number measures a **missing binding**, and the actionable finding is "bind a milestone (or
 create the milestones) so the next run can join" — not "the backlog is unplanned."
 
 Then compare the planned theme against the observed flow distribution and the top targets, and
@@ -361,7 +359,7 @@ Then offer — do not assume — to hand the targets to `marathon-triage`.
 | `gh` / auth | Lens 2 signals 3-5, open-PR collision check, Lens 3 joins, Sink B | Lenses 1-2 (signals 1-2), Sink A; state that no in-flight-work check or live checklist was available this run |
 | `PROJECT/**` | Lens 2 signal 1, `rgt:` overrides, Sink A's normal location | Lenses 1-3 from git + `gh`; offer repo-root fallback for Sink A |
 | Conventional commits | Lens 1 inference | Report the Unclassified share as the finding it is |
-| `RELEASES.md`, or seed-only | Lens 3 | Everything else; PLAN reads "no release plan" — a valid state, not a gap |
+| `releases.db` absent, or seed-only | Lens 3 | Everything else; PLAN reads "no release plan" — a valid state, not a gap |
 | Closed issues (zero) | Lens 2 signal 4 entirely | Everything else; say "nothing has had time to recur" rather than implying a clean sweep |
 | History < ~2 windows | The trend line, and most of Lens 2 | Lens 1 for the current window only; state that recurrence is structurally unobservable this young |
 
