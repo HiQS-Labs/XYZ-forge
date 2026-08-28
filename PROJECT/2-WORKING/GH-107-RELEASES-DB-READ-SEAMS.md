@@ -8,6 +8,9 @@ updated: 2026-08-28
 owner: noel
 doc_type: feedback
 release: 0.9.0 Cargo (dialed in per manifest_items)
+goal: >
+  Let /10days, /radar, and PARKED read release state from the RELEASES DB instead of
+  re-deriving it by hand, as read-only consumers — the CLI dual path stays the only writer.
 fix_probes:
   - path_absent:test/gh107-timeline-json-seam.sh
 effort: 2
