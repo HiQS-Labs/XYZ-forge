@@ -1,0 +1,11 @@
+{
+  "sha": "df9c52a74a34a8e83e952b0062cb3f93f6b7540c",
+  "gate": "bash validate.sh",
+  "mode": "marathon",
+  "exit_code": 0,
+  "passed": null,
+  "total": null,
+  "duration_s": null,
+  "timestamp": "2026-08-28T03:36:45.197151+00:00",
+  "host": "Darwin 24.6.0"
+}

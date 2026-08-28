@@ -1,0 +1,69 @@
+{
+  "orchestrator_owned": [],
+  "codex_lane": [
+    "utils/timeline/export_timeline.py",
+    "skills/10days/SKILL.md",
+    "skills/radar/SKILL.md",
+    "PARKED/2026-08-16-xyz-forge-2143.md",
+    "PARKED/2026-08-19-session-close.md",
+    "PARKED/README.md",
+    "test/gh107-timeline-json-seam.sh",
+    "test/gh103-timeline-exporter.sh",
+    "test/gh153-releases-sidebar-rollup.sh",
+    "test/gh168-wave-reconcile-scope.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh202-wave-reconcile-issue-state.sh",
+    "test/gh232-wave-reconcile-multiphase.sh",
+    "test/wave-reconcile.sh",
+    "test/_setup.sh",
+    "test/lib/fixture-guard.sh"
+  ],
+  "agy_lane": [],
+  "effective_artifacts": [
+    "utils/timeline/export_timeline.py",
+    "skills/10days/SKILL.md",
+    "skills/radar/SKILL.md",
+    "PARKED/2026-08-16-xyz-forge-2143.md",
+    "PARKED/2026-08-19-session-close.md",
+    "PARKED/README.md",
+    "test/gh107-timeline-json-seam.sh",
+    "test/gh103-timeline-exporter.sh",
+    "test/gh153-releases-sidebar-rollup.sh",
+    "test/gh168-wave-reconcile-scope.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh202-wave-reconcile-issue-state.sh",
+    "test/gh232-wave-reconcile-multiphase.sh",
+    "test/wave-reconcile.sh",
+    "test/_setup.sh",
+    "test/lib/fixture-guard.sh"
+  ],
+  "inferred_test_artifacts": [
+    "test/gh103-timeline-exporter.sh",
+    "test/gh153-releases-sidebar-rollup.sh",
+    "test/gh168-wave-reconcile-scope.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh202-wave-reconcile-issue-state.sh",
+    "test/gh232-wave-reconcile-multiphase.sh",
+    "test/wave-reconcile.sh"
+  ],
+  "inferred_test_helpers": [
+    "test/_setup.sh",
+    "test/lib/fixture-guard.sh"
+  ],
+  "fs_touching_tests": [
+    "test/gh107-timeline-json-seam.sh",
+    "test/gh103-timeline-exporter.sh",
+    "test/gh153-releases-sidebar-rollup.sh",
+    "test/gh168-wave-reconcile-scope.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh202-wave-reconcile-issue-state.sh",
+    "test/gh232-wave-reconcile-multiphase.sh",
+    "test/wave-reconcile.sh",
+    "test/_setup.sh",
+    "test/lib/fixture-guard.sh"
+  ],
+  "agy_review_default": true,
+  "coupling_warning": null,
+  "parallelizable": true,
+  "single_lane_only": false
+}

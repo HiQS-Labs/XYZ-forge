@@ -1,0 +1,14 @@
+{
+  "prs": [
+    {
+      "number": 283,
+      "title": "GH-107: read-only RELEASES-DB seams for /10days, /radar, and PARKED",
+      "state": "MERGED",
+      "mergedAt": "2026-08-28T03:40:09Z",
+      "baseRefName": "development",
+      "headRefName": "marathon/gh-107-releases-db-read-seams-2026-08-27",
+      "body": "Reviewed one-phase lane (agy builder, codex reviewer), full validate.sh gate green via jog gate-only retry. Closes #107"
+    }
+  ],
+  "source": "jog land (verified gh pr view)"
+}

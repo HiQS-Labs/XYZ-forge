@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 3 complete (2026-08-28): `jog resume` (reconcile-only, never fires), `jog retry-gate` (Marathon's satisfied-lane path, head-moved guard pre-dispatch, no builder turn), `jog retry-build` (fresh suffixed token, history preserved), `jog land`/`jog reconcile` (verified GitHub truth → idempotent landing projection → wave_reconcile with a verified offline manifest → reconciliation evidence; replay resumes at the first missing step). Adapter suite 139/0; wave-reconcile 11/0, jog-queue 34/0, marathon-drive 152/0, swarm-preflight 100/0. | Phase 4: real root + vendored dogfood runs — requires operator-supplied builder/reviewer agents and PR/merge authorization (see open risks). |
+| Phase 4 root dogfood complete (2026-08-28): queue compiled from the Releases ledger (0.9.0 dialed-in GH-107 + GH-105; 0.7.4 Linux RC excluded per operator; GH-222 excluded — artifact overlaps the executor overlay), agy builder + codex reviewer, REAL turns, PRs #283/#284 merged into development, both issues closed, lifecycle reconciled, cold-start + replay boundaries exercised. Evidence: `relay-system/2026-08-28/gh280-phase4-dogfood/`. | Operator review of Phase 4 findings; the vendored `.xyz` consumer half of Phase 4 remains; named follow-up fixes below before any Phase 5 default flip. |
 
 ### Phase status
 
@@ -44,8 +44,80 @@ goal: >
 | 1 — Pin the boundary and add machine contracts | Complete | `bash test/gh280-jog-marathon-adapter.sh` → 80 pass, 0 fail (root + vendored fixtures, stubbed agents/GitHub, no `--simulate`); `test/swarm-preflight.sh` 100/0, `test/marathon-drive.sh` 152/0, `test/jog-queue.sh` 34/0 in a separate disposable full clone; clone identity verified before/after. |
 | 2 — Opt-in Marathon executor | Complete | Adapter test sections G/H/I: root + vendored queue runs through real Preflight → Marathon → Relay with deterministic agent stubs (106 pass, 0 fail total); reviewer-policy refusals before lease mutation; cold-start at both boundaries (missing result parks; terminal result re-projects without a second dispatch); foreign-cwd vendored run stays clean (GH-279 #2 fixed for this executor); legacy relay default verified unchanged. |
 | 3 — Resume, retry, landing semantics | Complete | Adapter test sections J/K/L (139 pass, 0 fail total): resume re-projects terminal state and parks result-less dispatches without spending a token; retry-gate proves no new task.created and work-head preservation (only Marathon's own transcript commit advances the lane); retry-build runs on a fresh `-2` token with prior Tick history and execution records intact; land fails closed on wrong base/head-SHA/open-PR/unreachable-merge/missing-gate-evidence/foreign-repo, completes + delegates to wave_reconcile on truth, replays idempotently, and resumes at the reconciliation boundary; `test/wave-reconcile.sh` 11/0 unchanged. |
-| 4 — Dogfood root and vendored runs | Blocked at operator boundary | Needs a real operator-supplied builder/reviewer, a real target consumer repo, and authorization for external PR/merge activity — see "Open risks and operator decisions". |
-| 5 — Default flip + retire duplication | Blocked behind Phase 4 | — |
+| 4 — Dogfood root and vendored runs | Root half complete; vendored half pending | Real run below — PRs #283/#284 (both MERGED into development), issues #107/#105 CLOSED, gate receipts + receipts + ledgers committed under `relay-system/2026-08-28/gh280-phase4-dogfood/`. Vendored `.xyz` consumer run not yet executed. |
+| 5 — Default flip + retire duplication | Blocked behind Phase 4 closeout | — |
+
+### Phase 4 dogfood record (2026-08-28, agy builder + codex reviewer, operator-authorized)
+
+Queue source: Releases ledger upcoming releases with assigned issues — 0.7.4 "Linux MVP RC"
+**excluded per operator instruction** (its whole manifest set: 123/204/249/251/255/256/275);
+0.9.0 "Cargo" dialed-in, non-cut issues = 105/107/222; **GH-222 excluded** because its declared
+artifact (`utils/py/releases_app.py`) is the executor overlay itself — the isolation worktree
+seeds allowlisted artifacts from the working tree, so its lane PR would carry unreviewed GH-280
+hunks. Remedy: run GH-222 after PR #281 lands. Tested SHAs: dogfood base `aaa153f9`,
+merges `4751d3ce` (PR #283) and `de67142f` (PR #284).
+
+**GH-107 (attempt 1 → containment → retry-build → 2× gate-only retry → landed):**
+agy builder + codex reviewer ran real multi-round review (formal Changes-requested round, then
+Approved). Attempt 1 escalated exit 6 — the builder wrote probe files to in-tree `scratch/`
+against the relay's explicit $TMPDIR instruction; containment reverted, work preserved in
+`.tick/orphan-backups/20260828T022003Z-80043`. `jog retry-build` fired attempt 2 on token
+`…-TURN-2` (prior history intact); the relay Approved, then the full `validate.sh` gate failed
+twice on MY intake-hygiene defects (missing `goal:` key; unparked roadmap row / stale dashboard).
+After fixing intake and regenerating the dashboard, `jog retry-gate` approved via the
+satisfied-lane path with ZERO further turns. closeout opened PR #283; merged; `jog land`
+verified truth and wave_reconcile promoted the doc + closed the issue.
+
+**GH-105 (run → gate-only retry → landed):** one changes-requested round then Approved; the
+gate failed once on dashboard drift caused by jog's own promotion repoint; after dashboard
+regen, `jog retry-gate` approved with zero further turns. PR #284 merged (issue auto-closed by
+GitHub's `Closes #105`), `jog land` verified + completed + reconciled.
+
+**Cold-start + replay boundaries (real receipts):** a row rewound to crashed-running with a
+dispatched execution and a live terminal receipt was re-projected by `jog resume` with no
+dispatch; `jog land` replay correctly refused to redo durable steps (and exposed the
+projection-recorded-but-row-not-completed edge, see finding 6).
+
+### Phase 4 material findings (the dogfood's real deliverable)
+
+1. **Turn containment reverts supervisor-owned tracked state.** During turns, the containment
+   pass restored `releases.db`/`releases.sql` (uncommitted jog queue writes), the executor
+   overlay files, and the regenerated dashboard to HEAD — the supervisor's own uncommitted
+   tracked-file writes are indistinguishable from an agent's off-lane edits. Untracked state
+   (`.tick/`, the jog ledger) survives. Consequence: queue rows vanished mid-run (twice),
+   requiring a re-add + ledger re-key drill. Durable fix candidates: commit intake/queue
+   writes before dispatch, or keep jog queue mutations in untracked space until landing.
+2. **Queue identity (global_id) does not survive external DB loss.** Re-adding an issue mints
+   a new gid and orphans the execution ledger (absolute gid paths inside `state.json` AND
+   `marathon-invocation.json`). Fail-closed loaders caught the stale paths loudly. Fix
+   candidate: relative ledger paths + gid lookup by gh_number fallback.
+3. **Intake/promotion writes are gate-load-bearing.** A 2-WORKING doc without a `goal:` key or
+   a parked roadmap row fails validate.sh's pdda suites; jog's promotion `roadmap repoint`
+   stales the committed dashboard (GH-243). Both items' first gates went red on exactly this.
+   Fix candidate: the executor regenerates `ROADMAP-DASHBOARD.md` after promotion, before
+   dispatch.
+4. **Real builders still write probe files in-tree** (attempt 1's `scratch/`), re-confirming
+   the GH-279 defect-3 class — but with GH-280 the failure is a receipt + orphan-backup + a
+   designed retry, not hand surgery.
+5. **`jog retry-gate` recovered both items with zero further agent turns** after operator
+   hygiene fixes — the GH-274 satisfied-lane seam works in production and is the correct
+   "approved relay, red gate" remedy. Attempt caps were never the limiter; hygiene was.
+6. **`jog land` replay does not re-assert the queue projection** when the landing key matches —
+   safe for genuine crash replay, but a projection-recorded-yet-unprojected row (fabricated
+   here) needs one sanctioned `jog_set_status`. Edge, documented.
+7. **GitHub's `Closes #N` auto-close races wave_reconcile's close step** (GH-105): harmless
+   here (the reconciler handles already-closed issues), but lane PRs should perhaps not
+   auto-close, leaving closure to the reconciler's verified path.
+8. **GH-222-class exclusion**: an executor cannot dogfood a lane whose artifacts include the
+   executor's own files. Run such items after the executor PR lands.
+
+### Phase 4 open items
+
+- Vendored `.xyz` consumer dogfood (Phase 4's second half) not yet run — needs a consumer repo
+  with the GH-280 harness vendored.
+- The dogfood clone's working tree still holds uncommitted intake hygiene (goal keys, dashboard
+  regen, queue rows) that should land on development as a real intake commit.
+- Findings 1–3 above need their durable fixes before Phase 5's default flip.
 
 ## Table of contents
 

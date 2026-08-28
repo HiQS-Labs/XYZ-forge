@@ -1,0 +1,55 @@
+jog: warning: roadmap repoint returned code 3: refused: rule=no-such-row: no roadmap row for GH-107
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • LEADERBOARD.html
+marathon-drive:   • PROJECT/1-INBOX/GH-105-VENDOR-RELEASES-ADDON.md
+marathon-drive:   • PROJECT/2-WORKING/GH-107-RELEASES-DB-READ-SEAMS.md
+marathon-drive:   • RELEASES-PREVIEW.html
+marathon-drive:   • releases.db
+marathon-drive:   • releases.sql
+marathon-drive:   • utils/py/jog_run.py
+marathon-drive:   • utils/py/marathon_drive.py
+marathon-drive:   • utils/py/swarm_preflight.py
+marathon-drive: branch guard: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood was on its trunk branch 'development' — cut 'marathon/gh-107-releases-db-read-seams-2026-08-27' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/marathon-system/gh-107-releases-db-read-seams/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN → agy
+marathon-drive: memory-telemetry: phase gh-107-releases-db-read-seams-start boundary — compressor=3210MB, swap_free=1636MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.O0RKfZ)
+agy-turn: committed agy turn (file-scoped, no push)
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.MRjTiT)
+codex-turn: committed codex turn (file-scoped, no push)
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.YGrSo9)
+agy-turn: committed agy turn (file-scoped, no push)
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.nBpjiZ)
+codex-turn: committed codex turn (file-scoped, no push)
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.XlivRU)
+agy-turn: OFF-ALLOWLIST change: scratch/ — reverting
+agy-turn: pre-revert copy of scratch/ saved under /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/orphan-backups/20260828T022003Z-80043
+agy-turn: off-lane edits reverted; failing the turn
+marathon-drive: relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/relay-system/2026-08-28/marathon-gh-107-releases-db-read-seams-022003.md
+marathon-drive: warn: host free swap is critically low (801MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-107-releases-db-read-seams-escalated boundary — compressor=3463MB, swap_free=801MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/marathon-system/gh-107-releases-db-read-seams/ESCALATION.md (reason: containment-violation (off-lane edit reverted by a turn-taker))
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M131S5F2NXBDCBQ9YXCMHA2M/gh107-exec1/preflight/marathon-result.json (outcome: escalated, exit 6)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 14m 53s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 3463MB, swap free min: 801MB
+  turn peak RSS: agy: 236MB peak RSS, codex: 257MB peak RSS
+
+
+============================================================
+jog: processing GH-107 (attempt 1) at position 1
+============================================================
+jog: promoting 1-INBOX contract for GH-107 to 2-WORKING...
+jog: marathon execution gh107-exec1 for GH-107 (packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M131S5F2NXBDCBQ9YXCMHA2M/gh107-exec1/preflight)
+jog: dispatching marathon-drive (/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/relay-automation/marathon-drive.sh)
+jog: stopping queue execution on task failure.
+JOG-EXIT=0

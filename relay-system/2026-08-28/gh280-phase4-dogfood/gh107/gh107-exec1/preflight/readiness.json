@@ -1,0 +1,33 @@
+{
+  "ready": true,
+  "next_action": null,
+  "unscoped_index_only": [],
+  "issue_state": {
+    "status": "OPEN",
+    "closed_at": null,
+    "detail": "issue #107 is OPEN"
+  },
+  "frozen_artifacts": [],
+  "acceptance_fidelity": {
+    "status": "unknown",
+    "cause": "no-issue-section",
+    "detail": "issue #107 has no '## Acceptance' section \u2014 nothing to copy from",
+    "issue": "107",
+    "dropped": [],
+    "added": [],
+    "declared": 0
+  },
+  "source_url": {
+    "status": "ok",
+    "detail": "source: resolves to issue #107 (https://github.com/HiQS-Labs/XYZ-forge/issues/107)",
+    "issue": "107",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/107",
+    "slug": "HiQS-Labs/XYZ-forge"
+  },
+  "acceptance_inline": {
+    "criteria": 6,
+    "scope": "whole-document",
+    "over_cap": 0,
+    "lossless": true
+  }
+}

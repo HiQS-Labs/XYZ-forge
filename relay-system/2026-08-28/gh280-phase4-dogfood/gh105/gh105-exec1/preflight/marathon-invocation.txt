@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-105-vendor-releases-addon RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/xyz-vendor.sh,relay-automation/xyz-sync.sh,RELEASES-DB-FAQS.md,test/find-harness.sh,test/gh105-vendor-releases-addon.sh,test/gh197-vendor-tier-split.sh,test/gh293-vendored-guard-drift.sh,test/gh312-vendor-preserves-state.sh,test/write-ops-log.sh,test/xyz-sync-check.sh,test/xyz-vendor.sh,test/baselines/GH-52-negative-control.md,test/_setup.sh \
+  --pre-advance-cmd 'bash validate.sh' \
+  --require-clean
