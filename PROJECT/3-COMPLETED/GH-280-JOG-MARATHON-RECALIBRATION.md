@@ -432,3 +432,34 @@ resetting shared history, deleting Tick events, rewriting queue receipts, or reu
 1. **Contract-driven integration over runtime duplication:** Duplicating execution mechanics (Tick tokens, worktree isolation, retry caps) in a supervisor inevitably creates split-brain state and drift. Establishing additive, versioned machine contracts (`marathon-invocation@1` and `marathon-drive/result@1`) provides a stable, machine-verifiable boundary that works seamlessly across both root and vendored `.xyz` layouts.
 2. **Supervisor state mutations vs. executor cleanliness checks:** When a supervisor leases a queue row, it legitimately updates database ledger files (`releases.db`/`releases.sql`). Passing strict `--require-clean` flags from preflight packets into the execution driver causes self-inflicted refusals; supervisors must control cleanliness invariants at their own outer boundary.
 3. **Idempotent crash-resilient landing:** GitHub PR merges, SQLite queue projections, and PDDA wave reconciliation belong to separate failure domains. Structuring landing workflows around durable keys `(repo identity, queue global ID, execution ID, merged SHA)` guarantees that failures at any step can safely resume at the missing durable step without duplicate turn dispatches or wasted tokens.
+
+## Post-completion follow-up record (2026-08-28, from #291 review)
+
+PR #281 merged and reconciled; development at `00ac4594`. Codex review (#291) accepted with two
+corrections and one sequencing constraint (reply posted, signed GLM 5.3 High). The follow-up
+workflow now carries, in order:
+
+1. **Durable fixes for the Phase-4 findings** (new issue; see below) — F1 supervisor-state
+   commit-before-dispatch, F2 gid-relative ledger paths + gh-number fallback, F3 dashboard
+   regen after promotion. These land FIRST: F2 changes what valid ledger/invocation paths look
+   like, so the golden-fixture suite below would churn if authored before it.
+2. **#291 Scope 1+5** — standalone contract reference for `marathon-invocation@1` and
+   `marathon-drive/result@1` (fields, ownership, outcome vocabulary, version negotiation,
+   bounded deprecation window). Correction accepted: the outcome vocabulary is
+   approved / refused / escalated / parked / interrupted / crashed / lock-contention /
+   post-approve-failed (+ reason `already-satisfied`); there is no "already-landed" outcome,
+   and preflight already-landed parks at the queue level without a receipt.
+3. **#291 Scope 3** — boundary-regression guard pinning that the marathon executor path never
+   writes executor-owned truth (Tick attempts/tokens, terminal results, lane branch/PR
+   identity). The legacy `--executor relay` path is the declared exception until its Phase-5
+   removal.
+4. **#291 Scope 2** — conformance suite with golden `@1` fixtures (there is no prior version;
+   "prior" is defined forward by the Scope-5 policy) across root and vendored layouts,
+   including future-schema refusal with zero queue/Tick mutation.
+5. **#291 Scope 4** — refused/escalated projections name execution_id + result_path (the
+   awaiting-landing and landed projections already carry PR/merge identity).
+6. **#290 (ATE)** — variation grid on the fuzz-stable surfaces (land verification, receipt
+   writer) runs as its own parallel lane; full long-run ATE grinds the grid after the fixes
+   stabilize the surface.
+
+Phase 5 (default flip + legacy relay removal) remains gated behind items 1–4.
