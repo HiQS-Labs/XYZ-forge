@@ -107,6 +107,9 @@ DROP_GLOBS=(
 # very string it strips, and ship into the artifact as a self-inflicted match.
 REDACT_HOME="$(printf '/%s/%s/' Users noelsaw)"
 REDACT_WITH="~/"
+# GH-204: derive the bare username from REDACT_HOME for the residual sweep below. Hardcoding it
+# there re-introduced exactly the self-inflicted match the assembly above exists to avoid.
+REDACT_USER="$(printf '%s' "$REDACT_HOME" | awk -F/ '{print $3}')"
 
 # ── PROJECT retention ─────────────────────────────────────────────────────────────────────────────
 # PROJECT/ ships as the PDDA scaffold plus the capture docs for THIS RELEASE, so the tree reflects
@@ -278,18 +281,32 @@ fi
 
 # ── Redact the author's home path from every text file ───────────────────────────────────────────
 redacted=0
+redact_failed=0
 while IFS= read -r f; do
   if LC_ALL=C grep -qF "$REDACT_HOME" "$f" 2>/dev/null; then
-    LC_ALL=C sed -i '' "s|${REDACT_HOME}|${REDACT_WITH}|g" "$f" 2>/dev/null && redacted=$((redacted+1))
+    # GH-204: portable in-place edit (GNU + BSD). The counter reflects a real CONTENT change, not
+    # sed's exit code -- the BSD-only `sed -i ''` form rewrote the file unchanged under GNU sed and
+    # still read as success, shipping the author's home path into the artifact.
+    if LC_ALL=C sed -i.bak "s|${REDACT_HOME}|${REDACT_WITH}|g" "$f" 2>/dev/null \
+       && ! LC_ALL=C grep -qF "$REDACT_HOME" "$f" 2>/dev/null; then
+      redacted=$((redacted+1))
+    else
+      redact_failed=$((redact_failed+1))
+      printf '  REDACTION FAILED (home path still present): %s\n' "${f#"$DEST_NORM"/}" >&2
+    fi
+    rm -f "$f.bak"
   fi
 done < <(find "$DEST_NORM" -type f ! -path "*/.git/*" 2>/dev/null)
 printf '  redacted home path in %s file(s)\n' "$redacted"
+if [ "$redact_failed" != "0" ]; then
+  die "redaction FAILED for $redact_failed file(s) — the artifact still carries the author home path ($redacted file(s) were redacted successfully). A failure is NOT the same as 'nothing to redact', which reports 0 redactions and no failures."
+fi
 
 # Report anything the substitution could not reach, rather than assuming it is clean.
-residual="$(LC_ALL=C grep -rlF "noelsaw" "$DEST_NORM" --exclude-dir=.git 2>/dev/null | wc -l | tr -d ' ')"
+residual="$(LC_ALL=C grep -rlF "$REDACT_USER" "$DEST_NORM" --exclude-dir=.git 2>/dev/null | wc -l | tr -d ' ')"
 if [ "$residual" != "0" ]; then
   printf '  NOTE: %s file(s) still contain the username in some other form:\n' "$residual"
-  LC_ALL=C grep -rlF "noelsaw" "$DEST_NORM" --exclude-dir=.git 2>/dev/null \
+  LC_ALL=C grep -rlF "$REDACT_USER" "$DEST_NORM" --exclude-dir=.git 2>/dev/null \
     | sed "s|^$DEST_NORM/|    |" | head -20
 fi
 

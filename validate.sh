@@ -65,6 +65,7 @@ TESTS=(
   "handoff-exclusive.sh"
   "circuit-break.sh"
   "terminality-seal.sh"          # GH-41 (terminal seal edge cases — cross-model review of PR #99)
+  "write-ops-log.sh"
   "auto-sync.sh"
   "analyze.sh"
   "workstealing-verdict.sh"      # GH-4 (work-stealing via take + lane-count-independent verdict)
@@ -88,6 +89,7 @@ TESTS=(
   "gh278-turn-timeout-parity.sh" # GH-278 (Aider Python/Bash/doc timeout default must stay aligned)
   "gh308-frozen-twin-guard.sh"  # GH-308 (Python-authoritative twins: banner + committed-change guard)
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
+  "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
@@ -243,6 +245,7 @@ TESTS=(
   "synthetic/synthetic-pi-model-unset.sh"     # pi-turn: unset model handled, not silently defaulted
   "synthetic/synthetic-pi-provider-unsupported.sh" # pi-turn: unsupported provider exits clean, not fake-success
   "gh141-synthetic-registry.sh"  # #141 Phase 1 (single selector: every test/synthetic suite is registry-reachable AND fuzz-loop's derived selection matches — no suite selectable by one path but not the other; a dropped-in unregistered suite is CAUGHT)
+  "gh141-fuzz-inputs.sh"         # #141 Phase 3 (fuzz_inputs.py parser-only slice positive/negative controls)
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 (DeepSeek Harness integration & deepseek-turn shim with OpenRouter route, 11/11 assertions)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
@@ -283,6 +286,7 @@ TESTS=(
                                  #   the dialed_in+shipped denominator, baseline/growth emission, the
                                  #   rating metrics + effectiveScore precedence, and the leaderboard's
                                  #   one-scorer property (script ranking == --json ordering).
+  "gh75-dashboard.sh"            # GH-75 (releases dashboard verb renders one self-contained read-only HTML page)
   "gh32-releases-app.sh"         # GH-32 Phase 0+1 (SQLite RELEASES ledger CLI: schema/GID shape,
                                  #   writer-lock + journal protocol, canonical dump, receipt chain,
                                  #   import grandfathering, side-by-side gen) — 81/0; registered in the
@@ -326,7 +330,7 @@ TESTS=(
                                  #   first run — a failed resolve left the merge half-closed, a rewound generation
                                  #   header was accepted silently, releases.db.bak was committable, and `--root ""`
                                  #   retargeted the resolver at the current repo. 27/0
-  "gh69-roadmap-shadow.sh"        # GH-69 (ROADMAP.md shadow: `releases roadmap sync` mirrors the ledger into
+  "gh69-roadmap-shadow.sh"        # GH-69 (roadmap ledger: `releases roadmap sync` mirrors the ledger into
                                  #   roadmap_items, GH-32 Phase-0 pattern) — 24/0; pins that the shadow never
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
@@ -395,6 +399,7 @@ TESTS=(
   "gh528-parallel-contention-retry.sh" # GH-528 (--parallel re-runs a pooled failure alone before believing it, and names the contended suite; the driver-lock lane list cannot be validated by reading it)
   "xyz-completion.sh"
   "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
+  "gh123-lock-progress-bound.sh" # GH-123 (XYZ_LOCK_WAIT_S bounds one holder, not the queue; progress re-arms)
   "gh14-atomic-append.sh"        # GH-14 (appendEvent publishes via a .tmp name + atomic rename; concurrent readers never see a torn .jsonl)
   "gh23-path-overlap-enforcement.sh" # GH-23 (enforce path overlap rejection on direct tick claim and tick scope under withClaimLock; --force bypass)
   "gh4-ungated-clone-warning.sh" # GH-4 (validate.sh warns non-fatally when the push gate is not installed; silent when gated)
@@ -419,6 +424,7 @@ TESTS=(
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh205-gate-idempotency.sh"    # GH-205 (telemetry writes land off-tree; the gate never dirties tracked files)
+  "gh204-sed-portability.sh"     # GH-204 (in-place edits portable AND content-asserted; exit code masks the loss)
   "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
                                  #   exporter payload keys + baked chrome in both artifacts; the rollup
                                  #   embed itself lives in hq-rollup.sh cases A/F/G)

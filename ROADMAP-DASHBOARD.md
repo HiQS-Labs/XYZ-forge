@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 22 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 24 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -15,7 +15,6 @@ Summary: 22 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI &gt;=1.1.19 — whoami subcommand removed | — | [#221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) · [PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md](PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md) |
 | GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth | — | [#215](https://github.com/HiQS-Labs/XYZ-forge/issues/215) · [PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md](PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md) |
 | GH-216 — marathon-plan.sh ledger parser rejects link-style ROADMAP.md bullets | — | [Title](path) · [#216](https://github.com/HiQS-Labs/XYZ-forge/issues/216) · [PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md](PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md) |
-| GH-105 · vendor the RELEASES DB system + HTML timeline generator into the .xyz payload (optional add-on) | — | [GH-105-VENDOR-RELEASES-ADDON.md](PROJECT/1-INBOX/GH-105-VENDOR-RELEASES-ADDON.md) · [#105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
 | GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) | — | [#62](https://github.com/HiQS-Suite/XYZ-forge/issues/62) · [#63](https://github.com/HiQS-Suite/XYZ-forge/issues/63) · [#64](https://github.com/HiQS-Suite/XYZ-forge/issues/64) · [#65](https://github.com/HiQS-Suite/XYZ-forge/issues/65) · [#61](https://github.com/HiQS-Suite/XYZ-forge/issues/61) |
 | GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build | — | [#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) |
@@ -30,7 +29,10 @@ Summary: 22 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-256 — no preflight checks the builder can reach a phase's artifact paths | — | [#256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) · [PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md](PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md) |
 | GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1) | — | [GH-259-JOG-SERIAL-QUEUE.md](PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md) · [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) |
 | GH-271 · wave_reconcile closing-keyword extraction + rollback completeness | — | — |
+| GH-275 · medium-level write-ops logging of agent disk-write commands | — | [GH-275-WRITE-OPS-LOGGING.md](PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md) |
+| GH-267 · /express — hotfix fast lane through the whole paper trail | — | [doc](PROJECT/3-COMPLETED/GH-267-EXPRESS-HOTFIX-LANE.md) · [#267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) |
 | GH-272 · releases-merge-resolve regenerates derived views | — | — |
+| GH-269 · full switchover to Releases DB — retire ROADMAP.md | — | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md) |
 | GH-273 · marathon-root-audit python spellings | — | — |
 
 ## Queue
@@ -59,7 +61,7 @@ Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · 🔮 0 · 🔲 0
+Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -68,6 +70,7 @@ Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · �
 | GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | ✅ | [GH-114-HEADLESS-TTY-IDLE-HANG.md](PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md) · [#114](https://github.com/HiQS-Suite/XYZ-forge/issues/114) |
 | GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6) | ✅ | [GH-113-HEADLESS-SCRATCH-CONTAINMENT.md](PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md) · [#113](https://github.com/HiQS-Suite/XYZ-forge/issues/113) |
 | GH-91 · a build turn has nowhere to write verification output | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) |
+| GH-105 · vendor the RELEASES DB system + HTML timeline generator into the .xyz payload (optional add-on) | — | [GH-105-VENDOR-RELEASES-ADDON.md](PROJECT/3-COMPLETED/GH-105-VENDOR-RELEASES-ADDON.md) · [#105](https://github.com/HiQS-Suite/XYZ-forge/issues/105) |
 | GH-168 · wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | ✅ | [GH-168-WAVE-RECONCILE-SCOPE.md](PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md) · [#168](https://github.com/HiQS-Suite/XYZ-forge/issues/168) |
 | GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | ✅ | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Suite/XYZ-forge/issues/50) |
 | GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | ✅ | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Suite/XYZ-forge/issues/2) |
@@ -84,6 +87,7 @@ Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · �
 | GH-184 · committed scratch artifact .relay-scratch/probe_telemetry.json makes every real turn a tracked-file mutation | ✅ | [GH-184-TRACKED-SCRATCH-ARTIFACT.md](PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md) · [#184](https://github.com/HiQS-Labs/XYZ-forge/issues/184) |
 | GH-195 · marathon-root-audit's blind spot: a direct python3 marathon_drive.py call | ✅ | [GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md) · [#195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) |
 | GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | ✅ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
+| GH-107 · Connect /10days, /radar, and PARKED to the RELEASES DB (read-only seams) | — | [GH-107-RELEASES-DB-READ-SEAMS.md](PROJECT/3-COMPLETED/GH-107-RELEASES-DB-READ-SEAMS.md) · [#107](https://github.com/HiQS-Labs/XYZ-forge/issues/107) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | ✅ | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) |
 | GH-42 · relay automation: supported Commandcode turn-taker | ✅ | [GH-42-COMMANDCODE-TURN.md](PROJECT/2-WORKING/GH-42-COMMANDCODE-TURN.md) · [#42](https://github.com/HiQS-Suite/XYZ-forge/issues/42) |
 | GH-170 · Agent2Agent: close transcript glitches and harden publishing | ✅ | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Suite/XYZ-forge/issues/170) |

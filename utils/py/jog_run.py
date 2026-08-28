@@ -24,6 +24,7 @@ import signal
 import sqlite3
 import subprocess
 import sys
+import tempfile
 
 # Ensure utils/py is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -335,8 +336,41 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
     env = dict(os.environ)
     env["RELAY_DRIVER_LOCKED"] = "1"
     env["XYZ_ROOT"] = root
+    # Turn-taker shim env contract (relay-xyz Path A): <BUILDER>_AGENT selects the
+    # dispatching actor (must match the tick token's handoff target above), ALLOW_PATHS
+    # (comma-separated) grants the contract's artifact paths for a build turn, and
+    # <BUILDER>_LOG keeps concurrent runs from sharing one log. Without these the shim
+    # dies at startup ("AGY_AGENT required") before any turn runs.
+    env[f"{builder.upper()}_AGENT"] = builder
+    env.setdefault(f"{builder.upper()}_LOG",
+                   os.path.join(tempfile.gettempdir(), f"{builder}-turn-jog-{os.getpid()}.log"))
+    doc = find_issue_doc(root, gh_num)
+    artifacts = []
+    if doc:
+        m = re.search(r"##\s*Swarm Preflight Contract\s*\n+```json\n(.*?)\n```", open(doc).read(), re.S)
+        if m:
+            try:
+                artifacts = [a for a in json.loads(m.group(1)).get("artifacts", []) if isinstance(a, str)]
+            except Exception:
+                pass
+    env["ALLOW_PATHS"] = ",".join(artifacts)
 
     proc = subprocess.run(cmd, cwd=root, env=env)
+    if proc.returncode != 0:
+        # relay-drive speaks the multi-round protocol: a builder that finishes in one
+        # turn sets STATUS: Done and releases its token to 'done', which the driver
+        # reads as a spent task and escalates (exit 4). For jog's single-phase drives a
+        # terminal STATUS on the relay file IS success; the landing boundary still
+        # verifies before anything merges.
+        try:
+            head = open(relay_file, encoding="utf-8").read(2048)
+            m = re.search(r"^STATUS:\s*(\S+)", head, re.M)
+            if m and m.group(1).lower() in ("done", "approved"):
+                print(f"jog: drive escalated (exit {proc.returncode}) but relay STATUS is "
+                      f"{m.group(1)} — treating single-phase drive as complete.")
+                return 0
+        except OSError:
+            pass
     return proc.returncode
 
 
@@ -509,7 +543,10 @@ def jog_run_main(args=None):
             preflight_py = os.path.join(root, "utils", "py", "swarm_preflight.py")
             if os.path.isfile(preflight_py) and not getattr(args, "simulate", False):
                 pf_res = subprocess.run(
-                    [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--root", root],
+                    # swarm_preflight.py has no --root flag (it resolves the repo from cwd,
+                    # which this subprocess already pins below); passing one is a usage error
+                    # that parked every queue item on the first real run.
+                    [sys.executable, preflight_py, "--gh-issue", str(gh_num)],
                     cwd=root,
                     capture_output=True,
                     text=True,

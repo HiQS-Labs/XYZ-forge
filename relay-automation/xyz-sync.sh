@@ -328,6 +328,37 @@ require_safe_update_source() {
   fi
 }
 
+
+xyz_write_ops_log_append() {
+  [ "${XYZ_WRITE_OPS_LOG:-}" = "0" ] && return 0
+  local dest="${XYZ_WRITE_OPS_LOG:-$HOME/.local/state/xyz/write-ops.jsonl}"
+  local pattern="$1"
+  local cmd="$2"
+  local stamp; stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+  local host; host="$(hostname)"
+  local cwd; cwd="$(pwd)"
+  python3 -c '
+import sys, json, os
+record = {
+    "timestamp": sys.argv[1],
+    "host": sys.argv[2],
+    "session": os.environ.get("TERM_SESSION_ID", ""),
+    "cwd": sys.argv[3],
+    "pattern": sys.argv[4],
+    "command": sys.argv[5],
+    "stage": "run"
+}
+log_path = sys.argv[6]
+try:
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    fd = os.open(log_path, os.O_CREAT | os.O_WRONLY | os.O_APPEND, 0o600)
+    with os.fdopen(fd, "a") as f:
+        f.write(json.dumps(record) + "\n")
+except Exception:
+    pass
+' "$stamp" "$host" "$cwd" "$pattern" "$cmd" "$dest" || true
+}
+
 delete_rows() {
   local target confirmed i
   target="${1:-}"
@@ -357,6 +388,7 @@ delete_rows() {
     safe_registered_xyz_dir "${SELECTED_INSTALL_DIRS[$i]}" || die "refusing to delete non-.xyz path: ${SELECTED_INSTALL_DIRS[$i]}"
     if [ -e "${SELECTED_INSTALL_DIRS[$i]}" ]; then
       rm -rf "${SELECTED_INSTALL_DIRS[$i]}"
+      xyz_write_ops_log_append "xyz-sync delete" "rm -rf ${SELECTED_INSTALL_DIRS[$i]}"
       note "removed ${SELECTED_INSTALL_DIRS[$i]}"
     else
       note "delete: missing on disk, pruning row: ${SELECTED_INSTALL_DIRS[$i]}"

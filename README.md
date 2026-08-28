@@ -1,14 +1,20 @@
 # XYZ — Multi-Agent Coordination Beta
 
 **XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) — work
-on the same repo at the same time without overwriting each other's work.**
+on the same repo concurrently, with path claims and isolated turns that reduce accidental overwrites.**
+
+> **Safety and warranty:** XYZ Forge is provided **“AS IS,” without warranty**, under the applicable
+> license. Coding-agent automation is inherently risky: models may choose commands through their own
+> runtimes and safety controls, outside the intended harness workflow. XYZ Forge cannot guarantee
+> model behavior or data integrity; maintain tested, independent backups and follow industry-standard
+> backup and recovery practices.
 
 ## What XYZ is
 
 It's built in two layers:
 
-- **`tick`** — the kernel: a tiny local event-log CLI that hands out collision-free, path-scoped
-  work claims, so two agents never edit the same thing at once. No server, no API keys, no remote.
+- **`tick`** — the kernel: a tiny local event-log CLI that hands out path-scoped work claims to
+  serialize overlapping edits. No server, no API keys, no remote.
 - **`relay-automation/`** — the product on top of `tick`: it runs agents in **turns** (one builds,
   another reviews) headlessly, so you can hand a task to Codex or agy and let them iterate toward
   done without babysitting the handoff.

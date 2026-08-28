@@ -1,6 +1,6 @@
 ---
 gh_issue: 141
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/141
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/141
 title: "Make Fuzzing and ATE actually useful: neither currently fuzzes"
 status: Active (2-WORKING — plan ratified 2026-08-22, execution started)
 created: 2026-08-22
@@ -13,9 +13,12 @@ risk: 3
 phases: 4
 rating: "pri/sev/appeal/effort 80/65/85/55 · calc 285"
 related:
+  - https://github.com/HiQS-Suite/XYZ-forge/issues/141 (original pre-rename tracking URL)
   - https://github.com/HiQS-Suite/XYZ-forge/issues/142
   - https://github.com/HiQS-Suite/XYZ-forge/issues/143
   - https://github.com/HiQS-Suite/XYZ-forge/issues/146
+fix_probes:
+  - test -f utils/py/fuzz_inputs.py
 goal: >
   Execute #141's Phases 1, 2, 4, and 5: one selector owns the synthetic suites, telemetry
   carries no aliased field, the ATE chain fails loudly and hermetically, and ATE's labels,
@@ -161,3 +164,38 @@ no Phase 3 on this branch.
 3. `utils/pdda/pdda.sh run` — 0 errors.
 4. `releases roadmap sync` after ROADMAP edits; CHANGELOG entry at ship time.
 5. Negative controls recorded per phase (pre-fix behavior pinned in each suite's header).
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "path_absent",
+      "path": "utils/py/fuzz_inputs.py"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh141-fuzz-inputs.sh"
+    }
+  ],
+  "artifacts": [
+    "utils/py/fuzz_inputs.py",
+    "test/gh141-fuzz-inputs.sh",
+    "validate.sh"
+  ],
+  "remediation": {
+    "source": "issue#141 Phase 3 (remaining arc; Phases 1/2/4/5 landed in PR #149)",
+    "criteria": "utils/py/fuzz_inputs.py fuzzes the four target families from the issue's Phase 3 design (Python under utils/py per the no-new-Bash rail) and test/gh141-fuzz-inputs.sh registered in validate.sh proves at least the parser-only slice finds seeded defects."
+  },
+  "artifacts_new": [
+    "utils/py/fuzz_inputs.py",
+    "test/gh141-fuzz-inputs.sh"
+  ]
+}
+```

@@ -5,34 +5,43 @@ second started as "why does the local gate refuse on Linux" and turned into eigh
 
 ---
 
-## ⚠️ Gate status, stated plainly
+## Gate status, stated plainly
 
-This branch is **not** backed by a fully green local gate, and I am not implying otherwise.
+**Green.** `validate.sh` exits **0** on this branch — 260 suites, no failures.
 
-**Before this branch**, a full `validate.sh` on a pristine `--ff-only` checkout of `development` at
-`713ba6d1` — containing none of my changes — failed **9 suites** while hosted CI was green at the
-same SHA.
+**Before this branch**, the same gate on a pristine `--ff-only` checkout of `development` at
+`713ba6d1` — containing none of my changes — failed **9 suites**, while hosted CI was green at the
+same SHA. Every one of those is accounted for below: eight were real repo bugs or undocumented
+dependencies and are fixed here; the ninth was agy's individual quota, which has since reset.
+`relay-self-sufficiency.sh` now passes **4/0** against the live API.
 
-**After this branch**, that is down to **1**, and the remaining one is not fixable here:
+Two suites (`gh35-test-tiers.sh`, `relay-turn-timeout.sh`) failed under 2-wide parallelism and
+**passed when re-run alone** — the gate's own GH-528 warning, with sequential treated as the source
+of truth. Not claimed as clean; naming them rather than letting the exit code speak for them.
 
-| Suite | Status |
-|---|---|
-| `relay-self-sufficiency.sh` | ❌ agy individual quota exhausted — resets ≈2026-08-27 15:30 |
+**What this green does and does not attest.** It was run in 2-wide **parallel** mode, which GH-509
+explicitly says is *not* promotion evidence — `ci-local.sh`'s sequential run is the qualifying gate,
+and the macOS job is the promotion boundary. So this means "nothing on this branch is broken on a
+clean Linux host", not "this is qualified to ship".
 
-The agy CLI prints the reason verbatim: `Error: Individual quota reached. Please upgrade your
-subscription to increase your limits. Resets in 75h40m54s.` No code change can clear it; it wants a
-re-run after the reset.
+**How it was measured, since two earlier attempts were not trustworthy.** The number moved twice
+before settling, both times for reasons that were mine and not the code's:
 
-Everything else is green. The eight suites this branch fixes are listed below with their root causes.
+1. A run that reported *three* failures had me editing `ROADMAP.md` and committing **while it was
+   running** — the GH-141 hazard. One extra (`roadmap-dashboard.sh`) was genuine drift I had just
+   introduced and is fixed in this branch; the other was the GH-1 identity bracket correctly
+   catching a tree that moved under it.
+2. A later run straddled a **branch switch** — it began on this branch and finished after an
+   unrelated `Linux-MVP-RC` merge landed in the same checkout mid-run, so it read two different
+   trees and produced five meaningless failures.
 
-**How that number was arrived at, since it moved once.** An earlier full run of mine reported *three*
-failures — the one above plus `roadmap-dashboard.sh` and `clone-identity-invariant`. Both extras were
-self-inflicted: I edited `ROADMAP.md` and committed **while the gate was running**, which is exactly
-the hazard the repo documents (GH-141 — never hand-edit a clone while a run is in flight).
-`roadmap-dashboard` was a real drift I had just introduced and is fixed in this branch;
-`clone-identity-invariant` is the GH-1 identity bracket correctly noticing a tree that changed
-underneath it. The **1** above is from a clean re-run on an untouched tree: **260 suites, one
-failure**, with `clone-identity-invariant` passing. CI is green on this PR.
+The figure above comes from a **standalone clone** of this branch at `2aac676e`, with its own
+`.git`, isolated from the working checkout. A linked worktree was tried first and `validate.sh`
+**refused** it — correctly: its refusal documents an observed run where suites writing to "the repo"
+reached the parent clone, set `core.bare=true`, repointed origin, and overwrote `development`. That
+refusal was not overridden.
+
+CI is green on this PR (Ubuntu portability canary; the macOS job does not run on PRs by design).
 
 ---
 

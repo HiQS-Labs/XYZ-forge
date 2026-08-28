@@ -34,7 +34,12 @@ GUARD_DEV=""
 
 get_dev_inode() {
   local target="$1"
-  stat -f "%d %i" "$target" 2>/dev/null || stat -c "%d %i" "$target" 2>/dev/null || true
+  # GNU coreutils spells --format as -c and uses -f for --file-system; BSD spells --format as -f.
+  # Probing BSD-first therefore SUCCEEDS on Linux for the wrong reason: `-f` is accepted, "%d %i"
+  # is read as a filename, and stdout gets a multi-line filesystem block instead of "<dev> <inode>".
+  # The caller's "${x%% *}" then yields an empty device and the guard reports an identity mismatch
+  # between two identical inodes. `-c` is not a BSD flag, so probing GNU-first fails cleanly there.
+  stat -c "%d %i" "$target" 2>/dev/null || stat -f "%d %i" "$target" 2>/dev/null || true
 }
 
 cleanup_guard() {
