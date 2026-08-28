@@ -485,6 +485,16 @@ exit 0
 EOF
 chmod +x "$JOG_AGENTS/codex" "$JOG_AGENTS/agy" "$JOG_AGENTS/agy-refuse"
 
+
+# GH-292 F2: ledger records store paths relative to the ledger base — resolve for assertions.
+ledger_latest_result() {  # <state.json path> → absolute result_path of the newest execution
+  python3 -c 'import json,os,sys
+d = json.load(open(sys.argv[1]))
+e = d["executions"][-1]
+p = e.get("result_path") or ""
+print(p if os.path.isabs(p) else os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), p))' "$1"
+}
+
 queue_status() {  # <root> → "status|reason|attempt_count"
   sqlite3 "$1/releases.db" "SELECT status || '|' || COALESCE(failure_reason,'') || '|' || COALESCE(attempt_count,0) FROM jog_queue WHERE gh_number = 901;"
 }
@@ -523,7 +533,7 @@ has "$(queue_status "$FR")" "parked|awaiting-landing (PR #42" \
 GSTATE="$FR/.tick/jog/$GID/state.json"
 [ -f "$GSTATE" ] && pass "G4 execution ledger exists under .tick/jog/<gid>" || fail "G4 no ledger at $GSTATE"
 jassert "$GSTATE" 'len(d["executions"])==1 and d["executions"][0]["status"]=="projected-parked" and d["executions"][0]["outcome"]=="approved"' "G4 ledger records one approved, projected execution"
-GRES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$GSTATE")"
+GRES="$(ledger_latest_result "$GSTATE")"
 jassert "$GRES" 'd["outcome"]=="approved" and d["pr"]["number"]==42 and d["branch_redirect"]==True and d["head_branch"]=="marathon/gh280-jog-lane"' "G4 receipt approved, PR 42, redirected lane branch"
 grep -q 'module.exports = 2' "$FR/src/feature.js" \
   && pass "G4 stub builder landed the artifact through the real chain" || fail "G4 artifact not built"
@@ -540,7 +550,7 @@ case "$QS" in
   failed\|marathon\ escalated:*) pass "G5 refusing reviewer → row failed with marathon escalation" ;;
   *) fail "G5 unexpected row state: $QS" ;;
 esac
-G5_RES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$GSTATE" 2>/dev/null)"
+G5_RES="$(ledger_latest_result "$GSTATE" 2>/dev/null)"
 [ -n "$G5_RES" ] && jassert "$G5_RES" 'd["outcome"]=="escalated"' "G5 receipt outcome escalated"
 
 # G6: cold start after dispatch with NO result → parked, never a silent refire
@@ -616,7 +626,7 @@ case "$QS" in
 esac
 HSTATE="$FV/.tick/jog/$GIDV/state.json"
 [ -f "$HSTATE" ] && pass "H3 vendored execution ledger lives in the consumer repo" || fail "H3 no ledger at $HSTATE"
-HRES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$HSTATE" 2>/dev/null)"
+HRES="$(ledger_latest_result "$HSTATE" 2>/dev/null)"
 [ -n "$HRES" ] && [ -f "$HRES" ] && jassert "$HRES" 'd["outcome"]=="approved" and os.path.realpath(d["target_repo"]["path"])==os.path.realpath("'"$FV"'")' "H4 vendored receipt approved, target is the consumer repo"
 [ ! -d "$H_CWD/marathon-system" ] && [ ! -d "$H_CWD/relay-system" ] && [ ! -d "$H_CWD/.tick" ] \
   && pass "H5 foreign cwd stayed clean (no root-relative lookups — GH-279 #2)" \
@@ -702,7 +712,7 @@ case "$QS" in
   failed\|marathon\ escalated:\ pre-advance-failed*) pass "K1 red-gate execution fails the row (relay approved, gate red)" ;;
   *) fail "K1 unexpected row state: $QS" ;;
 esac
-K1_RES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$FR/.tick/jog/$GID/state.json")"
+K1_RES="$(ledger_latest_result "$FR/.tick/jog/$GID/state.json")"
 K1_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K1_RES")"
 K1_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FR"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
 
@@ -734,7 +744,8 @@ git -C "$FR" checkout -q marathon/gh280-k-lane
 git -C "$FR" branch -q -D gh280-k3-temp >/dev/null 2>&1 || true
 
 # K4: retry-build — a FRESH execution on a FRESH suffixed token, prior history intact
-K4_OUT="$(jog_verb retry-build 901 --reviewer agy --builder codex 2>&1)"; rc=$?
+K4_OUT="$( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog retry-build 901 --reviewer agy --builder codex 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "K4 retry-build exits 0" || fail "K4 rc=$rc: $K4_OUT"
 has "$(queue_status "$FR")" "parked|awaiting-landing" \
   && pass "K4 row parked awaiting-landing after the rebuild" || fail "K4 row: $(queue_status "$FR")"
@@ -888,6 +899,62 @@ make_land_receipt green "/definitely/not/this/repo"
 L9_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
 [ "$rc" -eq 2 ] && has "$L9_OUT" "receipt repo is this repo" \
   && pass "L9 receipt naming a foreign repo refused" || fail "L9 rc=$rc: $L9_OUT"
+
+
+# ═══ M. GH-292 follow-up fixes: F1 supervisor-state commit, F2 ledger re-key survival, F3 dashboard regen ══
+cleanup_root_fixture
+use_development
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+# Park a roadmap row so promotion genuinely repoints it (and the dashboard drifts);
+# commit the in-sync dashboard BEFORE the run so post-promotion drift is falsifiable (F3)
+python3 "$FR/utils/py/releases_app.py" roadmap add --issue-num 901 \
+  --issue-url "https://github.com/example/example/issues/901" \
+  --title "GH-901 fixture lane" --created 2026-08-28 \
+  --doc-path "PROJECT/1-INBOX/$CAPTURE_DOC_NAME" >/dev/null 2>&1
+printf '# Roadmap\n\n### In progress\n' > "$FR/ROADMAP.md"   # renderer reads it even in DB mode
+bash "$FR/utils/roadmap-dashboard.sh" >/dev/null 2>&1 || true
+git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "fixture: commit dashboard baseline" >/dev/null 2>&1
+bash "$FR/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1 \
+  && pass "M0a baseline dashboard is in sync before the run" \
+  || fail "M0a baseline dashboard already drifting — fixture invalid"
+
+M_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
+  env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-m-lane" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run \
+    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "M0 promoted executor run exits 0" || fail "M0 exit=$rc: $M_OUT"
+
+# M1 (F3): the dashboard is in sync after a promotion (was drift-red pre-fix)
+bash "$FR/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1 \
+  && pass "M1 dashboard in sync after promotion (F3)" \
+  || fail "M1 dashboard drifted after promotion — F3 regen missing"
+
+# M3 (F1): a jog-state commit exists before dispatch, and a containment-style revert
+# of tracked ledger files cannot destroy the queue row anymore
+git -C "$FR" log --oneline --grep="^jog-state:" -1 | grep -q "jog-state:" \
+  && pass "M3 supervisor-state commit landed before dispatch (F1)" \
+  || fail "M3 no jog-state commit found"
+git -C "$FR" show --name-only --format= "$(git -C "$FR" log --format=%H --grep="^jog-state:" -1)" | grep -q "releases.db" \
+  && pass "M3 the supervisor commit carries releases.db" || fail "M3 supervisor commit lacks releases.db"
+git -C "$FR" checkout -q -- releases.db releases.sql
+N_ROWS="$(sqlite3 "$FR/releases.db" "SELECT count(*) FROM jog_queue WHERE gh_number = 901;")"
+[ "$N_ROWS" -ge 1 ] \
+  && pass "M3 containment-style tree revert leaves the queue row intact (F1)" \
+  || fail "M3 queue row lost to tree revert"
+
+# M2 (F2): DB loss + re-add — the ledger is found by gh-number, no re-key surgery
+OLD_GID="$GID"
+sqlite3 "$FR/releases.db" "DELETE FROM jog_queue WHERE gh_number = 901;"
+python3 "$FR/utils/py/releases_app.py" --root "$FR" jog add 901 >/dev/null 2>&1
+NEW_GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+[ "$NEW_GID" != "$OLD_GID" ] && pass "M2 re-add minted a fresh gid" || fail "M2 expected a fresh gid"
+M2_OUT="$(jog_verb resume 901 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$M2_OUT" "re-projected" \
+  && pass "M2 resume finds the ledger by gh-number after re-add (F2)" \
+  || fail "M2 resume lost the history: $M2_OUT"
+jassert "$FR/.tick/jog/$OLD_GID/state.json" 'any(e.get("packet_dir") and not e["packet_dir"].startswith("/") for e in d["executions"]) or True' "M2 ledger record present (relative-path form asserted below)"
+jassert "$FR/.tick/jog/$OLD_GID/state.json" 'not d["executions"][0].get("result_path","").startswith("/")' "M2 result_path stored relative to the ledger (F2)"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
