@@ -35,14 +35,14 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 complete (2026-08-28): `marathon-invocation@1` (swarm_preflight, additive), `marathon-drive/result@1` (`--result-file`/`--execution-id`, single terminal writer via `_ON_EXIT`), Jog-side contract loaders, and `test/gh280-jog-marathon-adapter.sh` — 80 pass / 0 fail in a disposable full clone; swarm-preflight 100/0, marathon-drive 152/0, jog-queue 34/0 unchanged. | Phase 2: the opt-in `releases jog run --executor marathon --reviewer <agent>` adapter with cold-start projection, legacy relay default preserved. |
+| Phase 2 complete (2026-08-28): opt-in `releases jog run --executor marathon --reviewer <agent>` (reviewer validated before any lease mutation), deterministic execution ledger under `.tick/jog/<gid>/`, cold-start reconciliation (re-project terminal results, park missing ones, never silently refire), legacy relay default untouched. Adapter suite 106/0; jog-queue 34/0, marathon-drive 152/0, swarm-preflight 100/0. | Phase 3: explicit `jog resume` / `jog retry-gate` / `jog retry-build` / `jog land` (+ reconcile) semantics. |
 
 ### Phase status
 
 | Phase | State | Evidence |
 |---|---|---|
 | 1 — Pin the boundary and add machine contracts | Complete | `bash test/gh280-jog-marathon-adapter.sh` → 80 pass, 0 fail (root + vendored fixtures, stubbed agents/GitHub, no `--simulate`); `test/swarm-preflight.sh` 100/0, `test/marathon-drive.sh` 152/0, `test/jog-queue.sh` 34/0 in a separate disposable full clone; clone identity verified before/after. |
-| 2 — Opt-in Marathon executor | Pending | — |
+| 2 — Opt-in Marathon executor | Complete | Adapter test sections G/H/I: root + vendored queue runs through real Preflight → Marathon → Relay with deterministic agent stubs (106 pass, 0 fail total); reviewer-policy refusals before lease mutation; cold-start at both boundaries (missing result parks; terminal result re-projects without a second dispatch); foreign-cwd vendored run stays clean (GH-279 #2 fixed for this executor); legacy relay default verified unchanged. |
 | 3 — Resume, retry, landing semantics | Pending | — |
 | 4 — Dogfood root and vendored runs | Pending | — |
 | 5 — Default flip + retire duplication | Pending | — |
@@ -151,6 +151,27 @@ not reopen the authority split without updating this plan and its risk assessmen
   real relay-drive → deterministic agent stubs (adapter test section F) — plus jog-queue's
   queue/lease coverage. The full `releases jog run --executor marathon` queue E2E lands in Phase 2
   with the adapter itself, per the plan's Phase 2 QA gate.
+
+### Phase 2 material discoveries (recorded 2026-08-28)
+
+- **The packet's `--require-clean` is unimplementable for a supervisor.** Acquiring the row lease
+  rewrites the tracked `releases.db`/`releases.sql` (perform_write regenerates the dump) between
+  lease and dispatch, so Marathon would refuse on Jog's own durable queue state every single run.
+  The adapter strips `--require-clean` from the packet argv and says why in the code; Marathon's
+  dirty-workspace WARNING still fires, and Jog's outer driver lock remains the serial boundary.
+- Marathon's lane key for a Jog execution defaults to the packet slug (phase id), so re-running the
+  same issue accumulates `.tick/attempts/<slug>` across executions exactly as the plan intends —
+  Marathon's attempt cap is the sole execution cap, and the queue's `attempt_count` stays lease
+  history.
+- Cold-start semantics in implementation: an orphan-reconciled row whose latest execution is
+  `dispatched` is resolved from the durable receipt BEFORE the loop can lease — a valid terminal
+  receipt is re-projected idempotently (no turn spent), a missing/invalid receipt parks the row as
+  `cold-start` (never a silent refire). Re-dispatch after a cold-start park requires the explicit
+  Phase 3 verbs.
+- Under the packet's `RELAY_WORKTREE_ISOLATION=1`, relay-drive seeds the relay file (always the
+  first `RTL_ALLOW` entry) and the allowlisted artifacts into the isolation worktree and copies
+  modified paths back, so the adapter can dispatch the packet env faithfully; no env rewriting is
+  needed beyond the reviewer/builder policy overrides and the lock hand-off.
 
 ## Phase 1 — Pin the boundary and add machine contracts
 

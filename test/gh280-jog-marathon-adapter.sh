@@ -149,6 +149,9 @@ sys.exit(0 if eval(sys.argv[2]) else 1)' "$1" "$2" 2>/dev/null \
     && pass "$3" || fail "$3 ($(head -c 400 "$1" 2>/dev/null))"
 }
 
+# fixed-substring helper (jog-queue.sh has one; this suite is standalone)
+has() { printf '%s' "$1" | grep -Fq -- "$2"; }
+
 run_md_root() {  # <extra-args…> — drive in the ROOT fixture with the stub relay-drive
   (cd "$FR" && MARATHON_RELAY_DRIVE="$STUB_RD" \
     CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" \
@@ -430,6 +433,189 @@ find "$FR/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2
 find "$FR/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
   | xargs -0 grep -l '"type":"task.claimed".*"agent":"agy"' >/dev/null 2>&1 \
   && pass "F7 reviewer claim event in the fixture tick log" || fail "F7 missing reviewer claim event"
+
+# ═══ G. Phase 2: `releases jog run --executor marathon` (root install) ════════════════════════
+# Deterministic agent stubs that discover the relay file rather than hardcoding a phase dir —
+# the marathon executor dispatches the packet's slug as the phase id.
+JOG_AGENTS="$WORK/jog-agent-stubs"; mkdir -p "$JOG_AGENTS"
+cat > "$JOG_AGENTS/codex" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+relay="$(find "$PWD/marathon-system" -name RELAY.md -type f | head -1)"
+printf '\n### Round 1 · Builder · %s (stub)\nImplemented: test builder update\n' "$RELAY_AGENT" >> "$relay"
+printf 'module.exports = 2\n' > "$PWD/src/feature.js"
+exit 0
+EOF
+cat > "$JOG_AGENTS/agy" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  whoami|models) printf 'agy-stub\n'; exit 0 ;;
+esac
+relay="$(find "$PWD/marathon-system" -name RELAY.md -type f | head -1)"
+printf 'agy review stub\n'
+sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
+printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Approved\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$relay"
+exit 0
+EOF
+cat > "$JOG_AGENTS/agy-refuse" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  whoami|models) printf 'agy-stub\n'; exit 0 ;;
+esac
+relay="$(find "$PWD/marathon-system" -name RELAY.md -type f | head -1)"
+printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Changes requested\nBasis: test reviewer refusal\n' "$RELAY_AGENT" >> "$relay"
+exit 0
+EOF
+chmod +x "$JOG_AGENTS/codex" "$JOG_AGENTS/agy" "$JOG_AGENTS/agy-refuse"
+
+queue_status() {  # <root> → "status|reason|attempt_count"
+  sqlite3 "$1/releases.db" "SELECT status || '|' || COALESCE(failure_reason,'') || '|' || COALESCE(attempt_count,0) FROM jog_queue WHERE gh_number = 901;"
+}
+
+jog_run_root() {  # <extra-args…> — jog run against the ROOT fixture's own releases_app
+  ( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" \
+    python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run "$@" )
+}
+
+# G1-G3: reviewer validation fails BEFORE lease mutation (row untouched)
+cleanup_root_fixture
+rm -rf "$FR/.tick/jog"
+OUT_G1="$(jog_run_root --executor marathon --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && pass "G1 marathon executor without --reviewer refuses (exit 2)" || fail "G1 exit=$rc: $OUT_G1"
+grep -q "required with --executor marathon" <<<"$OUT_G1" && pass "G1 refusal names the reviewer policy" || fail "G1 refusal message drifted: $OUT_G1"
+has "$(queue_status "$FR")" "pending||0" && pass "G1 row untouched (pending, attempt_count 0)" || fail "G1 row mutated: $(queue_status "$FR")"
+OUT_G2="$(jog_run_root --executor marathon --builder codex --reviewer codex 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$(queue_status "$FR")" "pending||0" \
+  && pass "G2 reviewer == builder refused before lease" || fail "G2 exit=$rc row=$(queue_status "$FR")"
+OUT_G3="$(AGY_BIN="$WORK/no-such-agy-bin" jog_run_root --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$(queue_status "$FR")" "pending||0" \
+  && pass "G3 unavailable reviewer binary refused before lease" || fail "G3 exit=$rc row=$(queue_status "$FR")"
+
+# G4: full happy path — Preflight → Marathon (real relay-drive, isolated) → receipt → projection
+cleanup_root_fixture
+git -C "$FR" checkout -q -b development
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+G4_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
+  env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run \
+    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "G4 marathon executor queue run exits 0" || fail "G4 queue run exit=$rc: $G4_OUT"
+has "$(queue_status "$FR")" "parked|awaiting-landing (PR #42" \
+  && pass "G4 row parked awaiting-landing with receipt PR identity" || fail "G4 row: $(queue_status "$FR")"
+GSTATE="$FR/.tick/jog/$GID/state.json"
+[ -f "$GSTATE" ] && pass "G4 execution ledger exists under .tick/jog/<gid>" || fail "G4 no ledger at $GSTATE"
+jassert "$GSTATE" 'len(d["executions"])==1 and d["executions"][0]["status"]=="projected-parked" and d["executions"][0]["outcome"]=="approved"' "G4 ledger records one approved, projected execution"
+GRES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$GSTATE")"
+jassert "$GRES" 'd["outcome"]=="approved" and d["pr"]["number"]==42 and d["branch_redirect"]==True and d["head_branch"]=="marathon/gh280-jog-lane"' "G4 receipt approved, PR 42, redirected lane branch"
+grep -q 'module.exports = 2' "$FR/src/feature.js" \
+  && pass "G4 stub builder landed the artifact through the real chain" || fail "G4 artifact not built"
+
+# G5: controlled failure — reviewer refuses every round → escalated receipt → row failed, queue stops
+cleanup_root_fixture
+python3 "$FR/utils/py/releases_app.py" --root "$FR" jog retry 901 >/dev/null 2>&1
+G5_OUT="$(env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane-5" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy-refuse" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run \
+    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+QS="$(queue_status "$FR")"
+case "$QS" in
+  failed\|marathon\ escalated:*) pass "G5 refusing reviewer → row failed with marathon escalation" ;;
+  *) fail "G5 unexpected row state: $QS" ;;
+esac
+G5_RES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$GSTATE" 2>/dev/null)"
+[ -n "$G5_RES" ] && jassert "$G5_RES" 'd["outcome"]=="escalated"' "G5 receipt outcome escalated"
+
+# G6: cold start after dispatch with NO result → parked, never a silent refire
+cleanup_root_fixture
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+mkdir -p "$FR/.tick/jog/$GID"
+cat > "$FR/.tick/jog/$GID/state.json" <<JSEOF
+{"schema": "jog/execution-state@1", "gid": "$GID", "gh_number": 901,
+ "executions": [{"execution_id": "gh901-exec1", "mode": "run", "started_at": "2026-08-28T00:00:00Z",
+                 "status": "dispatched", "packet_dir": "$FR/.tick/jog/$GID/gh901-exec1/preflight",
+                 "result_path": "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json"}]}
+JSEOF
+sqlite3 "$FR/releases.db" "UPDATE jog_queue SET status = 'running', lease_pid = 999999 WHERE gh_number = 901;"
+G6_OUT="$(jog_run_root --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+QS="$(queue_status "$FR")"
+case "$QS" in
+  parked\|cold-start:*) pass "G6 cold-start without result parks (never refires)" ;;
+  *) fail "G6 unexpected row state: $QS" ;;
+esac
+jassert "$GSTATE" 'len(d["executions"])==1' "G6 no second execution fired on cold start"
+
+# G7: cold start with a valid terminal result → idempotent re-projection, no new turn
+# (state is re-fabricated as dispatched: G6 legitimately moved it to cold-start-paused)
+mkdir -p "$FR/.tick/jog/$GID/gh901-exec1/preflight"
+cat > "$FR/.tick/jog/$GID/state.json" <<JSEOF
+{"schema": "jog/execution-state@1", "gid": "$GID", "gh_number": 901,
+ "executions": [{"execution_id": "gh901-exec1", "mode": "run", "started_at": "2026-08-28T00:00:00Z",
+                 "status": "dispatched", "packet_dir": "$FR/.tick/jog/$GID/gh901-exec1/preflight",
+                 "result_path": "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json"}]}
+JSEOF
+cat > "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json" <<JREOF
+{"schema": "marathon-drive/result@1", "execution_id": "gh901-exec1", "generated_at": "2026-08-28T00:00:01Z",
+ "outcome": "approved", "reason": "approved, gate passed", "exit_code": 0, "approval_preserved": false,
+ "issue": "901", "phase": "p", "lane": "p", "token": "T", "attempt": {"count": 1, "max": 2},
+ "builder": "codex", "reviewer": "agy",
+ "target_repo": {"path": "$FR", "origin_url": null},
+ "base_branch": "development", "head_branch": "marathon/x", "head_sha": "deadbeef",
+ "branch_redirect": true,
+ "gate": {"cmd": "true", "result": "green", "exit": 0, "receipt_path": null},
+ "acceptance": {"checked": false, "unmet_count": 0},
+ "pr": {"number": 7, "url": "https://example.invalid/x/pr/7", "state": "OPEN"},
+ "pr_note": null, "relay_status": "Approved",
+ "timestamps": {"started_at": "2026-08-28T00:00:00Z", "finished_at": "2026-08-28T00:00:01Z"}}
+JREOF
+sqlite3 "$FR/releases.db" "UPDATE jog_queue SET status = 'running', lease_pid = 999999 WHERE gh_number = 901;"
+G7_OUT="$(jog_run_root --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+has "$(queue_status "$FR")" "parked|awaiting-landing (PR #7" \
+  && pass "G7 cold-start re-projects the terminal result idempotently" || fail "G7 row: $(queue_status "$FR")"
+jassert "$GSTATE" 'len(d["executions"])==1' "G7 re-projection fired no new execution"
+
+# G8: preflight refusal parks the row with the preflight exit
+cleanup_root_fixture
+rm -f "$FR/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "remove capture doc" >/dev/null 2>&1
+G8_OUT="$(jog_run_root --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+QS="$(queue_status "$FR")"
+case "$QS" in
+  parked\|preflight-refused\ \(exit\ 6\)*) pass "G8 preflight refusal parks with exit code" ;;
+  *) fail "G8 unexpected row state: $QS" ;;
+esac
+
+# ═══ H. Phase 2 vendored: jog run --executor marathon from a foreign cwd ══════════════════════
+H_CWD="$WORK/foreign-cwd"; mkdir -p "$H_CWD"
+GIDV="$(sqlite3 "$FV/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+H_OUT="$( cd "$H_CWD" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FV/.xyz/utils/py/releases_app.py" --root "$FV" jog run \
+    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "H1 vendored marathon queue run exits 0 from a foreign cwd" || fail "H1 exit=$rc: $H_OUT"
+QS="$(queue_status "$FV")"
+case "$QS" in
+  parked\|awaiting-landing\ \(no\ PR\ yet*) pass "H2 vendored row parked awaiting-landing (green, no PR)" ;;
+  *) fail "H2 unexpected vendored row state: $QS" ;;
+esac
+HSTATE="$FV/.tick/jog/$GIDV/state.json"
+[ -f "$HSTATE" ] && pass "H3 vendored execution ledger lives in the consumer repo" || fail "H3 no ledger at $HSTATE"
+HRES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$HSTATE" 2>/dev/null)"
+[ -n "$HRES" ] && [ -f "$HRES" ] && jassert "$HRES" 'd["outcome"]=="approved" and os.path.realpath(d["target_repo"]["path"])==os.path.realpath("'"$FV"'")' "H4 vendored receipt approved, target is the consumer repo"
+[ ! -d "$H_CWD/marathon-system" ] && [ ! -d "$H_CWD/relay-system" ] && [ ! -d "$H_CWD/.tick" ] \
+  && pass "H5 foreign cwd stayed clean (no root-relative lookups — GH-279 #2)" \
+  || fail "H5 foreign cwd grew harness output dirs"
+
+# ═══ I. legacy relay default unchanged ════════════════════════════════════════════════════════
+cleanup_root_fixture
+python3 "$FR/utils/py/releases_app.py" --root "$FR" jog add 902 >/dev/null 2>&1
+I_OUT="$(jog_run_root --simulate --auto-merge --max-tasks 1 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$I_OUT" "simulated single-phase drive on GH-901" \
+  && pass "I1 default executor (relay) simulate path unchanged" || fail "I1 legacy simulate path drifted: $(printf '%s' "$I_OUT" | head -3)"
+sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;" | grep -q completed \
+  && pass "I1b simulated auto-merge completes the processed row" || fail "I1b row 901 not completed"
+[ ! -d "$FR/.tick/jog" ] && pass "I2 legacy run leaves no marathon execution state" || fail "I2 marathon state created without --executor marathon"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

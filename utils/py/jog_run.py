@@ -145,6 +145,273 @@ def load_marathon_result(path):
     return obj
 
 
+# ── GH-280 Phase 2: the opt-in Marathon executor ───────────────────────────────────────────────
+# `releases jog run --executor marathon --reviewer <agent>` delegates each leased item's
+# execution to Marathon's reviewed one-phase driver through the Phase 1 contracts. Jog still
+# owns the queue, lease, and driver lock (the outer serial boundary); it never seeds Tick,
+# renders a relay, picks a branch, interprets agent output, runs a gate, or discovers a PR —
+# those belong to Marathon, and the receipt is the only outcome Jog reads.
+#
+# Execution state lives under <root>/.tick/jog/<queue-global-id>/ (gitignored by every harness
+# layout, so it can never trip the packet's own --require-clean): state.json is an append-only
+# execution ledger for cold-start recovery, and <exec-id>/ holds that execution's packet and
+# Marathon result receipt. Legacy `relay` remains the default executor until Phase 5.
+
+JOG_EXECUTION_STATE_SCHEMA = "jog/execution-state@1"
+
+# Marathon's reviewed-phase contract (marathon_drive.py): reviewer ids must start with one of
+# these. Jog mirrors the rule so an invalid reviewer fails before ANY lease mutation.
+_MARATHON_REVIEWER_PREFIXES = ("codex", "gemini", "agy")
+
+
+def harness_home():
+    """Dir containing relay-automation/ + utils/py/: repo root, or <repo>/.xyz when vendored.
+
+    Derived from THIS file's location (utils/py/jog_run.py), never from the caller's cwd or an
+    assumed repository root — the exact root-relative-path defect (GH-279 #2) that silently
+    skipped preflight on every vendored install.
+    """
+    return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+
+
+def validate_marathon_executor(args):
+    """Fail-closed executor validation. Returns an error string or None; called before any
+    lease mutation, lock acquisition, or dispatch (GH-280 reviewer policy: explicit only)."""
+    reviewer = getattr(args, "reviewer", None)
+    if not reviewer:
+        return ("--reviewer <agent> is required with --executor marathon — Jog does not "
+                "select a reviewer by default (GH-280: no silent cost-bearing or same-agent route)")
+    if reviewer == args.builder:
+        return f"--reviewer must differ from --builder (both are '{reviewer}')"
+    if not reviewer.startswith(_MARATHON_REVIEWER_PREFIXES):
+        return (f"--reviewer '{reviewer}' must start with one of "
+                f"{'/'.join(_MARATHON_REVIEWER_PREFIXES)} (marathon's reviewed-phase contract)")
+    if reviewer.startswith("agy"):
+        bin_name = os.environ.get("AGY_BIN", "agy")
+    elif reviewer.startswith("codex"):
+        bin_name = os.environ.get("CODEX_BIN", "codex")
+    else:  # gemini*
+        bin_name = os.environ.get("GEMINI_BIN", "gemini")
+    if not (shutil.which(bin_name) or (os.path.isfile(bin_name) and os.access(bin_name, os.X_OK))):
+        return f"reviewer binary '{bin_name}' not found on PATH (--reviewer {reviewer})"
+    return None
+
+
+def _jog_state_paths(root, gid):
+    base = os.path.join(root, ".tick", "jog", gid)
+    return base, os.path.join(base, "state.json")
+
+
+def jog_load_state(root, gid):
+    """Load the append-only execution ledger for a queue row; a fresh one if absent."""
+    _base, path = _jog_state_paths(root, gid)
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                state = json.load(f)
+            if isinstance(state, dict) and state.get("schema") == JOG_EXECUTION_STATE_SCHEMA \
+                    and isinstance(state.get("executions"), list):
+                return state
+        except (OSError, ValueError):
+            pass
+    return {"schema": JOG_EXECUTION_STATE_SCHEMA, "gid": gid, "executions": []}
+
+
+def jog_save_state(root, gid, state):
+    _base, path = _jog_state_paths(root, gid)
+    os.makedirs(_base, exist_ok=True)
+    tmp = path + f".tmp.{os.getpid()}"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2)
+        f.write("\n")
+    os.replace(tmp, path)
+
+
+def jog_current_gid(root, gh_num):
+    """The queue row's global_id (its durable identity across retries)."""
+    conn = sqlite3.connect(os.path.join(root, "releases.db"))
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT global_id FROM jog_queue WHERE gh_number = ? "
+                           "ORDER BY id DESC LIMIT 1", (gh_num,)).fetchone()
+        return row["global_id"] if row else None
+    finally:
+        conn.close()
+
+
+def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False):
+    """Project a validated Marathon result receipt into the queue via perform_write.
+
+    Marathon owns the outcome; this only records it. Returns the queue action taken
+    ("completed", "parked", "failed") plus a human reason. Never guesses a branch or PR:
+    landing identity comes from the receipt, and a green phase without a PR is parked with
+    the receipt's branch fields — it is never a global failure.
+    """
+    outcome = receipt.get("outcome")
+    reason = receipt.get("reason")
+    if outcome == "approved":
+        pr = receipt.get("pr") or {}
+        pr_number = pr.get("number")
+        if pr_number:
+            note = f"awaiting-landing (PR #{pr_number}: {pr.get('url') or 'url unavailable'})"
+            if auto_merge:
+                merge = subprocess.run(
+                    ["gh", "pr", "merge", str(pr_number), "--merge", "--auto=false"],
+                    cwd=root, capture_output=True, text=True)
+                if merge.returncode == 0:
+                    return "completed", f"marathon approved; PR #{pr_number} merged"
+                return "parked", f"{note} — auto-merge failed: {(merge.stderr or '').strip()}"
+            return "parked", note
+        head = receipt.get("head_branch")
+        base = receipt.get("base_branch")
+        pr_note = receipt.get("pr_note")
+        bits = [f"head={head or 'unknown'}", f"base={base or 'unknown'}"]
+        if pr_note:
+            bits.append(pr_note)
+        return "parked", "awaiting-landing (no PR yet — open one from the receipt's branches: " + \
+            "; ".join(bits) + ")"
+    label = f"marathon {outcome}: {reason} (exit {receipt.get('exit_code')})"
+    return ("failed", label) if outcome != "parked" else ("parked", label)
+
+
+def jog_reconcile_cold_start(root, gh_nums):
+    """GH-280 cold start for the marathon executor: for each orphan-reconciled row that has a
+    dispatched Marathon execution on record, inspect the durable result BEFORE the queue can
+    lease and refire. A valid terminal result is re-projected idempotently (no turn spent);
+    a dispatched execution with no valid result parks the row — never a silent refire."""
+    for gh_num in gh_nums:
+        gid = jog_current_gid(root, gh_num)
+        if not gid:
+            continue
+        state = jog_load_state(root, gid)
+        executions = state.get("executions") or []
+        if not executions:
+            continue
+        latest = executions[-1]
+        if latest.get("status") != "dispatched":
+            continue
+        receipt = None
+        result_path = latest.get("result_path")
+        if result_path and os.path.isfile(result_path):
+            try:
+                receipt = load_marathon_result(result_path)
+            except ContractError:
+                receipt = None
+        if receipt is not None:
+            action, reason = jog_project_marathon_outcome(root, gh_num, receipt)
+            latest["status"] = f"projected-{action}"
+            latest["projected_reason"] = reason
+            jog_save_state(root, gid, state)
+            jog_set_status(root, gh_num, action, failure_reason=reason)
+            print(f"jog: cold start GH-{gh_num}: re-projected terminal Marathon result "
+                  f"({action}) — no new execution fired")
+        else:
+            latest["status"] = "cold-start-paused"
+            jog_save_state(root, gid, state)
+            jog_set_status(root, gh_num, "parked",
+                           failure_reason="cold-start: dispatched Marathon execution has no valid "
+                                          "result receipt — inspect manually before any refire")
+            print(f"jog: cold start GH-{gh_num}: dispatched execution {latest.get('execution_id')} "
+                  f"has no valid result — parked; never silently refire")
+
+
+def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False):
+    """Execute one leased queue item through Preflight → Marathon's one-phase driver.
+
+    Returns (queue_status, failure_reason): one of ("completed", reason) / ("parked", reason) /
+    ("failed", reason) for jog_set_status. All durable state lands in the execution ledger
+    under .tick/jog/<gid>/ so a restart can reconcile without a second dispatch.
+    """
+    home = harness_home()
+    preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
+        return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
+                        f"(vendored installs resolve .xyz via the harness home — GH-279 #2)"
+
+    state = jog_load_state(root, gid)
+    exec_id = f"gh{gh_num}-exec{len(state['executions']) + 1}"
+    exec_dir = os.path.join(_jog_state_paths(root, gid)[0], exec_id)
+    packet_dir = os.path.join(exec_dir, "preflight")
+    record = {
+        "execution_id": exec_id,
+        "mode": "run",
+        "started_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "status": "dispatched",
+        "packet_dir": packet_dir,
+        "result_path": None,
+    }
+    state["executions"].append(record)
+    state["gh_number"] = gh_num
+    jog_save_state(root, gid, state)
+    print(f"jog: marathon execution {exec_id} for GH-{gh_num} (packet: {packet_dir})")
+
+    pf = subprocess.run(
+        [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
+        cwd=root, capture_output=True, text=True)
+    if pf.returncode == 4:
+        record["status"] = "completed-preflight-stale"
+        jog_save_state(root, gid, state)
+        return "completed", "preflight: already-landed"
+    if pf.returncode != 0:
+        record["status"] = "preflight-refused"
+        jog_save_state(root, gid, state)
+        tail = (pf.stderr or pf.stdout or "").strip().splitlines()
+        detail = tail[-1][:200] if tail else ""
+        return "parked", f"preflight-refused (exit {pf.returncode}){': ' + detail if detail else ''}"
+
+    invocation_path = os.path.join(packet_dir, "marathon-invocation.json")
+    try:
+        invocation = load_marathon_invocation(invocation_path)
+    except ContractError as exc:
+        record["status"] = "invalid-invocation"
+        jog_save_state(root, gid, state)
+        return "parked", f"invalid marathon invocation artifact: {exc}"
+
+    argv = list(invocation["argv"])
+    for flag, value in (("--reviewer", reviewer), ("--builder", builder)):
+        if flag in argv:
+            argv[argv.index(flag) + 1] = value
+        else:
+            argv += [flag, value]
+    if "--require-clean" in argv:
+        # The packet suggests --require-clean for a pristine hand-off. Jog cannot provide one:
+        # acquiring the row lease legitimately rewrites the tracked releases.db/releases.sql
+        # (perform_write regenerates the dump) between lease and dispatch, so a supervisor
+        # drive would refuse on its own queue state every time. Marathon's dirty-workspace
+        # WARNING still fires (advisory); Jog's outer driver lock is the serial boundary.
+        argv.remove("--require-clean")
+    argv += ["--execution-id", exec_id]
+    record["result_path"] = invocation["result_path"]
+
+    env = dict(os.environ)
+    env.update(invocation["env"])
+    # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
+    # contending with its own supervisor on the same lock directory.
+    env["RELAY_DRIVER_LOCKED"] = "1"
+
+    print(f"jog: dispatching marathon-drive ({invocation['drive_command']})")
+    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
+    record["drive_exit"] = proc.returncode
+
+    try:
+        receipt = load_marathon_result(invocation["result_path"])
+    except ContractError as exc:
+        record["status"] = "no-valid-result"
+        jog_save_state(root, gid, state)
+        return "failed", (f"marathon-drive exited {proc.returncode} without a valid result "
+                          f"receipt: {exc}")
+    record["status"] = "terminal"
+    record["outcome"] = receipt["outcome"]
+    record["reason"] = receipt["reason"]
+    jog_save_state(root, gid, state)
+
+    action, reason = jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=auto_merge)
+    record["status"] = f"projected-{action}"
+    record["projected_reason"] = reason
+    jog_save_state(root, gid, state)
+    return action, reason
+
+
 class JogSupervisorLock:
     """Outer driver lock supervisor ensuring exclusive execution on the clone."""
 
@@ -536,10 +803,28 @@ def jog_run_main(args=None):
         parser.add_argument("--root", default=None, help="repository root path")
         parser.add_argument("--auto-merge", action="store_true", help="auto-merge passing PRs")
         parser.add_argument("--builder", default="agy", help="builder turn-taker (agy, codex, aider)")
+        parser.add_argument("--reviewer", default=None,
+                            help="reviewer agent — REQUIRED with --executor marathon "
+                                 "(no default is selected; must differ from --builder)")
+        parser.add_argument("--executor", choices=["relay", "marathon"], default="relay",
+                            help="per-task executor (GH-280). 'relay' is the legacy default; "
+                                 "'marathon' delegates to the reviewed one-phase driver via "
+                                 "the structured contracts")
         parser.add_argument("--max-tasks", type=int, default=None, help="max tasks to process")
         parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
         parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
         args = parser.parse_args()
+
+    executor = getattr(args, "executor", "relay") or "relay"
+    simulate = getattr(args, "simulate", False)
+
+    # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
+    # invalid configuration must not mutate queue state at all.
+    if executor == "marathon" and not simulate:
+        executor_error = validate_marathon_executor(args)
+        if executor_error:
+            print(f"jog: {executor_error}", file=sys.stderr)
+            sys.exit(2)
 
     root = os.path.abspath(getattr(args, "root", None) or os.getcwd())
     db_path = os.path.join(root, "releases.db")
@@ -593,6 +878,10 @@ def jog_run_main(args=None):
         reconciled = jog_reconcile_orphan_leases(root)
         if reconciled:
             print(f"jog: reconciled orphan lease(s) for: {', '.join('GH-%d' % n for n in reconciled)}")
+            if executor == "marathon" and not simulate:
+                # GH-280 cold start: a dispatched Marathon execution on a crashed row is
+                # reconciled from its durable result BEFORE the loop can lease and refire.
+                jog_reconcile_cold_start(root, reconciled)
 
         tasks_processed = 0
         while True:
@@ -640,6 +929,25 @@ def jog_run_main(args=None):
                     jog_set_status(root, gh_num, "parked", failure_reason=err)
                     continue
                 doc_path = promoted_path
+
+            # GH-280: the opt-in Marathon executor — Jog leases the row, delegates execution to
+            # the reviewed one-phase driver through the structured contracts, and projects the
+            # receipt's outcome. No Tick seeding, relay rendering, branch choice, gate, or PR
+            # discovery happens here; the legacy relay path below is untouched.
+            if executor == "marathon" and not simulate:
+                action, reason = run_marathon_phase(
+                    root, gh_num, row["global_id"],
+                    builder=args.builder, reviewer=args.reviewer,
+                    auto_merge=getattr(args, "auto_merge", False))
+                jog_set_status(root, gh_num, action, failure_reason=reason)
+                if action == "completed":
+                    tasks_processed += 1
+                    continue
+                if action == "failed":
+                    print("jog: stopping queue execution on task failure.")
+                else:
+                    print("jog: advancing halted at landing boundary.")
+                break
 
             # Swarm Preflight check
             preflight_py = os.path.join(root, "utils", "py", "swarm_preflight.py")

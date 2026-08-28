@@ -4633,6 +4633,11 @@ def build_parser():
     sp_jrun = jsub.add_parser("run", help="execute the serial jog queue loop")
     sp_jrun.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge passing PRs on same-seam tasks")
     sp_jrun.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
+    sp_jrun.add_argument("--reviewer", default=None,
+                         help="reviewer agent — REQUIRED with --executor marathon (GH-280); no default is selected")
+    sp_jrun.add_argument("--executor", choices=["relay", "marathon"], default="relay",
+                         help="per-task executor (GH-280): 'relay' legacy default; 'marathon' delegates to the "
+                              "reviewed one-phase driver via the structured contracts")
     sp_jrun.add_argument("--max-tasks", type=int, default=None, help="maximum tasks to process in this run")
     sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
     sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
