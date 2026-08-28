@@ -2,12 +2,14 @@
 gh_issue: 107
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/107
 title: "Connect /10days, /radar, and PARKED to the RELEASES DB (read-only seams, no new writers)"
-status: Active
+status: Complete
 created: 2026-08-28
 updated: 2026-08-28
 owner: noel
 doc_type: feedback
 release: 0.9.0 Cargo (dialed in per manifest_items)
+goal: >
+  Make /10days, /radar, and PARKED read the RELEASES DB through read-only seams instead of re-deriving ground truth by hand.
 fix_probes:
   - path_absent:test/gh107-timeline-json-seam.sh
 effort: 2
@@ -73,3 +75,12 @@ Integration stays **read-only consumption** — the CLI dual path remains the on
   "artifacts_new": [ "test/gh107-timeline-json-seam.sh" ]
 }
 ```
+
+## Lessons Learned (For Future Agents)
+- The jog → marathon executor path landed this lane end-to-end: one containment failure
+  (in-tree `scratch/` probe files, preserved in `.tick/orphan-backups/`), one fresh-token
+  retry-build, and two gate-only retries after intake-hygiene gate failures — no manual Tick,
+  branch, or PR surgery.
+- Intake hygiene is gate-load-bearing: a 2-WORKING doc without a `goal:` key or a roadmap
+  ledger row (with a regenerated dashboard) fails validate.sh's pdda suites; park the roadmap
+  row and regenerate ROADMAP-DASHBOARD.md BEFORE the first jog run, not after a red gate.
