@@ -1,24 +1,24 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
-<!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN builder=agy reviewer=codex round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
 ## Phase Brief
 
 # Marathon preflight packet — gh-107-releases-db-read-seams
 
-- Generated: 2026-08-28T02:04:43Z
+- Generated: 2026-08-28T02:22:20Z
 - Mode: gh-bundle
 - Sources: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/PROJECT/2-WORKING/GH-107-RELEASES-DB-READ-SEAMS.md 
-- Target root: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood (development @ aaa153f9e)
+- Target root: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood (marathon/gh-107-releases-db-read-seams-2026-08-27 @ bf2a7b6d2)
 - Suggested branch: `marathon/gh-107-releases-db-read-seams-2026-08-28` (branch_ready=false — carve-out: risk=1/independent zone, proceed on the current branch without asking)
 - Verdict: ready
 - Source issue state: OPEN.
 - Gate: `bash validate.sh`
 
 - Artifacts: utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh
-- Suggested turn budget: `turn_timeout_s: 1800` in this phase's MARATHON.yaml entry (≈ 1600 LOC across 16 artifact(s) — over the 900s default, so it needs headroom). marathon.sh reads that field and applies it to the phase; the value is a starting point, not a measurement.
+- Suggested turn budget: `turn_timeout_s: 1800` in this phase's MARATHON.yaml entry (≈ 1697 LOC across 16 artifact(s) — over the 900s default, so it needs headroom). marathon.sh reads that field and applies it to the phase; the value is a starting point, not a measurement.
 - Auto-included covering tests/helpers: test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
@@ -61,7 +61,7 @@ criterion here reads as a fragment, that is the source text, not a truncation.*
 
 ## Scope lock — builder, do exactly this and nothing else
 - Edit ONLY: `utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh` (plus the relay file). Any other edit is reverted and FAILS the turn.
-- Do NOT run ANY test or gate yourself — not `bash validate.sh`, and NOT `test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh` either. Those tests create temporary git fixtures/files inside your isolated worktree, which containment treats as off-lane edits and can discard your whole turn. Read them as specs instead; the harness runs the real gate after your turn, outside the worktree.
+- Do NOT run ANY test or gate yourself — not `bash validate.sh`, and NOT `test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh` either. Those tests create temporary git fixtures/files inside your isolated worktree, which containment treats as off-lane edits and can discard your whole turn. Read them as specs instead; the harness runs the real gate after your turn, outside the worktree.
 - Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
 
 ## Suggested marathon-drive.sh invocation
@@ -85,6 +85,11 @@ XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-107-releases-db-read-seams RELAY_WOR
 - `marathon-invocation.json` — the same invocation as structured data (`swarm-preflight/marathon-invocation@1`, GH-280); supervisors consume this, never the shell text
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh-107-releases-db-read-seams/ESCALATION.md`): `containment-violation (off-lane edit reverted by a turn-taker)`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (agy — BUILDER role)
@@ -93,9 +98,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh
 2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick claim MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN --agent agy --paths "marathon-system/gh-107-releases-db-read-seams/RELAY.md,utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh"
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick ping MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN --agent agy
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick release MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN --agent agy --to codex
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick claim MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 --agent agy --paths "marathon-system/gh-107-releases-db-read-seams/RELAY.md,utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick ping MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 --agent agy
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick release MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 --agent agy --to codex
 4. Edit ONLY these paths: marathon-system/gh-107-releases-db-read-seams/RELAY.md and utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to codex — codex, take your turn." A turn that ends without that line
@@ -108,8 +113,8 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/timeline/export_timeline.py,skills/10days/SKILL.md,skills/radar/SKILL.md,PARKED/2026-08-16-xyz-forge-2143.md,PARKED/2026-08-19-session-close.md,PARKED/README.md,test/gh107-timeline-json-seam.sh,test/gh103-timeline-exporter.sh,test/gh153-releases-sidebar-rollup.sh,test/gh168-wave-reconcile-scope.sh,test/gh197-vendor-tier-split.sh,test/gh202-wave-reconcile-issue-state.sh,test/gh232-wave-reconcile-multiphase.sh,test/wave-reconcile.sh,test/_setup.sh,test/lib/fixture-guard.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick release MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN --agent codex --to agy
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick done MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN --agent codex
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick release MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick done MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick
    Edit ONLY marathon-system/gh-107-releases-db-read-seams/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -123,63 +128,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · agy
-Added `--json` JSON validation test in `test/gh107-timeline-json-seam.sh`.
-Added ledger cross-check logic in `skills/10days/SKILL.md`.
-Updated `skills/radar/SKILL.md` to instruct reading from `releases.db` payload and `releases check` instead of parsing `RELEASES.md`.
-Added `check:` read-only verification commands to `PARKED/2026-08-16-xyz-forge-2143.md` and `PARKED/2026-08-19-session-close.md`.
-Added documentation for the `check:` convention in `PARKED/README.md`.
-
-### Round 1 · Reviewer · codex
-swept file: yes
-
-The exporter implementation satisfies the requested seam: `--json` builds the same payload as
-the normal `data.json` path, prints only that JSON, returns before output-directory creation, and
-retains the pre-existing drift path when the flag is absent. The 10days and radar instructions use
-read-only DB seams, and the parked-file convention is documented and applied.
-
-**Changes requested:** `test/gh107-timeline-json-seam.sh` initializes `fixture-guard.sh` but its
-EXIT cleanup performs `rm -rf "$WORK"` without `require_fixture "$WORK"` (and without even
-checking that it remains a directory). This violates the repository's use-boundary containment
-rule for destructive fixture operations. Guard the cleanup immediately before removal, following
-the shared helper's pattern; retain the test's current assertions.
-
-I swept every scoped artifact in full, including the pre-existing exporter, skills, parked docs,
-and all listed tests/helpers. Apart from the new test cleanup containment gap above, I found no
-additional in-scope defects.
-
-handing off to agy — agy, take your turn.
-
-### Round 2 · Builder · agy
-Guarded the test cleanup in `test/gh107-timeline-json-seam.sh` using a containment pattern. I used the lexical containment check pattern (`case "$WORK" in "${TMPDIR:-/tmp}"/*)`) rather than `require_fixture "$WORK"` directly, because `fixture-guard.sh` explicitly rejects the sandbox root itself (it strictly checks for descendants via `"$FIXTURE_GUARD_ROOT"/*`), which causes the test to fail on cleanup if called on `$WORK`. The cleanup now safely verifies the directory exists and is under TMPDIR before removal.
-
-handing off to codex — codex, take your turn.
-
-### Round 2 · Reviewer · codex
-swept file: yes
-
-**Verdict:** Changes requested
-
-1. `test/gh107-timeline-json-seam.sh` still has an unsafe cleanup. The replacement
-   `case "$WORK" in "${TMPDIR:-/tmp}"/*)` is only lexical: a value such as
-   `$TMPDIR/../outside` (or a symlink beneath TMPDIR) matches and `rm -rf` resolves outside the
-   sandbox. The documented GH-567 rule requires a non-empty, physically resolved descendant check
-   immediately before deletion. `require_fixture` rejecting the sandbox root is expected; add an
-   explicit resolved-TMPDIR containment guard for this root cleanup (and retain the directory
-   check), rather than substituting a lexical prefix check.
-2. The new test proves `--json` is parseable JSON and writes no output directory, but it never
-   proves the acceptance criterion that it is the *same projection* as ordinary `data.json`.
-   Generate the normal output in the fixture and compare parsed payloads (excluding only the
-   generation timestamp if separate invocations make that necessary). Keep the no-files assertion
-   for the `--json` invocation.
-
-I swept every scoped artifact in full, including the exporter, both skills, both parked records,
-the new GH-107 test, all listed covering tests, `_setup.sh`, and `fixture-guard.sh`. I found the
-two defects above in the new test; the swept pre-existing scoped files also contain legacy lexical
-or unguarded root-cleanup patterns, but those are outside this phase's requested JSON-seam change
-and should be hardened in their own containment lane.
-
-NEXT: agy (Builder)
-
-handing off to agy — agy, take your turn.
