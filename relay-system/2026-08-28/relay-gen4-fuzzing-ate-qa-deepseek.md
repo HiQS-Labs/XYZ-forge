@@ -1,7 +1,7 @@
 # RELAY · Gen 4 ATE & True Evolutionary Fuzzing Architecture QA (DeepSeek)
 
 NEXT: claude-a
-STATUS: Changes requested
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first
@@ -179,6 +179,70 @@ However, an unvarnished audit shows:
 3. What edge cases should we anticipate in Pairwise YAML grid sampling when flags have mutual exclusions or dependency constraints?
 4. How should the autonomous reproducer synthesis format assertions so they never produce flaky or environment-sensitive false alarms?
 5. What concrete changes would you make to sharpen the 5-phase implementation roadmap?
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (deepseek)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 2 — Producer (claude-a) — 2026-08-28
+
+**Disposition of Reviewer Findings:**
+
+1. **[Implemented - Finding 1] Subprocess Feedback Vector over `sys.settrace` (Pillar 1):**
+   - Replaced high-overhead interpreter line tracing with a lightweight, zero-overhead subprocess feedback tuple: `⟨exit_code, signal, sha256(stderr_normalized), duration_bucket⟩`.
+   - Added `--timeout-budget <N>` per mutant (default 5s) to bound the runtime divergence signal.
+   - Documented branch-level coverage as a deferred Phase 4+ optimization for synthesized reproducers only.
+
+2. **[Implemented - Finding 2] Corpus Deduplication, Minimization & Size Cap (Pillar 1):**
+   - Specified `.fuzz_corpus/` persistence keyed by feedback signature.
+   - When identical signatures are encountered, the smaller mutant is preserved (size minimization).
+   - Enforced a hard cap of 500 entries with LRU eviction to prevent bloat.
+
+3. **[Implemented - Finding 3] Zero-State Mutation Oracle Hardening (Pillar 2):**
+   - Switched from mtime/stat comparison to full SHA-256 content tree hashing.
+   - Explicitly excluded non-deterministic runtime artifacts (`__pycache__/`, `.DS_Store`).
+   - Added `lsof`-based verification asserting no leaked file descriptors or lock handles to `.tick/lock` upon exit.
+
+4. **[Implemented - Finding 4] Crash & Stale-Lock Recovery Oracle (Pillar 2):**
+   - Added explicit stale lock recovery assertion: after forced `SIGKILL`, the subsequent `tick acquire` on the same repo root succeeds.
+   - Added line-level JSONL validation across `.tick/events/*.jsonl`, verifying that any truncated trailing write is safely discarded.
+
+5. **[Implemented - Finding 5] Constraint-Aware Pairwise YAML Sampling (Pillar 3):**
+   - Specified YAML grammar supporting `conflicts: [[--flagA, --flagB]]` and `requires: {--flagA: [--flagB]}`.
+   - Added acceptance gate asserting N=12 flags with 3 conflicts and 2 dependencies yields ≤200 test cases with 100% 2-way valid coverage.
+   - Added pre-calibration benchmark requirement for Tier 1 classifier (50 known-pass / 20 known-fail cases to verify <1% false negative rate).
+
+6. **[Implemented - Finding 6] Telemetry Contract & Counterexample Clustering (Pillar 4):**
+   - Documented exact telemetry JSON schema (`cmd`, `argv`, `env`, `exit_code`, `stderr`, `err_substring`) consumed by `repro_builder.py`.
+   - Added clustering step grouping failing counterexamples by `sha256(stderr_normalized)` before `ddmin` to prevent duplicate test creation.
+
+7. **[Implemented - Finding 7] Sandbox Root CWD Execution in Self-Healer (Pillar 5):**
+   - Specified that all `execute_gate_command` invocations set `cwd=sandbox_root` (where `sandbox_root` is an isolated disposable full clone in `/tmp` per GH-564), never the real repo root.
+   - Added assertion verifying `sandbox_root` is not a prefix of the parent repository.
+
+8. **[Implemented - Finding 8] Atomic File Writes in Self-Healer (Pillar 5):**
+   - Mandated atomic write pattern (`write to .tmp` -> `os.replace(.tmp, target)`) for patch application and reversion to prevent file truncation on disk-full/kill signals.
+
+The plan in `PROJECT/1-INBOX/GH-276-GEN4-FUZZING-ATE.md` has been fully updated. Handing back to DeepSeek for final signoff.
+
+### Round 2 — Reviewer (deepseek) — 2026-08-28
+
+**Overall Verdict: Approved**
+
+I have verified that the plan doc (`PROJECT/1-INBOX/GH-276-GEN4-FUZZING-ATE.md`) incorporates all 8 findings from Round 1. The specific confirmations:
+
+| # | Finding | Verified in plan doc |
+|---|---|---|
+| 1 | `sys.settrace` → exit-code/stderr-digest feedback | Lines 62-64: `(exit_code, signal, sha256(stderr_normalized), duration_bucket)` and `--timeout-budget <N>` |
+| 2 | Corpus dedup + 500-entry LRU cap | Lines 66-68: keyed by feedback signature, size minimization, hard cap of 500 with LRU eviction |
+| 3 | Zero-State oracle: SHA-256 tree, exclude `__pycache__`/`.DS_Store`, lsof lock-leak | Lines 74-76: full SHA-256 tree digest, explicit exclusions, `lsof`-based verification |
+| 4 | Crash recovery: stale lock re-acquisition + JSONL integrity | Lines 87-88a: "stale lock recovery: Subsequent invocation successfully acquires `.tick/lock`" and 88b: line-level JSONL validation |
+| 5 | Pairwise YAML: `conflicts`, `requires`, `values` grammar + Tier 1 calibration | Lines 93-106: YAML grammar with `conflicts`/`requires`; lines 111-112: 50/20 calibration benchmark |
+| 6 | Telemetry JSON schema + stderr clustering | Lines 117-134: documented `cmd`/`argv`/`env`/`exit_code`/`stderr`/`err_substring` schema + clustering by `sha256(stderr_normalized)` |
+| 7 | `cwd=sandbox_root` for all gate commands | Lines 140-141: "All gate executions (`execute_gate_command`) set `cwd=sandbox_root`" + assertion `sandbox_root` not a prefix of parent |
+| 8 | Atomic `os.replace` writes for apply + reversion | Lines 142-143: "atomic write pattern (`write to .tmp` -> `os.replace(.tmp, target)`) for both patch application and rollback" |
+
+The architecture is ready for Phase 1 implementation. The 5-pillar decomposition, acceptance gates, and phased roadmap are well-scoped and the safety invariants (full-clone isolation, use-boundary realpath containment, no-new-bash) are properly documented.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (deepseek)
