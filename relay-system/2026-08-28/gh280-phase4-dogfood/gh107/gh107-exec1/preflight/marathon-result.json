@@ -1,0 +1,45 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh107-exec1",
+  "generated_at": "2026-08-28T02:20:04Z",
+  "outcome": "escalated",
+  "reason": "containment-violation (off-lane edit reverted by a turn-taker)",
+  "exit_code": 6,
+  "approval_preserved": false,
+  "issue": "107",
+  "phase": "gh-107-releases-db-read-seams",
+  "lane": "gh-107-releases-db-read-seams",
+  "token": "MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-107-releases-db-read-seams-2026-08-27",
+  "head_sha": "bf2a7b6d205bc7e9c28952bcf1b0c892c154dff9",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash validate.sh",
+    "result": "not-run",
+    "exit": null,
+    "receipt_path": null
+  },
+  "acceptance": null,
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Open",
+  "timestamps": {
+    "started_at": "2026-08-28T02:04:45Z",
+    "finished_at": "2026-08-28T02:20:04Z"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "orchestrator_owned": [],
+  "codex_lane": [
+    "relay-automation/xyz-vendor.sh",
+    "relay-automation/xyz-sync.sh",
+    "RELEASES-DB-FAQS.md",
+    "test/find-harness.sh",
+    "test/gh105-vendor-releases-addon.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh293-vendored-guard-drift.sh",
+    "test/gh312-vendor-preserves-state.sh",
+    "test/write-ops-log.sh",
+    "test/xyz-sync-check.sh",
+    "test/xyz-vendor.sh",
+    "test/baselines/GH-52-negative-control.md",
+    "test/_setup.sh"
+  ],
+  "agy_lane": [],
+  "effective_artifacts": [
+    "relay-automation/xyz-vendor.sh",
+    "relay-automation/xyz-sync.sh",
+    "RELEASES-DB-FAQS.md",
+    "test/find-harness.sh",
+    "test/gh105-vendor-releases-addon.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh293-vendored-guard-drift.sh",
+    "test/gh312-vendor-preserves-state.sh",
+    "test/write-ops-log.sh",
+    "test/xyz-sync-check.sh",
+    "test/xyz-vendor.sh",
+    "test/baselines/GH-52-negative-control.md",
+    "test/_setup.sh"
+  ],
+  "inferred_test_artifacts": [
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh293-vendored-guard-drift.sh",
+    "test/gh312-vendor-preserves-state.sh",
+    "test/write-ops-log.sh",
+    "test/xyz-sync-check.sh",
+    "test/xyz-vendor.sh",
+    "test/baselines/GH-52-negative-control.md"
+  ],
+  "inferred_test_helpers": [
+    "test/_setup.sh"
+  ],
+  "fs_touching_tests": [
+    "test/find-harness.sh",
+    "test/gh197-vendor-tier-split.sh",
+    "test/gh293-vendored-guard-drift.sh",
+    "test/gh312-vendor-preserves-state.sh",
+    "test/write-ops-log.sh",
+    "test/xyz-sync-check.sh",
+    "test/xyz-vendor.sh",
+    "test/_setup.sh"
+  ],
+  "agy_review_default": true,
+  "coupling_warning": null,
+  "parallelizable": true,
+  "single_lane_only": false
+}

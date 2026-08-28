@@ -1,0 +1,61 @@
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M134AW66PHWKKSH2304XK3R8",
+  "executions": [
+    {
+      "execution_id": "gh107-exec1",
+      "mode": "run",
+      "started_at": "2026-08-28T02:04:43Z",
+      "status": "projected-failed",
+      "packet_dir": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec1/preflight",
+      "result_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec1/preflight/marathon-result.json",
+      "drive_exit": 6,
+      "outcome": "escalated",
+      "reason": "containment-violation (off-lane edit reverted by a turn-taker)",
+      "projected_reason": "marathon escalated: containment-violation (off-lane edit reverted by a turn-taker) (exit 6)"
+    },
+    {
+      "execution_id": "gh107-exec2",
+      "mode": "retry-build",
+      "started_at": "2026-08-28T02:22:20Z",
+      "status": "projected-failed",
+      "packet_dir": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec2/preflight",
+      "result_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec2/preflight/marathon-result.json",
+      "drive_exit": 5,
+      "outcome": "escalated",
+      "reason": "pre-advance-failed",
+      "projected_reason": "marathon escalated: pre-advance-failed (exit 5)",
+      "gate_retries": [
+        {
+          "execution_id": "gh107-exec2",
+          "attempt": 1,
+          "status": "escalated",
+          "result_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec2/gate-retry-1/marathon-result.json"
+        },
+        {
+          "execution_id": "gh107-exec2",
+          "attempt": 2,
+          "status": "approved",
+          "result_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec2/gate-retry-2/marathon-result.json"
+        }
+      ],
+      "landing": {
+        "key": {
+          "repo": "https://github.com/HiQS-Labs/XYZ-forge.git",
+          "gid": "jog-01M134AW66PHWKKSH2304XK3R8",
+          "execution_id": "gh107-exec2",
+          "merged_sha": "4751d3ce4ad5e1fb2594145acb7fda84c345b3c3"
+        },
+        "pr_number": 283,
+        "pr_url": "https://github.com/HiQS-Labs/XYZ-forge/pull/283",
+        "merged_at": "2026-08-28T03:40:09Z",
+        "landed_via": "jog land",
+        "landed_at": "2026-08-28T03:41:00Z",
+        "reconciled": true,
+        "reconciled_at": "2026-08-28T03:41:12Z",
+        "manifest_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/.tick/jog/jog-01M134AW66PHWKKSH2304XK3R8/gh107-exec2/wave-manifest.json"
+      }
+    }
+  ],
+  "gh_number": 107
+}

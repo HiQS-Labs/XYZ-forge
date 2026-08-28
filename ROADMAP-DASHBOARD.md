@@ -45,7 +45,7 @@ Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -58,6 +58,7 @@ Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 | GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) | — | [GH-201-GEN35-FOLLOWUPS.md](PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md) · [#201](https://github.com/HiQS-Labs/XYZ-forge/issues/201) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Suite/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Suite/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Suite/XYZ-forge/issues/146) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
+| GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 
 ## Completed
 

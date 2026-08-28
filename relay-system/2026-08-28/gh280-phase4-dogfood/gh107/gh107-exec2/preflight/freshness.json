@@ -1,0 +1,22 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": true,
+  "stale_index_lock": false,
+  "stale_index_lock_path": null,
+  "stale_index_lock_warning": null,
+  "evaluated_ref": "development",
+  "evaluated_ref_commit": "aaa153f9ed5da351a88bd88b5ad96f93b0e0e07b",
+  "checkout_matches_ref": false,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "path_absent",
+      "path": "test/gh107-timeline-json-seam.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}

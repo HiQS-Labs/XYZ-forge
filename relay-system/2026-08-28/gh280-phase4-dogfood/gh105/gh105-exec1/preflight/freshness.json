@@ -1,0 +1,22 @@
+{
+  "fetch_ok": true,
+  "upstream": "origin/development",
+  "ahead": 0,
+  "behind": 0,
+  "dirty": true,
+  "stale_index_lock": false,
+  "stale_index_lock_path": null,
+  "stale_index_lock_warning": null,
+  "evaluated_ref": "development",
+  "evaluated_ref_commit": "4751d3ce4ad5e1fb2594145acb7fda84c345b3c3",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "path_absent",
+      "path": "test/gh105-vendor-releases-addon.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}

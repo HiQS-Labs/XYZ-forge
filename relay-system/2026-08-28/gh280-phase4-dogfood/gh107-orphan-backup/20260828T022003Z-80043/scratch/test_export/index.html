@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<!-- GH-103 spike: adapted from timeline-ui/ledger.html (© Neochrome, AGPL-3.0).
+     Renders from inline JSON when export_timeline.py bakes it in, else fetches ./data.json. -->
+<title>planning ledgers</title>
+<style>
+:root{
+  --bg:oklch(0.168 0.008 250);--card:oklch(0.212 0.009 250);--sunk:oklch(0.19 0.008 250);
+  --line:oklch(0.295 0.011 250);--line2:oklch(0.38 0.014 250);
+  --ink:oklch(0.925 0.006 250);--ink2:oklch(0.715 0.011 250);--ink3:oklch(0.565 0.012 250);
+  --red:oklch(0.685 0.185 25);--redbg:oklch(0.275 0.06 25);--amber:oklch(0.775 0.135 78);
+  --blue:oklch(0.715 0.115 252);--green:oklch(0.7 0.105 155);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:linear-gradient(to bottom,#000 0%,#000 50%,#020617 100%);color:var(--ink)}
+html{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;text-wrap:pretty;-webkit-text-size-adjust:100%}
+a{color:var(--blue);text-decoration:none;border-bottom:1px solid transparent}
+a:hover{border-bottom-color:currentColor}
+b{font-weight:700;color:var(--ink2)}
+.r,b.r{color:var(--red);font-weight:700}
+.wrap{padding:12px 14px 8px;max-width:1480px;margin:0 auto;width:100%;flex:none}
+/* header collapse (caret in the title row) */
+body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip,body.hdr-collapsed #fbar{display:none}
+#hdr-toggle{font-size:11px;line-height:1;padding:2px 8px;min-height:22px;cursor:pointer;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink2);
+  background:var(--card);border:1px solid var(--line2)}
+#hdr-toggle:hover{border-color:var(--blue);color:var(--blue)}
+.mono,.meta,.tiny{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tiny{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.meta{font-size:10px;color:var(--ink3);font-variant-numeric:tabular-nums}
+
+/* header */
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:9px}
+.ttl{font-size:15px;font-weight:650;letter-spacing:-0.01em}
+.banner{display:grid;grid-template-columns:5px minmax(0,1fr);border:1px solid var(--red);background:var(--redbg);margin-bottom:9px;break-inside:avoid}
+.banner .hz{background:repeating-linear-gradient(135deg,var(--red) 0 4px,transparent 4px 8px);background-color:var(--red)}
+.banner h3{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--red)}
+.banner p{margin:3px 0 0;color:var(--ink);max-width:96ch}
+.banner code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;background:var(--card);border:1px solid var(--red);padding:0 4px}
+.bar{display:flex;flex-wrap:wrap;border:1px solid var(--line);background:var(--sunk);margin-bottom:9px;break-inside:avoid}
+.bar>div{padding:5px 14px;border-right:1px solid var(--line)}
+.bar>div:last-child{border-right:0}
+.bar .v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;font-variant-numeric:tabular-nums}
+.strip{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:1px solid var(--line2);background:var(--card);margin-bottom:9px;break-inside:avoid}
+.strip>div{padding:6px 12px 7px}
+.strip>div:first-child{border-right:1px solid var(--line2)}
+.strip .h{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:1px}
+.strip .h .t{font-size:13px;font-weight:600}
+
+/* controls */
+#fbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);background:var(--sunk);padding:5px 8px;margin-bottom:9px}
+.fbtn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2);background:var(--card);border:1px solid var(--line2);padding:3px 9px;cursor:pointer;min-height:30px}
+.fbtn:hover{border-color:var(--blue);color:var(--blue)}
+.fbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+#q{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--ink);background:var(--card);border:1px solid var(--line2);padding:5px 8px;min-width:220px;flex:1;max-width:400px;min-height:30px}
+#q:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset}
+#qcount{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:var(--ink3);margin-left:auto}
+.nav{display:flex;gap:4px}
+.nav button{width:34px;min-height:30px;font-size:13px;line-height:1;padding:0}
+
+/* graph */
+.rail{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.rail::before,.rail::after{content:"";position:absolute;top:0;bottom:0;width:26px;pointer-events:none;z-index:30}
+.rail::before{left:0;background:linear-gradient(to right,var(--bg),transparent)}
+.rail::after{right:0;background:linear-gradient(to left,var(--bg),transparent)}
+#track{display:grid;grid-auto-flow:column;grid-auto-columns:352px;flex:1;min-height:0;
+  grid-template-rows:minmax(112px,1fr) auto minmax(292px,2.2fr);column-gap:26px;
+  overflow-x:auto;overflow-y:hidden;padding:2px 14px 14px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;scrollbar-width:thin;cursor:grab}
+#track.drag{cursor:grabbing;scroll-snap-type:none;user-select:none;-webkit-user-select:none}
+#track::-webkit-scrollbar{height:9px}
+#track::-webkit-scrollbar-thumb{background:var(--line2)}
+.col{display:grid;grid-template-rows:subgrid;grid-row:1/4;scroll-snap-align:start;scroll-margin-left:14px;min-width:0}
+.lane{position:relative;padding-left:22px;display:grid;gap:3px;align-content:start;min-height:0;height:100%;align-self:stretch;overflow-y:hidden;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+/* bottom-anchor via auto margin, not align-content:end — end-alignment puts overflow
+   above the scroll origin where it is unreachable; the auto margin collapses to 0 on
+   overflow so the lane scrolls normally from the top */
+.lane-t{display:flex;flex-direction:column}
+.lane-t > *{flex-shrink:0}
+.lane-t > :first-child{margin-top:auto}
+.lane-b{padding-top:10px}
+.lane::before{content:"";position:absolute;left:8px;border-left:1px solid var(--line2)}
+.lane-t::before{top:11px;bottom:0}
+.lane-b::before{top:0;bottom:11px}
+.lane::after{content:"";position:absolute;left:5px;width:7px;height:7px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+.lane-t::after{bottom:1px;transform:rotate(45deg)}
+.lane-b::after{top:1px;transform:rotate(-135deg)}
+.lc,.stub,.mar{position:relative}
+.lc::before,.stub::before,.mar::before{content:"";position:absolute;left:-14px;top:10px;width:14px;border-top:1px solid var(--line2)}
+.lc{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--line2);padding:4px 8px 5px;transition:border-color .12s ease}
+.lc:hover{border-color:var(--line2);border-left-color:var(--blue)}
+.lc.lead{border-color:var(--line2);border-left-color:var(--ink)}
+.lc[data-sec="done"]{opacity:.55}
+.lc[data-sec="done"] .pills{display:none}
+.lc[data-sec="done"] .lt{font-weight:500}
+.lc[data-sec="done"]:hover{opacity:1}
+.lc[data-sec="adhoc"]{border-left-color:var(--amber)}
+.lc[data-sec="deferred"]{border-style:dashed;opacity:.7}
+.lh{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
+.lt{font-size:12px;font-weight:600;min-width:0}
+.iid{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:var(--ink3)}
+.mk{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:var(--ink3)}
+.m-wip{color:var(--blue)}.m-done{color:var(--green)}.m-paused{color:var(--amber)}
+.ovr{color:var(--ink);font-weight:700}
+.ovr[data-up]{color:var(--red)}
+.rk{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;font-weight:700;background:var(--ink);color:var(--card);padding:0 4px;line-height:1.6}
+.stub{border:1px dashed var(--line);padding:4px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.04em;color:var(--ink3)}
+.mar{border:1px dashed var(--line2);background:var(--sunk);padding:4px 5px 5px;display:grid;gap:3px}
+.mar .lc::before{display:none}
+.mar .lc{border-left-width:2px}
+.mar[data-state="done"]{opacity:.55}
+.mar[data-state="done"]:hover{opacity:1}
+.mh{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;padding:0 2px 1px}
+.mtag{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--card);background:var(--ink2);padding:0 4px;line-height:1.7}
+.mar[data-state="run"] .mtag{background:var(--blue)}
+.mt{font-size:11px;font-weight:650}
+.mmeta{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;color:var(--ink3);margin-left:auto}
+.ph{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;color:var(--ink3);border:1px solid var(--line2);padding:0 3px;line-height:1.6}
+.pills{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.pill{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.05em;line-height:1.7;padding:0 5px;border:1px solid var(--line);border-radius:8px;color:var(--ink2);background:var(--sunk);cursor:pointer}
+.pill:hover{border-color:var(--blue);color:var(--blue)}
+.pill[data-hot]{color:var(--red);border-color:var(--red)}
+
+/* trunk */
+.tr{position:relative;display:flex;align-items:center;padding:22px 0 14px}
+.tr::before{content:"";position:absolute;left:-30px;right:-30px;top:50%;margin-top:-1px;border-top:2px solid var(--line2);z-index:0}
+.col:first-child .tr::before{left:50%}
+.col:last-child .tr::before{right:50%}
+.node{position:relative;z-index:1;width:100%;background:var(--card);border:1px solid var(--line2);border-left:3px solid var(--line2);padding:7px 10px 8px}
+.node::before{content:"";position:absolute;left:-8px;top:50%;width:11px;height:11px;margin-top:-5.5px;border-radius:50%;background:var(--line2);box-shadow:0 0 0 3px var(--bg)}
+.node.shipped{opacity:.58}
+.node.shipped:hover{opacity:1}
+.node.shipped::before{background:var(--bg);border:2px solid var(--line2)}
+.node.draft{border-style:dashed;border-left-style:solid}
+.node.now{border-color:var(--blue);border-left-color:var(--blue);box-shadow:0 1px 0 var(--line)}
+.node.now::before{background:var(--blue)}
+.node.od{border-color:var(--red);border-left-color:var(--red);box-shadow:0 0 0 1px var(--red) inset}
+.node.od::before{background:var(--red);width:15px;height:15px;margin-top:-7.5px;left:-10px}
+.nh{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.cn{font-size:18px;font-weight:700;letter-spacing:-0.015em}
+.node.od .cn{color:var(--red);font-size:20px}
+.node.shipped .cn{font-size:15px;font-weight:650}
+.ver{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--ink2)}
+.badge{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.11em;text-transform:uppercase;padding:0 5px;margin-left:auto;white-space:nowrap}
+.badge.shipped{color:var(--ink2);border:1px solid var(--line2)}
+.badge.active{color:var(--blue);border:1px solid var(--blue);font-weight:700}
+.badge.draft{color:var(--ink3);border:1px dashed var(--line2)}
+.badge.od{color:var(--card);background:var(--red);font-weight:700;font-size:10px;padding:1px 6px}
+.node .meta{font-size:11px;color:var(--ink2);margin-top:2px}
+.node .base{white-space:nowrap}
+/* ---- leaderboard view: same page, same chrome, one different body ---- */
+/* #fbar carries search + focus + prev/next, all wired by initInteractions(), which the leaderboard
+   view never calls — leaving an inert search box that looks broken (aider/qwen3.8-max QA r1). Hide
+   it rather than wire a second interaction model for a table that is already sorted. */
+body[data-view="leaderboard"] #fbar,
+body[data-view="leaderboard"] #strip,body[data-view="leaderboard"] .rail::before,
+body[data-view="leaderboard"] .rail::after,body[data-view="leaderboard"] .scrim,
+body[data-view="leaderboard"] .nav{display:none}
+body[data-view="leaderboard"] #track{display:block;overflow:auto;padding:10px 14px}
+.lb{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.lb th{text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--ink3);border-bottom:1px solid var(--line);padding:4px 8px;position:sticky;top:0;
+  background:var(--bg)}
+.lb td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.lb td.n,.lb th.n{text-align:right;white-space:nowrap}
+.lb .sc{font-weight:700;color:var(--ink)}
+.lb tr[data-ovr] .sc{color:var(--red)}
+.lb .empty{padding:16px;color:var(--ink3)}
+.blurb{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.node:hover .blurb,.node:focus-visible .blurb,.node:focus-within .blurb{-webkit-line-clamp:99}
+.exit{margin:5px 0 0;font-size:11.5px;line-height:1.4;color:var(--ink2);border-top:1px dotted var(--line2);padding-top:4px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.node:hover .exit,.node:focus-visible .exit,.node:focus-within .exit{-webkit-line-clamp:99}
+.node.od .exit,.node.now .exit{-webkit-line-clamp:99}
+.node:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.exit.clip{cursor:pointer}
+
+/* focus + search */
+.scrim{position:absolute;left:0;right:0;background:#000;opacity:0;pointer-events:none;z-index:29}
+.rail[data-focus="rel"] #s-top,.rail[data-focus="rel"] #s-bot,.rail[data-focus="road"] #s-mid{opacity:.8}
+#track[data-focus="rel"] .lane a,#track[data-focus="rel"] .lane button,
+#track[data-focus="road"] .tr a{pointer-events:none}
+article[hidden]{display:none}
+.foot{flex:none;border-top:1px solid var(--line);margin:4px 14px 0;padding:6px 0 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:var(--ink3);display:flex;gap:14px;flex-wrap:wrap}
+
+/* ---- GH-153 spike: left sidebar navigation ----
+   Additive chrome shared by both baked views. Three states on <body data-sn=…>:
+   expanded (default ON, 232px), rail (icon strip, 46px), hidden (only the hamburger).
+   The page body is a flex column, so the sidebar is position:fixed and the shift is
+   padding-left — .wrap/.rail/.foot are untouched. */
+#sidenav-toggle{position:fixed;top:8px;left:8px;z-index:60;width:30px;min-height:26px;
+  font-size:13px;line-height:1;cursor:pointer;color:var(--ink2);background:var(--card);
+  border:1px solid var(--line2);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#sidenav-toggle:hover{border-color:var(--blue);color:var(--blue)}
+#sidenav{position:fixed;top:0;left:0;bottom:0;width:232px;z-index:55;display:flex;
+  flex-direction:column;gap:10px;background:var(--sunk);border-right:1px solid var(--line);
+  padding:38px 10px 10px;overflow-y:auto;overscroll-behavior:contain;
+  transition:transform .18s ease,width .18s ease}
+body{transition:padding-left .18s ease}
+body[data-sn="expanded"]{padding-left:232px}
+body[data-sn="rail"]{padding-left:46px}
+body[data-sn="hidden"]{padding-left:0}
+body[data-sn="hidden"] #sidenav{transform:translateX(-100%)}
+.sn-head{display:flex;align-items:center;gap:6px}
+#sn-project{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;color:var(--ink);background:var(--card);border:1px solid var(--line2);
+  padding:3px 4px;min-height:24px}
+#sn-project:focus{outline:none;border-color:var(--blue)}
+#sn-min{width:24px;min-height:24px;font-size:12px;line-height:1;cursor:pointer;color:var(--ink2);
+  background:var(--card);border:1px solid var(--line2)}
+#sn-min:hover{border-color:var(--blue);color:var(--blue)}
+.sn-sec{display:flex;flex-direction:column;gap:2px}
+.sn-sec>.tiny{margin-bottom:1px}
+.sn-item{display:flex;align-items:center;gap:7px;padding:3px 6px;font-size:12px;line-height:1.4;
+  color:var(--ink2);cursor:pointer;background:none;border:1px solid transparent;
+  font-family:inherit;text-align:left;text-decoration:none}
+a.sn-item{border-bottom:1px solid transparent}
+.sn-item:hover{color:var(--blue);border-color:var(--line2);background:var(--card)}
+.sn-item .sn-ico{width:14px;text-align:center;flex:none;color:var(--ink3)}
+.sn-ph{cursor:default;font-style:italic;opacity:.75;color:var(--ink3)}
+.sn-ph:hover{color:var(--ink3);border-color:transparent;background:none}
+.sn-cycle{gap:4px}
+.sn-kv{display:flex;justify-content:space-between;gap:8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;
+  color:var(--ink2);font-variant-numeric:tabular-nums}
+.sn-kv .k{color:var(--ink3)}
+.sn-note{font-size:10px;color:var(--ink3);line-height:1.4}
+.sn-foot{margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+/* rail state: labels, titles, panel and placeholders collapse away; icons stay */
+body[data-sn="rail"] #sidenav{width:46px;padding:38px 4px 8px}
+body[data-sn="rail"] .sn-label,body[data-sn="rail"] .sn-sec>.tiny,
+body[data-sn="rail"] .sn-cycle,body[data-sn="rail"] #sn-project,
+body[data-sn="rail"] .sn-coming{display:none}
+body[data-sn="rail"] .sn-item{justify-content:center;padding:4px 0}
+body[data-sn="rail"] .sn-head{flex-direction:column}
+/* leaderboard view hides the timeline-only focus section (mirrors the #fbar rule) */
+body[data-view="leaderboard"] .sn-focus{display:none}
+/* narrow screens: overlay instead of shifting an already-scarce column */
+@media (max-width:900px){
+  #sidenav{z-index:70;box-shadow:8px 0 24px rgba(0,0,0,.45)}
+  body[data-sn="expanded"],body[data-sn="rail"]{padding-left:0}
+}
+
+@media print{
+  :root{--bg:#fff;--card:#fff;--sunk:#fff;--line:#c8c8c8;--line2:#999;--ink:#000;--ink2:#333;--ink3:#555;--red:#8a0f0f;--amber:#6b4a00;--blue:#123a8a;--green:#14502e}
+  html,body{background:#fff}
+  #fbar,.rail::before,.rail::after,.scrim,#hdr-toggle{display:none}
+  #sidenav,#sidenav-toggle{display:none}
+  body[data-sn="expanded"],body[data-sn="rail"],body[data-sn="hidden"]{padding-left:0}
+  body{display:block;min-height:0}
+  body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip{display:grid}
+  #track{display:block;overflow:visible;padding:0;height:auto;grid-template-rows:auto auto auto}
+  .lane{height:auto!important;overflow:visible!important;filter:none!important}
+  .tr{filter:none!important}
+  .lc[data-sec="done"] .pills{display:flex}
+  .col{display:block;break-inside:avoid;border-bottom:1px solid #c8c8c8;padding-bottom:5px;margin-bottom:5px}
+  .lane{padding-left:16px}.lane-t{padding-bottom:3px}.lane-b{padding-top:3px}
+  .tr{padding:3px 0}.tr::before{display:none}.node{border-left-width:3px}
+  .node.shipped,.lc[data-sec="done"]{opacity:.85}
+  .mar[data-state="done"]{opacity:1}
+  .exit{-webkit-line-clamp:99}
+  article[hidden]{display:block!important}
+  @page{margin:9mm}
+}
+</style>
+</head>
+<body data-sn="expanded">
+<!-- GH-153 spike: left sidebar navigation. Default ON; the hamburger (#sidenav-toggle) slides
+     the whole nav out, the chevron (#sn-min) collapses it to an icon rail (state persists via
+     localStorage). Items with no real destination yet are intentionally NON-LINK placeholders
+     (.sn-ph) — do not fake hrefs. The project switcher and the "releases cycle" panel are
+     filled from the payload by window.__snCycle(data) in boot(). -->
+<button id="sidenav-toggle" type="button" aria-controls="sidenav" aria-expanded="true" title="toggle navigation">☰</button>
+<nav id="sidenav" aria-label="Dashboard navigation">
+  <div class="sn-head">
+    <select id="sn-project" aria-label="Project switcher"></select>
+    <button id="sn-min" type="button" title="minimize to icon rail">‹</button>
+  </div>
+  <div class="sn-sec">
+    <div class="tiny">views</div>
+    <a class="sn-item" id="sn-view-a" href="./LEADERBOARD.html"><span class="sn-ico">◫</span><span class="sn-label">leaderboard</span></a>
+    <a class="sn-item" id="sn-view-b" href="#track"><span class="sn-ico">▤</span><span class="sn-label">timeline</span></a>
+  </div>
+  <div class="sn-sec sn-focus">
+    <div class="tiny">focus</div>
+    <button class="sn-item" data-snfocus="all" type="button"><span class="sn-ico">∙</span><span class="sn-label">all</span></button>
+    <button class="sn-item" data-snfocus="rel" type="button"><span class="sn-ico">◧</span><span class="sn-label">releases</span></button>
+    <button class="sn-item" data-snfocus="road" type="button"><span class="sn-ico">⋱</span><span class="sn-label">roadmap</span></button>
+  </div>
+  <div class="sn-sec">
+    <div class="tiny">repo</div>
+    <a class="sn-item" id="sn-gh" target="_blank" rel="noopener"><span class="sn-ico">↗</span><span class="sn-label">github</span></a>
+    <a class="sn-item" id="sn-ms" target="_blank" rel="noopener"><span class="sn-ico">◈</span><span class="sn-label">milestones</span></a>
+  </div>
+  <div class="sn-sec sn-cycle">
+    <div class="tiny">releases cycle</div>
+    <div id="sn-cycle-panel"><div class="sn-note">loading…</div></div>
+  </div>
+  <div class="sn-sec sn-coming">
+    <div class="tiny">coming</div>
+    <span class="sn-item sn-ph" title="placeholder — no destination yet">insights</span>
+    <span class="sn-item sn-ph" title="placeholder — no destination yet">funnels</span>
+    <span class="sn-item sn-ph" title="placeholder — no destination yet">settings</span>
+  </div>
+  <div class="sn-foot meta" id="sn-foot"></div>
+</nav>
+<div class="wrap">
+
+  <div class="top">
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span class="ttl" id="pg-title">Planning ledgers</span>
+      <span class="mono" id="pg-subtitle" style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink3)"></span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <!-- The cross-link lives in .top, not #fbar: #fbar is inside the collapsible header, so a
+           link there vanishes the moment the operator collapses the chrome. -->
+      <a id="view-link" class="mono" href="./LEADERBOARD.html"
+         style="font-size:10px;letter-spacing:0.06em;text-transform:uppercase">leaderboard →</a>
+      <span class="mono" id="pg-generated" style="font-size:10px;color:var(--ink3)"></span>
+      <button id="hdr-toggle" type="button" aria-expanded="true" title="collapse header">▴</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden>
+    <div class="hz"></div>
+    <div style="padding:8px 12px 9px">
+      <h3 id="banner-h">⚠ stale — source file has unsynced edits</h3>
+      <p id="banner-body"></p>
+    </div>
+  </div>
+
+  <div class="bar" id="bar"></div>
+
+  <div class="strip" id="strip"></div>
+
+  <div id="fbar">
+    <span class="tiny">search &amp; filter</span>
+    <input id="q" type="search" placeholder="issue, title, label…  (esc to clear)" autocomplete="off" spellcheck="false">
+    <span class="tiny" style="margin-left:4px">focus</span>
+    <div style="display:flex;gap:4px">
+      <button class="fbtn" data-focus="all" aria-pressed="true" type="button">all</button>
+      <button class="fbtn" data-focus="rel" aria-pressed="false" type="button">releases</button>
+      <button class="fbtn" data-focus="road" aria-pressed="false" type="button">roadmap</button>
+    </div>
+    <div class="nav">
+      <button class="fbtn" id="prev" type="button" aria-label="older releases">‹</button>
+      <button class="fbtn" id="next" type="button" aria-label="newer releases">›</button>
+    </div>
+    <span id="qcount"></span>
+  </div>
+</div>
+
+<div class="rail" id="rail" data-focus="all">
+  <div class="scrim" id="s-top"></div>
+  <div class="scrim" id="s-mid"></div>
+  <div class="scrim" id="s-bot"></div>
+  <div id="track" data-focus="all"></div>
+</div>
+
+<div class="foot">
+  <span><span id="foot-src">ledger.db</span> · gen <span id="foot-gen"></span></span>
+  <span>← older &nbsp; newer → &nbsp;·&nbsp; swipe or drag the trunk</span>
+  <span>ad-hoc merges down · roadmap merges up · ⟦marathon⟧ = gated phase chain, runs in order</span>
+  <span>○ queued &nbsp; ◑ in progress &nbsp; ‖ paused &nbsp; ✓ done</span>
+  <span>pri / sev / appeal / effort 1–100 (100 = strongest; effort scores cheapness) · calc = sum /400 · ovr = operator override, wins over calc</span>
+</div>
+
+<script id="ledger-data" type="application/json">{"meta": {"title": "Planning ledgers", "subtitle": "XYZ-forge · releases.db · read-only", "generatedAtDisplay": "2026-08-28 02:18:24Z", "sourceLabel": "releases.db · schema v6", "repoUrl": "https://github.com/HiQS-Suite/XYZ-forge"}, "sync": null, "telemetry": {"dbGeneration": 277, "receipts": 308, "lastSyncDisplay": "2026-08-28T02:04", "lastSyncAgoDisplay": "in 1 day", "releasesOpen": 6, "releasesTotal": 13, "releasesOverdue": 0}, "ratedTasks": [{"id": "GH-67", "title": "Commandcode builder default widened to `--yolo` — closer evaluation → possible build", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 88, "sev": 80, "appeal": 45, "effort": 70, "calc": 283, "effectiveScore": 340}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/67"}, "override": {"value": 340, "hot": true}}, {"id": "GH-249", "title": "ubuntu canary: EUID=0 defeats chmod-based assertions", "release": "Linux-RC", "lane": "queue", "metrics": {"pri": 90, "sev": 85, "appeal": 80, "effort": 70, "calc": 325, "effectiveScore": 325}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/249"}}, {"id": "GH-181", "title": "repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2)", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 90, "sev": 75, "appeal": 90, "effort": 60, "calc": 315, "effectiveScore": 315}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/181"}}, {"id": "GH-204", "title": "BSD `sed -i ''` no-ops on Linux at production call sites", "release": "Linux-RC", "lane": "in progress", "metrics": {"pri": 88, "sev": 85, "appeal": 70, "effort": 65, "calc": 308, "effectiveScore": 308}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/204"}}, {"id": "GH-202", "title": "wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 85, "sev": 65, "appeal": 85, "effort": 70, "calc": 305, "effectiveScore": 305}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/202"}}, {"id": "GH-228", "title": "Org rename HiQS-Suite → HiQS-Labs: a hardcoded regex silently drops issue URLs from the roadmap shadow", "release": "Linux-RC", "lane": "completed", "metrics": {"pri": 80, "sev": 60, "appeal": 75, "effort": 90, "calc": 305, "effectiveScore": 305}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/228"}}, {"id": "GH-174", "title": "Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 85, "sev": 75, "appeal": 95, "effort": 45, "calc": 300, "effectiveScore": 300}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/174"}}, {"id": "GH-14", "title": "appendEvent writes non-atomically, so concurrent readers can observe torn event files", "release": null, "lane": "Completed", "metrics": {"pri": 85, "sev": 85, "appeal": 70, "effort": 55, "calc": 295, "effectiveScore": 295}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/14"}}, {"id": "GH-155", "title": "3rd Gen ATE & Fuzzing", "release": null, "lane": "Completed", "metrics": {"pri": 85, "sev": 70, "appeal": 90, "effort": 50, "calc": 295, "effectiveScore": 295}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/155"}}, {"id": "GH-165", "title": "Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning)", "release": null, "lane": "Completed", "metrics": {"pri": 90, "sev": 80, "appeal": 90, "effort": 35, "calc": 295, "effectiveScore": 295}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/165"}}, {"id": "GH-23", "title": "Kernel invariant: enforce path-overlap rejection on direct tick claim and tick scope", "release": null, "lane": "Completed", "metrics": {"pri": 82, "sev": 78, "appeal": 72, "effort": 60, "calc": 292, "effectiveScore": 292}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/23"}}, {"id": "GH-113", "title": "headless agy builder writes root scratch files, tripping containment (exit 6)", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 85, "sev": 60, "appeal": 85, "effort": 60, "calc": 290, "effectiveScore": 290}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/113"}}, {"id": "GH-123", "title": "Linux portability canary — remainder: gh358 lock contention on shared runners", "release": "Linux-RC", "lane": "in progress", "metrics": {"pri": 90, "sev": 80, "appeal": 75, "effort": 45, "calc": 290, "effectiveScore": 290}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/123"}}, {"id": "GH-148", "title": "DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro", "release": null, "lane": "Completed", "metrics": {"pri": 85, "sev": 75, "appeal": 90, "effort": 40, "calc": 290, "effectiveScore": 290}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/148"}}, {"id": "GH-168", "title": "wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 80, "sev": 55, "appeal": 85, "effort": 70, "calc": 290, "effectiveScore": 290}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/168"}}, {"id": "GH-226", "title": "xyz-vendor.sh transcript gate refuses repos that gitignore transcripts", "release": "Linux-RC", "lane": "completed", "metrics": {"pri": 75, "sev": 50, "appeal": 80, "effort": 85, "calc": 290, "effectiveScore": 290}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/226"}}, {"id": "GH-141", "title": "make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison", "release": "Linux-RC", "lane": "ad-hoc detour", "metrics": {"pri": 80, "sev": 65, "appeal": 85, "effort": 55, "calc": 285, "effectiveScore": 285}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/141"}}, {"id": "GH-221", "title": "GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI >=1.1.19 — whoami subcommand removed", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 70, "sev": 65, "appeal": 70, "effort": 80, "calc": 285, "effectiveScore": 285}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/221"}}, {"id": "GH-114", "title": "headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7)", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 80, "sev": 60, "appeal": 80, "effort": 60, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/114"}}, {"id": "GH-115", "title": "marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4)", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 75, "sev": 50, "appeal": 85, "effort": 70, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/115"}}, {"id": "GH-180", "title": "repro_builder crashes on timeout telemetry records (exit_code: null → TypeError)", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 70, "sev": 45, "appeal": 85, "effort": 80, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/180"}}, {"id": "GH-193", "title": "AgentChorus Gen 2", "release": "Cargo", "lane": "cut", "metrics": {"pri": 75, "sev": 70, "appeal": 85, "effort": 50, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/193"}}, {"id": "GH-216", "title": "GH-216 — marathon-plan.sh ledger parser rejects link-style ROADMAP.md bullets", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 75, "sev": 65, "appeal": 70, "effort": 70, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/216"}}, {"id": "GH-223", "title": "GH-223 — pre-push gate push double-applies through ref lock", "release": "Cargo", "lane": "cut", "metrics": {"pri": 80, "sev": 75, "appeal": 65, "effort": 60, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/223"}}, {"id": "GH-251", "title": "validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent", "release": "Linux-RC", "lane": "queue", "metrics": {"pri": 70, "sev": 55, "appeal": 70, "effort": 85, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/251"}}, {"id": "GH-4", "title": "the pre-push gate does not travel with clones: fresh clones push unverified", "release": null, "lane": "Completed", "metrics": {"pri": 78, "sev": 72, "appeal": 70, "effort": 60, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/4"}}, {"id": "GH-77", "title": "`/standup` — session-scoped triage: what did I leave open, what is rotting, is the plan still right?", "release": null, "lane": "Completed", "metrics": {"pri": 95, "sev": 70, "appeal": 85, "effort": 30, "calc": 280, "effectiveScore": 280}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/77"}}, {"id": "GH-1", "title": "suite-wide fixture containment + clone-identity invariant gate", "release": null, "lane": "Completed", "metrics": {"pri": 80, "sev": 75, "appeal": 70, "effort": 50, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/1"}}, {"id": "GH-124", "title": "eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene", "release": null, "lane": "Completed", "metrics": {"pri": 85, "sev": 60, "appeal": 90, "effort": 40, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/124"}}, {"id": "GH-132", "title": "feat(skills): formal /review-xyz code review skill & multi-model harness", "release": null, "lane": "Completed", "metrics": {"pri": 80, "sev": 70, "appeal": 85, "effort": 40, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/132"}}, {"id": "GH-15", "title": "parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract", "release": null, "lane": "Completed", "metrics": {"pri": 80, "sev": 75, "appeal": 70, "effort": 50, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/15"}}, {"id": "GH-170", "title": "Agent2Agent: close transcript glitches and harden publishing", "release": null, "lane": "Completed", "metrics": {"pri": 75, "sev": 60, "appeal": 85, "effort": 55, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/170"}}, {"id": "GH-2", "title": "test-suite run relocated an untracked file into .tick/orphan-backups/", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 80, "sev": 55, "appeal": 85, "effort": 55, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/2"}}, {"id": "GH-201", "title": "Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174)", "release": "Cargo", "lane": "cut", "metrics": {"pri": 80, "sev": 70, "appeal": 80, "effort": 45, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/201"}}, {"id": "GH-8", "title": "kernel boundary hardening — CLI numeric validation, task/agent format contract", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 75, "sev": 55, "appeal": 80, "effort": 65, "calc": 275, "effectiveScore": 275}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/8"}}, {"id": "GH-184", "title": "committed scratch artifact `.relay-scratch/probe_telemetry.json` makes every real turn a tracked-file mutation", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 60, "sev": 40, "appeal": 80, "effort": 90, "calc": 270, "effectiveScore": 270}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/184"}}, {"id": "GH-205", "title": "validate.sh mutates four tracked files per run — gate not idempotent", "release": "Linux-RC", "lane": "completed", "metrics": {"pri": 75, "sev": 70, "appeal": 70, "effort": 55, "calc": 270, "effectiveScore": 270}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/205"}}, {"id": "GH-75", "title": "single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 90, "sev": 40, "appeal": 85, "effort": 55, "calc": 270, "effectiveScore": 270}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/75"}}, {"id": "GH-111", "title": "retire manifest FREEZE; tasks and marathons are DIALED IN to exactly one release, as a database state", "release": null, "lane": "Completed", "metrics": {"pri": 85, "sev": 75, "appeal": 70, "effort": 35, "calc": 265, "effectiveScore": 265}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/111"}}, {"id": "GH-182", "title": "self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design", "release": "Cargo", "lane": "cut", "metrics": {"pri": 75, "sev": 55, "appeal": 80, "effort": 55, "calc": 265, "effectiveScore": 265}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/182"}}, {"id": "GH-275", "title": "Medium-level write-ops logging of agent disk-write commands", "release": "Linux-RC", "lane": "queue", "metrics": {"pri": 70, "sev": 60, "appeal": 60, "effort": 75, "calc": 265, "effectiveScore": 265}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/275"}}, {"id": "GH-50", "title": "sandboxed git --track / branch -D half-applies and loses uncommitted work", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 65, "sev": 35, "appeal": 85, "effort": 80, "calc": 265, "effectiveScore": 265}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/50"}}, {"id": "GH-183", "title": "active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage)", "release": "Bulkhead", "lane": "completed", "metrics": {"pri": 65, "sev": 50, "appeal": 75, "effort": 70, "calc": 260, "effectiveScore": 260}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/183"}}, {"id": "GH-215", "title": "GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 72, "sev": 60, "appeal": 65, "effort": 60, "calc": 257, "effectiveScore": 257}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/215"}}, {"id": "GH-10", "title": "prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket", "release": null, "lane": "Completed", "metrics": {"pri": 55, "sev": 70, "appeal": 50, "effort": 80, "calc": 255, "effectiveScore": 255}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/10"}}, {"id": "GH-144", "title": "Agent2Agent 3+ participant onboarding + read-only status quick wins", "release": null, "lane": "Completed", "metrics": {"pri": 55, "sev": 30, "appeal": 80, "effort": 90, "calc": 255, "effectiveScore": 255}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/144"}}, {"id": "GH-269", "title": "Full switchover to Releases DB — retire ROADMAP.md", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 75, "sev": 65, "appeal": 65, "effort": 50, "calc": 255, "effectiveScore": 255}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/269"}}, {"id": "GH-45", "title": "validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone", "release": null, "lane": "Completed", "metrics": {"pri": 65, "sev": 60, "appeal": 60, "effort": 70, "calc": 255, "effectiveScore": 255}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/45"}}, {"id": "GH-91", "title": "a build turn has nowhere to write verification output", "release": null, "lane": "Completed", "metrics": {"pri": 60, "sev": 65, "appeal": 55, "effort": 75, "calc": 255, "effectiveScore": 255}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/91"}}, {"id": "GH-153", "title": "RELEASES dashboard sidebar + full-cycle rollup (technical spike)", "release": null, "lane": "Completed", "metrics": {"pri": 70, "sev": 55, "appeal": 80, "effort": 45, "calc": 250, "effectiveScore": 250}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/153"}}, {"id": "GH-197", "title": "two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up)", "release": null, "lane": "Completed", "metrics": {"pri": 80, "sev": 55, "appeal": 65, "effort": 50, "calc": 250, "effectiveScore": 250}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/197"}}, {"id": "GH-232", "title": "wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs", "release": "Linux-RC", "lane": "completed", "metrics": {"pri": 70, "sev": 55, "appeal": 65, "effort": 60, "calc": 250, "effectiveScore": 250}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/232"}}, {"id": "GH-243", "title": "GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard", "release": null, "lane": "Queue", "metrics": {"pri": 70, "sev": 55, "appeal": 65, "effort": 60, "calc": 250, "effectiveScore": 250}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/243"}}, {"id": "GH-246", "title": "relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix)", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 60, "sev": 35, "appeal": 70, "effort": 85, "calc": 250, "effectiveScore": 250}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/246"}}, {"id": "GH-108", "title": "pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override)", "release": "Daybreak", "lane": "cut", "metrics": {"pri": 80, "sev": 50, "appeal": 75, "effort": 40, "calc": 245, "effectiveScore": 245}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/108"}}, {"id": "GH-222", "title": "GH-222 — releases update cannot re-point a release's tracking issue", "release": "Cargo", "lane": "queue", "metrics": {"pri": 60, "sev": 40, "appeal": 60, "effort": 75, "calc": 235, "effectiveScore": 235}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/222"}}, {"id": "GH-105", "title": "vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on)", "release": "Cargo", "lane": "queue", "metrics": {"pri": 75, "sev": 50, "appeal": 60, "effort": 45, "calc": 230, "effectiveScore": 230}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/105"}}, {"id": "GH-102", "title": "Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE", "release": null, "lane": "Completed", "metrics": {"pri": 68, "sev": 45, "appeal": 70, "effort": 45, "calc": 228, "effectiveScore": 228}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/102"}}, {"id": "GH-103", "title": "technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view)", "release": null, "lane": "Completed", "metrics": {"pri": 62, "sev": 35, "appeal": 75, "effort": 50, "calc": 222, "effectiveScore": 222}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/103"}}, {"id": "GH-3", "title": "improve-loop.sh --state-dir durability — provenance evidence must not evaporate", "release": null, "lane": "Completed", "metrics": {"pri": 55, "sev": 45, "appeal": 55, "effort": 65, "calc": 220, "effectiveScore": 220}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/3"}}, {"id": "GH-32", "title": "RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 70, "sev": 50, "appeal": 65, "effort": 35, "calc": 220, "effectiveScore": 220}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/32"}}, {"id": "GH-57", "title": "test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite", "release": null, "lane": "Completed", "metrics": {"pri": 60, "sev": 45, "appeal": 65, "effort": 50, "calc": 220, "effectiveScore": 220}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/57"}}, {"id": "GH-135", "title": "GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap", "release": null, "lane": "Completed", "metrics": {"pri": 58, "sev": 45, "appeal": 60, "effort": 55, "calc": 218, "effectiveScore": 218}, "links": null}, {"id": "GH-233", "title": "AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter", "release": "Linux-RC", "lane": "completed", "metrics": {"pri": 65, "sev": 45, "appeal": 75, "effort": 30, "calc": 215, "effectiveScore": 215}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/233"}}, {"id": "GH-5", "title": "kernel robustness: node:test unit runner", "release": "Linux-RC", "lane": "ad-hoc detour", "metrics": {"pri": 45, "sev": 40, "appeal": 45, "effort": 80, "calc": 210, "effectiveScore": 210}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/5"}}, {"id": "GH-35", "title": "3-tier test suite selection (docs / utility subsystems / core) + CPU governance", "release": null, "lane": "Completed", "metrics": {"pri": 55, "sev": 45, "appeal": 50, "effort": 45, "calc": 195, "effectiveScore": 195}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/35"}}, {"id": "GH-39", "title": "RELEASES app: one-way GitHub Project release-card projection", "release": null, "lane": "Completed", "metrics": {"pri": 50, "sev": 30, "appeal": 65, "effort": 45, "calc": 190, "effectiveScore": 190}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/39"}}, {"id": "GH-61", "title": "RELEASES ledger durability hardening (GH-57 follow-up)", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 45, "sev": 55, "appeal": 40, "effort": 50, "calc": 190, "effectiveScore": 190}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/62"}}, {"id": "GH-17", "title": "SOP for evaluating new agent harnesses and frontier models", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 45, "sev": 30, "appeal": 50, "effort": 60, "calc": 185, "effectiveScore": 185}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/17"}}, {"id": "GH-42", "title": "relay automation: supported Commandcode turn-taker", "release": null, "lane": "Completed", "metrics": {"pri": 50, "sev": 35, "appeal": 55, "effort": 45, "calc": 185, "effectiveScore": 185}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/42"}}, {"id": "GH-101", "title": "Feasibility Study: Promoting Programmatic Script Runner (`script_runner.py`) into Core Relay & Consult Runtimes", "release": null, "lane": "Completed", "metrics": {"pri": 45, "sev": 20, "appeal": 70, "effort": 40, "calc": 175, "effectiveScore": 175}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/101"}}, {"id": "GH-94", "title": "research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment", "release": null, "lane": "Completed", "metrics": {"pri": 45, "sev": 20, "appeal": 70, "effort": 40, "calc": 175, "effectiveScore": 175}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/94"}}, {"id": "GH-195", "title": "marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call", "release": null, "lane": "Completed", "metrics": {"pri": 60, "sev": 40, "appeal": 50, "effort": 20, "calc": 170, "effectiveScore": 170}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/195"}}, {"id": "GH-28", "title": "RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 40, "sev": 35, "appeal": 40, "effort": 55, "calc": 170, "effectiveScore": 170}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/28"}}, {"id": "GH-18", "title": "Harness evaluation: Command Code (cmd) and model matrix", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 35, "sev": 25, "appeal": 45, "effort": 55, "calc": 160, "effectiveScore": 160}, "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/18"}}, {"id": "GH-267", "title": "/express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile", "release": null, "lane": "Queue / parked intake", "metrics": {"pri": 3, "sev": 3, "appeal": 3, "effort": 3, "calc": 12, "effectiveScore": 12}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/267"}}, {"id": "GH-256", "title": "No preflight checks the builder can reach a phase artifact paths", "release": "Linux-RC", "lane": "queue", "metrics": {"pri": 3, "sev": 2, "appeal": 2, "effort": 1, "calc": 8, "effectiveScore": 8}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/256"}}, {"id": "GH-255", "title": "marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT", "release": "Linux-RC", "lane": "queue", "metrics": {"pri": 1, "sev": 1, "appeal": 1, "effort": 1, "calc": 4, "effectiveScore": 4}, "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/255"}}], "justFinished": {"issue": "v0.7.3", "title": "Bulkhead shipped", "closedDateDisplay": "2026-08-25", "closedAgoDisplay": "2 days ago", "issueUrl": "https://github.com/HiQS-Suite/XYZ-forge/issues/179"}, "whatsNext": {"issue": "v0.7.4", "title": "Linux-RC", "note": "target 2026-09-05 · in 9 days", "issueUrl": "https://github.com/HiQS-Labs/XYZ-forge/issues/224"}, "releases": [{"id": "c-0-1-0", "slug": "quicksilver", "name": "Quicksilver", "version": "0.1.0", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-01", "extra": null, "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Quicksilver", "blurb": "Python-authoritative Tier-A twins.", "exit": "Python-authoritative Tier-A twins. Licensed AGPL-3.0-only (`LICENSE`) with a commercial option (`LICENSE-COMMERCIAL.md`), adopted 2026-07-29 post-ship; the pre-existing conflicting `LICENSE.md` was removed 2026-07-30 (#372).", "detours": [], "roadmap": []}, {"id": "c-0-2-0", "slug": "litmus", "name": "Litmus", "version": "0.2.0", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-14", "extra": null, "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Litmus", "blurb": "Make the checks capable of failing.", "exit": "Exit: `bash test/litmus-release.sh --release-gate` exits 0. Red today by design; turning it green is what \"done\" means. Its own negative control is `--mutate-evidence`, which must detect a stripped declaration and an unregistered gate. NOTE the honest limit, stated in that file: the audit proves registration, declaration shape and the absence of false completion claims. It does NOT prove a control was truly observed, because `gate_inventory.py` reads a declaration authored by the same person who wrote the gate. Recorded execution of each control is deliberately out of scope for this release.", "detours": [], "roadmap": []}, {"id": "c-0-3-0", "slug": "nightwatch", "name": "Nightwatch", "version": "0.3.0", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-14", "extra": null, "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Nightwatch", "blurb": "An unattended marathon against a real target repo survives, records, and recovers.", "exit": "Exit: `bash test/nightwatch-release.sh --release-gate` exits 0. BUILT 2026-08-11 and red by design, exactly as Litmus's was; turning it green is what \"done\" means. It has two halves because a metadata audit cannot answer this release's question. Half A audits the frozen manifest — each entry's gate EXISTS, is REGISTERED in `validate.sh` (a gate absent from TESTS is indistinguishable from one that passes — the #461 defect), and has a RECORDED control under `test/baselines/`; it also cross-checks that this list and the `Manifest:` line below agree, since a boundary that disagrees with itself is not frozen. Half B executes the lifecycle cases rather than auditing them, delegating to the suites that already drive real children and kill them rather than growing a second driver fixture here. Status on 2026-08-11: manifest 8/8 complete; lifecycle 5 passing, 0 NOT COVERED — GOALPOST MET. The last gap was the hostile-target write-set case, closed by #514, which was filed while executing this release and deliberately NOT admitted to the manifest (discovery is not admission); it belongs to the lifecycle list because the exit criterion always named that case — what was missing was a suite driving it. That lane also corrected its own premise: the pre-fix tree does not dispatch a turn first, it dies at the render's `git add` with an unhandled `CalledProcessError` traceback, so the discriminating assertion is the absence of that traceback rather than the absence of a dispatch. Its own negative control is `--mutate-evidence` (34/0), which unregisters a gate and deletes a recorded control in a fixture copy, requires both to be detected, and re-checks the unmutated inputs green in the same run so an always-red detector cannot pass for one. Honest limit, inherited from Litmus: Half A reads a declaration and a filename and cannot know a recorded control was honestly recorded; Half B is what narrows that, and is why this criterion is a command that kills children rather than a checklist.", "detours": [], "roadmap": []}, {"id": "c-0-7-0", "slug": "ballast", "name": "Ballast", "version": "0.7.0", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-18", "extra": null, "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Ballast", "blurb": "Post-launch hardening: the launched repository holds up under a stranger's first run and an outside contributor's first push.", "exit": "Exit: `bash test/ballast-release.sh --release-gate` exits 0. NOT BUILT — writing it is Ballast's first task, before any member is fixed (the Litmus/Nightwatch/Meter ordering; a release whose exit criterion is authored after its members cannot tell a finished entry from a claimed one). Two halves, the established shape. Half A audits the frozen manifest: each entry's gate EXISTS, is REGISTERED in `validate.sh` (a gate absent from TESTS is indistinguishable from one that passes — the #461 defect), has a RECORDED control under `test/baselines/`, and the list agrees with the `Manifest-Members:` line below in both directions. Half B EXECUTES the stranger's path rather than auditing it: (1) a fresh unauthenticated clone from the published commit runs the documented entry path ten consecutive times in parallel with zero failing runs — a contention warning is allowed only where it names the contended suite per #15's contract; (2) a fresh clone with no gate installed is surfaced as ungated, in-band, on the documented first-run path, naming the one-command install (#4) — and with the gate installed, a would-be-red push is refused (a push cannot be locally refused with no hook at all; that mechanical limit is stated here rather than papered over, and #4's fix makes the ungated state loud instead of invisible); (3) a writer killed mid-`appendEvent` loses no event, and no reader ever observes a partial `.jsonl` (#14). RED on arrival by design. Its own negative control is `--mutate-evidence`: in a fixture copy it must unregister a gate, delete a recorded control, and forge a passing stranger-run record; detect all three; and re-check the unmutated inputs green in the same run so an always-red detector cannot pass for one. SHIPPED 2026-08-18. `XYZ_BALLAST_STRANGER_RUNS=10 test/ballast-release.sh --release-gate` executed for real against a fresh disposable clone (`~/xyz-disposable/xyz-stranger-clone`): exit 0. Half A: 4 of 4 manifest members complete (#14, #15, #4, #3 — gate/registration/control/CLOSED-issue all confirmed). Half B: 4 of 4 passing (B1: 10/10 consecutive parallel runs with zero failures; B2a: ungated clone warning in-band; B2b: forced-red push refusal; B3: atomic-append cross-process stress case clean) — GOALPOST MET.", "detours": [], "roadmap": []}, {"id": "c-0-7-1", "slug": "bulwark", "name": "Bulwark", "version": "0.7.1", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-19", "extra": null, "itemsTotal": 3, "itemsOpen": 3, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Bulwark", "blurb": "Patch release on Ballast: the RELEASES ledger survives a git merge.", "exit": "Exit: test/gh32-releases-artifacts.sh, test/gh53-releases-merge-resolve.sh, test/gh54-merged-dump-refusals.sh and releases_app.py check all exit 0, AND this release's own merge into development resolves releases.sql without a hand-edit.", "detours": [], "roadmap": [{"id": "GH-52", "title": "issue GH-52", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/52"}}, {"id": "GH-53", "title": "issue GH-53", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/53"}}, {"id": "GH-54", "title": "issue GH-54", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/54"}}]}, {"id": "c-0-7-2", "slug": "daybreak", "name": "Daybreak", "version": "0.7.2", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-23", "extra": null, "itemsTotal": 9, "itemsOpen": 0, "baseline": {"count": 9, "at": "2026-08-21T04:21:29Z", "source": "backfilled", "growth": 0}, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Daybreak", "blurb": "The /standup skill completes: collect.sh implements the eight bounded lens reads that feed triage.py, and the skill runs end-to-end.", "exit": "Exit: collect.sh --fixture emits all eight lenses; triage.py consumes each without a D5; test/gh77-standup-triage.sh green with per-lens assertions AND a per-lens degradation assertion; the skill runs end-to-end on this repo and its output fits the 15-line cap; validate.sh full gate green.", "detours": [], "roadmap": [{"type": "marathon", "id": "GH-77", "url": "https://github.com/HiQS-Suite/XYZ-forge/issues/77", "title": "Daybreak marathon", "meta": "planned", "state": "run", "cards": [{"id": "GH-79", "title": "issue GH-79", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/79"}}, {"id": "GH-80", "title": "issue GH-80", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/80"}}, {"id": "GH-81", "title": "issue GH-81", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/81"}}, {"id": "GH-82", "title": "issue GH-82", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/82"}}, {"id": "GH-83", "title": "issue GH-83", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/83"}}, {"id": "GH-84", "title": "issue GH-84", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/84"}}, {"id": "GH-85", "title": "issue GH-85", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/85"}}, {"id": "GH-86", "title": "issue GH-86", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/86"}}, {"id": "GH-87", "title": "issue GH-87", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/87"}}]}, {"id": "GH-108", "title": "pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override)", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/108", "doc": "PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md"}, "metrics": {"pri": 80, "sev": 50, "appeal": 75, "effort": 40, "calc": 245, "effectiveScore": 245}}]}, {"id": "c-0-7-3", "slug": "bulkhead", "name": "Bulkhead", "version": "0.7.3", "status": "shipped", "flags": {}, "badge": {"type": "shipped", "label": "shipped"}, "dateLabel": "shipped", "date": "2026-08-25", "extra": null, "itemsTotal": 13, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Bulkhead", "blurb": "An unattended marathon survives its own harness.", "exit": "Exit: Each member suite (gh8, gh2, gh50, gh113, gh114, gh115, gh168) green and registered in validate.sh; full local gate green; manifest 7/7 shipped or explicitly cut.", "detours": [], "roadmap": [{"id": "GH-113", "title": "headless agy builder writes root scratch files, tripping containment (exit 6)", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/113", "doc": "PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md"}, "metrics": {"pri": 85, "sev": 60, "appeal": 85, "effort": 60, "calc": 290, "effectiveScore": 290}}, {"id": "GH-114", "title": "headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7)", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/114", "doc": "PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md"}, "metrics": {"pri": 80, "sev": 60, "appeal": 80, "effort": 60, "calc": 280, "effectiveScore": 280}}, {"id": "GH-115", "title": "marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4)", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/115", "doc": "PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md"}, "metrics": {"pri": 75, "sev": 50, "appeal": 85, "effort": 70, "calc": 280, "effectiveScore": 280}}, {"id": "GH-168", "title": "wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/168", "doc": "PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md"}, "metrics": {"pri": 80, "sev": 55, "appeal": 85, "effort": 70, "calc": 290, "effectiveScore": 290}}, {"id": "GH-8", "title": "kernel boundary hardening — CLI numeric validation, task/agent format contract", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/8", "doc": "PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md"}, "metrics": {"pri": 75, "sev": 55, "appeal": 80, "effort": 65, "calc": 275, "effectiveScore": 275}}, {"id": "GH-2", "title": "test-suite run relocated an untracked file into .tick/orphan-backups/", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/2", "doc": "PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md"}, "metrics": {"pri": 80, "sev": 55, "appeal": 85, "effort": 55, "calc": 275, "effectiveScore": 275}}, {"id": "GH-50", "title": "sandboxed git --track / branch -D half-applies and loses uncommitted work", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/50", "doc": "PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md"}, "metrics": {"pri": 65, "sev": 35, "appeal": 85, "effort": 80, "calc": 265, "effectiveScore": 265}}, {"id": "GH-180", "title": "repro_builder crashes on timeout telemetry records (exit_code: null → TypeError)", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/180", "doc": "PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md"}, "metrics": {"pri": 70, "sev": 45, "appeal": 85, "effort": 80, "calc": 280, "effectiveScore": 280}}, {"id": "GH-181", "title": "repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2)", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/181", "doc": "PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md"}, "metrics": {"pri": 90, "sev": 75, "appeal": 90, "effort": 60, "calc": 315, "effectiveScore": 315}}, {"id": "GH-182", "title": "self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/182", "doc": "PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md"}, "metrics": {"pri": 75, "sev": 55, "appeal": 80, "effort": 55, "calc": 265, "effectiveScore": 265}}, {"id": "GH-183", "title": "active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage)", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/183", "doc": "PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md"}, "metrics": {"pri": 65, "sev": 50, "appeal": 75, "effort": 70, "calc": 260, "effectiveScore": 260}}, {"id": "GH-184", "title": "committed scratch artifact `.relay-scratch/probe_telemetry.json` makes every real turn a tracked-file mutation", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/184", "doc": "PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md"}, "metrics": {"pri": 60, "sev": 40, "appeal": 80, "effort": 90, "calc": 270, "effectiveScore": 270}}, {"id": "GH-174", "title": "Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/174", "doc": "PROJECT/3-COMPLETED/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md"}, "metrics": {"pri": 85, "sev": 75, "appeal": 95, "effort": 45, "calc": 300, "effectiveScore": 300}}, {"id": "GH-193", "title": "AgentChorus Gen 2", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/193", "doc": "PROJECT/2-WORKING/GH-193-AGENTCHORUS-GEN2.md"}, "metrics": {"pri": 75, "sev": 70, "appeal": 85, "effort": 50, "calc": 280, "effectiveScore": 280}}, {"id": "GH-202", "title": "wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/202", "doc": "PROJECT/2-WORKING/GH-202-WAVE-RECONCILER-STATE.md"}, "metrics": {"pri": 85, "sev": 65, "appeal": 85, "effort": 70, "calc": 305, "effectiveScore": 305}}, {"id": "GH-222", "title": "GH-222 — releases update cannot re-point a release's tracking issue", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/222", "doc": "PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md"}, "metrics": {"pri": 60, "sev": 40, "appeal": 60, "effort": 75, "calc": 235, "effectiveScore": 235}}]}, {"id": "c-0-7-4", "slug": "linux-rc", "name": "Linux-RC", "version": "0.7.4", "status": "active", "flags": {"now": true}, "badge": {"type": "active", "label": "active"}, "dateLabel": "target", "date": "2026-09-05", "extra": "in 9 days", "itemsTotal": 12, "itemsOpen": 7, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Linux MVP RC", "blurb": "Linux MVP release candidate: portability blockers cleared, hosted Ubuntu CI attestation on branch Linux-MVP-RC", "exit": "Exit: All #224 checklist items closed or waived; qualifying 100% green hosted Ubuntu CI run on Linux-MVP-RC", "detours": [{"id": "GH-141", "title": "make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison", "marker": "wip", "section": "adhoc", "sectionLabel": "ad-hoc detour", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/141"}, "metrics": {"pri": 80, "sev": 65, "appeal": 85, "effort": 55, "calc": 285, "effectiveScore": 285}}, {"id": "GH-5", "title": "kernel robustness: node:test unit runner", "marker": "wip", "section": "adhoc", "sectionLabel": "ad-hoc detour", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/5"}, "metrics": {"pri": 45, "sev": 40, "appeal": 45, "effort": 80, "calc": 210, "effectiveScore": 210}}], "roadmap": [{"id": "GH-204", "title": "BSD `sed -i ''` no-ops on Linux at production call sites", "marker": "wip", "section": "wip", "sectionLabel": "in progress", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/204", "doc": "PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md"}, "metrics": {"pri": 88, "sev": 85, "appeal": 70, "effort": 65, "calc": 308, "effectiveScore": 308}, "metricFlags": {"sev": "hot"}}, {"id": "GH-205", "title": "validate.sh mutates four tracked files per run — gate not idempotent", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/205", "doc": "PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md"}, "metrics": {"pri": 75, "sev": 70, "appeal": 70, "effort": 55, "calc": 270, "effectiveScore": 270}}, {"id": "GH-123", "title": "Linux portability canary — remainder: gh358 lock contention on shared runners", "marker": "wip", "section": "wip", "sectionLabel": "in progress", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/123", "doc": "PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md"}, "metrics": {"pri": 90, "sev": 80, "appeal": 75, "effort": 45, "calc": 290, "effectiveScore": 290}, "metricFlags": {"sev": "hot"}}, {"id": "GH-226", "title": "xyz-vendor.sh transcript gate refuses repos that gitignore transcripts", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/226", "doc": "PROJECT/3-COMPLETED/GH-226-VENDOR-TRANSCRIPT-GATE.md"}, "metrics": {"pri": 75, "sev": 50, "appeal": 80, "effort": 85, "calc": 290, "effectiveScore": 290}}, {"id": "GH-228", "title": "Org rename HiQS-Suite → HiQS-Labs: a hardcoded regex silently drops issue URLs from the roadmap shadow", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/228", "doc": "PROJECT/3-COMPLETED/GH-228-ROADMAP-ORG-RENAME-REGEX.md"}, "metrics": {"pri": 80, "sev": 60, "appeal": 75, "effort": 90, "calc": 305, "effectiveScore": 305}}, {"id": "GH-232", "title": "wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/232", "doc": "PROJECT/3-COMPLETED/GH-232-WAVE-RECONCILER-MULTIPHASE.md"}, "metrics": {"pri": 70, "sev": 55, "appeal": 65, "effort": 60, "calc": 250, "effectiveScore": 250}}, {"id": "GH-233", "title": "AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter", "marker": "done", "section": "done", "sectionLabel": "completed", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/233", "doc": "PROJECT/3-COMPLETED/GH-233-AGENTCHORUS-GEN2-PHASE2.md"}, "metrics": {"pri": 65, "sev": 45, "appeal": 75, "effort": 30, "calc": 215, "effectiveScore": 215}}, {"id": "GH-249", "title": "ubuntu canary: EUID=0 defeats chmod-based assertions", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/249", "doc": "PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md"}, "metrics": {"pri": 90, "sev": 85, "appeal": 80, "effort": 70, "calc": 325, "effectiveScore": 325}, "metricFlags": {"sev": "hot"}}, {"id": "GH-251", "title": "validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/251", "doc": "PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md"}, "metrics": {"pri": 70, "sev": 55, "appeal": 70, "effort": 85, "calc": 280, "effectiveScore": 280}}, {"id": "GH-255", "title": "marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/255", "doc": "PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md"}, "metrics": {"pri": 1, "sev": 1, "appeal": 1, "effort": 1, "calc": 4, "effectiveScore": 4}}, {"id": "GH-256", "title": "No preflight checks the builder can reach a phase artifact paths", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/256", "doc": "PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md"}, "metrics": {"pri": 3, "sev": 2, "appeal": 2, "effort": 1, "calc": 8, "effectiveScore": 8}}, {"id": "GH-275", "title": "Medium-level write-ops logging of agent disk-write commands", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/275", "doc": "PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md"}, "metrics": {"pri": 70, "sev": 60, "appeal": 60, "effort": 75, "calc": 265, "effectiveScore": 265}}]}, {"id": "c-0-9-0", "slug": "cargo", "name": "Cargo", "version": "0.9.0", "status": "draft", "flags": {}, "badge": {"type": "draft", "label": "draft"}, "dateLabel": "target", "date": "2026-09-19", "extra": "in 23 days", "itemsTotal": 3, "itemsOpen": 3, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Cargo", "blurb": "The harness travels with its ledger: the RELEASES DB system (releases_app.py CLI + merge resolver + FAQs) and the GH-103 HTML timeline generator (utils/timeline/) ship inside every vendored .xyz/ payload as an optional, never-wired-by-default add-on — a 'when you're ready' module a target repo enables by running releases init itself, matching RELEASES.md's own OPTIONAL philosophy (GH-381).", "exit": "Exit: A repo vendored with xyz-vendor.sh can, with zero extra downloads, run releases init/add and export_timeline.py --preview from .xyz/ against its own root, and xyz-sync.sh update preserves the target's ledger state (GH-312 preserve list). Nothing runs until the user invokes it.", "detours": [], "roadmap": [{"id": "GH-105", "title": "vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on)", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/105", "doc": "PROJECT/1-INBOX/GH-105-VENDOR-RELEASES-ADDON.md"}, "metrics": {"pri": 75, "sev": 50, "appeal": 60, "effort": 45, "calc": 230, "effectiveScore": 230}}, {"id": "GH-107", "title": "issue GH-107", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Suite/XYZ-forge/issues/107"}}, {"id": "GH-201", "title": "Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174)", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/201", "doc": "PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md"}, "metrics": {"pri": 80, "sev": 70, "appeal": 80, "effort": 45, "calc": 275, "effectiveScore": 275}}, {"id": "GH-182", "title": "self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/182", "doc": "PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md"}, "metrics": {"pri": 75, "sev": 55, "appeal": 80, "effort": 55, "calc": 265, "effectiveScore": 265}}, {"id": "GH-193", "title": "AgentChorus Gen 2", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/193", "doc": "PROJECT/2-WORKING/GH-193-AGENTCHORUS-GEN2.md"}, "metrics": {"pri": 75, "sev": 70, "appeal": 85, "effort": 50, "calc": 280, "effectiveScore": 280}}, {"id": "GH-222", "title": "GH-222 — releases update cannot re-point a release's tracking issue", "marker": "queued", "section": "queue", "sectionLabel": "queue", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/222", "doc": "PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md"}, "metrics": {"pri": 60, "sev": 40, "appeal": 60, "effort": 75, "calc": 235, "effectiveScore": 235}}, {"id": "GH-223", "title": "GH-223 — pre-push gate push double-applies through ref lock", "marker": "paused", "section": "deferred", "sectionLabel": "cut", "links": {"issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/223", "doc": "PROJECT/1-INBOX/GH-223-GATE-PUSH-DOUBLE-APPLY.md"}, "metrics": {"pri": 80, "sev": 75, "appeal": 65, "effort": 60, "calc": 280, "effectiveScore": 280}}]}, {"id": "c-0-6-0", "slug": "front-door", "name": "Front-Door", "version": "0.6.0", "status": "draft", "flags": {}, "badge": {"type": "draft", "label": "draft"}, "dateLabel": "target", "date": "2026-09-26", "extra": "in 30 days", "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Front-Door", "blurb": "XYZ can be handed to a stranger: an unauthenticated clone reaches a documented entry path and exercises a supported happy path with no private context, from a sanitized, secret-scanned tree.", "exit": "Exit: bash test/meter-release.sh --release-gate exits 0. NOT BUILT — written first, before any sanitization (the Litmus/Nightwatch ordering). Half A AUDITS the launch artifact: single-commit sanitized clone at the declared path; CHANGELOG.md byte-identical; .tick/, relay-system/, temp/ absent; PROJECT/ = PDDA scaffold + retained Meter example only; both LICENSE files present and consistent; secret-scan result names tool version and exact commit. Half B EXECUTES the stranger's path: a credential-less clone of the published commit completes one supported happy path with nothing author-machine-local. Negative control --mutate-evidence: plant a private path, remove CHANGELOG.md, leave a relay-system/ behind — detect all three, re-check unmutated inputs green in the same run. RED on arrival.", "detours": [], "roadmap": []}, {"id": "c-0-8-0", "slug": "sundown", "name": "Sundown", "version": "0.8.0", "status": "draft", "flags": {}, "badge": {"type": "draft", "label": "draft"}, "dateLabel": "target", "date": "2026-10-17", "extra": "in 51 days", "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Sundown", "blurb": "Retire the twelve frozen Bash twins.", "exit": "Exit: NOT WRITTEN. Required before this release starts, per the ordering Litmus and Nightwatch both used and Meter is repeating — the gate is built first and arrives RED, because a release whose exit criterion is authored after its members cannot tell a finished entry from a claimed one.", "detours": [], "roadmap": []}, {"id": "c-0-4-0", "slug": "plumbline", "name": "Plumbline", "version": "0.4.0", "status": "draft", "flags": {}, "badge": {"type": "draft", "label": "draft"}, "dateLabel": "target", "date": "2026-11-14", "extra": "in 79 days", "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "Plumbline", "blurb": "Assisted reflection and a bounded self-improvement loop, measured before either is trusted.", "exit": "Assisted reflection and a bounded self-improvement loop, measured before either is trusted. The reflection pipeline turns durable Nightwatch records into proposals (`proposals-sink.sh` gains its first production caller) and is graded against external ground truth — the 49 human-f…", "detours": [], "roadmap": []}, {"id": "c-0-5-0", "slug": "lantern", "name": "Lantern", "version": "0.5.0", "status": "draft", "flags": {}, "badge": {"type": "draft", "label": "draft"}, "dateLabel": "target", "date": "2026-12-12", "extra": "in 107 days", "itemsTotal": 0, "itemsOpen": 0, "baseline": null, "milestoneUrl": "https://github.com/HiQS-Suite/XYZ-forge/milestones", "milestoneRef": "milestones", "blurb": "When the harness fails, the information needed to act already exists inside it — make it say so.", "exit": "Exit: `bash test/lantern-release.sh --release-gate` exits 0. NOT BUILT. Writing it precedes fixing any member, which is the Litmus and Nightwatch ordering and the reason both releases could tell a finished entry from a claimed one. Two halves, the established shape: Half A audits the frozen manifest — each entry's gate EXISTS, is REGISTERED in `validate.sh`, has a RECORDED control under `test/baselines/`, and the list agrees with the `Manifest:` line below. Half B executes #499's four phases rather than auditing them, since every one of them is a message an operator either receives or does not: a `relay-drive` launch preflight that refuses before spending, a gate refusal that states its real reason, a launcher exit code that survives its wrapper, and a change-impact report. #358 Phase 2 is the one member with no executable half, and the criterion is written around that rather than pretending otherwise: it is satisfied by a RECORDED transcript of a real CI failure under `test/baselines/`, and it must NOT be satisfiable by a disposition written in advance — that issue's own capture doc forbids pre-committing one, and an exit criterion that accepted a pre-written verdict would launder exactly the thing #419 exists to prevent. Its own negative control is `--mutate-evidence`, which must unregister a gate, delete a recorded control, and substitute a pre-dated disposition for a real transcript — detecting all three, and re-checking the unmutated inputs green in the same run so an always-red detector cannot pass for one.", "detours": [], "roadmap": []}], "projects": [{"slug": "XYZ-forge", "active": true}], "cycle": {"repo": "XYZ-forge", "generatedAt": "2026-08-28T02:18:24Z", "db": {"generation": 277, "receipts": 308, "lastOp": "2026-08-28T02:04:43Z", "schemaVersion": 6}, "releases": {"total": 13, "open": 6, "overdue": 0, "byStatus": {"active": 1, "draft": 5, "shipped": 7}, "openList": [{"version": "0.7.4", "codename": "Linux-RC", "status": "active", "target": "2026-09-05", "daysToTarget": 9}, {"version": "0.9.0", "codename": "Cargo", "status": "draft", "target": "2026-09-19", "daysToTarget": 23}, {"version": "0.6.0", "codename": "Front-Door", "status": "draft", "target": "2026-09-26", "daysToTarget": 30}, {"version": "0.8.0", "codename": "Sundown", "status": "draft", "target": "2026-10-17", "daysToTarget": 51}, {"version": "0.4.0", "codename": "Plumbline", "status": "draft", "target": "2026-11-14", "daysToTarget": 79}], "recentShipped": [{"version": "0.7.3", "shipped": "2026-08-25"}, {"version": "0.7.2", "shipped": "2026-08-23"}, {"version": "0.7.1", "shipped": "2026-08-19"}]}, "roadmap": {"total": 81, "unmarked": 23, "wip": 11, "queued": 0, "done": 47, "paused": 0}, "marathons": {"total": 1, "byStatus": {"planned": 1}, "runningRefs": ["GH-77"]}, "items": {"open": 0, "dialedIn": 13, "shipped": 27, "cut": 8}, "recentEvents": [{"at": "2026-08-26T22:44:50Z", "from": "dialed_in", "to": "shipped", "reason": "PR #235 merged to development 2026-08-26; test/gh232-wave-reconcile-multiphase.sh green; issue CLOSED", "item": "GH-232"}, {"at": "2026-08-26T22:44:50Z", "from": "dialed_in", "to": "shipped", "reason": "PR #244 merged to development 2026-08-26; test/gh233-agent-chorus-concurrency.sh green; issue CLOSED", "item": "GH-233"}, {"at": "2026-08-26T15:32:04Z", "from": "dialed_in", "to": "shipped", "reason": "issue CLOSED; validate.sh no longer mutates tracked files per run — gate idempotency covered by test/gh205-gate-idempotency.sh, green in ./validate.sh --auto on development", "item": "GH-205"}, {"at": "2026-08-26T05:51:12Z", "from": "dialed_in", "to": "cut", "reason": "self_healer containment facade — a healer defect, not a vendored-ledger concern. Cut to match Cargo's theme.", "item": "GH-182"}, {"at": "2026-08-26T05:51:12Z", "from": "dialed_in", "to": "cut", "reason": "AgentChorus improvements — a separate subsystem arc. Cut to match Cargo's theme.", "item": "GH-193"}]}}</script>
+<script>
+/* ---- header collapse caret — pure chrome, no data dependency ---- */
+(function(){
+  var KEY='ledger-hdr-collapsed',btn=document.getElementById('hdr-toggle');
+  function set(collapsed){
+    document.body.classList.toggle('hdr-collapsed',collapsed);
+    btn.setAttribute('aria-expanded',String(!collapsed));
+    btn.textContent=collapsed?'▾':'▴';
+    btn.title=collapsed?'expand header':'collapse header';
+    try{localStorage.setItem(KEY,collapsed?'1':'0');}catch(e){}
+    /* rail height changed — let gauge()/bands() re-measure */
+    dispatchEvent(new Event('resize'));
+  }
+  btn.addEventListener('click',function(){
+    set(!document.body.classList.contains('hdr-collapsed'));});
+  var saved=null;try{saved=localStorage.getItem(KEY);}catch(e){}
+  if(saved==='1')set(true);
+})();
+</script>
+<script>
+/* ---- GH-153 spike: sidebar state + wiring (pure chrome). The data-dependent half is
+       window.__snCycle(data), called from boot() once the payload arrives — so fetch-mode
+       and baked-inline mode both fill the switcher and cycle panel through one door. ---- */
+(function(){
+  var KEY='ledger-sidenav';
+  var btn=document.getElementById('sidenav-toggle'),
+      min=document.getElementById('sn-min');
+  function set(state){
+    if(state!=='expanded'&&state!=='rail'&&state!=='hidden')state='expanded';
+    document.body.dataset.sn=state;
+    btn.setAttribute('aria-expanded',String(state!=='hidden'));
+    min.textContent=state==='rail'?'›':'‹';
+    min.title=state==='rail'?'restore sidebar':'minimize to icon rail';
+    try{localStorage.setItem(KEY,state);}catch(e){}
+  }
+  /* default ON ('expanded' when nothing persisted); hamburger slides out, chevron rails */
+  var saved=null;try{saved=localStorage.getItem(KEY);}catch(e){}
+  set(saved);
+  btn.addEventListener('click',function(){
+    set(document.body.dataset.sn==='hidden'?'expanded':'hidden');});
+  min.addEventListener('click',function(){
+    set(document.body.dataset.sn==='rail'?'expanded':'rail');});
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    var t=document.activeElement&&document.activeElement.tagName;
+    if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA')return;
+    set('hidden');});
+
+  /* view links mirror #view-link's targets (the two baked artifacts sit side by side) */
+  function viewLinks(){
+    var lb=document.body.dataset.view==='leaderboard';
+    document.getElementById('sn-view-a').href=lb?'#':'./LEADERBOARD.html';
+    document.getElementById('sn-view-b').href=lb?'./RELEASES-PREVIEW.html':'#';
+  }
+  viewLinks();   /* pre-boot paint (template default is the timeline view) */
+
+  /* focus items drive the existing #fbar buttons — display:none buttons still receive
+     programmatic clicks; in leaderboard view this section is CSS-hidden anyway */
+  [].forEach.call(document.querySelectorAll('.sn-item[data-snfocus]'),function(b){
+    b.addEventListener('click',function(){
+      var t=document.querySelector('#fbar .fbtn[data-focus="'+b.dataset.snfocus+'"]');
+      if(t)t.click();});
+  });
+
+  function kv(k,v){return '<div class="sn-kv"><span class="k">'+k+'</span><span>'+v+'</span></div>';}
+
+  window.__snCycle=function(data){
+    viewLinks();
+    var gh=document.getElementById('sn-gh'),ms=document.getElementById('sn-ms'),
+        url=(data.meta||{}).repoUrl;
+    if(url){gh.href=url;ms.href=url+'/milestones';}
+    else{gh.hidden=true;ms.hidden=true;}
+
+    /* project switcher: real rows from the payload; a lone project gets an explicit inert
+       "add project" hint rather than a fake multiplicity */
+    var sel=document.getElementById('sn-project'),projects=data.projects||[];
+    sel.innerHTML='';
+    projects.forEach(function(p){
+      var o=document.createElement('option');
+      o.value=p.slug;o.textContent=p.slug;o.selected=!!p.active;
+      sel.appendChild(o);});
+    if(projects.length<2){
+      var o=document.createElement('option');
+      o.disabled=true;o.selected=false;o.textContent='+ add project…';
+      sel.appendChild(o);
+    }
+    sel.onchange=function(){
+      var slug=sel.value,active=projects.some(function(p){return p.slug===slug&&p.active;});
+      document.getElementById('sn-foot').textContent=active
+        ?'':'“'+slug+'” is not wired to this ledger yet — its cycle rides the HQ daily rollup';
+    };
+
+    /* the rollup panel: same summary the HQ daily rollup embeds (one source of truth) */
+    var c=data.cycle||{},panel=document.getElementById('sn-cycle-panel');
+    if(!c.releases){panel.innerHTML='<div class="sn-note">no cycle data in payload</div>';}
+    else{
+      var r=c.releases,rm=c.roadmap||{},m=c.marathons||{},it=c.items||{};
+      var od=r.overdue?' · <b class="r">'+r.overdue+' overdue</b>':'';
+      var ev=(c.recentEvents&&c.recentEvents.length)
+        ?'<div class="sn-note">last: '+c.recentEvents[0].item+' '+c.recentEvents[0].from+
+          ' → '+c.recentEvents[0].to+'</div>':'';
+      panel.innerHTML=
+        kv('releases',r.open+' open of '+r.total+od)+
+        kv('roadmap',(rm.wip||0)+' wip · '+(rm.done||0)+' done')+
+        kv('marathons',(m.total||0)+' total')+
+        kv('items',(it.shipped||0)+' shipped · '+(it.cut||0)+' cut')+
+        ev;
+      if(c.db)document.getElementById('sn-foot').textContent=
+        'gen '+c.db.generation+' · '+Number(c.db.receipts||0).toLocaleString()+' receipts';
+    }
+  };
+})();
+</script>
+<script>
+/* ---- data loading + rendering ---- */
+(function(){
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+  }
+  var MARK_SYMBOL={wip:'◑',done:'✓',paused:'‖',queued:'○'};
+  var MARK_CLASS={wip:'m-wip',done:'m-done',paused:'m-paused',queued:'m-queued'};
+
+  function metricPart(key,val,flag){
+    var s=String(val);
+    if(flag==='hot') s='<b class="r">'+s+'</b>';
+    else if(flag==='bold') s='<b>'+s+'</b>';
+    return key+' '+s;
+  }
+
+  function cardHTML(c){
+    var flags=c.metricFlags||{},parts=[];
+    ['pri','sev','appeal','effort','calc'].forEach(function(k){
+      if(c.metrics&&c.metrics[k]!=null) parts.push(metricPart(k,c.metrics[k],flags[k]));
+    });
+    var overrideHTML=c.override
+      ?(' <span class="ovr"'+(c.override.hot?' data-up':'')+'>▸ ovr '+c.override.value+'</span>')
+      :'';
+    var blocksHTML=c.blocks
+      ?(' · '+(c.blocks.hot?'<b class="r">'+esc(c.blocks.text)+'</b>':esc(c.blocks.text)))
+      :'';
+    var linksHTML='';
+    if(c.links){
+      if(c.links.issue) linksHTML+=' · <a href="'+esc(c.links.issue)+'">issue</a>';
+      if(c.links.doc) linksHTML+=' · <a href="'+esc(c.links.doc)+'">doc</a>';
+    }
+    var pillsHTML=(c.pills&&c.pills.length)
+      ?('<div class="pills">'+c.pills.map(function(p){
+          return '<span class="pill"'+(p.hot?' data-hot':'')+'>'+esc(p.label)+'</span>';
+        }).join('')+'</div>')
+      :'';
+    var phaseHTML=c.phase?('<span class="ph">'+esc(c.phase)+'</span>'):'';
+    var noteHTML=c.note?(' · '+esc(c.note)):'';
+    return '<article class="lc'+(c.lead?' lead':'')+'" data-sec="'+esc(c.section)+'">'+
+      '<div class="lh"><span class="mk '+(MARK_CLASS[c.marker]||'')+'">'+(MARK_SYMBOL[c.marker]||'○')+'</span>'+
+        phaseHTML+'<span class="iid">'+esc(c.id)+'</span><span class="lt">'+esc(c.title)+'</span></div>'+
+      '<div class="meta"><span class="sec">'+esc(c.sectionLabel)+'</span>'+noteHTML+
+        (parts.length?' · '+parts.join(' · '):'')+overrideHTML+blocksHTML+linksHTML+'</div>'+
+      pillsHTML+
+      '</article>';
+  }
+
+  function marathonHTML(m){
+    return '<div class="mar" data-state="'+esc(m.state)+'" data-mar="'+esc(String(m.id).replace('GH-',''))+'">'+
+      '<div class="mh"><span class="mtag">marathon</span><span class="iid"><a href="'+esc(m.url)+'">'+esc(m.id)+'</a></span>'+
+        '<span class="mt">'+esc(m.title)+'</span><span class="mmeta">'+esc(m.meta)+'</span></div>'+
+      m.cards.map(cardHTML).join('')+
+      '</div>';
+  }
+
+  function nodeHTML(rel){
+    var extraCls=[];
+    if(rel.flags&&rel.flags.now) extraCls.push('now');
+    if(rel.flags&&rel.flags.overdue) extraCls.push('od');
+    var extraText=rel.extra?(' · <b>'+esc(rel.extra)+'</b>'):'';
+    var openHTML=(rel.itemsOpen>0?'<span class="r">':'<span>')+rel.itemsOpen+' open</span>';
+    // Two numbers when the release has a kickoff baseline: what it committed to, and how much
+    // that commitment has moved since. A baseline-less release shows neither — no placeholder
+    // zero, which would read as "no scope creep" rather than "never measured".
+    var baseHTML='';
+    if(rel.baseline){
+      var g=rel.baseline.growth,gTxt=(g>0?'+'+g:String(g))+' since kickoff';
+      baseHTML=' · <span class="base" title="baseline '+esc(rel.baseline.source)+
+        ' at '+esc(String(rel.baseline.at||'').slice(0,10))+'">baseline '+rel.baseline.count+
+        (g===0?'':' · '+(g>0?'<b class="r">'+gTxt+'</b>':gTxt))+'</span>';
+    }
+    return '<article class="node '+rel.status+(extraCls.length?' '+extraCls.join(' '):'')+'" tabindex="0">'+
+      '<div class="nh"><span class="cn">'+esc(rel.name)+'</span><span class="ver">'+esc(rel.version)+'</span>'+
+        '<span class="badge '+esc(rel.badge.type)+'">'+esc(rel.badge.label)+'</span></div>'+
+      '<div class="meta">'+esc(rel.dateLabel)+' '+esc(rel.date)+extraText+' · '+rel.itemsTotal+' items · '+openHTML+
+        baseHTML+' · <a href="'+esc(rel.milestoneUrl)+'">'+esc(rel.milestoneRef)+'</a></div>'+
+      (rel.blurb?'<p class="blurb">'+esc(rel.blurb)+'</p>':'')+
+      '<p class="exit">'+esc(rel.exit)+'</p>'+
+      '</article>';
+  }
+
+  function columnHTML(rel){
+    var detours=(rel.detours&&rel.detours.length)
+      ? rel.detours.map(cardHTML).join('')
+      : '<div class="stub">no detours</div>';
+    var roadmap=(rel.roadmap&&rel.roadmap.length)
+      ? rel.roadmap.map(function(item){return item.type==='marathon'?marathonHTML(item):cardHTML(item);}).join('')
+      : '<div class="stub">no roadmap items merged into this release</div>';
+    return '<div class="col" data-v="'+esc(rel.version)+'" data-name="'+esc(rel.slug)+'" id="'+esc(rel.id)+'">'+
+      '<div class="lane lane-t">'+detours+'</div>'+
+      '<div class="tr">'+nodeHTML(rel)+'</div>'+
+      '<div class="lane lane-b">'+roadmap+'</div>'+
+      '</div>';
+  }
+
+  function renderHeader(data){
+    document.getElementById('pg-title').textContent=data.meta.title;
+    document.getElementById('pg-subtitle').textContent=data.meta.subtitle;
+    document.getElementById('pg-generated').textContent='generated '+data.meta.generatedAtDisplay;
+
+    if(data.sync&&data.sync.stale){
+      document.getElementById('banner').hidden=false;
+      if(data.sync.heading) document.getElementById('banner-h').textContent=data.sync.heading;
+      if(data.sync.message){document.getElementById('banner-body').textContent=data.sync.message;}
+      else document.getElementById('banner-body').innerHTML=
+        esc(data.sync.sourceFile)+' was modified <b style="color:var(--ink)">'+esc(data.sync.sourceModifiedDisplay)+'</b>, '+
+        esc(data.sync.lagDisplay)+' after the last database sync. '+data.sync.rowsDiffer+' rows differ. '+
+        'Everything below this line reflects the database, not the file you edited. Run <code>'+esc(data.sync.fixCommand)+'</code> before trusting this page.';
+    }
+
+    var t=data.telemetry||{};
+    var par=t.rowParity,parHTML='';
+    if(par){
+      var ok=par.db===par.md;
+      parHTML='<div><div class="tiny"'+(ok?'':' style="color:var(--red)"')+'>row parity</div>'+
+        '<div class="v'+(ok?'':' r')+'">'+(ok?'✓':'✗')+' db '+par.db+' / md '+par.md+'</div></div>';
+    }
+    var odHTML=t.releasesOverdue>0?' · <span class="r">'+t.releasesOverdue+' overdue</span>':'';
+    document.getElementById('bar').innerHTML=
+      '<div><div class="tiny">db generation</div><div class="v">'+t.dbGeneration+'</div></div>'+
+      '<div><div class="tiny">receipts</div><div class="v">'+Number(t.receipts||0).toLocaleString()+'</div></div>'+
+      '<div><div class="tiny">last sync</div><div class="v">'+esc(t.lastSyncDisplay)+' <span style="color:var(--ink3)">· '+esc(t.lastSyncAgoDisplay)+'</span></div></div>'+
+      parHTML+
+      '<div><div class="tiny">releases open</div><div class="v">'+t.releasesOpen+' <span style="color:var(--ink3)">of '+t.releasesTotal+'</span>'+odHTML+'</div></div>';
+    document.getElementById('foot-gen').textContent=t.dbGeneration;
+    if(data.meta.sourceLabel) document.getElementById('foot-src').textContent=data.meta.sourceLabel;
+
+    var jf=data.justFinished,wn=data.whatsNext,strip=document.getElementById('strip');
+    if(!jf&&!wn){strip.hidden=true;return;}
+    var jfHTML=jf
+      ?('<div><div class="tiny">just finished</div>'+
+        '<div class="h"><span class="mk m-done">✓</span><span class="iid">'+esc(jf.issue)+'</span><span class="t">'+esc(jf.title)+'</span></div>'+
+        '<div class="meta">closed '+esc(jf.closedDateDisplay)+' · '+esc(jf.closedAgoDisplay)+
+          (jf.mergedInto?' · merged into '+esc(jf.mergedInto):'')+
+          (jf.issueUrl?' · <a href="'+esc(jf.issueUrl)+'">issue</a>':'')+'</div>'+
+        '</div>')
+      :'<div></div>';
+    var wnHTML='<div></div>';
+    if(wn){
+      var wnFlags=wn.metricFlags||{},wnParts=[];
+      ['pri','sev','appeal','effort','calc'].forEach(function(k){
+        if(wn.metrics&&wn.metrics[k]!=null) wnParts.push(metricPart(k,wn.metrics[k],wnFlags[k]));
+      });
+      if(wn.note) wnParts.unshift(esc(wn.note));
+      var wnOverride=wn.override?(' <span class="ovr"'+(wn.override.hot?' data-up':'')+'>▸ ovr '+wn.override.value+'</span>'):'';
+      var wnMarathon=wn.marathon?(' · marathon <a href="'+esc(wn.marathon.url)+'">'+esc(wn.marathon.id)+'</a> '+esc(wn.marathon.phase)):'';
+      var wnBlocks=wn.blocks?(' · '+(wn.blocks.hot?'<b class="r">'+esc(wn.blocks.text)+'</b>':esc(wn.blocks.text))):'';
+      wnHTML='<div><div class="tiny">what\'s next</div>'+
+        '<div class="h"><span class="mk">○</span><span class="iid">'+esc(wn.issue)+'</span><span class="t">'+esc(wn.title)+'</span></div>'+
+        '<div class="meta">'+wnParts.join(' · ')+wnOverride+wnMarathon+wnBlocks+
+          (wn.issueUrl?' · <a href="'+esc(wn.issueUrl)+'">issue</a>':'')+'</div>'+
+        '</div>';
+    }
+    strip.innerHTML=jfHTML+wnHTML;
+  }
+
+  /* Every rated card in the payload, flattened and ranked. The exporter is the ONLY scorer:
+     effectiveScore already applies the override-wins-over-calc rule, so nothing here recomputes
+     it — the same one-scorer property utils/leaderboard.sh relies on. */
+  function rankedCards(data){
+    return (data.ratedTasks||[]).map(function(t){
+      return {card:t,release:t.release||'—',lane:t.lane};
+    });
+  }
+
+  function leaderboardHTML(data){
+    var rows=rankedCards(data);
+    if(!rows.length) return '<p class="empty">No rated tasks yet. Add <code>rated N/N/N/N</code> '+
+      'to a ROADMAP.md entry and run <code>releases roadmap sync</code>.</p>';
+    var body=rows.map(function(r,i){
+      var m=r.card.metrics,link=(r.card.links&&r.card.links.issue)
+        ?('<a href="'+esc(r.card.links.issue)+'">'+esc(r.card.id)+'</a>'):esc(r.card.id);
+      return '<tr'+(r.card.override?' data-ovr':'')+'>'+
+        '<td class="n">'+(i+1)+'</td>'+
+        '<td class="n"><span class="sc">'+m.effectiveScore+'</span></td>'+
+        '<td><span class="iid">'+link+'</span> '+esc(r.card.title)+'</td>'+
+        '<td>'+esc(r.release)+'</td><td>'+esc(r.lane)+'</td>'+
+        '<td class="n">'+m.pri+'</td><td class="n">'+m.sev+'</td>'+
+        '<td class="n">'+m.appeal+'</td><td class="n">'+m.effort+'</td>'+
+        '<td class="n">'+m.calc+'</td>'+
+        '<td class="n">'+(r.card.override?r.card.override.value:'—')+'</td></tr>';
+    }).join('');
+    return '<table class="lb"><thead><tr><th class="n">#</th><th class="n">score</th>'+
+      '<th>task</th><th>release</th><th>lane</th><th class="n">pri</th><th class="n">sev</th>'+
+      '<th class="n">appeal</th><th class="n">effort</th><th class="n">calc</th>'+
+      '<th class="n">ovr</th></tr></thead><tbody>'+body+'</tbody></table>';
+  }
+
+  function boot(data){
+    /* ONE template, two baked artifacts. The payload's `view` field picks the body; everything
+       above it — chrome, palette, legend, collapse caret — is shared by construction, so there is
+       no second copy of the design system to drift. */
+    var view=data.view==='leaderboard'?'leaderboard':'timeline';
+    document.body.dataset.view=view;
+    var link=document.getElementById('view-link');
+    if(link){
+      link.href=view==='leaderboard'?'./RELEASES-PREVIEW.html':'./LEADERBOARD.html';
+      link.textContent=view==='leaderboard'?'← timeline':'leaderboard →';
+    }
+    renderHeader(data);
+    if(typeof window.__snCycle==='function')window.__snCycle(data);   /* GH-153 sidebar panel */
+    if(view==='leaderboard'){
+      document.getElementById('track').innerHTML=leaderboardHTML(data);
+      return;
+    }
+    document.getElementById('track').innerHTML=data.releases.map(columnHTML).join('');
+    initInteractions();
+  }
+  var inline=document.getElementById('ledger-data');
+  if(inline){
+    try{boot(JSON.parse(inline.textContent));}
+    catch(err){document.getElementById('track').innerHTML='<p style="padding:14px">Failed to parse inline ledger data: '+esc(err.message)+'</p>';}
+  }else{
+    fetch('./data.json',{cache:'no-store'}).then(function(r){return r.json();}).then(boot).catch(function(err){
+      document.getElementById('track').innerHTML='<p style="padding:14px">Failed to load data.json: '+esc(err.message)+'</p>';
+    });
+  }
+})();
+
+/* ---- interaction wiring — runs once the track is populated ---- */
+function initInteractions(){
+  var track=document.getElementById('track'),q=document.getElementById('q'),
+      count=document.getElementById('qcount'),
+      cards=[].slice.call(track.querySelectorAll('.lc')),
+      cols=[].slice.call(track.querySelectorAll('.col')),
+      lanes=[].slice.call(track.querySelectorAll('.lane'));
+  /* only lanes with real overflow get a scrollbar — ignores sub-pixel rounding */
+  function gauge(){lanes.forEach(function(L){
+    L.style.overflowY='hidden';
+    L.style.overflowY=(L.scrollHeight-L.clientHeight>4)?'auto':'hidden';});}
+  cards.forEach(function(c){
+    var m=c.closest('.mar'),extra=m?' marathon '+m.querySelector('.mh').textContent:'';
+    c.dataset.hay=(c.textContent+extra).toLowerCase().replace(/\s+/g,' ');});
+
+  function apply(){
+    var t=q.value.trim().toLowerCase(),shown=0;
+    cards.forEach(function(c){
+      var hit=!t||c.dataset.hay.indexOf(t)>-1;
+      c.hidden=!hit; if(hit)shown++;
+    });
+    [].forEach.call(track.querySelectorAll('.mar'),function(m){
+      m.hidden=!m.querySelector('.lc:not([hidden])');});
+    count.textContent=t?shown+' of '+cards.length+' match':'';
+    gauge();
+  }
+  gauge();addEventListener('resize',gauge);
+  q.addEventListener('input',apply);
+  q.addEventListener('keydown',function(e){if(e.key==='Escape'){q.value='';apply();}});
+
+  var rail=document.getElementById('rail'),
+      sTop=document.getElementById('s-top'),sMid=document.getElementById('s-mid'),
+      sBot=document.getElementById('s-bot');
+  function bands(){
+    var r=rail.getBoundingClientRect(),t=track.querySelector('.tr').getBoundingClientRect(),
+        top=t.top-r.top,bot=t.bottom-r.top;
+    sTop.style.top='0px';        sTop.style.height=Math.max(0,top)+'px';
+    sMid.style.top=top+'px';     sMid.style.height=Math.max(0,bot-top)+'px';
+    sBot.style.top=bot+'px';     sBot.style.height=Math.max(0,r.height-bot)+'px';
+  }
+  bands();addEventListener('resize',bands);
+
+  document.querySelectorAll('[data-focus]').forEach(function(b){
+    if(b.tagName!=='BUTTON')return;
+    b.addEventListener('click',function(){
+      track.dataset.focus=b.dataset.focus;
+      rail.dataset.focus=b.dataset.focus;
+      bands();
+      document.querySelectorAll('.fbtn[data-focus]').forEach(function(o){
+        o.setAttribute('aria-pressed',o===b?'true':'false');});
+    });
+  });
+
+  document.addEventListener('click',function(e){
+    var p=e.target.closest&&e.target.closest('.pill');
+    if(!p)return;
+    q.value=(q.value.trim().toLowerCase()===p.textContent.toLowerCase())?'':p.textContent;
+    apply();
+  });
+
+  /* column stepping — buttons, arrow keys */
+  function step(d){
+    var x=track.scrollLeft,best=null;
+    cols.forEach(function(c){
+      var l=Math.max(0,c.offsetLeft-track.offsetLeft-14);
+      if(d>0?l>x+8:l<x-8){ if(best===null||(d>0?l<best:l>best)) best=l; }
+    });
+    track.scrollTo({left:best===null?(d>0?track.scrollWidth:0):best,behavior:'smooth'});
+  }
+  document.getElementById('prev').onclick=function(){step(-1);};
+  document.getElementById('next').onclick=function(){step(1);};
+  document.addEventListener('keydown',function(e){
+    if(document.activeElement===q)return;
+    if(e.key==='ArrowRight')step(1); else if(e.key==='ArrowLeft')step(-1);
+  });
+
+  /* pointer drag-to-pan (trackpad/mouse; touch uses native momentum scrolling) */
+  var down=false,sx=0,sl=0;
+  track.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='touch'||e.target.closest('a,button,input,.pill'))return;
+    down=true;sx=e.clientX;sl=track.scrollLeft;track.classList.add('drag');
+    e.preventDefault();
+  });
+  track.addEventListener('pointermove',function(e){
+    if(!down)return;track.scrollLeft=sl-(e.clientX-sx);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+    track.addEventListener(ev,function(){down=false;track.classList.remove('drag');});
+  });
+
+  /* open on the active release */
+  var now=track.querySelector('.node.od')||track.querySelector('.node.now');
+  if(now){var c=now.closest('.col');
+    requestAnimationFrame(function(){
+      track.scrollLeft=Math.max(0,c.offsetLeft-track.offsetLeft-14);
+    });}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh105-exec1",
+  "generated_at": "2026-08-28T04:02:17Z",
+  "outcome": "escalated",
+  "reason": "pre-advance-failed",
+  "exit_code": 5,
+  "approval_preserved": false,
+  "issue": "105",
+  "phase": "gh-105-vendor-releases-addon",
+  "lane": "gh-105-vendor-releases-addon",
+  "token": "MARATHON-GH-105-VENDOR-RELEASES-ADDON-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-105-vendor-releases-addon-2026-08-27",
+  "head_sha": "b9a8e28793844aadb69d61680659139633341696",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash validate.sh",
+    "result": "red",
+    "exit": 1,
+    "receipt_path": null
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-08-28T03:42:19Z",
+    "finished_at": "2026-08-28T04:02:17Z"
+  }
+}

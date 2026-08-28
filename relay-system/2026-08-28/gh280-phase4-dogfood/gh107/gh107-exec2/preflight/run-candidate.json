@@ -1,0 +1,173 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-08-28T02:22:20Z",
+  "mode": "gh-bundle",
+  "candidate": {
+    "slug": "gh-107-releases-db-read-seams"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/PROJECT/2-WORKING/GH-107-RELEASES-DB-READ-SEAMS.md"
+    ],
+    "issues": [
+      "107"
+    ],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood",
+    "branch": "marathon/gh-107-releases-db-read-seams-2026-08-27",
+    "commit": "bf2a7b6d205bc7e9c28952bcf1b0c892c154dff9",
+    "suggested_branch": "marathon/gh-107-releases-db-read-seams-2026-08-28",
+    "branch_ready": false,
+    "skip_branch_prompt": true
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash validate.sh",
+    "fix_probes": [
+      {
+        "type": "path_absent",
+        "path": "test/gh107-timeline-json-seam.sh"
+      }
+    ],
+    "artifacts": [
+      "utils/timeline/export_timeline.py",
+      "skills/10days/SKILL.md",
+      "skills/radar/SKILL.md",
+      "PARKED/2026-08-16-xyz-forge-2143.md",
+      "PARKED/2026-08-19-session-close.md",
+      "PARKED/README.md",
+      "test/gh107-timeline-json-seam.sh"
+    ],
+    "artifacts_new": [
+      "test/gh107-timeline-json-seam.sh"
+    ],
+    "remediation": null,
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "aaa153f9ed5da351a88bd88b5ad96f93b0e0e07b",
+    "checkout_matches_ref": false,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "path_absent",
+        "path": "test/gh107-timeline-json-seam.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #107 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-issue-section",
+      "detail": "issue #107 has no '## Acceptance' section \u2014 nothing to copy from",
+      "issue": "107",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #107 (https://github.com/HiQS-Labs/XYZ-forge/issues/107)",
+      "issue": "107",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/107",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 6,
+      "scope": "whole-document",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/timeline/export_timeline.py",
+      "skills/10days/SKILL.md",
+      "skills/radar/SKILL.md",
+      "PARKED/2026-08-16-xyz-forge-2143.md",
+      "PARKED/2026-08-19-session-close.md",
+      "PARKED/README.md",
+      "test/gh107-timeline-json-seam.sh",
+      "test/gh103-timeline-exporter.sh",
+      "test/gh153-releases-sidebar-rollup.sh",
+      "test/gh168-wave-reconcile-scope.sh",
+      "test/gh197-vendor-tier-split.sh",
+      "test/gh202-wave-reconcile-issue-state.sh",
+      "test/gh232-wave-reconcile-multiphase.sh",
+      "test/wave-reconcile.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/timeline/export_timeline.py",
+      "skills/10days/SKILL.md",
+      "skills/radar/SKILL.md",
+      "PARKED/2026-08-16-xyz-forge-2143.md",
+      "PARKED/2026-08-19-session-close.md",
+      "PARKED/README.md",
+      "test/gh107-timeline-json-seam.sh",
+      "test/gh103-timeline-exporter.sh",
+      "test/gh153-releases-sidebar-rollup.sh",
+      "test/gh168-wave-reconcile-scope.sh",
+      "test/gh197-vendor-tier-split.sh",
+      "test/gh202-wave-reconcile-issue-state.sh",
+      "test/gh232-wave-reconcile-multiphase.sh",
+      "test/wave-reconcile.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh103-timeline-exporter.sh",
+      "test/gh153-releases-sidebar-rollup.sh",
+      "test/gh168-wave-reconcile-scope.sh",
+      "test/gh197-vendor-tier-split.sh",
+      "test/gh202-wave-reconcile-issue-state.sh",
+      "test/gh232-wave-reconcile-multiphase.sh",
+      "test/wave-reconcile.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh107-timeline-json-seam.sh",
+      "test/gh103-timeline-exporter.sh",
+      "test/gh153-releases-sidebar-rollup.sh",
+      "test/gh168-wave-reconcile-scope.sh",
+      "test/gh197-vendor-tier-split.sh",
+      "test/gh202-wave-reconcile-issue-state.sh",
+      "test/gh232-wave-reconcile-multiphase.sh",
+      "test/wave-reconcile.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

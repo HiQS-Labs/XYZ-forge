@@ -1,0 +1,14 @@
+{
+  "prs": [
+    {
+      "number": 284,
+      "title": "GH-105: vendor the RELEASES DB + timeline into the .xyz payload (opt-in add-on)",
+      "state": "MERGED",
+      "mergedAt": "2026-08-28T04:19:16Z",
+      "baseRefName": "development",
+      "headRefName": "marathon/gh-105-vendor-releases-addon-2026-08-27",
+      "body": "Reviewed one-phase lane (agy builder, codex reviewer), full validate.sh gate green via jog gate-only retry. Closes #105"
+    }
+  ],
+  "source": "jog land (verified gh pr view)"
+}
