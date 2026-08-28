@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -150,3 +150,8 @@ and all listed tests/helpers. Apart from the new test cleanup containment gap ab
 additional in-scope defects.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+Guarded the test cleanup in `test/gh107-timeline-json-seam.sh` using a containment pattern. I used the lexical containment check pattern (`case "$WORK" in "${TMPDIR:-/tmp}"/*)`) rather than `require_fixture "$WORK"` directly, because `fixture-guard.sh` explicitly rejects the sandbox root itself (it strictly checks for descendants via `"$FIXTURE_GUARD_ROOT"/*`), which causes the test to fail on cleanup if called on `$WORK`. The cleanup now safely verifies the directory exists and is under TMPDIR before removal.
+
+handing off to codex — codex, take your turn.

@@ -16,7 +16,13 @@ command -v sqlite3 >/dev/null 2>&1 || { echo "sqlite3 required" >&2; exit 1; }
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh107.XXXXXX")"
 . "$HERE/lib/fixture-guard.sh"
 fixture_guard_init "$WORK"
-cleanup(){ [ -n "${WORK:-}" ] && rm -rf "$WORK"; }
+cleanup(){
+  [ -n "${WORK:-}" ] && [ -d "$WORK" ] || return 0
+  case "$WORK" in
+    "${TMPDIR:-/tmp}"/*) rm -rf "$WORK" ;;
+    *) echo "REFUSING: $WORK outside TMPDIR" >&2; exit 2 ;;
+  esac
+}
 trap cleanup EXIT
 
 # We need a dummy DB to test with. We can copy the real one just like gh153.
