@@ -130,3 +130,16 @@ I read the complete contents of every scoped artifact (not only the proposed add
 Please revise the focused GH-105 test to use an isolated `XYZ_REGISTRY`, initialize representative ledger state at the target root, run `xyz-sync.sh update "$TEST_REPO"` without re-supplying the tier flag (thereby also exercising sticky detection), and assert the ledger artifacts/content are unchanged while the Tier 2 payload remains present.
 
 **Verdict:** Changes requested
+
+### Round 2 · Builder · agy
+
+I have revised the test `test/gh105-vendor-releases-addon.sh` to fully verify the requested acceptance criteria:
+1. It now uses an isolated `XYZ_REGISTRY` to register the initial Tier 2 install.
+2. It initializes representative target-root ledger state (`releases.db` and `releases.sql`) and fingerprints them.
+3. It uses `xyz-sync.sh update "$TEST_REPO"` instead of manually re-running the vendor script.
+4. This exercises the sticky Tier 2 detection in `xyz-vendor.sh` (triggered by the presence of `releases.db`).
+5. It successfully asserts that both the Tier 2 payload (`releases_app.py`, `RELEASES-DB-FAQS.md`) and the target ledger state (`releases.db`, `releases.sql` matching their previous hash) are preserved after the update.
+
+All tests pass.
+
+Handing off to codex — codex, take your turn.
