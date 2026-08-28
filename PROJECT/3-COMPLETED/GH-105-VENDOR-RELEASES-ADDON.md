@@ -2,7 +2,7 @@
 gh_issue: 105
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/105
 title: "Vendor the RELEASES DB system + HTML timeline generator into the .xyz payload as an optional add-on"
-status: Active
+status: Complete
 created: 2026-08-20
 updated: 2026-08-28
 owner: noel
@@ -88,4 +88,6 @@ cx/risk/eff 2/1/2 — additive to the vendor script; blast radius is the `.xyz/`
       until `releases init`).
 
 ## Lessons Learned (For Future Agents)
-- (to be filled before completion)
+- Jog promotion repoints the roadmap row and STALES the committed dashboard — the lane's own
+  gate then fails on drift. Regenerate ROADMAP-DASHBOARD.md after any promotion/intake write,
+  before dispatch (found twice in the 2026-08-28 dogfood).
