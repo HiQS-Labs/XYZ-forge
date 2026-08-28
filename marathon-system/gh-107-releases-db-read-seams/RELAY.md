@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
@@ -158,3 +158,8 @@ Verification was intentionally not run: this reviewer turn permits static review
 harness owns the scoped test execution.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+Updated `test/gh107-timeline-json-seam.sh` to deterministically pin the drift guard behavior as requested. The test now introduces a fake release to a copied `RELEASES.md` fixture and asserts that running `export_timeline.py --check-drift` exits with 1 and prints the expected drift message. It also verifies that running it with an aligned `RELEASES.md` exits 0.
+
+handing off to codex — codex, take your turn.

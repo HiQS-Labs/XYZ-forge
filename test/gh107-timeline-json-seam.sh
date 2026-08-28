@@ -70,14 +70,39 @@ fi
 
 echo "-- testing drift guard --"
 # Drift guard behavior unchanged WITHOUT the flag
-# --check-drift should report drift or not drift, depending on DB and MD.
-# We just want to ensure it still runs correctly and its output/exit code makes sense.
-python3 "$EXPORTER" --db "$DB" --md "$MD" --check-drift > "$WORK/drift.txt" 2>&1
+# We use a deterministically mismatched RELEASES.md fixture.
+MISMATCHED_MD="$WORK/MISMATCHED_RELEASES.md"
+cp "$MD" "$MISMATCHED_MD"
+# Add a fake release to RELEASES.md to ensure drift is detected
+cat << 'EOF' >> "$MISMATCHED_MD"
+
+Release: 999.9.9
+Status: Shipped
+EOF
+
+python3 "$EXPORTER" --db "$DB" --md "$MISMATCHED_MD" --check-drift > "$WORK/drift.txt" 2>&1
 rc=$?
-if [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ]; then
-  ok "drift guard still runs without --json (rc=$rc)" 0
+if [ "$rc" -eq 1 ]; then
+  if grep -q "DRIFT" "$WORK/drift.txt"; then
+    ok "drift guard correctly exits 1 and reports drift for mismatched file" 0
+  else
+    echo "Output was:"
+    cat "$WORK/drift.txt"
+    ok "drift guard exited 1 but did not mention 'DRIFT'" 1
+  fi
 else
-  ok "drift guard failed with unexpected rc $rc" 1
+  echo "Expected exit 1, got $rc. Output:"
+  cat "$WORK/drift.txt"
+  ok "drift guard failed to exit 1 for mismatched file" 1
+fi
+
+# Ensure it still succeeds when aligned (no --json)
+python3 "$EXPORTER" --db "$DB" --md "$MD" --check-drift > /dev/null 2>&1
+rc=$?
+if [ "$rc" -eq 0 ]; then
+  ok "drift guard exits 0 for aligned files" 0
+else
+  ok "drift guard failed to exit 0 for aligned files" 1
 fi
 
 # Ensure --json doesn't write any files
