@@ -156,7 +156,7 @@ sys.exit(0 if eval(sys.argv[2]) else 1)' "$1" "$2" 2>/dev/null \
 }
 
 # fixed-substring helper (jog-queue.sh has one; this suite is standalone)
-has() { printf '%s' "$1" | grep -Fq -- "$2"; }
+has() { grep -Fq -- "$2" <<<"$1"; }   # GH-139/GH-472: capture-then-match, never pipe-into-grep -q
 
 # idempotent development-branch setup: switch if it exists, create if not, normalize HEAD.
 # `checkout -b` on an existing branch fails silently-in-context and leaves the fixture on the
@@ -638,7 +638,7 @@ python3 "$FR/utils/py/releases_app.py" --root "$FR" jog add 902 >/dev/null 2>&1
 I_OUT="$(jog_run_root --simulate --auto-merge --max-tasks 1 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && has "$I_OUT" "simulated single-phase drive on GH-901" \
   && pass "I1 default executor (relay) simulate path unchanged" || fail "I1 legacy simulate path drifted: $(printf '%s' "$I_OUT" | head -3)"
-sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;" | grep -q completed \
+grep -q completed <<<"$(sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;")" \
   && pass "I1b simulated auto-merge completes the processed row" || fail "I1b row 901 not completed"
 [ ! -d "$FR/.tick/jog" ] && pass "I2 legacy run leaves no marathon execution state" || fail "I2 marathon state created without --executor marathon"
 
@@ -750,9 +750,9 @@ K4_OUT="$( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AG
 has "$(queue_status "$FR")" "parked|awaiting-landing" \
   && pass "K4 row parked awaiting-landing after the rebuild" || fail "K4 row: $(queue_status "$FR")"
 jassert "$FR/.tick/jog/$GID/state.json" 'len(d["executions"])==2 and d["executions"][1]["mode"]=="retry-build"' "K4 ledger gained a second retry-build execution"
-ls "$FR"/.tick/events/ | grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN-2" \
+grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN-2" <<<"$(ls "$FR"/.tick/events/)" \
   && pass "K4 rebuild ran on a fresh suffixed token (-2)" || fail "K4 no -2 token events"
-ls "$FR"/.tick/events/ | grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN$\|MARATHON-GH-901-FIXTURE-LANE-TURN-" >/dev/null \
+grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN$\|MARATHON-GH-901-FIXTURE-LANE-TURN-" <<<"$(ls "$FR"/.tick/events/)" \
   && [ -d "$FR/.tick/jog/$GID/gh901-exec1" ] \
   && pass "K4 prior token history and execution records preserved" || fail "K4 prior history damaged"
 
@@ -932,10 +932,10 @@ bash "$FR/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1 \
 
 # M3 (F1): a jog-state commit exists before dispatch, and a containment-style revert
 # of tracked ledger files cannot destroy the queue row anymore
-git -C "$FR" log --oneline --grep="^jog-state:" -1 | grep -q "jog-state:" \
+grep -q "jog-state:" <<<"$(git -C "$FR" log --oneline --grep="^jog-state:" -1)" \
   && pass "M3 supervisor-state commit landed before dispatch (F1)" \
   || fail "M3 no jog-state commit found"
-git -C "$FR" show --name-only --format= "$(git -C "$FR" log --format=%H --grep="^jog-state:" -1)" | grep -q "releases.db" \
+grep -q "releases.db" <<<"$(git -C "$FR" show --name-only --format= "$(git -C "$FR" log --format=%H --grep="^jog-state:" -1)")" \
   && pass "M3 the supervisor commit carries releases.db" || fail "M3 supervisor commit lacks releases.db"
 git -C "$FR" checkout -q -- releases.db releases.sql
 N_ROWS="$(sqlite3 "$FR/releases.db" "SELECT count(*) FROM jog_queue WHERE gh_number = 901;")"

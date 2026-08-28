@@ -524,6 +524,9 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
             argv += ["--relay-task", f"{prior_token}-{len(state['executions'])}"]
     argv += ["--execution-id", exec_id]
     record["result_path"] = _ledger_rel_path(root, gid, invocation["result_path"])
+    # PR #281 review B4: persist the result path BEFORE dispatch — a crash mid-drive otherwise
+    # orphans a receipt that was actually written (the ledger's newest record still says null).
+    jog_save_state(root, gid, state)
 
     env = dict(os.environ)
     env.update(invocation["env"])
