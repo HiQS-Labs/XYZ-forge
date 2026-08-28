@@ -143,3 +143,31 @@ I have revised the test `test/gh105-vendor-releases-addon.sh` to fully verify th
 All tests pass.
 
 Handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+I read the complete contents of every scoped artifact, including the pre-existing vendor/sync
+implementation and all listed test helpers. No additional feature-blocking pre-existing defect
+surfaced in that sweep.
+
+**Finding — the revised GH-105 test is a false positive:** it sets `XYZ_REGISTRY="$WORK/registry"`
+and immediately runs `mkdir -p "$XYZ_REGISTRY"`. That makes the supposed registry a directory.
+`xyz-vendor.sh` then moves its temporary registry file *into* that directory, leaving
+`$XYZ_REGISTRY` non-regular; `xyz-sync.sh`'s `select_vendored_rows` stops at
+`[ -f "$XYZ_REGISTRY" ] || return 0`. Therefore `xyz-sync.sh update "$TEST_REPO"` prints the
+no-matched-rows message and exits successfully without invoking `xyz-vendor.sh`. The payload and
+ledger hashes pass only because no update occurred.
+
+Set the registry to a file path (for example `$WORK/registry.tsv`) and create only its parent
+directory if needed. Assert it is a regular registry with the target row before updating, and
+assert the update actually materialized a new `VERSION` (or otherwise prove `xyz-vendor.sh` ran),
+in addition to the existing payload and ledger-preservation assertions.
+
+**Finding — test fixture is not self-contained:** the new test runs `git commit --allow-empty` in
+`$TEST_REPO` without configuring an identity, while `_setup.sh` configures only its `$A` and `$B`
+clones. The commit is unnecessary to the test; remove it, or provide inline test identity config,
+so a host without global Git identity can run this targeted test.
+
+**Verdict:** Changes requested
