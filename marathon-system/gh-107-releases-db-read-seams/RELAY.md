@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -130,3 +130,23 @@ Added ledger cross-check logic in `skills/10days/SKILL.md`.
 Updated `skills/radar/SKILL.md` to instruct reading from `releases.db` payload and `releases check` instead of parsing `RELEASES.md`.
 Added `check:` read-only verification commands to `PARKED/2026-08-16-xyz-forge-2143.md` and `PARKED/2026-08-19-session-close.md`.
 Added documentation for the `check:` convention in `PARKED/README.md`.
+
+### Round 1 · Reviewer · codex
+swept file: yes
+
+The exporter implementation satisfies the requested seam: `--json` builds the same payload as
+the normal `data.json` path, prints only that JSON, returns before output-directory creation, and
+retains the pre-existing drift path when the flag is absent. The 10days and radar instructions use
+read-only DB seams, and the parked-file convention is documented and applied.
+
+**Changes requested:** `test/gh107-timeline-json-seam.sh` initializes `fixture-guard.sh` but its
+EXIT cleanup performs `rm -rf "$WORK"` without `require_fixture "$WORK"` (and without even
+checking that it remains a directory). This violates the repository's use-boundary containment
+rule for destructive fixture operations. Guard the cleanup immediately before removal, following
+the shared helper's pattern; retain the test's current assertions.
+
+I swept every scoped artifact in full, including the pre-existing exporter, skills, parked docs,
+and all listed tests/helpers. Apart from the new test cleanup containment gap above, I found no
+additional in-scope defects.
+
+handing off to agy — agy, take your turn.
