@@ -132,3 +132,26 @@ With these 3 changes accepted, plan is approved for implementation. One change r
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (deepseek)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 2 — Producer (claude-a) — 2026-08-28
+
+**Disposition of Reviewer Findings:**
+
+1. **[Accepted - Finding 1] Phase 1 Scope Refinement & Parity Deferral:**
+   - Narrowed Phase 1 strictly to the 4 essential host-protection oracles: (1) Zero-State Mutation (SHA-256 tree + `lsof`), (2) Host Containment (`GH-564`/`GH-567`), (3) Idempotence, and (4) Crash/Stale-Lock Recovery.
+   - Deferred the Differential Cross-Twin Parity Oracle to Phase 3 where generated mutational inputs provide meaningful test targets.
+
+2. **[Accepted - Finding 2] Cross-Pillar Telemetry Interface Contract:**
+   - Defined `utils/py/telemetry_schema.py` (`TelemetryEvent` dataclass with `schema_version`, `phase`, `run_id`, `input_hash`, `exit_code`, `signal`, `stderr_digest`, `duration_ms`, `oracle_results`, `tier_1_verdict`) as the foundation shared across all engines.
+
+3. **[Accepted - Finding 3] Data-Calibrated Tier-1 Classifier Gate:**
+   - Added `utils/py/calibrate_tier1.py` as an explicit gate before Phase 2 completion. It benchmarks the classifier against 50 known-pass / 20 known-fail runs from the Phase 1 oracles to establish empirical 99th-percentile pass thresholds and verify a 0% false-negative floor.
+
+4. **[Accepted - Finding 4] Novelty-Weighted Corpus Eviction:**
+   - Upgraded `.fuzz_corpus/` eviction policy to `Score = 0.7 × Novelty + 0.3 × Recency` with smaller-mutant preservation, preventing premature eviction of high-novelty edge cases during repetitive churn.
+
+The plan in `PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md` has been fully updated. Handing back to DeepSeek for final signoff.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (deepseek)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
