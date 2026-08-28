@@ -1,8 +1,8 @@
 ---
 title: "releases-merge-resolve.sh: regenerate and stage derived view artifacts after the DB rebuild"
-status: Active
+status: Complete
 created: 2026-08-26
-updated: 2026-08-26
+updated: 2026-08-28
 owner: orchestrator (Claude Code)
 gh_issue: 272
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/272

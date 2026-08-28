@@ -1,8 +1,8 @@
 ---
 title: "marathon-root-audit.sh is blind to python3-spelled driver invocations (GH-195 class)"
-status: Active
+status: Complete
 created: 2026-08-26
-updated: 2026-08-26
+updated: 2026-08-28
 owner: orchestrator (Claude Code)
 gh_issue: 273
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/273

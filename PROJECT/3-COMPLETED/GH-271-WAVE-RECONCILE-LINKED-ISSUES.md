@@ -1,8 +1,8 @@
 ---
 title: "wave_reconcile.py: linked-issue extraction is mention-greedy; rollback leaves regenerated artifacts behind"
-status: Active
+status: Complete
 created: 2026-08-26
-updated: 2026-08-26
+updated: 2026-08-28
 owner: orchestrator (Claude Code)
 gh_issue: 271
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/271
