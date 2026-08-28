@@ -62,3 +62,8 @@ Fix: after restore, assert `git status --porcelain` clean via the existing
 
 - `bash test/gh202-wave-reconcile-issue-state.sh` (extended) green
 - Full `./validate.sh` green
+
+## Lessons Learned (For Future Agents)
+
+1. **Closing keywords vs prose mentions:** In multi-phase projects and issue tracking, differentiating between explicit closing verbs (`closes #N`) and informal citations (`mentions GH-N`) is load-bearing. Informal mentions must never trigger destructive document relocations or premature status promotions.
+2. **Verifiable rollback completeness:** Partial rollbacks that silently leave generated artifacts behind can corrupt clean development environments. Asserting porcelain cleanliness against a captured pre-run baseline guarantees fail-safe recovery when a step in a multi-step mutation aborts.

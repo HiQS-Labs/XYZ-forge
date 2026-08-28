@@ -54,3 +54,8 @@ Fix:
 
 - `bash test/gh57-live-merge-resolve.sh` (extended) green
 - Full `./validate.sh` green
+
+## Lessons Learned (For Future Agents)
+
+1. **Automate derived view regeneration in resolvers:** Derived markdown and HTML views are rendered directly from database state. Embedding view regeneration and automatic staging into the single-command merge resolver (`releases-merge-resolve.sh`) eliminates human error and repetitive hand-regeneration taxes across concurrent branches.
+2. **Fail-closed posture during merges:** When regenerating views during merge resolution, generator failures must hard-fail and leave the merge open rather than emitting warnings, preventing the accidental commitment of stale or corrupted artifacts.

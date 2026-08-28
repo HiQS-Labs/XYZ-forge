@@ -56,3 +56,8 @@ Fix:
 
 - new pinning test green; `bash test/marathon-root-audit.sh` still green
 - Full `./validate.sh` green
+
+## Lessons Learned (For Future Agents)
+
+1. **Multi-interpreter invocation shape coverage:** When auditing root-safety or security constraints, matcher logic must recognize all execution spellings (`python3`, explicit paths, environment prefixes, variable aliases) in program position without false-positive matching on heredoc data streams or comments.
+2. **Hermetic invariant testing:** Pinning both positive scoping and negative un-scoped controls in dedicated tests ensures that interpreter short-flags and compound command lines cannot bypass safety filters unnoticed.
