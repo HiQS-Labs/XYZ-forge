@@ -43,6 +43,108 @@ TRIVIAL_PROBE_PATTERNS = [
 ]
 
 
+# ── GH-280: structured Jog ↔ Preflight ↔ Marathon machine contracts ────────────────────────────
+# Jog consumes Swarm Preflight's marathon-invocation@1 artifact and Marathon's marathon-drive/
+# result@1 receipt as DATA. It never parses shell text, relay prose, or the driver's stdout —
+# that is the GH-279 failure family this recalibration exists to end. These loaders are the one
+# validation boundary: unsupported schema versions and malformed artifacts are refused loudly
+# BEFORE any dispatch (no lease mutation, no token spend).
+
+MARATHON_INVOCATION_SCHEMA = "swarm-preflight/marathon-invocation@1"
+MARATHON_RESULT_SCHEMA = "marathon-drive/result@1"
+
+
+class ContractError(Exception):
+    """A machine contract failed validation — refuse before dispatch, never guess."""
+
+
+def _load_contract_json(path, expected_schema, what):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+    except OSError as exc:
+        raise ContractError(f"{what} unreadable at {path}: {exc}")
+    except ValueError as exc:
+        raise ContractError(f"{what} at {path} is not valid JSON: {exc}")
+    if not isinstance(obj, dict):
+        raise ContractError(f"{what} at {path} is not a JSON object")
+    schema = obj.get("schema")
+    if schema != expected_schema:
+        raise ContractError(
+            f"{what} at {path} carries schema {schema!r}; this Jog supports only "
+            f"{expected_schema!r} — refusing rather than guessing at an unknown contract")
+    return obj
+
+
+def load_marathon_invocation(path):
+    """Load and validate a swarm-preflight/marathon-invocation@1 artifact.
+
+    Returns the dict on success; raises ContractError on anything a supervisor must not
+    dispatch against. Packet presence is checked because argv embeds the packet path.
+    """
+    obj = _load_contract_json(path, MARATHON_INVOCATION_SCHEMA, "marathon invocation")
+
+    argv = obj.get("argv")
+    if not isinstance(argv, list) or not argv or any(not isinstance(a, str) or not a for a in argv):
+        raise ContractError("invocation argv must be a non-empty array of non-empty strings")
+    drive = argv[0]
+    if not os.path.isabs(drive):
+        raise ContractError(f"invocation argv[0] must be absolute (got {drive!r})")
+    if not os.path.isfile(drive) or not os.access(drive, os.X_OK):
+        raise ContractError(f"invocation drive command is not an executable file: {drive}")
+
+    env = obj.get("env")
+    if not isinstance(env, dict) or any(not isinstance(k, str) or not isinstance(v, str)
+                                        for k, v in env.items()):
+        raise ContractError("invocation env must be an object of string -> string")
+
+    for key, check in (
+        ("harness_root", os.path.isdir),
+        ("target_root", os.path.isdir),
+        ("packet_path", os.path.isfile),
+    ):
+        val = obj.get(key)
+        if not isinstance(val, str) or not val:
+            raise ContractError(f"invocation field {key!r} must be a non-empty string")
+        if not check(val):
+            raise ContractError(f"invocation field {key!r} does not resolve: {val}")
+
+    for key in ("issue", "phase", "lane", "gate", "builder", "reviewer", "base_ref",
+                "result_path", "packet_dir"):
+        if key not in obj:
+            raise ContractError(f"invocation is missing required field {key!r}")
+    if not isinstance(obj.get("artifacts"), list):
+        raise ContractError("invocation artifacts must be an array")
+    return obj
+
+
+def load_marathon_result(path):
+    """Load and validate a marathon-drive/result@1 receipt.
+
+    Field VALUES may be null (Marathon writes explicit nulls for unreached values); the KEYS
+    must all be present with the right shape, so a truncated or hand-edited receipt is refused
+    rather than half-trusted.
+    """
+    obj = _load_contract_json(path, MARATHON_RESULT_SCHEMA, "marathon result")
+
+    for key in ("execution_id", "outcome", "reason", "exit_code", "issue", "phase", "lane",
+                "token", "attempt", "target_repo", "base_branch", "head_branch", "head_sha",
+                "gate", "acceptance", "pr", "timestamps"):
+        if key not in obj:
+            raise ContractError(f"result receipt is missing required field {key!r}")
+
+    if not isinstance(obj["execution_id"], str) or not obj["execution_id"]:
+        raise ContractError("result execution_id must be a non-empty string")
+    if not isinstance(obj["exit_code"], int) or isinstance(obj["exit_code"], bool):
+        raise ContractError("result exit_code must be an integer")
+    if not isinstance(obj["outcome"], str) or not obj["outcome"]:
+        raise ContractError("result outcome must be a non-empty string")
+    for key in ("target_repo", "gate", "attempt", "pr", "timestamps"):
+        if not isinstance(obj[key], dict):
+            raise ContractError(f"result field {key!r} must be an object")
+    return obj
+
+
 class JogSupervisorLock:
     """Outer driver lock supervisor ensuring exclusive execution on the clone."""
 

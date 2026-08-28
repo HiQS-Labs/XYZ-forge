@@ -60,6 +60,267 @@ def _exit_meaning(code):
     return _EXIT_MEANINGS.get(code, "unrecognised exit code")
 
 
+# ── GH-280: opt-in durable terminal result receipt (marathon-drive/result@1) ──────────────────
+# A supervisor (Jog) driving marathon-drive as its executor needs a machine-readable terminal
+# record: outcome, identity (issue/phase/lane/token/attempt), repo/branch/SHA, gate + acceptance
+# results, and PR identity when one exists. Parsing the driver's stdout or the relay file's prose
+# is forbidden (that is the GH-279 failure family this exists to end), so the driver emits the
+# record itself — from ONE writer reached from every exit path, registered as an _ON_EXIT hook the
+# moment --result-file is validated, so every die()/sys.exit/escalation after arming flows through
+# it. Fully opt-in: without --result-file no state is armed, no hook runs, and observable
+# behavior is byte-identical.
+#
+# Marathon's semantics are preserved exactly: PR publication stays best-effort. A missing/failed
+# PR shows up as explicit nulls plus a note — it never redefines a green phase as red.
+RESULT_SCHEMA = "marathon-drive/result@1"
+
+_RESULT = {
+    "armed": False,
+    "path": None,
+    "execution_id": None,
+    "started_at": None,
+    "reason": None,            # machine reason token; falls back to _exit_meaning(code)
+    "phase": None,
+    "builder": None,
+    "reviewer": None,
+    "root": None,              # harness root (MARATHON_ROOT-resolved)
+    "target_repo_path": None,  # repo the artifact lands in (target_root or root)
+    "lane": None,
+    "token": None,
+    "gate_cmd": None,
+    "gate_result": None,       # green / red / not-run
+    "gate_exit": None,
+    "acceptance": None,        # {"checked": bool, "unmet_count": int}
+    "base_branch": None,       # set when the GH-561 branch guard redirected this run
+    "head_branch": None,
+    "branch_redirect": None,   # True when the guard cut/switched a lane branch
+    "attempt_max": None,
+    "pr_note": None,           # non-None when PR publication was attempted and failed
+    "phases_dir": None,
+}
+
+_EXECUTION_ID_RE = re.compile(r'^[A-Za-z0-9._:@/-]+$')
+
+
+def _result_outcome(code):
+    """Map a driver exit code onto the receipt's outcome vocabulary."""
+    try:
+        code = int(code)
+    except (TypeError, ValueError):
+        return "escalated"
+    if code == 0:
+        return "approved"
+    if code == 1:
+        return "lock-contention"
+    if code == 2:
+        return "refused"
+    if code == 8:
+        return "parked"
+    if code == 9:
+        return "post-approve-failed"
+    if code >= 128:
+        return "interrupted"
+    return "escalated"
+
+
+def _derive_issue_number(lane, task, brief_name):
+    """Same derivation lane_issue_number() performs, at module scope for the exit hook."""
+    for candidate in (lane, task, brief_name):
+        m = re.search(r'GH-?([0-9]+)', str(candidate or ""))
+        if m:
+            return m.group(1)
+    return None
+
+
+def _result_cmd_out(cmd, cwd=None):
+    """Best-effort stdout capture for the receipt's git/gh probes; failure yields None."""
+    try:
+        res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=30)
+    except Exception:
+        return None
+    if res.returncode != 0:
+        return None
+    out = (res.stdout or "").strip()
+    return out or None
+
+
+def write_terminal_result(code):
+    """The single terminal writer. Registered once via _ON_EXIT; never raises, never changes
+    the process's real exit code — the receipt is a record, not a verdict override."""
+    if not _RESULT.get("armed") or not _RESULT.get("path"):
+        return
+    try:
+        _write_terminal_result_inner(code)
+    except Exception as exc:
+        eprint(f"marathon-drive: result receipt could not be written "
+               f"({exc.__class__.__name__}: {exc}) — the run's own exit code is unaffected")
+
+
+def _write_terminal_result_inner(code):
+    repo = _RESULT.get("target_repo_path") or _RESULT.get("root") or os.getcwd()
+    lane = _RESULT.get("lane")
+    head_branch = _RESULT.get("head_branch") or _result_cmd_out(
+        ["git", "-C", repo, "symbolic-ref", "--quiet", "--short", "HEAD"])
+    head_sha = _result_cmd_out(["git", "-C", repo, "rev-parse", "HEAD"])
+
+    origin_url = _result_cmd_out(["git", "-C", repo, "remote", "get-url", "origin"])
+
+    pr_number = pr_url = pr_state = None
+    if head_branch and shutil.which("gh"):
+        raw = _result_cmd_out(["gh", "pr", "list", "--head", head_branch,
+                               "--json", "number,url,state", "--jq", ".[0]"], cwd=repo)
+        if raw:
+            try:
+                pr = json.loads(raw)
+                # Real gh with --jq '.[0]' yields the object or empty output; tolerate the
+                # unfiltered array shape too rather than die on a list-vs-dict mismatch.
+                if isinstance(pr, list):
+                    pr = pr[0] if pr else {}
+                if isinstance(pr, dict):
+                    num = pr.get("number")
+                    pr_number = int(num) if str(num or "").isdigit() else None
+                    pr_url = pr.get("url") or None
+                    pr_state = pr.get("state") or None
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                pass
+
+    attempt_count = _RESULT.get("attempt_count")
+    if attempt_count is None and lane and _RESULT.get("root"):
+        attempts_file = os.path.join(_RESULT["root"], ".tick", "attempts",
+                                     re.sub(r'[^A-Za-z0-9._-]', '_', lane))
+        if os.path.isfile(attempts_file):
+            try:
+                with open(attempts_file, "r") as f:
+                    attempt_count = sum(1 for _ in f)
+            except OSError:
+                pass
+
+    gate_receipt_path = None
+    if head_sha and _RESULT.get("root"):
+        candidate = os.path.join(_RESULT["root"], ".xyz", "receipts", f"{head_sha}.json")
+        if os.path.isfile(candidate):
+            gate_receipt_path = candidate
+
+    relay_status = None
+    if _RESULT.get("phases_dir") and lane:
+        relay_file = os.path.join(_RESULT["phases_dir"], lane, "RELAY.md")
+        try:
+            with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if line.startswith("STATUS:"):
+                        relay_status = line.split(":", 1)[1].strip()
+                        break
+        except OSError:
+            pass
+
+    outcome = _result_outcome(code)
+    if _RESULT.get("crashed"):
+        outcome = "crashed"
+    elif outcome == "lock-contention" and _RESULT.get("reason"):
+        # Exit 1 is lock contention ONLY when nothing else recorded a more specific cause
+        # (e.g. a tick command failing with its own exit-1) — those are escalations, not
+        # contention, and a supervisor would respond to the two in opposite ways.
+        outcome = "escalated"
+    reason = _RESULT.get("reason") or _exit_meaning(code)
+    if outcome == "interrupted":
+        reason = _RESULT.get("reason") or f"interrupted (exit {code})"
+    elif outcome == "crashed":
+        reason = _RESULT.get("reason") or "driver raised an unhandled exception"
+
+    brief_name = _RESULT.get("brief_name")
+    issue = _derive_issue_number(_RESULT.get("lane"), _RESULT.get("token"), brief_name)
+
+    receipt = {
+        "schema": RESULT_SCHEMA,
+        "execution_id": _RESULT.get("execution_id"),
+        "generated_at": _utc_now_z(),
+        "outcome": outcome,
+        "reason": reason,
+        "exit_code": code,
+        "approval_preserved": outcome == "post-approve-failed",
+        "issue": issue,
+        "phase": _RESULT.get("phase"),
+        "lane": lane,
+        "token": _RESULT.get("token"),
+        "attempt": {"count": attempt_count, "max": _RESULT.get("attempt_max")},
+        "builder": _RESULT.get("builder"),
+        "reviewer": _RESULT.get("reviewer"),
+        "target_repo": {"path": _RESULT.get("target_repo_path") or _RESULT.get("root"),
+                        "origin_url": origin_url},
+        "base_branch": _RESULT.get("base_branch"),
+        "head_branch": head_branch,
+        "head_sha": head_sha,
+        "branch_redirect": bool(_RESULT.get("branch_redirect")),
+        "gate": {
+            "cmd": _RESULT.get("gate_cmd"),
+            "result": _RESULT.get("gate_result") or "not-run",
+            "exit": _RESULT.get("gate_exit"),
+            "receipt_path": gate_receipt_path,
+        },
+        "acceptance": _RESULT.get("acceptance"),
+        "pr": {"number": pr_number, "url": pr_url, "state": pr_state},
+        "pr_note": _RESULT.get("pr_note"),
+        "relay_status": relay_status,
+        "timestamps": {"started_at": _RESULT.get("started_at"),
+                       "finished_at": _utc_now_z()},
+    }
+
+    target = _RESULT["path"]
+    directory = os.path.dirname(target) or "."
+    fd, tmp = tempfile.mkstemp(dir=directory, prefix=".marathon-result.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(receipt, f, indent=2)
+            f.write("\n")
+        os.replace(tmp, target)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+    log(f"result receipt written: {target} (outcome: {outcome}, exit {code})")
+
+
+def _result_arm(args, root, target_root):
+    """Validate --result-file / --execution-id and arm the terminal writer.
+
+    Called immediately after the root resolution succeeds and before any preflight that can
+    die — a malformed path is a pre-dispatch refusal (exit 2), never a half-armed run.
+    """
+    path = os.path.abspath(os.path.expanduser(args.result_file.strip()))
+    if os.path.isdir(path):
+        die(f"--result-file points at a directory: {path}")
+    parent = os.path.dirname(path)
+    if not os.path.isdir(parent):
+        die(f"--result-file parent directory does not exist: {parent} — create it first; "
+            f"marathon-drive will not guess a location for the receipt")
+    execution_id = args.execution_id
+    if execution_id is not None:
+        execution_id = execution_id.strip()
+        if not execution_id or not _EXECUTION_ID_RE.fullmatch(execution_id):
+            die(f"--execution-id must be non-empty and match {_EXECUTION_ID_RE.pattern!r}: "
+                f"{args.execution_id!r}")
+    else:
+        stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        execution_id = f"mdrive-{args.phase_id}-{stamp}"
+
+    _RESULT.update({
+        "armed": True,
+        "path": path,
+        "execution_id": execution_id,
+        "started_at": _utc_now_z(),
+        "phase": args.phase_id,
+        "builder": args.builder,
+        "reviewer": args.reviewer,
+        "root": root,
+        "target_repo_path": (os.path.abspath(target_root) if target_root else root),
+        "attempt_max": int(os.environ.get("LANE_MAX_ATTEMPTS", "2") or 2),
+        "brief_name": os.path.basename(args.phase_brief_file or "") or None,
+    })
+    _ON_EXIT.append(write_terminal_result)
+
+
 def runlog_find_comment_id(payload_text, marker):
     """Return the id of the run-log comment carrying <marker>, or "" if there is none.
 
@@ -241,6 +502,9 @@ def run_tick_loud(cmd_args):
         for stream in (res.stdout, res.stderr):
             for line in (stream or "").splitlines():
                 eprint(f"  {line}")
+        # GH-280: tick's failure exits with its own code, which can collide with the driver's
+        # exit-1 lock-contention meaning — record the real reason for the result receipt.
+        _RESULT["reason"] = f"tick-command-failed (exit {res.returncode})"
         sys.exit(res.returncode)
 
 def preflight_write_set_trackable(repo_root, paths, transcript_paths=None):
@@ -402,6 +666,7 @@ def phase_commit_root(root, phase_dir, target_root):
 def _probe_bin(bin_name, role_label, agent_id):
     if shutil.which(bin_name):
         return
+    _RESULT["reason"] = f"{role_label}-binary-missing"
     die(f"{role_label} binary '{bin_name}' not found on PATH (--{role_label} agent '{agent_id}')")
 
 def _probe_claude_bin(role_label):
@@ -415,6 +680,7 @@ def _probe_claude_bin(role_label):
         local_claude = os.path.join(os.path.expanduser("~"), ".claude", "local", "claude")
         if os.access(local_claude, os.X_OK):
             return
+    _RESULT["reason"] = f"{role_label}-binary-missing"
     die(f"{role_label} binary 'claude' not found on PATH (set CLAUDE_BIN or use a codex/agy --{role_label} agent)")
 
 def _probe_agent_bin(agent_id, role_label):
@@ -651,6 +917,13 @@ def main():
                         help="permit committing to the receiving repo's trunk/default branch (GH-402)")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--log-github", dest="log_github", action="store_true")  # GH-284 P2 / GH-322
+    # GH-280: opt-in durable terminal-result receipt for supervisors. No behavior change when unset.
+    parser.add_argument("--result-file", dest="result_file",
+                        help="write a marathon-drive/result@1 JSON receipt at this path on every "
+                             "terminal exit (GH-280; opt-in, atomic, never changes the exit code)")
+    parser.add_argument("--execution-id", dest="execution_id",
+                        help="caller-assigned execution ID recorded in the result receipt "
+                             "(default: mdrive-<phase>-<utc stamp>)")
     parser.add_argument("--help", action="store_true")
 
     args, unknown = parser.parse_known_args()
@@ -662,6 +935,9 @@ def main():
         print("  --log-github            GH-284 opt-in run log (default OFF). Updates the lane's EXISTING GitHub")
         print("                          issue in place via a marker comment — never creates an issue, never closes")
         print("                          one. A missing/unauthenticated gh degrades to local telemetry only.")
+        print("  --result-file PATH      GH-280 opt-in terminal result receipt (marathon-drive/result@1), written")
+        print("                          atomically on every terminal exit. Never changes the run's exit code.")
+        print("  --execution-id ID       GH-280 caller-assigned execution ID recorded in the result receipt.")
         sys.exit(0)
 
     # GH-322: `unknown` was captured and never read, so ANY unrecognised flag was silently
@@ -711,6 +987,13 @@ def main():
     # os.access(X_OK) at spawn time, so a harness missing the script simply harvests nothing.
     harvest_findings_bin = os.path.join(xyz_harness, "relay-automation", "harvest-findings.sh")
 
+    # GH-280: arm the terminal-result receipt BEFORE anything below can die, so every refusal,
+    # escalation, and success path from here on produces exactly one receipt when requested.
+    # --help / unknown-arg / missing-required-arg exits above are pre-arm on purpose: they never
+    # started a run, and a supervisor treats "exit non-zero, no receipt" as "driver never armed".
+    if args.result_file:
+        _result_arm(args, root, args.target_root)
+
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
@@ -739,6 +1022,10 @@ def main():
         elif count >= max_attempts:
             eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
             eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
+            # GH-280: the receipt reports the count that PARKED the lane; the attempts file
+            # still holds it here, but record it explicitly so the receipt survives any later
+            # state change.
+            _RESULT["attempt_count"] = count
             # Sentinel Tier 1 (GH-281/GH-342). The Bash lane emits this from the CALLER, on rc==8
             # (marathon-drive.sh:1103-1106); this gate exits directly, so it emits here instead —
             # same record, same position relative to the two messages above. `raw`, not `key`: the
@@ -759,6 +1046,10 @@ def main():
             pass
         with open(attempts_file, "a") as f:
             f.write(f"{ts} fire\n")
+        # GH-280: record the attempt this fire represents — complete_phase_success RESETS the
+        # attempts file, so a receipt that re-reads it after a green phase would report null
+        # for a run that genuinely fired.
+        _RESULT["attempt_count"] = count + 1
         return 0
 
     def lane_attempt_reset(root_dir, raw):
@@ -931,6 +1222,7 @@ def main():
     # PHASES_DIR still override it exactly as before; only the default value changed. Historical
     # runs stay in `phases/` — the monitors read both, this driver only ever writes the new one.
     phases_dir = args.phases_dir or os.path.join(root, "marathon-system")
+    _RESULT["phases_dir"] = phases_dir
     # GH-319: the default gate is interpolated into a string that run_pre_advance_gate() hands to
     # `bash -c`, so an UNQUOTED root word-splits on any space in the repo path. Observed live: a
     # clone at ".../Documents/GH Repos/xyz-3-agents-swarm" produced `bash /Users/.../Documents/GH
@@ -976,10 +1268,13 @@ def main():
         log("  (--strict: a detected-but-missing tool FAILS rather than silently narrowing the gate;\n   exits 3 when it detects nothing, so 'no checks found' fails rather than passes)")
     else:
         pre_advance_cmd = f"bash {shlex.quote(os.path.join(root, 'validate.sh'))}"
+    _RESULT["gate_cmd"] = pre_advance_cmd
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
+    _RESULT["token"] = relay_task
     # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
     # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
     lane_state_key = get_env("MARATHON_LANE_NS") or args.phase_id
+    _RESULT["lane"] = lane_state_key
 
     # ── GH-284 Phase 2, ported (GH-322) ────────────────────────────────────────────────────────
     # BOTH halves of Phase 2 — the driver heartbeat AND the --log-github run log — existed only in
@@ -1423,9 +1718,11 @@ def main():
                 target_root=args.target_root, phase_id=args.phase_id,
                 relay_task=relay_task)
             eprint(f"marathon-drive: lane parked — issue {issue_display} is already closed")
+            _RESULT["reason"] = "issue-closed"
             sys.exit(4)
 
     def _pre_advance_not_runnable(reason):
+        _RESULT["reason"] = "pre-advance-gate-not-runnable"
         die(f"pre-advance gate not runnable: '{pre_advance_cmd}' ({reason}). "
             f"Pass --pre-advance-cmd '<runnable command>' to override it.")
     def _preflight_pre_advance_gate():
@@ -1509,6 +1806,7 @@ def main():
         else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode")
         
     if args.builder == args.reviewer:
+        _RESULT["reason"] = "builder-equals-reviewer"
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
         
     route_agent(args.builder)
@@ -1654,6 +1952,7 @@ relay-file: {rel_relay}
         _phase_memory_sample(f"{args.phase_id}-escalated", root=root, tick_bin=tick_bin, relay_task=relay_task)
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(f"escalation written: {esc_file} (reason: {reason})")
+        _RESULT["reason"] = reason
         # marathon-drive.sh:867-868 — last thing escalate() does, carrying the relay-drive exit code.
         xyz_debug_log_append(
             root, "error", "marathon.escalation",
@@ -1784,10 +2083,12 @@ relay-file: {rel_relay}
                     if rc == base_rc or (rc > 0 and rc <= base_rc):
                         log(f"gate-baseline: gate exit {rc} matches recorded baseline allowance ({base_rc}) — allowing advance (GH-378)")
                         run_gate_result[0] = "green"
+                        _RESULT.update({"gate_result": "green", "gate_exit": 0})
                         return 0
                 except ValueError:
                     pass
             run_gate_result[0] = "green" if rc == 0 else "red"
+            _RESULT.update({"gate_result": run_gate_result[0], "gate_exit": rc})
             return rc
 
         cfg = _gate_guard_config()
@@ -1868,10 +2169,12 @@ relay-file: {rel_relay}
                 if rc == base_rc or (rc > 0 and rc <= base_rc):
                     log(f"gate-baseline: gate exit {rc} matches recorded baseline allowance ({base_rc}) — allowing advance (GH-378)")
                     run_gate_result[0] = "green"
+                    _RESULT.update({"gate_result": "green", "gate_exit": 0})
                     return 0
             except ValueError:
                 pass
         run_gate_result[0] = "green" if rc == 0 else "red"
+        _RESULT.update({"gate_result": run_gate_result[0], "gate_exit": rc})
         return rc
 
     def run_post_approve_cmd():
@@ -2045,6 +2348,9 @@ relay-file: {rel_relay}
             if line.strip():
                 log(f"lane PR: {line.strip()}")
         if res.returncode != 0:
+            _RESULT["pr_note"] = (f"pr-publication-failed: closeout exited {res.returncode}; "
+                                  f"the phase stays green and its commits are on '{head}' — "
+                                  f"open the PR by hand: gh pr create --base {base} --head {head}")
             log(f"lane PR: closeout exited {res.returncode} — the phase is still GREEN and its commits "
                 f"are on '{head}'. Open the PR by hand: "
                 f"gh pr create --base {base} --head {head}")
@@ -2054,6 +2360,8 @@ relay-file: {rel_relay}
         # acceptance — that is exactly why the reported lane passed it while having changed nothing —
         # so a lane that did not do its own job should say so in its own terms, not as a gate failure.
         unmet = acceptance_probes_unmet()
+        _RESULT["acceptance"] = {"checked": unmet is not None,
+                                 "unmet_count": len(unmet) if unmet else 0}
         if unmet:
             for p in unmet:
                 log(f"acceptance probe still {p.get('verdict')}: type={p.get('type')} path={p.get('path')}")
@@ -2085,6 +2393,7 @@ relay-file: {rel_relay}
             sys.exit(5)
         if success_mode == "already-satisfied":
             success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
+            _RESULT["reason"] = "already-satisfied"
         else:
             success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -2261,6 +2570,7 @@ relay-file: {rel_relay}
                 for p in dirty:
                     if p: log(f"  • {p}")
                 if args.require_clean:
+                    _RESULT["reason"] = "require-clean-dirty-workspace"
                     die("--require-clean set and the workspace has pre-existing changes (above)")
         except Exception: pass
 
@@ -2568,6 +2878,8 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             sys.exit(2)
 
         lane_branch_cut[0] = (commit_root, lane_branch, current)
+        _RESULT.update({"base_branch": current, "head_branch": lane_branch,
+                        "branch_redirect": True})
         log(f"branch guard: {commit_root} was on its {kind} '{current}' — "
             f"{'switched to' if exists else 'cut'} '{lane_branch}' and continuing (GH-561)")
         log("  this lane's commits land there; a green phase opens a PR back into "
@@ -2883,6 +3195,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         xyz_marathon_emit("red", timeout_emit[0])
         sys.exit(7)
     else:
+        _RESULT["reason"] = f"unexpected-relay-exit-{relay_exit}"
         die(f"relay-drive exited with unexpected code {relay_exit}")
 
 if __name__ == "__main__":
@@ -2931,6 +3244,9 @@ if __name__ == "__main__":
             _exit_code = _e.code if isinstance(_e.code, int) else (0 if _e.code is None else 1)
         except BaseException:
             _exit_code = 1
+            # GH-280: an unhandled driver crash must not read as "lock contention" (also exit 1)
+            # in the result receipt — the two demand opposite responses from a supervisor.
+            _RESULT["crashed"] = True
             raise
     finally:
         for _hook in _ON_EXIT:

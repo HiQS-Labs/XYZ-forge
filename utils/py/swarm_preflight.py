@@ -1065,6 +1065,67 @@ def check_source_url(doc_path, issue_number, tracking_slug=None):
     res["detail"] = f"source: resolves to issue #{issue_number} ({res['url']})"
     return res
 
+MARATHON_INVOCATION_SCHEMA = "swarm-preflight/marathon-invocation@1"
+
+
+def build_marathon_invocation_artifact(now, root, drive_cmd, target_root, out_dir,
+                                       slug, gate_cmd, art_csv, issue, base_ref, builder, reviewer):
+    """GH-280: the structured, machine-consumable Marathon invocation contract.
+
+    The existing `marathon-invocation.txt` is shell text for a human to copy — a supervisor
+    must never parse it (no shell-string parsing as an API). This artifact carries the same
+    suggestion as real data: argv as an array, explicit env entries, roots, identity fields,
+    and the packet/result paths. `builder`/`reviewer` mirror the text invocation's suggestion
+    (codex/agy, GH-212); a supervisor that requires an explicit reviewer selection must still
+    enforce its own policy — the artifact is a suggestion, not an authorization.
+
+    Pure builder: no I/O, no exit paths — directly testable (GH-322 precedent).
+    """
+    drive_abs = os.path.abspath(os.path.join(root, drive_cmd))
+    harness_home = root
+    if drive_cmd.startswith(".xyz/"):
+        harness_home = os.path.join(root, ".xyz")
+    argv = [
+        drive_abs,
+        "--phase-brief", os.path.join(out_dir, "packet.md"),
+        "--reviewer", reviewer,
+        "--builder", builder,
+        "--artifact", art_csv,
+    ]
+    if os.path.realpath(target_root) != os.path.realpath(root):
+        argv += ["--target-root", target_root]
+    argv += [
+        "--pre-advance-cmd", gate_cmd,
+        "--result-file", os.path.join(out_dir, "marathon-result.json"),
+        "--require-clean",
+    ]
+    return {
+        "schema": MARATHON_INVOCATION_SCHEMA,
+        "generated_at": now,
+        "harness_root": root,
+        "harness_home": harness_home,
+        "target_root": target_root,
+        "drive_command": drive_abs,
+        "argv": argv,
+        "env": {
+            "XYZ_HARNESS_CONTEXT": "swarm",
+            "XYZ_SESSION_ID": slug,
+            "RELAY_WORKTREE_ISOLATION": "1",
+        },
+        "issue": str(issue) if issue else None,
+        "phase": slug,
+        "lane": slug,
+        "artifacts": [a for a in art_csv.split(",") if a],
+        "gate": gate_cmd,
+        "builder": builder,
+        "reviewer": reviewer,
+        "base_ref": base_ref,
+        "packet_dir": out_dir,
+        "packet_path": os.path.join(out_dir, "packet.md"),
+        "result_path": os.path.join(out_dir, "marathon-result.json"),
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description="swarm-preflight", add_help=False)
     parser.add_argument("--project-doc", dest="project_doc")
@@ -1625,6 +1686,14 @@ def main():
     with open(os.path.join(out_dir, "freshness.json"), "w") as f: json.dump(rc_obj["freshness"], f, indent=2)
     with open(os.path.join(out_dir, "readiness.json"), "w") as f: json.dump(rc_obj["readiness"], f, indent=2)
     with open(os.path.join(out_dir, "marathon-invocation.txt"), "w") as f: f.write(invocation + "\n")
+    # GH-280: the structured twin of marathon-invocation.txt. Additive — every pre-existing
+    # consumer of the packet (run-candidate@1, the text hint, exits, stdout) is unchanged.
+    invocation_artifact = build_marathon_invocation_artifact(
+        now, root, drive_cmd, target_root, out_dir, slug, gate_cmd, art_csv,
+        acc_issue, ref, builder="codex", reviewer="agy")
+    with open(os.path.join(out_dir, "marathon-invocation.json"), "w") as f:
+        json.dump(invocation_artifact, f, indent=2)
+        f.write("\n")
     
     # GH-399: inline the checklist with its hard-wrapped continuation lines intact. The previous
     # line-oriented match kept only each bullet's first line, so a wrapped criterion reached the
@@ -1764,6 +1833,7 @@ criterion here reads as a fragment, that is the source text, not a truncation.*
 - `readiness.json` — remediation readiness verdict
 - `lane-plan.json` — Codex / agy / orchestrator lane assignment
 - `marathon-invocation.txt` — the invocation hint above
+- `marathon-invocation.json` — the same invocation as structured data (`swarm-preflight/marathon-invocation@1`, GH-280); supervisors consume this, never the shell text
 """
 
     with open(os.path.join(out_dir, "packet.md"), "w") as f:

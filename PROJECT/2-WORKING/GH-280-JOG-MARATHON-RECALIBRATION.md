@@ -35,7 +35,17 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon traced the full system and Agy approved the implementation plan in the GH-280 plan-QA relay. The authority boundary and staged rollback are explicit. | Complete Phase 1 contract tests and additive invocation/result receipts without changing any existing default. |
+| Phase 1 complete (2026-08-28): `marathon-invocation@1` (swarm_preflight, additive), `marathon-drive/result@1` (`--result-file`/`--execution-id`, single terminal writer via `_ON_EXIT`), Jog-side contract loaders, and `test/gh280-jog-marathon-adapter.sh` — 80 pass / 0 fail in a disposable full clone; swarm-preflight 100/0, marathon-drive 152/0, jog-queue 34/0 unchanged. | Phase 2: the opt-in `releases jog run --executor marathon --reviewer <agent>` adapter with cold-start projection, legacy relay default preserved. |
+
+### Phase status
+
+| Phase | State | Evidence |
+|---|---|---|
+| 1 — Pin the boundary and add machine contracts | Complete | `bash test/gh280-jog-marathon-adapter.sh` → 80 pass, 0 fail (root + vendored fixtures, stubbed agents/GitHub, no `--simulate`); `test/swarm-preflight.sh` 100/0, `test/marathon-drive.sh` 152/0, `test/jog-queue.sh` 34/0 in a separate disposable full clone; clone identity verified before/after. |
+| 2 — Opt-in Marathon executor | Pending | — |
+| 3 — Resume, retry, landing semantics | Pending | — |
+| 4 — Dogfood root and vendored runs | Pending | — |
+| 5 — Default flip + retire duplication | Pending | — |
 
 ## Table of contents
 
@@ -118,6 +128,29 @@ Recon is complete; the detailed map is
 
 These findings settle the architectural direction. Later phases may refine field names, but they may
 not reopen the authority split without updating this plan and its risk assessment.
+
+### Phase 1 material discoveries (recorded 2026-08-28)
+
+- `marathon-closeout.sh` refuses `--base main` outright ("'development' is the required WIP base
+  branch"), so a redirected green phase only opens a PR when the run started on `development` (or
+  the configured integration branch). The adapter test fixture checks out `development` for the
+  redirect cases; the Jog adapter must treat a run fired from any other branch as PR-less-but-green
+  (receipt `pr: null`), never as a failure.
+- `complete_phase_success` RESETS `.tick/attempts/<lane>` on success, so the result receipt records
+  the fired attempt count at fire time (`_RESULT["attempt_count"]`) rather than re-reading the file
+  at exit — otherwise every approved receipt would report `attempt.count: null`.
+- A stubbed `gh` returning the unfiltered `[]` array for a `--jq '.[0]'` query exposed that the
+  receipt writer's PR parse only tolerated the object shape; it now accepts object, first-element,
+  and empty shapes. Real `gh` applies the jq filter, but the receipt writer must be robust to both.
+- A tick-command failure exits with tick's own code, which can collide with the driver's exit-1
+  "lock contention" meaning; the receipt now records `tick-command-failed` and maps exit 1 with a
+  specific recorded reason to `escalated`, so a supervisor never misreads a broken tick binary as
+  lock contention.
+- Scope note: the Phase 1 baseline "Jog reaches its executor" is pinned by driving the exact seam
+  Jog's Phase 2 adapter uses — Preflight packet → `marathon-invocation@1` argv → marathon-drive →
+  real relay-drive → deterministic agent stubs (adapter test section F) — plus jog-queue's
+  queue/lease coverage. The full `releases jog run --executor marathon` queue E2E lands in Phase 2
+  with the adapter itself, per the plan's Phase 2 QA gate.
 
 ## Phase 1 — Pin the boundary and add machine contracts
 
