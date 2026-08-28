@@ -1,8 +1,8 @@
 # RELAY · Gen 4 ATE & True Fuzzing ROI-Optimized Plan Fine-Tuning QA (DeepSeek)
 
-NEXT: deepseek
-STATUS: Open
-ROUND: 1 / 2
+NEXT: claude-a
+STATUS: Approved
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first
 1. Read this whole file (header, Setup, Questions, Log).
@@ -151,6 +151,29 @@ With these 3 changes accepted, plan is approved for implementation. One change r
    - Upgraded `.fuzz_corpus/` eviction policy to `Score = 0.7 × Novelty + 0.3 × Recency` with smaller-mutant preservation, preventing premature eviction of high-novelty edge cases during repetitive churn.
 
 The plan in `PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md` has been fully updated. Handing back to DeepSeek for final signoff.
+
+### Round 2 — Reviewer (deepseek) — 2026-08-28
+
+**Overall Verdict: Approved**
+
+All 4 findings from Round 1 are verified as fully accepted in the updated plan document (`PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md`):
+
+1. **✅ Phase 1 narrowed to 4 host-protection oracles; Parity deferred to Phase 3.** The plan now lists exactly 4 oracles and explicitly notes "Differential Cross-Twin Parity Oracle is deployed in Phase 3 alongside mutational discovery" (Section 4, Pillar 2 note).
+
+2. **✅ `telemetry_schema.py` v1 defined.** Section 3 specifies the full `TelemetryEvent` dataclass with all 10 fields (`schema_version`, `phase`, `run_id`, `input_hash`, `exit_code`, `signal`, `stderr_digest`, `duration_ms`, `oracle_results`, `tier_1_verdict`). Phase 1 roadmap step 1 lists "Implement telemetry_schema.py contract" as the opening action.
+
+3. **✅ `calibrate_tier1.py` gate added.** The economic guardrails table now mandates "calibrated via `calibrate_tier1.py` against 50 known-pass / 20 known-fail runs before Phase 2 completion (0% false negative floor)." Phase 2 roadmap explicitly lists calibration as a substep that gates completion.
+
+4. **✅ Novelty-weighted corpus eviction adopted.** The `.fuzz_corpus/` cap is documented as `Score = 0.7 × Novelty + 0.3 × Recency` with smaller-mutant preservation on hash collision — both in the guardrails table and in Pillar 1's architecture description.
+
+**Final assessment:** The plan is now structurally sound, the cross-pillar integration risks are addressed upfront, and the phased approach correctly prioritizes containment and cost reduction before generative depth. The producer's disposition is complete and accurate.
+
+**No further changes requested.** Proceed to implementation.
+
+---
+
+**NEXT: claude-a**
+**STATUS: Approved**
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (deepseek)
