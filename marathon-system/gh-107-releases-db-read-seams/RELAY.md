@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -123,3 +123,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+Added `--json` JSON validation test in `test/gh107-timeline-json-seam.sh`.
+Added ledger cross-check logic in `skills/10days/SKILL.md`.
+Updated `skills/radar/SKILL.md` to instruct reading from `releases.db` payload and `releases check` instead of parsing `RELEASES.md`.
+Added `check:` read-only verification commands to `PARKED/2026-08-16-xyz-forge-2143.md` and `PARKED/2026-08-19-session-close.md`.
+Added documentation for the `check:` convention in `PARKED/README.md`.
