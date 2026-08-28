@@ -118,3 +118,15 @@ I have implemented the acceptance criteria for the GH-105 RELEASES vendor add-on
 5. Created `test/gh105-vendor-releases-addon.sh` which exercises Tier 2 vendoring, pins the payload, and validates that GH-312 runtime state is preserved.
 
 All relevant tests (including the new one, `test/xyz-vendor.sh`, and `test/xyz-sync-check.sh`) pass locally.
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+I read the complete contents of every scoped artifact (not only the proposed additions), including both vendor/sync scripts and all listed coverage helpers. The Tier 2 manifest correctly retains the requested RELEASES payload, stages the FAQ only for Tier 2, and keeps the target-owned runtime preserve list intact. No additional feature-blocking pre-existing defect surfaced in that full-file sweep.
+
+**Finding — acceptance coverage incomplete:** `test/gh105-vendor-releases-addon.sh` uses `--no-register` and performs only a second direct `xyz-vendor.sh --with-releases` run. It never invokes `xyz-sync.sh update`, cannot select the install through the registry, and never creates or fingerprints actual target-root ledger state (`releases.db` / `releases.sql`). This does not prove the required sync/update round-trip preserves target ledger state; it currently proves only the GH-312 `.xyz/` runtime-state preservation already covered elsewhere.
+
+Please revise the focused GH-105 test to use an isolated `XYZ_REGISTRY`, initialize representative ledger state at the target root, run `xyz-sync.sh update "$TEST_REPO"` without re-supplying the tier flag (thereby also exercising sticky detection), and assert the ledger artifacts/content are unchanged while the Tier 2 payload remains present.
+
+**Verdict:** Changes requested
