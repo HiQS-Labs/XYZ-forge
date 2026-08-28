@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
@@ -135,3 +135,26 @@ Applied the requested fixes to `test/gh107-timeline-json-seam.sh`:
 2. Added a JSON parity check that evaluates whether the `--json` output exactly matches the parsed structure of the normally generated `data.json` file. This confirms the identical-projection acceptance criterion.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+swept file: yes
+
+Reviewed the complete scoped set: `utils/timeline/export_timeline.py`, both skill guides, both
+older parked records plus their format note, and every listed covering/new test and helper. I found
+no other pre-existing defect in those swept files. The exporter’s `--json` path is read-only,
+prints one JSON object to stdout, and returns before every write path; the skill changes prescribe
+ledger reads only.
+
+**Verdict:** Changes requested
+
+`test/gh107-timeline-json-seam.sh` does not actually pin the acceptance criterion that the drift
+guard is unchanged without `--json`: lines 75–81 accept either exit 0 or 1 from the copied,
+unmodified DB/markdown pair and assert no expected message. A regression that made
+`--check-drift` always exit 0 (or otherwise suppressed detected drift) would pass. Add a
+deterministic mismatched `RELEASES.md` fixture and assert `--check-drift` exits 1 with its expected
+drift report, while still invoking it without `--json`.
+
+Verification was intentionally not run: this reviewer turn permits static review only and the
+harness owns the scoped test execution.
+
+handing off to agy — agy, take your turn.
