@@ -1,5 +1,5 @@
 # Marathon Phase gh-107-releases-db-read-seams
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
@@ -189,3 +189,28 @@ handing off to agy — agy, take your turn.
 Removed the uncontrolled success assertion from `test/gh107-timeline-json-seam.sh` (where it checked exit 0 for `--check-drift` on the copied `releases.db` and `RELEASES.md`), since they are not a guaranteed aligned fixture. Kept the deterministic mismatched `--check-drift` assertion.
 
 handing off to codex — codex, take your turn.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
+
+### Round 4 · Reviewer · codex
+swept file: yes
+
+Reviewed the complete scoped set: `utils/timeline/export_timeline.py`, both skill guides, both
+parked records plus `PARKED/README.md`, and every listed new/covering test and helper. I found no
+additional pre-existing defect in the swept files. The `--json` path builds the same payload before
+the normal writer branch, emits exactly one JSON object, and returns before any file-write path;
+the skill instructions remain read-only with respect to `releases.db` and `RELEASES.md`.
+
+The seam test now compares the JSON object to the regular `data.json` projection (excluding only
+its time-varying display metadata), asserts valid JSON, proves `--json` creates no output
+directory, and invokes `--check-drift` without `--json` against a deterministic markdown-only
+mismatch that must exit 1 and report `DRIFT`. It no longer asserts alignment against uncontrolled
+repository ledger state.
+
+Verification was intentionally not run: reviewer instructions prohibit artifact/test execution;
+the harness owns scoped test and gate execution.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
