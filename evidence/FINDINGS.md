@@ -45,7 +45,7 @@ disambiguate.
 | F-022 | LINUX | med | the compute/ranking step cannot run in a vendored repo | — |
 | **F-023** | **LINUX** | **med** | **GH-68 drift watcher fires on every path absent at both revs** | `probe-drift-false-positive` |
 | F-024 | LINUX | med | the gate mutates 4 tracked files on every run; benchmark rows accumulate | — |
-| F-025 | LINUX | med | upstream `development` is RED on this host (9 suites) while hosted CI is green | — |
+| F-025 | LINUX | med | upstream `development` was RED on this host (9 suites) while hosted CI was green — **CLOSED 2026-08-28, gate now exits 0** | — |
 | F-026 | WSL | low | background-task notification reported exit 0 for a push that exited 1 (F-021 recurrence) | — |
 | F-027 | LINUX | low | F-001 unchanged — guard still blocks read-only compound commands | `probe-guard-read` |
 | **F-028** | **LINUX** | **high** | **`claude-turn.sh`'s PATH filter strips `node` too — suite cannot pass on an nvm install** | — |
@@ -53,6 +53,7 @@ disambiguate.
 | F-030 | LINUX | low-med | `gh382` asserts a `darwin`-only feature on every platform | — |
 | **F-031** | **LINUX** | **high** | **the fixture remote's HEAD names a branch never created — clones land with no commits** | — |
 | F-032 | DOC | med | `--tool-mode programmatic` requires bubblewrap; listed in no prerequisites table | — |
+| F-033 | LINUX | info | `validate.sh` refuses a linked-worktree gate run — guard working as designed | — |
 
 Three are worth an issue each on their own: **F-015**, **F-018**, **F-023**.
 
@@ -878,3 +879,52 @@ Worth stating separately, because both were **passing** before and passing for n
 
 That suite now runs **two more real assertions** than it did before this round, at 38/0 rather than
 35/3.
+
+## F-025 — CLOSED 2026-08-28: the gate is green on this branch
+
+agy's quota reset. `relay-self-sufficiency.sh` re-run against the live API: **4 pass, 0 fail** —
+shim exit 0, token claimed and released, `VERDICT:` and `Basis:` both present.
+
+A full `validate.sh` on a **standalone clone** of `evidence/round2-msys2-followup` at `2aac676e`
+exits **0** — 260 suites, no failures. F-025 is closed: all nine original failures are accounted
+for, eight by fix and one by the quota reset.
+
+Two suites (`gh35-test-tiers.sh`, `relay-turn-timeout.sh`) failed under 2-wide parallelism and passed
+alone — the gate's own GH-528 flake warning. Sequential is the source of truth, and neither is
+claimed as clean here.
+
+### Measurement hygiene — two invalid runs, both self-inflicted
+
+Recorded because both produce *plausible-looking* red that has nothing to do with the code, and both
+were nearly reported as real:
+
+1. **Editing during a run.** A run reporting three failures had `ROADMAP.md` edited and committed
+   mid-flight. One extra (`roadmap-dashboard.sh`) was genuine drift just introduced; the other was
+   `clone-identity-invariant`, the GH-1 bracket correctly catching a tree that moved under it. This
+   is the GH-141 hazard, arriving through a second session rather than a driven turn.
+2. **A branch switch mid-run.** A later run began on this branch and finished after an unrelated
+   `Linux-MVP-RC` merge landed in the same checkout at 13:12. It read two different trees, counted
+   271 pooled suites instead of 245, and produced five failures that were pure artefact.
+
+**The lesson worth keeping:** on a shared checkout, a full-gate result is only trustworthy if the
+tree is provably unchanged across the whole run — which is exactly what `clone-identity-invariant`
+exists to tell you. It fired correctly both times.
+
+### F-033 — `validate.sh` refuses to run in a linked worktree, and is right to
+
+**Tag: LINUX** · Severity: info — documenting a guard that worked
+
+The obvious isolation for the re-run was a linked worktree. `validate.sh` refuses:
+
+```
+validate.sh: REFUSING — '<path>' is a linked git worktree, which shares the parent clone's
+  .git (config, refs, objects). Suites that write to 'the repo' reach the PARENT, not a
+  fixture: an observed run set core.bare=true, repointed origin at a deleted temp path,
+  deleted every refs/remotes/origin/*, and overwrote development with fixture commits.
+  Run the gate from a normal clone. Override with XYZ_ALLOW_WORKTREE_GATE=1 only if you
+  accept that blast radius.
+```
+
+Exit 2, before any suite runs. **Not overridden.** The correct move is a standalone clone, which is
+what produced the green above. Noted here because it is the clearest error message in the repo —
+it names the mechanism, the observed damage, the fix, and the opt-out, in that order.
