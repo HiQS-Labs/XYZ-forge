@@ -1,5 +1,5 @@
 # Marathon Phase gh-105-vendor-releases-addon
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-105-VENDOR-RELEASES-ADDON-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -183,3 +183,21 @@ I have addressed the reviewer's feedback for `test/gh105-vendor-releases-addon.s
 All tests pass.
 
 Handing off to codex — codex, take your turn.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
+
+### Round 3 · Reviewer · codex
+
+swept file: yes
+
+I read the complete contents of every scoped artifact, including the vendor and sync
+implementations and all listed test helpers. No additional feature-blocking pre-existing
+defect surfaced in that full-file sweep.
+
+The focused GH-105 test now uses a regular isolated registry file, confirms the registered target
+row before update, removes `VERSION` to prove `xyz-sync.sh update` actually invokes materialization,
+and verifies sticky Tier 2 preservation alongside unchanged target-root `releases.db` and
+`releases.sql` contents. The payload and enablement documentation meet the stated acceptance scope.
+
+**Verdict:** Approved
