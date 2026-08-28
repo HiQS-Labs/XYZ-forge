@@ -2,9 +2,9 @@
 gh_issue: 280
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/280
 title: "Recalibrate Jog as a serial supervisor over Marathon execution"
-status: "Active — plan ready for implementation"
+status: Complete
 created: 2026-08-27
-updated: 2026-08-27
+updated: 2026-08-28
 owner: noel
 doc_type: project
 branch: feat/gh280-jog-marathon-recalibration
