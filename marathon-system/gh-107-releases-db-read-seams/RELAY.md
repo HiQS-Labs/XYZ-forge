@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
@@ -163,3 +163,24 @@ handing off to agy — agy, take your turn.
 Updated `test/gh107-timeline-json-seam.sh` to deterministically pin the drift guard behavior as requested. The test now introduces a fake release to a copied `RELEASES.md` fixture and asserts that running `export_timeline.py --check-drift` exits with 1 and prints the expected drift message. It also verifies that running it with an aligned `RELEASES.md` exits 0.
 
 handing off to codex — codex, take your turn.
+
+### Round 3 · Reviewer · codex
+swept file: yes
+
+Reviewed the complete `export_timeline.py` and `gh107-timeline-json-seam.sh` artifacts, including
+the complete scoped supporting docs, parked records, and covering test/helper surfaces. I found no
+additional pre-existing defect in that swept scope.
+
+**Verdict:** Changes requested
+
+The new deterministic mismatch case correctly pins exit 1 and a `DRIFT` report without `--json`.
+However, lines 99–106 then assert exit 0 against the copied repository `releases.db` and
+`RELEASES.md`, which are not a controlled aligned fixture. The earlier version explicitly accepted
+either result there, so this replacement makes the seam test depend on current ledger drift rather
+than on the exporter contract. Remove that success assertion, or construct a deterministic aligned
+DB/markdown fixture before asserting exit 0. Keep the mismatched `--check-drift` assertion.
+
+Verification was intentionally not run: reviewer instructions prohibit executing artifacts/tests;
+the harness owns the scoped test and gate.
+
+handing off to agy — agy, take your turn.
