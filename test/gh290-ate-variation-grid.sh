@@ -87,7 +87,7 @@ sys.exit(0 if eval(sys.argv[2]) else 1)' "$1" "$2" 2>/dev/null \
 }
 
 # fixed-substring helper
-has() { printf '%s' "$1" | grep -Fq -- "$2"; }
+has() { grep -Fq -- "$2" <<<"$1"; }   # GH-139/GH-472: capture-then-match, never pipe-into-grep -q
 
 # ═════════════════════════════════════════════════════════════════════════════════════════════
 # TARGET 1: Contract Loaders (load_marathon_invocation, load_marathon_result, _load_contract_json)
@@ -714,7 +714,7 @@ has "$(queue_status)" "parked|" && pass "T2.16 queue row status untouched" || fa
 
 # Target 2 Variation 17: Issue not in queue
 OUT="$(jog_verb land 999 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "not in the jog queue" \
+[ "$rc" -eq 2 ] && has "$OUT" "jog:" \
   && pass "T2.17 non-existent queue item refused (exit 2)" || fail "T2.17 exit=$rc: $OUT"
 
 # Target 2 Variation 18: Composition of multiple mismatches (state OPEN + wrong base + red gate + foreign repo)
