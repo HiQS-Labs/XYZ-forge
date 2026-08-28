@@ -42,6 +42,12 @@ if [ "${1:-}" = "pr" ] && [ "${2:-}" = "list" ]; then
   fi
   exit 0
 fi
+if [ "${1:-}" = "pr" ] && [ "${2:-}" = "view" ]; then
+  if [ -n "${GH_STUB_PR_VIEW_JSON:-}" ] && [ -s "${GH_STUB_PR_VIEW_JSON:-}" ]; then
+    cat "$GH_STUB_PR_VIEW_JSON"; exit 0
+  fi
+  exit 1
+fi
 if [ "${1:-}" = "pr" ] && [ "${2:-}" = "create" ]; then
   if [ "${GH_STUB_CREATE_FAIL:-0}" = "1" ]; then exit 1; fi
   echo "https://example.invalid/pr/created-by-stub"
@@ -151,6 +157,15 @@ sys.exit(0 if eval(sys.argv[2]) else 1)' "$1" "$2" 2>/dev/null \
 
 # fixed-substring helper (jog-queue.sh has one; this suite is standalone)
 has() { printf '%s' "$1" | grep -Fq -- "$2"; }
+
+# idempotent development-branch setup: switch if it exists, create if not, normalize HEAD.
+# `checkout -b` on an existing branch fails silently-in-context and leaves the fixture on the
+# wrong branch — the branch guard then records the wrong base.
+use_development() {
+  git -C "$FR" checkout -q development >/dev/null 2>&1 \
+    || git -C "$FR" checkout -q -b development >/dev/null 2>&1
+  git -C "$FR" reset -q --hard "$INIT_HEAD_R" >/dev/null 2>&1 || true
+}
 
 run_md_root() {  # <extra-args…> — drive in the ROOT fixture with the stub relay-drive
   (cd "$FR" && MARATHON_RELAY_DRIVE="$STUB_RD" \
@@ -326,7 +341,7 @@ jassert "$RES" 'd["execution_id"]=="gh280-exec-0002"' "C12 re-run atomically rep
 # work landing via development.
 # D1: guard redirects development → lane branch, stub gh reports PR 42 → receipt carries identity
 cleanup_root_fixture; rm -f "$RES"
-git -C "$FR" checkout -q -b development
+use_development
 ( cd "$FR" && GH_STUB_PR_JSON="$CANNED_PR" RELAY_DRIVE_EXIT=0 \
     env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-lane" \
     MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" \
@@ -343,7 +358,7 @@ jassert "$RES" 'd["pr_note"] is None' "D1 no PR note on successful publication"
 
 # D2: PR publication fails → phase stays green, PR identity explicit null + visible note
 cleanup_root_fixture; rm -f "$RES"
-git -C "$FR" checkout -q -b development
+use_development
 ( cd "$FR" && GH_STUB_CREATE_FAIL=1 RELAY_DRIVE_EXIT=0 \
     env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-lane-2" \
     MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" \
@@ -495,7 +510,7 @@ OUT_G3="$(AGY_BIN="$WORK/no-such-agy-bin" jog_run_root --executor marathon --bui
 
 # G4: full happy path — Preflight → Marathon (real relay-drive, isolated) → receipt → projection
 cleanup_root_fixture
-git -C "$FR" checkout -q -b development
+use_development
 GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
 G4_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
   env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane" \
@@ -616,6 +631,263 @@ I_OUT="$(jog_run_root --simulate --auto-merge --max-tasks 1 2>&1)"; rc=$?
 sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;" | grep -q completed \
   && pass "I1b simulated auto-merge completes the processed row" || fail "I1b row 901 not completed"
 [ ! -d "$FR/.tick/jog" ] && pass "I2 legacy run leaves no marathon execution state" || fail "I2 marathon state created without --executor marathon"
+
+# ═══ J. Phase 3: jog resume — reconcile, never fire ═══════════════════════════════════════════
+jog_verb() {  # <verb> <extra-args…>
+  ( cd "$FR" && python3 "$FR/utils/py/releases_app.py" --root "$FR" jog "$@" )
+}
+
+# J1: terminal receipt on record → idempotent re-projection, no new execution
+cleanup_root_fixture
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+mkdir -p "$FR/.tick/jog/$GID/gh901-exec1/preflight"
+cat > "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json" <<JREOF
+{"schema": "marathon-drive/result@1", "execution_id": "gh901-exec1", "generated_at": "2026-08-28T00:00:01Z",
+ "outcome": "approved", "reason": "approved, gate passed", "exit_code": 0, "approval_preserved": false,
+ "issue": "901", "phase": "p", "lane": "p", "token": "T", "attempt": {"count": 1, "max": 2},
+ "builder": "codex", "reviewer": "agy",
+ "target_repo": {"path": "$FR", "origin_url": null},
+ "base_branch": "development", "head_branch": "marathon/x", "head_sha": "deadbeef",
+ "branch_redirect": true,
+ "gate": {"cmd": "true", "result": "green", "exit": 0, "receipt_path": null},
+ "acceptance": {"checked": false, "unmet_count": 0},
+ "pr": {"number": 7, "url": "https://example.invalid/x/pr/7", "state": "OPEN"},
+ "pr_note": null, "relay_status": "Approved",
+ "timestamps": {"started_at": "2026-08-28T00:00:00Z", "finished_at": "2026-08-28T00:00:01Z"}}
+JREOF
+cat > "$FR/.tick/jog/$GID/state.json" <<JSEOF
+{"schema": "jog/execution-state@1", "gid": "$GID", "gh_number": 901,
+ "executions": [{"execution_id": "gh901-exec1", "mode": "run", "started_at": "2026-08-28T00:00:00Z",
+                 "status": "dispatched", "packet_dir": "$FR/.tick/jog/$GID/gh901-exec1/preflight",
+                 "result_path": "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json"}]}
+JSEOF
+J1_OUT="$(jog_verb resume 901 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$J1_OUT" "re-projected" \
+  && pass "J1 resume re-projects a terminal result (no dispatch)" || fail "J1 rc=$rc: $J1_OUT"
+has "$(queue_status "$FR")" "parked|awaiting-landing (PR #7" \
+  && pass "J1 row parked awaiting-landing after resume" || fail "J1 row: $(queue_status "$FR")"
+jassert "$FR/.tick/jog/$GID/state.json" 'len(d["executions"])==1' "J1 resume fired no new execution"
+
+# J2: dispatched without a result → parked, no token spent
+python3 - "$FR/.tick/jog/$GID/state.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+d["executions"][0]["status"] = "dispatched"
+json.dump(d, open(p, "w"), indent=2)
+PY
+rm -f "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json"
+sqlite3 "$FR/releases.db" "UPDATE jog_queue SET status = 'running', lease_pid = 999999 WHERE gh_number = 901;"
+J2_OUT="$(jog_verb resume 901 2>&1)"; rc=$?
+[ "$rc" -eq 1 ] && has "$J2_OUT" "no valid result" \
+  && pass "J2 resume parks a result-less dispatched execution (exit 1)" || fail "J2 rc=$rc: $J2_OUT"
+has "$(queue_status "$FR")" "parked|resume: dispatched" \
+  && pass "J2 row parked with resume reason" || fail "J2 row: $(queue_status "$FR")"
+
+# ═══ K. Phase 3: jog retry-gate — gate-only, same head SHA, no builder turn ════════════════════
+cleanup_root_fixture
+use_development
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+GATE_MARKER="$WORK/gh280-gate-green"
+# The contract gate reads a marker: red until K2 flips it green — one gate, two states.
+printf '#!/usr/bin/env bash\ntest -f %s\n' "$GATE_MARKER" > "$FR/test/fixture-gate.sh"
+git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "marker-driven gate" >/dev/null 2>&1
+
+K1_OUT="$(env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-k-lane" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run \
+    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+QS="$(queue_status "$FR")"
+case "$QS" in
+  failed\|marathon\ escalated:\ pre-advance-failed*) pass "K1 red-gate execution fails the row (relay approved, gate red)" ;;
+  *) fail "K1 unexpected row state: $QS" ;;
+esac
+K1_RES="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["executions"][0]["result_path"])' "$FR/.tick/jog/$GID/state.json")"
+K1_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K1_RES")"
+K1_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FR"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
+
+touch "$GATE_MARKER"
+K2_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "K2 gate-only retry exits 0" || fail "K2 rc=$rc: $K2_OUT"
+has "$(queue_status "$FR")" "parked|awaiting-landing" \
+  && pass "K2 row parked awaiting-landing after green gate retry" || fail "K2 row: $(queue_status "$FR")"
+K2_RES="$FR/.tick/jog/$GID/gh901-exec1/gate-retry-1/marathon-result.json"
+jassert "$K2_RES" 'd["outcome"]=="approved" and d["reason"]=="already-satisfied"' "K2 retry receipt approved via satisfied-lane path"
+K2_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K2_RES")"
+[ "$(git -C "$FR" rev-parse "$K2_HEAD^" 2>/dev/null)" = "$K1_HEAD" ] \
+  && pass "K2 only marathon's own transcript commit advanced the head (work head preserved)" \
+  || fail "K2 head moved by more than the transcript commit: $K1_HEAD -> $K2_HEAD"
+K2_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FR"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
+[ "$K2_TASK_COUNT" = "$K1_TASK_COUNT" ] \
+  && pass "K2 gate retry spent no new tick token ($K2_TASK_COUNT task.created)" \
+  || fail "K2 token re-seeded: before=$K1_TASK_COUNT after=$K2_TASK_COUNT"
+
+# K3: head moved under the retry → refused BEFORE dispatch (needs retry-build, not a gate check)
+git -C "$FR" checkout -q -b gh280-k3-temp
+git -C "$FR" commit -q --allow-empty -m "move head under the gate retry"
+K3_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$K3_OUT" "head moved" \
+  && pass "K3 gate retry refuses when the head SHA moved" || fail "K3 rc=$rc: $K3_OUT"
+[ ! -d "$FR/.tick/jog/$GID/gh901-exec1/gate-retry-2" ] \
+  && pass "K3 refusal dispatched no gate run" || fail "K3 dispatch happened despite refusal"
+git -C "$FR" checkout -q marathon/gh280-k-lane
+git -C "$FR" branch -q -D gh280-k3-temp >/dev/null 2>&1 || true
+
+# K4: retry-build — a FRESH execution on a FRESH suffixed token, prior history intact
+K4_OUT="$(jog_verb retry-build 901 --reviewer agy --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "K4 retry-build exits 0" || fail "K4 rc=$rc: $K4_OUT"
+has "$(queue_status "$FR")" "parked|awaiting-landing" \
+  && pass "K4 row parked awaiting-landing after the rebuild" || fail "K4 row: $(queue_status "$FR")"
+jassert "$FR/.tick/jog/$GID/state.json" 'len(d["executions"])==2 and d["executions"][1]["mode"]=="retry-build"' "K4 ledger gained a second retry-build execution"
+ls "$FR"/.tick/events/ | grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN-2" \
+  && pass "K4 rebuild ran on a fresh suffixed token (-2)" || fail "K4 no -2 token events"
+ls "$FR"/.tick/events/ | grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN$\|MARATHON-GH-901-FIXTURE-LANE-TURN-" >/dev/null \
+  && [ -d "$FR/.tick/jog/$GID/gh901-exec1" ] \
+  && pass "K4 prior token history and execution records preserved" || fail "K4 prior history damaged"
+
+# ═══ L. Phase 3: jog land / jog reconcile — verify, project, delegate, replay ═════════════════
+# Real merge: the lane branch is genuinely merged into development so reachability holds.
+git -C "$FR" checkout -q development
+git -C "$FR" merge -q --no-ff -m "merge lane gh280" marathon/gh280-k-lane >/dev/null 2>&1
+LANE_TIP="$(git -C "$FR" rev-parse marathon/gh280-k-lane)"
+MERGE_SHA="$(git -C "$FR" rev-parse HEAD)"
+# wave_reconcile fixture prep (mirrors test/wave-reconcile.sh): legacy ROADMAP, lessons-learned
+# on the capture doc, lifecycle dirs, and mocked downstream subordinates.
+mkdir -p "$FR/PROJECT/3-COMPLETED" "$FR/PROJECT/4-MISC" "$FR/TESTS-RESULTS/2026-08-28"
+cat >> "$FR/PROJECT/2-WORKING/$CAPTURE_DOC_NAME" <<'EOF'
+
+## Lessons Learned (For Future Agents)
+- Verified landing through the receipt contract.
+EOF
+cat > "$FR/ROADMAP.md" <<'EOF'
+# Roadmap
+
+### In progress
+- **GH-901 · Fixture Lane** 🚧 **active 2026-08-28** — fixture lane. → [GH-901-FIXTURE-LANE.md](PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) · [#901](https://github.com/example/example/issues/901)
+
+### Completed
+EOF
+printf '#!/usr/bin/env bash\necho "MOCK: dashboard OK"\n' > "$FR/utils/roadmap-dashboard.sh"
+printf '#!/usr/bin/env bash\necho "MOCK: marathon-plan OK"\n' > "$FR/utils/marathon-plan.sh"
+printf '#!/usr/bin/env python3\nprint("MOCK: timeline OK")\n' > "$FR/utils/timeline/export_timeline.py"
+printf '#!/usr/bin/env bash\necho "MOCK: pdda OK"\n' > "$FR/utils/pdda/pdda.sh"
+chmod +x "$FR/utils/roadmap-dashboard.sh" "$FR/utils/marathon-plan.sh" "$FR/utils/pdda/pdda.sh"
+printf '{"status": "PASS"}\n' > "$FR/TESTS-RESULTS/2026-08-28/provenance.jsonl"
+git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "wave fixture prep" >/dev/null 2>&1
+
+pr_view_json() {  # <state> <base> <headRefOid> <mergeOid|null>
+  python3 - "$@" <<'PY'
+import json, sys
+state, base, head_oid, merge_oid = sys.argv[1:5]
+pr = {"number": 42, "url": "https://example.invalid/x/pr/42", "state": state,
+      "baseRefName": base, "headRefName": "marathon/gh280-k-lane", "headRefOid": head_oid,
+      "mergedAt": "2026-08-28T01:00:00Z" if state == "MERGED" else None,
+      "title": "GH-901 fixture", "body": "Closes #901"}
+if merge_oid != "null":
+    pr["mergeCommit"] = {"oid": merge_oid}
+print(json.dumps(pr))
+PY
+}
+VIEW="$WORK/pr-view.json"
+
+# L1-L4: fail-closed checks — wrong base, unmerged PR, head-SHA mismatch, unreachable merge SHA
+GH_STUB_PR_VIEW_JSON="$VIEW" pr_view_json MERGED main "$LANE_TIP" "$MERGE_SHA" > "$VIEW"
+L1_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$L1_OUT" "base development" \
+  && pass "L1 wrong PR base refused" || fail "L1 rc=$rc: $L1_OUT"
+pr_view_json MERGED development 0000000000000000000000000000000000000000 "$MERGE_SHA" > "$VIEW"
+L2_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$L2_OUT" "head SHA" \
+  && pass "L2 head-SHA mismatch refused" || fail "L2 rc=$rc: $L2_OUT"
+pr_view_json OPEN development "$LANE_TIP" null > "$VIEW"
+L3_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$L3_OUT" "state MERGED" \
+  && pass "L3 unmerged PR refused" || fail "L3 rc=$rc: $L3_OUT"
+git -C "$FR" checkout -q -b unrelated-base development >/dev/null 2>&1
+git -C "$FR" commit -q --allow-empty -m "unrelated" >/dev/null 2>&1
+UNRELATED="$(git -C "$FR" rev-parse HEAD)"
+git -C "$FR" checkout -q development >/dev/null 2>&1
+git -C "$FR" branch -q -D unrelated-base >/dev/null 2>&1
+pr_view_json MERGED development "$LANE_TIP" "$UNRELATED" > "$VIEW"
+L4_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$L4_OUT" "not reachable" \
+  && pass "L4 unreachable merge SHA refused" || fail "L4 rc=$rc: $L4_OUT"
+has "$(queue_status "$FR")" "parked|" \
+  && pass "L1-L4 left the row un-landed (fail closed)" || fail "row mutated by a refused land: $(queue_status "$FR")"
+
+# L5: the good landing — verifies, completes the row, delegates lifecycle to wave_reconcile
+pr_view_json MERGED development "$LANE_TIP" "$MERGE_SHA" > "$VIEW"
+L5_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "L5 jog land completes cleanly" || fail "L5 rc=$rc: $L5_OUT"
+has "$(queue_status "$FR")" "completed|landed via PR #42" \
+  && pass "L5 row completed with landed-PR reason" || fail "L5 row: $(queue_status "$FR")"
+[ -f "$FR/PROJECT/3-COMPLETED/$CAPTURE_DOC_NAME" ] && [ ! -f "$FR/PROJECT/2-WORKING/$CAPTURE_DOC_NAME" ] \
+  && pass "L5 wave_reconcile promoted the capture doc to 3-COMPLETED" \
+  || fail "L5 doc not promoted by wave_reconcile"
+grep -q "SHIPPED.*PR #42" "$FR/ROADMAP.md" \
+  && pass "L5 ROADMAP entry archived with the shipping badge" || fail "L5 ROADMAP not archived"
+jassert "$FR/.tick/jog/$GID/state.json" 'any(e.get("landing",{}).get("reconciled") for e in d["executions"])' "L5 landing reconciliation evidence recorded"
+
+# L6: replay is idempotent — verifies again, projects nothing new, reconciles nothing new
+L6_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$L6_OUT" "already reconciled" \
+  && pass "L6 land replay is idempotent" || fail "L6 rc=$rc: $L6_OUT"
+
+# L7: crash-boundary resume — landing recorded, reconciliation evidence missing → only step 3 re-runs
+python3 - "$FR/.tick/jog/$GID/state.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+for e in d["executions"]:
+    if "landing" in e:
+        e["landing"]["reconciled"] = False
+json.dump(d, open(p, "w"), indent=2)
+PY
+L7_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb reconcile 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$L7_OUT" "replaying missing steps only" \
+  && pass "L7 reconcile resumes at the missing durable step" || fail "L7 rc=$rc: $L7_OUT"
+jassert "$FR/.tick/jog/$GID/state.json" 'any(e.get("landing",{}).get("reconciled") for e in d["executions"])' "L7 reconciliation evidence restored"
+
+# L8/L9: more fail-closed shapes on a fabricated ledger — missing gate evidence, wrong repo
+cleanup_root_fixture
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+mkdir -p "$FR/.tick/jog/$GID/gh901-exec1/preflight"
+make_land_receipt() {  # <gate-result> <repo-path>
+  python3 - "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json" "$1" "$2" <<'PY'
+import json, sys
+path, gate_result, repo_path = sys.argv[1:4]
+json.dump({
+    "schema": "marathon-drive/result@1", "execution_id": "gh901-exec1",
+    "generated_at": "2026-08-28T02:00:00Z", "outcome": "approved", "reason": "approved",
+    "exit_code": 0, "approval_preserved": False, "issue": "901", "phase": "p", "lane": "p",
+    "token": "T", "attempt": {"count": 1, "max": 2}, "builder": "codex", "reviewer": "agy",
+    "target_repo": {"path": repo_path, "origin_url": None},
+    "base_branch": "development", "head_branch": "marathon/gh280-k-lane", "head_sha": "deadbeef",
+    "branch_redirect": True,
+    "gate": {"cmd": "true", "result": gate_result, "exit": 0 if gate_result == "green" else 1,
+             "receipt_path": None},
+    "acceptance": {"checked": False, "unmet_count": 0},
+    "pr": {"number": 42, "url": "https://example.invalid/x/pr/42", "state": "OPEN"},
+    "pr_note": None, "relay_status": "Approved",
+    "timestamps": {"started_at": "2026-08-28T01:59:00Z", "finished_at": "2026-08-28T02:00:00Z"},
+}, open(path, "w"), indent=2)
+PY
+}
+cat > "$FR/.tick/jog/$GID/state.json" <<JSEOF
+{"schema": "jog/execution-state@1", "gid": "$GID", "gh_number": 901,
+ "executions": [{"execution_id": "gh901-exec1", "mode": "run", "started_at": "2026-08-28T02:00:00Z",
+                 "status": "projected-parked", "packet_dir": "$FR/.tick/jog/$GID/gh901-exec1/preflight",
+                 "result_path": "$FR/.tick/jog/$GID/gh901-exec1/preflight/marathon-result.json"}]}
+JSEOF
+pr_view_json MERGED development deadbeef deadbeef > "$VIEW"
+make_land_receipt red "$FR"
+L8_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$L8_OUT" "gate green on the landed head" \
+  && pass "L8 receipt without green gate evidence refused" || fail "L8 rc=$rc: $L8_OUT"
+make_land_receipt green "/definitely/not/this/repo"
+L9_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$L9_OUT" "receipt repo is this repo" \
+  && pass "L9 receipt naming a foreign repo refused" || fail "L9 rc=$rc: $L9_OUT"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

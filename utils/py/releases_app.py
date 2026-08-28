@@ -3675,6 +3675,37 @@ def cmd_jog_run(args):
     jog_run_main(args)
 
 
+def _jog_verb_dispatch(fn_name):
+    """GH-280 Phase 3 verb dispatch: shared root/target resolution, then delegate to jog_run."""
+    def handler(args):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import jog_run
+        root = resolve_root(getattr(args, "root", None))
+        gh_num = resolve_issue_number(args.target)
+        sys.exit(getattr(jog_run, fn_name)(root, gh_num, args))
+    return handler
+
+
+def cmd_jog_resume(args):
+    _jog_verb_dispatch("jog_resume")(args)
+
+
+def cmd_jog_retry_gate(args):
+    _jog_verb_dispatch("jog_retry_gate")(args)
+
+
+def cmd_jog_retry_build(args):
+    _jog_verb_dispatch("jog_retry_build")(args)
+
+
+def cmd_jog_land(args):
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import jog_run
+    root = resolve_root(getattr(args, "root", None))
+    gh_num = resolve_issue_number(args.target)
+    sys.exit(jog_run.jog_land(root, gh_num, getattr(args, "pr", None)))
+
+
 
 
 def cmd_gen(args):
@@ -4630,6 +4661,34 @@ def build_parser():
 
     sp_jtm = jsub.add_parser("to-marathon", help="export active jog items to marathon format")
 
+    sp_jres = jsub.add_parser("resume", help="reconcile durable Marathon state for an item (spends no token)")
+    sp_jres.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jres.add_argument("--root", default=None, help="repository root path")
+
+    sp_jrg = jsub.add_parser("retry-gate", help="re-run ONLY the gate against the same head SHA (no builder turn)")
+    sp_jrg.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jrg.add_argument("--builder", default="agy", help="builder identity recorded for the retry")
+    sp_jrg.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
+    sp_jrg.add_argument("--auto-merge", action="store_true", help="merge the PR if the gate retry approves")
+    sp_jrg.add_argument("--root", default=None, help="repository root path")
+
+    sp_jrb = jsub.add_parser("retry-build", help="fresh Marathon attempt on a fresh execution id (history preserved)")
+    sp_jrb.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jrb.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
+    sp_jrb.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
+    sp_jrb.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge an approved PR")
+    sp_jrb.add_argument("--root", default=None, help="repository root path")
+
+    sp_jl = jsub.add_parser("land", help="verify merged delivery, complete the row, delegate lifecycle to wave_reconcile")
+    sp_jl.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jl.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
+    sp_jl.add_argument("--root", default=None, help="repository root path")
+
+    sp_jrec = jsub.add_parser("reconcile", help="idempotent replay entry for jog land (same verification and steps)")
+    sp_jrec.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jrec.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
+    sp_jrec.add_argument("--root", default=None, help="repository root path")
+
     sp_jrun = jsub.add_parser("run", help="execute the serial jog queue loop")
     sp_jrun.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge passing PRs on same-seam tasks")
     sp_jrun.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
@@ -4669,7 +4728,9 @@ def main(argv=None):
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,
                           "retry": cmd_jog_retry, "skip": cmd_jog_skip,
                           "clear": cmd_jog_clear, "to-marathon": cmd_jog_to_marathon,
-                          "run": cmd_jog_run}[a.jog_cmd](a),
+                          "run": cmd_jog_run, "resume": cmd_jog_resume,
+                          "retry-gate": cmd_jog_retry_gate, "retry-build": cmd_jog_retry_build,
+                          "land": cmd_jog_land, "reconcile": cmd_jog_land}[a.jog_cmd](a),
     }
     handlers[args.cmd](args)
 

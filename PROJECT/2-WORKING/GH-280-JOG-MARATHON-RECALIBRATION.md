@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 2 complete (2026-08-28): opt-in `releases jog run --executor marathon --reviewer <agent>` (reviewer validated before any lease mutation), deterministic execution ledger under `.tick/jog/<gid>/`, cold-start reconciliation (re-project terminal results, park missing ones, never silently refire), legacy relay default untouched. Adapter suite 106/0; jog-queue 34/0, marathon-drive 152/0, swarm-preflight 100/0. | Phase 3: explicit `jog resume` / `jog retry-gate` / `jog retry-build` / `jog land` (+ reconcile) semantics. |
+| Phase 3 complete (2026-08-28): `jog resume` (reconcile-only, never fires), `jog retry-gate` (Marathon's satisfied-lane path, head-moved guard pre-dispatch, no builder turn), `jog retry-build` (fresh suffixed token, history preserved), `jog land`/`jog reconcile` (verified GitHub truth → idempotent landing projection → wave_reconcile with a verified offline manifest → reconciliation evidence; replay resumes at the first missing step). Adapter suite 139/0; wave-reconcile 11/0, jog-queue 34/0, marathon-drive 152/0, swarm-preflight 100/0. | Phase 4: real root + vendored dogfood runs — requires operator-supplied builder/reviewer agents and PR/merge authorization (see open risks). |
 
 ### Phase status
 
@@ -43,9 +43,9 @@ goal: >
 |---|---|---|
 | 1 — Pin the boundary and add machine contracts | Complete | `bash test/gh280-jog-marathon-adapter.sh` → 80 pass, 0 fail (root + vendored fixtures, stubbed agents/GitHub, no `--simulate`); `test/swarm-preflight.sh` 100/0, `test/marathon-drive.sh` 152/0, `test/jog-queue.sh` 34/0 in a separate disposable full clone; clone identity verified before/after. |
 | 2 — Opt-in Marathon executor | Complete | Adapter test sections G/H/I: root + vendored queue runs through real Preflight → Marathon → Relay with deterministic agent stubs (106 pass, 0 fail total); reviewer-policy refusals before lease mutation; cold-start at both boundaries (missing result parks; terminal result re-projects without a second dispatch); foreign-cwd vendored run stays clean (GH-279 #2 fixed for this executor); legacy relay default verified unchanged. |
-| 3 — Resume, retry, landing semantics | Pending | — |
-| 4 — Dogfood root and vendored runs | Pending | — |
-| 5 — Default flip + retire duplication | Pending | — |
+| 3 — Resume, retry, landing semantics | Complete | Adapter test sections J/K/L (139 pass, 0 fail total): resume re-projects terminal state and parks result-less dispatches without spending a token; retry-gate proves no new task.created and work-head preservation (only Marathon's own transcript commit advances the lane); retry-build runs on a fresh `-2` token with prior Tick history and execution records intact; land fails closed on wrong base/head-SHA/open-PR/unreachable-merge/missing-gate-evidence/foreign-repo, completes + delegates to wave_reconcile on truth, replays idempotently, and resumes at the reconciliation boundary; `test/wave-reconcile.sh` 11/0 unchanged. |
+| 4 — Dogfood root and vendored runs | Blocked at operator boundary | Needs a real operator-supplied builder/reviewer, a real target consumer repo, and authorization for external PR/merge activity — see "Open risks and operator decisions". |
+| 5 — Default flip + retire duplication | Blocked behind Phase 4 | — |
 
 ## Table of contents
 
@@ -172,6 +172,45 @@ not reopen the authority split without updating this plan and its risk assessmen
   first `RTL_ALLOW` entry) and the allowlisted artifacts into the isolation worktree and copies
   modified paths back, so the adapter can dispatch the packet env faithfully; no env rewriting is
   needed beyond the reviewer/builder policy overrides and the lock hand-off.
+
+### Phase 3 material discoveries (recorded 2026-08-28)
+
+- **The packet argv carries no `--phase-id`, and Marathon defaults every lane to `p1`** — without
+  intervention, two different queue issues would share ONE lane attempt budget. The adapter now
+  adopts the packet's suggested per-issue phase id (the candidate slug) on every dispatch path
+  (run / retry-gate / retry-build share one argv builder), keeping Marathon's namespaced attempt
+  record per-issue as its cap semantics assume.
+- **Every Marathon run commits its own transcript, so a receipt's head SHA legitimately advances
+  even on a "gate-only" retry.** The head-moved guard therefore runs PRE-DISPATCH in Jog (live
+  `rev-parse` vs the prior receipt): it catches operator head movement between runs without
+  false-tripping on the retry's own transcript commit — and refuses without spending the gate run.
+- A gate-only retry never passes the branch guard (the satisfied-lane short-circuit runs first),
+  so its receipt carries no `base_branch`; landing falls back to the newest receipt in the
+  execution family that carries base/head — identity is stable across one issue's family, and
+  nothing is ever guessed.
+- A rebuild that must not be satisfied by the attempt it retries dispatches on a fresh suffixed
+  token (`<token>-2`, Marathon's own GH-116 family convention) — the spent base token's history
+  stays untouched, which is exactly the append-only behavior the plan demands.
+- `wave_reconcile` is handed an offline manifest built from the PR metadata Jog verified seconds
+  earlier (`gh pr view` truth), plus `--skip-pull --skip-branch-check --allow-dirty`: Jog's own
+  tracked-ledger writes make the tree non-pristine, the pull/branch checks belong to an operator
+  context, and the manifest avoids a second network dependency. Its exit is a resumable boundary:
+  landing is already persisted, and a re-run resumes at the reconciliation step only.
+
+## Open risks and operator decisions (as of Phase 3)
+
+- **Phase 4 requires operator-supplied resources** the adapter tests deliberately do not fake: a
+  real builder/reviewer pair (e.g. `--builder codex --reviewer agy` with live CLIs), a real root
+  queue with ≥2 serial items including one controlled failure/retry, a genuinely vendored `.xyz`
+  consumer repository, and authorization for external PR/merge activity against real remotes.
+  Per the task's boundary rule, implementation stops here and reports the need rather than
+  fabricating dogfood evidence.
+- **Phase 5 (default flip) stays blocked** on Phase 4 evidence by design; `--executor relay`
+  remains the default and the explicit rollback path.
+- The queue-level `attempt_count` remains lease history only; Marathon's per-lane cap (default 2)
+  is the sole execution cap. A deliberately unlucky sequence can therefore park a lane at the cap
+  — the remedy is Marathon's own `--force` convention, which Jog deliberately does NOT expose
+  (no Jog-only bypass around attempt limits).
 
 ## Phase 1 — Pin the boundary and add machine contracts
 

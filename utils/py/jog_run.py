@@ -315,7 +315,30 @@ def jog_reconcile_cold_start(root, gh_nums):
                   f"has no valid result — parked; never silently refire")
 
 
-def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False):
+def _marathon_argv_from_invocation(invocation, builder, reviewer):
+    """The packet's argv with Jog's supervisor policy applied.
+
+    Policy overrides, in one place so every dispatch path (run / retry-gate / retry-build)
+    stays identical: the operator's reviewer/builder replace the packet's suggestions, the
+    packet's --require-clean is dropped (a supervisor's own queue writes make the tree
+    legitimately non-pristine between lease and dispatch), and the packet's suggested
+    per-issue phase id is adopted so Marathon's lane namespace (and its attempt cap) stays
+    per-issue instead of collapsing onto marathon's bare 'p1' default.
+    """
+    argv = list(invocation["argv"])
+    for flag, value in (("--reviewer", reviewer), ("--builder", builder)):
+        if flag in argv:
+            argv[argv.index(flag) + 1] = value
+        else:
+            argv += [flag, value]
+    if "--require-clean" in argv:
+        argv.remove("--require-clean")
+    if "--phase-id" not in argv and invocation.get("phase"):
+        argv += ["--phase-id", invocation["phase"]]
+    return argv
+
+
+def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, mode="run"):
     """Execute one leased queue item through Preflight → Marathon's one-phase driver.
 
     Returns (queue_status, failure_reason): one of ("completed", reason) / ("parked", reason) /
@@ -334,7 +357,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False):
     packet_dir = os.path.join(exec_dir, "preflight")
     record = {
         "execution_id": exec_id,
-        "mode": "run",
+        "mode": mode,
         "started_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "status": "dispatched",
         "packet_dir": packet_dir,
@@ -367,19 +390,15 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False):
         jog_save_state(root, gid, state)
         return "parked", f"invalid marathon invocation artifact: {exc}"
 
-    argv = list(invocation["argv"])
-    for flag, value in (("--reviewer", reviewer), ("--builder", builder)):
-        if flag in argv:
-            argv[argv.index(flag) + 1] = value
-        else:
-            argv += [flag, value]
-    if "--require-clean" in argv:
-        # The packet suggests --require-clean for a pristine hand-off. Jog cannot provide one:
-        # acquiring the row lease legitimately rewrites the tracked releases.db/releases.sql
-        # (perform_write regenerates the dump) between lease and dispatch, so a supervisor
-        # drive would refuse on its own queue state every time. Marathon's dirty-workspace
-        # WARNING still fires (advisory); Jog's outer driver lock is the serial boundary.
-        argv.remove("--require-clean")
+    argv = _marathon_argv_from_invocation(invocation, builder, reviewer)
+    if mode == "retry-build":
+        # A rebuild must not be satisfied by the attempt it retries (GH-491): dispatch on a
+        # FRESH suffixed token in the same family. The spent token's history stays untouched —
+        # Tick events are append-only and prior execution records are never deleted.
+        prior_record, prior_receipt = _jog_latest_receipt(root, gid)
+        prior_token = (prior_receipt or {}).get("token")
+        if prior_token:
+            argv += ["--relay-task", f"{prior_token}-{len(state['executions'])}"]
     argv += ["--execution-id", exec_id]
     record["result_path"] = invocation["result_path"]
 
@@ -410,6 +429,386 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False):
     record["projected_reason"] = reason
     jog_save_state(root, gid, state)
     return action, reason
+
+
+# ── GH-280 Phase 3: explicit resume / gate-only retry / rebuild / landing semantics ────────────
+
+def _jog_latest_receipt(root, gid, outcomes=None):
+    """Newest loadable receipt (optionally filtered by outcome): (record, receipt) or (None, None).
+
+    Scans executions newest-first; within an execution, its gate-retry receipts are newer than
+    the original dispatch receipt (a green gate retry is the outcome that lands). History is
+    read-only here — recovery never rewrites old receipts."""
+    state = jog_load_state(root, gid)
+    for record in reversed(state.get("executions") or []):
+        candidates = [g.get("result_path") for g in reversed(record.get("gate_retries") or [])]
+        candidates.append(record.get("result_path"))
+        for path in candidates:
+            if not path or not os.path.isfile(path):
+                continue
+            try:
+                receipt = load_marathon_result(path)
+            except ContractError:
+                continue
+            if outcomes and receipt.get("outcome") not in outcomes:
+                continue
+            return record, receipt
+    return None, None
+
+
+def _jog_exec_dir(root, gid, record):
+    return os.path.dirname(record.get("packet_dir") or "") or \
+        os.path.join(_jog_state_paths(root, gid)[0], record.get("execution_id", "exec"))
+
+
+def jog_resume(root, gh_num, args=None):
+    """`jog resume <GH>` — reconcile existing durable state, spend nothing.
+
+    Reconciliation only: a valid terminal receipt is re-projected idempotently (no dispatch,
+    no token); a dispatched execution without a receipt parks the row (the operator chooses
+    retry-build); anything else is reported. Resume never fires Marathon on its own — a new
+    fire is always the explicit retry-build decision."""
+    gid = jog_current_gid(root, gh_num)
+    if not gid:
+        print(f"jog: GH-{gh_num} is not in the jog queue")
+        sys.exit(2)
+    state = jog_load_state(root, gid)
+    executions = state.get("executions") or []
+    if not executions:
+        print(f"jog: GH-{gh_num} has no marathon execution state — run `releases jog run "
+              f"--executor marathon` or `jog retry-build` to dispatch")
+        return 0
+
+    latest = executions[-1]
+    record, receipt = _jog_latest_receipt(root, gid)
+    if record is not None and record.get("execution_id") == latest.get("execution_id"):
+        action, reason = jog_project_marathon_outcome(root, gh_num, receipt)
+        latest["status"] = f"projected-{action}"
+        latest["projected_reason"] = reason
+        jog_save_state(root, gid, state)
+        jog_set_status(root, gh_num, action, failure_reason=reason)
+        print(f"jog: resume GH-{gh_num}: terminal Marathon result re-projected ({action}) — {reason}")
+        return 0
+    if latest.get("status") == "dispatched":
+        latest["status"] = "cold-start-paused"
+        jog_save_state(root, gid, state)
+        jog_set_status(root, gh_num, "parked",
+                       failure_reason="resume: dispatched Marathon execution has no valid result "
+                                      "receipt — inspect, then `jog retry-build` if a rebuild is wanted")
+        print(f"jog: resume GH-{gh_num}: execution {latest.get('execution_id')} dispatched with no "
+              f"valid result — parked; no token spent")
+        return 1
+    print(f"jog: resume GH-{gh_num}: latest execution {latest.get('execution_id')} is "
+          f"'{latest.get('status')}' — nothing to reconcile; use jog retry-gate / retry-build / land")
+    return 0
+
+
+def jog_retry_gate(root, gh_num, args):
+    """`jog retry-gate <GH>` — re-run ONLY the gate against the same head SHA.
+
+    Marathon's native satisfied-lane path (GH-274) is the mechanism: with the phase's relay
+    terminal and its tick token done, re-invoking marathon-drive skips render/reseed/dispatch
+    and re-runs the pre-advance gate alone. Jog refuses if the head SHA moves during the
+    retry — that state needs retry-build, not a gate check."""
+    error = validate_marathon_executor(args)
+    if error:
+        print(f"jog: {error}", file=sys.stderr)
+        sys.exit(2)
+    gid = jog_current_gid(root, gh_num)
+    record, receipt = _jog_latest_receipt(root, gid, outcomes=("approved",))
+    if record is None:
+        # A red gate escalates with outcome 'escalated'; the relay behind it is terminal and
+        # its receipt still names the head — retry-gate applies there too.
+        record, receipt = _jog_latest_receipt(root, gid, outcomes=("escalated",))
+    if record is None:
+        print(f"jog: GH-{gh_num} has no terminal Marathon execution to gate-retry", file=sys.stderr)
+        sys.exit(2)
+
+    prior_head = receipt.get("head_sha")
+    invocation_path = os.path.join(record["packet_dir"], "marathon-invocation.json")
+    try:
+        invocation = load_marathon_invocation(invocation_path)
+    except ContractError as exc:
+        print(f"jog: cannot gate-retry — {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    # The head-moved guard runs BEFORE dispatch: marathon's own runs commit transcripts (the
+    # receipt head legitimately advances by those), so the meaningful invariant is that the
+    # head is UNCHANGED between the execution and this retry — checked against the live repo
+    # pre-dispatch, not against the post-run receipt (which would false-trip on the retry's
+    # own transcript commit and burn a gate run to report it).
+    pre_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=invocation["target_root"],
+                              capture_output=True, text=True)
+    if pre_head.returncode == 0 and pre_head.stdout.strip() != prior_head:
+        print(f"jog: refusing gate retry for GH-{gh_num} — head is {pre_head.stdout.strip()[:8]} "
+              f"but the execution ran on {str(prior_head or '')[:8]}; the head moved between "
+              f"runs (use jog retry-build)", file=sys.stderr)
+        sys.exit(2)
+
+    state = jog_load_state(root, gid)
+    entry = next((e for e in state.get("executions") or []
+                  if e.get("execution_id") == record["execution_id"]), None)
+    if entry is None:
+        print(f"jog: ledger lost execution {record['execution_id']} — refusing to gate-retry",
+              file=sys.stderr)
+        sys.exit(2)
+    gate_retries = entry.setdefault("gate_retries", [])
+    attempt_no = len(gate_retries) + 1
+    retry_dir = os.path.join(_jog_exec_dir(root, gid, record), f"gate-retry-{attempt_no}")
+    os.makedirs(retry_dir, exist_ok=True)
+    argv = _marathon_argv_from_invocation(invocation, args.builder, args.reviewer)
+    argv += ["--execution-id", f"{record['execution_id']}-gateretry{attempt_no}",
+             "--result-file", os.path.join(retry_dir, "marathon-result.json")]
+
+    env = dict(os.environ)
+    env.update(invocation["env"])
+    env["RELAY_DRIVER_LOCKED"] = "1"
+    print(f"jog: gate-only retry for GH-{gh_num} against head {prior_head} "
+          f"(no builder turn; satisfied-lane path)")
+    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
+    result_path = os.path.join(retry_dir, "marathon-result.json")
+    try:
+        new_receipt = load_marathon_result(result_path)
+    except ContractError as exc:
+        gate_retries.append({"execution_id": record["execution_id"], "attempt": attempt_no,
+                             "status": "no-valid-result", "drive_exit": proc.returncode})
+        jog_save_state(root, gid, state)
+        print(f"jog: gate retry exited {proc.returncode} without a valid receipt: {exc}",
+              file=sys.stderr)
+        sys.exit(2)
+    gate_retries.append({"execution_id": record["execution_id"], "attempt": attempt_no,
+                         "status": new_receipt.get("outcome"),
+                         "result_path": result_path})
+    jog_save_state(root, gid, state)
+
+    action, reason = jog_project_marathon_outcome(root, gh_num, new_receipt,
+                                                  auto_merge=getattr(args, "auto_merge", False))
+    jog_set_status(root, gh_num, action, failure_reason=reason)
+    print(f"jog: gate retry result: {new_receipt.get('outcome')} → queue {action} — {reason}")
+    return 0 if new_receipt.get("outcome") == "approved" else 1
+
+
+def jog_retry_build(root, gh_num, args):
+    """`jog retry-build <GH>` — a fresh Marathon attempt on a fresh execution id.
+
+    Marathon's namespaced attempt record is the sole retry cap: the lane key is unchanged, so
+    attempts accumulate and the cap parks the lane exactly as an ordinary marathon caller
+    would experience. All prior Tick history and execution records are preserved."""
+    error = validate_marathon_executor(args)
+    if error:
+        print(f"jog: {error}", file=sys.stderr)
+        sys.exit(2)
+    gid = jog_current_gid(root, gh_num)
+    if not gid:
+        print(f"jog: GH-{gh_num} is not in the jog queue", file=sys.stderr)
+        sys.exit(2)
+    conn = sqlite3.connect(os.path.join(root, "releases.db"))
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT status FROM jog_queue WHERE global_id = ?", (gid,)).fetchone()
+        if row and row["status"] == "running":
+            print(f"jog: GH-{gh_num} has a live lease — resume or wait; retry-build refused",
+                  file=sys.stderr)
+            sys.exit(2)
+    finally:
+        conn.close()
+
+    jog_acquire_lease(root, gh_num, os.getpid())
+    action, reason = run_marathon_phase(
+        root, gh_num, gid,
+        builder=getattr(args, "builder", "agy"), reviewer=args.reviewer,
+        auto_merge=getattr(args, "auto_merge", False), mode="retry-build")
+    jog_set_status(root, gh_num, action, failure_reason=reason)
+    print(f"jog: retry-build GH-{gh_num} → {action} — {reason}")
+    return 0 if action in ("completed", "parked") else 1
+
+
+def _gh_pr_view(root, pr_number):
+    out = subprocess.run(
+        ["gh", "pr", "view", str(pr_number), "--json",
+         "number,url,state,baseRefName,headRefName,headRefOid,mergedAt,mergeCommit,title,body"],
+        cwd=root, capture_output=True, text=True)
+    if out.returncode != 0:
+        return None, (out.stderr or "gh pr view failed").strip()
+    try:
+        return json.loads(out.stdout), None
+    except ValueError as exc:
+        return None, f"gh pr view returned unparseable JSON: {exc}"
+
+
+def jog_land(root, gh_num, pr_arg=None):
+    """`jog land <GH> [--pr N|URL]` — verify merged delivery, complete the row, delegate lifecycle.
+
+    Replay-safe order (the plan's idempotency key is (repo, gid, execution id, merged SHA)):
+      1. verify GitHub truth (PR identity, merged state, base/head/head-SHA match against the
+         execution receipt, merge-SHA reachability, qualifying gate evidence)
+      2. persist the landing projection (queue completed + ledger landing record)
+      3. invoke wave_reconcile.py --pr <N> with the verified PR metadata as its offline manifest
+      4. persist reconciliation evidence
+    A crash at any boundary resumes at the first missing durable step on re-run."""
+    gid = jog_current_gid(root, gh_num)
+    if not gid:
+        print(f"jog: GH-{gh_num} is not in the jog queue", file=sys.stderr)
+        sys.exit(2)
+    record, receipt = _jog_latest_receipt(root, gid, outcomes=("approved",))
+    if record is None:
+        print(f"jog: GH-{gh_num} has no approved Marathon execution to land — nothing terminal "
+              f"with a green outcome is on record", file=sys.stderr)
+        sys.exit(2)
+
+    # A gate-only retry inherits its lane from the original dispatch but never passes the
+    # branch guard (the satisfied-lane short-circuit runs first), and a rebuild fired while
+    # the lane branch is already checked out likewise records no redirect. Branch identity is
+    # stable across one issue's execution family: fall back to the newest receipt in the
+    # ledger that carries base/head — never guess.
+    if not receipt.get("base_branch") or not receipt.get("head_branch"):
+        _state_all = jog_load_state(root, gid)
+        for _rec in reversed(_state_all.get("executions") or []):
+            for _path in ([g.get("result_path") for g in reversed(_rec.get("gate_retries") or [])]
+                          + [_rec.get("result_path")]):
+                if not _path or not os.path.isfile(_path):
+                    continue
+                try:
+                    _other = load_marathon_result(_path)
+                except (ContractError, OSError):
+                    continue
+                for field in ("base_branch", "head_branch"):
+                    if not receipt.get(field) and _other.get(field):
+                        receipt[field] = _other[field]
+            if receipt.get("base_branch") and receipt.get("head_branch"):
+                break
+
+    # ── PR identity: explicit --pr wins, but only after matching it against the receipt.
+    pr_number = None
+    if pr_arg:
+        m = re.search(r"/pull/(\d+)|^#?(\d+)$", str(pr_arg).strip())
+        pr_number = (m.group(1) or m.group(2)) if m else None
+        if not pr_number:
+            print(f"jog: --pr expects a PR number or URL, got {pr_arg!r}", file=sys.stderr)
+            sys.exit(2)
+    else:
+        pr_number = (receipt.get("pr") or {}).get("number")
+        if not pr_number:
+            print(f"jog: receipt for {record['execution_id']} has no PR identity — pass "
+                  f"`--pr <N|URL>` after opening one from its branches "
+                  f"(head={receipt.get('head_branch')}, base={receipt.get('base_branch')})",
+                  file=sys.stderr)
+            sys.exit(2)
+
+    # ── Step 1: verify GitHub truth against the execution receipt.
+    pr, err = _gh_pr_view(root, pr_number)
+    if pr is None:
+        print(f"jog: could not verify PR #{pr_number}: {err}", file=sys.stderr)
+        sys.exit(2)
+    checks = [
+        ("state MERGED", pr.get("state") == "MERGED"),
+        (f"base {receipt.get('base_branch')}", pr.get("baseRefName") == receipt.get("base_branch")),
+        (f"head {receipt.get('head_branch')}", pr.get("headRefName") == receipt.get("head_branch")),
+        (f"head SHA {str(receipt.get('head_sha') or '')[:8]}",
+         pr.get("headRefOid") == receipt.get("head_sha")),
+        ("receipt repo is this repo",
+         not receipt.get("target_repo", {}).get("path")
+         or os.path.realpath(receipt["target_repo"]["path"]) == os.path.realpath(root)),
+    ]
+    gate = receipt.get("gate") or {}
+    checks.append(("gate green on the landed head",
+                   gate.get("result") == "green"
+                   and (not gate.get("receipt_path") or os.path.isfile(gate["receipt_path"]))))
+    merged_sha = ((pr.get("mergeCommit") or {}).get("oid")) or None
+    checks.append(("merge commit present", bool(merged_sha)))
+    failed = [name for name, ok in checks if not ok]
+    if failed:
+        print(f"jog: refusing to land GH-{gh_num} via PR #{pr_number} — failed verification: "
+              f"{', '.join(failed)}", file=sys.stderr)
+        sys.exit(2)
+    base_ref = pr.get("baseRefName")
+    reach = subprocess.run(["git", "merge-base", "--is-ancestor", merged_sha, base_ref],
+                           cwd=root, capture_output=True)
+    if reach.returncode != 0:
+        print(f"jog: merge commit {merged_sha[:8]} is not reachable from '{base_ref}' — refusing "
+              f"to land GH-{gh_num}", file=sys.stderr)
+        sys.exit(2)
+
+    # ── Step 2: persist the landing projection (idempotent by key).
+    state = jog_load_state(root, gid)
+    entry = next((e for e in state.get("executions") or []
+                  if e.get("execution_id") == record["execution_id"]), None)
+    if entry is None:
+        print(f"jog: ledger lost execution {record['execution_id']} — refusing to land",
+              file=sys.stderr)
+        sys.exit(2)
+    landing = entry.setdefault("landing", {})
+    key = {
+        "repo": (receipt.get("target_repo") or {}).get("origin_url") or root,
+        "gid": gid,
+        "execution_id": record["execution_id"],
+        "merged_sha": merged_sha,
+    }
+    if landing.get("key") != key:
+        landing.update({
+            "key": key,
+            "pr_number": int(pr_number),
+            "pr_url": pr.get("url"),
+            "merged_at": pr.get("mergedAt"),
+            "landed_via": "jog land",
+            "landed_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        })
+        jog_save_state(root, gid, state)
+        jog_set_status(root, gh_num, "completed",
+                       failure_reason=f"landed via PR #{pr_number} (merged {merged_sha[:8]})")
+        print(f"jog: GH-{gh_num} landed — PR #{pr_number} merged into {base_ref} at {merged_sha[:8]}")
+    else:
+        print(f"jog: landing projection already recorded for PR #{pr_number} — replaying "
+              f"missing steps only")
+
+    # ── Step 3: delegate lifecycle closeout to wave_reconcile.py (idempotent).
+    if landing.get("reconciled"):
+        print(f"jog: GH-{gh_num} already reconciled at {landing.get('reconciled_at')} — nothing to do")
+        return 0
+    manifest = {
+        "prs": [{
+            "number": int(pr_number),
+            "title": pr.get("title") or f"GH-{gh_num}",
+            "state": "MERGED",
+            "mergedAt": pr.get("mergedAt"),
+            "baseRefName": pr.get("baseRefName"),
+            "headRefName": pr.get("headRefName"),
+            "body": pr.get("body") or f"Closes #{gh_num}",
+        }],
+        "source": "jog land (verified gh pr view)",
+    }
+    exec_dir = _jog_exec_dir(root, gid, record)
+    os.makedirs(exec_dir, exist_ok=True)
+    manifest_path = os.path.join(exec_dir, "wave-manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
+        f.write("\n")
+    # The tree is never pristine here (jog's own tracked releases.db/sql writes), and the pull/
+    # branch checks belong to an operator's working context, not this supervised closeout; the
+    # offline manifest carries the PR truth verified seconds ago, so no second network fetch.
+    reconcile_py = os.path.join(harness_home(), "utils", "py", "wave_reconcile.py")
+    proc = subprocess.run(
+        [sys.executable, reconcile_py, "--root", root, "--pr", str(pr_number),
+         "--offline", manifest_path, "--skip-pull", "--skip-branch-check", "--allow-dirty"],
+        cwd=root)
+    if proc.returncode != 0:
+        print(f"jog: wave_reconcile exited {proc.returncode} — landing is recorded; re-run "
+              f"`jog land GH-{gh_num}` to resume reconciliation at this step", file=sys.stderr)
+        sys.exit(6)
+
+    # ── Step 4: persist reconciliation evidence.
+    state = jog_load_state(root, gid)
+    for entry in state.get("executions") or []:
+        if entry.get("execution_id") == record["execution_id"]:
+            entry.setdefault("landing", {}).update({
+                "key": key,
+                "reconciled": True,
+                "reconciled_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "manifest_path": manifest_path,
+            })
+    jog_save_state(root, gid, state)
+    print(f"jog: GH-{gh_num} lifecycle reconciled (wave_reconcile --pr {pr_number})")
+    return 0
 
 
 class JogSupervisorLock:
