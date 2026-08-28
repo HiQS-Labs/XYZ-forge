@@ -1,6 +1,6 @@
 # Marathon Phase gh-105-vendor-releases-addon
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-105-VENDOR-RELEASES-ADDON-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -92,7 +92,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: relay-automation/xyz-vendor.sh,relay-automation/xyz-sync.sh,RELEASES-DB-FAQS.md,test/find-harness.sh,test/gh105-vendor-releases-addon.sh,test/gh197-vendor-tier-split.sh,test/gh293-vendored-guard-drift.sh,test/gh312-vendor-preserves-state.sh,test/write-ops-log.sh,test/xyz-sync-check.sh,test/xyz-vendor.sh,test/baselines/GH-52-negative-control.md,test/_setup.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick release MARATHON-GH-105-VENDOR-RELEASES-ADDON-TURN --agent codex --to agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Reviewer)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick release MARATHON-GH-105-VENDOR-RELEASES-ADDON-TURN --agent codex --to agy
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick done MARATHON-GH-105-VENDOR-RELEASES-ADDON-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh280-dogfood/bin/tick
    Edit ONLY marathon-system/gh-105-vendor-releases-addon/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
@@ -107,3 +107,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+I have implemented the acceptance criteria for the GH-105 RELEASES vendor add-on feature:
+1. Created `RELEASES-DB-FAQS.md` which carries the short "enable the RELEASES ledger" recipe (`releases init`).
+2. Confirmed that Tier 2 vendoring (`--with-releases` or auto-detection) in `relay-automation/xyz-vendor.sh` properly ships `utils/py/releases_app.py`, `utils/releases-merge-resolve.sh`, `RELEASES-DB-FAQS.md`, and `utils/timeline/`.
+3. Confirmed that target-repo state is preserved by default (GH-312 covers `.xyz/relay-system/`, `.xyz/.relay-driver.lock`, `.xyz/XYZ.json`).
+4. Updated `relay-automation/xyz-vendor.sh` to output a one-line pointer to the vendored RELEASES add-on (`"RELEASES add-on included: run 'releases init' to enable (see RELEASES-DB-FAQS.md)"`) when Tier 2 is active, acting as the discovery surface.
+5. Created `test/gh105-vendor-releases-addon.sh` which exercises Tier 2 vendoring, pins the payload, and validates that GH-312 runtime state is preserved.
+
+All relevant tests (including the new one, `test/xyz-vendor.sh`, and `test/xyz-sync-check.sh`) pass locally.
