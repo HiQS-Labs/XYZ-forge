@@ -202,6 +202,127 @@ def _jog_state_paths(root, gid):
     return base, os.path.join(base, "state.json")
 
 
+def _ledger_abs_path(root, gid, path):
+    """Resolve a ledger-recorded path. GH-292 F2: new records store paths RELATIVE to the
+    ledger base (<root>/.tick/jog/<gid>/) so the ledger survives a queue-row re-add (a fresh
+    global_id) without re-key surgery. Absolute paths from older records still resolve."""
+    if not path:
+        return path
+    if os.path.isabs(path):
+        return path
+    base, _ = _jog_state_paths(root, gid)
+    return os.path.join(base, path)
+
+
+def _ledger_rel_path(root, gid, path):
+    """Store-side twin of _ledger_abs_path: absolute→relative when the path sits inside this
+    ledger; anything else is stored verbatim."""
+    if not path or not os.path.isabs(path):
+        return path
+    base, _ = _jog_state_paths(root, gid)
+    try:
+        rel = os.path.relpath(path, base)
+    except ValueError:
+        return path
+    if rel == os.pardir or rel.startswith(os.pardir + os.sep):
+        return path
+    return rel
+
+
+def jog_regenerate_dashboard(root):
+    """GH-292 F3: jog's promotion repoints roadmap rows and stalens the committed
+    ROADMAP-DASHBOARD.md — the lane's own gate then fails on drift (observed on both Phase-4
+    dogfood items). Regenerate after promotion, before dispatch. Best-effort and scoped to
+    installs that ship the renderer."""
+    script = None
+    for candidate in (os.path.join(harness_home(), "utils", "roadmap-dashboard.sh"),
+                      os.path.join(root, "utils", "roadmap-dashboard.sh")):
+        if os.path.isfile(candidate):
+            script = candidate
+            break
+    if not script:
+        return
+    try:
+        subprocess.run(["bash", script], cwd=root, capture_output=True, text=True, timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
+def jog_commit_supervisor_state(root, gh_num, exec_id):
+    """GH-292 F1: commit the supervisor's own ledger/doc writes before dispatch.
+
+    The turn-containment pass restores tracked working-tree modifications to HEAD, and jog's
+    uncommitted writes (releases.db/sql, regenerated views, the promoted doc pair) are
+    indistinguishable from an agent's off-lane edits — the Phase-4 dogfood lost queue rows to
+    exactly this, twice. Committing supervisor-owned paths BEFORE any turn dispatches makes
+    containment have nothing of the supervisor's to revert.
+
+    Stages an explicit path list only — never `git add -A` (the GH-124 sweep lesson). The
+    promotion's own `git rm`/`git add` of the doc pair is already staged by promotion.
+    Commits only on the integration branch: a retry-build dispatches from a lane branch,
+    and a ledger commit there would ride into the lane PR and block later branch switches.
+    Returns True when a commit was made."""
+    integration = os.environ.get("MARATHON_INTEGRATION_BRANCH", "development")
+    current = subprocess.run(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"],
+                             capture_output=True, text=True)
+    if current.returncode == 0 and current.stdout.strip() != integration:
+        print(f"jog: supervisor-state commit skipped — on branch '{current.stdout.strip()}' "
+              f"(not the integration branch '{integration}'); uncommitted ledger writes on a "
+              f"lane are the containment-revert tradeoff (GH-292 F1)")
+        return False
+    paths = [p for p in ("releases.db", "releases.sql", "releases.gen",
+                         "ROADMAP-DASHBOARD.md", "LEADERBOARD.html", "RELEASES-PREVIEW.html")
+             if os.path.exists(os.path.join(root, p))]
+    if paths:
+        subprocess.run(["git", "-C", root, "add", "--"] + paths, capture_output=True)
+    staged = subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet"],
+                            capture_output=True)
+    if staged.returncode == 0:
+        return False
+    res = subprocess.run(
+        ["git", "-C", root, "commit", "-q", "-m",
+         f"jog-state: intake + lease for GH-{gh_num} (execution {exec_id}) — supervisor-owned "
+         f"ledger, doc, and view writes committed before dispatch (GH-292 F1)"],
+        capture_output=True, text=True)
+    if res.returncode != 0:
+        print(f"jog: warning: supervisor-state commit failed: {(res.stderr or '').strip()}",
+              file=sys.stderr)
+        return False
+    return True
+
+
+def jog_resolve_ledger_gid(root, gh_num):
+    """GH-292 F2: the gid whose ledger holds this issue's executions.
+
+    Prefers the queue row's own global_id when its ledger exists; otherwise scans
+    .tick/jog/*/state.json for a matching gh_number (newest first) so history written under a
+    previous row identity is still found after DB loss + re-add. Returns None when the issue
+    has no ledger at all."""
+    gid = jog_current_gid(root, gh_num)
+    if gid:
+        _base, path = _jog_state_paths(root, gid)
+        if os.path.isfile(path):
+            return gid
+    jog_dir = os.path.join(root, ".tick", "jog")
+    if not os.path.isdir(jog_dir):
+        return None
+    candidates = []
+    for name in os.listdir(jog_dir):
+        _base, path = _jog_state_paths(root, name)
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                state = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if state.get("gh_number") == gh_num:
+            candidates.append((os.path.getmtime(path), name))
+    if not candidates:
+        return None
+    return max(candidates)[1]
+
+
 def jog_load_state(root, gid):
     """Load the append-only execution ledger for a queue row; a fresh one if absent."""
     _base, path = _jog_state_paths(root, gid)
@@ -280,7 +401,7 @@ def jog_reconcile_cold_start(root, gh_nums):
     lease and refire. A valid terminal result is re-projected idempotently (no turn spent);
     a dispatched execution with no valid result parks the row — never a silent refire."""
     for gh_num in gh_nums:
-        gid = jog_current_gid(root, gh_num)
+        gid = jog_resolve_ledger_gid(root, gh_num)
         if not gid:
             continue
         state = jog_load_state(root, gid)
@@ -291,7 +412,7 @@ def jog_reconcile_cold_start(root, gh_nums):
         if latest.get("status") != "dispatched":
             continue
         receipt = None
-        result_path = latest.get("result_path")
+        result_path = _ledger_abs_path(root, gid, latest.get("result_path"))
         if result_path and os.path.isfile(result_path):
             try:
                 receipt = load_marathon_result(result_path)
@@ -360,7 +481,9 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         "mode": mode,
         "started_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "status": "dispatched",
-        "packet_dir": packet_dir,
+        # GH-292 F2: ledger-internal paths are stored RELATIVE to the ledger base so the
+        # history survives a queue-row re-add (fresh gid) without re-key surgery.
+        "packet_dir": _ledger_rel_path(root, gid, packet_dir),
         "result_path": None,
     }
     state["executions"].append(record)
@@ -400,13 +523,21 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         if prior_token:
             argv += ["--relay-task", f"{prior_token}-{len(state['executions'])}"]
     argv += ["--execution-id", exec_id]
-    record["result_path"] = invocation["result_path"]
+    record["result_path"] = _ledger_rel_path(root, gid, invocation["result_path"])
+    # PR #281 review B4: persist the result path BEFORE dispatch — a crash mid-drive otherwise
+    # orphans a receipt that was actually written (the ledger's newest record still says null).
+    jog_save_state(root, gid, state)
 
     env = dict(os.environ)
     env.update(invocation["env"])
     # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
     # contending with its own supervisor on the same lock directory.
     env["RELAY_DRIVER_LOCKED"] = "1"
+
+    # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
+    # containment pass (which restores tracked modifications to HEAD) has nothing of the
+    # supervisor's to revert. GH-292 F3: the dashboard was regenerated after promotion.
+    jog_commit_supervisor_state(root, gh_num, exec_id)
 
     print(f"jog: dispatching marathon-drive ({invocation['drive_command']})")
     proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
@@ -438,12 +569,14 @@ def _jog_latest_receipt(root, gid, outcomes=None):
 
     Scans executions newest-first; within an execution, its gate-retry receipts are newer than
     the original dispatch receipt (a green gate retry is the outcome that lands). History is
-    read-only here — recovery never rewrites old receipts."""
+    read-only here — recovery never rewrites old receipts. Paths resolve relative-to-ledger
+    (GH-292 F2) with absolute legacy paths still honored."""
     state = jog_load_state(root, gid)
     for record in reversed(state.get("executions") or []):
         candidates = [g.get("result_path") for g in reversed(record.get("gate_retries") or [])]
         candidates.append(record.get("result_path"))
-        for path in candidates:
+        for rel_path in candidates:
+            path = _ledger_abs_path(root, gid, rel_path)
             if not path or not os.path.isfile(path):
                 continue
             try:
@@ -457,7 +590,8 @@ def _jog_latest_receipt(root, gid, outcomes=None):
 
 
 def _jog_exec_dir(root, gid, record):
-    return os.path.dirname(record.get("packet_dir") or "") or \
+    packet_dir = _ledger_abs_path(root, gid, record.get("packet_dir"))
+    return os.path.dirname(packet_dir or "") or \
         os.path.join(_jog_state_paths(root, gid)[0], record.get("execution_id", "exec"))
 
 
@@ -468,7 +602,7 @@ def jog_resume(root, gh_num, args=None):
     no token); a dispatched execution without a receipt parks the row (the operator chooses
     retry-build); anything else is reported. Resume never fires Marathon on its own — a new
     fire is always the explicit retry-build decision."""
-    gid = jog_current_gid(root, gh_num)
+    gid = jog_resolve_ledger_gid(root, gh_num)
     if not gid:
         print(f"jog: GH-{gh_num} is not in the jog queue")
         sys.exit(2)
@@ -514,7 +648,7 @@ def jog_retry_gate(root, gh_num, args):
     if error:
         print(f"jog: {error}", file=sys.stderr)
         sys.exit(2)
-    gid = jog_current_gid(root, gh_num)
+    gid = jog_resolve_ledger_gid(root, gh_num)
     record, receipt = _jog_latest_receipt(root, gid, outcomes=("approved",))
     if record is None:
         # A red gate escalates with outcome 'escalated'; the relay behind it is terminal and
@@ -525,7 +659,8 @@ def jog_retry_gate(root, gh_num, args):
         sys.exit(2)
 
     prior_head = receipt.get("head_sha")
-    invocation_path = os.path.join(record["packet_dir"], "marathon-invocation.json")
+    invocation_path = os.path.join(
+        _ledger_abs_path(root, gid, record.get("packet_dir")), "marathon-invocation.json")
     try:
         invocation = load_marathon_invocation(invocation_path)
     except ContractError as exc:
@@ -598,7 +733,7 @@ def jog_retry_build(root, gh_num, args):
     if error:
         print(f"jog: {error}", file=sys.stderr)
         sys.exit(2)
-    gid = jog_current_gid(root, gh_num)
+    gid = jog_resolve_ledger_gid(root, gh_num) or jog_current_gid(root, gh_num)
     if not gid:
         print(f"jog: GH-{gh_num} is not in the jog queue", file=sys.stderr)
         sys.exit(2)
@@ -646,9 +781,9 @@ def jog_land(root, gh_num, pr_arg=None):
       3. invoke wave_reconcile.py --pr <N> with the verified PR metadata as its offline manifest
       4. persist reconciliation evidence
     A crash at any boundary resumes at the first missing durable step on re-run."""
-    gid = jog_current_gid(root, gh_num)
+    gid = jog_resolve_ledger_gid(root, gh_num)
     if not gid:
-        print(f"jog: GH-{gh_num} is not in the jog queue", file=sys.stderr)
+        print(f"jog: GH-{gh_num} has no jog queue row and no execution ledger", file=sys.stderr)
         sys.exit(2)
     record, receipt = _jog_latest_receipt(root, gid, outcomes=("approved",))
     if record is None:
@@ -666,6 +801,7 @@ def jog_land(root, gh_num, pr_arg=None):
         for _rec in reversed(_state_all.get("executions") or []):
             for _path in ([g.get("result_path") for g in reversed(_rec.get("gate_retries") or [])]
                           + [_rec.get("result_path")]):
+                _path = _ledger_abs_path(root, gid, _path)
                 if not _path or not os.path.isfile(_path):
                     continue
                 try:
@@ -1334,8 +1470,9 @@ def jog_run_main(args=None):
             # receipt's outcome. No Tick seeding, relay rendering, branch choice, gate, or PR
             # discovery happens here; the legacy relay path below is untouched.
             if executor == "marathon" and not simulate:
+                ledger_gid = jog_resolve_ledger_gid(root, gh_num) or row["global_id"]
                 action, reason = run_marathon_phase(
-                    root, gh_num, row["global_id"],
+                    root, gh_num, ledger_gid,
                     builder=args.builder, reviewer=args.reviewer,
                     auto_merge=getattr(args, "auto_merge", False))
                 jog_set_status(root, gh_num, action, failure_reason=reason)
