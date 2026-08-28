@@ -1,9 +1,9 @@
 ---
-title: "GH-204: BSD `sed -i ''` idiom silently no-ops on Linux at two call sites"
+title: "GH-204: BSD `sed -i ''` idiom silently no-ops on Linux at five call sites"
 status: inbox
 roadmap_exempt: true
 created: 2026-08-24
-updated: 2026-08-24
+updated: 2026-08-28
 owner: arnoldadero
 goal: make both in-place edits portable so a lost write can never be reported as a completed one
 gh_issue: 204
@@ -29,7 +29,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Both call sites re-verified present at `713ba6d1` (2026-08-24) and the failure mode reproduced directly on Linux (GNU sed 4.x). Severity established: at `relay-drive.sh:546` the lost write is **never surfaced** — the script prints an escalation message and exits 4 regardless. **Filed as [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) on 2026-08-24**, so `marathon-plan.sh` can now see it. | Promote to `2-WORKING` with a preflight contract when it is scheduled. Fix is two lines; the only real decision is whether to fix the hardcoded-username residual check at `build-launch-artifact.sh:289` in the same change or separately. |
+| **Five** call sites, not two — the other three were found on 2026-08-28 while diagnosing why the gate refused on Linux: `test/gh69-roadmap-shadow.sh:102` and `:109` (which were *actively failing that suite*, 49/4) and `test/meter-release.sh:528`. The two test sites in gh69 are **fixed in PR #209** (53/0); the production pair and `meter-release.sh` remain. Original two re-verified present at `713ba6d1` (2026-08-24) and the failure mode reproduced directly on Linux (GNU sed 4.x). Severity established: at `relay-drive.sh:546` the lost write is **never surfaced** — the script prints an escalation message and exits 4 regardless. **Filed as [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) on 2026-08-24**, so `marathon-plan.sh` can now see it. | Promote to `2-WORKING` with a preflight contract when it is scheduled. Fix is two lines; the only real decision is whether to fix the hardcoded-username residual check at `build-launch-artifact.sh:289` in the same change or separately. |
 
 ## Why this is in the ledger
 
