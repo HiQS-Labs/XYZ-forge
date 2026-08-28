@@ -426,3 +426,9 @@ Before the default flip, omit `--executor marathon`. During the compatibility wi
 `--executor relay`. If a receipt/schema defect is found after the flip, restore the legacy default in
 one commit while preserving all queue, Tick, and result artifacts for diagnosis. Never roll back by
 resetting shared history, deleting Tick events, rewriting queue receipts, or reusing a spent token.
+
+## Lessons Learned (For Future Agents)
+
+1. **Contract-driven integration over runtime duplication:** Duplicating execution mechanics (Tick tokens, worktree isolation, retry caps) in a supervisor inevitably creates split-brain state and drift. Establishing additive, versioned machine contracts (`marathon-invocation@1` and `marathon-drive/result@1`) provides a stable, machine-verifiable boundary that works seamlessly across both root and vendored `.xyz` layouts.
+2. **Supervisor state mutations vs. executor cleanliness checks:** When a supervisor leases a queue row, it legitimately updates database ledger files (`releases.db`/`releases.sql`). Passing strict `--require-clean` flags from preflight packets into the execution driver causes self-inflicted refusals; supervisors must control cleanliness invariants at their own outer boundary.
+3. **Idempotent crash-resilient landing:** GitHub PR merges, SQLite queue projections, and PDDA wave reconciliation belong to separate failure domains. Structuring landing workflows around durable keys `(repo identity, queue global ID, execution ID, merged SHA)` guarantees that failures at any step can safely resume at the missing durable step without duplicate turn dispatches or wasted tokens.
