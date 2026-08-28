@@ -169,8 +169,9 @@ For every issue that survives Step 2, spawn one subagent (Explore or general-pur
 batch in groups of ~5-6 concurrent, not all at once) to answer, with receipts:
 
 - `gh issue view <N> --json title,body,comments,state,labels,url` — read the actual ask.
+- **Ledger cross-check**: query `releases.db` for manifest, marathon, or roadmap rows by GH number to confirm if the issue is already recorded or tracked.
 - `git log --all --oneline -i --grep="#<N>\b" --grep="GH-<N>\b"` — any commit that
-  references this issue number by either convention.
+  references this issue number by either convention, providing completion evidence.
 - `gh pr list --state merged --search "<N> in:body"` (and `--search "#<N>"`) — any
   merged PR that references it, even without a matching commit message.
 - If a capture doc exists (from Step 2), read its own "Status" table for a prior
