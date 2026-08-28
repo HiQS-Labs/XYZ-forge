@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
@@ -128,3 +128,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 2 · Builder · agy
+Applied the requested fixes to `test/gh107-timeline-json-seam.sh`:
+1. Updated the cleanup trap to use `os.path.realpath` to physically resolve both the test's `$WORK` directory and `$TMPDIR` before checking containment, replacing the strictly lexical prefix check. This safely prevents `$TMPDIR/../outside` bypasses while satisfying `fixture-guard.sh` requirements.
+2. Added a JSON parity check that evaluates whether the `--json` output exactly matches the parsed structure of the normally generated `data.json` file. This confirms the identical-projection acceptance criterion.
+
+handing off to codex — codex, take your turn.

@@ -18,9 +18,13 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh107.XXXXXX")"
 fixture_guard_init "$WORK"
 cleanup(){
   [ -n "${WORK:-}" ] && [ -d "$WORK" ] || return 0
-  case "$WORK" in
-    "${TMPDIR:-/tmp}"/*) rm -rf "$WORK" ;;
-    *) echo "REFUSING: $WORK outside TMPDIR" >&2; exit 2 ;;
+  local resolved_work resolved_tmp
+  resolved_work="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$WORK" 2>/dev/null)"
+  resolved_tmp="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "${TMPDIR:-/tmp}" 2>/dev/null)"
+  [ -n "$resolved_work" ] && [ -n "$resolved_tmp" ] || return 0
+  case "$resolved_work" in
+    "$resolved_tmp"/*) rm -rf "$WORK" ;;
+    *) echo "REFUSING: $WORK resolves to $resolved_work outside TMPDIR ($resolved_tmp)" >&2; exit 2 ;;
   esac
 }
 trap cleanup EXIT
@@ -42,6 +46,26 @@ if python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$JSON_OUT" >/dev
   ok "--json output is valid JSON" 0
 else
   ok "JSON parse failed" 1
+fi
+
+echo "-- testing JSON parity with normal run --"
+NORMAL_OUT_DIR="$WORK/normal_out"
+python3 "$EXPORTER" --db "$DB" --md "$MD" --out "$NORMAL_OUT_DIR" >/dev/null 2>&1
+NORMAL_JSON="$NORMAL_OUT_DIR/data.json"
+
+if python3 -c '
+import json, sys
+def strip_meta(d):
+    d.get("meta", {}).pop("generatedAtDisplay", None)
+    d.get("cycle", {}).pop("generatedAt", None)
+    return d
+a = strip_meta(json.load(open(sys.argv[1])))
+b = strip_meta(json.load(open(sys.argv[2])))
+sys.exit(0 if a == b else 1)
+' "$JSON_OUT" "$NORMAL_JSON"; then
+  ok "--json payload matches normal data.json" 0
+else
+  ok "--json payload does NOT match normal data.json" 1
 fi
 
 echo "-- testing drift guard --"
