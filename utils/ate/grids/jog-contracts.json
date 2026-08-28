@@ -1,0 +1,539 @@
+{
+  "schema": "ate/variation-grid@1",
+  "name": "jog-contracts",
+  "title": "ATE Variation Grid for Jog Machine Contracts (GH-290, Targets 1-3)",
+  "description": "Deterministic variation matrix targeting contract loaders, landing verification, and receipt writer robustness across Jog and Marathon surfaces (GH-280).",
+  "targets": [
+    "contract_loaders",
+    "landing_verification",
+    "receipt_writer_robustness"
+  ],
+  "invariants": {
+    "contract_loaders": "Every hostile input must refuse with ContractError before any lease mutation or dispatch; no uncaught exception reaches the caller.",
+    "landing_verification": "Every mismatch class must refuse with exit 2 and leave the queue row untouched; the fail-closed decision table holds under composition.",
+    "receipt_writer_robustness": "Never raises, never changes the process exit code, always leaves exactly one valid marathon-drive/result@1 file when armed."
+  },
+  "variations": [
+    {
+      "id": "T1-INV-MALFORMED-TRUNCATED",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "malformed_json",
+      "description": "Truncated JSON syntax error in marathon-invocation.json",
+      "mutation": {"type": "raw_content", "content": "{\"schema\": \"swarm-preflight/marathon-invocation@1\", \"argv\": ["},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-MALFORMED-EMPTY",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "malformed_json",
+      "description": "Empty file (0 bytes) for marathon-invocation.json",
+      "mutation": {"type": "raw_content", "content": ""},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-MALFORMED-NON-JSON",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "malformed_json",
+      "description": "Non-JSON text string in marathon-invocation.json",
+      "mutation": {"type": "raw_content", "content": "<html><body>Not JSON</body></html>"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-TOP-LEVEL-ARRAY",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "shape_confusion",
+      "description": "Top-level JSON array instead of dict",
+      "mutation": {"type": "wrap_array"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-SCHEMA-V2",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "schema_version",
+      "description": "Unsupported schema version @2",
+      "mutation": {"type": "set_field", "field": "schema", "value": "swarm-preflight/marathon-invocation@2"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-SCHEMA-WRONG-NAME",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "schema_version",
+      "description": "Wrong schema name (marathon-drive/result@1)",
+      "mutation": {"type": "set_field", "field": "schema", "value": "marathon-drive/result@1"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-SCHEMA-MISSING",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "schema_version",
+      "description": "Missing schema field",
+      "mutation": {"type": "delete_field", "field": "schema"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-ARGV-EMPTY",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "argv_validation",
+      "description": "Empty argv list",
+      "mutation": {"type": "set_field", "field": "argv", "value": []},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-ARGV0-RELATIVE",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "argv_validation",
+      "description": "Non-absolute argv[0] relative path",
+      "mutation": {"type": "set_field", "field": "argv", "value": ["relay-automation/marathon-drive.sh"]},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-ARGV0-NONEXISTENT",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "argv_validation",
+      "description": "Non-existent argv[0] drive path",
+      "mutation": {"type": "set_field", "field": "argv", "value": ["/nonexistent/marathon-drive.sh"]},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-ARGV0-NON-EXEC",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "argv_validation",
+      "description": "Non-executable file for argv[0]",
+      "mutation": {"type": "set_field", "field": "argv", "value": ["/path/to/non_exec_file"]},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-ENV-NON-DICT",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "env_validation",
+      "description": "Non-dict env field",
+      "mutation": {"type": "set_field", "field": "env", "value": ["XYZ=1"]},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-ENV-NON-STRING-VAL",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "env_validation",
+      "description": "Env with non-string values",
+      "mutation": {"type": "set_field", "field": "env", "value": {"XYZ": 123}},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-HARNESS-ROOT-NONEXISTENT",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "path_resolution",
+      "description": "Non-existent harness_root directory",
+      "mutation": {"type": "set_field", "field": "harness_root", "value": "/nonexistent/harness_root"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-PACKET-PATH-NONEXISTENT",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "path_resolution",
+      "description": "Non-existent packet_path file",
+      "mutation": {"type": "set_field", "field": "packet_path", "value": "/nonexistent/packet.md"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-INV-MISSING-REQUIRED-FIELD",
+      "target": "contract_loaders",
+      "surface": "load_marathon_invocation",
+      "category": "required_fields",
+      "description": "Missing required fields (issue, phase, lane, gate, builder, reviewer, base_ref, result_path, packet_dir)",
+      "mutation": {"type": "delete_field", "field": "issue"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-RES-MALFORMED-TRUNCATED",
+      "target": "contract_loaders",
+      "surface": "load_marathon_result",
+      "category": "malformed_json",
+      "description": "Truncated JSON syntax error in marathon-result.json",
+      "mutation": {"type": "raw_content", "content": "{\"schema\": \"marathon-drive/result@1\", \"outcome\": "},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-RES-TOP-LEVEL-ARRAY",
+      "target": "contract_loaders",
+      "surface": "load_marathon_result",
+      "category": "shape_confusion",
+      "description": "Top-level JSON array instead of dict",
+      "mutation": {"type": "wrap_array"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-RES-SCHEMA-V2",
+      "target": "contract_loaders",
+      "surface": "load_marathon_result",
+      "category": "schema_version",
+      "description": "Unsupported schema version @2",
+      "mutation": {"type": "set_field", "field": "schema", "value": "marathon-drive/result@2"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-RES-EXIT-CODE-BOOL",
+      "target": "contract_loaders",
+      "surface": "load_marathon_result",
+      "category": "type_confusion",
+      "description": "Boolean exit_code (True/False) refused",
+      "mutation": {"type": "set_field", "field": "exit_code", "value": true},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-RES-EXIT-CODE-STR",
+      "target": "contract_loaders",
+      "surface": "load_marathon_result",
+      "category": "type_confusion",
+      "description": "String exit_code ('0') refused",
+      "mutation": {"type": "set_field", "field": "exit_code", "value": "0"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T1-RES-DICT-FIELD-TYPE",
+      "target": "contract_loaders",
+      "surface": "load_marathon_result",
+      "category": "type_confusion",
+      "description": "Dict field (gate/target_repo/attempt/pr/timestamps) as non-dict",
+      "mutation": {"type": "set_field", "field": "gate", "value": "green"},
+      "expected_exception": "ContractError",
+      "expected_dispatch": false
+    },
+    {
+      "id": "T2-LAND-WRONG-BASE",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "pr_mismatch",
+      "description": "PR base branch differs from receipt base_branch",
+      "mutation": {"pr_base": "main", "receipt_base": "development"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "base development",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-WRONG-HEAD",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "pr_mismatch",
+      "description": "PR head branch differs from receipt head_branch",
+      "mutation": {"pr_head": "marathon/wrong-lane", "receipt_head": "marathon/gh290-lane"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "head",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-MISMATCHED-HEAD-SHA",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "pr_mismatch",
+      "description": "PR headRefOid differs from receipt head_sha",
+      "mutation": {"pr_head_oid": "0000000000000000000000000000000000000000"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "head SHA",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-STATE-OPEN",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "pr_state",
+      "description": "PR state is OPEN (unmerged)",
+      "mutation": {"pr_state": "OPEN"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "state MERGED",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-STATE-CLOSED",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "pr_state",
+      "description": "PR state is CLOSED (unmerged)",
+      "mutation": {"pr_state": "CLOSED"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "state MERGED",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-FOREIGN-REPO",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "repo_boundary",
+      "description": "Receipt target_repo.path points at a foreign repository",
+      "mutation": {"receipt_target_repo": "/foreign/repo/path"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "receipt repo is this repo",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-UNREACHABLE-MERGE-SHA",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "git_reachability",
+      "description": "PR merge commit SHA is not an ancestor of base branch",
+      "mutation": {"pr_merge_oid": "unreachable_commit_sha"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "not reachable",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-RED-GATE",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "gate_evidence",
+      "description": "Receipt carries red gate evidence (exit 1)",
+      "mutation": {"receipt_gate": {"result": "red", "exit": 1}},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "gate green on the landed head",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-ABSENT-GATE-RECEIPT",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "gate_evidence",
+      "description": "Receipt specifies gate receipt_path that does not exist on disk",
+      "mutation": {"receipt_gate": {"result": "green", "receipt_path": "/nonexistent/receipt.json"}},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "gate green on the landed head",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-GH-PR-VIEW-FAIL",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "gh_api_robustness",
+      "description": "gh pr view command fails (exit 1)",
+      "mutation": {"gh_pr_view_fail": true},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "could not verify PR",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-GH-PR-VIEW-UNPARSEABLE",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "gh_api_robustness",
+      "description": "gh pr view returns unparseable non-JSON output",
+      "mutation": {"gh_pr_view_raw": "Not JSON"},
+      "expected_exit_code": 2,
+      "expected_reason_substr": "unparseable JSON",
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T2-LAND-COMPOSITE-FAILURE",
+      "target": "landing_verification",
+      "surface": "jog_land",
+      "category": "composition",
+      "description": "Multiple simultaneous mismatches (OPEN + wrong base + red gate + foreign repo)",
+      "mutation": {"pr_state": "OPEN", "pr_base": "main", "gate_result": "red", "foreign_repo": true},
+      "expected_exit_code": 2,
+      "expected_reason_substr": ["state MERGED", "base development", "gate green", "receipt repo is this repo"],
+      "expected_queue_mutation": false
+    },
+    {
+      "id": "T3-WRITER-GH-EMPTY",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "hostile_gh_output",
+      "description": "Empty output from gh pr list query",
+      "mutation": {"gh_pr_list_output": ""},
+      "expected_outcome": "approved",
+      "expected_exit_code": 0,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-GH-BARE-ARRAY",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "hostile_gh_output",
+      "description": "Bare array output [] from gh pr list query",
+      "mutation": {"gh_pr_list_output": "[]"},
+      "expected_outcome": "approved",
+      "expected_exit_code": 0,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-GH-NON-JSON",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "hostile_gh_output",
+      "description": "Non-JSON error string from gh pr list query",
+      "mutation": {"gh_pr_list_output": "error: network unreachable"},
+      "expected_outcome": "approved",
+      "expected_exit_code": 0,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-GH-TRUNCATED-JSON",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "hostile_gh_output",
+      "description": "Truncated JSON syntax error from gh pr list query",
+      "mutation": {"gh_pr_list_output": "{\"number\": 42, \"state\":"},
+      "expected_outcome": "approved",
+      "expected_exit_code": 0,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-0-APPROVED",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 0 maps to outcome approved",
+      "mutation": {"exit_code": 0},
+      "expected_outcome": "approved",
+      "expected_exit_code": 0,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-2-REFUSED",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 2 maps to outcome refused",
+      "mutation": {"exit_code": 2},
+      "expected_outcome": "refused",
+      "expected_exit_code": 2,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-3-ESCALATED-NO-PROGRESS",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 3 maps to outcome escalated (no-progress)",
+      "mutation": {"exit_code": 3},
+      "expected_outcome": "escalated",
+      "expected_exit_code": 3,
+      "expected_reason_substr": "no-progress",
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-4-ESCALATED-CAP",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 4 maps to outcome escalated (cap-or-close-mismatch)",
+      "mutation": {"exit_code": 4},
+      "expected_outcome": "escalated",
+      "expected_exit_code": 4,
+      "expected_reason_substr": "cap-or-close-mismatch",
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-5-ESCALATED-GATE",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 5 maps to outcome escalated (pre-advance-failed)",
+      "mutation": {"exit_code": 5},
+      "expected_outcome": "escalated",
+      "expected_exit_code": 5,
+      "expected_reason_substr": "pre-advance-failed",
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-7-ESCALATED-TIMEOUT",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 7 maps to outcome escalated (timeout-no-artifact)",
+      "mutation": {"exit_code": 7},
+      "expected_outcome": "escalated",
+      "expected_exit_code": 7,
+      "expected_reason_substr": "timeout-no-artifact",
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-1-LOCK-CONTENTION",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 1 (bare) maps to outcome lock-contention",
+      "mutation": {"exit_code": 1},
+      "expected_outcome": "lock-contention",
+      "expected_exit_code": 1,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-1-ESCALATED",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit code 1 (with specific reason) maps to outcome escalated",
+      "mutation": {"exit_code": 1, "reason": "tick failed"},
+      "expected_outcome": "escalated",
+      "expected_exit_code": 1,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-EXIT-INTERRUPTED",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Exit codes 130/137/143 map to outcome interrupted",
+      "mutation": {"exit_code": 130},
+      "expected_outcome": "interrupted",
+      "expected_exit_code": 130,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-CRASHED",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Driver unhandled exception sets crashed flag -> outcome crashed",
+      "mutation": {"crashed": true},
+      "expected_outcome": "crashed",
+      "expected_exit_code": 1,
+      "expected_receipt_valid": true
+    },
+    {
+      "id": "T3-WRITER-POST-APPROVE-FAILED",
+      "target": "receipt_writer_robustness",
+      "surface": "write_terminal_result",
+      "category": "outcome_vocabulary",
+      "description": "Failure after approval preserves approval_preserved: true",
+      "mutation": {"post_approve_failed": true},
+      "expected_outcome": "post-approve-failed",
+      "expected_approval_preserved": true,
+      "expected_receipt_valid": true
+    }
+  ]
+}
