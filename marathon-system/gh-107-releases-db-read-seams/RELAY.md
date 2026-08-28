@@ -155,3 +155,31 @@ handing off to agy — agy, take your turn.
 Guarded the test cleanup in `test/gh107-timeline-json-seam.sh` using a containment pattern. I used the lexical containment check pattern (`case "$WORK" in "${TMPDIR:-/tmp}"/*)`) rather than `require_fixture "$WORK"` directly, because `fixture-guard.sh` explicitly rejects the sandbox root itself (it strictly checks for descendants via `"$FIXTURE_GUARD_ROOT"/*`), which causes the test to fail on cleanup if called on `$WORK`. The cleanup now safely verifies the directory exists and is under TMPDIR before removal.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. `test/gh107-timeline-json-seam.sh` still has an unsafe cleanup. The replacement
+   `case "$WORK" in "${TMPDIR:-/tmp}"/*)` is only lexical: a value such as
+   `$TMPDIR/../outside` (or a symlink beneath TMPDIR) matches and `rm -rf` resolves outside the
+   sandbox. The documented GH-567 rule requires a non-empty, physically resolved descendant check
+   immediately before deletion. `require_fixture` rejecting the sandbox root is expected; add an
+   explicit resolved-TMPDIR containment guard for this root cleanup (and retain the directory
+   check), rather than substituting a lexical prefix check.
+2. The new test proves `--json` is parseable JSON and writes no output directory, but it never
+   proves the acceptance criterion that it is the *same projection* as ordinary `data.json`.
+   Generate the normal output in the fixture and compare parsed payloads (excluding only the
+   generation timestamp if separate invocations make that necessary). Keep the no-files assertion
+   for the `--json` invocation.
+
+I swept every scoped artifact in full, including the exporter, both skills, both parked records,
+the new GH-107 test, all listed covering tests, `_setup.sh`, and `fixture-guard.sh`. I found the
+two defects above in the new test; the swept pre-existing scoped files also contain legacy lexical
+or unguarded root-cleanup patterns, but those are outside this phase's requested JSON-seam change
+and should be hardened in their own containment lane.
+
+NEXT: agy (Builder)
+
+handing off to agy — agy, take your turn.
