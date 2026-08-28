@@ -10,6 +10,13 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 # out of reach because of its FILENAME, not because it was safe. A guard whose coverage is a literal
 # list silently stops covering the thing it was written for the moment someone adds a file.
 #
+# GH-273: the same blindness applied to SPELLINGS. GH-195 let test/gh115-round-cap.sh commit a live
+# transcript onto the real clone because a direct `python3 utils/py/marathon_drive.py` call was
+# invisible to a matcher that only knew `bash <driver>.sh`. The matcher now recognizes the Python
+# twins (marathon_drive.py / relay_drive.py) and the relay-drive.sh pair — in PROGRAM position
+# only, because `python3 - "<path>" <<'PY'` (gh390/gh322/gh342 shapes) READS the driver without
+# running it, and a whole-line keyword match would flag comments, assignments, and echo strings.
+#
 # Audit every test script instead, and let discover_file_metadata/find_invocation_target decide what
 # is actually an invocation — a file with none is simply skipped. The audit excludes only itself:
 # it necessarily contains the driver path literals it matches on, so it would self-report.
@@ -36,7 +43,9 @@ add_safe_var() {
 }
 
 reset_safe_vars() {
-  safe_vars=(A B)
+  # A and B are the _setup.sh fixture vars; WORK is the sandbox root itself — every
+  # fixture-guard assertion already refuses to operate outside it.
+  safe_vars=(A B WORK)
 }
 
 is_safe_var() {
@@ -102,7 +111,18 @@ discover_file_metadata() {
       add_safe_var "${BASH_REMATCH[1]}"
     fi
 
-    if [[ "$line" =~ ^([A-Z][A-Z0-9_]*)=.*relay-automation/(marathon|marathon-drive)\.sh ]]; then
+    # GH-273: transitive safety — `R1="$A/relay1.md"` (poll-relay) or
+    # `DRIVE="$A/relay-automation/relay-drive.sh"` derives entirely from an
+    # already-safe var, so the derived var is safe too. Registration is in file
+    # order, matching how fixtures are built before they are used.
+    if [[ "$line" =~ ^([A-Z][A-Z0-9_]*)=\"\$([A-Z][A-Z0-9_]*)/ ]] && is_safe_var "${BASH_REMATCH[2]}"; then
+      add_safe_var "${BASH_REMATCH[1]}"
+    fi
+
+    # GH-273: the Python twins are the default runtime — a variable pointing at
+    # utils/py/marathon_drive.py or relay_drive.py is the same driver the .sh
+    # spellings wrap, so it registers the same way.
+    if [[ "$line" =~ ^([A-Z][A-Z0-9_]*)=.*(relay-automation/(marathon|marathon-drive|relay-drive)\.sh|utils/py/(marathon_drive|relay_drive)\.py) ]]; then
       name="${BASH_REMATCH[1]}"
       target="${BASH_REMATCH[2]}"
       set_alias "$name" "$target"
@@ -124,10 +144,40 @@ find_invocation_target() {
     return 0
   fi
 
-  rest="${line#*bash \"\$}"
-  if [ "$rest" != "$line" ]; then
-    var="${rest%%\"*}"
-    target="$(get_alias_target "$var" || true)"
+  # GH-273 + codex consult: direct interpreter + driver-path in PROGRAM position —
+  # optional version suffix (python3.12) and short-flag runs (-u) are still the program
+  # line; the `python3 - "<path>" <<'PY'` heredoc-argv shape that merely READS the driver
+  # (gh390/gh322/gh342) still never matches (`-` alone is not a flag run, and the path is
+  # then not the next token). Quotes optional; the path token must carry a directory
+  # component so bare-filename prose stays out.
+  # Word-start anchor on the interpreter token: without it the `sh` alternative matches
+  # inside the word "Bash" (relay-xyz-skill-guard's `run ... Bash "$DRIVE"` was audited as
+  # an invocation). `(^|[^A-Za-z0-9_])` is the portable ERE word boundary.
+  if [[ "$line" =~ (^|[^A-Za-z0-9_])python3?(\.[0-9]+)?([[:space:]]+-[A-Za-z0-9]+)*[[:space:]]+[^[:space:]]*/(marathon_drive|relay_drive)\.py ]]; then
+    printf '%s\n' "${BASH_REMATCH[4]}"
+    return 0
+  fi
+
+  # GH-273: same for a direct `bash/sh/zsh/dash <path>/relay-automation/<driver>.sh`
+  # beyond the vendored ./.xyz literals above (gh376 drives "$WT/relay-automation/relay-drive.sh").
+  if [[ "$line" =~ (^|[^A-Za-z0-9_])(bash|zsh|sh|dash)[[:space:]]+[^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; then
+    printf '%s\n' "${BASH_REMATCH[3]}"
+    return 0
+  fi
+
+  # GH-273 + codex consult: interpreter + registered alias variable, quoted or bare,
+  # version suffix and short flags tolerated — pattern-based so `python3 -u "$DRIVER"`
+  # resolves the alias the same way `python3 "$DRIVER"` does.
+  if [[ "$line" =~ (^|[^A-Za-z0-9_])(bash|zsh|sh|dash)[[:space:]]+\"?\$([A-Z][A-Z0-9_]*) ]]; then
+    target="$(get_alias_target "${BASH_REMATCH[3]}" || true)"
+    if [ -n "$target" ]; then
+      printf '%s\n' "$target"
+      return 0
+    fi
+  fi
+
+  if [[ "$line" =~ (^|[^A-Za-z0-9_])python3?(\.[0-9]+)?([[:space:]]+-[A-Za-z0-9]+)*[[:space:]]+\"?\$([A-Z][A-Z0-9_]*) ]]; then
+    target="$(get_alias_target "${BASH_REMATCH[4]}" || true)"
     if [ -n "$target" ]; then
       printf '%s\n' "$target"
       return 0
@@ -137,33 +187,150 @@ find_invocation_target() {
   return 1
 }
 
+# GH-273: a driver invocation's scoping often lives on the CONTINUATION group, not the
+# program line — `python3 "$DRIVER" \` followed by `--phase-brief "$A/brief.md"`. Answer
+# for the whole logical line.
+invocation_group() {  # <idx> <lines...> -> "start:end"
+  local idx="$1"; shift
+  local -a lines=("$@")
+  local start="$idx" end="$idx"
+  while [ "$start" -gt 0 ] && [[ "${lines[$((start - 1))]}" =~ \\[[:space:]]*$ ]]; do
+    start=$((start - 1))
+  done
+  while [ "$end" -lt "$((${#lines[@]} - 1))" ] && [[ "${lines[$end]}" =~ \\[[:space:]]*$ ]]; do
+    end=$((end + 1))
+  done
+  printf '%s:%s\n' "$start" "$end"
+}
+
+group_has_safe_cwd() {  # <group-text>
+  local line
+  while IFS= read -r line || [ -n "$line" ]; do
+    line_has_safe_cwd "$line" && return 0
+  done <<< "$1"
+  return 1
+}
+
+# GH-273 QA round 1: `;`, `&&`, and `||` separate shell commands — an env prefix binds only
+# to ITS command (`MARATHON_ROOT="$W" foo; python3 driver.py` scopes foo, not python3).
+# Evaluate the rooted-ness rules on the SEGMENT that carries the invocation, not the whole
+# continuation group. cwd is the exception: a cd persists for the rest of the shell.
+driver_segments() {  # <group-text> -> one line per command segment carrying a driver token
+  local g="$1" seg
+  # Split on command separators — pure bash (BSD sed refuses a literal newline in a
+  # substitute pattern). Codex consult: EVERY driver-carrying segment is emitted, because a
+  # safely rooted first call on a multi-invocation line must not whitelist an unrooted second.
+  local chopped="${g//;/$'\n'}"
+  chopped="${chopped//&&/$'\n'}"
+  chopped="${chopped//||/$'\n'}"
+  while IFS= read -r seg || [ -n "$seg" ]; do
+    if [[ "$seg" =~ (^|[^A-Za-z0-9_])python3?(\.[0-9]+)?([[:space:]]+-[A-Za-z0-9]+)*[[:space:]]+[^[:space:]]*/(marathon_drive|relay_drive)\.py ]] \
+       || [[ "$seg" =~ (^|[^A-Za-z0-9_])(bash|zsh|sh|dash)[[:space:]]+[^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]] \
+       || [[ "$seg" =~ (^|[^A-Za-z0-9_])python3?(\.[0-9]+)?([[:space:]]+-[A-Za-z0-9]+)*[[:space:]]+\"?\$[A-Za-z_][A-Za-z0-9_]* ]] \
+       || [[ "$seg" =~ (^|[^A-Za-z0-9_])(bash|zsh|sh|dash)[[:space:]]+\"?\$[A-Za-z_][A-Za-z0-9_]* ]]; then
+      printf '%s\n' "$seg"
+    fi
+  done <<< "${chopped}"
+}
+
+# A driver flag whose value anchors the run's outputs to a $WORK-derived fixture
+# (gh115's `--relay-file "$A/relay.md"`, gh438's `--phases-dir "$A/phases"`).
+group_has_safe_anchor_arg() {  # <group-text>
+  local g="$1" var
+  while [[ "$g" =~ --(phase-brief|phases-dir|relay-file|artifact|target-root)[[:space:]]+\"?\$([A-Z][A-Z0-9_]*) ]]; do
+    var="${BASH_REMATCH[2]}"
+    is_safe_var "$var" && return 0
+    g="${g#*${BASH_REMATCH[0]}}"
+  done
+  return 1
+}
+
+# A scoping env assignment (gh378's inline `MARATHON_ROOT="$ROOT" \` where ROOT is the
+# $WORK fixture repo, gh115's file-scope `export MARATHON_ROOT="$A"`).
+group_has_safe_scoping_env() {  # <group-text>
+  local g="$1" var
+  while [[ "$g" =~ (MARATHON_ROOT|RELAY_TARGET_ROOT|TICK_REPO_ROOT)[[:space:]]*=[[:space:]]*\"?\$([A-Z][A-Z0-9_]*) ]]; do
+    var="${BASH_REMATCH[2]}"
+    is_safe_var "$var" && return 0
+    g="${g#*${BASH_REMATCH[0]}}"
+  done
+  return 1
+}
+
+# The invoked driver itself lives under a $WORK-derived path (gh376's
+# `python3 "$WT/utils/py/relay_drive.py"`, gh331's fixture copy): the driver resolves its
+# repo from its own location, so the run is fixture-local by construction. Segment-scoped so
+# a multi-invocation line cannot borrow residency from a sibling call.
+# NOTE (GH-567 class, known limit): the check is LEXICAL — `$WORK/../../real-repo` passes —
+# same as every static scanner here; the runtime fixture guard is the enforcement point.
+segment_invokes_fixture_resident_driver() {  # <segment>
+  local seg="$1" var
+  while [[ "$seg" =~ \"?\$([A-Za-z_][A-Za-z0-9_]*)[^[:space:]]*(marathon_drive|relay_drive)\.py ]]; do
+    var="${BASH_REMATCH[1]}"
+    is_safe_var "$var" && return 0
+    seg="${seg#*${BASH_REMATCH[0]}}"
+  done
+  while [[ "$seg" =~ \"?\$([A-Za-z_][A-Za-z0-9_]*)[^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; do
+    var="${BASH_REMATCH[1]}"
+    is_safe_var "$var" && return 0
+    seg="${seg#*${BASH_REMATCH[0]}}"
+  done
+  return 1
+}
+
 check_invocation_safety() {
   local idx="$1"
   shift
   local -a lines=("$@")
   local start j boundary_found=0
   local line="${lines[$idx]}"
+  local group_text="" span gstart gend seg
 
-  if [[ "$line" == *'MARATHON_ROOT='* ]]; then
-    return 0
-  fi
-
-  if line_has_safe_cwd "$line"; then
-    return 0
-  fi
-
-  for ((j = idx - 1; j >= 0; j--)); do
-    if [[ "${lines[$j]}" == *'MARATHON_ROOT='* ]]; then
-      return 0
-    fi
-    if line_has_safe_cwd "${lines[$j]}"; then
-      return 0
-    fi
-    [[ "${lines[$j]}" =~ \\[[:space:]]*$ ]] || break
+  # GH-273: the invocation's continuation group, computed first — a driver call's
+  # scoping often lives on the lines above (env-prefix blocks) or below (args).
+  span="$(invocation_group "$idx" "${lines[@]}")"
+  gstart="${span%%:*}"
+  gend="${span##*:}"
+  for ((j = gstart; j <= gend; j++)); do
+    group_text+="${lines[$j]} "
   done
 
-  start=$((idx > 40 ? idx - 40 : 0))
-  for ((j = idx - 1; j >= start; j--)); do
+  # A cd persists for the rest of the shell, so the cwd rules stay group-wide.
+  if line_has_safe_cwd "$line" || group_has_safe_cwd "$group_text"; then
+    return 0
+  fi
+
+  # Codex consult: EVERY driver-carrying segment of the group must independently be
+  # rooted. A bare MARATHON_ROOT= anywhere in the group used to end the check at the first
+  # segment, whitelisting an unrooted second call on the same line.
+  local unrooted=0 seg_total=0
+  while IFS= read -r seg || [ -n "$seg" ]; do
+    seg_total=$((seg_total + 1))
+    if [[ "$seg" == *'MARATHON_ROOT='* ]]; then
+      continue
+    fi
+    if group_has_safe_scoping_env "$seg " \
+       || group_has_safe_anchor_arg "$seg " \
+       || segment_invokes_fixture_resident_driver "$seg"; then
+      continue
+    fi
+    unrooted=$((unrooted + 1))
+  done < <(driver_segments "$group_text")
+  if [ "$seg_total" -gt 0 ] && [ "$unrooted" -eq 0 ]; then
+    return 0
+  fi
+
+  # File-scope scoping exports (gh115's `export MARATHON_ROOT="$A"` two lines above the
+  # invocation): an EXPORTED root persists for every later line, but only when its VALUE
+  # is fixture-derived — a nearby `MARATHON_ROOT="$REAL_REPO"` must not whitelist a
+  # later invocation, so unsafe-valued assignments never count here.
+  local wstart=$((idx > 40 ? idx - 40 : 0))
+  for ((j = idx - 1; j >= wstart; j--)); do
+    group_has_safe_scoping_env "${lines[$j]} " && return 0
+    line_has_safe_cwd "${lines[$j]}" && return 0
+  done
+
+  for ((j = idx - 1; j >= wstart; j--)); do
     if [[ "${lines[$j]}" =~ ^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*[[:space:]]*\(\)[[:space:]]*\{ ]]; then
       start="$j"
       boundary_found=1
@@ -193,7 +360,7 @@ check_invocation_safety() {
 audit_file() {
   local file="$1"
   local -a lines=()
-  local line target idx
+  local line target idx first_string
 
   discover_file_metadata "$file"
 
@@ -202,7 +369,24 @@ audit_file() {
   done < "$file"
 
   for ((idx = 0; idx < ${#lines[@]}; idx++)); do
-    target="$(find_invocation_target "${lines[$idx]}" || true)"
+    line="${lines[$idx]}"
+    # Comments are not invocations — GH-273 QA round 1 made path quotes optional, so a
+    # comment or prose string saying "python3 utils/py/marathon_drive.py" would otherwise
+    # match in program position.
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    # A driver spelling inside the first QUOTED STRING of an assignment is payload, not a
+    # command (relay-xyz-skill-guard.sh builds event strings like
+    # DRIVE="bash relay-automation/relay-drive.sh ..."). An env-prefix invocation
+    # (MARATHON_ROOT="$W" python3 ...driver.py) keeps its driver OUTSIDE that first
+    # string, so it is still audited.
+    if [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*=\" ]]; then
+      first_string="${line#*\"}"
+      first_string="${first_string%%\"*}"
+      if [[ "$first_string" =~ (marathon_drive|relay_drive)\.py|relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; then
+        continue
+      fi
+    fi
+    target="$(find_invocation_target "$line" || true)"
     [ -z "$target" ] && continue
     checked=$((checked + 1))
     if check_invocation_safety "$idx" "${lines[@]}"; then

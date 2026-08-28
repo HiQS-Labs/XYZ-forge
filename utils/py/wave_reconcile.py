@@ -8,6 +8,7 @@ ROADMAP.md, releases.db SQLite ledger, generated dashboards, and next-wave marat
 
 import argparse
 import fcntl
+import glob
 import json
 import os
 import re
@@ -136,6 +137,32 @@ def check_porcelain_cleanliness(repo_root, allow_dirty=False):
             f"Working tree is dirty. Must be completely clean to reconcile:\n{dirt}",
             code=3,
         )
+    return dirt
+
+
+def verify_rollback_completeness(repo_root, baseline):
+    """GH-271: a rollback must restore the pre-run tree, not merely claim to.
+
+    The 2026-08-23 failure left regenerated dashboards and a stray MARATHON-PLAN-<date>.md
+    behind after "Rolling back all uncommitted mutations..." reported success. Compare
+    porcelain against the pre-run baseline (fixtures may legitimately start dirty under
+    --allow-dirty) and name every leftover — an incomplete rollback must be visible, never
+    a silent success.
+    """
+    if baseline is None:
+        return
+    cmd = ["git", "-C", repo_root, "status", "--porcelain"]
+    r = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        log_err(f"Rollback completeness could not be verified: git status failed: {r.stderr}")
+        return
+    current = r.stdout.strip()
+    if current != baseline:
+        base_lines = set(baseline.splitlines())
+        log_err("Rollback INCOMPLETE — working tree differs from the pre-run state. Leftovers:")
+        for line in current.splitlines():
+            if line not in base_lines:
+                log_err(f"  {line}")
 
 
 def check_current_branch(repo_root, expected_branch="development", skip_branch_check=False):
@@ -268,19 +295,66 @@ def check_provenance_receipts(repo_root, pr_meta):
     log(f"  Provenance receipts verified for PR #{pr_num} (GH-430 compliant)")
 
 
+# GH-271: closing-keyword clause + trailing title tag decide LINKAGE (what a merged PR may
+# complete); bare mentions are references only. The #-or-GH- prefix is mandatory in both —
+# "closes 5 issues" must not extract issue 5 — and keywords must sit on the same line as the
+# ref, so a title ending in "fixed" cannot capture a body that opens with "#123".
+CLOSING_KEYWORD_CLAUSE = re.compile(
+    r"\b(?:closes?|closed|fix(?:es|ed)?|resolves?|resolved)[ \t]*:?[ \t]+"
+    r"((?:#|GH-)[0-9]{1,6}\b"
+    r"(?:(?:[ \t]*,[ \t]*(?:and[ \t]+)?|[ \t]+and[ \t]+)(?:#|GH-)[0-9]{1,6}\b)*)",
+    re.IGNORECASE,
+)
+REF_IN_CLAUSE = re.compile(r"(?:#|GH-)([0-9]{1,6})\b", re.IGNORECASE)
+# A `#N`/`GH-N` inside a URL (fragment `/#123`, path `/GH-123`, query `?#123`, `?issue=#123`,
+# `&#123`) is part of the link, not a reference — GH-271 QA rounds 1+3. The lookbehind is one
+# fixed-width character class.
+MENTION = re.compile(r"(?<![A-Za-z0-9_/?.=&])(?:[Gg][Hh]-|#)([0-9]{1,6})\b")
+TITLE_TRAILER = re.compile(
+    r"\([ \t]*((?:(?:#|GH-)[0-9]{1,6}\b[ \t]*(?:[,;][ \t]*)?)+)[ \t]*\)[ \t]*$",
+    re.IGNORECASE,
+)
+CODE_FENCE = re.compile(r"```.*?```", re.DOTALL)
+INLINE_CODE = re.compile(r"`[^`\n]*`")
+
+
+def _strip_code_blocks(text):
+    """GitHub ignores closing keywords inside code; so does the reconciler."""
+    return INLINE_CODE.sub(" ", CODE_FENCE.sub(" ", text))
+
+
 def extract_linked_issues(pr_meta):
-    """Extract linked issue numbers from PR body/title."""
-    issues = set()
-    text = (pr_meta.get("title", "") + " " + pr_meta.get("body", "")).strip()
-    # Match Closes #123, Fixes #123, GH-123, #123
-    patterns = [
-        r"(?:[Ff]ixes|[Cc]loses|[Rr]esolves)\s+#?([0-9]{1,6})",
-        r"\b[Gg][Hh]-([0-9]{1,6})\b",
-    ]
-    for pat in patterns:
-        for m in re.finditer(pat, text):
-            issues.add(int(m.group(1)))
-    return sorted(issues)
+    """Split a PR's issue references into (closers, mentions) — GH-271.
+
+    closers: refs introduced by a GitHub closing keyword (close/closes/closed/fix/fixes/
+    fixed/resolve/resolves/resolved) before a #- or GH--prefixed number, comma lists
+    included, plus a trailing "(#N)"/"(GH-N)" title tag. These mirror GitHub's own linking
+    rules — extended to the repo's GH-N spelling, since PRs merge into `development` and
+    the reconciler parses text rather than relying on default-branch auto-close — and are
+    eligible for every reconciler action (promotion when the issue is closed, evidence +
+    stays-active when open).
+
+    mentions: bare GH-N/#N references in prose. The old extractor treated every mention as
+    a link (PR #185's body yielded ten "linked" issues, two of them live active lanes), so
+    a mention now only ever records merge evidence on an OPEN issue's active doc — never a
+    promotion, ROADMAP move, or doc relocation.
+
+    Both lists are deduplicated and sorted.
+    """
+    title = _strip_code_blocks(pr_meta.get("title") or "").strip()
+    body = _strip_code_blocks(pr_meta.get("body") or "")
+    closers, mentions = set(), set()
+
+    scan_text = title + "\n" + body
+    for m in CLOSING_KEYWORD_CLAUSE.finditer(scan_text):
+        closers.update(int(n) for n in REF_IN_CLAUSE.findall(m.group(1)))
+    trailer = TITLE_TRAILER.search(title)
+    if trailer:
+        closers.update(int(n) for n in REF_IN_CLAUSE.findall(trailer.group(1)))
+
+    mentions.update(int(n) for n in MENTION.findall(scan_text))
+    mentions -= closers
+    return sorted(closers), sorted(mentions)
 
 
 def find_active_doc_for_issue(repo_root, issue_num):
@@ -363,6 +437,11 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
     if not dry_run:
         if journal:
             journal.snapshot(doc_path)
+            # GH-271: a destination that already exists (an earlier reconciliation promoted
+            # this doc and was committed) is an overwrite, not a creation — snapshot it too,
+            # or rollback's unlink leaves a tracked path deleted in porcelain.
+            if os.path.exists(dest_path):
+                journal.snapshot(dest_path)
             journal.track_created(dest_path)
         os.makedirs(dest_dir, exist_ok=True)
         with open(dest_path, "w", encoding="utf-8") as f:
@@ -565,9 +644,39 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     # Snapshot DB files in journal for transactional integrity
     db_file = os.path.join(repo_root, "releases.db")
     sql_file = os.path.join(repo_root, "releases.sql")
+    pre_views = set()
     if not dry_run and journal:
         journal.snapshot(db_file)
         journal.snapshot(sql_file)
+        # GH-271: the regen steps below also rewrite the baked views and marathon-plan drops
+        # a dated plan doc — none of which the journal previously knew about, which is how a
+        # failed run's rollback left regenerated dashboards and a stray MARATHON-PLAN behind
+        # while reporting success (2026-08-23). Snapshot existing views (new ones are tracked
+        # as created post-run); plan docs are always new files, so a before/after glob covers
+        # them.
+        for view in (
+            "ROADMAP-DASHBOARD.md",
+            "RELEASES-PREVIEW.html",
+            "LEADERBOARD.html",
+            "LEADERBOARD.md",
+        ):
+            view_path = os.path.join(repo_root, view)
+            if os.path.exists(view_path):
+                journal.snapshot(view_path)
+                pre_views.add(view_path)
+
+    def _plan_docs():
+        found = set()
+        for pattern in ("MARATHON-PLAN-*.md", os.path.join("PROJECT", "2-WORKING", "MARATHON-PLAN-*.md")):
+            found.update(glob.glob(os.path.join(repo_root, pattern)))
+        return found
+
+    pre_plan_docs = _plan_docs() if not dry_run else set()
+    if journal and not dry_run:
+        # Codex consult: a same-dated plan doc that already exists gets OVERWRITTEN by the
+        # replan, and tracking-only-created would leave rollback no bytes to restore.
+        for existing_doc in pre_plan_docs:
+            journal.snapshot(existing_doc)
 
     sync_cmd = ["python3", "utils/py/releases_app.py", "roadmap", "sync"]
     check_cmd = ["python3", "utils/py/releases_app.py", "check"]
@@ -594,13 +703,30 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     else:
         steps.append(("marathon-plan.sh --dry-run", plan_cmd))
 
-    for name, cmd in steps:
-        log(f"  -> {name}")
-        r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
-        if name.startswith("marathon-plan"):
-            handle_marathon_plan_result(r, reconciled_issues or set())
-        elif r.returncode != 0:
-            die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
+    # GH-271: registration of created views/plan docs must happen even when a step DIES —
+    # the marathon-plan failure path raises from inside the loop, and a post-loop pass
+    # would never run, which is exactly how the stray MARATHON-PLAN escaped rollback.
+    try:
+        for name, cmd in steps:
+            log(f"  -> {name}")
+            r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
+            if name.startswith("marathon-plan"):
+                handle_marathon_plan_result(r, reconciled_issues or set())
+            elif r.returncode != 0:
+                die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
+    finally:
+        if journal and not dry_run:
+            for view in (
+                "ROADMAP-DASHBOARD.md",
+                "RELEASES-PREVIEW.html",
+                "LEADERBOARD.html",
+                "LEADERBOARD.md",
+            ):
+                view_path = os.path.join(repo_root, view)
+                if os.path.exists(view_path) and view_path not in pre_views:
+                    journal.track_created(view_path)
+            for plan_doc in _plan_docs() - pre_plan_docs:
+                journal.track_created(plan_doc)
 
 
 def run_validation_gate(repo_root):
@@ -682,11 +808,12 @@ def main():
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
     lock_file = os.path.join(repo_root, ".git", "wave-reconcile.lock")
     journal = RollbackJournal()
+    baseline = None
 
     try:
         # Preflight phase
         log(f"Starting wave reconciliation (dry_run={args.dry_run}, root={repo_root})")
-        check_porcelain_cleanliness(repo_root, allow_dirty=(args.allow_dirty or args.dry_run))
+        baseline = check_porcelain_cleanliness(repo_root, allow_dirty=(args.allow_dirty or args.dry_run))
         check_current_branch(repo_root, skip_branch_check=args.skip_branch_check)
 
         if not args.skip_pull and not args.dry_run and not args.offline:
@@ -733,11 +860,18 @@ def main():
                 if args.require_receipts:
                     check_provenance_receipts(repo_root, pr_meta)
 
-                linked_issues = extract_linked_issues(pr_meta)
+                linked_issues, mentioned_issues = extract_linked_issues(pr_meta)
                 reconciled_issues.update(linked_issues)
-                log(f"  PR #{pr_id} linked issues: {linked_issues}")
+                log(f"  PR #{pr_id} closes {linked_issues}; references {mentioned_issues}")
+                # GH-271: mentions never act on their own. --force-promote is the one
+                # explicit operator override that widens the action set past closers.
+                action_issues = (
+                    sorted(set(linked_issues) | set(mentioned_issues))
+                    if args.force_promote
+                    else linked_issues
+                )
 
-                for issue_num in linked_issues:
+                for issue_num in action_issues:
                     doc_path = find_active_doc_for_issue(repo_root, issue_num)
                     issue_state = fetch_issue_state(repo_root, issue_num, offline_manifest)
                     fm = parse_doc_frontmatter(doc_path) if doc_path else {}
@@ -790,6 +924,29 @@ def main():
                         else:
                             log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
 
+                # GH-271: reference-only mentions never promote or move anything. When the
+                # mentioned issue is OPEN (or an unknowable-state umbrella), record merge
+                # evidence on its active doc — the "Advances GH-N (phase k of n)" convention
+                # GH-202/GH-232 pin — and nothing else. Issues already handled above (the
+                # force-promote widening) are skipped.
+                for issue_num in mentioned_issues:
+                    if issue_num in action_issues:
+                        continue
+                    doc_path = find_active_doc_for_issue(repo_root, issue_num)
+                    if not doc_path:
+                        continue
+                    issue_state = fetch_issue_state(repo_root, issue_num, offline_manifest)
+                    fm = parse_doc_frontmatter(doc_path)
+                    is_multiphase = (
+                        fm.get("umbrella") in ("true", "1", "yes")
+                        or fm.get("multiphase") in ("true", "1", "yes")
+                        or fm.get("multi_phase") in ("true", "1", "yes")
+                    )
+                    is_open = (issue_state == "OPEN") or (issue_state is None and is_multiphase)
+                    if is_open and is_merged:
+                        log(f"  Issue #{issue_num} referenced without a closing keyword and OPEN — recording merge evidence only")
+                        record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
+
             # Subprocess orchestration
             run_subprocesses(
                 repo_root,
@@ -807,9 +964,11 @@ def main():
 
     except ReconcileError as re_err:
         journal.rollback()
+        verify_rollback_completeness(repo_root, baseline)
         sys.exit(re_err.code)
     except (Exception, SystemExit) as exc:
         journal.rollback()
+        verify_rollback_completeness(repo_root, baseline)
         raise exc
 
 

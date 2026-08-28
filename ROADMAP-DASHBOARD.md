@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 21 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 24 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -28,9 +28,12 @@ Summary: 21 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | — | [#255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) · [PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md](PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md) |
 | GH-256 — no preflight checks the builder can reach a phase's artifact paths | — | [#256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) · [PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md](PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md) |
 | GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1) | — | [GH-259-JOG-SERIAL-QUEUE.md](PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md) · [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) |
+| GH-271 · wave_reconcile closing-keyword extraction + rollback completeness | — | — |
 | GH-275 · medium-level write-ops logging of agent disk-write commands | — | [GH-275-WRITE-OPS-LOGGING.md](PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md) |
 | GH-267 · /express — hotfix fast lane through the whole paper trail | — | [doc](PROJECT/3-COMPLETED/GH-267-EXPRESS-HOTFIX-LANE.md) · [#267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) |
+| GH-272 · releases-merge-resolve regenerates derived views | — | — |
 | GH-269 · full switchover to Releases DB — retire ROADMAP.md | — | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md) |
+| GH-273 · marathon-root-audit python spellings | — | — |
 
 ## Queue
 
