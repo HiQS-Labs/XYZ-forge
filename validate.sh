@@ -423,6 +423,10 @@ TESTS=(
   "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
+  "gh280-jog-marathon-adapter.sh"     # GH-280 (Jog↔Marathon machine contracts: invocation/result@1 artifacts, executor
+                                     #   E2E in root + vendored installs with stubbed agents/GitHub, resume/retry/land
+                                     #   semantics; registered per PR #281 review B3 — the one-directional registry
+                                     #   guard had let it ship unregistered, running only when invoked by hand)
   "gh205-gate-idempotency.sh"    # GH-205 (telemetry writes land off-tree; the gate never dirties tracked files)
   "gh204-sed-portability.sh"     # GH-204 (in-place edits portable AND content-asserted; exit code masks the loss)
   "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
