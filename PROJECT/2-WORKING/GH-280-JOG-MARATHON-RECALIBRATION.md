@@ -8,6 +8,7 @@ updated: 2026-08-27
 owner: noel
 doc_type: project
 branch: feat/gh280-jog-marathon-recalibration
+reviewed: "Agy relay QA approved 2026-08-27"
 effort: 4
 complexity: 4
 risk: 3
@@ -34,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon traced Jog, Swarm Preflight, Marathon, Relay, Tick, Releases, Git/PR delivery, and PDDA reconciliation end to end. The implementation boundary and staged rollback are now explicit. | Complete Phase 1 contract tests and additive invocation/result receipts without changing any existing default. |
+| Recon traced the full system and Agy approved the implementation plan in the GH-280 plan-QA relay. The authority boundary and staged rollback are explicit. | Complete Phase 1 contract tests and additive invocation/result receipts without changing any existing default. |
 
 ## Table of contents
 
