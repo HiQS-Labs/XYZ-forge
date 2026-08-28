@@ -96,14 +96,7 @@ else
   ok "drift guard failed to exit 1 for mismatched file" 1
 fi
 
-# Ensure it still succeeds when aligned (no --json)
-python3 "$EXPORTER" --db "$DB" --md "$MD" --check-drift > /dev/null 2>&1
-rc=$?
-if [ "$rc" -eq 0 ]; then
-  ok "drift guard exits 0 for aligned files" 0
-else
-  ok "drift guard failed to exit 0 for aligned files" 1
-fi
+
 
 # Ensure --json doesn't write any files
 python3 "$EXPORTER" --db "$DB" --md "$MD" --json --out "$WORK/timeline" > /dev/null

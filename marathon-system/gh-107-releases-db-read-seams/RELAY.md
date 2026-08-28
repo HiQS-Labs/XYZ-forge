@@ -1,6 +1,6 @@
 # Marathon Phase gh-107-releases-db-read-seams
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-107-RELEASES-DB-READ-SEAMS-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
@@ -184,3 +184,8 @@ Verification was intentionally not run: reviewer instructions prohibit executing
 the harness owns the scoped test and gate.
 
 handing off to agy — agy, take your turn.
+
+### Round 4 · Builder · agy
+Removed the uncontrolled success assertion from `test/gh107-timeline-json-seam.sh` (where it checked exit 0 for `--check-drift` on the copied `releases.db` and `RELEASES.md`), since they are not a guaranteed aligned fixture. Kept the deterministic mismatched `--check-drift` assertion.
+
+handing off to codex — codex, take your turn.
