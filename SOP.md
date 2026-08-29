@@ -185,3 +185,37 @@ Store the campaign output in `TESTS-RESULTS/`:
   marathon per-lane branch. It authorizes exactly one `feat/`/`fix/` branch per fresh task
   clone, and it is *not* a licence to commit directly onto `development` (the express path
   above remains user-request-only).
+
+### Arc planning — schedule the follow-up lanes, don't discover them
+
+> Lesson from the GH-280/#291 stretch (2026-08-29): six PRs in ~48h, each small and safe,
+> yet the shape of progress was a thicket instead of a line. Post-mortem: the *arc* was
+> predictable (implement → review findings → dogfood findings → conformance → default
+> flip); only the specific defects weren't. The fix is not fewer rails — it is making the
+> predictable parts of the arc explicit at plan time.
+
+1. **Pre-create the budgeted follow-up lanes at plan time.** Before implementation starts,
+   open the three issues you already know you will need: a *review-findings* lane (the
+   builder/reviewer split guarantees one), a *dogfood-findings* lane (dogfooding exists to
+   manufacture findings), and a *conformance* lane (new contracts always owe fixtures).
+   Follow-ups then arrive as scheduled phases instead of surprises. Evidence this works:
+   the GH-280 plan's follow-up record listed six items before execution began; all six
+   landed in that order, with review findings landed on top.
+2. **Batch same-seam scopes into one PR.** Five small PRs touching one seam is five
+   gate + merge + reconcile cycles for what is really one unit of review. GH-291 shipped
+   Scopes 1+5, 3+4, and 2 as three PRs; two would have carried the same review weight.
+3. **Batch reconciles.** The post-merge rule is "run `wave_reconcile.py --pr <N>` before
+   ending the task" — not "instantly, once per merge." Land 2–3 merges, then run one
+   reconcile pass for the batch. Each per-merge reconcile otherwise costs an extra
+   commit + gated push on `development`.
+4. **Never write bare `#N` for another repo's issues in a PR body.** The reconciler
+   resolves every `#N` against *this* repo and exits 6 when it cannot (GH-301 needed an
+   offline-manifest escape mid-reconcile). Cross-repo references are written `GH-N`;
+   in-repo references may use `#N`.
+5. **Delegate in this shape when lanes are independent:** each lane gets its own fresh
+   full clone and exactly one branch + one PR; it commits and pushes at every milestone
+   (the push gate is the boundary); it never merges its own PR. A single
+   orchestrator-reviewer holds merge duty, checks the three predicates (base branch,
+   diff size vs logical scope, gate evidence on the final SHA), merges pinned to the
+   reviewed head — and **independently verifies any claim the gate cannot prove** (the
+   gate-invisible example: a suite exempted from the registry as "pre-existing red").
