@@ -9,6 +9,7 @@ owner: jog
 doc_type: bugfix
 fix_probes:
   - bash test/wave-reconcile.sh
+goal: normalize wave_reconcile's Completed-archive template so separator-less roadmap entries archive cleanly (GH-314)
 ---
 ## Status
 
@@ -52,8 +53,8 @@ existing Completed line, the probe reads landed.
 
 ## Acceptance
 
-- `bash test/wave-reconcile.sh` passes with a new regression assertion archiving a
+- [ ] `bash test/wave-reconcile.sh` passes with a new regression assertion archiving a
   separator-less fixture entry — the archived line carries no nested/mismatched bold markers.
-- The existing mangled GH-222 Completed line in `ROADMAP.md` is normalized
+- [ ] The existing mangled GH-222 Completed line in `ROADMAP.md` is normalized
   (no `- **GH-222 ** ✅` shape remains).
-- `./validate.sh` green on the lane branch.
+- [ ] `./validate.sh` green on the lane branch.
