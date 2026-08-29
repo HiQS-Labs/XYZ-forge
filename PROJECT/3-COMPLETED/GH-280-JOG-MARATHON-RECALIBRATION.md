@@ -45,7 +45,7 @@ goal: >
 | 2 — Opt-in Marathon executor | Complete | Adapter test sections G/H/I: root + vendored queue runs through real Preflight → Marathon → Relay with deterministic agent stubs (106 pass, 0 fail total); reviewer-policy refusals before lease mutation; cold-start at both boundaries (missing result parks; terminal result re-projects without a second dispatch); foreign-cwd vendored run stays clean (GH-279 #2 fixed for this executor); legacy relay default verified unchanged. |
 | 3 — Resume, retry, landing semantics | Complete | Adapter test sections J/K/L (139 pass, 0 fail total): resume re-projects terminal state and parks result-less dispatches without spending a token; retry-gate proves no new task.created and work-head preservation (only Marathon's own transcript commit advances the lane); retry-build runs on a fresh `-2` token with prior Tick history and execution records intact; land fails closed on wrong base/head-SHA/open-PR/unreachable-merge/missing-gate-evidence/foreign-repo, completes + delegates to wave_reconcile on truth, replays idempotently, and resumes at the reconciliation boundary; `test/wave-reconcile.sh` 11/0 unchanged. |
 | 4 — Dogfood root and vendored runs | Root half complete; vendored half pending | Real run below — PRs #283/#284 (both MERGED into development), issues #107/#105 CLOSED, gate receipts + receipts + ledgers committed under `relay-system/2026-08-28/gh280-phase4-dogfood/`. Vendored `.xyz` consumer run not yet executed. |
-| 5 — Default flip + retire duplication | Blocked behind Phase 4 closeout | — |
+| 5 — Default flip + retire duplication | In progress (flip PR + this surface), 2026-08-28 | Default-flip code change in flight as the parallel flip PR; human-facing surface aligned by the Phase 5 docs lane (`skills/jog/SKILL.md`: marathon default, required `--reviewer`, legacy `--executor relay` window, recovery verbs, receipt-backed landing). Completion evidence due per the Phase 5 QA gate. |
 
 ### Phase 4 dogfood record (2026-08-28, agy builder + codex reviewer, operator-authorized)
 
@@ -400,6 +400,12 @@ not reopen the authority split without updating this plan and its risk assessmen
    Queue, lease, intake/promotion, and landing policy remain in Jog.
 4. After the compatibility window, remove the legacy executor and its exclusive tests in a separate,
    easily reversible commit. Do not combine that deletion with the default flip.
+
+Phase 5 progress note (2026-08-28): root + vendored dogfood evidence landed 2026-08-29 (GH-222
+dogfood: `relay-system/2026-08-29/gh222-executor-dogfood/` + `relay-system/2026-08-29/gh222-vendored-dogfood/`,
+PRs #311/#312) — that is the Phase 4 vendored half closing, which unblocks this phase. Phase 5 is
+now in progress as the flip PR (marathon default, `--reviewer` required, `--executor relay`
+documented as the legacy rollback window) plus this surface alignment.
 
 ### Phase 5 QA gate
 
