@@ -1,0 +1,48 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh901-exec1",
+  "generated_at": "2026-08-29T15:04:34Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "901",
+  "phase": "gh-901-fixture-lane",
+  "lane": "gh-901-fixture-lane",
+  "token": "MARATHON-GH-901-FIXTURE-LANE-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/private/tmp/p5-vendored.AoymO5/consumer",
+    "origin_url": null
+  },
+  "base_branch": null,
+  "head_branch": "development",
+  "head_sha": "0869fdf1723a0b6f048008c2e6d6fff68cc53e5c",
+  "branch_redirect": false,
+  "gate": {
+    "cmd": "bash test/fixture-gate.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/private/tmp/p5-vendored.AoymO5/consumer/.xyz/receipts/0869fdf1723a0b6f048008c2e6d6fff68cc53e5c.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-08-29T15:04:25Z",
+    "finished_at": "2026-08-29T15:04:34Z"
+  }
+}
