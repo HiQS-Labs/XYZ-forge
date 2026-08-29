@@ -54,9 +54,11 @@ cat << 'EOF' > "$REPO/ROADMAP.md"
 ### In progress
 - **GH-999 · Test Feature** 🚧 **active 2026-08-22** — test description. rated 80/80/80/80. → [GH-999-TEST.md](PROJECT/2-WORKING/GH-999-TEST.md) · [#999](https://github.com/HiQS-Suite/XYZ-forge/issues/999)
 - **GH-777 · Declined Feature** 🚧 **active 2026-08-22** — declined feature. rated 50/50/50/50. → [GH-777-DECLINED.md](PROJECT/2-WORKING/GH-777-DECLINED.md) · [#777](https://github.com/HiQS-Suite/XYZ-forge/issues/777)
+- **GH-444 ** 🚧 **active 2026-08-22** separatorless description
 
 ### Completed
 - **GH-888 · Old Feature** ✅ **SHIPPED 2026-08-20 (PR #888)** — old summary.
+- **GH-222 ** ✅ **SHIPPED 2026-08-21 (PR #222)** — mangled entry.
 EOF
 
 # Create active docs
@@ -73,6 +75,19 @@ updated: 2026-08-22
 
 ## Lessons Learned (For Future Agents)
 - Always verify porcelain cleanliness and isolated worktree boundaries.
+EOF
+
+cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-444.md"
+---
+gh_issue: 444
+title: "GH-444: Separatorless"
+status: In Progress
+created: 2026-08-22
+updated: 2026-08-22
+---
+# GH-444: Separatorless
+## Lessons Learned (For Future Agents)
+- None
 EOF
 
 cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-777-DECLINED.md"
@@ -103,6 +118,15 @@ cat << 'EOF' > "$REPO/manifest.json"
       "baseRefName": "development",
       "headRefName": "feat/gh999",
       "body": "Closes #999"
+    },
+    {
+      "number": 1003,
+      "title": "feat(core): separatorless",
+      "state": "MERGED",
+      "mergedAt": "2026-08-22T19:00:00Z",
+      "baseRefName": "development",
+      "headRefName": "feat/gh444",
+      "body": "Closes #444"
     },
     {
       "number": 1002,
@@ -216,7 +240,7 @@ EOF
 git -C "$REPO" add -A && git -C "$REPO" commit -q -m "valid doc restored"
 
 # Test 5: Live reconciliation execution with merged and unmerged PRs
-out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 1001 1002 --offline "$REPO/manifest.json" --skip-pull --gate 2>&1)"
+out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 1001 1002 1003 --offline "$REPO/manifest.json" --skip-pull --gate 2>&1)"
 rc=$?
 assert_eq "Live reconciliation exits 0" "$rc" "0"
 
@@ -251,6 +275,30 @@ if grep -q "GH-999.*SHIPPED 2026-08-22 (PR #1001)" "$REPO/ROADMAP.md"; then
   pass "ROADMAP.md entry archived to Completed with shipping badge"
 else
   fail "ROADMAP.md entry archived to Completed" "not found" "SHIPPED 2026-08-22"
+fi
+
+
+# Verify GH-444 separatorless roadmap entry is archived and formatted correctly
+if grep -q "GH-444.*SHIPPED 2026-08-22 (PR #1003).*— separatorless" "$REPO/ROADMAP.md"; then
+  pass "ROADMAP.md entry archived separator-less fixture entry with correct formatting"
+else
+  fail "ROADMAP.md entry archived separator-less fixture entry with correct formatting" "not found" "GH-444...SHIPPED...— separatorless"
+fi
+
+gh444_line=$(grep -m 1 "GH-444" "$REPO/ROADMAP.md")
+expected_line="- **GH-444** ✅ **SHIPPED 2026-08-22 (PR #1003)** — separatorless description"
+if [ "$gh444_line" = "$expected_line" ]; then
+  pass "Archived line carries no nested/mismatched bold markers"
+else
+  fail "Archived line carries no nested/mismatched bold markers" "$expected_line" "$gh444_line"
+fi
+
+gh222_line=$(grep -m 1 "GH-222" "$REPO/ROADMAP.md")
+expected_gh222_line="- **GH-222** ✅ **SHIPPED 2026-08-21 (PR #222)** — mangled entry."
+if [ "$gh222_line" = "$expected_gh222_line" ]; then
+  pass "Mangled GH-222 entry is fixed and canonicalized"
+else
+  fail "Mangled GH-222 entry is fixed and canonicalized" "$expected_gh222_line" "$gh222_line"
 fi
 
 echo "=== wave-reconcile.sh Results: $PASS passed, $FAIL failed ==="

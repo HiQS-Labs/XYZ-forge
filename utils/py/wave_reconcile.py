@@ -495,16 +495,23 @@ def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True
     target_section = "### Completed" if is_merged else "### Deferred / cancelled"
     badge_sub = f"✅ **SHIPPED {ship_date} (PR #{pr_num})**" if is_merged else f"🛑 **DECLINED {ship_date} (PR #{pr_num})**"
 
-    if expected_marker not in first_line and "—" in first_line:
-        prefix, rest = first_line.split("—", 1)
-        title_part = prefix.split("**")[1] if "**" in prefix else f"GH-{issue_num}"
-        new_first_line = f"- **{title_part}** {badge_sub} —{rest}"
-    elif expected_marker not in first_line:
-        new_first_line = re.sub(
-            r"(\*\*[^*]+\*\*)\s+(?:[^\—]+)\s+—", rf"\1 {badge_sub} —", first_line
-        )
+    title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", first_line)
+    if title_match:
+        title_part = title_match.group(1).strip()
     else:
-        new_first_line = first_line
+        title_part = f"GH-{issue_num}"
+
+    if "—" in first_line:
+        rest = first_line.split("—", 1)[1]
+    else:
+        after_title = first_line[title_match.end():] if title_match else first_line
+        rest = re.sub(r"^(?:\s*✅\s*(?:\*\*.*?\*\*)?|\s*🚧\s*(?:\*\*.*?\*\*)?|\s*🛑\s*(?:\*\*.*?\*\*)?|\s*)", "", after_title)
+        if not rest.startswith(" ") and rest != "\n" and rest != "":
+            rest = " " + rest
+        if not rest.endswith("\n"):
+            rest += "\n"
+
+    new_first_line = f"- **{title_part}** {badge_sub} —{rest}"
 
     block_lines[0] = new_first_line
 
@@ -544,6 +551,26 @@ def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True
             f.writelines(new_lines)
 
     return True
+
+
+def fix_mangled_roadmap_entries(repo_root, dry_run=False, journal=None):
+    roadmap_path = os.path.join(repo_root, "ROADMAP.md")
+    if not os.path.isfile(roadmap_path):
+        return
+    with open(roadmap_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    changed = False
+    for i, line in enumerate(lines):
+        if line.startswith("- **") and " ** " in line:
+            new_line = re.sub(r"^-\s+\*\*(GH-\d+)\s+\*\*", r"- **\1**", line)
+            if new_line != line:
+                lines[i] = new_line
+                changed = True
+    if changed and not dry_run:
+        if journal:
+            journal.snapshot(roadmap_path)
+        with open(roadmap_path, "w", encoding="utf-8") as f:
+            f.writelines(lines)
 
 
 def marathon_plan_findings(output, returncode):
@@ -946,6 +973,9 @@ def main():
                     if is_open and is_merged:
                         log(f"  Issue #{issue_num} referenced without a closing keyword and OPEN — recording merge evidence only")
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
+
+            # Global roadmap cleanups
+            fix_mangled_roadmap_entries(repo_root, dry_run=args.dry_run, journal=journal)
 
             # Subprocess orchestration
             run_subprocesses(
