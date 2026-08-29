@@ -2,7 +2,7 @@
 gh_issue: 314
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/314
 title: "GH-314: wave_reconcile Completed-archive line mangles ROADMAP entries without the 'GH-N · Title' shape"
-status: "Active"
+status: Active
 created: 2026-08-29
 updated: 2026-08-29
 owner: jog
@@ -10,6 +10,11 @@ doc_type: bugfix
 fix_probes:
   - bash test/wave-reconcile.sh
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted to active working contract via jog | Execute implementation and verify probes |
 
 # GH-314: archive-template mangles separator-less entries
 
@@ -44,3 +49,11 @@ finding 3): `grep_present` = the pattern describes the PRE-fix state; the verdic
 `landed` when it is absent. The mangled GH-222 line is present on `development` today, so
 the lane starts honestly `unfixed`; when the fix normalizes both the writer and the
 existing Completed line, the probe reads landed.
+
+## Acceptance
+
+- `bash test/wave-reconcile.sh` passes with a new regression assertion archiving a
+  separator-less fixture entry — the archived line carries no nested/mismatched bold markers.
+- The existing mangled GH-222 Completed line in `ROADMAP.md` is normalized
+  (no `- **GH-222 ** ✅` shape remains).
+- `./validate.sh` green on the lane branch.
