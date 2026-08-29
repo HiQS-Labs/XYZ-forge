@@ -1,0 +1,97 @@
+GH-280 Phase 5 legacy-audit — function reachability walk
+parsed: utils/py/jog_run.py (39 defs)
+
+Per-config reachability (x = reached):
+  function                           lines        a  b  c  d  e 
+  _load_contract_json                61-76        x  x  x  x  x 
+  load_marathon_invocation           79-118       x  x  x  x  x 
+  load_marathon_result               121-145      x  x  x  x  x 
+  harness_home                       167-174      x  x  x  x  x 
+  validate_marathon_executor         177-197      x  x  x  x  x 
+  _jog_state_paths                   200-202      x  x  x  x  x 
+  _ledger_abs_path                   205-214      x  x  x  x  x 
+  _ledger_rel_path                   217-229      x  x  x  x  x 
+  jog_regenerate_dashboard           232-248      x  x  x  x  x 
+  jog_commit_supervisor_state        251-291      x  x  x  x  x 
+  jog_resolve_ledger_gid             294-323      x  x  x  x  x 
+  jog_load_state                     326-338      x  x  x  x  x 
+  jog_save_state                     341-348      x  x  x  x  x 
+  jog_current_gid                    351-360      x  x  x  x  x 
+  jog_verify_pr_before_merge         363-391      x  x  x  x  x 
+  jog_project_marathon_outcome       394-437      x  x  x  x  x 
+  jog_reconcile_cold_start           440-487      .  x  .  .  x 
+  _marathon_argv_from_invocation     490-510      x  x  x  x  x 
+  run_marathon_phase                 513-619      x  x  x  x  x 
+  _jog_latest_receipt                624-646      x  x  x  x  x 
+  _jog_exec_dir                      649-652      x  x  x  x  x 
+  jog_resume                         655-707      x  x  x  x  x 
+  jog_retry_gate                     710-729      x  x  x  x  x 
+  _jog_retry_gate_locked             732-813      x  x  x  x  x 
+  jog_retry_build                    816-832      x  x  x  x  x 
+  _jog_retry_build_locked            835-858      x  x  x  x  x 
+  _gh_pr_view                        861-871      x  x  x  x  x 
+  jog_land                           874-1047     x  x  x  x  x 
+  __init__                           1053-1056    x  x  x  x  x 
+  acquire                            1058-1106    x  x  x  x  x 
+  release                            1108-1115    x  x  x  x  x 
+  lint_probe                         1118-1137    x  x  x  x  x 
+  find_issue_doc                     1140-1151    x  x  x  x  x 
+  extract_probes_from_doc            1154-1176    x  x  x  x  x 
+  promote_contract_to_working        1179-1264    x  x  x  x  x 
+  run_single_phase_drive             1267-1378    x  .  x  x  . 
+  _verify_legacy_pr_before_merge     1381-1395    x  .  x  x  . 
+  handle_landing_boundary            1398-1459    x  .  x  x  . 
+  jog_run_main                       1462-1663    x  x  x  x  x 
+
+config key:
+  a = pre-flip-default(relay)
+  b = post-flip-default(marathon)
+  c = post-flip-window(--executor relay)
+  d = post-flip-simulate(minimal flip)
+  e = post-window-target(marathon-only)
+
+CLASS A — dead immediately post-flip (0):
+
+CLASS B — alive only during the window (3):
+    run_single_phase_drive (jog_run.py:1267-1378)
+    _verify_legacy_pr_before_merge (jog_run.py:1381-1395)
+    handle_landing_boundary (jog_run.py:1398-1459)
+
+CLASS C — shared, must survive removal (36):
+    _load_contract_json (jog_run.py:61-76)
+    load_marathon_invocation (jog_run.py:79-118)
+    load_marathon_result (jog_run.py:121-145)
+    harness_home (jog_run.py:167-174)
+    validate_marathon_executor (jog_run.py:177-197)
+    _jog_state_paths (jog_run.py:200-202)
+    _ledger_abs_path (jog_run.py:205-214)
+    _ledger_rel_path (jog_run.py:217-229)
+    jog_regenerate_dashboard (jog_run.py:232-248)
+    jog_commit_supervisor_state (jog_run.py:251-291)
+    jog_resolve_ledger_gid (jog_run.py:294-323)
+    jog_load_state (jog_run.py:326-338)
+    jog_save_state (jog_run.py:341-348)
+    jog_current_gid (jog_run.py:351-360)
+    jog_verify_pr_before_merge (jog_run.py:363-391)
+    jog_project_marathon_outcome (jog_run.py:394-437)
+    jog_reconcile_cold_start (jog_run.py:440-487)
+    _marathon_argv_from_invocation (jog_run.py:490-510)
+    run_marathon_phase (jog_run.py:513-619)
+    _jog_latest_receipt (jog_run.py:624-646)
+    _jog_exec_dir (jog_run.py:649-652)
+    jog_resume (jog_run.py:655-707)
+    jog_retry_gate (jog_run.py:710-729)
+    _jog_retry_gate_locked (jog_run.py:732-813)
+    jog_retry_build (jog_run.py:816-832)
+    _jog_retry_build_locked (jog_run.py:835-858)
+    _gh_pr_view (jog_run.py:861-871)
+    jog_land (jog_run.py:874-1047)
+    __init__ (jog_run.py:1053-1056)
+    acquire (jog_run.py:1058-1106)
+    release (jog_run.py:1108-1115)
+    lint_probe (jog_run.py:1118-1137)
+    find_issue_doc (jog_run.py:1140-1151)
+    extract_probes_from_doc (jog_run.py:1154-1176)
+    promote_contract_to_working (jog_run.py:1179-1264)
+    jog_run_main (jog_run.py:1462-1663)
+

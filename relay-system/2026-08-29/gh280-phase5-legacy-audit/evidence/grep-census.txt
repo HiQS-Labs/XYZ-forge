@@ -1,0 +1,90 @@
+# GH-280 Phase 5 legacy-audit — raw grep census (repo at fa85a955, branch docs/gh280-phase5-legacy-audit)
+# Generated 2026-08-29T06:16:55Z; every command run from repo root. ugrep alias notes: -r recursive.
+
+## 1. Legacy executor functions — every reference repo-wide (code + tests + docs)
+$ grep -rn "run_single_phase_drive" --include="*.py" --include="*.sh" . 
+relay-system/2026-08-29/gh280-phase5-legacy-audit/evidence/reachability_walk.py:19:   The else-arm of :1600 is the legacy arm -> run_single_phase_drive, handle_landing_boundary.
+relay-system/2026-08-29/gh280-phase5-legacy-audit/evidence/reachability_walk.py:105:LEGACY_ARM = {"run_single_phase_drive", "handle_landing_boundary"}  # :1639, :1653 — the else-arm
+utils/py/jog_run.py:1267:def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
+utils/py/jog_run.py:1639:            drive_rc = run_single_phase_drive(
+
+$ grep -rn "handle_landing_boundary" --include="*.py" --include="*.sh" .
+relay-system/2026-08-29/gh280-phase5-legacy-audit/evidence/reachability_walk.py:19:   The else-arm of :1600 is the legacy arm -> run_single_phase_drive, handle_landing_boundary.
+relay-system/2026-08-29/gh280-phase5-legacy-audit/evidence/reachability_walk.py:105:LEGACY_ARM = {"run_single_phase_drive", "handle_landing_boundary"}  # :1639, :1653 — the else-arm
+utils/py/jog_run.py:1398:def handle_landing_boundary(root, gh_num, auto_merge=False):
+utils/py/jog_run.py:1653:            landed, status, reason = handle_landing_boundary(root, gh_num, auto_merge=args.auto_merge)
+
+$ grep -rn "_verify_legacy_pr_before_merge" --include="*.py" --include="*.sh" .
+utils/py/jog_run.py:1381:def _verify_legacy_pr_before_merge(root, pr_num):
+utils/py/jog_run.py:1415:            failures = _verify_legacy_pr_before_merge(root, pr_num)
+utils/py/jog_run.py:1449:        failures = _verify_legacy_pr_before_merge(root, pr_num)
+
+## 2. Entry-point reach — jog_run_main / jog_run.py importers
+$ grep -rn "jog_run_main\|from jog_run import\|import jog_run" --include="*.py" --include="*.sh" utils/ relay-automation/ bin/ src/ test/
+utils/py/jog_run.py:1462:def jog_run_main(args=None):
+utils/py/jog_run.py:1667:    jog_run_main()
+utils/py/releases_app.py:3719:        from jog_run import jog_run_main
+utils/py/releases_app.py:3722:        from jog_run import jog_run_main
+utils/py/releases_app.py:3723:    jog_run_main(args)
+utils/py/releases_app.py:3730:        import jog_run
+utils/py/releases_app.py:3751:    import jog_run
+test/gh290-ate-variation-grid.sh:107:from jog_run import (
+test/gh290-ate-variation-grid.sh:744:import jog_run
+test/gh280-jog-marathon-adapter.sh:211:from jog_run import load_marathon_invocation
+test/gh280-jog-marathon-adapter.sh:217:from jog_run import load_marathon_invocation, ContractError
+test/gh280-jog-marathon-adapter.sh:228:from jog_run import load_marathon_invocation, ContractError
+test/gh280-jog-marathon-adapter.sh:254:from jog_run import load_marathon_result
+test/gh280-jog-marathon-adapter.sh:1024:from jog_run import jog_project_marathon_outcome, load_marathon_result
+test/gh280-jog-marathon-adapter.sh:1103:from jog_run import jog_project_marathon_outcome, load_marathon_result
+test/gh280-jog-marathon-adapter.sh:1117:from jog_run import jog_project_marathon_outcome, load_marathon_result
+test/gh291-contract-goldens.sh:132:from jog_run import load_marathon_invocation, ContractError
+test/gh291-contract-goldens.sh:242:from jog_run import load_marathon_result, ContractError
+
+## 3. The jog run CLI shape outside jog_run.py/releases_app.py (Bash twins, skills, entry shims)
+$ grep -rn "jog run" relay-automation/ utils/ bin/ src/ 2>/dev/null
+utils/py/jog_run.py:149:# `releases jog run --executor marathon --reviewer <agent>` delegates each leased item's
+utils/py/jog_run.py:669:        print(f"jog: GH-{gh_num} has no marathon execution state — run `releases jog run "
+(no hits above = no frozen-twin or shim caller)
+
+## 4. --executor / simulate flag references (production code only)
+$ grep -rn "executor\|simulate" --include="*.py" utils/py/jog_run.py utils/py/releases_app.py | grep -v "^\s*#"
+utils/py/jog_run.py:148:# ── GH-280 Phase 2: the opt-in Marathon executor ───────────────────────────────────────────────
+utils/py/jog_run.py:149:# `releases jog run --executor marathon --reviewer <agent>` delegates each leased item's
+utils/py/jog_run.py:158:# Marathon result receipt. Legacy `relay` remains the default executor until Phase 5.
+utils/py/jog_run.py:177:def validate_marathon_executor(args):
+utils/py/jog_run.py:178:    """Fail-closed executor validation. Returns an error string or None; called before any
+utils/py/jog_run.py:182:        return ("--reviewer <agent> is required with --executor marathon — Jog does not "
+utils/py/jog_run.py:441:    """GH-280 cold start for the marathon executor: for each orphan-reconciled row that has a
+utils/py/jog_run.py:523:        return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
+utils/py/jog_run.py:670:              f"--executor marathon` or `jog retry-build` to dispatch")
+utils/py/jog_run.py:717:    error = validate_marathon_executor(args)
+utils/py/jog_run.py:721:    # GH-300 (B2): retry verbs dispatch marathon-drive exactly like the run executor, so
+utils/py/jog_run.py:822:    error = validate_marathon_executor(args)
+utils/py/jog_run.py:826:    # GH-300 (B2): same supervisor lock as the run executor — see jog_retry_gate.
+utils/py/jog_run.py:1267:def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
+utils/py/jog_run.py:1269:    if simulate:
+utils/py/jog_run.py:1270:        print(f"jog: [simulate] simulated single-phase drive on GH-{gh_num} with builder={builder}")
+utils/py/jog_run.py:1470:                            help="reviewer agent — REQUIRED with --executor marathon "
+utils/py/jog_run.py:1472:        parser.add_argument("--executor", choices=["relay", "marathon"], default="relay",
+utils/py/jog_run.py:1473:                            help="per-task executor (GH-280). 'relay' is the legacy default; "
+utils/py/jog_run.py:1477:        parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
+utils/py/jog_run.py:1478:        parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
+utils/py/jog_run.py:1481:    executor = getattr(args, "executor", "relay") or "relay"
+utils/py/jog_run.py:1482:    simulate = getattr(args, "simulate", False)
+utils/py/jog_run.py:1484:    # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
+utils/py/jog_run.py:1486:    if executor == "marathon" and not simulate:
+utils/py/jog_run.py:1487:        executor_error = validate_marathon_executor(args)
+utils/py/jog_run.py:1488:        if executor_error:
+utils/py/jog_run.py:1489:            print(f"jog: {executor_error}", file=sys.stderr)
+utils/py/jog_run.py:1544:            if executor == "marathon" and not simulate:
+utils/py/jog_run.py:1596:            # GH-280: the opt-in Marathon executor — Jog leases the row, delegates execution to
+utils/py/jog_run.py:1600:            if executor == "marathon" and not simulate:
+utils/py/jog_run.py:1618:            if os.path.isfile(preflight_py) and not getattr(args, "simulate", False):
+utils/py/jog_run.py:1643:                simulate=getattr(args, "simulate", False),
+utils/py/releases_app.py:4747:                         help="reviewer agent — REQUIRED with --executor marathon (GH-280); no default is selected")
+utils/py/releases_app.py:4748:    sp_jrun.add_argument("--executor", choices=["relay", "marathon"], default="relay",
+utils/py/releases_app.py:4749:                         help="per-task executor (GH-280): 'relay' legacy default; 'marathon' delegates to the "
+utils/py/releases_app.py:4752:    sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
+utils/py/releases_app.py:4753:    sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
+
+## 5. The bin/tick tripwire evasion (adapter P2 vs legacy reality)

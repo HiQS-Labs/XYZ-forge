@@ -1,0 +1,54 @@
+# GH-280 Phase 5 legacy-audit — mutation probe matrix (disposable /tmp clone ONLY)
+# Clone: /tmp/gh280-p5-fixture @ fa85a955. Three states probed; suites re-run per state.
+# Generated 2026-08-29T06:17:27Z. The p5-audit lane clone NEVER ran these.
+
+## State 1 — baseline (fa85a955 untouched)
+\$ bash test/jog-queue.sh         -> rc=0, 34 passed, 0 failed
+    
+    34 passed, 0 failed
+\$ bash test/gh280-jog-marathon-adapter.sh -> rc=0, 167 pass, 0 fail
+      gh280-jog-marathon-adapter: 167 pass, 0 fail
+
+## State 2 — minimal flip (default relay->marathon at jog_run.py:1472+1481, releases_app.py:4748; NOTHING else)
+\$ bash test/jog-queue.sh -> rc=1, 33 passed, 1 failed
+      FAIL: jog run --dry-run reports simulated execution plan
+    33 passed, 1 failed
+    Root cause: jog_run.py:1486 validates executor==marathon when not simulate — --dry-run
+    is NOT exempt, so the hermetic dry-run (which mutates nothing) now refuses exit 2:
+            $ jog run --dry-run  (fresh fixture)
+            jog: --reviewer <agent> is required with --executor marathon — ...
+            rc=2
+    => The flip PR MUST exempt --dry-run from marathon validation (or the test must pass
+       --reviewer). This is the ONLY committed assertion that notices the minimal flip.
+
+\$ bash test/gh280-jog-marathon-adapter.sh -> rc=0, 167 pass, 0 fail
+      gh280-jog-marathon-adapter: 167 pass, 0 fail
+    INCLUDING section I ('legacy relay default unchanged') — flip-blind as written:
+        PASS: I1 default executor (relay) simulate path unchanged
+        PASS: I1b simulated auto-merge completes the processed row
+        PASS: I2 legacy run leaves no marathon execution state
+    => No committed test asserts the executor DEFAULT. The flip PR must add one
+       (cheapest: bare 'jog run' without --reviewer must exit 2 demanding a reviewer).
+
+## State 3 — removal probe (legacy trio + legacy arm deleted, relay choice dropped,
+#             default=marathon; --simulate retained, falls into a refusal stub)
+\$ bash test/jog-queue.sh -> rc=1, 30 passed, 4 failed
+      FAIL: jog run --dry-run reports simulated execution plan
+      FAIL: jog run processes queue items in simulate mode
+      FAIL: processed item is marked completed
+      FAIL: jog drop refuses already-completed item without --force
+    30 passed, 4 failed
+    §12 dry-run: marathon-validation ordering (State-2 issue, unowned by removal)
+    §15 x2 + drop-guard cascade: --simulate has nowhere to go once the legacy body is
+    gone — the removal commit MUST define simulate semantics (delete --simulate, or
+    re-point it at the marathon arm with a no-dispatch short-circuit).
+
+\$ bash test/gh280-jog-marathon-adapter.sh -> rc=1, aborts at I1 (103 pass before it)
+      FAIL: I1 legacy simulate path drifted: jog: legacy relay executor removed (GH-280 Phase 5); executor is marathon-only
+    test/_setup.sh:168 fail() hard-exits: sections J-P never run until §I is rewritten.
+    I2 (no .tick/jog state) would survive; I1/I1b are the simulate-coupled casualties.
+
+\$ bash test/gh291-contract-goldens.sh -> rc=0, 20 pass, 0 fail   (class C survives removal)
+      gh291-contract-goldens: 20 pass, 0 fail
+\$ bash test/gh290-ate-variation-grid.sh -> rc=0, 37 pass, 0 fail (class C survives removal)
+      gh290-ate-variation-grid: 37 pass, 0 fail
