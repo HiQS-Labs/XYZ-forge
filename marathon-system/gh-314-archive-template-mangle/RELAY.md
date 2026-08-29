@@ -137,3 +137,15 @@ handing off to agy — agy, take your turn
 
 **Handoff:**
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Assessment:** I read the complete implementation and all seven scoped test/helper files. The GH-444 separator-less path now reconstructs the entry from the parsed bold title and the test pins the complete resulting line, so the Round 1 marker-shape gap is closed. The global GH-222 cleanup safely canonicalizes the known malformed opening title marker. I found no unrelated pre-existing defects in the swept files.
+
+**Changes requested:** Add a focused GH-222 fixture and assertion to `test/wave-reconcile.sh`. The new `fix_mangled_roadmap_entries` behavior is currently unexercised: the fixture has no GH-222 malformed Completed entry, so a regression that removes, bypasses, or incorrectly narrows that global cleanup would still pass all scoped tests. Seed the exact malformed shape and assert it is absent after reconciliation (preferably also assert the canonical line), fulfilling the second acceptance criterion.
+
+**Verdict:** Changes requested
+
+handing off to agy — agy, take your turn.
