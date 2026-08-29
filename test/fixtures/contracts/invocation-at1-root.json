@@ -1,0 +1,43 @@
+{
+  "schema": "swarm-preflight/marathon-invocation@1",
+  "generated_at": "2026-08-29T00:00:00Z",
+  "harness_root": "<FIX>",
+  "harness_home": "<FIX>",
+  "target_root": "<FIX>",
+  "drive_command": "<FIX>/relay-automation/marathon-drive.sh",
+  "argv": [
+    "<FIX>/relay-automation/marathon-drive.sh",
+    "--phase-brief",
+    "<FIX>/packet/packet.md",
+    "--reviewer",
+    "agy",
+    "--builder",
+    "codex",
+    "--artifact",
+    "docs/A.md,src/b.js",
+    "--pre-advance-cmd",
+    "bash <FIX>/gate.sh",
+    "--result-file",
+    "<FIX>/packet/marathon-result.json",
+    "--require-clean"
+  ],
+  "env": {
+    "XYZ_HARNESS_CONTEXT": "swarm",
+    "XYZ_SESSION_ID": "gh901-p",
+    "RELAY_WORKTREE_ISOLATION": "1"
+  },
+  "issue": "901",
+  "phase": "gh901-p",
+  "lane": "gh901-p",
+  "artifacts": [
+    "docs/A.md",
+    "src/b.js"
+  ],
+  "gate": "bash <FIX>/gate.sh",
+  "builder": "codex",
+  "reviewer": "agy",
+  "base_ref": "development",
+  "packet_dir": "<FIX>/packet",
+  "packet_path": "<FIX>/packet/packet.md",
+  "result_path": "<FIX>/packet/marathon-result.json"
+}

@@ -425,6 +425,9 @@ TESTS=(
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh290-ate-variation-grid.sh"       # GH-290 (ATE variation grid: contract loaders, land verification,
                                      #   receipt-writer robustness — deterministic hostile-input matrix)
+  "gh291-contract-goldens.sh"         # GH-291 Scope 2 (golden @1 conformance: producer fidelity vs
+                                     #   committed fixtures, loader accept/refuse matrix, future-schema
+                                     #   refusal with zero Tick mutation)
   "gh280-jog-marathon-adapter.sh"     # GH-280 (Jog↔Marathon machine contracts: invocation/result@1 artifacts, executor
                                      #   E2E in root + vendored installs with stubbed agents/GitHub, resume/retry/land
                                      #   semantics; registered per PR #281 review B3 — the one-directional registry
