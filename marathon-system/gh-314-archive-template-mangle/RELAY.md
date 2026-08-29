@@ -1,5 +1,5 @@
 # Marathon Phase gh-314-archive-template-mangle
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-314-ARCHIVE-TEMPLATE-MANGLE-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -161,3 +161,18 @@ handing off to agy — agy, take your turn.
 
 **Handoff:**
 handing off to codex — codex, take your turn.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
+
+### Round 4 · Reviewer · codex
+
+swept file: yes
+
+**Assessment:** I read the complete reconciler implementation and every scoped test/helper file. The separator-less GH-444 archive path parses the original bold title, strips the trailing internal space, and reconstructs the canonical entry; its regression now requires the entire exact resulting line, so nested or mismatched bold markers cannot pass. The global cleanup normalizes the malformed GH-222 opening marker before downstream regeneration, and the focused fixture asserts the exact canonical Completed line. I found no unrelated pre-existing defects in the swept files.
+
+**Verification:** Not run locally; the reviewer scope permits no in-tree artifact work and the harness supplies the gate.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
