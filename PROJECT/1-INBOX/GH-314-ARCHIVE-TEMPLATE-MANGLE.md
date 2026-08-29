@@ -7,6 +7,8 @@ created: 2026-08-29
 updated: 2026-08-29
 owner: jog
 doc_type: bugfix
+fix_probes:
+  - bash test/wave-reconcile.sh
 ---
 
 # GH-314: archive-template mangles separator-less entries
