@@ -139,6 +139,23 @@ Fix (one command, then commit the result into the same push):
 Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
 EOF
     else
+      # The other legitimate no-diff case: a ledger change the dashboard cannot render.
+      # jog_queue rows have no dashboard projection, and a jog write's full dump fan-out is
+      # jog_queue + its op_receipts audit rows + the settings generation counter — none of
+      # which the dashboard renders (GH-315). If every changed data line targets exactly
+      # that set, allow; any other table's data change keeps the dropped-row refusal below.
+      non_jog_data=0
+      while IFS= read -r dline; do
+        case "$dline" in
+          '-'INSERT\ INTO\ jog_queue*|'+'INSERT\ INTO\ jog_queue*) ;;
+          '-'INSERT\ INTO\ op_receipts*|'+'INSERT\ INTO\ op_receipts*) ;;
+          *INSERT\ INTO\ settings*generation*) ;;
+          '-'INSERT\ INTO\ *|'+'INSERT\ INTO\ *) non_jog_data=1; break ;;
+        esac
+      done < <(git -C "$REPO" diff --no-renames "$remote_sha" "$local_sha" -- releases.sql 2>/dev/null)
+      if [ "$non_jog_data" -eq 0 ]; then
+        continue
+      fi
       cat >&2 <<'EOF'
 dashboard-staleness-guard: REFUSING the push — this range writes the roadmap ledger
 (releases.sql / releases.db) without modifying ROADMAP-DASHBOARD.md, but regenerating the

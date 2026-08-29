@@ -62,4 +62,39 @@ bash "$GUARD" "$R" "$DOCS" "$FIXED" || fail "non-ledger range must pass, got $?"
 rc=0; bash "$GUARD" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "expected usage exit 2, got $rc"
 
+
+# 7. GH-315: jog-queue-only ledger write, renderer in-sync, no dashboard change -> ALLOW
+# (jog rows have no dashboard projection; a no-diff regen is the expected outcome, not a
+# dropped-row symptom). The fixture needs a renderer whose --check passes to reach the
+# guard's no-drift branch at all.
+mkdir -p "$R/utils"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R/utils/roadmap-dashboard.sh"
+chmod +x "$R/utils/roadmap-dashboard.sh"
+cd "$R"
+git add utils/roadmap-dashboard.sh
+git -c user.email=t@t -c user.name=t commit -q -m "add passing renderer"
+RENDERED="$(git rev-parse HEAD)"
+{ echo "-- dump v3"
+  echo "INSERT INTO settings(key, value) VALUES('generation', '9');"
+  echo "INSERT INTO jog_queue VALUES('seed');"
+  echo "INSERT INTO op_receipts(op, target_gid) VALUES('jog-add', 'seed');"
+} > releases.sql
+git add releases.sql
+git -c user.email=t@t -c user.name=t commit -q -m "jog-only ledger write"
+JOG_ONLY="$(git rev-parse HEAD)"
+cd "$root"
+bash "$GUARD" "$R" "$JOG_ONLY" "$RENDERED" \
+  || fail "jog-queue-only ledger write must pass the no-drift branch (GH-315), got $?"
+
+# 8. Control: a roadmap_items data change in the same no-drift shape still refuses.
+cd "$R"
+{ echo "-- dump v4"; echo "INSERT INTO roadmap_items VALUES('r1');"; } > releases.sql
+git add releases.sql
+git -c user.email=t@t -c user.name=t commit -q -m "roadmap-only ledger write"
+ROADMAP_ONLY="$(git rev-parse HEAD)"
+cd "$root"
+rc=0; out="$(bash "$GUARD" "$R" "$ROADMAP_ONLY" "$RENDERED" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "expected no-drift refusal (1) for non-jog data, got $rc"
+grep -q "NO diff" <<<"$out" || fail "expected the no-diff refusal message"
+
 echo "== GH-243 ALL PASSED =="
