@@ -1,0 +1,47 @@
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • releases.db
+marathon-drive:   • releases.sql
+marathon-drive: relay file committed: /private/tmp/gh222-vendored.bDS1FB/consumer/marathon-system/gh-901-fixture-lane/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-901-FIXTURE-LANE-TURN → codex
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-901-fixture-lane-start boundary — compressor=0MB, swap_free=0MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.hWx3ut)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: handed off token MARATHON-GH-901-FIXTURE-LANE-TURN → agy (tick release --to)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.djjk4y)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: relay STATUS=Approved → closed token (tick done MARATHON-GH-901-FIXTURE-LANE-TURN)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: bash test/fixture-gate.sh
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 2MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /private/tmp/gh222-vendored.bDS1FB/consumer/relay-system/2026-08-29/marathon-gh-901-fixture-lane-043333.md
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-901-fixture-lane-complete boundary — compressor=0MB, swap_free=0MB
+marathon-drive: phase gh-901-fixture-lane complete — STATUS: Approved, gate passed
+marathon-drive: result receipt written: /tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight/marathon-result.json (outcome: approved, exit 0)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 6s
+per done-task: ≥0 tokens, 6s wall-clock
+memory: compressor peak: 0MB, swap free min: 0MB
+  turn peak RSS: codex: 61MB peak RSS, agy: 62MB peak RSS
+
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: marathon execution gh901-exec1 for GH-901 (packet: /tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight)
+jog: supervisor-state commit skipped — on branch 'main' (not the integration branch 'development'); uncommitted ledger writes on a lane are the containment-revert tradeoff (GH-292 F1)
+jog: dispatching marathon-drive (/private/tmp/gh222-vendored.bDS1FB/consumer/.xyz/relay-automation/marathon-drive.sh)
+jog: advancing halted at landing boundary.

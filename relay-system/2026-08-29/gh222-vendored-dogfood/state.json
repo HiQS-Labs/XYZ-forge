@@ -1,0 +1,19 @@
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M15WPECB49RHAP9ES93WVV8W",
+  "executions": [
+    {
+      "execution_id": "gh901-exec1",
+      "mode": "run",
+      "started_at": "2026-08-29T04:33:25Z",
+      "status": "projected-parked",
+      "packet_dir": "gh901-exec1/preflight",
+      "result_path": "gh901-exec1/preflight/marathon-result.json",
+      "drive_exit": 0,
+      "outcome": "approved",
+      "reason": "approved, gate passed",
+      "projected_reason": "awaiting-landing (PR #42: https://example.invalid/x/pr/42)"
+    }
+  ],
+  "gh_number": 901
+}

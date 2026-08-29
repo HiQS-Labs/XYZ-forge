@@ -1,0 +1,8 @@
+== assertions ==
+FAIL: invocation harness_home inside .xyz
+FAIL: invocation argv[0] inside .xyz
+PASS: invocation target_root is the consumer repo
+PASS: receipt outcome approved
+PASS: receipt target_repo is the consumer repo
+PASS: foreign cwd stayed clean (no root-relative lookups)
+queue-row: parked|awaiting-landing (PR #42: https://example.invalid/x/pr/42)

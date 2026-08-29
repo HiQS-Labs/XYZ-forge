@@ -1,0 +1,21 @@
+diff --git a/harnesses.sql b/harnesses.sql
+index 6b1a0948..78e640ab 100644
+--- a/harnesses.sql
++++ b/harnesses.sql
+@@ -881,6 +881,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260827235946-1511ba47','noels-Mac-St
+ INSERT INTO "invocation_logs" VALUES('inv-20260829035003-b67742bb','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN',0.0,0,0,NULL,NULL,0.0,' 1 file changed, 1 insertion(+), 1 deletion(-)','2026-08-29 03:50:03');
+ INSERT INTO "invocation_logs" VALUES('inv-20260829035446-79ea0c48','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 2 insertions(+), 1 deletion(-)','2026-08-29 03:54:46');
+ INSERT INTO "invocation_logs" VALUES('inv-20260829035745-ab80bca4','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 3 insertions(+), 1 deletion(-)','2026-08-29 03:57:45');
++INSERT INTO "invocation_logs" VALUES('inv-20260829044629-de21db14','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN-3',0.0,7,0,NULL,NULL,0.0,' 1 file changed, 1 insertion(+)','2026-08-29 04:46:29');
+ CREATE TABLE models (
+             model_id TEXT PRIMARY KEY,
+             lab TEXT NOT NULL,
+diff --git a/test/_setup.sh b/test/_setup.sh
+index c4b804bb..5cfb17e7 100755
+--- a/test/_setup.sh
++++ b/test/_setup.sh
+@@ -169,3 +169,4 @@ fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); [ "${TEST_SOFT_FAIL:-0}" = "1"
+ 
+ echo "== test: $TEST_NAME =="
+ echo "  workdir: $WORK"
++unset RELAY_COST_SUMMARY

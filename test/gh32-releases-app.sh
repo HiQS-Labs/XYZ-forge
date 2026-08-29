@@ -354,8 +354,29 @@ if [ "$ST" = "shipped" ] && [ "$SD" = "2026-08-18" ] && has "$EV" "evidence: gat
 V="$(rlog ship --gid "$K1" --evidence "again")"; if has "$V" "rule=transition"; then ok "re-shipping a shipped release is refused (transition legality is CLI-enforced)" 0; else ok "re-ship refused" 1; fi
 rout update --gid "$K1" --codename Renamed
 CN="$(sql "SELECT codename FROM releases WHERE global_id = '$K1'")"
-V="$(rlog update --gid "$K1" --tracking-issue "https://github.com/A/B/issues/2")"
-if [ "$CN" = "Renamed" ] && has "$V" "rule=tracking-ref-immutable"; then ok "update can change fields but NOT the tracking reference (identity is reconcile-only)" 0; else ok "update + immutable ref" 1; fi
+# GH-222: `update --tracking-issue` re-points the tracking ref through perform_write. The
+# legitimate case is a superseding umbrella that is already CLOSED, so the write path must
+# never consult gh issue state — asserted by pointing RELEASES_GH_BIN at /bin/false: had the
+# CLI asked gh anything, the write would refuse with rule=github-project-cli.
+V="$(RELEASES_GH_BIN=/bin/false rlog update --gid "$K1" --tracking-issue "https://github.com/A/B/issues/2")"
+TU="$(sql "SELECT t.url FROM releases r JOIN issue_refs t ON t.id = r.tracking_ref_id WHERE r.global_id = '$K1'")"
+OLDREF="$(sql "SELECT COUNT(*) FROM issue_refs WHERE url = 'https://github.com/A/B/issues/1'")"
+V2="$(rlog check)"
+if [ "$CN" = "Renamed" ] && [ "$TU" = "https://github.com/A/B/issues/2" ] && [ "$OLDREF" = "1" ] \
+   && has "$V2" "receipt chain intact" && ! has "$V2" "FAIL:"; then
+  ok "GH-222 re-point via URL writes through perform_write (check clean, old ref row kept, gh never consulted — closed targets work)" 0
+else ok "GH-222 re-point via URL" 1; fi
+V="$(rlog update --gid "$K1" --tracking-issue 9)"
+if has "$V" "rule=tracking-issue-slug"; then ok "GH-222 bare number with no org/repo slug and no origin remote is refused, rule named" 0; else ok "GH-222 bare number unresolved" 1; fi
+git -C "$R" remote add origin https://github.com/O/P.git
+rout update --gid "$K1" --tracking-issue 9
+TU="$(sql "SELECT t.url FROM releases r JOIN issue_refs t ON t.id = r.tracking_ref_id WHERE r.global_id = '$K1'")"
+if [ "$TU" = "https://github.com/O/P/issues/9" ]; then ok "GH-222 bare number expands against the github origin remote (slug 'kappa' is not org/repo)" 0; else ok "GH-222 bare number expansion" 1; fi
+V="$(rlog update --gid "$K1" --tracking-issue "https://example.com/x")"
+if has "$V" "rule=issue-url-shape"; then ok "GH-222 non-GitHub URL refused, rule named" 0; else ok "GH-222 bad URL shape" 1; fi
+V="$(rlog update --gid "$K1" --tracking-issue "TMP-ABC123")"
+TU2="$(sql "SELECT t.url FROM releases r JOIN issue_refs t ON t.id = r.tracking_ref_id WHERE r.global_id = '$K1'")"
+if has "$V" "rule=tracking-repoint-shape" && [ "$TU2" = "$TU" ]; then ok "GH-222 re-point to a TMP- placeholder refused, nothing changed (a re-point is URL-to-URL; placeholders belong to add/reconcile)" 0; else ok "GH-222 placeholder refused" 1; fi
 N="$(sql 'SELECT COUNT(DISTINCT op) FROM op_receipts')"
 N2="$(sql "SELECT COUNT(*) FROM op_receipts WHERE session_id != ''")"
 if [ "$N" -ge 2 ] 2>/dev/null && [ "$N2" -ge 2 ] 2>/dev/null; then ok "the receipt log records >=2 distinct ops with session ids (the exit gate reads these)" 0; else ok "receipts recorded" 1; fi

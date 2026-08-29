@@ -1,0 +1,47 @@
+marathon-drive: phase gh-222-releases-tracking-repoint: relay is terminal (STATUS: Approved) but token 'MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN-3' reads 'unknown', not done — rebuilding; if this phase really did complete, its record is on a token this run cannot see (see GH-385)
+marathon-drive: phase gh-222-releases-tracking-repoint: --retry given, so this run REBUILDS. But the relay is already terminal (STATUS: Approved) and its recorded token 'MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN' reads done — re-firing WITHOUT --retry would have re-run only the pre-advance gate and dispatched no builder or reviewer turn (GH-491)
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • LEADERBOARD.html
+marathon-drive:   • RELEASES-PREVIEW.html
+marathon-drive:   • releases.db
+marathon-drive:   • releases.sql
+marathon-drive: relay file committed: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/marathon-system/gh-222-releases-tracking-repoint/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN-3 → agy
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-222-releases-tracking-repoint-start boundary — compressor=0MB, swap_free=0MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+relay-turn: ⚠️  NOTICE: tracking ref origin/development is 6 commits ahead. Consider rebasing between phases.
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.CU565N)
+agy-turn: idle-blocker attribution: blocker=lock — the process tree held a .lock file open (e.g. a git index or harness driver lock) — it was waiting on a lock held by someone else, not working.
+agy-turn: agy -p exceeded 900s wall-clock cap — killed [timeout-idle-no-progress]
+agy-turn: timeout attribution: no CPU and no file progress — the agent was blocked waiting on something external (a lock, a prompt, or a hung network call) rather than working. [cpu=0.06s/s, samples=1464, worktree-progress=no]
+agy-turn: OFF-ALLOWLIST change: patch3.py — reverting
+agy-turn: pre-revert copy of patch3.py saved under /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/orphan-backups/20260829T044629Z-73938
+agy-turn: OFF-ALLOWLIST change: patch4.py — reverting
+agy-turn: pre-revert copy of patch4.py saved under /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/orphan-backups/20260829T044629Z-73938
+agy-turn: OFF-ALLOWLIST change: patch5.py — reverting
+agy-turn: pre-revert copy of patch5.py saved under /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/orphan-backups/20260829T044629Z-73938
+agy-turn: off-lane edits reverted; failing the turn
+agy-turn: released the claim on MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN-3 that this turn would otherwise have left held — the turn ended without reaching its own token handoff (GH-409)
+marathon-drive: relay timed out (exit 7) before any declared artifact landed — treating it as a real hang
+marathon-drive: relay escalated: timeout / hang (relay-drive exit 7)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/relay-system/2026-08-29/marathon-gh-222-releases-tracking-repoint-044630.md
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-222-releases-tracking-repoint-escalated boundary — compressor=0MB, swap_free=0MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/marathon-system/gh-222-releases-tracking-repoint/ESCALATION.md (reason: timeout-no-artifact)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec3/preflight/marathon-result.json (outcome: escalated, exit 7)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥3080 total (≥2400 in / ≥680 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 13m 24s
+per done-task: ≥3080 tokens, 13m 24s wall-clock
+memory: compressor peak: 0MB, swap free min: 0MB
+  turn peak RSS: agy: 236MB peak RSS, codex: 240MB peak RSS, reviewer: 17MB peak RSS
+
+jog: marathon execution gh222-exec3 for GH-222 (packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec3/preflight)
+jog: supervisor-state commit skipped — on branch 'marathon/gh-222-releases-tracking-repoint-2026-08-28' (not the integration branch 'development'); uncommitted ledger writes on a lane are the containment-revert tradeoff (GH-292 F1)
+jog: dispatching marathon-drive (/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/relay-automation/marathon-drive.sh)
+jog: retry-build GH-222 → failed — marathon escalated: timeout-no-artifact (exit 7) [gh222-exec3; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec3/preflight/marathon-result.json]
