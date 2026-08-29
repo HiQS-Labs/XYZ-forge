@@ -360,6 +360,37 @@ def jog_current_gid(root, gh_num):
         conn.close()
 
 
+def jog_verify_pr_before_merge(root, receipt, pr_number):
+    """GH-300 (PR #281 review B1): verify GitHub truth against the receipt BEFORE merging.
+
+    An approved receipt's PR identity is Marathon-owned and trusted as a record, but the
+    merge must not act on it blind: a stale PR number that happens to resolve in this repo
+    (or a PR whose head moved after the reviewed build) would otherwise be merged as-is.
+    Mirrors the verification family `jog land` performs post-merge, adapted to pre-merge:
+    the PR must still be OPEN with the receipt's base/head/head-SHA, the receipt must name
+    this repo, and the gate must be green for that head. Returns (failures, pr); an empty
+    failures list means the merge may proceed.
+    """
+    pr, err = _gh_pr_view(root, pr_number)
+    if pr is None:
+        return [f"pr view failed: {err}"], None
+    checks = [
+        ("state OPEN", pr.get("state") == "OPEN"),
+        (f"base {receipt.get('base_branch')}", pr.get("baseRefName") == receipt.get("base_branch")),
+        (f"head {receipt.get('head_branch')}", pr.get("headRefName") == receipt.get("head_branch")),
+        (f"head SHA {str(receipt.get('head_sha') or '')[:8]}",
+         pr.get("headRefOid") == receipt.get("head_sha")),
+        ("receipt repo is this repo",
+         not receipt.get("target_repo", {}).get("path")
+         or os.path.realpath(receipt["target_repo"]["path"]) == os.path.realpath(root)),
+    ]
+    gate = receipt.get("gate") or {}
+    checks.append(("gate green on the merge head",
+                   gate.get("result") == "green"
+                   and (not gate.get("receipt_path") or os.path.isfile(gate["receipt_path"]))))
+    return [name for name, ok in checks if not ok], pr
+
+
 def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False):
     """Project a validated Marathon result receipt into the queue via perform_write.
 
@@ -376,6 +407,10 @@ def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False):
         if pr_number:
             note = f"awaiting-landing (PR #{pr_number}: {pr.get('url') or 'url unavailable'})"
             if auto_merge:
+                failures, _ = jog_verify_pr_before_merge(root, receipt, pr_number)
+                if failures:
+                    return "parked", (f"{note} — auto-merge refused (verification failed: "
+                                      f"{', '.join(failures)})")
                 merge = subprocess.run(
                     ["gh", "pr", "merge", str(pr_number), "--merge", "--auto=false"],
                     cwd=root, capture_output=True, text=True)
@@ -648,7 +683,24 @@ def jog_retry_gate(root, gh_num, args):
     if error:
         print(f"jog: {error}", file=sys.stderr)
         sys.exit(2)
+    # GH-300 (B2): retry verbs dispatch marathon-drive exactly like the run executor, so
+    # they hold the same supervisor lock — a retry fired beside a live drive is precisely
+    # the concurrency the lock exists to prevent (GH-42 / GH-354).
+    supervisor_lock = JogSupervisorLock(root)
+    supervisor_lock.acquire()
+    try:
+        return _jog_retry_gate_locked(root, gh_num, args)
+    finally:
+        supervisor_lock.release()
+
+
+def _jog_retry_gate_locked(root, gh_num, args):
     gid = jog_resolve_ledger_gid(root, gh_num)
+    if not gid:
+        # Same refusal retry-build already had: a None gid here would otherwise surface
+        # as a TypeError traceback from jog_load_state instead of a clean exit.
+        print(f"jog: GH-{gh_num} has no jog queue row and no execution ledger", file=sys.stderr)
+        sys.exit(2)
     record, receipt = _jog_latest_receipt(root, gid, outcomes=("approved",))
     if record is None:
         # A red gate escalates with outcome 'escalated'; the relay behind it is terminal and
@@ -733,6 +785,16 @@ def jog_retry_build(root, gh_num, args):
     if error:
         print(f"jog: {error}", file=sys.stderr)
         sys.exit(2)
+    # GH-300 (B2): same supervisor lock as the run executor — see jog_retry_gate.
+    supervisor_lock = JogSupervisorLock(root)
+    supervisor_lock.acquire()
+    try:
+        return _jog_retry_build_locked(root, gh_num, args)
+    finally:
+        supervisor_lock.release()
+
+
+def _jog_retry_build_locked(root, gh_num, args):
     gid = jog_resolve_ledger_gid(root, gh_num) or jog_current_gid(root, gh_num)
     if not gid:
         print(f"jog: GH-{gh_num} is not in the jog queue", file=sys.stderr)
@@ -1278,11 +1340,28 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
     return proc.returncode
 
 
+def _verify_legacy_pr_before_merge(root, pr_num):
+    """GH-300: minimal pre-merge guard for the relay-path landing boundary.
+
+    The legacy path has no marathon receipt to verify against — it discovers its PR by
+    branch-name convention — so the guard is the subset that convention can support: the
+    discovered PR must be OPEN and based on development before it is merged. Returns None
+    when the merge may proceed, else the failed-check names.
+    """
+    pr, err = _gh_pr_view(root, pr_num)
+    if pr is None:
+        return [f"pr view failed: {err}"]
+    return [name for name, ok in [
+        ("state OPEN", pr.get("state") == "OPEN"),
+        ("base development", pr.get("baseRefName") == "development"),
+    ] if not ok]
+
+
 def handle_landing_boundary(root, gh_num, auto_merge=False):
     """Handle landing confirmation, PR merge, and development re-anchoring.
 
     Returns:
-      (success: bool, status: str, failure_reason: str or None)
+        (success: bool, status: str, failure_reason: str or None)
     """
     if auto_merge:
         print(f"jog: task GH-{gh_num} passed; auto-merging into development...")
@@ -1295,6 +1374,11 @@ def handle_landing_boundary(root, gh_num, auto_merge=False):
         )
         pr_num = pr_view.stdout.strip()
         if pr_num and pr_num.isdigit():
+            failures = _verify_legacy_pr_before_merge(root, pr_num)
+            if failures:
+                print(f"jog: auto-merge refused (verification failed: {', '.join(failures)})",
+                      file=sys.stderr)
+                return False, "parked", f"auto-merge refused (verification failed: {', '.join(failures)})"
             merge_res = subprocess.run(["gh", "pr", "merge", pr_num, "--merge", "--auto=false"], cwd=root, capture_output=True, text=True)
             if merge_res.returncode != 0:
                 print(f"jog: auto-merge failed: {merge_res.stderr.strip()}", file=sys.stderr)
@@ -1324,6 +1408,12 @@ def handle_landing_boundary(root, gh_num, auto_merge=False):
     )
     pr_num = pr_view.stdout.strip()
     if pr_num and pr_num.isdigit():
+        failures = _verify_legacy_pr_before_merge(root, pr_num)
+        if failures:
+            print(f"jog: merge refused (verification failed: {', '.join(failures)}) — parking; "
+                  f"the discovered PR is not mergeable into development as confirmed",
+                  file=sys.stderr)
+            return False, "parked", f"merge refused (verification failed: {', '.join(failures)})"
         subprocess.run(["gh", "pr", "merge", pr_num, "--merge", "--auto=false"], cwd=root)
 
     subprocess.run(["git", "checkout", "development"], cwd=root, capture_output=True)

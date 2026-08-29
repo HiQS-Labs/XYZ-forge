@@ -53,6 +53,10 @@ if [ "${1:-}" = "pr" ] && [ "${2:-}" = "create" ]; then
   echo "https://example.invalid/pr/created-by-stub"
   exit 0
 fi
+if [ "${1:-}" = "pr" ] && [ "${2:-}" = "merge" ]; then
+  if [ "${GH_STUB_MERGE_FAIL:-0}" = "1" ]; then echo "stub: merge refused" >&2; exit 1; fi
+  exit 0
+fi
 exit 1
 GH_EOF
 chmod +x "$STUB_BIN/gh"
@@ -644,7 +648,11 @@ grep -q completed <<<"$(sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue 
 
 # ═══ J. Phase 3: jog resume — reconcile, never fire ═══════════════════════════════════════════
 jog_verb() {  # <verb> <extra-args…>
-  ( cd "$FR" && python3 "$FR/utils/py/releases_app.py" --root "$FR" jog "$@" )
+  # GH-300 B5: stub agents on PATH for every verb call — on runners without a real agy
+  # the pre-dispatch binary check refused (canary K2: binary-not-found instead of the
+  # intended refusal), so the helper carries the stub env itself.
+  ( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+    python3 "$FR/utils/py/releases_app.py" --root "$FR" jog "$@" )
 }
 
 # J1: terminal receipt on record → idempotent re-projection, no new execution
@@ -955,6 +963,122 @@ M2_OUT="$(jog_verb resume 901 2>&1)"; rc=$?
   || fail "M2 resume lost the history: $M2_OUT"
 jassert "$FR/.tick/jog/$OLD_GID/state.json" 'any(e.get("packet_dir") and not e["packet_dir"].startswith("/") for e in d["executions"]) or True' "M2 ledger record present (relative-path form asserted below)"
 jassert "$FR/.tick/jog/$OLD_GID/state.json" 'not d["executions"][0].get("result_path","").startswith("/")' "M2 result_path stored relative to the ledger (F2)"
+
+# ═══ N. GH-300 (PR #281 review): verified auto-merge (B1) + supervisor lock on retries (B2) ══
+# N1–N5 drive the projection seam directly — a hand-written approved receipt plus a canned
+# `gh pr view` answer — so the pre-merge verification matrix is hermetic and exact. The gh
+# stub logs every call; merge refusals are proven by a frozen merge-call count.
+cleanup_root_fixture
+use_development
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+NEXEC="$FR/.tick/jog/$GID/gh901-exec1/preflight"; mkdir -p "$NEXEC"
+N_RECEIPT="$NEXEC/marathon-result.json"
+N_HEAD="$(git -C "$FR" rev-parse HEAD)"
+N_OTHER_HEAD="$(git -C "$FR" rev-parse HEAD^{tree})"
+N_VIEW="$WORK/n-pr-view.json"
+
+write_n_receipt() {  # <head-sha> <gate-result> <repo-path>
+  python3 - "$N_RECEIPT" "$1" "$2" "$3" <<'PY'
+import json, sys
+path, head_sha, gate, repo = sys.argv[1:5]
+json.dump({
+  "schema": "marathon-drive/result@1", "execution_id": "gh901-exec1",
+  "generated_at": "2026-08-28T02:00:00Z", "outcome": "approved",
+  "reason": "approved, gate passed", "exit_code": 0, "approval_preserved": False,
+  "issue": "901", "phase": "p", "lane": "p", "token": "T",
+  "attempt": {"count": 1, "max": 2}, "builder": "codex", "reviewer": "agy",
+  "target_repo": {"path": repo, "origin_url": None},
+  "base_branch": "development", "head_branch": "marathon/gh280-n-lane", "head_sha": head_sha,
+  "branch_redirect": True,
+  "gate": {"cmd": "true", "result": gate, "exit": 0 if gate == "green" else 1, "receipt_path": None},
+  "acceptance": {"checked": False, "unmet_count": 0},
+  "pr": {"number": 42, "url": "https://example.invalid/x/pr/42", "state": "OPEN"},
+  "pr_note": None, "relay_status": "Approved",
+  "timestamps": {"started_at": "2026-08-28T01:59:59Z", "finished_at": "2026-08-28T02:00:00Z"},
+}, open(path, "w"), indent=1)
+PY
+}
+
+write_n_view() {  # <state> <base> <head-branch> <head-oid>
+  python3 - "$N_VIEW" "$@" <<'PY'
+import json, sys
+path, state, base, head_branch, head_oid = sys.argv[1:6]
+json.dump({"number": 42, "url": "https://example.invalid/x/pr/42", "state": state,
+           "baseRefName": base, "headRefName": head_branch, "headRefOid": head_oid,
+           "mergedAt": None, "title": "GH-901 fixture", "body": "Closes #901"}, open(path, "w"))
+PY
+}
+
+n_project() {  # run the auto-merge projection against the current receipt + view
+  ( cd "$FR" && GH_STUB_PR_VIEW_JSON="$N_VIEW" python3 - "$FR" "$N_RECEIPT" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1] + "/utils/py")
+from jog_run import jog_project_marathon_outcome, load_marathon_result
+receipt = load_marathon_result(sys.argv[2])
+action, reason = jog_project_marathon_outcome(sys.argv[1], 901, receipt, auto_merge=True)
+print(f"{action}|{reason}")
+PY
+  )
+}
+merge_calls() { grep -c 'pr merge' "$GH_STUB_LOG" || true; }
+
+# N1 (B1 accept): every identity field matches → merge fires, row completes
+write_n_receipt "$N_HEAD" green "$FR"
+write_n_view OPEN development marathon/gh280-n-lane "$N_HEAD"
+MERGES_BEFORE_N="$(merge_calls)"
+N1_OUT="$(n_project)"
+has "$N1_OUT" "completed|marathon approved; PR #42 merged" \
+  && pass "N1 verified auto-merge completes on a matching PR" || fail "N1 unexpected projection: $N1_OUT"
+[ "$(merge_calls)" -eq $((MERGES_BEFORE_N + 1)) ] \
+  && pass "N1 the verified merge issued exactly one gh pr merge" \
+  || fail "N1 merge call count moved $(merge_calls) != $((MERGES_BEFORE_N + 1))"
+
+# N2 (B1 refuse): the PR's head moved after the reviewed build → no merge
+write_n_view OPEN development marathon/gh280-n-lane "$N_OTHER_HEAD"
+N2_OUT="$(n_project)"; rc=$?
+has "$N2_OUT" "auto-merge refused (verification failed: head SHA" \
+  && pass "N2 head-SHA mismatch refuses the auto-merge" || fail "N2 rc=$rc: $N2_OUT"
+[ "$(merge_calls)" -eq $((MERGES_BEFORE_N + 1)) ] \
+  && pass "N2 no merge call issued on refusal" || fail "N2 a merge leaked through: $(merge_calls)"
+
+# N3 (B1 refuse): PR already merged elsewhere → refuse (jog land owns the merged case)
+write_n_view MERGED development marathon/gh280-n-lane "$N_HEAD"
+N3_OUT="$(n_project)"
+has "$N3_OUT" "auto-merge refused (verification failed: state OPEN" \
+  && pass "N3 already-merged PR refuses the auto-merge" || fail "N3: $N3_OUT"
+
+# N4 (B1 refuse): gate red on the receipt → refuse naming the gate
+write_n_receipt "$N_HEAD" red "$FR"
+write_n_view OPEN development marathon/gh280-n-lane "$N_HEAD"
+N4_OUT="$(n_project)"
+has "$N4_OUT" "auto-merge refused (verification failed: gate green on the merge head" \
+  && pass "N4 red gate refuses the auto-merge" || fail "N4: $N4_OUT"
+
+# N5 (B1 refuse): receipt belongs to a foreign repo → refuse naming the repo check
+write_n_receipt "$N_HEAD" green "$WORK/foreign-repo"
+N5_OUT="$(n_project)"
+has "$N5_OUT" "auto-merge refused (verification failed: receipt repo is this repo" \
+  && pass "N5 foreign-repo receipt refuses the auto-merge" || fail "N5: $N5_OUT"
+[ "$(merge_calls)" -eq $((MERGES_BEFORE_N + 1)) ] \
+  && pass "N5 refusal matrix issued no further merge calls" || fail "N5 merge leaked: $(merge_calls)"
+
+# N6–N8 (B2): retry verbs hold the supervisor lock — a live holder refuses before dispatch
+LOCK_DIR="$FR/.git/relay-driver.lock"
+mkdir -p "$LOCK_DIR"; printf '%s\n' "$$" > "$LOCK_DIR/pid"
+N6_OUT="$(jog_verb retry-gate 901 --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 4 ] && has "$N6_OUT" "another driver is active" \
+  && pass "N6 retry-gate refuses under a live supervisor lock (exit 4)" || fail "N6 rc=$rc: $N6_OUT"
+N7_OUT="$(jog_verb retry-build 901 --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 4 ] && has "$N7_OUT" "another driver is active" \
+  && pass "N7 retry-build refuses under a live supervisor lock (exit 4)" || fail "N7 rc=$rc: $N7_OUT"
+rm -rf "$LOCK_DIR"
+# N8: with the lock free, the verb acquires AND releases it (proceeds to its normal
+# no-ledger refusal — exit 2, not the lock's 4 — and leaves no lock dir behind)
+N8_OUT="$(jog_verb retry-gate 901 --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$N8_OUT" "has no jog queue row and no execution ledger" \
+  && pass "N8 retry-gate proceeds past a free lock (exit 2, not lock refusal)" || fail "N8 rc=$rc: $N8_OUT"
+[ ! -e "$LOCK_DIR" ] \
+  && pass "N8 retry-gate released the supervisor lock on exit" || fail "N8 lock dir left behind"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
