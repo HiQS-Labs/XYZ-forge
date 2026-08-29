@@ -1,11 +1,11 @@
 ---
 name: jog
-description: Immediate serial task queue execution engine and conversational capture skill. Use when an operator wants to queue, prioritize, inspect, or execute a sequence of tasks one at a time today without marathon wave planning or concurrency overhead. Re-uses the Releases SQLite DB, driver lock, single-phase drive, and swarm-preflight.
+description: Immediate serial task queue execution engine and conversational capture skill. Use when an operator wants to queue, prioritize, inspect, or execute a sequence of tasks one at a time today without marathon wave planning or concurrency overhead. Re-uses the Releases SQLite DB, driver lock, Marathon's reviewed one-phase executor (default since GH-280), and swarm-preflight.
 ---
 
 # /jog — Serial Immediate-Queue Execution Engine
 
-`jog` manages a serial queue of tasks for immediate execution today. It provides conversational task intake and runs tasks one by one with zero concurrency overhead, using `releases.db` (`jog_queue` table), the outer `relay-driver.lock`, single-phase `relay-drive`, and `swarm-preflight`.
+`jog` manages a serial queue of tasks for immediate execution today. It provides conversational task intake and runs tasks one by one with zero concurrency overhead, using `releases.db` (`jog_queue` table), the outer `relay-driver.lock`, and `swarm-preflight`. Since the GH-280 recalibration, per-task execution defaults to Marathon's reviewed one-phase driver (`--executor marathon`); `--executor relay` keeps the legacy single-phase `relay-drive` path as the documented rollback during a bounded compatibility window.
 
 ## Conversational Triggers
 
@@ -54,8 +54,25 @@ releases jog clear
 releases jog to-marathon
     Export active jog items to marathon format.
 
-releases jog run [--auto-merge] [--builder agy|codex|aider] [--max-tasks N] [--simulate] [--dry-run]
-    Execute the serial jog runner loop.
+releases jog resume <GH-NUM>
+    Reconcile durable Marathon state for an item (spends no token).
+
+releases jog retry-gate <GH-NUM>
+    Re-run ONLY the gate against the same head SHA (no builder turn).
+
+releases jog retry-build <GH-NUM>
+    Fresh Marathon attempt on a fresh execution id (history preserved).
+
+releases jog land <GH-NUM> [--pr N]
+    Verify merged delivery against GitHub truth, complete the row, delegate lifecycle to wave_reconcile.
+
+releases jog reconcile <GH-NUM>
+    Idempotent replay entry for jog land (same verification and steps).
+
+releases jog run [--executor relay|marathon] [--reviewer <agent>] [--builder agy|codex|aider] [--auto-merge] [--max-tasks N] [--simulate] [--dry-run]
+    Execute the serial jog runner loop. Default executor is marathon (GH-280); --reviewer is
+    required (builder and reviewer must differ). --executor relay selects the legacy rollback
+    path during its compatibility window.
 ```
 
 ## Runner Execution Lifecycle (`jog run`)
@@ -79,17 +96,42 @@ releases jog run [--auto-merge] [--builder agy|codex|aider] [--max-tasks N] [--s
 
 5. **Swarm Preflight:**
    Runs `swarm-preflight --gh-issue <n>`:
-   - `ready` (exit 0) -> fires single-phase drive.
+   - `ready` (exit 0) -> fires the executor (Marathon one-phase drive by default).
    - `already-landed` (exit 4) -> marks `completed` with auto-drop receipt.
    - `not-ready` -> marks `parked`, records error, and prompts operator.
 
-6. **Single-Phase Drive Dispatch:**
-   Scaffolds `relay-system/<date>/gh<n>-jog-drive.md`, claims and releases the task token via `bin/tick`, and invokes `relay-drive.sh --relay-file <file> --agent-cmd <shim> --relay-task <task>` with nested driver lock protection.
+6. **Marathon Executor Dispatch (default; GH-280):**
+   Per-task execution is delegated to Marathon's reviewed one-phase driver: Jog validates the
+   preflight packet's `marathon-invocation@1` contract, invokes the drive, and projects the
+   validated `marathon-drive/result@1` receipt. Attempts, review, gates, branch/commit, and PR
+   identity are Marathon-owned; Jog records a receipt-backed projection, never a guess. Builder
+   and reviewer are separated: `--builder` defaults to the cost-blind lanes (`agy`; `codex`/`aider`
+   selectable) while `--reviewer <agent>` is required, must differ from the builder, and has no
+   silent default. `--executor relay` keeps the legacy single-phase `relay-drive.sh` dispatch as
+   the explicit rollback path during a documented compatibility window; it will be removed in its
+   own dedicated commit one release cycle after the flip — do not build new usage on it.
 
-7. **Landing Boundary & `--auto-merge`:**
+7. **Receipt-Backed Landing & `--auto-merge`:**
+   A row is never marked `completed` on a self-report. `jog land` verifies GitHub truth first —
+   merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
+   gate evidence — then completes the row and delegates issue closure, doc promotion, and
+   dashboard refresh to `wave_reconcile`.
    - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
    - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
-   - **`--auto-merge`:** Automatically merges passing PRs on same-seam tasks into `development` and re-anchors the checkout before advancing.
+   - **`--auto-merge` (verified, GH-300):** Verifies GitHub truth against the receipt BEFORE merging — the PR must still be OPEN on the receipt's base/head/head SHA in this repo with the gate green on that head — and refuses (parking the row) instead of merging blind; on pass, merges into `development` and re-anchors the checkout before advancing.
 
 8. **Teardown Cleanliness:**
    Verifies clean worktree disposal, clean working tree status, and gate receipts between serial items.
+
+## Recovery Verbs
+
+After an interrupted or failed item, pick the verb that matches what actually needs redoing:
+
+- `jog resume <GH-NUM>` — the crash/restart remedy: reconciles the durable Marathon state and
+  re-projects a valid terminal receipt without spending a token (parks instead of silently
+  re-firing when state is missing or contradictory).
+- `jog retry-gate <GH-NUM>` — the "approved relay, red gate" remedy: re-runs ONLY the gate against
+  the same head SHA with no builder turn, for failures fixed outside the build (e.g. operator
+  intake-hygiene fixes).
+- `jog retry-build <GH-NUM>` — the real rebuild: a fresh Marathon attempt on a fresh execution id
+  when the build itself must be redone; all prior Tick history and execution records are preserved.
