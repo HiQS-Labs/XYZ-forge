@@ -10,6 +10,11 @@ Supervises the serial execution of tasks in jog_queue:
 6. Dispatches single-phase turn runner.
 7. Defaults to pausing at landing boundaries for operator confirmation before merging PRs into development (with --auto-merge as opt-in).
 8. Re-anchors same-seam tasks on development and tears down throwaway worktrees cleanly.
+
+GH-280 Phase 5: the DEFAULT per-task executor is marathon (the reviewed one-phase driver —
+items 5-8 above describe the LEGACY relay loop, still reached via `--executor relay` or
+`--simulate` during a documented compatibility window; every such run prints a deprecation
+notice naming the window and the separate-removal fact).
 """
 
 import argparse
@@ -155,13 +160,27 @@ def load_marathon_result(path):
 # Execution state lives under <root>/.tick/jog/<queue-global-id>/ (gitignored by every harness
 # layout, so it can never trip the packet's own --require-clean): state.json is an append-only
 # execution ledger for cold-start recovery, and <exec-id>/ holds that execution's packet and
-# Marathon result receipt. Legacy `relay` remains the default executor until Phase 5.
+# Marathon result receipt.
+#
+# GH-280 Phase 5: `marathon` is the DEFAULT executor. The legacy `relay` machinery stays
+# functional behind `--executor relay` (and `--simulate`) for a documented compatibility
+# window — it is THE rollback path — and its removal lands as its own commit one release
+# cycle after this flip. Every legacy invocation prints a one-line stderr deprecation notice.
 
 JOG_EXECUTION_STATE_SCHEMA = "jog/execution-state@1"
 
 # Marathon's reviewed-phase contract (marathon_drive.py): reviewer ids must start with one of
 # these. Jog mirrors the rule so an invalid reviewer fails before ANY lease mutation.
 _MARATHON_REVIEWER_PREFIXES = ("codex", "gemini", "agy")
+
+# GH-280 Phase 5: one line, stderr, on every legacy-machinery invocation (explicit
+# `--executor relay`, or `--simulate` which stays on the relay machinery). Names the window
+# and the separate-removal fact — removal is NOT part of the flip commit.
+JOG_RELAY_DEPRECATION_NOTICE = (
+    "jog: relay executor is legacy (compatibility window; removal lands as its own commit "
+    "one release cycle after the Phase 5 flip — see "
+    "PROJECT/3-COMPLETED/GH-280-JOG-MARATHON-RECALIBRATION.md)"
+)
 
 
 def harness_home():
@@ -179,8 +198,9 @@ def validate_marathon_executor(args):
     lease mutation, lock acquisition, or dispatch (GH-280 reviewer policy: explicit only)."""
     reviewer = getattr(args, "reviewer", None)
     if not reviewer:
-        return ("--reviewer <agent> is required with --executor marathon — Jog does not "
-                "select a reviewer by default (GH-280: no silent cost-bearing or same-agent route)")
+        return ("--reviewer <agent> is required with --executor marathon (the default "
+                "executor since the Phase 5 flip) — Jog does not select a reviewer by "
+                "default (GH-280: no silent cost-bearing or same-agent route)")
     if reviewer == args.builder:
         return f"--reviewer must differ from --builder (both are '{reviewer}')"
     if not reviewer.startswith(_MARATHON_REVIEWER_PREFIXES):
@@ -667,7 +687,8 @@ def jog_resume(root, gh_num, args=None):
     executions = state.get("executions") or []
     if not executions:
         print(f"jog: GH-{gh_num} has no marathon execution state — run `releases jog run "
-              f"--executor marathon` or `jog retry-build` to dispatch")
+              f"--reviewer <agent>` (marathon is the default executor) or `jog retry-build` "
+              f"to dispatch")
         return 0
 
     latest = executions[-1]
@@ -1467,27 +1488,40 @@ def jog_run_main(args=None):
         parser.add_argument("--auto-merge", action="store_true", help="auto-merge passing PRs")
         parser.add_argument("--builder", default="agy", help="builder turn-taker (agy, codex, aider)")
         parser.add_argument("--reviewer", default=None,
-                            help="reviewer agent — REQUIRED with --executor marathon "
-                                 "(no default is selected; must differ from --builder)")
-        parser.add_argument("--executor", choices=["relay", "marathon"], default="relay",
-                            help="per-task executor (GH-280). 'relay' is the legacy default; "
-                                 "'marathon' delegates to the reviewed one-phase driver via "
-                                 "the structured contracts")
+                            help="reviewer agent — REQUIRED with --executor marathon (the "
+                                 "default executor; no default is selected; must differ from "
+                                 "--builder)")
+        parser.add_argument("--executor", choices=["relay", "marathon"], default="marathon",
+                            help="per-task executor (GH-280 Phase 5): 'marathon' is the default — "
+                                 "the reviewed one-phase driver via the structured contracts, "
+                                 "requires --reviewer; 'relay' is the legacy rollback path kept "
+                                 "for a documented compatibility window")
         parser.add_argument("--max-tasks", type=int, default=None, help="max tasks to process")
         parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
         parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
         args = parser.parse_args()
 
-    executor = getattr(args, "executor", "relay") or "relay"
+    # GH-280 Phase 5: marathon is the default executor. A namespace without an `executor`
+    # attribute (programmatic callers) resolves to the same default as the CLI.
+    executor = getattr(args, "executor", "marathon") or "marathon"
     simulate = getattr(args, "simulate", False)
+    dry_run = getattr(args, "dry_run", False)
 
     # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
-    # invalid configuration must not mutate queue state at all.
-    if executor == "marathon" and not simulate:
+    # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
+    # excluded: both stay on the hermetic/relay machinery and dispatch no Marathon execution,
+    # so the reviewer policy (which governs real dispatches) does not apply to them.
+    if executor == "marathon" and not simulate and not dry_run:
         executor_error = validate_marathon_executor(args)
         if executor_error:
             print(f"jog: {executor_error}", file=sys.stderr)
             sys.exit(2)
+
+    # GH-280 Phase 5: anything still on the relay machinery is legacy — explicit
+    # `--executor relay` (THE documented rollback path) or `--simulate` (which stays on the
+    # relay machinery by design). --dry-run dispatches nothing, so it stays silent.
+    if not dry_run and (executor == "relay" or simulate):
+        print(JOG_RELAY_DEPRECATION_NOTICE, file=sys.stderr)
 
     root = os.path.abspath(getattr(args, "root", None) or os.getcwd())
     db_path = os.path.join(root, "releases.db")
@@ -1593,10 +1627,11 @@ def jog_run_main(args=None):
                     continue
                 doc_path = promoted_path
 
-            # GH-280: the opt-in Marathon executor — Jog leases the row, delegates execution to
-            # the reviewed one-phase driver through the structured contracts, and projects the
-            # receipt's outcome. No Tick seeding, relay rendering, branch choice, gate, or PR
-            # discovery happens here; the legacy relay path below is untouched.
+            # GH-280 Phase 5: the DEFAULT Marathon executor — Jog leases the row, delegates
+            # execution to the reviewed one-phase driver through the structured contracts, and
+            # projects the receipt's outcome. No Tick seeding, relay rendering, branch choice,
+            # gate, or PR discovery happens here; the legacy relay path below is reached only
+            # via --executor relay or --simulate during the compatibility window.
             if executor == "marathon" and not simulate:
                 ledger_gid = jog_resolve_ledger_gid(root, gh_num) or row["global_id"]
                 action, reason = run_marathon_phase(

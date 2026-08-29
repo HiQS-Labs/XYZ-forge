@@ -636,15 +636,73 @@ HRES="$(ledger_latest_result "$HSTATE" 2>/dev/null)"
   && pass "H5 foreign cwd stayed clean (no root-relative lookups — GH-279 #2)" \
   || fail "H5 foreign cwd grew harness output dirs"
 
-# ═══ I. legacy relay default unchanged ════════════════════════════════════════════════════════
+# ═══ I. Phase 5 flip: marathon is the default; relay is legacy (--executor relay / --simulate) ═
+# The default executor is now marathon (GH-280 Phase 5). The relay machinery survives on two
+# explicit spellings — `--executor relay` (THE rollback path) and `--simulate` (which stays on
+# the relay machinery by design) — each printing the one-line deprecation notice naming the
+# compatibility window and the separate-removal fact. Legacy code is NOT removed in the flip.
 cleanup_root_fixture
 python3 "$FR/utils/py/releases_app.py" --root "$FR" jog add 902 >/dev/null 2>&1
 I_OUT="$(jog_run_root --simulate --auto-merge --max-tasks 1 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && has "$I_OUT" "simulated single-phase drive on GH-901" \
-  && pass "I1 default executor (relay) simulate path unchanged" || fail "I1 legacy simulate path drifted: $(printf '%s' "$I_OUT" | head -3)"
+  && pass "I1 --simulate stays on the relay machinery (behavior unchanged)" || fail "I1 simulate path drifted: $(printf '%s' "$I_OUT" | head -3)"
 grep -q completed <<<"$(sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;")" \
   && pass "I1b simulated auto-merge completes the processed row" || fail "I1b row 901 not completed"
 [ ! -d "$FR/.tick/jog" ] && pass "I2 legacy run leaves no marathon execution state" || fail "I2 marathon state created without --executor marathon"
+has "$I_OUT" "relay executor is legacy" && has "$I_OUT" "compatibility window" \
+  && has "$I_OUT" "removal lands as its own commit" \
+  && pass "I3 --simulate prints the deprecation notice (window + separate removal)" \
+  || fail "I3 deprecation notice missing/incomplete: $(printf '%s' "$I_OUT" | head -2)"
+
+# I4: explicit --executor relay — the rollback path still completes the legacy simulate run
+cleanup_root_fixture
+I4_OUT="$(jog_run_root --executor relay --simulate --auto-merge --max-tasks 1 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$I4_OUT" "simulated single-phase drive on GH-901" \
+  && has "$I4_OUT" "relay executor is legacy" \
+  && pass "I4 --executor relay rollback path completes the legacy simulate + notice" \
+  || fail "I4 legacy rollback path drifted: $(printf '%s' "$I4_OUT" | head -3)"
+grep -q completed <<<"$(sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;")" \
+  && pass "I4b relay simulate completes the processed row" || fail "I4b row 901 not completed"
+
+# I5: bare `jog run` (no --executor, no --reviewer) now refuses pre-lease under the G1 policy
+cleanup_root_fixture
+rm -rf "$FR/.tick/jog"
+I5_OUT="$(jog_run_root --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && pass "I5 bare jog run without --reviewer refuses (exit 2)" || fail "I5 exit=$rc: $I5_OUT"
+grep -q "required with --executor marathon" <<<"$I5_OUT" \
+  && pass "I5 refusal names the reviewer policy (marathon default)" || fail "I5 refusal message drifted: $I5_OUT"
+has "$(queue_status "$FR")" "pending||0" && pass "I5 row untouched (pending, attempt_count 0)" || fail "I5 row mutated: $(queue_status "$FR")"
+
+# I6: default run WITH --reviewer dispatches the marathon executor (G4-mirrored assertions)
+use_development
+GID_I="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+I6_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
+  env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-i-lane" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run \
+    --builder codex --reviewer agy 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "I6 default run (no --executor) dispatches marathon, exits 0" || fail "I6 exit=$rc: $I6_OUT"
+has "$(queue_status "$FR")" "parked|awaiting-landing (PR #42" \
+  && pass "I6 row parked awaiting-landing with receipt PR identity" || fail "I6 row: $(queue_status "$FR")"
+ISTATE="$FR/.tick/jog/$GID_I/state.json"
+[ -f "$ISTATE" ] && pass "I6 execution ledger exists under .tick/jog/<gid>" || fail "I6 no ledger at $ISTATE"
+jassert "$ISTATE" 'len(d["executions"])==1 and d["executions"][0]["status"]=="projected-parked" and d["executions"][0]["outcome"]=="approved"' "I6 ledger records one approved, projected execution"
+IRES="$(ledger_latest_result "$ISTATE")"
+jassert "$IRES" 'd["outcome"]=="approved" and d["pr"]["number"]==42 and d["branch_redirect"]==True and d["head_branch"]=="marathon/gh280-i-lane"' "I6 receipt approved, PR 42, redirected lane branch"
+grep -q 'module.exports = 2' "$FR/src/feature.js" \
+  && pass "I6 stub builder landed the artifact through the real chain" || fail "I6 artifact not built"
+! has "$I6_OUT" "relay executor is legacy" \
+  && pass "I6 marathon-default run prints no deprecation notice" || fail "I6 notice leaked onto the marathon path"
+
+# I7: --dry-run unchanged — hermetic plan, no notice, no reviewer requirement, zero mutation
+cleanup_root_fixture
+I7_OUT="$(jog_run_root --dry-run 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && has "$I7_OUT" "would process 1 pending item" \
+  && ! has "$I7_OUT" "relay executor is legacy" \
+  && pass "I7 --dry-run unchanged (plan only, no notice, no reviewer needed)" \
+  || fail "I7 dry-run drifted: $(printf '%s' "$I7_OUT" | head -3)"
+has "$(sqlite3 "$FR/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 901;")" "pending" \
+  && pass "I7b dry-run leaves the row pending (zero mutation)" || fail "I7b row mutated"
 
 # ═══ J. Phase 3: jog resume — reconcile, never fire ═══════════════════════════════════════════
 jog_verb() {  # <verb> <extra-args…>
