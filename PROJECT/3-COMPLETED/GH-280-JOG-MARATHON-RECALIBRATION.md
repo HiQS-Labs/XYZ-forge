@@ -463,3 +463,9 @@ workflow now carries, in order:
    stabilize the surface.
 
 Phase 5 (default flip + legacy relay removal) remains gated behind items 1–4.
+
+Status 2026-08-28 (later): item 1 landed as PR #296 (GH-292, merged `e6f91eb8`, reconciled); item 6's
+first slice landed as PR #297 (GH-290 variation grid, merged `82881f7a`, reconciled). The PR #281
+review's remaining findings B1/B2 (+ test-only B5) are fixed as GH-300 ahead of items 2–5: verified
+pre-merge auto-merge and supervisor-locked retry verbs are prerequisites for trusting any broader
+contract hardening on the same verbs.
