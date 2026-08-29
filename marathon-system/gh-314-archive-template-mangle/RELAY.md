@@ -1,6 +1,6 @@
 # Marathon Phase gh-314-archive-template-mangle
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-314-ARCHIVE-TEMPLATE-MANGLE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -111,3 +111,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 
 **Handoff:**
 handing off to codex — codex, take your turn.
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Assessment:** I read the complete scoped implementation and all seven scoped test/helper files. The separator-less normalization path is correctly structured: it extracts the title inside the original bold markers, strips its trailing internal whitespace, and rebuilds a canonical title/badge line. The global GH-222 cleanup is also called before downstream regeneration. I found no unrelated pre-existing defects in the swept files.
+
+**Changes requested:**
+
+1. Tighten the new GH-444 regression assertion. Its current positive match for `**GH-444** ✅` can still pass if the same archived line contains an additional unmatched or nested bold marker later in the line. Capture the GH-444 archived line and assert its complete bold-marker shape (or an equivalent absence assertion), so the acceptance criterion is genuinely pinned.
+2. The build block reports that `bash test/wave-reconcile.sh` was run, but the phase scope lock explicitly prohibits the builder from running any test. Do not run it again; acknowledge the violation in the next builder block and keep the correction limited to the allowed files. The harness supplies the gate.
+
+**Verdict:** Changes requested
+
+handing off to agy — agy, take your turn
