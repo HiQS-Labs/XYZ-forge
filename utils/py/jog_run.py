@@ -391,13 +391,18 @@ def jog_verify_pr_before_merge(root, receipt, pr_number):
     return [name for name, ok in checks if not ok], pr
 
 
-def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False):
+def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False,
+                                 execution_id=None, result_path=None):
     """Project a validated Marathon result receipt into the queue via perform_write.
 
     Marathon owns the outcome; this only records it. Returns the queue action taken
     ("completed", "parked", "failed") plus a human reason. Never guesses a branch or PR:
     landing identity comes from the receipt, and a green phase without a PR is parked with
     the receipt's branch fields — it is never a global failure.
+
+    GH-291 Scope 4: refused/escalated/parked reasons carry a trace segment naming the
+    execution_id and result_path when the caller provides them, so a failed row points at
+    its receipt without a ledger inspection.
     """
     outcome = receipt.get("outcome")
     reason = receipt.get("reason")
@@ -427,6 +432,8 @@ def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False):
         return "parked", "awaiting-landing (no PR yet — open one from the receipt's branches: " + \
             "; ".join(bits) + ")"
     label = f"marathon {outcome}: {reason} (exit {receipt.get('exit_code')})"
+    if execution_id or result_path:
+        label += f" [{execution_id or 'no-execution-id'}; result: {result_path or 'no-result-path'}]"
     return ("failed", label) if outcome != "parked" else ("parked", label)
 
 
@@ -454,7 +461,9 @@ def jog_reconcile_cold_start(root, gh_nums):
             except ContractError:
                 receipt = None
         if receipt is not None:
-            action, reason = jog_project_marathon_outcome(root, gh_num, receipt)
+            action, reason = jog_project_marathon_outcome(
+                root, gh_num, receipt,
+                execution_id=latest.get("execution_id"), result_path=latest.get("result_path"))
             latest["status"] = f"projected-{action}"
             latest["projected_reason"] = reason
             jog_save_state(root, gid, state)
@@ -590,7 +599,9 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     record["reason"] = receipt["reason"]
     jog_save_state(root, gid, state)
 
-    action, reason = jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=auto_merge)
+    action, reason = jog_project_marathon_outcome(
+        root, gh_num, receipt, auto_merge=auto_merge,
+        execution_id=exec_id, result_path=invocation["result_path"])
     record["status"] = f"projected-{action}"
     record["projected_reason"] = reason
     jog_save_state(root, gid, state)
@@ -651,7 +662,9 @@ def jog_resume(root, gh_num, args=None):
     latest = executions[-1]
     record, receipt = _jog_latest_receipt(root, gid)
     if record is not None and record.get("execution_id") == latest.get("execution_id"):
-        action, reason = jog_project_marathon_outcome(root, gh_num, receipt)
+        action, reason = jog_project_marathon_outcome(
+            root, gh_num, receipt,
+            execution_id=latest.get("execution_id"), result_path=latest.get("result_path"))
         latest["status"] = f"projected-{action}"
         latest["projected_reason"] = reason
         jog_save_state(root, gid, state)
@@ -768,8 +781,11 @@ def _jog_retry_gate_locked(root, gh_num, args):
                          "result_path": result_path})
     jog_save_state(root, gid, state)
 
-    action, reason = jog_project_marathon_outcome(root, gh_num, new_receipt,
-                                                  auto_merge=getattr(args, "auto_merge", False))
+    action, reason = jog_project_marathon_outcome(
+        root, gh_num, new_receipt,
+        auto_merge=getattr(args, "auto_merge", False),
+        execution_id=f"{record['execution_id']}-gateretry{attempt_no}",
+        result_path=_ledger_rel_path(root, gid, result_path))
     jog_set_status(root, gh_num, action, failure_reason=reason)
     print(f"jog: gate retry result: {new_receipt.get('outcome')} → queue {action} — {reason}")
     return 0 if new_receipt.get("outcome") == "approved" else 1

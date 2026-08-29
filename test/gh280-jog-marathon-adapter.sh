@@ -720,6 +720,9 @@ case "$QS" in
   failed\|marathon\ escalated:\ pre-advance-failed*) pass "K1 red-gate execution fails the row (relay approved, gate red)" ;;
   *) fail "K1 unexpected row state: $QS" ;;
 esac
+has "$QS" "gh901-exec1" && has "$QS" "marathon-result.json" \
+  && pass "K1 failed row's reason carries the trace segment (execution id + result path — Scope 4)" \
+  || fail "K1 trace segment missing from row reason: $QS"
 K1_RES="$(ledger_latest_result "$FR/.tick/jog/$GID/state.json")"
 K1_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K1_RES")"
 K1_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FR"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
@@ -1079,6 +1082,58 @@ N8_OUT="$(jog_verb retry-gate 901 --builder codex --reviewer agy 2>&1)"; rc=$?
   && pass "N8 retry-gate proceeds past a free lock (exit 2, not lock refusal)" || fail "N8 rc=$rc: $N8_OUT"
 [ ! -e "$LOCK_DIR" ] \
   && pass "N8 retry-gate released the supervisor lock on exit" || fail "N8 lock dir left behind"
+
+# ═══ O. GH-291 Scope 4: refused/escalated projections name execution_id + result_path ══════
+# Hermetic seam check with a hand-written refused receipt: the trace segment must point at
+# the receipt without a ledger inspection.
+python3 - "$FR" "$N_RECEIPT" <<'PY'
+import json, sys
+receipt = json.load(open(sys.argv[2]))
+receipt.update({"outcome": "refused", "reason": "gate-missing", "exit_code": 2})
+json.dump(receipt, open(sys.argv[2], "w"), indent=1)
+PY
+O1_OUT="$( cd "$FR" && python3 - "$FR" "$N_RECEIPT" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1] + "/utils/py")
+from jog_run import jog_project_marathon_outcome, load_marathon_result
+action, reason = jog_project_marathon_outcome(
+    sys.argv[1], 901, load_marathon_result(sys.argv[2]),
+    execution_id="gh901-exec9", result_path=".tick/jog/x/gh901-exec9/marathon-result.json")
+print(f"{action}|{reason}")
+PY
+)"
+has "$O1_OUT" "failed|marathon refused: gate-missing (exit 2) [gh901-exec9" \
+  && has "$O1_OUT" "result: .tick/jog/x/gh901-exec9/marathon-result.json]" \
+  && pass "O1 refused projection carries the trace segment (execution id + result path)" \
+  || fail "O1 trace segment missing: $O1_OUT"
+O2_OUT="$( cd "$FR" && python3 - "$FR" "$N_RECEIPT" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1] + "/utils/py")
+from jog_run import jog_project_marathon_outcome, load_marathon_result
+action, reason = jog_project_marathon_outcome(sys.argv[1], 901, load_marathon_result(sys.argv[2]))
+print(f"{action}|{reason}")
+PY
+)"
+has "$O2_OUT" "marathon refused: gate-missing (exit 2)" && ! has "$O2_OUT" "no-execution-id" \
+  && pass "O2 projection without trace args stays unannotated (back-compat)" \
+  || fail "O2 unexpected unannotated form: $O2_OUT"
+
+# ═══ P. GH-291 Scope 3: boundary-regression guard — the supervisor never writes ═════════════
+# executor-owned truth. Static tripwire over jog_run.py (the seam module): Marathon owns PR
+# creation, Tick attempts/tokens, and lane-branch identity; Jog only reads, verifies, and
+# merges post-verification (gh pr merge/view/list are read-or-verified actions, allowed).
+# Known limit (GH-195 lesson): a static grep is a tripwire against accidental
+# reintroduction, not a proof — behavioral coverage lives in sections C-M above.
+JOG_SRC="$(cat "$FR/utils/py/jog_run.py")"
+! has "$JOG_SRC" "gh pr create" \
+  && pass "P1 jog never creates PRs (Marathon owns PR identity)" \
+  || fail "P1 jog_run.py creates PRs directly"
+! has "$JOG_SRC" "bin/tick" && ! has "$JOG_SRC" '".tick/attempts' \
+  && pass "P2 jog never invokes the tick binary or writes executor attempt state" \
+  || fail "P2 jog_run.py touches executor-owned Tick state"
+! has "$JOG_SRC" "checkout -b" \
+  && pass "P3 jog never cuts lane branches (branch identity is Marathon's)" \
+  || fail "P3 jog_run.py cuts branches directly"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
