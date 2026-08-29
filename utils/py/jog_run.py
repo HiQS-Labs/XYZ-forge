@@ -454,12 +454,16 @@ def jog_reconcile_cold_start(root, gh_nums):
         if latest.get("status") != "dispatched":
             continue
         receipt = None
+        load_error = None
         result_path = _ledger_abs_path(root, gid, latest.get("result_path"))
         if result_path and os.path.isfile(result_path):
             try:
                 receipt = load_marathon_result(result_path)
-            except ContractError:
+            except ContractError as exc:
+                # GH-291 Scope 2: a future-schema (or otherwise invalid) receipt must be
+                # distinguishable from a missing one — version skew parks with its cause named.
                 receipt = None
+                load_error = str(exc)
         if receipt is not None:
             action, reason = jog_project_marathon_outcome(
                 root, gh_num, receipt,
@@ -475,9 +479,12 @@ def jog_reconcile_cold_start(root, gh_nums):
             jog_save_state(root, gid, state)
             jog_set_status(root, gh_num, "parked",
                            failure_reason="cold-start: dispatched Marathon execution has no valid "
-                                          "result receipt — inspect manually before any refire")
+                                          "result receipt"
+                                          + (f" (load error: {load_error})" if load_error else "")
+                                          + " — inspect manually before any refire")
             print(f"jog: cold start GH-{gh_num}: dispatched execution {latest.get('execution_id')} "
-                  f"has no valid result — parked; never silently refire")
+                  f"has no valid result{f' ({load_error})' if load_error else ''} — parked; "
+                  f"never silently refire")
 
 
 def _marathon_argv_from_invocation(invocation, builder, reviewer):
@@ -672,13 +679,24 @@ def jog_resume(root, gh_num, args=None):
         print(f"jog: resume GH-{gh_num}: terminal Marathon result re-projected ({action}) — {reason}")
         return 0
     if latest.get("status") == "dispatched":
+        # GH-291 Scope 2: distinguish a future-schema/invalid receipt from a missing one —
+        # version skew must park with its cause named, not read as "no result".
+        load_error = None
+        _p = _ledger_abs_path(root, gid, latest.get("result_path"))
+        if _p and os.path.isfile(_p):
+            try:
+                load_marathon_result(_p)
+            except ContractError as exc:
+                load_error = str(exc)
         latest["status"] = "cold-start-paused"
         jog_save_state(root, gid, state)
         jog_set_status(root, gh_num, "parked",
                        failure_reason="resume: dispatched Marathon execution has no valid result "
-                                      "receipt — inspect, then `jog retry-build` if a rebuild is wanted")
+                                      "receipt"
+                                      + (f" (load error: {load_error})" if load_error else "")
+                                      + " — inspect, then `jog retry-build` if a rebuild is wanted")
         print(f"jog: resume GH-{gh_num}: execution {latest.get('execution_id')} dispatched with no "
-              f"valid result — parked; no token spent")
+              f"valid result{f' ({load_error})' if load_error else ''} — parked; no token spent")
         return 1
     print(f"jog: resume GH-{gh_num}: latest execution {latest.get('execution_id')} is "
           f"'{latest.get('status')}' — nothing to reconcile; use jog retry-gate / retry-build / land")

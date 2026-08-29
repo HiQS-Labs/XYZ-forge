@@ -143,7 +143,8 @@ boundary-regression guard (#291 Scope 3, marathon-executor path; the legacy
   (Contract B).
 - Loaders/validators: `utils/py/jog_run.py` (`load_marathon_invocation`,
   `load_marathon_result`, `jog_verify_pr_before_merge`).
-- Pinning suites: `test/gh280-jog-marathon-adapter.sh`, `test/gh290-ate-variation-grid.sh`
-  (both registered in `validate.sh`).
+- Pinning suites: `test/gh280-jog-marathon-adapter.sh`, `test/gh290-ate-variation-grid.sh`,
+  and `test/gh291-contract-goldens.sh` with its committed goldens under
+  `test/fixtures/contracts/` (all registered in `validate.sh`).
 - History: GH-280 (introduction), GH-292 (F1–F3 durability fixes), GH-300 (verified
   pre-merge auto-merge, locked retry verbs), #291 (this reference + policy, Scopes 1+5).

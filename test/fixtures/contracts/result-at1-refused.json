@@ -1,0 +1,45 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh901-exec1",
+  "generated_at": "2026-08-29T02:02:58Z",
+  "outcome": "refused",
+  "reason": "gate-missing",
+  "exit_code": 2,
+  "approval_preserved": false,
+  "issue": "901",
+  "phase": "p",
+  "lane": "MARATHON-GH-901",
+  "token": "GH-901-2026-08-29",
+  "attempt": {
+    "count": null,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "<WORK>/rrepo",
+    "origin_url": null
+  },
+  "base_branch": null,
+  "head_branch": "development",
+  "head_sha": "5fc89608ee24ce0e1ddd3da91c7892c57e1dfedb",
+  "branch_redirect": false,
+  "gate": {
+    "cmd": null,
+    "result": "not-run",
+    "exit": null,
+    "receipt_path": null
+  },
+  "acceptance": null,
+  "pr": {
+    "number": 42,
+    "url": "https://example.invalid/x/pr/42",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": null,
+  "timestamps": {
+    "started_at": "2026-08-29T00:00:00Z",
+    "finished_at": "2026-08-29T02:02:58Z"
+  }
+}
