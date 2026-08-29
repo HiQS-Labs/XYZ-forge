@@ -31,6 +31,7 @@ Read `PROJECT/PDDA.md` when the task touches project docs, `ROADMAP.md`, or `CHA
 Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibility grades, and CLI flags.
 
 Read `TESTS-RESULTS/README.md` for committed test artifacts, telemetry receipts, and benchmark logs.
+Read `SOP.md` → "Arc planning" before starting a large refactor — scheduling the follow-up arcs (review/dogfood/conformance lanes) at plan time is what keeps the arc linear.
 
 ## Runtime default
 
@@ -100,15 +101,6 @@ If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHA
 
 Most edits are small and reversible. Do not manufacture ceremony for a rename, typo fix, or other
 local change.
-
-### 9. Pre-budget the follow-up arcs of an architectural refactor
-
-Implement → review findings → dogfood findings → conformance is not a surprise sequence — it is
-the shape every large refactor follows. At plan time, open the budgeted follow-up lanes
-(review-findings, dogfood-findings, conformance) as issues instead of discovering them
-mid-flight; batch same-seam scopes into fewer PRs and batch post-merge reconciles. The
-maintainer-detail version (PR batching, the delegation shape, the cross-repo `#N` rule) lives
-in `SOP.md` → "Arc planning" (GH-280/#291 post-mortem, 2026-08-29).
 
 ## Repo-specific rails
 
