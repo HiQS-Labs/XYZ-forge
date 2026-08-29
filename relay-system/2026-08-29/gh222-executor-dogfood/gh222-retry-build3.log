@@ -1,0 +1,16 @@
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • LEADERBOARD.html
+marathon-drive:   • RELEASES-PREVIEW.html
+marathon-drive:   • harnesses.db
+marathon-drive:   • harnesses.sql
+marathon-drive:   • releases.db
+marathon-drive:   • releases.sql
+marathon-drive:   • test/_setup.sh
+marathon-drive: relay file committed: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/marathon-system/gh-222-releases-tracking-repoint/RELAY.md
+lane-attempt-cap: lane gh-222-releases-tracking-repoint PARKED after 2 attempt(s) (cap 2) — no relay token seeded.
+  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/attempts/gh-222-releases-tracking-repoint
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec4/preflight/marathon-result.json (outcome: parked, exit 8)
+jog: marathon execution gh222-exec4 for GH-222 (packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec4/preflight)
+jog: supervisor-state commit skipped — on branch 'marathon/gh-222-releases-tracking-repoint-2026-08-28' (not the integration branch 'development'); uncommitted ledger writes on a lane are the containment-revert tradeoff (GH-292 F1)
+jog: dispatching marathon-drive (/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/relay-automation/marathon-drive.sh)
+jog: retry-build GH-222 → parked — marathon parked: lane parked at the attempt cap (exit 8) [gh222-exec4; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec4/preflight/marathon-result.json]

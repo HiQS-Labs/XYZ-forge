@@ -1,0 +1,51 @@
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M15SX2C7QYQ5RYWTF0NSQ1SD",
+  "executions": [
+    {
+      "execution_id": "gh222-exec1",
+      "mode": "run",
+      "started_at": "2026-08-29T03:44:43Z",
+      "status": "completed-preflight-stale",
+      "packet_dir": "gh222-exec1/preflight",
+      "result_path": null
+    },
+    {
+      "execution_id": "gh222-exec2",
+      "mode": "run",
+      "started_at": "2026-08-29T03:45:38Z",
+      "status": "projected-failed",
+      "packet_dir": "gh222-exec2/preflight",
+      "result_path": "gh222-exec2/preflight/marathon-result.json",
+      "drive_exit": 5,
+      "outcome": "escalated",
+      "reason": "pre-advance-failed",
+      "projected_reason": "marathon escalated: pre-advance-failed (exit 5) [gh222-exec2; result: gh222-exec2/preflight/marathon-result.json]"
+    },
+    {
+      "execution_id": "gh222-exec3",
+      "mode": "retry-build",
+      "started_at": "2026-08-29T04:31:17Z",
+      "status": "projected-failed",
+      "packet_dir": "gh222-exec3/preflight",
+      "result_path": "gh222-exec3/preflight/marathon-result.json",
+      "drive_exit": 7,
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "projected_reason": "marathon escalated: timeout-no-artifact (exit 7) [gh222-exec3; result: gh222-exec3/preflight/marathon-result.json]"
+    },
+    {
+      "execution_id": "gh222-exec4",
+      "mode": "retry-build",
+      "started_at": "2026-08-29T04:48:39Z",
+      "status": "projected-parked",
+      "packet_dir": "gh222-exec4/preflight",
+      "result_path": "gh222-exec4/preflight/marathon-result.json",
+      "drive_exit": 8,
+      "outcome": "parked",
+      "reason": "lane parked at the attempt cap",
+      "projected_reason": "marathon parked: lane parked at the attempt cap (exit 8) [gh222-exec4; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222/.tick/jog/jog-01M15SX2C7QYQ5RYWTF0NSQ1SD/gh222-exec4/preflight/marathon-result.json]"
+    }
+  ],
+  "gh_number": 222
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "swarm-preflight/marathon-invocation@1",
+  "generated_at": "2026-08-29T04:33:25Z",
+  "harness_root": "/private/tmp/gh222-vendored.bDS1FB/consumer",
+  "harness_home": "/private/tmp/gh222-vendored.bDS1FB/consumer/.xyz",
+  "target_root": "/private/tmp/gh222-vendored.bDS1FB/consumer",
+  "drive_command": "/private/tmp/gh222-vendored.bDS1FB/consumer/.xyz/relay-automation/marathon-drive.sh",
+  "argv": [
+    "/private/tmp/gh222-vendored.bDS1FB/consumer/.xyz/relay-automation/marathon-drive.sh",
+    "--phase-brief",
+    "/tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight/packet.md",
+    "--reviewer",
+    "agy",
+    "--builder",
+    "codex",
+    "--artifact",
+    "src/feature.js",
+    "--pre-advance-cmd",
+    "bash test/fixture-gate.sh",
+    "--result-file",
+    "/tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight/marathon-result.json",
+    "--require-clean"
+  ],
+  "env": {
+    "XYZ_HARNESS_CONTEXT": "swarm",
+    "XYZ_SESSION_ID": "gh-901-fixture-lane",
+    "RELAY_WORKTREE_ISOLATION": "1"
+  },
+  "issue": "901",
+  "phase": "gh-901-fixture-lane",
+  "lane": "gh-901-fixture-lane",
+  "artifacts": [
+    "src/feature.js"
+  ],
+  "gate": "bash test/fixture-gate.sh",
+  "builder": "codex",
+  "reviewer": "agy",
+  "base_ref": "main",
+  "packet_dir": "/tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight",
+  "packet_path": "/tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight/packet.md",
+  "result_path": "/tmp/gh222-vendored.bDS1FB/consumer/.tick/jog/jog-01M15WPECB49RHAP9ES93WVV8W/gh901-exec1/preflight/marathon-result.json"
+}

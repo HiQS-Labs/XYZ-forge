@@ -1,0 +1,48 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh222-exec2",
+  "generated_at": "2026-08-29T04:09:24Z",
+  "outcome": "escalated",
+  "reason": "pre-advance-failed",
+  "exit_code": 5,
+  "approval_preserved": false,
+  "issue": "222",
+  "phase": "gh-222-releases-tracking-repoint",
+  "lane": "gh-222-releases-tracking-repoint",
+  "token": "MARATHON-GH-222-RELEASES-TRACKING-REPOINT-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh222",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-222-releases-tracking-repoint-2026-08-28",
+  "head_sha": "70efcfd75aefdd822797c8ff1c20eb8c13c3405a",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash validate.sh",
+    "result": "red",
+    "exit": 1,
+    "receipt_path": null
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-08-29T03:45:40Z",
+    "finished_at": "2026-08-29T04:09:24Z"
+  }
+}
