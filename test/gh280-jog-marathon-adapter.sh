@@ -918,7 +918,12 @@ use_development
 GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
 # Park a roadmap row so promotion genuinely repoints it (and the dashboard drifts);
 # commit the in-sync dashboard BEFORE the run so post-promotion drift is falsifiable (F3)
-python3 "$FR/utils/py/releases_app.py" roadmap add --issue-num 901 \
+# --root is REQUIRED: without it resolve_root() lands on the REAL clone running the gate
+# and the fixture row escapes into the live releases.db (GH-195 class, observed live
+# 2026-08-29: a phantom GH-901 row parked at 04:09:08Z failed roadmap-dashboard.sh mid-gate
+# and — worse — neutered M1 below, because the fixture never held the row and the promotion's
+# repoint silently no-such-row'd, leaving the F3 assertion vacuously green).
+python3 "$FR/utils/py/releases_app.py" --root "$FR" roadmap add --issue-num 901 \
   --issue-url "https://github.com/example/example/issues/901" \
   --title "GH-901 fixture lane" --created 2026-08-28 \
   --doc-path "PROJECT/1-INBOX/$CAPTURE_DOC_NAME" >/dev/null 2>&1

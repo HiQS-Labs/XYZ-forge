@@ -587,7 +587,11 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
 
     # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
     # containment pass (which restores tracked modifications to HEAD) has nothing of the
-    # supervisor's to revert. GH-292 F3: the dashboard was regenerated after promotion.
+    # supervisor's to revert. GH-292 F3: the dashboard was regenerated after promotion —
+    # the call was previously dead code (defined, never invoked), observed live 2026-08-29
+    # when the supervisor commit carried a stale dashboard and the lane's gate failed
+    # roadmap-dashboard.sh drift; regenerate BEFORE the commit so the fresh one rides it.
+    jog_regenerate_dashboard(root)
     jog_commit_supervisor_state(root, gh_num, exec_id)
 
     print(f"jog: dispatching marathon-drive ({invocation['drive_command']})")
