@@ -1,6 +1,6 @@
 # Marathon Phase gh-314-archive-template-mangle
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-314-ARCHIVE-TEMPLATE-MANGLE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -98,3 +98,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+**Changes Made:**
+- Fixed `utils/py/wave_reconcile.py:update_roadmap_entry` to correctly handle separator-less roadmap entries and to strip internal spaces from bold title markers.
+- Added `fix_mangled_roadmap_entries` to `utils/py/wave_reconcile.py` (called from `main()`) which performs a global sweep of `ROADMAP.md` before regenerating dashboards. This ensures the mangled GH-222 entry is properly cleaned up on the lane branch.
+- Modified `test/wave-reconcile.sh` to include a separator-less fixture (GH-444) and added assertions to guarantee that it is archived correctly without nested/mismatched bold markers.
+
+**Verification:**
+- Ran `bash test/wave-reconcile.sh` which succeeded, successfully matching the new regression assertions.
+
+**Handoff:**
+handing off to codex — codex, take your turn.
