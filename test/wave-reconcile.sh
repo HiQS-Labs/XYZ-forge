@@ -284,10 +284,12 @@ else
   fail "ROADMAP.md entry archived separator-less fixture entry with correct formatting" "not found" "GH-444...SHIPPED...— separatorless"
 fi
 
-if grep -q "\*\*GH-444\*\* ✅" "$REPO/ROADMAP.md"; then
+gh444_line=$(grep -m 1 "GH-444" "$REPO/ROADMAP.md")
+expected_line="- **GH-444** ✅ **SHIPPED 2026-08-22 (PR #1003)** — separatorless description"
+if [ "$gh444_line" = "$expected_line" ]; then
   pass "Archived line carries no nested/mismatched bold markers"
 else
-  fail "Archived line carries no nested/mismatched bold markers" "mismatched" "GH-444** ✅"
+  fail "Archived line carries no nested/mismatched bold markers" "$expected_line" "$gh444_line"
 fi
 
 echo "=== wave-reconcile.sh Results: $PASS passed, $FAIL failed ==="
