@@ -1700,6 +1700,45 @@ def issue_ref_for_token(conn, token, allow_mig=False):
     return conn.execute("SELECT * FROM issue_refs WHERE global_id = ?", (gid,)).fetchone()
 
 
+def _github_slug_from_origin(root):
+    """Best-effort '<org>/<repo>' from a github.com origin remote; None when unresolved."""
+    try:
+        out = subprocess.check_output(["git", "-C", root, "remote", "get-url", "origin"],
+                                      stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return None
+    m = re.search(r"github\.com[/:]([\w.\-]+/[\w.\-]+?)(?:\.git)?$", out)
+    return m.group(1) if m else None
+
+
+def tracking_token_to_url(conn, root, token):
+    """GH-222: canonicalize `releases update --tracking-issue <N|URL>` to a real issue URL.
+    A bare issue number expands against the tracked repo slug (when org/repo shaped) or the
+    github.com origin remote; a full URL passes the shared shape check. Placeholders are
+    refused: a re-point supersedes a real issue with a real issue (the TMP-/MIG- lifecycle
+    belongs to `add` and `reconcile --map`). GitHub issue state is never consulted — the
+    legitimate case is re-pointing to an already-closed superseding umbrella."""
+    token = (token or "").strip()
+    if re.fullmatch(r"[0-9]+", token):
+        row = conn.execute("SELECT slug FROM repos ORDER BY id LIMIT 1").fetchone()
+        slug = row["slug"] if row else ""
+        if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", slug):
+            slug = _github_slug_from_origin(root) or ""
+        if not slug:
+            refuse("tracking-issue-slug",
+                   "cannot expand bare issue number %r: the repo slug is not org/repo shaped "
+                   "and no github.com origin remote resolves; pass the full "
+                   "https://github.com/<org>/<repo>/issues/<n> URL" % token)
+        return "https://github.com/%s/issues/%s" % (slug, token)
+    kind, value = check_tracking_token(token)
+    if kind != "url":
+        refuse("tracking-repoint-shape",
+               "re-pointing to placeholder %r is refused: a re-point supersedes a real issue "
+               "with a real issue (the TMP-/MIG- lifecycle belongs to `add` and "
+               "`reconcile --map`)" % value)
+    return value
+
+
 def validate_release_fields(conn, mode, *, version=None, status=None, target_date=None,
                             shipped_date=None, description=None, exit_criterion=None,
                             editing_gid=None):
@@ -1975,10 +2014,11 @@ def cmd_update(args):
     try:
         row = find_release(conn, args.gid)
         mode = enforcement_mode(conn)
+        # GH-222: `--tracking-issue <N|URL>` re-points the tracking ref (validated pre-write,
+        # applied inside the perform_write transaction so the dump/receipt chain stays atomic).
+        new_tracking_url = None
         if args.tracking_issue is not None:
-            refuse("tracking-ref-immutable",
-                   "a release's tracking reference keeps its identity; fill the real URL with "
-                   "`releases reconcile --map` (the TMP-/MIG- lifecycle), never by replacing it")
+            new_tracking_url = tracking_token_to_url(conn, root, args.tracking_issue)
         eff_version = args.version if args.version is not None else row["version"]
         validate_release_fields(conn, mode, version=eff_version,
                                 status=args.status, target_date=args.target_date,
@@ -1986,10 +2026,14 @@ def cmd_update(args):
                                 exit_criterion=args.exit_criterion, editing_gid=args.gid)
 
         def mutate(conn):
+            tracking_ref_id = row["tracking_ref_id"]
+            if new_tracking_url is not None:
+                ref = issue_ref_for_token(conn, new_tracking_url)
+                tracking_ref_id = ref["id"]
             conn.execute("""UPDATE releases SET version=?, codename=?, status=?, target_date=?,
-                         shipped_date=?, description=?, exit_criterion=?, gh_release_url=?,
-                         milestone=?, front_door_reviewed=?, shakedown_reviewed=?, license_file=?
-                         WHERE global_id=?""",
+                         shipped_date=?, description=?, exit_criterion=?, tracking_ref_id=?,
+                         gh_release_url=?, milestone=?, front_door_reviewed=?, shakedown_reviewed=?,
+                         license_file=? WHERE global_id=?""",
                          (eff_version,
                           args.codename if args.codename is not None else row["codename"],
                           args.status if args.status is not None else row["status"],
@@ -1998,6 +2042,7 @@ def cmd_update(args):
                           args.description if args.description is not None else row["description"],
                           args.exit_criterion if args.exit_criterion is not None
                           else row["exit_criterion"],
+                          tracking_ref_id,
                           args.gh_release_url if args.gh_release_url is not None
                           else row["gh_release_url"],
                           args.milestone if args.milestone is not None else row["milestone"],
@@ -2021,6 +2066,9 @@ def cmd_update(args):
                 count = _capture_baseline(conn, row["id"], "observed")
                 if count:
                     print("baseline for %s captured at %d (observed)" % (args.gid, count))
+            if new_tracking_url is not None:
+                print("re-pointed tracking issue -> %s (old ref row kept its identity)"
+                      % new_tracking_url)
             print("updated release %s" % args.gid)
 
         perform_write(root, conn, "update", args.gid, mutate)
@@ -4484,7 +4532,10 @@ def build_parser():
         sp.add_argument(flag)
     for flag in ("--front-door", "--shakedown", "--license"):
         sp.add_argument(flag, choices=["Yes", "No"])
-    sp.add_argument("--tracking-issue", help=argparse.SUPPRESS)
+    sp.add_argument("--tracking-issue", metavar="N|URL",
+                    help="GH-222: re-point the tracking issue (bare number expands against the "
+                         "org/repo slug or the github origin remote; the new URL is stored "
+                         "canonically like `add`)")
 
     sp = sub.add_parser("migrate",
                         help="upgrade a LIVE ledger to the registry's schema version "
