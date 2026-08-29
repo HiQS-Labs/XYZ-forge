@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-08-28
+
+### Changed
+- **GH-280 Phase 5: `releases jog run` now defaults to the marathon executor; the relay machinery is legacy behind a documented compatibility window.** The flip changes no legacy code — `--executor relay` remains fully functional as THE rollback path, `--simulate` stays on the relay machinery by design, and every legacy invocation prints a one-line stderr deprecation notice naming the window and the fact that removal lands as its own commit one release cycle after the flip (see `PROJECT/3-COMPLETED/GH-280-JOG-MARATHON-RECALIBRATION.md`). The marathon executor's reviewer policy (G1) now governs the default path: bare `jog run` without `--reviewer` refuses pre-lease (exit 2, no queue mutation) with the named error; `--dry-run` and `--simulate` are exempt from the reviewer requirement (they dispatch nothing). Help text for `jog run` states the default, the reviewer requirement, and the relay rollback window; root and vendored `.xyz` installs flip together (same file). The bet: Phase-4 root dogfood evidence (PRs #283/#284 through the reviewed chain, cold-start + replay exercised) is sufficient to make reviewed execution the default, with `--executor relay` as the one-command rollback and legacy removal deliberately NOT in this change — it lands separately after the window per the plan. Blast radius: every `releases jog run` consumer that omitted `--executor` and expected the relay loop — exactly the drift the flip exists to end. Reversibility: Easy (revert one commit, or select `--executor relay`). Tests: `test/gh280-jog-marathon-adapter.sh` section I extended (I1-I7b: simulate stays relay + notice, explicit relay rollback + notice, bare-run refusal pre-lease, default dispatch mirrors G4, dry-run unchanged); `test/jog-queue.sh` passes unchanged (34/0) — its simulate/dry-run sections needed zero edits.
+
 ## [Unreleased] - 2026-08-27
 
 ### Fixed
