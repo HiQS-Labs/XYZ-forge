@@ -58,6 +58,7 @@ cat << 'EOF' > "$REPO/ROADMAP.md"
 
 ### Completed
 - **GH-888 · Old Feature** ✅ **SHIPPED 2026-08-20 (PR #888)** — old summary.
+- **GH-222 ** ✅ **SHIPPED 2026-08-21 (PR #222)** — mangled entry.
 EOF
 
 # Create active docs
@@ -290,6 +291,14 @@ if [ "$gh444_line" = "$expected_line" ]; then
   pass "Archived line carries no nested/mismatched bold markers"
 else
   fail "Archived line carries no nested/mismatched bold markers" "$expected_line" "$gh444_line"
+fi
+
+gh222_line=$(grep -m 1 "GH-222" "$REPO/ROADMAP.md")
+expected_gh222_line="- **GH-222** ✅ **SHIPPED 2026-08-21 (PR #222)** — mangled entry."
+if [ "$gh222_line" = "$expected_gh222_line" ]; then
+  pass "Mangled GH-222 entry is fixed and canonicalized"
+else
+  fail "Mangled GH-222 entry is fixed and canonicalized" "$expected_gh222_line" "$gh222_line"
 fi
 
 echo "=== wave-reconcile.sh Results: $PASS passed, $FAIL failed ==="

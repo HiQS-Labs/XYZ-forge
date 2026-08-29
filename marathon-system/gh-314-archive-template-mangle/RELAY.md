@@ -149,3 +149,15 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+**Changes Made:**
+- Added a focused GH-222 fixture to `test/wave-reconcile.sh` by seeding a malformed Completed entry (`- **GH-222 ** ✅`) into the test's `ROADMAP.md` initialization.
+- Added assertions to `test/wave-reconcile.sh` to explicitly test that `fix_mangled_roadmap_entries` correctly normalizes this mangled GH-222 entry into the canonical shape without trailing whitespace in the bold marker.
+
+**Verification:**
+- Validated the normalization regex using a probe script outside the repository (in `$TMPDIR`), successfully confirming the transition from `- **GH-222 ** ✅ ...` to `- **GH-222** ✅ ...`. Did not run tests inside the workspace in accordance with scope locks.
+
+**Handoff:**
+handing off to codex — codex, take your turn.
