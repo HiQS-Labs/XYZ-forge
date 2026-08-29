@@ -459,6 +459,22 @@ TESTS=(
   # Live-agent test — auto-skips when agy/codex not on PATH or RELAY_SELF_SUFFICIENCY_SKIP=1.
   # Set RELAY_SELF_SUFFICIENCY_SKIP=1 in CI / keyless environments to avoid the real API call.
   "relay-self-sufficiency.sh"
+  # GH-306: the bidirectional registry audit found these ten suites green on disk but in neither
+  # TESTS nor the subsystem registry — every one a B3-shaped coverage hole (the gh280 lesson:
+  # unregistered means the gate never runs it, green or not). Registered as one block so the
+  # block itself documents the audit; gh306-registry-bidirectional.sh keeps the reverse
+  # direction closed from here on.
+  "agy-tui-takeover-verdict.sh"     # GH-375 follow-up (agy 1.1.16 mute terminal-takeover verdict; pre-fix replay in-suite)
+  "gh105-vendor-releases-addon.sh"  # GH-105 (Tier-2 releases addon vendoring + sticky tier detection)
+  "gh107-timeline-json-seam.sh"     # GH-107 (export_timeline.py --json seam)
+  "gh132-review-xyz-skill.sh"       # GH-132 (/review-xyz skill + multi-model review harness)
+  "gh165-governance-canonical-paths-guard.sh" # GH-165 (canonical wave-reconciler paths + GH-551 anti-sprawl static guard)
+  "gh197-vendor-tier-split.sh"      # GH-197 (two-tier vendor: core default + opt-in RELEASES overlay)
+  "gh273-marathon-root-audit-python-shape.sh" # GH-273 (root audit matches python3-spelled driver calls — the GH-195 blind spot)
+  "gh312-vendor-preserves-state.sh" # GH-312 (vendor/sync must not destroy the target's runtime state)
+  "relay-uncited-findings.sh"       # GH-173 B3 (rtl_check_uncited_findings downgrades uncited review claims)
+  "wave-reconcile.sh"               # GH-165 (canonical post-merge reconciler behavior)
+  "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
 )
 
 PASSED=()
