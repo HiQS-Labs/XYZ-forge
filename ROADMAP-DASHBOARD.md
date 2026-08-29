@@ -34,7 +34,7 @@ Summary: 25 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-272 · releases-merge-resolve regenerates derived views | — | — |
 | GH-269 · full switchover to Releases DB — retire ROADMAP.md | — | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md) |
 | GH-273 · marathon-root-audit python spellings | — | — |
-| GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries | — | [GH-314-ARCHIVE-TEMPLATE-MANGLE.md](PROJECT/1-INBOX/GH-314-ARCHIVE-TEMPLATE-MANGLE.md) · [#314](https://github.com/HiQS-Labs/XYZ-forge/issues/314) |
+| GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries | — | [GH-314-ARCHIVE-TEMPLATE-MANGLE.md](PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md) · [#314](https://github.com/HiQS-Labs/XYZ-forge/issues/314) |
 
 ## Queue
 
