@@ -1,13 +1,25 @@
 ---
 name: swe
-description: Apply an opinionated software-engineering governance lens to a build/spec/PRD document — especially a "build v1.x" doc — so the plan enforces minimal scope, designs for diagnosis, accounts for blast radius, and is verifiable before anyone writes code. Use this when authoring or reviewing a v1.x build plan, implementation spec, architecture doc, RFC, or AGENTS.md/CLAUDE.md, or when the user says "write a project plan," "write a plan," "review this build doc," "apply our SWE standards," "make this plan production-grade," "gate this spec," "is this plan ready to build," "bake in our engineering philosophy," or pastes a plan and asks whether it embodies good engineering discipline. Also self-trigger before drafting a v1.x build document or any project plan so the standards shape it from the first draft instead of being bolted on after. This is the standard (the rubric), not the pipeline — it supplies the engineering invariants a plan is checked against.
+description: Apply an opinionated software-engineering governance lens to a build/spec/PRD document — especially a "build v1.x" doc — so the plan enforces minimal scope, designs for diagnosis, accounts for blast radius, and is verifiable before anyone writes code. Use this when authoring or reviewing a v1.x build plan, implementation spec, architecture doc, RFC, or AGENTS.md/CLAUDE.md, or when the user says "write a project plan," "write a plan," "review this build doc," "apply our SWE standards," "make this plan production-grade," "gate this spec," "is this plan ready to build," "bake in our engineering philosophy," or pastes a plan and asks whether it embodies good engineering discipline. Also self-trigger before drafting a v1.x build document or any project plan so the standards shape it from the first draft instead of being bolted on after. This is the standard (the rubric), not the pipeline — it supplies the engineering invariants a plan is checked against. Its Pillar 0 grades provenance — whether the plan was written against a trace of the real system (see the recon skill) rather than an invented blast radius — where an existing system is in play.
 ---
 
 # SWE
 
 Vibe the build; engineer the plan. This lens is the discipline that lets a fast v1.x ship without becoming a liability.
 
-A governance overlay for **build/spec documents** — the "build v1.x" doc, the implementation spec, the architecture RFC. It does not debug code or pick a tradeoff in the moment; it reads the *plan* and asks whether the plan already embodies the engineering standards before a single line is written. Run it two ways: as an **authoring gate** (write the doc against it) or as a **review rubric** (read a doc, emit findings + a verdict). The whole bet: most plans fail not on the feature but on the four things below, smuggled past in prose.
+A governance overlay for **build/spec documents** — the "build v1.x" doc, the implementation spec, the architecture RFC. It does not debug code or pick a tradeoff in the moment; it reads the *plan* and asks whether the plan already embodies the engineering standards before a single line is written. Run it two ways: as an **authoring gate** (write the doc against it) or as a **review rubric** (read a doc, emit findings + a verdict). The whole bet: most plans fail not on the feature but on the five things below, smuggled past in prose — starting with Pillar 0, where the plan is grounded (or not) in the system as it actually exists.
+
+## Pillar 0: Recon — is the plan grounded in a system anyone actually read?
+
+The four pillars grade what the document *says*. Pillar 0 grades its **provenance**: was it written against the system as it exists, or from the prompt plus three grepped files? This pillar is about evidence, not consequences — what breaks when a *step* runs is Blast's job, below.
+
+- [ ] The current system was traced before the first plan heading: entry points and call paths in, every read *and write* site of the state involved, the contracts crossed, the failure and rollback paths today.
+- [ ] Claims about what the change touches cite code somebody read — `file:line`, not "various downstream."
+- [ ] What could not be verified is listed as an explicit unknown with the command or file that would settle it, never smoothed into the findings.
+
+**Applicability first.** Pillar 0 does not apply to greenfield work, a non-code plan, or a change contained to files the doc already quotes — mark it N/A and say why. Where it does apply, grade the *evidence*, not the artifact: a [recon](../recon/SKILL.md) Recon Map is the standard form, but a trace embedded in the doc or supplied by the author counts. **Block** only when the doc makes claims about an existing system that nothing behind it verifies; a thin trace on a genuinely small change is a **Fix**, not a Block.
+
+**Pillar 0 feeds Blast; it does not satisfy it.** The trace establishes the *current-state* radius — who depends today on what the plan touches. Blast then asks what each proposed step *adds*: new systems, new data, new people, the shield, the tripwire, the undo class. Copying the map's radius into the Blast section unchanged understates the plan's own impact and fails Blast on its own terms.
 
 ## The four pillars
 
@@ -74,6 +86,8 @@ Non-negotiable conventions a v1.x doc must satisfy regardless of pillar. These a
 ## How this differs from the sibling skills
 
 - **swe** — "Does this *plan* embody our engineering standards before we build?" The standard/rubric, applied to a whole document.
+- **recon** — "What is actually there?" The read-only trace of the current system that Pillar 0 grades the doc against. It supplies the current-state radius; Blast extends that radius per proposed step. Run recon first in author mode when the plan changes an existing system.
+- **phase-0-spike** (an external workflow at `~/.claude/workflows/phase-0-spike.js`, not a skill in this repo) — the deep seam map, contract owners, and rollout invariants for a refactor that is already committed to. `recon` is the cheap universal pass before any plan; phase-0-spike is the expensive one after the refactor is approved. A v1.x doc for a subsystem refactor cites one or the other, never neither.
 - **plan-adversarial-serial** — the *pipeline* (generate → review → revise → review → judge). It is the machinery; `swe` is one of the standards the machinery can enforce. Compose them: run the adversarial pipeline with `swe` as the lens content.
 - **blast-radius** — "How big is *this one decision* and what breaks?" `swe`'s Blast pillar defers per-decision accounting to it.
 - **iron-triangle** — "Which of speed/cost/quality is *this choice* trading?" When a plan forces fast/cheap/good tension, hand that node to it.
@@ -85,13 +99,13 @@ Reach for `swe` the moment there is a build/spec document to hold to a standard 
 
 ## How to apply
 
-**Author mode** — you are writing the v1.x doc. Use the four pillars and house invariants as the doc's skeleton: each feature passes Minimal before it earns a section; each risky step ships with its Blast block; each task ships with its Proof criterion. The lens is the gate, not a later edit.
+**Author mode** — you are writing the v1.x doc. Clear Pillar 0 first (run recon, or state why it was skipped), then use the four pillars and house invariants as the doc's skeleton: each feature passes Minimal before it earns a section; each risky step ships with its Blast block; each task ships with its Proof criterion. The lens is the gate, not a later edit.
 
-**Review mode** — you are handed a v1.x doc. Walk the four pillars then the invariants. For each gap, emit one finding keyed to the doc location (`§section`, or `file:line` for code-adjacent specs), tagged by severity, with the *cheapest* fix first. Close with a verdict. Do not rewrite the doc unless asked — surface the checkable gaps and let the author act.
+**Review mode** — you are handed a v1.x doc. Walk Pillar 0, then the four pillars, then the invariants. For each gap, emit one finding keyed to the doc location (`§section`, or `file:line` for code-adjacent specs), tagged by severity, with the *cheapest* fix first. Close with a verdict. Do not rewrite the doc unless asked — surface the checkable gaps and let the author act.
 
 ## Project plan scaffold (Author mode)
 
-When the ask is "write a project plan" / "write a plan" (authoring, not reviewing), build the doc against the four pillars **and** lay it out in the fixed structure below. The structure is load-bearing, not decoration: the status table forces an honest "where are we" at a glance, the Table of contents keeps a long plan navigable, observable checklist items *are* the Proof done-criteria, and the per-phase QA checklist is the grader pass made mechanical. Implied is unbuilt — so every field below is written down, not assumed.
+When the ask is "write a project plan" / "write a plan" (authoring, not reviewing), clear Pillar 0 first, build the doc against the four pillars **and** lay it out in the fixed structure below. The structure is load-bearing, not decoration: the status table forces an honest "where are we" at a glance, the Table of contents keeps a long plan navigable, observable checklist items *are* the Proof done-criteria, and the per-phase QA checklist is the grader pass made mechanical. Implied is unbuilt — so every field below is written down, not assumed.
 
 Required order, top to bottom: **frontmatter → status table → table of contents → phases (each with observable todos) → per-phase QA checklist**.
 

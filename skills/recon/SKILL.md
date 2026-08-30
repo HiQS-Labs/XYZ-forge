@@ -41,7 +41,7 @@ Say "recon skipped — [one-line reason]" and go. A recon on a contained rename 
 
 ## Step 1 — Scope the trace
 
-Name the **subject** in one line: the function, module, table, endpoint, or feature the change lands on. Name the **change class**: local edit, cross-module change, contract change, state/authority change, or replacement. If the class is state/authority, run `spike-360` (Giant Brains; not shipped here) first — it decides whether a new source of truth should exist at all; recon maps the system either way once that is settled.
+Name the **subject** in one line: the function, module, table, endpoint, or feature the change lands on. Name the **change class**: local edit, cross-module change, contract change, state/authority change, or replacement. If the class is state/authority, run [spike-360](../spike-360/SKILL.md) first — it decides whether a new source of truth should exist at all; recon maps the system either way once that is settled.
 
 Ask at most one clarifying question. If the subject is ambiguous, pick the likeliest reading, state it, and trace that — **unless the two readings sit on opposite sides of a boundary** (application versus infrastructure, this service versus another). There, guessing wrong spends the whole fan-out on the wrong system, so name both readings and ask.
 
@@ -124,8 +124,8 @@ If the user asked for a plan in the same breath, write it next — recon does no
 ## Escalation and neighbors
 
 - **recon** — "What is actually there?" Read-only reconnaissance of the current system, before a plan exists.
-- **`spike-360` (Giant Brains; not shipped here)** — "Should this authority exist?" Classify first when state is moving; recon then maps what the approved shape has to live with.
+- **[spike-360](../spike-360/SKILL.md)** — "Should this authority exist?" Classify first when state is moving; recon then maps what the approved shape has to live with.
 - **[swe](../swe/SKILL.md)** — "Does the plan embody our standards?" Its Pillar 0 is satisfied by recon's map; its Blast pillar extends that map per decision.
 - **`phase-0-spike`** (`~/.claude/workflows/phase-0-spike.js`) — the deep seam map with contract owners and rollout invariants, for a refactor already committed to. Recon is the cheap universal pass; that is the expensive committed one.
-- **`blast-radius` (Giant Brains; not shipped here)** — prices a one-way door the map exposes.
+- **`blast-radius` (not shipped here)** — prices a one-way door the map exposes.
 - **[debug-mantra](../debug-mantra/SKILL.md)** — traces a fail path for a bug happening now; recon traces edges for a change that has not happened yet.
