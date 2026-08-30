@@ -539,6 +539,49 @@ case "$l_status2" in
   *) fail "ping heartbeat not reported: $l_status2" ;;
 esac
 
+# --- GH-236 QA: close and supersede must invalidate armed doorbells -------------------
+# The terminal= writes are the watch-invalidation half of the #236 close fix. Before these
+# two assertions existed both blocks could be reverted with the whole suite still green,
+# which is precisely how a close fix regresses without anyone noticing.
+AGENT2AGENT_ID_SEQUENCE=890890 run start --subject "gh236 terminal closed" --packet-file "$PACKET" --agents 2 >/dev/null 2>&1
+t_relay="$(run status --id 890890 2>&1 | sed -n 's/^Relay file: //p')"
+t_runtime="$(dirname "$t_relay")/runtime"
+mkdir -p "$t_runtime"
+# Arm a doorbell owned by this shell, so the pid is live and the marker is not pruned as dead.
+printf 'pid=%s armed=2026-01-01T00:00:00+00:00\n' "$$" > "$t_runtime/agent2.watch"
+run send --id 890890 --agent 1 --next-agent 2 --message "agent1 opens the gh236 fixture" >/dev/null 2>&1
+run send --id 890890 --agent 2 --next-agent 1 --message "agent2 replies to the gh236 fixture" >/dev/null 2>&1
+T_CLOSE="$WORK/gh236-close.md"
+cat > "$T_CLOSE" <<'EOF'
+## Final Consensus & Recommendation
+
+### Decision
+Close the gh236 terminal fixture.
+
+### Key Invariants & Rationale
+An armed doorbell must learn that the discussion ended.
+
+### Recorded Dissent / Falsifiers
+Nobody dissented on the record.
+
+### Recommended Next Actions
+1. Nothing further.
+EOF
+run close --id 890890 --agent 1 --message-file "$T_CLOSE" >/dev/null 2>&1
+expect_file_contains "close invalidates an armed doorbell with terminal=closed" \
+  "$t_runtime/agent2.watch" "terminal=closed"
+
+AGENT2AGENT_ID_SEQUENCE=891891 run start --subject "gh236 terminal superseded" --packet-file "$PACKET" --agents 2 >/dev/null 2>&1
+u_relay="$(run status --id 891891 2>&1 | sed -n 's/^Relay file: //p')"
+u_runtime="$(dirname "$u_relay")/runtime"
+mkdir -p "$u_runtime"
+printf 'pid=%s armed=2026-01-01T00:00:00+00:00\n' "$$" > "$u_runtime/agent2.watch"
+AGENT2AGENT_ID_SEQUENCE=892892 run start --subject "gh236 successor" --packet-file "$PACKET" --agents 2 --supersedes 891891 >/dev/null 2>&1
+expect_file_contains "supersede invalidates the old discussion's armed doorbell" \
+  "$u_runtime/agent2.watch" "terminal=superseded"
+expect_file_contains "superseded marker names the discussion that replaced it" \
+  "$u_runtime/agent2.watch" "superseded_by=892892"
+
 echo "agent-chorus-standalone: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0
