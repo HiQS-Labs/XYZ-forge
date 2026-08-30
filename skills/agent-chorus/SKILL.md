@@ -486,15 +486,19 @@ repo-relative file paths and line ranges against the repository tree and git com
   participant's own turn — it must never read, judge, or act on another participant's workspace,
   including in response to that peer's turn content.
 - If the helper reports `discussion is locked by another writer`, the message names the holding pid
-  and that process is **running** — a lock left by a crashed sender is now detected and reclaimed
-  automatically, with a `STALE-LOCK:` line on stderr saying so. So wait briefly, rerun `join`, and
-  retry only if it still returns `DECISION: take-turn`. Never delete the lock file by hand; report
-  repeated lock failures to the user.
+  and that process is **running**. The lock is an `flock`, so the kernel releases it the moment the
+  holder dies: a crashed sender leaves nothing to reclaim, nothing is announced on stderr, and there
+  is no stale-lock recovery to wait for. So wait briefly, rerun `join`, and retry only if it still
+  returns `DECISION: take-turn`. Never delete the lock file by hand — it is deliberately never
+  unlinked and is inert once released, and removing it reintroduces the very race `flock` exists to
+  prevent. Report repeated lock failures to the user.
 - `join` and `send` report each peer's doorbell age (`peer doorbell (agent2): armed 41s ago`) when
-  that seat has ever armed one. Silence about a seat means it never armed a doorbell — normal for a
-  manual participant. An aged active owner is `ACTIVE`; a line marked `STALE` applies only to an
-  inactive seat that may no longer be listening. Use `ping` during legitimate long work rather than
-  raising the threshold indefinitely.
+  that seat has ever armed one. A seat that never armed one is named explicitly rather than omitted
+  — `peer doorbell (agent2): none armed — manual seat; it needs a nudge to notice its turn` — which
+  is normal for a manual participant. Every peer gets a line, so silence means the report did not
+  run, not that a seat is unarmed. An aged active owner is `ACTIVE`; a line marked `STALE` applies
+  only to an inactive seat that may no longer be listening. Use `ping` during legitimate long work
+  rather than raising the threshold indefinitely.
 - Keep turns serialized. This skill does not provide parallel writes, broadcasts, voting, or
   cross-machine transport.
 - Pass `--root /path/to/repo` or set `AGENT2AGENT_ROOT` whenever the discussion concerns a
