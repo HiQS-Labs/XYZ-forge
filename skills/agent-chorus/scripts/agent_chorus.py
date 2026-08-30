@@ -268,31 +268,81 @@ def telemetry_index_path(store: Optional[Path]) -> Optional[Path]:
     return Path(resolved) / "telemetry_index.db" if resolved else None
 
 
+_INDEX_DEGRADED_WARNED = False
+
+
+def _warn_index_degraded(db_path: Path, exc: BaseException) -> None:
+    """Say once, on stderr, that the index is unavailable — then never again this process.
+
+    Once per process rather than once per call: `close` reaches the index twice (append_turn and
+    `outcome`), and an operator who sees the same warning repeated learns to filter it out."""
+    global _INDEX_DEGRADED_WARNED
+    if _INDEX_DEGRADED_WARNED:
+        return
+    _INDEX_DEGRADED_WARNED = True
+    print(
+        f"warning: telemetry index unavailable at {db_path} ({exc}); "
+        f"continuing without it — the discussion itself is unaffected",
+        file=sys.stderr,
+    )
+
+
 def index_connect(store: Optional[Path]):
+    """Open the telemetry index, or return (None, None) and say so.
+
+    GH-329: this used to let sqlite's exceptions escape. That mattered because callers write first
+    and index second — `append_turn` commits the turn at :1674 and only then calls `index_upsert`
+    at :1704 — so an uncaught failure here produced the worst kind of partial failure: the turn
+    WAS written, the command exited 1 with a traceback, and the operator's natural response (retry)
+    was refused as out of turn.
+
+    The reachable trigger was a store directory that does not exist. `normalize_store` deliberately
+    returns a non-existent path rather than creating one (:154-155), and a legacy `relay-system/`
+    discussion resolves without any store at all — so on a machine that has never run `start` or
+    `configure-store`, `sqlite3.connect` raises `OperationalError: unable to open database file`.
+
+    Creating the directory here was the other candidate fix and is rejected on purpose: the store is
+    deliberately mode-0700 and `normalize_store` is the one place that enforces that (:163-167).
+    Having telemetry silently conjure a store behind that check would trade a crash for a privacy
+    regression. Telemetry is derived state — the JSONL sidecar is the raw log — so degrading is
+    the honest failure, and it must never be able to fail a turn that has already been written.
+
+    Note the exception is `sqlite3.OperationalError`, NOT an `OSError`: the sidecar's existing
+    `except OSError` idiom elsewhere in this file would not have caught it."""
     import sqlite3
     db_path = telemetry_index_path(store)
     if db_path is None:
         return None, None
-    conn = sqlite3.connect(str(db_path))
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS discussions ("
-        " id TEXT PRIMARY KEY, subject_sha256 TEXT, agents INTEGER, opened_at TEXT,"
-        " closed_at TEXT, close_type TEXT, turn_count INTEGER,"
-        " outcome TEXT, outcome_note TEXT, outcome_agents TEXT,"
-        " supersedes TEXT, superseded_by TEXT)"
-    )
-    cur = conn.cursor()
+    conn = None
     try:
-        cols = [r[1] for r in cur.execute("PRAGMA table_info(discussions)").fetchall()]
-        if "supersedes" not in cols:
-            cur.execute("ALTER TABLE discussions ADD COLUMN supersedes TEXT")
-        if "superseded_by" not in cols:
-            cur.execute("ALTER TABLE discussions ADD COLUMN superseded_by TEXT")
-    except Exception:
-        pass
-    conn.execute("CREATE TABLE IF NOT EXISTS outcomes_log ("
-                 " id TEXT, result TEXT, note TEXT, agents TEXT, recorded_at TEXT)")
-    return conn, db_path
+        conn = sqlite3.connect(str(db_path))
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS discussions ("
+            " id TEXT PRIMARY KEY, subject_sha256 TEXT, agents INTEGER, opened_at TEXT,"
+            " closed_at TEXT, close_type TEXT, turn_count INTEGER,"
+            " outcome TEXT, outcome_note TEXT, outcome_agents TEXT,"
+            " supersedes TEXT, superseded_by TEXT)"
+        )
+        cur = conn.cursor()
+        try:
+            cols = [r[1] for r in cur.execute("PRAGMA table_info(discussions)").fetchall()]
+            if "supersedes" not in cols:
+                cur.execute("ALTER TABLE discussions ADD COLUMN supersedes TEXT")
+            if "superseded_by" not in cols:
+                cur.execute("ALTER TABLE discussions ADD COLUMN superseded_by TEXT")
+        except Exception:
+            pass
+        conn.execute("CREATE TABLE IF NOT EXISTS outcomes_log ("
+                     " id TEXT, result TEXT, note TEXT, agents TEXT, recorded_at TEXT)")
+        return conn, db_path
+    except (sqlite3.Error, OSError) as exc:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+        _warn_index_degraded(db_path, exc)
+        return None, None
 
 
 def index_upsert(store: Optional[Path], discussion_id: str, **columns) -> None:

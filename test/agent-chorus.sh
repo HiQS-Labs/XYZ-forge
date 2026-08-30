@@ -809,5 +809,43 @@ p2_cit_fail_rc=$?
 [ "$p2_cit_fail_rc" -ne 0 ] && pass "verify-citations fails on unresolvable file citation" || fail "verify-citations passed on invalid refs: $p2_cit_fail"
 expect_contains "verify-citations text output lists unresolvable count" "$p2_cit_fail" "STATUS: FAIL"
 
+# --- GH-329: a missing store must degrade telemetry, never fail a turn that was already written ---
+# The trigger is a LEGACY relay-system discussion (resolvable with no store at all) on a machine that
+# has never run `start` or `configure-store`. Before the fix, `close` wrote the turn at append_turn
+# and then died in index_connect with sqlite3.OperationalError — turn committed, exit 1, and the
+# operator's retry refused as out of turn. Telemetry is forced ON explicitly rather than relying on
+# the pilot window, so this test keeps testing the same thing after the window closes.
+G329="$WORK/gh329-legacy"
+G329_STORE="$WORK/gh329-store-that-never-existed"
+mkdir -p "$G329/relay-system/2026-08-30"
+G329_SEED_STORE="$WORK/gh329-seed-store"
+AGENT2AGENT_ID_SEQUENCE=779779 python3 "$CLI" --root "$G329" --store "$G329_SEED_STORE" \
+  start --subject "gh329 legacy discussion" --agents 2 --packet-file "$PACKET" >/dev/null 2>&1
+g329_seed="$(find "$G329_SEED_STORE" -name conversation.md | head -1)"
+if [ -n "$g329_seed" ] && [ -f "$g329_seed" ]; then
+  cp "$g329_seed" "$G329/relay-system/2026-08-30/779779-gh329-legacy-discussion.md"
+  rm -rf "$G329_SEED_STORE"
+  g329_file="$G329/relay-system/2026-08-30/779779-gh329-legacy-discussion.md"
+  [ -e "$G329_STORE" ] \
+    && fail "gh329 fixture is invalid: the store must not exist" \
+    || pass "gh329 fixture: legacy discussion resolves with no store on disk"
+  g329_out="$(AGENT2AGENT_TELEMETRY=1 python3 "$CLI" --root "$G329" --store "$G329_STORE" \
+    close --id 779779 --agent 2 --trivial --message "Administrative close under a missing store." 2>&1)"
+  g329_rc=$?
+  [ "$g329_rc" -eq 0 ] \
+    && pass "close SUCCEEDS when the telemetry store does not exist" \
+    || fail "a missing store still fails a written turn: rc=$g329_rc $g329_out"
+  case "$g329_out" in
+    *Traceback*) fail "close still crashes with a traceback under a missing store" ;;
+    *) pass "close reports no traceback under a missing store" ;;
+  esac
+  expect_contains "the telemetry degrade is announced, not silent" "$g329_out" "telemetry index unavailable"
+  expect_file_contains "the turn is written despite the unavailable index" \
+    "$g329_file" "Administrative close under a missing store."
+  expect_file_contains "the discussion actually reaches Closed" "$g329_file" "STATUS: Closed"
+else
+  fail "gh329 fixture could not be seeded (no conversation.md produced)"
+fi
+
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
