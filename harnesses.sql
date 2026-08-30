@@ -878,6 +878,8 @@ INSERT INTO "invocation_logs" VALUES('inv-20260827183921-e2ebbd21','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260827184300-3a042d2a','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh141-jog-drive',0.0,0,0,NULL,NULL,0.0,' 15 files changed, 158 insertions(+), 406 deletions(-)','2026-08-27 18:43:00');
 INSERT INTO "invocation_logs" VALUES('inv-20260827185147-7594475a','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh75-jog-drive',0.0,0,0,NULL,NULL,0.0,' 15 files changed, 125 insertions(+), 374 deletions(-)','2026-08-27 18:51:47');
 INSERT INTO "invocation_logs" VALUES('inv-20260827235946-1511ba47','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh280-jog-marathon-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-27 23:59:46');
+INSERT INTO "invocation_logs" VALUES('inv-20260830180004-a285a8ea','noels-Mac-Studio.local','commandcode','qwen/qwen3.8-max','openrouter','xhigh','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo"]','RELAY-dry-skill-qa-qwen',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-30 18:00:04');
+INSERT INTO "invocation_logs" VALUES('inv-20260830182116-675489da','noels-Mac-Studio.local','commandcode','qwen/qwen3.8-max','openrouter','xhigh','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo"]','RELAY-pr236-agent-chorus-qa',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 2 insertions(+)','2026-08-30 18:21:16');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
@@ -902,6 +904,7 @@ INSERT INTO "models" VALUES('antigravity/gemini-2.5-pro','Antigravity','antigrav
 INSERT INTO "models" VALUES('openai/gpt-mini-latest','Openai','openai/gpt-mini-latest','pi',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('Gemini 3.5 Flash','Auto','Gemini 3.5 Flash','google',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('stealth/ox-alpha','Stealth','stealth/ox-alpha','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
+INSERT INTO "models" VALUES('qwen/qwen3.8-max','Qwen','qwen/qwen3.8-max','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 CREATE TABLE user_configs (
             config_id TEXT PRIMARY KEY,
             device_id TEXT NOT NULL REFERENCES devices(device_id),
