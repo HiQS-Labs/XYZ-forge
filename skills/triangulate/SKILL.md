@@ -19,8 +19,8 @@ argument-hint: "[subject]"
 
 Three lenses, one problem. Ground it, falsify it, then shrink it.
 
-`/recon`, `/debug-mantra`, `/spike-360` and `/blast-radius` are external skills — invoke them by
-name. `ponytail` and `swe` are vendored beside this one in `skills/`.
+Every skill this one calls ships in `skills/` beside it — `recon`, `debug-mantra`, `ponytail`,
+`swe`. Nothing here depends on an external skill pack.
 
 ## Step 0a — Should this fire at all?
 
@@ -28,14 +28,16 @@ Route to the single skill and stop, if the task is:
 
 | Task | Route to |
 |---|---|
-| A live bug in a system you already understand | `/debug-mantra` |
+| A live bug in a system you already understand | [debug-mantra](../debug-mantra/SKILL.md) |
 | Greenfield — nothing exists to trace | [ponytail](../ponytail/SKILL.md) |
-| A change to a known system, no over-build temptation | `/recon`, then [swe](../swe/SKILL.md) |
-| "Should this authority exist at all?" | `/spike-360` |
-| Pricing a one-way door you have already found | `/blast-radius` |
+| A change to a known system, no over-build temptation | [recon](../recon/SKILL.md), then [swe](../swe/SKILL.md) |
 | A typo, comment, or formatting change | none of the three — fix it |
 
-**Two rows match: the existence question wins; then a live bug beats a planned change.**
+**Two rows match: a live bug beats a planned change.**
+
+**If the change would introduce, move, or replace a source of truth**, do not route away — that
+question is not a lens conflict, it is an authority question. Answer it before Step 1, and treat the
+decision as **irreversible** there regardless of how small the diff looks.
 
 Triangulate fires only when **at least two** lenses would fire **and pull in opposite directions on
 effort**. If the change is smaller than the sentence describing it, do not classify — fix it.
@@ -98,9 +100,9 @@ Read the floor from the cell, not from a count of how many axes went the hard wa
   what crosses a boundary; `file:line` or it is an Unknown), then disprove *"that is all of them."*
   The seam read is what tells you what to falsify — a falsification with nothing enumerated never
   targets dynamic dispatch or string-based references.
-- **falsify** — `/debug-mantra` step 3 against the single belief that makes this irreversible. Run
+- **falsify** — [debug-mantra](../debug-mantra/SKILL.md) step 3 against the single belief that makes this irreversible. Run
   the **disproof** first.
-- **full** — `/recon` fan-out, then the mantra ledger across every observation. Ponytail then
+- **full** — [recon](../recon/SKILL.md) fan-out, then the mantra ledger across every observation. Ponytail then
   applies to the **fix**, never to the reading.
 
 **The floor is a floor.** Buy more evidence freely; never buy less. "I'm confident" is not a reason
@@ -108,7 +110,7 @@ to drop a floor — confidence is what debug-mantra exists to attack.
 
 ## Step 3 — Ground (recon)
 
-Run `/recon` at the floor's width. Its rules carry unchanged: the graph is a lead not a citation,
+Run [recon](../recon/SKILL.md) at the floor's width. Its rules carry unchanged: the graph is a lead not a citation,
 every edge a decision depends on is confirmed by reading the file, and anything unverified goes in
 Unknowns rather than being smoothed into the findings.
 
@@ -118,7 +120,7 @@ minutes ago is satisfied by what you already hold — write it down, do not re-r
 ## Step 4 — Falsify (debug-mantra)
 
 Take the belief the plan leans on hardest — the one whose failure costs the most, not the one you
-are least sure of. Then apply `/debug-mantra`:
+are least sure of. Then apply [debug-mantra](../debug-mantra/SKILL.md):
 
 - What is the cleanest **disproof**? Run that first.
 - Does the belief hold against **every** breadcrumb so far, or only the most recent?
@@ -176,8 +178,8 @@ Say `triangulate → ponytail only` and go. This is ponytail rung 1 applied to t
 
 ## Neighbors
 
-- `/recon` — the ground pass, Step 3.
-- `/debug-mantra` — the falsification pass, Step 4.
+- [recon](../recon/SKILL.md) — the ground pass, Step 3.
+- [debug-mantra](../debug-mantra/SKILL.md) — the falsification pass, Step 4.
 - [ponytail](../ponytail/SKILL.md) — rung 1 at Step 0b, the shrink pass at Step 5.
 - [swe](../swe/SKILL.md) — grades the resulting plan; triangulate feeds its Pillar 0 and Blast.
 
