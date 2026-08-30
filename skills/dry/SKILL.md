@@ -3,7 +3,8 @@ name: dry
 description: >-
   Find the subsystems that should be one subsystem. Traces a codebase resource-first
   instead of subject-first, then reports every place N independent paths reach the same
-  table, file, env var, endpoint, binary, or config key without ever meeting — the
+  table, file, env var, endpoint, binary, or config key without ever meeting — or where N
+  places define the same decision with different answers — the
   "we built four of these and none of them know about each other" failure that stays
   invisible until the bug count spikes. Produces a ranked Convergence Map naming the
   single gateway each cluster is missing. Trigger on /dry, and on "do we have duplicate
@@ -33,8 +34,7 @@ different paths are, whether or not they share a line of text — and so are two
 define what counts as a paid order, with different value sets.
 
 The rule forbids clustering on how code *reads*. It does not forbid clustering on what code
-*decides*. An earlier version of this skill said "resource, never shape", and that wording blinded it
-to the highest-value duplication class there is: a concept defined N times with N different answers.
+*decides*.
 
 ## When NOT to fire
 
@@ -58,12 +58,24 @@ of them for a full audit, two or three for a quick pass:
 | **Config** | env vars, config keys, feature flags, secrets names |
 | **Network** | hosts, base URLs, endpoint paths, queue/topic names |
 | **Process** | external binaries invoked, subprocess/`exec` targets, CLI names |
+| **Boundary** | first-party references pointing *into* an excluded, vendored, or generated tree, and module-path surgery that makes them work — `sys.path` inserts, `PYTHONPATH`, `NODE_PATH`, classpath tweaks. **Reportable at any toucher count:** excluding a tree hides its contents, not the reaches into it, so this shape sits below every threshold and must be exempt from them. |
 | **Policy** | named constants and the *values* they carry — status/enum value sets, thresholds, byte and row ceilings, timeouts, retry counts and backoff formulas, truncation limits, allowlists |
 
 **Policy is the class most often missed and most often expensive.** Index the *name and its value
-set together*, then group by what the constant decides rather than what it is called — the four
-definitions of "a real sale" will not share a name. A cluster where the values **disagree** is a live
-defect, not a cleanliness item: it means the system already answers one question two ways.
+set together* — rival definitions of one concept rarely share a name, so identifier matching will not
+group them. Use this test instead:
+
+> **Could one real-world event — a single order, request, upload — be classified differently by the
+> two value sets?**
+
+Yes → one decision split across N sites. No → different policies, however alike they look. When the
+read site is hard to follow, the cheap proxy is whether the predicates reference the same entity and
+field (`order.status`, `payment.state`).
+
+**Disagreeing values are a defect only where one owner should answer.** Touchers serving different
+operations or failure domains may rightly disagree — a health probe's 2-second connect timeout and a
+bulk uploader's 60-second one are not a cluster, and merging them is the wrong DRY. Say why the
+decision should be single before filing it.
 
 Language does not matter — every class above is a *literal* in almost every language, which is why
 this works on a polyglot tree with no parser, no index, and no git history.
@@ -92,7 +104,7 @@ by reading the file, exactly as in [recon](../recon/SKILL.md). Graph-only edges 
 
 An empty class is a finding, not a failure: a repo with no config-key duplication should say so.
 
-### Audit the guards, do not trust them
+## Step 2b — Audit the guards, do not trust them
 
 If the repo ships a CI check, lint rule, or script that guards a duplication class — a
 `check_no_*.sh`, a banned-import checker, a contract test — **run it, then check its coverage against
@@ -105,22 +117,25 @@ your index.** A guard is a claim, and this skill exists to test claims.
   finding, and usually the most urgent one in the report** — because a green guard is read as
   evidence, and everyone downstream stops looking.
 
-A guard that was fixed once is not a guard that works. Confidently incomplete is worse than visibly
-broken.
-
 ## Step 3 — Pivot: group, then test for disjointness
 
 For each resource with **≥3 touching files** (**≥2** if any toucher *writes* it — write paths
-diverge faster and hurt sooner), ask the question that separates a finding from a coincidence:
+diverge faster and hurt sooner; **for Policy, a definer counts as a writer**, so two rival
+definitions of one decision clear the threshold), ask the question that separates a finding from a
+coincidence:
 
 > **Do these files ever meet?**
 
 They meet if they share an import, extend a common base, or route through a common module. Resolve
 it by reading the imports of each toucher — not by proximity in the tree.
 
-- **They meet** → not a finding. One gateway already exists; note it and move on.
-- **They do not meet** → **convergence target.** N independent paths to one resource is the shape
-  the user feels as "these should all go through one place."
+- **They all meet** → not a finding. One gateway already exists; note it in *Already converged*.
+- **Some meet, some do not** → **bypass finding.** A shared owner exists and part of the tree routes
+  around it — including files that import it and do the job themselves anyway. This is the most
+  common shape in a maturing codebase and the one `converge` expects this skill to emit; do not let
+  the existence of a gateway close the question.
+- **None meet** → **convergence target.** N independent paths to one resource is the shape the user
+  feels as "these should all go through one place."
 
 ## Step 4 — Corroborate — two signals or it is not reported
 
