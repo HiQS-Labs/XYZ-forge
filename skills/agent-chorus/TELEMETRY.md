@@ -48,6 +48,15 @@ exempts exactly those shapes from its substring check).
   override state, and index location.
 - **Retention**: sidecar and index live only under the store (itself mode-0700 private); purge
   is complete and immediate; nothing is copied into any repository.
+- **Eligibility (GH-327)**: only a discussion whose file is named `conversation.md` — that is, one
+  living in the external store — gets a sidecar or a close report. A legacy
+  `relay-system/<date>/<id>-slug.md` discussion lives inside the git worktree, so it is excluded
+  entirely and **no** telemetry file is written for it. This is what makes the retention claim above
+  true as written rather than true by convention: there is no path on which telemetry can be written
+  into a repository, so there is none for `purge` to be unable to reach. The trade is deliberate and
+  worth stating: telemetry is blind to legacy discussions, which skews the pilot corpus away from the
+  longest-running threads. With `AGENT2AGENT_TELEMETRY=1` set explicitly, the exclusion is announced
+  once on stderr; inside the default-ON window it is silent.
 
 ## Commands
 
