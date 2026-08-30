@@ -6,7 +6,7 @@ updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: reproduce the untracked-file relocation, then guard every mv/rm/find-delete on a derived path with a resolved-containment check at the use boundary
 gh_issue: 2
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/2
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/2
 branch: gh-2/orphan-backup-relocation
 doc_type: bugfix
 effort: 2

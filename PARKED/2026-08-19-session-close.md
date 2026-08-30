@@ -11,7 +11,7 @@ GitHub issue, PR, or in-repo pointer as its real home; this is the index.
 > done, not by silence: release **0.7.1 Bulwark shipped** (evidence in the receipt chain, generation
 > 9); issues **#61–#65** — filed that afternoon and never triaged anywhere — are now a Queue entry in
 > `ROADMAP.md`; and the ledger's four stale status markers (GH-23/#39/#45/#57, all closed on GitHub)
-> were moved to Completed. New: **[#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75)** (the
+> were moved to Completed. New: **[#75](https://github.com/HiQS-Labs/XYZ-forge/issues/75)** (the
 > two-ledger dashboard) is queued at the FRONT of the line by operator call. Nothing below changed.
 
 ## Decisions waiting on the operator
@@ -27,10 +27,10 @@ GitHub issue, PR, or in-repo pointer as its real home; this is the index.
 
 | Issue | Priority | One-liner | Check |
 |---|---|---|---|
-| [#59](https://github.com/HiQS-Suite/XYZ-forge/issues/59) | P2 | Re-arm hosted CI: repo is public, Actions enabled, triggers in ci.yml — yet pushes produce zero runs. Find the cause, then narrow triggers to push/merge on `development`+`main`, then wire the required status check behind `main`'s branch protection (protection is already live, PR-required). | `check: gh issue view 59 --json state` |
-| [#58](https://github.com/HiQS-Suite/XYZ-forge/issues/58) | P2/P3 | GH-35 Phase 3 follow-ups: tier-2 skips the hygiene suites (security-scan, mktemp-trap-guard, path-integrity, checkjs) — P2; `--tier 3 --subsystem X` silently runs tier 2 — P3; pre-push mktemp-failure path contradicts its comment (`_rc` unbound) — P3. Recommended: ride with Phase 3's registry widening, not before. | `check: gh issue view 58 --json state` |
-| [#56](https://github.com/HiQS-Suite/XYZ-forge/issues/56) | P3 | Split the 2,214-line `skills/xyz/SKILL.md` into SKILL.md + MANUAL.md. Re-derive from today's file; do NOT resurrect PR #19's `tree-hygiene-guard.sh` (GH-484 trap). | `check: gh issue view 56 --json state` |
-| [#68](https://github.com/HiQS-Suite/XYZ-forge/issues/68) | P3 | `HARNESS-MODELS-REGISTRY.md` row from PR #60 is off-schema (date in the Harness column). Fold into the next touch of that file. | `check: gh issue view 68 --json state` |
+| [#59](https://github.com/HiQS-Labs/XYZ-forge/issues/59) | P2 | Re-arm hosted CI: repo is public, Actions enabled, triggers in ci.yml — yet pushes produce zero runs. Find the cause, then narrow triggers to push/merge on `development`+`main`, then wire the required status check behind `main`'s branch protection (protection is already live, PR-required). | `check: gh issue view 59 --json state` |
+| [#58](https://github.com/HiQS-Labs/XYZ-forge/issues/58) | P2/P3 | GH-35 Phase 3 follow-ups: tier-2 skips the hygiene suites (security-scan, mktemp-trap-guard, path-integrity, checkjs) — P2; `--tier 3 --subsystem X` silently runs tier 2 — P3; pre-push mktemp-failure path contradicts its comment (`_rc` unbound) — P3. Recommended: ride with Phase 3's registry widening, not before. | `check: gh issue view 58 --json state` |
+| [#56](https://github.com/HiQS-Labs/XYZ-forge/issues/56) | P3 | Split the 2,214-line `skills/xyz/SKILL.md` into SKILL.md + MANUAL.md. Re-derive from today's file; do NOT resurrect PR #19's `tree-hygiene-guard.sh` (GH-484 trap). | `check: gh issue view 56 --json state` |
+| [#68](https://github.com/HiQS-Labs/XYZ-forge/issues/68) | P3 | `HARNESS-MODELS-REGISTRY.md` row from PR #60 is off-schema (date in the Harness column). Fold into the next touch of that file. | `check: gh issue view 68 --json state` |
 
 *(#67 is NOT parked — promoted to the roadmap's Queue position 1 this session, per operator call.)*
 

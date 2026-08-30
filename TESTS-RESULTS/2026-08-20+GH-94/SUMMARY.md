@@ -1,7 +1,7 @@
 # ATE Benchmark Run Summary: GH-94 (2026-08-20)
 
 - **Date:** 2026-08-20
-- **Tracking Issue:** [#94](https://github.com/HiQS-Suite/XYZ-forge/issues/94)
+- **Tracking Issue:** [#94](https://github.com/HiQS-Labs/XYZ-forge/issues/94)
 - **Active Working Doc:** [`PROJECT/2-WORKING/GH-94-PROGRAMMATIC-TOOL-CALLING.md`](../../PROJECT/2-WORKING/GH-94-PROGRAMMATIC-TOOL-CALLING.md)
 - **Campaign Duration:** 180 minutes (3.0 hours)
 - **Total Iterations Completed:** 438 runs

@@ -67,7 +67,7 @@ git -C "$R" config user.email t@t
 git -C "$R" config user.name t
 ra(){ require_fixture "$R" "timeline fixture"; python3 "$APP" --root "$R" "$@"; }
 rq(){ ra "$@" >/dev/null 2>&1; }
-GH="https://github.com/HiQS-Suite/XYZ-forge/issues"
+GH="https://github.com/HiQS-Labs/XYZ-forge/issues"
 
 rq init --slug gh103
 
@@ -92,9 +92,9 @@ cat > "$R/ROADMAP.md" <<'MD'
 # Fixture roadmap
 ## Ledger
 ### In progress
-- **GH-801 · marathon phase one** 🚧 — body. rated 90/85/70/60 → [#801](https://github.com/HiQS-Suite/XYZ-forge/issues/801)
-- **GH-805 · a non-member with an override** 🚧 — body. rated 10/10/10/10 ovr 399 → [#805](https://github.com/HiQS-Suite/XYZ-forge/issues/805)
-- **GH-900 · a rated detour, on no manifest** 🚧 — body. rated 50/50/50/50 → [#900](https://github.com/HiQS-Suite/XYZ-forge/issues/900)
+- **GH-801 · marathon phase one** 🚧 — body. rated 90/85/70/60 → [#801](https://github.com/HiQS-Labs/XYZ-forge/issues/801)
+- **GH-805 · a non-member with an override** 🚧 — body. rated 10/10/10/10 ovr 399 → [#805](https://github.com/HiQS-Labs/XYZ-forge/issues/805)
+- **GH-900 · a rated detour, on no manifest** 🚧 — body. rated 50/50/50/50 → [#900](https://github.com/HiQS-Labs/XYZ-forge/issues/900)
 ### Queue / parked intake
 - **GH-802 · marathon phase two, unrated** — body.
 MD

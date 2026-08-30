@@ -1,6 +1,6 @@
 ---
 gh_issue: 3
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/3
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/3
 title: "GH-3: improve-loop.sh --state-dir durability — provenance evidence must not evaporate"
 status: active
 created: 2026-08-16
@@ -42,7 +42,7 @@ swap it, or close #3 as already-landed.
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#3](https://github.com/HiQS-Suite/XYZ-forge/issues/3)
+- GitHub issue: [HiQS-Labs/XYZ-forge#3](https://github.com/HiQS-Labs/XYZ-forge/issues/3)
 
 ## Acceptance
 

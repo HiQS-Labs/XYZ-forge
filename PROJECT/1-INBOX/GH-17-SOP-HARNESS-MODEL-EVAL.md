@@ -1,6 +1,6 @@
 ---
 gh_issue: 17
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/17
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/17
 title: SOP for Evaluating New Agent Harnesses and Frontier Models
 status: Proposed (1-INBOX — not yet active)
 created: 2026-08-16

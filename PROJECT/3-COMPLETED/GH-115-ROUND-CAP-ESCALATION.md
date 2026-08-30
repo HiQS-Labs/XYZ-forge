@@ -6,7 +6,7 @@ updated: 2026-08-22
 owner: orchestrator (Claude Code)
 goal: let a relay that is demonstrably converging continue past the round cap, and make cap escalations distinguish stall from progress
 gh_issue: 115
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/115
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/115
 branch: gh-115/round-cap-escalation
 doc_type: bugfix
 effort: 1

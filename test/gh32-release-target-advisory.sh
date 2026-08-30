@@ -52,7 +52,7 @@ ra init --slug gh32adv >/dev/null
 # The clock is mocked for every assertion below, so this suite does not rot as the wall clock moves.
 NOW="2026-09-01T12:00:00Z"
 
-TRACK="https://github.com/HiQS-Suite/XYZ-forge/issues/32"
+TRACK="https://github.com/HiQS-Labs/XYZ-forge/issues/32"
 ra add --version 1.0.0 --codename Overdue --target-date 2026-08-20 --status active \
   --tracking-issue "$TRACK" \
   --description "an active release whose target has passed" \

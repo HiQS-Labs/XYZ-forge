@@ -1,6 +1,6 @@
 ---
 gh_issue: 91
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/91
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/91
 title: "fix(relay): a build turn has nowhere to write verification output — containment kills a complete, green turn"
 status: Active (2-WORKING — built 2026-08-20)
 created: 2026-08-20
@@ -17,8 +17,8 @@ goal: >
   committed on the non-worktree path. Containment otherwise unchanged: stray writes and
   lookalike prefixes still fail the turn.
 related:
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/90
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/107
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/90
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/107
 ---
 
 # GH-91: the sanctioned scratch directory

@@ -20,7 +20,7 @@ goal: >
 | Brief authored. | Phase execution. |
 
 Execution surface of record: `PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md`
-(issue: https://github.com/HiQS-Suite/XYZ-forge/issues/168)
+(issue: https://github.com/HiQS-Labs/XYZ-forge/issues/168)
 
 ## Task
 

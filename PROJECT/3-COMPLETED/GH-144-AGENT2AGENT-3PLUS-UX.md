@@ -1,6 +1,6 @@
 ---
 gh_issue: 144
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/144
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/144
 title: "Agent2Agent 3+ participant onboarding and read-only status quick wins"
 status: Active
 created: 2026-08-21
@@ -62,4 +62,4 @@ aliases, automatic routing, or automatic watcher/model startup.
 
 ## Source
 
-Live discussion and implementation review captured in [issue #144](https://github.com/HiQS-Suite/XYZ-forge/issues/144).
+Live discussion and implementation review captured in [issue #144](https://github.com/HiQS-Labs/XYZ-forge/issues/144).

@@ -57,7 +57,7 @@ Standing rules for every Ballast lane (from the release brief):
 
 ## Lane #4 — the gate travels with the repo, not just with the clone
 
-Issue: https://github.com/HiQS-Suite/XYZ-forge/issues/4 · Capture:
+Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/4 · Capture:
 `PROJECT/2-WORKING/GH-4-GATE-TRAVELS-WITH-CLONES.md`.
 
 Fix shape: surface an ungated clone in-band — a committed marker or first-run check that warns
@@ -73,7 +73,7 @@ Artifacts: `README.md`, `githooks/install.sh`, `test/baselines/GH-4-negative-con
 
 ## Lane #10 — prevent-half of containment: require_fixture adoption
 
-Issue: https://github.com/HiQS-Suite/XYZ-forge/issues/10 · Capture:
+Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/10 · Capture:
 `PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md`. The manifest's designated cut if scope
 slips (RELEASES.md); by far the largest member (~31 unaudited suites), with #1's clone-identity
 bracket already covering the same ground *detectably* in the meantime.

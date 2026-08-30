@@ -522,7 +522,7 @@ choosing where its `.git` lives. Two practical consequences:
    clone, and rerun at the same concurrency. Repairing the damaged clone does not rehabilitate the
    prior result.
 
-Tracked as [GH-45](https://github.com/HiQS-Suite/XYZ-forge/issues/45), with the broader fixture
+Tracked as [GH-45](https://github.com/HiQS-Labs/XYZ-forge/issues/45), with the broader fixture
 containment and identity work tracked by GH-564/GH-567.
 
 ---

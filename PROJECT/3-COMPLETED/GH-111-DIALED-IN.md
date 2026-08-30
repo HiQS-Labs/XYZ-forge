@@ -1,6 +1,6 @@
 ---
 gh_issue: 111
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/111
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/111
 title: "Retire manifest FREEZE; tasks and marathons are DIALED-IN to exactly one release, as a database state"
 status: Complete (3-COMPLETED as of 2026-08-21)
 created: 2026-08-20

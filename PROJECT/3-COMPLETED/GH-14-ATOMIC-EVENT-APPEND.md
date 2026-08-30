@@ -1,6 +1,6 @@
 ---
 gh_issue: 14
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/14
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/14
 title: "GH-14: appendEvent writes non-atomically; concurrent readers can observe torn event files"
 status: active
 created: 2026-08-16
@@ -60,8 +60,8 @@ write first, quarantine layered on top only after.
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#14](https://github.com/HiQS-Suite/XYZ-forge/issues/14)
-- Correction context: [#5 correction comment](https://github.com/HiQS-Suite/XYZ-forge/issues/5) (2026-08-15)
+- GitHub issue: [HiQS-Labs/XYZ-forge#14](https://github.com/HiQS-Labs/XYZ-forge/issues/14)
+- Correction context: [#5 correction comment](https://github.com/HiQS-Labs/XYZ-forge/issues/5) (2026-08-15)
 
 ## Acceptance
 

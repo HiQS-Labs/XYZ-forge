@@ -6,7 +6,7 @@ updated: 2026-08-22
 owner: orchestrator (Claude Code)
 goal: reject malformed CLI input at the tick kernel's boundary instead of persisting NaN/null and unbounded strings into event files
 gh_issue: 8
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/8
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/8
 branch: gh-8/kernel-boundary-hardening
 doc_type: bugfix
 effort: 2

@@ -27,7 +27,7 @@ phases: 1
 # GH-105: Vendor the RELEASES DB + timeline generator into `.xyz/` (optional add-on)
 
 ## Context & Cross-References
-- **Tracking Issue:** [#105](https://github.com/HiQS-Suite/XYZ-forge/issues/105)
+- **Tracking Issue:** [#105](https://github.com/HiQS-Labs/XYZ-forge/issues/105)
 - **Release:** 0.9.0 "Cargo" (target 2026-09-19, sequenced before Meter by operator decision 2026-08-20) — sole frozen manifest entry.
 - **Builds on:** GH-32 (RELEASES app) · GH-69 (roadmap shadow) · GH-103 / PR #104 (timeline viewer) · GH-312 (vendor preserve list) · interacts with the #75 dashboard-verb fold-in decision.
 

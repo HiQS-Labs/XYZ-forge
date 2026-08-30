@@ -74,7 +74,7 @@ name: CI
 # ── HOSTED CI RE-ARMED FOR THE PUBLIC REPOSITORY (XYZ-forge #16, 2026-08-17) ─────────────────────
 #
 # GH-544 deliberately removed `push:` and `pull_request:` while the source repository was private.
-# That bridge had one explicit end condition: the repository becomes public. HiQS-Suite/XYZ-forge
+# That bridge had one explicit end condition: the repository becomes public. HiQS-Labs/XYZ-forge
 # is public, so automatic triggers are restored here. The local pre-push gate remains useful as the
 # earliest signal; hosted CI restores independent attestation and the Linux portability canary.
 #

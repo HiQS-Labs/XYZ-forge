@@ -1,6 +1,6 @@
 ---
 gh_issue: 135
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/135
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/135
 title: "fix(consult): agy auth pre-flight still fatal on a non-zero whoami exit — the #130 gap"
 status: Active (2-WORKING — built 2026-08-22)
 created: 2026-08-22

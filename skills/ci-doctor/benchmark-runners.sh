@@ -30,7 +30,7 @@ replaced for every variant (sed has no per-line targeting here) — make --find
 specific enough to hit only the line(s) you mean.
 
 Example:
-  benchmark-runners.sh --repo HiQS-Suite/XYZ-forge --workflow ci.yml --base development \
+  benchmark-runners.sh --repo HiQS-Labs/XYZ-forge --workflow ci.yml --base development \
     --find 'runs-on: ubuntu-latest' \
     --variant 'github-hosted=runs-on: ubuntu-latest' \
     --variant 'starsling-4vcpu=runs-on: starsling-ubuntu-24.04' \

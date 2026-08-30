@@ -1,6 +1,6 @@
 ---
 gh_issue: 136
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/136
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/136
 title: "relay-drive: lane-attempt gate reads TICK_REPO_ROOT before #129's self-resolution"
 status: Active (2-WORKING — built 2026-08-22)
 created: 2026-08-22

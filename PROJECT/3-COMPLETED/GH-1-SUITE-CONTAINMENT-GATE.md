@@ -6,7 +6,7 @@ updated: 2026-08-16
 owner: orchestrator (Claude Code)
 goal: make every test suite unable to touch the caller's clone — harden require_fixture to resolved-path containment and bracket suite runs with a clone-identity invariant check
 gh_issue: 1
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/1
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/1
 branch: gh-1/suite-containment-gate
 doc_type: bugfix
 effort: 2
@@ -37,7 +37,7 @@ containment test is **lexical** (`case "$p" in "$WORK"/*)`), which still accepts
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)
+- GitHub issue: [HiQS-Labs/XYZ-forge#1](https://github.com/HiQS-Labs/XYZ-forge/issues/1)
 - This doc is the execution surface of record.
 
 ## Plan

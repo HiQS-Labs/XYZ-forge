@@ -9,7 +9,7 @@ NEXT: codex (Reviewer)
 # Daybreak · Wave 1 — the three offline lenses
 
 Release **0.7.2 "Daybreak"** · marathon `mar-01M0EC2ZXJCCJ88KASQPDBTBJ9` · tracking
-[#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77).
+[#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77).
 
 Build lenses **2, 3, 7** in `skills/standup/collect.sh`. These three are deliberately first: they are
 pure-local reads with no network and no `gh`, so they are the cheapest possible proof that the
@@ -19,9 +19,9 @@ harness holds before the two `gh` lenses arrive in wave 3.
 
 | Issue | Lens | Bounded read |
 |---|---|---|
-| [#79](https://github.com/HiQS-Suite/XYZ-forge/issues/79) | 2 · working tree | `git status --porcelain`, excluding **untracked** paths under `PARKED/` |
-| [#80](https://github.com/HiQS-Suite/XYZ-forge/issues/80) | 3 · branch | `git rev-list --left-right --count @{upstream}...HEAD`, trunk fallback on exit 128 |
-| [#81](https://github.com/HiQS-Suite/XYZ-forge/issues/81) | 7 · ROADMAP ledger | `python3 utils/py/releases_app.py roadmap sync --dry-run` |
+| [#79](https://github.com/HiQS-Labs/XYZ-forge/issues/79) | 2 · working tree | `git status --porcelain`, excluding **untracked** paths under `PARKED/` |
+| [#80](https://github.com/HiQS-Labs/XYZ-forge/issues/80) | 3 · branch | `git rev-list --left-right --count @{upstream}...HEAD`, trunk fallback on exit 128 |
+| [#81](https://github.com/HiQS-Labs/XYZ-forge/issues/81) | 7 · ROADMAP ledger | `python3 utils/py/releases_app.py roadmap sync --dry-run` |
 
 ## The transform — identical for all three
 

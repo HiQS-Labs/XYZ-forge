@@ -5,7 +5,7 @@ Each carries enough context to pick up cold; real homes are the linked issues/fi
 
 - **#75 fold-in decision.** The GH-103 exporter (`utils/timeline/export_timeline.py`) is
   effectively the rendering prototype for the queued `releases dashboard` verb
-  ([#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75)). Open call: fold it into
+  ([#75](https://github.com/HiQS-Labs/XYZ-forge/issues/75)). Open call: fold it into
   `releases_app.py` as the verb's body, or keep it standalone with the `data.json` contract as
   the seam. Decide when #75 is picked up; nothing blocks on it.
 

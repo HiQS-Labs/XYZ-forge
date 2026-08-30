@@ -1,6 +1,6 @@
 ---
 gh_issue: 102
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/102
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/102
 title: "GH-102: Unify Telemetry Schema & Inspection Tooling Across Fuzzing (utils/fuzzing) and ATE (utils/ate)"
 status: Complete
 created: 2026-08-20

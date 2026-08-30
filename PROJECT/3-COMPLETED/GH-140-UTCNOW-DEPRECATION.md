@@ -1,6 +1,6 @@
 ---
 gh_issue: 140
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/140
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/140
 title: "chore(marathon): datetime.utcnow() deprecation warnings pollute every driven run's output"
 status: Active (2-WORKING — built 2026-08-22)
 created: 2026-08-22

@@ -1,6 +1,6 @@
 ---
 gh_issue: 155
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/155
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/155
 title: "3rd Gen ATE & Fuzzing: Metamorphic Invariants, Differential Oracles, Hermetic Reproducers, Self-Healing & Active Explorers"
 status: Complete
 created: 2026-08-22
@@ -13,14 +13,14 @@ risk: 2
 phases: 5
 rating: "pri/sev/appeal/effort 85/70/90/50 · calc 295"
 related:
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/141
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/142
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/156
-  - https://github.com/HiQS-Suite/XYZ-forge/pull/150
-  - https://github.com/HiQS-Suite/XYZ-forge/pull/157
-  - https://github.com/HiQS-Suite/XYZ-forge/pull/160
-  - https://github.com/HiQS-Suite/XYZ-forge/pull/171
-  - https://github.com/HiQS-Suite/XYZ-forge/pull/172
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/141
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/142
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/156
+  - https://github.com/HiQS-Labs/XYZ-forge/pull/150
+  - https://github.com/HiQS-Labs/XYZ-forge/pull/157
+  - https://github.com/HiQS-Labs/XYZ-forge/pull/160
+  - https://github.com/HiQS-Labs/XYZ-forge/pull/171
+  - https://github.com/HiQS-Labs/XYZ-forge/pull/172
 goal: >
   Execute 3rd Gen Agentic ATE & Fuzzing (#155): build deterministic $0 metamorphic
   invariant assertion oracles (Phase 1), differential multi-harness cross-testing oracles (Phase 2),

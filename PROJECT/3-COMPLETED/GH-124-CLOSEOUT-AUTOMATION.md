@@ -1,6 +1,6 @@
 ---
 gh_issue: 124
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/124
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/124
 title: "feat(harness): eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene"
 status: Active (2-WORKING as of 2026-08-21)
 created: 2026-08-21
@@ -27,7 +27,7 @@ goal: >
 
 ## Canonical Implementation Specification (Finalized & Hardened Plan)
 
-This document establishes the **authoritative, production-grade implementation specification and safety contracts** for eliminating end-of-day closeout friction, incorporating all feedback from the `openrouter/stealth/ox-alpha` relay review, Agent2Agent session [#658731](https://github.com/HiQS-Suite/XYZ-forge/issues/124#issuecomment-5373503236), and Fable 5's architectural verification.
+This document establishes the **authoritative, production-grade implementation specification and safety contracts** for eliminating end-of-day closeout friction, incorporating all feedback from the `openrouter/stealth/ox-alpha` relay review, Agent2Agent session [#658731](https://github.com/HiQS-Labs/XYZ-forge/issues/124#issuecomment-5373503236), and Fable 5's architectural verification.
 
 ---
 

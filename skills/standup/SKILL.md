@@ -22,7 +22,7 @@ tiering, suppression, parking, rendering) is implemented and pinned by `test/gh7
 skill cannot run completely end-to-end today. `collect.sh` requires **`jq`** in addition to git and
 python3; without it every lens degrades to `D5` and the collector exits 3 rather than emitting nothing. Design and remaining work:
 [PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md](../../PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md)
-· [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77).
+· [#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77).
 
 ## The division of labour, and why it is drawn here
 

@@ -6,7 +6,7 @@ updated: 2026-08-18
 owner: orchestrator (Claude Code)
 goal: enforce collision-free path claims at the kernel boundary by rejecting direct tick claim and tick scope when requested paths overlap active claims
 gh_issue: 23
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/23
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/23
 branch: fix/gh-23-kernel-overlap-enforcement
 doc_type: bugfix
 effort: 2

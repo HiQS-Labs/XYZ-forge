@@ -1,6 +1,6 @@
 ---
 gh_issue: 18
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/18
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/18
 title: Harness Evaluation - Command Code (cmd) and Model Matrix
 status: Proposed (1-INBOX — not yet active)
 created: 2026-08-16
@@ -49,14 +49,14 @@ Tracking capture doc for evaluating Command Code (`cmd`) as an agent harness and
 - **Output Quality**: Outstanding. Emphasized standardized eval fixtures, GH-221 role/billing taxonomy, silent no-op hazards (GH-319 class), and prompt injection resistance tests.
 
 ### 3. Structural Refactor Autonomous Build Test: `qwen/qwen3.8-max` on Issue #12
-- **Task**: Execute [Issue #12](https://github.com/HiQS-Suite/XYZ-forge/issues/12) ("Tree diet: retire the ingestion scaffold, relocate marathon-system run logs, split the 2,214-line xyz SKILL.md").
+- **Task**: Execute [Issue #12](https://github.com/HiQS-Labs/XYZ-forge/issues/12) ("Tree diet: retire the ingestion scaffold, relocate marathon-system run logs, split the 2,214-line xyz SKILL.md").
 - **Command**: `cmd -p "<task prompt>" -m qwen/qwen3.8-max --tools-all --yolo -t`
 - **Actions Landed**: Relocated `ingestion/` docs, deleted `ingest.js`, relocated past marathon run logs to `PROJECT/4-MISC/marathon-run-records/`, split `skills/xyz/SKILL.md` (down to 178 lines) and created `skills/xyz/MANUAL.md`, authored `test/tree-hygiene-guard.sh`.
 - **Verification**: `validate.sh` 209/209 passed.
-- **Pull Request**: [PR #19](https://github.com/HiQS-Suite/XYZ-forge/pull/19).
+- **Pull Request**: [PR #19](https://github.com/HiQS-Labs/XYZ-forge/pull/19).
 
 ### 4. Deep Concurrency Debugging Autonomous Build Test: `qwen/qwen3.8-max` on Issue #15
-- **Task**: Resolve [Issue #15](https://github.com/HiQS-Suite/XYZ-forge/issues/15) ("Parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract").
+- **Task**: Resolve [Issue #15](https://github.com/HiQS-Labs/XYZ-forge/issues/15) ("Parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract").
 - **Command**: `cmd -p "<task prompt>" -m qwen/qwen3.8-max --tools-all --yolo -t`
 - **Root Cause & Actions Landed**:
   - Diagnosed that `validate.sh`'s serial retry loop was reading `$RESULTS` from stdin while spawning test suites, causing suites reading stdin to swallow subsequent results.
@@ -64,17 +64,17 @@ Tracking capture doc for evaluating Command Code (`cmd`) as an agent harness and
   - Added completeness catch-up and tally integrity gate (`passed + failed == total`).
   - Expanded `test/gh528-parallel-contention-retry.sh` to 9/9 assertions.
 - **Verification**: `validate.sh` 209/209 passed, 10/10 fresh clone parallel runs green.
-- **Pull Request**: [PR #20](https://github.com/HiQS-Suite/XYZ-forge/pull/20).
+- **Pull Request**: [PR #20](https://github.com/HiQS-Labs/XYZ-forge/pull/20).
 
 ### 5. Kernel Hardening Autonomous Build Test: `qwen/qwen3.8-max` on Issue #14
-- **Task**: Resolve [Issue #14](https://github.com/HiQS-Suite/XYZ-forge/issues/14) ("appendEvent writes non-atomically, so concurrent readers can observe torn event files").
+- **Task**: Resolve [Issue #14](https://github.com/HiQS-Labs/XYZ-forge/issues/14) ("appendEvent writes non-atomically, so concurrent readers can observe torn event files").
 - **Command**: `cmd -p "<task prompt>" -m qwen/qwen3.8-max --tools-all --yolo -t`
 - **Actions Landed**:
   - Updated `appendEvent` in `src/events.js` to write to `fpath + '.tmp'` first and rename atomically onto `fpath` via `fs.renameSync`.
   - Authored `test/gh14-atomic-append.sh` with 6 assertions (byte stability, traced mock pin, `.tmp` residue tolerance, and 300-event multi-process stress run).
   - Recorded negative control in `test/baselines/GH-14-negative-control.md`.
 - **Verification**: `validate.sh` 210/210 passed.
-- **Pull Request**: [PR #21](https://github.com/HiQS-Suite/XYZ-forge/pull/21).
+- **Pull Request**: [PR #21](https://github.com/HiQS-Labs/XYZ-forge/pull/21).
 
 ---
 

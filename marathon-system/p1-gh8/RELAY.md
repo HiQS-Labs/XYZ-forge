@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/marathon-clones/bulkhead-2026-08-23/gh-8-kernel-boundary-hardening/PROJECT/2-WORKING/GH-8-KERNEL-BOUNDARY-HARDENING.md` (its `## Acceptance` section, 4 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #8](https://github.com/HiQS-Suite/XYZ-forge/issues/8) — 4/4 criteria copied verbatim from issue #8.*
+*Verified against [issue #8](https://github.com/HiQS-Labs/XYZ-forge/issues/8) — 4/4 criteria copied verbatim from issue #8.*
 - [ ] `--priority abc` / `--epoch -1` / `--priority=3` all behave correctly (reject, reject, accept).
 - [ ] Malformed `task`/`agent` strings are refused at write time with actionable errors.
 - [ ] `test/unit/cli.test.js` and `test/unit/lock.test.js` exist and pass via `npm run test:unit`.

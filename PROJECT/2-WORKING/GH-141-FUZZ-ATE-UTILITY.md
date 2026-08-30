@@ -13,10 +13,10 @@ risk: 3
 phases: 4
 rating: "pri/sev/appeal/effort 80/65/85/55 · calc 285"
 related:
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/141 (original pre-rename tracking URL)
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/142
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/143
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/146
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/141 (original pre-rename tracking URL)
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/142
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/143
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/146
 fix_probes:
   - test -f utils/py/fuzz_inputs.py
 goal: >
