@@ -5,6 +5,9 @@ description: "ATE (Automated Testing Environment): drive long-running (2-3hr+) u
 
 # ATE — Automated Testing Environment (generic bounded-variation matrix runner)
 
+The skill interface lives here; its implementation is bundled under
+[`utils/ate/`](../../utils/ate/).
+
 ATE walks a declared grid of command variations unattended for hours, logs every result as
 structured JSON, and a frontier model (you, Claude) checks in every ~5 minutes to catch
 drift/looping. The full cycle — run, capture, document, file — is chained end to end: when the
@@ -39,7 +42,7 @@ as long as `--gh-repo` was passed.
 
 ```bash
 # 1. Install
-bash install.sh                     # copies this skill to ~/.claude/skills/
+bash utils/ate/install.sh           # copies the interface + implementation to ~/.claude/skills/
 
 # 2. In LM Studio: load a Gemma 4 model (31B Dense recommended), start the
 #    Local Server (Developer tab -> Start Server). Default: http://localhost:1234/v1
@@ -180,7 +183,7 @@ per_variation_timeout_seconds: 180
 - `scripts/compile_issue.py` — rolls up `error_log.jsonl` into one GH issue titled
   `ATE - [test-name] yyyy-mm-dd`; runs standalone too, for a manual rollup
 - `variations.example.yaml` — starter grid, copy and edit per pipeline under test
-- `install.sh` — copies this skill folder to `~/.claude/skills/`
+- [`utils/ate/install.sh`](../../utils/ate/install.sh) — copies the interface and implementation to `~/.claude/skills/`
 
 ## Notes / gotchas
 

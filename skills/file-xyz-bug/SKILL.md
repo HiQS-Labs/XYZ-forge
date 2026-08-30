@@ -9,7 +9,7 @@ You hit a harness bug **while working somewhere else**. This skill records it in
 owns the harness — `xyz-3-agents-swarm` — as a proper PDDA intake capture, then gets out of the
 way so you can go back to what you were doing.
 
-It is the **inbound-from-elsewhere** sibling of [`/idea`](../../../pdda/.claude/skills/idea/SKILL.md)
+It is the **inbound-from-elsewhere** sibling of `/idea`
 (net-new ideas, same repo) and `/triage` (incoming external reports). Same intake format, same
 preview-first discipline, same `PROJECT/PDDA.md` contract. The one thing it adds is **cross-repo
 addressing**: everything is written to the *intake* repo, and **nothing** is written to the repo
