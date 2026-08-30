@@ -229,10 +229,62 @@ def telemetry_enabled() -> bool:
     return start <= today <= end
 
 
-def telemetry_sidecar(path: Path) -> Path:
-    """telemetry.jsonl lives beside the doorbell markers, never inside conversation.md."""
-    runtime = path.parent / "runtime"
-    return runtime / "telemetry.jsonl"
+_TELEMETRY_SKIP_WARNED = False
+
+
+def _telemetry_explicitly_enabled() -> bool:
+    """True only for an explicit AGENT2AGENT_TELEMETRY opt-in, not the default-ON pilot window."""
+    return os.environ.get("AGENT2AGENT_TELEMETRY", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _warn_telemetry_skipped(path: Path) -> None:
+    """Announce the exclusion once, and only to someone who asked for telemetry by name.
+
+    An operator who set AGENT2AGENT_TELEMETRY=1 should learn their run is not being recorded. One
+    who is merely inside the default-ON pilot window did not ask, and a line on every legacy join
+    would be noise they learn to filter — which is how a real warning gets missed later."""
+    global _TELEMETRY_SKIP_WARNED
+    if _TELEMETRY_SKIP_WARNED:
+        return
+    _TELEMETRY_SKIP_WARNED = True
+    print(
+        f"warning: telemetry is skipped for {path.name} — legacy discussions live inside the "
+        f"repository and telemetry is never written there (GH-327)",
+        file=sys.stderr,
+    )
+
+
+def telemetry_runtime_dir(path: Path) -> Optional[Path]:
+    """The one place that decides whether a discussion gets sidecar files at all, and where.
+
+    GH-327: the sidecar used to be rooted at `path.parent / "runtime"` unconditionally. For a
+    discussion in the external store that is outside the repository and correct. But a LEGACY
+    `relay-system/<date>/<id>-slug.md` discussion lives INSIDE the git worktree, so the same
+    expression put telemetry there — breaking the contract in TELEMETRY.md that nothing is copied
+    into any repository, and putting it beyond the reach of `telemetry purge`, which only walks the
+    store. A single read-only `join` was enough to create it.
+
+    The test is the FILE NAME, not the path. Store discussions are always `conversation.md`
+    (find_discussions globs `**/{id}--*/conversation.md`); legacy ones are always `{id}-*.md`. A
+    geometric `_is_within(path, store)` check was the obvious alternative and is wrong: a
+    cross-model review found that `normalize_store` refuses a store inside the repo but NOT a repo
+    inside the store (:145-152), so with `--root <store>/repo --store <store>` — which is accepted
+    today — a legacy discussion IS within the store, the containment test passes, and telemetry
+    lands back in the worktree. The name check has no such geometry to defeat, needs no path
+    resolution, and is exactly how DiscussionLock and watch_sidecar already pivot.
+
+    Returning None means "this discussion gets no sidecar", and every caller must handle it."""
+    if path.name != "conversation.md":
+        return None
+    return path.parent / "runtime"
+
+
+def telemetry_sidecar(path: Path) -> Optional[Path]:
+    """telemetry.jsonl lives beside the doorbell markers, never inside conversation.md.
+
+    None for any discussion that is not telemetry-eligible — see telemetry_runtime_dir."""
+    runtime = telemetry_runtime_dir(path)
+    return (runtime / "telemetry.jsonl") if runtime is not None else None
 
 
 def _citation_counts(text: str) -> Tuple[int, int]:
@@ -255,6 +307,10 @@ def emit_telemetry(path: Path, event: str, **fields) -> None:
         if key in allowed and value is not None:
             record[key] = value
     sidecar = telemetry_sidecar(path)
+    if sidecar is None:
+        # Not telemetry-eligible (GH-327). Deliberate policy, not a failure.
+        _warn_telemetry_skipped(path)
+        return
     try:
         private_mkdir(sidecar.parent)
         with open(sidecar, "a", encoding="utf-8") as handle:
@@ -1770,13 +1826,18 @@ def append_turn(
         if close:
             metrics = parse_close_metrics(message)
             emit_telemetry(path, "close_written", close_type="substantive", turn_count=turn, **metrics)
-            try:
-                report = {"discussion_id": discussion_id, "turn_count": turn, **metrics}
-                runtime = path.parent / "runtime"
-                private_mkdir(runtime)
-                atomic_write(runtime / "close_report.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
-            except OSError:
-                pass
+            # GH-327: close_report.json bypassed telemetry_sidecar entirely and hard-coded
+            # `path.parent / "runtime"`. Guarding only emit_telemetry would have left THIS write
+            # still landing in the worktree for a legacy discussion — the fix would have looked
+            # complete and not been. Both advisors in the cross-model review found it independently.
+            close_runtime = telemetry_runtime_dir(path)
+            if close_runtime is not None:
+                try:
+                    report = {"discussion_id": discussion_id, "turn_count": turn, **metrics}
+                    private_mkdir(close_runtime)
+                    atomic_write(close_runtime / "close_report.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
+                except OSError:
+                    pass
             index_upsert(store_for_index, discussion_id, closed_at=timestamp,
                          close_type="substantive", turn_count=turn)
         if extension:
@@ -2043,6 +2104,12 @@ def telemetry_audit(discussion_id: str) -> int:
     """
     path = resolve_discussion(normalize_root(os.environ.get("AGENT2AGENT_ROOT")), discussion_id)
     sidecar = telemetry_sidecar(path)
+    if sidecar is None:
+        # Distinguish a deliberate exclusion from "off or no events" — otherwise the operator
+        # reads a policy decision as a missing file and goes looking for a bug (GH-327).
+        print(f"audit: #{discussion_id} is not telemetry-eligible "
+              f"(legacy discussion inside the repository; no sidecar is ever written)")
+        return 1
     if not sidecar.is_file():
         print(f"audit: no telemetry sidecar for #{discussion_id} (telemetry off or no events)")
         return 1

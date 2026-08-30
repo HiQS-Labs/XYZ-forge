@@ -907,5 +907,77 @@ else
   fi
 fi
 
+# --- GH-327: telemetry must never be written inside the coordinated repository ---
+# The sidecar used to root at `path.parent/runtime` unconditionally, so a LEGACY
+# relay-system/<date>/<id>-slug.md discussion — which lives in the git worktree — got
+# runtime/telemetry.jsonl and runtime/close_report.json written into the repo. That broke
+# TELEMETRY.md's "nothing is copied into any repository" and put the files beyond `telemetry purge`,
+# which only walks the store. Telemetry is forced ON so this tests the policy, not the pilot window.
+G327="$WORK/gh327-legacy/repo"
+G327_STORE="$WORK/gh327-store"
+mkdir -p "$G327/relay-system/2026-08-30"
+AGENT2AGENT_ID_SEQUENCE=771201 python3 "$CLI" --root "$G327" --store "$G327_STORE" \
+  start --subject "gh327 legacy" --agents 2 --packet-file "$PACKET" >/dev/null 2>&1
+g327_seed="$(find "$G327_STORE" -path "*771201*" -name conversation.md 2>/dev/null | head -1)"
+if [ -n "$g327_seed" ] && [ -f "$g327_seed" ]; then
+  # A store-resident discussion DOES get a sidecar. Negative control: without this the whole block
+  # would still pass if telemetry were simply broken everywhere.
+  g327_store_sidecar="$(dirname "$g327_seed")/runtime/telemetry.jsonl"
+  [ -f "$g327_store_sidecar" ] \
+    && pass "a store-resident discussion still gets its telemetry sidecar" \
+    || fail "telemetry is broken for store discussions, not just excluded for legacy ones"
+  cp "$g327_seed" "$G327/relay-system/2026-08-30/771201-gh327-legacy.md"
+  rm -rf "$(dirname "$g327_seed")"
+  AGENT2AGENT_TELEMETRY=1 python3 "$CLI" --root "$G327" --store "$G327_STORE" \
+    join --id 771201 --agent 1 >/dev/null 2>&1
+  g327_close="$(AGENT2AGENT_TELEMETRY=1 python3 "$CLI" --root "$G327" --store "$G327_STORE" \
+    close --id 771201 --agent 2 --trivial --message "Administrative close for gh327." 2>&1)"
+  g327_close_rc=$?
+  [ "$g327_close_rc" -eq 0 ] \
+    && pass "a legacy discussion still closes normally" \
+    || fail "excluding telemetry broke the legacy close: $g327_close"
+  g327_leaked="$(find "$G327" \( -name runtime -o -name telemetry.jsonl -o -name close_report.json \) 2>/dev/null | head -1)"
+  [ -z "$g327_leaked" ] \
+    && pass "no telemetry file is written inside the repository for a legacy discussion" \
+    || fail "telemetry still leaks into the repository: $g327_leaked"
+  expect_contains "the exclusion is announced when telemetry was explicitly enabled" \
+    "$g327_close" "telemetry is skipped"
+  # audit must report the policy, not die on a None sidecar
+  g327_audit="$(AGENT2AGENT_TELEMETRY=1 AGENT2AGENT_ROOT="$G327" python3 "$CLI" \
+    --root "$G327" --store "$G327_STORE" telemetry audit --id 771201 2>&1)"
+  case "$g327_audit" in
+    *Traceback*) fail "telemetry audit crashes on a non-eligible discussion" ;;
+    *) pass "telemetry audit does not crash on a non-eligible discussion" ;;
+  esac
+  expect_contains "telemetry audit names the exclusion rather than 'off or no events'" \
+    "$g327_audit" "not telemetry-eligible"
+else
+  fail "gh327 fixture could not be seeded"
+fi
+
+# The geometry a containment check would have failed on: normalize_store refuses a store INSIDE the
+# repo but not a repo INSIDE the store, so `_is_within(path, store)` returns true for a legacy
+# discussion here and would have written telemetry straight back into the worktree. The name check
+# has no geometry to defeat.
+G327B_STORE="$WORK/gh327-inverted"
+G327B="$G327B_STORE/repo"
+mkdir -p "$G327B/relay-system/2026-08-30"
+AGENT2AGENT_ID_SEQUENCE=772202 python3 "$CLI" --root "$G327B" --store "$G327B_STORE" \
+  start --subject "gh327 inverted" --agents 2 --packet-file "$PACKET" >/dev/null 2>&1
+g327b_seed="$(find "$G327B_STORE/repositories" -path "*772202*" -name conversation.md 2>/dev/null | head -1)"
+if [ -n "$g327b_seed" ] && [ -f "$g327b_seed" ]; then
+  pass "a repo inside its own store is accepted (the geometry that defeats a containment guard)"
+  cp "$g327b_seed" "$G327B/relay-system/2026-08-30/772202-gh327-inverted.md"
+  rm -rf "$(dirname "$g327b_seed")"
+  AGENT2AGENT_TELEMETRY=1 python3 "$CLI" --root "$G327B" --store "$G327B_STORE" \
+    close --id 772202 --agent 2 --trivial --message "Administrative close for gh327 inverted." >/dev/null 2>&1
+  g327b_leaked="$(find "$G327B" \( -name runtime -o -name telemetry.jsonl -o -name close_report.json \) 2>/dev/null | head -1)"
+  [ -z "$g327b_leaked" ] \
+    && pass "no telemetry lands in the repo even when the repo sits inside the store" \
+    || fail "the repo-inside-store geometry still leaks telemetry: $g327b_leaked"
+else
+  fail "gh327 inverted-geometry fixture could not be seeded"
+fi
+
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
