@@ -6,7 +6,7 @@ updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: scope wave_reconcile's drift check to the PR being reconciled so unrelated backlog drift downgrades to a warning instead of rolling back correct mutations
 gh_issue: 168
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/168
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/168
 branch: gh-168/wave-reconcile-scope
 doc_type: bugfix
 effort: 1

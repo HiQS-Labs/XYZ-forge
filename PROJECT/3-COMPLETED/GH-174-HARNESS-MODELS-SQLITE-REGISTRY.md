@@ -1,6 +1,6 @@
 ---
 gh_issue: 174
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/174
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/174
 title: "Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator"
 status: 3-COMPLETED (shipped)
 created: 2026-08-22
@@ -13,14 +13,14 @@ risk: 2
 phases: 5
 rating: "pri/sev/appeal/effort 85/75/95/45 · calc 300"
 related:
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/17
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/18
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/32
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/68
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/103
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/148
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/156
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/165
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/17
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/18
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/32
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/68
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/103
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/148
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/156
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/165
 goal: >
   Migrate static HARNESS-MODELS-REGISTRY.md into an active SQLite ledger (harnesses.db)
   with unified per-device config resolution, model reasoning effort tracking, deterministic post-turn

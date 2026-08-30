@@ -1,7 +1,7 @@
 # Daybreak · Wave 2 — session transcript, RELEASES CLI, PARKED (still offline)
 
 Release **0.7.2 "Daybreak"** · marathon `mar-01M0EC2ZXJCCJ88KASQPDBTBJ9` · tracking
-[#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77).
+[#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77).
 
 Build lenses **1, 6, 8** in `skills/standup/collect.sh`. Wave 1 (lenses 2, 3, 7) is already landed
 and green — `test/gh77-standup-triage.sh` runs 92/0 on `development`. These three complete the
@@ -11,9 +11,9 @@ offline set before the two `gh` lenses arrive in wave 3; none of them touches th
 
 | Issue | Lens | Bounded read |
 |---|---|---|
-| [#82](https://github.com/HiQS-Suite/XYZ-forge/issues/82) | 1 · conversation | this session's transcript — an action the agent said it would take, or a finding it raised, neither completed nor parked |
-| [#83](https://github.com/HiQS-Suite/XYZ-forge/issues/83) | 6 · RELEASES ledger | `$R check`, `$R next`, then `$R list --status draft` + `--status active` to enumerate, then `$R show --version <v>` per enumerated release |
-| [#84](https://github.com/HiQS-Suite/XYZ-forge/issues/84) | 8 · PARKED | read `PARKED/*.md` — a parked record whose mandatory `check` field (a read-only probe, never the `close` command) reports the work is done |
+| [#82](https://github.com/HiQS-Labs/XYZ-forge/issues/82) | 1 · conversation | this session's transcript — an action the agent said it would take, or a finding it raised, neither completed nor parked |
+| [#83](https://github.com/HiQS-Labs/XYZ-forge/issues/83) | 6 · RELEASES ledger | `$R check`, `$R next`, then `$R list --status draft` + `--status active` to enumerate, then `$R show --version <v>` per enumerated release |
+| [#84](https://github.com/HiQS-Labs/XYZ-forge/issues/84) | 8 · PARKED | read `PARKED/*.md` — a parked record whose mandatory `check` field (a read-only probe, never the `close` command) reports the work is done |
 
 ## Contract (unchanged from wave 1)
 

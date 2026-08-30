@@ -8,8 +8,8 @@ created: 2026-08-20
 # GH-103: Technical spike — RELEASES SQLite → timeline-ui viewer
 
 ## Context & Cross-References
-- **Tracking Issue:** [#103](https://github.com/HiQS-Suite/XYZ-forge/issues/103)
-- **Overlaps / informs:** [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — the queued `releases dashboard` verb wants exactly this (one read-only self-contained HTML from `releases.db`). This spike is #75's rendering prototype; if adopted, the exporter becomes that verb's body.
+- **Tracking Issue:** [#103](https://github.com/HiQS-Labs/XYZ-forge/issues/103)
+- **Overlaps / informs:** [#75](https://github.com/HiQS-Labs/XYZ-forge/issues/75) — the queued `releases dashboard` verb wants exactly this (one read-only self-contained HTML from `releases.db`). This spike is #75's rendering prototype; if adopted, the exporter becomes that verb's body.
 - **Template source:** `timeline-ui` repo (`ledger.html` + `data.json` contract; `ledger-static-preview.html` is the target look). © Neochrome, AGPL-3.0 — same family as this repo's license.
 
 ## Why

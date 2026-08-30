@@ -28,7 +28,7 @@ goal: >
 | Brief authored. | Phase execution. |
 
 Execution surface of record: `PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md`
-(issue: https://github.com/HiQS-Suite/XYZ-forge/issues/50)
+(issue: https://github.com/HiQS-Labs/XYZ-forge/issues/50)
 
 ## Task
 

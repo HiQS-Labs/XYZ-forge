@@ -1,7 +1,7 @@
 ---
 title: "GH-148: DeepSeek Harness (dsh) Integration & Evaluation"
 gh_issue: 148
-source: "https://github.com/HiQS-Suite/XYZ-forge/issues/148"
+source: "https://github.com/HiQS-Labs/XYZ-forge/issues/148"
 status: active
 created: 2026-08-21
 updated: 2026-08-21

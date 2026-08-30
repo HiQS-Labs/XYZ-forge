@@ -9,7 +9,7 @@ NEXT: none (relay closed)
 # Daybreak · Wave 3 — Open PRs & Issue state (lenses 4, 5 — the gh lenses)
 
 Release **0.7.2 "Daybreak"** · marathon `mar-01M0EC2ZXJCCJ88KASQPDBTBJ9` · tracking
-[#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77).
+[#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77).
 
 Build lenses **4, 5** in `skills/standup/collect.sh`. Waves 1 (lenses 2, 3, 7) and 2 (lenses 1, 6, 8)
 are landed and green — `test/gh77-standup-triage.sh` runs 112/0 on `development`. These two complete the
@@ -19,8 +19,8 @@ full 8-lens set by adding the GitHub metadata reads.
 
 | Issue | Lens | Bounded read |
 |---|---|---|
-| [#85](https://github.com/HiQS-Suite/XYZ-forge/issues/85) | 4 · Open PRs | `gh pr list --limit 51 --json number,title,updatedAt,isDraft,mergeStateStatus` — 51 probes one past the bound so truncation is detectable |
-| [#86](https://github.com/HiQS-Suite/XYZ-forge/issues/86) | 5 · Issue state | `gh issue view <n> --json number,state,title,updatedAt` over the bounded set (session mentions + Queue/In-progress ledger cites + non-shipped manifests) |
+| [#85](https://github.com/HiQS-Labs/XYZ-forge/issues/85) | 4 · Open PRs | `gh pr list --limit 51 --json number,title,updatedAt,isDraft,mergeStateStatus` — 51 probes one past the bound so truncation is detectable |
+| [#86](https://github.com/HiQS-Labs/XYZ-forge/issues/86) | 5 · Issue state | `gh issue view <n> --json number,state,title,updatedAt` over the bounded set (session mentions + Queue/In-progress ledger cites + non-shipped manifests) |
 
 ## Contract (unchanged from waves 1 & 2)
 

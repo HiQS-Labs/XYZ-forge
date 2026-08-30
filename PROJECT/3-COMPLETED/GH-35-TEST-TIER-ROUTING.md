@@ -1,6 +1,6 @@
 ---
 gh_issue: 35
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/35
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/35
 title: "3-Tier test suite selection (docs, utility libraries, core harness) + CPU governance"
 status: Active (2-WORKING — Phases 1+2 built 2026-08-18; Phase 3 pending)
 created: 2026-08-18
@@ -44,7 +44,7 @@ goal: >
 
 ## Acceptance criteria (from the issue)
 
-Transcribed from [#35](https://github.com/HiQS-Suite/XYZ-forge/issues/35); the checkboxes reflect
+Transcribed from [#35](https://github.com/HiQS-Labs/XYZ-forge/issues/35); the checkboxes reflect
 THIS repo's state, not the issue's. Phases 1+2 were the requested scope; Phase 3 is pending.
 
 ### Phase 1 (Tier 1 - Docs)

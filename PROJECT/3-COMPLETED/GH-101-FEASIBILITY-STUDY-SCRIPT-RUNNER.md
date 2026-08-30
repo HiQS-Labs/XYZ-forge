@@ -1,6 +1,6 @@
 ---
 gh_issue: 101
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/101
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/101
 title: "GH-101: Feasibility Study — Promoting `script_runner.py` into Core Relay & Consult Runtimes"
 status: Complete
 created: 2026-08-20
@@ -53,6 +53,6 @@ goal: >
 - [x] Test 1 ✅ → [x] Test 2 ✅ → [x] Test 3 ✅ → **`script_runner.py` Promoted into Core Runtimes**
 
 ## Cross-References
-- **Parent Research Track:** [GH-94](../../PROJECT/3-COMPLETED/GH-94-PROGRAMMATIC-TOOL-CALLING.md) · [#94](https://github.com/HiQS-Suite/XYZ-forge/issues/94) · [PR #100](https://github.com/HiQS-Suite/XYZ-forge/pull/100)
-- **Unified Telemetry Contract:** [GH-102](../../PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Suite/XYZ-forge/issues/102)
+- **Parent Research Track:** [GH-94](../../PROJECT/3-COMPLETED/GH-94-PROGRAMMATIC-TOOL-CALLING.md) · [#94](https://github.com/HiQS-Labs/XYZ-forge/issues/94) · [PR #100](https://github.com/HiQS-Labs/XYZ-forge/pull/100)
+- **Unified Telemetry Contract:** [GH-102](../../PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Labs/XYZ-forge/issues/102)
 - **Discussion Sync:** [Relay #709506](../../relay-system/2026-08-20/709506-agent2agent-gh-102-telemetry-architecture-gh-101-test-2-consult-dogf.md)

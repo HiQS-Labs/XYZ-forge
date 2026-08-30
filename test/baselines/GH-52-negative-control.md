@@ -63,6 +63,6 @@ produces a `.bak`, so its absence is positive evidence the gate stayed read-only
 
 ## Related
 
-- [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52) — the issue this closes
+- [#52](https://github.com/HiQS-Labs/XYZ-forge/issues/52) — the issue this closes
 - [RELEASES-DB-FAQS.md](../../RELEASES-DB-FAQS.md) — the merge model and why this gate exists
 - `test/baselines/GH-32-negative-control.md` — the CLI-level controls this one sits on top of

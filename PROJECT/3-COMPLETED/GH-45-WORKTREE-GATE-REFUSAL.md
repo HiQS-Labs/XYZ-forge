@@ -1,6 +1,6 @@
 ---
 gh_issue: 45
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/45
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/45
 title: "validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone"
 status: Active (2-WORKING — built 2026-08-18)
 created: 2026-08-18
@@ -16,7 +16,7 @@ goal: >
   closed, every tier), with a message that names the observed damage and an explicit
   XYZ_ALLOW_WORKTREE_GATE=1 override for deliberate disposable runs.
 related:
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/35
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/35
 ---
 
 # GH-45: The gate refuses to run from a linked worktree
@@ -34,7 +34,7 @@ Running `bash validate.sh` from a **linked git worktree** corrupted the parent c
 `remote.origin.url` repointed to a since-deleted fixture bare repo, all `refs/remotes/origin/*`
 deleted, `development` and `main` overwritten with fixture commits, fixture branches and ~72
 fixture files left behind. No commits were lost; recovery required knowing exactly what to look
-for. Full damage list: [#45](https://github.com/HiQS-Suite/XYZ-forge/issues/45).
+for. Full damage list: [#45](https://github.com/HiQS-Labs/XYZ-forge/issues/45).
 
 Root cause: a linked worktree **shares the parent's `.git` common directory** — config, refs,
 objects. A suite that reaches "the repo" through `git -C "$(git rev-parse --git-common-dir)"`,

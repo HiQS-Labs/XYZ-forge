@@ -1,6 +1,6 @@
 ---
 gh_issue: 111
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/111
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/111
 title: "Execution checklist — GH-111 (dialed-in) and GH-108 (rating system) to done"
 status: Complete (3-COMPLETED as of 2026-08-21)
 created: 2026-08-20
@@ -25,7 +25,7 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 | What was just completed | What's next |
 |---|---|
-| **Every item below is landed and green, and the work is merged.** GH-111 Phases A/B/C and GH-108 Phases A/B/C/D shipped to `development` via PR [#116](https://github.com/HiQS-Suite/XYZ-forge/pull/116) (`c271be3`, 2026-08-21). The two closing items G3 and G4 — the ones this list carried as `[~]` pending the merge — are done: both plans are in `PROJECT/3-COMPLETED`, their ROADMAP pointers retargeted, and #108/#111 closed (#109 and #110 closed themselves on the PR's `Closes` lines). | Nothing — this checklist is retired. It existed to keep the next move unambiguous while the two plans were in flight; both are now complete, which was its stated end condition. |
+| **Every item below is landed and green, and the work is merged.** GH-111 Phases A/B/C and GH-108 Phases A/B/C/D shipped to `development` via PR [#116](https://github.com/HiQS-Labs/XYZ-forge/pull/116) (`c271be3`, 2026-08-21). The two closing items G3 and G4 — the ones this list carried as `[~]` pending the merge — are done: both plans are in `PROJECT/3-COMPLETED`, their ROADMAP pointers retargeted, and #108/#111 closed (#109 and #110 closed themselves on the PR's `Closes` lines). | Nothing — this checklist is retired. It existed to keep the next move unambiguous while the two plans were in flight; both are now complete, which was its stated end condition. |
 
 ## GH-111 Phase A — schema + verbs
 

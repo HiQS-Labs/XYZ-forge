@@ -1,6 +1,6 @@
 ---
 gh_issue: 4
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/4
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/4
 title: "GH-4: the pre-push gate does not travel with clones — fresh clones push unverified"
 status: active
 created: 2026-08-16
@@ -42,7 +42,7 @@ the ungated state stops being invisible.
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#4](https://github.com/HiQS-Suite/XYZ-forge/issues/4)
+- GitHub issue: [HiQS-Labs/XYZ-forge#4](https://github.com/HiQS-Labs/XYZ-forge/issues/4)
 
 ## Acceptance
 

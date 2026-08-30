@@ -1,7 +1,7 @@
 # Daybreak · Wave 4 — End-to-end Wiring, All-Degraded Fixture & Subsystem Registration
 
 Release **0.7.2 "Daybreak"** · marathon `mar-01M0EC2ZXJCCJ88KASQPDBTBJ9` · tracking
-[#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) ([#87](https://github.com/HiQS-Suite/XYZ-forge/issues/87)).
+[#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77) ([#87](https://github.com/HiQS-Labs/XYZ-forge/issues/87)).
 
 Complete the final integration of the `/standup` toolchain:
 1. End-to-end `skills/standup/collect.sh` execution combining all 8 lenses (1 through 8).
@@ -14,7 +14,7 @@ Complete the final integration of the `/standup` toolchain:
 
 | Issue | Unit | Deliverables |
 |---|---|---|
-| [#87](https://github.com/HiQS-Suite/XYZ-forge/issues/87) | 4 · Wiring & Integration | `collect.sh` end-to-end with all 8 lenses, `fixtures/all-degraded/`, `install.sh --check`, `ci-route.sh` registration, and full `test/gh77-standup-triage.sh` suite |
+| [#87](https://github.com/HiQS-Labs/XYZ-forge/issues/87) | 4 · Wiring & Integration | `collect.sh` end-to-end with all 8 lenses, `fixtures/all-degraded/`, `install.sh --check`, `ci-route.sh` registration, and full `test/gh77-standup-triage.sh` suite |
 
 ## Contract
 

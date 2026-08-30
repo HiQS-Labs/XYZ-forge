@@ -52,8 +52,8 @@ cat << 'EOF' > "$REPO/ROADMAP.md"
 # Test Roadmap
 
 ### In progress
-- **GH-999 · Test Feature** 🚧 **active 2026-08-22** — test description. rated 80/80/80/80. → [GH-999-TEST.md](PROJECT/2-WORKING/GH-999-TEST.md) · [#999](https://github.com/HiQS-Suite/XYZ-forge/issues/999)
-- **GH-777 · Declined Feature** 🚧 **active 2026-08-22** — declined feature. rated 50/50/50/50. → [GH-777-DECLINED.md](PROJECT/2-WORKING/GH-777-DECLINED.md) · [#777](https://github.com/HiQS-Suite/XYZ-forge/issues/777)
+- **GH-999 · Test Feature** 🚧 **active 2026-08-22** — test description. rated 80/80/80/80. → [GH-999-TEST.md](PROJECT/2-WORKING/GH-999-TEST.md) · [#999](https://github.com/HiQS-Labs/XYZ-forge/issues/999)
+- **GH-777 · Declined Feature** 🚧 **active 2026-08-22** — declined feature. rated 50/50/50/50. → [GH-777-DECLINED.md](PROJECT/2-WORKING/GH-777-DECLINED.md) · [#777](https://github.com/HiQS-Labs/XYZ-forge/issues/777)
 - **GH-444 ** 🚧 **active 2026-08-22** separatorless description
 
 ### Completed

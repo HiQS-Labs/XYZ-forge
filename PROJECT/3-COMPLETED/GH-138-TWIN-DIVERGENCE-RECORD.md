@@ -1,6 +1,6 @@
 ---
 gh_issue: 138
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/138
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/138
 title: "relay-drive Bash/Python twin divergence (post-#129) — record it before it generates false bug reports"
 status: Active (2-WORKING — built 2026-08-22)
 created: 2026-08-22

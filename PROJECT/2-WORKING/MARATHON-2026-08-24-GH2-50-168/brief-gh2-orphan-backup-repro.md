@@ -20,7 +20,7 @@ goal: >
 | Brief authored. | Phase execution. |
 
 Execution surface of record: `PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md`
-(issue: https://github.com/HiQS-Suite/XYZ-forge/issues/2)
+(issue: https://github.com/HiQS-Labs/XYZ-forge/issues/2)
 
 ## Task
 

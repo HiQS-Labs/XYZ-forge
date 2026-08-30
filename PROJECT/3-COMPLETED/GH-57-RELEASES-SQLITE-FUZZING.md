@@ -1,7 +1,7 @@
 ---
 title: "GH-57: RELEASES SQLite system fuzzing & multi-scenario resilience suite"
 gh_issue: 57
-source: "https://github.com/HiQS-Suite/XYZ-forge/issues/57"
+source: "https://github.com/HiQS-Labs/XYZ-forge/issues/57"
 status: active
 created: 2026-08-19
 updated: 2026-08-19

@@ -1,7 +1,7 @@
 ---
 title: "GH-39: Project RELEASES.DB into GitHub release cards"
 gh_issue: 39
-source: "https://github.com/HiQS-Suite/XYZ-forge/issues/39"
+source: "https://github.com/HiQS-Labs/XYZ-forge/issues/39"
 status: active
 created: 2026-08-18
 updated: 2026-08-19
@@ -38,4 +38,4 @@ instead of creating duplicates.
 
 - `test/gh39-releases-project-sync.sh`: dry-run non-mutation, initial create, idempotent repeat
   update, and missing-schema refusal.
-- Live sync is scoped only to HiQS-Suite Project #2 and uses the existing eight release cards.
+- Live sync is scoped only to HiQS-Labs Project #2 and uses the existing eight release cards.

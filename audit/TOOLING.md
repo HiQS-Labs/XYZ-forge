@@ -1,7 +1,7 @@
 # Audit repro tooling
 
 Two standalone probe scripts. They produced the evidence in the
-[Windows/MSYS2 audit](https://github.com/HiQS-Suite/XYZ-forge/pull/29); this PR is the tooling only,
+[Windows/MSYS2 audit](https://github.com/HiQS-Labs/XYZ-forge/pull/29); this PR is the tooling only,
 split out so the executable half can be reviewed on its own merits.
 
 | Script | What it probes |

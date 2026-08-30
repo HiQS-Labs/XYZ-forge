@@ -1,6 +1,6 @@
 ---
 gh_issue: 32
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/32
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/32
 title: "RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, and cross-repo UI"
 status: Proposed (1-INBOX — not yet active)
 created: 2026-08-18

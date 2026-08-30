@@ -6,7 +6,7 @@ updated: 2026-08-16
 owner: orchestrator (Claude Code)
 goal: this lane delivers ONLY the node:test unit runner and the first direct unit tests for src/. The corrupt-file recovery is re-routed to #14 (atomic write first; quarantine only on top of atomic writes), per the correction on #5.
 gh_issue: 5
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/5
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/5
 branch: gh-5/events-quarantine-unit-tests
 doc_type: bugfix
 effort: 1
@@ -40,7 +40,7 @@ The reader-recovery half was rejected on review (unsafe while writes are non-ato
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5)
+- GitHub issue: [HiQS-Labs/XYZ-forge#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5)
 
 ## Plan
 

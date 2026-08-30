@@ -1,6 +1,6 @@
 ---
 gh_issue: 137
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/137
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/137
 title: "test: Wave-1 synthetic suites (gh129/gh130/gh131) are unregistered — nothing runs them"
 status: Active (2-WORKING — built 2026-08-22)
 created: 2026-08-22

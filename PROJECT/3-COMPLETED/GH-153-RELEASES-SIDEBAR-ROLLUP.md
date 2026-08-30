@@ -1,6 +1,6 @@
 ---
 gh_issue: 153
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/153
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/153
 title: "Add left sidebar navigation and project switcher rollup for RELEASES system"
 status: Active (2-WORKING — spike executing 2026-08-22, same session as filing)
 created: 2026-08-22
@@ -13,7 +13,7 @@ risk: 2
 phases: 3
 rating: "pri/sev/appeal/effort 70/55/80/45 · calc 250"
 related:
-  - https://github.com/HiQS-Suite/XYZ-forge/issues/154
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/154
 goal: >
   Technical spike (operator-directed): give the RELEASES dashboard a traditional left
   sidebar — default ON, hamburger slideout, minimize-to-icon-rail, project switcher,

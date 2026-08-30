@@ -30,7 +30,7 @@ related:
 1. In `utils/py/releases_app.py` (`parse_roadmap_ledger`), widen the issue regex from `HiQS-Suite` to `HiQS-(?:Suite|Labs)` so both legacy and new org URLs parse cleanly into `issue_url`.
 2. In `evidence/_env/fix-gh-default.sh`, update target repository to `HiQS-Labs/XYZ-forge`.
 3. In `utils/build-launch-artifact.sh`, update `DEFAULT_REMOTE` to `https://github.com/HiQS-Labs/XYZ-forge.git`.
-4. In `test/gh69-roadmap-shadow.sh`, add test fixtures and assertions validating both legacy `HiQS-Suite` and new `HiQS-Labs` issue and PR URLs.
+4. In `test/gh69-roadmap-shadow.sh`, add test fixtures and assertions validating both legacy `HiQS-Labs` and new `HiQS-Labs` issue and PR URLs.
 5. Review via `/review-xyz` with Alibaba Qwen 3.8 Max.
 
 ## Acceptance

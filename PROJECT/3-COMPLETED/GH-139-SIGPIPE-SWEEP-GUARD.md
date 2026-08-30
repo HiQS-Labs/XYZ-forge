@@ -1,6 +1,6 @@
 ---
 gh_issue: 139
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/139
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/139
 title: "test: GH-460's SIGPIPE shape is still open across the suite — sweep + ratchet guard"
 status: Active (2-WORKING — built 2026-08-22)
 created: 2026-08-22

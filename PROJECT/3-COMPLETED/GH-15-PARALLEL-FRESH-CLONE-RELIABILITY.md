@@ -1,6 +1,6 @@
 ---
 gh_issue: 15
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/15
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/15
 title: "GH-15: parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract"
 status: active
 created: 2026-08-16
@@ -45,7 +45,7 @@ alone" must always be followed by "in what environment".
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#15](https://github.com/HiQS-Suite/XYZ-forge/issues/15)
+- GitHub issue: [HiQS-Labs/XYZ-forge#15](https://github.com/HiQS-Labs/XYZ-forge/issues/15)
 
 ## Acceptance
 

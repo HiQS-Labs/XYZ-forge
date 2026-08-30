@@ -68,7 +68,7 @@ python3 utils/ate/scripts/run_variations.py \
   --repo /tmp/scratch-repo \
   --variations utils/ate/variations.tool-density.yaml \
   --lmstudio-model "gemma-4-31b-instruct" \
-  --gh-repo HiQS-Suite/XYZ-forge \
+  --gh-repo HiQS-Labs/XYZ-forge \
   --test-name "tool-density-fuzz" \
   --minutes 180
 

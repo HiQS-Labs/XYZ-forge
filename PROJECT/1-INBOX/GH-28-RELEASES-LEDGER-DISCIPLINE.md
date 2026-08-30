@@ -1,6 +1,6 @@
 ---
 gh_issue: 28
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/28
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/28
 title: "RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue"
 status: Proposed (1-INBOX — not yet active)
 created: 2026-08-18

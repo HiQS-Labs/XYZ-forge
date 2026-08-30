@@ -1,7 +1,7 @@
 ---
 title: "GH-132: Formal /review-xyz Code Review Skill & Multi-Model Harness"
 gh_issue: 132
-source: "https://github.com/HiQS-Suite/XYZ-forge/issues/132"
+source: "https://github.com/HiQS-Labs/XYZ-forge/issues/132"
 status: active
 created: 2026-08-21
 updated: 2026-08-21

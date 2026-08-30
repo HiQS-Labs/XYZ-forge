@@ -6,7 +6,7 @@ updated: 2026-08-24
 owner: orchestrator (Claude Code)
 goal: make branch operations refuse-or-succeed atomically under a sandbox that blocks .git/config writes, so a half-applied switch can never overwrite uncommitted work
 gh_issue: 50
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/50
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/50
 branch: gh-50/sandboxed-git-half-apply
 doc_type: bugfix
 effort: 1

@@ -1,7 +1,7 @@
 # GH-563 secret-scan evidence
 
 - Tool: TruffleHog 3.97.0
-- Public repository: `HiQS-Suite/XYZ-forge`
+- Public repository: `HiQS-Labs/XYZ-forge`
 - Scanned commit: `e80e1fcc859d5943d56978bcaace8c9e97044324`
 - Scope: Git scan of the fresh public clone and its reachable refs, with updater disabled
 - Result: 0 findings; 0 verified; 0 unverified

@@ -173,7 +173,7 @@ Store the campaign output in `TESTS-RESULTS/`:
   `origin/development`:
 
   ```bash
-  git clone git@github.com:HiQS-Suite/XYZ-forge.git ../XYZ-forge-<topic>
+  git clone git@github.com:HiQS-Labs/XYZ-forge.git ../XYZ-forge-<topic>
   cd ../XYZ-forge-<topic>
   bash githooks/install.sh                       # per-clone; the gate does not travel (GH-549)
   git checkout -b feat/<topic> origin/development   # or fix/<topic>

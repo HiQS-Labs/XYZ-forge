@@ -345,7 +345,7 @@ def execute_model_review(engine, model_name, prompt, wt_dir, timeout_s, env):
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/HiQS-Suite/XYZ-forge",
+                "HTTP-Referer": "https://github.com/HiQS-Labs/XYZ-forge",
                 "X-Title": "XYZ-forge review-xyz",
             },
         )

@@ -1,15 +1,15 @@
 # ROADMAP upstream archive — entries removed 2026-08-19
 
-**Why this file exists.** `HiQS-Suite/XYZ-forge` is the successor to
+**Why this file exists.** `HiQS-Labs/XYZ-forge` is the successor to
 [`Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm).
 The migration did not renumber GH references, so the inherited `ROADMAP.md` carried 256 ledger
 entries whose `GH-nnn` keys and issue links belong to the OLD repo's numbering — alongside 17
 entries keyed to this repo's own issues. On the operator's call (2026-08-19, tracked on
-[#69](https://github.com/HiQS-Suite/XYZ-forge/issues/69)), the old-numbered entries were removed
+[#69](https://github.com/HiQS-Labs/XYZ-forge/issues/69)), the old-numbered entries were removed
 from the live ledger and preserved here verbatim.
 
 **Reading this file:** every `GH-nnn` and bare `#nnn` below refers to the UPSTREAM repo's numbering,
-not this repo's. Do not cross-file against `HiQS-Suite/XYZ-forge` issue numbers. The removal commit
+not this repo's. Do not cross-file against `HiQS-Labs/XYZ-forge` issue numbers. The removal commit
 is the second backup: `git log --follow ROADMAP.md`.
 
 **This file is not parsed by anything.** It is outside the planner's `## Ledger` scan and carries

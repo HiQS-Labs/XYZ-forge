@@ -1,6 +1,6 @@
 ---
 gh_issue: 10
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/10
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/10
 title: "GH-10: prevent-half of containment — adopt require_fixture across the ~31 unaudited suites + adoption guard + ci-local identity bracket"
 status: cut-from-ballast
 created: 2026-08-16
@@ -48,7 +48,7 @@ remains live in each of them.
 
 ## Source of truth
 
-- GitHub issue: [HiQS-Suite/XYZ-forge#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10)
+- GitHub issue: [HiQS-Labs/XYZ-forge#10](https://github.com/HiQS-Labs/XYZ-forge/issues/10)
 
 ## Acceptance
 

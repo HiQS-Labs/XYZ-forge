@@ -1,6 +1,6 @@
 ---
 gh_issue: 108
-source: https://github.com/HiQS-Suite/XYZ-forge/issues/108
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/108
 title: "pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override)"
 status: Complete (3-COMPLETED as of 2026-08-21)
 created: 2026-08-20
