@@ -430,9 +430,22 @@ $$\text{Wave} \longrightarrow \text{Lane} \longrightarrow \text{Execution Plan (
 ## Repo map
 
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
-- `skills/` — packaged skill surfaces, including `agent2agent`, `relay-xyz`, `relay-automation`, `xyz`, consult helpers, and
-  [`ponytail`](skills/ponytail/SKILL.md) (the `/ponytail` lens definition cited throughout
-  `PROJECT/` docs and PDDA's `/idea` Phase 0 — see legacy source issue #180).
+- `skills/` — the canonical home for every packaged skill interface; see the complete
+  [Skills Index](ARCHITECTURE.md#skills-index). The standalone SWE set includes planning and
+  explanation skills ([`better-options`](skills/better-options/SKILL.md),
+  [`feynman`](skills/feynman/SKILL.md), [`phase-qa`](skills/phase-qa/SKILL.md),
+  [`recon`](skills/recon/SKILL.md), [`spike-360`](skills/spike-360/SKILL.md),
+  [`swe`](skills/swe/SKILL.md)); build discipline and relay protocol
+  ([`debug-mantra`](skills/debug-mantra/SKILL.md), [`ponytail`](skills/ponytail/SKILL.md),
+  [`relay`](skills/relay/SKILL.md)); repo audits
+  ([`front-door`](skills/front-door/SKILL.md), [`honest`](skills/honest/SKILL.md),
+  [`readme-audit`](skills/readme-audit/SKILL.md), [`shakedown`](skills/shakedown/SKILL.md));
+  and toolbox skills ([`github-auth-debug`](skills/github-auth-debug/SKILL.md),
+  [`install-improve-audit`](skills/install-improve-audit/SKILL.md),
+  [`read-only`](skills/read-only/SKILL.md), [`rpr`](skills/rpr/SKILL.md),
+  [`vscode-color`](skills/vscode-color/SKILL.md)). The ATE and SWE diagram interfaces also live
+  here ([`ate`](skills/ate/SKILL.md), [`swe-diagram`](skills/swe-diagram/SKILL.md)); their
+  implementation assets remain under `utils/`.
   Claude Code only scans `~/.claude/skills/`, so a fresh clone won't see these until you symlink them in —
   run `bash skills/relay-xyz/install.sh` once per clone/machine to make the `/relay-xyz` skill discoverable
   (see [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md#first-time-setup-on-a-new-clone-or-machine-make-the-skill-discoverable)).
@@ -452,7 +465,12 @@ $$\text{Wave} \longrightarrow \text{Lane} \longrightarrow \text{Execution Plan (
 - `releases.db` + `releases.sql` — TWO subsystems in one ledger: the GH-32 RELEASES ledger and the GH-69 ROADMAP shadow (`releases roadmap sync` mirrors `ROADMAP.md`'s ledger in, one-way). Read [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md) before merging either file, since the SQLite file is derived and the SQL dump is what git actually merges.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md).
 - `utils/marathon-plan.sh` — the marathon planner/ranker: scores the whole ROADMAP ledger into waves of disjoint, collision-safe write-sets, and with `--deep` delegates to `swarm-preflight.sh --dry-run` per item for an authoritative freshness verdict. Writes `PROJECT/2-WORKING/MARATHON-PLAN-<date>.md` — the "marathon file" the operator skills act on.
-- `utils/swe-diagram/` — dependency-free architecture/Git-history diagram generator; `layout: "git-lanes"` renders stacked branch lanes with commits left-to-right, driven by a local ref-reading generator that emits an auditable JSON spec plus self-contained HTML. See legacy source issue #201.
+- `utils/ate/` — ATE implementation scripts and variation grids; the canonical skill interface is
+  [`skills/ate/SKILL.md`](skills/ate/SKILL.md).
+- `utils/swe-diagram/` — dependency-free architecture/Git-history diagram implementation;
+  `layout: "git-lanes"` renders stacked branch lanes with commits left-to-right. The canonical
+  skill interface is [`skills/swe-diagram/SKILL.md`](skills/swe-diagram/SKILL.md). See legacy
+  source issue #201.
 - `utils/git-bundle-snapshot.sh` + `relay-automation/hooks/gh177-sandbox-test-guard.sh` — the wipe-prevention layer: rotated `git bundle --all` backups on a daily cron, plus a PreToolUse hook that blocks running the test suite under a *sandboxed* Claude Code Bash call (the ignition for the GH-177 repo wipes). See legacy source issue #233.
 - `install.sh` — materializes the `tick` runtime (`bin/tick` + `src/*.js`) into an external repo and records the install in a per-user, machine-local registry (`~/.config/xyz/registry.tsv`). See "Install into another repo" below.
 - `utils/hq/` — **HQ**, the multi-repo command center (`hq.sh` + `hq-lib.sh`); driven by the user-level `/hq` skill in `skills/hq/`. See [HQ — multi-repo command center](#hq--multi-repo-command-center) below.

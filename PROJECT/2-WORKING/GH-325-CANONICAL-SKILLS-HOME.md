@@ -55,7 +55,7 @@ and locator, while `utils/hq` is the implementation.
 
 | What was just completed | What's next |
 |---|---|
-| Issue opened; source and branch sequencing verified against PRs #323 and #324. | Vendor and re-path the skill interfaces, then run structural and full gates. |
+| Vendored and re-pathed the standalone legacy set; made `skills/` canonical; refreshed the README/index; structural sweeps are clean. | Run the requested gates on the final commit, then hand PR review back to the operator without merging. |
 
 ## QA gates
 
