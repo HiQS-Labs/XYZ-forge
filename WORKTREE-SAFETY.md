@@ -1,7 +1,7 @@
 # Git Worktree and Full-Clone Safety Guide for Agents
 
 Author: Noel Saw (@noelsaw1)  
-License: See [`LICENSE`](LICENSE) and [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)
+License: See [`LICENSE`](LICENSE) and [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)  
 Copyright 2026 Neochrome, Inc.  
 
 > **Purpose:** Prevent destructive checkout and repository-state failures in agent-driven Git workflows.
@@ -489,6 +489,26 @@ directory. A linked-worktree run is both unsafe and an invalid measurement.
 - The full gate captures clone identity before the suite and asserts it afterward. Drift in
   `core.bare`, `origin`, local user identity, or `HEAD` fails the run. This detects corruption after
   it happens; it does not protect a valued clone from the mutation.
+
+### What the clone boundary does not cover
+
+A disposable clone contains everything the suite does *to a repository*. It does not contain what the
+suite does to the machine, and the identity invariant above only watches Git state.
+
+Observed 2026-08-30: running the full gate from a throwaway clone repointed six real symlinks under
+`~/.gemini/**/skills/` at that clone, because a skill-install suite installs from whatever checkout it
+is running in. The gate passed and reported nothing unusual — correctly, since no Git state drifted.
+Step 5 below then says to discard the clone, which is exactly what turns those symlinks into dangling
+links pointing at a deleted temporary directory. The damage lands outside Git, outside the clone, and
+after a green run.
+
+This is §16's point applied to the gate itself: a suite that writes to `$HOME` is not contained by
+choosing where its `.git` lives. Two practical consequences:
+
+- Before deleting a gate clone, check whether the run installed anything pointing back at it:
+  `find ~ -maxdepth 6 -type l -lname '*<clone-path-fragment>*' 2>/dev/null`.
+- Prefer running such suites in the checkout that will still exist afterwards, or give the gate clone a
+  scratch `HOME` so home-directory writes land somewhere disposable too.
 
 ### Correct workflow
 
