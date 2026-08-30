@@ -5,6 +5,9 @@ description: Draw an interactive system architecture or Git-history diagram for 
 
 # swe-diagram — Interactive Architecture and Git-History Maps
 
+The skill interface lives here; its implementation assets are bundled under
+[`utils/swe-diagram/`](../../utils/swe-diagram/).
+
 Produce two deliverables for the target repo:
 
 1. `ARCHITECTURE/system-diagram.json` — the diagram spec (schema below)
@@ -18,10 +21,10 @@ For a **Git-history request**, produce `ARCHITECTURE/git-history-diagram.json`
 and `.html` instead, skip Steps 1–2's architecture discovery, and run:
 
 ```bash
-node "<this-skill-dir>/scripts/git-history-to-json.js" \
+node "<this-skill-dir>/../../utils/swe-diagram/scripts/git-history-to-json.js" \
   --repo "<target-repo>" --limit 20 \
   --output ARCHITECTURE/git-history-diagram.json
-bash "<this-skill-dir>/assets/build-diagram.sh" \
+bash "<this-skill-dir>/../../utils/swe-diagram/assets/build-diagram.sh" \
   ARCHITECTURE/git-history-diagram.json
 ```
 
@@ -148,10 +151,11 @@ Run the bundled builder (resolve the path relative to THIS skill directory,
 not the CWD):
 
 ```bash
-bash "<this-skill-dir>/assets/build-diagram.sh" ARCHITECTURE/system-diagram.json
+bash "<this-skill-dir>/../../utils/swe-diagram/assets/build-diagram.sh" ARCHITECTURE/system-diagram.json
 ```
 
-It inlines `assets/renderer.js` and the JSON into `assets/template.html`,
+It inlines `../../utils/swe-diagram/assets/renderer.js` and the JSON into
+`../../utils/swe-diagram/assets/template.html`,
 producing `ARCHITECTURE/system-diagram.html`. If `bash`/`python3` is unavailable,
 do the substitution yourself: copy the template and replace `__TITLE__`,
 `__RENDERER_JS__` (contents of renderer.js), and `__DIAGRAM_JSON__` (the spec).

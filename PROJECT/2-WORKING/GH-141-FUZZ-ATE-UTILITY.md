@@ -60,7 +60,7 @@ goal: >
 Sites and fix exactly as #142 specifies:
 
 - `compile_issue.py`: `main()` returns an int; `__main__` does `sys.exit(main())`. Exit codes,
-  deliberate and documented in `utils/ate/SKILL.md`: **0** filed or dry-run rendered, **3** no
+  deliberate and documented in `skills/ate/SKILL.md`: **0** filed or dry-run rendered, **3** no
   records to file (distinct, non-error, machine-branchable), **1** `gh issue create` failed
   (body preserved). The failure branch also returns, not falls through.
 - `run_variations.py`: `file_issue()` returns the child's return code (drop `-> None`);
@@ -139,7 +139,7 @@ Acceptance: the regression is deterministic and observes all three outcomes.
 - New `utils/ate/variations.turn-shims.yaml`: a declared turn-shim grid via `command_template`
   (argv-list form), with the safe execution profile written into it (stub builder binaries or a
   disposable full clone — GH-564), NOT wired to any runner by default.
-- `utils/ate/SKILL.md` generalized off Aider (the generic matrix runner is the subject; Aider
+- `skills/ate/SKILL.md` generalized off Aider (the generic matrix runner is the subject; Aider
   is one preset), including the Step-0 exit-code contract.
 
 Acceptance: labels default-neutral end-to-end; a non-edit probe grid classifies a no-edit exit-0

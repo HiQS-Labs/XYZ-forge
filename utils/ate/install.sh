@@ -3,6 +3,8 @@ set -euo pipefail
 
 SKILL_NAME="ate"
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SRC_DIR}/../.." && pwd)"
+SKILL_SOURCE="${REPO_ROOT}/skills/${SKILL_NAME}/SKILL.md"
 DEST_DIR="${HOME}/.claude/skills/${SKILL_NAME}"
 
 mkdir -p "${HOME}/.claude/skills"
@@ -13,6 +15,7 @@ else
   echo "Installing ${SKILL_NAME} -> ${DEST_DIR}"
   rm -rf "${DEST_DIR}"
   cp -R "${SRC_DIR}" "${DEST_DIR}"
+  cp "${SKILL_SOURCE}" "${DEST_DIR}/SKILL.md"
 fi
 chmod +x "${DEST_DIR}"/scripts/*.py
 

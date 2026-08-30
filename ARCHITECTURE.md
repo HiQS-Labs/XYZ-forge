@@ -37,25 +37,45 @@ without reading all of them first.
 |---|---|
 | [10days](skills/10days/SKILL.md) | Sweep recent GitHub issues, verify still-valid, build a marathon plan from survivors. |
 | [agent-chorus](skills/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
+| [ate](skills/ate/SKILL.md) | Drive bounded, unattended variation-test matrices and roll findings into one issue. |
+| [better-options](skills/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
 | [ci-doctor](skills/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [consult](skills/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
+| [debug-mantra](skills/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [express](skills/express/SKILL.md) | Hotfix fast lane — one motion: fix + suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
+| [feynman](skills/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [file-xyz-bug](skills/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
+| [front-door](skills/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
+| [github-auth-debug](skills/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |
+| [honest](skills/honest/SKILL.md) | Produce a defensible ground-truth assessment of repository maturity and claims. |
 | [hq](skills/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
+| [install-improve-audit](skills/install-improve-audit/SKILL.md) | Get an unfamiliar repository building, fix blockers, and open a bounded PR. |
+| [jog](skills/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
 | [marathon-cleanup](skills/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
 | [marathon-triage](skills/marathon-triage/SKILL.md) | Triage intake into a ranked, preflight-checked marathon candidate queue. |
 | [open-router](skills/open-router/SKILL.md) | Resolve a colloquial model name to its canonical OpenRouter slug. |
+| [phase-qa](skills/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
 | [ponytail](skills/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [radar](skills/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
+| [read-only](skills/read-only/SKILL.md) | Add a narrow read-only command allowlist to Claude Code settings. |
+| [readme-audit](skills/readme-audit/SKILL.md) | Audit a README as both user-facing artifact and map of the repo's docs. |
+| [recon](skills/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
+| [relay](skills/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |
 | [relay-automation](skills/relay-automation/SKILL.md) | Tick-backed automation library behind the `/relay` review loop. |
 | [relay-to-issue](skills/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [relay-xyz](skills/relay-xyz/SKILL.md) | Drive an automated relay review loop with the shipped harness. |
 | [releases](skills/releases/SKILL.md) | Read/author/publish the optional RELEASES.md planning ledger. |
 | [review-xyz](skills/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
+| [rpr](skills/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |
+| [shakedown](skills/shakedown/SKILL.md) | Audit script-calling skills across CWD, install, symlink, and permission scenarios. |
 | [skills-sync-trinity](skills/skills-sync-trinity/SKILL.md) | Keep a skill's PDDA doc, SKILL.md, and helper scripts aligned. |
+| [spike-360](skills/spike-360/SKILL.md) | Interrogate authority before introducing or moving a source of truth. |
 | [standup](skills/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
 | [swe](skills/swe/SKILL.md) | Software-engineering governance lens for build/spec/PRD docs. |
+| [swe-diagram](skills/swe-diagram/SKILL.md) | Generate interactive architecture and Git-history diagrams from local evidence. |
+| [triangulate](skills/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [vendor-stack](skills/vendor-stack/SKILL.md) | Install the XYZ harness + optional PDDA runtime into a target repo. |
+| [vscode-color](skills/vscode-color/SKILL.md) | Assign a stable per-repository VS Code workspace tint. |
 | [weekly-shipped](skills/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [xyz](skills/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 

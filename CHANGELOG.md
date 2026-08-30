@@ -2,6 +2,14 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-08-30
+
+### Added
+- **GH-325: XYZ-forge now carries the standalone legacy SWE skill set.** Vendored the portable planning, build, audit, and toolbox skills into the flat `skills/` tree; refreshed `recon` and `swe` from the canonical SWE source while confirming `debug-mantra` and `ponytail` were current; and added the generic `relay` protocol as the distinct scaffolding layer that `relay-xyz` automates.
+
+### Changed
+- **GH-325: `skills/<name>/SKILL.md` is the single in-repo skill-interface home.** Moved the ATE and SWE diagram interfaces out of `utils/` while keeping their implementations there, preserved ATE's self-contained installer, documented the existing one-skill HQ interface/implementation split, and made the README plus Architecture Skills Index enumerate all 43 interfaces. The bet is that flat, local sibling links and explicit `../../utils/<name>/` implementation links remove the hidden cross-repo dependency without changing skill behavior; the expected signal is empty forbidden-reference/dead-link/stub/name-mismatch sweeps plus green Tier 1, registry, and sequential gates on this branch. Reversibility is **Easy** before merge (drop the branch) and after merge (revert the four logical commits). Revisit on any installed-skill path failure or missing implementation asset; graduate if the PR gates and review stay green.
+
 ## [Unreleased] - 2026-08-28
 
 ### Changed
