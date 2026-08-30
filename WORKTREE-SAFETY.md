@@ -1,7 +1,7 @@
 # Git Worktree and Full-Clone Safety Guide for Agents
 
 Author: Noel Saw (@noelsaw1)  
-License: See [`LICENSE`](LICENSE) and [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)
+License: See [`LICENSE`](LICENSE) and [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)  
 Copyright 2026 Neochrome, Inc.  
 
 > **Purpose:** Prevent destructive checkout and repository-state failures in agent-driven Git workflows.
@@ -31,6 +31,9 @@ Copyright 2026 Neochrome, Inc.
 - [11. Selective `.git` corruption and skeleton loss](#11-selective-git-corruption-and-skeleton-loss)
 - [12. Run the full gate only in a disposable full clone](#12-run-the-full-gate-only-in-a-disposable-full-clone)
 - [13. Other worktree and full-clone footguns](#13-other-worktree-and-full-clone-footguns)
+- [14. Recovering a checkout that is already gone](#14-recovering-a-checkout-that-is-already-gone)
+- [15. Audit trails that make the next incident solvable](#15-audit-trails-that-make-the-next-incident-solvable)
+- [16. Containment: limiting blast radius outside Git](#16-containment-limiting-blast-radius-outside-git)
 - [Golden rules](#golden-rules)
 - [See also](#see-also)
 
@@ -487,6 +490,26 @@ directory. A linked-worktree run is both unsafe and an invalid measurement.
   `core.bare`, `origin`, local user identity, or `HEAD` fails the run. This detects corruption after
   it happens; it does not protect a valued clone from the mutation.
 
+### What the clone boundary does not cover
+
+A disposable clone contains everything the suite does *to a repository*. It does not contain what the
+suite does to the machine, and the identity invariant above only watches Git state.
+
+Observed 2026-08-30: running the full gate from a throwaway clone repointed six real symlinks under
+`~/.gemini/**/skills/` at that clone, because a skill-install suite installs from whatever checkout it
+is running in. The gate passed and reported nothing unusual — correctly, since no Git state drifted.
+Step 5 below then says to discard the clone, which is exactly what turns those symlinks into dangling
+links pointing at a deleted temporary directory. The damage lands outside Git, outside the clone, and
+after a green run.
+
+This is §16's point applied to the gate itself: a suite that writes to `$HOME` is not contained by
+choosing where its `.git` lives. Two practical consequences:
+
+- Before deleting a gate clone, check whether the run installed anything pointing back at it:
+  `find ~ -maxdepth 6 -type l -lname '*<clone-path-fragment>*' 2>/dev/null`.
+- Prefer running such suites in the checkout that will still exist afterwards, or give the gate clone a
+  scratch `HOME` so home-directory writes land somewhere disposable too.
+
 ### Correct workflow
 
 1. Edit and commit in the assigned worktree or task clone.
@@ -530,6 +553,352 @@ containment and identity work tracked by GH-564/GH-567.
 
 ---
 
+## 14. Recovering a checkout that is already gone
+
+Sections 1–13 prevent damage. This section assumes prevention failed: a linked worktree or a full-clone
+folder is missing, and the first job is to recover the bytes and establish a timeline. Work in this
+order — the cheapest, least destructive sources first.
+
+**Do not re-run the agent, re-clone into the same path, or `git init` the parent directory yet.** Each
+of those writes to the volume and can overwrite the free blocks a recovery would have used.
+
+### 14.1 Local APFS snapshots and Time Machine
+
+macOS can keep automatic local APFS snapshots even with no backup disk attached, which makes this the
+highest-yield first check. It is not guaranteed: `tmutil localsnapshot` only covers APFS volumes
+included in a configured Time Machine backup, so a machine that has never been configured may have
+none. Check first, and never treat a snapshot as a precondition that must exist.
+
+```bash
+# What point-in-time views exist on the boot volume?
+tmutil listlocalsnapshots /
+
+# Mount one read-only and copy files out. NOTE: the tool is mount_apfs -s,
+# not "mount_apfs_snapshot" — the latter does not exist.
+mkdir -p /tmp/snap
+sudo mount_apfs -s com.apple.TimeMachine.2026-08-27-073000 / /tmp/snap
+ls "/tmp/snap/Users/$USER/Documents/GH Repos/"
+
+# When finished
+sudo umount /tmp/snap
+```
+
+Copy out of the snapshot; never work inside it. If an external Time Machine disk is attached, browse it
+in Finder instead — same data, friendlier interface.
+
+### 14.2 Trash, then any sync provider
+
+`rm -rf` does not use the Trash, but a Finder-driven or script-driven move might have. Check `~/.Trash`
+before assuming permanent loss. If the path lived under Dropbox, iCloud Drive, Google Drive, or a NAS
+sync root, check that provider's web UI — most keep deleted-file and version history well past the
+local deletion.
+
+### 14.3 Git can rebuild more than you think
+
+A destroyed *working tree* need not mean destroyed *history* — but only if the objects survive
+somewhere, and each source has a real limit. A **remote** carries only what was pushed and is still
+reachable there. A **linked worktree is not an independent object store**: it helps only if the parent
+clone's common Git directory survived, which is exactly what §7 warns you can destroy. A **sibling full
+clone** is independent, and is the strongest of the three. Before treating a loss as total:
+
+```bash
+# Does the remote still carry the work?
+git ls-remote origin 'refs/heads/*'
+
+# Does a sibling full clone or the parent of a linked worktree still hold the objects?
+git --git-dir=/path/to/other/clone/.git log --oneline --all | head
+
+# Unreferenced commits in a surviving clone — the reflog MAY outlive branch deletion.
+# Retention is finite (gc.reflogExpire, default 90d; 30d unreachable) and `git gc`
+# can prune it, so run this early rather than after more repo activity.
+git --git-dir=/path/to/other/clone/.git reflog --date=iso | head -50
+git --git-dir=/path/to/other/clone/.git fsck --lost-found
+```
+
+This is the payoff for §7 and §12: if the destroyed folder was a *disposable* full clone, recovery is a
+fresh `git clone` and nothing was lost. The recovery cost of an incident is set by the discipline applied
+before it.
+
+### 14.4 This harness's two non-Git stores
+
+Before concluding anything is unrecoverable, check the two places this harness keeps data that `git`
+will never show you.
+
+**`.tick/orphan-backups/` — the relay's pre-revert copies.** A driven turn reverts any edit outside its
+allowlist, and since 2026-07-18 it copies the file's prior content out first rather than discarding it
+(`relay-automation/relay-turn-lib.sh`). If a hand-edit was made in a clone while a turn was in flight
+there, this is where it went:
+
+```bash
+ls -lt .tick/orphan-backups/ | head          # newest incident first
+find .tick/orphan-backups -name '*<filename>*'
+```
+
+**Vendored `.xyz/` has no Git recovery at all.** It is gitignored (`.gitignore`), so nothing inside it
+has a reflog, a stash, or an `fsck --lost-found` behind it — a destroyed relay thread or `.tick/` log
+under `.xyz/` is simply gone. `xyz-sync.sh update` preserves a known list of runtime paths across the
+rebuild, and anything not on that list is deleted unread. Snapshots (§14.1) are the only recovery path
+for this directory, which is why §15.4's pre-run snapshot matters more here than anywhere else.
+
+### 14.5 Correlate with shell history
+
+```bash
+grep -n -E 'rm -rf|git clean|git worktree remove|reset --hard|rsync.*--delete' ~/.zsh_history
+```
+
+Without `EXTENDED_HISTORY` (§15.1) these lines carry no timestamps, so you get sequence but not time.
+Enable it now so the *next* incident has both.
+
+### 14.6 Unified logging
+
+macOS retains system log data for a limited window, so capture this early:
+
+```bash
+# Everything a given process did in the last few hours
+log show --last 3h --predicate 'process == "node"' --info --style compact
+
+# Narrow to a path fragment that appears in error messages
+log show --last 3h --style compact | grep -i 'GH Repos'
+```
+
+Unified logging will not hand you "this command deleted this folder." It gives process names, restart and
+crash events, and paths quoted in errors — enough to bound the window and identify the actor.
+
+---
+
+## 15. Audit trails that make the next incident solvable
+
+§14 is only as good as the evidence that exists before the incident. All three of these are cheap and
+worth enabling once.
+
+### 15.1 Timestamped shell history
+
+```zsh
+# ~/.zshrc
+setopt EXTENDED_HISTORY        # record start time and duration per command
+setopt INC_APPEND_HISTORY      # write as commands run, not only at shell exit
+setopt HIST_IGNORE_DUPS
+```
+
+`INC_APPEND_HISTORY` matters as much as the timestamps: without it, a shell killed mid-incident —
+which is exactly what happens when an agent run goes wrong — never flushes its history to disk.
+
+### 15.2 An agent action log
+
+Have the harness, not the model, record every destructive intent before it executes. Log the resolved
+absolute path, the operation, and the justification:
+
+```python
+import datetime, json, os, pathlib
+
+LOG = pathlib.Path(os.environ.get("AGENT_ACTION_LOG", "~/agent-logs/actions.jsonl")).expanduser()
+
+def log_action(action: str, **details):
+    LOG.parent.mkdir(parents=True, exist_ok=True)
+    entry = {"ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+             "action": action, **details}
+    with LOG.open("a") as f:                     # append-only, one JSON object per line
+        f.write(json.dumps(entry) + "\n")
+        f.flush()
+        os.fsync(f.fileno())                     # survive a hard kill
+```
+
+The `fsync` is the point. A buffered log loses precisely the last few entries — the ones describing the
+operation that killed the process.
+
+### 15.3 Filesystem-level events with `eslogger`
+
+`eslogger` ships with macOS 13+ and reports Endpoint Security events directly. It requires root and Full
+Disk Access for the invoking terminal, and it is verbose — treat it as a diagnostic you switch on while
+hunting a specific problem, not a permanent daemon:
+
+```bash
+# Deletion-and-move audit. Subscribe ONLY to what the selector actually handles.
+sudo eslogger unlink rename 2>/dev/null \
+  | jq -c --arg re 'GH Repos|agent-workspaces' '
+      [ .event.unlink.target.path,
+        .event.rename.source.path,
+        .event.rename.destination.new_path,
+        .event.rename.destination.existing_file.path ]
+      | map(select(. != null))
+      | select(any(.[]; test($re)))' \
+  >> ~/agent-logs/file-events.jsonl
+```
+
+Three things this deliberately gets right, because the obvious version gets them wrong:
+
+- **Do not subscribe to an event you do not extract.** Adding `create` to the command line while the
+  selector has no `.event.create` arm produces a log that looks complete and silently drops every
+  creation. Either handle it or leave it unsubscribed.
+- **A rename has two ends.** Filtering only on `.source.path` misses a move *into* a watched root.
+  `rename` reports its destination as either `new_path` or an `existing_file` being clobbered,
+  so check both.
+- **This JSON is not a stable API.** Apple documents the Endpoint Security event schema as subject to
+  change, so treat the field paths above as verified-at-time-of-writing and confirm against
+  `eslogger --list-events` and a sample event on your OS version before relying on them.
+
+This tells you the exact time, full path, and responsible process for every delete — the one source that
+attributes a deletion to a process rather than inferring it. It cannot tell you which prompt caused it;
+that is what §15.2 is for.
+
+### 15.4 Snapshot before a destructive run
+
+```bash
+tmutil localsnapshot && echo "snapshot taken: $(date -u +%FT%TZ)"
+```
+
+Cheap (copy-on-write, seconds) and the single highest-value pre-flight for any mass refactor, migration,
+or cleanup. Wire it into the harness ahead of destructive lanes rather than remembering it by hand.
+
+Two limits to encode rather than assume. Snapshots are pruned automatically under disk pressure, so
+they are a short-horizon undo buffer, never a backup. And the command fails on a machine with no
+suitable Time Machine configuration — a harness preflight should **report** that it could not snapshot
+and carry on, not treat snapshot support as universally available:
+
+```bash
+if tmutil localsnapshot 2>/dev/null | grep -q 'Created local snapshot'; then
+  echo "pre-run snapshot: ok"
+else
+  echo "pre-run snapshot: UNAVAILABLE — proceeding without an undo buffer" >&2
+fi
+```
+
+---
+
+## 16. Containment: limiting blast radius outside Git
+
+Git-level care (§1–§13) does not help when a command never reaches Git. These limits are what keep a
+mistaken path from reaching valued data at all.
+
+### 16.1 Give agents a dedicated root
+
+**Anti-pattern:** letting an agent run with its working directory anywhere under `$HOME`, so a
+mis-resolved relative path lands on `~/Documents` or `~/Desktop`.
+
+Keep agent-writable work under one root, and require an explicit override to leave it:
+
+```python
+from pathlib import Path
+
+SAFE_ROOTS = [Path.home() / "agent-workspaces", Path.home() / "Documents" / "GH Repos"]
+NEVER_DELETE = {Path.home(), Path.home() / "Documents", Path.home() / "Desktop", Path("/")}
+
+def _within(child: Path, parent: Path) -> bool:
+    """True only if child is STRICTLY inside parent. Python 3.8-compatible:
+    Path.is_relative_to() was added in 3.9, and it also returns True for
+    child == parent, which would authorize deleting the safe root itself."""
+    if child == parent:
+        return False
+    try:
+        child.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+
+def assert_deletable(path: Path):
+    p = path.resolve()                                   # resolve symlinks BEFORE comparing
+    if p in {r.resolve() for r in NEVER_DELETE}:         # resolve BOTH sides, or the test misses
+        raise RuntimeError(f"refusing to delete a protected root: {p}")
+    if not any(_within(p, root.resolve()) for root in SAFE_ROOTS):
+        raise RuntimeError(f"refusing to delete outside safe roots: {p}")
+    log_action("file_delete", path=str(p))
+```
+
+Four things here are load-bearing, and three of them are defects this example had in an earlier draft:
+
+- **Resolve before comparing.** Without it a path inside the safe root can still point outside it via a
+  symlink — the same class of defect as §3's unvalidated trap paths.
+- **Resolve both sides.** Comparing a resolved `p` against unresolved `NEVER_DELETE` members silently
+  misses when `~` or any parent is itself a symlink.
+- **Component-aware containment, not string prefixes.** `str.startswith` accepts
+  `/Users/me/Documents-backup` as being inside `/Users/me/Documents`.
+- **Reject `child == parent`.** `Path.is_relative_to` returns `True` for a path against itself, so the
+  obvious one-liner authorizes `rm -rf ~/Documents/GH Repos` — deleting *every* repo — as "inside a safe
+  root." `_within` rejects it explicitly. It also keeps the check working on Python 3.8, this repo's
+  declared floor (`README.md:198`); `is_relative_to` needs 3.9+.
+
+`resolve()` is non-strict by default, so it still returns a usable path when the leaf does not exist.
+
+**What this check does not do — know the boundary before you rely on it.** `assert_deletable` validates
+a path at one instant; the caller deletes at a later one. Anything able to change what a path points at
+in between — retargeting a symlink inside a safe root, swapping a parent directory — redirects the
+delete to somewhere the check already approved. That is a genuine time-of-check-to-time-of-use gap, and
+it is not closable at this layer.
+
+It is also outside what this guard is for. The threat model here is **a mistaken path, not a hostile
+one**: an agent resolving `../..` one level too far, or interpolating an empty variable. Against that,
+a one-instant check is sufficient and worth having. Against a local attacker deliberately racing your
+process, it is not — and no amount of pre-validation makes it so. If that is your threat model, the
+answer is §16.4's isolation or an `openat`-style handle-based delete, not a better string check.
+
+### 16.2 Make critical directories refuse writes
+
+```bash
+chflags uchg ~/ImportantData          # set the immutable flag
+chflags nouchg ~/ImportantData        # release it deliberately, for a known operation
+```
+
+`rm -rf` fails against `uchg` even as your own user, which turns a silent catastrophe into an error
+message. It is not a security boundary — anyone able to run `chflags` can undo it — but it is an
+effective guard against an unthinking command.
+
+### 16.3 Wrap destructive commands, and prefer dry-run first
+
+Put a wrapper earlier on `PATH` than the real binary so an unqualified `rm -rf` cannot run unattended:
+
+```bash
+#!/bin/zsh
+# ~/bin/safe-rm — refuses ANY recursive delete without an explicit acknowledgement
+set -euo pipefail
+
+ack=0 recursive=0 end_of_opts=0
+for arg in "$@"; do
+  [[ "$arg" == "--i-mean-it" ]] && { ack=1; continue; }
+  (( end_of_opts )) && continue
+  [[ "$arg" == "--" ]] && { end_of_opts=1; continue; }
+  case "$arg" in
+    --recursive) recursive=1 ;;               # GNU spelling; macOS /bin/rm rejects it, but flag it anyway
+    --*) ;;                                   # any other long option: not recursive
+    -*[rR]*) recursive=1 ;;                   # -r, -R, -rf, -fr, -Rv, and every other cluster
+  esac
+done
+
+if (( recursive && ! ack )); then
+  print -u2 "safe-rm: recursive delete requires --i-mean-it"
+  print -u2 "  command: rm $*"
+  exit 1
+fi
+exec /bin/rm "${@:#--i-mean-it}"     # zsh: drop the sentinel, then exec the real rm
+```
+
+The gate is on **`-r`/`-R` alone**, not on the combination of `-r` and `-f`. An earlier draft matched
+only single words containing both letters, which let `safe-rm -r target`, `safe-rm -R target`, and
+`safe-rm -r -f target` (two separate words) through ungated — the wrapper advertised a guarantee it did
+not provide, which is worse than no wrapper. `-r` without `-f` still destroys a directory tree, so it
+needs the same acknowledgement. Options are scanned only up to `--`, so a file literally named `-rf`
+after the separator does not trip the gate — correct, since `rm -- -rf` deletes one file, not a tree.
+
+One known wart, in the safe direction: a file literally named `--i-mean-it` is stripped along with the
+sentinel, so it survives instead of being deleted. That is a false negative, not a gate bypass, and it
+is the right way round for a safety wrapper to fail.
+
+Pair it with a two-phase habit for any bulk operation: run with `--dry-run`, read the plan it prints,
+then re-run for real. An agent that cannot articulate what it is about to delete should not delete it.
+
+### 16.4 Isolate the environment when the stakes justify it
+
+- **Containers** — mount only the specific project directory into the container; everything else is
+  simply absent from the filesystem the agent can see. Lowest overhead of the three.
+- **Virtual machines** — a full VM with a snapshot taken before each session, reverted afterwards.
+  Heaviest, and the only option that also contains a compromised toolchain.
+- **A separate macOS user account** — run agents as a distinct user whose home directory holds only
+  agent workspaces. POSIX permissions then do the enforcing, with no wrapper to bypass.
+
+For this harness specifically, §12's disposable full clone is already the containment boundary for
+mutation-heavy gates. These options extend the same principle to everything the agent does outside Git.
+
+---
+
 ## Golden rules
 
 1. **Always use `git worktree remove`/`prune`/`repair`, never manual `rm -rf` or `mv`** on worktree
@@ -554,6 +923,12 @@ containment and identity work tracked by GH-564/GH-567.
 8. **Run the full test gate only in a separate disposable full clone** (§12) — never in a linked
    worktree or a primary clone whose state matters. The identity bracket detects damage; it does not
    make damage acceptable.
+9. **Assume prevention will eventually fail, and pay the small costs that make recovery possible** —
+   timestamped shell history, an `fsync`ed action log, and a `tmutil localsnapshot` before destructive
+   runs (§15). After a loss, capture snapshots and logs *before* re-running anything (§14).
+10. **Constrain the agent's writable world outside Git, not just inside it** — a resolved-path safe-root
+    check, `chflags uchg` on data that should not move, and containment for mutation-heavy work (§16).
+    Resolve symlinks before any path comparison; `startswith` on a path string is not containment.
 
 ---
 
@@ -564,8 +939,13 @@ containment and identity work tracked by GH-564/GH-567.
 - [git-init](https://git-scm.com/docs/git-init) — confirms re-running `init` on an existing repo is safe/non-clobbering
 - [git-fsck](https://git-scm.com/docs/git-fsck) — integrity check, first step after any suspected `.git` corruption
 - [git-gc](https://git-scm.com/docs/git-gc) — documents the `--prune=now` concurrency risk cited in §6
+- [git-reflog](https://git-scm.com/docs/git-reflog) — the recovery path in §14.3 for commits no branch points at
+- [tmutil(8)](https://keith.github.io/xcode-man-pages/tmutil.8.html) — `listlocalsnapshots` and `localsnapshot`, §14.1 and §15.4
+- [mount_apfs(8)](https://keith.github.io/xcode-man-pages/mount_apfs.8.html) — `-s` mounts a named snapshot read-only (§14.1)
+- [chflags(1)](https://keith.github.io/xcode-man-pages/chflags.1.html) — the `uchg` immutable flag used in §16.2
+- [Apple: Endpoint Security](https://developer.apple.com/documentation/endpointsecurity) — the framework behind `eslogger` (§15.3)
 
 ---
 
-Licensed under: Apache 2.0   
+License: See [`LICENSE`](LICENSE) and [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)  
 Copyright 2026 Neochrome, Inc.  
