@@ -847,5 +847,65 @@ else
   fail "gh329 fixture could not be seeded (no conversation.md produced)"
 fi
 
+# --- GH-328: a crash mid-supersede must not leave a pointer to an unwritable discussion ---
+# The old order closed the original, stamped SUPERSEDED-BY on it, and only then wrote the new
+# conversation.md. A failure in that gap left the original Closed pointing at a directory with no
+# readable content, the ID permanently reserved, and a retry refused as "already superseded" — no
+# way back through the CLI. Fault injection is the only honest way to test this: the window is an
+# I/O failure, so a copy of the helper is patched to raise at exactly the boundary that used to be
+# unsafe. If the anchor ever moves, the patch step exits 3 and this FAILS rather than passing silently.
+G328="$WORK/gh328-supersede"
+G328_STORE="$WORK/gh328-store"
+G328_CLI="$WORK/agent_chorus_gh328_fault.py"
+mkdir -p "$G328"
+python3 - "$CLI" "$G328_CLI" <<'GH328_PATCH'
+import pathlib, sys
+src, dst = sys.argv[1], sys.argv[2]
+text = pathlib.Path(src).read_text(encoding="utf-8")
+anchor = '            private_mkdir(session_dir / "runtime")'
+if anchor not in text:
+    sys.exit(3)
+injected = '            raise OSError(28, "GH328 injected fault")\n' + anchor
+pathlib.Path(dst).write_text(text.replace(anchor, injected, 1), encoding="utf-8")
+GH328_PATCH
+g328_patch_rc=$?
+if [ "$g328_patch_rc" -ne 0 ]; then
+  fail "gh328 fault injection could not find its anchor in the helper (rc=$g328_patch_rc)"
+else
+  pass "gh328 fault injection anchors on the new-discussion write"
+  # Seed with the CLEAN helper — the patched copy raises on every creation, including this one.
+  AGENT2AGENT_ID_SEQUENCE=886001 python3 "$CLI" --root "$G328" --store "$G328_STORE" \
+    start --subject "gh328 original" --agents 2 --packet-file "$PACKET" >/dev/null 2>&1
+  g328_old="$(find "$G328_STORE" -name conversation.md 2>/dev/null | head -1)"
+  if [ -n "$g328_old" ] && [ -f "$g328_old" ]; then
+    AGENT2AGENT_ID_SEQUENCE=886002 python3 "$G328_CLI" --root "$G328" --store "$G328_STORE" \
+      start --subject "gh328 replacement" --agents 2 --packet-file "$PACKET" \
+      --supersedes 886001 >/dev/null 2>&1
+    g328_crash_rc=$?
+    [ "$g328_crash_rc" -ne 0 ] \
+      && pass "the injected fault does abort the supersede" \
+      || fail "the injected fault did not abort the supersede (rc=$g328_crash_rc)"
+    grep -q '^STATUS: Open' "$g328_old" \
+      && pass "a crash mid-supersede leaves the ORIGINAL discussion open" \
+      || fail "a crash mid-supersede closed the original: $(grep -m1 '^STATUS' "$g328_old")"
+    grep -q 'SUPERSEDED-BY' "$g328_old" \
+      && fail "a crash mid-supersede left a SUPERSEDED-BY pointer to nothing" \
+      || pass "a crash mid-supersede writes no dangling SUPERSEDED-BY pointer"
+    # Recovery is the property that actually matters: before the fix the retry was refused,
+    # so the operator's only route was hand-editing a header.
+    g328_retry="$(AGENT2AGENT_ID_SEQUENCE=886003 python3 "$CLI" --root "$G328" --store "$G328_STORE" \
+      start --subject "gh328 retry" --agents 2 --packet-file "$PACKET" --supersedes 886001 2>&1)"
+    g328_retry_rc=$?
+    [ "$g328_retry_rc" -eq 0 ] \
+      && pass "the supersede can be retried after a crash" \
+      || fail "the supersede is still unrecoverable after a crash: $g328_retry"
+    expect_file_contains "the retry closes the original for real" "$g328_old" "STATUS: Closed"
+    expect_file_contains "the original now points at the discussion that replaced it" \
+      "$g328_old" "SUPERSEDED-BY: 886003"
+  else
+    fail "gh328 fixture could not be seeded (no original discussion produced)"
+  fi
+fi
+
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

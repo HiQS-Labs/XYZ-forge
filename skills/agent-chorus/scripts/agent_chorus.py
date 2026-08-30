@@ -872,13 +872,74 @@ def create_discussion(
         if not discussion_id or session_dir is None:
             raise Agent2AgentError("could not allocate an unused six-digit discussion ID")
 
-        # If superseding, close old discussion atomically first
+        def write_new_discussion() -> Path:
+            """Materialize the reserved ID into a readable discussion. Extracted so the supersede
+            path can call it BEFORE closing the old discussion — see GH-328 below."""
+            private_mkdir(session_dir / "runtime")
+            new_path = session_dir / "conversation.md"
+            descriptor = os.open(new_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(render_initial(
+                    discussion_id, normalized, agents, timestamp, timed_watch, context_packet,
+                    supersedes=supersedes,
+                ))
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.chmod(new_path, 0o600)
+            metadata = {
+                "agent2agent_id": discussion_id,
+                "subject": normalized,
+                "repository_identity": identity,
+                "repository_root": str(canonical_root),
+                "repository_remote": repository_remote,
+                "created": timestamp,
+                "status": "Open",
+                "next": "agent2",
+                "turn": 1,
+                "extensions": 0,
+                "updated": timestamp,
+            }
+            if supersedes:
+                metadata["supersedes"] = supersedes
+            metadata_path = session_dir / "metadata.json"
+            descriptor = os.open(metadata_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+                json.dump(metadata, handle, indent=2, sort_keys=True)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.chmod(metadata_path, 0o600)
+            _fsync_dir(session_dir)
+            return new_path
+
         if supersedes is not None and old_path is not None and old_content is not None:
+            # GH-328: write the replacement BEFORE closing the original.
+            #
+            # The old order closed the original first, stamped `SUPERSEDED-BY: <new id>` on it, and
+            # only then wrote the new conversation.md. A failure in that gap — verified by injecting
+            # one — left the original Closed with its only forward reference pointing at a directory
+            # that has no conversation.md. Worse, the reservation keeps the ID from being reused, and
+            # a second `start --supersedes` is refused as "already superseded", so the CLI offered no
+            # way back: recovery meant hand-editing a header, the one thing SKILL.md forbids.
+            #
+            # Nothing about the new discussion depends on the old one being closed — render_initial
+            # takes `supersedes` as a plain ID, not as anything read out of the old file — so the
+            # order is free to change. This does not make the operation atomic; it moves the failure
+            # window somewhere survivable. A crash after the new write and before the old close now
+            # leaves BOTH discussions open and readable, which an operator can settle with a normal
+            # `close`, instead of one unreadable pointer they cannot repair.
+            #
+            # The old discussion's lock is held across both steps so the "already superseded" check
+            # and the close it guards stay one atomic decision; without that, two concurrent
+            # supersedes could both validate and both write.
             with DiscussionLock(old_path):
                 old_cur = read_discussion(old_path)
                 existing_sup = optional_field(old_cur, "SUPERSEDED-BY")
                 if existing_sup:
+                    # Checked before the new discussion is written, so a refused supersede still
+                    # leaves nothing behind but the reserved directory it always did.
                     raise Agent2AgentError(f"AgentChorus discussion #{supersedes} is already superseded by #{existing_sup}")
+                path = write_new_discussion()
                 old_turn = int(field(old_cur, "TURN")) + 1
                 old_updated = replace_field(old_cur, "STATUS", "Closed")
                 old_updated = replace_field(old_updated, "NEXT", "none")
@@ -898,43 +959,8 @@ def create_discussion(
                             pass
                 emit_telemetry(old_path, "close_written", close_type="superseded", superseded_by=discussion_id, turn_count=old_turn)
                 index_upsert(store, supersedes, closed_at=timestamp, close_type="superseded", superseded_by=discussion_id, turn_count=old_turn)
-
-        runtime = session_dir / "runtime"
-        private_mkdir(runtime)
-        path = session_dir / "conversation.md"
-        descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(render_initial(
-                discussion_id, normalized, agents, timestamp, timed_watch, context_packet,
-                supersedes=supersedes,
-            ))
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.chmod(path, 0o600)
-        metadata = {
-            "agent2agent_id": discussion_id,
-            "subject": normalized,
-            "repository_identity": identity,
-            "repository_root": str(canonical_root),
-            "repository_remote": repository_remote,
-            "created": timestamp,
-            "status": "Open",
-            "next": "agent2",
-            "turn": 1,
-            "extensions": 0,
-            "updated": timestamp,
-        }
-        if supersedes:
-            metadata["supersedes"] = supersedes
-        metadata_path = session_dir / "metadata.json"
-        descriptor = os.open(metadata_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            json.dump(metadata, handle, indent=2, sort_keys=True)
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.chmod(metadata_path, 0o600)
-        _fsync_dir(session_dir)
+        else:
+            path = write_new_discussion()
     finally:
         fcntl.flock(allocation.fileno(), fcntl.LOCK_UN)
         allocation.close()
