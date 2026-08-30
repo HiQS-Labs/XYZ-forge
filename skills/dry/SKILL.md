@@ -27,9 +27,14 @@ question backwards: **"for each resource, who touches it, and do those touchers 
 
 ## The one rule
 
-**A finding must name a shared *resource*, never a shared *shape*.** Two functions that look alike
-are not a finding. Two functions that both write `users.credits` by different paths are, whether or
-not they share a single line of text.
+**A finding must name a shared *resource* or a shared *policy*, never a shared *syntax*.** Two
+functions that look alike are not a finding. Two functions that both write `users.credits` by
+different paths are, whether or not they share a line of text — and so are two modules that both
+define what counts as a paid order, with different value sets.
+
+The rule forbids clustering on how code *reads*. It does not forbid clustering on what code
+*decides*. An earlier version of this skill said "resource, never shape", and that wording blinded it
+to the highest-value duplication class there is: a concept defined N times with N different answers.
 
 ## When NOT to fire
 
@@ -53,9 +58,28 @@ of them for a full audit, two or three for a quick pass:
 | **Config** | env vars, config keys, feature flags, secrets names |
 | **Network** | hosts, base URLs, endpoint paths, queue/topic names |
 | **Process** | external binaries invoked, subprocess/`exec` targets, CLI names |
+| **Policy** | named constants and the *values* they carry — status/enum value sets, thresholds, byte and row ceilings, timeouts, retry counts and backoff formulas, truncation limits, allowlists |
+
+**Policy is the class most often missed and most often expensive.** Index the *name and its value
+set together*, then group by what the constant decides rather than what it is called — the four
+definitions of "a real sale" will not share a name. A cluster where the values **disagree** is a live
+defect, not a cleanliness item: it means the system already answers one question two ways.
 
 Language does not matter — every class above is a *literal* in almost every language, which is why
 this works on a polyglot tree with no parser, no index, and no git history.
+
+## Step 1b — Read the repo's own rules first
+
+Before indexing, read `AGENTS.md`, `CLAUDE.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, and any
+`GUIDING-PRINCIPLES` file. Ten minutes, and it changes what every later finding means:
+
+- A rule the repo already states turns a finding from an opinion into a **violation**. "Keep
+  BigQuery access behind one thin wrapper" quoted from `AGENTS.md` beside six scattered call sites is
+  an argument nobody has to win.
+- A **recorded decision** turns an apparent defect into house style. Contradicting one is the most
+  expensive mistake this skill can make — check the docs and the inline comments before you file.
+
+Quote the rule in the finding. Do not paraphrase it.
 
 ## Step 2 — Build the resource index (the recon half, inverted)
 
@@ -67,6 +91,22 @@ Do it with the cheapest tool that holds: `rg` with a pattern per class, one pass
 by reading the file, exactly as in [recon](../recon/SKILL.md). Graph-only edges are marked and never ranked.
 
 An empty class is a finding, not a failure: a repo with no config-key duplication should say so.
+
+### Audit the guards, do not trust them
+
+If the repo ships a CI check, lint rule, or script that guards a duplication class — a
+`check_no_*.sh`, a banned-import checker, a contract test — **run it, then check its coverage against
+your index.** A guard is a claim, and this skill exists to test claims.
+
+- Read its target list. Does it walk every directory the violations live in?
+- Read its pattern. Does it match the identifier names the code actually uses, or only the ones its
+  author had in mind?
+- Compare its result to your own index for the same class. **Green plus violations in your index is a
+  finding, and usually the most urgent one in the report** — because a green guard is read as
+  evidence, and everyone downstream stops looking.
+
+A guard that was fixed once is not a guard that works. Confidently incomplete is worse than visibly
+broken.
 
 ## Step 3 — Pivot: group, then test for disjointness
 
@@ -141,6 +181,10 @@ with its thumb on the scale, and it is the section that tells you whether the sw
 
 ## Honesty rules
 
+- **Search the issue tracker before reporting.** For each target, search open *and* closed issues for
+  the resource or constant name, and label it `new`, `tracked (#N)`, or `closed-but-present (#N)`.
+  That last label is its own finding: work that was closed without landing. Re-filing tracked work is
+  how an audit loses its reader.
 - Every path in a target cites `file:line`. No `file:line`, no row.
 - Never claim two files "don't talk" without having read both import blocks. Say `unverified`.
 - Zero targets is a real result on a small or well-factored tree. Say which, rather than
