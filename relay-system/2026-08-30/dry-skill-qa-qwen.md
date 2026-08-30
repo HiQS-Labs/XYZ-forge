@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -87,5 +87,58 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### R1 · Reviewer (commandcode) · 2026-08-30
+
+swept file: yes — read all 201 lines of `skills/dry/SKILL.md`; also read `skills/recon/SKILL.md`, `skills/triangulate/SKILL.md`, `skills/converge/SKILL.md`, and `skills/ponytail/SKILL.md` to verify every cross-link.
+
+**Q1 — does the loosened rule let noise back in?**
+
+- [Should] Yes — worked false positive. A health probe's `CONNECT_TIMEOUT=2` and a bulk uploader's `CONNECT_TIMEOUT=60` both decide "how long to wait for a connection." Under the new wording they form one Policy cluster, and "A cluster where the values **disagree** is a live defect" (`skills/dry/SKILL.md:65-66`) makes it a ranked defect — but two different operations are *supposed* to carry different timeouts, and merging them into one constant is exactly the wrong DRY. Old wording rejected this correctly: a bare constant was not a resource. The unconditional disagree-equals-defect sentence is the amplifier.
+  → Fix: gate on decision ownership — "disagreeing values are a defect only if one owner should answer. Touchers serving different operations or failure domains may rightly disagree; say why the decision should be single before filing." (The Q2 test below also rejects this case mechanically: no single event is gated by both constants.)
+
+**Q2 — is "group by what the constant decides" actionable?**
+
+- [Should] It is a wish, not an instruction — an agent cannot execute "what it decides" mechanically.
+  → Replacement method, reading-based, no parser: (1) for each indexed constant, list its read sites; (2) name the predicate each read site gates ("does this order count as paid?", "should this request retry?"); (3) cluster constants whose predicates name the same real-world distinction, with the operational test: **could one real-world event (a single order, request, upload) be classified differently by the two value sets?** Yes → one decision split across N sites; if the constants never co-apply to any single event they are different policies however alike they look. Cheap proxy when the read is hard: the predicates reference the same entity/field (`order.status`, `payment.state`).
+
+**Q3 — is "Audit the guards" in the right place?**
+
+- [Should] Inside Step 2 as an H3 (`skills/dry/SKILL.md:95`, under the Step 2 heading at `skills/dry/SKILL.md:84`) is logically fine — it consumes the index — but structurally risky: the technique that produced the skill's only unique win is subordinate to "build the index" and can be skipped as a detail, especially in a quick pass that only picked "two or three" classes (`skills/dry/SKILL.md:52`).
+  → Fix: promote to its own numbered heading, e.g. `## Step 2b — Audit the guards, do not trust them` (no renumbering of Steps 3–6 needed).
+
+**Q4 — self-consistency**
+
+- [Should] Frontmatter class list is stale: "the same table, file, env var, endpoint, binary, or config key" (`skills/dry/SKILL.md:5-6`) has no Policy/constants entry, while Step 1's table (`skills/dry/SKILL.md:61`) and the one rule (`skills/dry/SKILL.md:30`) now do. The description is the routing surface; the new capability is undersold there.
+  → Fix: extend the enumeration, e.g. "…config key — or where N files define the same decision with different answers."
+- [Should] The one rule's flagship example falls out of Step 3's threshold: "two modules that both define what counts as a paid order, with different value sets" (`skills/dry/SKILL.md:32-33`) is only two touchers, and Step 3 requires "≥3 touching files (≥2 if any toucher *writes* it)" (`skills/dry/SKILL.md:113`) without defining whether a constant's *definer* is a writer. Read the wrong way, the pivot filters out the exact finding the rule promises.
+  → Fix: add one clause to Step 3 — "for Policy, a definer counts as a writer."
+- No duplicated instructions found; no other new-vs-surviving contradictions.
+
+**Q5 — bloat**
+
+- [Nit] 201 lines is tolerable, but both new prose patches are commentary, not instruction:
+  - "An earlier version of this skill said 'resource, never shape', and that wording blinded it to the highest-value duplication class there is…" (`skills/dry/SKILL.md:37-38`) — changelog inside the skill. → Delete the sentence; the line before it already carries the rule.
+  - "A guard that was fixed once is not a guard that works. Confidently incomplete is worse than visibly broken." (`skills/dry/SKILL.md:108-109`) — aphorisms. → Delete; "run it, then check its coverage against your index" (`skills/dry/SKILL.md:98-99`) already says the thing.
+
+**Q6 — what is still missing**
+
+- [Pass] retry/backoff written six times with no jitter: **caught**. The Policy row explicitly names "retry counts and backoff formulas" (`skills/dry/SKILL.md:61`); six definers clear the ≥3 threshold and any divergence fires signal 4 (`skills/dry/SKILL.md:135-137`).
+- [Should] vendor client bypassing a shared error-body helper: **missed**. Step 3's pivot is binary — "**They meet** → not a finding. One gateway already exists" (`skills/dry/SKILL.md:121`) — so the mixed case (gateway exists, some touchers route around it) dies at "meet." Yet that is precisely the shape converge's fleet table expects dry to emit: "Bypassed gateway — a single canonical module exists; files that import it still reach the resource directly" (`skills/converge/SKILL.md:59`). Absent class: **Contract/Bypass** — the existing shared module, and who reaches around it.
+  → Fix: add a third pivot outcome: "some touchers route through a shared module and others do not → bypass finding," and let signal 4 rank it.
+- [Should] production script reading config from a vendored tree, and `sys.path` surgery: **missed**, one class gap — **Boundary** (first-party code reaching into an excluded tree). Step 2 excludes vendor trees (`skills/dry/SKILL.md:86-87`), which hides the vendored config resource entirely, and no class row covers import-path manipulation. Worse: a path literal pointing *into* an excluded tree only becomes a resource if it happens to clear the toucher thresholds, so the real shape of this finding — one script crossing the line — stays below them.
+  → Fix: (a) extend the File/Config rows: "a first-party reference pointing *into* an excluded directory is reportable at any toucher count — exclusion hides the tree, not reaches into it"; (b) add to the Config or Process row: "module/import-path surgery (`sys.path`, `PYTHONPATH`, `NODE_PATH`, classpath tweaks)."
+
+**Rest of the sweep**
+
+- [Should] Neighbors (`skills/dry/SKILL.md:195-201`) omits converge — the fleet layer whose only input is dry's maps and whose own Neighbors lists dry (`skills/converge/SKILL.md:143`). A dry run that ends with two maps has no onward routing.
+  → Fix: add "- [converge](../converge/SKILL.md) — reads two or more of these maps across repos or re-runs; run it once you have two."
+- [Pass] Step 1b and the issue cross-check — the other two edits — landed clean: "Quote the rule in the finding. Do not paraphrase it." (`skills/dry/SKILL.md:82`) and "label it `new`, `tracked (#N)`, or `closed-but-present (#N)`" (`skills/dry/SKILL.md:185`) are both mechanically executable.
+- [Pass] Cross-references hold: "exactly as in recon" (`skills/dry/SKILL.md:91`) matches recon's graph-only rule (`skills/recon/SKILL.md:58`); the crossing/irreversible handoff (`skills/dry/SKILL.md:147-149`) matches the vocabulary in triangulate/converge (`skills/converge/SKILL.md:144-145`); the ponytail line (`skills/dry/SKILL.md:201`) matches ponytail's charter.
+- Pre-existing code (GH-268): whole file swept. Beyond the stale frontmatter list above (surviving text the edits made stale), I found no pre-existing defects; say-so recorded here rather than left unstated.
+
+**Verdict: Changes requested** — the Policy class and guard audit are real improvements, but the unconditional disagree-equals-defect framing (Q1), the unexecutable grouping rule (Q2), the buried unique-win technique (Q3), and the two absent classes (Q6) need a pass before approval.
+
+Handing off to Producer (claude-a) — go to the claude-a window and say "take your turn": log dispositions for these findings and implement the fixes.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
