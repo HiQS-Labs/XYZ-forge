@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 2: the reporting repo's review of PR #350 (LTVera-Pandas #322) found four parser defects, one of which broke `roadmap sync` on **this repo's own** `ROADMAP.md`. All four fixed; suite extended to 30/30; nine releases/roadmap suites green (375 assertions, 0 failures) | agy QA review of the full branch via `/relay-xyz`, then merge |
+| Phase 2: the reporting repo's review of PR #350 (LTVera-Pandas #322) found four parser defects, one of which broke `roadmap sync` on **this repo's own** `ROADMAP.md`. All four fixed; suite extended to 32/32; `validate.sh --auto` 305/305; agy QA review **PASS** with one minor finding, fixed | Merge |
 
 ## Symptom
 
@@ -147,13 +147,14 @@ instead of restating it.
 - [x] Extend `test/gh349-releases-roadmap-vendored.sh` (sections 6-7, now 30/30)
 - [x] Pin this repo's own ROADMAP.md against duplicate keys inside the suite itself
 - [x] Re-run the releases/roadmap suites: 9 suites, 375 assertions, 0 failures
-- [ ] agy QA review of the full branch via `/relay-xyz`
+- [x] agy QA review of the full branch via `/relay-xyz` — **PASS** (`relay-system/2026-08-31/gh349-phase2-review-qa.md`)
+- [x] agy minor finding: dotted-range umbrella titles (`GH-135..140`) carry no key
 
 ### Verification
 
 | Suite | Result |
 |---|---|
-| `test/gh349-releases-roadmap-vendored.sh` | 30 passed, 0 failed |
+| `test/gh349-releases-roadmap-vendored.sh` | 32 passed, 0 failed |
 | `test/gh69-roadmap-shadow.sh` | 84 passed, 0 failed |
 | `test/gh257-roadmap-ledger-fixes.sh` | all passed |
 | `test/gh32-releases-app.sh` | 144 passed, 0 failed |
@@ -169,6 +170,18 @@ instead of restating it.
 The reporting repo's `ROADMAP.md` carries **two** entries keyed `GH-199`, so `roadmap sync` there
 still refuses with `roadmap-duplicate-gh`. That is a data condition in that repo, correctly named by
 the existing guard, not a parser defect — it belongs to LTVera-Pandas #322's own remediation.
+
+### agy QA — PASS, one minor finding fixed
+
+`relay-system/2026-08-31/gh349-phase2-review-qa.md`. Nine questions adjudicated, verdict PASS.
+One minor finding, now fixed: `_ROADMAP_MULTI_KEY_RE` recognised `/`, `,`, `+` and `&` as
+multi-issue separators but not a dotted **range**, so `GH-135..140 · Wave-1 follow-ups` — six
+issues — was keyed to 135. Pre-existing behaviour (`development` did the same), but it is the
+same mis-keying class the rest of Phase 2 fixes, so it is closed here.
+
+Dashes are deliberately **excluded** from the separator set: `GH-100 — 2026 planning` is a
+single-issue title, and treating an em-dash as a range would silently drop its key. The suite
+pins both directions (32/32).
 
 ### Lessons Learned
 

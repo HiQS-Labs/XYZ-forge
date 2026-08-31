@@ -2811,7 +2811,11 @@ def parse_rating(raw, title):
 # `roadmap sync` refuse outright on this repo's own ROADMAP.md. A title that names several issues
 # (`#129/#130/#131 · Wave 1 …`) is an umbrella heading, not a key, and must stay unnumbered.
 _ROADMAP_KEY_RE = re.compile(r"^(?:GH-|#)(\d+)\b")
-_ROADMAP_MULTI_KEY_RE = re.compile(r"^(?:GH-|#)\d+\s*[/,+&]\s*(?:GH-|#)?\d+")
+# The separator set is deliberately conservative. `..`/`...` is an unambiguous range
+# (`GH-135..140 · Wave-1 follow-ups` is six issues, not issue 135). En/em dashes are NOT
+# included: `GH-100 — 2026 planning` is a single-issue title, and treating the dash as a range
+# would silently drop its key. agy QA, 2026-08-31.
+_ROADMAP_MULTI_KEY_RE = re.compile(r"^(?:GH-|#)\d+\s*(?:[/,+&]|\.\.\.?)\s*(?:GH-|#)?\d+")
 
 # Markdown task-list items (`- [ ]`, `- [x]`) share the `- [` prefix with a link bullet but are
 # not ledger entries; without this they parsed as rows with an empty or "x" title.

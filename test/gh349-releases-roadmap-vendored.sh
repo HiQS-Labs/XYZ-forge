@@ -140,13 +140,15 @@ cat > "$R/ROADMAP.md" <<'MD'
 ### In progress
 - **Execution checklist for GH-500 + GH-501** — a bold title that MENTIONS issues it is not keyed by.
 - **#601/#602/#603 · umbrella wave heading** — names three issues; none of them is its key.
+- **GH-701..706 · umbrella wave range** — a dotted RANGE is six issues, not issue 701.
+- **GH-707 — 2026 planning cycle** — an em-dash before a number is NOT a range; this IS keyed.
 MD
 
 out="$(ra roadmap sync 2>&1)"; rc=$?
 ok "review-regression ledger syncs (rc=$rc)" "[ $rc -eq 0 ]"
 
 count6="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items")"
-ok "  and task-list checkboxes are not entries (5 rows, not 7)" "[ \"$count6\" = '5' ]"
+ok "  and task-list checkboxes are not entries (7 rows, not 9)" "[ \"$count6\" = '7' ]"
 
 box="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE title = '' OR title = 'x'")"
 ok "  and no empty-titled checkbox row was stored" "[ \"$box\" = '0' ]"
@@ -159,6 +161,12 @@ ok "  and a multi-issue umbrella title carries no key" "[ \"$umbrella\" = 'NULL'
 
 hash_key="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE gh_number = 503")"
 ok "  and a hash-prefixed single-issue title IS keyed" "[ \"$hash_key\" = '1' ]"
+
+rng="$(sqlite3 "$R/releases.db" "SELECT COALESCE(gh_number,'NULL') FROM roadmap_items WHERE title LIKE 'GH-701%'")"
+ok "  and a dotted RANGE umbrella carries no key (agy QA)" "[ \"$rng\" = 'NULL' ]"
+
+dash="$(sqlite3 "$R/releases.db" "SELECT COALESCE(gh_number,'NULL') FROM roadmap_items WHERE title LIKE 'GH-707%'")"
+ok "  but an em-dash before a number is NOT a range — that title keeps its key" "[ \"$dash\" = '707' ]"
 
 doc500="$(sqlite3 "$R/releases.db" "SELECT COALESCE(doc_path,'NULL') FROM roadmap_items WHERE gh_number=500")"
 ok "  and an issue-linked bullet leaves doc_path NULL, not a URL" "[ \"$doc500\" = 'NULL' ]"
