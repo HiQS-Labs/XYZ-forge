@@ -335,6 +335,25 @@ TESTS=(
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
                                  #   a duplicate GH key in the markdown is refused by name
+  "gh349-releases-roadmap-vendored.sh" # GH-349 (roadmap layer generalised to a vendored install) — 54/0;
+                                  #   link-style `- [Title](path)` bullets parse alongside bold ones, issue URLs
+                                  #   come from any GitHub org, and a 0-entry parse of a non-empty ledger REFUSES
+                                  #   (rule=roadmap-empty-parse) rather than deleting roadmap_items and exiting 0.
+                                  #   Sections 6-7 pin the LTVera-Pandas #322 review of PR #350: a GH number is a
+                                  #   KEY read only from the head of a title (a whole-title search harvested 111
+                                  #   out of "Execution checklist for GH-111 + GH-108" and created a duplicate key
+                                  #   in THIS repo's own ROADMAP.md, which roadmap sync refuses by name), umbrella
+                                  #   titles carry no key, doc_path never holds a URL, issue_url is anchored to the
+                                  #   bullet's own link or a corroborating number, and `- [ ]` task-list items are
+                                  #   not entries. Section 7 parses this repo's own ROADMAP.md on every run.
+                                  #   Sections 8-10 pin the codex QA round: an UNKEYED entry never
+                                  #   adopts a cited blocker as its own issue_url (the real ledger
+                                  #   stored #42 as "Grow Willies"'s identity), absolute/scheme/
+                                  #   drive-letter targets never reach doc_path, en dash is a
+                                  #   numeric range while em dash is prose, duplicate unkeyed titles
+                                  #   refuse, --allow-empty is the one sanctioned way to clear the
+                                  #   mirror and never excuses a non-empty ledger, and the legacy
+                                  #   GH_URL matcher keeps its issue-only contract.
   "gh77-standup-triage.sh"        # GH-77 (`skills/standup/triage.py`, the deterministic half of /standup) — 29/0.
                                  #   Its PRD escalated at a 4-round review cap with a FLAT finding rate
                                  #   (11/13/10/10) because a state machine was being specified in prose. The
