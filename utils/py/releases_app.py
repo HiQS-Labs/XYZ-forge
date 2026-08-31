@@ -108,7 +108,10 @@ ITEM_STATES = ("open", "shipped", "cut")
 # dead end that only the schema knew about — `manifest ship` writes it. Both `shipped` and `cut` are
 # terminal FOR THAT ROW: re-admitting an item is a NEW dial-in row, which keeps the trail append-only
 # and readable rather than flipping one row back and forth.
-LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut")}
+# GH-351: `shipped` was a dead end. `manifest cut` refuses on a shipped row and re-dialing adds a
+# SECOND row beside it, so a manifest could permanently assert that one issue both shipped and is
+# pending. `manifest unship` retracts a false shipped item back to dialed_in instead.
+LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut"), ("shipped", "dialed_in")}
 GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+$")
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
@@ -2387,6 +2390,100 @@ def cmd_manifest_cut(args):
     finally:
         conn.close()
 
+
+
+def cmd_manifest_unship(args):
+    """GH-351: retract a shipped manifest item back to dialed_in.
+
+    `shipped` used to be terminal with no way out. `manifest cut` refuses on a shipped row, and the
+    refusal pointed at re-dialing — which retracts nothing and adds a SECOND row, leaving the
+    manifest asserting that one issue both shipped and is pending. AGENTS.md forbids hand-editing
+    releases.db, so an operator had no supported way to correct a false ship at all.
+
+    The correction is a real state transition with an auditable event, not a silent UPDATE: the
+    retraction lands in manifest_state_events beside the ship it reverses, so the ledger records
+    that the claim was withdrawn rather than pretending it was never made.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        reason = (args.reason or "").strip()
+        if not reason:
+            refuse("unship-needs-reason",
+                   "retracting a shipped manifest item without a reason is refused (structural, "
+                   "both modes)")
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+
+            item = conn.execute("""SELECT * FROM manifest_items
+                                   WHERE release_id=? AND issue_ref_id=? AND state='shipped'
+                                   ORDER BY id DESC LIMIT 1""",
+                                (rel["id"], ref["id"])).fetchone()
+            if not item:
+                prior = conn.execute("""SELECT state FROM manifest_items
+                                        WHERE release_id=? AND issue_ref_id=?
+                                        ORDER BY id DESC LIMIT 1""",
+                                     (rel["id"], ref["id"])).fetchone()
+                if prior:
+                    refuse("transition",
+                           "issue %r is in release %s at state %r, not shipped"
+                           % (value, args.gid, prior["state"]))
+                refuse("unknown-issue",
+                       "issue %r is not in release %s's manifest" % (value, args.gid))
+
+            # Un-shipping must not manufacture the very contradiction it exists to remove: if a live
+            # row already sits beside the shipped one (GH-111 dropped UNIQUE(release_id,
+            # issue_ref_id), so it can), retracting would leave TWO dialed_in rows.
+            existing = conn.execute("""SELECT 1 FROM manifest_items
+                                       WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'
+                                         AND id != ?""",
+                                    (rel["id"], ref["id"], item["id"])).fetchone()
+            if existing:
+                refuse("manifest-duplicate",
+                       "issue is already dialed into this release as dialed_in; unship would "
+                       "create a duplicate live row")
+
+            held = conn.execute("""SELECT r.global_id, r.codename FROM manifest_items mi
+                                   JOIN releases r ON r.id = mi.release_id
+                                   WHERE mi.issue_ref_id = ? AND mi.release_id != ?
+                                     AND mi.state = 'dialed_in'""",
+                                (ref["id"], rel["id"])).fetchall()
+            if held:
+                refuse("dialed-in-elsewhere",
+                       "issue is already dialed into %s — a task belongs to ONE release at a time."
+                       % (", ".join("%s (%s)" % (h["global_id"], h["codename"] or "?")
+                                    for h in held)))
+
+            if (item["state"], "dialed_in") not in LEGAL_ITEM_TRANSITIONS:
+                refuse("transition",
+                       "cannot move an item from %r to 'dialed_in' (legality is CLI-enforced)"
+                       % item["state"])
+
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("UPDATE manifest_items SET state='dialed_in', updated_at=? WHERE id=?",
+                             (now_iso(), item["id"]))
+            else:
+                conn.execute("UPDATE manifest_items SET state='dialed_in' WHERE id=?",
+                             (item["id"],))
+            # item state and its event land in ONE transaction, matching ship/cut: a direct writer
+            # that skips the event is caught by the digest chain.
+            conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at,
+                            reason) VALUES (?, 'shipped', 'dialed_in', ?, ?)""",
+                         (item["id"], now_iso(), reason))
+            print("manifest item %s un-shipped (shipped -> dialed_in); retraction event appended"
+                  % item["global_id"])
+
+        perform_write(root, conn, "manifest-unship", args.gid, mutate)
+    finally:
+        conn.close()
 
 def cmd_marathon_add(args):
     root = resolve_root(args.root)
@@ -4740,6 +4837,12 @@ def build_parser():
     sp_cut.add_argument("--gid", required=True)
     sp_cut.add_argument("issue", help="issue URL or TMP-XXXXXX")
     sp_cut.add_argument("--reason", default="")
+    sp_unship = msub.add_parser("unship",
+                                help="retract a falsely shipped manifest item back to dialed_in "
+                                     "(REQUIRES --reason)")
+    sp_unship.add_argument("--gid", required=True)
+    sp_unship.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_unship.add_argument("--reason", default="")
 
     sp = sub.add_parser("marathon", help="marathon CRUD (v1: add/list)")
     msub = sp.add_subparsers(dest="marathon_cmd", required=True)
@@ -4931,7 +5034,8 @@ def main(argv=None):
         "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd in ("dial-in", "add")
         else (cmd_manifest_ship(a) if a.manifest_cmd == "ship"
               else (cmd_manifest_marathon(a) if a.manifest_cmd == "marathon"
-                    else cmd_manifest_cut(a))),
+    else (cmd_manifest_unship(a) if a.manifest_cmd == "unship"
+                    else cmd_manifest_cut(a)))),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
