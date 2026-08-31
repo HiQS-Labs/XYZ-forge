@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 25 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 27 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -35,6 +35,8 @@ Summary: 25 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-269 · full switchover to Releases DB — retire ROADMAP.md | — | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md) |
 | GH-273 · marathon-root-audit python spellings | — | — |
 | GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries | — | [GH-314-ARCHIVE-TEMPLATE-MANGLE.md](PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md) · [#314](https://github.com/HiQS-Labs/XYZ-forge/issues/314) |
+| GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status | — | [GH-254-PREVIEW-DRAFT-SORT.md](PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md) · [#254](https://github.com/HiQS-Labs/XYZ-forge/issues/254) |
+| GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing — Feedback-guided mutational engine, semantic domain oracles, and adaptive pairwise matrix | — | [GH-299-GEN4-FUZZING-ATE.md](PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md) · [#299](https://github.com/HiQS-Labs/XYZ-forge/issues/299) |
 
 ## Queue
 
