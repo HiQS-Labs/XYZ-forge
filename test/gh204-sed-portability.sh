@@ -79,9 +79,16 @@ pass "meter-release.sh fixture scrub is portable"
 # twin is documented, not patched. Comment lines are excluded — several files discuss the idiom.
 # This suite is excluded too: its negative control at §1 must actually RUN the old form to prove
 # the write is lost, and its grep patterns quote the idiom verbatim.
+#
+# `.tick/` is excluded because it is gitignored runtime state, not source. Its `orphan-backups/`
+# holds the relay's pre-revert copies — by design, the version of a file as it was BEFORE a fix.
+# Scanning it makes this guard report a defect that was already fixed, and report it forever, since
+# the backup is never supposed to change. That is a false red, and a permanently red gate is worse
+# than no gate: it teaches everyone to reach for --no-verify.
 residual="$(grep -rn "sed -i ''" \
     --include='*.sh' --include='*.py' --include='*.yml' --include='*.yaml' "$root" 2>/dev/null \
   | grep -v '/\.git/' \
+  | grep -v '/\.tick/' \
   | grep -v '^[^:]*:[0-9]*: *#' \
   | grep -v 'relay-automation/relay-drive\.sh' \
   | grep -v 'test/gh204-sed-portability\.sh' || true)"

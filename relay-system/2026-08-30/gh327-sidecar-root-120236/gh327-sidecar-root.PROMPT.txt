@@ -1,0 +1,103 @@
+# Design call: where should the agent-chorus telemetry sidecar be rooted? (GH-327)
+
+You are one of two independent advisors. **I have already picked an option and I want you to try to
+break it.** A reply that agrees with me and adds nothing is the least useful thing you can send. If
+you think I am right, say so in one line and spend the rest of your answer on the strongest objection
+you can construct against it anyway, and on what it would cost me if I am wrong.
+
+Read the files. Every claim you make should carry `file:line`.
+
+## The repo
+
+`HiQS-Labs/XYZ-forge`, branch `development`. The subject is the `agent-chorus` skill:
+`skills/agent-chorus/scripts/agent_chorus.py` (~2380 lines), `skills/agent-chorus/SKILL.md`,
+`skills/agent-chorus/TELEMETRY.md`.
+
+`agent-chorus` coordinates a serialized multi-agent discussion. One discussion is one markdown file
+plus a `runtime/` directory of sidecar state (doorbell `.watch` markers, a lock, telemetry).
+
+## The defect
+
+`telemetry_sidecar()` (`agent_chorus.py:231-234`) roots the sidecar unconditionally:
+
+```python
+def telemetry_sidecar(path: Path) -> Path:
+    """telemetry.jsonl lives beside the doorbell markers, never inside conversation.md."""
+    runtime = path.parent / "runtime"
+    return runtime / "telemetry.jsonl"
+```
+
+Discussions normally live in an **external store** outside the repository — `normalize_store()`
+(`:145-152`) actively refuses a store inside the coordinated repo. For those, `path.parent/runtime`
+is outside the repo and everything is fine.
+
+But there is a **legacy discussion location**: `relay-system/<date>/<id>-<slug>.md`, *inside the git
+worktree*. `find_discussions()` (`:578-609`) still resolves it — the legacy glob is
+`f"**/{discussion_id}-*.md"` under `legacy_relay_root(root)`. For a legacy discussion,
+`path.parent/runtime` resolves **inside the repository**.
+
+I reproduced it. A single read-only `join` — no write to the discussion at all — created
+`relay-system/2026-08-30/runtime/telemetry.jsonl` inside a fixture repo.
+
+Three consequences:
+
+1. **It contradicts the stated contract.** `TELEMETRY.md:49-50`: sidecar and index "live only under
+   the store … nothing is copied into any repository."
+2. **`telemetry purge` cannot revoke it.** Purge rglobs only the store (`:2019-2022`), so telemetry
+   written into a repo is unreachable by the tool that exists to remove it. This is the part I care
+   most about: it is a data-revocation hole, not just untidiness.
+3. **One `git add -A` commits it.** A `.gitignore` stopgap has already landed (`relay-system/**/runtime/`),
+   which closes the accident path but not the cause.
+
+Telemetry is metadata-only by construction (`TELEMETRY_EVENT_FIELDS`, `:202-215`) — no message
+bodies — and is default-ON in a declared pilot window `2026-08-24..2026-09-08` (`:201`).
+
+## The two options
+
+**Option 1 — root the sidecar in the store.** Mirror the discussion's identity under
+`<store>/…/runtime/`. Keeps telemetry for legacy discussions; purge reaches all of it. Requires a
+mapping from an arbitrary repo path to a store-side key, and that mapping must survive a discussion
+file being moved or renamed.
+
+**Option 2 — skip the sidecar entirely for paths outside the store.** One `_is_within(path, store)`
+guard; if the discussion is not under the store, write no telemetry. Makes `TELEMETRY.md:49-50` true
+as written. Silently drops telemetry for every legacy discussion.
+
+## My call, which I want you to attack
+
+**I pick option 2**, and my reasoning is:
+
+- Legacy `relay-system/` discussions are a **compatibility path being wound down**. Option 1 spends
+  its complexity budget building durable identity for a location we want to stop using.
+- Option 2 **cannot be wrong**: no file is written outside the store under any input, so the
+  acceptance criterion becomes structurally true rather than test-enforced. Option 1 leaves a mapping
+  that can be got wrong.
+- The cost is real and I am accepting it knowingly: telemetry goes blind for exactly the discussions
+  most likely to be long-running.
+
+## What I actually want from you
+
+Answer these directly, in this order. Be specific and cite lines.
+
+1. **Is "cannot be wrong" true?** Find the input that defeats the `_is_within(path, store)` guard.
+   Symlinks, a store configured *inside* a second repo, `ACTIVE_STORE` being `None`, a relative vs
+   resolved path mismatch, the reservation path returned by `find_discussions` for a crashed creator.
+   If the guard has a hole, that is the single most valuable thing you can tell me.
+2. **Is silent the right failure mode?** Option 2 as I stated it drops telemetry with no warning. Is
+   that acceptable, or does it need to say something — and if it says something on every legacy
+   `join`, does that become noise that trains operators to ignore output?
+3. **Is there a third option I have not considered** that is better than both? Say concretely what it
+   is and why it beats option 2, or say plainly that there isn't one. Do not invent one to seem
+   thorough.
+4. **What breaks downstream?** Does anything else in this repo assume a sidecar exists next to a
+   discussion — `telemetry audit --id N`, the aggregate command, `close_report.json`
+   (`:1697-1701`), tests under `test/`? Grep for it rather than guessing. A missing file where code
+   expects one is how "cannot be wrong" turns into a new crash.
+5. **Does the same bug exist for the OTHER things written to `path.parent/runtime`?** The doorbell
+   `.watch` markers and `DiscussionLock` also root there (`:936-941`). If those also land in the
+   repo for a legacy discussion, does option 2's guard need to cover them too — and if it does, does
+   that break the doorbell for legacy discussions in a way that matters?
+
+Question 5 is the one I am least sure about and most likely to have got wrong. Weight it accordingly.
+
+**Advisory only. Do not edit any file.**
