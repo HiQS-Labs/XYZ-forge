@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0 discovery completed; link-bullet parser, org-agnostic regex, empty-parse refusal guard, and RELEASES-DB-FAQS.md rating documentation implemented in `releases_app.py` | Run regression test suite `test/gh349-releases-roadmap-vendored.sh`, then drive Codex QA via `/relay-xyz` |
+| Link-bullet parser, org-agnostic regex, empty-parse refusal guard, and RELEASES-DB-FAQS.md rating documentation implemented; regression suite `test/gh349-releases-roadmap-vendored.sh` passed (18/18); independent Codex QA approved via `/relay-xyz` | Create PR into development and link to issue #349 |
 
 ## Symptom
 
@@ -70,7 +70,7 @@ Without `--dry-run` the rows are deleted and the command exits 0.
    now checks if `ROADMAP.md` has a non-empty ledger or if `roadmap_items` in the DB has existing rows,
    refusing with `rule=roadmap-empty-parse` rather than wiping the table.
 2. **The issue-URL regex is un-hardcoded from this org.** Replaced with module-level `URL_EXTRACT_RE`
-   matching any GitHub org/repo issue or PR URL (`https://github.com/[^/\s]+/[^/\s]+/(?:issues|pull)/[0-9]+`).
+   matching any GitHub org/repo issue or PR URL (`https://github.com/[^/\s]+/[^/\s]+/(?:issues|pull|pulls)/[0-9]+`).
 3. **Modification timestamps:** Clarified table timestamping model. Append-only tables (`op_receipts`,
    `manifest_state_events`, `schema_migrations`) carry immutable transaction timestamps (`at`, `applied_at`),
    while global and per-table state changes are tracked through generation counters and SHA-256 state digests.
@@ -85,5 +85,6 @@ Without `--dry-run` the rows are deleted and the command exits 0.
 - [x] Un-hardcode GitHub URL regex using org-agnostic `URL_EXTRACT_RE`
 - [x] Add fail-safe refusal `rule=roadmap-empty-parse` in `cmd_roadmap_sync`
 - [x] Add canonical rating documentation in `RELEASES-DB-FAQS.md`
-- [ ] Add regression test suite `test/gh349-releases-roadmap-vendored.sh`
-- [ ] Run Codex QA via `/relay-xyz`
+- [x] Add regression test suite `test/gh349-releases-roadmap-vendored.sh`
+- [x] Run Codex QA via `/relay-xyz`
+
