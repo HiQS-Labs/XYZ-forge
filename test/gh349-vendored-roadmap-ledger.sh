@@ -7,8 +7,8 @@
 #   Scope 2: Issue URLs from foreign orgs (arbitrary GitHub orgs/repos) are captured into issue_url.
 #   Scope 3: Migration 007 applies `updated_at` timestamps to all 9 tables from pre-migration state,
 #            non-null backfill, direct rebuild from untouched v6 dump backfills all 9 tables,
-#            updates advance timestamps (including settings.generation), and exact timestamp preservation
-#            across all 9 tables during v7 dump/rebuild.
+#            updates advance timestamps (including settings.generation), exact timestamp preservation
+#            across all non-generation tables with stable keys, and pinned rebuild timestamp on settings.generation.
 #   Scope 4: Rating system doc and validation (shape refusal, axis ranges, ovr range/orphan, vocabulary clash).
 #   Advisory: `releases next` warns when all candidates are undated.
 set -uo pipefail
@@ -157,21 +157,38 @@ TIME_AFTER="$(sqlite3 "$R_PRE/releases.db" "SELECT updated_at FROM releases WHER
 ok "release update advances release updated_at timestamp" "$([ "$TIME_AFTER" \> "$TIME_BEFORE" ] && echo 0 || echo 1)"
 ok "mutation advances settings.generation updated_at timestamp" "$([ "$GEN_TIME_AFTER" \> "$GEN_TIME_BEFORE" ] && echo 0 || echo 1)"
 
-# Test dump and rebuild exact timestamp preservation across ALL 9 tables
+# Test dump and rebuild exact timestamp preservation across all non-generation tables using stable keys
 python3 "$APP" --root "$R_PRE" check >/dev/null
 
-snapshot_all_tables(){
+snapshot_non_generation_tables(){
   local db="$1"
-  for tbl in "${TABLES[@]}"; do
-    echo "--- $tbl ---"
-    sqlite3 "$db" "SELECT id, updated_at FROM $tbl ORDER BY id;" 2>/dev/null || sqlite3 "$db" "SELECT key, updated_at FROM $tbl ORDER BY key;"
-  done
+  echo "--- settings (non-generation) ---"
+  sqlite3 "$db" "SELECT key, value, updated_at FROM settings WHERE key != 'generation' ORDER BY key;"
+  echo "--- repos ---"
+  sqlite3 "$db" "SELECT global_id, slug, updated_at FROM repos ORDER BY global_id;"
+  echo "--- issue_refs ---"
+  sqlite3 "$db" "SELECT global_id, COALESCE(url, temp_id), updated_at FROM issue_refs ORDER BY global_id;"
+  echo "--- marathons ---"
+  sqlite3 "$db" "SELECT global_id, status, updated_at FROM marathons ORDER BY global_id;"
+  echo "--- releases ---"
+  sqlite3 "$db" "SELECT global_id, version, updated_at FROM releases ORDER BY global_id;"
+  echo "--- manifest_items ---"
+  sqlite3 "$db" "SELECT global_id, state, updated_at FROM manifest_items ORDER BY global_id;"
+  echo "--- doc_lines ---"
+  sqlite3 "$db" "SELECT position, content, updated_at FROM doc_lines ORDER BY position;"
+  echo "--- legacy_lines ---"
+  sqlite3 "$db" "SELECT position, content, updated_at FROM legacy_lines ORDER BY position;"
+  echo "--- grandfather_entries ---"
+  sqlite3 "$db" "SELECT import_run, COALESCE(release_gid, '(doc)'), rule, updated_at FROM grandfather_entries ORDER BY import_run, id;"
 }
 
-SNAPSHOT_BEFORE="$(snapshot_all_tables "$R_PRE/releases.db")"
-python3 "$APP" --root "$R_PRE" check --rebuild >/dev/null
-SNAPSHOT_AFTER="$(snapshot_all_tables "$R_PRE/releases.db")"
-ok "check --rebuild preserves exact updated_at values across all 9 tables" "$(is "$SNAPSHOT_BEFORE" "$SNAPSHOT_AFTER"; echo $?)"
+SNAPSHOT_BEFORE="$(snapshot_non_generation_tables "$R_PRE/releases.db")"
+RELEASES_APP_NOW="2026-09-01T12:00:00Z" python3 "$APP" --root "$R_PRE" check --rebuild >/dev/null
+SNAPSHOT_AFTER="$(snapshot_non_generation_tables "$R_PRE/releases.db")"
+ok "check --rebuild preserves exact updated_at values across all non-generation tables" "$(is "$SNAPSHOT_BEFORE" "$SNAPSHOT_AFTER"; echo $?)"
+
+GEN_AFTER="$(sqlite3 "$R_PRE/releases.db" "SELECT updated_at FROM settings WHERE key='generation';")"
+ok "check --rebuild stamps pinned rebuild time into settings.generation.updated_at" "$(is "$GEN_AFTER" "2026-09-01T12:00:00Z"; echo $?)"
 
 # ── 4. Scope 4: Canonical rating vocabulary, axis parsing, ranges, ovr, malformed shape, vocabulary clash ──
 cat > "$R/ROADMAP.md" <<'MD'
