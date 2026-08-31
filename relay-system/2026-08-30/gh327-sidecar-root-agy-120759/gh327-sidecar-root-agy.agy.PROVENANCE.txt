@@ -1,0 +1,4 @@
+FIRSTHAND_COUNT=0
+ECHOED_COUNT=2
+ECHOED `join`
+ECHOED `DiscussionLock`

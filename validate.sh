@@ -475,6 +475,7 @@ TESTS=(
   "relay-uncited-findings.sh"       # GH-173 B3 (rtl_check_uncited_findings downgrades uncited review claims)
   "wave-reconcile.sh"               # GH-165 (canonical post-merge reconciler behavior)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
+  "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
 )
 
 PASSED=()
