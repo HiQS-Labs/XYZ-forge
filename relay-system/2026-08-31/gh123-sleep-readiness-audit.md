@@ -186,6 +186,42 @@ one line of a test file.
 
 ---
 
+## Addendum — a flake this audit misclassified, caught by its own fix run
+
+While running the full gate to verify Findings 1–2's fixes, `test/relay-turn-timeout.sh` went red —
+**three times out of three** while the box was loaded, and then **green four times out of four**
+(twice in this working tree, twice in a clean `development` clone) once it was quiet.
+
+The failing assertion is [test/relay-turn-timeout.sh:111](test/relay-turn-timeout.sh#L111):
+
+```bash
+[ "$elapsed" -lt 5 ] && pass "agy: turn killed fast (${elapsed}s < stub's 5s sleep)" \
+  || fail "agy: cap did not fire fast enough (${elapsed}s)"
+```
+
+A 1 s cap against a 5 s stub, asserted with a fixed wall-clock ceiling of 5 s. Under load the shim
+took **5–7 s** to return. Note the shape carefully: the cap *did* fire — the `rc -eq 7` assertion on
+the line above passed every time. Only the wall-clock ceiling failed.
+
+**This audit classified `relay-turn-timeout.sh` as "fixture that must be slow" and did not
+mutation-test it. That was wrong, and the reason is worth recording:** the sleep in that suite (the
+stub's `sleep 5`) genuinely is a fixture — but the *assertion* built around it is a fixed margin,
+and margins are the thing this audit exists to find. Screening on "is the `sleep` load-bearing?"
+misses a race whose margin lives in a `-lt` comparison rather than in a `sleep`.
+
+The correct screen is broader: **any fixed wall-clock constant that an assertion compares against**,
+whether it is spelled `sleep N` or `[ "$elapsed" -lt N ]`. Findings 1–3 above stand as written; the
+sweep that produced them was too narrow, and a second pass over elapsed-time comparisons is
+warranted. Filed as follow-up work on #345 rather than silently patched here.
+
+Two footnotes on the same gate run:
+
+- `test/gh528-parallel-contention-retry.sh` also went red in the pooled lane and green standalone
+  (9/0). That is `validate.sh`'s contention-retry mechanism working: the gate re-ran both suites
+  alone and exited **0**.
+- Which means the gate's own retry is currently absorbing this flake class rather than surfacing it.
+  Good for the gate's signal-to-noise; bad for noticing that the margins are thin.
+
 ## Coverage and limits
 
 - **Swept:** every `sleep` / `time.sleep` in `*.sh`, `*.py`, `*.yml`, `*.yaml`, excluding
