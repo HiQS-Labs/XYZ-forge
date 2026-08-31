@@ -3073,16 +3073,17 @@ def parse_roadmap_ledger(path):
     lines = open(path, encoding="utf-8").read().splitlines()
     entries = []
     sec = None
-    inledger = False
+    has_ledger_header = any(re.match(r"^##\s+Ledger\s*$", l.strip()) for l in lines)
+    inledger = not has_ledger_header
     pos = {}
     i, n = 0, len(lines)
     while i < n:
         line = lines[i]
-        if re.match(r"^##\s+Ledger\s*$", line.strip()):
+        if has_ledger_header and re.match(r"^##\s+Ledger\s*$", line.strip()):
             inledger = True
             i += 1
             continue
-        if inledger and re.match(r"^##\s+", line):
+        if has_ledger_header and inledger and re.match(r"^##\s+", line):
             break
         if inledger and line.startswith("### "):
             sec = line[4:].strip()
