@@ -113,7 +113,14 @@ GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-URL_EXTRACT_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull|pulls)/[0-9]+")
+# The legacy `GH_URL:` import field means a RELEASE pointer; it accepted issue URLs only before
+# GH-349 and still does. Widening it to PRs was an unrequested cross-caller change with no contract
+# test behind it — codex QA, 2026-08-31. The roadmap ledger keeps its own, wider matcher below.
+URL_EXTRACT_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+")
+
+# The roadmap ledger has always accepted a `pull` URL in an entry (the pre-GH-349 regex did too),
+# so it matches both kinds — org-agnostic, which is the whole point of GH-349.
+ROADMAP_URL_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull|pulls)/[0-9]+")
 
 # Crockford base32 (PRD GID shape note): every global_id CHECK is the type prefix plus exactly
 # 26 characters of [0-9A-HJKMNP-TV-Z], written out in full in the migration so length AND
@@ -2811,11 +2818,13 @@ def parse_rating(raw, title):
 # `roadmap sync` refuse outright on this repo's own ROADMAP.md. A title that names several issues
 # (`#129/#130/#131 · Wave 1 …`) is an umbrella heading, not a key, and must stay unnumbered.
 _ROADMAP_KEY_RE = re.compile(r"^(?:GH-|#)(\d+)\b")
-# The separator set is deliberately conservative. `..`/`...` is an unambiguous range
-# (`GH-135..140 · Wave-1 follow-ups` is six issues, not issue 135). En/em dashes are NOT
-# included: `GH-100 — 2026 planning` is a single-issue title, and treating the dash as a range
-# would silently drop its key. agy QA, 2026-08-31.
-_ROADMAP_MULTI_KEY_RE = re.compile(r"^(?:GH-|#)\d+\s*(?:[/,+&]|\.\.\.?)\s*(?:GH-|#)?\d+")
+# The separator set distinguishes a RANGE from prose. `..`/`...` and U+2013 EN DASH are the
+# conventional numeric-range delimiters (`GH-135..140`, `GH-135–140` — six issues, not issue 135).
+# U+2014 EM DASH is deliberately EXCLUDED: `GH-100 — 2026 planning` is a single-issue title whose
+# key would otherwise be silently dropped. The ASCII hyphen is excluded for the same reason.
+# The first pass conflated the two dashes; codex QA separated them, 2026-08-31.
+_ROADMAP_MULTI_KEY_RE = re.compile(
+    r"^(?:GH-|#)\d+\s*(?:[/,+&\u2013]|\.\.\.?)\s*(?:GH-|#)?\d+")
 
 # Markdown task-list items (`- [ ]`, `- [x]`) share the `- [` prefix with a link bullet but are
 # not ledger entries; without this they parsed as rows with an empty or "x" title.
@@ -2837,39 +2846,60 @@ def _roadmap_gh_number(title):
     return int(m.group(1)) if m else None
 
 
-def _is_doc_pointer(target):
-    """True when a link target is a repo document path rather than an absolute URL. The
-    `doc_path` column is a path a consumer resolves against the filesystem; storing an issue URL
-    in it (5 of 51 rows in the reporting repo) yields a miss indistinguishable from a dead
-    pointer."""
+# A scheme in a markdown link target: `https:`, `mailto:`, or a Windows drive prefix `C:`. Any of
+# these means the target is not a repo-relative path, whatever it ends with.
+_DOC_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def _doc_pointer(target):
+    """The repo-relative document path a link target names, or None.
+
+    The `doc_path` column is a path a consumer resolves against the filesystem, so an absolute
+    URL, a mail address or a drive-lettered path in it yields a miss indistinguishable from a
+    dead pointer. codex QA found the first cut let all three through, because the extraction
+    regexes accepted any `.md`-suffixed target and this check was only consulted on the fallback
+    branch. It is now the SINGLE validator every candidate passes through, whichever regex found
+    it — a scheme-bearing `https://github.com/acme/specs/blob/main/DESIGN.md` is rejected here
+    even though it ends `.md`."""
     if not target:
-        return False
+        return None
     target = target.strip()
-    if not target or "://" in target or target.startswith("//"):
-        return False
-    return target.split("#", 1)[0].endswith(".md")
+    if not target:
+        return None
+    if _DOC_SCHEME_RE.match(target) or target.startswith("/") or "\\" in target:
+        return None
+    path = target.split("#", 1)[0].split("?", 1)[0]
+    return path if path.endswith(".md") else None
 
 
 def _roadmap_issue_url(raw, link_target, gh_number):
-    """The URL a ledger entry is keyed to. It must either be the bullet's OWN link target or
-    corroborate the entry's GH number — never an arbitrary URL lifted from the hook prose. An
-    unanchored whole-block search keyed GH-94 to a DIFFERENT repo's issue #2 and GH-68 to a PR,
-    because both hooks cite other work in passing. No URL beats a wrong URL."""
+    """The URL a ledger entry is keyed to, or None.
+
+    Exactly two things count as evidence of identity: the bullet's OWN link target, and a URL in
+    the block whose number corroborates the title's GH key. Nothing else — an unanchored search
+    keyed GH-94 to a DIFFERENT repo's issue #2 and GH-68 to a PR, because both hooks cite other
+    work in passing.
+
+    An earlier cut kept a third branch for UNKEYED entries: the first URL on the bullet's first
+    line. codex QA showed that branch is wrong on the reporting repo's live data, where it stored
+    a BLOCKER as the row's identity — `Grow Willies …` took #42 (a blocker that has its own ledger
+    row) and `Marathon Plan 2026-07-07 …` took #47 (merely its only fireable lane). Being first is
+    not evidence. An unkeyed entry whose own link is a document now stores nothing.
+
+    Position never implies identity here: no URL beats a wrong URL."""
     if link_target:
         target = link_target.strip()
-        m = URL_EXTRACT_RE.fullmatch(target)
+        m = ROADMAP_URL_RE.fullmatch(target)
         if m:
             num = int(target.rsplit("/", 1)[1])
             if gh_number is None or num == gh_number:
                 return m.group(0)
-    if gh_number is not None:
-        for cand in URL_EXTRACT_RE.findall(raw):
-            if int(cand.rsplit("/", 1)[1]) == gh_number:
-                return cand
+    if gh_number is None:
         return None
-    first_line = raw.splitlines()[0] if raw else ""
-    m = URL_EXTRACT_RE.search(first_line)
-    return m.group(0) if m else None
+    for cand in ROADMAP_URL_RE.findall(raw):
+        if int(cand.rsplit("/", 1)[1]) == gh_number:
+            return cand
+    return None
 
 
 def parse_roadmap_ledger(path):
@@ -2917,12 +2947,11 @@ def parse_roadmap_ledger(path):
             link_target = m_link.group(2) if m_link else None
             doc = (re.search(r"\]\((PROJECT/[^)#]+\.md)(?:#[^)]*)?\)", raw)
                    or re.search(r"\]\(([^)#\s]+\.md)(?:#[^)]*)?\)", raw))
-            if doc:
-                doc_path = doc.group(1)
-            elif _is_doc_pointer(link_target):
-                doc_path = link_target.strip().split("#", 1)[0]
-            else:
-                doc_path = None
+            # Every candidate goes through the one validator — the extraction regexes only find
+            # a shape, they do not decide whether it is a document pointer.
+            doc_path = _doc_pointer(doc.group(1)) if doc else None
+            if doc_path is None:
+                doc_path = _doc_pointer(link_target)
             issue_url = _roadmap_issue_url(raw, link_target, gh_number)
             pos[sec] = pos.get(sec, 0) + 1
             entry = {
@@ -3270,13 +3299,32 @@ def cmd_roadmap_sync(args):
                     continue
                 if in_ledger_check and re.match(r"^##\s+", line):
                     break
-                if in_ledger_check and line.strip() and not line.strip().startswith("<!--"):
+                # A `###` section heading is ledger STRUCTURE, not content: a ledger with its
+                # sections and no bullets is genuinely empty. Format drift, by contrast, is
+                # bullets in a shape the parser missed — still non-heading lines, still caught.
+                if (in_ledger_check and line.strip()
+                        and not line.strip().startswith("<!--")
+                        and not line.startswith("###")):
                     ledger_has_content = True
                     break
-            if ledger_has_content or (_table_exists(conn, "roadmap_items") and conn.execute("SELECT 1 FROM roadmap_items LIMIT 1").fetchone()):
-                refuse("roadmap-empty-parse",
-                       "parsed 0 entries from %s (%s); refusing to delete roadmap_items"
-                       % (ROADMAP_NAME, "ledger is non-empty" if ledger_has_content else "table has existing rows"))
+            has_rows = bool(_table_exists(conn, "roadmap_items")
+                            and conn.execute("SELECT 1 FROM roadmap_items LIMIT 1").fetchone())
+            if ledger_has_content or has_rows:
+                # --allow-empty is the ONE sanctioned way to clear the mirror. It is deliberately
+                # narrow: it never excuses a ledger that still has content, so it cannot be used to
+                # paper over the format drift this guard exists to catch. Without it, an
+                # intentionally emptied ledger was a dead end, and AGENTS.md forbids the hand-edit
+                # of releases.db that agy suggested as the workaround. codex QA, 2026-08-31.
+                if ledger_has_content or not getattr(args, "allow_empty", False):
+                    refuse("roadmap-empty-parse",
+                           "parsed 0 entries from %s (%s); refusing to delete roadmap_items%s"
+                           % (ROADMAP_NAME,
+                              "ledger is non-empty" if ledger_has_content else "table has existing rows",
+                              "" if ledger_has_content else " — pass --allow-empty if the ledger is "
+                              "meant to be empty and you intend to clear the mirror"))
+                n_rows = conn.execute("SELECT COUNT(*) FROM roadmap_items").fetchone()[0]
+                print("roadmap sync: --allow-empty — %s ledger is empty, clearing %d mirrored row(s)"
+                      % (ROADMAP_NAME, n_rows))
         # duplicate GH keys in the markdown would make the mirror ambiguous — name it, do not pick
         seen = {}
         for e in parsed:
@@ -3288,6 +3336,21 @@ def cmd_roadmap_sync(args):
                            % (e["gh_number"], ROADMAP_NAME, seen[e["gh_number"]][:60],
                               e["title"][:60]))
                 seen[e["gh_number"]] = e["title"]
+
+        # An unkeyed row is keyed by its TITLE instead (see the `have`/`parsed` key below), so two
+        # identical unkeyed titles are the same ambiguity as a duplicate GH number — and more
+        # reachable since GH-349 made umbrella and range headings deliberately unkeyed. Left
+        # unguarded, both enter `adds` on the first sync and collapse to one key on the next,
+        # leaving an orphan row behind. codex QA, 2026-08-31.
+        seen_titles = set()
+        for e in parsed:
+            if e["gh_number"] is None:
+                if e["title"] in seen_titles:
+                    refuse("roadmap-duplicate-title",
+                           "the unkeyed entry %r appears twice in %s. Entries without a GH number "
+                           "are mirrored by title, so two identical ones are ambiguous; give one a "
+                           "GH key or retitle it, then re-run." % (e["title"][:80], ROADMAP_NAME))
+                seen_titles.add(e["title"])
 
         repo = conn.execute("SELECT id, global_id FROM repos ORDER BY id LIMIT 1").fetchone()
         if repo is None:
@@ -4721,6 +4784,11 @@ def build_parser():
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_rs = rsub.add_parser("sync", help="mirror legacy ROADMAP.md's ledger into roadmap_items (one-way)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
+    sp_rs.add_argument("--allow-empty", action="store_true",
+                       help="permit clearing roadmap_items when the ledger is genuinely empty. "
+                            "Without it a 0-entry parse REFUSES (rule=roadmap-empty-parse) so "
+                            "format drift can never silently delete the mirror; this flag never "
+                            "excuses a ledger that still has content")
     sp_rl = rsub.add_parser("list", help="print the shadow rows")
     sp_rl.add_argument("--json", dest="as_json", action="store_true",
                        help="emit rows as a JSON array (machine-readable; the default rendering "

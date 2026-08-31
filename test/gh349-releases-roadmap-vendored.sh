@@ -5,11 +5,16 @@
 #   1. parse_roadmap_ledger accepts link-style bullets: `- [Title](doc_path) — ...`
 #   2. parse_roadmap_ledger extracts issue and PR URLs from any GitHub org/repo
 #   3. roadmap sync successfully populates roadmap_items from link-style bullets in legacy mode
-#   4. roadmap sync refuses with rule=roadmap-empty-parse when parsing 0 entries from a non-empty ledger (prevents table deletion)
-#   5. review regressions (LTVera-Pandas #322): anchored GH key, umbrella titles, doc_path vs URL,
-#      issue_url anchoring, task-list checkboxes
-#   6. this repo's own ROADMAP.md parses with no duplicate GH keys
+#   4. roadmap sync refuses with rule=roadmap-empty-parse when parsing 0 entries from a non-empty
+#      ledger (prevents table deletion)
 #   5. RELEASES-DB-FAQS.md contains the canonical rating system documentation
+#   6. LTVera-Pandas #322 review regressions: anchored GH key, umbrella titles, doc_path vs URL,
+#      issue_url anchoring, task-list checkboxes
+#   7. this repo's own ROADMAP.md parses with no duplicate GH keys
+#   8. codex QA regressions: unkeyed entries never adopt a cited blocker, absolute/scheme/absolute-
+#      path targets never reach doc_path, en dash is a range and em dash is not
+#   9. ambiguity + clearing refusals: duplicate unkeyed titles, and --allow-empty
+#  10. the legacy GH_URL matcher keeps its issue-only contract, separate from the roadmap matcher
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -200,6 +205,137 @@ PY
 )"
 ok "this repo's own ROADMAP.md parses a non-empty ledger" "[ \"${self_dup%% *}\" -gt 0 ]"
 ok "  and yields no duplicate GH keys (would refuse roadmap sync)" "[ \"${self_dup##* }\" = 'none' ]"
+
+
+# ── 8. codex QA regressions (second review, 2026-08-31) ─────────────────────────────
+# agy passed the branch; codex found two Majors it missed:
+#   a. an UNKEYED entry took the first URL on its first line as its own identity — on the real
+#      reporting ledger that stored a BLOCKER (#42) as "Grow Willies"'s issue_url
+#   b. an absolute `.md` URL bypassed the doc-pointer check entirely, because the extraction
+#      regex accepted any `.md`-suffixed target and the validator was only consulted on the
+#      fallback branch
+# Plus: en dash is a numeric range (em dash is not), and duplicate UNKEYED titles are ambiguous.
+cat > "$R/ROADMAP.md" <<'MD'
+# Codex Review Regression Roadmap
+
+## Ledger
+
+### Queue / parked intake
+- [An unkeyed entry blocked by another issue](docs/plans/unkeyed.md) - **BLOCKED** on [#42](https://github.com/ExternalOrg/CustomRepo/issues/42), which has its own ledger row.
+- [GH-800 — upstream design lives outside the repo](https://github.com/ExternalOrg/SpecRepo/blob/main/DESIGN.md) - an absolute URL is not a doc pointer.
+- [GH-801 — mail target](mailto:notes.md) - a scheme with no slashes is still a scheme.
+- [GH-802 — absolute path](/docs/plan.md) - leading slash is not repo-relative.
+- [GH-803 — anchored doc](docs/plans/gh-803.md#phase-2) - an anchor is stripped, the path survives.
+### In progress
+- **GH-804..809 · dotted range umbrella** — six issues, not issue 804.
+- **GH-810–815 · en dash range umbrella** — en dash is the numeric-range delimiter.
+- **GH-816 — 2026 planning cycle** — an EM dash before a year is not a range.
+MD
+
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "codex-regression ledger syncs (rc=$rc)" "[ $rc -eq 0 ]"
+
+unkeyed="$(sqlite3 "$R/releases.db" "SELECT COALESCE(issue_url,'NULL') FROM roadmap_items WHERE title LIKE 'An unkeyed entry%'")"
+ok "  and an UNKEYED entry does not adopt a cited blocker as its identity" "[ \"$unkeyed\" = 'NULL' ]"
+
+doc800="$(sqlite3 "$R/releases.db" "SELECT COALESCE(doc_path,'NULL') FROM roadmap_items WHERE gh_number=800")"
+ok "  and an absolute .md URL never reaches doc_path" "[ \"$doc800\" = 'NULL' ]"
+
+url800="$(sqlite3 "$R/releases.db" "SELECT issue_url FROM roadmap_items WHERE gh_number=800")"
+ok "  and that entry keeps no issue_url either (the link is not an issue)" "[ -z \"$url800\" ]"
+
+doc801="$(sqlite3 "$R/releases.db" "SELECT COALESCE(doc_path,'NULL') FROM roadmap_items WHERE gh_number=801")"
+ok "  and a mailto: target is rejected (a scheme without // is still a scheme)" "[ \"$doc801\" = 'NULL' ]"
+
+doc802="$(sqlite3 "$R/releases.db" "SELECT COALESCE(doc_path,'NULL') FROM roadmap_items WHERE gh_number=802")"
+ok "  and a leading-slash absolute path is rejected" "[ \"$doc802\" = 'NULL' ]"
+
+doc803="$(sqlite3 "$R/releases.db" "SELECT doc_path FROM roadmap_items WHERE gh_number=803")"
+ok "  but a real relative doc survives, with its #anchor stripped" "[ \"$doc803\" = 'docs/plans/gh-803.md' ]"
+
+dotted="$(sqlite3 "$R/releases.db" "SELECT COALESCE(gh_number,'NULL') FROM roadmap_items WHERE title LIKE 'GH-804%'")"
+ok "  and a dotted range umbrella carries no key" "[ \"$dotted\" = 'NULL' ]"
+
+endash="$(sqlite3 "$R/releases.db" "SELECT COALESCE(gh_number,'NULL') FROM roadmap_items WHERE title LIKE 'GH-810%'")"
+ok "  and an EN DASH range umbrella carries no key (codex QA)" "[ \"$endash\" = 'NULL' ]"
+
+emdash="$(sqlite3 "$R/releases.db" "SELECT COALESCE(gh_number,'NULL') FROM roadmap_items WHERE title LIKE 'GH-816%'")"
+ok "  but an EM DASH before a year is prose — that title keeps its key" "[ \"$emdash\" = '816' ]"
+
+# ── 9. Ambiguity and clearing refusals ──────────────────────────────────────────────
+cat > "$R/ROADMAP.md" <<'MD'
+# Ambiguous Roadmap
+
+## Ledger
+
+### Queue / parked intake
+- [A repeated unkeyed title](docs/a.md) - first occurrence.
+- [A repeated unkeyed title](docs/b.md) - second occurrence, same title.
+MD
+
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "sync refuses two identical UNKEYED titles (rc=$rc)" "[ $rc -ne 0 ]"
+ok "  and cites rule=roadmap-duplicate-title" "has \"\$out\" 'rule=roadmap-duplicate-title'"
+
+# A genuinely empty ledger: still refuses by default, clears only with the explicit override.
+cat > "$R/ROADMAP.md" <<'MD'
+# Emptied Roadmap
+
+## Ledger
+
+### Queue / parked intake
+MD
+
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "an empty ledger still REFUSES by default (rc=$rc)" "[ $rc -ne 0 ]"
+ok "  and the refusal names the --allow-empty escape hatch" "has \"\$out\" '--allow-empty'"
+
+before_empty="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items")"
+ok "  and nothing was deleted" "[ \"$before_empty\" -gt 0 ]"
+
+out="$(ra roadmap sync --allow-empty 2>&1)"; rc=$?
+ok "--allow-empty clears the mirror when the ledger is genuinely empty (rc=$rc)" "[ $rc -eq 0 ]"
+after_empty="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items")"
+ok "  and roadmap_items is now empty" "[ \"$after_empty\" = '0' ]"
+
+# --allow-empty must NEVER excuse a ledger that still has content (format drift).
+cat > "$R/ROADMAP.md" <<'MD'
+# Malformed Roadmap
+
+## Ledger
+
+### Queue / parked intake
+Some unbulleted drift prose that parses to 0 entries.
+MD
+
+out="$(ra roadmap sync --allow-empty 2>&1)"; rc=$?
+ok "--allow-empty does NOT excuse a non-empty ledger that parses to 0 (rc=$rc)" "[ $rc -ne 0 ]"
+ok "  and still cites rule=roadmap-empty-parse" "has \"\$out\" 'rule=roadmap-empty-parse'"
+
+# ── 10. The legacy GH_URL field keeps its pre-GH-349 issue-only contract ────────────
+legacy_split="$(python3 - "$ROOT_DIR" <<'PY'
+import importlib.util, os, sys
+root = sys.argv[1]
+spec = importlib.util.spec_from_file_location("ra", os.path.join(root, "utils/py/releases_app.py"))
+m = importlib.util.module_from_spec(spec)
+sys.argv = ["ra"]
+try:
+    spec.loader.exec_module(m)
+except SystemExit:
+    pass
+pr = "https://github.com/Org/Repo/pull/9"
+iss = "https://github.com/Org/Repo/issues/9"
+yn = lambda x: "yes" if x else "no"
+print("%s %s %s %s" % (
+    yn(m.URL_EXTRACT_RE.fullmatch(pr)),       # legacy vs a PR URL   — must be no
+    yn(m.URL_EXTRACT_RE.fullmatch(iss)),      # legacy vs an issue   — must be yes
+    yn(m.ROADMAP_URL_RE.fullmatch(pr)),       # roadmap vs a PR URL  — must be yes
+    yn(m.ROADMAP_URL_RE.fullmatch(iss))))     # roadmap vs an issue  — must be yes
+PY
+)"
+ok "legacy GH_URL matcher still rejects a PR URL (no cross-caller widening)" "[ \"$(echo "$legacy_split" | cut -d' ' -f1)\" = 'no' ]"
+ok "  and still accepts an issue URL" "[ \"$(echo "$legacy_split" | cut -d' ' -f2)\" = 'yes' ]"
+ok "  while the roadmap matcher accepts both PR and issue URLs" "[ \"$(echo "$legacy_split" | cut -d' ' -f3-4)\" = 'yes yes' ]"
 
 
 
