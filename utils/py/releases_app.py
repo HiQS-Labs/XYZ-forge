@@ -1309,16 +1309,24 @@ def perform_write(root, conn, op, target_gid, mutate):
             except OSError:
                 pass
             raise
-        cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
-                           (str(generation), GENERATION_KEY))
-        if cur.rowcount == 0:
-            conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
-                         (GENERATION_KEY, str(generation)))
+        now = now_iso()
+        if _has_column(conn, "settings", "updated_at"):
+            cur = conn.execute("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?",
+                               (str(generation), now, GENERATION_KEY))
+            if cur.rowcount == 0:
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+                             (GENERATION_KEY, str(generation), now))
+        else:
+            cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
+                               (str(generation), GENERATION_KEY))
+            if cur.rowcount == 0:
+                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
+                             (GENERATION_KEY, str(generation)))
         digest_after = business_digest(conn)
         conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                          state_digest_before, state_digest_after)
                          VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                     (op, target_gid, now_iso(), txn_id, session_id(),
+                     (op, target_gid, now, txn_id, session_id(),
                       digest_before, digest_after))
         _crash("pre-commit")
         conn.commit()
@@ -1415,11 +1423,19 @@ def perform_migration(root, conn):
                        "the migrated schema has %d foreign-key violation(s) (first: %s); the "
                        "migration is rolled back and the ledger is untouched"
                        % (len(violations), tuple(violations[0])))
-            cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
-                               (str(generation), GENERATION_KEY))
-            if cur.rowcount == 0:
-                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
-                             (GENERATION_KEY, str(generation)))
+            now = now_iso()
+            if _has_column(conn, "settings", "updated_at"):
+                cur = conn.execute("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?",
+                                   (str(generation), now, GENERATION_KEY))
+                if cur.rowcount == 0:
+                    conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+                                 (GENERATION_KEY, str(generation), now))
+            else:
+                cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
+                                   (str(generation), GENERATION_KEY))
+                if cur.rowcount == 0:
+                    conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
+                                 (GENERATION_KEY, str(generation)))
             digest_after = business_digest(conn)
             conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                              state_digest_before, state_digest_after)
@@ -4416,17 +4432,18 @@ def load_dump(conn, tables, skip_schema_migrations=False):
         for row in tables.get("schema_migrations", []):
             conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
                          (int(row["version"]), row["applied_at"]))
+    now = now_iso()
     for row in tables.get("settings", []):
         if _has_column(conn, "settings", "updated_at"):
             conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
-                         (row["key"], row["value"], row.get("updated_at")))
+                         (row["key"], row["value"], row.get("updated_at") or now))
         else:
             conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)", (row["key"], row["value"]))
     repo_ids = {}
     for row in tables.get("repos", []):
         if _has_column(conn, "repos", "updated_at"):
             cur = conn.execute("INSERT INTO repos(global_id, slug, updated_at) VALUES (?, ?, ?)",
-                               (row["global_id"], row["slug"], row.get("updated_at")))
+                               (row["global_id"], row["slug"], row.get("updated_at") or now))
         else:
             cur = conn.execute("INSERT INTO repos(global_id, slug) VALUES (?, ?)",
                                (row["global_id"], row["slug"]))
@@ -4434,10 +4451,11 @@ def load_dump(conn, tables, skip_schema_migrations=False):
     ref_ids = {}
     for row in tables.get("issue_refs", []):
         if _has_column(conn, "issue_refs", "updated_at"):
+            ref_updated = row.get("updated_at") or row.get("created_at") or now
             cur = conn.execute("""INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at)
                                   VALUES (?, ?, ?, ?, ?)""",
                                (row["global_id"], row.get("url"), row.get("temp_id"),
-                                row["created_at"], row.get("updated_at")))
+                                row["created_at"], ref_updated))
         else:
             cur = conn.execute("""INSERT INTO issue_refs(global_id, url, temp_id, created_at)
                                   VALUES (?, ?, ?, ?)""",
@@ -4447,11 +4465,12 @@ def load_dump(conn, tables, skip_schema_migrations=False):
     mar_ids = {}
     for row in tables.get("marathons", []):
         if _has_column(conn, "marathons", "updated_at"):
+            mar_updated = row.get("updated_at") or row.get("created_at") or now
             cur = conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
                                   created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)""",
                                (row["global_id"], repo_ids[row["repo_gid"]],
                                 ref_ids[row["tracking_ref_gid"]], row["status"], row["created_at"],
-                                row.get("updated_at")))
+                                mar_updated))
         else:
             cur = conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
                                   created_at) VALUES (?, ?, ?, ?, ?)""",
@@ -4461,6 +4480,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
     rel_ids = {}
     for row in tables.get("releases", []):
         if _has_column(conn, "releases", "updated_at"):
+            rel_updated = row.get("updated_at") or row.get("shipped_date") or row.get("baseline_at") or now
             cur = conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
                                   target_date, shipped_date, description, exit_criterion,
                                   tracking_ref_id, marathon_id, gh_release_url, milestone,
@@ -4476,7 +4496,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
                                 row.get("front_door_reviewed"), row.get("shakedown_reviewed"),
                                 row.get("license_file"),
                                 _int_or_none(row.get("baseline_count")), row.get("baseline_at"),
-                                row.get("baseline_source"), row.get("updated_at")))
+                                row.get("baseline_source"), rel_updated))
         else:
             cur = conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
                                   target_date, shipped_date, description, exit_criterion,
@@ -4502,6 +4522,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
         # vocabulary is ever emitted.
         state = "dialed_in" if row["state"] == "open" else row["state"]
         if _has_column(conn, "manifest_items", "updated_at"):
+            item_updated = row.get("updated_at") or row.get("dialed_in_at") or now
             cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
                                   dialed_in_at, dial_reason, marathon_id, updated_at)
                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -4509,7 +4530,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
                                 ref_ids[row["issue_ref_gid"]], state,
                                 row.get("dialed_in_at"), row.get("dial_reason"),
                                 mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None,
-                                row.get("updated_at")))
+                                item_updated))
         else:
             cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
                                   dialed_in_at, dial_reason, marathon_id)
@@ -4527,7 +4548,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
     for row in tables.get("doc_lines", []):
         if _has_column(conn, "doc_lines", "updated_at"):
             conn.execute("""INSERT INTO doc_lines(repo_id, position, content, updated_at) VALUES (?, ?, ?, ?)""",
-                         (repo_ids[row["repo_gid"]], int(row["position"]), row["content"], row.get("updated_at")))
+                         (repo_ids[row["repo_gid"]], int(row["position"]), row["content"], row.get("updated_at") or now))
         else:
             conn.execute("""INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)""",
                          (repo_ids[row["repo_gid"]], int(row["position"]), row["content"]))
@@ -4536,7 +4557,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
             conn.execute("""INSERT INTO legacy_lines(release_id, position, content, disposition, updated_at)
                             VALUES (?, ?, ?, ?, ?)""",
                          (rel_ids[row["release_gid"]], int(row["position"]), row["content"],
-                          row.get("disposition"), row.get("updated_at")))
+                          row.get("disposition"), row.get("updated_at") or now))
         else:
             conn.execute("""INSERT INTO legacy_lines(release_id, position, content, disposition)
                             VALUES (?, ?, ?, ?)""",
@@ -4552,7 +4573,7 @@ def load_dump(conn, tables, skip_schema_migrations=False):
             conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
                             supplied_value, disposition, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)""",
                          (row["import_run"], rgid, row["rule"], row.get("source_value"),
-                          row.get("supplied_value"), row.get("disposition"), row.get("updated_at")))
+                          row.get("supplied_value"), row.get("disposition"), row.get("updated_at") or now))
         else:
             conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
                             supplied_value, disposition) VALUES (?, ?, ?, ?, ?, ?)""",
@@ -4649,12 +4670,20 @@ def _rebuild(root, conn):
             for version in registry_versions():
                 tconn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
                               (version, dump_applied.get(version, stamped_at)))
-            tconn.execute("UPDATE settings SET value = ? WHERE key = ?",
-                          (str(new_gen), GENERATION_KEY))
-            if tconn.execute("SELECT 1 FROM settings WHERE key = ?",
-                             (GENERATION_KEY,)).fetchone() is None:
-                tconn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
-                              (GENERATION_KEY, str(new_gen)))
+            if _has_column(tconn, "settings", "updated_at"):
+                tconn.execute("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?",
+                              (str(new_gen), stamped_at, GENERATION_KEY))
+                if tconn.execute("SELECT 1 FROM settings WHERE key = ?",
+                                 (GENERATION_KEY,)).fetchone() is None:
+                    tconn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+                                  (GENERATION_KEY, str(new_gen), stamped_at))
+            else:
+                tconn.execute("UPDATE settings SET value = ? WHERE key = ?",
+                              (str(new_gen), GENERATION_KEY))
+                if tconn.execute("SELECT 1 FROM settings WHERE key = ?",
+                                 (GENERATION_KEY,)).fetchone() is None:
+                    tconn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
+                                  (GENERATION_KEY, str(new_gen)))
             new_digest = business_digest(tconn)
             tconn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                              state_digest_before, state_digest_after)
