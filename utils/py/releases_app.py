@@ -115,8 +115,6 @@ MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 URL_EXTRACT_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull|pulls)/[0-9]+")
 
-
-
 # Crockford base32 (PRD GID shape note): every global_id CHECK is the type prefix plus exactly
 # 26 characters of [0-9A-HJKMNP-TV-Z], written out in full in the migration so length AND
 # alphabet are schema-refused, not convention.
@@ -2807,6 +2805,69 @@ def parse_rating(raw, title):
     return out
 
 
+# GH-349 review (LTVera-Pandas #322): a ledger entry's GH number is a KEY, not a mention. It is
+# only read from the HEAD of the title. An unanchored search harvested 111 out of "Execution
+# checklist for GH-111 + GH-108", which collided with the real GH-111 entry and made
+# `roadmap sync` refuse outright on this repo's own ROADMAP.md. A title that names several issues
+# (`#129/#130/#131 · Wave 1 …`) is an umbrella heading, not a key, and must stay unnumbered.
+_ROADMAP_KEY_RE = re.compile(r"^(?:GH-|#)(\d+)\b")
+_ROADMAP_MULTI_KEY_RE = re.compile(r"^(?:GH-|#)\d+\s*[/,+&]\s*(?:GH-|#)?\d+")
+
+# Markdown task-list items (`- [ ]`, `- [x]`) share the `- [` prefix with a link bullet but are
+# not ledger entries; without this they parsed as rows with an empty or "x" title.
+_ROADMAP_TASKBOX_RE = re.compile(r"^- \[[ xX]\]")
+
+
+def _is_ledger_bullet(line):
+    """A ledger entry opener: a bold bullet or a link bullet, never a task-list checkbox."""
+    if line.startswith("- **"):
+        return True
+    return line.startswith("- [") and not _ROADMAP_TASKBOX_RE.match(line)
+
+
+def _roadmap_gh_number(title):
+    """The GH number a ledger entry is keyed by, or None. Anchored at the head of the title."""
+    if _ROADMAP_MULTI_KEY_RE.match(title):
+        return None
+    m = _ROADMAP_KEY_RE.match(title)
+    return int(m.group(1)) if m else None
+
+
+def _is_doc_pointer(target):
+    """True when a link target is a repo document path rather than an absolute URL. The
+    `doc_path` column is a path a consumer resolves against the filesystem; storing an issue URL
+    in it (5 of 51 rows in the reporting repo) yields a miss indistinguishable from a dead
+    pointer."""
+    if not target:
+        return False
+    target = target.strip()
+    if not target or "://" in target or target.startswith("//"):
+        return False
+    return target.split("#", 1)[0].endswith(".md")
+
+
+def _roadmap_issue_url(raw, link_target, gh_number):
+    """The URL a ledger entry is keyed to. It must either be the bullet's OWN link target or
+    corroborate the entry's GH number — never an arbitrary URL lifted from the hook prose. An
+    unanchored whole-block search keyed GH-94 to a DIFFERENT repo's issue #2 and GH-68 to a PR,
+    because both hooks cite other work in passing. No URL beats a wrong URL."""
+    if link_target:
+        target = link_target.strip()
+        m = URL_EXTRACT_RE.fullmatch(target)
+        if m:
+            num = int(target.rsplit("/", 1)[1])
+            if gh_number is None or num == gh_number:
+                return m.group(0)
+    if gh_number is not None:
+        for cand in URL_EXTRACT_RE.findall(raw):
+            if int(cand.rsplit("/", 1)[1]) == gh_number:
+                return cand
+        return None
+    first_line = raw.splitlines()[0] if raw else ""
+    m = URL_EXTRACT_RE.search(first_line)
+    return m.group(0) if m else None
+
+
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
     from its bullet line (`- **` or `- [`) to the next bullet, `###`, or `##`."""
@@ -2828,11 +2889,9 @@ def parse_roadmap_ledger(path):
             sec = line[4:].strip()
             i += 1
             continue
-        is_bullet = line.startswith("- **") or line.startswith("- [")
-        if inledger and sec and is_bullet:
+        if inledger and sec and _is_ledger_bullet(line):
             j = i + 1
-            while j < n and not (lines[j].startswith("- **") or lines[j].startswith("- [")
-                                 or lines[j].startswith("### ")
+            while j < n and not (_is_ledger_bullet(lines[j]) or lines[j].startswith("### ")
                                  or re.match(r"^##\s+", lines[j])):
                 j += 1
             raw = "\n".join(lines[i:j]).rstrip()
@@ -2844,31 +2903,33 @@ def parse_roadmap_ledger(path):
                 title = m_link.group(1).strip()
             else:
                 title = raw[2:].strip()[:80]
-            gh = re.match(r"^(?:GH-|#)?(\d+)\b", title) if title.startswith(("GH-", "#")) else re.search(r"\bGH-(\d+)\b", title)
+            gh_number = _roadmap_gh_number(title)
             marker = None
             for cand in _ROADMAP_STATUS_MARKERS:
                 if cand in raw:
                     marker = cand
                     break
             cre = re.search(r"cx/risk/eff (\d+)/(\d+)/(\d+)", raw)
-            doc = re.search(r"\]\((PROJECT/[^)]+\.md)\)", raw) or re.search(r"\]\(([^)]+\.md)\)", raw)
+            link_target = m_link.group(2) if m_link else None
+            doc = (re.search(r"\]\((PROJECT/[^)#]+\.md)(?:#[^)]*)?\)", raw)
+                   or re.search(r"\]\(([^)#\s]+\.md)(?:#[^)]*)?\)", raw))
             if doc:
                 doc_path = doc.group(1)
-            elif m_link and m_link.group(2) and m_link.group(2).strip():
-                doc_path = m_link.group(2).strip()
+            elif _is_doc_pointer(link_target):
+                doc_path = link_target.strip().split("#", 1)[0]
             else:
                 doc_path = None
-            issue = URL_EXTRACT_RE.search(raw)
+            issue_url = _roadmap_issue_url(raw, link_target, gh_number)
             pos[sec] = pos.get(sec, 0) + 1
             entry = {
-                "gh_number": int(gh.group(1)) if gh else None,
+                "gh_number": gh_number,
                 "title": title, "section": sec, "position": pos[sec],
                 "status_marker": marker,
                 "complexity": int(cre.group(1)) if cre else None,
                 "risk": int(cre.group(2)) if cre else None,
                 "effort": int(cre.group(3)) if cre else None,
                 "doc_path": doc_path,
-                "issue_url": issue.group(0) if issue else None,
+                "issue_url": issue_url,
                 "raw_text": raw,
             }
             entry.update(parse_rating(raw, title))
@@ -2877,7 +2938,6 @@ def parse_roadmap_ledger(path):
             continue
         i += 1
     return entries
-
 
 
 _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
