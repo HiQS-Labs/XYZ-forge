@@ -8,6 +8,7 @@ import tempfile
 import signal
 from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
 from turn_diagnostics import TurnDiagnostics
+from model_alias import resolve_model_slug
 
 
 def die(msg):
@@ -133,7 +134,14 @@ def main():
     )
 
     dflags = default_deepseek_flags()
-    deepseek_model = os.environ.get("DEEPSEEK_MODEL", "deepseek/deepseek-v4-pro")
+    # GH-346 Phase 1: let the operator write DEEPSEEK_MODEL="deepseek v4 pro" and have the alias
+    # table canonicalise it. This is an ENHANCEMENT layered over the literal, not a swap:
+    # resolve-model-alias.sh exits 1 with no output on a miss and has no canonical-slug
+    # passthrough, so a bare resolver call would blank out every already-canonical id. The literal
+    # below stays as the floor and resolve_model_slug() returns its input unchanged on any miss.
+    deepseek_model = resolve_model_slug(
+        os.environ.get("DEEPSEEK_MODEL", "deepseek/deepseek-v4-pro"), xyz_root
+    )
     deepseek_provider = os.environ.get("DEEPSEEK_PROVIDER", "openrouter")
     api_key_env = "OPENROUTER_API_KEY" if deepseek_provider == "openrouter" else "DEEPSEEK_API_KEY"
 

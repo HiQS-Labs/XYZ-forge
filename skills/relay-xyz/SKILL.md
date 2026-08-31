@@ -246,7 +246,22 @@ reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row (n
 |---|---|---|---|---|---|
 | Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn-$$.log` |
 | agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn-$$.log` |
-| Commandcode | `command -v cmd` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
+| Commandcode | `"$RELAY_HAS_COMMANDCODE" = 1` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
+| DeepSeek | `"$RELAY_HAS_DEEPSEEK" = 1` | `deepseek` | `DEEPSEEK_AGENT=deepseek ALLOW_PATHS="$ARTIFACT" DEEPSEEK_LOG="${TMPDIR:-/tmp}/deepseek-turn-$$.log"` | `relay-automation/deepseek-turn.sh` | `${TMPDIR:-/tmp}/deepseek-turn-$$.log` |
+
+**Model selection per worker** (GH-346) — the one lookup that used to mean reading each shim's
+source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also honors
+`<PREFIX>_FLAGS` and `RELAY_TURN_TIMEOUT_S`:
+
+| Worker | Model env | Default | Notes |
+|---|---|---|---|
+| Codex | *(none)* | codex CLI's own | `codex-turn.sh` never passes `--model`; set it in codex's own config |
+| agy | `AGY_MODEL` | agy CLI's own | validated against `agy models` — an unlisted id fails fast rather than falling back |
+| Commandcode | `COMMANDCODE_MODEL` | `meta/muse-spark-1.2-contributor` | `cmd --list-models` for the live catalog (GLM, Qwen, DeepSeek all reachable here) |
+| DeepSeek | `DEEPSEEK_MODEL` | `deepseek/deepseek-v4-pro` | accepts a colloquial alias (`"deepseek v4 pro"`); also `DEEPSEEK_PROVIDER` (`openrouter`\|`deepseek`) which selects `OPENROUTER_API_KEY` vs `DEEPSEEK_API_KEY` |
+| Aider | `AIDER_MODEL` | `openrouter/anthropic/claude-sonnet-5`, or `openai/agents-a1` when `AIDER_OPENAI_API_BASE` is set | force `AIDER_FLAGS=--edit-format diff` on GLM |
+| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | API-billed — an explicit operator choice, never a session default |
+| Pi | `PI_MODEL` | **none — required** | refuses to guess (GH-295) |
 
 Codex example:
 

@@ -195,7 +195,10 @@ def main():
             harness_id="pi",
             shim="pi-turn.py",
             task_scope=t,
-            model_id=os.environ.get("PI_MODEL", "pi-native"),
+            # GH-346 Phase 0: pi-turn refuses to run at all when PI_MODEL is unset (GH-295), so
+            # the old "pi-native" default was unreachable and contradicted that contract. Log the
+            # dispatch variable, which is guaranteed non-empty by the guard above.
+            model_id=pi_model,
             gateway=os.environ.get("PI_GATEWAY", "pi"),
             reasoning_effort=os.environ.get("PI_REASONING_EFFORT", "high"),
             cli_flags=pflags,

@@ -65,30 +65,31 @@ while the four axes keep their honest values underneath.
 | 53 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Queue | 70 | 55 | 65 | 60 | 250 | — |
 | 54 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Queue / parked intake | 60 | 35 | 70 | 85 | 250 | — |
 | 55 | **245** | [GH-108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
-| 56 | **235** | [GH-222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) — GH-222 — releases update cannot re-point a release's tracking issue | Cargo | completed | 60 | 40 | 60 | 75 | 235 | — |
-| 57 | **230** | [GH-105](https://github.com/HiQS-Labs/XYZ-forge/issues/105) — vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on) | Cargo | completed | 75 | 50 | 60 | 45 | 230 | — |
-| 58 | **228** | [GH-102](https://github.com/HiQS-Labs/XYZ-forge/issues/102) — Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | — | Completed | 68 | 45 | 70 | 45 | 228 | — |
-| 59 | **222** | [GH-103](https://github.com/HiQS-Labs/XYZ-forge/issues/103) — technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | — | Completed | 62 | 35 | 75 | 50 | 222 | — |
-| 60 | **220** | [GH-3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) — improve-loop.sh --state-dir durability — provenance evidence must not evaporate | — | Completed | 55 | 45 | 55 | 65 | 220 | — |
-| 61 | **220** | [GH-32](https://github.com/HiQS-Labs/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Queue / parked intake | 70 | 50 | 65 | 35 | 220 | — |
-| 62 | **220** | [GH-57](https://github.com/HiQS-Labs/XYZ-forge/issues/57) — test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | — | Completed | 60 | 45 | 65 | 50 | 220 | — |
-| 63 | **218** | GH-135 — GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | Completed | 58 | 45 | 60 | 55 | 218 | — |
-| 64 | **215** | [GH-233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) — AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | Linux-RC | completed | 65 | 45 | 75 | 30 | 215 | — |
-| 65 | **210** | [GH-5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Linux-RC | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
-| 66 | **195** | [GH-35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
-| 67 | **190** | [GH-39](https://github.com/HiQS-Labs/XYZ-forge/issues/39) — RELEASES app: one-way GitHub Project release-card projection | — | Completed | 50 | 30 | 65 | 45 | 190 | — |
-| 68 | **190** | [GH-61](https://github.com/HiQS-Labs/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
-| 69 | **185** | [GH-17](https://github.com/HiQS-Labs/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
-| 70 | **185** | [GH-42](https://github.com/HiQS-Labs/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Completed | 50 | 35 | 55 | 45 | 185 | — |
-| 71 | **175** | [GH-101](https://github.com/HiQS-Labs/XYZ-forge/issues/101) — Feasibility Study: Promoting Programmatic Script Runner (`script_runner.py`) into Core Relay & Consult Runtimes | — | Completed | 45 | 20 | 70 | 40 | 175 | — |
-| 72 | **175** | [GH-94](https://github.com/HiQS-Labs/XYZ-forge/issues/94) — research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment | — | Completed | 45 | 20 | 70 | 40 | 175 | — |
-| 73 | **170** | [GH-195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
-| 74 | **170** | [GH-28](https://github.com/HiQS-Labs/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
-| 75 | **160** | [GH-18](https://github.com/HiQS-Labs/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
-| 76 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | — | Queue / parked intake | 3 | 3 | 3 | 3 | 12 | — |
-| 77 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
-| 78 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Linux-RC | queue | 3 | 2 | 2 | 1 | 8 | — |
-| 79 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Linux-RC | queue | 1 | 1 | 1 | 1 | 4 | — |
+| 56 | **244** | [GH-346](https://github.com/HiQS-Labs/XYZ-forge/issues/346) — Speed up harness -> gateway -> model resolution with a real cache | — | Queue / parked intake | 62 | 58 | 58 | 66 | 244 | — |
+| 57 | **235** | [GH-222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) — GH-222 — releases update cannot re-point a release's tracking issue | Cargo | completed | 60 | 40 | 60 | 75 | 235 | — |
+| 58 | **230** | [GH-105](https://github.com/HiQS-Labs/XYZ-forge/issues/105) — vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on) | Cargo | completed | 75 | 50 | 60 | 45 | 230 | — |
+| 59 | **228** | [GH-102](https://github.com/HiQS-Labs/XYZ-forge/issues/102) — Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | — | Completed | 68 | 45 | 70 | 45 | 228 | — |
+| 60 | **222** | [GH-103](https://github.com/HiQS-Labs/XYZ-forge/issues/103) — technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | — | Completed | 62 | 35 | 75 | 50 | 222 | — |
+| 61 | **220** | [GH-3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) — improve-loop.sh --state-dir durability — provenance evidence must not evaporate | — | Completed | 55 | 45 | 55 | 65 | 220 | — |
+| 62 | **220** | [GH-32](https://github.com/HiQS-Labs/XYZ-forge/issues/32) — RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | Queue / parked intake | 70 | 50 | 65 | 35 | 220 | — |
+| 63 | **220** | [GH-57](https://github.com/HiQS-Labs/XYZ-forge/issues/57) — test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | — | Completed | 60 | 45 | 65 | 50 | 220 | — |
+| 64 | **218** | GH-135 — GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | Completed | 58 | 45 | 60 | 55 | 218 | — |
+| 65 | **215** | [GH-233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) — AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | Linux-RC | completed | 65 | 45 | 75 | 30 | 215 | — |
+| 66 | **210** | [GH-5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Linux-RC | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
+| 67 | **195** | [GH-35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
+| 68 | **190** | [GH-39](https://github.com/HiQS-Labs/XYZ-forge/issues/39) — RELEASES app: one-way GitHub Project release-card projection | — | Completed | 50 | 30 | 65 | 45 | 190 | — |
+| 69 | **190** | [GH-61](https://github.com/HiQS-Labs/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
+| 70 | **185** | [GH-17](https://github.com/HiQS-Labs/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
+| 71 | **185** | [GH-42](https://github.com/HiQS-Labs/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Completed | 50 | 35 | 55 | 45 | 185 | — |
+| 72 | **175** | [GH-101](https://github.com/HiQS-Labs/XYZ-forge/issues/101) — Feasibility Study: Promoting Programmatic Script Runner (`script_runner.py`) into Core Relay & Consult Runtimes | — | Completed | 45 | 20 | 70 | 40 | 175 | — |
+| 73 | **175** | [GH-94](https://github.com/HiQS-Labs/XYZ-forge/issues/94) — research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment | — | Completed | 45 | 20 | 70 | 40 | 175 | — |
+| 74 | **170** | [GH-195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
+| 75 | **170** | [GH-28](https://github.com/HiQS-Labs/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
+| 76 | **160** | [GH-18](https://github.com/HiQS-Labs/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
+| 77 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | — | Queue / parked intake | 3 | 3 | 3 | 3 | 12 | — |
+| 78 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
+| 79 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Linux-RC | queue | 3 | 2 | 2 | 1 | 8 | — |
+| 80 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Linux-RC | queue | 1 | 1 | 1 | 1 | 4 | — |
 
 **Top of the line:** GH-67 — Commandcode builder default widened to `--yolo` — closer evaluation → possible build (score 340, operator override).
 

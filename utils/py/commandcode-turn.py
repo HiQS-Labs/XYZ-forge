@@ -125,7 +125,9 @@ def main():
             harness_id="commandcode",
             shim="commandcode-turn.py",
             task_scope=t,
-            model_id=os.environ.get("COMMANDCODE_MODEL", "Qwen/Qwen3.8-Max"),
+            # GH-346 Phase 0: log the dispatched model, not a second, drifted default. An unset
+            # COMMANDCODE_MODEL ran meta/muse-spark-1.2-contributor and recorded Qwen/Qwen3.8-Max.
+            model_id=commandcode_model,
             gateway=os.environ.get("COMMANDCODE_GATEWAY", "openrouter"),
             reasoning_effort=os.environ.get("COMMANDCODE_REASONING_EFFORT", "xhigh"),
             cli_flags=cflags,

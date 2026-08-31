@@ -267,8 +267,16 @@ def main():
             harness_id="aider",
             shim="aider-turn.py",
             task_scope=t,
-            model_id=os.environ.get("AIDER_MODEL", "openrouter/deepseek/deepseek-v4-pro"),
-            gateway=os.environ.get("AIDER_GATEWAY", "openrouter"),
+            # GH-346 Phase 0: log the dispatched model, not a third independent default. Dispatch
+            # picks one of two values depending on the AIDER_OPENAI_API_BASE seam; this logged
+            # openrouter/deepseek/deepseek-v4-pro regardless, so neither seam recorded truthfully.
+            model_id=aider_model,
+            # Same bug one argument over: the LM Studio seam is not OpenRouter. Default honestly
+            # per seam; an explicit AIDER_GATEWAY still wins.
+            gateway=os.environ.get(
+                "AIDER_GATEWAY",
+                "openai-compatible" if aider_openai_api_base else "openrouter",
+            ),
             reasoning_effort=os.environ.get("AIDER_REASONING_EFFORT", "high"),
             cli_flags=aflags,
             repo_root=xyz_root,

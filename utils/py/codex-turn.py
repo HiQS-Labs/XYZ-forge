@@ -140,7 +140,10 @@ def main():
             harness_id="codex",
             shim="codex-turn.py",
             task_scope=t,
-            model_id=os.environ.get("CODEX_MODEL", "openai/gpt-5-codex"),
+            # GH-346 Phase 0: CODEX_MODEL is read nowhere else in this shim — codex is never
+            # given a --model flag, so a hardcoded openai/gpt-5-codex here recorded a model this
+            # shim never selected. Pass None when unset and let device_config's resolver answer.
+            model_id=os.environ.get("CODEX_MODEL") or None,
             gateway=os.environ.get("CODEX_GATEWAY", "openai"),
             reasoning_effort=os.environ.get("CODEX_REASONING_EFFORT", "high"),
             cli_flags=flags,

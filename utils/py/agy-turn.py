@@ -618,7 +618,12 @@ def main():
             harness_id="agy",
             shim="agy-turn.py",
             task_scope=t,
-            model_id=os.environ.get("AGY_MODEL", "antigravity/gemini-2.5-pro"),
+            # GH-346 Phase 0: this shim passes --model ONLY when AGY_MODEL is set (see the
+            # agy_args build above); unset means agy's own CLI default ran and this shim never
+            # learned which. Logging a hardcoded antigravity/gemini-2.5-pro invented a value
+            # nothing chose. Pass None instead so HarnessTurnLogger falls back to
+            # device_config's resolver, which is at least a real, declared default.
+            model_id=os.environ.get("AGY_MODEL") or None,
             gateway=os.environ.get("AGY_GATEWAY", "google"),
             reasoning_effort=os.environ.get("AGY_REASONING_EFFORT", "high"),
             cli_flags=os.environ.get("AGY_FLAGS", "").split(),

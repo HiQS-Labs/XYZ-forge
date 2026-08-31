@@ -79,19 +79,10 @@ def die(msg, code=2):
     sys.exit(code)
 
 
-def resolve_model_slug(model_name, xyz_root):
-    """Resolve colloquial model name using openrouter-model-aliases.yml or return as-is."""
-    script = os.path.join(xyz_root, "relay-automation", "resolve-model-alias.sh")
-    if os.path.isfile(script):
-        try:
-            r = subprocess.run(
-                [script, model_name], capture_output=True, text=True, check=False
-            )
-            if r.returncode == 0 and r.stdout.strip():
-                return r.stdout.strip()
-        except Exception:
-            pass
-    return model_name
+# GH-346 Phase 1: this function was the original home of the resolver's safe-call pattern. It now
+# lives in model_alias.py so deepseek-turn.py (and the next caller) inherit it instead of
+# re-deriving it. Re-exported under the old name — behavior is unchanged apart from a timeout.
+from model_alias import resolve_model_slug  # noqa: E402,F401
 
 
 def infer_engine(model_name, explicit_engine=None):

@@ -266,7 +266,11 @@ def main():
             harness_id="claude",
             shim="claude-turn.py",
             task_scope=t,
-            model_id=os.environ.get("CLAUDE_MODEL", "anthropic/claude-3-7-sonnet"),
+            # GH-346 Phase 0: log the model that actually dispatched, not a second, drifted
+            # default. This read its own CLAUDE_MODEL with a different fallback than the
+            # dispatch site above, so an unset CLAUDE_MODEL ran claude-sonnet-4-6 and recorded
+            # anthropic/claude-3-7-sonnet in harnesses.db.
+            model_id=model,
             gateway=os.environ.get("CLAUDE_GATEWAY", "anthropic"),
             reasoning_effort=os.environ.get("CLAUDE_REASONING_EFFORT", "high"),
             cli_flags=cflags,

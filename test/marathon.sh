@@ -55,7 +55,7 @@ phases:
     max_review_rounds: 2
     brief: briefs/p1.md
   - id: p2
-    reviewer: gemini
+    reviewer: agy
     depends_on: p1
     max_review_rounds: 3
     brief: briefs/p2.md
@@ -67,13 +67,19 @@ phases:
     brief: briefs/p3.md
 YAML
 
+# GH-346 Phase 2: these fixtures used `reviewer: gemini` purely as "a valid reviewer that
+# is not codex". `gemini` was removed from the reviewer gate (bin/marathon-yaml,
+# src/marathon-yaml.js) because no gemini shim exists anywhere in the tree and route_agent,
+# which runs first, always rejected it. `agy` preserves the mixed-reviewer intent with a
+# reviewer that can actually run. Case (5) below still pins that an INVALID reviewer
+# (`claude`) halts the plan.
 # --- (1) full chain: order + round-cap math + marathon.complete ------------
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
 run_marathon "$A/PROJECT/2-WORKING/m.yaml" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "full chain exits 0" || fail "chain exit=$rc"
 [ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "p1,p2,p3" ] \
   && pass "phases run in execution order p1,p2,p3" || fail "order: [$(cat "$WORK/phases-ran")]"
-grep -q "^p2|7|gemini|src/p2.js||1200|chain--p2|$" "$WORK/phases-ran" \
+grep -q "^p2|7|agy|src/p2.js||1200|chain--p2|$" "$WORK/phases-ran" \
   && pass "p2: round-cap=7, reviewer + artifact passed through, timeout exported, lane namespace set" || fail "p2 args: [$(grep p2 "$WORK/phases-ran")]"
 grep -q "^p1|5|codex||||chain--p1|$" "$WORK/phases-ran" \
   && pass "p1: round-cap=5, no timeout override by default, lane namespace set" || fail "p1 cap/env: [$(grep p1 "$WORK/phases-ran")]"
@@ -99,7 +105,7 @@ phases:
     depends_on: a
     brief: briefs/b.md
   - id: a
-    reviewer: gemini
+    reviewer: agy
     brief: briefs/a.md
 YAML
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
@@ -124,7 +130,7 @@ run_marathon "$A/PROJECT/2-WORKING/bad.yaml" >/dev/null 2>&1; rc=$?
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
 run_marathon "$A/PROJECT/2-WORKING/m.yaml" --retry p2 >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "--retry run still exits 0 (full chain)" || fail "--retry chain exit=$rc"
-grep -q "^p2|7|gemini|src/p2.js|MARATHON-P2-TURN-2|1200|chain--p2|$" "$WORK/phases-ran" \
+grep -q "^p2|7|agy|src/p2.js|MARATHON-P2-TURN-2|1200|chain--p2|$" "$WORK/phases-ran" \
   && pass "--retry p2: relay-task overridden to MARATHON-P2-TURN-2 (first unused suffix), lane namespace preserved" \
   || fail "--retry p2 relay-task: [$(grep p2 "$WORK/phases-ran")]"
 grep -q "^p1|5|codex||||chain--p1|$" "$WORK/phases-ran" \
@@ -138,7 +144,7 @@ grep -q "^p3|5|codex||||chain--p3|$" "$WORK/phases-ran" \
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
 TICK_REPO_ROOT="$A" "$TICK" log task.created "MARATHON-P2-TURN-2" --agent test >/dev/null 2>&1
 run_marathon "$A/PROJECT/2-WORKING/m.yaml" --retry p2 >/dev/null 2>&1
-grep -q "^p2|7|gemini|src/p2.js|MARATHON-P2-TURN-3|1200|chain--p2|$" "$WORK/phases-ran" \
+grep -q "^p2|7|agy|src/p2.js|MARATHON-P2-TURN-3|1200|chain--p2|$" "$WORK/phases-ran" \
   && pass "--retry p2: MARATHON-P2-TURN-2 already used -> bumps to -3 (checked via tick info, not hardcoded), lane namespace preserved" \
   || fail "--retry bump: [$(grep p2 "$WORK/phases-ran")]"
 
