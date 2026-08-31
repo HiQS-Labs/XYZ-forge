@@ -422,6 +422,8 @@ TESTS=(
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
+  "gh349-vendored-roadmap-ledger.sh"  # GH-349 (roadmap layer + releases ledger in vendored installs: link bullets, foreign org URLs, Migration 007 timestamps, rating grammar)
+  "gh351-manifest-unship.sh"          # GH-351 (manifest unship retraction verb: reason enforcement, exclusivity, audit event)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh290-ate-variation-grid.sh"       # GH-290 (ATE variation grid: contract loaders, land verification,
                                      #   receipt-writer robustness — deterministic hostile-input matrix)
