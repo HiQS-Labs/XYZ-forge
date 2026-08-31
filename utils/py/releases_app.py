@@ -879,11 +879,22 @@ def _migration_007(conn):
     releases, manifest_items, marathons, repos, settings, issue_refs, doc_lines, legacy_lines,
     and grandfather_entries allows consumers to detect changes and staleness across the ledger.
     """
+    stamp = now_iso()
     tables = ("releases", "manifest_items", "marathons", "repos", "settings", "issue_refs",
               "doc_lines", "legacy_lines", "grandfather_entries")
     for table in tables:
         if _table_exists(conn, table) and not _has_column(conn, table, "updated_at"):
             conn.execute("ALTER TABLE %s ADD COLUMN updated_at TEXT" % table)
+            if table == "issue_refs" and _has_column(conn, table, "created_at"):
+                conn.execute("UPDATE issue_refs SET updated_at = COALESCE(created_at, ?)", (stamp,))
+            elif table == "marathons" and _has_column(conn, table, "created_at"):
+                conn.execute("UPDATE marathons SET updated_at = COALESCE(created_at, ?)", (stamp,))
+            elif table == "releases":
+                conn.execute("UPDATE releases SET updated_at = COALESCE(shipped_date, baseline_at, ?)", (stamp,))
+            elif table == "manifest_items":
+                conn.execute("UPDATE manifest_items SET updated_at = COALESCE(dialed_in_at, ?)", (stamp,))
+            else:
+                conn.execute("UPDATE %s SET updated_at = ?" % table, (stamp,))
 
 
 # The migration REGISTRY is the truth (GH-111). apply/rebuild stamp exactly the versions
@@ -981,22 +992,43 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
     _emit(w, "schema_migrations", ["version", "applied_at"],
           _rows(conn, "SELECT version, applied_at FROM schema_migrations ORDER BY version"))
 
-    settings_sql = "SELECT key, value FROM settings"
+    settings_cols = ["key", "value"]
+    settings_select = "SELECT key, value{extra} FROM settings"
+    if _has_column(conn, "settings", "updated_at"):
+        settings_cols.append("updated_at")
+        settings_extra = ", updated_at"
+    else:
+        settings_extra = ""
     if not include_generation:
-        settings_sql += " WHERE key != '%s'" % GENERATION_KEY
-    _emit(w, "settings", ["key", "value"], _rows(conn, settings_sql + " ORDER BY key"))
+        settings_select += " WHERE key != '%s'" % GENERATION_KEY
+    _emit(w, "settings", settings_cols, _rows(conn, settings_select.format(extra=settings_extra) + " ORDER BY key"))
 
-    _emit(w, "repos", ["global_id", "slug"],
-          _rows(conn, "SELECT global_id, slug FROM repos ORDER BY id"))
+    repo_cols = ["global_id", "slug"]
+    repo_extra = ""
+    if _has_column(conn, "repos", "updated_at"):
+        repo_cols.append("updated_at")
+        repo_extra = ", updated_at"
+    _emit(w, "repos", repo_cols,
+          _rows(conn, "SELECT global_id, slug%s FROM repos ORDER BY id" % repo_extra))
 
-    _emit(w, "issue_refs", ["global_id", "url", "temp_id", "created_at"],
-          _rows(conn, "SELECT global_id, url, temp_id, created_at FROM issue_refs ORDER BY id"))
+    ref_cols = ["global_id", "url", "temp_id", "created_at"]
+    ref_extra = ""
+    if _has_column(conn, "issue_refs", "updated_at"):
+        ref_cols.append("updated_at")
+        ref_extra = ", updated_at"
+    _emit(w, "issue_refs", ref_cols,
+          _rows(conn, "SELECT global_id, url, temp_id, created_at%s FROM issue_refs ORDER BY id" % ref_extra))
 
-    _emit(w, "marathons", ["global_id", "repo_gid", "tracking_ref_gid", "status", "created_at"],
+    mar_cols = ["global_id", "repo_gid", "tracking_ref_gid", "status", "created_at"]
+    mar_extra = ""
+    if _has_column(conn, "marathons", "updated_at"):
+        mar_cols.append("updated_at")
+        mar_extra = ", m.updated_at"
+    _emit(w, "marathons", mar_cols,
           _rows(conn, """SELECT m.global_id, r.global_id AS repo_gid, t.global_id AS tracking_ref_gid,
-                         m.status, m.created_at
+                         m.status, m.created_at%s
                          FROM marathons m JOIN repos r ON r.id = m.repo_id
-                         JOIN issue_refs t ON t.id = m.tracking_ref_id ORDER BY m.id"""))
+                         JOIN issue_refs t ON t.id = m.tracking_ref_id ORDER BY m.id""" % mar_extra))
 
     # GH-111 appends three baseline fields to the RELEASE record and three membership fields to
     # the MANIFEST ITEM record, both in fixed trailing order. They are emitted only when the
@@ -1014,11 +1046,13 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                     FROM releases rel JOIN repos r ON r.id = rel.repo_id
                     JOIN issue_refs t ON t.id = rel.tracking_ref_id
                     LEFT JOIN marathons mar ON mar.id = rel.marathon_id ORDER BY rel.id"""
+    rel_extra = ""
     if _has_column(conn, "releases", "baseline_count"):
         rel_cols += ["baseline_count", "baseline_at", "baseline_source"]
-        rel_extra = ", rel.baseline_count, rel.baseline_at, rel.baseline_source"
-    else:
-        rel_extra = ""
+        rel_extra += ", rel.baseline_count, rel.baseline_at, rel.baseline_source"
+    if _has_column(conn, "releases", "updated_at"):
+        rel_cols.append("updated_at")
+        rel_extra += ", rel.updated_at"
     _emit(w, "releases", rel_cols, _rows(conn, rel_select.format(extra=rel_extra)))
 
     mfi_cols = ["global_id", "release_gid", "issue_ref_gid", "state"]
@@ -1026,14 +1060,16 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                     t.global_id AS issue_ref_gid, mi.state{extra}
                     FROM manifest_items mi JOIN releases rel ON rel.id = mi.release_id
                     JOIN issue_refs t ON t.id = mi.issue_ref_id{join} ORDER BY mi.id"""
+    mfi_extra, mfi_join = "", ""
     if _has_column(conn, "manifest_items", "dialed_in_at"):
         # marathon_id is an integer FK, and integer FKs never appear as dump VALUES — the row
         # carries its marathon's GID, exactly as the release record does.
         mfi_cols += ["dialed_in_at", "dial_reason", "marathon_gid"]
-        mfi_extra = ", mi.dialed_in_at, mi.dial_reason, mar.global_id AS marathon_gid"
+        mfi_extra += ", mi.dialed_in_at, mi.dial_reason, mar.global_id AS marathon_gid"
         mfi_join = " LEFT JOIN marathons mar ON mar.id = mi.marathon_id"
-    else:
-        mfi_extra, mfi_join = "", ""
+    if _has_column(conn, "manifest_items", "updated_at"):
+        mfi_cols.append("updated_at")
+        mfi_extra += ", mi.updated_at"
     _emit(w, "manifest_items", mfi_cols,
           _rows(conn, mfi_select.format(extra=mfi_extra, join=mfi_join)))
 
@@ -1042,15 +1078,25 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                          FROM manifest_state_events e JOIN manifest_items mi ON mi.id = e.item_id
                          ORDER BY e.id"""))
 
-    _emit(w, "doc_lines", ["repo_gid", "position", "content"],
-          _rows(conn, """SELECT r.global_id AS repo_gid, d.position, d.content
+    doc_cols = ["repo_gid", "position", "content"]
+    doc_extra = ""
+    if _has_column(conn, "doc_lines", "updated_at"):
+        doc_cols.append("updated_at")
+        doc_extra = ", d.updated_at"
+    _emit(w, "doc_lines", doc_cols,
+          _rows(conn, """SELECT r.global_id AS repo_gid, d.position, d.content%s
                          FROM doc_lines d JOIN repos r ON r.id = d.repo_id
-                         ORDER BY d.repo_id, d.position"""))
+                         ORDER BY d.repo_id, d.position""" % doc_extra))
 
-    _emit(w, "legacy_lines", ["release_gid", "position", "content"],
-          _rows(conn, """SELECT rel.global_id AS release_gid, l.position, l.content
+    leg_cols = ["release_gid", "position", "content"]
+    leg_extra = ""
+    if _has_column(conn, "legacy_lines", "updated_at"):
+        leg_cols.append("updated_at")
+        leg_extra = ", l.updated_at"
+    _emit(w, "legacy_lines", leg_cols,
+          _rows(conn, """SELECT rel.global_id AS release_gid, l.position, l.content%s
                          FROM legacy_lines l JOIN releases rel ON rel.id = l.release_id
-                         ORDER BY l.release_id, l.position"""))
+                         ORDER BY l.release_id, l.position""" % leg_extra))
 
     gf_rows = _rows(conn, """SELECT g.import_run, COALESCE(g.release_gid, '(document)') AS rgid,
                              g.rule, g.source_value, g.supplied_value, g.disposition, g.id AS _id
@@ -1063,13 +1109,16 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
         for row in gf_rows:
             key = (row["import_run"], row["rgid"], row["rule"])
             ordinal[key] = ordinal.get(key, 0) + 1
-            values = ", ".join(_sql_str(row[c]) for c in
-                               ("import_run", "rgid", "rule", "source_value",
-                                "supplied_value", "disposition"))
+            cols = ["import_run", "rgid", "rule", "source_value", "supplied_value", "disposition"]
+            if _has_column(conn, "grandfather_entries", "updated_at"):
+                cols.append("updated_at")
+            values = ", ".join(_sql_str(row.get(c)) for c in cols)
             w("-- gf-key: %s/%s/%s/%d" % (row["import_run"], row["rgid"], row["rule"],
                                            ordinal[key]))
-            w("INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value, "
-              "supplied_value, disposition) VALUES(%s);" % values)
+            ins_cols = ["import_run", "release_gid", "rule", "source_value", "supplied_value", "disposition"]
+            if _has_column(conn, "grandfather_entries", "updated_at"):
+                ins_cols.append("updated_at")
+            w("INSERT INTO grandfather_entries(%s) VALUES(%s);" % (", ".join(ins_cols), values))
 
     if _table_exists(conn, "roadmap_items"):
         # GH-108's five rating columns are appended in fixed trailing order, emitted only when the
@@ -1815,11 +1864,21 @@ def cmd_init(args):
         conn = connect(paths["db"], must_exist=False)
         try:
             apply_migrations(conn)
-            conn.execute("INSERT INTO repos(global_id, slug) VALUES (?, ?)",
-                         (new_gid("repo-"), slug))
-            conn.execute("INSERT INTO settings(key, value) VALUES ('enforcement', 'lenient')")
-            conn.execute("INSERT INTO settings(key, value) VALUES ('repo_slug', ?)", (slug,))
-            conn.execute("INSERT INTO settings(key, value) VALUES (?, '1')", (GENERATION_KEY,))
+            now = now_iso()
+            if _has_column(conn, "repos", "updated_at"):
+                conn.execute("INSERT INTO repos(global_id, slug, updated_at) VALUES (?, ?, ?)",
+                             (new_gid("repo-"), slug, now))
+            else:
+                conn.execute("INSERT INTO repos(global_id, slug) VALUES (?, ?)",
+                             (new_gid("repo-"), slug))
+            if _has_column(conn, "settings", "updated_at"):
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES ('enforcement', 'lenient', ?)", (now,))
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES ('repo_slug', ?, ?)", (slug, now))
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, '1', ?)", (GENERATION_KEY, now))
+            else:
+                conn.execute("INSERT INTO settings(key, value) VALUES ('enforcement', 'lenient')")
+                conn.execute("INSERT INTO settings(key, value) VALUES ('repo_slug', ?)", (slug,))
+                conn.execute("INSERT INTO settings(key, value) VALUES (?, '1')", (GENERATION_KEY,))
             generation = get_generation(conn)
             _atomic_write(paths["dump"], dump_text(conn, generation))
         finally:
@@ -2004,16 +2063,28 @@ def cmd_add(args):
                 if not row:
                     refuse("unknown-gid", "no marathon with global id %r" % args.marathon)
                 marathon_id = row["id"]
-            conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
-                         target_date, shipped_date, description, exit_criterion, tracking_ref_id,
-                         marathon_id, gh_release_url, milestone, front_door_reviewed,
-                         shakedown_reviewed, license_file)
-                         VALUES (?, (SELECT id FROM repos ORDER BY id LIMIT 1), ?, ?, ?, ?, ?, ?, ?,
-                                 ?, ?, ?, ?, ?, ?, ?)""",
-                         (gid, args.version, args.codename, args.status, args.target_date,
-                          args.shipped_date, args.description, args.exit_criterion, ref["id"],
-                          marathon_id, args.gh_release_url, args.milestone,
-                          _qa(args.front_door), _qa(args.shakedown), _qa(args.license)))
+            if _has_column(conn, "releases", "updated_at"):
+                conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
+                             target_date, shipped_date, description, exit_criterion, tracking_ref_id,
+                             marathon_id, gh_release_url, milestone, front_door_reviewed,
+                             shakedown_reviewed, license_file, updated_at)
+                             VALUES (?, (SELECT id FROM repos ORDER BY id LIMIT 1), ?, ?, ?, ?, ?, ?, ?,
+                                     ?, ?, ?, ?, ?, ?, ?, ?)""",
+                             (gid, args.version, args.codename, args.status, args.target_date,
+                              args.shipped_date, args.description, args.exit_criterion, ref["id"],
+                              marathon_id, args.gh_release_url, args.milestone,
+                              _qa(args.front_door), _qa(args.shakedown), _qa(args.license), now_iso()))
+            else:
+                conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
+                             target_date, shipped_date, description, exit_criterion, tracking_ref_id,
+                             marathon_id, gh_release_url, milestone, front_door_reviewed,
+                             shakedown_reviewed, license_file)
+                             VALUES (?, (SELECT id FROM repos ORDER BY id LIMIT 1), ?, ?, ?, ?, ?, ?, ?,
+                                     ?, ?, ?, ?, ?, ?, ?)""",
+                             (gid, args.version, args.codename, args.status, args.target_date,
+                              args.shipped_date, args.description, args.exit_criterion, ref["id"],
+                              marathon_id, args.gh_release_url, args.milestone,
+                              _qa(args.front_door), _qa(args.shakedown), _qa(args.license)))
             print("added release %s (version %s, status %s)" % (gid, args.version, args.status))
 
         perform_write(root, conn, "add", gid, mutate)
@@ -2044,10 +2115,15 @@ def cmd_update(args):
             if new_tracking_url is not None:
                 ref = issue_ref_for_token(conn, new_tracking_url)
                 tracking_ref_id = ref["id"]
+            upd_clause = ""
+            extra_params = ()
+            if _has_column(conn, "releases", "updated_at"):
+                upd_clause = ", updated_at=?"
+                extra_params = (now_iso(),)
             conn.execute("""UPDATE releases SET version=?, codename=?, status=?, target_date=?,
                          shipped_date=?, description=?, exit_criterion=?, tracking_ref_id=?,
                          gh_release_url=?, milestone=?, front_door_reviewed=?, shakedown_reviewed=?,
-                         license_file=? WHERE global_id=?""",
+                         license_file=?""" + upd_clause + " WHERE global_id=?",
                          (eff_version,
                           args.codename if args.codename is not None else row["codename"],
                           args.status if args.status is not None else row["status"],
@@ -2065,8 +2141,7 @@ def cmd_update(args):
                           _qa(args.shakedown) if args.shakedown is not None
                           else row["shakedown_reviewed"],
                           _qa(args.license) if args.license is not None
-                          else row["license_file"],
-                          args.gid))
+                          else row["license_file"]) + extra_params + (args.gid,))
             # GH-111 baseline auto-capture, in the SAME writer-locked transaction as the status
             # flip — a dial-in landing between the two would pin a manifest state that never
             # existed. Only on draft -> active, only when nothing is captured yet: an
@@ -2109,8 +2184,9 @@ def _capture_baseline(conn, release_id, source):
     count = _live_manifest_count(conn, release_id)
     if not count:
         return 0
+    now = now_iso()
     conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?, baseline_source = ?
-                     WHERE id = ?""", (count, now_iso(), source, release_id))
+                     WHERE id = ?""", (count, now, source, release_id))
     return count
 
 
@@ -2164,8 +2240,13 @@ def cmd_ship(args):
             refuse("date-shape", "--date %r must be a valid YYYY-MM-DD calendar date" % when)
 
         def mutate(conn):
-            conn.execute("UPDATE releases SET status='shipped', shipped_date=? WHERE global_id=?",
-                         (when, args.gid))
+            if _has_column(conn, "releases", "updated_at"):
+                conn.execute("""UPDATE releases SET status='shipped', shipped_date=?, updated_at=?
+                                WHERE global_id=?""",
+                             (when, now_iso(), args.gid))
+            else:
+                conn.execute("UPDATE releases SET status='shipped', shipped_date=? WHERE global_id=?",
+                             (when, args.gid))
             # The evidence citation rides in the append-only audit trail (the schema has no
             # evidence column by design): a ship-evidence receipt in the SAME transaction as the
             # status flip. check()'s chain rule skips op='ship-evidence' rows.
@@ -2229,11 +2310,18 @@ def cmd_manifest_add(args):
                            "marathon %s does not belong to release %s; an item's marathon must be "
                            "its own release's marathon" % (args.marathon, args.gid))
                 marathon_id = mar["id"]
-            conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
-                                                       dialed_in_at, dial_reason, marathon_id)
-                         VALUES (?, ?, ?, 'dialed_in', ?, ?, ?)""",
-                         (gid, rel["id"], ref["id"], now_iso(),
-                          getattr(args, "reason", None), marathon_id))
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                                                           dialed_in_at, dial_reason, marathon_id, updated_at)
+                             VALUES (?, ?, ?, 'dialed_in', ?, ?, ?, ?)""",
+                             (gid, rel["id"], ref["id"], now_iso(),
+                              getattr(args, "reason", None), marathon_id, now_iso()))
+            else:
+                conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                                                           dialed_in_at, dial_reason, marathon_id)
+                             VALUES (?, ?, ?, 'dialed_in', ?, ?, ?)""",
+                             (gid, rel["id"], ref["id"], now_iso(),
+                              getattr(args, "reason", None), marathon_id))
             print("manifest item %s dialed into %s (state=dialed_in)" % (gid, args.gid))
 
         perform_write(root, conn, "manifest-add", gid, mutate)
@@ -2268,7 +2356,11 @@ def cmd_manifest_ship(args):
             if not ref:
                 refuse("unknown-issue", "no issue_refs row for %r" % value)
             item = _live_manifest_item(conn, rel, ref, value, args.gid, "shipped")
-            conn.execute("UPDATE manifest_items SET state='shipped' WHERE id=?", (item["id"],))
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("UPDATE manifest_items SET state='shipped', updated_at=? WHERE id=?",
+                             (now_iso(), item["id"]))
+            else:
+                conn.execute("UPDATE manifest_items SET state='shipped' WHERE id=?", (item["id"],))
             # State and event land in ONE transaction — the coupling the digest chain checks.
             conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at,
                          reason) VALUES (?, ?, 'shipped', ?, ?)""",
@@ -2346,7 +2438,11 @@ def cmd_manifest_unship(args):
                        "cannot move an item from %r to 'dialed_in' (legality is CLI-enforced)"
                        % item["state"])
 
-            conn.execute("UPDATE manifest_items SET state='dialed_in' WHERE id=?", (item["id"],))
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("UPDATE manifest_items SET state='dialed_in', updated_at=? WHERE id=?",
+                             (now_iso(), item["id"]))
+            else:
+                conn.execute("UPDATE manifest_items SET state='dialed_in' WHERE id=?", (item["id"],))
             conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason)
                             VALUES (?, 'shipped', 'dialed_in', ?, ?)""",
                          (item["id"], now_iso(), reason))
@@ -2397,8 +2493,12 @@ def cmd_manifest_marathon(args):
                 refuse("marathon-link-permanent",
                        "manifest item %s already belongs to another marathon; marathon links are "
                        "historical and permanent" % item["global_id"])
-            conn.execute("UPDATE manifest_items SET marathon_id=? WHERE id=?",
-                         (mar["id"], item["id"]))
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("UPDATE manifest_items SET marathon_id=?, updated_at=? WHERE id=?",
+                             (mar["id"], now_iso(), item["id"]))
+            else:
+                conn.execute("UPDATE manifest_items SET marathon_id=? WHERE id=?",
+                             (mar["id"], item["id"]))
             print("manifest item %s linked to marathon %s" % (item["global_id"], args.marathon))
 
         perform_write(root, conn, "manifest-marathon", args.gid, mutate)
@@ -2415,7 +2515,7 @@ def _live_manifest_item(conn, rel, ref, token, gid_arg, target_state):
     the historical cut row and refuse "cut is terminal" while a live row sat beside it.
     """
     item = conn.execute("""SELECT * FROM manifest_items
-                           WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
+                            WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
                         (rel["id"], ref["id"])).fetchone()
     if item:
         if (item["state"], target_state) not in LEGAL_ITEM_TRANSITIONS:
@@ -2458,7 +2558,11 @@ def cmd_manifest_cut(args):
             if not ref:
                 refuse("unknown-issue", "no issue_refs row for %r" % value)
             item = _live_manifest_item(conn, rel, ref, value, args.gid, "cut")
-            conn.execute("UPDATE manifest_items SET state='cut' WHERE id=?", (item["id"],))
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("UPDATE manifest_items SET state='cut', updated_at=? WHERE id=?",
+                             (now_iso(), item["id"]))
+            else:
+                conn.execute("UPDATE manifest_items SET state='cut' WHERE id=?", (item["id"],))
             # item state and its event land in ONE transaction (PRD: the coupling is
             # CLI-enforced; a direct writer that skips the event is caught by the digest chain)
             conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at,
@@ -2482,9 +2586,14 @@ def cmd_marathon_add(args):
         def mutate(conn):
             ref = issue_ref_for_token(conn, args.tracking_issue)
             repo_id = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()["id"]
-            conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
-                         created_at) VALUES (?, ?, ?, ?, ?)""",
-                         (gid, repo_id, ref["id"], args.status, now_iso()))
+            if _has_column(conn, "marathons", "updated_at"):
+                conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
+                             created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)""",
+                             (gid, repo_id, ref["id"], args.status, now_iso(), now_iso()))
+            else:
+                conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
+                             created_at) VALUES (?, ?, ?, ?, ?)""",
+                             (gid, repo_id, ref["id"], args.status, now_iso()))
             print("marathon %s added (status %s)" % (gid, args.status))
 
         perform_write(root, conn, "marathon-add", gid, mutate)
@@ -4272,45 +4381,83 @@ def load_dump(conn, tables, skip_schema_migrations=False):
             conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
                          (int(row["version"]), row["applied_at"]))
     for row in tables.get("settings", []):
-        conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)", (row["key"], row["value"]))
+        if _has_column(conn, "settings", "updated_at"):
+            conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+                         (row["key"], row["value"], row.get("updated_at")))
+        else:
+            conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)", (row["key"], row["value"]))
     repo_ids = {}
     for row in tables.get("repos", []):
-        cur = conn.execute("INSERT INTO repos(global_id, slug) VALUES (?, ?)",
-                           (row["global_id"], row["slug"]))
+        if _has_column(conn, "repos", "updated_at"):
+            cur = conn.execute("INSERT INTO repos(global_id, slug, updated_at) VALUES (?, ?, ?)",
+                               (row["global_id"], row["slug"], row.get("updated_at")))
+        else:
+            cur = conn.execute("INSERT INTO repos(global_id, slug) VALUES (?, ?)",
+                               (row["global_id"], row["slug"]))
         repo_ids[row["global_id"]] = cur.lastrowid
     ref_ids = {}
     for row in tables.get("issue_refs", []):
-        cur = conn.execute("""INSERT INTO issue_refs(global_id, url, temp_id, created_at)
-                              VALUES (?, ?, ?, ?)""",
-                           (row["global_id"], row.get("url"), row.get("temp_id"),
-                            row["created_at"]))
+        if _has_column(conn, "issue_refs", "updated_at"):
+            cur = conn.execute("""INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at)
+                                  VALUES (?, ?, ?, ?, ?)""",
+                               (row["global_id"], row.get("url"), row.get("temp_id"),
+                                row["created_at"], row.get("updated_at")))
+        else:
+            cur = conn.execute("""INSERT INTO issue_refs(global_id, url, temp_id, created_at)
+                                  VALUES (?, ?, ?, ?)""",
+                               (row["global_id"], row.get("url"), row.get("temp_id"),
+                                row["created_at"]))
         ref_ids[row["global_id"]] = cur.lastrowid
     mar_ids = {}
     for row in tables.get("marathons", []):
-        cur = conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
-                              created_at) VALUES (?, ?, ?, ?, ?)""",
-                           (row["global_id"], repo_ids[row["repo_gid"]],
-                            ref_ids[row["tracking_ref_gid"]], row["status"], row["created_at"]))
+        if _has_column(conn, "marathons", "updated_at"):
+            cur = conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
+                                  created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)""",
+                               (row["global_id"], repo_ids[row["repo_gid"]],
+                                ref_ids[row["tracking_ref_gid"]], row["status"], row["created_at"],
+                                row.get("updated_at")))
+        else:
+            cur = conn.execute("""INSERT INTO marathons(global_id, repo_id, tracking_ref_id, status,
+                                  created_at) VALUES (?, ?, ?, ?, ?)""",
+                               (row["global_id"], repo_ids[row["repo_gid"]],
+                                ref_ids[row["tracking_ref_gid"]], row["status"], row["created_at"]))
         mar_ids[row["global_id"]] = cur.lastrowid
     rel_ids = {}
     for row in tables.get("releases", []):
-        cur = conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
-                              target_date, shipped_date, description, exit_criterion,
-                              tracking_ref_id, marathon_id, gh_release_url, milestone,
-                              front_door_reviewed, shakedown_reviewed, license_file,
-                              baseline_count, baseline_at, baseline_source)
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                           (row["global_id"], repo_ids[row["repo_gid"]], row.get("version"),
-                            row.get("codename"), row["status"], row.get("target_date"),
-                            row.get("shipped_date"), row["description"], row.get("exit_criterion"),
-                            ref_ids[row["tracking_ref_gid"]],
-                            mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None,
-                            row.get("gh_release_url"), row.get("milestone"),
-                            row.get("front_door_reviewed"), row.get("shakedown_reviewed"),
-                            row.get("license_file"),
-                            # absent trailing fields read as NULL — a pre-004 dump is still loadable
-                            _int_or_none(row.get("baseline_count")), row.get("baseline_at"),
-                            row.get("baseline_source")))
+        if _has_column(conn, "releases", "updated_at"):
+            cur = conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
+                                  target_date, shipped_date, description, exit_criterion,
+                                  tracking_ref_id, marathon_id, gh_release_url, milestone,
+                                  front_door_reviewed, shakedown_reviewed, license_file,
+                                  baseline_count, baseline_at, baseline_source, updated_at)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                               (row["global_id"], repo_ids[row["repo_gid"]], row.get("version"),
+                                row.get("codename"), row["status"], row.get("target_date"),
+                                row.get("shipped_date"), row["description"], row.get("exit_criterion"),
+                                ref_ids[row["tracking_ref_gid"]],
+                                mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None,
+                                row.get("gh_release_url"), row.get("milestone"),
+                                row.get("front_door_reviewed"), row.get("shakedown_reviewed"),
+                                row.get("license_file"),
+                                _int_or_none(row.get("baseline_count")), row.get("baseline_at"),
+                                row.get("baseline_source"), row.get("updated_at")))
+        else:
+            cur = conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
+                                  target_date, shipped_date, description, exit_criterion,
+                                  tracking_ref_id, marathon_id, gh_release_url, milestone,
+                                  front_door_reviewed, shakedown_reviewed, license_file,
+                                  baseline_count, baseline_at, baseline_source)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                               (row["global_id"], repo_ids[row["repo_gid"]], row.get("version"),
+                                row.get("codename"), row["status"], row.get("target_date"),
+                                row.get("shipped_date"), row["description"], row.get("exit_criterion"),
+                                ref_ids[row["tracking_ref_gid"]],
+                                mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None,
+                                row.get("gh_release_url"), row.get("milestone"),
+                                row.get("front_door_reviewed"), row.get("shakedown_reviewed"),
+                                row.get("license_file"),
+                                _int_or_none(row.get("baseline_count")), row.get("baseline_at"),
+                                row.get("baseline_source")))
         rel_ids[row["global_id"]] = cur.lastrowid
     item_ids = {}
     for row in tables.get("manifest_items", []):
@@ -4318,13 +4465,23 @@ def load_dump(conn, tables, skip_schema_migrations=False):
         # git-merge surface, and a colleague's branch may carry one for weeks — but only the new
         # vocabulary is ever emitted.
         state = "dialed_in" if row["state"] == "open" else row["state"]
-        cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
-                              dialed_in_at, dial_reason, marathon_id)
-                              VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                           (row["global_id"], rel_ids[row["release_gid"]],
-                            ref_ids[row["issue_ref_gid"]], state,
-                            row.get("dialed_in_at"), row.get("dial_reason"),
-                            mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None))
+        if _has_column(conn, "manifest_items", "updated_at"):
+            cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                                  dialed_in_at, dial_reason, marathon_id, updated_at)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                               (row["global_id"], rel_ids[row["release_gid"]],
+                                ref_ids[row["issue_ref_gid"]], state,
+                                row.get("dialed_in_at"), row.get("dial_reason"),
+                                mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None,
+                                row.get("updated_at")))
+        else:
+            cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                                  dialed_in_at, dial_reason, marathon_id)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                               (row["global_id"], rel_ids[row["release_gid"]],
+                                ref_ids[row["issue_ref_gid"]], state,
+                                row.get("dialed_in_at"), row.get("dial_reason"),
+                                mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None))
         item_ids[row["global_id"]] = cur.lastrowid
     for row in tables.get("manifest_state_events", []):
         conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason)
@@ -4332,23 +4489,39 @@ def load_dump(conn, tables, skip_schema_migrations=False):
                      (item_ids[row["item_gid"]], row["from_state"], row["to_state"], row["at"],
                       row["reason"]))
     for row in tables.get("doc_lines", []):
-        conn.execute("""INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)""",
-                     (repo_ids[row["repo_gid"]], int(row["position"]), row["content"]))
+        if _has_column(conn, "doc_lines", "updated_at"):
+            conn.execute("""INSERT INTO doc_lines(repo_id, position, content, updated_at) VALUES (?, ?, ?, ?)""",
+                         (repo_ids[row["repo_gid"]], int(row["position"]), row["content"], row.get("updated_at")))
+        else:
+            conn.execute("""INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)""",
+                         (repo_ids[row["repo_gid"]], int(row["position"]), row["content"]))
     for row in tables.get("legacy_lines", []):
-        conn.execute("""INSERT INTO legacy_lines(release_id, position, content, disposition)
-                        VALUES (?, ?, ?, ?)""",
-                     (rel_ids[row["release_gid"]], int(row["position"]), row["content"],
-                      row.get("disposition")))
+        if _has_column(conn, "legacy_lines", "updated_at"):
+            conn.execute("""INSERT INTO legacy_lines(release_id, position, content, disposition, updated_at)
+                            VALUES (?, ?, ?, ?, ?)""",
+                         (rel_ids[row["release_gid"]], int(row["position"]), row["content"],
+                          row.get("disposition"), row.get("updated_at")))
+        else:
+            conn.execute("""INSERT INTO legacy_lines(release_id, position, content, disposition)
+                            VALUES (?, ?, ?, ?)""",
+                         (rel_ids[row["release_gid"]], int(row["position"]), row["content"],
+                          row.get("disposition")))
     for row in tables.get("grandfather_entries", []):
         rgid = row.get("release_gid")
         if rgid in ("(document)", ""):
             rgid = None
         elif rgid is not None and not rgid.startswith("rel-"):
             rgid = None   # tolerate older shapes; the (document) marker is the contract
-        conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
-                        supplied_value, disposition) VALUES (?, ?, ?, ?, ?, ?)""",
-                     (row["import_run"], rgid, row["rule"], row.get("source_value"),
-                      row.get("supplied_value"), row.get("disposition")))
+        if _has_column(conn, "grandfather_entries", "updated_at"):
+            conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
+                            supplied_value, disposition, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                         (row["import_run"], rgid, row["rule"], row.get("source_value"),
+                          row.get("supplied_value"), row.get("disposition"), row.get("updated_at")))
+        else:
+            conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
+                            supplied_value, disposition) VALUES (?, ?, ?, ?, ?, ?)""",
+                         (row["import_run"], rgid, row["rule"], row.get("source_value"),
+                          row.get("supplied_value"), row.get("disposition")))
     for row in tables.get("roadmap_items", []):
         conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section,
                         position, status_marker, complexity, risk, effort, doc_path, issue_url,

@@ -643,7 +643,7 @@ if [ $RC -ne 0 ] && has "$OUT" "UNIQUE"; then ok "a marathon cannot be named by 
 
 # ── the extended dump grammar survives a round trip ─────────────────────────────────────────────
 rout manifest dial-in --gid "$MR1" "https://github.com/A/B/issues/32" --reason "carries a marathon" --marathon "$M1"
-if grep -qE '^INSERT INTO manifest_items\(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid\)' "$R/releases.sql"; then ok "the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID" 0; else ok "manifest dump grammar" 1; fi
+if grep -qE '^INSERT INTO manifest_items\(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid(, updated_at)?\)' "$R/releases.sql"; then ok "the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID" 0; else ok "manifest dump grammar" 1; fi
 if ! grep -qE 'INSERT INTO manifest_items\([^)]*marathon_id' "$R/releases.sql"; then ok "and marathon_id (an integer FK) never appears as a dump value" 0; else ok "no integer FK in dump" 1; fi
 BD_BEFORE="$(python3 - "$R" "$APP" <<'PYEOF4'
 import importlib.util, sys, os

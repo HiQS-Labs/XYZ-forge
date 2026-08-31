@@ -78,7 +78,30 @@ ok "manifest_state_events recorded shipped -> dialed_in with reason" "$(is "$EVE
 out="$(ra manifest unship --gid "$REL" https://github.com/Org/Repo/issues/1 --reason "retract again" 2>&1 || true)"
 ok "unshipping an item in dialed_in state is refused" "$(has "$out" "rule=transition"; echo $?)"
 
-# 7. Consistency check passes after unship
+# 7. Same-release exclusivity: ship, redial in same release, attempt unship -> rule=manifest-duplicate
+ra manifest dial-in --gid "$REL" https://github.com/Org/Repo/issues/2 --reason "feature 2" >/dev/null
+ra manifest ship --gid "$REL" https://github.com/Org/Repo/issues/2 --evidence "https://github.com/Org/Repo/pull/3" >/dev/null
+ra manifest dial-in --gid "$REL" https://github.com/Org/Repo/issues/2 --reason "feature 2 redial" >/dev/null
+
+EVENTS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
+out="$(ra manifest unship --gid "$REL" https://github.com/Org/Repo/issues/2 --reason "try unship duplicate" 2>&1 || true)"
+ok "unship when issue already dialed_in in same release is refused with manifest-duplicate" "$(has "$out" "rule=manifest-duplicate"; echo $?)"
+EVENTS_AFTER="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
+ok "state events not mutated after manifest-duplicate refusal" "$(is "$EVENTS_BEFORE" "$EVENTS_AFTER"; echo $?)"
+
+# 8. Cross-release exclusivity: ship in REL1, dial in REL2, attempt unship in REL1 -> rule=dialed-in-elsewhere
+REL2="$(ra add --version 2.0.0 --status active --tracking-issue https://github.com/Org/Repo/issues/200 --description "v2.0.0" | grep -o 'rel-[0-9A-HJKMNP-TV-Z]\{26\}')"
+ra manifest dial-in --gid "$REL" https://github.com/Org/Repo/issues/3 --reason "feature 3" >/dev/null
+ra manifest ship --gid "$REL" https://github.com/Org/Repo/issues/3 --evidence "https://github.com/Org/Repo/pull/4" >/dev/null
+ra manifest dial-in --gid "$REL2" https://github.com/Org/Repo/issues/3 --reason "handed to v2" >/dev/null
+
+EVENTS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
+out="$(ra manifest unship --gid "$REL" https://github.com/Org/Repo/issues/3 --reason "try unship cross-held" 2>&1 || true)"
+ok "unship when issue dialed_in elsewhere is refused with dialed-in-elsewhere" "$(has "$out" "rule=dialed-in-elsewhere"; echo $?)"
+EVENTS_AFTER="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
+ok "state events not mutated after dialed-in-elsewhere refusal" "$(is "$EVENTS_BEFORE" "$EVENTS_AFTER"; echo $?)"
+
+# 9. Consistency check passes after unship
 out="$(ra check 2>&1)"
 ok "releases check passes after manifest unship" "$([ $? -eq 0 ] && echo 0 || echo 1)"
 
