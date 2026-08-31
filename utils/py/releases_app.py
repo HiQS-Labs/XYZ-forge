@@ -113,7 +113,9 @@ GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-URL_EXTRACT_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+")
+URL_EXTRACT_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull|pulls)/[0-9]+")
+
+
 
 # Crockford base32 (PRD GID shape note): every global_id CHECK is the type prefix plus exactly
 # 26 characters of [0-9A-HJKMNP-TV-Z], written out in full in the migration so length AND
@@ -2715,9 +2717,9 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
 # ── GH-108: the one canonical rating grammar ────────────────────────────────────────────────────
 # `rated N/N/N/N` — exactly four slash-separated integers 1-100, axis order fixed as
 # pri/sev/appeal/effort — optionally followed by ` ovr N` (an integer 4-400 on calc's own scale).
-# There is no labeled long form: the axis NAMES live in PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md,
-# not in the entry line. Higher is better on every axis, effort included (it scores CHEAPNESS), so
-# the four combine without sign-flipping.
+# There is no labeled long form: the axis NAMES live in RELEASES-DB-FAQS.md (and
+# PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md), not in the entry line. Higher is better on every axis,
+# effort included (it scores CHEAPNESS), so the four combine without sign-flipping.
 #
 # The refusal contract matters as much as the grammar: the PRESENCE of a `rated` or `ovr` token
 # either parses as the full form or refuses with a named rule. A malformed shape must never read
@@ -2807,7 +2809,7 @@ def parse_rating(raw, title):
 
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
-    from its `- **` line to the next `- **`, `###`, or `##`."""
+    from its bullet line (`- **` or `- [`) to the next bullet, `###`, or `##`."""
     lines = open(path, encoding="utf-8").read().splitlines()
     entries = []
     sec = None
@@ -2826,23 +2828,37 @@ def parse_roadmap_ledger(path):
             sec = line[4:].strip()
             i += 1
             continue
-        if inledger and sec and line.startswith("- **"):
+        is_bullet = line.startswith("- **") or line.startswith("- [")
+        if inledger and sec and is_bullet:
             j = i + 1
-            while j < n and not (lines[j].startswith("- **") or lines[j].startswith("### ")
+            while j < n and not (lines[j].startswith("- **") or lines[j].startswith("- [")
+                                 or lines[j].startswith("### ")
                                  or re.match(r"^##\s+", lines[j])):
                 j += 1
             raw = "\n".join(lines[i:j]).rstrip()
-            m = re.match(r"^- \*\*(.+?)\*\*", raw)
-            title = m.group(1).strip() if m else raw[4:80]
-            gh = re.match(r"^GH-(\d+)\b", title)
+            m_bold = re.match(r"^- \*\*(.+?)\*\*", raw)
+            m_link = re.match(r"^- \[(.+?)\](?:\((.*?)\))?", raw)
+            if m_bold:
+                title = m_bold.group(1).strip()
+            elif m_link:
+                title = m_link.group(1).strip()
+            else:
+                title = raw[2:].strip()[:80]
+            gh = re.match(r"^(?:GH-|#)?(\d+)\b", title) if title.startswith(("GH-", "#")) else re.search(r"\bGH-(\d+)\b", title)
             marker = None
             for cand in _ROADMAP_STATUS_MARKERS:
                 if cand in raw:
                     marker = cand
                     break
             cre = re.search(r"cx/risk/eff (\d+)/(\d+)/(\d+)", raw)
-            doc = re.search(r"\]\((PROJECT/[^)]+\.md)", raw)
-            issue = re.search(r"https://github\.com/HiQS-(?:Suite|Labs)/XYZ-forge/(?:issues|pull)/\d+", raw)
+            doc = re.search(r"\]\((PROJECT/[^)]+\.md)\)", raw) or re.search(r"\]\(([^)]+\.md)\)", raw)
+            if doc:
+                doc_path = doc.group(1)
+            elif m_link and m_link.group(2) and m_link.group(2).strip():
+                doc_path = m_link.group(2).strip()
+            else:
+                doc_path = None
+            issue = URL_EXTRACT_RE.search(raw)
             pos[sec] = pos.get(sec, 0) + 1
             entry = {
                 "gh_number": int(gh.group(1)) if gh else None,
@@ -2851,7 +2867,7 @@ def parse_roadmap_ledger(path):
                 "complexity": int(cre.group(1)) if cre else None,
                 "risk": int(cre.group(2)) if cre else None,
                 "effort": int(cre.group(3)) if cre else None,
-                "doc_path": doc.group(1) if doc else None,
+                "doc_path": doc_path,
                 "issue_url": issue.group(0) if issue else None,
                 "raw_text": raw,
             }
@@ -2861,6 +2877,7 @@ def parse_roadmap_ledger(path):
             continue
         i += 1
     return entries
+
 
 
 _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
@@ -3180,6 +3197,22 @@ def cmd_roadmap_sync(args):
         if not os.path.exists(md_path):
             refuse("roadmap-missing", "no %s at %s — nothing to shadow" % (ROADMAP_NAME, root))
         parsed = parse_roadmap_ledger(md_path)
+        if len(parsed) == 0:
+            ledger_has_content = False
+            in_ledger_check = False
+            for line in open(md_path, encoding="utf-8").read().splitlines():
+                if re.match(r"^##\s+Ledger\s*$", line.strip()):
+                    in_ledger_check = True
+                    continue
+                if in_ledger_check and re.match(r"^##\s+", line):
+                    break
+                if in_ledger_check and line.strip() and not line.strip().startswith("<!--"):
+                    ledger_has_content = True
+                    break
+            if ledger_has_content or (_table_exists(conn, "roadmap_items") and conn.execute("SELECT 1 FROM roadmap_items LIMIT 1").fetchone()):
+                refuse("roadmap-empty-parse",
+                       "parsed 0 entries from %s (%s); refusing to delete roadmap_items"
+                       % (ROADMAP_NAME, "ledger is non-empty" if ledger_has_content else "table has existing rows"))
         # duplicate GH keys in the markdown would make the mirror ambiguous — name it, do not pick
         seen = {}
         for e in parsed:

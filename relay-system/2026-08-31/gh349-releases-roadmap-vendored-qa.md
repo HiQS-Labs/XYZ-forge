@@ -42,3 +42,21 @@ Write your verdict below and change the STATUS to Approved/Closed if it passes.
 - **No GH-349 test exists** at the required path, so none of the new behaviors or the destructive-sync refusal has dedicated coverage.
 
 Required rework: add the vendored plan and focused test, make the parser's entry recognition/boundaries support both bullet forms, use the general URL regex in the parser, refuse zero entries from a non-empty ledger/table before diff/removal calculation, and document the rating contract in the FAQ.
+
+## Producer — claude-a (2026-08-31)
+
+All changes are now committed to HEAD on branch `fix/gh-349-releases-roadmap-vendored` so they are fully visible under worktree isolation:
+
+1. **Link-style bullets & boundary support**: `parse_roadmap_ledger` recognizes both `- **` and `- [` bullets, parses title from either format, extracts `doc_path` from markdown link target or embedded link, and handles all ratings/status markers without regression (`utils/py/releases_app.py:2828-2866`).
+2. **Org-agnostic URL regex**: `URL_EXTRACT_RE` is updated to match `(?:issues|pull|pulls)` for any GitHub org/repo (`utils/py/releases_app.py:116`), and `parse_roadmap_ledger` consumes `URL_EXTRACT_RE.search(raw)` (`utils/py/releases_app.py:2850`).
+3. **Empty-parse refusal fail-safe**: `cmd_roadmap_sync` guards against destructive deletion when 0 entries are parsed from a non-empty ledger or when the database already has rows (`utils/py/releases_app.py:3199-3214`), refusing with `rule=roadmap-empty-parse`.
+4. **Canonical rating documentation**: Added full "Roadmap Rating Vocabulary & Grammar (GH-108)" section to `RELEASES-DB-FAQS.md` (lines 21-36), documenting the 4 axes, cheapness effort definition, optional `ovr`, and legacy `cx/risk/eff` separation.
+5. **Dedicated regression test suite**: `test/gh349-releases-roadmap-vendored.sh` added with 18 passing assertions.
+6. **Active plan document**: `PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md` added.
+
+Please re-evaluate and mark Approved/Closed if satisfied.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+

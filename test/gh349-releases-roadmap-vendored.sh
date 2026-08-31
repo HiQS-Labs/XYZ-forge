@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# GH-349 — releases ledger: roadmap layer generalisation for vendored installs
+#
+# Tests:
+#   1. parse_roadmap_ledger accepts link-style bullets: `- [Title](doc_path) — ...`
+#   2. parse_roadmap_ledger extracts issue and PR URLs from any GitHub org/repo
+#   3. roadmap sync successfully populates roadmap_items from link-style bullets in legacy mode
+#   4. roadmap sync refuses with rule=roadmap-empty-parse when parsing 0 entries from a non-empty ledger (prevents table deletion)
+#   5. RELEASES-DB-FAQS.md contains the canonical rating system documentation
+set -uo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$HERE/.." && pwd)"
+APP="$ROOT_DIR/utils/py/releases_app.py"
+
+pass=0; fail=0
+ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
+has()  { printf '%s' "$1" | grep -Fq -- "$2"; }
+
+echo "== test: gh349-releases-roadmap-vendored =="
+command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
+command -v sqlite3 >/dev/null 2>&1 || { echo "sqlite3 required" >&2; exit 1; }
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh349-vendored.XXXXXX")"
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
+cleanup() {
+  case "${WORK:-}" in
+    "${TMPDIR:-/tmp}"/gh349-vendored.*) [ -d "$WORK" ] && rm -rf "$WORK" ;;
+    *) echo "gh349: REFUSING cleanup outside the workspace: ${WORK:-<empty>}" >&2 ;;
+  esac
+}
+trap cleanup EXIT
+
+R="$WORK/r"
+mkdir -p "$R"; require_fixture "$R" "vendored roadmap fixture"
+git -C "$R" init -q -b main
+git -C "$R" config user.email gh349@test.invalid
+git -C "$R" config user.name gh349
+ra() { require_fixture "$R" "vendored roadmap fixture"; python3 "$APP" --root "$R" "$@"; }
+
+ra init --slug test-vendored-repo >/dev/null
+ra migrate >/dev/null
+
+# ── 1. Create link-style ROADMAP.md with external orgs ──────────────────────────────
+cat > "$R/ROADMAP.md" <<'MD'
+# Vendored Repo Roadmap
+
+## Ledger
+
+### Queue / parked intake
+- [GH-349 — releases ledger roadmap layer never generalised to a vendored install](PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md) - narrative body. (rated 85/70/90/60) -> [#349](https://github.com/ExternalOrg/CustomRepo/issues/349)
+- [GH-420 — external pull request tracking](docs/pr-420.md) - narrative body. (rated 50/40/60/70 ovr 220) -> [#420](https://github.com/OtherOrg/AnotherRepo/pull/420)
+- [Un-numbered item with link](docs/plans/item.md) - plain title. (rated 60/60/60/60)
+### In progress
+- **GH-100 · traditional bold bullet** 🚧 — standard bold form. (rated 75/65/80/55) -> [#100](https://github.com/CustomOrg/CustomRepo/issues/100)
+MD
+
+# ── 2. Sync link-style bullets in legacy mode ───────────────────────────────────────
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "sync succeeds with link-style bullets (rc=$rc)" "[ $rc -eq 0 ]"
+ok "  and captured all 4 ledger entries" "has \"\$out\" '+4 added'"
+
+count="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items")"
+ok "  and database has 4 roadmap items" "[ \"$count\" = '4' ]"
+
+# Verify link-style item fields
+gh349_title="$(sqlite3 "$R/releases.db" "SELECT title FROM roadmap_items WHERE gh_number=349")"
+ok "  and GH-349 title extracted correctly" "[ \"$gh349_title\" = 'GH-349 — releases ledger roadmap layer never generalised to a vendored install' ]"
+
+gh349_doc="$(sqlite3 "$R/releases.db" "SELECT doc_path FROM roadmap_items WHERE gh_number=349")"
+ok "  and GH-349 doc_path extracted correctly" "[ \"$gh349_doc\" = 'PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md' ]"
+
+gh349_url="$(sqlite3 "$R/releases.db" "SELECT issue_url FROM roadmap_items WHERE gh_number=349")"
+ok "  and GH-349 external org issue URL extracted correctly" "[ \"$gh349_url\" = 'https://github.com/ExternalOrg/CustomRepo/issues/349' ]"
+
+gh349_pri="$(sqlite3 "$R/releases.db" "SELECT rating_pri FROM roadmap_items WHERE gh_number=349")"
+ok "  and GH-349 rating_pri extracted correctly" "[ \"$gh349_pri\" = '85' ]"
+
+# Verify PR URL extraction on external org
+gh420_url="$(sqlite3 "$R/releases.db" "SELECT issue_url FROM roadmap_items WHERE gh_number=420")"
+ok "  and GH-420 external org pull URL extracted correctly" "[ \"$gh420_url\" = 'https://github.com/OtherOrg/AnotherRepo/pull/420' ]"
+
+gh420_ovr="$(sqlite3 "$R/releases.db" "SELECT rating_ovr FROM roadmap_items WHERE gh_number=420")"
+ok "  and GH-420 rating_ovr extracted correctly" "[ \"$gh420_ovr\" = '220' ]"
+
+# ── 3. Re-sync without changes is a no-op ───────────────────────────────────────────
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "second sync is no-op (rc=$rc)" "[ $rc -eq 0 ]"
+ok "  and reports already in sync" "has \"\$out\" 'already in sync'"
+
+# ── 4. Empty-parse refusal guard ───────────────────────────────────────────────────
+# Simulate format drift / malformed ledger where 0 entries are parsed from non-empty ledger
+cat > "$R/ROADMAP.md" <<'MD'
+# Malformed Roadmap
+
+## Ledger
+
+### Queue / parked intake
+Some unbulleted drift prose that parses to 0 entries.
+MD
+
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "sync refuses on 0 parsed entries from non-empty ledger (rc=$rc)" "[ $rc -ne 0 ]"
+ok "  and refusal cites rule=roadmap-empty-parse" "has \"\$out\" 'rule=roadmap-empty-parse'"
+
+count_after="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items")"
+ok "  and existing roadmap_items were NOT deleted" "[ \"$count_after\" = '4' ]"
+
+# ── 5. RELEASES-DB-FAQS.md rating documentation ─────────────────────────────────────
+faqs="$ROOT_DIR/RELEASES-DB-FAQS.md"
+ok "RELEASES-DB-FAQS.md exists" "[ -f \"$faqs\" ]"
+ok "  and documents canonical rating grammar" "grep -Fq 'rated <pri>/<sev>/<appeal>/<effort>' \"$faqs\""
+ok "  and documents cheapness effort axis" "grep -Fq 'cheapness' \"$faqs\""
+ok "  and documents legacy cx/risk/eff separation" "grep -Fq 'cx/risk/eff' \"$faqs\""
+
+
+echo "Results: $pass passed, $fail failed"
+[ "$fail" -eq 0 ] || exit 1
