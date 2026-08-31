@@ -105,10 +105,9 @@ MARATHON_STATUSES = ("planned", "running", "done", "escalated", "abandoned")
 ITEM_STATES = ("open", "shipped", "cut")
 # manifest-state transition legality is CLI-enforced (PRD schema note). GH-111 retires FREEZE for
 # DIALED-IN membership: a task is dialed into a release, ships, or is cut. `shipped` is no longer a
-# dead end that only the schema knew about — `manifest ship` writes it. Both `shipped` and `cut` are
-# terminal FOR THAT ROW: re-admitting an item is a NEW dial-in row, which keeps the trail append-only
-# and readable rather than flipping one row back and forth.
-LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut")}
+# dead end that only the schema knew about — `manifest ship` writes it. GH-351 adds `manifest unship`
+# to retract a false shipped item back to dialed_in.
+LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut"), ("shipped", "dialed_in")}
 GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+$")
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
@@ -873,6 +872,20 @@ def _migration_006(conn):
     _ensure_jog_schema(conn, stamp=False)
 
 
+def _migration_007(conn):
+    """GH-349 Scope #3: Add updated_at modification timestamps to remaining tables.
+
+    Only roadmap_items and jog_queue previously carried updated_at; adding updated_at to
+    releases, manifest_items, marathons, repos, settings, issue_refs, doc_lines, legacy_lines,
+    and grandfather_entries allows consumers to detect changes and staleness across the ledger.
+    """
+    tables = ("releases", "manifest_items", "marathons", "repos", "settings", "issue_refs",
+              "doc_lines", "legacy_lines", "grandfather_entries")
+    for table in tables:
+        if _table_exists(conn, table) and not _has_column(conn, table, "updated_at"):
+            conn.execute("ALTER TABLE %s ADD COLUMN updated_at TEXT" % table)
+
+
 # The migration REGISTRY is the truth (GH-111). apply/rebuild stamp exactly the versions
 # present here — never a hard-coded range — so a deliberate gap (e.g. GH-111's 004 landing
 # before GH-108's 003) yields a ledger of {1,2,4} rather than a false claim to 3. Pending
@@ -890,6 +903,7 @@ MIGRATIONS = {
     4: {"apply": _migration_004, "txn_safe": True},
     5: {"apply": _migration_005, "txn_safe": True},
     6: {"apply": _migration_006, "txn_safe": True},
+    7: {"apply": _migration_007, "txn_safe": True},
 }
 
 
@@ -2267,6 +2281,83 @@ def cmd_manifest_ship(args):
         conn.close()
 
 
+def cmd_manifest_unship(args):
+    """GH-351: retract a shipped manifest item back to dialed_in.
+
+    Allows correcting a false `shipped` state (e.g. unmerged PR, wrong branch) without leaving
+    an incorrect permanent shipped row or creating contradictory duplicate rows via re-dial.
+    Appends an auditable retraction event to manifest_state_events.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        reason = (args.reason or "").strip()
+        if not reason:
+            refuse("unship-needs-reason",
+                   "retracting a shipped manifest item without a reason is refused (structural, "
+                   "both modes)")
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+
+            item = conn.execute("""SELECT * FROM manifest_items
+                                   WHERE release_id=? AND issue_ref_id=? AND state='shipped'
+                                   ORDER BY id DESC LIMIT 1""",
+                                (rel["id"], ref["id"])).fetchone()
+            if not item:
+                prior = conn.execute("""SELECT state FROM manifest_items
+                                        WHERE release_id=? AND issue_ref_id=?
+                                        ORDER BY id DESC LIMIT 1""",
+                                     (rel["id"], ref["id"])).fetchone()
+                if prior:
+                    refuse("transition",
+                           "issue %r is in release %s at state %r, not shipped"
+                           % (value, args.gid, prior["state"]))
+                refuse("unknown-issue", "issue %r is not in release %s's manifest" % (value, args.gid))
+
+            # Check exclusivity: is the issue already dialed_in in this release or another?
+            existing_dialed_in = conn.execute("""SELECT 1 FROM manifest_items
+                                                 WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'
+                                                   AND id != ?""",
+                                              (rel["id"], ref["id"], item["id"])).fetchone()
+            if existing_dialed_in:
+                refuse("manifest-duplicate",
+                       "issue is already dialed into this release as dialed_in; unship would create a duplicate live row")
+
+            held = conn.execute("""SELECT r.global_id, r.codename FROM manifest_items mi
+                                   JOIN releases r ON r.id = mi.release_id
+                                   WHERE mi.issue_ref_id = ? AND mi.release_id != ?
+                                     AND mi.state = 'dialed_in'""",
+                                (ref["id"], rel["id"])).fetchall()
+            if held:
+                refuse("dialed-in-elsewhere",
+                       "issue is already dialed into %s — a task belongs to ONE release at a time."
+                       % (", ".join("%s (%s)" % (h["global_id"], h["codename"] or "?") for h in held)))
+
+            if (item["state"], "dialed_in") not in LEGAL_ITEM_TRANSITIONS:
+                refuse("transition",
+                       "cannot move an item from %r to 'dialed_in' (legality is CLI-enforced)"
+                       % item["state"])
+
+            conn.execute("UPDATE manifest_items SET state='dialed_in' WHERE id=?", (item["id"],))
+            conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason)
+                            VALUES (?, 'shipped', 'dialed_in', ?, ?)""",
+                         (item["id"], now_iso(), reason))
+            print("manifest item %s un-shipped (shipped -> dialed_in); retraction event appended"
+                  % item["global_id"])
+
+        perform_write(root, conn, "manifest-unship", args.gid, mutate)
+    finally:
+        conn.close()
+
+
 def cmd_manifest_marathon(args):
     """Link an ALREADY dialed-in item to its release's marathon.
 
@@ -2571,6 +2662,9 @@ def cmd_next(args):
         if not rows:
             print("no unshipped releases — the ledger has nothing queued")
             return
+        if all(r["target_date"] is None for r in rows):
+            print("warning: every candidate release is undated (unplanned); ordering degraded to version order",
+                  file=sys.stderr)
         head = rows[0]
         print("NEXT: %s %s (%s) target=%s gid=%s"
               % (head["version"] or "-", head["codename"] or "", head["status"],
@@ -2712,12 +2806,19 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
                            "\U0001F534", "\U0001F41E"]
 
 
-# ── GH-108: the one canonical rating grammar ────────────────────────────────────────────────────
-# `rated N/N/N/N` — exactly four slash-separated integers 1-100, axis order fixed as
-# pri/sev/appeal/effort — optionally followed by ` ovr N` (an integer 4-400 on calc's own scale).
-# There is no labeled long form: the axis NAMES live in PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md,
-# not in the entry line. Higher is better on every axis, effort included (it scores CHEAPNESS), so
-# the four combine without sign-flipping.
+# ── GH-108 / GH-349: the one canonical rating grammar ──────────────────────────────────────────
+# `rated N/N/N/N` — exactly four slash-separated integers 1-100, axis order fixed as:
+#   1. Priority (`pri`): urgency and importance of the outcome (1-100, 100 = critical/must-have)
+#   2. Severity (`sev`): severity of the problem or defect if left unaddressed (1-100, 100 = blocker)
+#   3. Appeal (`appeal`): user, operator, or ecosystem attractiveness/value (1-100, 100 = beloved)
+#   4. Effort (`effort`): CHEAPNESS of implementation (1-100, 100 = trivial/cheap, 1 = massive/costly)
+# Followed optionally by ` ovr N` (an integer 4-400 on calc's own scale, overriding calc for ranking).
+# Higher is better on every axis, effort included (it scores cheapness), so the four combine
+# additively without sign-flipping.
+#
+# Canonicality: `rated` is the canonical rating vocabulary across all installs (vendored or central).
+# The legacy triple `cx/risk/eff` (complexity/risk/effort) is deprecated and cannot be combined
+# with `rated` on the same entry.
 #
 # The refusal contract matters as much as the grammar: the PRESENCE of a `rated` or `ovr` token
 # either parses as the full form or refuses with a named rule. A malformed shape must never read
@@ -2807,7 +2908,7 @@ def parse_rating(raw, title):
 
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
-    from its `- **` line to the next `- **`, `###`, or `##`."""
+    from its bullet line (`- **`, `- [`, `- `) to the next `- `, `###`, or `##`."""
     lines = open(path, encoding="utf-8").read().splitlines()
     entries = []
     sec = None
@@ -2826,23 +2927,30 @@ def parse_roadmap_ledger(path):
             sec = line[4:].strip()
             i += 1
             continue
-        if inledger and sec and line.startswith("- **"):
+        if inledger and sec and (line.startswith("- **") or line.startswith("- [") or line.startswith("- ")):
             j = i + 1
-            while j < n and not (lines[j].startswith("- **") or lines[j].startswith("### ")
+            while j < n and not (lines[j].startswith("- ") or lines[j].startswith("### ")
                                  or re.match(r"^##\s+", lines[j])):
                 j += 1
             raw = "\n".join(lines[i:j]).rstrip()
-            m = re.match(r"^- \*\*(.+?)\*\*", raw)
-            title = m.group(1).strip() if m else raw[4:80]
-            gh = re.match(r"^GH-(\d+)\b", title)
+            m_bold = re.match(r"^- \*\*(.+?)\*\*", raw)
+            m_link = re.match(r"^- \[(.+?)\]", raw)
+            if m_bold:
+                title = m_bold.group(1).strip()
+            elif m_link:
+                title = m_link.group(1).strip()
+            else:
+                m_plain = re.match(r"^- (.+)", raw)
+                title = m_plain.group(1).strip() if m_plain else raw[2:80]
+            gh = re.match(r"^(?:GH-|#)(\d+)\b", title) or re.search(r"\b(?:GH-|#)(\d+)\b", title)
             marker = None
             for cand in _ROADMAP_STATUS_MARKERS:
                 if cand in raw:
                     marker = cand
                     break
             cre = re.search(r"cx/risk/eff (\d+)/(\d+)/(\d+)", raw)
-            doc = re.search(r"\]\((PROJECT/[^)]+\.md)", raw)
-            issue = re.search(r"https://github\.com/HiQS-(?:Suite|Labs)/XYZ-forge/(?:issues|pull)/\d+", raw)
+            doc = re.search(r"\]\((PROJECT/[^)]+\.md)", raw) or re.search(r"\((PROJECT/[^)]+\.md)\)", raw) or re.search(r"\]\(([^)]+\.md)\)", raw)
+            issue = re.search(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull)/\d+", raw)
             pos[sec] = pos.get(sec, 0) + 1
             entry = {
                 "gh_number": int(gh.group(1)) if gh else None,
@@ -3180,6 +3288,13 @@ def cmd_roadmap_sync(args):
         if not os.path.exists(md_path):
             refuse("roadmap-missing", "no %s at %s — nothing to shadow" % (ROADMAP_NAME, root))
         parsed = parse_roadmap_ledger(md_path)
+        if len(parsed) == 0:
+            with open(md_path, encoding="utf-8") as f:
+                content = f.read().strip()
+            if content:
+                refuse("roadmap-empty",
+                       "parsed 0 entries from non-empty %s; refusing sync to prevent accidental "
+                       "wipe of roadmap_items" % ROADMAP_NAME)
         # duplicate GH keys in the markdown would make the mirror ambiguous — name it, do not pick
         seen = {}
         for e in parsed:
@@ -4580,6 +4695,11 @@ def build_parser():
     sp_cut.add_argument("--gid", required=True)
     sp_cut.add_argument("issue", help="issue URL or TMP-XXXXXX")
     sp_cut.add_argument("--reason", default="")
+    sp_unship = msub.add_parser("unship",
+                                help="retract a shipped manifest item back to dialed_in (REQUIRES --reason)")
+    sp_unship.add_argument("--gid", required=True)
+    sp_unship.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_unship.add_argument("--reason", default="")
 
     sp = sub.add_parser("marathon", help="marathon CRUD (v1: add/list)")
     msub = sp.add_subparsers(dest="marathon_cmd", required=True)
@@ -4765,8 +4885,9 @@ def main(argv=None):
         "ship": cmd_ship, "migrate": cmd_migrate, "baseline": cmd_baseline,
         "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd in ("dial-in", "add")
         else (cmd_manifest_ship(a) if a.manifest_cmd == "ship"
-              else (cmd_manifest_marathon(a) if a.manifest_cmd == "marathon"
-                    else cmd_manifest_cut(a))),
+              else (cmd_manifest_unship(a) if a.manifest_cmd == "unship"
+                    else (cmd_manifest_marathon(a) if a.manifest_cmd == "marathon"
+                          else cmd_manifest_cut(a)))),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
