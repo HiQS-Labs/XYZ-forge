@@ -3,7 +3,7 @@ Goal: QA GH-346 Phase 0-2 — model-telemetry honesty, resolver fallback, and th
 Date: 2026-08-31
 Reviewer: commandcode (Command Code -> zai-org/glm-5.3, effort max)
 NEXT: Reviewer
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -334,7 +334,7 @@ pin, Q2 sentinel/wiring note) can ride as follow-ups or land in the same fix —
 **All three Path-to-Approved items are done, plus every [Should] except one. Commit `e3031586`;
 `validate.sh --sequential` green (SEQ4_RC=0, no failed suites). Handing back for re-review.**
 
-Every claim below was verified independently before acting — the blocker by an AST probe of my own,
+Every claim below was verified independently before acting — the blocker by an AST probe of my own,  [Unverified — no citation]
 not taken on your word.
 
 ### The three blockers
@@ -396,6 +396,141 @@ Q2's caveat is now documented but not closed: with the model var unset, agy and 
 0-2, or do you consider an explicit sentinel (e.g. `model_id="<cli-default>"`) the honest value
 until Phase 3 wires them together?
 
+---
+
+## Re-review verdict — round 2 (commandcode, 2026-08-31)
+
+**Verdict: APPROVED — STATUS set to Approved.** Every Path-to-Approved item verified
+independently at the source level, the [Should]s landed as claimed, and the commit ships two
+hardening pieces the response did not even list. Per relay rules I did not run `validate.sh`;
+the SEQ4_RC=0 claim is commit-message-attested and the harness gate after this turn is the
+independent attestation.
+
+### The three blockers — fixed and regression-checked
+
+1. **Undefined names.** `claude-turn.py:170/178/280` — `claude_cli_flags` is bound, telemetry
+   uses it, and dispatch argv is byte-identical pre/post (verified in the e3031586 diff: the
+   same eight flag tokens, named; prompt deliberately excluded). `aider-turn.py:284` —
+   `shlex.split(xflags)` on the var bound at `:157`, list-shaped like every other shim.
+   `codex-turn.py:153` — `cflags`, bound at `:64`, dispatch line `:97` untouched.
+2. **0.5 discharged for real.** `test/gh346-telemetry-row-written.sh` is genuinely dynamic: it
+   seeds a scratch DB (`harness_app.py init`), drives the real `HarnessTurnLogger` with logging
+   enabled, and asserts a row per gateway. I checked every pinned dispatched model against its
+   shim: claude `:97`, commandcode `:58`, aider `:64`, deepseek `:143`; pi's case is honest
+   because GH-295 (`pi-turn.py:70-76`) makes an explicit model a precondition of running at
+   all. The dsh-vs-deepseek namespace trap (`:48-51`) and the FK-seeding requirement are real
+   discoveries, not test plumbing, and `validate.sh:97` registers the suite.
+3. **2.10 de-vacuumed.** `gh346-gateway-allowlists.sh:353` now reads
+   `${TICK_REPO_ROOT:-$ROOT}/.tick/events.jsonl` — the file these probes can actually write.
+   The assertion can fail again.
+
+### Beyond the claim list (both verified)
+
+- **Section 3b of the honesty suite** implements the Q8 name-binding hardening: every `Name`
+  appearing in a `HarnessTurnLogger(...)` argument must be bound somewhere in the file. That is
+  precisely the check that would have caught the original blocker — the failure class cannot
+  recur silently. (It is file-scope rather than function-scope binding, so a pathological
+  cross-function shadow could pass it; acceptable for the realistic rename/typo mode, and the
+  row-written suite is the dynamic complement.)
+- **Section 3c** pins the swallow's visibility: every shim importing the logger must report
+  "telemetry not recorded" on failure.
+
+### Second swallow, [Should]s, and the record correction
+
+- `harness_turn_logger.py:92-106` inspects the `harness_app.py` rc and prints the stderr tail
+  on failure; still non-fatal. All seven Python shims carry the visible-swallow except.
+- The LANES derivation (`gh346-gateway-allowlists.sh:49-71`) **fails closed** — an empty
+  derivation is FAIL + exit 1, not a vacuous pass. That was the property that mattered most,
+  and it holds.
+- `_probe_agent_bin` `else: die` (`marathon_drive.py:753-762`); smallcode full-literal pin with
+  `$HOME` re-expansion (`:229-237`); the four doc lines (`SKILL.md:38,110,112`,
+  `xyz-vendor.sh:328`); the twin's gemini-advertising usage text now recorded in the divergence
+  note (`marathon_drive.py:1874-1878`); `gate_env.py:110-115` indented.
+- Frozen twin untouched by e3031586 (stat-verified); the commit message leads with the
+  correction; the capture doc's CORRECTION (`:95-134`) matches the round-1 table exactly, 0.5
+  honestly re-ticked (`:187-189`), 0.6 added. The `harnesses.sql`/`harnesses.db` deltas are one
+  real telemetry row from this relay's own commandcode turn plus its `models` FK row — the fix
+  working live, not a schema change.
+- **Round-1 loose end closed:** my Q6 `[Unverified — no citation]` on swarm-preflight was wrong
+  to leave uncited. It is GH-212 lane policy, not a gateway allowlist
+  (`utils/swarm-preflight.sh:415-432` lane classification, `:780` presence note, `:823-824`
+  suggested defaults), and it claims no completeness. Exclusion stands, now with citations.
+
+### Open question answered — documenting "declared, not dispatched" is sufficient for Phase 0-2
+
+A sentinel would be worse, for three reasons: (1) `invocation_logs.model_id` is
+`REFERENCES models(model_id)` (`harnesses.sql:218`) — a sentinel like `<cli-default>` needs a
+fake `models` row to be writable at all, planting a second dishonesty in a registry table to
+express the first; (2) the declared default is the same value Phase 3 will dispatch, so the
+column converges to truth instead of being swapped for a placeholder and back; (3) the test
+and capture doc label the row "declared, NOT dispatched"
+(`gh346-telemetry-row-written.sh:94-97`), so nothing in-tree can misread it. One condition I
+intend to hold the producer to: the ROI checkpoint item "Confirm harnesses.db telemetry matches
+dispatch for all 8 gateways" must NOT be ticked while this caveat stands. That item is exactly
+where declared-not-dispatched either gets closed by Phase 3 or the sentinel question gets
+re-opened — a caveat that quietly survives its own falsifier is how the original 5-of-8 error
+happened.
+
+### README Components table — parking agreed
+
+Pre-existing, additive-only, no behavior surface. Parking is right; growing this diff for a doc
+table nothing depends on would have been the wrong trade.
+
+### Residuals for the follow-up list (all non-blocking)
+
+- **[Nit]** Capture doc `:81-87` still carries the pre-QA claim ("5 live model-telemetry drift
+  bugs … records the wrong model for 5 of 8 gateways … live right now") uncorrected in place;
+  the CORRECTION at `:107-118` supersedes it, but a linear reader meets the wrong number first.
+  One pointer line at `:81` fixes it; same for "is really 5 of 8" at `:144`.
+- **[Nit]** The row-written test's `cases` list (`:44-53`) is a new small curated copy of the
+  shims' dispatched defaults — a shim default change fails no test (3b checks binding, not
+  values; this suite drives the logger directly). At the ROI checkpoint, derive the expected
+  values from the shims' source the way LANES is now derived.
+- **[Nit]** The allowlist test's env-scrub family still curates its lane set: #8/#9 loop only
+  commandcode/deepseek (`:277`) and #10's case-filter (`:294`) skips any lane outside the known
+  eight. A ninth lane IS caught loudly by #3, #4 (else:die), #5 and #2-message — but would be
+  silently un-checked for gate_env / `*_AGENT` reset / `GATE_SCRUBBED_ENV`. Derive those loops
+  from `$LANES` too.
+- **[Nit]** The logger's new rc-visibility branch is pinned by no test — a revert to silence
+  passes everything. Defensive observability; acceptable unpinned, worth one assertion if
+  touched again. Relatedly, a bare `except Exception: pass` survives around the tick *cost*
+  capture (`claude-turn.py:264-265`, `pi-turn.py:189-190`) — same family, pre-existing, out of
+  scope here; fold into the follow-up.
+- **Observation for the ROI checkpoint:** `smallcode-turn.sh` has NO telemetry block at all — a
+  shipped lane with no audit trail by omission. The checkpoint's "telemetry matches dispatch
+  for all 8 gateways" item will trip over it; name it in the capture doc now so it arrives as
+  a known gap rather than a surprise.
+
+### Verdict
+
+Phase 0-2 as delivered at e3031586 is honest, tested, and does what the plan comment agreed.
+Approved. The [Nit]s above ride as follow-ups; none of them misstates what the system records.
+
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (commandcode)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Log
+
+## commandcode r2 (2026-08-31)
+
+Re-review of commit e3031586 against the round-1 QA findings. All three Path-to-Approved items
+verified fixed at the source level; every [Should] except the parked README table landed and  [Unverified — no citation]
+verified; and the commit ships the Q8 name-binding hardening (honesty suite section 3b) and the
+swallow-visibility pin (3c) beyond the claim list. The open question is answered in the round-2
+verdict: documented declared-not-dispatched is sufficient for Phase 0-2 — a sentinel would need
+a fake `models` row to satisfy the FK (`harnesses.sql:218`) and would lose the declared value
+Phase 3 converges on. Residual [Nit]s (capture doc `:81-87` stale pre-QA claim, curated copies
+in the row-written cases and the scrub-family loops, unpinned rc-visibility branch, smallcode
+having no telemetry block at all) are recorded in the round-2 verdict as follow-ups; none of
+them misstate what the system records.
+
+VERDICT: PASS
+Basis: Round-2 verdict in this file — the three undefined cli_flags names are fixed and bound
+(claude-turn.py:170/280, aider-turn.py:284, codex-turn.py:64/153) with dispatch argv unchanged;
+checkbox 0.5 is discharged by test/gh346-telemetry-row-written.sh (dynamic, registered at
+validate.sh:97, every pinned model checked against its shim); the 2.10 assertion now reads
+$TICK_REPO_ROOT/.tick/events.jsonl (gh346-gateway-allowlists.sh:353) so it can actually fail;
+LANES is derived from route_agent's AST and fails closed on empty (:49-71); _probe_agent_bin
+gained its else:die (marathon_drive.py:753-762); the frozen twin is untouched by e3031586.
+validate.sh green is producer-attested; the harness gate attests independently after this turn.
