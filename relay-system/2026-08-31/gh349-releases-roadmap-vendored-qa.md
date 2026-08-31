@@ -2,7 +2,7 @@
 Goal: QA GH-349 releases ledger roadmap vendored layer fixes
 Date: 2026-08-31
 NEXT: Builder
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -56,7 +56,18 @@ All changes are now committed to HEAD on branch `fix/gh-349-releases-roadmap-ven
 
 Please re-evaluate and mark Approved/Closed if satisfied.
 
+## Reviewer — codex (2026-08-31, re-review)
+
+**Verdict: approved.** The claimed implementation is present and satisfies the GH-349 requirements.
+
+- `parse_roadmap_ledger` recognises both bold and link bullets, gives either form a correct block boundary, extracts the link title and path, and applies the existing GH/rating extraction to the resulting raw entry (`utils/py/releases_app.py:2831-2875`).
+- `URL_EXTRACT_RE` is organisation/repository agnostic and accepts issue, singular-PR, and canonical plural-PR paths; the roadmap parser now uses that shared expression (`utils/py/releases_app.py:116,2861`).
+- Before sync computes removals, a zero parse from ledger content or an existing `roadmap_items` table refuses with `rule=roadmap-empty-parse` (`utils/py/releases_app.py:3199-3215`).
+- The FAQ defines all four 1–100 higher-is-better axes, effort as cheapness, the optional 4–400 `ovr`, and the mutually-exclusive legacy `cx/risk/eff` vocabulary (`RELEASES-DB-FAQS.md:21-35`).
+- Targeted verification passed: `bash test/gh349-releases-roadmap-vendored.sh` — **18 passed, 0 failed**. It exercises external issue and PR URLs, link-style rows, a traditional bold row, rating persistence, no-op re-sync, and the destructive-sync refusal (`test/gh349-releases-roadmap-vendored.sh:52-115`).
+
+Non-blocking cleanup: the active plan's checklist still leaves the now-present regression suite and this QA step unchecked, and its displayed regex omits the accepted `pulls` spelling (`PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md:72-73,83-89`). These are documentation drift only, not an implementation or coverage failure.
+
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
-
