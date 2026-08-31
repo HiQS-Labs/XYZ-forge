@@ -1098,10 +1098,13 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                          FROM legacy_lines l JOIN releases rel ON rel.id = l.release_id
                          ORDER BY l.release_id, l.position""" % leg_extra))
 
+    gf_extra = ""
+    if _has_column(conn, "grandfather_entries", "updated_at"):
+        gf_extra = ", g.updated_at"
     gf_rows = _rows(conn, """SELECT g.import_run, COALESCE(g.release_gid, '(document)') AS rgid,
-                             g.rule, g.source_value, g.supplied_value, g.disposition, g.id AS _id
+                             g.rule, g.source_value, g.supplied_value, g.disposition, g.id AS _id%s
                              FROM grandfather_entries g
-                             ORDER BY g.import_run, COALESCE(g.release_gid, ''), g.rule, g.id""")
+                             ORDER BY g.import_run, COALESCE(g.release_gid, ''), g.rule, g.id""" % gf_extra)
     if gf_rows:
         w("-- table: grandfather_entries (natural key per PRD grammar: import_run + "
           "release_gid-or-(document) + rule + source ordinal)")
@@ -1756,10 +1759,17 @@ def issue_ref_for_token(conn, token, allow_mig=False):
     if row:
         return row
     gid = new_gid("ref-")
-    conn.execute("INSERT INTO issue_refs(global_id, url, temp_id, created_at) "
-                 "VALUES (?, ?, ?, ?)",
-                 (gid, value if kind == "url" else None,
-                  value if kind == "temp" else None, now_iso()))
+    now = now_iso()
+    if _has_column(conn, "issue_refs", "updated_at"):
+        conn.execute("INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at) "
+                     "VALUES (?, ?, ?, ?, ?)",
+                     (gid, value if kind == "url" else None,
+                      value if kind == "temp" else None, now, now))
+    else:
+        conn.execute("INSERT INTO issue_refs(global_id, url, temp_id, created_at) "
+                     "VALUES (?, ?, ?, ?)",
+                     (gid, value if kind == "url" else None,
+                      value if kind == "temp" else None, now))
     return conn.execute("SELECT * FROM issue_refs WHERE global_id = ?", (gid,)).fetchone()
 
 
@@ -1890,9 +1900,14 @@ def cmd_init(args):
 
 
 def _grandfather(conn, import_run, release_gid, rule, source_value, supplied_value):
-    conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
-                     supplied_value, disposition) VALUES (?, ?, ?, ?, ?, NULL)""",
-                 (import_run, release_gid, rule, source_value, supplied_value))
+    if _has_column(conn, "grandfather_entries", "updated_at"):
+        conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
+                         supplied_value, disposition, updated_at) VALUES (?, ?, ?, ?, ?, NULL, ?)""",
+                     (import_run, release_gid, rule, source_value, supplied_value, now_iso()))
+    else:
+        conn.execute("""INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value,
+                         supplied_value, disposition) VALUES (?, ?, ?, ?, ?, NULL)""",
+                     (import_run, release_gid, rule, source_value, supplied_value))
 
 
 def cmd_import(args):
@@ -1913,9 +1928,14 @@ def cmd_import(args):
                                     uuid.uuid4().hex[:6])
 
         def mutate(conn):
+            now = now_iso()
             for pos, content in enumerate(doc_lines):
-                conn.execute("INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)",
-                             (repo["id"], pos, content))
+                if _has_column(conn, "doc_lines", "updated_at"):
+                    conn.execute("INSERT INTO doc_lines(repo_id, position, content, updated_at) VALUES (?, ?, ?, ?)",
+                                 (repo["id"], pos, content, now))
+                else:
+                    conn.execute("INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)",
+                                 (repo["id"], pos, content))
             for block in blocks:
                 f = block["fields"]
 
@@ -2013,24 +2033,36 @@ def cmd_import(args):
                 if exit_criterion and len(exit_criterion) > 1000:
                     _grandfather(conn, import_run, gid, "exit-criterion-length",
                                  "%d chars" % len(exit_criterion), None)
-                if conn.execute("SELECT 1 FROM releases WHERE version = ?", (version,)).fetchone():
-                    refuse("version-uniqueness",
-                           "duplicate Release: %r in the legacy ledger (structural)" % version)
-
-                conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
-                             target_date, shipped_date, description, exit_criterion,
-                             tracking_ref_id, marathon_id, gh_release_url, milestone,
-                             front_door_reviewed, shakedown_reviewed, license_file)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?)""",
-                             (gid, repo["id"], version, codename, status, target_date,
-                              shipped_date, description, exit_criterion, ref["id"],
-                              gh_release_url, milestone, qa.get("front_door_reviewed"),
-                              qa.get("shakedown_reviewed"), qa.get("license_file")))
+                if _has_column(conn, "releases", "updated_at"):
+                    conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
+                                 target_date, shipped_date, description, exit_criterion,
+                                 tracking_ref_id, marathon_id, gh_release_url, milestone,
+                                 front_door_reviewed, shakedown_reviewed, license_file, updated_at)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)""",
+                                 (gid, repo["id"], version, codename, status, target_date,
+                                  shipped_date, description, exit_criterion, ref["id"],
+                                  gh_release_url, milestone, qa.get("front_door_reviewed"),
+                                  qa.get("shakedown_reviewed"), qa.get("license_file"), now))
+                else:
+                    conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
+                                 target_date, shipped_date, description, exit_criterion,
+                                 tracking_ref_id, marathon_id, gh_release_url, milestone,
+                                 front_door_reviewed, shakedown_reviewed, license_file)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?)""",
+                                 (gid, repo["id"], version, codename, status, target_date,
+                                  shipped_date, description, exit_criterion, ref["id"],
+                                  gh_release_url, milestone, qa.get("front_door_reviewed"),
+                                  qa.get("shakedown_reviewed"), qa.get("license_file")))
                 rel_id = conn.execute("SELECT id FROM releases WHERE global_id = ?",
                                       (gid,)).fetchone()["id"]
                 for ln, text in sorted(block["extras"], key=lambda e: e[0]):
-                    conn.execute("""INSERT INTO legacy_lines(release_id, position, content,
-                                 disposition) VALUES (?, ?, ?, NULL)""", (rel_id, ln, text))
+                    if _has_column(conn, "legacy_lines", "updated_at"):
+                        conn.execute("""INSERT INTO legacy_lines(release_id, position, content,
+                                     disposition, updated_at) VALUES (?, ?, ?, NULL, ?)""",
+                                     (rel_id, ln, text, now))
+                    else:
+                        conn.execute("""INSERT INTO legacy_lines(release_id, position, content,
+                                     disposition) VALUES (?, ?, ?, NULL)""", (rel_id, ln, text))
 
         txn = perform_write(root, conn, "import", None, mutate)
         gf = conn.execute("SELECT COUNT(*) c FROM grandfather_entries").fetchone()["c"]
@@ -2185,8 +2217,12 @@ def _capture_baseline(conn, release_id, source):
     if not count:
         return 0
     now = now_iso()
-    conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?, baseline_source = ?
-                     WHERE id = ?""", (count, now, source, release_id))
+    if _has_column(conn, "releases", "updated_at"):
+        conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?, baseline_source = ?,
+                        updated_at = ? WHERE id = ?""", (count, now, source, now, release_id))
+    else:
+        conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?, baseline_source = ?
+                        WHERE id = ?""", (count, now, source, release_id))
     return count
 
 
@@ -4772,13 +4808,24 @@ def cmd_reconcile(args):
                                    (temp,)).fetchone()
                 if not row:
                     refuse("unknown-temp-ref", "no issue_refs row carries temp id %r" % temp)
-                conn.execute("UPDATE issue_refs SET url = ?, temp_id = NULL WHERE id = ?",
-                             (url, row["id"]))
+                now = now_iso()
+                if _has_column(conn, "issue_refs", "updated_at"):
+                    conn.execute("UPDATE issue_refs SET url = ?, temp_id = NULL, updated_at = ? WHERE id = ?",
+                                 (url, now, row["id"]))
+                else:
+                    conn.execute("UPDATE issue_refs SET url = ?, temp_id = NULL WHERE id = ?",
+                                 (url, row["id"]))
                 if temp.startswith("MIG-"):
-                    conn.execute("""UPDATE grandfather_entries SET disposition = ?
-                                 WHERE rule = 'tracking-issue-missing' AND supplied_value = ?
-                                   AND disposition IS NULL""",
-                                 ("reconciled:%s" % now_iso(), temp))
+                    if _has_column(conn, "grandfather_entries", "updated_at"):
+                        conn.execute("""UPDATE grandfather_entries SET disposition = ?, updated_at = ?
+                                     WHERE rule = 'tracking-issue-missing' AND supplied_value = ?
+                                       AND disposition IS NULL""",
+                                     ("reconciled:%s" % now, now, temp))
+                    else:
+                        conn.execute("""UPDATE grandfather_entries SET disposition = ?
+                                     WHERE rule = 'tracking-issue-missing' AND supplied_value = ?
+                                       AND disposition IS NULL""",
+                                     ("reconciled:%s" % now, temp))
                 print("reconciled %s -> %s (row %s kept its identity)"
                       % (temp, url, row["global_id"]))
 

@@ -7,6 +7,7 @@
 #   3. An auditable event is recorded in `manifest_state_events` (from_state=shipped, to_state=dialed_in).
 #   4. Exclusivity check: refusing unship if the issue is already dialed in or dialed into another release.
 #   5. Transition legality: refusing unship on an item that is not in state 'shipped'.
+#   6. Complete database-state non-mutation on refusal.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -83,11 +84,16 @@ ra manifest dial-in --gid "$REL" https://github.com/Org/Repo/issues/2 --reason "
 ra manifest ship --gid "$REL" https://github.com/Org/Repo/issues/2 --evidence "https://github.com/Org/Repo/pull/3" >/dev/null
 ra manifest dial-in --gid "$REL" https://github.com/Org/Repo/issues/2 --reason "feature 2 redial" >/dev/null
 
-EVENTS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
+ITEMS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT id, release_id, issue_ref_id, state FROM manifest_items ORDER BY id;")"
+EVENTS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT id, item_id, from_state, to_state, reason FROM manifest_state_events ORDER BY id;")"
+
 out="$(ra manifest unship --gid "$REL" https://github.com/Org/Repo/issues/2 --reason "try unship duplicate" 2>&1 || true)"
 ok "unship when issue already dialed_in in same release is refused with manifest-duplicate" "$(has "$out" "rule=manifest-duplicate"; echo $?)"
-EVENTS_AFTER="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
-ok "state events not mutated after manifest-duplicate refusal" "$(is "$EVENTS_BEFORE" "$EVENTS_AFTER"; echo $?)"
+
+ITEMS_AFTER="$(sqlite3 "$R/releases.db" "SELECT id, release_id, issue_ref_id, state FROM manifest_items ORDER BY id;")"
+EVENTS_AFTER="$(sqlite3 "$R/releases.db" "SELECT id, item_id, from_state, to_state, reason FROM manifest_state_events ORDER BY id;")"
+ok "manifest_items table not mutated after manifest-duplicate refusal" "$(is "$ITEMS_BEFORE" "$ITEMS_AFTER"; echo $?)"
+ok "manifest_state_events table not mutated after manifest-duplicate refusal" "$(is "$EVENTS_BEFORE" "$EVENTS_AFTER"; echo $?)"
 
 # 8. Cross-release exclusivity: ship in REL1, dial in REL2, attempt unship in REL1 -> rule=dialed-in-elsewhere
 REL2="$(ra add --version 2.0.0 --status active --tracking-issue https://github.com/Org/Repo/issues/200 --description "v2.0.0" | grep -o 'rel-[0-9A-HJKMNP-TV-Z]\{26\}')"
@@ -95,11 +101,16 @@ ra manifest dial-in --gid "$REL" https://github.com/Org/Repo/issues/3 --reason "
 ra manifest ship --gid "$REL" https://github.com/Org/Repo/issues/3 --evidence "https://github.com/Org/Repo/pull/4" >/dev/null
 ra manifest dial-in --gid "$REL2" https://github.com/Org/Repo/issues/3 --reason "handed to v2" >/dev/null
 
-EVENTS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
+ITEMS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT id, release_id, issue_ref_id, state FROM manifest_items ORDER BY id;")"
+EVENTS_BEFORE="$(sqlite3 "$R/releases.db" "SELECT id, item_id, from_state, to_state, reason FROM manifest_state_events ORDER BY id;")"
+
 out="$(ra manifest unship --gid "$REL" https://github.com/Org/Repo/issues/3 --reason "try unship cross-held" 2>&1 || true)"
 ok "unship when issue dialed_in elsewhere is refused with dialed-in-elsewhere" "$(has "$out" "rule=dialed-in-elsewhere"; echo $?)"
-EVENTS_AFTER="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM manifest_state_events;")"
-ok "state events not mutated after dialed-in-elsewhere refusal" "$(is "$EVENTS_BEFORE" "$EVENTS_AFTER"; echo $?)"
+
+ITEMS_AFTER="$(sqlite3 "$R/releases.db" "SELECT id, release_id, issue_ref_id, state FROM manifest_items ORDER BY id;")"
+EVENTS_AFTER="$(sqlite3 "$R/releases.db" "SELECT id, item_id, from_state, to_state, reason FROM manifest_state_events ORDER BY id;")"
+ok "manifest_items table not mutated after dialed-in-elsewhere refusal" "$(is "$ITEMS_BEFORE" "$ITEMS_AFTER"; echo $?)"
+ok "manifest_state_events table not mutated after dialed-in-elsewhere refusal" "$(is "$EVENTS_BEFORE" "$EVENTS_AFTER"; echo $?)"
 
 # 9. Consistency check passes after unship
 out="$(ra check 2>&1)"
