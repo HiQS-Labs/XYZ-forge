@@ -335,6 +335,16 @@ TESTS=(
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
                                  #   a duplicate GH key in the markdown is refused by name
+  "gh351-manifest-unship.sh"      # GH-351 (`manifest unship` — the retraction verb) — 13/0. `shipped`
+                                  #   was terminal with no way out: `cut` refuses on a shipped row and
+                                  #   the refusal pointed at re-dialing, which retracts nothing and adds
+                                  #   a SECOND row — so a manifest could permanently assert one issue
+                                  #   both shipped and is pending, with AGENTS.md forbidding the
+                                  #   hand-edit that was the only escape. Pins that a reason is
+                                  #   mandatory, the retraction appends to manifest_state_events beside
+                                  #   the ship it reverses, unshipping a non-shipped row refuses, and
+                                  #   both exclusivity refusals (manifest-duplicate, dialed-in-elsewhere)
+                                  #   leave items AND events byte-unchanged.
   "gh349-releases-roadmap-vendored.sh" # GH-349 (roadmap layer generalised to a vendored install) — 54/0;
                                   #   link-style `- [Title](path)` bullets parse alongside bold ones, issue URLs
                                   #   come from any GitHub org, and a 0-entry parse of a non-empty ledger REFUSES
