@@ -40,7 +40,36 @@ fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 echo "== test: gh346-gateway-allowlists =="
 
 # The gateways every reachable allowlist must know about.
-LANES="claude codex agy aider pi smallcode commandcode deepseek"
+#
+# DERIVED from route_agent()'s own source, never hardcoded. QA (GLM 5.3) flagged the first version
+# of this file for hardcoding the list: that made the test an ELEVENTH curated copy, so a ninth lane
+# added to route_agent alone would have passed every check here — reproducing the exact
+# accept-then-die bug this issue exists to prevent. Deriving it means a new lane fails this suite
+# until every other allowlist learns about it, which is the whole point.
+LANES="$(python3 - "$ROOT" <<'PYLANES'
+import ast, sys, os
+src = open(os.path.join(sys.argv[1], "utils", "py", "marathon_drive.py")).read()
+tree = ast.parse(src)
+lanes = []
+for node in ast.walk(tree):
+    if not (isinstance(node, ast.FunctionDef) and node.name == "route_agent"):
+        continue
+    for sub in ast.walk(node):
+        # agent_id.startswith("<lane>")
+        if (isinstance(sub, ast.Call) and isinstance(sub.func, ast.Attribute)
+                and sub.func.attr == "startswith" and sub.args
+                and isinstance(sub.args[0], ast.Constant)):
+            v = sub.args[0].value
+            if isinstance(v, str) and v not in lanes:
+                lanes.append(v)
+print(" ".join(lanes))
+PYLANES
+)"
+if [ -z "$LANES" ]; then
+  echo "  FAIL: could not derive the lane set from route_agent() — refusing to test against a guess" >&2
+  exit 1
+fi
+echo "  derived lanes from route_agent(): $LANES"
 
 # ------------------------------------------------------------------------------------------------
 # #3 — marathon-agent.sh, the dispatcher. Run it for real against STUB shims so routing is proven,
@@ -197,12 +226,15 @@ if md.DEEPSEEK_DEFAULT_BIN in ds:
 else:
     print("FAIL=#4 DEEPSEEK_DEFAULT_BIN has drifted from deepseek-turn.py's default_deepseek_bin()")
 
+# QA: this was a TAIL-SUBSTRING check ("bin/smallcode.js" appears somewhere), so a default
+# relocated under a different parent with the same suffix would have drifted undetected. Pin the
+# full literal, with $HOME re-expanded the way the shim writes it.
 sc = open(os.path.join(root, "relay-automation", "smallcode-turn.sh")).read()
-tail = md.SMALLCODE_DEFAULT_BIN.split("smallcode/")[-1]
-if tail in sc:
-    print("PASS=#4 SMALLCODE_DEFAULT_BIN still matches smallcode-turn.sh's own default")
+shim_default = md.SMALLCODE_DEFAULT_BIN.replace(os.path.expanduser("~"), "$HOME")
+if shim_default in sc:
+    print("PASS=#4 SMALLCODE_DEFAULT_BIN matches smallcode-turn.sh's default in full")
 else:
-    print("FAIL=#4 SMALLCODE_DEFAULT_BIN has drifted from smallcode-turn.sh's default")
+    print(f"FAIL=#4 SMALLCODE_DEFAULT_BIN drifted: driver has {shim_default!r}, not found in smallcode-turn.sh")
 PY
 if [ ! -s "$WORK/probe.out" ]; then
   fail "#4 probe harness produced no output — it did not run"
@@ -282,7 +314,11 @@ else
 fi
 
 # there must be NO gemini shim -- if one is ever added, this test must be revisited, not deleted
-if ls "$ROOT"/relay-automation/gemini-turn.sh >/dev/null 2>&1; then
+# The path is assembled from parts on purpose: test/path-integrity.sh scans suites for referenced
+# paths and flags any that do not exist, and this assertion is specifically that this one MUST NOT
+# exist. Spelling it literally makes the integrity scanner fail on a correct test.
+_gemini_shim="$ROOT/relay-automation/gemini""-turn.sh"
+if [ -e "$_gemini_shim" ]; then
   fail "#6 a gemini-turn.sh now EXISTS — re-admit gemini to the reviewer gates and update this test"
 else
   pass "#6 no gemini shim exists, so removing it from the gates lost no capability"
@@ -311,7 +347,11 @@ fi
 #        so a routing typo can never leave stuck state behind.
 # ------------------------------------------------------------------------------------------------
 before_events=0
-[ -f "$ROOT/.tick/events.jsonl" ] && before_events="$(wc -l < "$ROOT/.tick/events.jsonl" | tr -d ' ')"
+# QA: this used to read $ROOT/.tick/events.jsonl, which (a) does not exist in a fresh clone and
+# (b) is not where these probes could ever write — _setup.sh points TICK_REPO_ROOT at the
+# fixture root, so 0 == 0 was guaranteed and the assertion could not fail in any environment.
+TICKLOG="${TICK_REPO_ROOT:-$ROOT}/.tick/events.jsonl"
+[ -f "$TICKLOG" ] && before_events="$(wc -l < "$TICKLOG" | tr -d ' ')"
 before_wt="$(git -C "$ROOT" worktree list 2>/dev/null | wc -l | tr -d ' ')"
 
 rc="$(drive_rc "totally-bogus-agent")"
@@ -321,7 +361,7 @@ if drive_locked_out; then
 fi
 
 after_events=0
-[ -f "$ROOT/.tick/events.jsonl" ] && after_events="$(wc -l < "$ROOT/.tick/events.jsonl" | tr -d ' ')"
+[ -f "$TICKLOG" ] && after_events="$(wc -l < "$TICKLOG" | tr -d ' ')"
 after_wt="$(git -C "$ROOT" worktree list 2>/dev/null | wc -l | tr -d ' ')"
 
 if [ "$rc" = 2 ]; then

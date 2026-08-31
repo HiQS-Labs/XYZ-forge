@@ -158,6 +158,61 @@ else
   fail "harness_turn_logger.py no longer falls back to cfg['model'] — agy/codex would log a null model"
 fi
 
+# --- 3b. the logger call must be EVALUABLE, not merely well-shaped ------------------------------
+# The gap this closes, found by GLM 5.3 in QA and confirmed: three shims passed an undefined name as
+# cli_flags (claude `cflags`, aider `aflags`, codex `flags`). Evaluating the argument raised
+# NameError, the block's own `except Exception` swallowed it, and those gateways wrote NO telemetry
+# row at all -- for the life of the shim. The original version of this test asserted only that
+# model_id was honest, so it passed with flying colours over three gateways that logged nothing.
+# A correct model id in a call that never runs is worth nothing.
+undef="$(python3 - "$ROOT" <<'PY'
+import ast, os, sys
+root = sys.argv[1]
+pydir = os.path.join(root, "utils", "py")
+for f in sorted(x for x in os.listdir(pydir) if x.endswith("-turn.py")):
+    src = open(os.path.join(pydir, f)).read()
+    tree = ast.parse(src)
+    bound = set(dir(__builtins__)) | {"__name__", "__file__"}
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store): bound.add(n.id)
+        if isinstance(n, ast.arg): bound.add(n.arg)
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)): bound.add(n.name)
+        if isinstance(n, (ast.Import, ast.ImportFrom)):
+            for a in n.names: bound.add((a.asname or a.name).split(".")[0])
+        if isinstance(n, ast.ExceptHandler) and n.name: bound.add(n.name)
+    for n in ast.walk(tree):
+        if not isinstance(n, ast.Call): continue
+        fn = n.func
+        nm = fn.id if isinstance(fn, ast.Name) else getattr(fn, "attr", None)
+        if nm != "HarnessTurnLogger": continue
+        for kw in n.keywords:
+            for sub in ast.walk(kw.value):
+                if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load) and sub.id not in bound:
+                    print(f"{f}: {kw.arg}={sub.id} is bound nowhere — NameError, swallowed, no row written")
+PY
+)"
+if [ -z "$undef" ]; then
+  pass "every HarnessTurnLogger argument resolves — no shim's telemetry is dead code"
+else
+  while IFS= read -r u; do
+    [ -n "$u" ] && fail "$u"
+  done <<< "$undef"
+fi
+
+# --- 3c. the swallow must be visible ------------------------------------------------------------
+# `except Exception: pass` is the mechanism that hid the above for the shims' entire life. Logging
+# must stay non-fatal, but never silent again.
+silent=0
+for s in "$ROOT"/utils/py/*-turn.py; do
+  if grep -q 'from harness_turn_logger import HarnessTurnLogger' "$s"; then
+    if grep -q 'telemetry not recorded' "$s"; then :; else
+      fail "$(basename "$s"): telemetry failure is still swallowed silently"
+      silent=1
+    fi
+  fi
+done
+[ "$silent" = 0 ] && pass "a swallowed telemetry failure is reported on stderr in every shim"
+
 # --- 4. every shim still parses ----------------------------------------------------------------
 for s in "$ROOT"/utils/py/*-turn.py; do
   if python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$s" 2>/dev/null; then

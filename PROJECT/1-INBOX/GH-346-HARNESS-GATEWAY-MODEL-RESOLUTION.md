@@ -92,6 +92,47 @@ ask never mentioned.
   `src/marathon-yaml.js:114` list `gemini` as reviewer-eligible. No such shim exists anywhere in
   the tree, and `route_agent` — which runs first — has no gemini branch, so it was unreachable.
 
+## CORRECTION after QA — the Phase 0 record was wrong, and worse than stated
+
+QA on this branch (GLM 5.3 via Command Code, `relay-system/2026-08-31/gh346-phase0-2-qa.md`)
+returned **changes requested** and was right. What it found, verified independently before acting:
+
+**Three shims' telemetry was DEAD CODE, and had been for their whole life.**
+`claude-turn.py`, `aider-turn.py` and `codex-turn.py` each passed an **undefined name** as
+`cli_flags` (`cflags`, `aflags`, `flags` — bound nowhere in their files). Evaluating the argument
+raised `NameError` *inside* the `HarnessTurnLogger(...)` call, and the block's own
+`except Exception: pass` swallowed it. Those gateways wrote **no telemetry row at all, on any
+turn** — not a wrong row, no row.
+
+So the earlier claim in this doc and in commit `86fa1906` — "harnesses.db records the wrong model
+for 5 of 8 gateways" — **described code that never executed**. The honest record:
+
+| Gateway | What actually happened before this work |
+|---|---|
+| claude, aider, codex | wrote NOTHING — NameError, silently swallowed |
+| commandcode, agy | wrote a real row with the WRONG model (the live bug, 2 gateways) |
+| dsh (deepseek), pi | wrote a correct row |
+
+Two live wrong-model bugs, not five — and three gateways with **no audit trail at all**, which for
+a telemetry system is the worse defect. Phase 0's edits to those three were correct but unreachable
+until the names were fixed.
+
+**Checkbox 0.5 was ticked without being performed.** "A fresh harnesses.db row per touched gateway
+shows the right model" was never run — no test in the tree exercised a shim with logging enabled,
+and the Phase 0 suite was AST-static. That is the process defect, and it is exactly what let dead
+code look fixed. It is now discharged by `test/gh346-telemetry-row-written.sh`, which enables
+logging against a scratch DB and asserts a row lands per gateway carrying the dispatched model.
+
+**A second silent swallow, found while fixing the first.** `HarnessTurnLogger` ran `harness_app.py`
+with `check=False` and never inspected the return code, so a failed INSERT (e.g. `FOREIGN KEY
+constraint failed` on an unseeded DB) also produced no row and no message. Both swallows now log to
+stderr and stay non-fatal.
+
+**Standing caveat on agy/codex (raised by QA, accepted).** With the model var unset these two pass
+no `--model` at all, so the row now records `device_config`'s **declared** default — better
+provenance than an invented literal, and the single source Phase 3 will converge with dispatch, but
+it is still *declared, not dispatched*. Do not read it as "the model that ran" until Phase 3.
+
 ## What shipped, and how it departed from the plan
 
 Phases 0–2 are implemented on branch `gh346-model-resolution`. Three departures, each deliberate:
@@ -144,6 +185,10 @@ the env var with a second hardcoded default. Three one-line changes, no design n
 - [x] **0.3** `aider-turn.py:270` — log the value that actually ran (`:62/64`), drop the third independent default
 - [x] **0.4** One regression test asserting telemetry model == dispatch model for each shim with the `*_MODEL` var unset
 - [x] **0.5** `./validate.sh` green; a fresh `harnesses.db` row per touched gateway shows the right model
+      — **re-done properly after QA**: was ticked without being performed (see the CORRECTION above).
+      Now enforced by `test/gh346-telemetry-row-written.sh`, 8/8 with logging enabled.
+- [x] **0.6** (added after QA) Fix the three undefined `cli_flags` names that made claude/aider/codex
+      telemetry dead code, and make both swallowed-exception paths log instead of passing silently
 
 ### Phase 1 — fault-tolerant resolver call, not a swap
 

@@ -35,7 +35,7 @@ bash "$L" --check
 ```
 
 That locator resolves the harness from wherever your CWD is and reports which workers
-(codex/agy/tick) are on PATH. See
+(tick/codex/agy/cmd/dsh) are on PATH. See
 [Preconditions](#preconditions--locate-the-harness-bundled-locator-never-hardcode-a-path) below for the
 full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this doc assumes has already
 run.
@@ -107,9 +107,9 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
 done
 [ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
 
-eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY}
+eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
 cd "$HARNESS"
-"$L" --check           # prints: harness path + which Path-A workers (codex/agy/tick) are on PATH
+"$L" --check           # prints: harness path + which Path-A workers (tick/codex/agy/cmd/dsh) are on PATH
 ```
 
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and

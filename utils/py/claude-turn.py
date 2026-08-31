@@ -163,8 +163,11 @@ def main():
     if bounded_rc == 0:
         warn_if_workspace_untrusted(run_cwd)
 
-    cmd = [
-        resolved_claude, "-p", prompt,
+    # GH-346: named so the telemetry block below can record the flags this turn actually ran with.
+    # It previously passed `cflags`, a name bound nowhere in this file — NameError, swallowed by the
+    # logger's `except Exception: pass`, so claude wrote NO telemetry row on any turn. The prompt is
+    # deliberately excluded: it is unbounded text, not a flag.
+    claude_cli_flags = [
         "--model", model,
         "--allowedTools", "Bash,Read,Edit,Write",
         "--permission-mode", "acceptEdits",
@@ -172,6 +175,7 @@ def main():
         "--max-turns", str(max_turns),
         "--max-budget-usd", str(max_budget)
     ]
+    cmd = [resolved_claude, "-p", prompt] + claude_cli_flags
     
     # Sample the turn while it runs so an exit-7 timeout can be attributed to a
     # cause. subprocess.run reaps the child before raising TimeoutExpired, so
@@ -273,12 +277,16 @@ def main():
             model_id=model,
             gateway=os.environ.get("CLAUDE_GATEWAY", "anthropic"),
             reasoning_effort=os.environ.get("CLAUDE_REASONING_EFFORT", "high"),
-            cli_flags=cflags,
+            cli_flags=claude_cli_flags,
             repo_root=xyz_root,
         ) as logger:
             logger.exit_code = bounded_rc or rc
-    except Exception:
-        pass
+    except Exception as _telemetry_exc:
+        # GH-346: this used to be a bare `pass`. Three shims passed an undefined name as
+        # cli_flags, raised NameError here, and silently wrote NO telemetry row for the entire
+        # life of the shim -- a telemetry system that fails closed and says nothing. Still
+        # non-fatal (a turn must never fail because logging did), but never again invisible.
+        print(f"claude-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)
 
     sys.exit(rc)
 

@@ -134,8 +134,12 @@ def main():
             repo_root=xyz_root,
         ) as logger:
             logger.exit_code = bounded_rc or rc
-    except Exception:
-        pass
+    except Exception as _telemetry_exc:
+        # GH-346: this used to be a bare `pass`. Three shims passed an undefined name as
+        # cli_flags, raised NameError here, and silently wrote NO telemetry row for the entire
+        # life of the shim -- a telemetry system that fails closed and says nothing. Still
+        # non-fatal (a turn must never fail because logging did), but never again invisible.
+        print(f"commandcode-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)
 
     # In-root enforcement violations take priority over a subprocess result.
     if rc == 6:

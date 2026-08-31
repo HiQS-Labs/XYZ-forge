@@ -107,12 +107,12 @@ HARNESS_ENV = {
     "AIDER_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "PI_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "SMALLCODE_AGENT": (SCRUB, "See CLAUDE_AGENT."),
-# GH-346 Phase 2: the EIGHTH place the shipped gateway set is enumerated by hand. The recon map on
-# the issue found six; src/marathon-yaml.js was a seventh; this registry was an eighth, and it was
-# test/gh441-gate-env-contract.sh — not review — that caught it. That is the whole argument for
-# generating this surface rather than curating it (issue #346, proposal B).
-"COMMANDCODE_AGENT": (SCRUB, "See CLAUDE_AGENT."),
-"DEEPSEEK_AGENT": (SCRUB, "See CLAUDE_AGENT."),
+    # GH-346 Phase 2: the EIGHTH place the shipped gateway set is enumerated by hand. The recon
+    # map on the issue found six; src/marathon-yaml.js was a seventh; this registry was an eighth,
+    # and it was test/gh441-gate-env-contract.sh — not review — that caught it. That is the whole
+    # argument for generating this surface rather than curating it (issue #346, proposal B).
+    "COMMANDCODE_AGENT": (SCRUB, "See CLAUDE_AGENT."),
+    "DEEPSEEK_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "RELAY_TOOL_MODE": (SCRUB, "Turn tool mode (standard vs programmatic); suites set this per-invocation."),
     "XYZ_TOOL_MODE": (SCRUB, "Harness tool execution mode; suites set this per-invocation."),
     # ── PASS: load-bearing for the gate or for the drivers a suite legitimately spawns ─────────────

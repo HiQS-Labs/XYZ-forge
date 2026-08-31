@@ -750,6 +750,16 @@ def _probe_agent_bin(agent_id, role_label):
             [get_env("DEEPSEEK_BIN"), DEEPSEEK_DEFAULT_BIN, "dsh"],
             role_label, agent_id, "DEEPSEEK_BIN",
         )
+    else:
+        # GH-346: the comment above used to STATE this invariant and nothing enforced it, so an id
+        # route_agent accepted but this function had no branch for skipped preflight in silence —
+        # the GH-117 guarantee quietly not applying to exactly the newest, least-proven lane. Now
+        # a routing/probe mismatch fails loudly here rather than surfacing as a mid-turn crash.
+        _RESULT["reason"] = f"{role_label}-probe-unmapped"
+        die(
+            f"{role_label} agent '{agent_id}' is routable but has no binary probe — every id "
+            f"route_agent() accepts must be probed here (GH-117). Add a branch to _probe_agent_bin."
+        )
 
 # GH-390 coverage seam.  Keep the attribution decision outside main() so its four
 # platform/Bash return-code shapes can be exercised on every host without executing
@@ -1860,6 +1870,12 @@ def main():
         # that way deliberately — teaching the frozen twin is a twin-retirement task, not a
         # drive-by. Reachable only via XYZ_PYTHON=0 or a host without python3 >= 3.8, and on that
         # path an unrecognized id fails at argument routing before any tick mutation.
+        #
+        # One more thing about the twin, since a reader under XYZ_PYTHON=0 will otherwise be misled:
+        # its USAGE TEXT (marathon-drive.sh:33, :593) still advertises `gemini` as a reviewer, and
+        # it keeps a `gemini*` arm in its reviewer gate at :795 — dead, because its own route_agent
+        # at :783 rejects the id first. No gemini shim has ever existed. The Python side dropped the
+        # phantom in GH-346; the twin advertises a lane that cannot run, and stays frozen anyway.
         #
         # REVIEWER routing is a separate, narrower set and Pi is NOT in it — see the check below
         # and bin/marathon-yaml:95. A Pi *builder* fallback does not give you a Pi *reviewer*.
