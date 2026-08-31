@@ -78,13 +78,15 @@ ask never mentioned.
   (env → `~/.xyz/device_config.json` → `GLOBAL_DEFAULTS`). All 7 Python shims already build a
   `HarnessTurnLogger` from it — but only for the telemetry record, never for the `--model` flag
   each shim constructs independently. That split is the real unification target, and it is Phase 3.
-- **5 live model-telemetry drift bugs (the issue said 3), more urgent than the efficiency ask.**
+- **Model-telemetry drift — the count below is SUPERSEDED; see the CORRECTION section.** QA found
+  three of these shims never wrote a row at all (NameError, silently swallowed), so only **two**
+  live wrong-model bugs existed. Left in place as the pre-QA reasoning, not as the record:
   `claude-turn.py:97` dispatches `claude-sonnet-4-6` while `:269` logs `anthropic/claude-3-7-sonnet`;
   `commandcode-turn.py:58` dispatches `meta/muse-spark-1.2-contributor` while `:128` logs
   `Qwen/Qwen3.8-Max`; `aider-turn.py:62/64` dispatches one of two values while `:270` logs a third.
-  **`harnesses.db` records the wrong model for 5 of 8 gateways whenever the model var is unset** —
-  agy and codex are worse still: neither passes `--model` at all when unset, so the slug they
-  logged was chosen by nothing. A correctness bug in the audit trail, live right now.
+  ~~`harnesses.db` records the wrong model for 5 of 8 gateways~~ — **wrong, see CORRECTION**: two
+  gateways logged a wrong model, three logged nothing. agy and codex pass no `--model` at all when
+  unset, so the slug they logged was chosen by nothing.
 - **Safety net worth preserving explicitly.** Both `route_agent()` twins reject an unrecognized id
   with **exit 2 before any tick or worktree mutation**, so a routing mistake cannot leave stuck
   state. Whatever replaces the 10 allowlists must keep that invariant, and Phase 2 tests it.
@@ -141,7 +143,8 @@ Phases 0–2 are implemented on branch `gh346-model-resolution`. Three departure
    in a worse form — neither shim passes `--model` at all when the env var is unset (agy gates the
    flag at `:383`; codex never sets one), yet both logged a hardcoded slug. So they were recording a
    model *nothing* selected. `pi-turn.py:198` had an unreachable `"pi-native"` default contradicting
-   its own GH-295 refuse-to-guess contract. **The issue's "3 of 8 gateways" is really 5 of 8.**
+   its own GH-295 refuse-to-guess contract. **The issue's "3 of 8" is wrong, but so was my "5 of 8"
+   — see the CORRECTION section: two wrote a wrong model, three wrote nothing at all.**
    agy/codex now pass `None`, which `harness_turn_logger.py` resolves through `device_config` —
    a real declared default instead of an invented one.
 2. **`aider-turn.py`'s `gateway` was fixed too**, not just its `model_id`: it logged `openrouter`

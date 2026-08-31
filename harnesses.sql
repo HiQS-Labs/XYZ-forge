@@ -886,6 +886,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260827081457-701525ca','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260827082037-b4a556a0','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa-r3',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 4 insertions(+)','2026-08-27 08:20:37');
 INSERT INTO "invocation_logs" VALUES('inv-20260827083100-7eab0808','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa-r3d',0.0,6,0,NULL,NULL,0.0,' 4 files changed, 20 insertions(+)','2026-08-27 08:31:00');
 INSERT INTO "invocation_logs" VALUES('inv-20260831223720-ba23359d','noels-Mac-Studio.local','commandcode','zai-org/glm-5.3','openrouter','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo", "--effort", "max"]','RELAY-gh346-phase0-2-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-31 22:37:20');
+INSERT INTO "invocation_logs" VALUES('inv-20260831235332-d7af29b7','noels-Mac-Studio.local','commandcode','zai-org/glm-5.3','openrouter','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo", "--effort", "max"]','RELAY-gh346-phase0-2-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-31 23:53:32');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
