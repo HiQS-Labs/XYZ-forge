@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Scope frozen: relocate the canary to push-on-development plus deliberate dispatch; keep it advisory; correct the promotion reader's false-green run-level query. | Implement the workflow and contract changes, verify in a disposable full clone, then measure the resulting PR run. |
+| Relocation, job-level status reporting, and regression coverage are implemented; focused checks and the full sequential macOS gate are green in a disposable full clone. | Open the PR, witness its hosted workflow, record the new critical path on #347, then merge and reconcile. |
 
 ## Why
 
@@ -54,14 +54,14 @@ workflow conclusion.
 
 ## Acceptance criteria
 
-- [ ] `canary-ubuntu` runs on push to `development` and on `workflow_dispatch`.
-- [ ] `canary-ubuntu` does not run for `pull_request` or push to `main`.
-- [ ] `continue-on-error: true`, the verdict step, and `fetch-depth: 0` remain intact.
-- [ ] The promotion reader reports the canary job's conclusion and includes its source SHA.
-- [ ] A negative control proves a successful workflow containing a failed canary reports drift.
-- [ ] Workflow-contract tests pin the relocation without weakening automatic CI triggers.
+- [x] `canary-ubuntu` runs on push to `development` and on `workflow_dispatch`.
+- [x] `canary-ubuntu` does not run for `pull_request` or push to `main`.
+- [x] `continue-on-error: true`, the verdict step, and `fetch-depth: 0` remain intact.
+- [x] The promotion reader reports the canary job's conclusion and includes its source SHA.
+- [x] A negative control proves a successful workflow containing a failed canary reports drift.
+- [x] Workflow-contract tests pin the relocation without weakening automatic CI triggers.
 - [ ] The post-change PR run is measured and the new critical path recorded on #347.
-- [ ] Full sequential macOS validation remains the promotion-evidence contract.
+- [x] Full sequential macOS validation remains the promotion-evidence contract.
 
 ## Verification
 
@@ -70,3 +70,12 @@ workflow conclusion.
 - `bash ci-local.sh` in a separate disposable full clone
 - Witness the pull-request workflow and record its elapsed time and job conclusions
 
+## Lessons Learned
+
+- `continue-on-error` changes the enclosing workflow conclusion, so workflow-level success is not
+  evidence that an advisory job passed. Promotion tooling must inspect the named job.
+- A relocation assertion should inspect the workflow's effective `if:` block, not comments around
+  it; otherwise explanatory prose can make a negative trigger test fail for the wrong reason.
+- The suite's optional local gate record can refuse after a green run when a benchmark suite mutates
+  tracked registry artifacts. The full gate verdict and clone-identity invariant remain distinct
+  evidence, and the dirty artifacts must not be committed from the disposable clone.

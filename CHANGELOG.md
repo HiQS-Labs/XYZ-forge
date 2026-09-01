@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-09-01
+
+### Changed
+- **GH-347: the advisory Ubuntu portability canary leaves the pull-request critical path.** The job now runs on pushes to `development` and deliberate `workflow_dispatch`, while remaining absent from pull requests and pushes to `main`; `continue-on-error`, the explicit drift verdict, full history checkout, and the full sequential macOS promotion boundary are unchanged. `utils/gate-status.sh` now reads the named canary job from the latest completed development-push run instead of trusting the enclosing workflow conclusion, closing a false-green path where an advisory failure can coexist with a successful workflow. A negative control pins that exact shape. Broad suite recalibration is deliberately separated into GH-365. Reversibility: **Easy** — revert the workflow condition and job-level status reader. Verification: `test/ci-workflow.sh` 43/43, `test/gh509-gate-evidence.sh` 19/19, and `ci-local.sh` green in a disposable full clone at `6969b975` (the suite-mutated registry files were discarded, not committed).
+
 ## [Unreleased] - 2026-08-31
 
 ### Added
