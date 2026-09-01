@@ -2,6 +2,35 @@
 
 North star for **xyz-3-agents-swarm**, the multi-agent coordination harness behind the `tick` event-log kernel and `relay-automation/` relay stack. When a choice is unclear, the option that keeps agents synchronized, contained, and verifiable — without leaking or destroying work — wins. AGENTS.md is the behavioral playbook; ROUTER.md is the entry-point map; this is the *why*.
 
+## The North Star
+
+There is no perfect architecture and no finished codebase. The bar is not perfection — it is that
+every change leaves the harness **more durable, more reversible, and less duplicated** than it found
+it, and that the three stay in balance:
+
+- **Durable** — it removes the root cause and the next planned change builds on it, rather than being
+  torn out when the obvious next feature lands.
+- **Reversible** — the cost of being wrong is known and bounded before the change lands. A change
+  nobody can undo is a bet, not a fix, and gets treated as one.
+- **DRY** — nothing canonical lives in two places where it can drift. One source of truth, and every
+  other surface is a pointer or a projection of it.
+
+**Do not build a new layer, module, or sub-system when an existing piece of code can be extended
+easily, logically, and safely.** Extending an existing abstraction beats standing up a parallel,
+siloed system, even when the parallel path is faster to write today — the parallel path is what
+later has to be kept in sync, and what silently drifts when it isn't. If the existing abstraction
+genuinely cannot carry the new case, say so in one line, with the reason, before forking.
+
+These three pull against each other, and that tension is the decision, not a problem to average
+away: the most durable fix is often the least reversible, and collapsing two near-duplicates is a
+DRY win that can widen the blast radius. Name the trade and pick; do not split the difference by
+building both.
+
+This section is canonical. `AGENTS.md` owns how it is applied to a given change — the reversibility
+scale (§3) and blast-radius sizing (§4) — and principles 6, 7, and 10 below are the build-time and
+done-time expressions of it. Where another doc restates this, that doc is the copy and this is the
+original.
+
 ## Purpose
 
 `tick` coordinates Claude Code, Codex, and agy (Antigravity CLI) on the same branch without collision: a shared local event log under `.tick/events/`, claims serialized by `O_EXCL` locks, and a `Marathon` harness that chains multi-phase build→review cycles from a `MARATHON.yaml`. The relay layer (`relay-automation/`) drives headless turns, isolates agent writes to worktrees, and enforces an allowlist so no headless agent destroys work it didn't intend to touch. The goal: a multi-agent swarm safe enough to run against a real external codebase and correct enough that its output is worth shipping.
