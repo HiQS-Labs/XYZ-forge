@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -241,5 +241,21 @@ All Round 4 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 31 distinct scenarios and 43 assertions (43 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 5
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Legacy Role split auditing still allows a contradictory frozen declaration when any separate line satisfies the active-role predicate. The block-wide check rejects only releases tokens, while `frozen`/`legacy` are considered only inside the individual line selected by `is_legacy_active_role_line`; therefore a canonical active `ROADMAP.md` entry plus another `ROADMAP.md is frozen legacy` line passes clean (`.relay-artifacts/router_audit.py:112-122`, `.relay-artifacts/router_audit.py:229-242`). The legacy fixer also leaves that second line untouched because it removes only releases-token lines and rewrites only `- ROADMAP.md =` declarations (`.relay-artifacts/router_audit.py:379-397`). Fix: reject frozen/legacy ROADMAP semantics anywhere in the bounded Role split, remediate every such owned reference, and add a two-line contradictory-role audit/fix regression.
+- [Blocker] Releases-mode auditing does not require affirmative dashboard guidance. A Role split declaration such as ``ROADMAP-DASHBOARD.md = obsolete; do not read`` satisfies `has_dashboard`, and a Startup line saying `Do not read ROADMAP-DASHBOARD.md` satisfies `has_dashboard_startup`; neither predicate evaluates polarity or active/current-work semantics (`.relay-artifacts/router_audit.py:174-186`, `.relay-artifacts/router_audit.py:204-215`). Fix: require a non-negated dashboard/release-ledger source-of-truth declaration in Role split and a non-negated current-work directive in Startup, then cover obsolete/do-not-read false-clean cases and their remediation.
+- [Blocker] The Round 4 polarity finding remains unresolved because Startup classification still returns false on the first whole-line frozen/do-not-read phrase before examining a later active clause. For example, `ROADMAP.md is frozen for historical reference; nevertheless use ROADMAP.md for current work` is certified non-active at the early return despite the explicit current-work directive (`.relay-artifacts/router_audit.py:87-107`). Releases Role split detection is likewise a narrow phrase list, so `ROADMAP.md = active; frozen legacy; releases.db is source of truth` omits every listed contradictory phrase and passes (`.relay-artifacts/router_audit.py:191-198`). Fix: evaluate each ROADMAP-bearing clause and its polarity, reject any affirmative active/current/pointer-ledger claim even alongside frozen text, and add these exact contradictory regressions for both audit and `--fix`.
+- [Should] Legacy Startup's advertised Markdown-link form cannot satisfy the positive directive regex because the pattern places a word boundary after the link's closing `)`, a non-word character; ordinary following whitespace or end-of-line therefore has no boundary (`.relay-artifacts/router_audit.py:256-260`). Fix: terminate the link alternative without the outer `\b` (or parse the target separately) and add a clean `Read [the roadmap](ROADMAP.md) ...` legacy fixture.
+- [Pass] Candidate validation now precedes any target-file mutation, and the live replacement uses a same-directory exclusive temporary file with flush, file `fsync`, mode restoration, cleanup, and `os.replace` (`.relay-artifacts/router_audit.py:475-500`). Static review only; the artifact, source files, and tests were not executed.
+
+Pre-existing defects: present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-553` was excluded.
+
+Handing off to Producer — relay is escalated at the round cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
