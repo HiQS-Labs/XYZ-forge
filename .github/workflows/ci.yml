@@ -84,7 +84,8 @@ name: CI
 #
 # THE BRIDGE HAS ENDED. The re-arm keeps the constraints the private-phase analysis established:
 #   1. `push:` and `pull_request:` cover main and development. The macOS job itself remains guarded
-#      to a push on main; pull requests receive only the Ubuntu portability canary.
+#      to a push on main; GH-347 moved the Ubuntu portability canary to push-on-development plus
+#      deliberate dispatch, so pull requests complete without paying for an advisory full suite.
 #   2. Expect a BATCH of accumulated Linux portability drift on the first green-field run. The local
 #      gate is macOS, so the platform we ship to stayed covered — the ubuntu canary did not, and drift
 #      has been accumulating unreported since this date. That backlog is the known, accepted cost of
@@ -232,6 +233,12 @@ jobs:
   # this job has proven it is not being actioned and should be deleted rather than kept as decoration.
   canary-ubuntu:
     name: portability canary (ubuntu — advisory, never breakage)
+    # GH-347: integration-time signal, not PR feedback. A development push is the last recurring
+    # point before promotion where this drift can be acted on; workflow_dispatch is the deliberate
+    # fallback. Push-to-main is after the promotion decision, and pull_request was the 8m54s long pole.
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: starsling-ubuntu-24.04-8
     continue-on-error: true
     steps:

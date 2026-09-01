@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 29 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -38,6 +38,7 @@ Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status | — | [GH-254-PREVIEW-DRAFT-SORT.md](PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md) · [#254](https://github.com/HiQS-Labs/XYZ-forge/issues/254) |
 | GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing — Feedback-guided mutational engine, semantic domain oracles, and adaptive pairwise matrix | — | [GH-299-GEN4-FUZZING-ATE.md](PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md) · [#299](https://github.com/HiQS-Labs/XYZ-forge/issues/299) |
 | GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
+| GH-365 · Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/promotion lanes | — | [doc](PROJECT/1-INBOX/GH-365-TEST-SUITE-RECALIBRATION.md) · [#365](https://github.com/HiQS-Labs/XYZ-forge/issues/365) |
 
 ## Queue
 
@@ -49,7 +50,7 @@ Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -64,6 +65,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
 | GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
+| GH-347 · CI: move advisory Ubuntu canary off the pull-request path | — | [doc](PROJECT/2-WORKING/GH-347-CANARY-PR-RELOCATION.md) · [#347](https://github.com/HiQS-Labs/XYZ-forge/issues/347) |
 
 ## Completed
 
