@@ -49,5 +49,55 @@ unknown_out="$(bash "$R" "totally-unknown-model-xyz" 2>/dev/null)"; unknown_rc=$
 bash "$R" >/dev/null 2>&1; rc=$?
 [ "$rc" = 2 ] && pass "no argument -> usage (exit 2)" || fail "expected 2 got $rc"
 
+# --- GH-346 Phase 3: caller-supplied table via MODEL_ALIASES_FILE=/dev/stdin ---
+#
+# Why this mode exists. Phase 3 needs to match a colloquial name ("GLM5.3 Max") against the
+# PROFILE names in device_config.json, not against the shipped OpenRouter table. QA round 2
+# found the seam unspecified and predicted three divergent implementations: reimplement
+# normalize/squash in Python, refactor this script into a sourceable library, or write a temp
+# file. All three grow a SECOND matcher.
+#
+# The fix was one character -- the readability guard went -f to -r, so a pipe is an acceptable
+# table. The four matching tiers stay the single implementation in the repo, and a Python
+# caller reuses them by piping in `name: canonical` lines. These cases pin that mode so the
+# guard cannot quietly regress to -f and silently break the Phase 3 caller.
+STDIN_TABLE=$'glm 5.3 max: zai-org/glm-5.3\nqwen 3.8 max: qwen/qwen3.8-max\n'
+
+stdin_check() {
+  local label="$1" query="$2" want="$3" got rc
+  got="$(printf '%s' "$STDIN_TABLE" | MODEL_ALIASES_FILE=/dev/stdin bash "$R" "$query" 2>/dev/null)"; rc=$?
+  if [ "$rc" = 0 ] && [ "$got" = "$want" ]; then
+    pass "$label ('$query' -> $want)"
+  else
+    fail "$label: '$query' -> rc=$rc out='$got' (wanted '$want')"
+  fi
+}
+
+stdin_check "piped table: exact"            "glm 5.3 max"   "zai-org/glm-5.3"
+stdin_check "piped table: punctuation"      "GLM5.3 Max"    "zai-org/glm-5.3"
+stdin_check "piped table: reordered tokens" "max glm 5.3"   "zai-org/glm-5.3"
+stdin_check "piped table: second entry"     "Qwen 3.8 Max"  "qwen/qwen3.8-max"
+
+# A miss against a piped table must behave exactly like a miss against the shipped file:
+# exit 1, no stdout. This is what lets tier 2 fall through to tier 3 instead of blocking.
+stdin_miss_out="$(printf '%s' "$STDIN_TABLE" | MODEL_ALIASES_FILE=/dev/stdin bash "$R" "no such profile zzz" 2>/dev/null)"; stdin_miss_rc=$?
+{ [ "$stdin_miss_rc" = 1 ] && [ -z "$stdin_miss_out" ]; } \
+  && pass "piped table: miss -> exit 1, no output (tier 2 falls through)" \
+  || fail "piped table miss -> rc=$stdin_miss_rc out='$stdin_miss_out'"
+
+# The -r guard must still REJECT an unreadable path. Loosening -f to -r was meant to admit a
+# pipe, not to admit a missing file as an empty table -- that would turn every lookup into a
+# silent miss.
+MODEL_ALIASES_FILE=/nonexistent/no-such-table.yml bash "$R" "glm 5.2" >/dev/null 2>&1; guard_rc=$?
+[ "$guard_rc" = 2 ] \
+  && pass "unreadable table still exits 2 (the -r guard did not become a no-op)" \
+  || fail "unreadable table -> rc=$guard_rc (expected 2)"
+
+# The default path is unchanged: no MODEL_ALIASES_FILE still reads the shipped table.
+default_out="$(bash "$R" "glm 5.2" 2>/dev/null)"
+[ "$default_out" = "z-ai/glm-5.2" ] \
+  && pass "shipped table remains the default when MODEL_ALIASES_FILE is unset" \
+  || fail "default table regressed: got '$default_out'"
+
 echo "  model-alias: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]
