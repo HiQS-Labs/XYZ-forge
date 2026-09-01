@@ -41,6 +41,43 @@ goal: >
 > OpenRouter → Qwen 3.8 max. Or if I say `relay-xyz with GLM 5.3 max` it knows to use CommandCode →
 > GLM 5.3 max."
 
+...and, clarifying scope after the first QA round:
+
+> "In lieu of the preference file, I was willing to add aliases to the canonical current config
+> file." — so `device_config.json` was the operator's own proposal, not a QA correction.
+>
+> "For now, don't add any new feature to profile-pin a reviewer in the build → review path. I am
+> fine leaving the defaults as agy ↔ codex."
+>
+> **"My main use case is around the relay-xyz reviewer alias."**
+
+### That last line is the spec's centre of gravity
+
+The target is **naming the reviewer for a `/relay-xyz` review turn** — the Path A flow. Today that
+means hand-assembling this, which is exactly what was typed by hand four times during this issue's
+own QA:
+
+```bash
+COMMANDCODE_AGENT=commandcode ALLOW_PATHS="" \
+COMMANDCODE_MODEL="zai-org/glm-5.3" COMMANDCODE_REASONING_EFFORT="max" \
+COMMANDCODE_FLAGS="--no-session --skip-onboarding --no-auto-update --yolo --effort max" \
+relay-automation/relay-drive.sh --relay-file "$RELAY" --relay-task "$TASK" \
+  --agent-cmd relay-automation/commandcode-turn.sh --review-once
+```
+
+After Phase 3, that is:
+
+```bash
+eval "$(resolve.sh 'glm 5.3 max' --env)"     # harness + gateway + model + flags, one call
+relay-automation/relay-drive.sh --relay-file "$RELAY" --relay-task "$TASK" \
+  --agent-cmd "$RELAY_AGENT_CMD" --review-once
+```
+
+**Explicitly OUT of scope, per the operator:** profile-pinning a reviewer in the marathon
+build → review path. The marathon reviewer gate keeps its post-GH-346 defaults (codex/agy) and is
+not touched. A profile names *which worker runs a relay review turn*, never *who is allowed to
+review a marathon phase*.
+
 Today that costs three separate lookups, none cached, none reading each other:
 
 | Layer | Where it lives now | How you find it |
@@ -56,9 +93,10 @@ It feeds documentation only.
 
 ### 1. A preferences file the operator owns — inside `device_config.json`, not beside it
 
-**Revised after QA.** The first draft proposed a new `~/.xyz/model-prefs.yml`. agy pushed back and
-was right, for a reason stronger than "one file is tidier": `~/.xyz/device_config.json` **already
-is** a single-profile version of exactly this feature —
+**Revised.** The first draft proposed a new `~/.xyz/model-prefs.yml`. That was a mistake on two
+counts: the operator had already offered to put aliases in the canonical config file, and QA
+independently reached the same conclusion. The reason is stronger than "one file is tidier" —
+`~/.xyz/device_config.json` **already is** a single-profile version of exactly this feature —
 
 ```json
 { "default_harness": "dsh", "default_gateway": "openrouter",
@@ -179,35 +217,45 @@ it should not be smuggled in here.
 
 ## Phases
 
-### Phase 3a — the profiles block and the resolver (no dispatch change, no cache)
+### Phase 3a — the reviewer alias, end to end (the operator's main use case)
 
-- [ ] `~/.xyz/model-prefs.yml` schema + a seeded file carrying the operator's two named profiles
-- [ ] `resolve.sh` with `--env`, `--list`, `--explain`; name matching delegated to
-      `resolve-model-alias.sh`, not reimplemented
-- [ ] Tiers 1, 2 and 4 only — tier 3 (`harnesses.db`) deliberately deferred to 3b
-- [ ] `--explain` names the answering tier for every resolution, including fallbacks
-- [ ] **Proof:** `resolve.sh "qwen 3.8 max" --env` emits a DeepSeek → OpenRouter → qwen/qwen3.8-max
-      block, and `resolve.sh "glm 5.3 max" --env` a Command Code → GLM 5.3 block, with no shim edited
+Ships the whole stated need on its own. Nothing below 3a is required for it to be useful.
 
-### Phase 3b — harnesses.db as tier 3, strictly as a fallback
+- [ ] `profiles` block in `device_config.json`, seeded with the operator's two entries; the existing
+      `default_*` keys become the unnamed fallback profile (no migration, no break)
+- [ ] `resolve.sh <name> --env` emits everything a relay review turn needs: `RELAY_AGENT_CMD`, the
+      gateway's `*_AGENT` / `*_MODEL` / `*_REASONING_EFFORT` / `*_FLAGS`, and `$HARNESS` / `$TICK`
+- [ ] `--list` and `--explain` (which tier answered, and why)
+- [ ] Name matching reuses `resolve-model-alias.sh` for **normalization only**; the profile file is
+      parsed by `device_config.py`, which already loads it
+- [ ] Tiers 1, 2 and 4 only — the `harnesses.db` tier is 3b
+- [ ] **Proof:** a real `/relay-xyz` review turn driven by
+      `eval "$(resolve.sh 'glm 5.3 max' --env)"` alone, with no hand-written env block — and the
+      same for `'qwen 3.8 max'` reaching DeepSeek → OpenRouter → `qwen/qwen3.8-max`
+- [ ] **Proof:** the relay-xyz SKILL.md worker recipes replaced by the one-line form
 
-- [ ] Read harness + gateway for a model from `models` / `invocation_logs`
-- [ ] Fail-soft on missing, locked, corrupt, or merge-conflicted DB — degrade to tier 4, say so
-- [ ] **Proof:** a test that deletes the DB, and another that corrupts it, and asserts turns still
-      resolve and run via tier 4
+### Phase 3b — `harnesses.db` as tier 3, declared registry only
+
+- [ ] Read `models.gateway` for a model the profile did not name. **Never `invocation_logs`.**
+- [ ] Fail-soft on missing, locked, corrupt or merge-conflicted DB — degrade to tier 4, and say so
+- [ ] **Proof:** a test that deletes the DB and another that corrupts it, both asserting turns still
+      resolve and run
 - [ ] **Not in scope:** making the DB required. That needs `harnesses-merge-resolve.sh` first.
 
-### Phase 3c — the shims consume the resolver
+### Phase 3c — the shims consume the resolver (OPTIONAL; not needed for the main use case)
 
-- [ ] Each shim's dispatch default comes from the resolver instead of its own literal
-- [ ] The literal remains as tier 4 inside the resolver — deleted from nowhere
-- [ ] The 8 `*_MODEL` env var names keep working (deprecation path, not a break)
+Deferred deliberately. 3a delivers the reviewer alias without touching a single shim's dispatch
+default, so this phase is a separate value judgement, not a dependency.
+
+- [ ] Each shim's dispatch default comes from the resolver; its literal remains as tier 4
+- [ ] The 8 `*_MODEL` env var names keep working permanently as tier-1 overrides — **not deprecated**
 - [ ] **Proof:** `test/gh346-telemetry-row-written.sh` extended — telemetry model == dispatched model
-      for **all 8 gateways, with the model var BOTH set and unset**. *QA caught the gap:* the first
-      draft asserted only the unset case, leaving the tier-1 override path unproven. This is the
-      proof that closes the declared-not-dispatched caveat the ROI checkpoint is forbidden to tick
-      until then
-- [ ] **Proof:** the resolver cache measurably removes re-resolutions — the checkpoint's own metric
+      for all 8 gateways, with the model var **both set and unset**
+
+> **Note the coupling:** this is the phase that closes the declared-not-dispatched caveat (agy and
+> codex record `device_config`'s declared default because they pass no `--model`). While 3c is
+> deferred, that caveat stands, and the ROI checkpoint item "telemetry matches dispatch for all 8
+> gateways" **must stay unticked**. Deferring 3c is fine; quietly ticking that box is not.
 
 ### Phase 3d — the resolution cache (independent of 3a-3c)
 
@@ -217,9 +265,11 @@ it should not be smuggled in here.
 
 ## Design questions — answered by QA (agy, 2026-09-01)
 
-1. **Separate prefs file vs `device_config.json`?** → **`device_config.json`.** Accepted and
-   applied above. Its `default_harness`/`default_gateway`/`default_model` keys are already a
-   one-profile version of this feature, so a second file would have been the eleventh curated list.
+1. **Separate prefs file vs `device_config.json`?** → **`device_config.json`** — which is where the
+   operator offered to put it in the first place ("in lieu of the preference file, I was willing to
+   add aliases to the canonical current config file"). QA reached the same answer independently. Its
+   `default_harness`/`default_gateway`/`default_model` keys are already a one-profile version of this
+   feature, so a second file would have been the eleventh curated list.
 2. **Route on `invocation_logs`?** → **No.** Accepted. Tier 3 now reads only the declared `models`
    table. Live data proved the objection: a two-row `stealth/ox-alpha` experiment would have become
    a routing default.
@@ -246,7 +296,8 @@ remedy is loud fallback, not abandoning the tier: every fallback reports which t
 stderr and via `--explain`. Reversibility (can the code change be undone?) and surprise (does the
 fallback announce itself?) are separate properties; this spec now provides both.
 
-## Still open for the operator
+## Closed by the operator
 
-- Should a profile be able to pin a **reviewer** as well as a builder? Today reviewer eligibility is
-  a separate gate (codex/agy only, post-GH-346). Out of scope as written.
+- *Should a profile pin a reviewer in the build → review path?* **No** — explicitly declined. The
+  marathon defaults stay agy ↔ codex and that gate is untouched. A profile selects the worker for a
+  **relay** review turn only.
