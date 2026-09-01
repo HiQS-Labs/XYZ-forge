@@ -39,7 +39,7 @@ Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing — Feedback-guided mutational engine, semantic domain oracles, and adaptive pairwise matrix | — | [GH-299-GEN4-FUZZING-ATE.md](PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md) · [#299](https://github.com/HiQS-Labs/XYZ-forge/issues/299) |
 | GH-346 · Speed up harness → gateway → model resolution with a real cache | — | [GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md](PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md) · [#346](https://github.com/HiQS-Labs/XYZ-forge/issues/346) |
 | GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
-| GH-365 · Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/promotion lanes | — | [doc](PROJECT/1-INBOX/GH-365-TEST-SUITE-RECALIBRATION.md) · [#365](https://github.com/HiQS-Labs/XYZ-forge/issues/365) |
+| GH-365 · Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/promotion lanes — EXECUTING (final plan in doc) | — | [doc](PROJECT/2-WORKING/GH-365-TEST-SUITE-RECALIBRATION.md) · [#365](https://github.com/HiQS-Labs/XYZ-forge/issues/365) |
 
 ## Queue
 
