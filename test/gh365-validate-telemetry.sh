@@ -115,6 +115,12 @@ names = {r["name"]: r for r in suites}
 assert "hq.sh" in names, names.keys()
 hq = names["hq.sh"]
 assert hq["lane"] in ("pool", "driver-lock", "sequential", "retry")  # last event = the retry-lane verdict
+# the POOL attempt itself must have been recorded: pool workers are fresh bash -c processes that
+# inherit only exported functions — an unexported emitter silently drops every pooled event
+# (observed in the first full pool run at this head). The retry record must not mask it.
+pool_evts = [r for r in suites if r["name"] == "hq.sh" and r["lane"] == "pool"]
+assert pool_evts, "no pool-lane suite event recorded — the pool workers cannot see the emitter (export -f missing?)"
+assert pool_evts[0]["rc"] == 1, pool_evts[0]  # the failing-first pass is what the pool saw
 assert hq["rc"] == 0 and hq["skip_lines"] == 1 and hq["out_bytes"] > 0
 assert hq["out_sha256"] != "-" and len(hq["out_sha256"]) == 12
 assert summ[0]["envelope_rc"] == "0"

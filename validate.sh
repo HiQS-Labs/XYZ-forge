@@ -892,6 +892,29 @@ fi
 # Tier 2 is the SAME machinery on a smaller list: same pool, same driver-lock lane, same
 # identity bracket, same summary invariant — only the test SET changes (and it comes from the
 # same registry the push hook uses, so the two cannot disagree about what "hq" covers).
+
+# GH-365 step 2: retained JSONL telemetry — every run reconstructs its own aggregate work,
+# critical path, per-suite verdicts/RCs, skip-lines, retries, and envelope validity. Best-effort
+# by contract (a broken telemetry write must never gate a run); receipts cited as evidence get
+# committed with provenance in the citing PR (GH-430). One shared implementation with ci-local.
+# Sourced BEFORE the tier-2 sections: t2:pdda/t2:static are timed sections too, and the first
+# pool run at this head caught them emitting "command not found" when this block lived below
+# them — an undercount with no signature in the receipt.
+. "$HERE/test/lib/runner-telemetry.sh"
+# The pool's workers are fresh `bash -c` processes reached through xargs: they inherit ONLY
+# exported functions. Export the WHOLE emitter surface (internal helpers included — a
+# half-exported lib once produced "skip_lines":<empty>, i.e. INVALID JSON). Workers append to
+# per-BASHPID shards (RT_SHARD=1 below) — concurrent appends to one shared file were observed
+# producing split lines — and the parent merges after the workers join.
+export -f rt_now_ms rt_hash12 rt_skip_lines rt_begin rt_emit rt_suite rt_extra rt_summary rt_out_file
+if [ -n "$PARALLEL_JOBS" ]; then
+  rt_begin "$HERE" "validate" "parallel" "$PARALLEL_JOBS" "$TIER" "${#TESTS[@]}"
+else
+  rt_begin "$HERE" "validate" "sequential" 1 "$TIER" "${#TESTS[@]}"
+fi
+RT_DISPATCH_MS="$(rt_now_ms)"
+export RT_DISPATCH_MS RT_FILE RT_RUN_ID RT_RUNNER RT_MODE RT_WIDTH RT_TIER
+
 RUN_TESTS=("${TESTS[@]}")
 if [ "$TIER" -eq 2 ]; then
   echo
@@ -1003,19 +1026,11 @@ trap runner_envelope_scrub EXIT
 # reference must be lane-serialized here or carry an audited fixture-root exemption.
 DRIVER_LOCK_LANE=" gh289-target-root-build-turn.sh gh322-unknown-arg-rejection.sh gh331-cost-summary.sh gh346-gateway-allowlists.sh gh391-emit-marathon-yaml.sh poll-relay.sh relay-artifact-file.sh relay-escalation-not-stall.sh relay-review-once.sh relay-target-root-newfile.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root.sh relay-token-collision.sh relay-untracked-file-warn.sh relay-xyz-skill-guard.sh "
 
-# GH-365 step 2: retained JSONL telemetry — every run reconstructs its own aggregate work,
-# critical path, per-suite verdicts/RCs, skip-lines, retries, and envelope validity. Best-effort
-# by contract (a broken telemetry write must never gate a run); receipts cited as evidence get
-# committed with provenance in the citing PR (GH-430). One shared implementation with ci-local.
-. "$HERE/test/lib/runner-telemetry.sh"
 if [ -n "$PARALLEL_JOBS" ]; then
-  rt_begin "$HERE" "validate" "parallel" "$PARALLEL_JOBS" "$TIER" "${#TESTS[@]}"
-else
-  rt_begin "$HERE" "validate" "sequential" 1 "$TIER" "${#TESTS[@]}"
-fi
-RT_DISPATCH_MS="$(rt_now_ms)"; export RT_DISPATCH_MS RT_FILE RT_RUN_ID RT_RUNNER
-
-if [ -n "$PARALLEL_JOBS" ]; then
+  # Workers and the lane subshell each append to their OWN shard (RT_SHARD=1): no process writes
+  # a file another process is writing, so no append-atomicity assumption survives from here on.
+  # The parent merges the shards after everything joins (see rt_merge_shards below).
+  RT_SHARD=1; export RT_SHARD
   RUN_DIR="$(mktemp -d -t validate-parallel.XXXXXX)"
   # GH-177: mktemp is verified before use, nothing ever cd's into it, and the EXIT trap only
   # removes a re-verified non-empty directory path.
@@ -1068,6 +1083,15 @@ if [ -n "$PARALLEL_JOBS" ]; then
   # `${POOL[@]+...}`: bash 3.2 (what macOS ships) errors on an empty array under `set -u`.
   [ "${#POOL[@]}" -eq 0 ] || printf '%s\n' ${POOL[@]+"${POOL[@]}"} | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$1" pool' _ {}
   wait "$LANE_PID"
+  # Workers joined: fold their shards into the retained record. Malformed shard lines (if any)
+  # are COUNTED in the merge record, never silently dropped — telemetry stays best-effort but
+  # its losses are named.
+  _merge="$(rt_merge_shards)"
+  # Unshard BEFORE emitting the merge record, or the merge record itself lands in a fresh
+  # orphaned shard nothing will ever fold in (observed: a leftover .w<parent> holding exactly
+  # the telemetry-merge line). The rerun lane below then writes straight to the retained file.
+  RT_SHARD=0; unset RT_SHARD
+  rt_emit stage non-suite "telemetry-merge" "$RT_DISPATCH_MS" "$(rt_now_ms)" 0 "merged_malformed=$_merge"
 
   # Every failure is RE-RUN SEQUENTIALLY before it is believed, with the pool drained and the lock
   # lane finished — so the driver lock is free and nothing else is competing for CPU.
