@@ -87,12 +87,14 @@ runner_envelope_begin() {
 
 runner_envelope_assert() {
   local here="$1" label="$2" facet drifted=0
+  RUNNER_ENVELOPE_DRIFT_FACETS=""
   [ -n "${RUNNER_ENVELOPE_STATE:-}" ] && [ -d "$RUNNER_ENVELOPE_STATE" ] || {
     echo "runner-envelope: no state snapshot captured (internal error) — cannot attest $label" >&2
     return 1
   }
   # Identity first, on the existing GH-1 machinery: its own diff names the drift (GH-567).
   if ! bash "$(_re_lib_dir)/clone-identity.sh" assert "$RUNNER_ENVELOPE_STATE/identity" "$here"; then
+    RUNNER_ENVELOPE_DRIFT_FACETS="identity"
     return 1
   fi
   for facet in tree worktrees locks; do
@@ -100,6 +102,7 @@ runner_envelope_assert() {
     if ! diff -u "$RUNNER_ENVELOPE_STATE/$facet" "$RUNNER_ENVELOPE_STATE/$facet.post" \
          > "$RUNNER_ENVELOPE_STATE/$facet.diff" 2>&1; then
       drifted=1
+      RUNNER_ENVELOPE_DRIFT_FACETS="${RUNNER_ENVELOPE_DRIFT_FACETS:+$RUNNER_ENVELOPE_DRIFT_FACETS }$facet"
       echo "runner-envelope: $facet DRIFT under $label — the run changed it; this run's evidence record is INVALID (GH-365):" >&2
       sed -n '1,20p' "$RUNNER_ENVELOPE_STATE/$facet.diff" >&2
     fi
