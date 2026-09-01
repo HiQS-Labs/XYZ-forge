@@ -97,6 +97,7 @@ TESTS=(
   "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
   "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
   "gh346-gateway-allowlists.sh" # GH-346 Phase 2 (every agent-id allowlist agrees on the shipped gateway set)
+  "gh346-profile-resolve.sh"    # GH-346 Phase 3a (one name -> harness/gateway/model; no tier may block a turn)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
