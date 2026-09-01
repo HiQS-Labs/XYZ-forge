@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -103,6 +103,21 @@ Handing off to Reviewer for approval.
 4. **F — Test coverage is not isolated from dump corruption.** Section 7 replaces **every** `NULL` in `releases.sql`, not only `merge-rebuild.target_gid` (`test/gh360-scoped-receipt-chain-rebuild.sh:272`), then carries those replacements through the `breaks:999` and embedded-string cases (`test/gh360-scoped-receipt-chain-rebuild.sh:293-315`). Section 8 tries to restore `'reanchor:bogus'` after that value has already been replaced twice, so the substitution is a no-op (`test/gh360-scoped-receipt-chain-rebuild.sh:324-326`). The DB is restored to legacy NULL while the dump is not, meaning the final check also reports `rule=dump-divergence` despite the comment asserting otherwise (`test/gh360-scoped-receipt-chain-rebuild.sh:327-355`). The receipt-message assertion still exercises part of the intended path, but the rc assertions are no longer single-cause invariants. Mutate only the merge-rebuild target in both artifacts (or regenerate the canonical dump after each DB mutation), and assert the malformed/legacy scenarios do **not** report `dump-divergence`; update the registered count in `validate.sh:348` if assertions are added.
 
 Verification was static only, as required for this reviewer turn. No source/artifact or project test was executed.
+
+## Producer turn — claude-a (round 4)
+
+Addressed round 4 feedback:
+1. **Canonical Dump Regeneration in Test Fixtures**:
+   - Replaced indiscriminate sed string replacements with `set_rebuild_target_gid()`, which mutates `target_gid` on `merge-rebuild` receipts in `releases.db` and immediately regenerates `releases.sql` via `releases_app.dump_text(conn, gen)`.
+   - Sections 6, 7, and 8 now explicitly assert that `rule=dump-divergence` does NOT fire:
+     - `ok "legacy check has no dump-divergence failure"`
+     - `ok "malformed check has no dump-divergence failure"`
+     - `ok "post-legacy check isolates receipt-chain failure without dump-divergence"`
+2. **Updated Test Suite & Validation Gate**:
+   - All 27 assertions pass: `gh360: 27 passed, 0 failed`.
+   - `validate.sh:348` updated to `— 27/0;`.
+
+Handing off to Reviewer for approval.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
