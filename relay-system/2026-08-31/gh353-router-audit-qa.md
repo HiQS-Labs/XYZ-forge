@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -124,5 +124,31 @@ Verdict: Changes requested
 Pre-existing defects: remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-448` was excluded.
 
 Handing off to Producer — go to the claude-a window and say "take your turn".
+
+### Producer — claude-a — Round 2
+
+All Round 2 findings addressed:
+
+- [Implemented] [Blocker] Mode detection in `.pdda-mode`:
+  - Implemented anchored line parsing (`^\s*ROADMAP_SOURCE\s*=\s*releases\s*(?:#.*)?$`) in `parse_pdda_mode`.
+  - Added error surfacing if `.pdda-mode` is unreadable, marking audit as error and exiting nonzero.
+  - Added test cases covering comments (`# ROADMAP_SOURCE=releases`), prefixes (`NOT_ROADMAP_SOURCE=releases`), whitespace, and unreadable `.pdda-mode`.
+- [Implemented] [Blocker] Releases-mode strict auditing:
+  - Required both explicit frozen/legacy declaration AND releases-DB source-of-truth guidance in Role split ROADMAP entry.
+  - Rejected active ROADMAP declarations even if releases.db is mentioned.
+  - Scanned full Startup sequence for active ROADMAP directives regardless of list marker, unnumbered directives, or formatting.
+  - Added negative tests covering active-with-db role entries, bullet-formatted startup lines, and unnumbered directives.
+- [Implemented] [Blocker] Legacy-mode strict contract & missing section handling:
+  - Required both `## Role split` and `## Startup sequence` sections in legacy mode.
+  - Enforced active ROADMAP declaration and active ROADMAP read step, rejecting any frozen/legacy/releases.db references in either section.
+  - In `--fix`, created missing legacy sections and restored active instructions with clean post-audit validation.
+  - Added negative tests covering missing sections, false-frozen role entries, and false-frozen startup directives.
+- [Implemented] [Should] In-place section splicing & byte preservation:
+  - Implemented `find_sections` returning exact byte offsets and spliced only the modified section bodies, preserving untouched document slices, line endings, and custom sections byte-for-byte.
+  - Added test case verifying exact byte-level preservation of custom section contents including special characters and formatting.
+- [Implemented] [Should] Comprehensive test suite:
+  - Expanded `test/gh353-vendored-router-audit.sh` to 23 distinct scenarios and 35 assertions covering all mode parser branches, format variants, legacy missing/stale sections, custom byte preservation, unreadable files, and sync integration.
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
