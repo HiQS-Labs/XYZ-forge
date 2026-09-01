@@ -2,8 +2,8 @@
 Goal: QA the GH-346 Phase 3 spec — preferred-model resolution, harnesses.db as a dispatch tier
 Date: 2026-09-01
 Reviewer: agy
-NEXT: Reviewer
-STATUS: Open
+NEXT: Author
+STATUS: Open (with findings)
 ---
 
 # Context
@@ -90,6 +90,45 @@ Judge the spec against **that**, not against the issue's original proposals A/B/
 
 Write your verdict below. Set `STATUS: Approved` if the spec is ready to implement, or leave it
 `Open` with findings.
+
+## QA Findings
+
+1. **Does the design actually satisfy the requirement?**
+   **No.** First, the operator requested Command Code as the gateway ("CommandCode → GLM 5.3 max"), but the spec's provided YAML profile explicitly wires `"glm 5.3 max"` to `gateway: openrouter` (`GH-346-PHASE-3-SPEC.md:68`), which routes to Command Code → OpenRouter → `zai-org/glm-5.3`. This directly contradicts the requirement. 
+   Second, the name matching via `resolve-model-alias.sh` is fundamentally under-specified. The existing bash script parses a flat `alias: canonical` text format line-by-line via `sed`/`read` (`resolve-model-alias.sh:65-74`). It is entirely incapable of parsing the nested dictionary structure proposed in `model-prefs.yml`. Two implementers would either silently break the script, write an unspecified adapter, or fail entirely.
+
+2. **The reversibility argument is load-bearing — attack it.**
+   Both halves are factually true: `releases.db` has a resolver (`utils/releases-merge-resolve.sh`); `harnesses.db` has none (`ls utils/harnesses-merge-resolve.sh` fails). The conclusion that Tier 3 is reversible follows *only* if the fallback degrades gracefully and isn't leaned on. However, if Tier 3 becomes the primary routing mechanism users rely on, and the DB conflicts or corrupts, degrading to Tier 4 (shim literals) means turns will unexpectedly run with completely incorrect model defaults instead of failing loudly. This makes the system silently do the wrong thing, becoming a load-bearing one-way door operationally.
+
+3. **Tier 3 reads `invocation_logs` — is that sound?**
+   **No.** The `invocation_logs` data contains one-off experiments like `stealth/ox-alpha`. Using empirical history for routing means a single experimental run could permanently pin that model as the new default for that harness. This incorrectly turns history into policy and is inherently unsound for routing.
+
+4. **Does it avoid becoming the eleventh allowlist?**
+   **No.** The operator-owned `model-prefs.yml` simply becomes the eleventh hand-curated allowlist. Since the design explicitly states every tier falls through (Tier 2 to 3 to 4) without blocking, there is no mechanism for `model-prefs.yml` to fail loudly if a model ID changes or a harness is deprecated. It simply drifts silently.
+
+5. **The fallback chain must never block a turn.**
+   The spec completely ignores parser failures. While a missing file falls through safely, **malformed YAML** in `model-prefs.yml` will cause a Python or Bash parser to crash or throw an exception, instantly halting the resolver. This will completely block a turn because a preference is unreadable, making it strictly worse than today.
+
+6. **Phase 3c's proof is the one that closes a standing caveat.**
+   The caveat notes telemetry records a *declared* default, not a dispatched one. Phase 3c's proof ("telemetry model == dispatched model for all 8 gateways **with the var unset**") leaves a glaring gap. It misses the case where the variable *is* set (Tier 1 override). The proof must assert the match whether the var is set *or* unset.
+
+7. **Scope and sequencing.**
+   - Phase 3a is overloaded. The cache (Proposal A) is completely orthogonal and should not be folded into 3a.
+   - The YAML parsing adapter/wrapper for `resolve-model-alias.sh` is entirely missing from the scope.
+   - `harnesses-merge-resolve.sh` should be its own issue and promoted out of a parenthetical if Tier 3 were kept.
+
+8. **The four open questions at the end of the spec.**
+   1. **`model-prefs.yml` vs `device_config.json`:** Use `device_config.json`. It already manages defaults in the exact same seam. Do not introduce an 11th file.
+   2. **`invocation_logs` for routing:** Unsound. Do not use experimental history for defaults.
+   3. **`effort` in profile:** Effort is gateway-specific (`COMMANDCODE_REASONING_EFFORT`, `AGY_REASONING_EFFORT`). It does not belong in a generic profile unless properly namespaced per-gateway.
+   4. **Deprecating 8 env vars:** Keep them as Tier 1 overrides (as the spec already intends). Deprecating them would break existing scripts without providing a cleaner override mechanism.
+
+9. **Anything wrong, missing, over- or under-engineered.**
+   - **Over-engineered:** Tier 3 (`harnesses.db`) adds unnecessary complexity and actively introduces bugs by routing on experiments. Drop Tier 3 entirely.
+   - **Missing:** A strategy for parsing the nested YAML using the flat-file `resolve-model-alias.sh` script.
+   - **Wrong:** The YAML example incorrectly routes GLM 5.3 to OpenRouter instead of Command Code.
+
+**Verdict**: The spec needs to be rewritten. Drop Tier 3, move profile configuration into `device_config.json` instead of a new YAML file, use a Python-based resolver to cleanly parse it, and pass the profile alias to `resolve-model-alias.sh` strictly for string normalization, not file reading.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
