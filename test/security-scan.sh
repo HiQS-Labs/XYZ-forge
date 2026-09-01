@@ -248,12 +248,20 @@ chmod 644 "$UNREADABLE_FILE"
 
 [[ "$RC" -ne 0 ]] && pass "unreadable file: scanner fails loud (exit $RC), not silently clean" \
   || fail "unreadable file: scanner should fail, got exit 0"
-grep -q "scan-error" "$STDERR_UNREAD" 2>/dev/null \
-  && pass "unreadable file: flagged with [scan-error], not silently skipped" \
-  || fail "unreadable file: no [scan-error] finding: $(cat "$STDERR_UNREAD")"
-[[ "$(grep -c "scan-error" "$STDERR_UNREAD" 2>/dev/null)" -eq 1 ]] \
-  && pass "unreadable file: scan-error reported once per file, not once per rule" \
-  || fail "unreadable file: expected 1 scan-error line, got $(grep -c "scan-error" "$STDERR_UNREAD" 2>/dev/null)"
+# GH-249: root reads a 0000 file, so the chmod above cannot make it unreadable and the scanner
+# emits no [scan-error] at all. Only these two assertions depend on that unreadability — the
+# fail-loud and scan-continues checks either side of them still hold and stay live.
+if [[ "$EUID" -ne 0 ]]; then
+  grep -q "scan-error" "$STDERR_UNREAD" 2>/dev/null \
+    && pass "unreadable file: flagged with [scan-error], not silently skipped" \
+    || fail "unreadable file: no [scan-error] finding: $(cat "$STDERR_UNREAD")"
+  [[ "$(grep -c "scan-error" "$STDERR_UNREAD" 2>/dev/null)" -eq 1 ]] \
+    && pass "unreadable file: scan-error reported once per file, not once per rule" \
+    || fail "unreadable file: expected 1 scan-error line, got $(grep -c "scan-error" "$STDERR_UNREAD" 2>/dev/null)"
+else
+  # Root defeats mode bits — say so rather than reporting a pass this run did not earn.
+  echo "  SKIP: unreadable-file [scan-error] assertions, 2 of them (running as root; mode bits do not apply)"
+fi
 grep -qF "ALSO_BAD" "$STDERR_UNREAD" 2>/dev/null \
   && pass "unreadable file: scan CONTINUES to the next file (not silently aborted mid-scan)" \
   || fail "unreadable file: scan stopped before reaching the next file — set -e propagation bug"
