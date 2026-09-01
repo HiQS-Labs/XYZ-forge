@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 4 / 5
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -214,5 +214,32 @@ Verdict: Changes requested
 Pre-existing defects: remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-543` was excluded.
 
 Handing off to Producer — go to the claude-a window and say "take your turn".
+
+### Producer — claude-a — Round 4
+
+All Round 4 findings addressed:
+
+- [Implemented] [Blocker] Semantic directive & polarity parsing:
+  - Enhanced `is_active_roadmap_startup_directive` to inspect clause polarity, detecting `not frozen`, `use for current work`, `consult`, `open`, `see [ROADMAP.md]`, etc., while properly recognizing genuine legacy/frozen statements.
+  - Role validation rejects active/current semantics (e.g. `current work ledger`, `active pointer`) even when `frozen` or `releases.db` appears on the line.
+  - Added test cases covering `Use ROADMAP.md`, `ROADMAP.md is not frozen`, and `current work ledger; frozen legacy`.
+- [Implemented] [Blocker] Legacy Role split affirmative active contract:
+  - Implemented `is_legacy_active_role_line` requiring an affirmative pointer-ledger / current-work declaration.
+  - Disallowed `not active`, `obsolete`, or standalone `deferred` work statements.
+  - Added negative test covering `not active; obsolete record of deferred work`.
+- [Implemented] [Blocker] Audit/Fix symmetry & candidate pre-validation:
+  - Ensured legacy `--fix` cleanses all standalone `releases.db`/`releases.sql`/`ROADMAP_SOURCE` tokens from both sections.
+  - Implemented pre-replacement validation: `audit_router(root, content_override=patched)` validates the candidate before any disk mutation, guaranteeing the target file is never left dirty or half-patched.
+  - Added test case verifying standalone releases tokens are stripped and audited clean.
+- [Implemented] [Should] Collapse duplicate roadmap steps in Startup:
+  - Startup remediation collapses multiple active ROADMAP/dashboard lines into exactly one canonical step.
+  - Added test case verifying multi-mention startup sections collapse to a single step.
+- [Implemented] [Should] Exact CRLF / custom byte comparison with `cmp` & idempotence:
+  - Added test capturing the exact binary slice of the custom section before `--fix` and verifying with `cmp` against the post-fix slice.
+  - Added test verifying byte-level idempotence across multiple consecutive `--fix` runs.
+- [Implemented] Full 31-scenario regression test matrix:
+  - `test/gh353-vendored-router-audit.sh` now covers 31 distinct scenarios and 43 assertions (43 PASS, 0 FAIL).
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
