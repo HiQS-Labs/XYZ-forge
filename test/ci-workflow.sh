@@ -246,16 +246,16 @@ else
 fi
 
 # GH-347 relocates the expensive advisory suite to the integration point. Extract only the job's
-# pre-steps header so workflow-level triggers and prose elsewhere cannot satisfy this contract.
-canary_header="$(awk '/^  canary-ubuntu:/{f=1} f{print} f && /^[[:space:]]*steps:/{exit}' "$WORKFLOW")"
-if grep -q "refs/heads/development" <<<"$canary_header" \
-  && grep -q "github.event_name == 'push'" <<<"$canary_header" \
-  && grep -q "github.event_name == 'workflow_dispatch'" <<<"$canary_header"; then
+# actual condition so workflow-level triggers and explanatory prose cannot satisfy this contract.
+canary_condition="$(awk '/^  canary-ubuntu:/{job=1} job && /^[[:space:]]*if:/{cond=1} cond{print} cond && /^[[:space:]]*runs-on:/{exit}' "$WORKFLOW")"
+if grep -q "refs/heads/development" <<<"$canary_condition" \
+  && grep -q "github.event_name == 'push'" <<<"$canary_condition" \
+  && grep -q "github.event_name == 'workflow_dispatch'" <<<"$canary_condition"; then
   pass "the ubuntu canary runs on push-to-development with deliberate dispatch fallback"
 else
   fail "GH-347: the ubuntu canary must run at integration time (push-to-development) and on deliberate dispatch"
 fi
-if grep -q "pull_request" <<<"$canary_header" || grep -q "refs/heads/main" <<<"$canary_header"; then
+if grep -q "pull_request" <<<"$canary_condition" || grep -q "refs/heads/main" <<<"$canary_condition"; then
   fail "GH-347: the ubuntu canary still runs on the PR path or after promotion on push-to-main"
 else
   pass "the ubuntu canary is off pull requests and push-to-main"
