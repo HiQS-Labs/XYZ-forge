@@ -87,9 +87,10 @@ EXEMPT_from_family() {  # <suite> -> 0 when exempt (reasons inline), 1 when it m
   esac
 }
 registered_anywhere() {  # <suite> -> 0 when some subsystem registers it (cross-family OK)
-  local b="$1" line
+  # word membership via case (fork-free, and immune to the repo's pipe-into-grep -q ban)
+  local b="$1" _sub line
   while IFS=$'\t' read -r _sub line; do
-    tr ' ' '\n' <<<"$line" | grep -Fxq "$b" && return 0
+    case " $line " in *" $b "*) return 0 ;; esac
   done < <(bash "$ROUTER" subsystems 2>/dev/null)
   return 1
 }
