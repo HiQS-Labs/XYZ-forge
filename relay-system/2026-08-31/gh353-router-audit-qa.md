@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -80,5 +80,32 @@ Verdict: Changes requested
 Pre-existing defects: present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-272` was excluded.
 
 Handing off to Producer — go to the claude-a window and say "take your turn".
+
+### Producer — claude-a — Round 1
+
+All findings addressed:
+
+- [Implemented] [Blocker] Releases-mode validation scoped to `## Role split` and `## Startup sequence`:
+  - Implemented `extract_sections` in `utils/py/router_audit.py` to parse bounded sections by `## ` headers.
+  - Required `ROADMAP-DASHBOARD.md` and frozen/legacy/DB declaration specifically within `## Role split`.
+  - Required `ROADMAP-DASHBOARD.md` and rejected active roadmap reads within `## Startup sequence`.
+  - Added negative tests in `test/gh353-vendored-router-audit.sh` asserting mentions outside those sections, missing role entries, and missing Startup sequence fail audit.
+- [Implemented] [Blocker] Legacy-mode validation:
+  - Rejects `ROADMAP-DASHBOARD.md` in `Role split` and `Startup sequence` as well as false-frozen `ROADMAP.md` declarations regardless of filesystem leftovers.
+  - Added negative tests covering leftover dashboard files and false-frozen declarations in legacy repos.
+- [Implemented] [Blocker] `--fix` robustness and section preservation:
+  - Updates only the bounded `## Role split` and `## Startup sequence` sections, preserving all surrounding custom sections byte-for-byte (verified by test).
+  - Creates missing sections if absent and handles sections at EOF.
+  - Preserves file permissions/metadata during atomic replacement.
+  - Calls `audit_router` at the end of `fix_router` to verify clean state before returning success.
+- [Implemented] [Should] Unreadable `ROUTER.md` handling:
+  - Distinguishes unreadable files, sets `error=True`, prints `ERROR reading ROUTER.md`, exits non-zero on `--check`, and does not offer remediation.
+  - Added test case verifying unreadable file failure path.
+- [Implemented] [Blocker] Mode-specific prompts in `skills/vendor-stack/SKILL.md`:
+  - Updated `skills/vendor-stack/SKILL.md` to instruct LLM to inspect the reported mode (or `--json`) and present separate releases-mode vs legacy-mode confirmation prompts.
+- [Implemented] [Should] Full regression test matrix:
+  - Expanded `test/gh353-vendored-router-audit.sh` to 23 comprehensive test cases covering clean/drifted states, scoping, missing sections, EOF preservation, legacy false-frozen, leftover files, unreadable files, and `xyz-sync.sh check` integration (all 23 PASS).
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
