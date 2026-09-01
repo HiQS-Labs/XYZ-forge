@@ -4266,7 +4266,10 @@ def cmd_check(args):
 # inserts, resolving parent GIDs to fresh integer ids in dump order — the "deterministic
 # renumbering on rebuild" the grammar promises.
 
-INSERT_RE = re.compile(r"^INSERT INTO ([a-z_]+)\(([^)]*)\) VALUES\((.*)\);$")
+# re.S: a dumped value may contain newlines (a roadmap_items raw_text, say). parse_dump
+# already buffers multi-line statements; without DOTALL the regex could never match one,
+# so the buffer swallowed the rest of the file and --rebuild refused with dump-parse.
+INSERT_RE = re.compile(r"^INSERT INTO ([a-z_]+)\(([^)]*)\) VALUES\((.*)\);$", re.S)
 
 
 def _split_values(blob):
