@@ -1276,12 +1276,17 @@ if [ $(( ${#PASSED[@]} + ${#FAILED[@]} )) -ne "$TOTAL" ]; then
   exit 1
 fi
 # GH-365 step 2: the retained record of THIS run — verdict, denominator, envelope validity, and
-# a self-check that the number of suite events written matches the suites classified. A mismatch
-# is reported (the JSONL undercounts) but never gates the verdict.
+# a self-check that the suite events written match the suites classified. The MATCH counts only
+# suite-lane records (pool/driver-lock/sequential): retry legs add retry-lane records and the
+# fixed probes add non-suite ones — all legitimate, none may dilute the completeness check. A
+# mismatch is reported (the JSONL undercounts) but never gates the verdict.
 _suite_events="$(grep -c '"event":"suite"' "$RT_FILE" 2>/dev/null || printf '0')"
+_suite_lane_events="$(( $(grep -c '"event":"suite","lane":"pool"' "$RT_FILE" 2>/dev/null || printf '0') \
+                    + $(grep -c '"event":"suite","lane":"driver-lock"' "$RT_FILE" 2>/dev/null || printf '0') \
+                    + $(grep -c '"event":"suite","lane":"sequential"' "$RT_FILE" 2>/dev/null || printf '0') ))"
 rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$TOTAL" \
   "suite_events=$_suite_events" "run_set=${#RUN_TESTS[@]}" "registered=${#TESTS[@]}" \
-  "suite_events_match=$([ "$_suite_events" -eq "$(( ${#RUN_TESTS[@]} + 0 ))" ] && printf yes || printf no)"
+  "suite_events_match=$([ "$_suite_lane_events" -eq "${#RUN_TESTS[@]}" ] && printf yes || printf no)"
 echo "telemetry: $RT_FILE ($_suite_events suite events, ${#TESTS[@]} registered)"
 echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done

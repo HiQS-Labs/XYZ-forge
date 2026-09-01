@@ -26,7 +26,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Final 9-step execution plan promoted to 2-WORKING as the plan of record (2026-09-01); roadmap row marked EXECUTING | Step 1: one shared scratch/identity envelope for `validate.sh` + `ci-local.sh`, then each step gated on its `Expect` before the next |
+| Steps 1+2+3+5 landed on the task branch: shared scratch/identity envelope (22/0), retained JSONL telemetry with live denominator (14/0), gh346 contention-skip closed + audited driver-lock lane registry (5/0), ShellCheck at balanced width with census pinned (10/0). Worker telemetry hardened against three real pool-run defects (unexported surface, shared-append splits, grep -c double-print). | Step 4 (PDDA single-scan) in review; then the step-6 width campaigns from the final head with per-width mutation reds; tier routing (step 8) and the route matrix (step 9); qualifying ci-local run at the final commit before the PR |
 
 ## Capture
 
