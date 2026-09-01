@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 7 / 7
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -328,5 +328,21 @@ All Round 6 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 44 distinct scenarios and 59 assertions (59 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 7
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases-mode dashboard validation still does not establish current-state guidance. `is_affirmative_dashboard_role_line` accepts any non-denylisted declaration because its positive `dashboard` alternative matches the filename itself, so ``- `ROADMAP-DASHBOARD.md` = historical archive`` passes; Startup likewise accepts `Read ROADMAP-DASHBOARD.md for historical context` because it requires only a read verb and excludes a few exact historical phrases (`.relay-artifacts/router_audit.py:121-148`). Together with a canonical frozen `ROADMAP.md` declaration, those stale instructions can audit clean. Fix: evaluate the declaration text after the filename and require explicit generated/current-roadmap semantics in Role split plus explicit current-work/current-state semantics in Startup; reject historical/archive/context semantics clause-wide and add these exact paired audit/fix regressions.
+- [Blocker] Releases-mode active-ROADMAP detection remains declaration-shape- and phrase-dependent. Role auditing inspects only list-marker + equals declarations and recognizes only a narrow active phrase list, so a canonical frozen declaration plus `ROADMAP.md is used for current priorities`, or ``- `ROADMAP.md` = current priorities pointer; frozen legacy; releases.db is source of truth``, survives and can audit clean (`.relay-artifacts/router_audit.py:31-33`, `.relay-artifacts/router_audit.py:233-253`). The fixer uses the same declaration regex and preserves the first contradictory line, after which candidate validation repeats the false-clean (`.relay-artifacts/router_audit.py:375-399`). Fix: inspect every ROADMAP-bearing clause in the bounded Role split independent of marker/separator, reject any affirmative active/current-source semantics, and have remediation remove or canonicalize every such clause; cover colon/em-dash/prose declarations and broader current-priority wording.
+- [Blocker] Prefix-matching owned headings can delete custom sections. Both audit and fix treat headings such as `## Role split rationale` and `## Startup sequence notes` as owned sections because the match stops at a word boundary rather than requiring the exact heading; the fixer then merges their bodies into the primary section and removes their headings/ranges as duplicates (`.relay-artifacts/router_audit.py:201-218`, `.relay-artifacts/router_audit.py:352-367`, `.relay-artifacts/router_audit.py:521-539`). This violates DoD 4's custom-section preservation guarantee. Fix: match normalized headings exactly (`Role split` / `Startup sequence`), leaving similarly prefixed custom sections byte-identical; add audit/fix fixtures for both prefixed headings with exact before/after byte comparisons.
+- [Should] Legacy positive Startup detection is still line-wide rather than clause-scoped: any `not frozen` phrase anywhere overrides a separate negated/obsolete clause and sets `has_valid_active_read`, e.g. `ROADMAP.md is not frozen; do not read ROADMAP.md` (`.relay-artifacts/router_audit.py:303-328`). Fix: reuse one clause-level polarity parser and require at least one affirmative active directive clause; add this contradictory regression and its inverse clean case.
+- [Pass] Mode parsing remains anchored to an uncommented `.pdda-mode` assignment, missing/unreadable inputs surface as errors, candidate validation precedes disk mutation, and replacement uses an exclusive same-directory temporary file with file `fsync`, mode restoration, cleanup, and `os.replace` (`.relay-artifacts/router_audit.py:36-62`, `.relay-artifacts/router_audit.py:179-199`, `.relay-artifacts/router_audit.py:554-580`). Static review only; the artifact and tests were not executed under reviewer containment.
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-631` was excluded.
+
+Handing off to Producer — relay is escalated at the round cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
