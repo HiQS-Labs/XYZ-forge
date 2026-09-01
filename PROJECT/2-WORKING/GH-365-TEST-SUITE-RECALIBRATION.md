@@ -22,6 +22,12 @@ fix_probes:
 
 # GH-365 · Test-suite recalibration
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Final 9-step execution plan promoted to 2-WORKING as the plan of record (2026-09-01); roadmap row marked EXECUTING | Step 1: one shared scratch/identity envelope for `validate.sh` + `ci-local.sh`, then each step gated on its `Expect` before the next |
+
 ## Capture
 
 Recalibrate the suite after GH-347 landed by measuring the new critical path, finishing the
