@@ -364,6 +364,19 @@ TESTS=(
                                   #   refuse, --allow-empty is the one sanctioned way to clear the
                                   #   mirror and never excuses a non-empty ledger, and the legacy
                                   #   GH_URL matcher keeps its issue-only contract.
+  # NB: test/gh358-lock-instrumentation.sh below carries a "GH-358" from the pre-rename numbering;
+  # this one is HiQS-Labs/XYZ-forge#358. Distinct files, deliberately not renumbered.
+  "gh358-wave-reconcile-vendored-paths.sh" # GH-358 (wave_reconcile's five HARNESS tools resolved
+                                  #   repo-root-relative, so on a vendored install — where they exist only under
+                                  #   <repo>/.xyz/ — the reconciler died on its first downstream step with
+                                  #   `can't open file '<repo>/utils/py/releases_app.py'` and rolled back. Same
+                                  #   defect class as GH-279 #2, which jog_run.harness_home() was written to
+                                  #   prevent and marathon_plan.py already guards. 9/0; control: pre-fix the
+                                  #   suite is 1/8 and reproduces that exact error string. Section 2 is the other
+                                  #   half — utils/pdda/pdda.sh is a TARGET-repo tool, and a decoy planted at
+                                  #   .xyz/utils/pdda/pdda.sh must never run, so a blanket .xyz/ prefix over the
+                                  #   file fails here. Section 3 pins that a repo-owned tool still wins, which is
+                                  #   what keeps every other wave-reconcile suite's $REPO/utils mock seam alive.
   "gh77-standup-triage.sh"        # GH-77 (`skills/standup/triage.py`, the deterministic half of /standup) — 29/0.
                                  #   Its PRD escalated at a 4-round review cap with a FLAT finding rate
                                  #   (11/13/10/10) because a state machine was being specified in prose. The
