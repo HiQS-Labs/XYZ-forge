@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -62,5 +62,23 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases-mode validation is not scoped to the required blocks and can report a stale router as clean. A `ROADMAP-DASHBOARD.md` mention anywhere satisfies `has_dashboard`, while an omitted `ROADMAP.md = ...` role entry skips the frozen check entirely; startup detection only recognizes one exact numbered `Read ROADMAP.md` spelling (`.relay-artifacts/router_audit.py:71-103`). Fix: parse the bounded `## Role split` and `## Startup sequence` sections, require the dashboard and frozen/source-of-truth declarations in Role split, reject active roadmap reads in Startup, and add negative tests for mentions outside those sections, missing role entries, case/format variants, and absent Startup guidance.
+- [Blocker] Legacy-mode validation does not detect the false frozen references required by DoD 3. It only reports a dashboard mention when the dashboard file is absent, never inspects a frozen/legacy `ROADMAP.md` declaration, and therefore treats a legacy repo with a leftover dashboard file—or a frozen declaration alone—as clean (`.relay-artifacts/router_audit.py:104-110`). Fix: reject releases-only dashboard/frozen/source-of-truth declarations based on mode regardless of filesystem leftovers, then test both false-clean cases.
+- [Blocker] `--fix` can return success without producing a clean router and can rewrite custom sections. Releases remediation never creates a missing Role split, fails to append a dashboard at EOF when the section lacks matching entries, and rewrites every matching numbered roadmap-read line globally rather than only Startup (`.relay-artifacts/router_audit.py:132-195`). Legacy remediation likewise deletes/replaces matching lines globally and hard-codes step `3`, losing original numbering/text (`.relay-artifacts/router_audit.py:196-225`). Fix: locate or create bounded sections, mutate only their owned entries while preserving all other bytes, handle section-at-EOF, preserve file metadata during atomic replacement, and re-run `audit_router` before returning success; cover missing/last sections and custom lookalike prose in tests.
+- [Should] An unreadable `ROUTER.md` accumulates a reason but leaves `drift=False`, so `--check` prints `ok` and `--fix` says already synchronized (`.relay-artifacts/router_audit.py:64-69`, `.relay-artifacts/router_audit.py:120-121`, `.relay-artifacts/router_audit.py:262-267`). Fix: distinguish audit failure from clean state, exit nonzero without offering remediation, and test the failure path.
+- [Blocker] The documented confirmation prompt is releases-specific even when the audit reports legacy drift, telling the user that releases mode is enabled and proposing the opposite transformation (`skills/vendor-stack/SKILL.md:109-115`). Fix: consume `--json` (or otherwise branch on reported mode/reasons) and provide separate releases→frozen/dashboard and legacy→active/no-dashboard prompts before `--fix`.
+- [Should] The registered test covers only canonical happy paths and broad substring outcomes (`test/gh353-vendored-router-audit.sh:43-146`; registration: `validate.sh:425`), so every false-clean/remediation case above can pass unnoticed. Extend that specific test with the regression matrix named in the findings. Test execution was intentionally not run in this reviewer-only turn.
+- [Pass] Static integration exists: `xyz-sync.sh check` invokes the audit for each selected target and surfaces nonzero diagnostics (`relay-automation/xyz-sync.sh:454-461`), and the specific GH-353 test is registered (`validate.sh:425`).
+
+Pre-existing defects: present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-272` was excluded.
+
+Handing off to Producer — go to the claude-a window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
