@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 8 / 8
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -368,5 +368,22 @@ All Round 7 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 47 distinct scenarios and 64 assertions (64 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 8
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases Role split validation still has shape- and polarity-based false-cleans. The generic active check only recognizes `= active`, so ``ROADMAP.md: active; frozen legacy; releases.db is source of truth`` satisfies the frozen/DB predicates and passes; conversely, `ROADMAP.md is not legacy; releases.db is source of truth` is counted as frozen because only `not frozen` negates the frozen/legacy test (`.relay-artifacts/router_audit.py:248-260`). Since a clean audit makes `--fix` return “already in sync,” neither contradiction is remediated (`.relay-artifacts/router_audit.py:349-355`). Fix: parse every ROADMAP-bearing clause independent of separator, require an affirmative frozen/legacy clause plus an affirmative releases-DB source clause, and reject any affirmative active/current clause or negated frozen/legacy clause; add both exact audit and `--fix` regressions.
+- [Blocker] The claimed affirmative dashboard check accepts a directly negated generated-view declaration. For example, ``ROADMAP-DASHBOARD.md = not generated; current view lives elsewhere`` passes because `not generated` is absent from the denylist while both `generated` and `current view` independently satisfy the positive regex (`.relay-artifacts/router_audit.py:120-132`). Fix: evaluate dashboard clauses and polarity before accepting generated/current-state semantics, reject contradictions such as `not generated`, `not current`, and “source lives elsewhere,” and test initial audit plus post-fix canonicalization.
+- [Blocker] Releases Startup polarity is still whole-clause and the clause splitter omits ordinary conjunctions. `ROADMAP.md is frozen and use ROADMAP.md for current work` remains one clause; the frozen/history early return suppresses the explicit active directive, so an otherwise canonical releases router audits clean (`.relay-artifacts/router_audit.py:91-117`). Fix: detect every affirmative current-work directive within a clause even when the same clause also carries frozen/history wording (without treating genuinely negated `do not use` wording as active), and add this exact audit/remediation regression.
+- [Blocker] Legacy false-frozen detection also applies negation line-wide. With a canonical active role entry present, an additional `ROADMAP.md is not frozen, but ROADMAP.md remains legacy` line is ignored because `not frozen` suppresses the separate affirmative `legacy` claim; the same construction can evade Startup frozen detection when a separate canonical active read exists (`.relay-artifacts/router_audit.py:289-308`, `.relay-artifacts/router_audit.py:314-339`). Fix: reuse a clause-scoped polarity parser for both legacy blocks, reject any affirmative frozen/legacy clause regardless of a different negated clause, and cover the two-line Role and Startup false-clean cases through `--fix`.
+- [Should] The 47-scenario test matrix does not include the colon-form `active`, negated `not legacy`, negated generated-dashboard, conjunction-suppressed active directive, or mixed `not frozen` + affirmative `legacy` cases above (`test/gh353-vendored-router-audit.sh:4-51`). Add those cases and assert both initial `--check` failure and clean, canonical post-fix output. Static review only: the artifact and tests were not executed under reviewer containment.
+- [Pass] Exact owned-heading matching now excludes prefixed custom headings (`.relay-artifacts/router_audit.py:204-217`, `.relay-artifacts/router_audit.py:363-365`), candidate validation precedes replacement (`.relay-artifacts/router_audit.py:559-576`), `xyz-sync.sh check` surfaces nonzero router-audit diagnostics (`relay-automation/xyz-sync.sh:454-461`), the vendor workflow provides mode-specific confirmation prompts (`skills/vendor-stack/SKILL.md:100-119`), and the focused test is registered (`validate.sh:425`).
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-636` was excluded.
+
+Handing off to Producer — relay is escalated at the round cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
