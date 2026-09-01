@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 11 / 11
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -498,5 +498,22 @@ All Round 10 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 64 distinct scenarios and 86 assertions (86 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 11
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] The releases Role-split predicates still accept keywords without the required affirmative relationships. `ROADMAP.md = frozen legacy; releases.db is present for compatibility` passes because any non-negated DB token sets `has_affirmative_db_clause`, and `ROADMAP-DASHBOARD.md = generated deployment manifest` passes because the bare word `generated` establishes the dashboard contract (`.relay-artifacts/router_audit.py:156-167`, `.relay-artifacts/router_audit.py:285-315`). Fix: require an affirmative releases-DB source-of-truth assignment and an affirmative generated *roadmap-ledger view* declaration, not token presence; add both exact false-clean cases through `--check` and canonical `--fix` regressions.
+- [Blocker] Releases-mode auditing treats every direct, non-negated `Read/Open/Use ROADMAP.md` as active before it examines purpose, so `Read ROADMAP.md only for historical reference` is falsely reported as stale. Remediation then classifies that line as an owned startup directive and drops it once the canonical dashboard step has been emitted, deleting valid historical guidance (`.relay-artifacts/router_audit.py:112-125`, `.relay-artifacts/router_audit.py:128-153`, `.relay-artifacts/router_audit.py:491-508`). Fix: classify current-work purpose and historical/frozen purpose separately, replace only affirmative current-state directives, and preserve the historical line byte-for-byte; add audit, repair, and idempotence coverage.
+- [Blocker] The Round 10 legacy current-work finding remains unresolved. `ROADMAP.md = pointer ledger for deployment policy` satisfies the Role predicate through bare `pointer ledger`, and `Read ROADMAP.md for deployment instructions` satisfies Startup through any unnegated read verb; together they audit clean despite providing no active/current-work routing, so `--fix` returns without canonicalizing them (`.relay-artifacts/router_audit.py:189-200`, `.relay-artifacts/router_audit.py:359-404`, `.relay-artifacts/router_audit.py:414-420`). Fix: require explicit affirmative current-work/current-state semantics in both predicates and add this paired false-clean plus canonical remediation regression.
+- [Blocker] `--fix` cannot repair an existing empty owned section when another heading follows it. Rebuilt bodies receive a trailing newline only if the original empty body already ended in one; otherwise the canonical last line is concatenated directly with the following `##` heading. Candidate validation then rejects the malformed candidate, leaving a repairable router unfixed (`.relay-artifacts/router_audit.py:69-90`, `.relay-artifacts/router_audit.py:476-478`, `.relay-artifacts/router_audit.py:545-547`, `.relay-artifacts/router_audit.py:596-622`). Fix: preserve/insert the structural separator before a following heading independently of the old body's terminator; test empty Role split and empty Startup sequence sections in both modes.
+- [Should] The Round 10 byte-preservation finding received no disposition and is still present. Bodies from all owned sections are flattened with `splitlines()`, repeated custom lines are removed by `if l not in new_*`, and every retained line is rejoined with one file-wide newline style, so mixed terminators and intentional duplicates inside the owned sections are not preserved (`.relay-artifacts/router_audit.py:435-441`, `.relay-artifacts/router_audit.py:464-478`, `.relay-artifacts/router_audit.py:528-547`, `.relay-artifacts/router_audit.py:561-578`). Fix: splice only classified owned line ranges while retaining every unclassified slice and terminator exactly; add mixed-LF/CRLF and repeated-custom-entry `cmp` regressions.
+- [Pass] Candidate validation still precedes replacement, and the write path uses an exclusive same-directory temporary file, flush/file `fsync`, mode restoration, cleanup, and `os.replace` (`.relay-artifacts/router_audit.py:619-645`). The report-only sync diagnosis, mode-specific confirmation prompts, and focused-test registration remain statically present (`relay-automation/xyz-sync.sh:454-461`, `skills/vendor-stack/SKILL.md:100-119`, `validate.sh:425`). Static review only; the artifact, source files, and tests were not executed under reviewer containment.
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-696` was excluded.
+
+Handing off to Producer — the relay is escalated at the Round 11 cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
