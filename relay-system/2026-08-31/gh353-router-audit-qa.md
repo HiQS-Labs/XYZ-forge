@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 13 / 13
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -579,5 +579,23 @@ All Round 12 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 75 distinct scenarios and 99 assertions (99 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 13
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] The Round 12 compound-line preservation finding is not actually remediated. `is_role_stray_active_roadmap_line` correctly finds the active second clause in ``- `PROJECT/PDDA.md` = governs the `ROADMAP.md` contract; `ROADMAP.md` is used for current work``, but the releases fixer responds by dropping the entire physical line, including the valid PDDA governance clause (`.relay-artifacts/router_audit.py:114-129`, `.relay-artifacts/router_audit.py:483-500`). Fix: transform classified clauses, not the whole line: retain the governance clause and its original line terminator while removing the active ROADMAP clause; add an exact before/after assertion for the producer's stated regression.
+- [Blocker] Releases Role-split validation still accepts a mode flag in place of the required releases-DB source-of-truth relationship. `has_affirmative_db_clause` has an unconditional `ROADMAP_SOURCE=releases` alternative, so an owned declaration such as ``ROADMAP.md = frozen legacy; ROADMAP_SOURCE=releases`` passes without saying that `releases.db` or `releases.sql` is the source of truth (`.relay-artifacts/router_audit.py:305-328`, contract: `.relay-artifacts/router_audit.py:8-10`). Fix: remove the mode-token shortcut and require a clause that affirmatively assigns source-of-truth authority to `releases.db`/`releases.sql`; cover the exact false-clean through `--check`, canonical `--fix`, and idempotence.
+- [Blocker] Releases Role-split frozen semantics are still gathered from unrelated subjects on the same owned line. For example, ``ROADMAP.md = deployment notes; OLD-API.md is frozen; releases.db is the source of truth`` passes because `is_frozen_clause` scans every clause without requiring that the frozen/legacy clause refer to ROADMAP.md (`.relay-artifacts/router_audit.py:317-345`). Fix: require the affirmative frozen/legacy relationship in a ROADMAP-bearing clause (or parse the owned declaration's subject/predicate relationship), and add this exact audit/remediation regression.
+- [Blocker] Dashboard Startup purpose remains line-scoped rather than directive-clause-scoped. In `Read ROADMAP-DASHBOARD.md for deployment instructions; TEAM.md tracks current work`, the dashboard clause passes the verb checks and the unrelated second clause supplies `current work` because the positive-purpose regex searches `line`, not `clause`; the stale guidance can therefore audit clean (`.relay-artifacts/router_audit.py:199-215`, `.relay-artifacts/router_audit.py:354-370`). Fix: require the current-work/current-state purpose in the same dashboard-bearing affirmative clause, and test initial failure plus canonical repair.
+- [Blocker] Legacy auditing and remediation treat any historical frozen mention inside Role split as a current false-frozen contract and delete the whole custom entry. Beside a canonical active ROADMAP declaration, ``- `CHANGELOG.md` = records when `ROADMAP.md` was frozen during the 2025 migration`` sets `has_affirmative_frozen_in_role`; remediation then removes that non-owned line wholesale (`.relay-artifacts/router_audit.py:375-403`, `.relay-artifacts/router_audit.py:562-574`). Fix: distinguish historical statements from current declarations and preserve non-owned custom entries byte-for-byte; add an audit/fix regression for the exact line.
+- [Should] `find_sections` is not Markdown-fence-aware: a line beginning `## Role split` or `## Startup sequence` inside a fenced example is counted as an owned section, so audit reports a duplicate and `--fix` can merge/delete part of a custom example (`.relay-artifacts/router_audit.py:69-92`, `.relay-artifacts/router_audit.py:274-294`, `.relay-artifacts/router_audit.py:623-638`). Fix: ignore headings inside fenced code blocks and add a byte-preservation fixture containing both exact headings in a fence.
+- [Pass] Candidate validation still occurs before any target mutation, and replacement uses an exclusive same-directory temporary file, flush/file `fsync`, mode restoration, cleanup on failure, and `os.replace` (`.relay-artifacts/router_audit.py:653-677`). Static review only: the artifact, source files, and tests were not executed under reviewer containment.
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-730` was excluded.
+
+Handing off to Producer — the relay is escalated at the Round 13 cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
