@@ -13,70 +13,75 @@
 #   9. Releases negative: generated deployment manifest `ROADMAP-DASHBOARD.md = generated deployment manifest` -> fails audit.
 #  10. Releases negative: negated DB source of truth `ROADMAP.md = frozen legacy; releases.db is not the source of truth` -> fails audit.
 #  11. Releases negative: compatibility DB note `ROADMAP.md = frozen legacy; releases.db is present for compatibility` -> fails audit.
-#  12. Releases negative: negated dashboard in Startup `Do not read ROADMAP-DASHBOARD.md` -> fails audit.
-#  13. Releases negative: historical context dashboard in Startup -> fails audit.
-#  14. Releases negative: purpose-free dashboard in Startup `Read ROADMAP-DASHBOARD.md for deployment instructions` -> fails audit.
-#  15. Releases negative: not current state dashboard in Startup `Read ROADMAP-DASHBOARD.md for not current state` -> fails audit.
-#  16. Releases negative: multi-clause active directive `ROADMAP.md is frozen for historical reference; nevertheless use ROADMAP.md for current work` -> fails audit.
-#  17. Releases negative: historical first clause + active second clause `Read ROADMAP.md only for historical reference; nevertheless use ROADMAP.md for current work` -> fails audit.
-#  18. Releases negative: conjunction active directive `ROADMAP.md is frozen and use ROADMAP.md for current work` -> fails audit.
-#  19. Releases negative: while-connector active directive `ROADMAP.md is frozen while operators use ROADMAP.md for current work` -> fails audit.
-#  20. Releases negative: colon-form active keywords `ROADMAP.md: active; frozen legacy; releases.db is source of truth` -> fails audit.
-#  21. Releases negative: negated legacy `ROADMAP.md is not legacy; releases.db is source of truth` -> fails audit.
-#  22. Releases negative: prose active ROADMAP in Role split `ROADMAP.md is used for current priorities` -> fails audit.
-#  23. Releases negative: prefixed prose active ROADMAP in Role split `Note: ROADMAP.md is used for current priorities` -> fails audit and --fix repairs it.
-#  24. Releases negative: compound custom entry + active prose in Role split `- \`PROJECT/PDDA.md\` = governs the \`ROADMAP.md\` contract; \`ROADMAP.md\` is used for current work` -> fails audit.
-#  25. Releases negative: asterisk list marker in Role split `* ROADMAP.md = active pointer ledger` -> fails audit.
-#  26. Releases negative: Startup sequence with Open verb `Open ROADMAP.md to find current work` -> fails audit.
-#  27. Releases negative: Startup sequence with Consult verb `Consult ROADMAP.md first` -> fails audit.
-#  28. Releases negative: Startup sequence with Use verb `Use ROADMAP.md for current work` -> fails audit.
-#  29. Releases negative: Startup sequence with negated frozen `ROADMAP.md is not frozen; use it for current work` -> fails audit.
-#  30. Releases negative: Startup sequence with markdown link `[ROADMAP.md](path)` -> fails audit.
-#  31. Releases negative: Missing Startup sequence section -> fails audit.
-#  32. Releases negative: Duplicate Role split and Startup sections -> fails audit.
-#  33. Releases clean valid custom mention `- \`PROJECT/PDDA.md\` = governs the \`ROADMAP.md\` contract` passes audit and --fix preserves it.
-#  34. Releases clean valid custom startup step `4. Read \`PROJECT/PDDA.md\` for the \`ROADMAP.md\` governance contract.` passes audit and --fix preserves it byte-for-byte.
-#  35. Releases clean valid historical read `Read ROADMAP.md only for historical reference` passes audit and --fix preserves it.
-#  36. Releases clean valid negations: `do not use it` and `do not use ROADMAP.md for current work` pass audit.
-#  37. Releases --fix: collapses duplicate roadmap steps in Startup to exactly 1 step, passes post-fix audit.
-#  38. Releases --fix: removes duplicate sections down to exactly 1 Role split and 1 Startup sequence.
-#  39. Releases --fix: preserves prefixed custom sections `## Role split rationale` and `## Startup sequence notes` with byte-for-byte cmp.
-#  40. Releases --fix: exact byte-level cmp on custom section with CRLF and idempotent re-run cmp.
-#  41. Releases --fix: repairs empty ## Role split followed by another section.
-#  42. Releases --fix: preserves repeated custom lines inside owned sections.
-#  43. Releases --fix: preserves mixed LF/CRLF lines in owned sections verbatim.
-#  44. Mode parser: commented `# ROADMAP_SOURCE=releases` in .pdda-mode is legacy mode.
-#  45. Mode parser: prefix `NOT_ROADMAP_SOURCE=releases` in .pdda-mode is legacy mode.
-#  46. Mode parser: whitespace `  ROADMAP_SOURCE  =  releases  # comment` in .pdda-mode is releases mode.
-#  47. Mode parser: unreadable .pdda-mode reports error and exits non-zero on --check.
-#  48. Clean legacy-mode repo reports `ok` (rc=0).
-#  49. Clean legacy-mode repo with Markdown link in Startup reports `ok` (rc=0).
-#  50. Clean legacy-mode repo with `ROADMAP.md is not frozen` in Startup reports `ok` (rc=0).
-#  51. Clean legacy-mode repo with unrelated legacy entry `- \`OLD-API.md\` = remains legacy` reports `ok` (rc=0) and --fix preserves it.
-#  52. Legacy clean valid custom startup step `4. Read \`PROJECT/PDDA.md\` for the \`ROADMAP.md\` governance contract.` passes audit and --fix preserves it byte-for-byte.
-#  53. Legacy negative: Role split with deployment policy pointer ledger `ROADMAP.md = pointer ledger for deployment policy` -> fails audit.
-#  54. Legacy negative: Role split with archived pointer ledger `ROADMAP.md = archived pointer ledger` -> fails audit.
-#  55. Legacy negative: Role split with false-frozen ROADMAP.md -> fails audit.
-#  56. Legacy negative: Role split with two contradictory lines (active + frozen) -> fails audit.
-#  57. Legacy negative: Role split with mixed not frozen + affirmative legacy `ROADMAP.md is not frozen, but ROADMAP.md remains legacy` -> fails audit.
-#  58. Legacy negative: Role split with asterisk marker `* ROADMAP.md = frozen` -> fails audit.
-#  59. Legacy negative: Role split with inactive `not active; obsolete record of deferred work` -> fails audit.
-#  60. Legacy negative: Role split with releases.db mention -> fails audit.
-#  61. Legacy negative: Startup sequence with deployment instructions `Read ROADMAP.md for deployment instructions` -> fails audit.
-#  62. Legacy negative: Startup sequence with deployment instructions + negated current work `Read ROADMAP.md for deployment instructions; do not use ROADMAP.md for current work` -> fails audit.
-#  63. Legacy negative: Startup sequence with false-frozen ROADMAP.md -> fails audit.
-#  64. Legacy negative: Startup sequence with historical reference only `Read ROADMAP.md only for historical reference` -> fails audit.
-#  65. Legacy negative: Startup sequence with negated `Do not read ROADMAP.md` -> fails audit.
-#  66. Legacy negative: Startup sequence with `ROADMAP.md is not frozen; do not read ROADMAP.md` -> fails audit.
-#  67. Legacy negative: Startup sequence with `Read ROADMAP.md; but note ROADMAP.md remains legacy` -> fails audit.
-#  68. Legacy negative: Startup sequence with releases.sql mention -> fails audit.
-#  69. Legacy negative: Missing Role split section -> fails audit.
-#  70. Legacy negative: Missing Startup sequence section -> fails audit.
-#  71. Legacy negative: leftover ROADMAP-DASHBOARD.md file on disk + clean router reports ok (not fooled by file).
-#  72. Legacy --fix: removes two-line contradictory frozen role lines, standalone releases tokens, creates/repairs missing sections, restores active ROADMAP.md, strips dashboard, passes post-fix audit.
-#  73. Missing ROUTER.md reports error and exits non-zero on --check.
-#  74. Unreadable ROUTER.md reports error and exits non-zero on --check.
-#  75. `xyz-sync.sh check` surfaces router drift for registered vendored repositories.
+#  12. Releases negative: mode token without DB source of truth `ROADMAP.md = frozen legacy; ROADMAP_SOURCE=releases` -> fails audit.
+#  13. Releases negative: unrelated frozen subject on same line `ROADMAP.md = deployment notes; OLD-API.md is frozen; releases.db is the source of truth` -> fails audit.
+#  14. Releases negative: negated dashboard in Startup `Do not read ROADMAP-DASHBOARD.md` -> fails audit.
+#  15. Releases negative: historical context dashboard in Startup -> fails audit.
+#  16. Releases negative: purpose-free dashboard in Startup `Read ROADMAP-DASHBOARD.md for deployment instructions` -> fails audit.
+#  17. Releases negative: purpose-free dashboard + unrelated current work `Read ROADMAP-DASHBOARD.md for deployment instructions; TEAM.md tracks current work` -> fails audit.
+#  18. Releases negative: not current state dashboard in Startup `Read ROADMAP-DASHBOARD.md for not current state` -> fails audit.
+#  19. Releases negative: multi-clause active directive `ROADMAP.md is frozen for historical reference; nevertheless use ROADMAP.md for current work` -> fails audit.
+#  20. Releases negative: historical first clause + active second clause `Read ROADMAP.md only for historical reference; nevertheless use ROADMAP.md for current work` -> fails audit.
+#  21. Releases negative: conjunction active directive `ROADMAP.md is frozen and use ROADMAP.md for current work` -> fails audit.
+#  22. Releases negative: while-connector active directive `ROADMAP.md is frozen while operators use ROADMAP.md for current work` -> fails audit.
+#  23. Releases negative: colon-form active keywords `ROADMAP.md: active; frozen legacy; releases.db is source of truth` -> fails audit.
+#  24. Releases negative: negated legacy `ROADMAP.md is not legacy; releases.db is source of truth` -> fails audit.
+#  25. Releases negative: prose active ROADMAP in Role split `ROADMAP.md is used for current priorities` -> fails audit.
+#  26. Releases negative: prefixed prose active ROADMAP in Role split `Note: ROADMAP.md is used for current priorities` -> fails audit and --fix repairs it.
+#  27. Releases negative: compound custom entry + active prose in Role split `- \`PROJECT/PDDA.md\` = governs the \`ROADMAP.md\` contract; \`ROADMAP.md\` is used for current work` -> fails audit and --fix preserves the governance clause while removing the active clause.
+#  28. Releases negative: asterisk list marker in Role split `* ROADMAP.md = active pointer ledger` -> fails audit.
+#  29. Releases negative: Startup sequence with Open verb `Open ROADMAP.md to find current work` -> fails audit.
+#  30. Releases negative: Startup sequence with Consult verb `Consult ROADMAP.md first` -> fails audit.
+#  31. Releases negative: Startup sequence with Use verb `Use ROADMAP.md for current work` -> fails audit.
+#  32. Releases negative: Startup sequence with negated frozen `ROADMAP.md is not frozen; use it for current work` -> fails audit.
+#  33. Releases negative: Startup sequence with markdown link `[ROADMAP.md](path)` -> fails audit.
+#  34. Releases negative: Missing Startup sequence section -> fails audit.
+#  35. Releases negative: Duplicate Role split and Startup sections -> fails audit.
+#  36. Releases clean valid custom mention `- \`PROJECT/PDDA.md\` = governs the \`ROADMAP.md\` contract` passes audit and --fix preserves it.
+#  37. Releases clean valid custom startup step `4. Read \`PROJECT/PDDA.md\` for the \`ROADMAP.md\` governance contract.` passes audit and --fix preserves it byte-for-byte.
+#  38. Releases clean valid historical read `Read ROADMAP.md only for historical reference` passes audit and --fix preserves it.
+#  39. Releases clean valid negations: `do not use it` and `do not use ROADMAP.md for current work` pass audit.
+#  40. Releases clean valid fenced code blocks containing `## Role split` and `## Startup sequence` are ignored by section finder.
+#  41. Releases --fix: collapses duplicate roadmap steps in Startup to exactly 1 step, passes post-fix audit.
+#  42. Releases --fix: removes duplicate sections down to exactly 1 Role split and 1 Startup sequence.
+#  43. Releases --fix: preserves prefixed custom sections `## Role split rationale` and `## Startup sequence notes` with byte-for-byte cmp.
+#  44. Releases --fix: exact byte-level cmp on custom section with CRLF and idempotent re-run cmp.
+#  45. Releases --fix: repairs empty ## Role split followed by another section.
+#  46. Releases --fix: preserves repeated custom lines inside owned sections.
+#  47. Releases --fix: preserves mixed LF/CRLF lines in owned sections verbatim.
+#  48. Mode parser: commented `# ROADMAP_SOURCE=releases` in .pdda-mode is legacy mode.
+#  49. Mode parser: prefix `NOT_ROADMAP_SOURCE=releases` in .pdda-mode is legacy mode.
+#  50. Mode parser: whitespace `  ROADMAP_SOURCE  =  releases  # comment` in .pdda-mode is releases mode.
+#  51. Mode parser: unreadable .pdda-mode reports error and exits non-zero on --check.
+#  52. Clean legacy-mode repo reports `ok` (rc=0).
+#  53. Clean legacy-mode repo with Markdown link in Startup reports `ok` (rc=0).
+#  54. Clean legacy-mode repo with `ROADMAP.md is not frozen` in Startup reports `ok` (rc=0).
+#  55. Clean legacy-mode repo with unrelated legacy entry `- \`OLD-API.md\` = remains legacy` reports `ok` (rc=0) and --fix preserves it.
+#  56. Clean legacy-mode repo with non-owned historical frozen mention `- \`CHANGELOG.md\` = records when \`ROADMAP.md\` was frozen during the 2025 migration` reports `ok` (rc=0) and --fix preserves it.
+#  57. Legacy clean valid custom startup step `4. Read \`PROJECT/PDDA.md\` for the \`ROADMAP.md\` governance contract.` passes audit and --fix preserves it byte-for-byte.
+#  58. Legacy negative: Role split with deployment policy pointer ledger `ROADMAP.md = pointer ledger for deployment policy` -> fails audit.
+#  59. Legacy negative: Role split with archived pointer ledger `ROADMAP.md = archived pointer ledger` -> fails audit.
+#  60. Legacy negative: Role split with false-frozen ROADMAP.md -> fails audit.
+#  61. Legacy negative: Role split with two contradictory lines (active + frozen) -> fails audit.
+#  62. Legacy negative: Role split with mixed not frozen + affirmative legacy `ROADMAP.md is not frozen, but ROADMAP.md remains legacy` -> fails audit.
+#  63. Legacy negative: Role split with asterisk marker `* ROADMAP.md = frozen` -> fails audit.
+#  64. Legacy negative: Role split with inactive `not active; obsolete record of deferred work` -> fails audit.
+#  65. Legacy negative: Role split with releases.db mention -> fails audit.
+#  66. Legacy negative: Startup sequence with deployment instructions `Read ROADMAP.md for deployment instructions` -> fails audit.
+#  67. Legacy negative: Startup sequence with deployment instructions + negated current work `Read ROADMAP.md for deployment instructions; do not use ROADMAP.md for current work` -> fails audit.
+#  68. Legacy negative: Startup sequence with false-frozen ROADMAP.md -> fails audit.
+#  69. Legacy negative: Startup sequence with historical reference only `Read ROADMAP.md only for historical reference` -> fails audit.
+#  70. Legacy negative: Startup sequence with negated `Do not read ROADMAP.md` -> fails audit.
+#  71. Legacy negative: Startup sequence with `ROADMAP.md is not frozen; do not read ROADMAP.md` -> fails audit.
+#  72. Legacy negative: Startup sequence with `Read ROADMAP.md; but note ROADMAP.md remains legacy` -> fails audit.
+#  73. Legacy negative: Startup sequence with releases.sql mention -> fails audit.
+#  74. Legacy negative: Missing Role split section -> fails audit.
+#  75. Legacy negative: Missing Startup sequence section -> fails audit.
+#  76. Legacy negative: leftover ROADMAP-DASHBOARD.md file on disk + clean router reports ok (not fooled by file).
+#  77. Legacy --fix: removes two-line contradictory frozen role lines, standalone releases tokens, creates/repairs missing sections, restores active ROADMAP.md, strips dashboard, passes post-fix audit.
+#  78. Missing ROUTER.md reports error and exits non-zero on --check.
+#  79. Unreadable ROUTER.md reports error and exits non-zero on --check.
+#  80. `xyz-sync.sh check` surfaces router drift for registered vendored repositories.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -292,7 +297,39 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_COMPAT_DB" 2>&1)"; rc=$?
 ok "compatibility DB note without source of truth in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 12. Releases negative: negated dashboard in Startup ────────────────────────────
+# ── 12. Releases negative: mode token without DB source of truth ───────────────────
+R_REL_MODE_TOKEN_ONLY="$(mkrepo rel_mode_token_only)"
+require_fixture "$R_REL_MODE_TOKEN_ONLY" "mode token only repo"
+touch "$R_REL_MODE_TOKEN_ONLY/releases.db"
+cat > "$R_REL_MODE_TOKEN_ONLY/ROUTER.md" <<'MD'
+# ROUTER.md
+## Role split
+- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROADMAP.md` = frozen legacy; ROADMAP_SOURCE=releases
+## Startup sequence
+1. Read `ROADMAP-DASHBOARD.md` (ROADMAP.md is frozen legacy).
+MD
+
+out="$(python3 "$AUDIT_PY" --check "$R_REL_MODE_TOKEN_ONLY" 2>&1)"; rc=$?
+ok "mode token without DB source of truth in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
+
+# ── 13. Releases negative: unrelated frozen subject on same line ──────────────────
+R_REL_UNRELATED_FROZEN="$(mkrepo rel_unrelated_frozen)"
+require_fixture "$R_REL_UNRELATED_FROZEN" "unrelated frozen repo"
+touch "$R_REL_UNRELATED_FROZEN/releases.db"
+cat > "$R_REL_UNRELATED_FROZEN/ROUTER.md" <<'MD'
+# ROUTER.md
+## Role split
+- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROADMAP.md` = deployment notes; OLD-API.md is frozen; releases.db is the source of truth
+## Startup sequence
+1. Read `ROADMAP-DASHBOARD.md` (ROADMAP.md is frozen legacy).
+MD
+
+out="$(python3 "$AUDIT_PY" --check "$R_REL_UNRELATED_FROZEN" 2>&1)"; rc=$?
+ok "unrelated frozen subject on same line in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
+
+# ── 14. Releases negative: negated dashboard in Startup ────────────────────────────
 R_REL_NEG_DASH="$(mkrepo rel_neg_dash)"
 require_fixture "$R_REL_NEG_DASH" "neg dash releases repo"
 touch "$R_REL_NEG_DASH/releases.db"
@@ -308,7 +345,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_NEG_DASH" 2>&1)"; rc=$?
 ok "negated dashboard read in Startup sequence reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 13. Releases negative: historical context dashboard in Startup ─────────────────
+# ── 15. Releases negative: historical context dashboard in Startup ─────────────────
 R_REL_HIST_STARTUP="$(mkrepo rel_hist_startup)"
 require_fixture "$R_REL_HIST_STARTUP" "hist startup releases repo"
 touch "$R_REL_HIST_STARTUP/releases.db"
@@ -324,7 +361,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_HIST_STARTUP" 2>&1)"; rc=$?
 ok "historical context dashboard directive in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 14. Releases negative: purpose-free dashboard in Startup ──────────────────────
+# ── 16. Releases negative: purpose-free dashboard in Startup ──────────────────────
 R_REL_PURPOSE_FREE="$(mkrepo rel_purpose_free)"
 require_fixture "$R_REL_PURPOSE_FREE" "purpose free releases repo"
 touch "$R_REL_PURPOSE_FREE/releases.db"
@@ -340,7 +377,23 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_PURPOSE_FREE" 2>&1)"; rc=$?
 ok "purpose-free dashboard directive in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 15. Releases negative: not current state dashboard in Startup ──────────────────
+# ── 17. Releases negative: purpose-free dashboard + unrelated current work ────────
+R_REL_PF_UNRELATED="$(mkrepo rel_pf_unrelated)"
+require_fixture "$R_REL_PF_UNRELATED" "pf unrelated releases repo"
+touch "$R_REL_PF_UNRELATED/releases.db"
+cat > "$R_REL_PF_UNRELATED/ROUTER.md" <<'MD'
+# ROUTER.md
+## Role split
+- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — releases.db is the source of truth
+## Startup sequence
+1. Read ROADMAP-DASHBOARD.md for deployment instructions; TEAM.md tracks current work
+MD
+
+out="$(python3 "$AUDIT_PY" --check "$R_REL_PF_UNRELATED" 2>&1)"; rc=$?
+ok "purpose-free dashboard + unrelated current work in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
+
+# ── 18. Releases negative: not current state dashboard in Startup ──────────────────
 R_REL_NOT_CURRENT_DASH="$(mkrepo rel_not_current_dash)"
 require_fixture "$R_REL_NOT_CURRENT_DASH" "not current dash releases repo"
 touch "$R_REL_NOT_CURRENT_DASH/releases.db"
@@ -356,7 +409,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_NOT_CURRENT_DASH" 2>&1)"; rc=$?
 ok "not current state dashboard directive in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 16. Releases negative: multi-clause active directive in Startup ────────────────
+# ── 19. Releases negative: multi-clause active directive in Startup ────────────────
 R_REL_MULTI_CLAUSE="$(mkrepo rel_multi_clause)"
 require_fixture "$R_REL_MULTI_CLAUSE" "multi clause releases repo"
 touch "$R_REL_MULTI_CLAUSE/releases.db"
@@ -373,7 +426,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_MULTI_CLAUSE" 2>&1)"; rc=$?
 ok "multi-clause line with active directive despite frozen text reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 17. Releases negative: historical first clause + active second clause ──────────
+# ── 20. Releases negative: historical first clause + active second clause ──────────
 R_REL_HIST_ACTIVE_STARTUP="$(mkrepo rel_hist_active_startup)"
 require_fixture "$R_REL_HIST_ACTIVE_STARTUP" "hist active startup releases repo"
 touch "$R_REL_HIST_ACTIVE_STARTUP/releases.db"
@@ -394,7 +447,7 @@ python3 "$AUDIT_PY" --fix "$R_REL_HIST_ACTIVE_STARTUP" >/dev/null
 out_has_check="$(python3 "$AUDIT_PY" --check "$R_REL_HIST_ACTIVE_STARTUP" 2>&1)"; rc_has=$?
 ok "historical first clause + active second clause repaired with --fix (rc=0)" "$(is "$rc_has" "0"; echo $?)"
 
-# ── 18. Releases negative: conjunction active directive in Startup ────────────────
+# ── 21. Releases negative: conjunction active directive in Startup ────────────────
 R_REL_CONJ_STARTUP="$(mkrepo rel_conj_startup)"
 require_fixture "$R_REL_CONJ_STARTUP" "conj startup releases repo"
 touch "$R_REL_CONJ_STARTUP/releases.db"
@@ -411,7 +464,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_CONJ_STARTUP" 2>&1)"; rc=$?
 ok "conjunction active directive in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 19. Releases negative: while-connector active directive in Startup ─────────────
+# ── 22. Releases negative: while-connector active directive in Startup ─────────────
 R_REL_WHILE_STARTUP="$(mkrepo rel_while_startup)"
 require_fixture "$R_REL_WHILE_STARTUP" "while startup releases repo"
 touch "$R_REL_WHILE_STARTUP/releases.db"
@@ -428,7 +481,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_WHILE_STARTUP" 2>&1)"; rc=$?
 ok "while-connector active directive in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 20. Releases negative: colon-form active keywords in Role split ────────────────
+# ── 23. Releases negative: colon-form active keywords in Role split ────────────────
 R_REL_COLON_ACTIVE="$(mkrepo rel_colon_active)"
 require_fixture "$R_REL_COLON_ACTIVE" "colon active releases repo"
 touch "$R_REL_COLON_ACTIVE/releases.db"
@@ -436,7 +489,7 @@ cat > "$R_REL_COLON_ACTIVE/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
 - `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
-ROADMAP.md: active; frozen legacy; releases.db is source of truth
+ROADMAP.md: active; frozen legacy; releases.db is the source of truth
 ## Startup sequence
 1. Read `ROADMAP-DASHBOARD.md` (ROADMAP.md is frozen legacy).
 MD
@@ -444,7 +497,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_COLON_ACTIVE" 2>&1)"; rc=$?
 ok "colon-form active keywords in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 21. Releases negative: negated legacy in Role split ───────────────────────────
+# ── 24. Releases negative: negated legacy in Role split ───────────────────────────
 R_REL_NOT_LEGACY="$(mkrepo rel_not_legacy)"
 require_fixture "$R_REL_NOT_LEGACY" "not legacy releases repo"
 touch "$R_REL_NOT_LEGACY/releases.db"
@@ -460,7 +513,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_NOT_LEGACY" 2>&1)"; rc=$?
 ok "negated legacy in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 22. Releases negative: prose active ROADMAP in Role split ──────────────────────
+# ── 25. Releases negative: prose active ROADMAP in Role split ──────────────────────
 R_REL_PROSE_ROLE="$(mkrepo rel_prose_role)"
 require_fixture "$R_REL_PROSE_ROLE" "prose role releases repo"
 touch "$R_REL_PROSE_ROLE/releases.db"
@@ -477,7 +530,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_PROSE_ROLE" 2>&1)"; rc=$?
 ok "prose active ROADMAP in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 23. Releases negative: prefixed prose active ROADMAP in Role split ────────────
+# ── 26. Releases negative: prefixed prose active ROADMAP in Role split ────────────
 R_REL_PREFIX_PROSE="$(mkrepo rel_prefix_prose)"
 require_fixture "$R_REL_PREFIX_PROSE" "prefix prose releases repo"
 touch "$R_REL_PREFIX_PROSE/releases.db"
@@ -498,7 +551,7 @@ python3 "$AUDIT_PY" --fix "$R_REL_PREFIX_PROSE" >/dev/null
 out_pref_prose_check="$(python3 "$AUDIT_PY" --check "$R_REL_PREFIX_PROSE" 2>&1)"; rc_pp=$?
 ok "prefixed prose active ROADMAP repaired with --fix (rc=0)" "$(is "$rc_pp" "0"; echo $?)"
 
-# ── 24. Releases negative: compound custom entry + active prose in Role split ─────
+# ── 27. Releases negative: compound custom entry + active prose in Role split ─────
 R_REL_COMPOUND_ROLE="$(mkrepo rel_compound_role)"
 require_fixture "$R_REL_COMPOUND_ROLE" "compound role releases repo"
 touch "$R_REL_COMPOUND_ROLE/releases.db"
@@ -506,16 +559,23 @@ cat > "$R_REL_COMPOUND_ROLE/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
 - `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
-- `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — releases.db is the source of truth
+- `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — the RELEASES DB (releases.db) is the source of truth
 - `PROJECT/PDDA.md` = governs the `ROADMAP.md` contract; `ROADMAP.md` is used for current work
 ## Startup sequence
-1. Read `ROADMAP-DASHBOARD.md` (ROADMAP.md is frozen legacy).
+1. Read `ROADMAP-DASHBOARD.md` to find active effort. (ROADMAP.md is frozen legacy.)
 MD
 
 out="$(python3 "$AUDIT_PY" --check "$R_REL_COMPOUND_ROLE" 2>&1)"; rc=$?
 ok "compound custom entry + active prose in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 25. Releases negative: asterisk list marker in Role split ──────────────────────
+python3 "$AUDIT_PY" --fix "$R_REL_COMPOUND_ROLE" >/dev/null
+out_comp_fix="$(python3 "$AUDIT_PY" --check "$R_REL_COMPOUND_ROLE" 2>&1)"; rc_cf=$?
+ok "compound custom entry fixed and passes audit (rc=0)" "$(is "$rc_cf" "0"; echo $?)"
+comp_content="$(cat "$R_REL_COMPOUND_ROLE/ROUTER.md")"
+ok "compound fix preserved governance clause" "$(has "$comp_content" "governs the \`ROADMAP.md\` contract"; echo $?)"
+ok "compound fix removed stray active clause" "$(! has "$comp_content" "is used for current work"; echo $?)"
+
+# ── 28. Releases negative: asterisk list marker in Role split ──────────────────────
 R_REL_ASTERISK="$(mkrepo rel_asterisk)"
 require_fixture "$R_REL_ASTERISK" "asterisk releases repo"
 touch "$R_REL_ASTERISK/releases.db"
@@ -531,7 +591,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_ASTERISK" 2>&1)"; rc=$?
 ok "asterisk-marker active ROADMAP.md declaration in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 26. Releases negative: Startup sequence with Open verb ─────────────────────────
+# ── 29. Releases negative: Startup sequence with Open verb ─────────────────────────
 R_REL_OPEN_STARTUP="$(mkrepo rel_open_startup)"
 require_fixture "$R_REL_OPEN_STARTUP" "open startup releases repo"
 touch "$R_REL_OPEN_STARTUP/releases.db"
@@ -548,7 +608,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_OPEN_STARTUP" 2>&1)"; rc=$?
 ok "Startup sequence with Open ROADMAP.md reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 27. Releases negative: Startup sequence with Consult verb ──────────────────────
+# ── 30. Releases negative: Startup sequence with Consult verb ──────────────────────
 R_REL_CONSULT_STARTUP="$(mkrepo rel_consult_startup)"
 require_fixture "$R_REL_CONSULT_STARTUP" "consult startup releases repo"
 touch "$R_REL_CONSULT_STARTUP/releases.db"
@@ -565,7 +625,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_CONSULT_STARTUP" 2>&1)"; rc=$?
 ok "Startup sequence with Consult ROADMAP.md reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 28. Releases negative: Startup sequence with Use verb ──────────────────────────
+# ── 31. Releases negative: Startup sequence with Use verb ──────────────────────────
 R_REL_USE_STARTUP="$(mkrepo rel_use_startup)"
 require_fixture "$R_REL_USE_STARTUP" "use startup releases repo"
 touch "$R_REL_USE_STARTUP/releases.db"
@@ -582,7 +642,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_USE_STARTUP" 2>&1)"; rc=$?
 ok "Startup sequence with Use ROADMAP.md for current work reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 29. Releases negative: Startup sequence with negated frozen phrase ─────────────
+# ── 32. Releases negative: Startup sequence with negated frozen phrase ─────────────
 R_REL_NOT_FROZEN_STARTUP="$(mkrepo rel_not_frozen_startup)"
 require_fixture "$R_REL_NOT_FROZEN_STARTUP" "not frozen startup releases repo"
 touch "$R_REL_NOT_FROZEN_STARTUP/releases.db"
@@ -599,7 +659,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_NOT_FROZEN_STARTUP" 2>&1)"; rc=$?
 ok "Startup sequence saying ROADMAP.md is not frozen reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 30. Releases negative: Startup sequence with markdown link ────────────────────
+# ── 33. Releases negative: Startup sequence with markdown link ────────────────────
 R_REL_LINK_STARTUP="$(mkrepo rel_link_startup)"
 require_fixture "$R_REL_LINK_STARTUP" "link startup releases repo"
 touch "$R_REL_LINK_STARTUP/releases.db"
@@ -616,7 +676,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_LINK_STARTUP" 2>&1)"; rc=$?
 ok "Startup sequence with markdown link to ROADMAP.md reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 31. Releases negative: missing Startup sequence section ─────────────────────────
+# ── 34. Releases negative: missing Startup sequence section ─────────────────────────
 R_REL_NO_START="$(mkrepo rel_no_start)"
 require_fixture "$R_REL_NO_START" "no start releases repo"
 touch "$R_REL_NO_START/releases.db"
@@ -630,7 +690,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_NO_START" 2>&1)"; rc=$?
 ok "missing Startup sequence section reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 32. Releases negative: duplicate sections ─────────────────────────────────────
+# ── 35. Releases negative: duplicate sections ─────────────────────────────────────
 R_REL_DUP_SECT="$(mkrepo rel_dup_sect)"
 require_fixture "$R_REL_DUP_SECT" "dup sect releases repo"
 touch "$R_REL_DUP_SECT/releases.db"
@@ -650,7 +710,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_DUP_SECT" 2>&1)"; rc=$?
 ok "duplicate Role split / Startup sequence sections report drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 33. Releases clean valid custom mention passes audit and is preserved ──────────
+# ── 36. Releases clean valid custom mention passes audit and is preserved ──────────
 R_REL_PDDA_CUSTOM="$(mkrepo rel_pdda_custom)"
 require_fixture "$R_REL_PDDA_CUSTOM" "pdda custom releases repo"
 touch "$R_REL_PDDA_CUSTOM/releases.db"
@@ -671,7 +731,7 @@ python3 "$AUDIT_PY" --fix "$R_REL_PDDA_CUSTOM" >/dev/null
 pdda_content="$(cat "$R_REL_PDDA_CUSTOM/ROUTER.md")"
 ok "releases --fix preserved custom PROJECT/PDDA.md entry" "$(has "$pdda_content" "PROJECT/PDDA.md"; echo $?)"
 
-# ── 34. Releases clean valid custom startup step preserved byte-for-byte ──────────
+# ── 37. Releases clean valid custom startup step preserved byte-for-byte ──────────
 R_REL_CUSTOM_STEP="$(mkrepo rel_custom_step)"
 require_fixture "$R_REL_CUSTOM_STEP" "custom step releases repo"
 touch "$R_REL_CUSTOM_STEP/releases.db"
@@ -709,7 +769,7 @@ with open('$WORK/custom_step_act.bin', 'wb') as out:
 cmp "$WORK/custom_step_exp.bin" "$WORK/custom_step_act.bin" >/dev/null 2>&1; rc_cs_cmp=$?
 ok "releases --fix preserved custom startup step byte-for-byte with cmp" "$(is "$rc_cs_cmp" "0"; echo $?)"
 
-# ── 35. Releases clean valid historical read preserved byte-for-byte ──────────────
+# ── 38. Releases clean valid historical read preserved byte-for-byte ──────────────
 R_REL_HIST_READ="$(mkrepo rel_hist_read)"
 require_fixture "$R_REL_HIST_READ" "hist read releases repo"
 touch "$R_REL_HIST_READ/releases.db"
@@ -731,7 +791,7 @@ python3 "$AUDIT_PY" --fix "$R_REL_HIST_READ" >/dev/null
 hist_content="$(cat "$R_REL_HIST_READ/ROUTER.md")"
 ok "releases --fix preserved historical read line" "$(has "$hist_content" "only for historical reference"; echo $?)"
 
-# ── 36. Releases clean valid negations pass audit ──────────────────────────────────
+# ── 39. Releases clean valid negations pass audit ──────────────────────────────────
 R_REL_VALID_NEG="$(mkrepo rel_valid_neg)"
 require_fixture "$R_REL_VALID_NEG" "valid neg releases repo"
 touch "$R_REL_VALID_NEG/releases.db"
@@ -748,7 +808,31 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_REL_VALID_NEG" 2>&1)"; rc=$?
 ok "valid negation 'do not use it for current work' passes releases audit (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 37. Releases --fix: collapses duplicate roadmap steps in Startup ───────────────
+# ── 40. Releases clean valid fenced code blocks ────────────────────────────────────
+R_REL_FENCED="$(mkrepo rel_fenced)"
+require_fixture "$R_REL_FENCED" "fenced code releases repo"
+touch "$R_REL_FENCED/releases.db"
+cat > "$R_REL_FENCED/ROUTER.md" <<'MD'
+# ROUTER.md
+## Role split
+- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — the RELEASES DB (releases.db) is the source of truth
+
+```markdown
+## Role split
+- `ROADMAP.md` = example in code fence
+## Startup sequence
+1. Read `ROADMAP.md` inside fence
+```
+
+## Startup sequence
+1. Read `ROADMAP-DASHBOARD.md` to find active effort. (ROADMAP.md is frozen legacy.)
+MD
+
+out="$(python3 "$AUDIT_PY" --check "$R_REL_FENCED" 2>&1)"; rc=$?
+ok "clean repo with ## headings inside code fences passes audit (rc=0)" "$(is "$rc" "0"; echo $?)"
+
+# ── 41. Releases --fix: collapses duplicate roadmap steps in Startup ───────────────
 R_REL_DUP="$(mkrepo rel_dup)"
 require_fixture "$R_REL_DUP" "dup releases repo"
 touch "$R_REL_DUP/releases.db"
@@ -769,7 +853,7 @@ ok "dup roadmap steps fixed and passes audit (rc=0)" "$(is "$rc_dup" "0"; echo $
 dup_count="$(grep -c "ROADMAP-DASHBOARD.md" "$R_REL_DUP/ROUTER.md")"
 ok "Startup sequence collapsed duplicate directives to 1 canonical step" "$(is "$dup_count" "2"; echo $?)"
 
-# ── 38. Releases --fix: removes duplicate sections down to exactly 1 each ──────────
+# ── 42. Releases --fix: removes duplicate sections down to exactly 1 each ──────────
 python3 "$AUDIT_PY" --fix "$R_REL_DUP_SECT" >/dev/null
 out_dup_sect_check="$(python3 "$AUDIT_PY" --check "$R_REL_DUP_SECT" 2>&1)"; rc_dup_sect=$?
 ok "duplicate sections fixed and passes audit (rc=0)" "$(is "$rc_dup_sect" "0"; echo $?)"
@@ -778,7 +862,7 @@ start_sect_count="$(grep -c "## Startup sequence" "$R_REL_DUP_SECT/ROUTER.md")"
 ok "fixed ROUTER.md has exactly 1 ## Role split" "$(is "$role_sect_count" "1"; echo $?)"
 ok "fixed ROUTER.md has exactly 1 ## Startup sequence" "$(is "$start_sect_count" "1"; echo $?)"
 
-# ── 39. Releases --fix: preserves prefixed custom sections byte-for-byte ───────────
+# ── 43. Releases --fix: preserves prefixed custom sections byte-for-byte ───────────
 R_REL_PREFIXED_CUSTOM="$(mkrepo rel_prefixed_custom)"
 require_fixture "$R_REL_PREFIXED_CUSTOM" "prefixed custom repo"
 touch "$R_REL_PREFIXED_CUSTOM/releases.db"
@@ -830,7 +914,7 @@ cmp "$WORK/custom_s2_exp.bin" "$WORK/custom_s2_act.bin" >/dev/null 2>&1; rc_s2=$
 ok "prefixed '## Role split rationale' preserved byte-for-byte with cmp" "$(is "$rc_s1" "0"; echo $?)"
 ok "prefixed '## Startup sequence notes' preserved byte-for-byte with cmp" "$(is "$rc_s2" "0"; echo $?)"
 
-# ── 40. Releases --fix: exact byte-level cmp on custom section with CRLF & idempotence
+# ── 44. Releases --fix: exact byte-level cmp on custom section with CRLF & idempotence
 R_REL_CRLF="$(mkrepo rel_crlf)"
 require_fixture "$R_REL_CRLF" "crlf releases repo"
 touch "$R_REL_CRLF/releases.db"
@@ -873,7 +957,7 @@ python3 "$AUDIT_PY" --fix "$R_REL_CRLF" >/dev/null
 cmp "$WORK/router_pass1.bin" "$R_REL_CRLF/ROUTER.md" >/dev/null 2>&1; rc_idemp=$?
 ok "--fix is byte-level idempotent on second run" "$(is "$rc_idemp" "0"; echo $?)"
 
-# ── 41. Releases --fix: repairs empty ## Role split followed by another section ───
+# ── 45. Releases --fix: repairs empty ## Role split followed by another section ───
 R_REL_EMPTY_ROLE="$(mkrepo rel_empty_role)"
 require_fixture "$R_REL_EMPTY_ROLE" "empty role releases repo"
 touch "$R_REL_EMPTY_ROLE/releases.db"
@@ -883,7 +967,7 @@ python3 "$AUDIT_PY" --fix "$R_REL_EMPTY_ROLE" >/dev/null
 out_er="$(python3 "$AUDIT_PY" --check "$R_REL_EMPTY_ROLE" 2>&1)"; rc_er=$?
 ok "releases repo with empty ## Role split fixed and passes audit (rc=0)" "$(is "$rc_er" "0"; echo $?)"
 
-# ── 42. Releases --fix: preserves repeated custom lines inside owned sections ─────
+# ── 46. Releases --fix: preserves repeated custom lines inside owned sections ─────
 R_REL_REPEAT_CUSTOM="$(mkrepo rel_repeat_custom)"
 require_fixture "$R_REL_REPEAT_CUSTOM" "repeat custom releases repo"
 touch "$R_REL_REPEAT_CUSTOM/releases.db"
@@ -902,18 +986,12 @@ repeat_content="$(cat "$R_REL_REPEAT_CUSTOM/ROUTER.md")"
 repeat_count="$(grep -c "CUSTOM.md" "$R_REL_REPEAT_CUSTOM/ROUTER.md")"
 ok "releases --fix preserved repeated custom entries" "$(is "$repeat_count" "2"; echo $?)"
 
-# ── 43. Releases --fix: preserves mixed LF/CRLF lines in owned sections verbatim ───
+# ── 47. Releases --fix: preserves mixed LF/CRLF lines in owned sections verbatim ───
 R_REL_MIXED_TERM="$(mkrepo rel_mixed_term)"
 require_fixture "$R_REL_MIXED_TERM" "mixed term releases repo"
 touch "$R_REL_MIXED_TERM/releases.db"
 printf '# ROUTER.md\n## Role split\n- `ROADMAP.md` = active work\n- `LF_LINE.md` = line with LF\n- `CRLF_LINE.md` = line with CRLF\r\n## Startup sequence\n1. Read ROADMAP.md\n' > "$R_REL_MIXED_TERM/ROUTER.md"
 
-# Save CRLF line slice
-python3 -c "
-with open('$R_REL_MIXED_TERM/ROUTER.md', 'rb') as f:
-    data = f.read()
-assert b'- \x60CRLF_LINE.md\x60 = line with CRLF\r\n' in data
-"
 python3 "$AUDIT_PY" --fix "$R_REL_MIXED_TERM" >/dev/null
 python3 -c "
 with open('$R_REL_MIXED_TERM/ROUTER.md', 'rb') as f:
@@ -923,7 +1001,7 @@ assert b'- \x60LF_LINE.md\x60 = line with LF\n' in data
 "
 ok "releases --fix preserved mixed LF and CRLF line endings verbatim" "0"
 
-# ── 44. Mode parser: commented line in .pdda-mode is legacy mode ───────────────────
+# ── 48. Mode parser: commented line in .pdda-mode is legacy mode ───────────────────
 R_PDDA_COMMENT="$(mkrepo pdda_comment)"
 require_fixture "$R_PDDA_COMMENT" "pdda comment repo"
 cat > "$R_PDDA_COMMENT/.pdda-mode" <<'MODE'
@@ -940,7 +1018,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_PDDA_COMMENT" 2>&1)"; rc=$?
 ok "commented ROADMAP_SOURCE=releases is recognized as legacy mode (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 45. Mode parser: prefix line in .pdda-mode is legacy mode ───────────────────────
+# ── 49. Mode parser: prefix line in .pdda-mode is legacy mode ───────────────────────
 R_PDDA_PREFIX="$(mkrepo pdda_prefix)"
 require_fixture "$R_PDDA_PREFIX" "pdda prefix repo"
 cat > "$R_PDDA_PREFIX/.pdda-mode" <<'MODE'
@@ -957,7 +1035,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_PDDA_PREFIX" 2>&1)"; rc=$?
 ok "prefix NOT_ROADMAP_SOURCE=releases is recognized as legacy mode (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 46. Mode parser: whitespace in .pdda-mode is releases mode ────────────────────
+# ── 50. Mode parser: whitespace in .pdda-mode is releases mode ────────────────────
 R_PDDA_WS="$(mkrepo pdda_ws)"
 require_fixture "$R_PDDA_WS" "pdda ws repo"
 cat > "$R_PDDA_WS/.pdda-mode" <<'MODE'
@@ -975,7 +1053,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_PDDA_WS" 2>&1)"; rc=$?
 ok "whitespace-padded ROADMAP_SOURCE=releases is recognized as releases mode (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 47. Mode parser: unreadable .pdda-mode reports error ──────────────────────────
+# ── 51. Mode parser: unreadable .pdda-mode reports error ──────────────────────────
 R_PDDA_UNREAD="$(mkrepo pdda_unread)"
 require_fixture "$R_PDDA_UNREAD" "pdda unread repo"
 touch "$R_PDDA_UNREAD/.pdda-mode"
@@ -989,7 +1067,7 @@ else
   pass=$((pass+1))
 fi
 
-# ── 48. Clean legacy-mode repo ─────────────────────────────────────────────────────
+# ── 52. Clean legacy-mode repo ─────────────────────────────────────────────────────
 R_LEG_CLEAN="$(mkrepo leg_clean)"
 require_fixture "$R_LEG_CLEAN" "clean legacy repo"
 cat > "$R_LEG_CLEAN/ROUTER.md" <<'MD'
@@ -1006,7 +1084,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_CLEAN" 2>&1)"; rc=$?
 ok "clean legacy-mode repo reports ok (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 49. Clean legacy-mode repo with Markdown link in Startup ───────────────────────
+# ── 53. Clean legacy-mode repo with Markdown link in Startup ───────────────────────
 R_LEG_MD_LINK="$(mkrepo leg_md_link)"
 require_fixture "$R_LEG_MD_LINK" "clean legacy md link repo"
 cat > "$R_LEG_MD_LINK/ROUTER.md" <<'MD'
@@ -1020,7 +1098,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_MD_LINK" 2>&1)"; rc=$?
 ok "clean legacy-mode repo with Markdown link in Startup reports ok (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 50. Clean legacy-mode repo with not frozen in Startup ──────────────────────────
+# ── 54. Clean legacy-mode repo with not frozen in Startup ──────────────────────────
 R_LEG_NOT_FROZEN="$(mkrepo leg_not_frozen)"
 require_fixture "$R_LEG_NOT_FROZEN" "clean legacy not frozen repo"
 cat > "$R_LEG_NOT_FROZEN/ROUTER.md" <<'MD'
@@ -1034,7 +1112,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_NOT_FROZEN" 2>&1)"; rc=$?
 ok "clean legacy-mode repo with 'not frozen' in Startup reports ok (rc=0)" "$(is "$rc" "0"; echo $?)"
 
-# ── 51. Clean legacy-mode repo with unrelated legacy entry ─────────────────────────
+# ── 55. Clean legacy-mode repo with unrelated legacy entry ─────────────────────────
 R_LEG_OLD_API="$(mkrepo leg_old_api)"
 require_fixture "$R_LEG_OLD_API" "clean legacy old api repo"
 cat > "$R_LEG_OLD_API/ROUTER.md" <<'MD'
@@ -1053,7 +1131,26 @@ python3 "$AUDIT_PY" --fix "$R_LEG_OLD_API" >/dev/null
 old_api_content="$(cat "$R_LEG_OLD_API/ROUTER.md")"
 ok "legacy --fix preserved unrelated OLD-API.md entry" "$(has "$old_api_content" "OLD-API.md"; echo $?)"
 
-# ── 52. Legacy clean valid custom startup step preserved byte-for-byte ────────────
+# ── 56. Clean legacy-mode repo with non-owned historical frozen mention ───────────
+R_LEG_HIST_CHANGELOG="$(mkrepo leg_hist_changelog)"
+require_fixture "$R_LEG_HIST_CHANGELOG" "hist changelog repo"
+cat > "$R_LEG_HIST_CHANGELOG/ROUTER.md" <<'MD'
+# ROUTER.md
+## Role split
+- `ROADMAP.md` = the pointer ledger of current, completed, attempted, and deferred work
+- `CHANGELOG.md` = records when `ROADMAP.md` was frozen during the 2025 migration
+## Startup sequence
+1. Read `ROADMAP.md` to find active effort.
+MD
+
+out="$(python3 "$AUDIT_PY" --check "$R_LEG_HIST_CHANGELOG" 2>&1)"; rc=$?
+ok "clean legacy repo with historical frozen mention in CHANGELOG entry reports ok (rc=0)" "$(is "$rc" "0"; echo $?)"
+
+python3 "$AUDIT_PY" --fix "$R_LEG_HIST_CHANGELOG" >/dev/null
+cl_content="$(cat "$R_LEG_HIST_CHANGELOG/ROUTER.md")"
+ok "legacy --fix preserved non-owned CHANGELOG entry" "$(has "$cl_content" "records when \`ROADMAP.md\` was frozen"; echo $?)"
+
+# ── 57. Legacy clean valid custom startup step preserved byte-for-byte ────────────
 R_LEG_CUSTOM_STEP="$(mkrepo leg_custom_step)"
 require_fixture "$R_LEG_CUSTOM_STEP" "custom step legacy repo"
 cat > "$R_LEG_CUSTOM_STEP/ROUTER.md" <<'MD'
@@ -1091,7 +1188,7 @@ with open('$WORK/leg_custom_step_act.bin', 'wb') as out:
 cmp "$WORK/leg_custom_step_exp.bin" "$WORK/leg_custom_step_act.bin" >/dev/null 2>&1; rc_lcs_cmp=$?
 ok "legacy --fix preserved custom startup step byte-for-byte with cmp" "$(is "$rc_lcs_cmp" "0"; echo $?)"
 
-# ── 53. Legacy negative: Role split with deployment policy pointer ledger ─────────
+# ── 58. Legacy negative: Role split with deployment policy pointer ledger ─────────
 R_LEG_DEPLOY_POLICY="$(mkrepo leg_deploy_policy)"
 require_fixture "$R_LEG_DEPLOY_POLICY" "deploy policy legacy repo"
 cat > "$R_LEG_DEPLOY_POLICY/ROUTER.md" <<'MD'
@@ -1105,7 +1202,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_DEPLOY_POLICY" 2>&1)"; rc=$?
 ok "legacy repo with pointer ledger for deployment policy in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 54. Legacy negative: Role split with archived pointer ledger ──────────────────
+# ── 59. Legacy negative: Role split with archived pointer ledger ──────────────────
 R_LEG_ARCHIVED="$(mkrepo leg_archived)"
 require_fixture "$R_LEG_ARCHIVED" "archived legacy repo"
 cat > "$R_LEG_ARCHIVED/ROUTER.md" <<'MD'
@@ -1119,7 +1216,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_ARCHIVED" 2>&1)"; rc=$?
 ok "legacy repo with archived pointer ledger in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 55. Legacy negative: Role split with false-frozen ROADMAP.md ───────────────────
+# ── 60. Legacy negative: Role split with false-frozen ROADMAP.md ───────────────────
 R_LEG_FALSE_FROZEN="$(mkrepo leg_false_frozen)"
 require_fixture "$R_LEG_FALSE_FROZEN" "false frozen legacy repo"
 cat > "$R_LEG_FALSE_FROZEN/ROUTER.md" <<'MD'
@@ -1134,7 +1231,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_FALSE_FROZEN" 2>&1)"; rc=$?
 ok "legacy repo with false-frozen ROADMAP.md in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 56. Legacy negative: Role split with two contradictory lines (active + frozen) ─
+# ── 61. Legacy negative: Role split with two contradictory lines (active + frozen) ─
 R_LEG_TWO_LINE="$(mkrepo leg_two_line)"
 require_fixture "$R_LEG_TWO_LINE" "two line contradictory legacy repo"
 cat > "$R_LEG_TWO_LINE/ROUTER.md" <<'MD'
@@ -1150,7 +1247,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_TWO_LINE" 2>&1)"; rc=$?
 ok "legacy repo with two contradictory lines in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 57. Legacy negative: Role split with mixed not frozen + affirmative legacy ─────
+# ── 62. Legacy negative: Role split with mixed not frozen + affirmative legacy ─────
 R_LEG_MIXED_ROLE="$(mkrepo leg_mixed_role)"
 require_fixture "$R_LEG_MIXED_ROLE" "mixed role legacy repo"
 cat > "$R_LEG_MIXED_ROLE/ROUTER.md" <<'MD'
@@ -1166,7 +1263,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_MIXED_ROLE" 2>&1)"; rc=$?
 ok "legacy repo with not frozen + affirmative legacy in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 58. Legacy negative: Role split with asterisk marker ───────────────────────────
+# ── 63. Legacy negative: Role split with asterisk marker ───────────────────────────
 R_LEG_ASTERISK="$(mkrepo leg_asterisk)"
 require_fixture "$R_LEG_ASTERISK" "asterisk legacy repo"
 cat > "$R_LEG_ASTERISK/ROUTER.md" <<'MD'
@@ -1180,7 +1277,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_ASTERISK" 2>&1)"; rc=$?
 ok "legacy repo with asterisk false-frozen role reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 59. Legacy negative: Role split with inactive declaration ──────────────────────
+# ── 64. Legacy negative: Role split with inactive declaration ──────────────────────
 R_LEG_INACTIVE_ROLE="$(mkrepo leg_inactive_role)"
 require_fixture "$R_LEG_INACTIVE_ROLE" "inactive role legacy repo"
 cat > "$R_LEG_INACTIVE_ROLE/ROUTER.md" <<'MD'
@@ -1195,7 +1292,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_INACTIVE_ROLE" 2>&1)"; rc=$?
 ok "legacy repo with not active; obsolete record in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 60. Legacy negative: Role split with releases.db mention ──────────────────────
+# ── 65. Legacy negative: Role split with releases.db mention ──────────────────────
 R_LEG_DB_ROLE="$(mkrepo leg_db_role)"
 require_fixture "$R_LEG_DB_ROLE" "db role legacy repo"
 cat > "$R_LEG_DB_ROLE/ROUTER.md" <<'MD'
@@ -1209,7 +1306,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_DB_ROLE" 2>&1)"; rc=$?
 ok "legacy repo with releases.db token in Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 61. Legacy negative: Startup sequence with deployment instructions ────────────
+# ── 66. Legacy negative: Startup sequence with deployment instructions ────────────
 R_LEG_DEPLOY_START="$(mkrepo leg_deploy_start)"
 require_fixture "$R_LEG_DEPLOY_START" "deploy start legacy repo"
 cat > "$R_LEG_DEPLOY_START/ROUTER.md" <<'MD'
@@ -1223,7 +1320,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_DEPLOY_START" 2>&1)"; rc=$?
 ok "legacy repo with deployment instructions in Startup sequence reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 62. Legacy negative: Startup sequence with deployment + negated current work ──
+# ── 67. Legacy negative: Startup sequence with deployment + negated current work ──
 R_LEG_DEPLOY_NEG_START="$(mkrepo leg_deploy_neg_start)"
 require_fixture "$R_LEG_DEPLOY_NEG_START" "deploy neg start legacy repo"
 cat > "$R_LEG_DEPLOY_NEG_START/ROUTER.md" <<'MD'
@@ -1237,7 +1334,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_DEPLOY_NEG_START" 2>&1)"; rc=$?
 ok "legacy repo with deployment instructions + negated current work in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 63. Legacy negative: Startup sequence with false-frozen ROADMAP.md ────────────
+# ── 68. Legacy negative: Startup sequence with false-frozen ROADMAP.md ────────────
 R_LEG_START_FROZEN="$(mkrepo leg_start_frozen)"
 require_fixture "$R_LEG_START_FROZEN" "start frozen legacy repo"
 cat > "$R_LEG_START_FROZEN/ROUTER.md" <<'MD'
@@ -1252,9 +1349,10 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_START_FROZEN" 2>&1)"; rc=$?
 ok "legacy repo with false-frozen Startup sequence reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 64. Legacy negative: Startup sequence with historical reference only ──────────
+# ── 69. Legacy negative: Startup sequence with historical reference only ──────────
 R_LEG_HIST_REF="$(mkrepo leg_hist_ref)"
 require_fixture "$R_LEG_HIST_REF" "hist ref legacy repo"
+touch "$R_LEG_HIST_REF/ROUTER.md"
 cat > "$R_LEG_HIST_REF/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
@@ -1266,7 +1364,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_HIST_REF" 2>&1)"; rc=$?
 ok "legacy repo with historical reference only in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 65. Legacy negative: Startup sequence with negated Do not read ─────────────────
+# ── 70. Legacy negative: Startup sequence with negated Do not read ─────────────────
 R_LEG_NEG_READ="$(mkrepo leg_neg_read)"
 require_fixture "$R_LEG_NEG_READ" "neg read legacy repo"
 cat > "$R_LEG_NEG_READ/ROUTER.md" <<'MD'
@@ -1281,7 +1379,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_NEG_READ" 2>&1)"; rc=$?
 ok "legacy repo with Do not read ROADMAP.md reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 66. Legacy negative: Startup sequence with not frozen + do not read contradiction
+# ── 71. Legacy negative: Startup sequence with not frozen + do not read contradiction
 R_LEG_START_CONTRADICT="$(mkrepo leg_start_contradict)"
 require_fixture "$R_LEG_START_CONTRADICT" "start contradict legacy repo"
 cat > "$R_LEG_START_CONTRADICT/ROUTER.md" <<'MD'
@@ -1295,7 +1393,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_START_CONTRADICT" 2>&1)"; rc=$?
 ok "legacy repo with not frozen + do not read contradiction in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 67. Legacy negative: Startup sequence with mixed not frozen + affirmative legacy
+# ── 72. Legacy negative: Startup sequence with mixed not frozen + affirmative legacy
 R_LEG_START_MIXED="$(mkrepo leg_start_mixed)"
 require_fixture "$R_LEG_START_MIXED" "start mixed legacy repo"
 cat > "$R_LEG_START_MIXED/ROUTER.md" <<'MD'
@@ -1309,7 +1407,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_START_MIXED" 2>&1)"; rc=$?
 ok "legacy repo with affirmative legacy clause in Startup reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 68. Legacy negative: Startup sequence with releases.sql mention ───────────────
+# ── 73. Legacy negative: Startup sequence with releases.sql mention ───────────────
 R_LEG_SQL_START="$(mkrepo leg_sql_start)"
 require_fixture "$R_LEG_SQL_START" "sql start legacy repo"
 cat > "$R_LEG_SQL_START/ROUTER.md" <<'MD'
@@ -1323,7 +1421,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_SQL_START" 2>&1)"; rc=$?
 ok "legacy repo with releases.sql in Startup sequence reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 69. Legacy negative: missing Role split section ───────────────────────────────
+# ── 74. Legacy negative: missing Role split section ───────────────────────────────
 R_LEG_NO_ROLE="$(mkrepo leg_no_role)"
 require_fixture "$R_LEG_NO_ROLE" "no role legacy repo"
 cat > "$R_LEG_NO_ROLE/ROUTER.md" <<'MD'
@@ -1335,7 +1433,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_NO_ROLE" 2>&1)"; rc=$?
 ok "legacy repo missing Role split reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 70. Legacy negative: missing Startup sequence section ─────────────────────────
+# ── 75. Legacy negative: missing Startup sequence section ─────────────────────────
 R_LEG_NO_START="$(mkrepo leg_no_start)"
 require_fixture "$R_LEG_NO_START" "no start legacy repo"
 cat > "$R_LEG_NO_START/ROUTER.md" <<'MD'
@@ -1347,7 +1445,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_NO_START" 2>&1)"; rc=$?
 ok "legacy repo missing Startup sequence reports drift" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 
-# ── 71. Legacy negative: leftover ROADMAP-DASHBOARD.md file on disk ───────────────
+# ── 76. Legacy negative: leftover ROADMAP-DASHBOARD.md file on disk ───────────────
 R_LEG_LEFTOVER="$(mkrepo leg_leftover)"
 require_fixture "$R_LEG_LEFTOVER" "leftover dashboard file legacy repo"
 touch "$R_LEG_LEFTOVER/ROADMAP-DASHBOARD.md"
@@ -1363,7 +1461,7 @@ MD
 out="$(python3 "$AUDIT_PY" --check "$R_LEG_LEFTOVER" 2>&1)"; rc=$?
 ok "legacy repo with leftover dashboard file but clean router reports ok" "$(is "$rc" "0"; echo $?)"
 
-# ── 72. Remediate legacy repo with --fix ──────────────────────────────────────────
+# ── 77. Remediate legacy repo with --fix ──────────────────────────────────────────
 R_LEG_DRIFT="$(mkrepo leg_drift)"
 require_fixture "$R_LEG_DRIFT" "drifted legacy repo"
 cat > "$R_LEG_DRIFT/ROUTER.md" <<'MD'
@@ -1389,14 +1487,14 @@ ok "legacy --fix stripped contradictory frozen line" "$(! has "$content_leg" "RO
 ok "legacy --fix restored active pointer ledger text" "$(has "$content_leg" "pointer ledger of current"; echo $?)"
 ok "legacy --fix restored active ROADMAP.md read step" "$(has "$content_leg" "Read \`ROADMAP.md\`"; echo $?)"
 
-# ── 73. Missing ROUTER.md handling ────────────────────────────────────────────────
+# ── 78. Missing ROUTER.md handling ────────────────────────────────────────────────
 R_MISSING="$(mkrepo missing_router)"
 require_fixture "$R_MISSING" "missing router repo"
 out="$(python3 "$AUDIT_PY" --check "$R_MISSING" 2>&1)"; rc=$?
 ok "missing ROUTER.md reports non-zero exit on --check" "$([ "$rc" -ne 0 ] && echo 0 || echo 1)"
 ok "missing ROUTER.md output indicates not found" "$(has "$out" "ROUTER.md not found"; echo $?)"
 
-# ── 74. Unreadable ROUTER.md handling ─────────────────────────────────────────────
+# ── 79. Unreadable ROUTER.md handling ─────────────────────────────────────────────
 R_UNREADABLE="$(mkrepo unreadable)"
 require_fixture "$R_UNREADABLE" "unreadable repo"
 touch "$R_UNREADABLE/ROUTER.md"
@@ -1412,7 +1510,7 @@ else
   pass=$((pass+2))
 fi
 
-# ── 75. xyz-sync.sh check integration ─────────────────────────────────────────────
+# ── 80. xyz-sync.sh check integration ─────────────────────────────────────────────
 REG_FILE="$WORK/registry.tsv"
 printf '# XYZ install registry\n' > "$REG_FILE"
 printf '%s\t%s\t%s\t%s\t%s\n' "$R_REL_STALE/.xyz" "2026-08-31T00:00:00Z" "0.2.0" "deadbeef" "$R_REL_STALE" >> "$REG_FILE"
