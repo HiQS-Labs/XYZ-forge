@@ -2,7 +2,7 @@
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
 NEXT: Reviewer
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -118,6 +118,17 @@ Addressed round 4 feedback:
    - `validate.sh:348` updated to `— 27/0;`.
 
 Handing off to Reviewer for approval.
+
+## Reviewer turn — codex (round 5)
+
+**Verdict: Approved (4/4 requirements satisfied).** The round-4 fixture-isolation defect is fixed: receipt-scope mutations are now limited to `merge-rebuild.target_gid`, the canonical dump is regenerated after every mutation, and the malformed/legacy checks explicitly exclude dump divergence.
+
+1. **P — Error message phrasing and de-dramatization.** `cmd_check` identifies git branch switching/rebasing as the likely cause, gives `releases check --rebuild` as remediation, and does not use the former spliced/forged claim (`utils/py/releases_app.py:4169-4181`).
+2. **P — Rebuild break scoping.** `_parse_reanchor_breaks` accepts only canonical `reanchor:N` values or legacy SQL NULL, `_rebuild` counts the rebuilt chain plus its prospective receipt break and records that absolute count, and `cmd_check` rejects breaks beyond the tolerated scope (`utils/py/releases_app.py:4039-4051`, `utils/py/releases_app.py:4144-4182`, `utils/py/releases_app.py:4622-4639`).
+3. **P — Legacy backwards compatibility.** SQL NULL snapshots the number of breaks seen at that receipt, so earlier breaks remain tolerated and a later break exceeds the saved boundary (`utils/py/releases_app.py:4152-4169`). The dedicated post-legacy fixture now regenerates `releases.sql` before asserting the isolated receipt-chain failure (`test/gh360-scoped-receipt-chain-rebuild.sh:319-355`).
+4. **P — Test coverage and invariants.** The suite covers clean state, un-reanchored break and wording, first rebuild, post-rebuild break, second rebuild, canonical/malformed scopes, legacy NULL compatibility, and a post-legacy break. `set_rebuild_target_gid` updates only merge-rebuild receipts and immediately writes `dump_text(...)`, eliminating the prior blanket-NULL substitution and stale-dump carryover (`test/gh360-scoped-receipt-chain-rebuild.sh:43-65`, `test/gh360-scoped-receipt-chain-rebuild.sh:268-355`). Each relevant fixture asserts absence of `rule=dump-divergence`, and the gate registration matches the stated 27 assertions (`validate.sh:348-350`).
+
+Verification was static only, as required for this reviewer turn. No source/artifact or project test was executed.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
