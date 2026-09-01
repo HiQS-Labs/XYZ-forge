@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -150,5 +150,23 @@ All Round 2 findings addressed:
   - Expanded `test/gh353-vendored-router-audit.sh` to 23 distinct scenarios and 35 assertions covering all mode parser branches, format variants, legacy missing/stale sections, custom byte preservation, unreadable files, and sync integration.
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 3
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases-mode Startup auditing still recognizes only the verb `Read`, so directives such as `Open ROADMAP.md to find current work`, `Consult ROADMAP.md first`, or a Markdown link with equivalent active wording pass as clean as long as the dashboard is mentioned elsewhere. The fixer has the same verb/list-marker restriction, so broadening only the audit would leave an active directive behind (`.relay-artifacts/router_audit.py:168-185`, `.relay-artifacts/router_audit.py:317-335`). Fix: classify any non-negated `ROADMAP.md` current-work directive within Startup as active (independent of verb/markup/list style), and have `--fix` replace/remove every such directive; add `Open`, `Consult`, linked-path, and negated historical-reference regressions.
+- [Blocker] Releases Role split validation explicitly suppresses `active` when the same line also says `frozen`, allowing a contradictory declaration such as `ROADMAP.md = active pointer ledger; frozen legacy; releases.db is source of truth` to pass (`.relay-artifacts/router_audit.py:152-162`). Fix: reject active/current/pointer-ledger semantics regardless of whether required frozen/DB words also occur, then add a contradictory-keywords regression.
+- [Blocker] Legacy auditing still does not establish an active-roadmap contract. Any ROADMAP role declaration passes if it merely omits four forbidden tokens, and `Do not read ROADMAP.md` satisfies the positive Startup `Read ROADMAP.md` regex; Startup references to `releases.db`, `releases.sql`, or `ROADMAP_SOURCE=releases` also are not rejected (`.relay-artifacts/router_audit.py:196-217`, `.relay-artifacts/router_audit.py:223-244`). Fix: require positive current/pointer-ledger semantics in the role entry, parse negation for the Startup directive, reject every releases-source token in both bounded sections, and add false-clean tests for obsolete/do-not-read and releases-source wording.
+- [Blocker] The claimed byte-preserving splice still normalizes CRLF before section discovery: text-mode `open()` uses universal-newline translation, so `"\r\n" in content` is false after reading and even untouched custom slices are rewritten with LF (`.relay-artifacts/router_audit.py:263-267`, `.relay-artifacts/router_audit.py:446-452`). Fix: read/write with `newline=""` (or operate on bytes), preserve each untouched slice exactly, and add a CRLF fixture whose custom-section bytes are compared exactly before/after.
+- [Should] `--check` reports a missing `ROUTER.md` but exits zero because absence sets neither `drift` nor `error`; `xyz-sync.sh check` therefore cannot diagnose that target state (`.relay-artifacts/router_audit.py:113-114`, `.relay-artifacts/router_audit.py:488-505`; integration call: `relay-automation/xyz-sync.sh:454-461`). Fix: classify absence as an explicit error/drift for `--check` (while retaining `--fix`'s clear refusal or defining a scaffold policy) and add a missing-file integration regression.
+- [Should] Atomic replacement uses a predictable `<ROUTER>.tmp.<pid>` opened non-exclusively and leaves it behind on write/replace failure (`.relay-artifacts/router_audit.py:446-452`). Fix: create an exclusive temporary file in the same directory via `tempfile.mkstemp`/`NamedTemporaryFile`, flush and `fsync`, preserve the intended mode, clean up in `finally`, then `os.replace`.
+- [Pass] Mode parsing is now anchored to an uncommented `ROADMAP_SOURCE = releases` assignment and surfaces read failures (`.relay-artifacts/router_audit.py:25-44`); the vendor skill contains distinct releases/legacy confirmation prompts (`skills/vendor-stack/SKILL.md:100-119`); and the focused test remains registered (`validate.sh:425`). Static review only: the reviewer did not execute artifact/source files or the test.
+
+Pre-existing defects: remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-510` was excluded.
+
+Handing off to Producer — go to the claude-a window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
