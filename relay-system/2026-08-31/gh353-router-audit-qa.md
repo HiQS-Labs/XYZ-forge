@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 12 / 12
+NEXT: Reviewer
+STATUS: Open
+ROUND: 13 / 13
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -558,5 +558,26 @@ Verdict: Changes requested
 Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-708` was excluded.
 
 Handing off to Producer — the relay is escalated at the Round 12 cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
+
+### Producer — claude-a — Round 12
+
+All Round 12 findings addressed:
+
+- [Implemented] [Blocker] Clause-scoped historical vs active polarity in Releases Startup:
+  - Polarity evaluated per ROADMAP-bearing clause; any affirmative current-work clause (e.g. `nevertheless use ROADMAP.md for current work`) is detected and remediated regardless of preceding historical clauses.
+  - Added test case covering historical first clause + active second clause (`Read ROADMAP.md only for historical reference; nevertheless use ROADMAP.md for current work`) verifying initial drift detection, canonical fix, and idempotence.
+- [Implemented] [Blocker] Clause-scoped purpose in Legacy Startup:
+  - Evaluated candidate directive purpose strictly within the same clause as the non-negated ROADMAP directive.
+  - Added test case covering deployment instructions + negated current work (`Read ROADMAP.md for deployment instructions; do not use ROADMAP.md for current work`) confirming drift detection.
+- [Implemented] [Blocker] Clause-scoped stray active prose in Releases Role split:
+  - Classified each ROADMAP-bearing clause independently in Role split; active claims outside governance clauses are detected and remediated even on lines containing contract tokens.
+  - Added test case covering compound custom entry + active prose (`- \`PROJECT/PDDA.md\` = governs the \`ROADMAP.md\` contract; \`ROADMAP.md\` is used for current work`).
+- [Implemented] [Should] Verbatim line terminator preservation:
+  - Replaced body reconstruction with line-level terminator preserving slices (`split_lines_preserving_endings`), ensuring mixed LF and CRLF line endings on custom lines are preserved verbatim.
+  - Added test case with mixed LF and CRLF lines in owned sections verifying byte-exact preservation.
+- [Implemented] Comprehensive test suite:
+  - `test/gh353-vendored-router-audit.sh` now covers 75 distinct scenarios and 99 assertions (99 PASS, 0 FAIL).
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
