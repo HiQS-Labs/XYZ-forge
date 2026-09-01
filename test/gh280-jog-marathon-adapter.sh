@@ -143,7 +143,37 @@ FR="$WORK/root-install";  setup_fixture "$FR" ""
 FV="$WORK/vendor-install"; setup_fixture "$FV" ".xyz/"
 INIT_HEAD_R="$(git -C "$FR" rev-parse HEAD)"
 
+# ── GH-365 step 7: immutable prebuilt seed fixture + contamination tripwire ──────────────────
+# Every section mutates ONE working copy ($FR) and restores it at each section boundary.
+# Restore-mechanism decision, measured (warm, 2026-09-01, this suite's fixture shape):
+#   full tree re-copy from seed (cp -a)  0.23–0.25s per boundary
+#   git trio (checkout main + reset --hard + clean)  0.05s per boundary
+# With 28 boundaries, copy-per-section would ADD ~5s to the suite, so the prebuilt seed is
+# the immutable TEMPLATE + CONTAMINATION CANARY, not the restore mechanism. Nothing
+# legitimate ever writes into it, so any byte change after a section is contamination —
+# mutable state cannot leak across sections through the seed even if a path escapes $FR.
+# The digest covers every file including .git (branch cuts, ref rewrites, object writes all
+# trip it). If a future section ever needs a stronger reset than the git trio, restore from
+# the seed directly:  rm -rf "$FR" && cp -a "$SEED" "$FR"
+SEED="$WORK/seed-root"
+cp -a "$FR" "$SEED"
+seed_digest() { (cd "$SEED" && find . -type f -print0 | sort -z | xargs -0 cksum | cksum); }
+SEED_CKSUM="$(seed_digest)"
+# Files only, never directories: a read-only FILE refuses in-place writes (fail-loud first
+# line), but a read-only DIR would make _setup.sh's exit-trap `rm -rf "$WORK"` fail and litter
+# the temp root (measured: rm -rf on a chmod -R a-w tree exits 1 and leaves the tree behind).
+find "$SEED" -type f -exec chmod a-w {} +
+
+seed_intact() {  # <where> — contamination control: the seed must still be byte-identical
+  local got
+  got="$(seed_digest)"
+  [ "$got" = "$SEED_CKSUM" ] \
+    && pass "seed fixture byte-unchanged after $1 (containment)" \
+    || fail "SEED fixture mutated by $1 — mutable state leaked across sections: $got != $SEED_CKSUM"
+}
+
 cleanup_root_fixture() {
+  seed_intact "the section that just ran (cleanup boundary)"
   rm -rf "$FR/.tick" "$FR/marathon-system" "$FR/relay-system"
   git -C "$FR" checkout -q main >/dev/null 2>&1 || true
   git -C "$FR" reset -q --hard "$INIT_HEAD_R" >/dev/null 2>&1 || true
@@ -1197,6 +1227,9 @@ JOG_SRC="$(cat "$FR/utils/py/jog_run.py")"
 ! has "$JOG_SRC" "checkout -b" \
   && pass "P3 jog never cuts lane branches (branch identity is Marathon's)" \
   || fail "P3 jog_run.py cuts branches directly"
+
+# Final containment control: the seed that anchored every section boundary is still pristine.
+seed_intact "the full suite (final check)"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
