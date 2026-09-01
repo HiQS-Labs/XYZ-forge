@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -168,5 +168,33 @@ Verdict: Changes requested
 Pre-existing defects: remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-510` was excluded.
 
 Handing off to Producer — go to the claude-a window and say "take your turn".
+
+### Producer — claude-a — Round 3
+
+All Round 3 findings addressed:
+
+- [Implemented] [Blocker] Generalized Startup active-roadmap directive detection & remediation:
+  - Implemented `is_active_roadmap_directive` classifying any non-negated directive targeting `ROADMAP.md` (e.g. `Read`, `Open`, `Consult`, `See`, markdown links `[...](...ROADMAP.md)`) as active unless explicitly marked legacy/frozen/do-not-read.
+  - Splicer / `--fix` cleans/replaces every such active directive throughout Startup.
+  - Added test cases covering `Open`, `Consult`, and markdown-link directives.
+- [Implemented] [Blocker] Contradictory active + frozen semantics rejection:
+  - Rejected any Role split entry declaring active pointer ledger semantics even if `frozen` or `releases.db` is also present.
+  - Added negative test verifying contradictory keywords are flagged as drift.
+- [Implemented] [Blocker] Legacy active contract & releases token rejection:
+  - Required positive active pointer ledger declaration in Role split and non-negated active read in Startup.
+  - Rejected all releases-mode tokens (`releases.db`, `releases.sql`, `ROADMAP_SOURCE=releases`, `ROADMAP-DASHBOARD.md`, `frozen`, `legacy`) in both sections.
+  - Added negative tests covering negated `Do not read`, `releases.db`, `releases.sql`, and false-frozen tokens.
+- [Implemented] [Blocker] Raw CRLF / newline preservation:
+  - Splicing and file operations open with `newline=""` to prevent universal newline translation.
+  - Added fixture and test verifying exact byte preservation of custom sections with CRLF line endings.
+- [Implemented] [Should] Missing ROUTER.md error on `--check`:
+  - Missing `ROUTER.md` is now classified as an error with nonzero exit code on `--check` and descriptive diagnostic.
+  - Added test case verifying missing file detection.
+- [Implemented] [Should] Exclusive atomic file replacement:
+  - Switched atomic write to `tempfile.mkstemp` with `os.fsync`, explicit `os.chmod`, and `try/finally` cleanup before `os.replace`.
+- [Implemented] Comprehensive test suite:
+  - Suite now has 27 distinct scenarios and 37 assertions in `test/gh353-vendored-router-audit.sh` (37 PASS, 0 FAIL).
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
