@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 5
 
@@ -196,5 +196,23 @@ All Round 3 findings addressed:
   - Suite now has 27 distinct scenarios and 37 assertions in `test/gh353-vendored-router-audit.sh` (37 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 4
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases-mode semantic detection remains narrower than the Producer's claimed “any non-negated directive” and “any active/current/pointer-ledger semantics.” `is_active_roadmap_directive` ignores `Use ROADMAP.md for current work` because neither `use` nor `current` is accepted, and its whole-line denylist also treats contradictory text such as `ROADMAP.md is not frozen; use it for current work` as negated merely because `frozen` occurs (`.relay-artifacts/router_audit.py:93-104`). Role validation likewise rejects only three exact active phrases, so `ROADMAP.md = current work ledger; frozen legacy; releases.db is source of truth` passes (`.relay-artifacts/router_audit.py:170-180`). Fix: parse the ROADMAP clause's polarity and current-work semantics rather than using narrow phrase/whole-line keyword tests; cover `Use`, `current work ledger`, `not frozen`, and `do not ignore ... use` regressions in both audit and remediation.
+- [Blocker] Legacy Role split validation still accepts explicitly inactive declarations. `has_positive_active_role` treats the single word `deferred` (or even `not active`) as positive, provided `frozen`/`legacy` are absent, so `ROADMAP.md = not active; obsolete record of deferred work` can pass as the required active pointer ledger (`.relay-artifacts/router_audit.py:217-238`). Fix: require an affirmative current-work/pointer-ledger declaration with negation handling; remove `deferred` as a standalone positive signal and add obsolete/deferred/not-active false-clean tests.
+- [Blocker] `--fix` does not remediate all drift that the audit detects, then replaces the live file before discovering that failure. In legacy mode the audit rejects releases tokens anywhere in either owned block, but the fixer only removes a dashboard declaration or rewrites ROADMAP declarations/directives; a separate `releases.db is the source` line survives (`.relay-artifacts/router_audit.py:213-246`, `.relay-artifacts/router_audit.py:373-424`). The code then calls `os.replace` before post-audit and returns failure without restoring the original, leaving a modified-but-still-drifted ROUTER behind (`.relay-artifacts/router_audit.py:468-490`). Fix: make audit/fix predicates symmetric, validate the patched candidate before replacement (or roll back on verification failure), and test that every failure leaves the original bytes untouched.
+- [Should] Fixing Startup can duplicate the canonical roadmap step: every matching active ROADMAP/dashboard line is independently replaced, so a section containing both produces two identical steps in releases mode and likewise in legacy mode (`.relay-artifacts/router_audit.py:340-356`, `.relay-artifacts/router_audit.py:403-424`). Fix: collapse all owned roadmap directives to exactly one canonical step while retaining the first suitable list position/prefix; assert idempotence and one-step cardinality.
+- [Should] The claimed exact CRLF/custom-byte regression is still only a substring test. Command substitution strips trailing newlines and the assertion merely searches for text, so it cannot detect CRLF normalization or changes around the custom block (`test/gh353-vendored-router-audit.sh:221-233`). Fix: save the exact custom block bytes before `--fix`, extract the same bounded slice afterward, and compare with `cmp` (plus assert the whole fixer is byte-idempotent on a second run).
+- [Pass] The raw-newline implementation now opens ROUTER with `newline=""` and splices untouched source slices (`.relay-artifacts/router_audit.py:285-294`, `.relay-artifacts/router_audit.py:439-450`); exclusive same-directory temp creation, file `fsync`, cleanup, and replacement are present (`.relay-artifacts/router_audit.py:468-485`). Static review only: the reviewer did not execute the artifact, source files, or test.
+- [Pass] The integration surfaces remain present: `xyz-sync.sh check` invokes the audit and prints nonzero diagnostics (`relay-automation/xyz-sync.sh:454-461`), the vendor skill has separate releases/legacy confirmation prompts (`skills/vendor-stack/SKILL.md:100-119`), and the focused test remains registered (`validate.sh:425`).
+
+Pre-existing defects: remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-543` was excluded.
+
+Handing off to Producer — go to the claude-a window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
