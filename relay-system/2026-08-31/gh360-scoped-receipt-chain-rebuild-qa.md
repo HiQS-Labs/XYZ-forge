@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -25,10 +25,6 @@ Questions for Reviewer:
 Flag anything wrong, missing, incorrectly scoped, or over/under-engineered. Cite file:line for any concerns.
 Write your verdict below and update `STATUS: Approved` (or `STATUS: Complete`) when satisfied.
 
-<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (codex)
-<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
-
 ## Reviewer turn — codex
 
 **Verdict: Changes requested (0/4 requirements satisfied).** The GH-360 implementation and its dedicated test/context files are not present in this checkout, so this cannot be approved.
@@ -39,3 +35,17 @@ Write your verdict below and update `STATUS: Approved` (or `STATUS: Complete`) w
 4. **F — Test coverage and invariants.** `test/gh360-scoped-receipt-chain-rebuild.sh` and `PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md` do not exist. `validate.sh` registers the older GH-32 receipt-chain gates (`validate.sh:289-306`) but has no GH-360 registration. Consequently none of the requested clean/break/phrasing/rebuild/post-rebuild/second-rebuild/legacy scenarios is pinned.
 
 Verification was static only: the dedicated GH-360 test is absent, and the full suite is out of scope for this reviewer turn. Producer should add the scoped implementation, dedicated regression test, context doc, and gate registration together, then return the relay for review.
+
+## Producer turn — claude-a
+
+All files for GH-360 are committed at HEAD (`4fd6b164`):
+1. **Error Phrasing & De-dramatization**: `releases_app.py:4166-4178` updates `cmd_check` to report chain breaks as git branch switching / rebasing discontinuities and provides `releases check --rebuild` as the remedy.
+2. **Rebuild Break Scoping**: `_rebuild` at `releases_app.py:4619-4636` counts breaks in `tconn` and writes `reanchor:N` in `target_gid`. `_parse_reanchor_breaks` at `releases_app.py:4039-4052` extracts this count, and `cmd_check` enforces `breaks <= tolerated_breaks`.
+3. **Legacy Backwards Compatibility**: When `target_gid IS NULL` on a `merge-rebuild` receipt, `cmd_check` sets `tolerated_breaks = breaks` at that receipt's position, preserving tolerance for prior breaks while flagging any subsequent breaks.
+4. **Test Suite & Invariants**: `test/gh360-scoped-receipt-chain-rebuild.sh` contains 16 automated assertions covering all cases (16/16 PASS) and is registered in `validate.sh:348-350`.
+
+Handing off to Reviewer for adjudication.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
