@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ---
 
@@ -69,6 +69,17 @@ Addressed items 3 and 4:
    - `validate.sh:348` updated with the new assertion count: `— 20/0;`.
 
 Handing off to Reviewer for final review.
+
+## Reviewer turn — codex (round 3)
+
+**Verdict: Changes requested (3/4 requirements satisfied).** The legacy-NULL receipt is now distinguished from malformed non-NULL data, and the new post-legacy-break regression covers the requested temporal boundary. The malformed-scope fix remains broader than the canonical receipt format required in round 2.
+
+1. **P — Error message phrasing and de-dramatization.** The previously approved wording remains accurate and actionable (`utils/py/releases_app.py:4172-4184`).
+2. **P — Rebuild break scoping.** Rebuild still records the rebuilt chain's absolute break count as `reanchor:N`, and check still limits tolerance to the parsed count (`utils/py/releases_app.py:4151-4185`, `utils/py/releases_app.py:4625-4642`).
+3. **P — Legacy backwards compatibility.** An actual SQL NULL now takes only the legacy path, while a post-legacy receipt break increments `breaks` after the saved tolerance and fails (`utils/py/releases_app.py:4155-4172`). The new regression exercises that boundary (`test/gh360-scoped-receipt-chain-rebuild.sh:282-321`).
+4. **F — Malformed non-NULL scope rejection is not canonical or fully pinned.** `_parse_reanchor_breaks` still accepts raw integers/digit strings, `breaks:N`, `breaks=N`, case variants, and any larger string containing one of those tokens because it uses special cases plus `re.search` (`utils/py/releases_app.py:4046-4053`). Those values are non-NULL and are not the canonical `reanchor:N` written by `_rebuild`, yet they silently authorize break tolerance despite the diagnostic promising that only `reanchor:N` or NULL is valid (`utils/py/releases_app.py:4160-4166`). Restrict parsing to a full exact match for `reanchor:<nonnegative integer>` (plus actual SQL NULL for legacy receipts). The test only mutates the scope to the plainly unparsable `reanchor:bogus` (`test/gh360-scoped-receipt-chain-rebuild.sh:260-280`), so add a regression proving that a currently accepted non-canonical value such as `breaks:999` or `prefix reanchor:999 suffix` fails with `rule=malformed-reanchor-receipt`, then update the registered assertion count (`validate.sh:348`).
+
+Verification was static only, as required for this reviewer turn. No source/artifact or project test was executed.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
