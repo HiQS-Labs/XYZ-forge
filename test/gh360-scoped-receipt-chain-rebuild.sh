@@ -279,6 +279,48 @@ else
   ok "error output reports malformed-reanchor-receipt rule" "false"
 fi
 
+# Non-canonical breaks:999 is rejected
+python3 -c "
+import sqlite3
+conn = sqlite3.connect('$R/releases.db')
+conn.execute('DROP TRIGGER IF EXISTS op_no_update')
+conn.execute('UPDATE op_receipts SET target_gid = \"breaks:999\" WHERE op = \"merge-rebuild\"')
+conn.execute(\"\"\"CREATE TRIGGER op_no_update BEFORE UPDATE ON op_receipts
+                 BEGIN SELECT RAISE(ABORT, 'op_receipts is append-only'); END;\"\"\")
+conn.commit()
+conn.close()
+"
+sed -i.bak "s/'reanchor:bogus'/'breaks:999'/g" "$R/releases.sql"
+out="$(ra check 2>&1)"; rc=$?
+ok "non-canonical breaks:999 fails check (rc=1)" "[ $rc -eq 1 ]"
+if has "$out" "FAIL: rule=malformed-reanchor-receipt"; then
+  ok "error output reports malformed-reanchor-receipt on breaks:999" "true"
+else
+  echo "DEBUG output: $out" >&2
+  ok "error output reports malformed-reanchor-receipt on breaks:999" "false"
+fi
+
+# Non-canonical embedded string 'prefix reanchor:999 suffix' is rejected
+python3 -c "
+import sqlite3
+conn = sqlite3.connect('$R/releases.db')
+conn.execute('DROP TRIGGER IF EXISTS op_no_update')
+conn.execute('UPDATE op_receipts SET target_gid = \"prefix reanchor:999 suffix\" WHERE op = \"merge-rebuild\"')
+conn.execute(\"\"\"CREATE TRIGGER op_no_update BEFORE UPDATE ON op_receipts
+                 BEGIN SELECT RAISE(ABORT, 'op_receipts is append-only'); END;\"\"\")
+conn.commit()
+conn.close()
+"
+sed -i.bak "s/'breaks:999'/'prefix reanchor:999 suffix'/g" "$R/releases.sql"
+out="$(ra check 2>&1)"; rc=$?
+ok "non-canonical embedded string fails check (rc=1)" "[ $rc -eq 1 ]"
+if has "$out" "FAIL: rule=malformed-reanchor-receipt"; then
+  ok "error output reports malformed-reanchor-receipt on embedded string" "true"
+else
+  echo "DEBUG output: $out" >&2
+  ok "error output reports malformed-reanchor-receipt on embedded string" "false"
+fi
+
 # 8. Break occurring AFTER legacy NULL target_gid receipt is caught
 # Restore NULL target_gid in dump and DB
 sed -i.bak "s/'reanchor:bogus'/NULL/g" "$R/releases.sql"

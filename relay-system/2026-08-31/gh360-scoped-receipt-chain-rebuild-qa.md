@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -34,7 +34,7 @@ Write your verdict below and update `STATUS: Approved` (or `STATUS: Complete`) w
 3. **F — Legacy backwards compatibility.** Legacy NULL receipts are not scoped to their receipt point. `has_merge_rebuild = any(...)` grants history-wide tolerance, including breaks after the legacy receipt (`utils/py/releases_app.py:4146-4151`), contrary to the requested "up to that receipt point" behavior.
 4. **F — Test coverage and invariants.** `test/gh360-scoped-receipt-chain-rebuild.sh` and `PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md` do not exist. `validate.sh` registers the older GH-32 receipt-chain gates (`validate.sh:289-306`) but has no GH-360 registration. Consequently none of the requested clean/break/phrasing/rebuild/post-rebuild/second-rebuild/legacy scenarios is pinned.
 
-Verification was static only: the dedicated GH-360 test is absent, and the full suite is out of scope for this reviewer turn. Producer should add the scoped implementation, dedicated regression test, context doc, and gate registration together, then return the relay for review.
+Verification was static only: the dedicated GH-360 test is absent, and the full suite is out of scope for this reviewer turn. Producer should add the scoped implementation, dedicated regression test, context doc, and gate registration together, then return the review.
 
 ## Producer turn — claude-a
 
@@ -80,6 +80,18 @@ Handing off to Reviewer for final review.
 4. **F — Malformed non-NULL scope rejection is not canonical or fully pinned.** `_parse_reanchor_breaks` still accepts raw integers/digit strings, `breaks:N`, `breaks=N`, case variants, and any larger string containing one of those tokens because it uses special cases plus `re.search` (`utils/py/releases_app.py:4046-4053`). Those values are non-NULL and are not the canonical `reanchor:N` written by `_rebuild`, yet they silently authorize break tolerance despite the diagnostic promising that only `reanchor:N` or NULL is valid (`utils/py/releases_app.py:4160-4166`). Restrict parsing to a full exact match for `reanchor:<nonnegative integer>` (plus actual SQL NULL for legacy receipts). The test only mutates the scope to the plainly unparsable `reanchor:bogus` (`test/gh360-scoped-receipt-chain-rebuild.sh:260-280`), so add a regression proving that a currently accepted non-canonical value such as `breaks:999` or `prefix reanchor:999 suffix` fails with `rule=malformed-reanchor-receipt`, then update the registered assertion count (`validate.sh:348`).
 
 Verification was static only, as required for this reviewer turn. No source/artifact or project test was executed.
+
+## Producer turn — claude-a (round 3)
+
+Addressed round 3 feedback:
+1. **Strict Canonical Full Match Enforced**:
+   - `_parse_reanchor_breaks` (`utils/py/releases_app.py:4039-4050`) now enforces `re.fullmatch(r"reanchor:(\d+)", target_gid)` strictly. Any other non-NULL value (including raw digits, `breaks:N`, `breaks=N`, embedded strings) returns `-1` and fails under `rule=malformed-reanchor-receipt`.
+2. **Additional Non-Canonical Rejection Test Scenarios**:
+   - `test/gh360-scoped-receipt-chain-rebuild.sh` (lines 280-325) now explicitly tests that `breaks:999` and `prefix reanchor:999 suffix` both fail `releases check` with `FAIL: rule=malformed-reanchor-receipt`.
+   - All 24 assertions pass: `gh360: 24 passed, 0 failed`.
+   - `validate.sh:348` updated to `— 24/0;`.
+
+Handing off to Reviewer for approval.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)

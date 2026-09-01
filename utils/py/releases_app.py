@@ -4038,17 +4038,14 @@ def cmd_gen(args):
 
 def _parse_reanchor_breaks(target_gid):
     """Extract re-anchored break count from a merge-rebuild receipt's target_gid (GH-360).
-    Returns int count for valid format, None if target_gid is NULL (legacy un-scoped rebuild),
-    or -1 for malformed non-NULL target_gid.
+    Returns int count for canonical 'reanchor:N', None if target_gid is NULL (legacy un-scoped rebuild),
+    or -1 for any non-NULL malformed/non-canonical target_gid.
     """
     if target_gid is None:
         return None
-    if isinstance(target_gid, int):
-        return target_gid
-    target_gid_str = str(target_gid).strip()
-    if target_gid_str.isdigit():
-        return int(target_gid_str)
-    m = re.search(r"\b(?:reanchor|breaks)[:=](\d+)\b", target_gid_str, re.IGNORECASE)
+    if not isinstance(target_gid, str):
+        return -1
+    m = re.fullmatch(r"reanchor:(\d+)", target_gid)
     if m:
         return int(m.group(1))
     return -1
