@@ -4038,7 +4038,8 @@ def cmd_gen(args):
 
 def _parse_reanchor_breaks(target_gid):
     """Extract re-anchored break count from a merge-rebuild receipt's target_gid (GH-360).
-    Returns int count, or None if target_gid is NULL (legacy un-scoped rebuild).
+    Returns int count for valid format, None if target_gid is NULL (legacy un-scoped rebuild),
+    or -1 for malformed non-NULL target_gid.
     """
     if target_gid is None:
         return None
@@ -4050,7 +4051,7 @@ def _parse_reanchor_breaks(target_gid):
     m = re.search(r"\b(?:reanchor|breaks)[:=](\d+)\b", target_gid_str, re.IGNORECASE)
     if m:
         return int(m.group(1))
-    return None
+    return -1
 
 
 def cmd_check(args):
@@ -4156,7 +4157,12 @@ def cmd_check(args):
                     breaks += 1
                 if r["op"] == "merge-rebuild":
                     scoped = _parse_reanchor_breaks(r["target_gid"])
-                    if scoped is not None:
+                    if scoped == -1:
+                        fail("malformed-reanchor-receipt",
+                             "merge-rebuild receipt carries unparseable target_gid %r — "
+                             "expected 'reanchor:N' or NULL" % r["target_gid"])
+                        chain_ok = False
+                    elif scoped is not None:
                         tolerated_breaks = scoped
                     else:
                         # Legacy merge-rebuild receipt with NULL target_gid tolerates breaks up to this point

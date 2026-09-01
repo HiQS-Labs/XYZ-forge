@@ -6,6 +6,8 @@
 #   * `releases check --rebuild` recording the break count in target_gid ('reanchor:N').
 #   * `releases check` tolerating at most the re-anchored count and failing on subsequent breaks.
 #   * Backwards compatibility with legacy `target_gid IS NULL` merge-rebuild receipts.
+#   * Rejection of malformed non-NULL rebuild scope target_gid values.
+#   * Catching breaks that occur after a legacy `target_gid IS NULL` merge-rebuild receipt.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -254,6 +256,70 @@ conn.close()
 "
 out="$(ra check 2>&1)"; rc=$?
 ok "legacy NULL target_gid merge-rebuild receipts pass when no new breaks exist (rc=0)" "[ $rc -eq 0 ]"
+
+# 7. Malformed non-NULL rebuild scope rejection
+# Set a malformed target_gid on a merge-rebuild receipt
+python3 -c "
+import sqlite3
+conn = sqlite3.connect('$R/releases.db')
+conn.execute('DROP TRIGGER IF EXISTS op_no_update')
+conn.execute('UPDATE op_receipts SET target_gid = \"reanchor:bogus\" WHERE op = \"merge-rebuild\"')
+conn.execute(\"\"\"CREATE TRIGGER op_no_update BEFORE UPDATE ON op_receipts
+                 BEGIN SELECT RAISE(ABORT, 'op_receipts is append-only'); END;\"\"\")
+conn.commit()
+conn.close()
+"
+sed -i.bak "s/NULL/'reanchor:bogus'/g" "$R/releases.sql"
+out="$(ra check 2>&1)"; rc=$?
+ok "malformed non-NULL target_gid fails check (rc=1)" "[ $rc -eq 1 ]"
+if has "$out" "FAIL: rule=malformed-reanchor-receipt"; then
+  ok "error output reports malformed-reanchor-receipt rule" "true"
+else
+  echo "DEBUG output: $out" >&2
+  ok "error output reports malformed-reanchor-receipt rule" "false"
+fi
+
+# 8. Break occurring AFTER legacy NULL target_gid receipt is caught
+# Restore NULL target_gid in dump and DB
+sed -i.bak "s/'reanchor:bogus'/NULL/g" "$R/releases.sql"
+python3 -c "
+import sqlite3
+conn = sqlite3.connect('$R/releases.db')
+conn.execute('DROP TRIGGER IF EXISTS op_no_update')
+conn.execute('UPDATE op_receipts SET target_gid = NULL WHERE op = \"merge-rebuild\"')
+conn.execute(\"\"\"CREATE TRIGGER op_no_update BEFORE UPDATE ON op_receipts
+                 BEGIN SELECT RAISE(ABORT, 'op_receipts is append-only'); END;\"\"\")
+conn.commit()
+conn.close()
+"
+# Add a new break after the legacy receipts
+d_cur="$(sqlite3 "$R/releases.db" "SELECT state_digest_after FROM op_receipts ORDER BY id DESC LIMIT 1")"
+python3 -c "
+import sqlite3
+conn = sqlite3.connect('$R/releases.db')
+conn.execute('DROP TRIGGER IF EXISTS op_no_update')
+# Insert a new receipt with broken state_digest_before
+conn.execute(\"\"\"INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
+                                          state_digest_before, state_digest_after)
+                 VALUES ('roadmap-add', 'rmi-test-after-legacy', '2026-08-31T23:59:59Z',
+                         'txn-after-legacy', 'default', 'deadbeef00000000000000000000000000000000000000000000000000000099',
+                         '$d_cur')\"\"\")
+conn.execute(\"\"\"CREATE TRIGGER op_no_update BEFORE UPDATE ON op_receipts
+                 BEGIN SELECT RAISE(ABORT, 'op_receipts is append-only'); END;\"\"\")
+conn.commit()
+conn.close()
+"
+# Append same row to dump so dump-divergence does not fire
+echo "INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-test-after-legacy', '2026-08-31T23:59:59Z', 'txn-after-legacy', 'default', 'deadbeef00000000000000000000000000000000000000000000000000000099', '$d_cur');" >> "$R/releases.sql"
+
+out="$(ra check 2>&1)"; rc=$?
+ok "break occurring after legacy NULL target_gid receipt fails check (rc=1)" "[ $rc -eq 1 ]"
+if has "$out" "1 new receipt(s) break the chain"; then
+  ok "error output announces new break after legacy receipt" "true"
+else
+  echo "DEBUG output: $out" >&2
+  ok "error output announces new break after legacy receipt" "false"
+fi
 
 echo "gh360: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

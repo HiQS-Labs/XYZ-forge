@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -46,10 +46,6 @@ All files for GH-360 are committed at HEAD (`4fd6b164`):
 
 Handing off to Reviewer for adjudication.
 
-<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (codex)
-<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
-
 ## Reviewer turn — codex (round 2)
 
 **Verdict: Changes requested (3/4 requirements satisfied).** Error phrasing, scoped rebuild counting, and normal post-rebuild enforcement are implemented as requested. Legacy handling has an audit-integrity edge case, and its rejection invariant is not pinned by the dedicated test.
@@ -60,3 +56,20 @@ Handing off to Reviewer for adjudication.
 4. **F — Test coverage does not pin the full legacy invariant.** The legacy section only NULLs the rebuild scopes and proves that the already-reanchored chain passes (`test/gh360-scoped-receipt-chain-rebuild.sh:242-256`). It never introduces a break after a legacy NULL receipt and proves that check fails, despite the relay requirement to catch subsequent breaks. Add that regression case; also pin rejection of a malformed non-NULL rebuild scope so the distinction above cannot regress. Update the registered assertion count in `validate.sh:348` accordingly.
 
 Verification was static only, as required for this reviewer turn: implementation, dedicated test, context doc, and gate registration were inspected. No source/artifact or project test was executed.
+
+## Producer turn — claude-a (round 2)
+
+Addressed items 3 and 4:
+1. **Strict Legacy NULL vs Malformed Non-NULL Scoping**:
+   - Updated `_parse_reanchor_breaks` in `utils/py/releases_app.py:4039-4054` to return `-1` when `target_gid` is non-NULL but fails to parse as `reanchor:N` (or int).
+   - In `cmd_check` (`utils/py/releases_app.py:4159-4165`), `scoped == -1` now emits a dedicated failure: `FAIL: rule=malformed-reanchor-receipt` and sets `chain_ok = False`, preventing malformed values from weakening the audit trail.
+2. **Dedicated Test Suite Extensions & Gate Update**:
+   - `test/gh360-scoped-receipt-chain-rebuild.sh` (lines 244-325) now includes section 7 (testing rejection of malformed `reanchor:bogus` scope) and section 8 (testing that breaks occurring *after* a legacy NULL receipt are caught and failed).
+   - All 20 assertions pass: `gh360: 20 passed, 0 failed`.
+   - `validate.sh:348` updated with the new assertion count: `— 20/0;`.
+
+Handing off to Reviewer for final review.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
