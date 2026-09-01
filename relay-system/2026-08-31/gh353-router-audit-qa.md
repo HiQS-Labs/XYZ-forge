@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 12 / 12
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -542,5 +542,21 @@ All Round 11 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 71 distinct scenarios and 94 assertions (94 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 12
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases Startup polarity still has a whole-line historical early return. `Read ROADMAP.md only for historical reference; nevertheless use ROADMAP.md for current work` is classified non-active before its affirmative second clause is inspected, and the fixer likewise classifies the whole line as non-owned and preserves it; with otherwise canonical sections the stale router audits clean and `--fix` returns without remediation (`.relay-artifacts/router_audit.py:112-116`, `.relay-artifacts/router_audit.py:129-145`, `.relay-artifacts/router_audit.py:510-519`). Fix: apply historical/current polarity per ROADMAP-bearing clause, reject any affirmative current-work clause regardless of a separate historical clause, and add this exact initial-check, canonical-fix, and idempotence regression.
+- [Blocker] Legacy Startup purpose is evaluated across the entire line instead of the candidate directive clause. `Read ROADMAP.md for deployment instructions; do not use ROADMAP.md for current work` gives the first non-negated clause an active purpose solely because `current work` appears in the later negated clause, so it satisfies the required active read and can audit clean (`.relay-artifacts/router_audit.py:400-409`). Fix: require the affirmative active/current purpose in the same clause as the non-negated ROADMAP directive, then cover this exact false-clean and its canonical post-fix output.
+- [Blocker] Releases Role-split stray-prose detection suppresses an active claim whenever `contract` appears anywhere on the same line. A custom entry such as ``- `PROJECT/PDDA.md` = governs the `ROADMAP.md` contract; `ROADMAP.md` is used for current work`` is not an owned declaration, contains the active phrase, but is exempted by the unrelated `contract` token; remediation also preserves it (`.relay-artifacts/router_audit.py:100-109`, `.relay-artifacts/router_audit.py:330-333`, `.relay-artifacts/router_audit.py:478-481`). Fix: classify each ROADMAP-bearing clause independently, preserve the governance clause, reject/remove the affirmative current-work clause, and add audit plus preservation/remediation coverage for the exact compound line.
+- [Should] Mixed line terminators inside owned sections are still normalized despite the stated line-ending preservation contract. All bodies are flattened with `splitlines()`, one file-wide `crlf` choice is made if any CRLF exists, and every retained custom line is rejoined with that single terminator (`.relay-artifacts/router_audit.py:441-457`, `.relay-artifacts/router_audit.py:491-493`, `.relay-artifacts/router_audit.py:524-526`, `.relay-artifacts/router_audit.py:558-560`, `.relay-artifacts/router_audit.py:588-590`). Fix: splice classified owned line ranges while retaining each untouched line and terminator verbatim; add a mixed-LF/CRLF owned-section fixture with repeated custom entries and exact pre/post byte comparison.
+- [Pass] Empty owned-section reconstruction now emits structurally separated canonical bodies in both modes, and candidate audit still occurs before the exclusive same-directory temporary write and `os.replace` (`.relay-artifacts/router_audit.py:494-504`, `.relay-artifacts/router_audit.py:527-535`, `.relay-artifacts/router_audit.py:561-569`, `.relay-artifacts/router_audit.py:591-599`, `.relay-artifacts/router_audit.py:631-648`). Static review only; the artifact, source files, and tests were not executed under reviewer containment.
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-708` was excluded.
+
+Handing off to Producer — the relay is escalated at the Round 12 cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
