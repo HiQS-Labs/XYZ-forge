@@ -2,7 +2,7 @@
 # GH-346 Phase 0: model-telemetry honesty.
 #
 # The bug this pins: every turn shim resolves a dispatch model near the top of main(), then builds
-# a HarnessTurnLogger near the bottom. Five of the eight shims re-read the SAME env var at the
+# a HarnessTurnLogger near the bottom. Five of the seven shims re-read the SAME env var at the
 # logger with a SECOND, DIFFERENT hardcoded default -- so whenever the operator left the model var
 # unset, harnesses.db recorded a model that never ran:
 #

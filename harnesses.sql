@@ -888,6 +888,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260827083100-7eab0808','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260831223720-ba23359d','noels-Mac-Studio.local','commandcode','zai-org/glm-5.3','openrouter','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo", "--effort", "max"]','RELAY-gh346-phase0-2-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-31 22:37:20');
 INSERT INTO "invocation_logs" VALUES('inv-20260831235332-d7af29b7','noels-Mac-Studio.local','commandcode','zai-org/glm-5.3','openrouter','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo", "--effort", "max"]','RELAY-gh346-phase0-2-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-31 23:53:32');
 INSERT INTO "invocation_logs" VALUES('inv-20260901041501-cb8d70d0','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh346-phase3-spec-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-01 04:15:01');
+INSERT INTO "invocation_logs" VALUES('inv-20260901043908-69de1ccf','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh346-phase3-spec-qa-r2',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-01 04:39:08');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,

@@ -107,7 +107,10 @@ raised `NameError` *inside* the `HarnessTurnLogger(...)` call, and the block's o
 turn** — not a wrong row, no row.
 
 So the earlier claim in this doc and in commit `86fa1906` — "harnesses.db records the wrong model
-for 5 of 8 gateways" — **described code that never executed**. The honest record:
+for 5 of 8 gateways" — **described code that never executed**. (The denominator was wrong as well:
+`utils/py/*-turn.py` is *seven* shims, not eight — caught in QA round 2 on the Phase 3 spec. Both
+halves of a nine-word claim were false, which is what a claim written from memory rather than from
+the tree looks like.) The honest record:
 
 | Gateway | What actually happened before this work |
 |---|---|
@@ -186,8 +189,20 @@ the env var with a second hardcoded default. Three one-line changes, no design n
 - [x] **0.1** `claude-turn.py:269` — log the dispatch value resolved at `:97`, drop the second hardcoded `anthropic/claude-3-7-sonnet`
 - [x] **0.2** `commandcode-turn.py:128` — log the dispatch value resolved at `:58`, drop the hardcoded `Qwen/Qwen3.8-Max`
 - [x] **0.3** `aider-turn.py:270` — log the value that actually ran (`:62/64`), drop the third independent default
-- [x] **0.4** One regression test asserting telemetry model == dispatch model for each shim with the `*_MODEL` var unset
+- [x] **0.4** One regression test asserting telemetry model == dispatch model **for the five shims that
+      pass an explicit model** (`claude`, `commandcode`, `aider`, `deepseek`, `pi`; the gateway
+      column is asserted on all seven), with the `*_MODEL` var unset
+      — **scoped after QA round 2 on the Phase 3 spec.** As first written this said "each shim", and
+      that was untrue for two of the seven. `agy-turn.py:626` and `codex-turn.py:146` pass
+      `os.environ.get("*_MODEL") or None`, and `harness_turn_logger.py:36` is
+      `self.model_id = model_id or self.cfg["model"]` — so with the var unset the row records
+      `device_config`'s `default_model` while agy and codex each run their own internal default.
+      Two different models. The work under this box was done and the test is real; the sentence
+      claimed more than the test proves, which is why it is scoped rather than unticked. Those two
+      gateways are covered by the standing caveat above and close in Phase 3c.
 - [x] **0.5** `./validate.sh` green; a fresh `harnesses.db` row per touched gateway shows the right model
+      (subject to 0.4's scoping — "the right model" means the dispatched one for the five explicit-model
+      shims, and the declared one for agy/codex until Phase 3c)
       — **re-done properly after QA**: was ticked without being performed (see the CORRECTION above).
       Now enforced by `test/gh346-telemetry-row-written.sh`, 8/8 with logging enabled.
 - [x] **0.6** (added after QA) Fix the three undefined `cli_flags` names that made claude/aider/codex
@@ -230,7 +245,12 @@ Phase 0-2 are all evidence-backed fixes to confirmed bugs. Phase 3 is the only p
 a seam every shim already depends on.
 
 - [ ] Re-run the original friction scenario and record: re-resolutions per session, source-reads needed to pick a gateway, time-to-first-turn
-- [ ] Confirm `harnesses.db` telemetry matches dispatch for all 8 gateways (the Phase 0 payoff, visible only after real runs)
+- [ ] Confirm `harnesses.db` telemetry matches dispatch for all **7** gateways (the Phase 0 payoff,
+      visible only after real runs). **Stays unticked while Phase 3c is deferred** — agy and codex
+      record a declared default, not a dispatched one (see the standing caveat and checkbox 0.4).
+      *Count corrected from 8 during QA round 2: `utils/py/*-turn.py` is seven shims — agy, aider,
+      claude, codex, commandcode, deepseek, pi. The 8 came from `test/gh346-telemetry-row-written.sh`
+      reporting "8 pass", which is 8 assertions (7 gateways + one that the scratch DB was written).*
 - [ ] Compare against this issue's baseline; decide **go / no-go / re-scope** on Phase 3 with numbers, not intuition
 
 ### Phase 3 — gated: unify dispatch on `device_config.py`'s resolver

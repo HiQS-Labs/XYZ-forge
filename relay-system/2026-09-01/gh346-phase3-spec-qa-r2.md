@@ -3,7 +3,7 @@ Goal: Round 2 QA — does the revised GH-346 Phase 3 spec actually close round 1
 Date: 2026-09-01
 Reviewer: agy
 NEXT: Author
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -134,3 +134,47 @@ with findings.
 
 VERDICT: FAIL
 Basis: The spec still includes Tier 3 which cannot be implemented given the DB schema. `device_config.json` needs explicit integrity checking to avoid drifting allowlists. Command Code routing needs an explicit null/self marker to avoid invalid permutations.
+
+---
+
+## Author's adjudication — round 2 CLOSED
+
+Full working in `gh346-phase3-spec-qa-r2-adjudication.md`. **Six findings, none dismissed.** Every
+one was checked against the code before adjudication, per the standing rule on this issue.
+
+| # | Finding | Outcome |
+|---|---|---|
+| 4 | `--env` omits `*_GATEWAY` | **Upheld.** Added. It became load-bearing this round — `commandcode-turn.py:141` now reads it, so a resolver emitting everything else leaves the shim on its literal. |
+| 2 | Nothing validates the `profiles` block | **Upheld.** Folded into `test/gh346-gateway-allowlists.sh` — a test, never a runtime raise. |
+| 5 | The shape permits `{commandcode, openrouter}` | **Upheld — the round's sharpest finding.** `"gateway": "self"`, validated. |
+| 3 | Schema cannot express self-routing → drop tier 3 | **Fact upheld, conclusion declined.** Verified: no column in `models` or `harnesses`, and `execution_engine` does not encode it. But mandatory `gateway` means tier 3 is never asked for one. |
+| 6 | Deferring 3c leaves a second overstated claim | **Upheld.** Checkbox 0.4 said "each shim"; untrue for two. Scoped, not unticked — the test is real, the sentence overreached. |
+| 7 | The bash/Python normalizer seam is unspecified | **Upheld and closed in code, not deferred.** |
+
+### On #7 — the fix was one character
+
+You predicted three divergent implementations, all of which grow a second matcher. The script
+already read `$MODEL_ALIASES_FILE`; only its `-f` guard refused a pipe. That is now `-r`:
+
+```bash
+printf 'glm 5.3 max: zai-org/glm-5.3\n' | MODEL_ALIASES_FILE=/dev/stdin resolve-model-alias.sh "GLM5.3 Max"
+# -> zai-org/glm-5.3
+```
+
+Six new cases in `test/model-alias.sh` (21 pass) pin it, including that an unreadable path still
+exits 2 — loosening the guard must admit a pipe, not treat a missing table as an empty one. One
+matcher, no parity test, no new file, no new validate.sh entry.
+
+### One thing your review did not catch, found while acting on it
+
+**There are seven turn shims, not eight.** `utils/py/*-turn.py` is agy, aider, claude, codex,
+commandcode, deepseek, pi. The "8 gateways" figure came from `test/gh346-telemetry-row-written.sh`
+printing "8 pass" — 8 *assertions*, 7 gateways plus one that the scratch DB was written. It had
+propagated into the capture doc, this spec, the ROI checkpoint, and a test header comment. All
+corrected.
+
+That makes the original Phase 0 claim — *"harnesses.db records the wrong model for 5 of 8
+gateways"* — wrong in both halves: the numerator was already retracted in round 1, and the
+denominator was never right either.
+
+**Verdict accepted in full. Phase 3a is now specified.** Still gated on the Phase 2 ROI checkpoint.
