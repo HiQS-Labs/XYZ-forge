@@ -107,8 +107,11 @@ python3 "$HARNESS/utils/py/router_audit.py" --check /abs/path/to/target-repo
 ```
 
 If `ROUTER DRIFT` is reported:
-The LLM MUST prompt the user for confirmation before modifying the target repository's `ROUTER.md`:
-> *"The target repository `<target-repo>` has releases mode enabled (`releases.db`), but its `ROUTER.md` still lists `ROADMAP.md` as active instead of frozen. Would you like me to update `ROUTER.md` to mark `ROADMAP.md` as frozen and reference `ROADMAP-DASHBOARD.md` and `releases.db`?"*
+The LLM MUST inspect the reported mode (or `--json` output) and prompt the user for confirmation before modifying the target repository's `ROUTER.md`:
+- **If releases mode is active (`releases.db` or `ROADMAP_SOURCE=releases`):**
+  > *"The target repository `<target-repo>` has releases mode enabled (`releases.db`), but its `ROUTER.md` still lists `ROADMAP.md` as active instead of frozen. Would you like me to update `ROUTER.md` to mark `ROADMAP.md` as frozen and reference `ROADMAP-DASHBOARD.md` and `releases.db`?"*
+- **If legacy mode is active (no releases DB):**
+  > *"The target repository `<target-repo>` is in legacy roadmap mode, but its `ROUTER.md` references releases-mode artifacts (`ROADMAP-DASHBOARD.md` or frozen `ROADMAP.md`). Would you like me to update `ROUTER.md` to restore active `ROADMAP.md` instructions?"*
 
 Upon user approval:
 ```bash
