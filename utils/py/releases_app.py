@@ -3258,6 +3258,10 @@ def cmd_roadmap_repoint(args):
     `roadmap add` records doc_path once and refuses duplicates, and nothing else rewrites it — so
     promoting a doc 1-INBOX -> 2-WORKING left the row pointing at a path that no longer exists, and
     pdda-check-roadmap-coverage fails on it with no supported way to fix it.
+
+    The move itself stays a `git mv` by the operator: this verb only rewrites the row (and the
+    dashboard regenerates separately via utils/roadmap-dashboard.sh), so the GH-243 ledger-with-
+    dashboard guard sees a clean regeneration range on the next push.
     """
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
