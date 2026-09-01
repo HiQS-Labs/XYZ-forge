@@ -1,6 +1,6 @@
 ---
 title: "GH-347: move the advisory Ubuntu portability canary off the pull-request path"
-status: Active
+status: Complete
 created: 2026-08-31
 updated: 2026-09-01
 owner: noelsaw1
@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Relocation, job-level status reporting, and regression coverage are implemented; focused checks and the full sequential macOS gate are green in a disposable full clone. | Open the PR, witness its hosted workflow, record the new critical path on #347, then merge and reconcile. |
+| PR #366 merged to `development`; its hosted PR workflow completed in 2 seconds with both jobs skipped and zero runner minutes, and the result is recorded on #347. | Broader suite measurement, parallel-equivalence evidence, and smoke-lane decisions continue separately in #365. |
 
 ## Why
 
@@ -60,7 +60,7 @@ workflow conclusion.
 - [x] The promotion reader reports the canary job's conclusion and includes its source SHA.
 - [x] A negative control proves a successful workflow containing a failed canary reports drift.
 - [x] Workflow-contract tests pin the relocation without weakening automatic CI triggers.
-- [ ] The post-change PR run is measured and the new critical path recorded on #347.
+- [x] The post-change PR run is measured and the new critical path recorded on #347.
 - [x] Full sequential macOS validation remains the promotion-evidence contract.
 
 ## Verification

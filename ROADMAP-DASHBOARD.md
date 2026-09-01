@@ -50,7 +50,7 @@ Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -65,11 +65,10 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
 | GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
-| GH-347 · CI: move advisory Ubuntu canary off the pull-request path | — | [doc](PROJECT/2-WORKING/GH-347-CANARY-PR-RELOCATION.md) · [#347](https://github.com/HiQS-Labs/XYZ-forge/issues/347) |
 
 ## Completed
 
-Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · 🔮 0 · 🔲 0
+Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 50 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -101,6 +100,7 @@ Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · �
 | GH-170 · Agent2Agent: close transcript glitches and harden publishing | ✅ | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Labs/XYZ-forge/issues/170) |
 | GH-165 · Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | ✅ | [GH-165-POST-MERGE-WAVE-RECONCILER.md](PROJECT/1-INBOX/GH-165-POST-MERGE-WAVE-RECONCILER.md) · [#165](https://github.com/HiQS-Labs/XYZ-forge/issues/165) |
 | GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | ✅ | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Labs/XYZ-forge/issues/124) |
+| GH-347 · CI: move advisory Ubuntu canary off the pull-request path | ✅ | [GH-347-CANARY-PR-RELOCATION.md](PROJECT/3-COMPLETED/GH-347-CANARY-PR-RELOCATION.md) · [#347](https://github.com/HiQS-Labs/XYZ-forge/issues/347) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | ✅ | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-153 · RELEASES dashboard sidebar + full-cycle rollup (technical spike) | ✅ | [GH-153-RELEASES-SIDEBAR-ROLLUP.md](PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md) · [#153](https://github.com/HiQS-Labs/XYZ-forge/issues/153) |
 | GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | ✅ | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Labs/XYZ-forge/issues/148) |
