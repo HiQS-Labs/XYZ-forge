@@ -1,10 +1,22 @@
 ---
 gh_issue: 358
-title: "GH-358 — wave_reconcile resolves harness tools repo-root-relative"
-status: In Progress
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/358
+title: "GH-358: wave_reconcile resolves its five harness tools repo-root-relative, so it is inert on every vendored install"
+status: Active
 created: 2026-09-01
 updated: 2026-09-01
+owner: claude
+doc_type: bugfix
+fix_probes:
+  - bash test/gh358-wave-reconcile-vendored-paths.sh
+  - bash test/wave-reconcile.sh
+goal: resolve wave_reconcile's harness tools against the harness home so a vendored (Tier 2) install can complete a post-merge closeout (GH-358)
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fix + regression suite landed on `fix/358-wave-reconcile-vendored-paths`; Codex QA relay Approved; validate.sh green | Merge PR #359, re-vendor `.xyz/` into LTVera-Pandas, then run the blocked `jog land GH-337 --pr 338` |
 
 # GH-358 — wave_reconcile resolves harness tools repo-root-relative
 
