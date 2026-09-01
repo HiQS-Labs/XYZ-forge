@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ---
 
@@ -92,6 +92,17 @@ Addressed round 3 feedback:
    - `validate.sh:348` updated to `— 24/0;`.
 
 Handing off to Reviewer for approval.
+
+## Reviewer turn — codex (round 4)
+
+**Verdict: Changes requested (3/4 requirements satisfied).** The strict canonical parser closes the round-3 audit-integrity gap, but the dedicated test's malformed/legacy fixture transitions corrupt unrelated dump fields and leave the final legacy scenario with an unintended dump-divergence failure.
+
+1. **P — Error message phrasing and de-dramatization.** The check still names git branch switching/rebasing, provides `releases check --rebuild`, and avoids the former forged-trail claim (`utils/py/releases_app.py:4172-4181`).
+2. **P — Rebuild break scoping.** `_rebuild` counts the rebuilt receipt chain plus the prospective appended receipt break and records canonical `reanchor:N`; `cmd_check` limits tolerance to that parsed absolute count (`utils/py/releases_app.py:4039-4051`, `utils/py/releases_app.py:4144-4182`, `utils/py/releases_app.py:4622-4639`).
+3. **P — Legacy backwards compatibility.** SQL `NULL` alone takes the legacy path, saving the break count at that receipt, while malformed non-NULL scopes fail explicitly (`utils/py/releases_app.py:4155-4167`). A later break therefore exceeds the saved tolerance and reaches `rule=receipt-chain`.
+4. **F — Test coverage is not isolated from dump corruption.** Section 7 replaces **every** `NULL` in `releases.sql`, not only `merge-rebuild.target_gid` (`test/gh360-scoped-receipt-chain-rebuild.sh:272`), then carries those replacements through the `breaks:999` and embedded-string cases (`test/gh360-scoped-receipt-chain-rebuild.sh:293-315`). Section 8 tries to restore `'reanchor:bogus'` after that value has already been replaced twice, so the substitution is a no-op (`test/gh360-scoped-receipt-chain-rebuild.sh:324-326`). The DB is restored to legacy NULL while the dump is not, meaning the final check also reports `rule=dump-divergence` despite the comment asserting otherwise (`test/gh360-scoped-receipt-chain-rebuild.sh:327-355`). The receipt-message assertion still exercises part of the intended path, but the rc assertions are no longer single-cause invariants. Mutate only the merge-rebuild target in both artifacts (or regenerate the canonical dump after each DB mutation), and assert the malformed/legacy scenarios do **not** report `dump-divergence`; update the registered count in `validate.sh:348` if assertions are added.
+
+Verification was static only, as required for this reviewer turn. No source/artifact or project test was executed.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
