@@ -366,6 +366,14 @@ TESTS=(
                                   #   GH_URL matcher keeps its issue-only contract.
   # NB: test/gh358-lock-instrumentation.sh below carries a "GH-358" from the pre-rename numbering;
   # this one is HiQS-Labs/XYZ-forge#358. Distinct files, deliberately not renumbered.
+  "gh362-marathon-plan-link-bullets.sh" # GH-362 (the planner reads link-style ledger bullets) —
+                                  #   GH-349 made `- [Title](path)` first class in releases_app.py, whose
+                                  #   parse_roadmap_ledger promises "the same block boundaries as the
+                                  #   planner". Both planner engines still tested `- **` only, so such a
+                                  #   ROADMAP parsed as ZERO items and exit 3 named the one thing that was
+                                  #   not wrong. Asserts BOTH engines (XYZ_PYTHON=1 and 0), that the GH key
+                                  #   comes from the link label and not from prose, and that `- [ ]` task
+                                  #   items are still not entries.
   "gh358-wave-reconcile-vendored-paths.sh" # GH-358 (wave_reconcile's five HARNESS tools resolved
                                   #   repo-root-relative, so on a vendored install — where they exist only under
                                   #   <repo>/.xyz/ — the reconciler died on its first downstream step with
