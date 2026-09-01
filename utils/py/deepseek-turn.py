@@ -8,6 +8,7 @@ import tempfile
 import signal
 from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
 from turn_diagnostics import TurnDiagnostics
+from model_alias import resolve_model_slug
 
 
 def die(msg):
@@ -133,7 +134,14 @@ def main():
     )
 
     dflags = default_deepseek_flags()
-    deepseek_model = os.environ.get("DEEPSEEK_MODEL", "deepseek/deepseek-v4-pro")
+    # GH-346 Phase 1: let the operator write DEEPSEEK_MODEL="deepseek v4 pro" and have the alias
+    # table canonicalise it. This is an ENHANCEMENT layered over the literal, not a swap:
+    # resolve-model-alias.sh exits 1 with no output on a miss and has no canonical-slug
+    # passthrough, so a bare resolver call would blank out every already-canonical id. The literal
+    # below stays as the floor and resolve_model_slug() returns its input unchanged on any miss.
+    deepseek_model = resolve_model_slug(
+        os.environ.get("DEEPSEEK_MODEL", "deepseek/deepseek-v4-pro"), xyz_root
+    )
     deepseek_provider = os.environ.get("DEEPSEEK_PROVIDER", "openrouter")
     api_key_env = "OPENROUTER_API_KEY" if deepseek_provider == "openrouter" else "DEEPSEEK_API_KEY"
 
@@ -243,8 +251,12 @@ def main():
             repo_root=xyz_root,
         ) as logger:
             logger.exit_code = bounded_rc or rc
-    except Exception:
-        pass
+    except Exception as _telemetry_exc:
+        # GH-346: this used to be a bare `pass`. Three shims passed an undefined name as
+        # cli_flags, raised NameError here, and silently wrote NO telemetry row for the entire
+        # life of the shim -- a telemetry system that fails closed and says nothing. Still
+        # non-fatal (a turn must never fail because logging did), but never again invisible.
+        print(f"deepseek-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)
 
     if rc == 6 or bounded_rc == 6:
         sys.exit(6)

@@ -325,7 +325,7 @@ register_vendor() {
 }
 
 # Directories mirrored into the vendored copy.
-#   relay-automation/  all turn shims (codex/agy/aider/gemini/claude), consult, marathon runtime,
+#   relay-automation/  all turn shims (claude/codex/agy/aider/pi/smallcode/commandcode/deepseek — GH-346: was 'gemini', a shim that never existed), consult, marathon runtime,
 #                      the self-improve loop, hooks/, docs, example configs
 #   bin/               tick, validate-relay-block, marathon-yaml
 #   src/               the tick/marathon JS core

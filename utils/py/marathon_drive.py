@@ -669,6 +669,35 @@ def _probe_bin(bin_name, role_label, agent_id):
     _RESULT["reason"] = f"{role_label}-binary-missing"
     die(f"{role_label} binary '{bin_name}' not found on PATH (--{role_label} agent '{agent_id}')")
 
+# GH-346 Phase 2: two lanes dispatch a script by absolute path through an interpreter rather than a
+# PATH binary, so shutil.which() alone is the wrong probe for them. These constants mirror the
+# shims' own defaults; test/gh346-gateway-allowlists.sh asserts they still match, so the copies
+# cannot drift apart silently. (Both shims hardcode a machine-specific path — a separate defect,
+# parked on this issue, not fixed here. Mirroring is faithful to today's behavior, which is what a
+# preflight has to be.)
+SMALLCODE_DEFAULT_BIN = os.path.join(
+    os.path.expanduser("~"), "Documents", "GH Repos", "smallcode", "bin", "smallcode.js"
+)
+DEEPSEEK_DEFAULT_BIN = "/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js"
+
+def _probe_bin_or_file(candidates, role_label, agent_id, override_env):
+    """Pass if ANY candidate resolves — on PATH, or as an existing file dispatched by interpreter.
+
+    Mirrors the shim's own resolution order so preflight never rejects a lane the shim could run.
+    """
+    tried = []
+    for cand in candidates:
+        if not cand:
+            continue
+        tried.append(cand)
+        if shutil.which(cand) or os.path.isfile(cand):
+            return
+    _RESULT["reason"] = f"{role_label}-binary-missing"
+    die(
+        f"{role_label} entrypoint for agent '{agent_id}' not found — tried {tried!r}. "
+        f"Set {override_env} to the executable or script this lane should run."
+    )
+
 def _probe_claude_bin(role_label):
     claude_bin = get_env("CLAUDE_BIN")
     if claude_bin:
@@ -696,6 +725,41 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin(get_env("AIDER_BIN", "aider"), role_label, agent_id)
     elif agent_id.startswith("pi"):
         _probe_bin(get_env("PI_BIN", "pi"), role_label, agent_id)
+    # GH-346 Phase 2 (allowlist #4). Every id route_agent() accepts must be probed here, or the
+    # GH-117 guarantee ("fail before any tick mutation if the lane's binary is undispatchable")
+    # silently does not apply to it — the run proceeds, claims a token, cuts a worktree, and only
+    # then dies inside the shim. smallcode/commandcode/deepseek were all missing.
+    #
+    # NOT all three can use _probe_bin. It is a pure shutil.which() PATH lookup, and two of these
+    # lanes do not dispatch a PATH binary at all: smallcode-turn.sh runs `node <abs path>.js` and
+    # deepseek-turn.py's default_deepseek_bin() prefers an absolute entrypoint over `which dsh`.
+    # Probing "smallcode"/"dsh" on PATH would fail preflight for lanes that run fine — the exact
+    # class of false blocker GH-117 must not introduce. See _probe_bin_or_file.
+    elif agent_id.startswith("commandcode"):
+        # Faithful: commandcode-turn.py:26 resolves COMMANDCODE_BIN or "cmd" and execs it directly.
+        _probe_bin(get_env("COMMANDCODE_BIN", "cmd"), role_label, agent_id)
+    elif agent_id.startswith("smallcode"):
+        _probe_bin_or_file(
+            [get_env("SMALLCODE_BIN"), SMALLCODE_DEFAULT_BIN],
+            role_label, agent_id, "SMALLCODE_BIN",
+        )
+    elif agent_id.startswith("deepseek"):
+        # Mirrors default_deepseek_bin()'s order: explicit override, then the vendored entrypoint,
+        # then `dsh` on PATH.
+        _probe_bin_or_file(
+            [get_env("DEEPSEEK_BIN"), DEEPSEEK_DEFAULT_BIN, "dsh"],
+            role_label, agent_id, "DEEPSEEK_BIN",
+        )
+    else:
+        # GH-346: the comment above used to STATE this invariant and nothing enforced it, so an id
+        # route_agent accepted but this function had no branch for skipped preflight in silence —
+        # the GH-117 guarantee quietly not applying to exactly the newest, least-proven lane. Now
+        # a routing/probe mismatch fails loudly here rather than surfacing as a mid-turn crash.
+        _RESULT["reason"] = f"{role_label}-probe-unmapped"
+        die(
+            f"{role_label} agent '{agent_id}' is routable but has no binary probe — every id "
+            f"route_agent() accepts must be probed here (GH-117). Add a branch to _probe_agent_bin."
+        )
 
 # GH-390 coverage seam.  Keep the attribution decision outside main() so its four
 # platform/Bash return-code shapes can be exercised on every host without executing
@@ -1779,6 +1843,11 @@ def main():
     os.environ["AIDER_AGENT"] = ""
     os.environ["PI_AGENT"] = ""
     os.environ["SMALLCODE_AGENT"] = ""
+    # GH-346 Phase 2: NINTH hand-maintained copy of the gateway set. This block exists so a stale
+    # *_AGENT var inherited from the parent shell cannot route a turn to a lane this run never
+    # asked for. Omitting the two new lanes here would have left exactly that hole open for them.
+    os.environ["COMMANDCODE_AGENT"] = ""
+    os.environ["DEEPSEEK_AGENT"] = ""
 
     def route_agent(agent_id):
         # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
@@ -1795,6 +1864,19 @@ def main():
         # retiring the twins. test/marathon-drive.sh case (20b) asserts the Bash rejection, so if
         # anyone does teach it Pi, that case fails loudly and this note must be retired with it.
         #
+        # GH-346 Phase 2 DECISION (allowlist #1), recorded rather than silently skipped: the same
+        # freeze applies to commandcode and deepseek, added below. The Bash twin still accepts only
+        # claude/codex/agy/aider. The divergence is now three ids wide instead of two, and it stays
+        # that way deliberately — teaching the frozen twin is a twin-retirement task, not a
+        # drive-by. Reachable only via XYZ_PYTHON=0 or a host without python3 >= 3.8, and on that
+        # path an unrecognized id fails at argument routing before any tick mutation.
+        #
+        # One more thing about the twin, since a reader under XYZ_PYTHON=0 will otherwise be misled:
+        # its USAGE TEXT (marathon-drive.sh:33, :593) still advertises `gemini` as a reviewer, and
+        # it keeps a `gemini*` arm in its reviewer gate at :795 — dead, because its own route_agent
+        # at :783 rejects the id first. No gemini shim has ever existed. The Python side dropped the
+        # phantom in GH-346; the twin advertises a lane that cannot run, and stays frozen anyway.
+        #
         # REVIEWER routing is a separate, narrower set and Pi is NOT in it — see the check below
         # and bin/marathon-yaml:95. A Pi *builder* fallback does not give you a Pi *reviewer*.
         if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
@@ -1803,7 +1885,14 @@ def main():
         elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
         elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
         elif agent_id.startswith("smallcode"): os.environ["SMALLCODE_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode")
+        # GH-346 Phase 2 (allowlist #2). Order matters below: neither "commandcode" nor "deepseek"
+        # is a prefix of, or prefixed by, any id above ("commandcode" does NOT start with "codex"),
+        # so these are safe as the last two branches. The matching case in marathon-agent.sh
+        # (allowlist #3) landed in the same change — routing here without a dispatcher branch there
+        # is what made these two gateways accept-then-die.
+        elif agent_id.startswith("commandcode"): os.environ["COMMANDCODE_AGENT"] = agent_id
+        elif agent_id.startswith("deepseek"): os.environ["DEEPSEEK_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek")
         
     if args.builder == args.reviewer:
         _RESULT["reason"] = "builder-equals-reviewer"
@@ -1812,8 +1901,19 @@ def main():
     route_agent(args.builder)
     route_agent(args.reviewer)
     
-    if not (args.reviewer.startswith("codex") or args.reviewer.startswith("gemini") or args.reviewer.startswith("agy")):
-        die(f"reviewer '{args.reviewer}' must start with codex/gemini/agy")
+    # GH-346 Phase 2 (allowlist #6): `gemini` was a PHANTOM. No gemini shim exists anywhere in this
+    # tree, and route_agent() above — which runs first — has no gemini branch, so a gemini reviewer
+    # always died there with "not recognized". Naming it here only advertised a lane that cannot
+    # exist. Removed rather than implemented.
+    #
+    # Reviewer eligibility for commandcode/deepseek is DELIBERATELY NOT added here. Reviewer
+    # fitness is a quality claim, and HARNESS-MODELS-REGISTRY.md grades it per harness separately
+    # from builder fitness (aider is graded "Builder only" precisely because its reviewer turns can
+    # produce a review without persisting it). Phase 2 makes them dispatchable as BUILDERS; whether
+    # they review well is for the ROI checkpoint to answer with evidence, not for this change to
+    # assume. See PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md.
+    if not (args.reviewer.startswith("codex") or args.reviewer.startswith("agy")):
+        die(f"reviewer '{args.reviewer}' must start with codex/agy")
 
     _probe_agent_bin(args.builder, "builder")
     _probe_agent_bin(args.reviewer, "reviewer")
@@ -2031,6 +2131,9 @@ relay-file: {rel_relay}
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
         "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         "SMALLCODE_AGENT",
+        # GH-346 Phase 2: TENTH copy. Kept in lockstep with gate_env.py's registry, which
+        # test/gh441-gate-env-contract.sh compares against this literal.
+        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "RELAY_TOOL_MODE", "XYZ_TOOL_MODE",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
@@ -2992,11 +3095,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         # Set on env2 (the relay-drive child) rather than os.environ, so the guard root is scoped
         # to the drive that actually has a foreign target and cannot leak into anything else in
         # this process. The name set matches route_agent's accepted prefixes above — claude, codex,
-        # agy, aider, pi, smallcode — plus commandcode, whose shim reads the var. Keeping the two
-        # lists together is deliberate: a new builder route added above without a guard root here
-        # silently reintroduces this bug.
+        # agy, aider, pi, smallcode, commandcode, deepseek. Keeping the two lists together is
+        # deliberate: a new builder route added above without a guard root here silently
+        # reintroduces this bug. GH-346 Phase 2 added DEEPSEEK, which was the one accepted route
+        # with no guard root — deepseek-turn.py:93 reads DEEPSEEK_TURN_ROOT, so a --target-root
+        # deepseek turn was resolving containment against the harness clone, not the target.
         if args.target_root:
-            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE"):
+            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK"):
                 env2[f"{_shim}_TURN_ROOT"] = args.target_root
         return subprocess.run(cmd2, env=env2, cwd=root).returncode
 

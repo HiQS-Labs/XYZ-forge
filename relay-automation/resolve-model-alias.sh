@@ -9,6 +9,14 @@
 #   -> prints the canonical slug on stdout and exits 0 on a match; exits 1 (no output on
 #      stdout) if nothing in the table matches; exits 2 on a usage error.
 #
+#   printf 'alias: canonical\n' | MODEL_ALIASES_FILE=/dev/stdin resolve-model-alias.sh "<name>"
+#   -> same, matching against a caller-supplied table instead of the shipped file (GH-346
+#      Phase 3). This is how a Python caller reuses THIS normalizer instead of growing a
+#      second one: `model_alias.py` pipes in the profile names from device_config.json and
+#      gets back the profile whose name matches. Only the readability guard below had to
+#      change (-f -> -r) to allow it -- the four matching tiers are untouched and remain the
+#      single implementation of colloquial-name matching in the repo.
+#
 # Matching is tiered, most-exact first, first match in file order wins each tier:
 #   1. normalized exact match      (case/punctuation/hyphen/whitespace-insensitive)
 #   2. squashed exact match        (also whitespace-insensitive: "GLM5.2" == "glm-5.2")
@@ -46,7 +54,9 @@ if [[ $# -lt 1 || -z "${1:-}" ]]; then
   exit 2
 fi
 
-if [[ ! -f "$ALIASES_FILE" ]]; then
+# -r, not -f: a regular file OR a pipe/process substitution (see MODEL_ALIASES_FILE=/dev/stdin
+# in the header). A missing or unreadable path still fails here with exit 2, unchanged.
+if [[ ! -r "$ALIASES_FILE" ]]; then
   echo "resolve-model-alias.sh: alias table not found: $ALIASES_FILE" >&2
   exit 2
 fi
