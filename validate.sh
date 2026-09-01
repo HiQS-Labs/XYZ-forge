@@ -218,6 +218,9 @@ TESTS=(
   "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 78/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
   "gh35-test-tiers.sh"                 # GH-35 (tiered test selection + CPU governance) — 56/0; pins the registry contract (every registered suite exists AND is in TESTS), the fail-closed tier boundaries, the balanced cores/2 default + --throttle/--burst/env levers, nice -n 10 on the workers, and the tier-1/tier-2 execution paths against fixture clones whose suites are stubs (real runner, real pool, real summary math)
   "gh365-runner-envelope.sh"           # GH-365 step 1 (ONE shared scratch/identity envelope for validate.sh + ci-local.sh) — 22/0; witnessed reds: identity/tree/worktree/lock drift classified, pre-set XYZ_HARNESS_DB respected, missing-lib refusal fail-closed, refused gate record no longer swallowed
+  "gh365-validate-telemetry.sh"        # GH-365 step 2 (retained JSONL telemetry, one lib for both runners) — unit schema, e2e pool/retry/sequential events with skip_lines + bytes/hash, live-denominator check, wiring pins
+  "gh365-driver-lane-registry.sh"      # GH-365 step 3 (driver-lock lane as an audited registry) — 5/0; gh346 contention-SKIP closed, bidirectional lane audit (fixture-root/copy/parse-only exemptions cited), planted-caller red in BOTH invocation shapes
+  "gh365-shellcheck-parallel.sh"       # GH-365 step 5 (ShellCheck census + balanced-width scan) — 10/0; census pinned (one local scan site, no suite executes shellcheck), serial/parallel verdict + SC-code-set equivalence, mutation-flip red on both shapes
   "gh1-fixture-guard.sh"               # GH-1 (shared require_fixture resolved-containment + clone-identity invariant gate; covers the GH-567 lexical-check residual)
   "gh1-adoption-guard.sh"             # GH-10 (every fixture-creating suite carries require_fixture adoption — derivation computed from source, exemptions declared in-file; controls prove the guard fires on an unguarded new suite, a stripped adoption, and a removed exemption marker)
   "gh314-transcript-writeset.sh"       # GH-314 (the write set is THREE paths: the transcript's git add was outside GH-514's preflight, so an ignored relay-system/ was discovered only after paid turns) — 5/0; control: dropping the transcript path spends 2 builder turns before the same refusal (test/baselines/GH-314-negative-control.md)
@@ -907,10 +910,13 @@ if [ "$TIER" -eq 2 ]; then
     echo "==============================="
     echo "Running tier-2 docs gate (docs paths in the change set)"
     echo "==============================="
+    _s="$(rt_now_ms)"
     if [ -x "$HERE/utils/pdda/pdda.sh" ] && $NICE_CMD bash "$HERE/utils/pdda/pdda.sh" run; then
       PASSED+=("tier2:pdda")
+      rt_emit suite non-suite "tier2:pdda" "$_s" "$(rt_now_ms)" 0
     else
       FAILED+=("tier2:pdda")
+      rt_emit suite non-suite "tier2:pdda" "$_s" "$(rt_now_ms)" 1
     fi
   fi
   if [ -n "$T2_PATHS" ]; then
@@ -919,6 +925,7 @@ if [ "$TIER" -eq 2 ]; then
     echo "Running tier-2 static syntax checks on changed files"
     echo "==============================="
     _t2s_rc=0
+    _t2s_s="$(rt_now_ms)"
     while IFS= read -r _p; do
       [ -n "$_p" ] || continue
       # A deleted file rides a git-diff path list (PR #55 review, finding 2): there is
@@ -938,6 +945,7 @@ if [ "$TIER" -eq 2 ]; then
       esac
     done <<<"$T2_PATHS"
     [ "$_t2s_rc" -eq 0 ] && PASSED+=("tier2:static") || FAILED+=("tier2:static")
+    rt_emit suite non-suite "tier2:static" "$_t2s_s" "$(rt_now_ms)" "$_t2s_rc"
   fi
 fi
 
@@ -987,7 +995,25 @@ trap runner_envelope_scrub EXIT
 # first clean run after it was added: it drives `marathon.sh --dry-run`, which reaches marathon-drive
 # and the same lock. The net named it, and the run still returned the correct verdict — which is the
 # mechanism working as intended, and also the honest reason this list is not trusted on its own.
-DRIVER_LOCK_LANE=" gh289-target-root-build-turn.sh gh322-unknown-arg-rejection.sh gh331-cost-summary.sh gh391-emit-marathon-yaml.sh poll-relay.sh relay-artifact-file.sh relay-escalation-not-stall.sh relay-review-once.sh relay-target-root-newfile.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root.sh relay-token-collision.sh relay-untracked-file-warn.sh relay-xyz-skill-guard.sh "
+# gh346-gateway-allowlists.sh joined by the GH-365 step-3 audit, not by inspection: it invokes the
+# REAL driver directly (`python3 utils/py/marathon_drive.py` — the direct-Python shape the GH-195
+# blind-spot warned about) with no MARATHON_ROOT fixture, so under the pool its three probes
+# retried the contended lock ~36s and then SKIPped the routing assertions while exiting GREEN.
+# test/gh365-driver-lane-registry.sh now audits this list bidirectionally: a shipped-driver
+# reference must be lane-serialized here or carry an audited fixture-root exemption.
+DRIVER_LOCK_LANE=" gh289-target-root-build-turn.sh gh322-unknown-arg-rejection.sh gh331-cost-summary.sh gh346-gateway-allowlists.sh gh391-emit-marathon-yaml.sh poll-relay.sh relay-artifact-file.sh relay-escalation-not-stall.sh relay-review-once.sh relay-target-root-newfile.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root.sh relay-token-collision.sh relay-untracked-file-warn.sh relay-xyz-skill-guard.sh "
+
+# GH-365 step 2: retained JSONL telemetry — every run reconstructs its own aggregate work,
+# critical path, per-suite verdicts/RCs, skip-lines, retries, and envelope validity. Best-effort
+# by contract (a broken telemetry write must never gate a run); receipts cited as evidence get
+# committed with provenance in the citing PR (GH-430). One shared implementation with ci-local.
+. "$HERE/test/lib/runner-telemetry.sh"
+if [ -n "$PARALLEL_JOBS" ]; then
+  rt_begin "$HERE" "validate" "parallel" "$PARALLEL_JOBS" "$TIER" "${#TESTS[@]}"
+else
+  rt_begin "$HERE" "validate" "sequential" 1 "$TIER" "${#TESTS[@]}"
+fi
+RT_DISPATCH_MS="$(rt_now_ms)"; export RT_DISPATCH_MS RT_FILE RT_RUN_ID RT_RUNNER
 
 if [ -n "$PARALLEL_JOBS" ]; then
   RUN_DIR="$(mktemp -d -t validate-parallel.XXXXXX)"
@@ -1001,8 +1027,8 @@ if [ -n "$PARALLEL_JOBS" ]; then
   : > "$RESULTS"
   export VALIDATE_HERE="$HERE" VALIDATE_LOG_DIR="$RUN_DIR" VALIDATE_RESULTS="$RESULTS"
 
-  vp_run_one() {  # <suite> — run one suite against its own log; append "rc suite" to the results file
-    local t="$1" log rc
+  vp_run_one() {  # <suite> <lane> — run one suite against its own log; append "rc suite" to the results file
+    local t="$1" lane="$2" log rc _s
     log="$VALIDATE_LOG_DIR/$(printf '%s' "$t" | tr '/' '_').log"
     # GH-15: stdin is /dev/null on EVERY path. The pool's xargs already hands its workers
     # /dev/null, but this same function also runs the sequential driver-lock LANE, which would
@@ -1010,8 +1036,10 @@ if [ -n "$PARALLEL_JOBS" ]; then
     # that reads stdin would behave differently per lane, or hang on a terminal. One stdin regime
     # for every suite is what makes the pool/lane/serial-re-run verdicts comparable.
     # GH-35: $NICE_CMD (unquoted, a scheduling HINT) keeps workers below interactive priority.
+    _s="$(rt_now_ms)"
     if $NICE_CMD bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
     printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
+    rt_suite "$lane" "$t" "$_s" "$(rt_now_ms)" "$rc" "$log"
     echo "[parallel] $t rc=$rc"
   }
   export -f vp_run_one
@@ -1034,11 +1062,11 @@ if [ -n "$PARALLEL_JOBS" ]; then
   echo "  ${#POOL[@]} pooled suites + ${#LANE[@]} in the sequential driver-lock lane (GH-528)"
   echo "  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509)."
   (
-    for t in ${LANE[@]+"${LANE[@]}"}; do vp_run_one "$t"; done
+    for t in ${LANE[@]+"${LANE[@]}"}; do vp_run_one "$t" "driver-lock"; done
   ) &
   LANE_PID=$!
   # `${POOL[@]+...}`: bash 3.2 (what macOS ships) errors on an empty array under `set -u`.
-  [ "${#POOL[@]}" -eq 0 ] || printf '%s\n' ${POOL[@]+"${POOL[@]}"} | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$@"' _ {}
+  [ "${#POOL[@]}" -eq 0 ] || printf '%s\n' ${POOL[@]+"${POOL[@]}"} | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$1" pool' _ {}
   wait "$LANE_PID"
 
   # Every failure is RE-RUN SEQUENTIALLY before it is believed, with the pool drained and the lock
@@ -1065,22 +1093,29 @@ if [ -n "$PARALLEL_JOBS" ]; then
   #     re-run nor reported. The completeness catch-up below gives a missing line the same
   #     treatment as a nonzero rc — re-run alone before believing anything.
   CONTENDED=()
-  vp_rerun_alone() {  # <suite> <why> — classify one suite by its ALONE verdict; never by the pool's
-    local t="$1" why="$2" log
+  vp_rerun_alone() {  # <suite> <why> [rc_first] — classify one suite by its ALONE verdict; never by the pool's
+    local t="$1" why="$2" rc_first="${3:-1}" log _s _e rc_alone
     log="$RUN_DIR/$(printf '%s' "$t" | tr '/' '_').log"
     echo
     echo "==============================="
     echo "$why: $t — re-running it alone to see if that verdict survives"
     echo "==============================="
+    _s="$(rt_now_ms)"
     if bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
+      rc_alone=0
       PASSED+=("$t")
       CONTENDED+=("$t")
       echo "  ... PASSES when run alone. Counting it as passed (sequential is the source of truth)."
       echo "  ... This means a shared resource is contended — see the warning at the end of this run."
+      rt_emit retry retry "$t" "$_s" "$(rt_now_ms)" "$rc_alone" "rc_first=$rc_first" "classified=contended"
+      rt_suite retry "$t" "$_s" "$(rt_now_ms)" "$rc_alone" "$log.serial"
     else
+      rc_alone=$?
       FAILED+=("$t")
       echo "  ... fails alone too. Real failure; last 40 lines of the SERIAL run:"
       tail -40 "$log.serial"
+      rt_emit retry retry "$t" "$_s" "$(rt_now_ms)" "$rc_alone" "rc_first=$rc_first" "classified=real-failure"
+      rt_suite retry "$t" "$_s" "$(rt_now_ms)" "$rc_alone" "$log.serial"
     fi
   }
   while IFS=' ' read -r rc t; do
@@ -1088,7 +1123,7 @@ if [ -n "$PARALLEL_JOBS" ]; then
       PASSED+=("$t")
       continue
     fi
-    vp_rerun_alone "$t" "FAILED in parallel (rc=$rc)"
+    vp_rerun_alone "$t" "FAILED in parallel (rc=$rc)" "$rc"
   done < "$RESULTS"
 
   # Completeness catch-up: every suite in the run set must appear in the results file exactly as
@@ -1121,10 +1156,13 @@ for t in "${RUN_TESTS[@]}"; do
   echo "==============================="
   echo "Running $t"
   echo "==============================="
+  _s="$(rt_now_ms)"
   if $NICE_CMD bash "$HERE/test/$t"; then
     PASSED+=("$t")
+    rt_suite sequential "$t" "$_s" "$(rt_now_ms)" 0 ""
   else
     FAILED+=("$t")
+    rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$?" ""
   fi
 done
 fi
@@ -1136,10 +1174,13 @@ if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
   echo "==============================="
   echo "Running python3 -m pytest test/test_python_layer.py"
   echo "==============================="
+  _s="$(rt_now_ms)"
   if $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py"; then
     PASSED+=("python:test_python_layer.py")
+    rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
   else
     FAILED+=("python:test_python_layer.py")
+    rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$?"
   fi
 fi
 
@@ -1156,7 +1197,10 @@ echo "==============================="
 echo "Running clone-identity invariant (GH-1)"
 echo "==============================="
 _re_rc=0
+_s="$(rt_now_ms)"
 runner_envelope_assert "$HERE" "validate.sh" || _re_rc=$?
+rt_emit stage non-suite "envelope-assert" "$_s" "$(rt_now_ms)" "$_re_rc"
+RT_ENVELOPE_RC="$_re_rc"; RT_ENVELOPE_DRIFT="${RUNNER_ENVELOPE_DRIFT_FACETS:-none}"
 if [ "$_re_rc" -eq 0 ]; then
   PASSED+=("clone-identity-invariant")
 else
@@ -1172,10 +1216,13 @@ if [ "$TIER" -eq 3 ]; then
   echo "==============================="
   echo "Running gamma-poison fixture staleness probe"
   echo "==============================="
+  _s="$(rt_now_ms)"
   if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
     PASSED+=("gamma-poison-staleness-probe")
+    rt_emit suite non-suite "gamma-poison-staleness-probe" "$_s" "$(rt_now_ms)" 0
   else
     FAILED+=("gamma-poison-staleness-probe")
+    rt_emit suite non-suite "gamma-poison-staleness-probe" "$_s" "$(rt_now_ms)" 1
   fi
 fi
 
@@ -1201,8 +1248,17 @@ fi
 if [ $(( ${#PASSED[@]} + ${#FAILED[@]} )) -ne "$TOTAL" ]; then
   echo "validate.sh: INTERNAL ERROR — classified ${#PASSED[@]} passed + ${#FAILED[@]} failed, expected $TOTAL (GH-15)." >&2
   echo "validate.sh: refusing a verdict on incomplete evidence; inspect $( [ -n "${RUN_DIR:-}" ] && printf '%s' "$RUN_DIR" || printf 'the run directory' )" >&2
+  rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$TOTAL" "complete=no-internal-error"
   exit 1
 fi
+# GH-365 step 2: the retained record of THIS run — verdict, denominator, envelope validity, and
+# a self-check that the number of suite events written matches the suites classified. A mismatch
+# is reported (the JSONL undercounts) but never gates the verdict.
+_suite_events="$(grep -c '"event":"suite"' "$RT_FILE" 2>/dev/null || printf '0')"
+rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$TOTAL" \
+  "suite_events=$_suite_events" "run_set=${#RUN_TESTS[@]}" "registered=${#TESTS[@]}" \
+  "suite_events_match=$([ "$_suite_events" -eq "$(( ${#RUN_TESTS[@]} + 0 ))" ] && printf yes || printf no)"
+echo "telemetry: $RT_FILE ($_suite_events suite events, ${#TESTS[@]} registered)"
 echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done
 if [ "${#FAILED[@]}" -gt 0 ]; then

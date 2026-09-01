@@ -147,10 +147,16 @@ PASSED=(); FAILED=()
 GATE_SUITE_LOG="${TMPDIR:-/tmp}/ci-local-suite-$$.log"
 GATE_VERDICTS="${TMPDIR:-/tmp}/ci-local-verdicts-$$.txt"
 trap 'rm -f "$GATE_SUITE_LOG" "$GATE_VERDICTS"' EXIT
+# GH-365 step 2: retained JSONL telemetry, same lib and schema validate.sh uses. rt_begin is
+# deferred to the run section (mode is known there); stage timing is wired once, here, so every
+# step() below is timed uniformly without per-step ceremony.
+. "$HERE/test/lib/runner-telemetry.sh"
 step() {  # <name> — everything after is the step body, run in a subshell
-  local name="$1"; shift
+  local name="$1" _s; shift
+  _s="$(rt_now_ms)"
   printf '\n\033[1m=== %s\033[0m\n' "$name"
-  if "$@"; then PASSED+=("$name"); else FAILED+=("$name"); printf '\033[31mFAILED: %s\033[0m\n' "$name" >&2; fi
+  if "$@"; then PASSED+=("$name"); rt_emit stage stage "$name" "$_s" "$(rt_now_ms)" 0
+  else FAILED+=("$name"); rt_emit stage stage "$name" "$_s" "$(rt_now_ms)" 1; printf '\033[31mFAILED: %s\033[0m\n' "$name" >&2; fi
 }
 
 # ── 1. prerequisites ─────────────────────────────────────────────────────────────────────────────
@@ -173,14 +179,15 @@ check_prereqs() {
 }
 
 # ── 2-5. the cheap static checks, verbatim from the workflow ─────────────────────────────────────
+# GH-365 step 5 census: THIS is the one local ShellCheck scan site (the hosted job in ci.yml is
+# the other); no registered suite executes shellcheck — everything else in test/ is directives.
+# Parallel at the balanced four-worker width (the same policy validate.sh's pool uses): one
+# shellcheck process per file, so diagnostics per file are IDENTICAL to the serial shape — only
+# their interleaving in the aggregate stream can differ. XYZ_SHELLCHECK_JOBS=1 restores the old
+# serial shape exactly (xargs -P 1); xargs aggregates any per-file failure into a nonzero exit.
 shellcheck_tracked() {
   # severity=error, matching the workflow's deliberate choice to land green before tightening.
-  local rc=0 file
-  while IFS= read -r file; do
-    [ -n "$file" ] || continue
-    shellcheck -S error "$file" || rc=1
-  done < <(git ls-files -- '*.sh')
-  return $rc
+  git ls-files -z -- '*.sh' | xargs -0 -P "${XYZ_SHELLCHECK_JOBS:-4}" -n 1 shellcheck -S error
 }
 
 bash_syntax_tracked() {
@@ -272,20 +279,25 @@ validate_suite() {
   # away.
   : > "$GATE_SUITE_LOG"
   : > "$GATE_VERDICTS"
+  _one="${TMPDIR:-/tmp}/ci-local-onesuite-$$.log"   # GH-365: per-suite capture for telemetry bytes/hash
   for t in "${all_tests[@]}"; do
     skip=0
     for s in "${skip_tests[@]}"; do [ "$t" = "$s" ] && { skip=1; break; }; done
-    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; printf '%s\tskip\n' "$t" >> "$GATE_VERDICTS"; continue; }
+    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; printf '%s\tskip\n' "$t" >> "$GATE_VERDICTS"; rt_emit suite stage "$t" "$(rt_now_ms)" "$(rt_now_ms)" 0 "verdict=skip-duplicate"; continue; }
     echo "=== $t ===" | tee -a "$GATE_SUITE_LOG"
-    bash "test/$t" 2>&1 | tee -a "$GATE_SUITE_LOG"
-    if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+    _s="$(rt_now_ms)"
+    bash "test/$t" 2>&1 | tee "$_one" -a "$GATE_SUITE_LOG"
+    _rc="${PIPESTATUS[0]}"
+    if [ "$_rc" -eq 0 ]; then
       printf '%s\tpass\n' "$t" >> "$GATE_VERDICTS"
     else
       rc=1
       printf '%s\tFAIL\n' "$t" >> "$GATE_VERDICTS"
       echo "  ^^ FAILED: $t" >&2
     fi
+    rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$_rc" "$_one"
   done
+  rm -f "$_one"
   return $rc
 }
 
@@ -297,6 +309,9 @@ validate_suite() {
 # evidence must not exit green (the failure mode #365 exists to prevent).
 ci_local_envelope_assert() {
   runner_envelope_assert "$HERE" "ci-local.sh"
+  local rc=$?
+  RT_ENVELOPE_RC="$rc"; RT_ENVELOPE_DRIFT="${RUNNER_ENVELOPE_DRIFT_FACETS:-none}"
+  return "$rc"
 }
 
 # ── run ──────────────────────────────────────────────────────────────────────────────────────────
@@ -304,6 +319,15 @@ printf '\033[1mci-local — mirroring .github/workflows/ci.yml tier1\033[0m\n'
 printf 'repo: %s\n' "$HERE"
 printf 'HEAD: %s\n' "$(git log --oneline -1 2>/dev/null)"
 [ "$FAST" -eq 1 ] && printf '\033[33mmode: --fast (full validate.sh suite SKIPPED)\033[0m\n'
+# GH-365 step 2: open the retained telemetry record for THIS run (same schema as validate.sh).
+# The registered denominator is parsed here, once, exactly the way validate_suite parses TESTS —
+# so run.start carries the explicit denominator instead of inheriting a stale section count.
+_declared="$(sed -n '/^TESTS=(/,/^)/p' "$HERE/validate.sh" | grep -oE '"[^"]+\.sh"' | wc -l | tr -d ' ')"
+if [ "$FAST" -eq 1 ]; then
+  rt_begin "$HERE" "ci-local" "fast" 1 3 "$_declared"
+else
+  rt_begin "$HERE" "ci-local" "sequential" 1 3 "$_declared"
+fi
 
 step "prerequisites"                check_prereqs
 step "shellcheck tracked scripts"   shellcheck_tracked
@@ -343,6 +367,7 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   printf '\n\033[31mci-local: %d step(s) failed\033[0m\n' "${#FAILED[@]}"
   printf 'This ran on macOS — the platform XYZ ships to — so a failure here is a real defect for\n'
   printf 'real users. Do not wait for hosted CI to confirm it; the ubuntu job is advisory (GH-509).\n'
+  rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$(( ${#PASSED[@]} + ${#FAILED[@]} ))" "declared=$_declared" "recorded=no"
   exit 1
 fi
 printf '\n\033[32mci-local: all steps passed\033[0m\n'
@@ -365,9 +390,13 @@ if [ "$FAST" -eq 0 ] && [ "$PROBE" -eq 0 ]; then
   # Delegated rather than inlined, so the REFUSAL has a test that does not cost a 15-minute suite run.
   _gr_rc=0
   bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || _gr_rc=$?
+  rt_emit stage stage "gate-record" "$(rt_now_ms)" "$(rt_now_ms)" "$_gr_rc"
   if [ "$_gr_rc" -ne 0 ]; then
     printf '\033[31mci-local: gate-record refused (exit %d) — this qualifying run leaves NO evidence record, so it cannot exit green (GH-365).\033[0m\n' "$_gr_rc" >&2
+    rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$(( ${#PASSED[@]} + ${#FAILED[@]} ))" "declared=$_declared" "recorded=refused-$_gr_rc"
     exit 1
   fi
 fi
+[ -n "${RT_FILE:-}" ] && echo "telemetry: $RT_FILE"
+rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$(( ${#PASSED[@]} + ${#FAILED[@]} ))" "declared=$_declared" "recorded=yes"
 exit 0
