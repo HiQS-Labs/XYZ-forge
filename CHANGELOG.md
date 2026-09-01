@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-09-01
+
+### Changed
+- **`GUIDING-PRINCIPLES.md` now opens with a canonical "The North Star" section: durable, reversible, DRY — extend what exists rather than forking a parallel, siloed system.** The three goals were already in the repo but split across three files and never stated as one balanced objective: durability and reuse in `GUIDING-PRINCIPLES.md` §6/§7 and the relay-path rule, reversibility in `AGENTS.md` §3, and nothing in `SOP.md` beyond a pointer. The new section states them together, says explicitly that the three pull against each other and that naming the trade is the decision, and declares itself the source of truth so the copies stay copies. `ROUTER.md` gains the missing role-split line for `GUIDING-PRINCIPLES.md` (it had none), `AGENTS.md` gains a pointer at its read-first list and a one-liner tying §3's reversibility scale to the section as its per-change application, and `SOP.md` names the section as canonical for this bar so it never restates it. Docs-only, no behavior change; reversibility **Easy** (revert one commit). Landed direct to `development` as a hotfix at the operator's instruction.
+
 ## [Unreleased] - 2026-08-31
 
 ### Added
