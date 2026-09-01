@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 9 / 9
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -409,5 +409,22 @@ All Round 8 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 52 distinct scenarios and 69 assertions (69 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 9
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases remediation still deletes valid custom Role-split guidance merely because it mentions `ROADMAP.md`. The audit puts every ROADMAP-bearing line into `roadmap_lines` and requires each line independently to contain frozen + DB semantics, so a valid custom entry such as ``- `PROJECT/PDDA.md` = governs the `ROADMAP.md` contract`` creates drift even beside the canonical ROADMAP declaration (`.relay-artifacts/router_audit.py:236-272`). The fixer then consumes every ROADMAP-bearing line as the owned declaration; once `roadmap_seen` is true, that custom entry is appended nowhere and is silently lost (`.relay-artifacts/router_audit.py:401-416`). Fix: identify declarations by a ROADMAP subject/entry shape, validate the section contract across those owned declarations, and preserve every non-owned mention byte-for-byte; add an audit + `--fix` regression with the exact PDDA custom line.
+- [Blocker] Legacy frozen detection is not scoped to `ROADMAP.md`, producing false drift that `--fix` cannot remediate. The third regex alternative matches any `is frozen` / `remains legacy` clause, so an unrelated valid entry such as ``- `OLD-API.md` = remains legacy`` trips both Role and Startup checks (`.relay-artifacts/router_audit.py:301-320`, `.relay-artifacts/router_audit.py:329-356`). Remediation preserves that unrelated line, after which candidate validation fails (`.relay-artifacts/router_audit.py:478-490`, `.relay-artifacts/router_audit.py:511-528`, `.relay-artifacts/router_audit.py:576-579`). Fix: require a ROADMAP mention in the same semantic clause before classifying frozen/legacy wording, and cover unrelated `remains legacy` / `is frozen` lines in both owned blocks through `--check` and `--fix`.
+- [Blocker] Releases Startup classification still suppresses an affirmative active directive whenever frozen wording shares a clause through an unrecognized connector. `split_clauses` recognizes a finite connector list, while `is_active_roadmap_startup_directive` returns non-active on frozen wording before checking active verbs/current-work terms (`.relay-artifacts/router_audit.py:91-117`). Thus `ROADMAP.md is frozen while operators use ROADMAP.md for current work` is not split on `while`, is discarded by the frozen early return, and can audit clean with otherwise canonical sections (`.relay-artifacts/router_audit.py:274-290`); a clean audit makes `--fix` return without changing it (`.relay-artifacts/router_audit.py:364-372`). Fix: detect every affirmative active/current directive independently of co-occurring frozen text (or conservatively require canonical owned guidance and reject extra ROADMAP directives), then add this exact audit/remediation regression.
+- [Should] The dashboard Startup predicate does not actually require current-work/current-state semantics: any non-denylisted read verb passes, so `Read ROADMAP-DASHBOARD.md for deployment instructions` satisfies the purported current-work contract (`.relay-artifacts/router_audit.py:138-152`, `.relay-artifacts/router_audit.py:278-287`). Fix: require an affirmative current-work/current-state/active-effort purpose, rather than inferring it from a filename and verb, and add negative audit + canonicalization coverage.
+- [Should] The enumerated regression matrix omits the custom ROADMAP mention, unrelated non-ROADMAP frozen/legacy clauses, unrecognized-connector contradiction, and purpose-free dashboard directive above (`test/gh353-vendored-router-audit.sh:4-56`). Add each case and assert initial `--check` status, post-fix content preservation/canonicalization, and clean re-audit. Static review only: the artifact and tests were not executed under reviewer containment.
+- [Pass] Mode detection remains anchored to an uncommented `.pdda-mode` assignment or `releases.db`, candidate validation precedes replacement, and the write path uses an exclusive same-directory temporary file with flush, file `fsync`, mode restoration, cleanup, and `os.replace` (`.relay-artifacts/router_audit.py:36-62`, `.relay-artifacts/router_audit.py:576-600`). The report-only sync diagnosis, mode-specific confirmation prompts, and focused-test registration are statically present (`relay-automation/xyz-sync.sh:402-405`, `relay-automation/xyz-sync.sh:454-461`, `skills/vendor-stack/SKILL.md:100-119`, `validate.sh:425`).
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-653` was excluded.
+
+Handing off to Producer — relay is escalated at the round cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
