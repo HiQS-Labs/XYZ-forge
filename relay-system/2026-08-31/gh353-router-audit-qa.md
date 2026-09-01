@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -282,5 +282,23 @@ All Round 5 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 36 distinct scenarios and 49 assertions (49 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 6
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases Role split still has a direct false-clean path for the contradiction from the prior rounds. `has_active_term` suppresses *all* active/current matches when the same line contains `frozen since`, so ``- `ROADMAP.md` = active pointer ledger, frozen since the flip; releases.db is source of truth`` satisfies frozen + DB and passes (`.relay-artifacts/router_audit.py:189-208`). Fix: evaluate each semantic clause and suppress only genuinely negated/historical uses of the active term; add this exact `active ... frozen since` regression to both `--check` and `--fix` coverage.
+- [Blocker] Audit and remediation recognize only hyphen-form declarations, so alternate list forms can survive a successful fix. For example, ``* `ROADMAP.md` = active pointer ledger`` is ignored by the declaration predicates; `--fix` preserves it, appends a canonical hyphen declaration, and candidate pre-validation then certifies the contradictory result (`.relay-artifacts/router_audit.py:116-132`, `.relay-artifacts/router_audit.py:185-208`, `.relay-artifacts/router_audit.py:326-347`, `.relay-artifacts/router_audit.py:495-498`). Fix: parse ROADMAP declarations independent of list marker/case (or explicitly reject every noncanonical declaration), remove/replace all owned variants, and add `*`, numbered, lowercase, and mixed-format audit/fix regressions.
+- [Blocker] Dashboard “affirmative” checks do not establish current-work guidance. A Role declaration such as ``ROADMAP-DASHBOARD.md = historical archive only`` passes the short denylist, and Startup text such as `Read ROADMAP-DASHBOARD.md only for historical reference` satisfies the verb regex; together they can report clean even though neither directs the operator to the dashboard for current state (`.relay-artifacts/router_audit.py:116-122`, `.relay-artifacts/router_audit.py:185-219`). Fix: require affirmative current-work/generated-ledger semantics with clause-scoped polarity in both sections, reject historical-only/not-source-of-truth contradictions even when a separate positive mention exists, and add paired false-clean/remediation tests.
+- [Blocker] Duplicate owned sections are invisible after the first match. Both audit and fix select a single `Role split` and `Startup sequence` with `next(...)`, so a canonical first section plus a later stale section that actively directs readers to `ROADMAP.md` passes and remains untouched (`.relay-artifacts/router_audit.py:175-177`, `.relay-artifacts/router_audit.py:315-316`, `.relay-artifacts/router_audit.py:470-480`). Fix: require exactly one owned section or audit/merge every matching section, then test duplicate sections in both modes and prove `--fix` leaves one unambiguous contract.
+- [Should] Startup polarity remains asymmetric: `Do not use ROADMAP.md for current work` and `ROADMAP.md is frozen; do not use it` are classified as active because the exclusion list handles `do not read`/`never read` but not `do not use`, after which the verb `use` returns true (`.relay-artifacts/router_audit.py:87-113`). Legacy frozen detection has the inverse problem and flags `ROADMAP.md is not frozen` merely because `frozen` occurs (`.relay-artifacts/router_audit.py:246-279`). Fix: use one clause-scoped polarity helper for affirmative and negated roadmap semantics in both modes; add valid-negation regressions so the audit does not rewrite already-correct instructions.
+- [Should] The 36-scenario test matrix covers only one canonical owned section and hyphen-form Role declarations, and it lacks the `frozen since` contradiction, alternate markers, duplicate sections, historical-only dashboard guidance, and valid `do not use`/`not frozen` cases above (`test/gh353-vendored-router-audit.sh:4-40`). Add those cases and assert both the initial audit result and post-fix bytes/cardinality. Static review only: this reviewer did not execute the artifact, source files, or test per turn containment rules.
+- [Pass] Candidate validation still precedes replacement, and the write path uses an exclusive same-directory temporary file, file `fsync`, mode restoration, cleanup, and `os.replace` (`.relay-artifacts/router_audit.py:495-519`). The integration call, mode-specific confirmation prompts, and focused-test registration are statically present (`relay-automation/xyz-sync.sh:454-461`, `skills/vendor-stack/SKILL.md:100-119`, `validate.sh:425`).
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-572` was excluded.
+
+Handing off to Producer — relay is escalated at the round cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
