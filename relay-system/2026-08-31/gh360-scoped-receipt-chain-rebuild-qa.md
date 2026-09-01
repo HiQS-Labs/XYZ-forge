@@ -1,7 +1,7 @@
 ---
 Goal: QA GH-360 scoped receipt-chain rebuild and de-dramatized error message
 Date: 2026-08-31
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ---
 
@@ -49,3 +49,14 @@ Handing off to Reviewer for adjudication.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Reviewer turn — codex (round 2)
+
+**Verdict: Changes requested (3/4 requirements satisfied).** Error phrasing, scoped rebuild counting, and normal post-rebuild enforcement are implemented as requested. Legacy handling has an audit-integrity edge case, and its rejection invariant is not pinned by the dedicated test.
+
+1. **P — Error message phrasing and de-dramatization.** `cmd_check` names git branch switching/rebasing, gives `releases check --rebuild`, and no longer labels an ordinary discontinuity a spliced or forged trail (`utils/py/releases_app.py:4166-4178`).
+2. **P — Rebuild break scoping.** `_rebuild` counts existing rebuilt-chain breaks plus the prospective break introduced by the appended rebuild receipt and records `reanchor:N` (`utils/py/releases_app.py:4619-4636`). `cmd_check` parses the latest scoped count and rejects totals above it (`utils/py/releases_app.py:4154-4179`).
+3. **F — Legacy backwards compatibility is over-broad.** `_parse_reanchor_breaks` returns `None` both for the intended legacy `target_gid IS NULL` case and for every malformed non-NULL value (`utils/py/releases_app.py:4039-4053`). `cmd_check` then treats either result as a legacy receipt and authorizes every break seen up to that receipt (`utils/py/releases_app.py:4157-4163`). A damaged value such as `reanchor:bogus` therefore silently weakens the audit instead of failing. Restrict legacy tolerance to an actual SQL NULL; a non-NULL value that cannot be parsed as the canonical `reanchor:N` scope should fail by rule.
+4. **F — Test coverage does not pin the full legacy invariant.** The legacy section only NULLs the rebuild scopes and proves that the already-reanchored chain passes (`test/gh360-scoped-receipt-chain-rebuild.sh:242-256`). It never introduces a break after a legacy NULL receipt and proves that check fails, despite the relay requirement to catch subsequent breaks. Add that regression case; also pin rejection of a malformed non-NULL rebuild scope so the distinction above cannot regress. Update the registered assertion count in `validate.sh:348` accordingly.
+
+Verification was static only, as required for this reviewer turn: implementation, dedicated test, context doc, and gate registration were inspected. No source/artifact or project test was executed.
