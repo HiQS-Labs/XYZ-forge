@@ -453,7 +453,7 @@ check_rows() {
 
     # GH-353: inspect target repo ROUTER.md against releases/legacy mode
     local router_audit_py="$HARNESS_ROOT/utils/py/router_audit.py"
-    if [ -f "$router_audit_py" ] && [ -d "${SELECTED_TARGET_REPOS[$i]}" ]; then
+    if [ -f "$router_audit_py" ] && [ -d "${SELECTED_TARGET_REPOS[$i]}" ] && [ -f "${SELECTED_TARGET_REPOS[$i]}/ROUTER.md" ]; then
       local audit_out
       if ! audit_out="$(python3 "$router_audit_py" --check "${SELECTED_TARGET_REPOS[$i]}" 2>&1)"; then
         printf 'ROUTER DRIFT %s\n' "${SELECTED_TARGET_REPOS[$i]}"
