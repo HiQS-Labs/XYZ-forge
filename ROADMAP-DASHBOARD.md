@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -38,6 +38,8 @@ Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status | — | [GH-254-PREVIEW-DRAFT-SORT.md](PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md) · [#254](https://github.com/HiQS-Labs/XYZ-forge/issues/254) |
 | GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing — Feedback-guided mutational engine, semantic domain oracles, and adaptive pairwise matrix | — | [GH-299-GEN4-FUZZING-ATE.md](PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md) · [#299](https://github.com/HiQS-Labs/XYZ-forge/issues/299) |
 | GH-346 · Speed up harness → gateway → model resolution with a real cache | — | [GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md](PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md) · [#346](https://github.com/HiQS-Labs/XYZ-forge/issues/346) |
+| GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
+| GH-365 · Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/promotion lanes | — | [doc](PROJECT/1-INBOX/GH-365-TEST-SUITE-RECALIBRATION.md) · [#365](https://github.com/HiQS-Labs/XYZ-forge/issues/365) |
 
 ## Queue
 
@@ -67,7 +69,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · 🔮 0 · 🔲 0
+Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 50 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -99,6 +101,7 @@ Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · �
 | GH-170 · Agent2Agent: close transcript glitches and harden publishing | ✅ | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Labs/XYZ-forge/issues/170) |
 | GH-165 · Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | ✅ | [GH-165-POST-MERGE-WAVE-RECONCILER.md](PROJECT/1-INBOX/GH-165-POST-MERGE-WAVE-RECONCILER.md) · [#165](https://github.com/HiQS-Labs/XYZ-forge/issues/165) |
 | GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | ✅ | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Labs/XYZ-forge/issues/124) |
+| GH-347 · CI: move advisory Ubuntu canary off the pull-request path | ✅ | [GH-347-CANARY-PR-RELOCATION.md](PROJECT/3-COMPLETED/GH-347-CANARY-PR-RELOCATION.md) · [#347](https://github.com/HiQS-Labs/XYZ-forge/issues/347) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | ✅ | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-153 · RELEASES dashboard sidebar + full-cycle rollup (technical spike) | ✅ | [GH-153-RELEASES-SIDEBAR-ROLLUP.md](PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md) · [#153](https://github.com/HiQS-Labs/XYZ-forge/issues/153) |
 | GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | ✅ | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Labs/XYZ-forge/issues/148) |

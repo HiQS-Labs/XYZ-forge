@@ -146,6 +146,40 @@ else
   fail "GH-509: boundary-macos's trigger changed — gate-status.sh's filter must change with it, and re-arming workflow_dispatch re-opens the ~\$1.25-1.50-per-dispatch spend"
 fi
 
+# ---------------------------------------------------------------------------
+# GH-347 negative control: the enclosing run is green while the advisory canary job is red.
+# gate-status must inspect the job list or it prints the exact false-green this reader exists to stop.
+echo "-- case 6: canary status comes from the advisory job, not the green workflow"
+FAKE_BIN="$WORK/fake-bin"; mkdir -p "$FAKE_BIN"
+cat >"$FAKE_BIN/gh" <<'EOF'
+#!/usr/bin/env bash
+case " $* " in
+  *" run list "*" headSha,conclusion,createdAt,event,headBranch "*)
+    printf '[]\n'
+    ;;
+  *" run list "*" databaseId,headSha,createdAt,url "*)
+    printf '[{"databaseId":34701,"headSha":"1234567890abcdef","createdAt":"2026-09-01T12:00:00Z","url":"https://example.invalid/runs/34701","conclusion":"success"}]\n'
+    ;;
+  *" run view 34701 "*)
+    printf '{"conclusion":"success","jobs":[{"name":"portability canary (ubuntu — advisory, never breakage)","conclusion":"failure"}]}\n'
+    ;;
+  *)
+    printf 'unexpected fake gh invocation: %s\n' "$*" >&2
+    exit 2
+    ;;
+esac
+EOF
+chmod +x "$FAKE_BIN/gh"
+out="$(PATH="$FAKE_BIN:$PATH" bash "$STATUS" --repo "$R1" 2>&1)"
+case "$out" in
+  *"DRIFT (failure) at 12345678"*) pass "a green workflow with a failed canary job reports drift and its source SHA" ;;
+  *) fail "GH-347: status inferred the canary from the workflow or lost its SHA: $out" ;;
+esac
+case "$out" in
+  *"portability canary (ubuntu): green"*) fail "GH-347: a failed advisory job was reported green from its enclosing run" ;;
+  *) pass "the failed advisory job cannot collapse to a workflow-level green" ;;
+esac
+
 echo
 echo "  $TEST_NAME: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

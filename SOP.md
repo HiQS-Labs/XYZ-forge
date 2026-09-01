@@ -1,6 +1,7 @@
 # Standard Operating Procedure (SOP): Testing Campaigns, Benchmarks, and Artifact Provenance
 
 > **Scope & Relationship to `AGENTS.md`**:
+> - **`GUIDING-PRINCIPLES.md` → "The North Star"** is the canonical source of truth for the durable / reversible / DRY bar and the "extend what exists, don't fork a parallel system" rule. Nothing here restates it.
 > - **`AGENTS.md`** owns repo-wide behavioral governance, core principles (*Verified Beats Plausible*, blast radius sizing, reversibility scale), marathon load rails, role splits, and push boundary gates.
 > - **`SOP.md` (this file)** is a specialized, tactical execution procedure specifically for **testing campaigns, ATE variation matrices, and benchmark telemetry provenance** (`TESTS-RESULTS/`).
 > - **Overlap (~25%)**: This SOP references and enforces `AGENTS.md` invariants (standalone clone isolation GH-564, githooks/pre-push gates, and committed `.jsonl` telemetry GH-430) within its step-by-step campaign workflow rather than redefining general repository policy.
