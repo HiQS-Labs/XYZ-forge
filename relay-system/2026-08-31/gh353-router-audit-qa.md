@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 10 / 10
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -451,5 +451,23 @@ All Round 9 findings addressed:
   - `test/gh353-vendored-router-audit.sh` now covers 56 distinct scenarios and 75 assertions (75 PASS, 0 FAIL).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 10
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Releases Role-split validation still treats any releases-DB token as an affirmative source-of-truth declaration. For example, ``- `ROADMAP.md` = frozen legacy; `releases.db` is not the source of truth`` has a frozen clause and a DB-token clause, so it passes even though it explicitly contradicts DoD 1–2; a clean audit also makes `--fix` return without canonicalizing it (`.relay-artifacts/router_audit.py:262-285`, `.relay-artifacts/router_audit.py:386-392`). Fix: require an affirmative clause that assigns source-of-truth authority to the releases DB and reject negated/obsolete/historical DB semantics; add exact `--check` and `--fix` regressions.
+- [Blocker] Releases dashboard polarity still has direct false-clean forms. ``ROADMAP-DASHBOARD.md = not a generated view`` evades the exact `not generated` denylist while `generated` satisfies the positive test, and `Read ROADMAP-DASHBOARD.md for not current state` likewise satisfies the Startup purpose regex because Startup has no `not current` polarity check (`.relay-artifacts/router_audit.py:132-162`). Fix: parse the semantic clause after the dashboard subject, including intervening articles and negated purpose phrases, and require an affirmative generated/current-state claim before accepting it; cover both exact examples through audit and canonical post-fix output.
+- [Blocker] `--fix` still deletes valid custom Startup guidance merely because it mentions a roadmap filename. Releases remediation consumes every line containing `ROADMAP.md` or `ROADMAP-DASHBOARD.md`, while legacy remediation does the same for any roadmap-bearing line; thus a custom step such as ``4. Read `PROJECT/PDDA.md` for the `ROADMAP.md` governance contract.`` is silently replaced or dropped whenever unrelated drift triggers a fix (`.relay-artifacts/router_audit.py:468-478`, `.relay-artifacts/router_audit.py:534-550`). Fix: classify and replace only owned current-state roadmap directives, preserve non-owned/historical/governance lines byte-for-byte, and add the exact custom-step regression in both modes with before/after `cmp` assertions.
+- [Blocker] Audit/fix predicates remain asymmetric for releases Role prose. The audit flags a prefixed line such as `Note: ROADMAP.md is used for current priorities`, but remediation strips only a line beginning exactly `ROADMAP.md is used for current`; candidate validation therefore refuses the fix instead of updating the owned block (`.relay-artifacts/router_audit.py:287-292`, `.relay-artifacts/router_audit.py:434-439`, `.relay-artifacts/router_audit.py:599-602`). Fix: share one classifier between audit and remediation and canonicalize/remove every line that classifier marks; test successful repair and unchanged original bytes on any genuine pre-write failure.
+- [Blocker] Legacy mode can still certify historical-only guidance as active. ``ROADMAP.md = archived pointer ledger`` passes because bare `pointer ledger` is a positive signal and `archived` is not denied, while `Read ROADMAP.md only for historical reference` passes Startup because any non-negated read verb is accepted without a current-work purpose (`.relay-artifacts/router_audit.py:165-176`, `.relay-artifacts/router_audit.py:359-376`). Fix: require affirmative current-work/current-state semantics in both legacy declarations and Startup directives, reject archived/historical-only polarity, and cover this paired false-clean plus canonical remediation.
+- [Should] Rebuilding owned sections is not byte-preserving for their custom entries: `splitlines()` discards original terminators, the entire body is rejoined with one global newline style, and `if l not in new_*` removes repeated custom lines and blank separators (`.relay-artifacts/router_audit.py:398-413`, `.relay-artifacts/router_audit.py:437-451`, `.relay-artifacts/router_audit.py:477-485`). Fix: splice only classified owned lines within the primary sections, retain every untouched slice exactly, and test mixed line endings plus intentional repeated custom entries.
+- [Pass] The Round 9 declaration scoping improvement is present: owned Role declarations are subject-anchored (`.relay-artifacts/router_audit.py:35-37`, `.relay-artifacts/router_audit.py:249-253`), and legacy frozen/legacy detection now requires a ROADMAP mention in the same clause (`.relay-artifacts/router_audit.py:324-329`, `.relay-artifacts/router_audit.py:352-357`). Static review only; the artifact and tests were not executed under reviewer containment.
+
+Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-676` was excluded.
+
+Handing off to Producer — relay is escalated at the Round 10 cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
