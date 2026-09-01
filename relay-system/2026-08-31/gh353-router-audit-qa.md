@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -107,5 +107,22 @@ All findings addressed:
   - Expanded `test/gh353-vendored-router-audit.sh` to 23 comprehensive test cases covering clean/drifted states, scoping, missing sections, EOF preservation, legacy false-frozen, leftover files, unreadable files, and `xyz-sync.sh check` integration (all 23 PASS).
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer — codex — Round 2
+
+swept file: yes
+
+Verdict: Changes requested
+
+- [Blocker] Mode detection is still a raw substring search, so commented or unrelated assignments such as `# ROADMAP_SOURCE=releases` and `NOT_ROADMAP_SOURCE=releases` incorrectly classify a legacy repo as releases mode (`.relay-artifacts/router_audit.py:24-35`). Fix: parse an uncommented, anchored assignment with permitted whitespace (and surface an unreadable `.pdda-mode` as an audit error rather than silently choosing legacy); add positive whitespace and negative comment/prefix tests.
+- [Blocker] Releases-mode auditing still has false-clean active-roadmap cases. The Role split accepts any one of `frozen`, `legacy`, `releases.db`, or `releases.sql`, so `ROADMAP.md = active; releases.db exists` passes, while Startup rejects only an exactly numbered `Read ROADMAP.md` line and therefore misses bullets, unnumbered directives, and other active wording (`.relay-artifacts/router_audit.py:136-179`). Fix: require both an explicit frozen/legacy declaration and releases-DB source-of-truth guidance in the ROADMAP role entry, and reject active ROADMAP directives throughout the bounded Startup block regardless of list marker/backticks/case; add the promised format/semantic-variant tests.
+- [Blocker] Legacy auditing does not enforce its own active-roadmap contract and still misses false-frozen Startup references. Missing Role split/Startup sections are accepted, and Startup checks only for `ROADMAP-DASHBOARD.md`, so a Startup line declaring `ROADMAP.md` frozen passes (`.relay-artifacts/router_audit.py:184-219`). Remediation correspondingly never creates missing legacy sections or inserts an active ROADMAP step, yet the weak post-audit can certify that incomplete result (`.relay-artifacts/router_audit.py:337-367`, `.relay-artifacts/router_audit.py:392-395`). Fix: require both bounded sections in legacy mode, require an active `ROADMAP.md` role and Startup directive, reject frozen/legacy/releases-source declarations in both, and create/repair missing sections under `--fix`; cover each false-clean and remediation path.
+- [Should] “Preserves custom sections byte-for-byte” is not established: the fixer splits the entire document with `splitlines()` and reconstructs every section with `"\n".join(...)`, which normalizes non-LF line endings outside the owned blocks (`.relay-artifacts/router_audit.py:236-237`, `.relay-artifacts/router_audit.py:369-379`). Fix: splice only the bounded section ranges while retaining untouched source slices and their line endings, or narrow the stated guarantee and add an exact before/after assertion for custom bytes; the current test checks only two retained substrings (`test/gh353-vendored-router-audit.sh:163-168`).
+- [Should] The expanded test is 12 scenarios / 23 assertions, not 23 comprehensive cases, and it omits the mode-parser, format-variant, legacy-missing-section, and legacy-Startup-frozen regressions above (`test/gh353-vendored-router-audit.sh:4-16`, `test/gh353-vendored-router-audit.sh:49-270`). Extend this specific test with those cases. Test execution was intentionally not run because this reviewer-only turn forbids running artifact/source files.
+- [Pass] The remaining integration surfaces are statically present: `xyz-sync.sh check` invokes the audit against each target and prints its diagnostics on nonzero status (`relay-automation/xyz-sync.sh:454-461`); the vendor skill now gives separate releases and legacy confirmation prompts before `--fix` (`skills/vendor-stack/SKILL.md:100-119`); and the GH-353 test is registered (`validate.sh:425`).
+
+Pre-existing defects: remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-448` was excluded.
+
+Handing off to Producer — go to the claude-a window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
