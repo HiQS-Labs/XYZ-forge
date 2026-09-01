@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 29 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -38,6 +38,7 @@ Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status | — | [GH-254-PREVIEW-DRAFT-SORT.md](PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md) · [#254](https://github.com/HiQS-Labs/XYZ-forge/issues/254) |
 | GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing — Feedback-guided mutational engine, semantic domain oracles, and adaptive pairwise matrix | — | [GH-299-GEN4-FUZZING-ATE.md](PROJECT/1-INBOX/GH-299-GEN4-FUZZING-ATE.md) · [#299](https://github.com/HiQS-Labs/XYZ-forge/issues/299) |
 | GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
+| GH-360 · releases check receipt chain failure phrasing and scoped --rebuild | — | [GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md](PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md) · [#360](https://github.com/HiQS-Labs/XYZ-forge/issues/360) |
 
 ## Queue
 

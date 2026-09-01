@@ -345,6 +345,9 @@ TESTS=(
                                   #   the ship it reverses, unshipping a non-shipped row refuses, and
                                   #   both exclusivity refusals (manifest-duplicate, dialed-in-elsewhere)
                                   #   leave items AND events byte-unchanged.
+  "gh360-scoped-receipt-chain-rebuild.sh" # GH-360 (`releases check` receipt chain failure phrasing and scoped --rebuild) — 16/0;
+                                  #   git branch switching breaks reported accurately without asserting forgery,
+                                  #   rebuild break counts scoped in target_gid, and subsequent breaks fail check
   "gh349-releases-roadmap-vendored.sh" # GH-349 (roadmap layer generalised to a vendored install) — 54/0;
                                   #   link-style `- [Title](path)` bullets parse alongside bold ones, issue URLs
                                   #   come from any GitHub org, and a 0-entry parse of a non-empty ledger REFUSES
