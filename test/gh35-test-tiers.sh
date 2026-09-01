@@ -179,6 +179,10 @@ mkfixture() {  # -> prints fixture repo path
   cp "$REPO/utils/py/gate_env.py" "$r/utils/py/gate_env.py"
   cp "$REPO/githooks/install.sh" "$r/githooks/install.sh"
   cp "$REPO/test/lib/clone-identity.sh" "$r/test/lib/clone-identity.sh"
+  # GH-365 step 1: validate.sh's envelope (harness scratch + identity + tree/worktree/lock
+  # bracket) lives in this shared lib now — the fixture copies it by name, same contract as
+  # clone-identity.sh above.
+  cp "$REPO/test/lib/runner-envelope.sh" "$r/test/lib/runner-envelope.sh"
   cat > "$r/utils/pdda/pdda.sh" <<'STUB'
 #!/usr/bin/env bash
 echo "stub-pdda ran"

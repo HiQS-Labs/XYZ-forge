@@ -217,6 +217,7 @@ TESTS=(
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
   "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 78/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
   "gh35-test-tiers.sh"                 # GH-35 (tiered test selection + CPU governance) — 56/0; pins the registry contract (every registered suite exists AND is in TESTS), the fail-closed tier boundaries, the balanced cores/2 default + --throttle/--burst/env levers, nice -n 10 on the workers, and the tier-1/tier-2 execution paths against fixture clones whose suites are stubs (real runner, real pool, real summary math)
+  "gh365-runner-envelope.sh"           # GH-365 step 1 (ONE shared scratch/identity envelope for validate.sh + ci-local.sh) — 22/0; witnessed reds: identity/tree/worktree/lock drift classified, pre-set XYZ_HARNESS_DB respected, missing-lib refusal fail-closed, refused gate record no longer swallowed
   "gh1-fixture-guard.sh"               # GH-1 (shared require_fixture resolved-containment + clone-identity invariant gate; covers the GH-567 lexical-check residual)
   "gh1-adoption-guard.sh"             # GH-10 (every fixture-creating suite carries require_fixture adoption — derivation computed from source, exemptions declared in-file; controls prove the guard fires on an unguarded new suite, a stripped adoption, and a removed exemption marker)
   "gh314-transcript-writeset.sh"       # GH-314 (the write set is THREE paths: the transcript's git add was outside GH-514's preflight, so an ignored relay-system/ was discovered only after paid turns) — 5/0; control: dropping the transcript path spends 2 builder turns before the same refusal (test/baselines/GH-314-negative-control.md)
@@ -943,29 +944,30 @@ fi
 # GH-1: suite-wide clone-identity invariant gate. Captured before any suite runs and asserted after
 # the last one — a suite that escapes its fixture sandbox and rewrites this clone's git identity
 # (the GH-564 incident: core.bare / origin / user identity / HEAD) fails the run HERE, detectably,
-# instead of leaving a clone whose every subsequent green run is unattributable (GH-567). Covers
-# the suites that have not yet adopted require_fixture; it detects rather than prevents.
+# instead of leaving a clone whose every subsequent green run is unattributable (GH-567). Covers the
+# suites that have not yet adopted require_fixture; it detects rather than prevents.
+#
 # GH-205: the gate must be idempotent. Suites and shims append benchmark/telemetry rows through
 # harness_app.py, whose every artifact path (db, dump, registry md, blog docs) follows
 # XYZ_HARNESS_DB — so point the whole run at a throwaway COPY and the four tracked artifacts
 # (harnesses.db/.sql, HARNESS-MODELS-REGISTRY.generated.md, docs/blog-*.md) stay untouched.
 # Regenerating them is an explicit harness_app.py command, never a gate side effect. A pre-set
 # XYZ_HARNESS_DB (an operator's or a hermetic suite's own) is respected and wins.
-HARNESS_SCRATCH=""
-if [ -z "${XYZ_HARNESS_DB:-}" ]; then
-  HARNESS_SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/validate-harness.XXXXXX")"
-  cp "$HERE/harnesses.db"  "$HARNESS_SCRATCH/harnesses.db"  2>/dev/null || true
-  cp "$HERE/harnesses.sql" "$HARNESS_SCRATCH/harnesses.sql" 2>/dev/null || true
-  export XYZ_HARNESS_DB="$HARNESS_SCRATCH/harnesses.db"
-fi
-
-IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/validate-identity.XXXXXX")"
-[ -n "$IDENTITY_SNAPSHOT" ] && [ -f "$IDENTITY_SNAPSHOT" ] || { echo "validate.sh: mktemp for identity snapshot failed" >&2; exit 1; }
-trap 'rm -f "$IDENTITY_SNAPSHOT"; [ -n "$HARNESS_SCRATCH" ] && rm -rf "$HARNESS_SCRATCH"' EXIT
-bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" || {
-  echo "validate.sh: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
+#
+# GH-365 step 1: the harness scratch AND the identity bracket now live in ONE shared helper
+# (test/lib/runner-envelope.sh) that ci-local.sh sources too — the qualifying runner used to run
+# the same suites with NO scratch envelope, so a green run dirtied the tracked harnesses.db and
+# gate-record refused to retain its own evidence. The helper additionally brackets tracked-tree,
+# worktree, and driver-lock state: identity drift is the GH-1 hard failure, and envelope drift
+# names what changed so the XYZ_HARNESS_DB bypass audit has a detector. A missing helper is a
+# fail-closed refusal, never a fallback to a second inline envelope.
+if [ ! -f "$HERE/test/lib/runner-envelope.sh" ]; then
+  echo "validate.sh: test/lib/runner-envelope.sh is missing — the shared GH-365 runner envelope cannot be set up; refusing." >&2
   exit 1
-}
+fi
+. "$HERE/test/lib/runner-envelope.sh"
+runner_envelope_begin "$HERE" "validate.sh" || exit 1
+trap runner_envelope_scrub EXIT
 
 # The suites that execute the real relay-drive.sh (not a stub or fixture copy). Membership was
 # derived in the GH-528 spike: every suite whose $DRIVE/$DRIVER/$RD resolves to the shipped
@@ -992,9 +994,9 @@ if [ -n "$PARALLEL_JOBS" ]; then
   # GH-177: mktemp is verified before use, nothing ever cd's into it, and the EXIT trap only
   # removes a re-verified non-empty directory path.
   [ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] || { echo "validate.sh: mktemp -d failed" >&2; exit 1; }
-  # Covers both this branch's mktemp and the GH-1 identity snapshot (a bare second trap would
-  # silently replace the first — bash keeps one EXIT trap).
-  trap '[ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] && rm -rf "$RUN_DIR"; rm -f "$IDENTITY_SNAPSHOT"' EXIT
+  # Covers this branch's mktemp scratch and the GH-365 envelope state dir (a bare second trap
+  # would silently replace the first — bash keeps one EXIT trap).
+  trap 'runner_envelope_scrub; [ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] && rm -rf "$RUN_DIR"' EXIT
   RESULTS="$RUN_DIR/results"
   : > "$RESULTS"
   export VALIDATE_HERE="$HERE" VALIDATE_LOG_DIR="$RUN_DIR" VALIDATE_RESULTS="$RESULTS"
@@ -1144,14 +1146,22 @@ fi
 # GH-1: the identity bracket's assert half. Runs AFTER every suite and before the summary, so a
 # sandbox escape anywhere in the run fails the run even when every suite reported green — the
 # corruption incidents were only ever found because pushes started failing in confusing ways.
+# GH-365 step 1: this is the shared envelope assert. rc=1 is identity drift (the GH-1 hard
+# failure, unchanged). rc=2 is ENVELOPE drift — the tracked tree, a registered worktree, or the
+# driver lock changed under the run — which also fails the bracket: a run that cannot be
+# attributed to a clone that is still what it was must not read as a clean green, and the drift
+# diff names the suite/stage to audit for an XYZ_HARNESS_DB bypass.
 echo
 echo "==============================="
 echo "Running clone-identity invariant (GH-1)"
 echo "==============================="
-if bash "$HERE/test/lib/clone-identity.sh" assert "$IDENTITY_SNAPSHOT" "$HERE"; then
+_re_rc=0
+runner_envelope_assert "$HERE" "validate.sh" || _re_rc=$?
+if [ "$_re_rc" -eq 0 ]; then
   PASSED+=("clone-identity-invariant")
 else
   FAILED+=("clone-identity-invariant")
+  [ "$_re_rc" -eq 2 ] && echo "  (envelope drift — the per-suite verdicts stand, but THIS run leaves no valid evidence record; audit the named drift for a harness-registry bypass)" >&2
 fi
 
 # GH-428: non-recursive staleness probe for the gamma-poison fixture (does NOT run

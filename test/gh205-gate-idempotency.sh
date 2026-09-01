@@ -38,8 +38,15 @@ XYZ_HARNESS_DB="$SCRATCH/harnesses.db" log_once || fail "harness_app.py log fail
 grep -q "gh205-test" "$SCRATCH/harnesses.sql" || fail "guarded write did not land in the scratch copy"
 
 # 3. The gate actually wires the guard — validate.sh exports the throwaway XYZ_HARNESS_DB.
-grep -q 'export XYZ_HARNESS_DB="$HARNESS_SCRATCH/harnesses.db"' "$root/validate.sh" \
-  || fail "validate.sh no longer exports XYZ_HARNESS_DB to a scratch copy (GH-205 regression)"
+#    GH-365 step 1 moved the export into the ONE shared helper (test/lib/runner-envelope.sh) that
+#    validate.sh AND ci-local.sh source; the pin follows the contract, not the old line number:
+#    both halves must hold or the throwaway envelope is unwired again.
+grep -q 'runner-envelope.sh' "$root/validate.sh" \
+  || fail "validate.sh no longer sources the shared envelope helper (GH-205/GH-365 regression)"
+grep -q 'export XYZ_HARNESS_DB="$RUNNER_ENVELOPE_SCRATCH/harnesses.db"' "$root/test/lib/runner-envelope.sh" \
+  || fail "the shared envelope helper no longer exports the throwaway XYZ_HARNESS_DB (GH-205 regression)"
+grep -q 'runner-envelope.sh' "$root/ci-local.sh" \
+  || fail "ci-local.sh (the qualifying runner) still bypasses the throwaway envelope (GH-365 regression)"
 
 # 4. The known root-writer suite is fixture-isolated (its own XYZ_HARNESS_DB under \$WORK).
 grep -q 'XYZ_HARNESS_DB="\$WORK' "$root/test/gh174-harness-registry.sh" \

@@ -289,15 +289,14 @@ validate_suite() {
   return $rc
 }
 
-# ── 10. GH-10: the identity bracket's assert half — the record this run writes must be
-# attributable to a clone that is still the clone it started as (see validate.sh's GH-1 block
-# for the incident). Runs as a step so its verdict lands in the summary like every other.
-ci_local_identity_assert() {
-  [ -n "$IDENTITY_SNAPSHOT" ] || { echo "  no snapshot captured (internal error)" >&2; return 1; }
-  bash "$HERE/test/lib/clone-identity.sh" assert "$IDENTITY_SNAPSHOT" "$HERE"
-  local rc=$?
-  rm -f "$IDENTITY_SNAPSHOT"
-  return $rc
+# ── 10. GH-10/GH-365: the shared envelope bracket — assert half ─────────────────────────────────
+# The qualifying run writes the gate-evidence record, so it carries the same clone-identity
+# bracket validate.sh has, from the SAME shared helper (GH-365 step 1): identity drift fails the
+# run (the GH-564 incident), and envelope drift (tracked tree / worktrees / driver lock changed
+# under the run) is named and also fails — a qualifying run that cannot retain attributable
+# evidence must not exit green (the failure mode #365 exists to prevent).
+ci_local_envelope_assert() {
+  runner_envelope_assert "$HERE" "ci-local.sh"
 }
 
 # ── run ──────────────────────────────────────────────────────────────────────────────────────────
@@ -318,22 +317,22 @@ else
   printf '\n\033[33mSKIP: frozen twin guard — CI runs it on pull_request only. Pass --base <ref> to run it.\033[0m\n'
 fi
 step "npm ci + acorn-extract"       npm_and_acorn
-# GH-10/GH-1: the qualifying run writes the gate-evidence record, so it carries the same
-# clone-identity bracket validate.sh has — captured BEFORE the suite runs and asserted after,
-# so a suite that escapes its fixture and rewrites this clone's git identity (the GH-564
-# incident) fails THIS run detectably instead of leaving an unattributable green record.
-IDENTITY_SNAPSHOT=""
+# GH-10/GH-1 + GH-365 step 1: the qualifying run gets the SAME envelope validate.sh uses, from
+# the ONE shared helper — harness-registry scratch (XYZ_HARNESS_DB) AND the identity bracket AND
+# the tree/worktree/lock bracket. Before GH-365, this run executed the registered suites with no
+# scratch envelope at all: harness_app.py writes landed in the TRACKED harnesses.db, the tree
+# went dirty, and gate-record.sh then refused to retain the record for exactly the run that
+# needed it. Fail closed if the helper is missing — never a second inline envelope.
 if [ "$FAST" -eq 0 ]; then
-  IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/ci-local-identity.XXXXXX")"
-  if [ -n "$IDENTITY_SNAPSHOT" ] && bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" 2>/dev/null; then
-    :
-  else
-    echo "ci-local: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
-    rm -f "$IDENTITY_SNAPSHOT"; IDENTITY_SNAPSHOT=""
+  if [ ! -f "$HERE/test/lib/runner-envelope.sh" ]; then
+    echo "ci-local: test/lib/runner-envelope.sh is missing — the shared GH-365 runner envelope cannot be set up; refusing." >&2
     exit 1
   fi
+  . "$HERE/test/lib/runner-envelope.sh"
+  runner_envelope_begin "$HERE" "ci-local.sh" || exit 1
   RELAY_SELF_SUFFICIENCY_SKIP=1 step "validate.sh suite" validate_suite
-  step "clone-identity invariant (GH-1)" ci_local_identity_assert
+  step "clone-identity invariant (GH-1)" ci_local_envelope_assert
+  runner_envelope_scrub
 fi
 
 # ── report ───────────────────────────────────────────────────────────────────────────────────────
@@ -355,9 +354,20 @@ printf 'for this exact commit (GH-509 §6) — a clean machine, and evidence you
 # Only a full run earns a record. A --fast or --probe run deliberately does not exercise the suite,
 # so recording one would make a partial run indistinguishable from a complete one — which is the
 # whole failure mode this file keeps warning about in other contexts.
+#
+# GH-365 step 1: a REFUSED record now fails the qualifying run instead of passing silently
+# (`|| true` used to swallow it). The record is the product of this run: a green exit with no
+# retained evidence is precisely the "cannot retain its evidence" failure #365 exists to prevent.
+# gate-record's own refusal names what made the tree dirty (exit 3) or why no commit was found
+# (exit 4); the envelope assert above has already named any drift that explains it.
 if [ "$FAST" -eq 0 ] && [ "$PROBE" -eq 0 ]; then
   printf '\n'
   # Delegated rather than inlined, so the REFUSAL has a test that does not cost a 15-minute suite run.
-  bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || true
+  _gr_rc=0
+  bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || _gr_rc=$?
+  if [ "$_gr_rc" -ne 0 ]; then
+    printf '\033[31mci-local: gate-record refused (exit %d) — this qualifying run leaves NO evidence record, so it cannot exit green (GH-365).\033[0m\n' "$_gr_rc" >&2
+    exit 1
+  fi
 fi
 exit 0
