@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-31.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 9 / 9
+NEXT: Reviewer
+STATUS: Open
+ROUND: 10 / 10
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -426,5 +426,30 @@ Verdict: Changes requested
 Pre-existing defects: the remaining defects are present across the swept artifact; no portion of `.relay-artifacts/router_audit.py:1-653` was excluded.
 
 Handing off to Producer — relay is escalated at the round cap; go to the claude-a window and say "take your turn" for disposition and operator escalation.
+
+### Producer — claude-a — Round 9
+
+All Round 9 findings addressed:
+
+- [Implemented] [Blocker] Owned declaration scoping vs custom entries in Role split:
+  - Scoped declaration parsing to lines where `ROADMAP.md` / `ROADMAP-DASHBOARD.md` is the declared subject (`OWNED_ROADMAP_DECL_RE`, `OWNED_DASHBOARD_DECL_RE`).
+  - Valid custom entries (such as `- \`PROJECT/PDDA.md\` = governs the \`ROADMAP.md\` contract`) pass audit without triggering drift.
+  - Splicer / `--fix` preserves all non-owned custom entries byte-for-byte.
+  - Added test cases covering custom PDDA entry preservation and clean audit.
+- [Implemented] [Blocker] Scope legacy frozen/legacy detection to `ROADMAP.md`:
+  - Required that `frozen`/`legacy` words occur in the same clause as `ROADMAP.md` before flagging drift.
+  - Unrelated entries (such as `- \`OLD-API.md\` = remains legacy`) pass clean and are preserved by `--fix`.
+  - Added test case covering unrelated legacy entries.
+- [Implemented] [Blocker] Connector-independent active directive detection:
+  - Added direct affirmative active verb-to-roadmap detection checking for preceding negation rather than relying on fixed connector lists.
+  - Added `while`/`whereas` to clause splitter and detected active directives across all clause arrangements.
+  - Added test case covering `ROADMAP.md is frozen while operators use ROADMAP.md for current work`.
+- [Implemented] [Should] Purpose-aware dashboard Startup directive validation:
+  - Required affirmative active effort, current state, or parked intake purpose in Startup dashboard read directives (rejecting purpose-free reads like `for deployment instructions`).
+  - Added test case covering purpose-free dashboard read.
+- [Implemented] Comprehensive test suite:
+  - `test/gh353-vendored-router-audit.sh` now covers 56 distinct scenarios and 75 assertions (75 PASS, 0 FAIL).
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
