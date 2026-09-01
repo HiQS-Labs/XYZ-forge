@@ -2,17 +2,18 @@
 """router_audit.py — Audit and remediate ROUTER.md roadmap declarations across repos.
 
 Contract:
-- Checks if a target repository is in releases mode (releases.db present or ROADMAP_SOURCE=releases in .pdda-mode).
+- Checks if a target repository is in releases mode (releases.db present or anchored ROADMAP_SOURCE=releases in .pdda-mode).
 - If in releases mode:
-  - Asserts ## Role split contains ROADMAP-DASHBOARD.md and notes ROADMAP.md is frozen / legacy / DB source of truth.
-  - Asserts ## Startup sequence points to ROADMAP-DASHBOARD.md / releases DB and notes ROADMAP.md is frozen / legacy.
+  - Asserts ## Role split contains ROADMAP-DASHBOARD.md and declares ROADMAP.md frozen/legacy AND points to releases.db/releases.sql.
+  - Asserts ## Startup sequence directs to ROADMAP-DASHBOARD.md / releases DB and forbids active ROADMAP.md reading directives.
 - If in legacy mode:
-  - Asserts ## Role split does not contain ROADMAP-DASHBOARD.md or declare ROADMAP.md frozen/legacy.
-  - Asserts ## Startup sequence directs agents to active ROADMAP.md and does not reference ROADMAP-DASHBOARD.md.
+  - Asserts ## Role split and ## Startup sequence exist.
+  - Asserts ## Role split declares active ROADMAP.md (pointer ledger) and forbids ROADMAP-DASHBOARD.md or frozen/legacy/releases.db declarations.
+  - Asserts ## Startup sequence directs to active ROADMAP.md and forbids ROADMAP-DASHBOARD.md or frozen/legacy directives.
 - In --fix mode:
-  - Safely and cleanly updates bounded ## Role split and ## Startup sequence blocks to match the active mode.
-  - Re-audits the result to guarantee the fixed state is clean before reporting success.
-- Report-only by default (exit 0 if clean, exit 1 if drift or unreadable on --check).
+  - Safely splices bounded ## Role split and ## Startup sequence sections while preserving untouched document bytes and metadata.
+  - Re-audits the result to guarantee the fixed state is genuinely clean before reporting success.
+- Report-only by default (exit 0 if clean, exit 1 if drift or error on --check).
 """
 
 import argparse
@@ -21,76 +22,77 @@ import re
 import sys
 
 
-def is_releases_mode(root):
-    """A repo is in releases mode if releases.db exists or .pdda-mode declares ROADMAP_SOURCE=releases."""
+def parse_pdda_mode(root):
+    """Checks .pdda-mode for anchored ROADMAP_SOURCE=releases.
+    Returns (is_releases_mode: bool, error_msg: str or None)
+    """
+    pdda_mode_path = os.path.join(root, ".pdda-mode")
+    if not os.path.exists(pdda_mode_path):
+        return False, None
+    try:
+        with open(pdda_mode_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        for line in lines:
+            line_clean = line.strip()
+            if not line_clean or line_clean.startswith("#"):
+                continue
+            m = re.match(r"^\s*ROADMAP_SOURCE\s*=\s*releases\s*(?:#.*)?$", line)
+            if m:
+                return True, None
+        return False, None
+    except Exception as e:
+        return False, f"could not read .pdda-mode: {e}"
+
+
+def get_repo_mode(root):
+    """Returns (is_releases_mode: bool, error_msg: str or None)"""
     if os.path.exists(os.path.join(root, "releases.db")):
-        return True
-    pdda_mode = os.path.join(root, ".pdda-mode")
-    if os.path.exists(pdda_mode):
-        try:
-            with open(pdda_mode, "r", encoding="utf-8", errors="replace") as f:
-                if "ROADMAP_SOURCE=releases" in f.read():
-                    return True
-        except OSError:
-            pass
-    return False
+        return True, None
+    return parse_pdda_mode(root)
 
 
-def extract_sections(content):
-    """Parses markdown content into sections bounded by ## headers."""
-    lines = content.splitlines()
-    sections = []  # list of dicts: {"heading": str or None, "heading_raw": str, "lines": [str], "start": int, "end": int}
-    cur_heading = None
-    cur_raw = None
-    cur_lines = []
-    cur_start = 0
+def find_sections(content):
+    """Finds all '## <heading>' sections and their byte/character spans in content.
+    Returns list of dicts:
+    {
+      "heading": str,
+      "heading_raw": str,
+      "start": int,         # index where '## heading' starts
+      "body_start": int,    # index where section body starts (after newline)
+      "end": int,           # index where next section starts, or len(content)
+      "body": str,          # body text
+    }
+    """
+    matches = list(re.finditer(r"^(##\s+[^\r\n]+)", content, re.MULTILINE))
+    sections = []
+    n = len(content)
 
-    for idx, line in enumerate(lines):
-        m = re.match(r"^##\s+(.+)$", line)
-        if m:
-            if cur_heading is not None or cur_lines:
-                sections.append({
-                    "heading": cur_heading,
-                    "heading_raw": cur_raw,
-                    "lines": cur_lines,
-                    "start": cur_start,
-                    "end": idx - 1,
-                })
-            cur_raw = line
-            cur_heading = m.group(1).strip()
-            cur_lines = []
-            cur_start = idx
-        else:
-            cur_lines.append(line)
-
-    if cur_heading is not None or cur_lines:
+    for i, m in enumerate(matches):
+        h_raw = m.group(1)
+        h_clean = re.sub(r"^##\s+", "", h_raw).strip()
+        start = m.start()
+        # Find newline after header
+        nl_pos = content.find("\n", start)
+        body_start = nl_pos + 1 if nl_pos != -1 else len(content)
+        end = matches[i + 1].start() if i + 1 < len(matches) else n
+        body = content[body_start:end]
         sections.append({
-            "heading": cur_heading,
-            "heading_raw": cur_raw,
-            "lines": cur_lines,
-            "start": cur_start,
-            "end": len(lines) - 1,
+            "heading": h_clean,
+            "heading_raw": h_raw,
+            "start": start,
+            "body_start": body_start,
+            "end": end,
+            "body": body,
         })
 
-    return lines, sections
+    return sections
 
 
 def audit_router(root):
-    """Audit ROUTER.md in root. Returns a dict:
-    {
-      "root": root,
-      "router_path": path,
-      "exists": bool,
-      "readable": bool,
-      "releases_mode": bool,
-      "drift": bool,
-      "error": bool,
-      "reasons": [str],
-      "fixes_available": bool,
-    }
-    """
+    """Audit ROUTER.md in root. Returns a dict."""
     router_path = os.path.join(root, "ROUTER.md")
-    releases_mode = is_releases_mode(root)
+    releases_mode, mode_err = get_repo_mode(root)
+
     result = {
         "root": root,
         "router_path": router_path,
@@ -102,6 +104,11 @@ def audit_router(root):
         "reasons": [],
         "fixes_available": False,
     }
+
+    if mode_err:
+        result["error"] = True
+        result["reasons"].append(mode_err)
+        return result
 
     if not result["exists"]:
         return result
@@ -115,103 +122,126 @@ def audit_router(root):
         result["reasons"].append(f"could not read ROUTER.md: {e}")
         return result
 
-    lines, sections = extract_sections(content)
-
-    role_section = None
-    startup_section = None
-
-    for s in sections:
-        if s["heading"] and re.match(r"^Role\s+split\b", s["heading"], re.IGNORECASE):
-            role_section = s
-        elif s["heading"] and re.match(r"^Startup\s+sequence\b", s["heading"], re.IGNORECASE):
-            startup_section = s
+    sections = find_sections(content)
+    role_section = next((s for s in sections if re.match(r"^Role\s+split\b", s["heading"], re.IGNORECASE)), None)
+    startup_section = next((s for s in sections if re.match(r"^Startup\s+sequence\b", s["heading"], re.IGNORECASE)), None)
 
     if releases_mode:
-        # Releases Mode Expectations:
-        # 1. Role split must exist and contain ROADMAP-DASHBOARD.md and frozen ROADMAP.md
+        # Releases Mode Validation
         if role_section is None:
             result["drift"] = True
             result["reasons"].append("ROUTER.md missing '## Role split' section")
         else:
-            role_text = "\n".join(role_section["lines"])
+            role_lines = role_section["body"].splitlines()
             has_dashboard = any(
                 re.search(r"-\s+`?ROADMAP-DASHBOARD\.md`?\s*=", l)
-                for l in role_section["lines"]
+                for l in role_lines
             )
-            roadmap_role_lines = [
-                l for l in role_section["lines"]
+            roadmap_lines = [
+                l for l in role_lines
                 if re.search(r"-\s+`?ROADMAP\.md`?\s*=", l)
             ]
-            has_frozen_roadmap = any(
-                re.search(r"\b(frozen|legacy|releases\.db|releases\.sql)\b", l, re.IGNORECASE)
-                for l in roadmap_role_lines
-            )
 
             if not has_dashboard:
                 result["drift"] = True
                 result["reasons"].append("Role split does not declare ROADMAP-DASHBOARD.md")
-            if not roadmap_role_lines:
+            if not roadmap_lines:
                 result["drift"] = True
                 result["reasons"].append("Role split does not contain a ROADMAP.md declaration")
-            elif not has_frozen_roadmap:
-                result["drift"] = True
-                result["reasons"].append("Role split describes ROADMAP.md as active rather than frozen/legacy")
+            else:
+                for r_line in roadmap_lines:
+                    # Must declare frozen or legacy
+                    is_frozen = bool(re.search(r"\b(frozen|legacy)\b", r_line, re.IGNORECASE))
+                    # Must reference releases DB/SQL as source of truth
+                    has_db_ref = bool(re.search(r"\b(releases\.db|releases\.sql|ROADMAP_SOURCE=releases)\b", r_line, re.IGNORECASE))
+                    # Must NOT declare active pointer ledger
+                    is_active = bool(re.search(r"\b(active|the pointer ledger)\b", r_line, re.IGNORECASE) and not is_frozen)
 
-        # 2. Startup sequence must exist and reference ROADMAP-DASHBOARD.md and note ROADMAP.md frozen
+                    if is_active or not (is_frozen and has_db_ref):
+                        result["drift"] = True
+                        result["reasons"].append("Role split describes ROADMAP.md as active or lacks frozen & releases DB source-of-truth declaration")
+
         if startup_section is None:
             result["drift"] = True
             result["reasons"].append("ROUTER.md missing '## Startup sequence' section")
         else:
-            startup_lines = startup_section["lines"]
+            startup_lines = startup_section["body"].splitlines()
             has_dashboard_startup = any(
                 "ROADMAP-DASHBOARD.md" in l for l in startup_lines
             )
-            has_active_roadmap_startup = any(
-                re.search(r"^\s*\d+\.\s+Read\s+`?ROADMAP\.md`?", l) and not re.search(r"\b(frozen|legacy|ROADMAP-DASHBOARD\.md)\b", l, re.IGNORECASE)
-                for l in startup_lines
-            )
+            # Check for any directive telling the agent to read ROADMAP.md without frozen/legacy notice
+            has_active_roadmap_read = False
+            for l in startup_lines:
+                if re.search(r"\bRead\s+`?ROADMAP\.md`?\b", l, re.IGNORECASE):
+                    # If it directs to read ROADMAP.md without clarifying it's frozen legacy / do not read
+                    if not re.search(r"\b(frozen|legacy|do not read)\b", l, re.IGNORECASE):
+                        has_active_roadmap_read = True
 
             if not has_dashboard_startup:
                 result["drift"] = True
                 result["reasons"].append("Startup sequence does not reference ROADMAP-DASHBOARD.md")
-            if has_active_roadmap_startup:
+            if has_active_roadmap_read:
                 result["drift"] = True
-                result["reasons"].append("Startup sequence directs agents to read ROADMAP.md without frozen/legacy note")
+                result["reasons"].append("Startup sequence directs agents to read ROADMAP.md without frozen/legacy notice")
 
         if result["drift"]:
             result["fixes_available"] = True
 
     else:
-        # Legacy Mode Expectations:
-        # 1. Role split must not contain ROADMAP-DASHBOARD.md or frozen ROADMAP.md
-        if role_section is not None:
+        # Legacy Mode Validation
+        if role_section is None:
+            result["drift"] = True
+            result["reasons"].append("Legacy ROUTER.md missing '## Role split' section")
+        else:
+            role_lines = role_section["body"].splitlines()
             has_dashboard = any(
-                "ROADMAP-DASHBOARD.md" in l for l in role_section["lines"]
+                "ROADMAP-DASHBOARD.md" in l for l in role_lines
             )
-            roadmap_role_lines = [
-                l for l in role_section["lines"]
+            roadmap_lines = [
+                l for l in role_lines
                 if re.search(r"-\s+`?ROADMAP\.md`?\s*=", l)
             ]
-            has_frozen_roadmap = any(
+            has_frozen = any(
                 re.search(r"\b(frozen|legacy|releases\.db|releases\.sql)\b", l, re.IGNORECASE)
-                for l in roadmap_role_lines
+                for l in roadmap_lines
             )
 
             if has_dashboard:
                 result["drift"] = True
                 result["reasons"].append("Role split references ROADMAP-DASHBOARD.md in a legacy-mode repo")
-            if has_frozen_roadmap:
+            if not roadmap_lines:
                 result["drift"] = True
-                result["reasons"].append("Role split describes ROADMAP.md as frozen/legacy in a legacy-mode repo")
+                result["reasons"].append("Role split missing active ROADMAP.md declaration in a legacy-mode repo")
+            elif has_frozen:
+                result["drift"] = True
+                result["reasons"].append("Role split declares ROADMAP.md as frozen/legacy in a legacy-mode repo")
 
-        # 2. Startup sequence must not reference ROADMAP-DASHBOARD.md
-        if startup_section is not None:
-            has_dashboard_startup = any(
-                "ROADMAP-DASHBOARD.md" in l for l in startup_section["lines"]
+        if startup_section is None:
+            result["drift"] = True
+            result["reasons"].append("Legacy ROUTER.md missing '## Startup sequence' section")
+        else:
+            startup_lines = startup_section["body"].splitlines()
+            has_dashboard = any(
+                "ROADMAP-DASHBOARD.md" in l for l in startup_lines
             )
-            if has_dashboard_startup:
+            has_frozen_startup = any(
+                re.search(r"\b(ROADMAP\.md.*(?:frozen|legacy)|(?:frozen|legacy).*ROADMAP\.md)\b", l, re.IGNORECASE)
+                for l in startup_lines
+            )
+            has_active_roadmap_read = any(
+                re.search(r"\bRead\s+`?ROADMAP\.md`?\b", l, re.IGNORECASE)
+                for l in startup_lines
+            )
+
+            if has_dashboard:
                 result["drift"] = True
                 result["reasons"].append("Startup sequence references ROADMAP-DASHBOARD.md in a legacy-mode repo")
+            if has_frozen_startup:
+                result["drift"] = True
+                result["reasons"].append("Startup sequence declares ROADMAP.md frozen in a legacy-mode repo")
+            if not has_active_roadmap_read:
+                result["drift"] = True
+                result["reasons"].append("Startup sequence missing active ROADMAP.md read instruction in a legacy-mode repo")
 
         if result["drift"]:
             result["fixes_available"] = True
@@ -220,12 +250,12 @@ def audit_router(root):
 
 
 def fix_router(root, dry_run=False):
-    """Applies targeted updates to ROUTER.md for releases mode or legacy mode, and verifies clean state."""
+    """Applies targeted updates to ROUTER.md by splicing sections in-place, preserving byte integrity of custom text."""
     audit = audit_router(root)
     if not audit["exists"]:
         return False, "ROUTER.md does not exist"
-    if not audit["readable"]:
-        return False, f"ROUTER.md is unreadable: {'; '.join(audit['reasons'])}"
+    if not audit["readable"] or audit["error"]:
+        return False, f"ROUTER.md cannot be audited: {'; '.join(audit['reasons'])}"
     if not audit["drift"]:
         return True, "ROUTER.md already in sync with repo mode"
 
@@ -233,150 +263,182 @@ def fix_router(root, dry_run=False):
     with open(router_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    lines = content.splitlines()
-    _, sections = extract_sections(content)
+    # Detect line ending (CRLF vs LF)
+    crlf = "\r\n" if "\r\n" in content else "\n"
 
-    role_split_idx = None
-    startup_idx = None
-    for idx, s in enumerate(sections):
-        if s["heading"] and re.match(r"^Role\s+split\b", s["heading"], re.IGNORECASE):
-            role_split_idx = idx
-        elif s["heading"] and re.match(r"^Startup\s+sequence\b", s["heading"], re.IGNORECASE):
-            startup_idx = idx
+    sections = find_sections(content)
+    role_s = next((s for s in sections if re.match(r"^Role\s+split\b", s["heading"], re.IGNORECASE)), None)
+    startup_s = next((s for s in sections if re.match(r"^Startup\s+sequence\b", s["heading"], re.IGNORECASE)), None)
 
     if audit["releases_mode"]:
-        # Build corrected Role split lines
-        if role_split_idx is not None:
-            s = sections[role_split_idx]
-            new_role_lines = []
+        # Build new Role split body
+        if role_s is not None:
+            r_lines = role_s["body"].splitlines()
+            new_r_lines = []
             dashboard_seen = False
             roadmap_seen = False
 
-            for l in s["lines"]:
+            for l in r_lines:
                 if re.search(r"-\s+`?ROADMAP-DASHBOARD\.md`?\s*=", l):
-                    new_role_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
+                    new_r_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
                     dashboard_seen = True
                 elif re.search(r"-\s+`?ROADMAP\.md`?\s*=", l):
                     if not dashboard_seen:
-                        new_role_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
+                        new_r_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
                         dashboard_seen = True
-                    new_role_lines.append("- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file")
+                    new_r_lines.append("- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file")
                     roadmap_seen = True
                 else:
-                    new_role_lines.append(l)
+                    new_r_lines.append(l)
 
             if not dashboard_seen and not roadmap_seen:
-                new_role_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
-                new_role_lines.append("- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file")
+                new_r_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
+                new_r_lines.append("- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file")
             elif not dashboard_seen:
-                new_role_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
+                new_r_lines.append("- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)")
             elif not roadmap_seen:
-                new_role_lines.append("- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file")
+                new_r_lines.append("- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file")
 
-            s["lines"] = new_role_lines
+            new_role_body = crlf.join(new_r_lines)
+            if role_s["body"].endswith("\n") or role_s["body"].endswith("\r\n"):
+                new_role_body += crlf
         else:
-            # Create Role split section after the first section (header)
-            new_section = {
-                "heading": "Role split",
-                "heading_raw": "## Role split",
-                "lines": [
-                    "",
-                    "- `ROUTER.md` = startup order and canonical entry points",
-                    "- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof",
-                    "- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)",
-                    "- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file",
-                    "- `CHANGELOG.md` = the end-of-iteration running log",
-                    "- `RELEASES.md` = forward-looking release-planning ledger (optional milestone planning aid)",
-                    "",
-                ],
-            }
-            insert_pos = 1 if len(sections) > 0 else 0
-            sections.insert(insert_pos, new_section)
-            # Recompute startup_idx
-            for idx, s in enumerate(sections):
-                if s["heading"] and re.match(r"^Startup\s+sequence\b", s["heading"], re.IGNORECASE):
-                    startup_idx = idx
+            new_role_body = crlf.join([
+                "",
+                "- `ROUTER.md` = startup order and canonical entry points",
+                "- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof",
+                "- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)",
+                "- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file",
+                "- `CHANGELOG.md` = the end-of-iteration running log",
+                "- `RELEASES.md` = forward-looking release-planning ledger (optional milestone planning aid)",
+                "",
+            ]) + crlf
 
-        # Build corrected Startup sequence lines
-        if startup_idx is not None:
-            s = sections[startup_idx]
-            new_startup_lines = []
+        # Build new Startup sequence body
+        if startup_s is not None:
+            st_lines = startup_s["body"].splitlines()
+            new_st_lines = []
             roadmap_step_seen = False
 
-            for l in s["lines"]:
-                m = re.match(r"^(\s*\d+\.\s+)(.*)$", l)
+            for l in st_lines:
+                m = re.match(r"^(\s*(?:\d+\.|\-|\*)\s+)(.*)$", l)
                 if m:
-                    num_prefix = m.group(1)
+                    prefix = m.group(1)
                     rest = m.group(2)
                     if re.search(r"Read\s+`?ROADMAP", rest, re.IGNORECASE) or re.search(r"Read\s+`?ROADMAP-DASHBOARD", rest, re.IGNORECASE):
-                        new_startup_lines.append(f"{num_prefix}Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)")
+                        new_st_lines.append(f"{prefix}Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)")
                         roadmap_step_seen = True
                         continue
-                new_startup_lines.append(l)
+                new_st_lines.append(l)
 
             if not roadmap_step_seen:
-                new_startup_lines.append("3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)")
+                new_st_lines.append("3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)")
 
-            s["lines"] = new_startup_lines
+            new_startup_body = crlf.join(new_st_lines)
+            if startup_s["body"].endswith("\n") or startup_s["body"].endswith("\r\n"):
+                new_startup_body += crlf
         else:
-            # Create Startup sequence section
-            new_section = {
-                "heading": "Startup sequence",
-                "heading_raw": "## Startup sequence",
-                "lines": [
-                    "",
-                    "1. Read `ROUTER.md` to understand the repo's operating order and canonical files.",
-                    "2. Read `AGENTS.md` before making recommendations or edits.",
-                    "3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)",
-                    "4. Read the linked `PROJECT/**` document that owns the work you are touching.",
-                    "",
-                ],
-            }
-            sections.append(new_section)
+            new_startup_body = crlf.join([
+                "",
+                "1. Read `ROUTER.md` to understand the repo's operating order and canonical files.",
+                "2. Read `AGENTS.md` before making recommendations or edits.",
+                "3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)",
+                "4. Read the linked `PROJECT/**` document that owns the work you are touching.",
+                "",
+            ]) + crlf
 
     else:
         # Legacy mode remediation
-        if role_split_idx is not None:
-            s = sections[role_split_idx]
-            new_role_lines = []
+        if role_s is not None:
+            r_lines = role_s["body"].splitlines()
+            new_r_lines = []
             roadmap_seen = False
-            for l in s["lines"]:
+
+            for l in r_lines:
                 if re.search(r"-\s+`?ROADMAP-DASHBOARD\.md`?\s*=", l):
                     continue
                 if re.search(r"-\s+`?ROADMAP\.md`?\s*=", l):
-                    new_role_lines.append("- `ROADMAP.md` = the pointer ledger of current, completed, attempted, and deferred work")
+                    new_r_lines.append("- `ROADMAP.md` = the pointer ledger of current, completed, attempted, and deferred work")
                     roadmap_seen = True
                 else:
-                    new_role_lines.append(l)
+                    new_r_lines.append(l)
+
             if not roadmap_seen:
-                new_role_lines.append("- `ROADMAP.md` = the pointer ledger of current, completed, attempted, and deferred work")
-            s["lines"] = new_role_lines
+                new_r_lines.append("- `ROADMAP.md` = the pointer ledger of current, completed, attempted, and deferred work")
 
-        if startup_idx is not None:
-            s = sections[startup_idx]
-            new_startup_lines = []
-            for l in s["lines"]:
-                m = re.match(r"^(\s*\d+\.\s+)(.*)$", l)
+            new_role_body = crlf.join(new_r_lines)
+            if role_s["body"].endswith("\n") or role_s["body"].endswith("\r\n"):
+                new_role_body += crlf
+        else:
+            new_role_body = crlf.join([
+                "",
+                "- `ROUTER.md` = startup order and canonical entry points",
+                "- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof",
+                "- `ROADMAP.md` = the pointer ledger of current, completed, attempted, and deferred work",
+                "- `CHANGELOG.md` = the end-of-iteration running log",
+                "",
+            ]) + crlf
+
+        if startup_s is not None:
+            st_lines = startup_s["body"].splitlines()
+            new_st_lines = []
+            roadmap_seen = False
+
+            for l in st_lines:
+                m = re.match(r"^(\s*(?:\d+\.|\-|\*)\s+)(.*)$", l)
                 if m:
-                    num_prefix = m.group(1)
+                    prefix = m.group(1)
                     rest = m.group(2)
-                    if re.search(r"Read\s+`?ROADMAP-DASHBOARD\.md`?", rest, re.IGNORECASE) or (re.search(r"Read\s+`?ROADMAP\.md`?", rest, re.IGNORECASE) and re.search(r"frozen|legacy", rest, re.IGNORECASE)):
-                        new_startup_lines.append(f"{num_prefix}Read `ROADMAP.md` to find the active effort or parked intake. -> expect links outward to canonical `PROJECT/**` docs.")
+                    if re.search(r"Read\s+`?ROADMAP", rest, re.IGNORECASE) or re.search(r"Read\s+`?ROADMAP-DASHBOARD", rest, re.IGNORECASE):
+                        new_st_lines.append(f"{prefix}Read `ROADMAP.md` to find the active effort or parked intake. -> expect links outward to canonical `PROJECT/**` docs.")
+                        roadmap_seen = True
                         continue
-                new_startup_lines.append(l)
-            s["lines"] = new_startup_lines
+                new_st_lines.append(l)
 
-    # Reconstruct document
-    out_lines = []
-    for s in sections:
-        if s.get("heading_raw"):
-            out_lines.append(s["heading_raw"])
-        for l in s["lines"]:
-            out_lines.append(l)
+            if not roadmap_seen:
+                new_st_lines.append("3. Read `ROADMAP.md` to find the active effort or parked intake. -> expect links outward to canonical `PROJECT/**` docs.")
 
-    new_content = "\n".join(out_lines)
-    if content.endswith("\n"):
-        new_content += "\n"
+            new_startup_body = crlf.join(new_st_lines)
+            if startup_s["body"].endswith("\n") or startup_s["body"].endswith("\r\n"):
+                new_startup_body += crlf
+        else:
+            new_startup_body = crlf.join([
+                "",
+                "1. Read `ROUTER.md` to understand the repo's operating order and canonical files.",
+                "2. Read `AGENTS.md` before making recommendations or edits.",
+                "3. Read `ROADMAP.md` to find the active effort or parked intake. -> expect links outward to canonical `PROJECT/**` docs.",
+                "4. Read the linked `PROJECT/**` document that owns the work you are touching.",
+                "",
+            ]) + crlf
+
+    # Perform slice replacements in reverse order of appearance to keep indices stable
+    splices = []  # list of (start_idx, end_idx, new_text)
+
+    if startup_s is not None:
+        splices.append((startup_s["body_start"], startup_s["end"], new_startup_body))
+    if role_s is not None:
+        splices.append((role_s["body_start"], role_s["end"], new_role_body))
+
+    # Apply existing section splices from back to front
+    splices.sort(key=lambda x: x[0], reverse=True)
+    patched = content
+    for start_idx, end_idx, new_text in splices:
+        patched = patched[:start_idx] + new_text + patched[end_idx:]
+
+    # If role_s was missing, inject it after the first section (or top)
+    if role_s is None:
+        re_sections = find_sections(patched)
+        if re_sections:
+            insert_at = re_sections[0]["start"]
+            role_block = f"## Role split{crlf}{new_role_body}"
+            patched = patched[:insert_at] + role_block + patched[insert_at:]
+        else:
+            patched = patched + f"{crlf}## Role split{crlf}{new_role_body}"
+
+    # If startup_s was missing, inject it at the end (or after role split)
+    if startup_s is None:
+        startup_block = f"{crlf}## Startup sequence{crlf}{new_startup_body}"
+        patched = patched + startup_block
 
     if dry_run:
         return True, "dry-run: planned updates to ROUTER.md"
@@ -385,7 +447,7 @@ def fix_router(root, dry_run=False):
     stat = os.stat(router_path)
     tmp_path = router_path + f".tmp.{os.getpid()}"
     with open(tmp_path, "w", encoding="utf-8") as f:
-        f.write(new_content)
+        f.write(patched)
     os.chmod(tmp_path, stat.st_mode)
     os.replace(tmp_path, router_path)
 
@@ -425,7 +487,7 @@ def main(argv=None):
     else:
         if not audit["exists"]:
             print(f"ROUTER.md not found in {root}")
-        elif not audit["readable"]:
+        elif not audit["readable"] or audit["error"]:
             print(f"ERROR reading ROUTER.md in {root}:")
             for r in audit["reasons"]:
                 print(f"  • {r}")
