@@ -10,7 +10,7 @@ doc_type: feature
 complexity: 6
 risk: 5
 effort: 5
-phases: 3
+phases: 4
 ratings_provisional: true
 non_goals:
   - Replacing any shim's execution or containment logic. Phase 3 changes only what a shim is TOLD
@@ -54,29 +54,48 @@ It feeds documentation only.
 
 ## What Phase 3 delivers
 
-### 1. A preferences file the operator owns
+### 1. A preferences file the operator owns — inside `device_config.json`, not beside it
 
-`~/.xyz/model-prefs.yml`, beside the existing `~/.xyz/device_config.json` (same seam, same
-3-tier discipline — env, then file, then shipped defaults).
+**Revised after QA.** The first draft proposed a new `~/.xyz/model-prefs.yml`. agy pushed back and
+was right, for a reason stronger than "one file is tidier": `~/.xyz/device_config.json` **already
+is** a single-profile version of exactly this feature —
 
-```yaml
-# One name -> the whole path. The name is what you type; everything else is inferred.
-profiles:
-  "glm 5.3 max":
-    harness: commandcode          # -> relay-automation/commandcode-turn.sh, COMMANDCODE_AGENT
-    gateway: openrouter
-    model:   zai-org/glm-5.3
-    effort:  max                  # -> COMMANDCODE_REASONING_EFFORT + `--effort max`
-
-  "qwen 3.8 max":
-    harness: dsh                  # -> deepseek-turn.sh, DEEPSEEK_AGENT
-    gateway: openrouter           # -> DEEPSEEK_PROVIDER=openrouter, OPENROUTER_API_KEY
-    model:   qwen/qwen3.8-max
-
-default: "glm 5.3 max"            # what an unqualified request resolves to
+```json
+{ "default_harness": "dsh", "default_gateway": "openrouter",
+  "default_model": "deepseek/deepseek-v4-pro", "default_reasoning_effort": "high" }
 ```
 
-The two entries above are the operator's own examples and ship as the seed file.
+— so a second file would have made the eleventh curated list this issue exists to stop. Profiles
+become a `profiles` block in that same file, and the existing `default_*` keys stay valid as the
+unnamed fallback profile. No migration, no break.
+
+```json
+{
+  "default_harness": "dsh",
+  "default_gateway": "openrouter",
+  "default_model":   "deepseek/deepseek-v4-pro",
+
+  "profiles": {
+    "glm 5.3 max":  { "harness": "commandcode", "gateway": "openrouter",
+                      "model": "zai-org/glm-5.3", "effort": "max" },
+    "qwen 3.8 max": { "harness": "dsh",         "gateway": "openrouter",
+                      "model": "qwen/qwen3.8-max" }
+  },
+  "default_profile": "glm 5.3 max"
+}
+```
+
+**On the `gateway: openrouter` for Command Code.** QA flagged this as contradicting the operator's
+"CommandCode → GLM 5.3 max". It does not — that phrasing was two-element shorthand. Command Code
+reaches GLM through OpenRouter, confirmed two ways: the declared registry
+(`models.gateway = openrouter` for `zai-org/GLM-5.3`) and live telemetry from this issue's own QA
+relay (`invocation_logs`: `commandcode | zai-org/glm-5.3 | openrouter`, 2 rows). The three-element
+path is the real one; the operator simply did not need to say it.
+
+JSON, not YAML, and parsed by `device_config.py`, which already loads this file. That removes the
+second QA finding entirely: `resolve-model-alias.sh` is a **flat** `alias: canonical` line parser
+(`:63-74`) and could never have read a nested structure. It is used here for **name normalization
+only** — never for reading the profile file.
 
 ### 2. One resolver, one command
 
@@ -98,19 +117,28 @@ file as its input.
 2. **A named profile** from the preferences file, matched through the *existing*
    `resolve-model-alias.sh` normalizer, so `"GLM5.3 max"`, `"glm 5.3 max"` and `"GLM 5.3 Max"` are
    one entry — no new fuzzy matcher.
-3. **`harnesses.db`** — the registry already knows which harness a model has actually run on
-   (`invocation_logs` proves it empirically; `models` carries the gateway). This is what "make the
-   DB feed dispatch" means, and it is the only tier that is new plumbing.
+3. **`harnesses.db` — the `models` table ONLY, never `invocation_logs`.** *Narrowed after QA.*
+   The first draft proposed routing partly on "this model has actually run on this harness before".
+   agy rejected that and the live data proves the point: `commandcode` carries a two-row
+   `stealth/ox-alpha` experiment that would have been promoted to a routing default. **History is
+   not policy.** Tier 3 reads only the *declared* registry (`models.gateway`), which is curated on
+   purpose. agy recommended dropping tier 3 outright; it is kept, narrowed, because the operator
+   asked for the DB to feed dispatch and the unsoundness was entirely in the `invocation_logs` half.
 4. **The shim's current literal default** — unchanged. The floor, always.
 
-**Every tier is skippable.** A missing preferences file, an unmatched name, an absent or corrupt
-`harnesses.db` — each falls through to the next tier, and tier 4 is exactly today's behavior. No
-tier can block a turn. This is the Phase 1 pattern (`model_alias.py`), which QA endorsed, applied
+**Every tier is skippable, INCLUDING on a parse error.** *Hardened after QA.* The first draft said
+"a missing preferences file falls through" and never said what a **malformed** one does — and a
+config parse error that propagates would halt the resolver and block the turn, which is strictly
+worse than today. Explicitly: a missing file, malformed JSON, an unknown key, an unmatched name, an
+absent/locked/corrupt `harnesses.db` — **each is caught, reported on stderr, and falls through**.
+Tier 4 is exactly today's behavior. No tier can block a turn, and no fallback is silent — that is
+the Phase 0 "log the swallow" lesson, where two silent handlers hid a whole-lifetime bug. This is the Phase 1 pattern (`model_alias.py`), which QA endorsed, applied
 one layer up.
 
-### 4. The cache
+### 4. The cache — its own phase (3d), not folded into the resolver
 
-Proposal A, subsumed here rather than built separately: hash the resolution inputs
+*Re-scoped after QA:* agy called the cache orthogonal to the resolver and was right — they share no
+code and bundling them would have made 3a un-shippable until both were done. Proposal A: hash the resolution inputs
 (`$XYZ_HARNESS`, cwd, `.xyz/` presence + version marker, prefs-file mtime) and skip the
 vendored-vs-live diff when the hash matches. Fixes the "`find-harness.sh` re-runs a dozen times a
 session and re-prints the same vendored-diff warning" friction the issue opened with.
@@ -151,7 +179,7 @@ it should not be smuggled in here.
 
 ## Phases
 
-### Phase 3a — the preferences file and the resolver (no dispatch change)
+### Phase 3a — the profiles block and the resolver (no dispatch change, no cache)
 
 - [ ] `~/.xyz/model-prefs.yml` schema + a seeded file carrying the operator's two named profiles
 - [ ] `resolve.sh` with `--env`, `--list`, `--explain`; name matching delegated to
@@ -175,18 +203,50 @@ it should not be smuggled in here.
 - [ ] The literal remains as tier 4 inside the resolver — deleted from nowhere
 - [ ] The 8 `*_MODEL` env var names keep working (deprecation path, not a break)
 - [ ] **Proof:** `test/gh346-telemetry-row-written.sh` extended — telemetry model == dispatched model
-      for **all 8 gateways with the var unset**, which closes the declared-not-dispatched caveat QA
-      raised and that the ROI checkpoint is forbidden to tick until then
+      for **all 8 gateways, with the model var BOTH set and unset**. *QA caught the gap:* the first
+      draft asserted only the unset case, leaving the tier-1 override path unproven. This is the
+      proof that closes the declared-not-dispatched caveat the ROI checkpoint is forbidden to tick
+      until then
 - [ ] **Proof:** the resolver cache measurably removes re-resolutions — the checkpoint's own metric
 
-## Open questions for QA
+### Phase 3d — the resolution cache (independent of 3a-3c)
 
-1. Is `~/.xyz/model-prefs.yml` the right home, or should profiles live inside the existing
-   `device_config.json` rather than adding a second file to the same directory?
-2. Tier 3 reads `invocation_logs` (what has actually run) as well as `models` (what is declared).
-   Is "this model ran on this harness before" sound evidence for routing, or does it risk pinning a
-   one-off experiment as a default?
-3. Does `effort` belong in the profile? It is per-gateway (`--effort max` for Command Code,
-   `AGY_REASONING_EFFORT` for agy) and not every gateway has it.
-4. Is 3c's deprecation of 8 env var names doable without a breaking change, or does that need its
-   own phase?
+- [ ] Hash the resolution inputs; skip the vendored-vs-live diff on a match
+- [ ] Invalidate on `.xyz/` version marker or config mtime change
+- [ ] **Proof:** the checkpoint metric — re-resolutions per session drops measurably
+
+## Design questions — answered by QA (agy, 2026-09-01)
+
+1. **Separate prefs file vs `device_config.json`?** → **`device_config.json`.** Accepted and
+   applied above. Its `default_harness`/`default_gateway`/`default_model` keys are already a
+   one-profile version of this feature, so a second file would have been the eleventh curated list.
+2. **Route on `invocation_logs`?** → **No.** Accepted. Tier 3 now reads only the declared `models`
+   table. Live data proved the objection: a two-row `stealth/ox-alpha` experiment would have become
+   a routing default.
+3. **Does `effort` belong in a profile?** → **Only namespaced per gateway**, since not every
+   gateway has one (`COMMANDCODE_REASONING_EFFORT`, `AGY_REASONING_EFFORT`; codex has none).
+   Accepted: `effort` is optional per profile and emitted only for gateways that accept it.
+4. **Deprecate the 8 `*_MODEL` env vars?** → **No.** Keep them permanently as tier 1 overrides.
+   Deprecating would break existing scripts while providing nothing better. The spec already
+   intended this; it is now explicit — 3c is a *fallback* change, not a migration.
+
+## Findings recorded but NOT adopted
+
+**"Drop tier 3 entirely."** Not taken. The unsoundness agy identified was real but confined to the
+`invocation_logs` half; narrowing tier 3 to the declared `models` table removes it. Dropping the
+tier outright would also refuse the operator's explicit instruction that `harnesses.db` should feed
+dispatch where reversible — and it is reversible in this shape.
+
+**"The YAML example routes GLM 5.3 to OpenRouter instead of Command Code."** Wrong on the facts.
+Command Code reaches GLM *through* OpenRouter; verified in both the declared registry and live
+telemetry. The operator's two-element phrasing was shorthand, not a different path.
+
+**"Degrading to tier 4 makes the system silently do the wrong thing."** The concern is fair but the
+remedy is loud fallback, not abandoning the tier: every fallback reports which tier answered, on
+stderr and via `--explain`. Reversibility (can the code change be undone?) and surprise (does the
+fallback announce itself?) are separate properties; this spec now provides both.
+
+## Still open for the operator
+
+- Should a profile be able to pin a **reviewer** as well as a builder? Today reviewer eligibility is
+  a separate gate (codex/agy only, post-GH-346). Out of scope as written.
