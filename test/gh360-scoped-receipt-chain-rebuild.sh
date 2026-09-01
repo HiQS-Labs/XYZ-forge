@@ -15,8 +15,9 @@ ROOT_DIR="$(cd "$HERE/.." && pwd)"
 APP="$ROOT_DIR/utils/py/releases_app.py"
 
 pass=0; fail=0
-ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
-has()  { printf '%s' "$1" | grep -Fq -- "$2"; }
+ok(){ if [ "$2" = "0" ]; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi; }
+is(){ [ "$1" = "$2" ]; }
+has(){ printf '%s' "$1" | grep -Fq -- "$2"; }
 
 echo "== test: gh360-scoped-receipt-chain-rebuild =="
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
@@ -68,7 +69,7 @@ conn.close()
 ra init >/dev/null 2>&1 || { echo "init failed" >&2; exit 1; }
 
 out="$(ra check 2>&1)"; rc=$?
-ok "clean repo passes releases check (rc=0)" "[ $rc -eq 0 ]"
+[ $rc -eq 0 ]; ok "clean repo passes releases check (rc=0)" $?
 
 # 2. Simulate a branch fork where two branches author operations from the same ancestor
 # Save the ancestor DB and dump
@@ -138,40 +139,28 @@ tconn.close()
 "
 
 out="$(ra check 2>&1)"; rc=$?
-ok "un-reanchored chain break fails check (rc=1)" "[ $rc -eq 1 ]"
-if has "$out" "likely caused by git branch switching or rebasing"; then
-  ok "error message states git branch switching / rebasing as likely cause" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "error message states git branch switching / rebasing as likely cause" "false"
-fi
-if ! has "$out" "spliced or forged"; then
-  ok "error message does NOT claim 'spliced or forged audit trail'" "true"
-else
-  ok "error message does NOT claim 'spliced or forged audit trail'" "false"
-fi
-if has "$out" "run \`releases check --rebuild\` to re-anchor"; then
-  ok "error message gives remediation command 'releases check --rebuild'" "true"
-else
-  ok "error message gives remediation command 'releases check --rebuild'" "false"
-fi
+[ $rc -eq 1 ]; ok "un-reanchored chain break fails check (rc=1)" $?
+has "$out" "likely caused by git branch switching or rebasing"
+ok "error message states git branch switching / rebasing as likely cause" $?
+
+! has "$out" "spliced or forged"
+ok "error message does NOT claim 'spliced or forged audit trail'" $?
+
+has "$out" "run \`releases check --rebuild\` to re-anchor"
+ok "error message gives remediation command 'releases check --rebuild'" $?
 
 # 3. Run releases check --rebuild to re-anchor the break
 out_rebuild="$(ra check --rebuild 2>&1)"; rc_rebuild=$?
-ok "releases check --rebuild succeeds (rc=0)" "[ $rc_rebuild -eq 0 ]"
+[ $rc_rebuild -eq 0 ]; ok "releases check --rebuild succeeds (rc=0)" $?
 
 # Verify the merge-rebuild receipt has target_gid = 'reanchor:2'
 last_target_gid="$(sqlite3 "$R/releases.db" "SELECT target_gid FROM op_receipts WHERE op='merge-rebuild' ORDER BY id DESC LIMIT 1")"
-ok "merge-rebuild receipt recorded reanchor:2 in target_gid ($last_target_gid)" "[ '$last_target_gid' = 'reanchor:2' ]"
+is "$last_target_gid" "reanchor:2"; ok "merge-rebuild receipt recorded reanchor:2 in target_gid ($last_target_gid)" $?
 
 out="$(ra check 2>&1)"; rc=$?
-ok "after rebuild, releases check passes with tolerated break note (rc=0)" "[ $rc -eq 0 ]"
-if has "$out" "2 merge fork(s) tolerated under the merge-rebuild receipt"; then
-  ok "check output announces 2 merge forks tolerated" "true"
-else
-  echo "DEBUG check output: $out" >&2
-  ok "check output announces 2 merge forks tolerated" "false"
-fi
+[ $rc -eq 0 ]; ok "after rebuild, releases check passes with tolerated break note (rc=0)" $?
+has "$out" "2 merge fork(s) tolerated under the merge-rebuild receipt"
+ok "check output announces 2 merge forks tolerated" $?
 
 # 4. Introduce a SECOND break occurring AFTER the rebuild
 # Save rebuilt state
@@ -241,80 +230,52 @@ tconn.close()
 "
 
 out="$(ra check 2>&1)"; rc=$?
-ok "subsequent break after previous rebuild fails check (rc=1)" "[ $rc -eq 1 ]"
-if has "$out" "1 new receipt(s) break the chain (3 total break(s), 2 re-anchored)"; then
-  ok "error message distinguishes new breaks from previously re-anchored breaks" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "error message distinguishes new breaks from previously re-anchored breaks" "false"
-fi
+[ $rc -eq 1 ]; ok "subsequent break after previous rebuild fails check (rc=1)" $?
+has "$out" "1 new receipt(s) break the chain (3 total break(s), 2 re-anchored)"
+ok "error message distinguishes new breaks from previously re-anchored breaks" $?
 
 # 5. Rebuild again to re-anchor the second break
 out_rebuild2="$(ra check --rebuild 2>&1)"; rc_rebuild2=$?
-ok "second releases check --rebuild succeeds (rc=0)" "[ $rc_rebuild2 -eq 0 ]"
+[ $rc_rebuild2 -eq 0 ]; ok "second releases check --rebuild succeeds (rc=0)" $?
 
 last_target_gid2="$(sqlite3 "$R/releases.db" "SELECT target_gid FROM op_receipts WHERE op='merge-rebuild' ORDER BY id DESC LIMIT 1")"
-ok "second merge-rebuild receipt recorded reanchor:4 in target_gid ($last_target_gid2)" "[ '$last_target_gid2' = 'reanchor:4' ]"
+is "$last_target_gid2" "reanchor:4"; ok "second merge-rebuild receipt recorded reanchor:4 in target_gid ($last_target_gid2)" $?
 
 out="$(ra check 2>&1)"; rc=$?
-ok "after second rebuild, releases check passes (rc=0)" "[ $rc -eq 0 ]"
-if has "$out" "4 merge fork(s) tolerated under the merge-rebuild receipt"; then
-  ok "check output announces 4 merge forks tolerated" "true"
-else
-  echo "DEBUG check output: $out" >&2
-  ok "check output announces 4 merge forks tolerated" "false"
-fi
+[ $rc -eq 0 ]; ok "after second rebuild, releases check passes (rc=0)" $?
+has "$out" "4 merge fork(s) tolerated under the merge-rebuild receipt"
+ok "check output announces 4 merge forks tolerated" $?
 
 # 6. Legacy merge-rebuild receipt compatibility (target_gid IS NULL)
 set_rebuild_target_gid "NULL"
 out="$(ra check 2>&1)"; rc=$?
-ok "legacy NULL target_gid merge-rebuild receipts pass when no new breaks exist (rc=0)" "[ $rc -eq 0 ]"
-if ! has "$out" "rule=dump-divergence"; then
-  ok "legacy check has no dump-divergence failure" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "legacy check has no dump-divergence failure" "false"
-fi
+[ $rc -eq 0 ]; ok "legacy NULL target_gid merge-rebuild receipts pass when no new breaks exist (rc=0)" $?
+! has "$out" "rule=dump-divergence"
+ok "legacy check has no dump-divergence failure" $?
 
 # 7. Malformed non-NULL rebuild scope rejection
 # Set a malformed target_gid 'reanchor:bogus'
 set_rebuild_target_gid "reanchor:bogus"
 out="$(ra check 2>&1)"; rc=$?
-ok "malformed non-NULL target_gid fails check (rc=1)" "[ $rc -eq 1 ]"
-if has "$out" "FAIL: rule=malformed-reanchor-receipt"; then
-  ok "error output reports malformed-reanchor-receipt rule" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "error output reports malformed-reanchor-receipt rule" "false"
-fi
-if ! has "$out" "rule=dump-divergence"; then
-  ok "malformed check has no dump-divergence failure" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "malformed check has no dump-divergence failure" "false"
-fi
+[ $rc -eq 1 ]; ok "malformed non-NULL target_gid fails check (rc=1)" $?
+has "$out" "FAIL: rule=malformed-reanchor-receipt"
+ok "error output reports malformed-reanchor-receipt rule" $?
+! has "$out" "rule=dump-divergence"
+ok "malformed check has no dump-divergence failure" $?
 
 # Non-canonical breaks:999 is rejected
 set_rebuild_target_gid "breaks:999"
 out="$(ra check 2>&1)"; rc=$?
-ok "non-canonical breaks:999 fails check (rc=1)" "[ $rc -eq 1 ]"
-if has "$out" "FAIL: rule=malformed-reanchor-receipt"; then
-  ok "error output reports malformed-reanchor-receipt on breaks:999" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "error output reports malformed-reanchor-receipt on breaks:999" "false"
-fi
+[ $rc -eq 1 ]; ok "non-canonical breaks:999 fails check (rc=1)" $?
+has "$out" "FAIL: rule=malformed-reanchor-receipt"
+ok "error output reports malformed-reanchor-receipt on breaks:999" $?
 
 # Non-canonical embedded string 'prefix reanchor:999 suffix' is rejected
 set_rebuild_target_gid "prefix reanchor:999 suffix"
 out="$(ra check 2>&1)"; rc=$?
-ok "non-canonical embedded string fails check (rc=1)" "[ $rc -eq 1 ]"
-if has "$out" "FAIL: rule=malformed-reanchor-receipt"; then
-  ok "error output reports malformed-reanchor-receipt on embedded string" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "error output reports malformed-reanchor-receipt on embedded string" "false"
-fi
+[ $rc -eq 1 ]; ok "non-canonical embedded string fails check (rc=1)" $?
+has "$out" "FAIL: rule=malformed-reanchor-receipt"
+ok "error output reports malformed-reanchor-receipt on embedded string" $?
 
 # 8. Break occurring AFTER legacy NULL target_gid receipt is caught without dump-divergence
 set_rebuild_target_gid "NULL"
@@ -341,19 +302,11 @@ conn.close()
 "
 
 out="$(ra check 2>&1)"; rc=$?
-ok "break occurring after legacy NULL target_gid receipt fails check (rc=1)" "[ $rc -eq 1 ]"
-if has "$out" "1 new receipt(s) break the chain"; then
-  ok "error output announces new break after legacy receipt" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "error output announces new break after legacy receipt" "false"
-fi
-if ! has "$out" "rule=dump-divergence"; then
-  ok "post-legacy check isolates receipt-chain failure without dump-divergence" "true"
-else
-  echo "DEBUG output: $out" >&2
-  ok "post-legacy check isolates receipt-chain failure without dump-divergence" "false"
-fi
+[ $rc -eq 1 ]; ok "break occurring after legacy NULL target_gid receipt fails check (rc=1)" $?
+has "$out" "1 new receipt(s) break the chain"
+ok "error output announces new break after legacy receipt" $?
+! has "$out" "rule=dump-divergence"
+ok "post-legacy check isolates receipt-chain failure without dump-divergence" $?
 
 echo "gh360: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1
