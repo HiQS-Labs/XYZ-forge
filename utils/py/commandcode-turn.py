@@ -128,7 +128,17 @@ def main():
             # GH-346 Phase 0: log the dispatched model, not a second, drifted default. An unset
             # COMMANDCODE_MODEL ran meta/muse-spark-1.2-contributor and recorded Qwen/Qwen3.8-Max.
             model_id=commandcode_model,
-            gateway=os.environ.get("COMMANDCODE_GATEWAY", "openrouter"),
+            # GH-346: this defaulted to "openrouter", which is wrong. Command Code is BOTH the
+            # harness and the router — this shim contains no OpenRouter API key, no base URL, and
+            # no routing config of any kind; `cmd` resolves the model from its own catalog
+            # (`cmd --list-models`). Contrast deepseek-turn.py, which builds an explicit OpenRouter
+            # overlay with baseURL + OPENROUTER_API_KEY because it genuinely routes through one.
+            #
+            # Same defect class as the model_id drift Phase 0 fixed, one argument over: a hardcoded
+            # default asserting a fact about the run that no dispatch path establishes. It is worth
+            # recording how it survived — this value was cited as EVIDENCE that Command Code routes
+            # through OpenRouter, when it was only ever a literal in this line.
+            gateway=os.environ.get("COMMANDCODE_GATEWAY", "commandcode"),
             reasoning_effort=os.environ.get("COMMANDCODE_REASONING_EFFORT", "xhigh"),
             cli_flags=cflags,
             repo_root=xyz_root,

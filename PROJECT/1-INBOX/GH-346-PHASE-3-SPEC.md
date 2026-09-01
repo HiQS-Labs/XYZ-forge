@@ -114,7 +114,7 @@ unnamed fallback profile. No migration, no break.
   "default_model":   "deepseek/deepseek-v4-pro",
 
   "profiles": {
-    "glm 5.3 max":  { "harness": "commandcode", "gateway": "openrouter",
+    "glm 5.3 max":  { "harness": "commandcode", "gateway": "commandcode",
                       "model": "zai-org/glm-5.3", "effort": "max" },
     "qwen 3.8 max": { "harness": "dsh",         "gateway": "openrouter",
                       "model": "qwen/qwen3.8-max" }
@@ -123,12 +123,31 @@ unnamed fallback profile. No migration, no break.
 }
 ```
 
-**On the `gateway: openrouter` for Command Code.** QA flagged this as contradicting the operator's
-"CommandCode → GLM 5.3 max". It does not — that phrasing was two-element shorthand. Command Code
-reaches GLM through OpenRouter, confirmed two ways: the declared registry
-(`models.gateway = openrouter` for `zai-org/GLM-5.3`) and live telemetry from this issue's own QA
-relay (`invocation_logs`: `commandcode | zai-org/glm-5.3 | openrouter`, 2 rows). The three-element
-path is the real one; the operator simply did not need to say it.
+**On Command Code's gateway — a correction, and how it nearly shipped.** The first draft wrote
+`gateway: openrouter` here. That is wrong, and it matters for the data model: **Command Code is
+both a harness AND a router.** OpenRouter is only ever a gateway. So the operator's
+"CommandCode → GLM 5.3 max" was not two-element shorthand for a three-element path — it *was* the
+whole path, because harness and gateway are the same thing on that lane.
+
+The evidence is unambiguous once looked at properly: `commandcode-turn.py` contains **no**
+OpenRouter API key, base URL, or routing config of any kind — `cmd` resolves the model from its own
+catalog. Contrast `deepseek-turn.py:35-48`, which builds an explicit overlay with
+`baseURL: https://openrouter.ai/api/v1` and `OPENROUTER_API_KEY` because it genuinely does route
+through one.
+
+QA (agy) flagged this and was **right**; the first revision of this spec overrode the finding and
+should not have. The stated justification was live telemetry showing
+`commandcode | zai-org/glm-5.3 | openrouter` — but that `openrouter` came from
+`gateway=os.environ.get("COMMANDCODE_GATEWAY", "openrouter")`, a hardcoded literal in the shim, not
+an observation of anything. **A hardcoded default was cited as evidence** — which is the precise
+defect Phase 0 of this issue exists to eliminate, reproduced while arguing against a correct
+review. The literal is now fixed to `commandcode`, and the lesson is recorded here rather than
+quietly patched: telemetry is only evidence once you have checked that something actually writes it.
+
+Note the `models` table is not wrong to list `openrouter` for `zai-org/GLM-5.3` — that model *is*
+reachable through OpenRouter. It says where a model can be reached, not which router a given
+harness used. Tier 3 must therefore treat `models.gateway` as a hint for lanes that need a
+gateway, never as an override for a harness that is its own router.
 
 JSON, not YAML, and parsed by `device_config.py`, which already loads this file. That removes the
 second QA finding entirely: `resolve-model-alias.sh` is a **flat** `alias: canonical` line parser
@@ -287,9 +306,10 @@ default, so this phase is a separate value judgement, not a dependency.
 tier outright would also refuse the operator's explicit instruction that `harnesses.db` should feed
 dispatch where reversible — and it is reversible in this shape.
 
-**"The YAML example routes GLM 5.3 to OpenRouter instead of Command Code."** Wrong on the facts.
-Command Code reaches GLM *through* OpenRouter; verified in both the declared registry and live
-telemetry. The operator's two-element phrasing was shorthand, not a different path.
+~~**"The YAML example routes GLM 5.3 to OpenRouter instead of Command Code."**~~ **RETRACTED — QA
+was right and this rejection was wrong.** Command Code is both harness and router; it does not
+route through OpenRouter. The "live telemetry" cited as counter-evidence was a hardcoded shim
+literal. See the correction under section 1, and the fix in `commandcode-turn.py`.
 
 **"Degrading to tier 4 makes the system silently do the wrong thing."** The concern is fair but the
 remedy is loud fallback, not abandoning the tier: every fallback reports which tier answered, on
