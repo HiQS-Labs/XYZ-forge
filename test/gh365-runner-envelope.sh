@@ -42,6 +42,12 @@ echo "== test: gh365-runner-envelope =="
 
 # ── A. the helper contract ───────────────────────────────────────────────────────────────────────
 . "$LIB"
+# Hermeticity: under validate.sh THIS suite inherits the runner's exported XYZ_HARNESS_DB (its
+# own envelope scratch). Section A must exercise the helper's OWN begin/assert, not the runner's
+# pre-set one — save, unset, restore. (Observed red in a real pool run: A1 read the runner's
+# scratch copy of the repo harnesses.db and failed the fixture-content assert.)
+_AMBIENT_HARNESS_DB="${XYZ_HARNESS_DB:-}"
+unset XYZ_HARNESS_DB
 
 R="$(mkclone)"
 runner_envelope_begin "$R" "suite" || fail "A1: begin failed on a healthy clone"
@@ -185,12 +191,12 @@ printf '#!/usr/bin/env bash\nexit 0\n' > "$CB/utils/hq/hq.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$CB/test/hq.sh"; chmod +x "$CB/test/hq.sh"
 git -C "$CB" add -A >/dev/null 2>&1; git -C "$CB" commit -qm base >/dev/null 2>&1
 out="$(cd "$CB" && bash validate.sh --tier 1 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q "stub-pdda ran" \
+[ "$rc" -eq 0 ] && grep -q "stub-pdda ran" <<<"$out" \
   && pass "C1 CONTROL: tier 1 (no suites) still runs green without the lib" \
   || fail "C1 CONTROL: tier 1 broke without the lib (rc=$rc): $(printf '%s' "$out" | tail -2)"
 printf 'utils/hq/hq.sh\n' > "$CB/paths.txt"
 out="$(cd "$CB" && bash validate.sh --paths-file "$CB/paths.txt" 2>&1)"; rc=$?
-if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q "runner-envelope.sh is missing"; then
+if [ "$rc" -ne 0 ] && grep -q "runner-envelope.sh is missing" <<<"$out"; then
   pass "C2: envelope path without the lib REFUSES, naming it (exit $rc)"
 else
   fail "C2: a validate.sh missing the lib must refuse the envelope path (rc=$rc): $(printf '%s' "$out" | tail -2)"
@@ -204,6 +210,7 @@ out="$(bash "$REPO/utils/gate-record.sh" --suite-log /dev/null --verdicts /dev/n
   || { [ "$rc" -eq 3 ] && pass "D1: gate-record refuses a dirty tree (exit 3) — the teeth exist" \
        || fail "D1: unexpected gate-record rc=$rc: $out"; }
 
+[ -n "$_AMBIENT_HARNESS_DB" ] && export XYZ_HARNESS_DB="$_AMBIENT_HARNESS_DB"
 echo "== gh365-runner-envelope: $PASS passed, $FAIL failed =="
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0
