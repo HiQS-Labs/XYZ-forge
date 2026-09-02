@@ -30,7 +30,7 @@ fi
 # Usage:
 #   relay-automation/marathon-drive.sh \
 #     --phase-brief <FILE>       phase brief (markdown; baked into the relay template)
-#     --reviewer    <AGENT_ID>   reviewer agent (codex* or gemini*)
+#     --reviewer    <AGENT_ID>   reviewer agent (codex* or agy*)
 #     [--builder    <AGENT_ID>]  builder agent (default: codex — GH-212: no per-call API charge;
 #                                --builder claude spawns a billed headless Claude Code CLI
 #                                subprocess instead — an explicit, cost-acknowledged opt-in)
@@ -590,7 +590,7 @@ usage() {
 Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]
 
   --phase-brief FILE      Phase brief markdown baked into the relay template (required).
-  --reviewer AGENT        Reviewer agent id; must start with 'codex', 'gemini', or 'agy' (required).
+  --reviewer AGENT        Reviewer agent id; must start with 'codex' or 'agy' (required).
   --builder AGENT         Builder agent id (default: codex — GH-212: no per-call API charge; bills
                           via the Codex/ChatGPT subscription, agy is the other cost-blind option).
                           --builder claude spawns a headless Claude Code CLI subprocess instead: a
@@ -769,7 +769,7 @@ LANE_STATE_KEY="${MARATHON_LANE_NS:-$PHASE_ID}"
 PRE_PHASE_HEAD="$(git -C "${TARGET_ROOT:-$ROOT}" rev-parse HEAD 2>/dev/null || true)"
 
 # Map builder/reviewer to _AGENT env vars for marathon-agent.sh routing. Both actors are routed to
-# their shim by name prefix (claude/codex/agy/gemini), so the harness supports cross-model BUILDERS
+# their shim by name prefix (claude/codex/agy/aider), so the harness supports cross-model BUILDERS
 # (e.g. agy) — not just Claude. Builder defaults to claude for back-compat.
 export MARATHON_BUILDER="$BUILDER"
 export MARATHON_REVIEWER="$REVIEWER"
@@ -791,8 +791,9 @@ route_agent() {  # <agent-id> → export the matching *_AGENT var marathon-agent
 [[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
 route_agent "$BUILDER"
 route_agent "$REVIEWER"
-# Reviewer must be a QA-capable model lane (codex/gemini/agy), never the Claude builder lane.
-case "$REVIEWER" in codex*|gemini*|agy*) ;; *) die "reviewer '$REVIEWER' must start with codex/gemini/agy" ;; esac
+# GH-373: Gemini has no router branch or turn shim, so the frozen fallback must not accept it.
+# Reviewer must be a QA-capable model lane (codex/agy), never the Claude builder lane.
+case "$REVIEWER" in codex*|agy*) ;; *) die "reviewer '$REVIEWER' must start with codex/agy" ;; esac
 
 # GH-117: probe the builder/reviewer binary's existence on PATH here — before ANY tick state
 # mutation (task.created/claim/release at :386+ below) or even Step 0's clean-workspace check —

@@ -2,6 +2,7 @@ import atexit
 import os
 import re
 import shlex
+import signal
 import subprocess
 import tempfile
 import sys
@@ -217,6 +218,51 @@ def split_allow_paths(allow_paths):
         if path:
             paths.append(path)
     return paths
+
+
+def rtl_run_bounded(timeout_secs, cmd, *, cwd=None, env=None, stdout=None, stderr=None):
+    """Run *cmd* under a wall-clock cap, reaping its entire process group on timeout.
+
+    Returns the command's exit status on normal completion and 7 after a timeout kill, matching
+    relay-turn-lib.sh::rtl_run_bounded.  `start_new_session=True` is load-bearing: without it a
+    process-group kill could signal the supervising turn shim instead of only its child tree.
+    """
+    # GH-369: record the child's actual PGID while the launcher is still alive.  A CLI may re-exec
+    # or leave a grandchild after its leader exits; the captured group is still the full timeout
+    # target.  `ps` mirrors the Bash lane; os.getpgid is only the portable fallback if ps is gone.
+    proc = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        env=env,
+        stdout=stdout,
+        stderr=stderr,
+        stdin=subprocess.DEVNULL,
+        shell=isinstance(cmd, str),
+        start_new_session=True,
+    )
+    try:
+        raw_pgid = subprocess.check_output(
+            ["ps", "-o", "pgid=", "-p", str(proc.pid)], stderr=subprocess.DEVNULL
+        ).decode("utf-8").strip()
+        pgid = int(raw_pgid)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        try:
+            pgid = os.getpgid(proc.pid)
+        except OSError:
+            pgid = proc.pid
+
+    try:
+        return proc.wait(timeout=float(timeout_secs))
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+        try:
+            proc.wait(timeout=5)
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        return 7
 
 def claim_paths_for_turn(root, relay_file, allow_paths):
     # Resolve both through realpath before computing the relative path. `root` and `relay_file` can
@@ -658,7 +704,12 @@ exit $RC
         return res.stdout.strip()
 
     def drift_brief(self, agent, tick_repo_root):
-        cmd = f"rtl_drift_brief {shlex.quote(agent)} {shlex.quote(tick_repo_root)}"
+        # GH-374: the tick event registry can be shared by a harness and a foreign turn root.
+        # Pass the driven repository explicitly so the Bash core filters stale cross-repo surfaces
+        # against that repository's committed HEAD, matching the direct Bash-shim path.
+        turn_root = os.environ.get("RELAY_TARGET_ROOT", self.root)
+        cmd = (f"rtl_drift_brief {shlex.quote(agent)} {shlex.quote(tick_repo_root)} "
+               f"{shlex.quote(turn_root)}")
         res = self._run_checked(cmd)
         return res.stdout.strip()
         

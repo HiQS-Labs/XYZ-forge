@@ -36,8 +36,10 @@ mkfixture() {
 
 echo "relay-dep-drift (GH-68):"
 
-# --- 1 & 2: emit schema + projection safety ---------------------------------------------------------
 D="$(mkfixture)"; export TICK_REPO_ROOT="$D"; T="$D/bin/tick"
+mkdir -p "$D/src"
+printf 'module.exports = {};\n' > "$D/src/project.js"
+git -C "$D" add src/project.js >/dev/null 2>&1; git -C "$D" commit -qm seed
 evfile="$("$T" drift "src/project.js" --agent agent-a --task post-commit \
            --prior-sha aaa --current-sha bbb --diff-lines 12 2>/dev/null)"
 ev="$D/$evfile"

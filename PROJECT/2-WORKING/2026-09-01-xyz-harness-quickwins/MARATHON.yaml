@@ -1,0 +1,89 @@
+# ── RESCOPED 2026-09-01 AFTER XYZ-forge #367 AND #375 MERGED ───────────────────────────────
+# This plan was authored against `development @ 6fe36fbb` and preflighted there. Two things
+# landed on `development` afterwards that change phase p1. Both are recorded in the capture
+# docs; this is the summary.
+#
+#  1. #373 IS MOSTLY ALREADY FIXED (PR #367, GH-346 Phase 2). `route_agent` has no gemini
+#     branch and `bin/marathon-yaml`'s reviewer regex is `/^(codex|agy)/`. What REMAINS is
+#     only the FROZEN twin `relay-automation/marathon-drive.sh`, which still accepts `gemini*`
+#     at :795 and advertises it at :33, :593, :772, :794. That is a GH-308 frozen-twin edit
+#     needing a `Frozen-twin-exception:` trailer — decide deliberately whether to spend it.
+#     The original GH-373 preflight contract listed the two ALREADY-FIXED files as its
+#     artifacts and omitted the one still carrying the defect; it has been corrected.
+#
+#  2. #368 WILL SILENTLY BREAK THE GH-346 PROFILE RESOLVER (PR #375). `utils/py/profile_resolve.py`
+#     derives the lane set by parsing `route_agent`'s source rather than copying it. Both fix
+#     directions #368 proposes rewrite that shape; the derivation then yields nothing and every
+#     profile degrades to tier 4 — no crash, no blocked turn, just a feature that quietly stops
+#     resolving. p1 must update the derivation in the same change. Added to p1's artifacts along
+#     with `test/gh346-profile-resolve.sh`, which already asserts the derived lane set equals
+#     route_agent's and so fails loudly instead of drifting.
+#
+# Re-run `swarm-preflight.sh --dry-run` after this rescope: the earlier "ready (exit 0)" was
+# measured against the old contracts.
+
+# XYZ harness quick wins — the seven findings from the 2026-09-01 LTVera health-and-isolation
+# marathon (issues #368-#374, filed same day with run-log evidence). Sequenced, NOT concurrent:
+# marathon.sh runs phases strictly one at a time with review between them (GH-241).
+#
+# Serialization analysis (shared files that force depends_on — it does not buy parallelism):
+#   * utils/py/marathon_drive.py is in p1 (routing/validation) AND p3 (interrupt snapshot)
+#     → p3 depends_on p1.
+#   * utils/py/relay_drive.py is in p2 (supervision telemetry) AND p3 (escalation tail)
+#     → p3 depends_on p2.
+#   * relay-automation/relay-turn-lib.sh + utils/py/rtl.py are in p2 (group kill) AND p4
+#     (drift filter) → p4 depends_on p2.
+#   * p1 and p2 share nothing → the only real ordering constraint between them is review
+#     bandwidth; p2 is ordered after p1 to keep one writer at a time on the drive twins.
+#
+# FROZEN TWINS (GH-308): behavior changes go in the .py lanes —
+# relay-automation/{marathon-drive,relay-drive,agy-turn}.sh are frozen; the preflight
+# contracts already list only authoritative paths. relay-automation/marathon-agent.sh and
+# relay-turn-lib.sh are NOT frozen (checked 2026-09-01) and may be edited directly.
+#
+# This repo HAS a root validate.sh — marathon.sh's default gate is `bash validate.sh`
+# (aggregate tick acceptance suite). Always --dry-run first:
+#   relay-automation/marathon.sh \
+#     --plan PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/MARATHON.yaml --dry-run
+#
+# Builder/reviewer: codex + agy (the intended cross-model pair). Contingency: if the codex
+# workspace is still out of credits (the condition that produced #368), phase p1's own fix
+# is what makes an agy/agy-qa same-lane run routable — run p1 first with whatever lanes
+# are available (claude is per-call billed and NOT authorized by default).
+
+name: 2026-09-01-xyz-harness-quickwins
+phases:
+  - id: p1-routing-validation
+    name: "#368 + #373 — same-lane agent routing + reviewer-validation alignment"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md
+    artifact: utils/py/marathon_drive.py,utils/py/agy-turn.py,relay-automation/marathon-agent.sh,relay-automation/marathon-drive.sh,utils/py/profile_resolve.py,test/gh346-profile-resolve.sh,test/gh368-same-lane-routing.sh,test/gh373-reviewer-validation.sh
+    turn_timeout_s: 1800
+    max_review_rounds: 3
+
+  - id: p2-turn-supervision
+    name: "#369 + #370 — process-group turn cap + worktree progress telemetry"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md
+    artifact: relay-automation/relay-turn-lib.sh,utils/py/rtl.py,utils/py/relay_drive.py,test/gh369-group-kill.sh,test/gh370-progress-telemetry.sh
+    turn_timeout_s: 1800
+    max_review_rounds: 3
+    depends_on: p1-routing-validation
+
+  - id: p3-incident-records
+    name: "#371 + #372 — interrupted-phase tree snapshot + escalation root-cause tail"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md
+    artifact: utils/py/marathon_drive.py,utils/py/relay_drive.py,test/gh371-interrupt-snapshot.sh,test/gh372-escalation-log-tail.sh
+    turn_timeout_s: 1800
+    max_review_rounds: 3
+    depends_on: p2-turn-supervision   # transitively after p1 (marathon-yaml takes one id)
+
+  - id: p4-drift-filter
+    name: "#374 — drift-brief path-existence filter"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md
+    artifact: relay-automation/relay-turn-lib.sh,utils/py/rtl.py,test/gh374-drift-path-filter.sh
+    turn_timeout_s: 1500
+    max_review_rounds: 2
+    depends_on: p2-turn-supervision

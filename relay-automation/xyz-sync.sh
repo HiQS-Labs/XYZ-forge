@@ -450,6 +450,16 @@ check_rows() {
       printf 'SAFETY GUARD MISSING %s (%s)\n' "${SELECTED_INSTALL_DIRS[$i]}" "$missing_guards"
       printf '  inspected installed copy directly; source_commit=%s does not establish guard coverage\n' "$rec_commit"
     fi
+
+    # GH-353: inspect target repo ROUTER.md against releases/legacy mode
+    local router_audit_py="$HARNESS_ROOT/utils/py/router_audit.py"
+    if [ -f "$router_audit_py" ] && [ -d "${SELECTED_TARGET_REPOS[$i]}" ] && [ -f "${SELECTED_TARGET_REPOS[$i]}/ROUTER.md" ]; then
+      local audit_out
+      if ! audit_out="$(python3 "$router_audit_py" --check "${SELECTED_TARGET_REPOS[$i]}" 2>&1)"; then
+        printf 'ROUTER DRIFT %s\n' "${SELECTED_TARGET_REPOS[$i]}"
+        printf '%s\n' "$audit_out" | sed 's/^/  /'
+      fi
+    fi
   done
 }
 

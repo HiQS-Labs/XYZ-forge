@@ -97,7 +97,28 @@ Prefer the **no-flag** form on first install: it installs in `observe` mode
 `--with-startup-docs` only if the target wants the ROUTER/AGENTS scaffold and
 does not already have its own. Re-running later upgrades in place.
 
-### 5. Verify
+### 5. Check and prompt for `ROUTER.md` updates (GH-353)
+
+After vendoring or updating XYZ in `<target-repo>`:
+
+Run the router roadmap audit check:
+```bash
+python3 "$HARNESS/utils/py/router_audit.py" --check /abs/path/to/target-repo
+```
+
+If `ROUTER DRIFT` is reported:
+The LLM MUST inspect the reported mode (or `--json` output) and prompt the user for confirmation before modifying the target repository's `ROUTER.md`:
+- **If releases mode is active (`releases.db` or `ROADMAP_SOURCE=releases`):**
+  > *"The target repository `<target-repo>` has releases mode enabled (`releases.db`), but its `ROUTER.md` still lists `ROADMAP.md` as active instead of frozen. Would you like me to update `ROUTER.md` to mark `ROADMAP.md` as frozen and reference `ROADMAP-DASHBOARD.md` and `releases.db`?"*
+- **If legacy mode is active (no releases DB):**
+  > *"The target repository `<target-repo>` is in legacy roadmap mode, but its `ROUTER.md` references releases-mode artifacts (`ROADMAP-DASHBOARD.md` or frozen `ROADMAP.md`). Would you like me to update `ROUTER.md` to restore active `ROADMAP.md` instructions?"*
+
+Upon user approval:
+```bash
+python3 "$HARNESS/utils/py/router_audit.py" --fix /abs/path/to/target-repo
+```
+
+### 6. Verify
 
 ```bash
 cd /abs/path/to/target-repo
@@ -118,8 +139,9 @@ grep -F "$(cd /abs/path/to/target-repo && pwd)" ~/.config/pdda/registry.tsv   # 
 Each tool registered the target into its own machine-local registry, so future
 updates are pull-based and per-tool — you never re-run this skill to upgrade:
 
-- **XYZ:** `relay-automation/xyz-sync.sh check --all` (report drift),
+- **XYZ:** `relay-automation/xyz-sync.sh check --all` (reports harness drift and `ROUTER.md` drift),
   `xyz-sync.sh update <target>/.xyz` (re-vendor a pinned copy).
+  When `ROUTER DRIFT` is flagged during checks or updates, prompt the user before running `router_audit.py --fix`.
 - **PDDA:** from the pdda clone, `utils/pdda/pdda-sync.sh status`,
   `pdda-sync.sh push [<target>]` (push the canonical runtime to registered
   targets; only advances files that genuinely changed).

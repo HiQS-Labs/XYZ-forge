@@ -4040,6 +4040,21 @@ def cmd_gen(args):
 
 # ── check ───────────────────────────────────────────────────────────────────────────────────────
 
+def _parse_reanchor_breaks(target_gid):
+    """Extract re-anchored break count from a merge-rebuild receipt's target_gid (GH-360).
+    Returns int count for canonical 'reanchor:N', None if target_gid is NULL (legacy un-scoped rebuild),
+    or -1 for any non-NULL malformed/non-canonical target_gid.
+    """
+    if target_gid is None:
+        return None
+    if not isinstance(target_gid, str):
+        return -1
+    m = re.fullmatch(r"reanchor:(\d+)", target_gid)
+    if m:
+        return int(m.group(1))
+    return -1
+
+
 def cmd_check(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -4123,35 +4138,51 @@ def cmd_check(args):
                 else:
                     print("OK: %s generation marker matches (%d)" % (GEN_NAME, db_gen))
 
-            # receipt chain (r3): before == previous after. The ONE legal fork is a history that
-            # went through the divergent-dump merge procedure: the union of two branches' dumps
-            # necessarily breaks the chain where the branches diverged, and the merge-rebuild
-            # receipt the rebuild appends records that fork. So: a break with a merge-rebuild
-            # receipt later in the history is the documented merge; a break with none is a
-            # spliced or forged audit trail. The latest after must equal the current
-            # business-state digest regardless — that is what catches a receipt-less direct
-            # write (detected, not prevented). HONEST LIMIT (stated, per r3's "narrow the claim
-            # to what can be proven"): a writer who edits the DUMP and launders it through
-            # --rebuild can always forge the receipt history too — provenance against a
-            # committer with dump-write access is git's job (the dump is a committed file), not
-            # the chain's; the chain catches direct DB writes and splices in rebuild-free
-            # histories.
-            receipts = conn.execute("""SELECT op, txn_id, state_digest_before,
+            # receipt chain (r3): before == previous after. A git branch switch, rebase, or divergent-dump
+            # merge legitimately forks the receipt chain between operations. The merge-rebuild receipt
+            # records that re-anchored fork point and scopes it to the specific breaks present at rebuild
+            # time (GH-360). A break with no matching merge-rebuild receipt is caught here and can be
+            # re-anchored via `releases check --rebuild`. The latest after must equal the current
+            # business-state digest regardless — that is what catches a receipt-less direct write
+            # (detected, not prevented).
+            receipts = conn.execute("""SELECT op, txn_id, target_gid, state_digest_before,
                                               state_digest_after
                                        FROM op_receipts WHERE op != 'ship-evidence'
                                        ORDER BY id""").fetchall()
             chain_ok = True
             breaks = 0
+            tolerated_breaks = 0
             prev_after = None
             for r in receipts:
                 if prev_after is not None and r["state_digest_before"] != prev_after:
                     breaks += 1
+                if r["op"] == "merge-rebuild":
+                    scoped = _parse_reanchor_breaks(r["target_gid"])
+                    if scoped == -1:
+                        fail("malformed-reanchor-receipt",
+                             "merge-rebuild receipt carries unparseable target_gid %r — "
+                             "expected 'reanchor:N' or NULL" % r["target_gid"])
+                        chain_ok = False
+                    elif scoped is not None:
+                        tolerated_breaks = scoped
+                    else:
+                        # Legacy merge-rebuild receipt with NULL target_gid tolerates breaks up to this point
+                        tolerated_breaks = breaks
                 prev_after = r["state_digest_after"]
-            has_merge_rebuild = any(r["op"] == "merge-rebuild" for r in receipts)
-            if breaks and not has_merge_rebuild:
-                fail("receipt-chain",
-                     "%d receipt(s) break the chain (before != previous after) with no "
-                     "merge-rebuild receipt — spliced or forged audit trail" % breaks)
+
+            if breaks > tolerated_breaks:
+                unreanchored = breaks - tolerated_breaks
+                if tolerated_breaks == 0:
+                    fail("receipt-chain",
+                         "%d receipt(s) break the chain (before != previous after) with no "
+                         "merge-rebuild receipt — likely caused by git branch switching or "
+                         "rebasing; run `releases check --rebuild` to re-anchor" % breaks)
+                else:
+                    fail("receipt-chain",
+                         "%d new receipt(s) break the chain (%d total break(s), %d re-anchored) — "
+                         "likely caused by git branch switching or rebasing; run "
+                         "`releases check --rebuild` to re-anchor"
+                         % (unreanchored, breaks, tolerated_breaks))
                 chain_ok = False
             digest = business_digest(conn)
             if receipts and receipts[-1]["state_digest_after"] != digest:
@@ -4595,11 +4626,24 @@ def _rebuild(root, conn):
                              (GENERATION_KEY,)).fetchone() is None:
                 tconn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
                               (GENERATION_KEY, str(new_gen)))
+            new_receipts = tconn.execute("""SELECT op, state_digest_before, state_digest_after
+                                           FROM op_receipts WHERE op != 'ship-evidence'
+                                           ORDER BY id""").fetchall()
+            reanchored_breaks = 0
+            prev_after = None
+            for r in new_receipts:
+                if prev_after is not None and r["state_digest_before"] != prev_after:
+                    reanchored_breaks += 1
+                prev_after = r["state_digest_after"]
+            if prev_after is not None and old_digest != prev_after:
+                reanchored_breaks += 1
+
             new_digest = business_digest(tconn)
+            reanchor_gid = "reanchor:%d" % reanchored_breaks
             tconn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                              state_digest_before, state_digest_after)
-                             VALUES ('merge-rebuild', NULL, ?, ?, ?, ?, ?)""",
-                          (now_iso(), new_txn_id(), session_id(), old_digest, new_digest))
+                             VALUES ('merge-rebuild', ?, ?, ?, ?, ?, ?)""",
+                          (reanchor_gid, now_iso(), new_txn_id(), session_id(), old_digest, new_digest))
         finally:
             tconn.close()
         probe = connect(tmp_db)   # FK pragma + openability of the rebuilt DB, before it goes live
