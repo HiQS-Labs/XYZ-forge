@@ -1,6 +1,6 @@
 # Marathon Phase p4-drift-filter
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P4-DRIFT-FILTER-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -99,3 +99,22 @@ all scanned events but displays only surfaces present in the driven repository's
 The Python bridge now supplies its driven-root explicitly, preserving the same behavior in both lanes.
 Added `test/gh374-drift-path-filter.sh`, which seeds present and stale registry entries and verifies
 both Bash and Python only surface the present path.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+Pre-existing defects in touched files: none found.
+
+Reviewed the implementation across `relay-automation/relay-turn-lib.sh`, `utils/py/rtl.py`, and `test/gh374-drift-path-filter.sh`:
+- `relay-automation/relay-turn-lib.sh`: `rtl_drift_brief` correctly filters out drift entries whose surfaces do not exist in the driven repository at `HEAD` using `git -C "$turnroot" cat-file -e "HEAD:$surf" 2>/dev/null`, while advancing the watermark past all scanned events. Preflight probe marker `# GH-374` is present.
+- `utils/py/rtl.py`: `RelayTurnLib.drift_brief` passes `turn_root` explicitly to `rtl_drift_brief`, preserving parity between the Python bridge and Bash shims.
+- `test/gh374-drift-path-filter.sh`: Verifies that stale cross-repo surfaces are omitted while present paths are retained on both Bash and Python lanes.
+
+**Issues found (Regressions & Missing Registrations):**
+1. **`test/relay-dep-drift.sh` regression:** The pre-existing test fails with `FAIL: peer sees unread drift` (line 57). In section 1, `mkfixture` initializes `$D` with `git init` but does not commit `src/project.js` at `HEAD`. Because `src/project.js` does not exist in `$D` at `HEAD`, `rtl_drift_brief` now filters it out in section 3, causing the assertion to fail. Fix: seed and commit `src/project.js` at `HEAD` in fixture `$D` before asserting the drift brief.
+2. **`test/gh308-turn-shim-parity.sh` regression:** The pre-existing test fails with `FAIL: claude-turn default lane: no drift brief in the turn prompt` (line 57). Fixture `$A` commits `relay.md` and `.gitignore` but does not commit `src/project.js`. When `claude-turn.sh` runs with `CLAUDE_TURN_ROOT="$A"`, `rtl_drift_brief` filters out `src/project.js` as absent at `HEAD`. Fix: seed and commit `src/project.js` at `HEAD` in fixture `$A`.
+3. **`validate.sh` test registration:** `test/gh374-drift-path-filter.sh` is not yet registered in `TESTS=(...)` in `validate.sh`.
+4. **Allowlist / Claim paths:** Ensure `test/relay-dep-drift.sh`, `test/gh308-turn-shim-parity.sh`, and `validate.sh` are claimed and edited in Round 2.
+
+**Verdict:** Changes requested
+
