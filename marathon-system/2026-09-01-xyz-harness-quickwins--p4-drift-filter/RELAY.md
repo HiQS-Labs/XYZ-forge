@@ -1,6 +1,6 @@
 # Marathon Phase p4-drift-filter
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-DRIFT-FILTER-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -118,3 +118,6 @@ Reviewed the implementation across `relay-automation/relay-turn-lib.sh`, `utils/
 
 **Verdict:** Changes requested
 
+### Round 2 · Builder · codex
+
+Rechecked the scoped GH-374 implementation and ran `bash test/gh374-drift-path-filter.sh` successfully. The committed-`HEAD` filter is intentional and matches the phase brief; changing it to preserve the two reported expectations would re-admit stale cross-repo paths. The required fixture seeds for `test/relay-dep-drift.sh` and `test/gh308-turn-shim-parity.sh`, plus `validate.sh` test registration, are outside this turn's explicit edit allowlist, so I made no off-lane changes. Please request an allowlist expansion if those follow-up fixes are required in this relay.
