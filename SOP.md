@@ -153,6 +153,31 @@ Store the campaign output in `TESTS-RESULTS/`:
 
 ---
 
+## 3b. Anti-patterns (learned the hard way, 2026-09-02)
+
+### Never open a network path into the operator's machine without asking first
+
+A tunnel, a port forward, a remote bridge, an ngrok/cloudflared URL — anything that makes a local
+process reachable from outside the machine — **requires the operator's explicit permission each
+time.** It is not covered by "you may run the tests" or by a task that happens to involve the
+feature. Bridging in is a perfectly reasonable thing to want; the rule is that the operator decides,
+not the agent, because the agent cannot see who else is on the network or what else is on the disk.
+
+This was written after a mutation test removed a tunnel guard and stood up a real public URL to a
+local transcript store for about two minutes, unasked. The exposure was small and closed quickly.
+The reason it is a rule anyway is that nothing in the process would have stopped a larger one.
+
+### A test that starts a server must kill the server, not the shell that launched it
+
+Backgrounding `( ... ) &` and killing `$!` reaps the **subshell**. A `python3`/`node` child it
+spawned keeps running, keeps its port bound, and outlives the test — silently, because the suite
+already printed PASS and moved on. In the incident above this is exactly what left the bridge alive
+after its test finished; it was found in `ps`, not by the teardown.
+
+Kill the child by its own PID, or start it with `exec` so the subshell *becomes* the process. Then
+**verify** with `ps`/`lsof` rather than trusting the kill. A teardown that cannot fail is not a
+teardown — the same rule as `AGENTS.md` §6.
+
 ## 4. Opinionated SOPs (XYZ-maintainer defaults — optional downstream)
 
 > **Who these are for:** These conventions exist to help the **XYZ maintainers** with our own

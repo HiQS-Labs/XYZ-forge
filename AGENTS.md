@@ -111,6 +111,11 @@ you extracted some: a failed command substitution yields an empty string, a shel
 the file regardless, and a scanner then reports CLEAN against zero bytes. Size-check the artifact,
 or guard the extraction with its own assertion, before trusting a verdict computed from it.
 
+**Never expose the operator's machine to the network without asking.** A tunnel, port forward, or
+remote bridge needs explicit permission each time — running the tests is not permission, and neither
+is working on the feature that provides it. `SOP.md` §3b has the incident and the teardown rule that
+goes with it.
+
 ### 7. Record only consequential bets
 
 If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
