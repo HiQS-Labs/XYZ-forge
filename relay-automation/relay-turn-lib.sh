@@ -530,25 +530,20 @@ rtl_is_containment_ignored() {  # <path> — is <path> an exempted tool-cache si
 rtl_run_bounded() {  # <timeout_secs> <cmd...>
   # Run <cmd...> under a wall-clock ceiling without coreutils `timeout` (absent on stock macOS).
   # Mirrors the consult.sh _guarded() pattern: sleep-then-kill watchdog, no external deps.
-  # GH-369: launch the command in a fresh session, then capture and kill ITS actual PGID. A non-
-  # interactive shell puts background jobs in the caller's process group, so killing -$apid without
-  # that session boundary could kill the turn shim itself. `setsid` is absent on stock macOS; Python
-  # is already a runtime dependency and its os.setsid() gives the child a portable, private group.
-  # Capture the PGID before the watchdog sleeps: a CLI can re-exec or its leader can exit while a
-  # grandchild survives, but the group remains the containment target.
+  # GH-369: launch the command in a fresh session and kill its process group.  A non-interactive
+  # shell puts background jobs in the caller's process group, so a `ps` sample immediately after
+  # fork can race os.setsid() and capture the TURN SHIM's group instead.  POSIX guarantees the new
+  # session leader's PGID equals its PID, and exec preserves that PID, so -$apid is the child's
+  # stable group even when the CLI re-execs or leaves a grandchild after its leader exits. `setsid`
+  # is absent on stock macOS; Python is already a runtime dependency and provides it portably.
   # NOTE: disk-quota and per-turn spend ceilings are NOT yet enforced here — wall-clock only (R5
   # partial). Disk-quota belongs in a TMPDIR watchdog; spend ceilings are model-shim-specific.
   local secs="$1"; shift
-  local apid pgid kpid rc=0
+  local apid kpid rc=0
   python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' "$@" &
   apid=$!
-  pgid="$(ps -o pgid= -p "$apid" 2>/dev/null | tr -d '[:space:]')"
   ( sleep "$secs"
-    if [[ -n "$pgid" ]]; then
-      kill -9 "-$pgid" 2>/dev/null
-    else
-      kill -9 "$apid" 2>/dev/null
-    fi
+    kill -9 "-$apid" 2>/dev/null || kill -9 "$apid" 2>/dev/null
   ) >/dev/null 2>&1 &
   kpid=$!
   wait "$apid" 2>/dev/null || rc=$?

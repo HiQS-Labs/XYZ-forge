@@ -1,6 +1,6 @@
 # Marathon Phase p2-turn-supervision
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-SUPERVISION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -102,6 +102,17 @@ swept file: yes
    - `utils/py/relay_drive.py`: swept file: yes (GH-370 progress telemetry polling loop correctly implements dynamic `rtl-wt.*` worktree discovery and main tree fallback with changed-file counting).
    - `test/gh369-group-kill.sh`: swept file: yes (fixture correctly tests both Bash and Python group-kill contracts once the runner race is resolved).
    - `test/gh370-progress-telemetry.sh`: swept file: yes (passes 4/4).
+
+### Round 2 · Builder · codex
+
+Resolved the GH-369 Bash timeout race in `relay-automation/relay-turn-lib.sh`: after the Python
+launcher creates a fresh session, its PID is deterministically that session's PGID. The watchdog now
+kills `-$apid` directly (with a PID fallback), rather than sampling `ps` before `setsid()` can finish
+and risking a SIGKILL of the caller's own process group. The Python twin already starts its child in
+a new session and retains its process-group containment behavior. No telemetry behavior changed.
+
+Verification: `bash test/gh369-group-kill.sh` (6 pass, 0 fail) and
+`bash test/gh370-progress-telemetry.sh` (4 pass, 0 fail).
 
 ---
 
