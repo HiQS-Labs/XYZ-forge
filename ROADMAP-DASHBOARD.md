@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 32 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 33 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -42,6 +42,7 @@ Summary: 32 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-365 · Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/promotion lanes | — | [doc](PROJECT/1-INBOX/GH-365-TEST-SUITE-RECALIBRATION.md) · [#365](https://github.com/HiQS-Labs/XYZ-forge/issues/365) |
 | GH-345 · Sleep-vs-readiness audit: one confirmed race in the agent-chorus doorbell assertion, and the case against the paid Test Reliability tier | — | [GH-345-SLEEP-READINESS-AUDIT.md](PROJECT/1-INBOX/GH-345-SLEEP-READINESS-AUDIT.md) · [#345](https://github.com/HiQS-Labs/XYZ-forge/issues/345) |
 | GH-341 · CI: attest Linux as an unprivileged user — the canary's 14 failures are almost all EUID=0 artifacts | — | [GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md](PROJECT/1-INBOX/GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md) · [#341](https://github.com/HiQS-Labs/XYZ-forge/issues/341) |
+| GH-353 · audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates | — | [GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md](PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md) · [#353](https://github.com/HiQS-Labs/XYZ-forge/issues/353) |
 
 ## Queue
 
