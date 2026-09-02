@@ -2375,6 +2375,17 @@ def build_parser() -> argparse.ArgumentParser:
     verify_cit.add_argument("--id", required=True)
     verify_cit.add_argument("--format", choices=["text", "json"], default="text")
 
+    bridge = commands.add_parser(
+        "bridge", help="launch localhost HTTP bridge for cross-device participation over Cloudflare Tunnel (GH-384)",
+    )
+    bridge.add_argument("--host", default="127.0.0.1", help="Host address to bind to (default: 127.0.0.1)")
+    bridge.add_argument("--port", type=int, default=8080, help="Port to bind to (default: 8080)")
+    bridge.add_argument("--idle-timeout", type=float, default=600.0, help="Idle lease timeout in seconds (default: 600)")
+    bridge.add_argument("--max-lifetime", type=float, default=7200.0, help="Max session lifetime in seconds (default: 7200)")
+    bridge.add_argument("--cf-client-id", help="Required Cloudflare Access Client ID")
+    bridge.add_argument("--cf-client-secret", help="Required Cloudflare Access Client Secret")
+    bridge.add_argument("--tunnel", action="store_true", help="Launch cloudflared Quick Tunnel")
+
     return parser
 
 
@@ -2510,6 +2521,48 @@ def main(argv: Optional[List[str]] = None) -> int:
                 root, args.id, args.agent, args.interval, args.timeout,
                 args.max_turns, args.turn_command,
             )
+        elif args.command == "bridge":
+            import agent_chorus_bridge
+            server, actual_port = agent_chorus_bridge.start_bridge_server(
+                host=args.host,
+                port=args.port,
+                root=root,
+                store=ACTIVE_STORE,
+                cf_client_id=args.cf_client_id,
+                cf_client_secret=args.cf_client_secret,
+                idle_timeout=args.idle_timeout,
+                max_lifetime=args.max_lifetime,
+            )
+            tunnel_proc = None
+            if args.tunnel:
+                try:
+                    tunnel_proc = agent_chorus_bridge.launch_quick_tunnel(actual_port)
+                except agent_chorus_bridge.BridgeError as exc:
+                    print(f"warning: could not launch quick tunnel ({exc}); continuing localhost only", file=sys.stderr)
+
+            print(f"AgentChorus Bridge listening on http://{args.host}:{actual_port}")
+            print(f"Idle lease: {args.idle_timeout}s | Max lifetime: {args.max_lifetime}s")
+            if args.cf_client_id:
+                print("Cloudflare Access authentication: ENABLED")
+
+            def handle_sig(sig, frame):
+                if tunnel_proc:
+                    try:
+                        tunnel_proc.terminate()
+                    except Exception:
+                        pass
+                sys.exit(0)
+
+            signal.signal(signal.SIGINT, handle_sig)
+            signal.signal(signal.SIGTERM, handle_sig)
+
+            try:
+                server.serve_forever()
+            finally:
+                server.server_close()
+                if tunnel_proc:
+                    tunnel_proc.terminate()
+            return 0
         else:
             raise Agent2AgentError(f"unsupported command: {args.command}")
     except KeyboardInterrupt:

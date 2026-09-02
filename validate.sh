@@ -453,6 +453,7 @@ TESTS=(
   "relay-dep-drift.sh"
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "agent-chorus-bridge.sh"      # GH-384 (cross-device bridge over Cloudflare Tunnel)
   "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
