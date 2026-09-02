@@ -210,7 +210,7 @@ create_fail_res="$(python3 -c '
 import json, sys
 packet = open(sys.argv[1]).read()
 print(json.dumps({
-  "subject": "Failure Mode Testing",
+  "subject": "Failure Mode Suite",
   "packet": packet,
   "agents": 2,
   "explicit_id": "777002"
@@ -267,7 +267,7 @@ idem_res2="$(curl -s -X POST "$BASE_URL/sessions/777002/send" \
 expect_contains "duplicate send with idempotency key returns identical turn 2" "$idem_res2" '"turn": 2'
 
 # Verify transcript has exactly 2 turns (not 3)
-content_777002_arr=( "$STORE/repositories"/*--*/*/"777002--failure-mode-testing/conversation.md" )
+content_777002_arr=( "$STORE/repositories"/*--*/*/"777002--failure-mode-suite/conversation.md" )
 content_777002="$(cat "${content_777002_arr[0]}")"
 turn_count_777002="$(grep -c '^### Turn ' <<<"$content_777002")"
 [ "$turn_count_777002" -eq 2 ] && pass "idempotent retry produced exactly one committed turn on disk" || fail "expected 2 turns, found $turn_count_777002"
@@ -323,7 +323,7 @@ python3 -c '
 import json, sys
 packet = open(sys.argv[1]).read()
 print(json.dumps({
-  "subject": "Idle Lease Expiration Test",
+  "subject": "Idle Lease Expiration Check",
   "packet": packet,
   "agents": 2,
   "explicit_id": "777003"
@@ -344,7 +344,7 @@ idle_expired_code="$(echo "$idle_expired_res" | tail -n 1)"
 [ "$idle_expired_code" -eq 410 ] && pass "write on expired session rejected with HTTP 410 Gone" || fail "expired session returned HTTP $idle_expired_code"
 
 # Verify canonical conversation.md still exists and is not corrupted
-IDLE_TRANSCRIPT=( "$STORE/repositories"/*--*/*/"777003--idle-lease-expiration-test/conversation.md" )
+IDLE_TRANSCRIPT=( "$STORE/repositories"/*--*/*/"777003--idle-lease-expiration-check/conversation.md" )
 [ -f "${IDLE_TRANSCRIPT[0]}" ] && pass "canonical transcript preserved after session expiry" || fail "transcript corrupted or deleted"
 
 # 10. Zero-Leak Access Log Verification
