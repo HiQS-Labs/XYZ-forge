@@ -463,6 +463,9 @@ $$\text{Wave} \longrightarrow \text{Lane} \longrightarrow \text{Execution Plan (
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
 - `releases.db` + `releases.sql` — TWO subsystems in one ledger: the GH-32 RELEASES ledger and the GH-69 ROADMAP shadow (`releases roadmap sync` mirrors `ROADMAP.md`'s ledger in, one-way). Read [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md) before merging either file, since the SQLite file is derived and the SQL dump is what git actually merges.
+- `PAGES/` — the GitHub Pages site source (<https://hiqs-labs.github.io/XYZ-forge/>): static pages
+  plus two data-driven pages (roadmap, models & harnesses) baked from the committed ledgers by
+  `utils/py/site_build.py` and deployed on push by `.github/workflows/pages.yml`.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md).
 - `utils/marathon-plan.sh` — the marathon planner/ranker: scores the whole ROADMAP ledger into waves of disjoint, collision-safe write-sets, and with `--deep` delegates to `swarm-preflight.sh --dry-run` per item for an authoritative freshness verdict. Writes `PROJECT/2-WORKING/MARATHON-PLAN-<date>.md` — the "marathon file" the operator skills act on.
 - `utils/ate/` — ATE implementation scripts and variation grids; the canonical skill interface is

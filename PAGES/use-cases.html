@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Use Cases — XYZ Forge</title>
+<meta name="description" content="Why use XYZ: local-first agent coordination, verified gates, subscription-billed builders — and the four stacked modes: Consult, Relay, Swarm, Marathon.">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/use-cases.html">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html">Welcome</a>
+      <a href="use-cases.html" aria-current="page">Use Cases</a>
+      <a href="how-it-works.html">How it Works</a>
+      <a href="faq.html">FAQ</a>
+      <a href="models-harnesses.html">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="issues.html">Issues</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1>Use Cases &amp; Why Use It</h1>
+    <p class="page-intro">If you regularly have more than one AI coding agent open — or you want
+    unattended runs you can actually trust — XYZ turns that into a coordinated, inspectable
+    system instead of copy-paste between windows.</p>
+
+    <h2>Why use XYZ</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Local-first, no infra</h3>
+        <p>Coordination is a local append-only event log — no server, no API keys for the kernel,
+        no remote dependency. One shared <code>.tick/</code> directory per active run.</p>
+      </div>
+      <div class="card">
+        <h3>Verified beats plausible</h3>
+        <p>Every phase boundary runs a real verification gate that must be able to
+        <em>start</em> before turn 1. Done means a gate passed, not a model saying so.</p>
+      </div>
+      <div class="card">
+        <h3>Uses the subscriptions you have</h3>
+        <p>Headless builders default to cost-blind, subscription-billed CLIs (Codex, agy).
+        API-billed Claude is an explicit opt-in with a budget cap, never a silent default.</p>
+      </div>
+      <div class="card">
+        <h3>Inspectable state, not self-report</h3>
+        <p>The whole run is a state machine you can read — event log, relay transcripts,
+        typed escalation reasons — rather than a model's claim about what it did.</p>
+      </div>
+      <div class="card">
+        <h3>Designed to be reversible</h3>
+        <p>Work lands on branches; relays write dated thread files plus the artifact under
+        review. Recovery is usually <code>git checkout</code> plus deleting a branch.</p>
+      </div>
+      <div class="card">
+        <h3>Collisions solved at the kernel</h3>
+        <p>Path-scoped claims serialize overlapping edits between concurrent agents, so two
+        sessions can't quietly shred the same file.</p>
+      </div>
+    </div>
+
+    <h2>What you can do with it</h2>
+
+    <h3>Consult — a cross-model second opinion</h3>
+    <p>Fan one question out to Codex and agy in parallel; each answers independently in an
+    isolated copy of the repo, and the answers are reconciled into one. Purely advisory, nothing
+    modified. Lowest risk, fastest payoff — the recommended first run.</p>
+
+    <h3>Relay — build and review until it's right</h3>
+    <p>A Producer builds an artifact, a Reviewer critiques and proposes fixes, and they hand off
+    back and forth until the artifact converges — replacing you as the copy-paste relay between
+    two agent windows. Changes are confined to the relay thread file and the artifact.</p>
+
+    <h3>Swarm — parallel lanes that don't collide</h3>
+    <p>Several agents working <em>concurrently</em> on the same repo, each claiming a
+    non-overlapping, path-scoped lane through the <code>tick</code> kernel. Good for parallel
+    builds or parallel codebase recon, arranged by you across separate full clones or worktrees.</p>
+
+    <h3>Marathon — the overnight queue</h3>
+    <p>Build a queue of pre-flighted tasks during the day, then fire them as one long autonomous
+    run — end-of-day or overnight. Every queued task is checked to be well-specified before
+    anything runs unattended, and every phase boundary is gated. After an interruption, a
+    read-only recovery report tells you exactly which commits are ungated.</p>
+
+    <h3>AgentChorus — live sessions by compact ID</h3>
+    <p>A serialized discussion between two or more live Claude/Codex sessions, joined through a
+    collision-checked six-digit ID with exactly one active writer at a time. Local, not a chat
+    server — every participant sees the same clone.</p>
+
+    <h3>HQ — the multi-repo command center</h3>
+    <p>Where <code>tick</code> coordinates agents <em>inside</em> one repo, HQ is the operator
+    front door across every repo on your device: resolve a fuzzy project name, report state, and
+    land intake on that repo's own governance rails. Read paths are safe; write paths preview
+    first.</p>
+
+    <h3>Install the kernel anywhere</h3>
+    <p><code>install.sh</code> materializes the <code>tick</code> runtime into any other repo and
+    records it in a machine-local registry, so future versions can be pushed to installs that are
+    behind.</p>
+
+    <h2>What you need</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Node 18+ and git</td><td>The <code>tick</code> kernel and the test suite.</td></tr>
+          <tr><td>Python 3.8+</td><td>Default runtime for the harness entry points (Bash fallback retained inline).</td></tr>
+          <tr><td>Codex CLI, agy CLI</td><td>For live Consult/Relay/Marathon turns — install and authenticate both before you start.</td></tr>
+          <tr><td>macOS</td><td>The platform XYZ ships for and gates on today; Linux and Windows are on the <a href="roadmap.html">roadmap</a>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>For unattended runs, XYZ measured about 2.2&nbsp;GB steady-state for a serial marathon on a
+    32&nbsp;GB M1&nbsp;Max; the README carries the full hardware-sizing guidance for parallel
+    waves.</p>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

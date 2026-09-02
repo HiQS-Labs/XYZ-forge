@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Models &amp; Harnesses — XYZ Forge</title>
+<meta name="description" content="Harnesses and models XYZ has been evaluated with, with grades from the committed evaluations ledger.">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/models-harnesses.html">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<!-- gen-time: 2026-09-02T14:48:32-07:00 -->
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html">Welcome</a>
+      <a href="use-cases.html">Use Cases</a>
+      <a href="how-it-works.html">How it Works</a>
+      <a href="faq.html">FAQ</a>
+      <a href="models-harnesses.html" aria-current="page">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="issues.html">Issues</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+<h1>Models &amp; Harnesses Tested</h1>
+<p class="page-intro">Every harness and model XYZ has been evaluated with, from the committed harnesses registry. Full narratives live in the repo's <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/HARNESS-MODELS-REGISTRY.md">HARNESS-MODELS-REGISTRY.md</a>; benchmark artifacts in <a href="https://github.com/HiQS-Labs/XYZ-forge/tree/development/TESTS-RESULTS">TESTS-RESULTS/</a>.</p>
+<h2>Evaluated pairs — grades</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Harness</th><th>Model</th><th>Grade</th><th>Gate</th><th>Diff cleanliness /5</th><th>Seam reliability /5</th><th>Failure mode</th><th>Evals</th></tr></thead>
+<tbody>
+<tr><td>commandcode</td><td>Qwen 3.8-Max</td><td><span class="badge ok">A-</span></td><td>✓ passed</td><td>5</td><td>5</td><td>none</td><td>24</td></tr>
+<tr><td>dsh</td><td>deepseek/deepseek-v4-pro</td><td><span class="badge ok">A</span></td><td>✓ passed</td><td>5</td><td>5</td><td>none</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p>Grades come from the evaluations ledger: A-range means the pairing is production-usable as driven; B-range usable with caveats; C or N/A means not recommended for that pairing. “Evals” counts the individual verified invocations behind each row.</p>
+<h2>Harnesses</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Name</th><th>Engine</th><th>Reasoning effort</th><th>Standing role</th></tr></thead>
+<tbody>
+<tr><td><code>agy</code></td><td>Antigravity CLI</td><td>native_cli</td><td>yes</td><td>Cost-blind cross-model builder/reviewer</td></tr>
+<tr><td><code>aider</code></td><td>Aider</td><td>python_litellm</td><td>no</td><td>Builder only</td></tr>
+<tr><td><code>claude</code></td><td>Claude Code</td><td>native_cli</td><td>yes</td><td>Orchestrator and final reviewer</td></tr>
+<tr><td><code>codex</code></td><td>Codex CLI</td><td>native_cli</td><td>yes</td><td>Cost-blind default builder and reviewer</td></tr>
+<tr><td><code>commandcode</code></td><td>Command Code</td><td>node_langbase</td><td>yes</td><td>Builder &amp; Systems Reviewer</td></tr>
+<tr><td><code>dsh</code></td><td>DeepSeek Harness</td><td>node_cordis</td><td>yes</td><td>Autonomous Headless Builder</td></tr>
+<tr><td><code>pi</code></td><td>Pi Agent</td><td>node_multi</td><td>no</td><td>Builder only</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Models</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Model</th><th>Lab</th><th>Gateway</th><th>Context</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Qwen 3.7-Flash</td><td>Alibaba</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>Qwen 3.8-Max</td><td>Alibaba</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>antigravity/gemini-2.5-pro</td><td>Antigravity</td><td>google</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>Gemini 3.5 Flash</td><td>Auto</td><td>google</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>deepseek/deepseek-v4-pro</td><td>Auto</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>DeepSeek V3</td><td>DeepSeek</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>DeepSeek V4 Pro</td><td>DeepSeek</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>Gemma 4 31B QAT</td><td>Google</td><td>lmstudio</td><td>32,768</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>openai/gpt-mini-latest</td><td>Openai</td><td>pi</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>qwen/qwen3.8-max</td><td>Qwen</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>Stealth Ox-Alpha</td><td>Stealth</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>stealth/ox-alpha</td><td>Stealth</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>GLM 5.3 High</td><td>Z.ai</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+<tr><td>zai-org/glm-5.3</td><td>Zai-org</td><td>openrouter</td><td>1M</td><td><span class="badge ok">active</span></td></tr>
+</tbody>
+</table>
+</div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

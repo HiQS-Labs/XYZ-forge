@@ -1,0 +1,57 @@
+name: Pages
+
+# Deploys the project site at https://hiqs-labs.github.io/XYZ-forge/ from PAGES/.
+# The two data-driven pages (roadmap.html, models-harnesses.html) are REGENERATED at
+# deploy time by utils/py/site_build.py from the committed releases.db / harnesses.db,
+# so a push that changes the ledgers republishes the site without anyone rebuilding
+# by hand. Static pages are served as committed. Pages is enabled on the repo with
+# build_type=workflow (Settings -> Pages -> Source: GitHub Actions).
+
+on:
+  push:
+    branches: [development, main]
+    paths:
+      - "PAGES/**"
+      - "utils/py/site_build.py"
+      - "utils/py/releases_app.py"
+      - "releases.db"
+      - "releases.sql"
+      - "harnesses.db"
+      - "harnesses.sql"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Regenerate data-driven pages from the committed ledgers
+        run: python3 utils/py/site_build.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: PAGES
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

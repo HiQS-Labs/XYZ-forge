@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XYZ Forge — Multi-Agent Coordination</title>
+<meta name="description" content="XYZ lets several AI coding agents — Claude Code, Codex, and agy — work on the same repo concurrently, with path claims and isolated turns that reduce accidental overwrites.">
+<meta property="og:title" content="XYZ Forge — Multi-Agent Coordination">
+<meta property="og:description" content="Several AI coding agents, one repo, no accidental overwrites: path-scoped claims, turn-based relays, and verified gates.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hiqs-labs.github.io/XYZ-forge/">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html" aria-current="page">Welcome</a>
+      <a href="use-cases.html">Use Cases</a>
+      <a href="how-it-works.html">How it Works</a>
+      <a href="faq.html">FAQ</a>
+      <a href="models-harnesses.html">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="issues.html">Issues</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>XYZ — Multi-Agent Coordination <span class="badge">Beta</span></h1>
+    <p class="tagline">
+      XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) —
+      work on the same repo concurrently, with path claims and isolated turns that reduce
+      accidental overwrites.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/HiQS-Labs/XYZ-forge">View on GitHub</a>
+      <a class="btn" href="how-it-works.html">How it Works</a>
+      <a class="btn" href="https://github.com/HiQS-Labs/XYZ-forge#quickstart--prove-it-works-no-accounts-needed">Get Started</a>
+    </div>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+    <h2>What XYZ is</h2>
+    <p>It's built in two layers:</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3><code>tick</code> — the kernel</h3>
+        <p>A tiny local event-log CLI that hands out path-scoped work claims to serialize
+        overlapping edits. No server, no API keys, no remote.</p>
+      </div>
+      <div class="card">
+        <h3><code>relay-automation/</code> — the product</h3>
+        <p>Runs agents in <em>turns</em> (one builds, another reviews) headlessly, so you can hand a
+        task to Codex or agy and let them iterate toward done without babysitting the handoff.</p>
+      </div>
+    </div>
+    <p>It's a working beta, not a polished product — but the kernel is test-covered and the relay
+    stack is the main active surface.</p>
+
+    <h2>The four modes — they stack</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>1 · Consult</h3>
+        <p>Answers <em>“what do the other models think?”</em> A one-shot, parallel second opinion:
+        the same question fans out to Codex and agy, each answers in an isolated copy of the repo,
+        and the answers are reconciled into one. Nothing is modified.</p>
+      </div>
+      <div class="card">
+        <h3>2 · Relay</h3>
+        <p>Answers <em>“build this and have it reviewed until it's right.”</em> A turn-based loop
+        between a Producer and a Reviewer on one shared artifact, handing off through files instead
+        of you copy-pasting between two agent windows.</p>
+      </div>
+      <div class="card">
+        <h3>3 · Swarm</h3>
+        <p>Answers <em>“do several independent things at once.”</em> Two or more agents working
+        concurrently, each claiming a non-overlapping, path-scoped lane via the <code>tick</code>
+        kernel so they never collide.</p>
+      </div>
+      <div class="card">
+        <h3>4 · Marathon</h3>
+        <p>Answers <em>“do all of today's queued work while I sleep.”</em> A queue of pre-flighted
+        tasks fired as one long autonomous run — typically end-of-day or overnight, with a
+        verification gate at every phase boundary.</p>
+      </div>
+    </div>
+    <p>Consult and Relay need only this repo. Swarm and Marathon earn their setup cost when you add
+    the PDDA doc structure. See <a href="use-cases.html">Use Cases</a> for the full picture.</p>
+
+    <h2>Prove it works — no accounts needed</h2>
+    <pre><code>git clone https://github.com/HiQS-Labs/XYZ-forge.git
+cd XYZ-forge
+npm install
+npm run test:unit   # ~1 second — fast proof the kernel logic is sound
+./validate.sh       # full suite — budget 5–10 minutes</code></pre>
+    <p>Requires Node 18+ and git; Python 3.8+ for the default runtime. See the
+    <a href="https://github.com/HiQS-Labs/XYZ-forge#readme">README</a> for the full quickstart.</p>
+
+    <div class="note warn">
+      <strong>Safety and warranty:</strong> XYZ Forge is provided “AS IS,” without warranty.
+      Coding-agent automation is inherently risky: models may choose commands through their own
+      runtimes, outside the intended harness workflow. Maintain tested, independent backups and
+      follow industry-standard backup and recovery practices.
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

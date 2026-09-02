@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — XYZ Forge</title>
+<meta name="description" content="Frequently asked questions about XYZ: is it a graph, do phases run in parallel, what do I need to run it, which models, what does it cost, is it safe.">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/faq.html">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html">Welcome</a>
+      <a href="use-cases.html">Use Cases</a>
+      <a href="how-it-works.html">How it Works</a>
+      <a href="faq.html" aria-current="page">FAQ</a>
+      <a href="models-harnesses.html">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="issues.html">Issues</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1>FAQ</h1>
+    <p class="page-intro">The questions that come up first. Fuller answers live in the
+    <a href="https://github.com/HiQS-Labs/XYZ-forge#readme">README</a> and
+    <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/GUIDING-PRINCIPLES.md">GUIDING-PRINCIPLES.md</a>.</p>
+
+    <h2>Is XYZ a “graph” — does it do graph engineering?</h2>
+    <p>Partly, and the parts it leaves out are deliberate.</p>
+    <p><strong>What matches:</strong> phases are real nodes — each gets a relay doc, a tick
+    token, a reviewer, a brief, and an artifact allowlist. Inside a phase there is a genuine
+    LLM-selected edge: the reviewer writes <code>STATUS:</code>, and approved/closed is terminal
+    while anything else is another round, bounded by a round cap. Every phase boundary runs a
+    verification gate, and the whole run is an inspectable state machine rather than a model's
+    self-report.</p>
+    <p><strong>What doesn't:</strong> there is no DAG. <code>depends_on</code> is scalar-only,
+    so a join (“p4 after p2 <em>and</em> p3”) is inexpressible. There is no parallel execution
+    within a plan; <code>depends_on</code> <em>validates</em> the order you authored rather than
+    <em>deriving</em> one. A failure halts the chain — there is no conditional edge to a
+    remediation node. The scheduling a graph engine automates is handed to the operator on
+    purpose; parallelism exists as swarms across separate clones, arranged by you.</p>
+
+    <h2>Do phases run in parallel? What does <code>depends_on</code> actually do?</h2>
+    <p><strong>Inside a single marathon plan: no.</strong> Phases run strictly one at a time, in
+    plan order. A phase without <code>depends_on</code> is not “parallel-safe” — it simply runs
+    when its turn comes. <code>depends_on</code> takes exactly one phase id
+    (<code>depends_on: p3</code>) and validates the authored order; chain them
+    (<code>p3 → p4 → p5</code>) for longer orders. Concurrency exists across separate runners,
+    live sessions sharing the tick log, and read-only triage fan-outs. Always
+    <code>--dry-run</code> a new plan first — it prints the real execution order at zero cost.</p>
+
+    <h2>What do I need to run it?</h2>
+    <p>Node 18+ and git for the kernel and test suite; Python 3.8+ for the default harness
+    runtime. Live Consult/Relay/Marathon turns additionally need the Codex and agy CLIs
+    installed and authenticated. XYZ is a macOS toolkit today — that's the platform the gates
+    run on — with Linux and Windows on the <a href="roadmap.html">roadmap</a>.</p>
+
+    <h2>Which agents and models can it drive?</h2>
+    <p>The default headless builders are the subscription-billed Codex and agy CLIs; Claude is
+    fully supported as an explicit, cost-acknowledged opt-in (default budget $0.50, 12 turns).
+    The <a href="models-harnesses.html">Models &amp; Harnesses</a> page lists the evaluated
+    harnesses and model grades from the committed registry.</p>
+
+    <h2>What does it cost?</h2>
+    <p>XYZ itself is open source (see the repo's license files). Builder turns bill against the
+    CLI subscriptions you already have (Codex, agy); the API-billed Claude builder is capped per
+    call and never a silent default.</p>
+
+    <h2>Is it safe to run unattended?</h2>
+    <p>XYZ is designed around reversibility and containment — branches, path claims, gates with
+    resource caps, typed escalation — but it is provided <strong>“AS IS,” without
+    warranty</strong>. Models may choose commands outside the intended harness workflow.
+    Maintain tested, independent backups, keep the verification gates on, and read the recovery
+    report after any interrupted run before trusting its commits.</p>
+
+    <h2>Where does the Roadmap page's data come from?</h2>
+    <p>Straight from the repository's committed releases ledger
+    (<code>releases.db</code> / <code>releases.sql</code>) — the same source of truth the repo's
+    own dashboard renders from. The page is regenerated on every deploy; nothing on it is edited
+    by hand.</p>
+
+    <h2>How do I report a bug?</h2>
+    <p><a href="issues.html">Open an issue on GitHub</a>. If you hit a harness bug while working
+    in a different repo, the <code>file-xyz-bug</code> skill files it here — capture doc and
+    roadmap parking included — without touching the repo you're standing in.</p>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

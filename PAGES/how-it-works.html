@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it Works — XYZ Forge</title>
+<meta name="description" content="Two layers: the tick coordination kernel (a local event log with O_EXCL-serialized path claims) and relay-automation (headless build→review turns with a gate at every boundary).">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/how-it-works.html">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html">Welcome</a>
+      <a href="use-cases.html">Use Cases</a>
+      <a href="how-it-works.html" aria-current="page">How it Works</a>
+      <a href="faq.html">FAQ</a>
+      <a href="models-harnesses.html">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="issues.html">Issues</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1>How it Works</h1>
+    <p class="page-intro">Two layers: a small coordination kernel that makes overlapping edits
+    safe, and an automation stack that drives headless agents through build→review turns with
+    hard verification gates.</p>
+
+    <h2>Layer 1 — the <code>tick</code> kernel</h2>
+    <p><code>tick</code> coordinates agents through a shared local event log under
+    <code>.tick/events/</code>:</p>
+    <ul>
+      <li><strong>Path-scoped claims.</strong> Agents claim work by path; overlapping claims are
+      serialized by an <code>O_EXCL</code> lock, so two agents can't quietly edit the same file.</li>
+      <li><strong>Projection, not state.</strong> A projection folds the append-only event log
+      into <code>.tick/STATE.md</code> — the coordination state is always derivable from the log.</li>
+      <li><strong>Local transport only.</strong> No per-event push/fetch, no remote dependency,
+      no server — one shared <code>.tick/</code> directory per active run.</li>
+    </ul>
+    <p>The kernel is deliberately tiny and test-covered: <code>bin/tick</code>,
+    <code>src/</code>, <code>test/</code> in the repo, and <code>install.sh</code> can
+    materialize it into any other repo.</p>
+
+    <h2>Layer 2 — relay automation</h2>
+    <p><code>relay-automation/</code> runs agents headlessly in <strong>turns</strong>: a
+    <strong>Producer</strong> builds an artifact, a <strong>Reviewer</strong> critiques and
+    proposes fixes, and the loop hands off through files — a relay thread plus the artifact
+    under review — until it converges. The Reviewer's <code>STATUS:</code> line drives the loop:
+    approved/closed is terminal, anything else is another round, bounded by a round cap.</p>
+
+    <h3>Marathon — chaining relays unattended</h3>
+    <p>A marathon chains several build→review phases from a <code>MARATHON.yaml</code> plan:</p>
+    <ul>
+      <li><strong>Strictly sequential phases.</strong> One at a time, in plan order.
+      <code>depends_on</code> validates the order you authored; it does not create a parallel
+      execution graph (see the <a href="faq.html">FAQ</a>).</li>
+      <li><strong>A gate at every boundary.</strong> Each phase's verification gate must be able
+      to <em>start</em> before turn 1 — a missing gate fails fast instead of being skipped.
+      Gates run under wall-clock, CPU, and memory caps, and a killed gate is recorded distinctly
+      from a failing one.</li>
+      <li><strong>Typed escalation.</strong> Failures halt the chain and land in
+      <code>ESCALATION.md</code> with reason codes — the run tells you what went wrong instead
+      of retrying blindly.</li>
+      <li><strong>Recovery is read-only.</strong> After a crash or reboot,
+        <code>marathon-recover.sh</code> reports which commits are ungated so you can re-run the
+        gate or revert before trusting them.</li>
+    </ul>
+
+    <h2>Where concurrency actually lives</h2>
+    <p>Phases inside one plan are serial on purpose. Real parallelism exists <em>across</em>
+    runners and sessions:</p>
+    <ul>
+      <li><strong>Swarms</strong> — separate agents in separate full clones or worktrees on
+      disjoint write-sets, coordinated by <code>tick</code> locks.</li>
+      <li><strong>Interactive sessions</strong> — multiple live agent sessions in one shared
+      workspace coordinate their claims through the same <code>.tick/events/</code> log.</li>
+      <li><strong>Triage fan-out</strong> — read-only subagents inspect backlog items in
+      parallel while each lane's execution stays sequential.</li>
+    </ul>
+
+    <h2>The execution model in one ladder</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Term</th><th>Scope</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Turn</strong></td><td>Agent</td><td>A single bounded headless invocation of a builder or reviewer.</td></tr>
+          <tr><td><strong>Relay</strong></td><td>Product</td><td>The iterative builder→reviewer handoff loop until a verified gate pass or halt.</td></tr>
+          <tr><td><strong>Phase</strong></td><td>Marathon</td><td>One discrete step in a <code>MARATHON.yaml</code> — strictly sequential per runner.</td></tr>
+          <tr><td><strong>Lane</strong></td><td>Workflow</td><td>An autonomous pipeline dedicated to one issue or task.</td></tr>
+          <tr><td><strong>Wave</strong></td><td>Planner</td><td>A batch of independent lanes with disjoint write-sets and respected zone caps.</td></tr>
+          <tr><td><strong>Marathon</strong></td><td>Automation</td><td>The orchestrator executing a plan's phases on a branch.</td></tr>
+          <tr><td><strong>Swarm</strong></td><td>Architecture</td><td>Multiple independent agents or runners working concurrently across separate clones.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>How “done” is defined</h2>
+    <p>XYZ separates a claim from evidence: an uncommitted run artifact is not proof. Gates are
+    real commands that must pass on the final state; a passing assertion counts only once it has
+    been seen to fail on a mutated input; and every phase boundary, escalation, and approval is
+    recorded as events you can audit after the fact.</p>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>
