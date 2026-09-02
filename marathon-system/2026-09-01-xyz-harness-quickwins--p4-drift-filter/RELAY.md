@@ -1,6 +1,6 @@
 # Marathon Phase p4-drift-filter
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-DRIFT-FILTER-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -91,3 +91,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the GH-374 read-time filter in `rtl_drift_brief`: it advances the existing watermark for
+all scanned events but displays only surfaces present in the driven repository's committed `HEAD`.
+The Python bridge now supplies its driven-root explicitly, preserving the same behavior in both lanes.
+Added `test/gh374-drift-path-filter.sh`, which seeds present and stale registry entries and verifies
+both Bash and Python only surface the present path.

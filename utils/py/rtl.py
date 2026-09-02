@@ -704,7 +704,12 @@ exit $RC
         return res.stdout.strip()
 
     def drift_brief(self, agent, tick_repo_root):
-        cmd = f"rtl_drift_brief {shlex.quote(agent)} {shlex.quote(tick_repo_root)}"
+        # GH-374: the tick event registry can be shared by a harness and a foreign turn root.
+        # Pass the driven repository explicitly so the Bash core filters stale cross-repo surfaces
+        # against that repository's committed HEAD, matching the direct Bash-shim path.
+        turn_root = os.environ.get("RELAY_TARGET_ROOT", self.root)
+        cmd = (f"rtl_drift_brief {shlex.quote(agent)} {shlex.quote(tick_repo_root)} "
+               f"{shlex.quote(turn_root)}")
         res = self._run_checked(cmd)
         return res.stdout.strip()
         

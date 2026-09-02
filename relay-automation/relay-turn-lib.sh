@@ -1514,15 +1514,15 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
 # advance just re-injects the same notice next turn, which is harmless. Capped at the 5 most recent
 # (older ones summarized as a count). Echoes NOTHING when there is no unread drift, so the default
 # turn-prompt path is unchanged. See decisions/2026-07-01-cross-agent-dep-conflict.md §4–5.
-rtl_drift_brief() {  # <agent> <tickroot>
-  local me="$1" tickroot="$2"
+rtl_drift_brief() {  # <agent> <tickroot> [<turnroot>]
+  local me="$1" tickroot="$2" turnroot="${3:-${RTL_ROOT:-$2}}"
   [[ -n "$me" && -n "$tickroot" ]] || return 0
   local evdir="$tickroot/.tick/events"
   [[ -d "$evdir" ]] || return 0
   local seg; seg="$(printf '%s' "$me" | tr -c 'A-Za-z0-9._-' '_')"
   local wmfile="$tickroot/.tick/dep-drift-watermark-$seg"
   local wm=""; [[ -f "$wmfile" ]] && wm="$(head -n1 "$wmfile" 2>/dev/null || true)"
-  local f base newest="$wm"
+  local f base newest="$wm" surf
   local -a unread=()
   # drift event filenames embed the action token 'dependency.drift' (appendEvent naming); the ISO-ts
   # prefix makes lexicographic order == chronological (LC_ALL=C for a stable ASCII sort).
@@ -1532,6 +1532,12 @@ rtl_drift_brief() {  # <agent> <tickroot>
     if [[ -n "$wm" ]] && ! [[ "$base" > "$wm" ]]; then continue; fi   # already processed (<= watermark)
     [[ "$base" > "$newest" ]] && newest="$base"
     grep -Fq "\"agent\":\"$me\"" "$f" 2>/dev/null && continue          # skip the agent's OWN changes
+    # GH-374: the drift registry is shared across driven repositories. Admit an event only when its
+    # surface exists in this turn's repository at HEAD; `cat-file` is deliberately used rather than
+    # the harness filesystem so the read has the same landed-commit boundary as the event it reports.
+    surf="$(sed -n 's/.*"surface":"\([^"]*\)".*/\1/p' "$f" | head -n1)"
+    [[ -n "$surf" ]] || continue
+    git -C "$turnroot" cat-file -e "HEAD:$surf" 2>/dev/null || continue
     unread+=("$f")
   done < <(LC_ALL=C ls -1 "$evdir"/*dependency.drift*.jsonl 2>/dev/null | LC_ALL=C sort)
   [[ -n "$newest" ]] && printf '%s\n' "$newest" > "$wmfile" 2>/dev/null || true
