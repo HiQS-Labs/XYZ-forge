@@ -617,6 +617,7 @@ USAGE
 }
 _err2() { echo "validate.sh: $*" >&2; _usage; exit 2; }
 SKIP_SUITES=()
+LIST_ONLY=0
 # GH-379: CI hands its quarantine in through the environment. Parsed before the flag loop so an
 # explicit --skip and the env COMPOSE rather than one silently winning.
 if [ -n "${XYZ_VALIDATE_SKIP:-}" ]; then
@@ -632,8 +633,12 @@ while [ $# -gt 0 ]; do
     --list)
       # #141 Phase 1: expose the authoritative registry as a manifest. Prints test/<entry> for
       # every TESTS member, one per line, before any gate machinery runs. Read-only.
-      for _t in "${TESTS[@]}"; do printf 'test/%s\n' "$_t"; done
-      exit 0 ;;
+      #
+      # GH-379: this used to `exit 0` right here, INSIDE the argument loop — which put it ahead of
+      # the --skip name validation below, so `XYZ_VALIDATE_SKIP=typo.sh ./validate.sh --list`
+      # returned 0 without ever checking the name. Deferred to after the loop so every exit path
+      # that accepts quarantine input also validates it. (Codex review round 2, 2026-09-02.)
+      LIST_ONLY=1; shift ;;
     --print-mode) PRINT_MODE_ONLY=1; shift ;;
     --skip)
       # GH-379: the canary hand-rolled its own runner partly to get a skip list. A skip is a real
@@ -689,6 +694,11 @@ if [ "${#SKIP_SUITES[@]}" -gt 0 ]; then
     for _t in "${TESTS[@]}"; do [ "$_t" = "$_sk" ] && { _known=1; break; }; done
     [ "$_known" -eq 1 ] || { echo "validate.sh: --skip names '$_sk', which is not in the registry — refusing, because a skip that matches nothing is indistinguishable from one that works (GH-379)." >&2; exit 2; }
   done
+fi
+
+if [ "$LIST_ONLY" -eq 1 ]; then
+  for _t in "${TESTS[@]}"; do printf 'test/%s\n' "$_t"; done
+  exit 0
 fi
 
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push

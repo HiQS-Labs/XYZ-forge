@@ -87,9 +87,18 @@ check "the FULL-suite step does not iterate suites itself" \
 
 # The Fast Gate's curated list is a SECOND registry that gh306-registry-bidirectional.sh does not
 # cover. A name that no longer exists on disk would silently shrink that lane.
-fast_list="$(awk '/FAST_TESTS=\(/,/^          \)/' "$WF" | grep -oE '"[a-zA-Z0-9._-]+\.sh"' | tr -d '"' || true)"
+fast_body="$(awk '/FAST_TESTS=\(/{f=1;next} f&&/^ *\)/{exit} f' "$WF")"
+fast_list="$(grep -oE '"[a-zA-Z0-9._-]+\.sh"' <<<"$fast_body" | tr -d '"' || true)"
 check "the Fast Gate list was actually extracted (not an empty awk range)" \
   test -n "$fast_list"
+# An empty extraction is not the only silent failure. The regex above only recognises QUOTED names,
+# so a valid-but-unquoted array entry is dropped without a word and every downstream assertion then
+# vouches for a list that is missing it. Count what the array body contains and require the parse to
+# account for all of it. (Codex review round 2, 2026-09-02.)
+body_tokens="$(awk '{sub(/#.*/,""); n+=NF} END{print n+0}' <<<"$fast_body")"
+parsed_tokens="$(grep -c . <<<"$fast_list" || true)"
+check "every Fast Gate array entry was parsed ($parsed_tokens parsed of $body_tokens in the array body)" \
+  test "$parsed_tokens" -eq "$body_tokens"
 gone=""
 while IFS= read -r t; do
   [ -n "$t" ] || continue
@@ -114,14 +123,61 @@ for lane in "python:test_python_layer.py" "clone-identity-invariant" "gamma-pois
   check "validate.sh still owns the non-shell lane '$lane'" \
     grep -Fq "$lane" "$V"
 done
-# Scoped to full_step, not the whole file: the Fast Gate step legitimately runs a narrower selection,
-# and matching workflow-wide would let its flags satisfy — or falsely fail — this check.
-for sel in --tier --subsystem --auto --paths-file; do
+# THE GUARANTEE IS AN ALLOWLIST GRAMMAR, not the named list below.
+#
+# The first fix here enumerated the narrowing selectors and rejected each by name. Codex round 2
+# showed why that shape cannot work: it missed `--print-mode` and `--list`, both of which exit
+# before a single suite runs, and any future short-circuit flag would slip past it too. A blocklist
+# of ways to break a claim is never finished. So state what IS allowed and reject everything else.
+#
+# The grammar is exactly:   ./validate.sh --parallel <N> [--skip <name>]...
+#
+# Join the step's backslash continuations into one logical line first — the invocation spans four
+# physical lines, and a per-line check would see "--skip acorn-extract.sh" as a whole command.
+canary_cmd="$(awk '
+  /\.\/validate\.sh/ { c = 1 }
+  c {
+    cont = ($0 ~ /\\[[:space:]]*$/)
+    line = $0
+    sub(/\\[[:space:]]*$/, "", line)
+    printf "%s ", line
+    if (!cont) exit
+  }' <<<"$full_step")"
+check "the canary's validate.sh invocation was captured (not an empty join)" \
+  matches 'validate\.sh' "$canary_cmd"
+
+grammar_bad=""
+# Deliberate word-splitting: this IS the tokenizer. `set --` is safe here; the suite takes no args.
+# shellcheck disable=SC2086
+set -- $canary_cmd
+[ "${1:-}" = "./validate.sh" ] || grammar_bad="entry point is '${1:-<empty>}', not ./validate.sh"
+shift || true
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --parallel)
+      case "${2:-}" in
+        ''|*[!0-9]*) grammar_bad="$grammar_bad; --parallel wants an integer, got '${2:-<missing>}'" ;;
+      esac
+      shift 2 || break ;;
+    --skip)
+      [ -n "${2:-}" ] || { grammar_bad="$grammar_bad; --skip with no value"; break; }
+      shift 2 || break ;;
+    *)
+      grammar_bad="$grammar_bad; unexpected token '$1' — only --parallel N and --skip NAME are allowed, because every other flag can narrow or short-circuit the run"
+      shift ;;
+  esac
+done
+check "the canary's command matches the allowed grammar './validate.sh --parallel N [--skip NAME]...' (bad:${grammar_bad:- none})" \
+  test -z "$grammar_bad"
+
+# Redundant with the grammar above, kept ONLY because it names the offender in the failure message.
+# The grammar is what makes the guarantee; do not delete it and keep just this list.
+for sel in --tier --subsystem --auto --paths-file --print-mode --list; do
   # NB: `fmatches`, and NO stray `--`. The helper supplies its own end-of-options marker, so an
   # extra one is swallowed as the PATTERN — which is exactly how the first draft of this loop
   # searched for the string "--" instead of the flag and passed against every negative control.
-  check "the canary's command does not narrow the run set with '$sel' (tier 3 is what reaches the non-shell lanes)" \
-    not fmatches "$sel" "$full_step"
+  check "the canary's command does not narrow or short-circuit the run with '$sel'" \
+    not fmatches "$sel" "$canary_cmd"
 done
 
 # ── 4. --skip is a real, guarded mechanism, not a comment ────────────────────────────────────────
