@@ -678,6 +678,19 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# ── GH-379: validate --skip NAMES here, before any tier can exit ────────────────────────────────
+# The FILTER lives after tier selection (so --skip composes with --tier), but the NAME CHECK cannot
+# wait that long. Tier 1 exits at its own `exit 0` several hundred lines above the filter, so a run
+# like `--tier 1 --skip typo.sh` used to report a clean green having validated nothing — the exact
+# silent no-op skip this guard exists to make impossible. Found by Codex review, 2026-09-02.
+if [ "${#SKIP_SUITES[@]}" -gt 0 ]; then
+  for _sk in ${SKIP_SUITES[@]+"${SKIP_SUITES[@]}"}; do
+    _known=0
+    for _t in "${TESTS[@]}"; do [ "$_t" = "$_sk" ] && { _known=1; break; }; done
+    [ "$_known" -eq 1 ] || { echo "validate.sh: --skip names '$_sk', which is not in the registry — refusing, because a skip that matches nothing is indistinguishable from one that works (GH-379)." >&2; exit 2; }
+  done
+fi
+
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
 # gate is the only gate while this repo is private (GH-544), and the hook lives in `.git/hooks/`,
 # which does not travel with a clone. Surface that state loudly but NON-FATALLY, in-band, on the
@@ -994,11 +1007,8 @@ fi
 #   3. any skip disqualifies the run as promotion evidence — the same stance tier 2 already takes.
 SKIPPED_SUITES=()
 if [ "${#SKIP_SUITES[@]}" -gt 0 ]; then
-  for _sk in "${SKIP_SUITES[@]}"; do
-    _known=0
-    for _t in "${TESTS[@]}"; do [ "$_t" = "$_sk" ] && { _known=1; break; }; done
-    [ "$_known" -eq 1 ] || { echo "validate.sh: --skip names '$_sk', which is not in the registry — refusing, because a skip that matches nothing is indistinguishable from one that works (GH-379)." >&2; exit 2; }
-  done
+  # Names were already validated right after argument parsing — deliberately, so tier 1's early
+  # exit cannot skip the check. Only the filtering happens here.
   _kept=()
   for _t in "${RUN_TESTS[@]}"; do
     _drop=0

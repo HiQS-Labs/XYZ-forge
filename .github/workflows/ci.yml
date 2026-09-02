@@ -468,9 +468,20 @@ jobs:
       # A quarantine that cannot be typo'd into a no-op is the whole point.
       #
       # --parallel is PINNED explicitly, for the same reason boundary-macos pins --sequential: a
-      # future change to validate.sh's default must not silently change what this job runs. The
-      # runner is 8-core; 6 leaves headroom for the serialized driver-lock lane (GH-42/GH-528).
-      # test/gh379-canary-uses-validate.sh asserts all of this.
+      # future change to validate.sh's default must not silently change what this job runs.
+      #
+      # On the width, stated honestly because the first version of this comment was not: 6 is the
+      # POOL width, and validate.sh runs the serialized driver-lock lane as a concurrent background
+      # subshell alongside the pool (GH-42/GH-528), so peak concurrency is 6 + 1 = 7 suite processes
+      # on an 8-core runner, not 6. That still fits, but it is one core of headroom rather than two.
+      # 6 is a REASONED GUESS, not a measurement: GH-528's 5.1x came from a 10-core Mac and nothing
+      # has been timed on this runner. Revisit with an A/B of 4 vs 6 once the step has run a few
+      # times — the numbers will be in the job log, which is the whole reason for pinning a value
+      # that can be compared across runs. (Codex review, 2026-09-02.)
+      #
+      # No tier or path selector may be added here: the three non-shell lanes are tier-3 lanes, so
+      # narrowing the run set would silently retract this issue's headline coverage claim.
+      # test/gh379-canary-uses-validate.sh asserts all of this, selector by selector.
       - name: Run validate.sh suite (minus a documented flaky test)
         if: steps.route.outputs.route == 'full'
         env:

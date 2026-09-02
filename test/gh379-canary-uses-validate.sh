@@ -50,7 +50,11 @@ check() { local label="$1"; shift; if "$@"; then ok "$label"; else bad "$label";
 # not <command> [args...] — inverts a check without needing a shell string.
 not()   { ! "$@"; }
 # matches <extended-regex> <text> — here-string, never a pipe (GH-139).
-matches() { grep -qE -- "$1" <<<"$2"; }
+matches()  { grep -qE -- "$1" <<<"$2"; }
+# fmatches <literal> <text> — same, fixed-string. Use this for anything containing regex
+# metacharacters or leading dashes; hand-escaping a flag name into an ERE is how the 2026-09-02
+# draft of the tier-selector check ended up vacuous.
+fmatches() { grep -qF -- "$1" <<<"$2"; }
 
 echo "== test: gh379-canary-uses-validate =="
 
@@ -93,13 +97,31 @@ while IFS= read -r t; do
 done <<<"$fast_list"
 check "every Fast Gate suite name still exists on disk (missing:${gone:- none})" test -z "$gone"
 
-# ── 3. the three non-shell lanes are reachable ───────────────────────────────────────────────────
-# These live outside TESTS=(...), which is why a '.sh'-only scrape missed them. This asserts the
-# thing that actually matters — that the canary's runner is one that KNOWS about them — by checking
-# validate.sh still owns them and the canary defers to validate.sh.
+# ── 3. the three non-shell lanes are actually REACHED ────────────────────────────────────────────
+# These live outside TESTS=(...), which is why a '.sh'-only scrape missed them, and running them on
+# Linux is the headline claim of GH-379.
+#
+# THE ASSERTION BELOW WAS VACUOUS UNTIL 2026-09-02, and Codex found it. It used to check only that
+# validate.sh still MENTIONS the three lane labels — which proves nothing about the canary, because
+# ownership is a property of validate.sh, not of how the canary calls it. Negative control at the
+# time: rewriting the canary command as `./validate.sh --parallel 6 --tier 1` — a mode that exits
+# long before any of the three lanes runs — left this suite at 23 pass, 0 fail.
+#
+# The lanes are tier-3 lanes. So the property that has to hold is TWO-part: validate.sh still owns
+# them, AND the canary's own command selects nothing narrower than tier 3. Anything that shrinks the
+# run set below the full registry breaks the coverage claim, so every selector is rejected by name.
 for lane in "python:test_python_layer.py" "clone-identity-invariant" "gamma-poison-staleness-probe"; do
   check "validate.sh still owns the non-shell lane '$lane'" \
     grep -Fq "$lane" "$V"
+done
+# Scoped to full_step, not the whole file: the Fast Gate step legitimately runs a narrower selection,
+# and matching workflow-wide would let its flags satisfy — or falsely fail — this check.
+for sel in --tier --subsystem --auto --paths-file; do
+  # NB: `fmatches`, and NO stray `--`. The helper supplies its own end-of-options marker, so an
+  # extra one is swallowed as the PATTERN — which is exactly how the first draft of this loop
+  # searched for the string "--" instead of the flag and passed against every negative control.
+  check "the canary's command does not narrow the run set with '$sel' (tier 3 is what reaches the non-shell lanes)" \
+    not fmatches "$sel" "$full_step"
 done
 
 # ── 4. --skip is a real, guarded mechanism, not a comment ────────────────────────────────────────

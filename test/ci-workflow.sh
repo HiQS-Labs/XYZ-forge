@@ -314,10 +314,15 @@ if [ -f "$CI_LOCAL" ]; then
   # not converted here because it is the local promotion-evidence runner with its own semantics, and
   # a 20KB rewrite does not belong in the change that fixed the workflow. Named rather than silently
   # tolerated, so it is a tracked follow-up on GH-379 instead of a rediscovery six weeks from now.
+  # Three outcomes, not two. An earlier draft called `pass` on both branches, which meant a THIRD
+  # state — ci-local.sh rewritten to re-derive the registry some *other* way — also passed, and the
+  # "tracked follow-up" was prose rather than an assertion. Codex flagged it, 2026-09-02.
   if grep -Fq "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$CI_LOCAL"; then
-    pass "ci-local.sh still re-derives the registry — known, tracked on GH-379 (not a new defect)"
+    pass "ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect"
+  elif grep -qE "TESTS=\\(|/\\^TESTS=" "$CI_LOCAL"; then
+    fail "ci-local.sh re-derives validate.sh's registry by some OTHER expression — a new copy of the runner, not the tracked one; call validate.sh instead (GH-379)"
   else
-    pass "ci-local.sh no longer re-derives the registry (GH-379 follow-up landed)"
+    pass "ci-local.sh no longer re-derives the registry at all (GH-379 follow-up landed)"
   fi
 
   # (2) The skip lists must now DIFFER, and this assertion was inverted on 2026-08-12 (GH-509).
