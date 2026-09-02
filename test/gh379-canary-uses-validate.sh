@@ -150,15 +150,22 @@ check "the canary step uses a LITERAL block scalar (run: |), not a folding one" 
 # which (a) has just established is equivalent. The fallback is announced, never silent.
 run_body=""
 if python3 -c 'import yaml' >/dev/null 2>&1; then
+  # Scoped to the canary job and required to be UNIQUE. An earlier version scanned every job and
+  # took the FIRST step whose name merely started with the prefix, so a future second job with a
+  # similarly-named step could become a decoy: the renamed or narrowed real canary would go
+  # unchecked while run_body stayed non-empty and every assertion below passed. (Codex round 4.)
   run_body="$(python3 - "$WF" <<'PY'
 import sys, yaml
 doc = yaml.safe_load(open(sys.argv[1]))
-for job in (doc.get("jobs") or {}).values():
-    for step in (job.get("steps") or []):
-        if str(step.get("name", "")).startswith("Run validate.sh suite"):
-            sys.stdout.write(step.get("run", ""))
-            raise SystemExit(0)
-raise SystemExit(1)
+job = (doc.get("jobs") or {}).get("canary-ubuntu")
+if job is None:
+    sys.stderr.write("no canary-ubuntu job\n"); raise SystemExit(1)
+hits = [st for st in (job.get("steps") or [])
+        if str(st.get("name", "")).startswith("Run validate.sh suite")]
+if len(hits) != 1:
+    sys.stderr.write("expected exactly 1 'Run validate.sh suite' step, found %d\n" % len(hits))
+    raise SystemExit(1)
+sys.stdout.write(hits[0].get("run", ""))
 PY
 )" || run_body=""
   check "the canary step's run body resolved through a real YAML parser" test -n "$run_body"
