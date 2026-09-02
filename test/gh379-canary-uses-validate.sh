@@ -95,7 +95,9 @@ check "the Fast Gate list was actually extracted (not an empty awk range)" \
 # so a valid-but-unquoted array entry is dropped without a word and every downstream assertion then
 # vouches for a list that is missing it. Count what the array body contains and require the parse to
 # account for all of it. (Codex review round 2, 2026-09-02.)
-body_tokens="$(awk '{sub(/#.*/,""); n+=NF} END{print n+0}' <<<"$fast_body")"
+# Strip a terminal backslash before counting: a legitimate `"a.sh" \` continuation would otherwise
+# count as a third field and fail the parity check on correct input. (Codex review round 3.)
+body_tokens="$(awk '{sub(/#.*/,""); sub(/\\[[:space:]]*$/,""); n+=NF} END{print n+0}' <<<"$fast_body")"
 parsed_tokens="$(grep -c . <<<"$fast_list" || true)"
 check "every Fast Gate array entry was parsed ($parsed_tokens parsed of $body_tokens in the array body)" \
   test "$parsed_tokens" -eq "$body_tokens"
@@ -123,30 +125,72 @@ for lane in "python:test_python_layer.py" "clone-identity-invariant" "gamma-pois
   check "validate.sh still owns the non-shell lane '$lane'" \
     grep -Fq "$lane" "$V"
 done
-# THE GUARANTEE IS AN ALLOWLIST GRAMMAR, not the named list below.
+# THE GUARANTEE IS AN ALLOWLIST GRAMMAR OVER THE RESOLVED RUN BODY.
 #
-# The first fix here enumerated the narrowing selectors and rejected each by name. Codex round 2
-# showed why that shape cannot work: it missed `--print-mode` and `--list`, both of which exit
-# before a single suite runs, and any future short-circuit flag would slip past it too. A blocklist
-# of ways to break a claim is never finished. So state what IS allowed and reject everything else.
+# Two earlier shapes failed here, and the second failure is the instructive one:
 #
-# The grammar is exactly:   ./validate.sh --parallel <N> [--skip <name>]...
+#   * A BLOCKLIST of narrowing selectors. Codex round 2: it missed --print-mode and --list, both of
+#     which exit before a suite runs. A list of ways to break a claim is never finished.
+#   * An allowlist grammar over text joined on SHELL backslash continuations. Codex round 3: the
+#     joiner understood `\` but not YAML. Switch the step's scalar from `run: |` to `run: >` and
+#     write the invocation on two un-backslashed lines, and YAML folds them into
+#     `./validate.sh --parallel 6 --tier 1` while the joiner captures only the first — so the
+#     grammar passed on a fragment it had never seen executed, and the lanes went unreached.
 #
-# Join the step's backslash continuations into one logical line first — the invocation spans four
-# physical lines, and a per-line check would see "--skip acorn-extract.sh" as a whole command.
-canary_cmd="$(awk '
-  /\.\/validate\.sh/ { c = 1 }
-  c {
-    cont = ($0 ~ /\\[[:space:]]*$/)
-    line = $0
-    sub(/\\[[:space:]]*$/, "", line)
-    printf "%s ", line
-    if (!cont) exit
-  }' <<<"$full_step")"
-check "the canary's validate.sh invocation was captured (not an empty join)" \
-  matches 'validate\.sh' "$canary_cmd"
+# So the command is now taken from the RESOLVED run scalar, and the scalar style is pinned besides.
 
-grammar_bad=""
+# (a) Pin the scalar style. A literal block (`run: |`) is the only style under which one physical
+# line is one command; every folding style makes text-level reasoning about this step unsound. This
+# assertion is unconditional and needs no YAML parser, so it holds even where PyYAML is absent.
+check "the canary step uses a LITERAL block scalar (run: |), not a folding one" \
+  matches '^        run: \|[[:space:]]*$' "$full_step"
+
+# (b) Resolve the run body. With PyYAML this is what the runner will actually execute — immune to
+# folding, quoting and continuation style alike. Without it, fall back to the literal-block text,
+# which (a) has just established is equivalent. The fallback is announced, never silent.
+run_body=""
+if python3 -c 'import yaml' >/dev/null 2>&1; then
+  run_body="$(python3 - "$WF" <<'PY'
+import sys, yaml
+doc = yaml.safe_load(open(sys.argv[1]))
+for job in (doc.get("jobs") or {}).values():
+    for step in (job.get("steps") or []):
+        if str(step.get("name", "")).startswith("Run validate.sh suite"):
+            sys.stdout.write(step.get("run", ""))
+            raise SystemExit(0)
+raise SystemExit(1)
+PY
+)" || run_body=""
+  check "the canary step's run body resolved through a real YAML parser" test -n "$run_body"
+else
+  echo "  NOTE: PyYAML absent — falling back to the literal-block text pinned by (a)"
+  run_body="$(awk '/^        run: \|/{f=1;next} f && /^      - name: /{exit} f' <<<"$full_step")"
+fi
+
+# (c) Collapse shell continuations, drop comments and blanks. What survives is one logical command
+# per line — the unit the grammar is stated over.
+logical="$(awk '
+  { sub(/#.*/, ""); }
+  { line = $0
+    cont = (line ~ /\\[[:space:]]*$/)
+    sub(/\\[[:space:]]*$/, "", line)
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+    if (line != "") buf = (buf == "" ? line : buf " " line)
+    if (!cont && buf != "") { print buf; buf = "" } }
+  END { if (buf != "") print buf }' <<<"$run_body")"
+
+# (d) The WHOLE body is asserted, not just the line that mentions validate.sh. Codex round 3 was
+# explicit that finding one acceptable fragment is not execution proof: a second command appended
+# below could re-narrow the run and a fragment-scoped check would never look at it.
+n_cmds="$(grep -c . <<<"$logical" || true)"
+check "the canary step runs exactly 2 commands — the shell pin and the gate (found $n_cmds)" \
+  test "$n_cmds" -eq 2
+check "  the first is the shell pin" matches '^set -euo pipefail$' "$(head -1 <<<"$logical")"
+canary_cmd="$(tail -1 <<<"$logical")"
+check "  the second invokes the gate" matches '\./validate\.sh' "$canary_cmd"
+
+# (e) The grammar itself:  ./validate.sh --parallel <N> [--skip <NAME>]...
+grammar_bad=""; n_parallel=0
 # Deliberate word-splitting: this IS the tokenizer. `set --` is safe here; the suite takes no args.
 # shellcheck disable=SC2086
 set -- $canary_cmd
@@ -155,6 +199,7 @@ shift || true
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --parallel)
+      n_parallel=$((n_parallel + 1))
       case "${2:-}" in
         ''|*[!0-9]*) grammar_bad="$grammar_bad; --parallel wants an integer, got '${2:-<missing>}'" ;;
       esac
@@ -167,7 +212,10 @@ while [ "$#" -gt 0 ]; do
       shift ;;
   esac
 done
-check "the canary's command matches the allowed grammar './validate.sh --parallel N [--skip NAME]...' (bad:${grammar_bad:- none})" \
+# EXACTLY one --parallel. Zero would inherit validate.sh's default, which is the thing pinning it
+# exists to prevent; more than one is ambiguous. Codex round 3 flagged that the loop counted neither.
+[ "$n_parallel" -eq 1 ] || grammar_bad="$grammar_bad; expected exactly one --parallel, found $n_parallel"
+check "the canary's command matches './validate.sh --parallel N [--skip NAME]...' exactly (bad:${grammar_bad:- none})" \
   test -z "$grammar_bad"
 
 # Redundant with the grammar above, kept ONLY because it names the offender in the failure message.
