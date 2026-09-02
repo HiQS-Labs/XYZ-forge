@@ -63,9 +63,14 @@ recorded rc=1 correctly).
 
 ## Qualifying run (step 1 gate, final commit 76174765)
 
-`qualifying-run.log` + `qualifying-run.telemetry.jsonl`: full sequential `ci-local.sh` in a
-disposable full clone — ends clean, envelope intact, and WRITES its gate record (the exact
-failure mode #365 step 1 existed to close).
+`qualifying-run.log` + `qualifying-run.record.txt` + `qualifying-run.telemetry.jsonl`: full
+sequential `ci-local.sh` at 5891d018 in a disposable full clone — rc=0, 1774s, ALL steps green
+including the clone-identity invariant, tree clean at exit, and the gate record WRITTEN with its
+output-sha256 (the exact failure mode #365 step 1 existed to close). Two earlier qualifying runs
+at 76174765/e44e0014 were REFUSED by the new bracket itself — it caught a stray repo-root file
+(`-a`, from a BSD-tee option-permutation bug in the new per-suite capture) and a shellcheck
+directive-typo comment, both fixed by 34aa7f16/5891d018. The bracket's first real uses found two
+defects in the very changes that shipped it.
 
 ## Provenance (GH-430)
 
