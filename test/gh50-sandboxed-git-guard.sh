@@ -52,28 +52,37 @@ CONFIG="$R/.git/config"
 require_fixture_file "$CONFIG" "GH-50 config"
 cp "$R/payload.txt" "$WORK/payload.before"
 cp "$CONFIG" "$WORK/config.before"
-chmod a-w "$CONFIG"
+# GH-249: the refusal half of this suite is chmod-dependent — it makes .git/config read-only and
+# asserts the guard declines before touching the index. Root appends to a 0444 file regardless of
+# mode bits, so under EUID=0 the refusal never fires and all eight assertions below are graded
+# against a premise the run could not create. The guard is right; the fixture is impossible here.
+if [ "$EUID" -ne 0 ]; then
+  chmod a-w "$CONFIG"
 
-OUT="$WORK/refusal.out"
-"$GUARD" --repo "$R" --operation "git switch --track" -- \
-  git -C "$R" switch --track -c tracked topic >"$OUT" 2>&1
-rc=$?
+  OUT="$WORK/refusal.out"
+  "$GUARD" --repo "$R" --operation "git switch --track" -- \
+    git -C "$R" switch --track -c tracked topic >"$OUT" 2>&1
+  rc=$?
 
-ok "guard refuses the read-only config with exit 2" test "$rc" -eq 2
-ok "refusal is named and says the operation was not attempted" \
-  grep -q "git-sandbox-guard: REFUSING.*not attempted (GH-50)" "$OUT"
-ok "refusal names the config write problem" grep -q "config.*not writable" "$OUT"
-ok "working-tree payload is byte-identical after refusal" cmp -s "$WORK/payload.before" "$R/payload.txt"
-ok "HEAD remains on main after refusal" test "$(git -C "$R" symbolic-ref --short HEAD)" = main
-if git -C "$R" show-ref --verify --quiet refs/heads/tracked; then
-  echo "  FAIL: refused command created the tracked branch" >&2
-  fail=$((fail + 1))
+  ok "guard refuses the read-only config with exit 2" test "$rc" -eq 2
+  ok "refusal is named and says the operation was not attempted" \
+    grep -q "git-sandbox-guard: REFUSING.*not attempted (GH-50)" "$OUT"
+  ok "refusal names the config write problem" grep -q "config.*not writable" "$OUT"
+  ok "working-tree payload is byte-identical after refusal" cmp -s "$WORK/payload.before" "$R/payload.txt"
+  ok "HEAD remains on main after refusal" test "$(git -C "$R" symbolic-ref --short HEAD)" = main
+  if git -C "$R" show-ref --verify --quiet refs/heads/tracked; then
+    echo "  FAIL: refused command created the tracked branch" >&2
+    fail=$((fail + 1))
+  else
+    echo "  PASS: refused command did not create the tracked branch"
+    pass=$((pass + 1))
+  fi
+  ok "config bytes are unchanged after refusal" cmp -s "$WORK/config.before" "$CONFIG"
+  ok "config-lock probe leaves no lock behind" test ! -e "$CONFIG.lock"
 else
-  echo "  PASS: refused command did not create the tracked branch"
-  pass=$((pass + 1))
+  # Root defeats mode bits — say so rather than reporting a pass this run did not earn.
+  echo "  SKIP: read-only-config refusal case, 8 assertions (running as root; mode bits do not apply)"
 fi
-ok "config bytes are unchanged after refusal" cmp -s "$WORK/config.before" "$CONFIG"
-ok "config-lock probe leaves no lock behind" test ! -e "$CONFIG.lock"
 
 # Control: once config writes are possible, the wrapper must run the exact command rather
 # than acting as a blanket branch-operation ban.

@@ -885,6 +885,14 @@ INSERT INTO "invocation_logs" VALUES('inv-20260827080556-2bfea107','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260827081457-701525ca','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 3 insertions(+)','2026-08-27 08:14:57');
 INSERT INTO "invocation_logs" VALUES('inv-20260827082037-b4a556a0','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa-r3',0.0,0,0,NULL,NULL,0.0,' 3 files changed, 4 insertions(+)','2026-08-27 08:20:37');
 INSERT INTO "invocation_logs" VALUES('inv-20260827083100-7eab0808','noels-Mac-Studio.local','agy','antigravity/gemini-2.5-pro','google','high','agy-turn.py','[]','RELAY-gh271-273-qa-r3d',0.0,6,0,NULL,NULL,0.0,' 4 files changed, 20 insertions(+)','2026-08-27 08:31:00');
+INSERT INTO "invocation_logs" VALUES('inv-20260831223720-ba23359d','noels-Mac-Studio.local','commandcode','zai-org/glm-5.3','openrouter','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo", "--effort", "max"]','RELAY-gh346-phase0-2-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-31 22:37:20');
+INSERT INTO "invocation_logs" VALUES('inv-20260831235332-d7af29b7','noels-Mac-Studio.local','commandcode','zai-org/glm-5.3','openrouter','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo", "--effort", "max"]','RELAY-gh346-phase0-2-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-08-31 23:53:32');
+INSERT INTO "invocation_logs" VALUES('inv-20260901041501-cb8d70d0','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh346-phase3-spec-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-01 04:15:01');
+INSERT INTO "invocation_logs" VALUES('inv-20260901043908-69de1ccf','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh346-phase3-spec-qa-r2',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-01 04:39:08');
+INSERT INTO "invocation_logs" VALUES('inv-20260902040618-8450435b','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh379-review',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-02 04:06:18');
+INSERT INTO "invocation_logs" VALUES('inv-20260902041608-f97f00b0','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh379-review-r2',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-02 04:16:08');
+INSERT INTO "invocation_logs" VALUES('inv-20260902042338-2b958332','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh379-review-r3',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 2 insertions(+)','2026-09-02 04:23:38');
+INSERT INTO "invocation_logs" VALUES('inv-20260902042957-1a6b3da6','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh379-review-r4',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 3 insertions(+)','2026-09-02 04:29:57');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
@@ -910,6 +918,7 @@ INSERT INTO "models" VALUES('openai/gpt-mini-latest','Openai','openai/gpt-mini-l
 INSERT INTO "models" VALUES('Gemini 3.5 Flash','Auto','Gemini 3.5 Flash','google',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('stealth/ox-alpha','Stealth','stealth/ox-alpha','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('qwen/qwen3.8-max','Qwen','qwen/qwen3.8-max','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
+INSERT INTO "models" VALUES('zai-org/glm-5.3','Zai-org','zai-org/glm-5.3','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 CREATE TABLE user_configs (
             config_id TEXT PRIMARY KEY,
             device_id TEXT NOT NULL REFERENCES devices(device_id),

@@ -245,6 +245,22 @@ else
   fail "GH-509: the ubuntu job must be advisory — a Linux failure is portability drift, not breakage"
 fi
 
+# GH-347 relocates the expensive advisory suite to the integration point. Extract only the job's
+# actual condition so workflow-level triggers and explanatory prose cannot satisfy this contract.
+canary_condition="$(awk '/^  canary-ubuntu:/{job=1} job && /^[[:space:]]*if:/{cond=1} cond{print} cond && /^[[:space:]]*runs-on:/{exit}' "$WORKFLOW")"
+if grep -q "refs/heads/development" <<<"$canary_condition" \
+  && grep -q "github.event_name == 'push'" <<<"$canary_condition" \
+  && grep -q "github.event_name == 'workflow_dispatch'" <<<"$canary_condition"; then
+  pass "the ubuntu canary runs on push-to-development with deliberate dispatch fallback"
+else
+  fail "GH-347: the ubuntu canary must run at integration time (push-to-development) and on deliberate dispatch"
+fi
+if grep -q "pull_request" <<<"$canary_condition" || grep -q "refs/heads/main" <<<"$canary_condition"; then
+  fail "GH-347: the ubuntu canary still runs on the PR path or after promotion on push-to-main"
+else
+  pass "the ubuntu canary is off pull requests and push-to-main"
+fi
+
 # The verdict step is the queryable signal. `if: always()` is the load-bearing half: without it the
 # step is skipped in precisely the case it exists to report on, and the canary goes silent exactly
 # when it has something to say.
@@ -278,14 +294,35 @@ fi
 CI_LOCAL="$ROOT/ci-local.sh"
 
 if [ -f "$CI_LOCAL" ]; then
-  # (1) The TESTS-parsing expression. Both read validate.sh's array; if one is edited to parse
-  # differently, the two run different suites while both still look correct in isolation.
-  wf_parse="$(grep -F "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$WORKFLOW" | tr -d ' ')"
-  cl_parse="$(grep -F "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$CI_LOCAL" | tr -d ' ')"
-  if [ -n "$wf_parse" ] && [ "$wf_parse" = "$cl_parse" ]; then
-    pass "ci-local.sh parses validate.sh's TESTS with the same expression as the workflow"
+  # (1) INVERTED on 2026-09-02 (GH-379), and the inversion is the point.
+  #
+  # This used to require ci.yml and ci-local.sh to parse validate.sh's TESTS array with the SAME
+  # expression, so "the two cannot drift". That pinned the wrong invariant: it enforced parity
+  # between two hand-rolled copies of the runner instead of forbidding the copies. Both stayed in
+  # agreement and both stayed wrong — the workflow's copy was serial (13m 14s where the real gate
+  # takes ~4 min parallel), had no contention-retry, and its '.sh'-only regex could not see
+  # validate.sh's three non-shell lanes, which therefore never ran on Linux at all.
+  #
+  # The workflow now CALLS validate.sh. So the assertion is that it does not parse TESTS.
+  if grep -Fq "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$WORKFLOW"; then
+    fail "GH-379: ci.yml parses validate.sh's TESTS again — it must CALL validate.sh, not re-derive its registry"
   else
-    fail "ci-local.sh and ci.yml disagree on how TESTS is parsed — they will run different suites"
+    pass "ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)"
+  fi
+
+  # ci-local.sh is the REMAINING copy of that pattern (see its own note near the TESTS parse). It is
+  # not converted here because it is the local promotion-evidence runner with its own semantics, and
+  # a 20KB rewrite does not belong in the change that fixed the workflow. Named rather than silently
+  # tolerated, so it is a tracked follow-up on GH-379 instead of a rediscovery six weeks from now.
+  # Three outcomes, not two. An earlier draft called `pass` on both branches, which meant a THIRD
+  # state — ci-local.sh rewritten to re-derive the registry some *other* way — also passed, and the
+  # "tracked follow-up" was prose rather than an assertion. Codex flagged it, 2026-09-02.
+  if grep -Fq "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$CI_LOCAL"; then
+    pass "ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect"
+  elif grep -qE "TESTS=\\(|/\\^TESTS=" "$CI_LOCAL"; then
+    fail "ci-local.sh re-derives validate.sh's registry by some OTHER expression — a new copy of the runner, not the tracked one; call validate.sh instead (GH-379)"
+  else
+    pass "ci-local.sh no longer re-derives the registry at all (GH-379 follow-up landed)"
   fi
 
   # (2) The skip lists must now DIFFER, and this assertion was inverted on 2026-08-12 (GH-509).
@@ -296,7 +333,11 @@ if [ -f "$CI_LOCAL" ]; then
   # discarded real signal about the platform we ship to, in order to imitate one we do not.
   #
   # Local must run MORE than hosted ubuntu, not the same.
-  if grep -qF '"acorn-extract.sh"' "$WORKFLOW" && grep -qF '"acorn-extract.sh"' "$CI_LOCAL"; then
+  # GH-379: the workflow now expresses its skips as validate.sh's `--skip <name>` rather than a
+  # quoted array member, so match either idiom. What matters is that BOTH still skip it — the
+  # intent (it already ran in the npm step; duplicate work, not lost coverage) is unchanged.
+  if { grep -qF '"acorn-extract.sh"' "$WORKFLOW" || grep -qE -- '--skip[[:space:]]+acorn-extract\.sh' "$WORKFLOW"; } \
+     && grep -qF '"acorn-extract.sh"' "$CI_LOCAL"; then
     pass "both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)"
   else
     fail "acorn-extract.sh skip drift — it is duplicate work in both files and should be skipped in both"

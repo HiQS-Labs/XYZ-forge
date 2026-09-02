@@ -113,19 +113,57 @@ else
 fi
 
 # ── portability canary ───────────────────────────────────────────────────────────────────────────
-# The mechanism that makes an advisory job READ rather than merely non-blocking. agy's review of the
-# GH-509 plan was right that "advisory" supplies nobody a reason to look; attaching it to the moment
-# someone is already deciding is the only reliable fix.
-canary="$(gh run list --workflow=ci.yml --branch "$branch" --limit 1 \
-  --json conclusion,headSha -q '.[0] | "\(.conclusion)\t\(.headSha)"' 2>/dev/null || true)"
-if [ -z "$canary" ] || [ "${canary%%$'\t'*}" = "null" ]; then
-  printf 'portability canary (ubuntu): no run found for %s\n' "$branch"
+# The mechanism that makes an advisory job READ rather than merely non-blocking. GH-347 moved it to
+# push-on-development, the recurring integration point before promotion, while retaining deliberate
+# workflow_dispatch as a fallback.
+#
+# Query the JOB conclusion, never the enclosing workflow conclusion. `continue-on-error: true` lets
+# the workflow conclude success while this job concludes failure — the previous run-level query
+# therefore printed a false green for the exact drift it existed to surface.
+canary_runs_json="$(gh run list --workflow=ci.yml --branch development --event push --status completed \
+  --limit 1 --json databaseId,headSha,createdAt,url 2>/dev/null)"
+canary_runs_rc=$?
+canary_run="$(printf '%s' "$canary_runs_json" | python3 -c '
+import json,sys
+try: runs=json.load(sys.stdin)
+except Exception: sys.exit(0)
+if runs:
+    r=runs[0]
+    print(r.get("databaseId", ""), r.get("headSha", ""), r.get("createdAt", ""), r.get("url", ""), sep="\t")
+' 2>/dev/null || true)"
+if [ "$canary_runs_rc" -ne 0 ]; then
+  printf 'portability canary (ubuntu): UNKNOWN (could not query development runs)\n'
+elif [ -z "$canary_run" ]; then
+  printf 'portability canary (ubuntu): no completed push-on-development run found\n'
 else
-  c_concl="${canary%%$'\t'*}"
-  if [ "$c_concl" = "success" ]; then
-    printf 'portability canary (ubuntu): green\n'
-  else
-    printf 'portability canary (ubuntu): DRIFT (%s) — not breakage; resolve before Linux support ships\n' "$c_concl"
+  IFS=$'\t' read -r c_run c_sha c_when c_url <<<"$canary_run"
+  canary_jobs_json="$(gh run view "$c_run" --json jobs 2>/dev/null)"
+  canary_jobs_rc=$?
+  c_concl="$(printf '%s' "$canary_jobs_json" | python3 -c '
+import json,sys
+try: jobs=json.load(sys.stdin).get("jobs", [])
+except Exception: sys.exit(0)
+for job in jobs:
+    if job.get("name") == "portability canary (ubuntu — advisory, never breakage)":
+        print(job.get("conclusion") or "unknown")
+        break
+' 2>/dev/null || true)"
+  if [ "$canary_jobs_rc" -ne 0 ]; then
+    printf 'portability canary (ubuntu): UNKNOWN (could not query jobs for development run %s)\n' "${c_sha:0:8}"
+  else case "$c_concl" in
+    success)
+      printf 'portability canary (ubuntu): green at %s (%s)\n' "${c_sha:0:8}" "$c_when"
+      ;;
+    failure)
+      printf 'portability canary (ubuntu): DRIFT (failure) at %s (%s) — not breakage; resolve before Linux support ships\n' "${c_sha:0:8}" "$c_when"
+      ;;
+    "")
+      printf 'portability canary (ubuntu): no canary job found in development run %s (%s)\n' "${c_sha:0:8}" "$c_url"
+      ;;
+    *)
+      printf 'portability canary (ubuntu): no usable result (%s) at %s (%s)\n' "$c_concl" "${c_sha:0:8}" "$c_when"
+      ;;
+  esac
   fi
 fi
 

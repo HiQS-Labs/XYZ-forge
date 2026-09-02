@@ -84,7 +84,8 @@ name: CI
 #
 # THE BRIDGE HAS ENDED. The re-arm keeps the constraints the private-phase analysis established:
 #   1. `push:` and `pull_request:` cover main and development. The macOS job itself remains guarded
-#      to a push on main; pull requests receive only the Ubuntu portability canary.
+#      to a push on main; GH-347 moved the Ubuntu portability canary to push-on-development plus
+#      deliberate dispatch, so pull requests complete without paying for an advisory full suite.
 #   2. Expect a BATCH of accumulated Linux portability drift on the first green-field run. The local
 #      gate is macOS, so the platform we ship to stayed covered — the ubuntu canary did not, and drift
 #      has been accumulating unreported since this date. That backlog is the known, accepted cost of
@@ -232,6 +233,12 @@ jobs:
   # this job has proven it is not being actioned and should be deleted rather than kept as decoration.
   canary-ubuntu:
     name: portability canary (ubuntu — advisory, never breakage)
+    # GH-347: integration-time signal, not PR feedback. A development push is the last recurring
+    # point before promotion where this drift can be acted on; workflow_dispatch is the deliberate
+    # fallback. Push-to-main is after the promotion decision, and pull_request was the 8m54s long pole.
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: starsling-ubuntu-24.04-8
     continue-on-error: true
     steps:
@@ -443,35 +450,48 @@ jobs:
       # hq.sh/relay-pkg-freshness.sh all passed cleanly once re-tested for real — no ubuntu-specific
       # bug in any of them. Only registry-lock-concurrency.sh (GH-72, a documented 16-concurrent-writer
       # lock-contention flake under CI load, unrelated to this issue) stays skipped.
+      # GH-379: this step CALLS validate.sh. It must never go back to iterating suites itself.
+      #
+      # It used to scrape the TESTS array out of validate.sh with sed/grep and run a serial
+      # for-loop, in order to carry the three skips below. That cost three things at once:
+      #   * PARALLELISM — GH-528 measured 946.0s -> 184.3s at --parallel 8 with byte-identical
+      #     pass/fail sets. The serial loop threw all of it away; the step measured 13m 14s, 88%
+      #     of this job's wall and 100% of the repo's sampled runner-minute bill.
+      #   * THE CONTENTION-RETRY — validate.sh re-runs a pooled failure alone before believing it,
+      #     which is what separates a real red from contention. The loop had no such filter.
+      #   * THREE NON-SHELL LANES — python:test_python_layer.py, clone-identity-invariant and
+      #     gamma-poison-staleness-probe live OUTSIDE the TESTS array, so a '.sh'-only scrape
+      #     could not see them. They had never run on Linux.
+      #
+      # The skips are now validate.sh's own --skip, which refuses an unregistered name, announces
+      # every skip in the header and the summary, and marks the run as not-promotion-evidence.
+      # A quarantine that cannot be typo'd into a no-op is the whole point.
+      #
+      # --parallel is PINNED explicitly, for the same reason boundary-macos pins --sequential: a
+      # future change to validate.sh's default must not silently change what this job runs.
+      #
+      # On the width, stated honestly because the first version of this comment was not: 6 is the
+      # POOL width, and validate.sh runs the serialized driver-lock lane as a concurrent background
+      # subshell alongside the pool (GH-42/GH-528), so peak concurrency is 6 + 1 = 7 suite processes
+      # on an 8-core runner, not 6. That still fits, but it is one core of headroom rather than two.
+      # 6 is a REASONED GUESS, not a measurement: GH-528's 5.1x came from a 10-core Mac and nothing
+      # has been timed on this runner. Revisit with an A/B of 4 vs 6 once the step has run a few
+      # times — the numbers will be in the job log, which is the whole reason for pinning a value
+      # that can be compared across runs. (Codex review, 2026-09-02.)
+      #
+      # No tier or path selector may be added here: the three non-shell lanes are tier-3 lanes, so
+      # narrowing the run set would silently retract this issue's headline coverage claim.
+      # test/gh379-canary-uses-validate.sh asserts all of this, selector by selector.
       - name: Run validate.sh suite (minus a documented flaky test)
         if: steps.route.outputs.route == 'full'
         env:
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
         run: |
           set -euo pipefail
-          SKIP_TESTS=(
-            "acorn-extract.sh"                    # already run above (needs npm ci first)
-            "registry-lock-concurrency.sh"          # GH-72/GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
-            "pdda-repo-contract.sh"               # already run in PDDA step
-          )
-          ALL_TESTS=()
-          while IFS= read -r line; do
-            [ -n "$line" ] && ALL_TESTS+=("$line")
-          done < <(sed -n '/^TESTS=(/,/^)/p' validate.sh | grep -oE '"[^"]+\.sh"' | tr -d '"')
-          FAILED=0
-          for t in "${ALL_TESTS[@]}"; do
-            skip=0
-            for s in "${SKIP_TESTS[@]}"; do
-              [ "$t" = "$s" ] && { skip=1; break; }
-            done
-            if [ "$skip" -eq 1 ]; then
-              echo "SKIP (GH-232): $t"
-              continue
-            fi
-            echo "=== $t ==="
-            bash "test/$t" || FAILED=1
-          done
-          exit "$FAILED"
+          ./validate.sh --parallel 6 \
+            --skip acorn-extract.sh \
+            --skip registry-lock-concurrency.sh \
+            --skip pdda-repo-contract.sh
 
       # GH-509 Phase 2 — the canary's verdict, written where a human and a script can both find it.
       #

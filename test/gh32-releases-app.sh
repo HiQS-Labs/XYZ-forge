@@ -234,14 +234,22 @@ echo "-- G: simulated concurrent writer; lock-audit sidecar"
 R="$(mkrepo g)"
 rout init --slug eta
 LOCK="$R/.git/releases-app.lock"
-python3 - "$LOCK" >/dev/null 2>&1 <<'PYEOF' &
+HOLDER_READY="$WORK/gh32-lock-holder.ready"
+python3 - "$LOCK" "$HOLDER_READY" >/dev/null 2>&1 <<'PYEOF' &
 import fcntl, sys, time
 fh = open(sys.argv[1], "a+")
 fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+open(sys.argv[2], "w").close()   # signal ONLY after the flock is genuinely held
 time.sleep(10)
 PYEOF
 HOLDER=$!
-sleep 1
+# GH-345: this was `sleep 1`. The assertion below is about a write under a HELD lock, so a holder
+# that has not acquired the flock yet proves nothing — the write would succeed and the suite would
+# report a lock defect that does not exist. Mutation did not convict this site (it stays green at
+# `sleep 0`, because python wins the race at ~0.02s here), but a fixed margin is the wrong mechanism
+# for "wait until something is true", and this is the site most likely to invert on a loaded runner.
+# Converted defensively; the holder now says when it is ready instead of us guessing.
+for _ in $(seq 1 100); do [ -f "$HOLDER_READY" ] && break; sleep 0.1; done
 DB_HASH="$(md5 -q "$R/releases.db")"; DUMP_HASH="$(md5 -q "$R/releases.sql")"
 TREE_BEFORE="$(cd "$R" && ls -A | sort | tr '\n' ' ')"
 V="$(rlog add --version 5.5.5 --status draft --description x --tracking-issue "https://github.com/A/B/issues/5")"; GRC=$?

@@ -35,7 +35,7 @@ bash "$L" --check
 ```
 
 That locator resolves the harness from wherever your CWD is and reports which workers
-(codex/agy/tick) are on PATH. See
+(tick/codex/agy/cmd/dsh) are on PATH. See
 [Preconditions](#preconditions--locate-the-harness-bundled-locator-never-hardcode-a-path) below for the
 full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this doc assumes has already
 run.
@@ -107,9 +107,9 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
 done
 [ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
 
-eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY}
+eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
 cd "$HARNESS"
-"$L" --check           # prints: harness path + which Path-A workers (codex/agy/tick) are on PATH
+"$L" --check           # prints: harness path + which Path-A workers (tick/codex/agy/cmd/dsh) are on PATH
 ```
 
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
@@ -242,11 +242,65 @@ is the harness clone). Choose either worker. The examples below pass `ALLOW_PATH
 fits a **build/fix** turn; for a pure **review** turn set `ALLOW_PATHS=""` (relay file only) so the
 reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row (note that fixed log paths break concurrent same-machine runs; prefer the shims' per-PID default or use per-PID `$$` variables):
 
+#### The one-line form (GH-346 Phase 3a) — name the reviewer, skip the table
+
+If a profile exists for the model you want, the whole env block below collapses to one call:
+
+```bash
+eval "$(relay-automation/resolve-profile.sh 'glm 5.3 max' --env)"
+ALLOW_PATHS="" relay-automation/relay-drive.sh \
+  --relay-file "$RELAY" --relay-task "$TASK" \
+  --agent-cmd "$RELAY_AGENT_CMD" --review-once
+```
+
+`--env` emits the lane's `*_AGENT`, `*_MODEL`, its gateway variable, `*_REASONING_EFFORT`,
+`*_FLAGS`, plus `RELAY_AGENT_CMD`, `$HARNESS` and `$TICK`. Profiles live in the `profiles` block of
+`~/.xyz/device_config.json`:
+
+```json
+"profiles": {
+  "glm 5.3 max":  { "harness": "commandcode", "gateway": "self",
+                    "model": "zai-org/glm-5.3", "effort": "max" },
+  "qwen 3.8 max": { "harness": "deepseek", "gateway": "openrouter",
+                    "model": "qwen/qwen3.8-max" }
+}
+```
+
+`"gateway": "self"` is for a harness that is **its own router** — Command Code resolves models from
+its own catalog and has no OpenRouter key or base URL, so naming a third-party router there would
+emit a value the shim ignores and telemetry would then record a route that never happened.
+
+Name matching is fuzzy (it reuses `resolve-model-alias.sh`), so `GLM5.3 max`, `glm 5.3 max` and
+`max glm 5.3` are one entry. `--list` shows every profile and flags broken ones; `--explain` says
+which tier answered.
+
+**This never blocks a turn.** A missing config, malformed JSON, or an unmatched name falls through
+to the shims' own defaults — the tables below — and says why on stderr. An explicit `*_AGENT` +
+`*_MODEL` already in the environment always wins and is never second-guessed.
+
+The tables below remain correct and are what a fall-through lands on. Use them when no profile
+exists, or when you want a one-off that is not worth naming.
+
 | Worker | Availability check | Handoff target | Env prefix | Shim | Log |
 |---|---|---|---|---|---|
 | Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn-$$.log` |
 | agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn-$$.log` |
-| Commandcode | `command -v cmd` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
+| Commandcode | `"$RELAY_HAS_COMMANDCODE" = 1` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
+| DeepSeek | `"$RELAY_HAS_DEEPSEEK" = 1` | `deepseek` | `DEEPSEEK_AGENT=deepseek ALLOW_PATHS="$ARTIFACT" DEEPSEEK_LOG="${TMPDIR:-/tmp}/deepseek-turn-$$.log"` | `relay-automation/deepseek-turn.sh` | `${TMPDIR:-/tmp}/deepseek-turn-$$.log` |
+
+**Model selection per worker** (GH-346) — the one lookup that used to mean reading each shim's
+source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also honors
+`<PREFIX>_FLAGS` and `RELAY_TURN_TIMEOUT_S`:
+
+| Worker | Model env | Default | Notes |
+|---|---|---|---|
+| Codex | *(none)* | codex CLI's own | `codex-turn.sh` never passes `--model`; set it in codex's own config |
+| agy | `AGY_MODEL` | agy CLI's own | validated against `agy models` — an unlisted id fails fast rather than falling back |
+| Commandcode | `COMMANDCODE_MODEL` | `meta/muse-spark-1.2-contributor` | `cmd --list-models` for the live catalog (GLM, Qwen, DeepSeek all reachable here) |
+| DeepSeek | `DEEPSEEK_MODEL` | `deepseek/deepseek-v4-pro` | accepts a colloquial alias (`"deepseek v4 pro"`); also `DEEPSEEK_PROVIDER` (`openrouter`\|`deepseek`) which selects `OPENROUTER_API_KEY` vs `DEEPSEEK_API_KEY` |
+| Aider | `AIDER_MODEL` | `openrouter/anthropic/claude-sonnet-5`, or `openai/agents-a1` when `AIDER_OPENAI_API_BASE` is set | force `AIDER_FLAGS=--edit-format diff` on GLM |
+| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | API-billed — an explicit operator choice, never a session default |
+| Pi | `PI_MODEL` | **none — required** | refuses to guess (GH-295) |
 
 Codex example:
 

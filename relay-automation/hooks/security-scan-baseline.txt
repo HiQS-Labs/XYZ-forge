@@ -87,3 +87,18 @@ test/gh69-roadmap-shadow.sh	eval-unsanitized	ok()   { if eval "$2"; then echo " 
 test/gh349-releases-roadmap-vendored.sh	eval-unsanitized	ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
 test/gh1-adoption-guard.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi }
 test/gh75-dashboard.sh	eval-unsanitized	ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
+
+# GH-346 Phase 3a — resolve-profile.sh documents `eval "$(... --env)"` in its usage header.
+# The rule is right to flag the pattern: eval of script output is only safe if every emitted
+# value is shell quoted. It is, via profile_resolve.py::_sh_quote, and that is not taken on
+# faith — test/gh346-profile-resolve.sh section 9 feeds hostile model values through the real
+# path (embedded single quote, double quote, $(...) and backticks), evals the output, and
+# asserts each survives VERBATIM as data with no command artifact left behind.
+# Same idiom the skill already documents for find-harness.sh --env. Baselined, not hidden:
+# the scan still prints it.
+relay-automation/resolve-profile.sh	eval-unsanitized	#   eval "$(relay-automation/resolve-profile.sh 'glm 5.3 max' --env)"
+# The injection PROOF itself trips the rule twice, unavoidably: a test that asserts
+# `eval "$(... --env)"` is safe has to actually run that eval, and the comment above it has
+# to name the pattern it is testing. Both lines exist to make the finding above defensible.
+test/gh346-profile-resolve.sh	eval-unsanitized	# `eval "$(resolve-profile.sh ... --env)"` is the documented usage, and security-scan.sh flags
+test/gh346-profile-resolve.sh	eval-unsanitized	  got="$( cd "$WORK" && eval "$(run "$WORK/evil.json" "$p" --env 2>/dev/null)" \

@@ -92,6 +92,18 @@ class HarnessTurnLogger:
             res = subprocess.run(cmd, cwd=self.repo_root, capture_output=True, text=True, check=False)
             if res.returncode == 0:
                 self.invocation_id = res.stdout.strip()
+            else:
+                # GH-346: this branch did not exist. A non-zero harness_app.py exit was discarded in
+                # silence, so a turn could report success while writing NO audit row — measured, not
+                # hypothetical: invocation_logs has foreign keys to devices/harnesses/models, and an
+                # unseeded or unregistered harness_id fails with "FOREIGN KEY constraint failed".
+                # Still non-fatal (a turn must never fail because logging did), but never silent.
+                import sys as _sys
+                print(
+                    f"harness-turn-logger: telemetry row NOT written for {self.harness_id} "
+                    f"(harness_app.py exit {res.returncode}): {(res.stderr or '').strip()[-300:]}",
+                    file=_sys.stderr,
+                )
 
     def record_evaluation(
         self,

@@ -16,6 +16,8 @@ set -euo pipefail
 #   AIDER_AGENT       — agent id that routes to aider-turn.sh (Aider via OpenRouter; OpenAI-standard lane)
 #   PI_AGENT          — agent id that routes to pi-turn.sh (Pi; explicit PI_MODEL required)
 #   SMALLCODE_AGENT   — agent id that routes to smallcode-turn.sh (SmallCode)
+#   COMMANDCODE_AGENT — agent id that routes to commandcode-turn.sh (Command Code / cmd)
+#   DEEPSEEK_AGENT    — agent id that routes to deepseek-turn.sh (DeepSeek via dsh)
 # Peer threading (set by marathon-drive.sh — prevents "release to literal role-string" failure):
 #   MARATHON_BUILDER  — builder agent id; when RELAY_AGENT matches this, RELAY_PEER = MARATHON_REVIEWER
 #   MARATHON_REVIEWER — reviewer agent id; when RELAY_AGENT is the reviewer, RELAY_PEER = MARATHON_BUILDER
@@ -36,6 +38,13 @@ agy_agent="${AGY_AGENT:-}"
 aider_agent="${AIDER_AGENT:-}"
 pi_agent="${PI_AGENT:-}"
 smallcode_agent="${SMALLCODE_AGENT:-}"
+# GH-346 Phase 2 (allowlist #3): commandcode-turn.sh and deepseek-turn.sh have shipped and worked
+# for a while, and marathon_drive.py's route_agent() was taught to export their *_AGENT vars — but
+# THIS case had no branch for either, so a marathon that named them died here with "unknown agent"
+# after the router had already accepted them. This is the site that made them non-runnable; fixing
+# route_agent() alone would have shipped a lane that still could not dispatch.
+commandcode_agent="${COMMANDCODE_AGENT:-}"
+deepseek_agent="${DEEPSEEK_AGENT:-}"
 
 # RELAY_PEER threading: builder's peer is the reviewer; reviewer's peer is the builder.
 # A live turn that lacks an explicit peer can release to a literal role-string (Gemini 2026-06-15).
@@ -72,7 +81,15 @@ case "$me" in
     [[ -n "$smallcode_agent" ]] || die "RELAY_AGENT='$me' matched an empty SMALLCODE_AGENT — set SMALLCODE_AGENT"
     exec "$HERE/smallcode-turn.sh"
     ;;
+  "$commandcode_agent")
+    [[ -n "$commandcode_agent" ]] || die "RELAY_AGENT='$me' matched an empty COMMANDCODE_AGENT — set COMMANDCODE_AGENT"
+    exec "$HERE/commandcode-turn.sh"
+    ;;
+  "$deepseek_agent")
+    [[ -n "$deepseek_agent" ]] || die "RELAY_AGENT='$me' matched an empty DEEPSEEK_AGENT — set DEEPSEEK_AGENT"
+    exec "$HERE/deepseek-turn.sh"
+    ;;
   *)
-    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT/PI_AGENT/SMALLCODE_AGENT to map it to a shim"
+    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT/PI_AGENT/SMALLCODE_AGENT/COMMANDCODE_AGENT/DEEPSEEK_AGENT to map it to a shim"
     ;;
 esac

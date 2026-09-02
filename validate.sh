@@ -92,6 +92,12 @@ TESTS=(
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
+  "gh346-model-telemetry-honesty.sh" # GH-346 Phase 0 (a shim may not log a model id no dispatch path can produce)
+  "gh346-resolver-fallback.sh"  # GH-346 Phase 1 (alias resolver is an enhancement over a literal floor, never a dependency)
+  "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
+  "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
+  "gh346-gateway-allowlists.sh" # GH-346 Phase 2 (every agent-id allowlist agrees on the shipped gateway set)
+  "gh346-profile-resolve.sh"    # GH-346 Phase 3a (one name -> harness/gateway/model; no tier may block a turn)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
@@ -210,6 +216,7 @@ TESTS=(
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
+  "gh379-canary-uses-validate.sh"      # GH-379 (the canary CALLS validate.sh; it must never re-implement the runner)
   "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 78/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
   "gh35-test-tiers.sh"                 # GH-35 (tiered test selection + CPU governance) — 56/0; pins the registry contract (every registered suite exists AND is in TESTS), the fail-closed tier boundaries, the balanced cores/2 default + --throttle/--burst/env levers, nice -n 10 on the workers, and the tier-1/tier-2 execution paths against fixture clones whose suites are stubs (real runner, real pool, real summary math)
   "gh1-fixture-guard.sh"               # GH-1 (shared require_fixture resolved-containment + clone-identity invariant gate; covers the GH-567 lexical-check residual)
@@ -313,6 +320,11 @@ TESTS=(
                                  #   a two-header dump (what a naive merge=union leaves) and a dump
                                  #   with conflict markers are both refused, not rebuilt. 18/0
   "gh54-merged-dump-refusals.sh" # #54 (check --rebuild must REFUSE merge damage by name, not throw).
+  "gh360-dump-multiline-values.sh" # GH-360 (a dumped value containing a newline must round-trip) —
+                                  #   INSERT_RE lacked re.DOTALL, so parse_dump could never match a
+                                  #   multi-line statement: the buffer swallowed every INSERT after it
+                                  #   and `check --rebuild` refused with rule=dump-parse, killing the
+                                  #   only documented git-merge resolution path for such a ledger.
                                  #   Every fixture is built by really merging two divergent branches
                                  #   and mangling the dump the way a union would — a refusal test
                                  #   whose fixture cannot occur proves nothing. Covers the two-header
@@ -369,6 +381,14 @@ TESTS=(
                                   #   GH_URL matcher keeps its issue-only contract.
   # NB: test/gh358-lock-instrumentation.sh below carries a "GH-358" from the pre-rename numbering;
   # this one is HiQS-Labs/XYZ-forge#358. Distinct files, deliberately not renumbered.
+  "gh362-marathon-plan-link-bullets.sh" # GH-362 (the planner reads link-style ledger bullets) —
+                                  #   GH-349 made `- [Title](path)` first class in releases_app.py, whose
+                                  #   parse_roadmap_ledger promises "the same block boundaries as the
+                                  #   planner". Both planner engines still tested `- **` only, so such a
+                                  #   ROADMAP parsed as ZERO items and exit 3 named the one thing that was
+                                  #   not wrong. Asserts BOTH engines (XYZ_PYTHON=1 and 0), that the GH key
+                                  #   comes from the link label and not from prose, and that `- [ ]` task
+                                  #   items are still not entries.
   "gh358-wave-reconcile-vendored-paths.sh" # GH-358 (wave_reconcile's five HARNESS tools resolved
                                   #   repo-root-relative, so on a vendored install — where they exist only under
                                   #   <repo>/.xyz/ — the reconciler died on its first downstream step with
@@ -467,6 +487,7 @@ TESTS=(
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
+  "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh290-ate-variation-grid.sh"       # GH-290 (ATE variation grid: contract loaders, land verification,
                                      #   receipt-writer robustness — deterministic hostile-input matrix)
@@ -587,20 +608,48 @@ usage: ./validate.sh [--parallel N | --sequential | --print-mode]
                 --paths-file <file>               tier 2 from a path list — what pre-push hands over
   environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
                 (an explicit flag always beats the environment; a width lever beats a throttle lever)
+  quarantine    --skip <suite>                      omit ONE registered suite (repeatable). Every skip
+                                                   is announced in the header AND the summary, and a
+                                                   run with any skip is NOT promotion evidence. An
+                                                   unregistered name is a usage error, so a typo can
+                                                   never silently skip nothing (GH-379).
+                XYZ_VALIDATE_SKIP=a.sh,b.sh        same, comma-separated, for CI
   introspection --list                             print the registry this gate runs (test/<entry>
                 per line) and exit 0 — the shared manifest #141 Phase 1 points secondary
                 selectors (fuzz-loop.sh) at, so suite ownership has ONE source of truth
 USAGE
 }
 _err2() { echo "validate.sh: $*" >&2; _usage; exit 2; }
+SKIP_SUITES=()
+LIST_ONLY=0
+# GH-379: CI hands its quarantine in through the environment. Parsed before the flag loop so an
+# explicit --skip and the env COMPOSE rather than one silently winning.
+if [ -n "${XYZ_VALIDATE_SKIP:-}" ]; then
+  _old_ifs="$IFS"; IFS=','
+  for _s in $XYZ_VALIDATE_SKIP; do
+    _s="${_s#"${_s%%[![:space:]]*}"}"; _s="${_s%"${_s##*[![:space:]]}"}"
+    [ -n "$_s" ] && SKIP_SUITES+=("$_s")
+  done
+  IFS="$_old_ifs"
+fi
 while [ $# -gt 0 ]; do
   case "$1" in
     --list)
       # #141 Phase 1: expose the authoritative registry as a manifest. Prints test/<entry> for
       # every TESTS member, one per line, before any gate machinery runs. Read-only.
-      for _t in "${TESTS[@]}"; do printf 'test/%s\n' "$_t"; done
-      exit 0 ;;
+      #
+      # GH-379: this used to `exit 0` right here, INSIDE the argument loop — which put it ahead of
+      # the --skip name validation below, so `XYZ_VALIDATE_SKIP=typo.sh ./validate.sh --list`
+      # returned 0 without ever checking the name. Deferred to after the loop so every exit path
+      # that accepts quarantine input also validates it. (Codex review round 2, 2026-09-02.)
+      LIST_ONLY=1; shift ;;
     --print-mode) PRINT_MODE_ONLY=1; shift ;;
+    --skip)
+      # GH-379: the canary hand-rolled its own runner partly to get a skip list. A skip is a real
+      # reduction in coverage, so it is spelled out loud rather than buried in a CI for-loop.
+      [ $# -ge 2 ] || _err2 "--skip requires a suite name (e.g. --skip registry-lock-concurrency.sh)"
+      SKIP_SUITES+=("$2")
+      shift 2 ;;
     --parallel|--max-parallel)
       [ $# -ge 2 ] || _err2 "$1 requires an integer >= 1"
       case "$2" in ''|*[!0-9]*) _err2 "$1 requires an integer >= 1" ;; esac
@@ -637,6 +686,24 @@ while [ $# -gt 0 ]; do
     *) _err2 "unknown argument: $1" ;;
   esac
 done
+
+# ── GH-379: validate --skip NAMES here, before any tier can exit ────────────────────────────────
+# The FILTER lives after tier selection (so --skip composes with --tier), but the NAME CHECK cannot
+# wait that long. Tier 1 exits at its own `exit 0` several hundred lines above the filter, so a run
+# like `--tier 1 --skip typo.sh` used to report a clean green having validated nothing — the exact
+# silent no-op skip this guard exists to make impossible. Found by Codex review, 2026-09-02.
+if [ "${#SKIP_SUITES[@]}" -gt 0 ]; then
+  for _sk in ${SKIP_SUITES[@]+"${SKIP_SUITES[@]}"}; do
+    _known=0
+    for _t in "${TESTS[@]}"; do [ "$_t" = "$_sk" ] && { _known=1; break; }; done
+    [ "$_known" -eq 1 ] || { echo "validate.sh: --skip names '$_sk', which is not in the registry — refusing, because a skip that matches nothing is indistinguishable from one that works (GH-379)." >&2; exit 2; }
+  done
+fi
+
+if [ "$LIST_ONLY" -eq 1 ]; then
+  for _t in "${TESTS[@]}"; do printf 'test/%s\n' "$_t"; done
+  exit 0
+fi
 
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
 # gate is the only gate while this repo is private (GH-544), and the hook lives in `.git/hooks/`,
@@ -938,6 +1005,45 @@ if [ "$TIER" -eq 2 ]; then
   fi
 fi
 
+# ── GH-379 quarantine: remove named suites from the run set, LOUDLY ─────────────────────────────
+# Applied AFTER tier selection so --skip composes with --tier rather than racing it.
+#
+# This exists because the Ubuntu canary used to hand-roll its own runner — a `sed`/`grep` scrape of
+# the TESTS array plus a serial for-loop — largely to carry three skips. That cost the gate its
+# parallelism, its contention-retry, and three non-shell lanes the scrape could not see. Giving the
+# real gate a skip mechanism removes the last reason to reimplement it.
+#
+# Three properties, each because the alternative has already bitten this repo:
+#   1. an unregistered name is a HARD ERROR — a typo'd skip that matches nothing looks identical to
+#      one that works, which is precisely how a quarantine rots into a no-op;
+#   2. every skip is echoed here AND repeated in the summary, so a reduced run cannot be mistaken
+#      for a full one at a glance;
+#   3. any skip disqualifies the run as promotion evidence — the same stance tier 2 already takes.
+SKIPPED_SUITES=()
+if [ "${#SKIP_SUITES[@]}" -gt 0 ]; then
+  # Names were already validated right after argument parsing — deliberately, so tier 1's early
+  # exit cannot skip the check. Only the filtering happens here.
+  _kept=()
+  for _t in "${RUN_TESTS[@]}"; do
+    _drop=0
+    for _sk in "${SKIP_SUITES[@]}"; do [ "$_t" = "$_sk" ] && { _drop=1; break; }; done
+    if [ "$_drop" -eq 1 ]; then SKIPPED_SUITES+=("$_t"); else _kept+=("$_t"); fi
+  done
+  # ORDER IS LOAD-BEARING. bash 3.2 (still the macOS default) treats "${empty[@]}" as an unbound
+  # variable under `set -u`, so assigning from an empty _kept aborts the script with
+  # "_kept[@]: unbound variable" BEFORE the refusal below could ever print. The guard therefore has
+  # to run first. Verified: with the two lines transposed, `--skip` every registered suite died at
+  # this line instead of saying why. Do not "tidy" this back into assign-then-check.
+  [ "${#_kept[@]}" -gt 0 ] || { echo "validate.sh: every suite was skipped — refusing a zero-test green (GH-379)." >&2; exit 1; }
+  RUN_TESTS=("${_kept[@]}")
+  echo
+  echo "==============================="
+  echo "QUARANTINE (GH-379): ${#SKIPPED_SUITES[@]} suite(s) skipped by request"
+  for _t in "${SKIPPED_SUITES[@]}"; do echo "  SKIPPED: $_t"; done
+  echo "NOT promotion evidence: a run that omits suites cannot qualify one."
+  echo "==============================="
+fi
+
 # GH-1: suite-wide clone-identity invariant gate. Captured before any suite runs and asserted after
 # the last one — a suite that escapes its fixture sandbox and rewrites this clone's git identity
 # (the GH-564 incident: core.bare / origin / user identity / HEAD) fails the run HERE, detectably,
@@ -1190,6 +1296,10 @@ if [ $(( ${#PASSED[@]} + ${#FAILED[@]} )) -ne "$TOTAL" ]; then
   echo "validate.sh: INTERNAL ERROR — classified ${#PASSED[@]} passed + ${#FAILED[@]} failed, expected $TOTAL (GH-15)." >&2
   echo "validate.sh: refusing a verdict on incomplete evidence; inspect $( [ -n "${RUN_DIR:-}" ] && printf '%s' "$RUN_DIR" || printf 'the run directory' )" >&2
   exit 1
+fi
+if [ "${#SKIPPED_SUITES[@]}" -gt 0 ]; then
+  echo "QUARANTINED (GH-379): ${#SKIPPED_SUITES[@]} suite(s) did NOT run — ${SKIPPED_SUITES[*]}"
+  echo "  this run is NOT promotion evidence."
 fi
 echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done

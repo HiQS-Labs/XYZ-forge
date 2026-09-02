@@ -24,7 +24,9 @@ Read [`WORKTREE-SAFETY.md`](WORKTREE-SAFETY.md) for the rationale, recovery path
 
 Read `ROUTER.md` first for startup order and canonical files.
 
-Read `GUIDING-PRINCIPLES.md` for the product north stars.
+Read `GUIDING-PRINCIPLES.md` for the product north stars — its "The North Star" section (durable,
+reversible, DRY; extend what exists rather than forking a parallel system) is canonical and governs
+everything below.
 
 Read `PROJECT/PDDA.md` when the task touches project docs, `ROADMAP.md`, or `CHANGELOG.md`.
 
@@ -72,6 +74,9 @@ reader could not say "that assumption was wrong," you have not made the real bet
 Consequential changes get a read on the shared scale: **Easy / Costly / One-way door**, with one line
 of why. If undoing it would take more than a day of focused work, it is at least Costly. Costly
 changes need a rollback path. One-way doors need explicit confirmation before proceeding.
+
+This scale is how `GUIDING-PRINCIPLES.md` → "The North Star" gets applied per change; that section
+owns the *why*, this one owns the read.
 
 ### 4. Size the blast radius before changing shared surfaces
 

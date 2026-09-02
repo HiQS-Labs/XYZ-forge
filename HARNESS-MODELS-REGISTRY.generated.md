@@ -20,12 +20,18 @@
 |---|---|:---:|:---:|:---:|
 | **Alibaba** | `Qwen 3.7-Flash` | 1,000,000 | `none` | $0.03 / $0.13 / $0.0060 |
 | **Alibaba** | `Qwen 3.8-Max` | 1,000,000 | `low, medium, xhigh` | $2.00 / $6.00 / $0.2500 |
+| **Antigravity** | `antigravity/gemini-2.5-pro` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
+| **Auto** | `Gemini 3.5 Flash` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Auto** | `deepseek/deepseek-v4-pro` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **DeepSeek** | `DeepSeek V3` | 1,000,000 | `none` | $0.27 / $1.10 / $0.0028 |
 | **DeepSeek** | `DeepSeek V4 Pro` | 1,000,000 | `low, medium, high, max` | $0.43 / $0.87 / $0.0036 |
 | **Google** | `Gemma 4 31B QAT` | 32,768 | `none` | $0.00 / $0.00 / $0.0000 |
+| **Openai** | `openai/gpt-mini-latest` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
+| **Qwen** | `qwen/qwen3.8-max` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Stealth** | `Stealth Ox-Alpha` | 1,000,000 | `high, max` | $1.50 / $4.50 / $0.2000 |
+| **Stealth** | `stealth/ox-alpha` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Z.ai** | `GLM 5.3 High` | 1,000,000 | `low, high, max` | $1.40 / $4.40 / $0.2600 |
+| **Zai-org** | `zai-org/glm-5.3` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 
 ## 3. Empirical Evaluation History & Qualitative Work Logs
 

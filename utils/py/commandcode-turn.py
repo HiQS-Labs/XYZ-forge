@@ -125,15 +125,31 @@ def main():
             harness_id="commandcode",
             shim="commandcode-turn.py",
             task_scope=t,
-            model_id=os.environ.get("COMMANDCODE_MODEL", "Qwen/Qwen3.8-Max"),
-            gateway=os.environ.get("COMMANDCODE_GATEWAY", "openrouter"),
+            # GH-346 Phase 0: log the dispatched model, not a second, drifted default. An unset
+            # COMMANDCODE_MODEL ran meta/muse-spark-1.2-contributor and recorded Qwen/Qwen3.8-Max.
+            model_id=commandcode_model,
+            # GH-346: this defaulted to "openrouter", which is wrong. Command Code is BOTH the
+            # harness and the router — this shim contains no OpenRouter API key, no base URL, and
+            # no routing config of any kind; `cmd` resolves the model from its own catalog
+            # (`cmd --list-models`). Contrast deepseek-turn.py, which builds an explicit OpenRouter
+            # overlay with baseURL + OPENROUTER_API_KEY because it genuinely routes through one.
+            #
+            # Same defect class as the model_id drift Phase 0 fixed, one argument over: a hardcoded
+            # default asserting a fact about the run that no dispatch path establishes. It is worth
+            # recording how it survived — this value was cited as EVIDENCE that Command Code routes
+            # through OpenRouter, when it was only ever a literal in this line.
+            gateway=os.environ.get("COMMANDCODE_GATEWAY", "commandcode"),
             reasoning_effort=os.environ.get("COMMANDCODE_REASONING_EFFORT", "xhigh"),
             cli_flags=cflags,
             repo_root=xyz_root,
         ) as logger:
             logger.exit_code = bounded_rc or rc
-    except Exception:
-        pass
+    except Exception as _telemetry_exc:
+        # GH-346: this used to be a bare `pass`. Three shims passed an undefined name as
+        # cli_flags, raised NameError here, and silently wrote NO telemetry row for the entire
+        # life of the shim -- a telemetry system that fails closed and says nothing. Still
+        # non-fatal (a turn must never fail because logging did), but never again invisible.
+        print(f"commandcode-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)
 
     # In-root enforcement violations take priority over a subprocess result.
     if rc == 6:
