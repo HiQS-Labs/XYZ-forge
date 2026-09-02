@@ -41,6 +41,7 @@ curated table gets wrong).
 
 import json
 import os
+import shutil
 import re
 import subprocess
 import sys
@@ -125,6 +126,26 @@ def _gateway_var_for(xyz_root: str, lane: str, prefix: str) -> Optional[str]:
     # A shim that hardcodes its gateway, or writes no telemetry at all, has no variable to emit.
     return None
 
+
+
+def _cli_for(xyz_root: str, lane: str, prefix: str) -> str:
+    """The binary a lane's shim actually invokes.
+
+    Derived from the shim's own `<PREFIX>_BIN` default rather than a curated map here, for the same
+    reason lanes() derives from route_agent(): a lane whose binary is renamed must not need a second
+    edit in this file. Falls back to the lane name, which is correct for codex and agy.
+    """
+    src_path = os.path.join(xyz_root, "utils", "py", f"{lane}-turn.py")
+    try:
+        with open(src_path, "r", encoding="utf-8") as fh:
+            src = fh.read()
+    except OSError:
+        return lane
+    m = re.search(r'%s_BIN["\']\s*,\s*["\']([A-Za-z0-9_.-]+)["\']' % re.escape(prefix), src)
+    if m:
+        return m.group(1)
+    m = re.search(r'shutil\.which\(\s*["\']([A-Za-z0-9_.-]+)["\']\s*\)', src)
+    return m.group(1) if m else lane
 
 def lanes(xyz_root: str) -> Dict[str, Dict[str, Any]]:
     """Every lane route_agent() routes, with the env contract each one answers to.
@@ -376,8 +397,24 @@ def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
     if res["flags"]:
         lines.append(f"export {spec['flags_var']}={_sh_quote(res['flags'])}")
 
+    # RELAY_AGENT is the actor name the turn shims compare against <HARNESS>_AGENT before they
+    # will act. Every shim hard-requires it ("RELAY_AGENT required", exit) — so without this line
+    # the one-liner this whole feature exists to provide could not run for ANY profile, and the
+    # operator got a bare "RELAY_AGENT required" with nothing pointing back here. It must match
+    # the relay file's `NEXT:` and the <HARNESS>_AGENT value emitted above.
+    lines.append(f"export RELAY_AGENT={_sh_quote(harness)}")
     lines.append(f"export RELAY_AGENT_CMD={_sh_quote(spec['shim'])}")
     lines.append(f"export HARNESS={_sh_quote(xyz_root)}")
+
+    # Resolving to a harness whose CLI is not installed is the other way this fails late and
+    # confusingly: the resolver exits 0, hands back a complete-looking environment, and the failure
+    # surfaces minutes later inside a relay driver as a stall. Say it here, at the moment the name
+    # is resolved, where the operator can still choose a different profile. A comment rather than a
+    # refusal — the caller may be preparing an environment for another machine.
+    cli = _cli_for(xyz_root, spec["lane"], spec["prefix"])
+    if not shutil.which(cli):
+        lines.insert(1, f"# resolve-profile: WARNING — {harness} harness selected, but its CLI "
+                        f"{cli!r} is NOT on PATH; this turn will not run on this machine")
     tick = os.path.join(xyz_root, "bin", "tick")
     if os.path.isfile(tick):
         lines.append(f"export TICK={_sh_quote(tick)}")
