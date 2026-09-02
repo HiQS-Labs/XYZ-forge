@@ -179,12 +179,14 @@ check_prereqs() {
 }
 
 # ── 2-5. the cheap static checks, verbatim from the workflow ─────────────────────────────────────
-# GH-365 step 5 census: THIS is the one local ShellCheck scan site (the hosted job in ci.yml is
-# the other); no registered suite executes shellcheck — everything else in test/ is directives.
-# Parallel at the balanced four-worker width (the same policy validate.sh's pool uses): one
-# shellcheck process per file, so diagnostics per file are IDENTICAL to the serial shape — only
-# their interleaving in the aggregate stream can differ. XYZ_SHELLCHECK_JOBS=1 restores the old
-# serial shape exactly (xargs -P 1); xargs aggregates any per-file failure into a nonzero exit.
+# GH-365 step 5 census: THIS is the one local scan site for the shellcheck BINARY (the hosted
+# job in ci.yml is the other); no registered suite executes it — everything else in test/ is
+# directives. Parallel at the balanced four-worker width (the same policy validate.sh's pool
+# uses): one process per file, so per-file diagnostics are IDENTICAL to the serial shape — only
+# their interleaving in the aggregate stream can differ. (A comment here must never START with
+# the word "shellcheck" — the scanner parses that prefix as a directive and the scan itself goes
+# red on SC1072/SC1073; observed on the first qualifying run at 76174765.) XYZ_SHELLCHECK_JOBS=1
+# restores the exact serial shape (xargs -P 1); xargs aggregates per-file failures nonzero.
 shellcheck_tracked() {
   # severity=error, matching the workflow's deliberate choice to land green before tightening.
   git ls-files -z -- '*.sh' | xargs -0 -P "${XYZ_SHELLCHECK_JOBS:-4}" -n 1 shellcheck -S error
