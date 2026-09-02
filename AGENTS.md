@@ -97,6 +97,20 @@ An uncommitted `provenance.jsonl` is not proof (GH-430). Any run cited as eviden
 ROADMAP entry, or decision record must have its `provenance.jsonl` committed in the same PR — a path
 you merely ran and can no longer show counts as no claim at all.
 
+**A check that cannot fail is not a check.** A passing assertion is evidence only once you have seen
+it fail: mutate the thing it guards — break the code, transpose the fix, delete the value — and watch
+it go red. If you cannot make it fail, it is decorative, and it is worse than nothing because it
+reports confidence it never earned. This is the precise way this principle fails while looking
+satisfied: you *did* verify, and the verification was hollow. Three examples from GH-377/GH-379, all
+of which passed cleanly before they were mutated — an `awk` range that terminated on its own first
+line, `not matches -- "$pat"` where the helper already supplied `--` so the check searched for the
+literal string `--`, and a telemetry `rc` assertion that no *passing* run could ever exercise.
+
+**An empty input passes every check.** Before asserting anything about extracted data, assert that
+you extracted some: a failed command substitution yields an empty string, a shell redirect creates
+the file regardless, and a scanner then reports CLEAN against zero bytes. Size-check the artifact,
+or guard the extraction with its own assertion, before trusting a verdict computed from it.
+
 ### 7. Record only consequential bets
 
 If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
