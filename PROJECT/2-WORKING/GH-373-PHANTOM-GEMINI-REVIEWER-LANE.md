@@ -80,18 +80,18 @@ preflight probe below keys on it.
   "fix_probes": [
     {
       "type": "grep_absent",
-      "path": "relay-automation/marathon-drive.sh",
+      "path": "utils/py/marathon_drive.py",
       "pattern": "GH-373"
     }
   ],
-  "artifacts":   ["relay-automation/marathon-drive.sh"],
+  "artifacts":   ["utils/py/marathon_drive.py"],
   "remediation": {
     "source": "issue#373",
     "criteria": "Reviewer validation accepts gemini* but no gemini lane exists"
   },
   "lanes": {
     "agy_safe": [
-      "relay-automation/marathon-drive.sh"
+      "utils/py/marathon_drive.py"
     ],
     "orchestrator_only": []
   }
