@@ -98,6 +98,13 @@ TESTS=(
   "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
   "gh346-gateway-allowlists.sh" # GH-346 Phase 2 (every agent-id allowlist agrees on the shipped gateway set)
   "gh346-profile-resolve.sh"    # GH-346 Phase 3a (one name -> harness/gateway/model; no tier may block a turn)
+  "gh368-same-lane-routing.sh"  # GH-368 (same-lane builder/reviewer routing)
+  "gh373-reviewer-validation.sh" # GH-373 (reviewer validation alignment)
+  "gh369-group-kill.sh"         # GH-369 (process-group kill for turn cap)
+  "gh370-progress-telemetry.sh" # GH-370 (worktree progress telemetry in supervisor poll)
+  "gh371-interrupt-snapshot.sh" # GH-371 (snapshot uncommitted tree on interruption)
+  "gh372-escalation-log-tail.sh" # GH-372 (escalation root cause tail)
+  "gh374-drift-path-filter.sh"  # GH-374 (drift-brief path-existence filter)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)

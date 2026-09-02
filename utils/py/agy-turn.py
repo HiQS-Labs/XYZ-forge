@@ -330,7 +330,10 @@ def main():
     if not f: die("RELAY_FILE required")
     if not agy_agent: die("AGY_AGENT required")
 
-    if me != agy_agent:
+    # GH-368: marathon-agent.sh has already selected this shim by lane membership. AGY_AGENT may
+    # name multiple same-lane actors (e.g. `agy,agy-qa`). Defer only if `me` is not in that set.
+    agy_agents = [a.strip() for a in agy_agent.split(",") if a.strip()]
+    if me not in agy_agents:
         print(f"agy-turn: actor {me} is not the agy agent ({agy_agent}) — deferring (window-driven)", file=sys.stderr)
         sys.exit(0)
 

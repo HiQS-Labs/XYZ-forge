@@ -135,6 +135,9 @@ def lanes(xyz_root: str) -> Dict[str, Dict[str, Any]]:
     src = _route_agent_source(xyz_root)
     out: Dict[str, Dict[str, Any]] = {}
     for lane, agent_var in re.findall(
+        # GH-368: AGY_AGENT accumulates same-lane actors with a join rather than a bare
+        # assignment.  The derivation intentionally keys on the env slot, not that assignment's
+        # right-hand side, so routing can evolve without growing a curated lane allowlist here.
         r"agent_id\.startswith\(\s*[\"']([a-z0-9_]+)[\"']\s*\)\s*:\s*os\.environ\[\s*[\"']([A-Z0-9_]+)[\"']\s*\]",
         src,
     ):

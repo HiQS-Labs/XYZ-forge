@@ -12,7 +12,7 @@ set -euo pipefail
 # Routing config (all optional; leave unset to skip that model):
 #   CLAUDE_AGENT      — agent id that routes to claude-turn.sh
 #   CODEX_AGENT       — agent id that routes to codex-turn.sh
-#   AGY_AGENT         — agent id that routes to agy-turn.sh (Antigravity CLI; permanent cross-model lane)
+#   AGY_AGENT         — comma-separated agent ids that route to agy-turn.sh (Antigravity CLI; permanent cross-model lane)
 #   AIDER_AGENT       — agent id that routes to aider-turn.sh (Aider via OpenRouter; OpenAI-standard lane)
 #   PI_AGENT          — agent id that routes to pi-turn.sh (Pi; explicit PI_MODEL required)
 #   SMALLCODE_AGENT   — agent id that routes to smallcode-turn.sh (SmallCode)
@@ -46,6 +46,19 @@ smallcode_agent="${SMALLCODE_AGENT:-}"
 commandcode_agent="${COMMANDCODE_AGENT:-}"
 deepseek_agent="${DEEPSEEK_AGENT:-}"
 
+# GH-368: a builder and reviewer may share the agy lane (for example `agy,agy-qa`).
+# Route by exact membership rather than treating AGY_AGENT as one overwrite-prone actor slot.
+agy_member=0
+if [[ -n "$agy_agent" ]]; then
+  IFS=, read -r -a agy_agents <<< "$agy_agent"
+  for agy_candidate in "${agy_agents[@]}"; do
+    if [[ "$me" == "$agy_candidate" ]]; then
+      agy_member=1
+      break
+    fi
+  done
+fi
+
 # RELAY_PEER threading: builder's peer is the reviewer; reviewer's peer is the builder.
 # A live turn that lacks an explicit peer can release to a literal role-string (Gemini 2026-06-15).
 if [[ -n "${MARATHON_BUILDER:-}" && -n "${MARATHON_REVIEWER:-}" ]]; then
@@ -56,6 +69,10 @@ if [[ -n "${MARATHON_BUILDER:-}" && -n "${MARATHON_REVIEWER:-}" ]]; then
   fi
 fi
 
+if [[ "$agy_member" -eq 1 ]]; then
+  exec "$HERE/agy-turn.sh"
+fi
+
 case "$me" in
   "$claude_agent")
     [[ -n "$claude_agent" ]] || die "RELAY_AGENT='$me' matched an empty CLAUDE_AGENT — set CLAUDE_AGENT"
@@ -64,10 +81,6 @@ case "$me" in
   "$codex_agent")
     [[ -n "$codex_agent" ]] || die "RELAY_AGENT='$me' matched an empty CODEX_AGENT — set CODEX_AGENT"
     exec "$HERE/codex-turn.sh"
-    ;;
-  "$agy_agent")
-    [[ -n "$agy_agent" ]] || die "RELAY_AGENT='$me' matched an empty AGY_AGENT — set AGY_AGENT"
-    exec "$HERE/agy-turn.sh"
     ;;
   "$aider_agent")
     [[ -n "$aider_agent" ]] || die "RELAY_AGENT='$me' matched an empty AIDER_AGENT — set AIDER_AGENT"
