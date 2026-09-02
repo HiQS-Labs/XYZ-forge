@@ -608,8 +608,15 @@ before_sidecar="$(fingerprint "$G38_FILE")"
 # agent2 does not own NEXT here, so its watch genuinely waits until the 1 s timeout.
 a2a watch --agent 2 --interval 0.05 --timeout 1 >/dev/null 2>&1 &
 G38_WATCH_PID=$!
-sleep 0.3
-[ -f "$(dirname "$G38_FILE")/runtime/agent2.watch" ] && pass "watch records its liveness in a per-agent sidecar while running" \
+# GH-345: this was a bare `sleep 0.3`, and mutation testing showed the assertion below was red at
+# 0.2s and green at 0.3s on an IDLE 10-core box — under 1.5x headroom for a backgrounded python3 to
+# start and stamp the marker. That is not a margin on a shared Linux runner under load, and it is
+# the exact failure shape #123 exists to close. Poll for the marker instead, the same way the flock
+# wait at :236 and the lock wait at :497 already do. Faster when the box is fast, patient when it
+# is not.
+G38_WATCH_SIDECAR="$(dirname "$G38_FILE")/runtime/agent2.watch"
+for _ in $(seq 1 100); do [ -f "$G38_WATCH_SIDECAR" ] && break; sleep 0.02; done
+[ -f "$G38_WATCH_SIDECAR" ] && pass "watch records its liveness in a per-agent sidecar while running" \
   || fail "no watch sidecar written"
 wait "$G38_WATCH_PID" 2>/dev/null
 [ ! -e "$(dirname "$G38_FILE")/runtime/agent2.watch" ] && pass "watch removes its liveness sidecar on exit" \
@@ -632,6 +639,10 @@ route_to 2   # agent1 must NOT own the turn, or its watch returns take-turn inst
 # the heartbeat and seeing the suite stay green.
 a2a watch --agent 1 --interval 0.1 --timeout 3 >/dev/null 2>&1 &     # waits ~30 intervals
 G38_LONG_WATCH_PID=$!
+# GH-345: this one MUST stay a fixed sleep — it is a measurement window, not a wait-for-an-event.
+# The assertion is that the marker stays FRESH across a long wait, and there is no condition to poll
+# for ("still fresh" is the thing being measured). Mutation confirms it is not fragile: it survives
+# being cut to 0.5. Do not "fix" it into a readiness poll the way :611 was fixed.
 sleep 2.5   # measure while the watch is still polling (the marker is removed on exit, GH-231)
 SIDECAR_AGE="$(python3 -c "import os,sys,time; print(int(time.time()-os.stat(sys.argv[1]).st_mtime))" "$(dirname "$G38_FILE")/runtime/agent1.watch" 2>/dev/null)"
 wait "$G38_LONG_WATCH_PID" 2>/dev/null
