@@ -1,6 +1,6 @@
 # Marathon Phase p1-routing-validation
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-ROUTING-VALIDATION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -145,3 +145,20 @@ Implemented same-lane AGY routing and reviewer validation alignment.
 
 Verification: `bash test/gh368-same-lane-routing.sh && bash test/gh373-reviewer-validation.sh`
 passed (4/0 and 4/0).
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed artifacts and test scripts:
+- `utils/py/marathon_drive.py`: `route_agent()` accumulates multiple `agy` actor IDs into `AGY_AGENT` via comma delimiter without overwriting. Validated builder/reviewer routing and binary probes.
+- `utils/py/profile_resolve.py`: `lanes()` correctly derives all 8 model lanes from `route_agent()` source matching the join accumulator shape; passes all 48 tests in `test/gh346-profile-resolve.sh`.
+- `relay-automation/marathon-agent.sh`: Membership parsing over comma-delimited `AGY_AGENT` correctly identifies same-lane actors (e.g., `agy` and `agy-qa`) and executes `agy-turn.sh`. `# GH-368` marker comment is present.
+- `utils/py/agy-turn.py`: Removed the strict equality check between `RELAY_AGENT` and `AGY_AGENT` while preserving `claim_task_or_exit()` tick ownership guard.
+- `relay-automation/marathon-drive.sh`: Gemini reviewer references removed from help/comments and reviewer validation restricted to `codex*|agy*`. `# GH-373` marker comment is present.
+
+**Issues found (Test Suite Portability):**
+1. `test/gh368-same-lane-routing.sh:73`: Uses `rg -q 'claim_task_or_exit\(' "$ROOT/utils/py/agy-turn.py"`. On environments where `rg` (ripgrep) is not installed on PATH, the command fails with `rg: command not found`, causing test failure (`FAIL: agy shim lost claim_task_or_exit ownership enforcement`). Use standard `grep -F -q 'claim_task_or_exit(' "$ROOT/utils/py/agy-turn.py"` or POSIX `grep -q 'claim_task_or_exit('` instead.
+2. `test/gh373-reviewer-validation.sh:41`: Uses `rg -q 'GH-373' "$DRIVE" && ! rg -q 'gemini' "$DRIVE"`. Similarly, on environments without `rg`, this fails with `rg: command not found` (`FAIL: fallback still contains Gemini validation or lacks its GH-373 marker`). Use standard `grep -q 'GH-373' "$DRIVE" && ! grep -q 'gemini' "$DRIVE"` instead.
+
+**Verdict:** Changes requested
