@@ -1,12 +1,12 @@
-commit: 36d142ed1b88c0e9241fced619438afdc55d6d6c
+commit: f1b59bd0d5f1433851d6c83630081a70e065e607
 result: green
 scope: full local suite (ci-local.sh, Darwin)
 host: Darwin 24.6.0
-recorded: 2026-09-02T05:22:19Z
-output-sha256: 652a8653afafcb21b9b23bcf837cdca963afdb067bf3ce506c3f599ae944254a
-output-bytes: 500923
+recorded: 2026-09-02T07:32:19Z
+output-sha256: 572ed261181c8748cfecaa3000812e74b4932097504d2c2b2efd539eed29684f
+output-bytes: 520075
 NOT-promotion-evidence: self-reported; promotion needs a hosted macOS run (GH-509)
-suites: 320 recorded
+suites: 330 recorded
 --- per-suite verdicts ---
 projection-idempotent.sh	pass
 concurrent-claim.sh	pass
@@ -53,6 +53,13 @@ gh346-telemetry-row-written.sh	pass
 gh346-registry-view-freshness.sh	pass
 gh346-gateway-allowlists.sh	pass
 gh346-profile-resolve.sh	pass
+gh368-same-lane-routing.sh	pass
+gh373-reviewer-validation.sh	pass
+gh369-group-kill.sh	pass
+gh370-progress-telemetry.sh	pass
+gh371-interrupt-snapshot.sh	pass
+gh372-escalation-log-tail.sh	pass
+gh374-drift-path-filter.sh	pass
 swe-diagram.sh	pass
 claude-turn.sh	pass
 commandcode-turn.sh	pass
@@ -143,6 +150,7 @@ improve-loop-dogfood.sh	pass
 gh430-state-dir-tracked-default.sh	pass
 gh536-evidence-detail.sh	pass
 gh544-parallel-default.sh	pass
+gh379-canary-uses-validate.sh	pass
 gh544-pre-push-gate.sh	pass
 gh35-test-tiers.sh	pass
 gh365-runner-envelope.sh	pass
@@ -216,6 +224,7 @@ gh57-releases-fuzz.sh	pass
 gh57-live-merge-resolve.sh	pass
 gh69-roadmap-shadow.sh	pass
 gh351-manifest-unship.sh	pass
+gh360-scoped-receipt-chain-rebuild.sh	pass
 gh349-releases-roadmap-vendored.sh	pass
 gh362-marathon-plan-link-bullets.sh	pass
 gh358-wave-reconcile-vendored-paths.sh	pass
@@ -291,6 +300,7 @@ gh238-hq-releases-mode.sh	pass
 gh239-hq-status-releases-mode.sh	pass
 gh243-dashboard-staleness-guard.sh	pass
 gh257-roadmap-ledger-fixes.sh	pass
+gh353-vendored-router-audit.sh	pass
 jog-queue.sh	pass
 gh290-ate-variation-grid.sh	pass
 gh291-contract-goldens.sh	pass

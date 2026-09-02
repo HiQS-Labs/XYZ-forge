@@ -69,11 +69,15 @@ recorded rc=1 correctly).
 
 ## Qualifying run (step 1 gate, final commit 76174765)
 
-**PASS at the resolved code head 36d142ed** — rc=0, 2132s, all steps green including the
-clone-identity invariant, tree clean at exit, gate record written with its output-sha256. This is
-the first qualifying run executing the authoritative set (every registered suite +
-`python:test_python_layer.py` + `gamma-poison-staleness-probe`, per the GH-377 review's blocker 1);
-both lanes are in the record's verdict list. Denominator: 318 registered + 3 non-suite. The pre-rebase run at 5891d018 (rc=0, 1774s) is retained as
+**PASS at the resolved code head `f1b59bd0`** (after re-review 5504874543's fixes AND a second
+development merge, ebe99e50) — all steps green including the clone-identity invariant, tree clean
+at exit, gate record written with its output-sha256, `python:test_python_layer.py` and
+`gamma-poison-staleness-probe` in the record's verdict list. **Denominator at this head: 328
+registered + 3 non-suite** (development kept moving while this branch cycled reviews: 318 → 328
+via the #356/#364/#385 lanes; every receipt pins the count at ITS head). Two intermediate runs
+are part of the record: the 36d142ed run (green, pre-re-review) and the first ebe99e50-merged run
+(refused — the new registry guards caught development's gh370/371/372 as unclassified, which is
+the guards working, resolved by audited exemptions in f1b59bd0). The pre-rebase run at 5891d018 (rc=0, 1774s) is retained as
 history in provenance; it predates both the rebase and the lane fix.
 
 Two runs before THAT were REFUSED by the new bracket itself — it caught a stray repo-root `-a`
