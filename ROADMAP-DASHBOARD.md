@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 31 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -40,6 +40,7 @@ Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-346 · Speed up harness → gateway → model resolution with a real cache | — | [GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md](PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md) · [#346](https://github.com/HiQS-Labs/XYZ-forge/issues/346) |
 | GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
 | GH-365 · Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/promotion lanes | — | [doc](PROJECT/1-INBOX/GH-365-TEST-SUITE-RECALIBRATION.md) · [#365](https://github.com/HiQS-Labs/XYZ-forge/issues/365) |
+| GH-345 · Sleep-vs-readiness audit: one confirmed race in the agent-chorus doorbell assertion, and the case against the paid Test Reliability tier | — | [GH-345-SLEEP-READINESS-AUDIT.md](PROJECT/1-INBOX/GH-345-SLEEP-READINESS-AUDIT.md) · [#345](https://github.com/HiQS-Labs/XYZ-forge/issues/345) |
 
 ## Queue
 
