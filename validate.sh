@@ -102,6 +102,8 @@ TESTS=(
   "gh373-reviewer-validation.sh" # GH-373 (reviewer validation alignment)
   "gh369-group-kill.sh"         # GH-369 (process-group kill for turn cap)
   "gh370-progress-telemetry.sh" # GH-370 (worktree progress telemetry in supervisor poll)
+  "gh371-interrupt-snapshot.sh" # GH-371 (snapshot uncommitted tree on interruption)
+  "gh372-escalation-log-tail.sh" # GH-372 (escalation root cause tail)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
