@@ -424,7 +424,10 @@ esac
 
 # A2: the escape hatch still exists, so the guard is a decision and not a wall. Asserted on the
 # flag surface rather than by opening a real tunnel in a test.
-python3 "$BRIDGE" --help 2>&1 | grep -q -- '--insecure-allow-unauthenticated' \
+# capture-then-match, never a pipe into a quiet grep (GH-139): `grep -q` exits at its first match
+# and the writer dies of SIGPIPE, which is nondeterministically red under `set -o pipefail`.
+_help_out="$(python3 "$BRIDGE" --help 2>&1)"
+grep -q -- '--insecure-allow-unauthenticated' <<<"$_help_out" \
   && pass "A2: --insecure-allow-unauthenticated is available as an explicit opt-out" \
   || fail "A2: no documented way to intentionally run an open bridge"
 
