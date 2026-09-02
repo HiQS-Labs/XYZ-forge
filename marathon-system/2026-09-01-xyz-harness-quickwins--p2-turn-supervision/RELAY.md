@@ -1,5 +1,5 @@
 # Marathon Phase p2-turn-supervision
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-SUPERVISION-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -113,6 +113,33 @@ a new session and retains its process-group containment behavior. No telemetry b
 
 Verification: `bash test/gh369-group-kill.sh` (6 pass, 0 fail) and
 `bash test/gh370-progress-telemetry.sh` (4 pass, 0 fail).
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+#### Findings & Verification
+
+1. **[Pass] GH-369 Bash Process-Group Timeout Containment (`relay-automation/relay-turn-lib.sh:530-559`)**
+   - Confirmed that `relay-automation/relay-turn-lib.sh::rtl_run_bounded` launches the command in a new session (`os.setsid()`) and directly targets `-$apid` on timeout expiration. This eliminates the race condition and caller self-kill hazard.
+   - Verified that `test/gh369-group-kill.sh` passes 6/6 tests (`Bash grandchild is gone after the timeout` and timeout exit 7).
+
+2. **[Pass] GH-369 Python Twin Parity (`utils/py/rtl.py:223-266`)**
+   - Confirmed that `utils/py/rtl.py::rtl_run_bounded` sets `start_new_session=True`, captures the process group ID via `ps`/`os.getpgid`, kills the process group with `os.killpg(pgid, signal.SIGKILL)` on `subprocess.TimeoutExpired`, and returns exit code 7.
+   - Verified that `test/gh369-group-kill.sh` confirms Python twin parity and grandchild cleanup.
+
+3. **[Pass] GH-370 Worktree Progress Telemetry (`utils/py/relay_drive.py:575-648`)**
+   - Confirmed that `utils/py/relay_drive.py` implements live progress telemetry with dynamic `rtl-wt.*` worktree discovery and main tree fallback, logging porcelain status file counts on `RELAY_PROGRESS_INTERVAL_S`.
+   - Verified that `test/gh370-progress-telemetry.sh` passes 4/4 tests.
+
+4. **Sweep Summary (`GH-268`):**
+   - `relay-automation/relay-turn-lib.sh`: swept file: yes (clean, no defects).
+   - `utils/py/rtl.py`: swept file: yes (clean, no defects).
+   - `utils/py/relay_drive.py`: swept file: yes (clean, no defects).
+   - `test/gh369-group-kill.sh`: swept file: yes (clean, passes 6/6).
+   - `test/gh370-progress-telemetry.sh`: swept file: yes (clean, passes 4/4).
 
 ---
 
