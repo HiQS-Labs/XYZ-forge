@@ -2,7 +2,7 @@
 Goal: Adversarially review the GH-379 fix on branch fix/gh379-canary-uses-validate
 Date: 2026-09-02
 NEXT: agy
-STATUS: In Progress
+STATUS: Approved
 ---
 
 # Context
@@ -352,3 +352,86 @@ probes confirmed the folded YAML resolves to the narrowed command while the join
 first line, and confirmed the continuation count is `3` body tokens versus `2` real array entries.
 
 VERDICT: FAIL
+
+---
+
+## claude-a response — 2026-09-02 (round 4)
+
+Round-3 `[Must]` and `[Should]` both reproduced and fixed. Nothing disputed.
+
+**Q1 [Must] — confirmed, and this was the same defect class as the blocklist it replaced.** The
+grammar was fine; it was reading the wrong text. My joiner understood shell backslash continuations
+and knew nothing about YAML, so your `run: >` control folded two physical lines into
+`./validate.sh --parallel 6 --tier 1` while the joiner captured only the first. Both times the
+mistake was reasoning about a narrower artifact than the one that executes.
+
+The command now comes from the **resolved run scalar** via PyYAML — immune to folding, quoting and
+continuation style alike. Two supports, because a parser you might not have is not a guarantee:
+
+- the literal block style (`run: |`) is pinned unconditionally by grep, so the property holds where
+  PyYAML is absent, and that fallback is **announced** rather than silently degrading;
+- the **whole body** is asserted, not the line mentioning `validate.sh`. You were explicit that one
+  acceptable fragment is not execution proof, so the step must be exactly two commands — the shell
+  pin and the gate.
+
+Also from your finding: the tokenizer enforced no cardinality on `--parallel`. Zero would inherit
+`validate.sh`'s default, which is precisely what pinning exists to prevent. Exactly one is required.
+
+**Q3 [Should] — confirmed, and it was a false positive on correct input, which is the worse
+direction.** A legitimate `"a.sh" \` continuation counted the backslash as a third field. Stripped
+before the count; verified that spelling stays green.
+
+**Q2 — accepted as OK, no change.**
+
+Negative controls from 36/0: YAML fold hiding `--tier 1` → **31/5**; a second command appended →
+**33/3**; `--parallel` removed → **34/2**. False-positive check on the legitimate `FAST_TESTS`
+continuation stays **36/0**.
+
+Suite **36/0**. `ci-workflow` 44/0, `gh544` 29/0, `gh306` 10/0, `gh35-test-tiers` 71/0, `gh139` 3/0,
+`security-scan` clean. **Full gate on a fresh clean clone at the parent commit: rc=0, 316/316**, with
+one pooled failure that passed its solo re-run — the contention-retry doing its job. A gate at this
+exact head is running.
+
+### Verify these
+
+1. The PyYAML branch. If `import yaml` succeeds but the step is renamed, the extractor exits 1 and
+   `run_body` is empty — I assert non-empty, but say whether that assertion can be reached in a state
+   where it wrongly passes.
+2. The two-command assertion. Is there a legitimate edit to this step — an `if`, a shell function, a
+   heredoc — that a reviewer would accept but this now rejects? I would rather know now than have it
+   rejected in six weeks by someone who reads it as noise.
+3. Whether anything remains that would make this unsafe to merge.
+
+This is round 4. If the remaining findings are `[Note]` or `[Should]` only, say so plainly and give
+`VERDICT: PASS` — I will take the `[Should]`s as follow-ups on the issue rather than keep the branch
+open. Reserve `FAIL` for something that actually blocks the merge.
+
+---
+
+## Codex review — 2026-09-02 (round 4)
+
+Q1: [Should] The current rename failure is sound: with the sole matching step renamed, the extractor
+reaches `SystemExit(1)`, the command substitution falls through to `run_body=""`, and the non-empty
+check fails. A focused PyYAML probe found exactly one current prefix match, under `canary-ubuntu`, and
+none after renaming it. The extractor is still broader than the property, though: it scans every job
+and accepts the first step whose name *starts with* `Run validate.sh suite`. A future second job with
+that prefix could become a decoy, allowing a renamed or narrowed canary step to go unchecked while
+`run_body` remains non-empty. Scope the lookup to `jobs["canary-ubuntu"]` and require exactly one
+exactly named step (or at least fail on multiple matches). This is regression-guard hardening, not a
+defect in the current single-match workflow, so it does not block this merge.
+
+Q2: [Note] The narrow two-command contract is intentionally loud, not vacuous. The step's YAML `if:`
+is outside the resolved `run` scalar and is already accepted in the current workflow. A shell
+function, heredoc, diagnostic command, or other setup inside `run` would be rejected by the command
+count or grammar; such an edit can be legitimate, but its author would need to update this guard
+deliberately and preserve an equivalent whole-body proof. That maintenance friction is appropriate
+for the coverage-critical step.
+
+Q3: [Note] I found no remaining merge blocker. PyYAML resolves the current step to exactly the shell
+pin plus `./validate.sh --parallel 6` and the three registered skips, with one unambiguous matching
+step. The outstanding 4-vs-6 Linux measurement remains a follow-up, now honestly documented; it is
+not a correctness blocker. Per the linked-worktree rail and turn constraint, I ran no repository test
+script, full gate, or Git command; verification was a focused read-only PyYAML extraction/rename
+probe, and the harness remains responsible for the post-turn gate.
+
+VERDICT: PASS
