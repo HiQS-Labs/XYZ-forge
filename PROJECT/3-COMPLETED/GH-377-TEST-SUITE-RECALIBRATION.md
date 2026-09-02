@@ -2,9 +2,9 @@
 gh_issue: 377
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/377
 title: "GH-377: finish the #365 test-suite recalibration — baseline, receipts, matrix, qualifying run (supersedes #365)"
-status: In progress (2-WORKING — execution continues under the #377 tracker; #365 closed in its favor)
+status: Complete
 created: 2026-09-01
-updated: 2026-09-01
+updated: 2026-09-02
 owner: agent-b (orchestrator: GLM 5.3)
 goal: Cut recoverable validation latency (runner-envelope drift, process-heavy governance, static-analysis duplication, long-tail suites) without weakening containment, timeout, or promotion coverage — correctness and falsifiability land before optimization.
 doc_type: plan
