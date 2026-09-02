@@ -256,3 +256,68 @@ teardown — the same rule as `AGENTS.md` §6.
    diff size vs logical scope, gate evidence on the final SHA), merges pinned to the
    reviewed head — and **independently verifies any claim the gate cannot prove** (the
    gate-invisible example: a suite exempted from the registry as "pre-existing red").
+
+### The project website (GitHub Pages) — edit, update, deploy
+
+`PAGES/` is the root of the live site at <https://hiqs-labs.github.io/XYZ-forge/>.
+There is no upload step and no build step for the static pages: what is committed to
+`PAGES/` is what gets served. Deploy happens in `.github/workflows/pages.yml`
+(Pages is enabled with **Source: GitHub Actions**, i.e. `build_type=workflow` — a custom
+folder like `PAGES/` is not servable from the "deploy from a branch" mode, which only
+supports `/` and `/docs`).
+
+**Two kinds of pages, two rules:**
+
+- **Static pages** (`index.html`, `use-cases.html`, `how-it-works.html`, `faq.html`,
+  `contact.html`, `issues.html`, `assets/style.css`, `robots.txt`, `sitemap.xml`) —
+  hand-edit the HTML directly. `issues.html` is an instant-redirect stub to the GitHub
+  issue tracker (noindex, no nav — deliberate).
+- **Generated pages** (`roadmap.html`, `models-harnesses.html`) — **never hand-edit.**
+  They are baked from the committed ledgers by `utils/py/site_build.py`
+  (roadmap ← `releases_app.py roadmap list --json`; models ← `harnesses.db`) and are
+  regenerated at deploy time, so a hand edit is silently overwritten on the next deploy.
+  Change their *data* through the normal ledger verbs (`releases_app`, `harness_app`);
+  change their *look* in the generator's render functions, then re-run it.
+
+**Edit + refresh the generated copies locally:**
+
+```bash
+python3 utils/py/site_build.py           # rewrite the two generated pages from the ledgers
+python3 utils/py/site_build.py --check   # informational: are committed copies stale?
+```
+
+**Preview locally** (loopback only — never bind a preview server to anything but
+127.0.0.1; see §3b on network paths):
+
+```bash
+cd PAGES && python3 -m http.server 8765 --bind 127.0.0.1
+# then open http://127.0.0.1:8765/ — links are relative, so they work under any prefix
+```
+
+**Deploy ("upload"):** commit and push to `development` (or `main`). The workflow
+triggers on changes to `PAGES/**`, `utils/py/site_build.py`, `utils/py/releases_app.py`,
+`releases.db`/`releases.sql`, `harnesses.db`/`harnesses.sql`, and the workflow file —
+so a ledger push republishes the roadmap even when nobody re-ran the builder. To
+redeploy without a push: `gh workflow run pages.yml --ref development`. Verify with
+`gh run watch <id>` and a `curl -sI` of the live URL; the concurrency group (`pages`)
+cancels superseded runs, so only one deploy lands at a time. The normal pre-push gate
+applies (~8 min if code paths are touched).
+
+**Site-specific rails:**
+
+- **Everything in `PAGES/` is publicly served.** No scratch files, notes, or drafts in
+  there (the near-miss: `PAGES/TEMP.md` research notes would have shipped as a public
+  page; they now live in `temp/`). Scratch goes to `temp/`, never the site root.
+- **Relative links only.** The site serves under `/XYZ-forge/`; an absolute path like
+  `/assets/style.css` 404s in production while working in some local previews.
+- **Adding a page means three edits:** the new file, the nav link in every static page
+  *and* the `NAV` list in `utils/py/site_build.py` (the generator does not read the
+  static pages), and a `<url>` entry in `sitemap.xml` (the sitemap is static).
+- **`google<token>.html` stays.** It is the Search Console verification file; deleting
+  it un-verifies the property. It is meant to be public.
+- **Do not copy the timeline template's styling into the site.**
+  `utils/timeline/RELEASES.html` is AGPL-derived (Neochrome); the site's own stylesheet
+  exists partly to keep that license out of the public site.
+- **Empty ledgers fail the deploy on purpose.** `site_build.py` exits 2 if a query
+  returns zero rows (an empty page would otherwise look like success — AGENTS.md §6).
+  Fix the data, don't bypass the guard.
