@@ -1,5 +1,5 @@
 # Marathon Phase p1-routing-validation
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-ROUTING-VALIDATION-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -174,3 +174,17 @@ Addressed the reviewer’s portability findings without changing the routing beh
 
 Verification: `bash test/gh368-same-lane-routing.sh && bash test/gh373-reviewer-validation.sh`
 passed (4/0 and 4/0). Both tests no longer require ripgrep on PATH.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+Whole-file review and verification findings:
+- `test/gh368-same-lane-routing.sh`: Replaced `rg` with `grep -F -q` for `claim_task_or_exit(` guard check. Passes cleanly (4/0).
+- `test/gh373-reviewer-validation.sh`: Replaced `rg` with `grep -F -q` for `GH-373` and `gemini` checks. Passes cleanly (4/0).
+- `test/gh346-profile-resolve.sh`: All 48 test cases pass cleanly (48/0).
+- Whole-file sweep across all touched files (`utils/py/marathon_drive.py`, `utils/py/agy-turn.py`, `relay-automation/marathon-agent.sh`, `relay-automation/marathon-drive.sh`, `utils/py/profile_resolve.py`, and test files): No remaining or pre-existing defects found in the touched files.
+
+relay closed, no further turn needed.
