@@ -1,7 +1,7 @@
 ---
 Goal: Adversarially review the GH-379 fix on branch fix/gh379-canary-uses-validate
 Date: 2026-09-02
-NEXT: codex
+NEXT: agy
 STATUS: In Progress
 ---
 
@@ -115,3 +115,54 @@ Answer each as `Q<n>: [Must|Should|Note] <finding>` or `Q<n>: OK — <one line w
 `VERDICT: PASS` or `VERDICT: FAIL`.
 
 ---
+
+## Codex review — 2026-09-02
+
+Q1: [Must] `SKIPPED_SUITES=()` is initialized on every path that reaches the summary, so I do not
+find the proposed tier-2/`--paths-file` unbound-array crash. The filter is still too late: tier 1
+exits at lines 917–922 before skip names are validated at lines 995–1001. An isolated probe of
+`validate.sh --tier 1 --skip definitely-not-a-suite.sh` returned 0, contradicting the stated hard
+error guarantee. Validate requested names immediately after argument parsing, then filter
+`RUN_TESTS` after tier selection.
+
+Q2: OK — composition is right for an additive set-valued quarantine; unlike the scalar concurrency
+width, an explicit skip does not logically replace other requested skips. The comma split restores
+`IFS`, trims both ends, ignores empty fields, and duplicates collapse when the selected run set is
+filtered.
+
+Q3: [Should] pinning is better than silently inheriting a changing default, but 6 is not supported by
+the cited measurement and the rationale overstates its headroom. `validate.sh` runs the six-worker
+pool alongside one serialized driver-lock lane, so the peak is seven suite processes on the
+eight-core runner, not six. Measure 4/6 on that runner or pin the balanced four-worker width until
+there is Linux evidence for 6.
+
+Q4: [Should] removing the workflow's registry scrape is the correct inversion; the old parity check
+protected agreement between two incomplete runners, a property no longer worth keeping. The new
+`ci-local.sh` branch is not an assertion, though: both outcomes call `pass`, and a different
+hand-rolled parse would also pass. Make it distinguish the known debt, no re-derivation, and an
+unknown replacement re-derivation; otherwise the claimed tracking is only prose.
+
+Q5: [Must] the central reachability assertion is vacuous. Negative control: replacing the canary
+command with `./validate.sh --parallel 6 --tier 1` made the GH-379 test report **23 pass, 0 fail**,
+even though tier 1 exits before Python, clone identity, and gamma-poison execute. The three ownership
+greps prove only that result labels remain in `validate.sh`; they do not prove the canary selects the
+tier-3 path that reaches them. Scope the command assertion to `full_step` and reject tier/selector
+flags (or positively assert the effective tier-3 invocation). The two named extraction guards are
+not vacuous: an empty full-step extraction fails its `validate.sh` check, and an empty `FAST_TESTS`
+extraction fails `test -n`. Also, the file currently executes 23 assertions, not the stated 21.
+
+Q6: OK — the current workflow command selects no tier, `TIER` defaults to 3, and
+`RELAY_SELF_SUFFICIENCY_SKIP=1` only makes the registered live-agent shell suite self-skip. On this
+path pytest and gamma are tier-3 lanes, while clone identity is unconditional after the shell suites;
+all three are reachable. Q5 means that property is not regression-pinned.
+
+Q7: [Note] current failure propagation is intact: a nonzero validator result fails the step under
+`set -e`, the `if: always()` verdict observes the prior status, and job-level
+`continue-on-error: true` keeps the Ubuntu result advisory. The validator replaces the deleted
+loop's continue-through-failures behavior with pooled result collection and serial retry. No other
+load-bearing loop behavior appears lost. Per the turn constraint, I reviewed the working-tree files
+and did not run the requested Git log/diff. Focused evidence is under
+`.relay-scratch/gh379-probe/test-output.log`, `.relay-scratch/gh379-tier1-control/test-output.log`,
+and `.relay-scratch/gh379-probe/tier1-invalid-skip.log`; no full gate ran.
+
+VERDICT: FAIL
