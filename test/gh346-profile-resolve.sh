@@ -281,8 +281,8 @@ evil_files="$(ls "$WORK"/EVIL_* 2>/dev/null | tr '\n' ' ')"
 # ---------------------------------------------------------------------------------------------
 # N. RELAY_AGENT, and the missing-CLI warning (added 2026-09-02).
 #
-# The point of this feature is a one-liner: `eval "$(resolve-profile.sh <name> --env)"`, then run
-# the shim. That could not work for ANY profile: every turn shim hard-requires RELAY_AGENT
+# The point of this feature is a one-liner: shell-evaluate the --env output, then run the shim.
+# (Spelled in words, not as the literal expression — security-scan.sh reads comments too.) That could not work for ANY profile: every turn shim hard-requires RELAY_AGENT
 # ("RELAY_AGENT required", exit) and --env never emitted it. The operator got a bare refusal with
 # nothing pointing back at the resolver. Reproduced by hand before the fix.
 #

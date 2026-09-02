@@ -167,6 +167,17 @@ This was written after a mutation test removed a tunnel guard and stood up a rea
 local transcript store for about two minutes, unasked. The exposure was small and closed quickly.
 The reason it is a rule anyway is that nothing in the process would have stopped a larger one.
 
+### The guards read comments — an example in prose fails the scan just like real code
+
+`security-scan.sh` and `gh139-pipe-grep-guard.sh` are static text scans over the whole file. Writing
+the banned shape into a comment to *explain* it fails the guard exactly as writing it in code does.
+This happened four separate times in one session — a piped quiet grep, a credential-looking
+assignment, a shell-eval example, and a comment explaining one of the other three.
+
+Describe the shape in words rather than reproducing it, and run `security-scan.sh` plus
+`gh139-pipe-grep-guard.sh` locally **before** pushing new guard-adjacent shell. The full gate takes
+about nine minutes to tell you the same thing.
+
 ### A test that starts a server must kill the server, not the shell that launched it
 
 Backgrounding `( ... ) &` and killing `$!` reaps the **subshell**. A `python3`/`node` child it
