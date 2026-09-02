@@ -1,8 +1,8 @@
 ---
-gh_issue: 365
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/365
-title: "GH-365: test-suite recalibration — finish tiering, prove parallel equivalence, and define smoke/promotion lanes"
-status: In progress (2-WORKING — execution began 2026-09-01)
+gh_issue: 377
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/377
+title: "GH-377: finish the #365 test-suite recalibration — baseline, receipts, matrix, qualifying run (supersedes #365)"
+status: In progress (2-WORKING — execution continues under the #377 tracker; #365 closed in its favor)
 created: 2026-09-01
 updated: 2026-09-01
 owner: agent-b (orchestrator: GLM 5.3)
@@ -20,7 +20,12 @@ fix_probes:
   - bash test/gh365-shellcheck-parallel.sh
 ---
 
-# GH-365 · Test-suite recalibration
+# GH-377 · Test-suite recalibration (supersedes #365)
+
+> Tracker note: #365 was closed in favor of [#377](https://github.com/HiQS-Labs/XYZ-forge/issues/377),
+> which carries the six completion gaps (baseline, real-push latency receipts, committed campaign
+> receipts, the operator matrix, the smoke-lane decision, final qualification + PR). This doc is the
+> same plan of record, executed under the #377 tracker; the branch PR closes #377.
 
 ## Status
 
@@ -97,6 +102,31 @@ equivalence gate passes.
 - Prove or bound parallel equivalence with committed multi-width receipts.
 - Add a smoke lane only if observed XYZ defects justify it and a witnessed red control falsifies it.
 - Preserve full sequential macOS promotion evidence unless a later explicit decision changes it.
+
+## Route/width matrix — the operator-facing contract (step 9)
+
+Measured numbers are this branch's committed receipts (10-core Apple Silicon, quiet host);
+exploratory-profile numbers are labelled as such. Evidentiary meaning is the column that matters:
+**only the hosted macOS boundary promotes** (GH-509); everything local is self-reported.
+
+| Trigger | What runs | Wall (measured) | CPU policy | Skip/retry behavior | Evidentiary meaning |
+| --- | --- | --- | --- | --- | --- |
+| Local edit, docs-only paths (`validate.sh --auto` → tier 1) | docs/governance gate (PDDA + local checks) | ~35s (was ~100s pre-step-4) | sequential, nice | none needed | Feedback only |
+| Local edit, mapped subsystem paths (tier 2) | that subsystem's registered suites + docs gate if docs paths present | ~20–60s per lane (real-push: 44s releases lane, 18 suites) | 2 workers, nice | fails closed to tier 3 on unmapped/zero-test | Feedback only |
+| Any `git push` (githooks/pre-push, classified tier) | the tier's set; kernel/test/workflow/runner/unmapped → tier 3 full | real-push receipts: tier-1 34s; full ≈ 8 min at 4-wide | 4-wide balanced, nice | contended suites re-run alone, classified CONTENTED and named (GH-15) | Push boundary; self-reported |
+| Full parallel validate (tier 3, default) | every registered suite + pytest + identity + gamma under the shared envelope | ~8–9 min at 4-wide (campaign: 2.02×/3.53×/4.33× at 2/4/8) | 4-wide default; `--burst` 8 | as above; envelope drift invalidates the receipt | Feedback + drift detection; NOT promotion |
+| `ci-local.sh` (the qualifying run) | static checks + 4-wide ShellCheck + PDDA + npm + **every suite sequentially + pytest + gamma-poison** under the shared envelope | ~30 min (receipt: 1774s) | sequential; ShellCheck scan 4-wide | refused gate-record FAILS the run; envelope bracket attests | Self-reported verification; writes `.gate-evidence/<sha>`; NOT promotion |
+| Hosted macOS boundary (ci.yml) | the same full sequential suite on a clean runner | hosted | hosted | hosted | **THE promotion evidence** — unchanged by this plan |
+| Campaign route (this issue) | multi-width clean+mutant legs in fresh clones, identity brackets, telemetry receipts | hours; quiet host only | per-width | a contention-skipped leg is INVALID, not equivalent | Timing/equivalence evidence only; pinned-head historical |
+
+**Smoke-lane decision: NOT added.** The plan's bar is "failure history shows it catches a real
+defect materially earlier than fail-closed tier routing." The defect classes this work actually
+hit — identity/tree drift (GH-564/567 family), contention-skips (#367), registry drift (step 8's
+first run caught gh153 genuinely unregistered), a BSD-tee stray file and a directive-typo comment
+(both caught by the new envelope on its own qualifying runs) — were caught by brackets and guards
+that now run in **every** route, not by any small deterministic subset. A smoke lane would re-run
+pieces of what every route already executes; it fails the "demonstrably earlier" test. Revisit
+only with a defect class the brackets provably miss.
 
 ## Preflight Contract
 

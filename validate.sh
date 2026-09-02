@@ -97,6 +97,7 @@ TESTS=(
   "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
   "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
   "gh346-gateway-allowlists.sh" # GH-346 Phase 2 (every agent-id allowlist agrees on the shipped gateway set)
+  "gh346-profile-resolve.sh"    # GH-346 Phase 3a (one name -> harness/gateway/model; no tier may block a turn)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
@@ -324,6 +325,11 @@ TESTS=(
                                  #   a two-header dump (what a naive merge=union leaves) and a dump
                                  #   with conflict markers are both refused, not rebuilt. 18/0
   "gh54-merged-dump-refusals.sh" # #54 (check --rebuild must REFUSE merge damage by name, not throw).
+  "gh360-dump-multiline-values.sh" # GH-360 (a dumped value containing a newline must round-trip) —
+                                  #   INSERT_RE lacked re.DOTALL, so parse_dump could never match a
+                                  #   multi-line statement: the buffer swallowed every INSERT after it
+                                  #   and `check --rebuild` refused with rule=dump-parse, killing the
+                                  #   only documented git-merge resolution path for such a ledger.
                                  #   Every fixture is built by really merging two divergent branches
                                  #   and mangling the dump the way a union would — a refusal test
                                  #   whose fixture cannot occur proves nothing. Covers the two-header
@@ -377,6 +383,14 @@ TESTS=(
                                   #   GH_URL matcher keeps its issue-only contract.
   # NB: test/gh358-lock-instrumentation.sh below carries a "GH-358" from the pre-rename numbering;
   # this one is HiQS-Labs/XYZ-forge#358. Distinct files, deliberately not renumbered.
+  "gh362-marathon-plan-link-bullets.sh" # GH-362 (the planner reads link-style ledger bullets) —
+                                  #   GH-349 made `- [Title](path)` first class in releases_app.py, whose
+                                  #   parse_roadmap_ledger promises "the same block boundaries as the
+                                  #   planner". Both planner engines still tested `- **` only, so such a
+                                  #   ROADMAP parsed as ZERO items and exit 3 named the one thing that was
+                                  #   not wrong. Asserts BOTH engines (XYZ_PYTHON=1 and 0), that the GH key
+                                  #   comes from the link label and not from prose, and that `- [ ]` task
+                                  #   items are still not entries.
   "gh358-wave-reconcile-vendored-paths.sh" # GH-358 (wave_reconcile's five HARNESS tools resolved
                                   #   repo-root-relative, so on a vendored install — where they exist only under
                                   #   <repo>/.xyz/ — the reconciler died on its first downstream step with
