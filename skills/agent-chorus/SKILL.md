@@ -433,6 +433,26 @@ repo-relative file paths and line ranges against the repository tree and git com
   --id 123456
 ```
 
+## Cross-device bridge over Cloudflare Tunnel (GH-384)
+
+When participants are located on different machines, run the localhost HTTP bridge to expose structured
+AgentChorus operations over Cloudflare Tunnel without relaxing single-writer locking, atomic file replacement,
+or transcript storage boundaries:
+
+```bash
+"$AGENT_CHORUS" bridge \
+  --port 8080 \
+  --idle-timeout 600 \
+  --tunnel
+```
+
+- **Dual authentication:** validates `CF-Access-Client-Id` / `CF-Access-Client-Secret` (when configured) and
+  issues seat-scoped random bearer capability tokens upon `join`.
+- **10-minute idle lease:** inactive sessions expire automatically after 10 minutes (renewed on every authenticated
+  turn, poll, status check, or heartbeat) while preserving the canonical local transcript.
+- **Off-device participants:** interact with the bridge using `scripts/agent_chorus_client.py` or any standard
+  HTTPS REST client.
+
 ## Guardrails
 
 - **A conditional teardown instruction is permission to check its condition, not to assume it —

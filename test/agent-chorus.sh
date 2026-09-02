@@ -69,9 +69,9 @@ grep -Fq -- '<this-skill>' "$SKILL" \
 # not from `git rev-parse --show-toplevel` (which fails outside an XYZ-forge clone). The Phase 2
 # `start --supersedes`, `invite`, and `verify-citations` examples now follow the same rule.
 helper_examples="$(grep -c '^"\$AGENT_CHORUS" ' "$SKILL")"
-[ "$helper_examples" -eq 16 ] \
+[ "$helper_examples" -eq 17 ] \
   && pass "all skill commands use the quoted skill-relative helper variable" \
-  || fail "expected 16 \$AGENT_CHORUS helper commands, found $helper_examples"
+  || fail "expected 17 \$AGENT_CHORUS helper commands, found $helper_examples"
 grep -Fq -- '$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py' "$SKILL" \
   && pass "skill still documents the in-repo helper path for XYZ-forge clones" \
   || fail "skill lost the in-repo helper path note"
