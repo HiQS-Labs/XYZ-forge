@@ -129,6 +129,8 @@ EXEMPT_reason() {
     gh401-dry-run-no-mutation.sh)           echo "fixture root: MARATHON_ROOT=\$MROOT (line 45)" ;;
     gh402-branch-enforcement.sh)            echo "fixture root: MARATHON_ROOT=\$WORK (4 sites)" ;;
     gh407-gate-ran-attribution.sh)          echo "fixture root: MARATHON_ROOT=\$WORK + stubs" ;;
+    gh371-interrupt-snapshot.sh)            echo "copied fixture harness at \$HARNESS: drivers are cp'd into it and MARATHON_ROOT=\$HARNESS puts the lock inside the copy (caught by D2 when development added the suite — the audit working)" ;;
+    gh372-escalation-log-tail.sh)           echo "copied fixture harness at \$HARNESS, same shape as gh371: MARATHON_ROOT=\$HARNESS + stub relay-drive (caught by D2 when development added the suite)" ;;
     *)                                      return 1 ;;
   esac
 }

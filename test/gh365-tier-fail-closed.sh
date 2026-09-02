@@ -83,6 +83,9 @@ EXEMPT_from_family() {  # <suite> -> 0 when exempt (reasons inline), 1 when it m
     gh382-marathon-memory-telemetry.sh) return 0 ;;
     # runner/gate surface (GH-365 step 2): deliberately tier 3, never a subsystem lane:
     gh365-validate-telemetry.sh) return 0 ;;
+    # relay-supervisor progress reporting (relay-drive domain), not the utils/telemetry/ subsystem
+    # (caught by T2 when development added the suite — the reverse-registry guard working):
+    gh370-progress-telemetry.sh) return 0 ;;
     *) return 1 ;;
   esac
 }
