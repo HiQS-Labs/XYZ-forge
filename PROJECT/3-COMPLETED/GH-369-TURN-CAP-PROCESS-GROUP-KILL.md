@@ -4,13 +4,13 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/369
 title: "rtl_run_bounded's PID-only kill lets a multi-process CLI outlive its turn cap (observed: 78 min past a 2400 s cap)"
 goal: >
   the turn wall-clock cap must kill the whole process group, not just the launched PID
-status: 2-WORKING
+status: Complete
 # Staged 2026-09-01 by the LTVera marathon orchestrator alongside the marathon plan at
 # PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/ — commit to XYZ-forge when the
 # marathon fires. Exempt from ROADMAP parking while it travels inside the plan bundle.
 roadmap_exempt: true
 created: 2026-09-01
-updated: 2026-09-01
+updated: 2026-09-02
 owner: unassigned
 doc_type: capture
 complexity: 2

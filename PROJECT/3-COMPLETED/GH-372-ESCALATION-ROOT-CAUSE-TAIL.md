@@ -4,13 +4,13 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/372
 title: "Turn-taker failure reason never reaches ESCALATION.md (codex 'workspace out of credits' surfaced as generic no-progress)"
 goal: >
   a failed turn must surface its log tail in ESCALATION.md
-status: 2-WORKING
+status: Complete
 # Staged 2026-09-01 by the LTVera marathon orchestrator alongside the marathon plan at
 # PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/ — commit to XYZ-forge when the
 # marathon fires. Exempt from ROADMAP parking while it travels inside the plan bundle.
 roadmap_exempt: true
 created: 2026-09-01
-updated: 2026-09-01
+updated: 2026-09-02
 owner: unassigned
 doc_type: capture
 complexity: 2
