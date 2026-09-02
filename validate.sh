@@ -1400,10 +1400,19 @@ fi
 # suite-lane records (pool/driver-lock/sequential): retry legs add retry-lane records and the
 # fixed probes add non-suite ones — all legitimate, none may dilute the completeness check. A
 # mismatch is reported (the JSONL undercounts) but never gates the verdict.
-_suite_events="$(grep -c '"event":"suite"' "$RT_FILE" 2>/dev/null || printf '0')"
-_suite_lane_events="$(( $(grep -c '"event":"suite","lane":"pool"' "$RT_FILE" 2>/dev/null || printf '0') \
-                    + $(grep -c '"event":"suite","lane":"driver-lock"' "$RT_FILE" 2>/dev/null || printf '0') \
-                    + $(grep -c '"event":"suite","lane":"sequential"' "$RT_FILE" 2>/dev/null || printf '0') ))"
+# `grep -c` ALWAYS prints its count and exits 1 on zero matches, so `grep -c … || printf '0'`
+# emits "0\n0" — a two-line value. Fed to $(( )) that is a syntax error, which aborted the
+# assignment and left _suite_lane_events unset; under `set -u` the very next line then died with
+# "unbound variable", so the completeness self-check silently never ran and every parallel gate
+# printed two errors into its summary. Observed on three consecutive full runs. runner-telemetry's
+# rt_skip_lines already documents this exact trap — capture first, default after.
+_rt_count() {  # <pattern> <file> — match count, 0 when absent, ALWAYS one line
+  local n; n="$(grep -c "$1" "$2" 2>/dev/null)"; printf '%s' "${n:-0}"
+}
+_suite_events="$(_rt_count '"event":"suite"' "$RT_FILE")"
+_suite_lane_events="$(( $(_rt_count '"event":"suite","lane":"pool"' "$RT_FILE") \
+                    + $(_rt_count '"event":"suite","lane":"driver-lock"' "$RT_FILE") \
+                    + $(_rt_count '"event":"suite","lane":"sequential"' "$RT_FILE") ))"
 rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$TOTAL" \
   "suite_events=$_suite_events" "run_set=${#RUN_TESTS[@]}" "registered=${#TESTS[@]}" \
   "suite_events_match=$([ "$_suite_lane_events" -eq "${#RUN_TESTS[@]}" ] && printf yes || printf no)"
