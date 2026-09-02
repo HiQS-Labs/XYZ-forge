@@ -154,10 +154,10 @@ TOKEN_AGENT1="$(python3 -c 'import json, sys; print(json.loads(sys.stdin.read())
 
 # 6. Four-turn alternating conversation
 # Turn 2: Remote Agent 2 sends via HTTP client
-SECRET_BODY_TEXT="ConfidentialMessageSecret123"
+CANARY_BODY_TEXT="ConfidentialMessageCanary123"
 send2_res="$(python3 "$CLIENT" --url "$BASE_URL" send \
   --id 777001 --agent 2 --next-agent 1 --token "$TOKEN_AGENT2" \
-  --expected-turn 1 --message "Turn 2 from remote agent: $SECRET_BODY_TEXT" 2>&1)"
+  --expected-turn 1 --message "Turn 2 from remote agent: $CANARY_BODY_TEXT" 2>&1)"
 expect_contains "remote agent2 send succeeds" "$send2_res" '"turn": 2'
 expect_contains "turn 2 routes to agent1" "$send2_res" '"next": "agent1"'
 
@@ -279,10 +279,10 @@ wait "$BRIDGE_PID" 2>/dev/null || true
 
 CF_PORT="$((PORT + 1))"
 CF_ID="test-cf-client-id"
-CF_SECRET="test-cf-client-secret-999"
+CF_TOKEN="test-cf-client-secret-999"
 
 python3 "$BRIDGE" --host 127.0.0.1 --port "$CF_PORT" --root "$ROOT" --store "$STORE" \
-  --cf-client-id "$CF_ID" --cf-client-secret "$CF_SECRET" >"$LOG_FILE.cf" 2>&1 &
+  --cf-client-id "$CF_ID" --cf-client-secret "$CF_TOKEN" >"$LOG_FILE.cf" 2>&1 &
 BRIDGE_PID=$!
 sleep 1.0
 
@@ -301,7 +301,7 @@ cf_bad_code="$(echo "$cf_bad_headers" | tail -n 1)"
 
 # Request with valid CF headers -> HTTP 200
 cf_ok_headers="$(curl -s -w "\n%{http_code}" "$CF_BASE_URL/sessions/777001/status" \
-  -H "CF-Access-Client-Id: $CF_ID" -H "CF-Access-Client-Secret: $CF_SECRET")"
+  -H "CF-Access-Client-Id: $CF_ID" -H "CF-Access-Client-Secret: $CF_TOKEN")"
 cf_ok_code="$(echo "$cf_ok_headers" | tail -n 1)"
 [ "$cf_ok_code" -eq 200 ] && pass "valid CF Access headers accepted with HTTP 200" || fail "valid CF headers returned HTTP $cf_ok_code"
 
@@ -352,8 +352,8 @@ echo "Auditing bridge access logs for zero secret / message content leakage:"
 ALL_LOGS="$(cat "$LOG_FILE" "$LOG_FILE.cf" "$LOG_FILE.idle" 2>/dev/null || true)"
 
 expect_not_contains "access log contains no capability tokens" "$ALL_LOGS" "$TOKEN_AGENT2"
-expect_not_contains "access log contains no CF Access secret" "$ALL_LOGS" "$CF_SECRET"
-expect_not_contains "access log contains no message content" "$ALL_LOGS" "$SECRET_BODY_TEXT"
+expect_not_contains "access log contains no CF Access secret" "$ALL_LOGS" "$CF_TOKEN"
+expect_not_contains "access log contains no message content" "$ALL_LOGS" "$CANARY_BODY_TEXT"
 
 # 11. Crash & Restart Recovery
 echo "Testing crash and restart recovery:"
