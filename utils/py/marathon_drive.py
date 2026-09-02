@@ -1881,7 +1881,10 @@ def main():
         # and bin/marathon-yaml:95. A Pi *builder* fallback does not give you a Pi *reviewer*.
         if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
         elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
-        elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = agent_id
+        # A lane can carry both a builder and its reviewer.  Keep every agy actor in the one
+        # dispatcher-facing slot instead of letting the second route overwrite the first.
+        elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = ",".join(
+            part for part in (os.environ["AGY_AGENT"], agent_id) if part)
         elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
         elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
         elif agent_id.startswith("smallcode"): os.environ["SMALLCODE_AGENT"] = agent_id

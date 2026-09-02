@@ -1,6 +1,6 @@
 # Marathon Phase p1-routing-validation
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-ROUTING-VALIDATION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -126,3 +126,22 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented same-lane AGY routing and reviewer validation alignment.
+
+- `utils/py/marathon_drive.py` preserves every AGY actor in `AGY_AGENT` instead of overwriting the
+  builder with its reviewer; `utils/py/profile_resolve.py` keeps deriving the lane map from that
+  router shape.
+- `relay-automation/marathon-agent.sh` routes exact comma-delimited AGY membership (`agy` and
+  `agy-qa`) to the AGY shim; `utils/py/agy-turn.py` trusts that dispatch choice while retaining its
+  `claim_task_or_exit()` tick ownership guard.
+- `relay-automation/marathon-drive.sh` no longer advertises or accepts Gemini as a reviewer
+  (`GH-373`), including its frozen fallback validation. Required harness commit trailer:
+  `Frozen-twin-exception: relay-automation/marathon-drive.sh — remove dead Gemini reviewer validation (GH-373)`.
+- Added focused fixture/stub coverage in `test/gh368-same-lane-routing.sh` and
+  `test/gh373-reviewer-validation.sh`.
+
+Verification: `bash test/gh368-same-lane-routing.sh && bash test/gh373-reviewer-validation.sh`
+passed (4/0 and 4/0).
