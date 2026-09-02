@@ -278,5 +278,40 @@ evil_files="$(ls "$WORK"/EVIL_* 2>/dev/null | tr '\n' ' ')"
   && pass "injection: eval of --env output executed nothing (no EVIL_* artifacts)" \
   || fail "INJECTION SUCCEEDED — eval ran embedded commands: $evil_files"
 
+# ---------------------------------------------------------------------------------------------
+# N. RELAY_AGENT, and the missing-CLI warning (added 2026-09-02).
+#
+# The point of this feature is a one-liner: `eval "$(resolve-profile.sh <name> --env)"`, then run
+# the shim. That could not work for ANY profile: every turn shim hard-requires RELAY_AGENT
+# ("RELAY_AGENT required", exit) and --env never emitted it. The operator got a bare refusal with
+# nothing pointing back at the resolver. Reproduced by hand before the fix.
+#
+# NEGATIVE CONTROL: delete the `export RELAY_AGENT=` line in profile_resolve.py — R1 goes red;
+# delete the `shutil.which(cli)` guard — R3 goes red. Both were run.
+# ---------------------------------------------------------------------------------------------
+out="$(run "$CFG" "glm 5.3 max" --env 2>/dev/null)"
+grep -q "^export RELAY_AGENT=" <<<"$out" \
+  && pass "R1: --env emits RELAY_AGENT (the shims refuse to act without it)" \
+  || fail "R1: --env omitted RELAY_AGENT — the documented one-liner cannot run"
+
+# It must EQUAL the harness agent var: the shim compares the two and DEFERS when they differ, which
+# reads as a silent no-op rather than a misconfiguration.
+_ra="$(grep -m1 "^export RELAY_AGENT=" <<<"$out" | sed "s/.*='\(.*\)'/\1/")"
+_ha="$(grep -m1 "^export COMMANDCODE_AGENT=" <<<"$out" | sed "s/.*='\(.*\)'/\1/")"
+[ -n "$_ra" ] && [ "$_ra" = "$_ha" ] \
+  && pass "R2: RELAY_AGENT matches the harness agent var ($_ra) — the shim acts instead of deferring" \
+  || fail "R2: RELAY_AGENT='$_ra' != COMMANDCODE_AGENT='$_ha' — the shim would silently defer"
+
+# R3: resolving to a harness whose CLI is absent must SAY SO here, where the operator can still
+# choose another profile — not fail minutes later inside a relay driver as an unexplained stall.
+_ghostcfg="$WORK/device_config_nocli.json"
+cat > "$_ghostcfg" <<'JSON'
+{ "profiles": { "ghost": { "harness": "deepseek", "gateway": "openrouter", "model": "x/y" } } }
+JSON
+out_ghost="$(PATH="/usr/bin:/bin" run "$_ghostcfg" "ghost" --env 2>&1 || true)"
+grep -q "is NOT on PATH" <<<"$out_ghost" \
+  && pass "R3: a profile whose harness CLI is missing warns at resolution time" \
+  || fail "R3: resolved to an unrunnable harness with no warning"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]
