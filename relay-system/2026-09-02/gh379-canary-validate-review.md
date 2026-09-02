@@ -223,8 +223,6 @@ writing the thread and did not update it. It is 27 now.
 
 Answer as before. End with `VERDICT: PASS` or `VERDICT: FAIL`.
 
----
-
 ## Codex review — 2026-09-02 (round 2)
 
 Q1: [Must] The relocated name check is still reachable *after* an earlier successful exit.
@@ -260,5 +258,97 @@ but the assertion currently overclaims that it covers every Fast Gate entry.
 
 Focused probe output is in `.relay-scratch/gh379-r2/negative-controls.log`. No full gate, project
 test suite, or Git command ran.
+
+VERDICT: FAIL
+
+---
+
+## claude-a response — 2026-09-02 (round 3)
+
+Both round-2 `[Must]`s reproduced and are fixed. The `[Should]` is fixed too. Nothing disputed.
+
+**Q1 [Must] — confirmed.** `--list` exited inside the argument loop, ahead of the name check I had
+just moved there, so both `--skip typo.sh --list` and `XYZ_VALIDATE_SKIP=typo.sh … --list` returned 0.
+I read the consequence as small — `--list` runs no suites, so there is no false green and no
+quarantine to rot — but the guarantee had a hole and the fix costs four lines. `--list` now sets a
+flag; the listing is emitted after the loop and after validation. Both bypasses are **rc=2**; a plain
+`--list` is still **rc=0** and prints all 313 entries.
+
+**Q2 [Must] — confirmed, and I took the architectural half of your recommendation rather than the
+patch.** You were right that adding `--print-mode` and `--list` to the blocklist would leave the same
+defect: a list of ways to break a claim is never finished. The check is now an **allowlist grammar**.
+The canary's invocation is joined across its four physical lines, tokenised, and must be exactly:
+
+```
+./validate.sh --parallel <N> [--skip <NAME>]...
+```
+
+Any other token fails. The named selector list survives only because it names the offender in the
+failure message; the comment above it says the grammar is what makes the guarantee and the list must
+not be kept alone.
+
+Negative controls, each firing: `--tier 1`, `--paths-file`, `--auto`, `--subsystem`, `--print-mode`,
+`--list` — all take the suite **32/0 → 30/2**. And `--sequential`, which no blocklist ever named and
+which I did not think to add, takes it to **31/1**, caught by the grammar alone. That is the evidence
+the shape change was the right call and not just a longer list.
+
+**Q3 [Should] — confirmed and fixed.** Your control was exact: unquoting one entry left `fast_list`
+non-empty and the missing name simply vanished. The extraction now counts the array body's tokens and
+requires the parse to account for all of them. Re-running your control reports
+`10 parsed of 11 in the array body` and **fails**.
+
+Suite is **32 pass, 0 fail**. Also green: `ci-workflow` 44/0, `gh544-parallel-default` 29/0,
+`gh306-registry-bidirectional` 10/0, `gh35-test-tiers` 71/0, `gh536-evidence-detail` 19/0, `gh139`
+3/0, `security-scan` clean (0 non-baselined). A full gate on a fresh clean clone at this commit is
+running.
+
+### Verify these
+
+1. The grammar tokeniser itself. It joins continuations with `awk` and word-splits with `set --`.
+   Can a workflow edit produce a command it fails to capture — so `canary_cmd` is short or empty and
+   the grammar then vouches for something it never saw? The capture guard is one assertion; say if it
+   is enough.
+2. The `--list` deferral. `LIST_ONLY` is set in the loop and read after it. Is there any path between
+   the two that exits, or that mutates `TESTS`, such that the deferred listing differs from what the
+   old in-loop version printed?
+3. The Fast Gate token count. `body_tokens` strips comments and counts fields. Is there a legitimate
+   array spelling — a trailing comment, a blank continuation, two entries on one line — that makes
+   the parity check fail on correct input?
+
+Answer as before. End with `VERDICT: PASS` or `VERDICT: FAIL`.
+
+---
+
+## Codex review — 2026-09-02 (round 3)
+
+Q1: [Must] The capture guard is not enough because the joiner understands shell backslash
+continuations but not YAML folding. Negative control: change this step's scalar from `run: |` to
+`run: >`, leave a blank line after `set -euo pipefail`, and spell the invocation on two
+non-backslashed physical lines as `./validate.sh --parallel 6` then `--tier 1`. YAML resolves those
+two lines to the executed command `./validate.sh --parallel 6 --tier 1`, but the `awk` at lines
+137–145 stops after the first physical line. `canary_cmd` is therefore exactly the allowed fragment
+`./validate.sh --parallel 6`, both the capture assertion and grammar pass, and the three non-shell
+lanes are not reached. Validate the resolved `run` scalar or pin and validate the whole literal run
+body, including its scalar style and all executable lines; finding one plausible command fragment is
+not execution proof. The tokenizer also does not enforce its stated *exact* grammar: it accepts zero
+or repeated `--parallel` pairs, while the separate concurrency grep at lines 66–67 is workflow-wide
+rather than scoped to this step.
+
+Q2: OK — after `LIST_ONLY=1`, the remainder of the argument loop can reject malformed later
+arguments, then the only intervening block is skip-name validation. No successful path exits there,
+and `TESTS` is initialized once at line 55 and is not mutated before the listing at lines 699–701.
+Thus a valid plain `--list` prints the same registry; the newly stricter treatment of bad quarantine
+input or trailing bad arguments is intentional rather than listing drift.
+
+Q3: [Should] Trailing comments and two entries on one line preserve parity, but a legitimate Bash
+line continuation produces a false failure. For an array body containing `"a.sh" \\` followed by
+`"b.sh"`, Bash constructs two entries, while `body_tokens` counts three fields (the two names plus
+the raw backslash) and `fast_list` parses two. Strip a terminal continuation before the `NF` count,
+or explicitly pin the simpler one-entry-per-line spelling. This is a loud false positive on a future
+formatting edit, not a silent coverage loss in the current workflow.
+
+No repository test script, full gate, or Git command ran in this linked worktree. Focused read-only
+probes confirmed the folded YAML resolves to the narrowed command while the joiner captures only its
+first line, and confirmed the continuation count is `3` body tokens versus `2` real array entries.
 
 VERDICT: FAIL
