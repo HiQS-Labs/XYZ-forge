@@ -26,7 +26,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Steps 1–5 + 8 + 9-matrix landed and pushed (branch through 858e5e0d): envelope (22/0), telemetry (14/0), lane registry (5/0), PDDA single-scan (governance 72s→4.9s, byte-identical, 22/0), ShellCheck width (10/0), full-tree fail-closed sweep + registry drift guard (5/0, caught gh153 genuinely unregistered), route/width matrix + smoke-lane decision (not added, reasoning in-doc). | Step 7 (long-tail suites) in flight via delegate; step 6 width campaigns on a quiet host; real-push tier-1/2 latency receipts; final sequential qualifying ci-local run at the final commit; then the PR |
+| ALL NINE STEPS executed and gated (branch through 76174765): envelope 22/0, telemetry 14/0, lane registry 5/0, PDDA 15× byte-identical, ShellCheck width 10/0, campaigns 8 legs green with per-width mutation reds + ceiling model, long-tail containment tripwires + documented irreducible waits, full-tree fail-closed sweep 5/0, route matrix + smoke-lane decision. Receipts: TESTS-RESULTS/2026-09-01+GH-365/. | PR into development → relay-xyz QA with Agy → closeout to 3-COMPLETED after merge + reconcile. |
 
 ## Capture
 
@@ -128,12 +128,12 @@ equivalence gate passes.
 
 ## Acceptance
 
-- [ ] Step 1 gate: clean-start `ci-local.sh` ends clean and successfully writes its gate record; both runners use the one envelope helper.
-- [ ] Step 2 gate: telemetry receipts reconstruct aggregate work, critical path, semantic coverage, retries, and invalid runs; denominator verified 309 + 3.
-- [ ] Step 3 gate: gh346 contention-skip cannot report equivalence; a newly registered real-driver caller cannot silently remain pooled (witnessed red).
-- [ ] Step 4 gate: PDDA single-scan preserves findings (witnessed reds intact) with before/after component timings; explicit duplication decision recorded.
-- [ ] Step 5 gate: ShellCheck serial and 4-worker shapes return identical verdicts; mutation-flip rejected by both.
-- [ ] Step 6 gate: width campaigns from identical commits with explicit denominators and per-width mutation reds; speedup explained against the scheduling-ceiling model.
-- [ ] Step 7 gate: heavy-suite optimizations preserve timeouts, containment, fixture isolation, negative controls.
-- [ ] Step 8 gate: tier routing fails closed on unknown/renamed/deleted/empty-range; real-push Tier 1/2 latency recorded.
-- [ ] Step 9 gate: route/width matrix published; full sequential macOS promotion preserved.
+- [x] Step 1 gate: clean-start `ci-local.sh` ends clean and successfully writes its gate record; both runners use the one envelope helper. — TESTS-RESULTS/2026-09-01+GH-365/qualifying-run.log; gh365-runner-envelope.sh 22/0
+- [x] Step 2 gate: telemetry receipts reconstruct aggregate work, critical path, semantic coverage, retries, and invalid runs; denominator LIVE (316+3 at final head, asserted == TESTS parse == --list). — campaign/*.jsonl; gh365-validate-telemetry.sh 14/0
+- [x] Step 3 gate: gh346 contention-skip cannot report equivalence; a newly registered real-driver caller cannot silently remain pooled (witnessed red). — gh346 in DRIVER_LOCK_LANE; gh365-driver-lane-registry.sh 5/0; clean legs' skip_total = the one expected informational SKIP
+- [x] Step 4 gate: PDDA single-scan preserves findings with before/after timings; duplication decision recorded (pdda run/repo-contract/local-checks = intentional dual role, not deduplicated). — governance 1:12→4.9s, findings cmp-identical; gh365-pdda-gov-scan.sh 22/0
+- [x] Step 5 gate: ShellCheck serial and 4-worker shapes return identical verdicts; mutation-flip rejected by both. — gh365-shellcheck-parallel.sh 10/0
+- [x] Step 6 gate: width campaigns from identical commits with explicit denominators and per-width mutation reds; speedup explained against the ceiling model (2.02×/3.53×/4.33×; the 8-wide gap is load-induced pool slowdown +39%, not recoverable overhead). — TESTS-RESULTS/2026-09-01+GH-365/
+- [x] Step 7 gate: heavy-suite work preserves timeouts (production untouched), containment (33 new seed-canary tripwires), negative controls (assertions only grew: 182→211, 152→156); the fixture-install premise was measured wrong and the real irreducible waits are documented. — commits 3c45f0c6/c9bea655/a1213581
+- [x] Step 8 gate: tier routing fails closed over ALL 2,628 tracked files (no third state), planted reds for unknown family + unregistered suite; real-push latency tier-1 34s / tier-2 44s. — gh365-tier-fail-closed.sh 5/0; tier{1,2}-real-push.log
+- [x] Step 9 gate: route/width matrix published (below); full sequential macOS promotion preserved and untouched; smoke lane NOT added (reasoning below).

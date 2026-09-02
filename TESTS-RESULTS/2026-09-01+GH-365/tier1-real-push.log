@@ -1,0 +1,127 @@
+pre-push: docs-only update — running the documentation gate, not validate.sh.
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+WARN [pdda-check-roadmap] ROADMAP.md:258 ROADMAP is 258 lines (> 200) — likely accumulating detail that belongs in PROJECT/** docs
+SUMMARY [pdda-check-roadmap] errors=0 warns=1 info=0
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-555-METER-EXIT-CRITERION.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-564-FIXTURE-CONTAINMENT.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-204-BSD-SED-IDIOM.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=19
+
+== pdda-check-changelog ==
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md:1 issue #204 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md PROJECT/3-COMPLETED/GH-204-BSD-SED-PORTABILITY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md:1 issue #314 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md:1 issue #349 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md PROJECT/3-COMPLETED/GH-349-RELEASES-ROADMAP-VENDORED.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md:1 issue #351 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md PROJECT/3-COMPLETED/GH-351-MANIFEST-UNSHIP.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md:1 issue #358 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md PROJECT/3-COMPLETED/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 issue #544 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-555-METER-EXIT-CRITERION.md:1 issue #555 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md:1 issue #563 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-564-FIXTURE-CONTAINMENT.md:1 issue #564 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=9 info=0
+
+== pdda-check-releases ==
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=0
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:44 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:53 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] README.md:71 dead reference 'PROJECT/4-MISC/AUTOMATED-RELAY.md' — no file at PROJECT/4-MISC/AUTOMATED-RELAY.md
+WARN [pdda-check-governance] README.md:482 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] README.md:569 dead reference 'PROJECT/4-MISC/REAL-AGENT-OBSERVATIONS.md' — no file at PROJECT/4-MISC/REAL-AGENT-OBSERVATIONS.md
+WARN [pdda-check-governance] README.md:570 dead reference 'RECAP.md' — no file at RECAP.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:42 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:428 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:498 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] README.md:559 governance doc references env var 'PDDA_REGISTRY_DIR' which no shipped script in this install reads or sets
+SUMMARY [pdda-check-governance] errors=0 warns=12 info=0
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 22 warning(s) to review — pdda-check-roadmap pdda-check-issue-doc-sync pdda-check-governance
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-1-SUITE-CONTAINMENT-GATE.md:1 doc is in 3-COMPLETED (issue #1) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md:1 doc is in 3-COMPLETED (issue #10) but frontmatter status still reads 'cut' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md:1 doc is in 3-COMPLETED (issue #115) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-124-CLOSEOUT-AUTOMATION.md:1 doc is in 3-COMPLETED (issue #124) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-132-REVIEW-XYZ-SKILL.md:1 doc is in 3-COMPLETED (issue #132) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-135-CONSULT-AGY-PREFLIGHT.md:1 doc is in 3-COMPLETED (issue #135) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-136-ATTEMPTS-GATE-ROOT.md:1 doc is in 3-COMPLETED (issue #136) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-137-SUITE-REGISTRATION.md:1 doc is in 3-COMPLETED (issue #137) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-138-TWIN-DIVERGENCE-RECORD.md:1 doc is in 3-COMPLETED (issue #138) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-139-SIGPIPE-SWEEP-GUARD.md:1 doc is in 3-COMPLETED (issue #139) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md:1 doc is in 3-COMPLETED (issue #14) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-140-UTCNOW-DEPRECATION.md:1 doc is in 3-COMPLETED (issue #140) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-144-AGENT2AGENT-3PLUS-UX.md:1 doc is in 3-COMPLETED (issue #144) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md:1 doc is in 3-COMPLETED (issue #148) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md:1 doc is in 3-COMPLETED (issue #15) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md:1 doc is in 3-COMPLETED (issue #153) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-170-AGENT2AGENT-GLITCHES.md:1 doc is in 3-COMPLETED (issue #170) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md:1 doc is in 3-COMPLETED (issue #180) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md:1 doc is in 3-COMPLETED (issue #181) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md:1 doc is in 3-COMPLETED (issue #183) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md:1 doc is in 3-COMPLETED (issue #184) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-23-KERNEL-OVERLAP-ENFORCEMENT.md:1 doc is in 3-COMPLETED (issue #23) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md:1 doc is in 3-COMPLETED (issue #3) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-35-TEST-TIER-ROUTING.md:1 doc is in 3-COMPLETED (issue #35) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-39-RELEASES-PROJECT-SYNC.md:1 doc is in 3-COMPLETED (issue #39) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md:1 doc is in 3-COMPLETED (issue #4) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-42-COMMANDCODE-TURN.md:1 doc is in 3-COMPLETED (issue #42) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-45-WORKTREE-GATE-REFUSAL.md:1 doc is in 3-COMPLETED (issue #45) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-57-RELEASES-SQLITE-FUZZING.md:1 doc is in 3-COMPLETED (issue #57) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md:1 doc is in 3-COMPLETED (issue #77) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md:1 doc is in 3-COMPLETED (issue #8) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md:1 doc is in 3-COMPLETED (issue #91) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+SUMMARY [pdda-local-check-completed-status] errors=0 warns=32 info=0
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:48 ledger entry reads shipped/done (✅/SHIPPED) but issue #75 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:48 ledger entry reads shipped/done (✅/SHIPPED) but issue #67 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:48 ledger entry reads shipped/done (✅/SHIPPED) but issue #59 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:48 ledger entry reads shipped/done (✅/SHIPPED) but issue #58 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:48 ledger entry reads shipped/done (✅/SHIPPED) but issue #61 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:89 ledger entry reads shipped/done (✅/SHIPPED) but issue #75 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:92 ledger entry reads shipped/done (✅/SHIPPED) but issue #123 is still OPEN — reconcile the ledger entry or close the issue
+WARN [pdda-local-check-roadmap-issue-state] ROADMAP.md:166 ledger entry reads shipped/done (✅/SHIPPED) but issue #193 is still OPEN — reconcile the ledger entry or close the issue
+INFO [pdda-local-check-roadmap-issue-state] ROADMAP.md:199 issue #564 state unavailable (gh absent/offline and no cached state) — sync not evaluated
+SUMMARY [pdda-local-check-roadmap-issue-state] errors=0 warns=8 info=1
+SUMMARY [pdda-local-check-roadmap-section-duplicates] errors=0 warns=0 info=0
+SUMMARY [pdda-local-check-release-milestone] errors=0 warns=0 info=0
+pre-push: documentation gate GREEN in 32s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   858e5e0d..d93a6ce6  feat/gh365-test-recalibration -> feat/gh365-test-recalibration
