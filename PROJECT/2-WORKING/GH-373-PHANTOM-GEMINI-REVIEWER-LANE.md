@@ -57,7 +57,7 @@ deliberately left alone. Decide explicitly whether the exception is worth spendi
 the honest move is to close #373 as "fixed where it can dispatch" and let the twin retire with
 GH-308. Either is defensible; silently re-fixing the Python side is not.
 
-## Swarm Preflight Contract — CORRECTED
+## Contract Rescope Notes
 
 The original contract probed `grep_absent GH-373` in `utils/py/marathon_drive.py` and listed that
 file plus `bin/marathon-yaml` as the artifacts. Both are already fixed, and the one file that still
