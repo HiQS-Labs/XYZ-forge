@@ -306,6 +306,32 @@ validate_suite() {
     rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$_rc" "$_one"
   done
   rm -f "$_one"
+
+  # GH-377 review blocker 1: the qualifying run must execute the AUTHORITATIVE tier-3 set, not a
+  # .sh-only subset. validate.sh owns three non-TESTS lanes; this runner supplies its own envelope
+  # bracket (the identity half of lane two), but Python and gamma-poison were historically omitted
+  # while the output said "full suite" and the record claimed qualifying evidence. They are part of
+  # the loop now, recorded in the verdicts under validate.sh's own PASSED labels so the record and
+  # the summary agree on the denominator.
+  _s="$(rt_now_ms)"
+  if python3 -m pytest "$HERE/test/test_python_layer.py"; then
+    printf '%s\tpass\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
+  else
+    rc=1
+    printf '%s\tFAIL\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
+    echo "  ^^ FAILED: python:test_python_layer.py" >&2
+  fi
+  rt_emit suite sequential "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$?"
+
+  _s="$(rt_now_ms)"
+  if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
+    printf '%s\tpass\n' "gamma-poison-staleness-probe" >> "$GATE_VERDICTS"
+  else
+    rc=1
+    printf '%s\tFAIL\n' "gamma-poison-staleness-probe" >> "$GATE_VERDICTS"
+    echo "  ^^ FAILED: gamma-poison-staleness-probe" >&2
+  fi
+  rt_emit suite sequential "gamma-poison-staleness-probe" "$_s" "$(rt_now_ms)" "$?"
   return $rc
 }
 

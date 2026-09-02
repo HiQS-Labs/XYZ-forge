@@ -1,4 +1,10 @@
-# GH-365 — test-suite recalibration: execution evidence
+# GH-377 — test-suite recalibration: execution evidence (supersedes #365)
+
+> **Post-rebase note (GH-377 review):** the width-campaign receipts in `campaign/` are HISTORICAL,
+> pinned to pre-rebase commit `46625dabbf10df3b1b688f69b10e9cc9524fa2b2` (315 registered suites at
+> that head; the rebased tree has 318). They describe their pinned commit exactly — mutation reds,
+> identity brackets, and the ceiling decomposition remain valid for that tree — and are labeled as
+> such in `provenance.jsonl`. The qualifying run below is the post-rebase, blocker-1-fixed run.
 
 Branch `feat/gh365-test-recalibration` → PR into `development`. Issue:
 https://github.com/HiQS-Labs/XYZ-forge/issues/365 (final plan comment 5498257579).
@@ -20,7 +26,7 @@ context.
 | 8 tier routing | classified or fail-closed, reds, real-push latency | `test/gh365-tier-fail-closed.sh` 5/0 (2,628-file sweep: 1,139 tier-1 / 326 tier-2 / 1,163 tier-3, no third state); tier1-real-push.log (34s), tier2-real-push.log (44s, 18-suite releases lane) |
 | 9 matrix + policy | evidence classes unambiguous; macOS promotion preserved | matrix in PROJECT/2-WORKING/GH-365-TEST-SUITE-RECALIBRATION.md; smoke lane NOT added (reasoning there) |
 
-## Width campaign (step 6) — 316 suites + 3 non-suite sections at the head
+## Width campaign (step 6) — HISTORICAL, at pinned pre-rebase head 46625dab (315 registered suites)
 
 Per width: one clean run + one mutation run (a registered suite PREPENDED a forced red — an
 appended red is dead code after the suite's own exit, observed and documented) in a fresh
@@ -63,14 +69,29 @@ recorded rc=1 correctly).
 
 ## Qualifying run (step 1 gate, final commit 76174765)
 
-`qualifying-run.log` + `qualifying-run.record.txt` + `qualifying-run.telemetry.jsonl`: full
-sequential `ci-local.sh` at 5891d018 in a disposable full clone — rc=0, 1774s, ALL steps green
-including the clone-identity invariant, tree clean at exit, and the gate record WRITTEN with its
-output-sha256 (the exact failure mode #365 step 1 existed to close). Two earlier qualifying runs
-at 76174765/e44e0014 were REFUSED by the new bracket itself — it caught a stray repo-root file
-(`-a`, from a BSD-tee option-permutation bug in the new per-suite capture) and a shellcheck
-directive-typo comment, both fixed by 34aa7f16/5891d018. The bracket's first real uses found two
-defects in the very changes that shipped it.
+See `qualifying-run.*` — the POST-REBASE run at the resolved head, now executing the authoritative
+full set (every registered suite + `python:test_python_layer.py` + `gamma-poison-staleness-probe`,
+per the GH-377 review's blocker 1). The pre-rebase run at 5891d018 (rc=0, 1774s) is retained as
+history in provenance; it predates both the rebase and the lane fix.
+
+Two runs before THAT were REFUSED by the new bracket itself — it caught a stray repo-root `-a`
+file (a BSD-tee option-permutation bug in the new per-suite capture) and a shellcheck
+directive-typo comment, both in this branch's own changes. The detector's first real uses found
+two defects in the changes that shipped it.
+
+## Campaign coverage named explicitly (GH-377 gap 3)
+
+- **Python lane:** `python3 -m pytest test/test_python_layer.py` executed inside every clean and
+  mutant campaign leg (validate.sh tier 3) and in every qualifying run post-blocker-1.
+- **npm lane:** `npm ci` + `test/acorn-extract.sh` run as the qualifying run's npm step
+  (`qualifying-run.log`, step `npm ci + acorn-extract`).
+- **Clean-tree:** the shared envelope's tracked-tree facet bracketed every campaign leg and every
+  qualifying run; per-leg `identity-*.before/after` pairs committed alongside.
+- **Lock-leak:** the envelope's driver-lock facet plus validate.sh's contended-retry
+  classification (GH-528 family) — the campaign's retry counts are in the receipts (0/1/1/4 by
+  width, all recovered, all named).
+- **Worktree-leak:** the envelope's registered-worktrees facet on every leg; zero drift observed
+  (no `worktrees` facet appears in any receipt's drift record).
 
 ## Provenance (GH-430)
 

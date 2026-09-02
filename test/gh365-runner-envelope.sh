@@ -172,6 +172,25 @@ fi
 grep -q 'runner-envelope.sh' "$REPO/test/gh35-test-tiers.sh" \
   && pass "B7: gh35 fixtures copy the shared lib (tier-2 fixture runs need it)" \
   || fail "B7: gh35 mkfixture does not copy runner-envelope.sh"
+# B8 (GH-377 review blocker 1): the qualifying runner must execute validate.sh's non-TESTS lanes —
+# a .sh-only loop once printed "full suite" and wrote qualifying evidence while omitting Python
+# and gamma-poison entirely. The pins: both lanes invoked inside validate_suite, both recorded in
+# GATE_VERDICTS under validate.sh's own PASSED labels (so the record's denominator is the
+# authoritative one), and the shell-suite scrape explicitly cannot cover them (the gap's cause).
+_ln_py="$(grep -n 'pytest "$HERE/test/test_python_layer.py"' "$REPO/ci-local.sh" | head -1 | cut -d: -f1)"
+_ln_gm="$(grep -n 'gamma-poison/poison.patch' "$REPO/ci-local.sh" | head -1 | cut -d: -f1)"
+_ln_vs="$(grep -n '^validate_suite() {' "$REPO/ci-local.sh" | cut -d: -f1)"
+_ln_ve="$(awk "/^validate_suite\(\) {/,/^}/" "$REPO/ci-local.sh" | tail -1 >/dev/null; grep -n '^}' "$REPO/ci-local.sh" | awk -F: -v s="$_ln_vs" '$1 > s {print $1; exit}')"
+[ -n "$_ln_py" ] && [ -n "$_ln_vs" ] && [ "$_ln_py" -gt "$_ln_vs" ] && [ "${_ln_ve:-0}" -gt "$_ln_py" ] \
+  && pass "B8: the Python lane runs INSIDE validate_suite (line $_ln_py)" \
+  || fail "B8: python:test_python_layer.py is not part of the qualifying suite loop"
+[ -n "$_ln_gm" ] && [ "$_ln_gm" -gt "$_ln_vs" ] && [ "${_ln_ve:-0}" -gt "$_ln_gm" ] \
+  && pass "B8b: the gamma-poison staleness probe runs INSIDE validate_suite (line $_ln_gm)" \
+  || fail "B8b: gamma-poison-staleness-probe is not part of the qualifying suite loop"
+grep -q 'python:test_python_layer.py" >> "$GATE_VERDICTS' "$REPO/ci-local.sh" \
+  && grep -q 'gamma-poison-staleness-probe" >> "$GATE_VERDICTS' "$REPO/ci-local.sh" \
+  && pass "B8c: both lanes land in GATE_VERDICTS under validate.sh's own PASSED labels" \
+  || fail "B8c: the non-TESTS lanes are not recorded in the qualifying verdicts"
 
 # ── C. fail-closed edge: a validate.sh without the lib refuses, never improvises ─────────────────
 # Same fixture shape as gh35-test-tiers' mkfixture (ci-route + gate_env + stubbed gates), with
