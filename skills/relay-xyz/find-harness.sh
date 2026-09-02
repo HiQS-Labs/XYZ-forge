@@ -194,6 +194,20 @@ AGY_PATH="$(_bin "${AGY_BIN:-agy}")"
 if [ -z "$AGY_PATH" ] && [ -z "${AGY_BIN:-}" ] && [ -x "$HOME/.local/bin/agy" ]; then
   AGY_PATH="$HOME/.local/bin/agy"
 fi
+
+# GH-346 Phase 2: commandcode and deepseek are shipped Path A workers, but neither was reported
+# here, so "which workers can I use?" was answerable only by grepping relay-automation/. These
+# flags are ADVISORY — nothing in the dispatch chain consumes them (route_agent and
+# marathon-agent.sh key on the *_AGENT vars, not these), exactly like RELAY_HAS_CODEX/AGY. They
+# close a discoverability gap, not a functional one.
+COMMANDCODE_PATH="$(_bin "${COMMANDCODE_BIN:-cmd}")"
+# deepseek-turn.py's default_deepseek_bin() prefers an absolute entrypoint over `which dsh`, so a
+# PATH-only probe would under-report this worker on a machine where the lane runs fine.
+DEEPSEEK_PATH="$(_bin "${DEEPSEEK_BIN:-dsh}")"
+if [ -z "$DEEPSEEK_PATH" ] && [ -n "${DEEPSEEK_BIN:-}" ] && [ -f "${DEEPSEEK_BIN}" ]; then
+  DEEPSEEK_PATH="$DEEPSEEK_BIN"
+fi
+
 _flag() { [ -n "${1:-}" ] && echo 1 || echo 0; }
 
 case "${1:-}" in
@@ -206,9 +220,13 @@ case "${1:-}" in
     [ -n "$TICK" ]       && printf 'export TICK=%q\n'       "$TICK"
     [ -n "$CODEX_PATH" ] && printf 'export CODEX_BIN=%q\n'  "$CODEX_PATH"
     [ -n "$AGY_PATH" ]   && printf 'export AGY_BIN=%q\n'    "$AGY_PATH"
+    [ -n "$COMMANDCODE_PATH" ] && printf 'export COMMANDCODE_BIN=%q\n' "$COMMANDCODE_PATH"
+    [ -n "$DEEPSEEK_PATH" ]    && printf 'export DEEPSEEK_BIN=%q\n'    "$DEEPSEEK_PATH"
     printf 'export RELAY_HAS_TICK=%s\n'  "$(_flag "$TICK")"
     printf 'export RELAY_HAS_CODEX=%s\n' "$(_flag "$CODEX_PATH")"
     printf 'export RELAY_HAS_AGY=%s\n'   "$(_flag "$AGY_PATH")"
+    printf 'export RELAY_HAS_COMMANDCODE=%s\n' "$(_flag "$COMMANDCODE_PATH")"
+    printf 'export RELAY_HAS_DEEPSEEK=%s\n'    "$(_flag "$DEEPSEEK_PATH")"
     ;;
   --check)
     mark() { if [ -n "${1:-}" ]; then echo "  ok  $2  ($1)"; else echo "  --  $2  (not found)"; fi; }
@@ -235,6 +253,8 @@ case "${1:-}" in
     mark "$TICK"       "tick CLI"
     mark "$CODEX_PATH" "codex CLI (Path A worker)"
     mark "$AGY_PATH"   "agy CLI   (Path A worker)"
+    mark "$COMMANDCODE_PATH" "cmd CLI   (Path A worker, Command Code)"
+    mark "$DEEPSEEK_PATH"    "dsh CLI   (Path A worker, DeepSeek)"
     if [ -z "$CODEX_PATH" ] && [ -z "$AGY_PATH" ]; then
       echo "  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available"
     fi

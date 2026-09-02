@@ -111,8 +111,11 @@ function resolveOrder(plan) {
     if (!p.id) throw new Error('a phase is missing its id');
     if (byId.has(p.id)) throw new Error(`duplicate phase id: ${p.id}`);
     if (!p.reviewer) throw new Error(`phase ${p.id}: missing reviewer`);
-    if (!/^(codex|gemini|agy)/.test(p.reviewer)) {
-      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex, gemini, or agy`);
+    // GH-346 Phase 2 (allowlist #6): `gemini` removed — phantom entry, no such shim in this tree.
+    // Kept byte-aligned with the duplicate implementation in bin/marathon-yaml; the allowlist test
+    // pins both, since the recon that found the other six allowlists missed this seventh copy.
+    if (!/^(codex|agy)/.test(p.reviewer)) {
+      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex or agy`);
     }
     if (p.depends_on === p.id) throw new Error(`phase ${p.id}: depends_on itself`);
     byId.set(p.id, p);

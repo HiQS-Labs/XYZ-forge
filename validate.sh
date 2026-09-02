@@ -92,6 +92,12 @@ TESTS=(
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
+  "gh346-model-telemetry-honesty.sh" # GH-346 Phase 0 (a shim may not log a model id no dispatch path can produce)
+  "gh346-resolver-fallback.sh"  # GH-346 Phase 1 (alias resolver is an enhancement over a literal floor, never a dependency)
+  "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
+  "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
+  "gh346-gateway-allowlists.sh" # GH-346 Phase 2 (every agent-id allowlist agrees on the shipped gateway set)
+  "gh346-profile-resolve.sh"    # GH-346 Phase 3a (one name -> harness/gateway/model; no tier may block a turn)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
@@ -313,6 +319,11 @@ TESTS=(
                                  #   a two-header dump (what a naive merge=union leaves) and a dump
                                  #   with conflict markers are both refused, not rebuilt. 18/0
   "gh54-merged-dump-refusals.sh" # #54 (check --rebuild must REFUSE merge damage by name, not throw).
+  "gh360-dump-multiline-values.sh" # GH-360 (a dumped value containing a newline must round-trip) —
+                                  #   INSERT_RE lacked re.DOTALL, so parse_dump could never match a
+                                  #   multi-line statement: the buffer swallowed every INSERT after it
+                                  #   and `check --rebuild` refused with rule=dump-parse, killing the
+                                  #   only documented git-merge resolution path for such a ledger.
                                  #   Every fixture is built by really merging two divergent branches
                                  #   and mangling the dump the way a union would — a refusal test
                                  #   whose fixture cannot occur proves nothing. Covers the two-header
@@ -335,6 +346,56 @@ TESTS=(
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
                                  #   a duplicate GH key in the markdown is refused by name
+  "gh351-manifest-unship.sh"      # GH-351 (`manifest unship` — the retraction verb) — 13/0. `shipped`
+                                  #   was terminal with no way out: `cut` refuses on a shipped row and
+                                  #   the refusal pointed at re-dialing, which retracts nothing and adds
+                                  #   a SECOND row — so a manifest could permanently assert one issue
+                                  #   both shipped and is pending, with AGENTS.md forbidding the
+                                  #   hand-edit that was the only escape. Pins that a reason is
+                                  #   mandatory, the retraction appends to manifest_state_events beside
+                                  #   the ship it reverses, unshipping a non-shipped row refuses, and
+                                  #   both exclusivity refusals (manifest-duplicate, dialed-in-elsewhere)
+                                  #   leave items AND events byte-unchanged.
+  "gh349-releases-roadmap-vendored.sh" # GH-349 (roadmap layer generalised to a vendored install) — 54/0;
+                                  #   link-style `- [Title](path)` bullets parse alongside bold ones, issue URLs
+                                  #   come from any GitHub org, and a 0-entry parse of a non-empty ledger REFUSES
+                                  #   (rule=roadmap-empty-parse) rather than deleting roadmap_items and exiting 0.
+                                  #   Sections 6-7 pin the LTVera-Pandas #322 review of PR #350: a GH number is a
+                                  #   KEY read only from the head of a title (a whole-title search harvested 111
+                                  #   out of "Execution checklist for GH-111 + GH-108" and created a duplicate key
+                                  #   in THIS repo's own ROADMAP.md, which roadmap sync refuses by name), umbrella
+                                  #   titles carry no key, doc_path never holds a URL, issue_url is anchored to the
+                                  #   bullet's own link or a corroborating number, and `- [ ]` task-list items are
+                                  #   not entries. Section 7 parses this repo's own ROADMAP.md on every run.
+                                  #   Sections 8-10 pin the codex QA round: an UNKEYED entry never
+                                  #   adopts a cited blocker as its own issue_url (the real ledger
+                                  #   stored #42 as "Grow Willies"'s identity), absolute/scheme/
+                                  #   drive-letter targets never reach doc_path, en dash is a
+                                  #   numeric range while em dash is prose, duplicate unkeyed titles
+                                  #   refuse, --allow-empty is the one sanctioned way to clear the
+                                  #   mirror and never excuses a non-empty ledger, and the legacy
+                                  #   GH_URL matcher keeps its issue-only contract.
+  # NB: test/gh358-lock-instrumentation.sh below carries a "GH-358" from the pre-rename numbering;
+  # this one is HiQS-Labs/XYZ-forge#358. Distinct files, deliberately not renumbered.
+  "gh362-marathon-plan-link-bullets.sh" # GH-362 (the planner reads link-style ledger bullets) —
+                                  #   GH-349 made `- [Title](path)` first class in releases_app.py, whose
+                                  #   parse_roadmap_ledger promises "the same block boundaries as the
+                                  #   planner". Both planner engines still tested `- **` only, so such a
+                                  #   ROADMAP parsed as ZERO items and exit 3 named the one thing that was
+                                  #   not wrong. Asserts BOTH engines (XYZ_PYTHON=1 and 0), that the GH key
+                                  #   comes from the link label and not from prose, and that `- [ ]` task
+                                  #   items are still not entries.
+  "gh358-wave-reconcile-vendored-paths.sh" # GH-358 (wave_reconcile's five HARNESS tools resolved
+                                  #   repo-root-relative, so on a vendored install — where they exist only under
+                                  #   <repo>/.xyz/ — the reconciler died on its first downstream step with
+                                  #   `can't open file '<repo>/utils/py/releases_app.py'` and rolled back. Same
+                                  #   defect class as GH-279 #2, which jog_run.harness_home() was written to
+                                  #   prevent and marathon_plan.py already guards. 9/0; control: pre-fix the
+                                  #   suite is 1/8 and reproduces that exact error string. Section 2 is the other
+                                  #   half — utils/pdda/pdda.sh is a TARGET-repo tool, and a decoy planted at
+                                  #   .xyz/utils/pdda/pdda.sh must never run, so a blanket .xyz/ prefix over the
+                                  #   file fails here. Section 3 pins that a repo-owned tool still wins, which is
+                                  #   what keeps every other wave-reconcile suite's $REPO/utils mock seam alive.
   "gh77-standup-triage.sh"        # GH-77 (`skills/standup/triage.py`, the deterministic half of /standup) — 29/0.
                                  #   Its PRD escalated at a 4-round review cap with a FLAT finding rate
                                  #   (11/13/10/10) because a state machine was being specified in prose. The

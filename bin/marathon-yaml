@@ -92,8 +92,12 @@ function resolveOrder(plan) {
     if (!p.id) throw new Error('a phase is missing its id');
     if (byId.has(p.id)) throw new Error(`duplicate phase id: ${p.id}`);
     if (!p.reviewer) throw new Error(`phase ${p.id}: missing reviewer`);
-    if (!/^(codex|gemini|agy)/.test(p.reviewer)) {
-      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex, gemini, or agy`);
+    // GH-346 Phase 2 (allowlist #6): `gemini` removed — it was a phantom. No gemini shim exists in
+    // this tree, so a plan naming a gemini reviewer VALIDATED here and then died at drive time in
+    // marathon_drive.py's route_agent(). Rejecting it at plan-validation time is the honest
+    // failure point. Kept in lockstep with the Python gate; the allowlist test pins both.
+    if (!/^(codex|agy)/.test(p.reviewer)) {
+      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex or agy`);
     }
     if (p.depends_on === p.id) throw new Error(`phase ${p.id}: depends_on itself`);
     byId.set(p.id, p);

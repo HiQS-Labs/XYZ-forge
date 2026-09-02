@@ -108,12 +108,22 @@ ITEM_STATES = ("open", "shipped", "cut")
 # dead end that only the schema knew about — `manifest ship` writes it. Both `shipped` and `cut` are
 # terminal FOR THAT ROW: re-admitting an item is a NEW dial-in row, which keeps the trail append-only
 # and readable rather than flipping one row back and forth.
-LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut")}
+# GH-351: `shipped` was a dead end. `manifest cut` refuses on a shipped row and re-dialing adds a
+# SECOND row beside it, so a manifest could permanently assert that one issue both shipped and is
+# pending. `manifest unship` retracts a false shipped item back to dialed_in instead.
+LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut"), ("shipped", "dialed_in")}
 GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+$")
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# The legacy `GH_URL:` import field means a RELEASE pointer; it accepted issue URLs only before
+# GH-349 and still does. Widening it to PRs was an unrequested cross-caller change with no contract
+# test behind it — codex QA, 2026-08-31. The roadmap ledger keeps its own, wider matcher below.
 URL_EXTRACT_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+")
+
+# The roadmap ledger has always accepted a `pull` URL in an entry (the pre-GH-349 regex did too),
+# so it matches both kinds — org-agnostic, which is the whole point of GH-349.
+ROADMAP_URL_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull|pulls)/[0-9]+")
 
 # Crockford base32 (PRD GID shape note): every global_id CHECK is the type prefix plus exactly
 # 26 characters of [0-9A-HJKMNP-TV-Z], written out in full in the migration so length AND
@@ -2381,6 +2391,100 @@ def cmd_manifest_cut(args):
         conn.close()
 
 
+
+def cmd_manifest_unship(args):
+    """GH-351: retract a shipped manifest item back to dialed_in.
+
+    `shipped` used to be terminal with no way out. `manifest cut` refuses on a shipped row, and the
+    refusal pointed at re-dialing — which retracts nothing and adds a SECOND row, leaving the
+    manifest asserting that one issue both shipped and is pending. AGENTS.md forbids hand-editing
+    releases.db, so an operator had no supported way to correct a false ship at all.
+
+    The correction is a real state transition with an auditable event, not a silent UPDATE: the
+    retraction lands in manifest_state_events beside the ship it reverses, so the ledger records
+    that the claim was withdrawn rather than pretending it was never made.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        reason = (args.reason or "").strip()
+        if not reason:
+            refuse("unship-needs-reason",
+                   "retracting a shipped manifest item without a reason is refused (structural, "
+                   "both modes)")
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+
+            item = conn.execute("""SELECT * FROM manifest_items
+                                   WHERE release_id=? AND issue_ref_id=? AND state='shipped'
+                                   ORDER BY id DESC LIMIT 1""",
+                                (rel["id"], ref["id"])).fetchone()
+            if not item:
+                prior = conn.execute("""SELECT state FROM manifest_items
+                                        WHERE release_id=? AND issue_ref_id=?
+                                        ORDER BY id DESC LIMIT 1""",
+                                     (rel["id"], ref["id"])).fetchone()
+                if prior:
+                    refuse("transition",
+                           "issue %r is in release %s at state %r, not shipped"
+                           % (value, args.gid, prior["state"]))
+                refuse("unknown-issue",
+                       "issue %r is not in release %s's manifest" % (value, args.gid))
+
+            # Un-shipping must not manufacture the very contradiction it exists to remove: if a live
+            # row already sits beside the shipped one (GH-111 dropped UNIQUE(release_id,
+            # issue_ref_id), so it can), retracting would leave TWO dialed_in rows.
+            existing = conn.execute("""SELECT 1 FROM manifest_items
+                                       WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'
+                                         AND id != ?""",
+                                    (rel["id"], ref["id"], item["id"])).fetchone()
+            if existing:
+                refuse("manifest-duplicate",
+                       "issue is already dialed into this release as dialed_in; unship would "
+                       "create a duplicate live row")
+
+            held = conn.execute("""SELECT r.global_id, r.codename FROM manifest_items mi
+                                   JOIN releases r ON r.id = mi.release_id
+                                   WHERE mi.issue_ref_id = ? AND mi.release_id != ?
+                                     AND mi.state = 'dialed_in'""",
+                                (ref["id"], rel["id"])).fetchall()
+            if held:
+                refuse("dialed-in-elsewhere",
+                       "issue is already dialed into %s — a task belongs to ONE release at a time."
+                       % (", ".join("%s (%s)" % (h["global_id"], h["codename"] or "?")
+                                    for h in held)))
+
+            if (item["state"], "dialed_in") not in LEGAL_ITEM_TRANSITIONS:
+                refuse("transition",
+                       "cannot move an item from %r to 'dialed_in' (legality is CLI-enforced)"
+                       % item["state"])
+
+            if _has_column(conn, "manifest_items", "updated_at"):
+                conn.execute("UPDATE manifest_items SET state='dialed_in', updated_at=? WHERE id=?",
+                             (now_iso(), item["id"]))
+            else:
+                conn.execute("UPDATE manifest_items SET state='dialed_in' WHERE id=?",
+                             (item["id"],))
+            # item state and its event land in ONE transaction, matching ship/cut: a direct writer
+            # that skips the event is caught by the digest chain.
+            conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at,
+                            reason) VALUES (?, 'shipped', 'dialed_in', ?, ?)""",
+                         (item["id"], now_iso(), reason))
+            print("manifest item %s un-shipped (shipped -> dialed_in); retraction event appended"
+                  % item["global_id"])
+
+        perform_write(root, conn, "manifest-unship", args.gid, mutate)
+    finally:
+        conn.close()
+
 def cmd_marathon_add(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -2715,9 +2819,9 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
 # ── GH-108: the one canonical rating grammar ────────────────────────────────────────────────────
 # `rated N/N/N/N` — exactly four slash-separated integers 1-100, axis order fixed as
 # pri/sev/appeal/effort — optionally followed by ` ovr N` (an integer 4-400 on calc's own scale).
-# There is no labeled long form: the axis NAMES live in PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md,
-# not in the entry line. Higher is better on every axis, effort included (it scores CHEAPNESS), so
-# the four combine without sign-flipping.
+# There is no labeled long form: the axis NAMES live in RELEASES-DB-FAQS.md (and
+# PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md), not in the entry line. Higher is better on every axis,
+# effort included (it scores CHEAPNESS), so the four combine without sign-flipping.
 #
 # The refusal contract matters as much as the grammar: the PRESENCE of a `rated` or `ovr` token
 # either parses as the full form or refuses with a named rule. A malformed shape must never read
@@ -2805,9 +2909,99 @@ def parse_rating(raw, title):
     return out
 
 
+# GH-349 review (LTVera-Pandas #322): a ledger entry's GH number is a KEY, not a mention. It is
+# only read from the HEAD of the title. An unanchored search harvested 111 out of "Execution
+# checklist for GH-111 + GH-108", which collided with the real GH-111 entry and made
+# `roadmap sync` refuse outright on this repo's own ROADMAP.md. A title that names several issues
+# (`#129/#130/#131 · Wave 1 …`) is an umbrella heading, not a key, and must stay unnumbered.
+_ROADMAP_KEY_RE = re.compile(r"^(?:GH-|#)(\d+)\b")
+# The separator set distinguishes a RANGE from prose. `..`/`...` and U+2013 EN DASH are the
+# conventional numeric-range delimiters (`GH-135..140`, `GH-135–140` — six issues, not issue 135).
+# U+2014 EM DASH is deliberately EXCLUDED: `GH-100 — 2026 planning` is a single-issue title whose
+# key would otherwise be silently dropped. The ASCII hyphen is excluded for the same reason.
+# The first pass conflated the two dashes; codex QA separated them, 2026-08-31.
+_ROADMAP_MULTI_KEY_RE = re.compile(
+    r"^(?:GH-|#)\d+\s*(?:[/,+&\u2013]|\.\.\.?)\s*(?:GH-|#)?\d+")
+
+# Markdown task-list items (`- [ ]`, `- [x]`) share the `- [` prefix with a link bullet but are
+# not ledger entries; without this they parsed as rows with an empty or "x" title.
+_ROADMAP_TASKBOX_RE = re.compile(r"^- \[[ xX]\]")
+
+
+def _is_ledger_bullet(line):
+    """A ledger entry opener: a bold bullet or a link bullet, never a task-list checkbox."""
+    if line.startswith("- **"):
+        return True
+    return line.startswith("- [") and not _ROADMAP_TASKBOX_RE.match(line)
+
+
+def _roadmap_gh_number(title):
+    """The GH number a ledger entry is keyed by, or None. Anchored at the head of the title."""
+    if _ROADMAP_MULTI_KEY_RE.match(title):
+        return None
+    m = _ROADMAP_KEY_RE.match(title)
+    return int(m.group(1)) if m else None
+
+
+# A scheme in a markdown link target: `https:`, `mailto:`, or a Windows drive prefix `C:`. Any of
+# these means the target is not a repo-relative path, whatever it ends with.
+_DOC_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def _doc_pointer(target):
+    """The repo-relative document path a link target names, or None.
+
+    The `doc_path` column is a path a consumer resolves against the filesystem, so an absolute
+    URL, a mail address or a drive-lettered path in it yields a miss indistinguishable from a
+    dead pointer. codex QA found the first cut let all three through, because the extraction
+    regexes accepted any `.md`-suffixed target and this check was only consulted on the fallback
+    branch. It is now the SINGLE validator every candidate passes through, whichever regex found
+    it — a scheme-bearing `https://github.com/acme/specs/blob/main/DESIGN.md` is rejected here
+    even though it ends `.md`."""
+    if not target:
+        return None
+    target = target.strip()
+    if not target:
+        return None
+    if _DOC_SCHEME_RE.match(target) or target.startswith("/") or "\\" in target:
+        return None
+    path = target.split("#", 1)[0].split("?", 1)[0]
+    return path if path.endswith(".md") else None
+
+
+def _roadmap_issue_url(raw, link_target, gh_number):
+    """The URL a ledger entry is keyed to, or None.
+
+    Exactly two things count as evidence of identity: the bullet's OWN link target, and a URL in
+    the block whose number corroborates the title's GH key. Nothing else — an unanchored search
+    keyed GH-94 to a DIFFERENT repo's issue #2 and GH-68 to a PR, because both hooks cite other
+    work in passing.
+
+    An earlier cut kept a third branch for UNKEYED entries: the first URL on the bullet's first
+    line. codex QA showed that branch is wrong on the reporting repo's live data, where it stored
+    a BLOCKER as the row's identity — `Grow Willies …` took #42 (a blocker that has its own ledger
+    row) and `Marathon Plan 2026-07-07 …` took #47 (merely its only fireable lane). Being first is
+    not evidence. An unkeyed entry whose own link is a document now stores nothing.
+
+    Position never implies identity here: no URL beats a wrong URL."""
+    if link_target:
+        target = link_target.strip()
+        m = ROADMAP_URL_RE.fullmatch(target)
+        if m:
+            num = int(target.rsplit("/", 1)[1])
+            if gh_number is None or num == gh_number:
+                return m.group(0)
+    if gh_number is None:
+        return None
+    for cand in ROADMAP_URL_RE.findall(raw):
+        if int(cand.rsplit("/", 1)[1]) == gh_number:
+            return cand
+    return None
+
+
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
-    from its `- **` line to the next `- **`, `###`, or `##`."""
+    from its bullet line (`- **` or `- [`) to the next bullet, `###`, or `##`."""
     lines = open(path, encoding="utf-8").read().splitlines()
     entries = []
     sec = None
@@ -2826,33 +3020,46 @@ def parse_roadmap_ledger(path):
             sec = line[4:].strip()
             i += 1
             continue
-        if inledger and sec and line.startswith("- **"):
+        if inledger and sec and _is_ledger_bullet(line):
             j = i + 1
-            while j < n and not (lines[j].startswith("- **") or lines[j].startswith("### ")
+            while j < n and not (_is_ledger_bullet(lines[j]) or lines[j].startswith("### ")
                                  or re.match(r"^##\s+", lines[j])):
                 j += 1
             raw = "\n".join(lines[i:j]).rstrip()
-            m = re.match(r"^- \*\*(.+?)\*\*", raw)
-            title = m.group(1).strip() if m else raw[4:80]
-            gh = re.match(r"^GH-(\d+)\b", title)
+            m_bold = re.match(r"^- \*\*(.+?)\*\*", raw)
+            m_link = re.match(r"^- \[(.+?)\](?:\((.*?)\))?", raw)
+            if m_bold:
+                title = m_bold.group(1).strip()
+            elif m_link:
+                title = m_link.group(1).strip()
+            else:
+                title = raw[2:].strip()[:80]
+            gh_number = _roadmap_gh_number(title)
             marker = None
             for cand in _ROADMAP_STATUS_MARKERS:
                 if cand in raw:
                     marker = cand
                     break
             cre = re.search(r"cx/risk/eff (\d+)/(\d+)/(\d+)", raw)
-            doc = re.search(r"\]\((PROJECT/[^)]+\.md)", raw)
-            issue = re.search(r"https://github\.com/HiQS-(?:Suite|Labs)/XYZ-forge/(?:issues|pull)/\d+", raw)
+            link_target = m_link.group(2) if m_link else None
+            doc = (re.search(r"\]\((PROJECT/[^)#]+\.md)(?:#[^)]*)?\)", raw)
+                   or re.search(r"\]\(([^)#\s]+\.md)(?:#[^)]*)?\)", raw))
+            # Every candidate goes through the one validator — the extraction regexes only find
+            # a shape, they do not decide whether it is a document pointer.
+            doc_path = _doc_pointer(doc.group(1)) if doc else None
+            if doc_path is None:
+                doc_path = _doc_pointer(link_target)
+            issue_url = _roadmap_issue_url(raw, link_target, gh_number)
             pos[sec] = pos.get(sec, 0) + 1
             entry = {
-                "gh_number": int(gh.group(1)) if gh else None,
+                "gh_number": gh_number,
                 "title": title, "section": sec, "position": pos[sec],
                 "status_marker": marker,
                 "complexity": int(cre.group(1)) if cre else None,
                 "risk": int(cre.group(2)) if cre else None,
                 "effort": int(cre.group(3)) if cre else None,
-                "doc_path": doc.group(1) if doc else None,
-                "issue_url": issue.group(0) if issue else None,
+                "doc_path": doc_path,
+                "issue_url": issue_url,
                 "raw_text": raw,
             }
             entry.update(parse_rating(raw, title))
@@ -3180,6 +3387,41 @@ def cmd_roadmap_sync(args):
         if not os.path.exists(md_path):
             refuse("roadmap-missing", "no %s at %s — nothing to shadow" % (ROADMAP_NAME, root))
         parsed = parse_roadmap_ledger(md_path)
+        if len(parsed) == 0:
+            ledger_has_content = False
+            in_ledger_check = False
+            for line in open(md_path, encoding="utf-8").read().splitlines():
+                if re.match(r"^##\s+Ledger\s*$", line.strip()):
+                    in_ledger_check = True
+                    continue
+                if in_ledger_check and re.match(r"^##\s+", line):
+                    break
+                # A `###` section heading is ledger STRUCTURE, not content: a ledger with its
+                # sections and no bullets is genuinely empty. Format drift, by contrast, is
+                # bullets in a shape the parser missed — still non-heading lines, still caught.
+                if (in_ledger_check and line.strip()
+                        and not line.strip().startswith("<!--")
+                        and not line.startswith("###")):
+                    ledger_has_content = True
+                    break
+            has_rows = bool(_table_exists(conn, "roadmap_items")
+                            and conn.execute("SELECT 1 FROM roadmap_items LIMIT 1").fetchone())
+            if ledger_has_content or has_rows:
+                # --allow-empty is the ONE sanctioned way to clear the mirror. It is deliberately
+                # narrow: it never excuses a ledger that still has content, so it cannot be used to
+                # paper over the format drift this guard exists to catch. Without it, an
+                # intentionally emptied ledger was a dead end, and AGENTS.md forbids the hand-edit
+                # of releases.db that agy suggested as the workaround. codex QA, 2026-08-31.
+                if ledger_has_content or not getattr(args, "allow_empty", False):
+                    refuse("roadmap-empty-parse",
+                           "parsed 0 entries from %s (%s); refusing to delete roadmap_items%s"
+                           % (ROADMAP_NAME,
+                              "ledger is non-empty" if ledger_has_content else "table has existing rows",
+                              "" if ledger_has_content else " — pass --allow-empty if the ledger is "
+                              "meant to be empty and you intend to clear the mirror"))
+                n_rows = conn.execute("SELECT COUNT(*) FROM roadmap_items").fetchone()[0]
+                print("roadmap sync: --allow-empty — %s ledger is empty, clearing %d mirrored row(s)"
+                      % (ROADMAP_NAME, n_rows))
         # duplicate GH keys in the markdown would make the mirror ambiguous — name it, do not pick
         seen = {}
         for e in parsed:
@@ -3191,6 +3433,21 @@ def cmd_roadmap_sync(args):
                            % (e["gh_number"], ROADMAP_NAME, seen[e["gh_number"]][:60],
                               e["title"][:60]))
                 seen[e["gh_number"]] = e["title"]
+
+        # An unkeyed row is keyed by its TITLE instead (see the `have`/`parsed` key below), so two
+        # identical unkeyed titles are the same ambiguity as a duplicate GH number — and more
+        # reachable since GH-349 made umbrella and range headings deliberately unkeyed. Left
+        # unguarded, both enter `adds` on the first sync and collapse to one key on the next,
+        # leaving an orphan row behind. codex QA, 2026-08-31.
+        seen_titles = set()
+        for e in parsed:
+            if e["gh_number"] is None:
+                if e["title"] in seen_titles:
+                    refuse("roadmap-duplicate-title",
+                           "the unkeyed entry %r appears twice in %s. Entries without a GH number "
+                           "are mirrored by title, so two identical ones are ambiguous; give one a "
+                           "GH key or retitle it, then re-run." % (e["title"][:80], ROADMAP_NAME))
+                seen_titles.add(e["title"])
 
         repo = conn.execute("SELECT id, global_id FROM repos ORDER BY id LIMIT 1").fetchone()
         if repo is None:
@@ -4009,7 +4266,10 @@ def cmd_check(args):
 # inserts, resolving parent GIDs to fresh integer ids in dump order — the "deterministic
 # renumbering on rebuild" the grammar promises.
 
-INSERT_RE = re.compile(r"^INSERT INTO ([a-z_]+)\(([^)]*)\) VALUES\((.*)\);$")
+# re.S: a dumped value may contain newlines (a roadmap_items raw_text, say). parse_dump
+# already buffers multi-line statements; without DOTALL the regex could never match one,
+# so the buffer swallowed the rest of the file and --rebuild refused with dump-parse.
+INSERT_RE = re.compile(r"^INSERT INTO ([a-z_]+)\(([^)]*)\) VALUES\((.*)\);$", re.S)
 
 
 def _split_values(blob):
@@ -4580,6 +4840,12 @@ def build_parser():
     sp_cut.add_argument("--gid", required=True)
     sp_cut.add_argument("issue", help="issue URL or TMP-XXXXXX")
     sp_cut.add_argument("--reason", default="")
+    sp_unship = msub.add_parser("unship",
+                                help="retract a falsely shipped manifest item back to dialed_in "
+                                     "(REQUIRES --reason)")
+    sp_unship.add_argument("--gid", required=True)
+    sp_unship.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_unship.add_argument("--reason", default="")
 
     sp = sub.add_parser("marathon", help="marathon CRUD (v1: add/list)")
     msub = sp.add_subparsers(dest="marathon_cmd", required=True)
@@ -4624,6 +4890,11 @@ def build_parser():
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_rs = rsub.add_parser("sync", help="mirror legacy ROADMAP.md's ledger into roadmap_items (one-way)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
+    sp_rs.add_argument("--allow-empty", action="store_true",
+                       help="permit clearing roadmap_items when the ledger is genuinely empty. "
+                            "Without it a 0-entry parse REFUSES (rule=roadmap-empty-parse) so "
+                            "format drift can never silently delete the mirror; this flag never "
+                            "excuses a ledger that still has content")
     sp_rl = rsub.add_parser("list", help="print the shadow rows")
     sp_rl.add_argument("--json", dest="as_json", action="store_true",
                        help="emit rows as a JSON array (machine-readable; the default rendering "
@@ -4766,7 +5037,8 @@ def main(argv=None):
         "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd in ("dial-in", "add")
         else (cmd_manifest_ship(a) if a.manifest_cmd == "ship"
               else (cmd_manifest_marathon(a) if a.manifest_cmd == "marathon"
-                    else cmd_manifest_cut(a))),
+    else (cmd_manifest_unship(a) if a.manifest_cmd == "unship"
+                    else cmd_manifest_cut(a)))),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,

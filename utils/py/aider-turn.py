@@ -267,15 +267,30 @@ def main():
             harness_id="aider",
             shim="aider-turn.py",
             task_scope=t,
-            model_id=os.environ.get("AIDER_MODEL", "openrouter/deepseek/deepseek-v4-pro"),
-            gateway=os.environ.get("AIDER_GATEWAY", "openrouter"),
+            # GH-346 Phase 0: log the dispatched model, not a third independent default. Dispatch
+            # picks one of two values depending on the AIDER_OPENAI_API_BASE seam; this logged
+            # openrouter/deepseek/deepseek-v4-pro regardless, so neither seam recorded truthfully.
+            model_id=aider_model,
+            # Same bug one argument over: the LM Studio seam is not OpenRouter. Default honestly
+            # per seam; an explicit AIDER_GATEWAY still wins.
+            gateway=os.environ.get(
+                "AIDER_GATEWAY",
+                "openai-compatible" if aider_openai_api_base else "openrouter",
+            ),
             reasoning_effort=os.environ.get("AIDER_REASONING_EFFORT", "high"),
-            cli_flags=aflags,
+            # GH-346: was `aflags`, bound nowhere — NameError, swallowed, no row ever written.
+            # xflags (:157) is the operator's AIDER_FLAGS string; split it to match the list shape
+            # every other shim passes.
+            cli_flags=shlex.split(xflags) if xflags else [],
             repo_root=xyz_root,
         ) as logger:
             logger.exit_code = bounded_rc or rc
-    except Exception:
-        pass
+    except Exception as _telemetry_exc:
+        # GH-346: this used to be a bare `pass`. Three shims passed an undefined name as
+        # cli_flags, raised NameError here, and silently wrote NO telemetry row for the entire
+        # life of the shim -- a telemetry system that fails closed and says nothing. Still
+        # non-fatal (a turn must never fail because logging did), but never again invisible.
+        print(f"aider-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)
 
     if bounded_rc == 7:
         sys.exit(7)

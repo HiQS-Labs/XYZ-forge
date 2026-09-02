@@ -140,15 +140,26 @@ def main():
             harness_id="codex",
             shim="codex-turn.py",
             task_scope=t,
-            model_id=os.environ.get("CODEX_MODEL", "openai/gpt-5-codex"),
+            # GH-346 Phase 0: CODEX_MODEL is read nowhere else in this shim — codex is never
+            # given a --model flag, so a hardcoded openai/gpt-5-codex here recorded a model this
+            # shim never selected. Pass None when unset and let device_config's resolver answer.
+            model_id=os.environ.get("CODEX_MODEL") or None,
             gateway=os.environ.get("CODEX_GATEWAY", "openai"),
             reasoning_effort=os.environ.get("CODEX_REASONING_EFFORT", "high"),
-            cli_flags=flags,
+            # GH-346: was `flags`, which is bound nowhere in this file. Evaluating the argument
+            # raised NameError, the `except Exception: pass` below swallowed it, and this gateway
+            # therefore wrote NO telemetry row on any turn, for the life of the shim. The real
+            # variable is cflags (:64).
+            cli_flags=cflags,
             repo_root=xyz_root,
         ) as logger:
             logger.exit_code = bounded_rc or rc
-    except Exception:
-        pass
+    except Exception as _telemetry_exc:
+        # GH-346: this used to be a bare `pass`. Three shims passed an undefined name as
+        # cli_flags, raised NameError here, and silently wrote NO telemetry row for the entire
+        # life of the shim -- a telemetry system that fails closed and says nothing. Still
+        # non-fatal (a turn must never fail because logging did), but never again invisible.
+        print(f"codex-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)
 
     if bounded_rc == 7:
         sys.exit(7)
