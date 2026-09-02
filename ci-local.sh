@@ -147,10 +147,16 @@ PASSED=(); FAILED=()
 GATE_SUITE_LOG="${TMPDIR:-/tmp}/ci-local-suite-$$.log"
 GATE_VERDICTS="${TMPDIR:-/tmp}/ci-local-verdicts-$$.txt"
 trap 'rm -f "$GATE_SUITE_LOG" "$GATE_VERDICTS"' EXIT
+# GH-365 step 2: retained JSONL telemetry, same lib and schema validate.sh uses. rt_begin is
+# deferred to the run section (mode is known there); stage timing is wired once, here, so every
+# step() below is timed uniformly without per-step ceremony.
+. "$HERE/test/lib/runner-telemetry.sh"
 step() {  # <name> — everything after is the step body, run in a subshell
-  local name="$1"; shift
+  local name="$1" _s; shift
+  _s="$(rt_now_ms)"
   printf '\n\033[1m=== %s\033[0m\n' "$name"
-  if "$@"; then PASSED+=("$name"); else FAILED+=("$name"); printf '\033[31mFAILED: %s\033[0m\n' "$name" >&2; fi
+  if "$@"; then PASSED+=("$name"); rt_emit stage stage "$name" "$_s" "$(rt_now_ms)" 0
+  else FAILED+=("$name"); rt_emit stage stage "$name" "$_s" "$(rt_now_ms)" 1; printf '\033[31mFAILED: %s\033[0m\n' "$name" >&2; fi
 }
 
 # ── 1. prerequisites ─────────────────────────────────────────────────────────────────────────────
@@ -173,14 +179,17 @@ check_prereqs() {
 }
 
 # ── 2-5. the cheap static checks, verbatim from the workflow ─────────────────────────────────────
+# GH-365 step 5 census: THIS is the one local scan site for the shellcheck BINARY (the hosted
+# job in ci.yml is the other); no registered suite executes it — everything else in test/ is
+# directives. Parallel at the balanced four-worker width (the same policy validate.sh's pool
+# uses): one process per file, so per-file diagnostics are IDENTICAL to the serial shape — only
+# their interleaving in the aggregate stream can differ. (A comment here must never START with
+# the word "shellcheck" — the scanner parses that prefix as a directive and the scan itself goes
+# red on SC1072/SC1073; observed on the first qualifying run at 76174765.) XYZ_SHELLCHECK_JOBS=1
+# restores the exact serial shape (xargs -P 1); xargs aggregates per-file failures nonzero.
 shellcheck_tracked() {
   # severity=error, matching the workflow's deliberate choice to land green before tightening.
-  local rc=0 file
-  while IFS= read -r file; do
-    [ -n "$file" ] || continue
-    shellcheck -S error "$file" || rc=1
-  done < <(git ls-files -- '*.sh')
-  return $rc
+  git ls-files -z -- '*.sh' | xargs -0 -P "${XYZ_SHELLCHECK_JOBS:-4}" -n 1 shellcheck -S error
 }
 
 bash_syntax_tracked() {
@@ -272,32 +281,75 @@ validate_suite() {
   # away.
   : > "$GATE_SUITE_LOG"
   : > "$GATE_VERDICTS"
+  _one="${TMPDIR:-/tmp}/ci-local-onesuite-$$.log"   # GH-365: per-suite capture for telemetry bytes/hash
   for t in "${all_tests[@]}"; do
     skip=0
     for s in "${skip_tests[@]}"; do [ "$t" = "$s" ] && { skip=1; break; }; done
-    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; printf '%s\tskip\n' "$t" >> "$GATE_VERDICTS"; continue; }
+    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; printf '%s\tskip\n' "$t" >> "$GATE_VERDICTS"; rt_emit suite stage "$t" "$(rt_now_ms)" "$(rt_now_ms)" 0 "verdict=skip-duplicate"; continue; }
     echo "=== $t ===" | tee -a "$GATE_SUITE_LOG"
-    bash "test/$t" 2>&1 | tee -a "$GATE_SUITE_LOG"
-    if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+    _s="$(rt_now_ms)"
+    # Two tees: the first APPENDS the shared transcript, the second writes the per-suite capture
+    # (truncated fresh). BSD tee does NOT permute options — the earlier single
+    # `tee "$_one" -a "$GATE_SUITE_LOG"` treated -a as a FILENAME (empirically confirmed:
+    # `printf hi | tee ./one -a ./two` leaves a file named '-a' in CWD), creating that stray file
+    # in the repo root on every suite. The GH-365 envelope's tree bracket caught it and refused
+    # to attest two qualifying runs before the shape was pinned.
+    bash "test/$t" 2>&1 | tee -a "$GATE_SUITE_LOG" | tee "$_one"
+    _rc="${PIPESTATUS[0]}"
+    if [ "$_rc" -eq 0 ]; then
       printf '%s\tpass\n' "$t" >> "$GATE_VERDICTS"
     else
       rc=1
       printf '%s\tFAIL\n' "$t" >> "$GATE_VERDICTS"
       echo "  ^^ FAILED: $t" >&2
     fi
+    rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$_rc" "$_one"
   done
+  rm -f "$_one"
+
+  # GH-377 review blocker 1: the qualifying run must execute the AUTHORITATIVE tier-3 set, not a
+  # .sh-only subset. validate.sh owns three non-TESTS lanes; this runner supplies its own envelope
+  # bracket (the identity half of lane two), but Python and gamma-poison were historically omitted
+  # while the output said "full suite" and the record claimed qualifying evidence. They are part of
+  # the loop now, recorded in the verdicts under validate.sh's own PASSED labels so the record and
+  # the summary agree on the denominator.
+  _s="$(rt_now_ms)"
+  _rc=0
+  if python3 -m pytest "$HERE/test/test_python_layer.py"; then
+    printf '%s\tpass\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
+  else
+    _rc=$?   # before any other statement — the printf/echo and the rt_now_ms substitutions reset $?
+    rc=1
+    printf '%s\tFAIL\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
+    echo "  ^^ FAILED: python:test_python_layer.py" >&2
+  fi
+  rt_emit suite sequential "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$_rc"
+
+  _s="$(rt_now_ms)"
+  _rc=0
+  if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
+    printf '%s\tpass\n' "gamma-poison-staleness-probe" >> "$GATE_VERDICTS"
+  else
+    _rc=$?   # before any other statement — same ordering rule
+    rc=1
+    printf '%s\tFAIL\n' "gamma-poison-staleness-probe" >> "$GATE_VERDICTS"
+    echo "  ^^ FAILED: gamma-poison-staleness-probe" >&2
+  fi
+  rt_emit suite sequential "gamma-poison-staleness-probe" "$_s" "$(rt_now_ms)" "$_rc"
   return $rc
 }
 
-# ── 10. GH-10: the identity bracket's assert half — the record this run writes must be
-# attributable to a clone that is still the clone it started as (see validate.sh's GH-1 block
-# for the incident). Runs as a step so its verdict lands in the summary like every other.
-ci_local_identity_assert() {
-  [ -n "$IDENTITY_SNAPSHOT" ] || { echo "  no snapshot captured (internal error)" >&2; return 1; }
-  bash "$HERE/test/lib/clone-identity.sh" assert "$IDENTITY_SNAPSHOT" "$HERE"
+# ── 10. GH-10/GH-365: the shared envelope bracket — assert half ─────────────────────────────────
+# The qualifying run writes the gate-evidence record, so it carries the same clone-identity
+# bracket validate.sh has, from the SAME shared helper (GH-365 step 1): identity drift fails the
+# run (the GH-564 incident), and envelope drift (tracked tree / worktrees / driver lock changed
+# under the run) is named and also fails — a qualifying run that cannot retain attributable
+# evidence must not exit green (the failure mode #365 exists to prevent).
+ci_local_envelope_assert() {
+  runner_envelope_assert "$HERE" "ci-local.sh"
   local rc=$?
-  rm -f "$IDENTITY_SNAPSHOT"
-  return $rc
+  RT_ENVELOPE_RC="$rc"; RT_ENVELOPE_DRIFT="${RUNNER_ENVELOPE_DRIFT_FACETS:-none}"
+  return "$rc"
 }
 
 # ── run ──────────────────────────────────────────────────────────────────────────────────────────
@@ -305,6 +357,19 @@ printf '\033[1mci-local — mirroring .github/workflows/ci.yml tier1\033[0m\n'
 printf 'repo: %s\n' "$HERE"
 printf 'HEAD: %s\n' "$(git log --oneline -1 2>/dev/null)"
 [ "$FAST" -eq 1 ] && printf '\033[33mmode: --fast (full validate.sh suite SKIPPED)\033[0m\n'
+# GH-365 step 2: open the retained telemetry record for THIS run (same schema as validate.sh).
+# The registered denominator is parsed here, once, exactly the way validate_suite parses TESTS —
+# so run.start carries the explicit denominator instead of inheriting a stale section count.
+# The denominator comes from validate.sh --list — the READ-ONLY registry surface #141 built for
+# exactly this (secondary selectors share one source of truth) — not a second TESTS scrape.
+# This is not "invoking validate.sh" in the sense gh544 pins: the gate never runs, no suites, no
+# envelope; it prints the manifest and exits.
+_declared="$(bash "$HERE/validate.sh" --list | wc -l | tr -d ' ')"
+if [ "$FAST" -eq 1 ]; then
+  rt_begin "$HERE" "ci-local" "fast" 1 3 "$_declared"
+else
+  rt_begin "$HERE" "ci-local" "sequential" 1 3 "$_declared"
+fi
 
 step "prerequisites"                check_prereqs
 step "shellcheck tracked scripts"   shellcheck_tracked
@@ -318,22 +383,22 @@ else
   printf '\n\033[33mSKIP: frozen twin guard — CI runs it on pull_request only. Pass --base <ref> to run it.\033[0m\n'
 fi
 step "npm ci + acorn-extract"       npm_and_acorn
-# GH-10/GH-1: the qualifying run writes the gate-evidence record, so it carries the same
-# clone-identity bracket validate.sh has — captured BEFORE the suite runs and asserted after,
-# so a suite that escapes its fixture and rewrites this clone's git identity (the GH-564
-# incident) fails THIS run detectably instead of leaving an unattributable green record.
-IDENTITY_SNAPSHOT=""
+# GH-10/GH-1 + GH-365 step 1: the qualifying run gets the SAME envelope validate.sh uses, from
+# the ONE shared helper — harness-registry scratch (XYZ_HARNESS_DB) AND the identity bracket AND
+# the tree/worktree/lock bracket. Before GH-365, this run executed the registered suites with no
+# scratch envelope at all: harness_app.py writes landed in the TRACKED harnesses.db, the tree
+# went dirty, and gate-record.sh then refused to retain the record for exactly the run that
+# needed it. Fail closed if the helper is missing — never a second inline envelope.
 if [ "$FAST" -eq 0 ]; then
-  IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/ci-local-identity.XXXXXX")"
-  if [ -n "$IDENTITY_SNAPSHOT" ] && bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" 2>/dev/null; then
-    :
-  else
-    echo "ci-local: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
-    rm -f "$IDENTITY_SNAPSHOT"; IDENTITY_SNAPSHOT=""
+  if [ ! -f "$HERE/test/lib/runner-envelope.sh" ]; then
+    echo "ci-local: test/lib/runner-envelope.sh is missing — the shared GH-365 runner envelope cannot be set up; refusing." >&2
     exit 1
   fi
+  . "$HERE/test/lib/runner-envelope.sh"
+  runner_envelope_begin "$HERE" "ci-local.sh" || exit 1
   RELAY_SELF_SUFFICIENCY_SKIP=1 step "validate.sh suite" validate_suite
-  step "clone-identity invariant (GH-1)" ci_local_identity_assert
+  step "clone-identity invariant (GH-1)" ci_local_envelope_assert
+  runner_envelope_scrub
 fi
 
 # ── report ───────────────────────────────────────────────────────────────────────────────────────
@@ -344,6 +409,7 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   printf '\n\033[31mci-local: %d step(s) failed\033[0m\n' "${#FAILED[@]}"
   printf 'This ran on macOS — the platform XYZ ships to — so a failure here is a real defect for\n'
   printf 'real users. Do not wait for hosted CI to confirm it; the ubuntu job is advisory (GH-509).\n'
+  rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$(( ${#PASSED[@]} + ${#FAILED[@]} ))" "declared=$_declared" "recorded=no"
   exit 1
 fi
 printf '\n\033[32mci-local: all steps passed\033[0m\n'
@@ -355,9 +421,24 @@ printf 'for this exact commit (GH-509 §6) — a clean machine, and evidence you
 # Only a full run earns a record. A --fast or --probe run deliberately does not exercise the suite,
 # so recording one would make a partial run indistinguishable from a complete one — which is the
 # whole failure mode this file keeps warning about in other contexts.
+#
+# GH-365 step 1: a REFUSED record now fails the qualifying run instead of passing silently
+# (`|| true` used to swallow it). The record is the product of this run: a green exit with no
+# retained evidence is precisely the "cannot retain its evidence" failure #365 exists to prevent.
+# gate-record's own refusal names what made the tree dirty (exit 3) or why no commit was found
+# (exit 4); the envelope assert above has already named any drift that explains it.
 if [ "$FAST" -eq 0 ] && [ "$PROBE" -eq 0 ]; then
   printf '\n'
   # Delegated rather than inlined, so the REFUSAL has a test that does not cost a 15-minute suite run.
-  bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || true
+  _gr_rc=0
+  bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || _gr_rc=$?
+  rt_emit stage stage "gate-record" "$(rt_now_ms)" "$(rt_now_ms)" "$_gr_rc"
+  if [ "$_gr_rc" -ne 0 ]; then
+    printf '\033[31mci-local: gate-record refused (exit %d) — this qualifying run leaves NO evidence record, so it cannot exit green (GH-365).\033[0m\n' "$_gr_rc" >&2
+    rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$(( ${#PASSED[@]} + ${#FAILED[@]} ))" "declared=$_declared" "recorded=refused-$_gr_rc"
+    exit 1
+  fi
 fi
+[ -n "${RT_FILE:-}" ] && echo "telemetry: $RT_FILE"
+rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$(( ${#PASSED[@]} + ${#FAILED[@]} ))" "declared=$_declared" "recorded=yes"
 exit 0

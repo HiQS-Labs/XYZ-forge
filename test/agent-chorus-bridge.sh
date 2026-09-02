@@ -369,6 +369,94 @@ restart_status="$(curl -s "http://127.0.0.1:$RESTART_PORT/sessions/777001/status
 expect_contains "restarted bridge recovers status of closed discussion 777001" "$restart_status" '"status": "Closed"'
 expect_contains "restarted bridge recovers turn count 5" "$restart_status" '"current_turn": 5'
 
+
+# ── GH-384 review: the UNCONFIGURED-CF path ──────────────────────────────────────────────────────
+#
+# Every CF assertion above starts the bridge WITH credentials, so all three pass while saying
+# nothing about the default configuration — which is the one that ships. That is the shape
+# AGENTS.md §6 calls a check that cannot fail: green, and blind to the hazard.
+#
+# The hazard, verified by hand during review: with no credentials, zero-header requests minted a
+# capability token from /join, read full turn bodies from /turns, and wrote to conversation.md on
+# disk. Over --tunnel that is reachable from anywhere, and conversation.md is fed back to a local
+# agent as turn context, so it doubles as a remote prompt-injection channel.
+#
+# These assertions pin the guard that closes it. NEGATIVE CONTROL: delete the
+# `args.tunnel and not auth_enabled` branch in agent_chorus_bridge.py's main() and A1 must go red.
+
+echo
+echo "── unauthenticated-by-default guard (GH-384 review) ──"
+
+# A1: --tunnel must REFUSE when no Cloudflare credentials are configured.
+# BOUNDED, and that is load-bearing. The first draft invoked the bridge in the foreground: with
+# the guard PRESENT it exits 2 immediately and passes, but with the guard REMOVED it falls through
+# to launch_quick_tunnel + serve_forever and the assertion HANGS instead of failing. A hanging
+# assertion stalls the whole pool and never reports — strictly worse than a red. Found by running
+# the mutation this block exists to catch. Run it detached, poll for a verdict, reap either way.
+_noauth_log="$WORK/noauth-tunnel.log"
+: > "$_noauth_log"
+( env -u CF_ACCESS_CLIENT_ID -u CF_ACCESS_CLIENT_SECRET \
+    PYTHONUNBUFFERED=1 python3 "$BRIDGE" --port 0 --tunnel --root "$REPO" \
+    > "$_noauth_log" 2>&1; echo "rc=$?" >> "$_noauth_log" ) &
+_noauth_pid=$!
+for _i in $(seq 1 100); do
+  grep -q '^rc=' "$_noauth_log" 2>/dev/null && break
+  sleep 0.1
+done
+kill "$_noauth_pid" 2>/dev/null || true
+wait "$_noauth_pid" 2>/dev/null || true
+noauth_out="$(cat "$_noauth_log")"
+
+case "$noauth_out" in
+  *"REFUSING --tunnel without Cloudflare Access credentials"*)
+    pass "A1: --tunnel refuses without CF Access credentials" ;;
+  *)
+    fail "A1: --tunnel did NOT refuse unauthenticated (got: $(printf '%s' "$noauth_out" | head -1))" ;;
+esac
+
+# A1b: the refusal must be an error EXIT, not a warning it continues past. If the guard is gone
+# the process never exits, no rc= line is ever written, and this fails on the missing verdict —
+# which is the correct outcome for a hang.
+case "$noauth_out" in
+  *"rc=2"*) pass "A1b: the refusal exits 2 rather than continuing" ;;
+  *)        fail "A1b: expected exit 2 from the tunnel refusal (no rc=2 in output — guard missing or process hung)" ;;
+esac
+
+# A2: the escape hatch still exists, so the guard is a decision and not a wall. Asserted on the
+# flag surface rather than by opening a real tunnel in a test.
+python3 "$BRIDGE" --help 2>&1 | grep -q -- '--insecure-allow-unauthenticated' \
+  && pass "A2: --insecure-allow-unauthenticated is available as an explicit opt-out" \
+  || fail "A2: no documented way to intentionally run an open bridge"
+
+# A3: the banner must state the auth posture in BOTH directions. Silence used to mean "disabled",
+# which is the state an operator most needs told, and the old check read argparse instead of the
+# manager so an env-configured bridge also printed nothing.
+# NB: no `timeout(1)` here — it is GNU coreutils and is NOT present on macOS, where this gate's
+# promotion boundary runs. The first draft used it; the command simply did not exist, `|| true`
+# swallowed the failure, and the assertion compared against an empty string. Start the server in
+# the background, read its banner from a log, then kill it. PYTHONUNBUFFERED is required: stdout
+# is block-buffered when redirected, so the banner never reaches the file otherwise.
+_banner() {  # <log> <env-assignments...> — capture the startup banner of a short-lived bridge
+  local log="$1"; shift
+  : > "$log"
+  ( env "$@" PYTHONUNBUFFERED=1 python3 "$BRIDGE" --port 0 --root "$REPO" > "$log" 2>&1 ) &
+  local pid=$!
+  local i
+  for i in $(seq 1 100); do
+    grep -q 'Cloudflare Access authentication' "$log" 2>/dev/null && break
+    sleep 0.05
+  done
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  cat "$log"
+}
+
+banner_off="$(_banner "$WORK/banner-off.log" CF_ACCESS_CLIENT_ID= CF_ACCESS_CLIENT_SECRET=)"
+expect_contains "A3: banner names DISABLED auth on an unauthenticated bridge" "$banner_off" "DISABLED"
+
+banner_on="$(_banner "$WORK/banner-on.log" CF_ACCESS_CLIENT_ID=probe-id CF_ACCESS_CLIENT_SECRET=probe-secret)"
+expect_contains "A3b: banner names ENABLED when creds come from the ENVIRONMENT (not argv)" "$banner_on" "ENABLED"
+
 echo
 echo "=========================================="
 echo "AgentChorus Bridge Test Summary: $PASS passed, $FAIL failed"

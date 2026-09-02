@@ -178,10 +178,10 @@ rm -rf "$R/.git/relay-driver.lock"
 
 # 14. Startup orphan lease reconciliation via perform_write
 # Simulate crash recovery with perform_write
-sqlite3 "$R/releases.db" "UPDATE jog_queue SET status = 'running', lease_pid = 999999 WHERE gh_number = 102;"
 python3 -c "
 import sys; sys.path.insert(0, '$ROOT/utils/py')
-from releases_app import jog_reconcile_orphan_leases
+from releases_app import jog_acquire_lease, jog_reconcile_orphan_leases
+jog_acquire_lease('$R', 102, 999999)
 jog_reconcile_orphan_leases('$R')
 "
 status_after="$(sqlite3 "$R/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 102;")"

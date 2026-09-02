@@ -38,6 +38,7 @@ import agent_chorus
 
 DEFAULT_PORT = 8080
 DEFAULT_IDLE_TIMEOUT = 600.0  # 10 minutes idle lease
+REQUEST_SOCKET_TIMEOUT = 30.0  # GH-384 review: drop stalled connections (slow-loris guard)
 DEFAULT_MAX_LIFETIME = 7200.0  # 2 hours maximum session duration
 MAX_BODY_BYTES = 2 * 1024 * 1024  # 2 MB max payload size
 
@@ -328,6 +329,15 @@ class BridgeRequestHandler(http.server.BaseHTTPRequestHandler):
         return None
 
     def do_OPTIONS(self) -> None:
+        # GH-384 review: this used to answer before any auth check, so with CF Access configured
+        # an unauthenticated OPTIONS still returned 204 plus the full method/header surface.
+        # Fingerprinting only — no data — but the preflight is a request like any other and there
+        # is no reason for it to be the one route that skips the gate.
+        try:
+            self.manager.validate_cf_access(dict(self.headers))
+        except Exception as exc:
+            self._send_error(exc)
+            return
         self.send_response(204)
         self.send_header("Allow", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -732,6 +742,12 @@ def start_bridge_server(
         max_lifetime=max_lifetime,
     )
     server = ThreadingHTTPServer((host, port), BridgeRequestHandler)
+    # GH-384 review (Qwen Q6): ThreadingHTTPServer with no socket timeout means a slow header
+    # drip, or a slow body up to the 2MB cap, pins one thread per connection with unbounded thread
+    # growth — a trivial DoS. BaseHTTPRequestHandler honours a class-level `timeout` on its
+    # rfile/wfile socket, so a connection that stalls is dropped instead of held.
+    BridgeRequestHandler.timeout = REQUEST_SOCKET_TIMEOUT
+    server.timeout = REQUEST_SOCKET_TIMEOUT
     setattr(server, "bridge_manager", manager)
     actual_port = server.server_address[1]
     return server, actual_port
@@ -783,6 +799,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cf-client-id", help="Required Cloudflare Access Client ID")
     parser.add_argument("--cf-client-secret", help="Required Cloudflare Access Client Secret")
     parser.add_argument("--tunnel", action="store_true", help="Launch cloudflared Quick Tunnel")
+    parser.add_argument(
+        "--insecure-allow-unauthenticated",
+        action="store_true",
+        help="Publish the tunnel with NO authentication. Every endpoint becomes world-readable "
+             "and world-writable. Only for a throwaway store you are willing to lose.",
+    )
     return parser.parse_args()
 
 
@@ -799,7 +821,37 @@ def main() -> int:
         max_lifetime=args.max_lifetime,
     )
 
+    # Ask the MANAGER, not argparse: credentials may arrive through CF_ACCESS_CLIENT_ID /
+    # CF_ACCESS_CLIENT_SECRET in the environment, which `args.cf_client_id` cannot see. The old
+    # banner checked args, so an env-configured bridge printed nothing and looked unauthenticated
+    # while it was in fact enforcing — wrong in both directions at once.
+    manager = getattr(server, "bridge_manager", None)
+    auth_enabled = bool(manager and (manager.cf_client_id or manager.cf_client_secret))
+
+    # GH-384 REVIEW BLOCKER: a Quick Tunnel puts this process on the public internet. With no
+    # Cloudflare Access credentials the ONLY auth gate (BridgeManager.validate_cf_access) returns
+    # early, so join/turns/send are all open — verified live: zero headers minted a capability
+    # token, read full turn bodies, and wrote to conversation.md on disk. The write path is worse
+    # than transcript tampering: conversation.md is fed back to the LOCAL agent as turn context,
+    # so an open bridge is a remote prompt-injection channel, and it writes outside the git tree
+    # where `git status` cannot see it. Obscurity of the random *.trycloudflare.com name is not a
+    # substitute — the URL's whole purpose is to be shared, so it lands in chat logs and history.
+    # Refuse by default; make the operator say the dangerous thing out loud.
     tunnel_proc = None
+    if args.tunnel and not auth_enabled and not args.insecure_allow_unauthenticated:
+        print(
+            "bridge: REFUSING --tunnel without Cloudflare Access credentials.\n"
+            "  A Quick Tunnel is public. With no credentials every endpoint is unauthenticated:\n"
+            "  anyone who reaches the URL can read transcripts, seat themselves, and write turns\n"
+            "  that this host feeds back to a local agent as context.\n"
+            "  Fix: set CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (or pass --cf-client-id /\n"
+            "  --cf-client-secret), or re-run with --insecure-allow-unauthenticated if you truly\n"
+            "  intend an open bridge over a throwaway store.",
+            file=sys.stderr,
+        )
+        server.server_close()
+        return 2
+
     if args.tunnel:
         try:
             tunnel_proc = launch_quick_tunnel(actual_port)
@@ -808,8 +860,14 @@ def main() -> int:
 
     print(f"AgentChorus Bridge listening on http://{args.host}:{actual_port}")
     print(f"Idle lease: {args.idle_timeout}s | Max lifetime: {args.max_lifetime}s")
-    if args.cf_client_id:
+    # Always state the auth posture. Silence used to mean "disabled", which is the one state an
+    # operator most needs told.
+    if auth_enabled:
         print("Cloudflare Access authentication: ENABLED")
+    elif args.tunnel:
+        print("Cloudflare Access authentication: DISABLED — TUNNEL IS PUBLIC AND UNAUTHENTICATED")
+    else:
+        print("Cloudflare Access authentication: DISABLED — localhost only, do not expose this port")
 
     def handle_sig(sig, frame):
         if tunnel_proc:

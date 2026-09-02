@@ -79,7 +79,16 @@ Implement two layers of authentication and session lifecycle management:
 3. **10-Minute Idle Lease & Maximum Lifetime**:
    - Enforces a 10-minute idle expiry (configurable) renewed on each valid request (join, poll, send, heartbeat).
    - Enforces maximum session lifetime.
-   - On expiry: tombstones remote bridge session, revokes tokens, while preserving canonical local transcript.
+   - On expiry: the session object becomes unreachable via `is_expired` and further requests get
+     410 Gone; the canonical local transcript is preserved. **Corrected 2026-09-02 (Qwen QA, Q3):**
+     nothing is actively tombstoned and no token is actively revoked on expiry — `revoke_all` runs
+     only on the HTTP `/close` path, so a discussion closed through the local CLI leaves bridge
+     tokens minted until the lease lapses. The 2-hour max lifetime also bounds one `BridgeSession`
+     object rather than participation: `POST /sessions {id}` silently reattaches any non-closed
+     discussion and a fresh join mints new tokens, so a client can stay resident indefinitely.
+     Both are accepted for now — behind the authentication guard added in the same review, an
+     unbounded-participation peer is an authenticated peer. Tracked as follow-ups, not shipped
+     guarantees. The original wording promised enforcement that does not exist.
 
 ### Phase 2 QA Gate
 - [x] Requests without valid Access credentials (when enabled) are rejected with HTTP 401.

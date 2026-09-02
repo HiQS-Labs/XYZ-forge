@@ -182,11 +182,43 @@ def load_text(file_path: Optional[str], inline_text: Optional[str]) -> str:
     raise ValueError("either inline text or file path is required")
 
 
+
+def resolve_token(args) -> str:
+    """Capability token from the least-exposed source available.
+
+    GH-384 review (Qwen Q5): `--token <value>` puts a live credential in argv, which is readable
+    by every local user through ps(1) and recorded in shell history. Same for the CF service
+    credentials. Order of preference: --token-file (or stdin), then AGENTCHORUS_TOKEN, then the
+    literal flag — which still works, but now warns, because breaking every existing caller to fix
+    a disclosure is a worse trade than telling them.
+    """
+    tf = getattr(args, "token_file", None)
+    if tf:
+        if tf == "-":
+            return sys.stdin.read().strip()
+        return Path(tf).read_text(encoding="utf-8").strip()
+    env = os.environ.get("AGENTCHORUS_TOKEN")
+    if env:
+        return env.strip()
+    tok = getattr(args, "token", None)
+    if tok:
+        print(
+            "agent-chorus-client: warning — --token exposes the capability token in argv "
+            "(visible via ps to any local user) and in shell history. Prefer --token-file, "
+            "'--token-file -' on stdin, or AGENTCHORUS_TOKEN.",
+            file=sys.stderr,
+        )
+        return tok
+    raise SystemExit(
+        "agent-chorus-client: a capability token is required — pass --token-file, set "
+        "AGENTCHORUS_TOKEN, or use --token (least private)."
+    )
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="AgentChorus Remote Bridge Client")
     parser.add_argument("--url", default="http://127.0.0.1:8080", help="Bridge server URL (default: http://127.0.0.1:8080)")
-    parser.add_argument("--cf-client-id", help="Cloudflare Access Client ID")
-    parser.add_argument("--cf-client-secret", help="Cloudflare Access Client Secret")
+    parser.add_argument("--cf-client-id", help="Cloudflare Access Client ID (prefer CF_ACCESS_CLIENT_ID)")
+    parser.add_argument("--cf-client-secret", help="Cloudflare Access Client Secret (prefer CF_ACCESS_CLIENT_SECRET)")
 
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -210,7 +242,8 @@ def parse_args() -> argparse.Namespace:
     p_poll = sub.add_parser("poll", help="Poll for turn")
     p_poll.add_argument("--id", required=True, help="6-digit discussion ID")
     p_poll.add_argument("--agent", type=int, required=True, help="Agent seat number")
-    p_poll.add_argument("--token", required=True, help="Seat capability token")
+    p_poll.add_argument("--token", help="Seat capability token (prefer --token-file or AGENTCHORUS_TOKEN)")
+    p_poll.add_argument("--token-file", help="Read the capability token from this file (or - for stdin)")
     p_poll.add_argument("--interval", type=float, default=5.0, help="Poll interval in seconds")
     p_poll.add_argument("--timeout", type=float, default=300.0, help="Max wait timeout in seconds")
 
@@ -219,7 +252,8 @@ def parse_args() -> argparse.Namespace:
     p_send.add_argument("--id", required=True, help="6-digit discussion ID")
     p_send.add_argument("--agent", type=int, required=True, help="Agent seat number")
     p_send.add_argument("--next-agent", type=int, required=True, help="Next agent seat number")
-    p_send.add_argument("--token", required=True, help="Seat capability token")
+    p_send.add_argument("--token", help="Seat capability token (prefer --token-file or AGENTCHORUS_TOKEN)")
+    p_send.add_argument("--token-file", help="Read the capability token from this file (or - for stdin)")
     p_send.add_argument("--message", help="Inline message body")
     p_send.add_argument("--message-file", help="Path to message file (or - for stdin)")
     p_send.add_argument("--expected-turn", type=int, help="Expected current turn before write")
@@ -229,7 +263,8 @@ def parse_args() -> argparse.Namespace:
     p_close = sub.add_parser("close", help="Close discussion")
     p_close.add_argument("--id", required=True, help="6-digit discussion ID")
     p_close.add_argument("--agent", type=int, required=True, help="Agent seat number")
-    p_close.add_argument("--token", required=True, help="Seat capability token")
+    p_close.add_argument("--token", help="Seat capability token (prefer --token-file or AGENTCHORUS_TOKEN)")
+    p_close.add_argument("--token-file", help="Read the capability token from this file (or - for stdin)")
     p_close.add_argument("--message", help="Inline close message")
     p_close.add_argument("--message-file", help="Path to close message file")
     p_close.add_argument("--trivial", action="store_true", help="Perform trivial administrative close")
@@ -238,7 +273,8 @@ def parse_args() -> argparse.Namespace:
     p_hb = sub.add_parser("heartbeat", help="Send heartbeat")
     p_hb.add_argument("--id", required=True, help="6-digit discussion ID")
     p_hb.add_argument("--agent", type=int, required=True, help="Agent seat number")
-    p_hb.add_argument("--token", required=True, help="Seat capability token")
+    p_hb.add_argument("--token", help="Seat capability token (prefer --token-file or AGENTCHORUS_TOKEN)")
+    p_hb.add_argument("--token-file", help="Read the capability token from this file (or - for stdin)")
 
     return parser.parse_args()
 
@@ -270,7 +306,7 @@ def main() -> int:
             decision, st = client.poll_for_turn(
                 discussion_id=args.id,
                 agent_number=args.agent,
-                token=args.token,
+                token=resolve_token(args),
                 interval=args.interval,
                 timeout=args.timeout,
             )
@@ -283,7 +319,7 @@ def main() -> int:
                 agent_number=args.agent,
                 next_agent_number=args.next_agent,
                 message=msg,
-                token=args.token,
+                token=resolve_token(args),
                 expected_turn=args.expected_turn,
                 idempotency_key=args.idempotency_key,
             )
@@ -294,7 +330,7 @@ def main() -> int:
                 discussion_id=args.id,
                 agent_number=args.agent,
                 message=msg,
-                token=args.token,
+                token=resolve_token(args),
                 trivial=args.trivial,
             )
             print(json.dumps(res, indent=2))
@@ -302,7 +338,7 @@ def main() -> int:
             res = client.heartbeat(
                 discussion_id=args.id,
                 agent_number=args.agent,
-                token=args.token,
+                token=resolve_token(args),
             )
             print(json.dumps(res, indent=2))
     except Exception as exc:

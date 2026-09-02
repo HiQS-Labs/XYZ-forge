@@ -523,3 +523,21 @@ or transcript storage boundaries:
   cross-machine transport.
 - Pass `--root /path/to/repo` or set `AGENT2AGENT_ROOT` whenever the discussion concerns a
   repository other than the one the skill is installed in (see Locating the helper).
+
+## Cross-device bridge — two things that will bite you
+
+**The bridge refuses `--tunnel` without Cloudflare Access credentials.** A Quick Tunnel is public,
+and with no credentials every endpoint is unauthenticated: anyone reaching the URL can read
+transcripts, seat themselves, and write turns — and `conversation.md` is fed back to the local agent
+as turn context, so an open bridge is a remote prompt-injection channel into your own pipeline. Set
+`CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET`, or pass `--insecure-allow-unauthenticated` if you
+genuinely want an open bridge over a throwaway store. The startup banner always states which posture
+you are in.
+
+**`send` can legitimately return 409, and the client does not retry.** The underlying `append_turn`
+takes a NON-BLOCKING `flock`, so a concurrent writer fails fast rather than waiting — by design, it
+is what keeps the single-writer invariant honest. A 409 means `locked by another writer` or `out of
+turn`, not an error in your request. Orchestration scripts must handle the retry themselves.
+
+Pass the capability token as `--token-file <path>`, `--token-file -` on stdin, or `AGENTCHORUS_TOKEN`.
+`--token <value>` still works but warns: argv is readable by every local user through `ps`.

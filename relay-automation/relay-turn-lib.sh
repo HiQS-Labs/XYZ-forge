@@ -32,8 +32,9 @@
 #                                                        code on normal failure, or 7 on timeout-kill.
 #                                                        No dependency on coreutils `timeout` (absent
 #                                                        on stock macOS) — sleep+kill watchdog pattern
-#                                                        (same as consult.sh _guarded). Kills by PID;
-#                                                        see function body for the process-group gap.
+#                                                        (same as consult.sh _guarded). Kills the
+#                                                        child session's process group; see function
+#                                                        body for the containment details.
 #
 # GH-161 observability (see PROJECT/1-INBOX/GH-161-HARNESS-OBSERVABILITY.md for the survey behind
 # this): instrumentation writes into the turn's own transcript, never a separate log file.
@@ -529,16 +530,21 @@ rtl_is_containment_ignored() {  # <path> — is <path> an exempted tool-cache si
 rtl_run_bounded() {  # <timeout_secs> <cmd...>
   # Run <cmd...> under a wall-clock ceiling without coreutils `timeout` (absent on stock macOS).
   # Mirrors the consult.sh _guarded() pattern: sleep-then-kill watchdog, no external deps.
-  # Process-group note: `setsid` is absent on stock macOS so we kill by PID (same as consult.sh).
-  # A multi-process CLI whose children outlive the leader is a known gap; worktree isolation is
-  # the airtight follow-up (ROADMAP 3.6). The PID kill is sufficient for hung single-process CLIs.
+  # GH-369: launch the command in a fresh session and kill its process group.  A non-interactive
+  # shell puts background jobs in the caller's process group, so a `ps` sample immediately after
+  # fork can race os.setsid() and capture the TURN SHIM's group instead.  POSIX guarantees the new
+  # session leader's PGID equals its PID, and exec preserves that PID, so -$apid is the child's
+  # stable group even when the CLI re-execs or leaves a grandchild after its leader exits. `setsid`
+  # is absent on stock macOS; Python is already a runtime dependency and provides it portably.
   # NOTE: disk-quota and per-turn spend ceilings are NOT yet enforced here — wall-clock only (R5
   # partial). Disk-quota belongs in a TMPDIR watchdog; spend ceilings are model-shim-specific.
   local secs="$1"; shift
   local apid kpid rc=0
-  "$@" &
+  python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' "$@" &
   apid=$!
-  ( sleep "$secs"; kill -9 "$apid" 2>/dev/null ) >/dev/null 2>&1 &
+  ( sleep "$secs"
+    kill -9 "-$apid" 2>/dev/null || kill -9 "$apid" 2>/dev/null
+  ) >/dev/null 2>&1 &
   kpid=$!
   wait "$apid" 2>/dev/null || rc=$?
   kill "$kpid" 2>/dev/null || true; wait "$kpid" 2>/dev/null || true
@@ -1508,15 +1514,15 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
 # advance just re-injects the same notice next turn, which is harmless. Capped at the 5 most recent
 # (older ones summarized as a count). Echoes NOTHING when there is no unread drift, so the default
 # turn-prompt path is unchanged. See decisions/2026-07-01-cross-agent-dep-conflict.md §4–5.
-rtl_drift_brief() {  # <agent> <tickroot>
-  local me="$1" tickroot="$2"
+rtl_drift_brief() {  # <agent> <tickroot> [<turnroot>]
+  local me="$1" tickroot="$2" turnroot="${3:-${RTL_ROOT:-$2}}"
   [[ -n "$me" && -n "$tickroot" ]] || return 0
   local evdir="$tickroot/.tick/events"
   [[ -d "$evdir" ]] || return 0
   local seg; seg="$(printf '%s' "$me" | tr -c 'A-Za-z0-9._-' '_')"
   local wmfile="$tickroot/.tick/dep-drift-watermark-$seg"
   local wm=""; [[ -f "$wmfile" ]] && wm="$(head -n1 "$wmfile" 2>/dev/null || true)"
-  local f base newest="$wm"
+  local f base newest="$wm" surf
   local -a unread=()
   # drift event filenames embed the action token 'dependency.drift' (appendEvent naming); the ISO-ts
   # prefix makes lexicographic order == chronological (LC_ALL=C for a stable ASCII sort).
@@ -1526,6 +1532,12 @@ rtl_drift_brief() {  # <agent> <tickroot>
     if [[ -n "$wm" ]] && ! [[ "$base" > "$wm" ]]; then continue; fi   # already processed (<= watermark)
     [[ "$base" > "$newest" ]] && newest="$base"
     grep -Fq "\"agent\":\"$me\"" "$f" 2>/dev/null && continue          # skip the agent's OWN changes
+    # GH-374: the drift registry is shared across driven repositories. Admit an event only when its
+    # surface exists in this turn's repository at HEAD; `cat-file` is deliberately used rather than
+    # the harness filesystem so the read has the same landed-commit boundary as the event it reports.
+    surf="$(sed -n 's/.*"surface":"\([^"]*\)".*/\1/p' "$f" | head -n1)"
+    [[ -n "$surf" ]] || continue
+    git -C "$turnroot" cat-file -e "HEAD:$surf" 2>/dev/null || continue
     unread+=("$f")
   done < <(LC_ALL=C ls -1 "$evdir"/*dependency.drift*.jsonl 2>/dev/null | LC_ALL=C sort)
   [[ -n "$newest" ]] && printf '%s\n' "$newest" > "$wmfile" 2>/dev/null || true

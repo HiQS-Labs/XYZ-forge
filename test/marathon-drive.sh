@@ -795,6 +795,36 @@ setup_vendored_consumer_fixture() {  # <root>
   cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$root/.xyz/"
 }
 
+# ── GH-365 step 7: ONE prebuilt vendored seed, section-local copies, contamination tripwire ──
+# The four vendored full-chain cases (17, 18, 18b, 18c) each used to install the complete
+# harness from the real tree (git init + commit + 4x cp -R, ~0.45s per install). The seed is
+# installed ONCE; each case copies it (cp -a, ~0.28s) into a path only that case mutates.
+# The copies are behaviorally identical fixtures (same tree shape, brief, and commits).
+# The seed is immutable: files are chmod a-w (files only — read-only directories would break
+# _setup.sh's exit-trap `rm -rf "$WORK"`), and the digest below trips on ANY byte change,
+# including inside .git, so a case that escapes its copy cannot leak state into another
+# case's fixture through the seed.
+VSEED="$WORK/vendor-seed"
+setup_vendored_consumer_fixture "$VSEED"
+vendored_seed_digest() { (cd "$VSEED" && find . -type f -print0 | sort -z | xargs -0 cksum | cksum); }
+VSEED_CKSUM="$(vendored_seed_digest)"
+find "$VSEED" -type f -exec chmod a-w {} +
+vendored_seed_intact() {  # <case-label>
+  local got
+  got="$(vendored_seed_digest)"
+  [ "$got" = "$VSEED_CKSUM" ] \
+    && pass "vendored seed byte-unchanged after $1 (containment)" \
+    || fail "VENDORED SEED mutated by $1 — a case wrote into the shared seed: $got != $VSEED_CKSUM"
+}
+fresh_vendored_fixture() {  # <dest> — section-local copy of the immutable seed
+  # cp -a reproduces the seed's read-only file modes in the copy, and the chains this suite
+  # runs against the copy WRITE (RELAY.md appends, git commits, .tick events) — restore the
+  # owner write bit on everything the copy inherited. First run of this helper shipped
+  # without the chmod and case 17 died with exit 1 (turn shims could not append to RELAY.md).
+  cp -a "$VSEED" "$1"
+  chmod -R u+w "$1"
+}
+
 assert_vendored_tick_event() {  # <root> <grep-pattern> <pass-msg> <fail-msg>
   local root="$1" pattern="$2" pass_msg="$3" fail_msg="$4"
   find "$root/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
@@ -809,7 +839,7 @@ assert_vendored_tick_event() {  # <root> <grep-pattern> <pass-msg> <fail-msg>
 # and no --target-root. The regression is a shim clobbering the inherited TICK_REPO_ROOT, silently
 # creating .xyz/.tick and claiming there while relay-drive watches the consumer repo's real .tick.
 V="$WORK/vendor-consumer"
-setup_vendored_consumer_fixture "$V"
+fresh_vendored_fixture "$V"
 VSTUBS="$WORK/vendor-stubs"
 mkdir -p "$VSTUBS"
 VCODEX="$VSTUBS/codex"
@@ -862,10 +892,11 @@ find "$V/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>
 [ ! -d "$V/.xyz/.tick/events" ] \
   && pass "GH-171: vendored .xyz does not grow a stray .tick event log" \
   || fail "GH-171: vendored .xyz/.tick should stay absent"
+vendored_seed_intact "case 17 (GH-171 vendored chain)"
 
 # ── (18) GH-172: vendored full chain stays on the consumer repo tick log in XYZ_PYTHON=1 mode ──
 VP="$WORK/vendor-consumer-python"
-setup_vendored_consumer_fixture "$VP"
+fresh_vendored_fixture "$VP"
 (
   cd "$VP"
   unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
@@ -908,6 +939,7 @@ find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2
   | xargs -0 grep -l '"type":"task.claimed".*"agent":"agy"' >/dev/null 2>&1 \
   && pass "GH-174: agy claim event lands in the consumer repo .tick under XYZ_PYTHON=1" \
   || fail "GH-174: consumer repo .tick missing agy claim event under XYZ_PYTHON=1 (claim-before-launch guard regression)"
+vendored_seed_intact "cases 18/18a (GH-172/GH-174 vendored XYZ_PYTHON=1 chain)"
 
 # ── (18b) GH-172: approval-path vendored Bash run keeps release + done in the consumer repo tick ──
 VCODEX_APPROVE="$VSTUBS/codex-approve"
@@ -933,7 +965,7 @@ exit 0
 EOF
 chmod +x "$VAGY_APPROVE"
 VA="$WORK/vendor-consumer-approved"
-setup_vendored_consumer_fixture "$VA"
+fresh_vendored_fixture "$VA"
 (
   cd "$VA"
   unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
@@ -970,10 +1002,11 @@ assert_vendored_tick_event "$VA" '"type":"task.done".*"agent":"agy"' \
 [ ! -d "$VA/.xyz/.tick/events" ] \
   && pass "GH-172: vendored Bash approval path does not grow a stray .xyz .tick event log" \
   || fail "GH-172: vendored Bash approval path should not create .xyz/.tick"
+vendored_seed_intact "case 18b (GH-172 vendored Bash approval chain)"
 
 # ── (18c) GH-172: approval-path vendored XYZ_PYTHON=1 run keeps release + done in the consumer repo tick ──
 VAP="$WORK/vendor-consumer-approved-python"
-setup_vendored_consumer_fixture "$VAP"
+fresh_vendored_fixture "$VAP"
 (
   cd "$VAP"
   unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
@@ -1010,6 +1043,7 @@ assert_vendored_tick_event "$VAP" '"type":"task.done".*"agent":"agy"' \
 [ ! -d "$VAP/.xyz/.tick/events" ] \
   && pass "GH-172: vendored XYZ_PYTHON=1 approval path does not grow a stray .xyz .tick event log" \
   || fail "GH-172: vendored XYZ_PYTHON=1 approval path should not create .xyz/.tick"
+vendored_seed_intact "case 18c (GH-172 vendored XYZ_PYTHON=1 approval chain)"
 
 # ── (19) GH-212: unset --builder now resolves to the new default, codex ───────
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
