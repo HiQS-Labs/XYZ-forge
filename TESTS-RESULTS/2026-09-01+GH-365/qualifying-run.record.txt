@@ -1,12 +1,12 @@
-commit: 5891d018832fd596b7f6167e09f0991d88c70083
+commit: 36d142ed1b88c0e9241fced619438afdc55d6d6c
 result: green
 scope: full local suite (ci-local.sh, Darwin)
 host: Darwin 24.6.0
-recorded: 2026-09-02T02:53:49Z
-output-sha256: a54ca29f453654d93e5063420bc462f8a97dfd4f6394f6cf1b3c01fad96038e3
-output-bytes: 496050
+recorded: 2026-09-02T05:22:19Z
+output-sha256: 652a8653afafcb21b9b23bcf837cdca963afdb067bf3ce506c3f599ae944254a
+output-bytes: 500923
 NOT-promotion-evidence: self-reported; promotion needs a hosted macOS run (GH-509)
-suites: 315 recorded
+suites: 320 recorded
 --- per-suite verdicts ---
 projection-idempotent.sh	pass
 concurrent-claim.sh	pass
@@ -52,6 +52,7 @@ gh346-resolver-fallback.sh	pass
 gh346-telemetry-row-written.sh	pass
 gh346-registry-view-freshness.sh	pass
 gh346-gateway-allowlists.sh	pass
+gh346-profile-resolve.sh	pass
 swe-diagram.sh	pass
 claude-turn.sh	pass
 commandcode-turn.sh	pass
@@ -210,11 +211,13 @@ gh32-releases-app.sh	pass
 gh32-releases-artifacts.sh	pass
 gh53-releases-merge-resolve.sh	pass
 gh54-merged-dump-refusals.sh	pass
+gh360-dump-multiline-values.sh	pass
 gh57-releases-fuzz.sh	pass
 gh57-live-merge-resolve.sh	pass
 gh69-roadmap-shadow.sh	pass
 gh351-manifest-unship.sh	pass
 gh349-releases-roadmap-vendored.sh	pass
+gh362-marathon-plan-link-bullets.sh	pass
 gh358-wave-reconcile-vendored-paths.sh	pass
 gh77-standup-triage.sh	pass
 gh32-release-target-advisory.sh	pass
@@ -323,3 +326,5 @@ relay-uncited-findings.sh	pass
 wave-reconcile.sh	pass
 gh306-registry-bidirectional.sh	pass
 gh298-ate-gen4-ci-smoke.sh	pass
+python:test_python_layer.py	pass
+gamma-poison-staleness-probe	pass

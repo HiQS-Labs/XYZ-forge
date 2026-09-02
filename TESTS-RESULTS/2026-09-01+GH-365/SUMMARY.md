@@ -69,9 +69,11 @@ recorded rc=1 correctly).
 
 ## Qualifying run (step 1 gate, final commit 76174765)
 
-See `qualifying-run.*` — the POST-REBASE run at the resolved head, now executing the authoritative
-full set (every registered suite + `python:test_python_layer.py` + `gamma-poison-staleness-probe`,
-per the GH-377 review's blocker 1). The pre-rebase run at 5891d018 (rc=0, 1774s) is retained as
+**PASS at the resolved code head 36d142ed** — rc=0, 2132s, all steps green including the
+clone-identity invariant, tree clean at exit, gate record written with its output-sha256. This is
+the first qualifying run executing the authoritative set (every registered suite +
+`python:test_python_layer.py` + `gamma-poison-staleness-probe`, per the GH-377 review's blocker 1);
+both lanes are in the record's verdict list. Denominator: 318 registered + 3 non-suite. The pre-rebase run at 5891d018 (rc=0, 1774s) is retained as
 history in provenance; it predates both the rebase and the lane fix.
 
 Two runs before THAT were REFUSED by the new bracket itself — it caught a stray repo-root `-a`
