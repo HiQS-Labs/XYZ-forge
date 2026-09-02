@@ -479,12 +479,33 @@ class Engine:
         v = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1", v)
         return v.strip()
 
+    # GH-349 made link-style `- [Title](path)` bullets first class in the ROADMAP ledger, and
+    # releases_app.py's parse_roadmap_ledger docstring promises "the same block boundaries as the
+    # planner". The planner never got that half: _parse_ledger tested `- **` only, so a ROADMAP
+    # written entirely in link bullets parsed as ZERO items and the run died EngineExit(3) with
+    # "no ledger items parsed (is '## Ledger' present?)" — on a file whose `## Ledger` heading and
+    # section names were all correct. Measured on LTVera-Pandas 2026-09-01, where it blocked
+    # wave_reconcile for four merged PRs. Mirrors releases_app.py's _is_ledger_bullet exactly,
+    # task-list exclusion included: `- [ ]` / `- [x]` share the `- [` prefix but are not entries.
+    @staticmethod
+    def _is_ledger_bullet(line):
+        if line.startswith("- **"):
+            return True
+        return line.startswith("- [") and not re.match(r"^- \[[ xX]\]", line)
+
     def _parse_bullet(self, block, section):
         text = " ".join(l.strip() for l in block)
         text = re.sub(r"\s+", " ", text).strip()
         title_match = re.match(r"^- \*\*(.+?)\*\*", text)
+        # A link bullet's TITLE is its leading link's label, never the whole joined block.
+        # _gh_issue_of reads `\bGH-(\d+)\b` out of the title, so letting the body fall into it
+        # would key the item to the first issue merely MENTIONED in prose — the identity bug
+        # GH-349 fixed on the python ledger side.
+        link_match = None if title_match else re.match(r"^- \[([^\]]+)\]\([^)]*\)", text)
         if title_match:
             title = self._strip_md(title_match.group(1))
+        elif link_match:
+            title = self._strip_md(link_match.group(1))
         else:
             title = self._strip_md(re.sub(r"^- ", "", text))
         status = "—"
@@ -518,13 +539,13 @@ class Engine:
                 current = sm.group(1).strip() if sm.group(1).strip() in SECTIONS else None
                 i += 1
                 continue
-            if not current or not re.match(r"^- \*\*", line):
+            if not current or not self._is_ledger_bullet(line):
                 i += 1
                 continue
             block = [line]
             while i + 1 < n:
                 nx = lines[i + 1]
-                if re.match(r"^###\s+", nx) or re.match(r"^##\s+", nx) or re.match(r"^- \*\*", nx):
+                if re.match(r"^###\s+", nx) or re.match(r"^##\s+", nx) or self._is_ledger_bullet(nx):
                     break
                 block.append(nx)
                 i += 1

@@ -464,10 +464,29 @@ function stripMd(v) {
   return v.replace(/`([^`]+)`/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1").replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1").trim();
 }
+// GH-349 made link-style `- [Title](path)` bullets first class in the ROADMAP ledger, and
+// releases_app.py's parse_roadmap_ledger docstring promises "the same block boundaries as the
+// planner". The planner never got that half: parseLedger tested `- **` only, so a ROADMAP written
+// entirely in link bullets parsed as ZERO items and the run died `exit 3` with
+// "no ledger items parsed (is '## Ledger' present?)" — on a file whose `## Ledger` heading and
+// section names were all correct. Measured on LTVera-Pandas 2026-09-01, where it blocked
+// wave_reconcile for four merged PRs. Mirrors releases_app.py's _is_ledger_bullet exactly,
+// task-list exclusion included: `- [ ]` / `- [x]` share the `- [` prefix but are not entries.
+const TASKBOX_RE = /^- \[[ xX]\]/;
+function isLedgerBullet(line) {
+  if (line.startsWith("- **")) return true;
+  return line.startsWith("- [") && !TASKBOX_RE.test(line);
+}
 function parseBullet(block, section) {
   const text = block.map((l) => l.trim()).join(" ").replace(/\s+/g, " ").trim();
   const titleMatch = text.match(/^- \*\*(.+?)\*\*/);
-  const title = titleMatch ? stripMd(titleMatch[1]) : stripMd(text.replace(/^- /, ""));
+  // A link bullet's TITLE is its leading link's label, never the whole joined block. ghIssueOf
+  // reads `\bGH-(\d+)\b` out of the title, so letting the body fall into it would key the item to
+  // the first issue merely MENTIONED in prose — the identity bug GH-349 fixed on the python side.
+  const linkMatch = titleMatch ? null : text.match(/^- \[([^\]]+)\]\([^)]*\)/);
+  const title = titleMatch ? stripMd(titleMatch[1])
+    : linkMatch ? stripMd(linkMatch[1])
+    : stripMd(text.replace(/^- /, ""));
   let status = "—";
   for (const e of KNOWN_EMOJI) { if (text.includes(e)) { status = e; break; } }
   const links = [];
@@ -486,11 +505,11 @@ function parseLedger(raw) {
     if (/^##\s+/.test(line) && !/^##\s+Ledger\s*$/.test(line.trim())) break;
     const sm = line.match(/^###\s+(.+?)\s*$/);
     if (sm) { current = SECTIONS.includes(sm[1].trim()) ? sm[1].trim() : null; continue; }
-    if (!current || !/^- \*\*/.test(line)) continue;
+    if (!current || !isLedgerBullet(line)) continue;
     const block = [line];
     while (i + 1 < lines.length) {
       const nx = lines[i + 1];
-      if (/^###\s+/.test(nx) || /^##\s+/.test(nx) || /^- \*\*/.test(nx)) break;
+      if (/^###\s+/.test(nx) || /^##\s+/.test(nx) || isLedgerBullet(nx)) break;
       block.push(nx); i += 1;
     }
     out.push(parseBullet(block, current));
