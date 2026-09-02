@@ -319,6 +319,11 @@ TESTS=(
                                  #   a two-header dump (what a naive merge=union leaves) and a dump
                                  #   with conflict markers are both refused, not rebuilt. 18/0
   "gh54-merged-dump-refusals.sh" # #54 (check --rebuild must REFUSE merge damage by name, not throw).
+  "gh360-dump-multiline-values.sh" # GH-360 (a dumped value containing a newline must round-trip) —
+                                  #   INSERT_RE lacked re.DOTALL, so parse_dump could never match a
+                                  #   multi-line statement: the buffer swallowed every INSERT after it
+                                  #   and `check --rebuild` refused with rule=dump-parse, killing the
+                                  #   only documented git-merge resolution path for such a ledger.
                                  #   Every fixture is built by really merging two divergent branches
                                  #   and mangling the dump the way a union would — a refusal test
                                  #   whose fixture cannot occur proves nothing. Covers the two-header
