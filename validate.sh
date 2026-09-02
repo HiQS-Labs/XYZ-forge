@@ -1005,8 +1005,13 @@ if [ "${#SKIP_SUITES[@]}" -gt 0 ]; then
     for _sk in "${SKIP_SUITES[@]}"; do [ "$_t" = "$_sk" ] && { _drop=1; break; }; done
     if [ "$_drop" -eq 1 ]; then SKIPPED_SUITES+=("$_t"); else _kept+=("$_t"); fi
   done
+  # ORDER IS LOAD-BEARING. bash 3.2 (still the macOS default) treats "${empty[@]}" as an unbound
+  # variable under `set -u`, so assigning from an empty _kept aborts the script with
+  # "_kept[@]: unbound variable" BEFORE the refusal below could ever print. The guard therefore has
+  # to run first. Verified: with the two lines transposed, `--skip` every registered suite died at
+  # this line instead of saying why. Do not "tidy" this back into assign-then-check.
+  [ "${#_kept[@]}" -gt 0 ] || { echo "validate.sh: every suite was skipped — refusing a zero-test green (GH-379)." >&2; exit 1; }
   RUN_TESTS=("${_kept[@]}")
-  [ "${#RUN_TESTS[@]}" -gt 0 ] || { echo "validate.sh: every suite was skipped — refusing a zero-test green (GH-379)." >&2; exit 1; }
   echo
   echo "==============================="
   echo "QUARANTINE (GH-379): ${#SKIPPED_SUITES[@]} suite(s) skipped by request"
