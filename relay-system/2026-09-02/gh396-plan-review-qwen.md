@@ -2,8 +2,8 @@
 Goal: Second-opinion QA of the GH-396 plan — adjudicate DeepSeek's review, then find what it missed
 Date: 2026-09-02
 Producer: claude-a
-Reviewer: commandcode
-NEXT: commandcode
+Reviewer: deepseek
+NEXT: deepseek
 STATUS: Open
 ---
 
@@ -103,13 +103,13 @@ For #5: is DeepSeek right that the bare-harness CI is already boundary on `devel
 
 Cite `file:line` for every claim. Where you disagree with DeepSeek, say so plainly and show why.
 
-Write your verdict below as `### Round 1 · Reviewer · commandcode (qwen 3.8 max)`, then set
+Write your verdict below as `### Round 1 · Reviewer · deepseek-shim (qwen 3.8 max via OpenRouter)`, then set
 `STATUS: Approved` if the plan **as amended by the upheld changes** is ready to build, or leave
 `STATUS: Open` with the consolidated numbered list of required changes (DeepSeek's upheld ones plus
 yours).
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (commandcode)
+▶ TAKE YOUR TURN (deepseek)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 # Log
