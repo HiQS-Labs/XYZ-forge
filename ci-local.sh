@@ -288,7 +288,13 @@ validate_suite() {
     [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; printf '%s\tskip\n' "$t" >> "$GATE_VERDICTS"; rt_emit suite stage "$t" "$(rt_now_ms)" "$(rt_now_ms)" 0 "verdict=skip-duplicate"; continue; }
     echo "=== $t ===" | tee -a "$GATE_SUITE_LOG"
     _s="$(rt_now_ms)"
-    bash "test/$t" 2>&1 | tee "$_one" -a "$GATE_SUITE_LOG"
+    # Two tees: the first APPENDS the shared transcript, the second writes the per-suite capture
+    # (truncated fresh). BSD tee does NOT permute options — the earlier single
+    # `tee "$_one" -a "$GATE_SUITE_LOG"` treated -a as a FILENAME (empirically confirmed:
+    # `printf hi | tee ./one -a ./two` leaves a file named '-a' in CWD), creating that stray file
+    # in the repo root on every suite. The GH-365 envelope's tree bracket caught it and refused
+    # to attest two qualifying runs before the shape was pinned.
+    bash "test/$t" 2>&1 | tee -a "$GATE_SUITE_LOG" | tee "$_one"
     _rc="${PIPESTATUS[0]}"
     if [ "$_rc" -eq 0 ]; then
       printf '%s\tpass\n' "$t" >> "$GATE_VERDICTS"
