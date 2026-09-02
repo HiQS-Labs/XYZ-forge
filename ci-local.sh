@@ -314,24 +314,28 @@ validate_suite() {
   # the loop now, recorded in the verdicts under validate.sh's own PASSED labels so the record and
   # the summary agree on the denominator.
   _s="$(rt_now_ms)"
+  _rc=0
   if python3 -m pytest "$HERE/test/test_python_layer.py"; then
     printf '%s\tpass\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
   else
+    _rc=$?   # before any other statement — the printf/echo and the rt_now_ms substitutions reset $?
     rc=1
     printf '%s\tFAIL\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
     echo "  ^^ FAILED: python:test_python_layer.py" >&2
   fi
-  rt_emit suite sequential "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$?"
+  rt_emit suite sequential "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$_rc"
 
   _s="$(rt_now_ms)"
+  _rc=0
   if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
     printf '%s\tpass\n' "gamma-poison-staleness-probe" >> "$GATE_VERDICTS"
   else
+    _rc=$?   # before any other statement — same ordering rule
     rc=1
     printf '%s\tFAIL\n' "gamma-poison-staleness-probe" >> "$GATE_VERDICTS"
     echo "  ^^ FAILED: gamma-poison-staleness-probe" >&2
   fi
-  rt_emit suite sequential "gamma-poison-staleness-probe" "$_s" "$(rt_now_ms)" "$?"
+  rt_emit suite sequential "gamma-poison-staleness-probe" "$_s" "$(rt_now_ms)" "$_rc"
   return $rc
 }
 
@@ -356,7 +360,11 @@ printf 'HEAD: %s\n' "$(git log --oneline -1 2>/dev/null)"
 # GH-365 step 2: open the retained telemetry record for THIS run (same schema as validate.sh).
 # The registered denominator is parsed here, once, exactly the way validate_suite parses TESTS —
 # so run.start carries the explicit denominator instead of inheriting a stale section count.
-_declared="$(sed -n '/^TESTS=(/,/^)/p' "$HERE/validate.sh" | grep -oE '"[^"]+\.sh"' | wc -l | tr -d ' ')"
+# The denominator comes from validate.sh --list — the READ-ONLY registry surface #141 built for
+# exactly this (secondary selectors share one source of truth) — not a second TESTS scrape.
+# This is not "invoking validate.sh" in the sense gh544 pins: the gate never runs, no suites, no
+# envelope; it prints the manifest and exits.
+_declared="$(bash "$HERE/validate.sh" --list | wc -l | tr -d ' ')"
 if [ "$FAST" -eq 1 ]; then
   rt_begin "$HERE" "ci-local" "fast" 1 3 "$_declared"
 else

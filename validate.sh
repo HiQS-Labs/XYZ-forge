@@ -1201,10 +1201,13 @@ for t in "${RUN_TESTS[@]}"; do
     PASSED+=("$t")
     rt_suite sequential "$t" "$_s" "$(rt_now_ms)" 0 ""
   else
-    FAILED+=("$t")
-    # capture rc FIRST: the rt_now_ms substitution in the argument list resets $?, which once
-    # recorded a failed sequential suite as rc=0 in telemetry (runner verdict was still correct)
+    # Capture rc BEFORE any other statement — an array append or a command substitution in the
+    # argument list resets $?, and the first version of this fix captured it AFTER FAILED+=,
+    # recording every failed sequential suite as rc=0 (caught by re-review 5504874543; a green
+    # receipt cannot represent a failure). The retry path ten lines up has had the order right
+    # since it was written.
     _rc=$?
+    FAILED+=("$t")
     rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$_rc" ""
   fi
 done
@@ -1222,8 +1225,9 @@ if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
     PASSED+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
   else
+    _rc=$?   # before FAILED+= and before the substitutions — same ordering rule as the suite loop
     FAILED+=("python:test_python_layer.py")
-    rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$?"
+    rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$_rc"
   fi
 fi
 

@@ -32,7 +32,19 @@
 #       when the runner sets RT_ENVELOPE_RC / RT_ENVELOPE_DRIFT.
 #
 # Every timestamp is epoch-ms. Lanes: pool | driver-lock | retry | non-suite | stage.
-rt_now_ms() { perl -MTime::HiRes -e 'print int(Time::HiRes::time()*1000)'; }
+rt_now_ms() {  # epoch-ms; perl Time::HiRes (bash 3.2 has no EPOCHREALTIME, BSD date no %N).
+  # Fallback when perl is absent (re-review 5504874543 finding 2): python3 is on every host this
+  # repo gates (validate.sh already requires it for pytest); a seconds-only `date +%s` is the
+  # last resort — degraded (sub-second ordering lost) but never fatal: telemetry is best-effort
+  # and must not gate a run because its clock helper vanished.
+  if command -v perl >/dev/null 2>&1; then
+    perl -MTime::HiRes -e 'print int(Time::HiRes::time()*1000)'
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import time; print(int(time.time()*1000))'
+  else
+    date +%s
+  fi
+}
 
 rt_hash12() {  # <file> — first 12 hex of sha256, "-" when absent
   [ -n "${1:-}" ] && [ -f "$1" ] || { printf '%s' "-"; return 0; }

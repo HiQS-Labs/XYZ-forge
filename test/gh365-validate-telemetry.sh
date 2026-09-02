@@ -144,6 +144,27 @@ grep -q '"mode":"sequential"' "$TEL2" && grep -q '"lane":"sequential"' "$TEL2" \
   && pass "B4: sequential mode records lane=sequential suite events" \
   || fail "B4: sequential record missing mode/lane fields"
 
+# B5 NEGATIVE CONTROL (re-review 5504874543): a suite that FAILS on the sequential lane must
+# carry rc=1 in its telemetry record. The first version of the rc-capture fix recorded rc=0 for
+# every sequential failure — invisible while every fixture passed (the same blind spot the real
+# qualifying runs had: green receipts cannot represent a failure). This leg makes hq.sh fail and
+# asserts BOTH the runner verdict (exit nonzero) and the receipt (rc=1).
+rm -f "$WORK/vt-marker"
+export XYZ_VALIDATE_TELEMETRY="$FB/.tick/telemetry"
+out="$(cd "$FB" && WORK="$WORK" bash validate.sh --paths-file "$FB/paths.txt" --sequential 2>&1)"; rc=$?
+unset XYZ_VALIDATE_TELEMETRY
+TEL3="$(ls -t "$FB/.tick/telemetry"/*.jsonl 2>/dev/null | head -1)"
+[ "$rc" -ne 0 ]   && pass "B5: a failing sequential suite fails the RUN (rc=$rc)"   || fail "B5: the failing-suite run exited green — the runner swallowed the failure"
+_seq_rc="$(python3 -c "
+import json, sys
+last = None
+for l in open('$TEL3'):
+    r = json.loads(l)
+    if r.get('event') == 'suite' and r.get('name') == 'hq.sh':
+        last = r
+print(last['rc'] if last else 'missing')" 2>&1)"
+[ "$_seq_rc" = "1" ]   && pass "B5b: the receipt carries the failure (hq.sh sequential rc=1)"   || fail "B5b: receipt must record rc=1 for the failed suite (got '$_seq_rc') — the rc capture is ordered wrong again"
+
 # ── C. wiring pins — ONE implementation, both runners, uniform step timing ────────────────────────
 grep -q 'test/lib/runner-telemetry.sh' "$REPO/validate.sh" \
   && pass "C1: validate.sh sources the shared telemetry lib" \

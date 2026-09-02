@@ -173,6 +173,12 @@ grep -q 'runner-envelope.sh' "$REPO/test/gh35-test-tiers.sh" \
   && pass "B7: gh35 fixtures copy the shared lib (tier-2 fixture runs need it)" \
   || fail "B7: gh35 mkfixture does not copy runner-envelope.sh"
 # B8 (GH-377 review blocker 1): the qualifying runner must execute validate.sh's non-TESTS lanes —
+# DESIGN NOTE (accepted by re-review 5504874543): the fix ADDS the missing lanes inside
+# validate_suite rather than having ci-local.sh invoke validate.sh wholesale. The two-runner
+# split is a pinned design (test/gh544-parallel-default.sh: "ci-local.sh does NOT invoke
+# validate.sh") with its own envelope/record machinery; unwinding a pinned design to close a
+# coverage gap is a far larger change than the gap warrants. The gap was the missing lanes,
+# and these pins keep them from silently returning.
 # a .sh-only loop once printed "full suite" and wrote qualifying evidence while omitting Python
 # and gamma-poison entirely. The pins: both lanes invoked inside validate_suite, both recorded in
 # GATE_VERDICTS under validate.sh's own PASSED labels (so the record's denominator is the
