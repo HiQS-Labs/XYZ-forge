@@ -6,6 +6,7 @@ import time
 import re
 import shutil
 import pathlib
+import json
 from contextlib import contextmanager
 
 # GH-376: resolve the driver lock through the ONE shared resolver rather than reimplementing it.
@@ -13,7 +14,7 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path, resolve_turn_root  # noqa: E402
+from rtl import driver_lock_path, resolve_turn_root, rtl_default_log  # noqa: E402
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -77,6 +78,51 @@ def main():
     tick_bin = get_env("TICK_BIN", os.path.join(root_dir, "bin", "tick"))
     consult_sh = get_env("CONSULT_SH", os.path.join(root_dir, "relay-automation", "consult.sh"))
     xyz_append_bin = get_env("XYZ_APPEND_BIN", os.path.join(root_dir, "utils", "telemetry", "append-xyz-completion.sh"))
+
+    # GH-371/GH-372: the relay driver is the only layer which sees both the active turn's
+    # worktree and its transcript.  The marathon driver owns the durable phase records, so leave
+    # it a small hand-off in its existing scratch channel rather than teaching it to guess a log
+    # filename later.  This is a pointer to the turn's `rtl_default_log` path, not a second log
+    # location; the shim receives this exact path via its normal <AGENT>_LOG override.
+    incident_file = os.path.join(root_dir, ".relay-scratch", "last-turn-incident.json")
+
+    def write_turn_incident(main_tree, turn_worktree, turn_log, actor):
+        try:
+            os.makedirs(os.path.dirname(incident_file), exist_ok=True)
+            with open(incident_file, "w", encoding="utf-8") as f:
+                json.dump({
+                    "main_tree": main_tree,
+                    "turn_worktree": turn_worktree,
+                    "turn_log": turn_log,
+                    "actor": actor,
+                    "worktree_isolation": get_env("RELAY_WORKTREE_ISOLATION", "1") != "0",
+                }, f)
+        except OSError:
+            # Incident evidence is best-effort: recording trouble must not change a driven turn.
+            pass
+
+    def prepare_turn_log(actor):
+        """Resolve the actual shim log once, then pass that exact path to the shim (GH-372)."""
+        shims = (
+            ("claude", "CLAUDE", "claude-turn"),
+            ("codex", "CODEX", "codex-turn"),
+            ("agy", "AGY", "agy-turn"),
+            ("aider", "AIDER", "aider-turn"),
+            ("pi", "PI", "pi-turn"),
+            ("smallcode", "SMALLCODE", "smallcode-turn"),
+            ("commandcode", "COMMANDCODE", "commandcode-turn"),
+            ("deepseek", "DEEPSEEK", "deepseek-turn"),
+        )
+        for prefix, env_prefix, tool_name in shims:
+            if actor.startswith(prefix):
+                log_key = f"{env_prefix}_LOG"
+                if get_env(log_key):
+                    return get_env(log_key)
+                turn_root = resolve_turn_root(get_env(f"{env_prefix}_TURN_ROOT"), root_dir)
+                turn_log = rtl_default_log(turn_root, tool_name, args.relay_task)
+                os.environ[log_key] = turn_log
+                return turn_log
+        return ""
 
     # GH-331 (mirrors relay-drive.sh GH-152): auto-surface the `tick analyze` cost block at end-of-run
     # so a driven run stops needing a manual `tick analyze` pull to see what it cost. This lived only in
@@ -599,6 +645,8 @@ def main():
 
         known_worktrees = progress_worktrees()
         turn_worktree = ""
+        turn_log = prepare_turn_log(actor)
+        write_turn_incident(progress_main_tree, turn_worktree, turn_log, actor)
         try:
             progress_interval_s = max(1.0, float(get_env("RELAY_PROGRESS_INTERVAL_S", "60")))
         except ValueError:
@@ -628,6 +676,7 @@ def main():
                     rtl_candidates = [p for p in candidates if os.path.basename(p).startswith("rtl-wt.")]
                     if rtl_candidates:
                         turn_worktree = sorted(rtl_candidates)[0]
+                        write_turn_incident(progress_main_tree, turn_worktree, turn_log, actor)
                 sample_root = turn_worktree or progress_main_tree
                 sample_kind = "turn worktree" if turn_worktree else "main tree fallback"
                 try:
@@ -646,6 +695,12 @@ def main():
             time.sleep(0.1)
 
         res_code = proc.returncode
+        if get_env("RELAY_WORKTREE_ISOLATION", "1") != "0" and not turn_worktree:
+            rtl_candidates = [p for p in progress_worktrees() - known_worktrees
+                              if os.path.basename(p).startswith("rtl-wt.")]
+            if rtl_candidates:
+                turn_worktree = sorted(rtl_candidates)[0]
+        write_turn_incident(progress_main_tree, turn_worktree, turn_log, actor)
         if peak_turn_rss_mb > 0 and tick_bin:
             try:
                 env = os.environ.copy()

@@ -1722,6 +1722,48 @@ def main():
 
             reason = _exit_meaning(code) if code else "interrupted"
             dest = os.path.join(phase_dir, "PHASE-INTERRUPTED.md")
+
+            # GH-371: a killed turn can leave its edits in the main tree while its isolation
+            # worktree is clean.  The relay driver records both roots while the turn is alive;
+            # snapshot those roots now, before the next phase (or gate) makes recovery ambiguous.
+            incident = {}
+            try:
+                with open(os.path.join(xyz_harness, ".relay-scratch", "last-turn-incident.json"),
+                          "r", encoding="utf-8") as f:
+                    incident = json.load(f)
+            except (OSError, ValueError, TypeError):
+                pass
+            main_tree = incident.get("main_tree") if isinstance(incident, dict) else ""
+            if not main_tree or not os.path.isdir(main_tree):
+                main_tree = args.target_root or root
+            worktree = incident.get("turn_worktree") if isinstance(incident, dict) else ""
+
+            def porcelain_snapshot(tree):
+                try:
+                    result = subprocess.run(
+                        ["git", "-C", tree, "status", "--porcelain"],
+                        capture_output=True, text=True, timeout=5,
+                    )
+                    if result.returncode == 0:
+                        return result.stdout.rstrip() or "(clean)"
+                    return f"(unavailable: git status exited {result.returncode})"
+                except Exception as exc:  # snapshot evidence must never mask the interruption
+                    return f"(unavailable: {exc.__class__.__name__})"
+
+            snapshots = [
+                "\n## Uncommitted tree snapshot (GH-371)\n\n",
+                f"### Main repository: `{main_tree}`\n\n```text\n{porcelain_snapshot(main_tree)}\n```\n",
+            ]
+            if (incident.get("worktree_isolation") if isinstance(incident, dict) else False) and worktree:
+                if os.path.realpath(worktree) != os.path.realpath(main_tree):
+                    if os.path.isdir(worktree):
+                        snapshots.append(
+                            f"\n### Turn worktree: `{worktree}`\n\n```text\n"
+                            f"{porcelain_snapshot(worktree)}\n```\n")
+                    else:
+                        snapshots.append(
+                            f"\n### Turn worktree: `{worktree}`\n\n"
+                            "(unavailable: the interrupted turn worktree no longer exists)\n")
             os.makedirs(phase_dir, exist_ok=True)
             with open(dest, "w", encoding="utf-8") as f:
                 f.write(
@@ -1738,6 +1780,7 @@ def main():
                     f"escalate() ran. The relay file above holds whatever the turns had written when\n"
                     f"the run stopped; this record exists so the phase is not simply absent (GH-388).\n"
                 )
+                f.write("".join(snapshots))
             log(f"interrupted-phase record written: {dest} (reason: {reason})")
             # Best-effort archive of the relay state itself, for the same reason escalate() does it.
             try:
@@ -2024,6 +2067,33 @@ def main():
         except Exception:
             pass
 
+        # GH-372: relay-drive resolves the exact `rtl_default_log` path and passes it to the shim;
+        # use its hand-off rather than globbing for a similar-looking filename.  A missing path or
+        # file is evidence too: it distinguishes a turn that never started from one that failed.
+        turn_log = ""
+        try:
+            with open(os.path.join(xyz_harness, ".relay-scratch", "last-turn-incident.json"),
+                      "r", encoding="utf-8") as f:
+                incident = json.load(f)
+            if isinstance(incident, dict):
+                turn_log = incident.get("turn_log") or ""
+        except (OSError, ValueError, TypeError):
+            pass
+
+        if turn_log and os.path.isfile(turn_log):
+            try:
+                with open(turn_log, "r", encoding="utf-8", errors="replace") as f:
+                    tail_lines = f.readlines()[-40:]
+                turn_log_record = (
+                    f"\nturn-log: {turn_log}\n\n<details>\n<summary>Last {len(tail_lines)} lines of failing turn log</summary>\n\n"
+                    "```text\n" + "".join(tail_lines).rstrip() + "\n```\n</details>\n")
+            except OSError as exc:
+                turn_log_record = f"\nturn-log: {turn_log} (unreadable: {exc.__class__.__name__})\n"
+        elif turn_log:
+            turn_log_record = f"\nturn-log: {turn_log} (missing — no turn log was created)\n"
+        else:
+            turn_log_record = "\nturn-log: unavailable (no turn log was created for the failing turn)\n"
+
         esc_file = os.path.join(phase_dir, "ESCALATION.md")
         with open(esc_file, 'w') as f:
             f.write(f"""# ESCALATION — Marathon Phase {args.phase_id}
@@ -2037,6 +2107,7 @@ relay-file: {rel_relay}
 """)
             if builder_diag:
                 f.write(f"builder-diagnostic: {builder_diag}\n")
+            f.write(turn_log_record)
         subprocess.run(["git", "-C", commit_root, "add", "--", esc_file], check=True)
         # GH-207: an identical escalation record must not HALT on nothing-to-commit.
         if subprocess.run(["git", "-C", commit_root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
@@ -3065,6 +3136,12 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         if os.path.isfile(reason_file):
             try:
                 os.remove(reason_file)
+            except OSError:
+                pass
+        incident_file = os.path.join(xyz_harness, ".relay-scratch", "last-turn-incident.json")
+        if os.path.isfile(incident_file):
+            try:
+                os.remove(incident_file)
             except OSError:
                 pass
         cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,

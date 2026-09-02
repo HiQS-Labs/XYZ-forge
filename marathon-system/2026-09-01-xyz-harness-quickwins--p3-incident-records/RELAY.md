@@ -1,6 +1,6 @@
 # Marathon Phase p3-incident-records
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-INCIDENT-RECORDS-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -105,3 +105,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented both incident records.
+
+- `utils/py/relay_drive.py` now resolves each dispatched shim's existing `rtl_default_log` path once,
+  passes that exact path through the normal shim environment, and records its path plus main/worktree
+  roots in the existing scratch handoff (`GH-371` / `GH-372`).
+- `utils/py/marathon_drive.py` appends main and distinct worktree porcelain snapshots to
+  `PHASE-INTERRUPTED.md`, and writes a collapsed 40-line tail (or an explicit no-log diagnosis) to
+  `ESCALATION.md`.
+- Added `test/gh371-interrupt-snapshot.sh` and `test/gh372-escalation-log-tail.sh`.
+
+Verification: `bash test/gh371-interrupt-snapshot.sh` (2 pass, 0 fail) and
+`bash test/gh372-escalation-log-tail.sh` (3 pass, 0 fail).
