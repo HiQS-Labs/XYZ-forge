@@ -23,6 +23,12 @@ related:
 
 # GH-370 — Mid-turn blindness
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Capture doc authored with preflight contract. | Marathon phase execution. |
+
 Capture of [XYZ-forge issue #370](https://github.com/HiQS-Labs/XYZ-forge/issues/370).
 
 Observed 2026-09-01: the agy CLI buffers all output until exit, so a turn's log was

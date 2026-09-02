@@ -39,6 +39,7 @@ import os
 import sys
 
 root = os.environ["ROOT_UNDER_TEST"]
+sys.path.insert(0, os.path.join(root, "utils", "py"))
 spec = importlib.util.spec_from_file_location("agy_turn_gh368", root + "/utils/py/agy-turn.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

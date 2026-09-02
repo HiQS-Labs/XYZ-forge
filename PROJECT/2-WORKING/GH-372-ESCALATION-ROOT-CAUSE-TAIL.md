@@ -23,6 +23,12 @@ related:
 
 # GH-372 — Turn-taker failure reason never reaches ESCALATION.md (codex 'workspace out of credits' surfaced as generic no-progress)
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Capture doc authored with preflight contract. | Marathon phase execution. |
+
 Capture of [XYZ-forge issue #372](https://github.com/HiQS-Labs/XYZ-forge/issues/372).
 
 Observed 2026-09-01: `codex exec` died immediately with `ERROR: Your workspace is

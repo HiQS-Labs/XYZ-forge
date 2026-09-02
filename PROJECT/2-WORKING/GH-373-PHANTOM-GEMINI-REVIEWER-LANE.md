@@ -10,7 +10,7 @@ status: 2-WORKING
 # marathon fires. Exempt from ROADMAP parking while it travels inside the plan bundle.
 roadmap_exempt: true
 created: 2026-09-01
-updated: 2026-09-01 (rescoped — most of this shipped in XYZ-forge PR #367)
+updated: 2026-09-01
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -22,6 +22,12 @@ related:
 ---
 
 # GH-373 — Reviewer validation accepts gemini* but no gemini lane exists (no GEMINI_AGENT routing, no gemini-turn.sh)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Capture doc authored with preflight contract. | Marathon phase execution. |
 
 Capture of [XYZ-forge issue #373](https://github.com/HiQS-Labs/XYZ-forge/issues/373).
 

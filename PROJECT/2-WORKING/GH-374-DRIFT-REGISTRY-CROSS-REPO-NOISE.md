@@ -23,6 +23,12 @@ related:
 
 # GH-374 — Drift-brief prepends stale cross-repo registry entries (src/project.js warnings inside an LTVera run)
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Capture doc authored with preflight contract. | Marathon phase execution. |
+
 Capture of [XYZ-forge issue #374](https://github.com/HiQS-Labs/XYZ-forge/issues/374).
 
 Observed 2026-09-01: every few turns, `dependency.drift — agy changed

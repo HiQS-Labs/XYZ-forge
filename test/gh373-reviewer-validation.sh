@@ -19,7 +19,7 @@ else
   fail "frozen fallback has a syntax error"
 fi
 
-help="$(XYZ_PYTHON=0 bash "$DRIVE" --help)"
+help="$(XYZ_PYTHON=0 MARATHON_ROOT="$WORK" bash "$DRIVE" --help)"
 if [[ "$help" != *gemini* && "$help" == *"codex' or 'agy'"* ]]; then
   pass "help advertises only dispatchable reviewer lanes"
 else

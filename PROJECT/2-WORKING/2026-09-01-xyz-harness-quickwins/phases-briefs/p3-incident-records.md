@@ -15,6 +15,12 @@ related:
 
 # p3 — incident records
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase brief authored. | Marathon phase execution. |
+
 Read the capture docs first: `PROJECT/2-WORKING/GH-371-INTERRUPT-SNAPSHOT-UNCOMMITTED-TREE.md`
 and `PROJECT/2-WORKING/GH-372-ESCALATION-ROOT-CAUSE-TAIL.md`.
 

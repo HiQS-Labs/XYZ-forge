@@ -23,6 +23,12 @@ related:
 
 # GH-369 — rtl_run_bounded's PID-only kill lets a multi-process CLI outlive its turn cap (observed
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Capture doc authored with preflight contract. | Marathon phase execution. |
+
 Capture of [XYZ-forge issue #369](https://github.com/HiQS-Labs/XYZ-forge/issues/369).
 
 Observed 2026-09-01: an agy builder turn with `turn_timeout_s: 2400` ran 78 minutes

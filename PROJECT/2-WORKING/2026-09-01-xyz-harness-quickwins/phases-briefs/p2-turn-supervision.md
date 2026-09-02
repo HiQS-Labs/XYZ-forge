@@ -15,6 +15,12 @@ related:
 
 # p2 — turn supervision
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase brief authored. | Marathon phase execution. |
+
 Read the capture docs first: `PROJECT/2-WORKING/GH-369-TURN-CAP-PROCESS-GROUP-KILL.md`
 and `PROJECT/2-WORKING/GH-370-WORKTREE-PROGRESS-TELEMETRY.md`.
 

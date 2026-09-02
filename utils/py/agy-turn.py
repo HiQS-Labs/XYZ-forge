@@ -330,9 +330,12 @@ def main():
     if not f: die("RELAY_FILE required")
     if not agy_agent: die("AGY_AGENT required")
 
-    # GH-368: marathon-agent.sh has already selected this shim by lane membership.  AGY_AGENT may
-    # therefore name both a builder and reviewer (``agy,agy-qa``); a second exact-id check would
-    # discard one of those valid turns.  Keep the ownership guard below in claim_task_or_exit().
+    # GH-368: marathon-agent.sh has already selected this shim by lane membership. AGY_AGENT may
+    # name multiple same-lane actors (e.g. `agy,agy-qa`). Defer only if `me` is not in that set.
+    agy_agents = [a.strip() for a in agy_agent.split(",") if a.strip()]
+    if me not in agy_agents:
+        print(f"agy-turn: actor {me} is not the agy agent ({agy_agent}) — deferring (window-driven)", file=sys.stderr)
+        sys.exit(0)
 
     if not agy_auth_preflight(agy_bin):
         sys.exit(5)

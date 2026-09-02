@@ -23,6 +23,12 @@ related:
 
 # GH-371 — Interrupted-phase record doesn't snapshot the uncommitted tree — a killed turn's edits stay in the main repo
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Capture doc authored with preflight contract. | Marathon phase execution. |
+
 Capture of [XYZ-forge issue #371](https://github.com/HiQS-Labs/XYZ-forge/issues/371).
 
 Observed 2026-09-01: a builder turn killed past its cap had "zero disk output" per

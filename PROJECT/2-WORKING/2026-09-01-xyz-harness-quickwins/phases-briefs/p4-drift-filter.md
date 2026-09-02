@@ -13,6 +13,12 @@ related:
 
 # p4 — drift filter
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase brief authored. | Marathon phase execution. |
+
 Read the capture doc first:
 `PROJECT/2-WORKING/GH-374-DRIFT-REGISTRY-CROSS-REPO-NOISE.md`.
 

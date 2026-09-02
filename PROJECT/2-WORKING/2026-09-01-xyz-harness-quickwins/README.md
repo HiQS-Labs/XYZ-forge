@@ -13,6 +13,12 @@ goal: >
 
 # How to execute this bundle
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Staging bundle prepared and preflighted. | Marathon execution across four phases. |
+
 Umbrella tracking issue: [XYZ-forge #376](https://github.com/HiQS-Labs/XYZ-forge/issues/376) —
 the marathon PR into XYZ-forge closes it.
 

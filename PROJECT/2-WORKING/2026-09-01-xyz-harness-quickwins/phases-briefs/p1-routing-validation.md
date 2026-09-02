@@ -2,7 +2,7 @@
 title: "p1 brief — same-lane agent routing (#368) + reviewer-validation alignment (#373)"
 status: "Brief (input to the 2026-09-01 xyz-harness-quickwins marathon — not a tracked plan)"
 created: 2026-09-01
-updated: 2026-09-01 (rescoped after XYZ-forge #367 and #375)
+updated: 2026-09-01
 owner: Noel Saw
 goal: >
   Make a builder and a reviewer on the SAME model lane routable (agy + agy-qa), and make
@@ -14,6 +14,12 @@ related:
 ---
 
 # p1 — routing + validation
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase brief authored. | Marathon phase execution. |
 
 Read the two capture docs first: `PROJECT/2-WORKING/GH-368-SAME-LANE-BUILDER-REVIEWER-ROUTING.md`
 and `PROJECT/2-WORKING/GH-373-PHANTOM-GEMINI-REVIEWER-LANE.md`.
