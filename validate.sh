@@ -1188,7 +1188,10 @@ for t in "${RUN_TESTS[@]}"; do
     rt_suite sequential "$t" "$_s" "$(rt_now_ms)" 0 ""
   else
     FAILED+=("$t")
-    rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$?" ""
+    # capture rc FIRST: the rt_now_ms substitution in the argument list resets $?, which once
+    # recorded a failed sequential suite as rc=0 in telemetry (runner verdict was still correct)
+    _rc=$?
+    rt_suite sequential "$t" "$_s" "$(rt_now_ms)" "$_rc" ""
   fi
 done
 fi
