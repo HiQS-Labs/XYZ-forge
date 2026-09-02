@@ -1,5 +1,5 @@
 # Marathon Phase p3-incident-records
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-INCIDENT-RECORDS-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -120,3 +120,19 @@ Implemented both incident records.
 
 Verification: `bash test/gh371-interrupt-snapshot.sh` (2 pass, 0 fail) and
 `bash test/gh372-escalation-log-tail.sh` (3 pass, 0 fail).
+
+### Round 1 · Reviewer · agy
+
+Reviewed implementation for GH-371 and GH-372 across `utils/py/marathon_drive.py`, `utils/py/relay_drive.py`, `test/gh371-interrupt-snapshot.sh`, and `test/gh372-escalation-log-tail.sh`.
+
+swept file: yes
+Pre-existing defects: none found.
+
+Assessment:
+- **GH-371**: In `utils/py/marathon_drive.py`, `_write_interrupted_phase_record` captures `git status --porcelain` for the main repository and distinct turn worktree, appending an `## Uncommitted tree snapshot (GH-371)` section to `PHASE-INTERRUPTED.md`. `utils/py/relay_drive.py` provides the tracking via `last-turn-incident.json` across turn lifecycle events.
+- **GH-372**: In `utils/py/relay_drive.py`, `prepare_turn_log` cleanly resolves `rtl_default_log` for the actor and propagates it through the agent environment. `escalate()` in `marathon_drive.py` reads the failing turn's log tail (last 40 lines) into a collapsed `<details>` block in `ESCALATION.md`, or outputs an explicit message when no log was created.
+- Marker comments (`GH-371`, `GH-372`) are in place for preflight probes.
+- Tests `test/gh371-interrupt-snapshot.sh` (2 pass, 0 fail) and `test/gh372-escalation-log-tail.sh` (3 pass, 0 fail) pass cleanly.
+
+**Verdict:** Approved
+
