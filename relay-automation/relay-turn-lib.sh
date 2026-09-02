@@ -32,8 +32,9 @@
 #                                                        code on normal failure, or 7 on timeout-kill.
 #                                                        No dependency on coreutils `timeout` (absent
 #                                                        on stock macOS) — sleep+kill watchdog pattern
-#                                                        (same as consult.sh _guarded). Kills by PID;
-#                                                        see function body for the process-group gap.
+#                                                        (same as consult.sh _guarded). Kills the
+#                                                        child session's process group; see function
+#                                                        body for the containment details.
 #
 # GH-161 observability (see PROJECT/1-INBOX/GH-161-HARNESS-OBSERVABILITY.md for the survey behind
 # this): instrumentation writes into the turn's own transcript, never a separate log file.
@@ -529,16 +530,26 @@ rtl_is_containment_ignored() {  # <path> — is <path> an exempted tool-cache si
 rtl_run_bounded() {  # <timeout_secs> <cmd...>
   # Run <cmd...> under a wall-clock ceiling without coreutils `timeout` (absent on stock macOS).
   # Mirrors the consult.sh _guarded() pattern: sleep-then-kill watchdog, no external deps.
-  # Process-group note: `setsid` is absent on stock macOS so we kill by PID (same as consult.sh).
-  # A multi-process CLI whose children outlive the leader is a known gap; worktree isolation is
-  # the airtight follow-up (ROADMAP 3.6). The PID kill is sufficient for hung single-process CLIs.
+  # GH-369: launch the command in a fresh session, then capture and kill ITS actual PGID. A non-
+  # interactive shell puts background jobs in the caller's process group, so killing -$apid without
+  # that session boundary could kill the turn shim itself. `setsid` is absent on stock macOS; Python
+  # is already a runtime dependency and its os.setsid() gives the child a portable, private group.
+  # Capture the PGID before the watchdog sleeps: a CLI can re-exec or its leader can exit while a
+  # grandchild survives, but the group remains the containment target.
   # NOTE: disk-quota and per-turn spend ceilings are NOT yet enforced here — wall-clock only (R5
   # partial). Disk-quota belongs in a TMPDIR watchdog; spend ceilings are model-shim-specific.
   local secs="$1"; shift
-  local apid kpid rc=0
-  "$@" &
+  local apid pgid kpid rc=0
+  python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' "$@" &
   apid=$!
-  ( sleep "$secs"; kill -9 "$apid" 2>/dev/null ) >/dev/null 2>&1 &
+  pgid="$(ps -o pgid= -p "$apid" 2>/dev/null | tr -d '[:space:]')"
+  ( sleep "$secs"
+    if [[ -n "$pgid" ]]; then
+      kill -9 "-$pgid" 2>/dev/null
+    else
+      kill -9 "$apid" 2>/dev/null
+    fi
+  ) >/dev/null 2>&1 &
   kpid=$!
   wait "$apid" 2>/dev/null || rc=$?
   kill "$kpid" 2>/dev/null || true; wait "$kpid" 2>/dev/null || true

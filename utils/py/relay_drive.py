@@ -572,8 +572,38 @@ def main():
         os.environ["RELAY_TASK"] = args.relay_task
         os.environ["RELAY_AGENT"] = actor
         
-        # Execute agent-cmd with RSS measurement (GH-382)
+        # Execute agent-cmd with RSS measurement (GH-382).
+        #
+        # GH-370: also emit a throttled changed-file count.  The turn-taker creates its own
+        # throwaway rtl-wt.* worktree, so discover worktrees which appear after this turn starts;
+        # with isolation off (or before that worktree appears), the explicitly named fallback is
+        # the target/main tree.  This is observability only: a failed sample must never affect a turn.
         peak_turn_rss_mb = 0
+        try:
+            progress_main_tree = get_env("RELAY_TARGET_ROOT") or subprocess.check_output(
+                ["git", "-C", os.path.dirname(relay_file), "rev-parse", "--show-toplevel"],
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8").strip()
+        except Exception:
+            progress_main_tree = root_dir
+
+        def progress_worktrees():
+            try:
+                out = subprocess.check_output(
+                    ["git", "-C", progress_main_tree, "worktree", "list", "--porcelain"],
+                    stderr=subprocess.DEVNULL,
+                ).decode("utf-8")
+                return {line[9:] for line in out.splitlines() if line.startswith("worktree ")}
+            except Exception:
+                return set()
+
+        known_worktrees = progress_worktrees()
+        turn_worktree = ""
+        try:
+            progress_interval_s = max(1.0, float(get_env("RELAY_PROGRESS_INTERVAL_S", "60")))
+        except ValueError:
+            progress_interval_s = 60.0
+        last_progress_at = 0.0
         if os.access(args.agent_cmd, os.X_OK):
             proc = subprocess.Popen([args.agent_cmd], start_new_session=True)
         else:
@@ -591,6 +621,28 @@ def main():
                     peak_turn_rss_mb = rss_mb
             except Exception:
                 pass
+            now = time.monotonic()
+            if now - last_progress_at >= progress_interval_s:
+                if get_env("RELAY_WORKTREE_ISOLATION", "1") != "0" and not turn_worktree:
+                    candidates = progress_worktrees() - known_worktrees
+                    rtl_candidates = [p for p in candidates if os.path.basename(p).startswith("rtl-wt.")]
+                    if rtl_candidates:
+                        turn_worktree = sorted(rtl_candidates)[0]
+                sample_root = turn_worktree or progress_main_tree
+                sample_kind = "turn worktree" if turn_worktree else "main tree fallback"
+                try:
+                    status = subprocess.run(
+                        ["git", "-C", sample_root, "status", "--porcelain"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    if status.returncode == 0:
+                        changed_count = len(status.stdout.splitlines())
+                        eprint(f"relay-drive: GH-370 progress ({sample_kind}: {sample_root}) changed-files={changed_count}")
+                except Exception:
+                    pass
+                last_progress_at = now
             time.sleep(0.1)
 
         res_code = proc.returncode

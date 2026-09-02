@@ -1,6 +1,6 @@
 # Marathon Phase p2-turn-supervision
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-SUPERVISION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -66,6 +66,20 @@ changed-count line.
   at the change sites (preflight probes key on them).
 - The Bash/Python lanes must stay behaviorally identical — update both or neither.
 - Gate: `bash validate.sh`. In-turn, run only the two new tests plus files you edit.
+
+### Round 1 · Builder · codex
+
+Implemented GH-369 process-group timeout containment in both runtime helpers: the Bash runner starts
+the bounded command in a private session, captures its actual PGID, and reaps that group; the Python
+twin now exposes the same bounded-runner contract. Added a regression fixture that proves a
+grandchild is gone after the leader's cap in both lanes. Added GH-370 throttled supervisor telemetry:
+the Python driver discovers a new `rtl-wt.*` turn worktree when available, otherwise explicitly logs
+the main-tree fallback and its `git status --porcelain` changed-file count. Added a focused driver
+fixture with a one-second test interval. Files touched: relay-turn-lib.sh, rtl.py, relay_drive.py,
+gh369-group-kill.sh, gh370-progress-telemetry.sh, and this relay log.
+
+Verification: `bash test/gh369-group-kill.sh` (6 pass, 0 fail) and
+`bash test/gh370-progress-telemetry.sh` (4 pass, 0 fail).
 
 
 ---
