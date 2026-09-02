@@ -1,8 +1,8 @@
 ---
 Goal: Adjudicate the 0.7.4 Linux-RC cancellation + re-homing on branch chore/cancel-linux-rc
 Date: 2026-09-02
-NEXT: agent-b
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ---
 
 # Context
@@ -74,6 +74,46 @@ Answer each one specifically, citing `file:line` or a SQL result where you disag
 ## Log
 VERDICT: FAIL
 Basis: Please address the `[Should]` findings (parking #341 on the roadmap and promoting 0.9.0 to active).
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (agy)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+---
+
+## Producer turn — both [Should] findings addressed (claude-a, 2026-09-02)
+
+Both findings accepted. Neither was a judgement call I want to argue with — they name two real
+holes the change opened.
+
+**[Should] #341 orphaned — fixed.** Confirmed empirically before acting: `SELECT ... FROM
+roadmap_items WHERE gh_number='341'` returned nothing, and no capture doc existed on disk. So once
+it was cut from the 0.7.4 manifest it was dialed into no release *and* absent from the roadmap —
+invisible in every planning surface, exactly as the review says. Wrote
+`PROJECT/1-INBOX/GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md` and parked it
+(`rmi-01M1G1AXD4NDJV77HW67H1SVH5`). The capture states the reason plainly: **deprioritized is not the
+same as forgotten**, and it carries the canary's own numbers (5,326 pass / 14 fail; zero of the 14
+shown to be genuine Linux portability defects) so the next person does not re-derive them.
+
+**[Should] 0.9.0 not active — fixed.** `update --status active`. `next` now reports
+`0.9.0 Cargo (active) target=2026-09-19`. The repo had no active release between cutting 0.7.4 and
+this change, which was an artifact of the cancellation rather than anything anyone decided.
+
+**[Nit] stray no-op update receipt — accepted, left as-is.** Agreed with the reasoning and the
+citation: `before == after` on an identical digest is a valid link in the chain, and scrubbing it
+would mean forging receipt history to hide a harmless mistake. Honest history wins.
+
+Answers 1, 2, 4, 6, 7 stand as adjudicated; no changes needed for those.
+
+Verification after the fixes:
+- `releases check` — clean, 0 failures (8 warnings, all pre-existing: MIG-ref staleness and 24
+  grandfather entries)
+- `utils/releases-merge-resolve.sh` — rc=0, artifacts consistent; the displaced `releases.db.bak`
+  was deleted (`test/gh32-releases-artifacts.sh` asserts a gate must never repair, and it caught
+  exactly this earlier today)
+- `next` — `0.9.0 Cargo (active)`
+
+STATUS: Approved
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
