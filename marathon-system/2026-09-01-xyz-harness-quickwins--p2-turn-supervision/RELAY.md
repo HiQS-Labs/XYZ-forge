@@ -1,6 +1,6 @@
 # Marathon Phase p2-turn-supervision
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-SUPERVISION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -81,6 +81,27 @@ gh369-group-kill.sh, gh370-progress-telemetry.sh, and this relay log.
 Verification: `bash test/gh369-group-kill.sh` (6 pass, 0 fail) and
 `bash test/gh370-progress-telemetry.sh` (4 pass, 0 fail).
 
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+#### Findings
+
+1. **[Critical] Process-Group Timeout Race Condition & Self-Kill Hazard in `relay-automation/relay-turn-lib.sh::rtl_run_bounded`**
+   - **Location:** `relay-automation/relay-turn-lib.sh:543-552`
+   - **Cause:** When starting `python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' "$@" &`, the shell executes `pgid="$(ps -o pgid= -p "$apid" 2>/dev/null | tr -d '[:space:]')"` immediately on the very next line. In a non-interactive shell without job control, the background child process inherits the calling shell's process group until `os.setsid()` executes. Because Python initialization takes ~10–30ms while `ps` executes in ~1–2ms, `ps` captures the **parent shell's PGID** (`my_pgid`).
+   - **Impact:** When the watchdog timeout expires, `kill -9 "-$pgid"` sends `SIGKILL` to the **caller's process group**, killing the calling script/test runner/shim itself (exit 137). When running `test/gh369-group-kill.sh`, the test runner was SIGKILLed at line 24 before any assertions completed, which masked the failure.
+   - **Remedy:** POSIX guarantees that when the child calls `os.setsid()`, its new PGID is equal to `$apid`. In the watchdog, kill the process group `-$apid` directly (e.g. `kill -9 "-$apid" 2>/dev/null || kill -9 "$apid" 2>/dev/null`), eliminating the startup `ps` race and preventing self-kill of the caller process group.
+   - **Verification:** Verified in an external `$TMPDIR` probe; with this fix, `test/gh369-group-kill.sh` runs all assertions to completion and reports `6 pass, 0 fail`.
+
+2. **Files Swept (`GH-268`):**
+   - `relay-automation/relay-turn-lib.sh`: swept file: yes (critical race condition found in `rtl_run_bounded` as described above; no other defects).
+   - `utils/py/rtl.py`: swept file: yes (`rtl_run_bounded` correctly sets `start_new_session=True`).
+   - `utils/py/relay_drive.py`: swept file: yes (GH-370 progress telemetry polling loop correctly implements dynamic `rtl-wt.*` worktree discovery and main tree fallback with changed-file counting).
+   - `test/gh369-group-kill.sh`: swept file: yes (fixture correctly tests both Bash and Python group-kill contracts once the runner race is resolved).
+   - `test/gh370-progress-telemetry.sh`: swept file: yes (passes 4/4).
 
 ---
 
