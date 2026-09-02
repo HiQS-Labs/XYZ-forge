@@ -18,9 +18,11 @@ SHIM="$ROOT/relay-automation/claude-turn.sh"
 PY_DIR="$ROOT/utils/py"
 
 tick_a init >/dev/null
+mkdir -p "$A/src"
+printf 'module.exports = {};\n' >"$A/src/project.js"
 printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
 printf '.tick/\n' >"$A/.gitignore"
-git -C "$A" add relay.md .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
+git -C "$A" add src/project.js relay.md .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
 
 # Stub `claude`: dumps its argv (which carries `-p <prompt>`) so we can inspect the turn brief, then
 # performs a minimal real turn (claim/append/release) so the shim reaches exit 0.

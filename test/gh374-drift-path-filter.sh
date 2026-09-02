@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
-#
 # gh374-drift-path-filter.sh — stale cross-repo dependency.drift events must not enter a turn brief.
+source "$(dirname "$0")/_setup.sh" gh374-drift-path-filter
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HARNESS="$(cd "$HERE/.." && pwd)"
+HARNESS="$(cd "$(dirname "$0")/.." && pwd)"
 LIB="$HARNESS/relay-automation/relay-turn-lib.sh"
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh374-drift-filter.XXXXXX")"
-trap 'rm -rf "$WORK"' EXIT
 D="$WORK/driven-repo"
 R="$WORK/shared-registry"
 
@@ -29,12 +25,20 @@ printf '%s\n' '{"agent":"peer","surface":"src/stale.js","diff_lines":9}' \
 source "$LIB"
 rtl_init "$D" "" ""
 bash_brief="$(rtl_drift_brief bash-agent "$R")"
-[[ "$bash_brief" == *"src/present.js"* ]]
-[[ "$bash_brief" != *"src/stale.js"* ]]
-[[ -z "$(rtl_drift_brief bash-agent "$R")" ]]
+if [[ "$bash_brief" == *"src/present.js"* && "$bash_brief" != *"src/stale.js"* ]]; then
+  pass "Bash drift brief includes present path and excludes stale path"
+else
+  fail "Bash drift brief unexpected: $bash_brief"
+fi
+
+if [[ -z "$(rtl_drift_brief bash-agent "$R")" ]]; then
+  pass "Bash drift watermark advances (second read is empty)"
+else
+  fail "Bash drift watermark did not advance"
+fi
 
 # Exercise the Python entry point too: it must pass the driven root through to the shared core.
-PYTHONPATH="$HARNESS/utils/py" GH374_ROOT="$D" GH374_REGISTRY="$R" GH374_HARNESS="$HARNESS" python3 - <<'PY'
+out="$(PYTHONPATH="$HARNESS/utils/py" GH374_ROOT="$D" GH374_REGISTRY="$R" GH374_HARNESS="$HARNESS" python3 - <<'PY'
 import os
 from rtl import RelayTurnLib
 
@@ -43,6 +47,14 @@ brief = rtl.drift_brief("python-agent", os.environ["GH374_REGISTRY"])
 assert "src/present.js" in brief, brief
 assert "src/stale.js" not in brief, brief
 assert not rtl.drift_brief("python-agent", os.environ["GH374_REGISTRY"])
+print("OK")
 PY
+)"
+if [[ "$out" == "OK" ]]; then
+  pass "Python drift brief mirrors path filter and watermark advance"
+else
+  fail "Python drift brief failed"
+fi
 
-echo "gh374-drift-path-filter: PASS"
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
