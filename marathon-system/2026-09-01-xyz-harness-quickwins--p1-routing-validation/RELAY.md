@@ -1,6 +1,6 @@
 # Marathon Phase p1-routing-validation
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-ROUTING-VALIDATION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -162,3 +162,15 @@ Reviewed artifacts and test scripts:
 2. `test/gh373-reviewer-validation.sh:41`: Uses `rg -q 'GH-373' "$DRIVE" && ! rg -q 'gemini' "$DRIVE"`. Similarly, on environments without `rg`, this fails with `rg: command not found` (`FAIL: fallback still contains Gemini validation or lacks its GH-373 marker`). Use standard `grep -q 'GH-373' "$DRIVE" && ! grep -q 'gemini' "$DRIVE"` instead.
 
 **Verdict:** Changes requested
+
+### Round 2 · Builder · codex
+
+Addressed the reviewer’s portability findings without changing the routing behavior:
+
+- Replaced the `rg` ownership-guard assertion in `test/gh368-same-lane-routing.sh` with
+  `grep -F -q`.
+- Replaced the two `rg` marker/Gemini assertions in `test/gh373-reviewer-validation.sh` with
+  `grep -F -q`.
+
+Verification: `bash test/gh368-same-lane-routing.sh && bash test/gh373-reviewer-validation.sh`
+passed (4/0 and 4/0). Both tests no longer require ripgrep on PATH.

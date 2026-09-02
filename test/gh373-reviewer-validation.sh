@@ -38,7 +38,7 @@ else
   fail "reviewer validation drifted (rc=$rc out=$out)"
 fi
 
-if rg -q 'GH-373' "$DRIVE" && ! rg -q 'gemini' "$DRIVE"; then
+if grep -F -q 'GH-373' "$DRIVE" && ! grep -F -q 'gemini' "$DRIVE"; then
   pass "GH-373 marker sits on a Gemini-free fallback"
 else
   fail "fallback still contains Gemini validation or lacks its GH-373 marker"

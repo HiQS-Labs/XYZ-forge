@@ -70,7 +70,7 @@ else
   fail "agy-qa deferred before the shim's auth/ownership path (out=$out)"
 fi
 
-if rg -q 'claim_task_or_exit\(' "$ROOT/utils/py/agy-turn.py"; then
+if grep -F -q 'claim_task_or_exit(' "$ROOT/utils/py/agy-turn.py"; then
   pass "agy shim retains the tick ownership guard"
 else
   fail "agy shim lost claim_task_or_exit ownership enforcement"
