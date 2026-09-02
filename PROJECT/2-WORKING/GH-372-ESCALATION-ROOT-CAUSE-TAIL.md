@@ -76,3 +76,7 @@ preflight probe below keys on it.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- Generic failure reasons like `relay-failed-before-gate` obscure critical diagnostic details such as provider credit exhaustion or authentication errors. Embedding the trailing lines of the failing turn's log into `ESCALATION.md` provides immediate actionable context without requiring full transcript excavation.

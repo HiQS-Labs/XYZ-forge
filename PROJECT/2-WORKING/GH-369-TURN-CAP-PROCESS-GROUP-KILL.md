@@ -78,3 +78,8 @@ preflight probe below keys on it.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- Killing only the leader PID in `rtl_run_bounded` allows child processes to survive and consume resources past turn timeouts. Use negative PID process-group signaling (`kill -TERM -$pgid` and `kill -KILL -$pgid`) to cleanly terminate the entire process hierarchy.
+- Python and Bash implementations must maintain strict parity in process-group creation (`setsid`) and cleanup semantics.

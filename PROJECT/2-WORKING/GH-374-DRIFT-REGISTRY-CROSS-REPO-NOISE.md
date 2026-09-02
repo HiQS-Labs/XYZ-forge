@@ -75,3 +75,7 @@ preflight probe below keys on it.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- Shared or multi-repo event logs must filter entries against the target repository's tree before injecting heads-ups into agent prompts. Checking path existence prevents cross-repo drift noise from misleading builder turns.

@@ -75,3 +75,7 @@ preflight probe below keys on it.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- When a phase or turn is interrupted, recording only the exit code leaves uncommitted working tree modifications untracked. Capturing `git status --porcelain` into `PHASE-INTERRUPTED.md` ensures partial turn output is inspectable and prevents silent leakage into subsequent gate runs.

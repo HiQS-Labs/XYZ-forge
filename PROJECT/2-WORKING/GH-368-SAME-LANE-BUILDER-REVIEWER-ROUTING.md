@@ -113,3 +113,8 @@ allowlist, which is the defect GH-346 spent three phases removing.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- When builder and reviewer share the same model lane prefix (e.g. `agy` and `agy-qa`), `route_agent` must preserve both in the environment slot (comma-separated), `marathon-agent.sh` must dispatch by lane membership, and the turn shim must check set membership rather than strict string equality before deferring.
+- Multi-actor lane configurations allow fallback workflows when one provider/workspace runs out of credits or encounters limits.

@@ -103,3 +103,7 @@ preflight probe below keys on it.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- CLI help text and option validation must agree with actual dispatch capabilities. Accepting options for unimplemented backends (such as phantom gemini routing) leads to confusing failures down the pipeline.

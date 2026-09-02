@@ -75,3 +75,7 @@ preflight probe below keys on it.
   }
 }
 ```
+
+## Lessons Learned (For Future Agents)
+
+- Turn-takers that buffer terminal output until exit (or emit no live logs) cause mid-turn blindness. The supervisor's poll loop should sample git worktree status (`git status --porcelain`) periodically to provide observable heartbeat telemetry during long runs.
