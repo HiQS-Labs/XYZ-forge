@@ -1025,6 +1025,62 @@ _pdda_gov_resolve_ref() {
   printf '%s\n' "$candidate"
 }
 
+# GH-365 step 4: extract every reference from ONE doc as "<line>\t<ref>" pairs. This is the
+# per-doc replacement for the per-line `_pdda_gov_extract_refs` fan-out, which spawned 4
+# printf|grep|sed pipelines per line and ran twice per doc (once per check_governance pass) —
+# ~78% of an 87s `pdda.sh run` on macOS. Preferred engine is the in-process scanner
+# utils/py/pdda_gov_scan.py (ONE python process per doc, byte-exact with the legacy output —
+# see that file's CONTRACT header). It lives OUTSIDE utils/pdda/ because this tree is
+# sync-managed (PROJECT/PDDA-SYNC-POLICY.md: new local behaviour belongs outside utils/pdda/**
+# so a later sync cannot silently remove it); PDDA_GOV_SCAN overrides the path for tests.
+# FAIL-SAFE: python3 absent, scanner file missing, or the scanner itself failing (non-zero
+# exit) degrades to the LEGACY per-line path below — findings stay identical, only slower.
+_pdda_gov_extract_doc_refs() {
+  local abs_file="$1" scanner out line_no text ref
+  # $HERE is utils/pdda — the scanner is ONE level up, in utils/py/ (NOT the repo root: this
+  # file can be installed into a target repo whose own py/ contents differ).
+  scanner="${PDDA_GOV_SCAN:-$HERE/../py/pdda_gov_scan.py}"
+  if command -v python3 >/dev/null 2>&1 && [ -f "$scanner" ]; then
+    out="$(python3 "$scanner" "$abs_file" 2>/dev/null)" && { printf '%s\n' "$out"; return 0; }
+    # a failed scanner run falls through to legacy — it must degrade to slow, never to silence
+  fi
+  while IFS=$'\t' read -r line_no text; do
+    [ -n "$line_no" ] || continue
+    while IFS= read -r ref; do
+      [ -n "$ref" ] || continue
+      printf '%s\t%s\n' "$line_no" "$ref"
+    done <<< "$(_pdda_gov_extract_refs "$text")"
+  done < <(_pdda_gov_scannable_lines "$abs_file")
+}
+
+# The per-doc cache check_governance's TWO passes both read (GH-365 step 4: "retaining
+# extracted references across its validation passes"). Same two-file shape as the bare-name
+# find-cache below: the key is a 32-bit cksum and CAN collide, so each entry stores the doc
+# path it was built from and a colliding doc is served UNCACHED (never overwritten) — the
+# GH-48 collision policy, applied one cache up.
+_pdda_gov_doc_refs() {
+  local abs_file="$1" cache_dir="${2:-}" key marker refs_file out
+  if [ -n "$cache_dir" ] && [ -d "$cache_dir" ]; then
+    key="$(_pdda_gov_cache_key "$abs_file")"
+    marker="$cache_dir/$key.doc"
+    refs_file="$cache_dir/$key.refs"
+    if [ -f "$marker" ]; then
+      if [ "$(cat "$marker" 2>/dev/null)" = "$abs_file" ]; then
+        cat "$refs_file" 2>/dev/null
+        return 0
+      fi
+    else
+      out="$(_pdda_gov_extract_doc_refs "$abs_file")"
+      printf '%s' "$abs_file" > "$marker" 2>/dev/null || :
+      if [ -n "$out" ]; then printf '%s\n' "$out" > "$refs_file" 2>/dev/null || :
+      else : > "$refs_file" 2>/dev/null || : ; fi
+      printf '%s\n' "$out"
+      return 0
+    fi
+  fi
+  _pdda_gov_extract_doc_refs "$abs_file"
+}
+
 check_governance() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-governance" rc=0
@@ -1055,13 +1111,18 @@ check_governance() {
   # scanned docs in exactly ONE whole-tree `find` call, before doing anything else — the DoD is one
   # traversal per check_governance run, not one per unique name (a per-name `find`, even memoized,
   # still multiplies with the number of DISTINCT dead names on a doc set with many different missing
-  # bare mentions). Pass 1 below just extracts and collects candidate names (cheap text processing on
-  # a handful of small governance docs — re-running it is not the expensive part, the tree walk is);
-  # pass 2, further down, is the existing per-ref loop, unchanged except it now reads a fully-populated
-  # cache instead of resolving anything itself.
+  # bare mentions). Pass 1 below just extracts and collects candidate names; pass 2, further down,
+  # is the existing per-ref loop, unchanged except it now reads a fully-populated cache instead of
+  # resolving anything itself.
+  # GH-365 (step 4): both passes read their references from the per-doc cache fed by
+  # _pdda_gov_doc_refs — each doc is extracted ONCE per run (one in-process scan), retained across
+  # the passes, instead of re-running the per-line grep fan-out twice. The bare-name collection and
+  # the batch find-cache below are unchanged.
   local gov_ref_cache_dir="" gov_names_file="" gov_uniq_names_file=""
   local gov_find_args gov_name gov_p gov_bn gov_key
+  local gov_refs_dir=""
   gov_ref_cache_dir="$(mktemp -d 2>/dev/null || true)"
+  gov_refs_dir="$(mktemp -d 2>/dev/null || true)"
   if [ -n "$gov_ref_cache_dir" ]; then
     gov_names_file="$(mktemp 2>/dev/null || true)"
     if [ -n "$gov_names_file" ]; then
@@ -1069,29 +1130,26 @@ check_governance() {
         abs_file="$PDDA_REPO_ROOT/$doc"
         is_shipped_doc=0
         case " $shipped_docs " in *" $doc "*) is_shipped_doc=1 ;; esac
-        while IFS=$'\t' read -r line_no text; do
+        while IFS=$'\t' read -r line_no ref; do
           [ -n "$line_no" ] || continue
-          while IFS= read -r ref; do
-            [ -n "$ref" ] || continue
-            if [ "$is_shipped_doc" -eq 1 ]; then
-              ref_path="${ref%%#*}"
-              while :; do
-                case "$ref_path" in
-                  ../*) ref_path="${ref_path#../}" ;;
-                  ./*) ref_path="${ref_path#./}" ;;
-                  *) break ;;
-                esac
-              done
-              case " $ref_exempt " in *" $ref_path "*) continue ;; esac
-            fi
-            case "$ref" in
-              http://*|https://*|//*|/*|./*|../*|*/*) continue ;;   # not a bare-name fallback candidate
-            esac
+          if [ "$is_shipped_doc" -eq 1 ]; then
             ref_path="${ref%%#*}"
-            [ -f "$PDDA_REPO_ROOT/$ref_path" ] && continue          # resolves directly, no lookup needed
-            printf '%s\n' "$ref_path" >> "$gov_names_file"
-          done <<< "$(_pdda_gov_extract_refs "$text")"
-        done < <(_pdda_gov_scannable_lines "$abs_file")
+            while :; do
+              case "$ref_path" in
+                ../*) ref_path="${ref_path#../}" ;;
+                ./*) ref_path="${ref_path#./}" ;;
+                *) break ;;
+              esac
+            done
+            case " $ref_exempt " in *" $ref_path "*) continue ;; esac
+          fi
+          case "$ref" in
+            http://*|https://*|//*|/*|./*|../*|*/*) continue ;;   # not a bare-name fallback candidate
+          esac
+          ref_path="${ref%%#*}"
+          [ -f "$PDDA_REPO_ROOT/$ref_path" ] && continue          # resolves directly, no lookup needed
+          printf '%s\n' "$ref_path" >> "$gov_names_file"
+        done < <(_pdda_gov_doc_refs "$abs_file" "$gov_refs_dir")
       done
       if [ -s "$gov_names_file" ]; then
         gov_uniq_names_file="$(mktemp 2>/dev/null || true)"
@@ -1137,31 +1195,29 @@ check_governance() {
     from_dir="$(dirname "$abs_file")"
     is_shipped_doc=0
     case " $shipped_docs " in *" $doc "*) is_shipped_doc=1 ;; esac
-    while IFS=$'\t' read -r line_no text; do
+    while IFS=$'\t' read -r line_no ref; do
       [ -n "$line_no" ] || continue
-      while IFS= read -r ref; do
-        [ -n "$ref" ] || continue
-        if [ "$is_shipped_doc" -eq 1 ]; then
-          # normalize away leading ./ or ../ so a relative mention (e.g. "../../PROJECT/3-COMPLETED/
-          # PDDA-SYNC-TO-OTHER-REPOS.md") matches the same manifest entry as its repo-relative form
-          ref_path="${ref%%#*}"
-          while :; do
-            case "$ref_path" in
-              ../*) ref_path="${ref_path#../}" ;;
-              ./*) ref_path="${ref_path#./}" ;;
-              *) break ;;
-            esac
-          done
-          case " $ref_exempt " in *" $ref_path "*) continue ;; esac
-        fi
-        resolved="$(_pdda_gov_resolve_ref "$ref" "$from_dir" "$gov_ref_cache_dir")" || continue
-        [ -f "$resolved" ] && continue
-        pdda_record_finding warn "$CHECK_NAME" "$abs_file" "$line_no" \
-          "dead reference '$ref' — no file at $(pdda_relpath "$resolved")" "fix-dead-reference"
-      done <<< "$(_pdda_gov_extract_refs "$text")"
-    done < <(_pdda_gov_scannable_lines "$abs_file")
+      if [ "$is_shipped_doc" -eq 1 ]; then
+        # normalize away leading ./ or ../ so a relative mention (e.g. "../../PROJECT/3-COMPLETED/
+        # PDDA-SYNC-TO-OTHER-REPOS.md") matches the same manifest entry as its repo-relative form
+        ref_path="${ref%%#*}"
+        while :; do
+          case "$ref_path" in
+            ../*) ref_path="${ref_path#../}" ;;
+            ./*) ref_path="${ref_path#./}" ;;
+            *) break ;;
+          esac
+        done
+        case " $ref_exempt " in *" $ref_path "*) continue ;; esac
+      fi
+      resolved="$(_pdda_gov_resolve_ref "$ref" "$from_dir" "$gov_ref_cache_dir")" || continue
+      [ -f "$resolved" ] && continue
+      pdda_record_finding warn "$CHECK_NAME" "$abs_file" "$line_no" \
+        "dead reference '$ref' — no file at $(pdda_relpath "$resolved")" "fix-dead-reference"
+    done < <(_pdda_gov_doc_refs "$abs_file" "$gov_refs_dir")
   done
   [ -n "$gov_ref_cache_dir" ] && rm -rf "$gov_ref_cache_dir"
+  [ -n "$gov_refs_dir" ] && [ -d "$gov_refs_dir" ] && rm -rf "$gov_refs_dir"
 
   # --- (2) orphan governance docs: a present doc the index doc never points at --------------------
   index_abs="$PDDA_REPO_ROOT/$index_doc"
@@ -1244,6 +1300,14 @@ check_governance() {
 # JSON-lines stream for downstream parsers.
 runner_say() { if [ "$PDDA_FORMAT" = "json" ]; then printf '%s\n' "$*" >&2; else printf '%s\n' "$*"; fi; }
 
+# GH-365 step 4: opt-in per-check wall-time telemetry for `run`. Default OFF, and zero output
+# drift either way (test/pdda-repo-contract.sh pins `run`'s output) — every PDDA_TIMING line goes
+# to STDERR only. Timing uses perl Time::HiRes (the same idiom as the runner telemetry), not
+# `date +%s` (whole-second coarse — a 200ms check would read 0) and not $EPOCHREALTIME (bash 3.2
+# on macOS doesn't have it). A PDDA_TIMINGS=1 run without perl prints one stderr note and no
+# timing lines rather than garbage zeros.
+_pdda_now_ms() { perl -MTime::HiRes -e 'print int(Time::HiRes::time()*1000)'; }
+
 # Deterministic checks, in the PDDA.md "Suggested hourly schedule" order. Format: "<label> <function>".
 PDDA_DETERMINISTIC_CHECKS="
 pdda-check-frontmatter:check_frontmatter
@@ -1260,6 +1324,7 @@ pdda-check-governance:check_governance
 
 cmd_run() {
   local EXIT_CODE=0 FAILED="" entry label fn MODE_NOTE
+  local timing_on=0 t_start t_end
 
   case "$PDDA_MODE" in
     observe) MODE_NOTE="observe (report-only; never blocks)" ;;
@@ -1269,6 +1334,16 @@ cmd_run() {
   esac
   runner_say "PDDA run starting — mode: $MODE_NOTE"
   pdda_log_activity info "pdda-run" "$PDDA_REPO_ROOT" 0 "starting deterministic PDDA run (mode=$PDDA_MODE)" "start"
+
+  # GH-365 step 4: PDDA_TIMINGS=1 decorates each check with a stderr "PDDA_TIMING <label> <ms>"
+  # line. Off by default; stdout is byte-identical either way.
+  if [ "${PDDA_TIMINGS:-0}" = "1" ]; then
+    if command -v perl >/dev/null 2>&1; then
+      timing_on=1
+    else
+      printf 'PDDA_TIMINGS=1 but perl not found — per-check timings unavailable\n' >&2
+    fi
+  fi
 
   # Quad Concepts is opt-in and orthogonal to the mode: include its check in the suite only when the
   # .pdda-quad / PDDA_QUAD lever is enabled, so a default run's output is unchanged when it's off.
@@ -1283,7 +1358,17 @@ pdda-check-quad-concepts:check_quad_concepts"
     fn="${entry##*:}"
     runner_say ""
     runner_say "== $label =="
-    if "$fn"; then
+    if [ "$timing_on" = "1" ]; then
+      t_start="$(_pdda_now_ms)"
+      if "$fn"; then
+        :
+      else
+        EXIT_CODE=1
+        FAILED="$FAILED $label"
+      fi
+      t_end="$(_pdda_now_ms)"
+      printf 'PDDA_TIMING %s %s\n' "$label" "$((t_end - t_start))" >&2
+    elif "$fn"; then
       :
     else
       EXIT_CODE=1
@@ -1302,6 +1387,16 @@ pdda-check-quad-concepts:check_quad_concepts"
     # — the opposite of PDDA.md's "spend time only on docs that passed" rule.
     runner_say "skipped pdda-doc-ready — fix the deterministic findings above first (${FAILED:-$PDDA_RUN_ERROR_CHECKS})"
     pdda_log_activity info "pdda-doc-ready" "$PDDA_REPO_ROOT" 0 "readiness review skipped — deterministic checks reported errors:${FAILED:-$PDDA_RUN_ERROR_CHECKS}" "skip"
+  elif [ "$timing_on" = "1" ]; then
+    t_start="$(_pdda_now_ms)"
+    if "$HERE/pdda-doc-ready.sh"; then
+      :
+    else
+      EXIT_CODE=1
+      FAILED="$FAILED pdda-doc-ready"
+    fi
+    t_end="$(_pdda_now_ms)"
+    printf 'PDDA_TIMING %s %s\n' "pdda-doc-ready" "$((t_end - t_start))" >&2
   elif "$HERE/pdda-doc-ready.sh"; then
     :
   else

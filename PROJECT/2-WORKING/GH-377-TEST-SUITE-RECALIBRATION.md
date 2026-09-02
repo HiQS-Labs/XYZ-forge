@@ -1,0 +1,169 @@
+---
+gh_issue: 377
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/377
+title: "GH-377: finish the #365 test-suite recalibration — baseline, receipts, matrix, qualifying run (supersedes #365)"
+status: In progress (2-WORKING — execution continues under the #377 tracker; #365 closed in its favor)
+created: 2026-09-01
+updated: 2026-09-01
+owner: agent-b (orchestrator: GLM 5.3)
+goal: Cut recoverable validation latency (runner-envelope drift, process-heavy governance, static-analysis duplication, long-tail suites) without weakening containment, timeout, or promotion coverage — correctness and falsifiability land before optimization.
+doc_type: plan
+effort: 4
+complexity: 4
+risk: 3
+phases: 9
+fix_probes:
+  - bash test/gh365-runner-envelope.sh
+  - bash test/gh365-driver-lane-registry.sh
+  - bash test/gh365-validate-telemetry.sh
+  - bash test/gh365-pdda-gov-scan.sh
+  - bash test/gh365-shellcheck-parallel.sh
+---
+
+# GH-377 · Test-suite recalibration (supersedes #365)
+
+> Tracker note: #365 was closed in favor of [#377](https://github.com/HiQS-Labs/XYZ-forge/issues/377),
+> which carries the six completion gaps (baseline, real-push latency receipts, committed campaign
+> receipts, the operator matrix, the smoke-lane decision, final qualification + PR). This doc is the
+> same plan of record, executed under the #377 tracker; the branch PR closes #377.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| ALL NINE STEPS executed and gated (branch through 76174765): envelope 22/0, telemetry 14/0, lane registry 5/0, PDDA 15× byte-identical, ShellCheck width 10/0, campaigns 8 legs green with per-width mutation reds + ceiling model, long-tail containment tripwires + documented irreducible waits, full-tree fail-closed sweep 5/0, route matrix + smoke-lane decision. Receipts: TESTS-RESULTS/2026-09-01+GH-365/. | PR into development → relay-xyz QA with Agy → closeout to 3-COMPLETED after merge + reconcile. |
+
+## Capture
+
+Recalibrate the suite after GH-347 landed by measuring the new critical path, finishing the
+fail-closed tier-routing contract, running the owed multi-width equivalence campaign, and deciding
+whether an XYZ-specific functional smoke lane adds measured defect-detection value.
+
+The work must keep four decisions distinct: fast feedback, integration drift detection,
+self-reported local verification, and independent full sequential macOS promotion evidence.
+
+## Plan of record — the issue's final execution plan (2026-09-01)
+
+Supersedes Draft 1's tactics where they conflict ([final
+comment](https://github.com/HiQS-Labs/XYZ-forge/issues/365#issuecomment-5498257579), which folds
+in the [exploratory post-#347
+profile](https://github.com/HiQS-Labs/XYZ-forge/issues/365#issuecomment-5498097911) and the [GLM
+5.3 accuracy review](https://github.com/HiQS-Labs/XYZ-forge/issues/365#issuecomment-5498223090)).
+Work stops at each step's `Expect` gate before proceeding.
+
+**Bet:** most of the recoverable latency is concentrated in measurement-invalidating runner drift,
+process-heavy governance, repeated/static analysis, and a small long tail of integration suites.
+
+**Failure mode to prevent:** a faster green run that executed a different suite/assertion set,
+skipped a contended assertion, dirtied or changed the identity of its clone, or could not retain
+its evidence.
+
+**Reversibility:** instrumentation and runner-envelope work are Easy. Routing, parallel
+equivalence, or promotion-meaning changes are Costly (rollback = the current full sequential macOS
+path). No parallel route gains qualifying status inside this plan unless its predeclared
+equivalence gate passes.
+
+| # | Step | Expect gate | Status |
+| --- | --- | --- | --- |
+| 1 | One shared scratch/identity envelope for `validate.sh` + `ci-local.sh` (single helper, not a copy); audit `XYZ_HARNESS_DB` overrides/bypasses; identity capture before/after via clone-identity machinery; witnessed red = intentional mutation invalidates the receipt | Clean-start qualifying run ends clean and writes its gate record; both runners exercise the same envelope contract | pending |
+| 2 | Retained phase/suite/assertion/worker telemetry (monotonic JSONL: lane, worker, queue/start/end, RCs, output hash/bytes, pass/fail/skip + reasons); denominator verified (309 + 3 post-#367, not the stale 307 label); exploratory output in `temp/`, cited evidence committed with provenance | Aggregate work, critical path, semantic coverage, retries, and invalid runs reconstructable from retained data | pending |
+| 3 | Close PR #367's counterexample: `gh346-gateway-allowlists.sh` real-driver probes contend in the pool, ~36s retrying, then SKIP routing assertions while exiting green — move to the serialized lane AND derive lane membership from an auditable driver-invocation registry recognizing Bash + direct-Python shapes; guard/red control for new real-driver callers | Sequential and parallel modes execute the same semantic assertions; a contention-skip cannot report equivalence or silently remain pooled | pending |
+| 4 | PDDA governance cross-reference: replace per-line `printf`/`grep`/`sed` fan-out (2 passes × ~2,775 lines) with one in-process scan per file/run retaining extraction across passes; per-check timings; witnessed reds for missing/broken refs; characterize `pdda.sh run` vs `pdda-repo-contract.sh` vs `pdda-local-checks.sh` before any dedup; leave fast RELEASES reads alone | Materially lower PDDA time, unchanged findings, explicit decision on intentional duplication |
+| 5 | ShellCheck census first (census result: exactly one local scan site — `ci-local.sh` — plus the hosted job; no suite executes shellcheck), then parallel independent files at the balanced 4-worker width; mutation-flip red on serial AND parallel shapes | Identical diagnostics/verdicts, no multiplied redundant sweep, measured wall-time improvement |
+| 6 | Re-baseline from merge SHA `6fe36fbb` (not the exploratory parent `102b11b0`); widths sequential/2/default/4/burst incl. Python/npm lanes and a loaded-host campaign; model the ceiling `max(pool aggregate / width, serialized-lane aggregate)` + fixed overhead before labeling the ~132.7s gap recoverable; per-width mutation-flip red | Explained speedup curve, witnessed worker-dropout detection, no retry masking a reproducible failure |
+| 7 | Long tail in descending critical-path order: `gh280` prebuilt immutable fixture seed + section-local copies; controlled clocks/fakes for poll/timeout-heavy suites (production timeouts unchanged); measure #367's per-turn Bash alias-resolution subprocess before caching | Lower aggregate + critical-path time, byte/semantic-equivalent verdicts, no timeout dilution |
+| 8 | Fail-closed tier routing derived from canonical registries (GH-306 bidirectional guard pattern); unknown/renamed/deleted/empty-range/workflow/runner/containment/kernel changes escalate to Tier 3; real-push Tier 1/2 latency | Every governed change classified or demonstrably fails closed; reds for unknown/renamed/deleted/empty-range |
+| 9 | Smoke lane only if failure history shows earlier real-defect detection than Tier 1/2; publish the route/width matrix (trigger, set, latency, CPU policy, skip/retry behavior, evidentiary meaning); qualifying run stays full sequential macOS | Operators can tell feedback / drift detection / self-verification / promotion evidence apart unambiguously |
+
+### Definition of done
+
+- [ ] Both runners share one tested scratch/identity envelope; a qualifying clean-start run ends clean and retains evidence.
+- [ ] Committed receipts reconstruct fixed cost, governance, pool/lane/retry work, assertion/skip coverage, critical path, and validity.
+- [ ] PR #367's contention-skip shape cannot report equivalence or silently remain in the pool.
+- [ ] PDDA and ShellCheck changes preserve witnessed red behavior and have before/after component timings.
+- [ ] Sequential/2/default/4/burst campaigns use identical commits, explicit denominators, semantic coverage matrices, and red controls.
+- [ ] Heavy-suite improvements preserve production timeouts, containment, fixture isolation, and negative controls.
+- [ ] Tier routing inherits canonical registry ownership and fails closed on ambiguity.
+- [ ] The final route matrix preserves full sequential macOS promotion unless a separately reviewed later decision changes it.
+
+### Non-goals
+
+- Weakening timeout, containment, clean-tree, or macOS promotion contracts to meet a latency number.
+- Treating a green suite RC as equivalence when assertions were skipped.
+- Optimizing already-fast RELEASES DB queries without new evidence.
+- Turning `harnesses.db` into the timing-receipt store (no merge resolver; #367 declared-vs-dispatched caveats).
+- Expanding Phase 3/model-routing work from PR #367 inside this test recalibration.
+
+## Acceptance summary
+
+- Retain a post-GH-347 latency and runner-minute baseline.
+- Classify every governed path or fail closed to Tier 3.
+- Measure Tier 1/2 on real pushes.
+- Prove or bound parallel equivalence with committed multi-width receipts.
+- Add a smoke lane only if observed XYZ defects justify it and a witnessed red control falsifies it.
+- Preserve full sequential macOS promotion evidence unless a later explicit decision changes it.
+
+## Route/width matrix — the operator-facing contract (step 9)
+
+Measured numbers are this branch's committed receipts (10-core Apple Silicon, quiet host);
+exploratory-profile numbers are labelled as such. Evidentiary meaning is the column that matters:
+**only the hosted macOS boundary promotes** (GH-509); everything local is self-reported.
+
+| Trigger | What runs | Wall (measured) | CPU policy | Skip/retry behavior | Evidentiary meaning |
+| --- | --- | --- | --- | --- | --- |
+| Local edit, docs-only paths (`validate.sh --auto` → tier 1) | docs/governance gate (PDDA + local checks) | ~35s (was ~100s pre-step-4) | sequential, nice | none needed | Feedback only |
+| Local edit, mapped subsystem paths (tier 2) | that subsystem's registered suites + docs gate if docs paths present | ~20–60s per lane (real-push: 44s releases lane, 18 suites) | 2 workers, nice | fails closed to tier 3 on unmapped/zero-test | Feedback only |
+| Any `git push` (githooks/pre-push, classified tier) | the tier's set; kernel/test/workflow/runner/unmapped → tier 3 full | real-push receipts: tier-1 34s; full ≈ 8 min at 4-wide | 4-wide balanced, nice | contended suites re-run alone, classified CONTENTED and named (GH-15) | Push boundary; self-reported |
+| Full parallel validate (tier 3, default) | every registered suite + pytest + identity + gamma under the shared envelope | ~8–9 min at 4-wide (campaign: 2.02×/3.53×/4.33× at 2/4/8) | 4-wide default; `--burst` 8 | as above; envelope drift invalidates the receipt | Feedback + drift detection; NOT promotion |
+| `ci-local.sh` (the qualifying run) | static checks + 4-wide ShellCheck + PDDA + npm + **every suite sequentially + pytest + gamma-poison** under the shared envelope | ~30 min (receipt: 1774s) | sequential; ShellCheck scan 4-wide | refused gate-record FAILS the run; envelope bracket attests | Self-reported verification; writes `.gate-evidence/<sha>`; NOT promotion |
+| Hosted macOS boundary (ci.yml) | the same full sequential suite on a clean runner | hosted | hosted | hosted | **THE promotion evidence** — unchanged by this plan |
+| Campaign route (this issue) | multi-width clean+mutant legs in fresh clones, identity brackets, telemetry receipts | hours; quiet host only | per-width | a contention-skipped leg is INVALID, not equivalent | Timing/equivalence evidence only; pinned-head historical |
+
+**Smoke-lane decision: NOT added.** The plan's bar is "failure history shows it catches a real
+defect materially earlier than fail-closed tier routing." The defect classes this work actually
+hit — identity/tree drift (GH-564/567 family), contention-skips (#367), registry drift (step 8's
+first run caught gh153 genuinely unregistered), a BSD-tee stray file and a directive-typo comment
+(both caught by the new envelope on its own qualifying runs) — were caught by brackets and guards
+that now run in **every** route, not by any small deterministic subset. A smoke lane would re-run
+pieces of what every route already executes; it fails the "demonstrably earlier" test. Revisit
+only with a defect class the brackets provably miss.
+
+## Preflight Contract
+
+```json
+{
+  "issue": 365,
+  "target": "development",
+  "gate": "bash ci-local.sh",
+  "fix_probes": [
+    "bash test/gh365-runner-envelope.sh",
+    "bash test/gh365-driver-lane-registry.sh",
+    "bash test/gh365-validate-telemetry.sh",
+    "bash test/gh365-pdda-gov-scan.sh",
+    "bash test/gh365-shellcheck-parallel.sh"
+  ],
+  "artifacts": [
+    "validate.sh",
+    "ci-local.sh",
+    "test/lib/runner-envelope.sh",
+    "utils/py/pdda_gov_scan.py",
+    "test/gh365-runner-envelope.sh",
+    "test/gh365-driver-lane-registry.sh",
+    "test/gh365-validate-telemetry.sh",
+    "test/gh365-pdda-gov-scan.sh",
+    "test/gh365-shellcheck-parallel.sh"
+  ]
+}
+```
+
+## Acceptance
+
+- [x] Step 1 gate: clean-start `ci-local.sh` ends clean and successfully writes its gate record; both runners use the one envelope helper. — TESTS-RESULTS/2026-09-01+GH-365/qualifying-run.log; gh365-runner-envelope.sh 22/0
+- [x] Step 2 gate: telemetry receipts reconstruct aggregate work, critical path, semantic coverage, retries, and invalid runs; denominator LIVE (316+3 at final head, asserted == TESTS parse == --list). — campaign/*.jsonl; gh365-validate-telemetry.sh 14/0
+- [x] Step 3 gate: gh346 contention-skip cannot report equivalence; a newly registered real-driver caller cannot silently remain pooled (witnessed red). — gh346 in DRIVER_LOCK_LANE; gh365-driver-lane-registry.sh 5/0; clean legs' skip_total = the one expected informational SKIP
+- [x] Step 4 gate: PDDA single-scan preserves findings with before/after timings; duplication decision recorded (pdda run/repo-contract/local-checks = intentional dual role, not deduplicated). — governance 1:12→4.9s, findings cmp-identical; gh365-pdda-gov-scan.sh 22/0
+- [x] Step 5 gate: ShellCheck serial and 4-worker shapes return identical verdicts; mutation-flip rejected by both. — gh365-shellcheck-parallel.sh 10/0
+- [x] Step 6 gate: width campaigns from identical commits with explicit denominators and per-width mutation reds; speedup explained against the ceiling model (2.02×/3.53×/4.33×; the 8-wide gap is load-induced pool slowdown +39%, not recoverable overhead). — TESTS-RESULTS/2026-09-01+GH-365/
+- [x] Step 7 gate: heavy-suite work preserves timeouts (production untouched), containment (33 new seed-canary tripwires), negative controls (assertions only grew: 182→211, 152→156); the fixture-install premise was measured wrong and the real irreducible waits are documented. — commits 3c45f0c6/c9bea655/a1213581
+- [x] Step 8 gate: tier routing fails closed over ALL 2,628 tracked files (no third state), planted reds for unknown family + unregistered suite; real-push latency tier-1 34s / tier-2 44s. — gh365-tier-fail-closed.sh 5/0; tier{1,2}-real-push.log
+- [x] Step 9 gate: route/width matrix published (below); full sequential macOS promotion preserved and untouched; smoke lane NOT added (reasoning below).

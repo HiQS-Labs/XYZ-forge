@@ -179,6 +179,11 @@ mkfixture() {  # -> prints fixture repo path
   cp "$REPO/utils/py/gate_env.py" "$r/utils/py/gate_env.py"
   cp "$REPO/githooks/install.sh" "$r/githooks/install.sh"
   cp "$REPO/test/lib/clone-identity.sh" "$r/test/lib/clone-identity.sh"
+  # GH-365 step 1: validate.sh's envelope (harness scratch + identity + tree/worktree/lock
+  # bracket) lives in this shared lib now — the fixture copies it by name, same contract as
+  # clone-identity.sh above. Step 2 adds the telemetry lib the same way.
+  cp "$REPO/test/lib/runner-envelope.sh" "$r/test/lib/runner-envelope.sh"
+  cp "$REPO/test/lib/runner-telemetry.sh" "$r/test/lib/runner-telemetry.sh"
   cat > "$r/utils/pdda/pdda.sh" <<'STUB'
 #!/usr/bin/env bash
 echo "stub-pdda ran"
@@ -191,6 +196,11 @@ echo "stub-pdda-local ran"
 exit 0
 STUB
   chmod +x "$r/utils/pdda-local-checks.sh"
+  # GH-365: fixture repos need the real repo's .tick/ ignore — the runner telemetry store lives
+  # at .tick/telemetry and the GH-365 envelope brackets tracked-tree drift, so an un-ignored
+  # fixture would fail its own identity bracket on the telemetry file (the detector working as
+  # designed, observed red on gh35's own tier-2 cases when step 2 landed).
+  printf '.tick/\n' > "$r/.gitignore"
   printf '%s\n' "$r"
 }
 

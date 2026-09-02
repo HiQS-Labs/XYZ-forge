@@ -1,0 +1,114 @@
+pre-push: utility-only update — running the tier 2 subsystem gate, not the full suite (GH-35).
+pre-push:   validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+pre-push:   validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+pre-push:     NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+pre-push:   validate.sh: tier 2 — subsystem/docs selection is NEVER promotion evidence (GH-35/GH-509).
+validate.sh: classified tier 2 — subsystems: releases (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 static syntax checks on changed files
+===============================
+  python3 ast-parse utils/py/releases_app.py
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.3CfJJe/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  18 pooled suites + 0 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=0
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+rootdir: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh365
+configfile: pytest.ini
+plugins: anyio-4.13.0
+collecting ... collected 20 items
+
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  5%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 10%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 15%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 20%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 25%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 30%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 35%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 40%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 45%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 50%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 55%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 60%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 65%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 70%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 75%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================== 20 passed in 0.07s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 18 suite(s). NOT promotion evidence (GH-35/GH-509).
+/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh365/validate.sh: line 1288: 18                     + 0
+0                     + 0
+0 : syntax error in expression (error token is "0                     + 0
+0 ")
+/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh365/validate.sh: line 1289: _suite_lane_events: unbound variable
+telemetry: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh365/.tick/telemetry/validate-parallel-1788297261984-76945.jsonl (20 suite events, 315 registered)
+passed: 21 / 21
+  + tier2:static
+  + gh103-timeline-exporter.sh
+  + gh32-releases-artifacts.sh
+  + gh53-releases-merge-resolve.sh
+  + gh54-merged-dump-refusals.sh
+  + gh57-live-merge-resolve.sh
+  + gh32-releases-app.sh
+  + gh32-release-target-advisory.sh
+  + gh69-roadmap-shadow.sh
+  + gh153-releases-sidebar-rollup.sh
+  + releases-skill.sh
+  + gh39-releases-project-sync.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + litmus-release.sh
+  + nightwatch-release.sh
+  + meter-release.sh
+  + ballast-release.sh
+  + gh57-releases-fuzz.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+pre-push: tier 2 gate GREEN in 42s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   a1213581..46625dab  feat/gh365-test-recalibration -> feat/gh365-test-recalibration
