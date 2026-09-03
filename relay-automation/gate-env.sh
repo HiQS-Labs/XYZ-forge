@@ -24,13 +24,13 @@
 
 # Resolve the harness root from this script's own location, following symlinks, so sourcing works
 # from any CWD and from a vendored .xyz/ install. No machine path is ever hardcoded.
-_ge_src="${BASH_SOURCE[0]:-$0}"
-while [ -L "$_ge_src" ]; do
-  _ge_dir="$(cd -P "$(dirname "$_ge_src")" && pwd)"
-  _ge_src="$(readlink "$_ge_src")"
-  case "$_ge_src" in /*) ;; *) _ge_src="$_ge_dir/$_ge_src" ;; esac
-done
-_ge_root="$(cd -P "$(dirname "$_ge_src")/.." && pwd)"
+_hp_lib="$(dirname "${BASH_SOURCE[0]:-$0}")/harness-paths.sh"
+if [ -f "$_hp_lib" ]; then
+  # shellcheck source=relay-automation/harness-paths.sh
+  . "$_hp_lib"
+fi
+_ge_dir="$(xyz_resolve_self_dir "${BASH_SOURCE[0]:-$0}")"
+_ge_root="$(cd -P "$_ge_dir/.." && pwd)"
 _ge_py="$_ge_root/utils/py/gate_env.py"
 
 if [ -r "$_ge_py" ]; then

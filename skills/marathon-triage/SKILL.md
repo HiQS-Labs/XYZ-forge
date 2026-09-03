@@ -29,14 +29,22 @@ record, GitHub as the live signal stream, and deterministic preflight output as 
 
 ### 0. Resolve the harness root
 
-`swarm-preflight.sh` and `marathon-plan.sh` may live at the repo root or, in a vendored install,
-under `.xyz/`. Resolve once, using the same precedence as other self-locating skills in this repo
-(env override → vendored `.xyz/` → current repo root):
+Resolve the harness root via the locator loop and evaluate its exported environment:
 
 ```bash
-HARNESS="${XYZ_HARNESS:-${XYZ_REPO_ROOT:-}}"
-[ -n "$HARNESS" ] || HARNESS="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-[ -x "$HARNESS/.xyz/utils/swarm-preflight.sh" ] && HARNESS="$HARNESS/.xyz"
+L=""
+for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
+                 "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.codex/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+                 "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
+                 "$(git rev-parse --show-toplevel 2>/dev/null)/skills/relay-xyz/find-harness.sh"; do
+  [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
+done
+[ -n "$L" ] || { echo "relay-xyz: locator not found — install the skill or set XYZ_HARNESS" >&2; exit 1; }
+eval "$("$L" --env)"
 ```
 
 Reference every script below as `$HARNESS/utils/swarm-preflight.sh` and

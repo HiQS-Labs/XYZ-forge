@@ -92,16 +92,12 @@ while [ "$#" -gt 0 ]; do
 done
 
 # --- resolve this script's real directory (symlink-safe) ---
-_src="${BASH_SOURCE[0]}"
-while [ -h "$_src" ]; do
-  _dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-  _src="$(readlink "$_src")"
-  case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
-done
-SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-
-# shellcheck source=relay-automation/driver-lock-lib.sh
-. "$SELF_DIR/../../relay-automation/driver-lock-lib.sh"
+_hp_lib="$(dirname "${BASH_SOURCE[0]}")/../../relay-automation/harness-paths.sh"
+if [ -f "$_hp_lib" ]; then
+  # shellcheck source=relay-automation/harness-paths.sh
+  . "$_hp_lib"
+fi
+SELF_DIR="$(xyz_resolve_self_dir "${BASH_SOURCE[0]}")"
 
 HARNESS=""
 VENDORED=0

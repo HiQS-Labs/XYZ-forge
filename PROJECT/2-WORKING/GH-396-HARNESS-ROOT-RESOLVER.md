@@ -45,7 +45,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 2: Python: one `harness_paths` module, extracted not invented (validated green) | Phase 3: Bash: one sourceable library, six files, not fifteen |
+| Phase 3: Bash: one sourceable library, six files, not fifteen (validated green) | Phase 4: Vendored integration in CI (blocking), and the env-var collision |
 
 ## Table of contents
 
@@ -134,13 +134,13 @@ Each phase is independently shippable and leaves the tree green. Order is fixed:
 
 ### Phase 3 — Bash: one sourceable library, **six files, not fifteen**
 
-- [ ] Create `relay-automation/harness-paths.sh` — sourceable, provides `xyz_resolve_self_dir` (the one symlink-following loop currently copied five times), `xyz_harness_home`, `xyz_repo_root`, `xyz_is_vendored`, `xyz_harness_tool <rel>`, and the shared `--env` export stanza. It lives in `relay-automation/` because that is in `VENDOR_DIRS` (`xyz-vendor.sh:344`). **It sources `driver-lock-lib.sh` itself**, so `find-harness.sh:76`'s dependency is preserved when that line moves. *(review change 11)*
-- [ ] Adopt it in **exactly** the five symlink-loop sites — `find-harness.sh:66-73`, `skills/hq/find-hq.sh:34-58`, `skills/file-xyz-bug/find-xyz.sh:37-75`, `skills/vendor-stack/find-pdda.sh:38-46`, `relay-automation/gate-env.sh:27-35` — and the four `find-*.sh` locators' export stanzas. *(review change 10)*
-- [ ] **`find-xyz.sh` adopts only the symlink loop, not `xyz_harness_home`.** Its `:22-25` policy — a vendored `.xyz` is never authoritative for filing a bug — is correct and stays. *(review change 12)*
-- [ ] The other ~10 live scripts with inline vendored predicates (`relay-automation/{finding-new,oracle-guard,smallcode-turn,target-checks,marathon,marathon-agent,improve-loop}.sh`, `utils/marathon-plan.sh`, `utils/swarm-preflight.sh`, `utils/roadmap-dashboard.sh`) get a **one-line comment** pointing at the library. Nothing else. Their predicates are simple and stable; the Python lane is authoritative.
-- [ ] Replace the byte-identical Step-0 snippet in `skills/marathon-triage/SKILL.md:30-45` and `skills/10days/SKILL.md:91-105` with `eval "$("$L" --env)"` using the locator loop `skills/relay-xyz/SKILL.md:23-30` already documents.
-- [ ] **Do not touch the ten FROZEN twins.**
-- [ ] **Acceptance:** the symlink-following loop appears once in the tree (`rg -c 'readlink' relay-automation skills --glob '*.sh'` names only `harness-paths.sh` among non-FROZEN files); `test/gh308-frozen-twin-guard.sh` confirms no frozen twin changed; `test/gh448-driver-lock-resolver.sh` still green.
+- [x] Create `relay-automation/harness-paths.sh` — sourceable, provides `xyz_resolve_self_dir` (the one symlink-following loop currently copied five times), `xyz_harness_home`, `xyz_repo_root`, `xyz_is_vendored`, `xyz_harness_tool <rel>`, and the shared `--env` export stanza. It lives in `relay-automation/` because that is in `VENDOR_DIRS` (`xyz-vendor.sh:344`). **It sources `driver-lock-lib.sh` itself**, so `find-harness.sh:76`'s dependency is preserved when that line moves. *(review change 11)*
+- [x] Adopt it in **exactly** the five symlink-loop sites — `find-harness.sh:66-73`, `skills/hq/find-hq.sh:34-58`, `skills/file-xyz-bug/find-xyz.sh:37-75`, `skills/vendor-stack/find-pdda.sh:38-46`, `relay-automation/gate-env.sh:27-35` — and the four `find-*.sh` locators' export stanzas. *(review change 10)*
+- [x] **`find-xyz.sh` adopts only the symlink loop, not `xyz_harness_home`.** Its `:22-25` policy — a vendored `.xyz` is never authoritative for filing a bug — is correct and stays. *(review change 12)*
+- [x] The other ~10 live scripts with inline vendored predicates (`relay-automation/{finding-new,oracle-guard,smallcode-turn,target-checks,marathon,marathon-agent,improve-loop}.sh`, `utils/marathon-plan.sh`, `utils/swarm-preflight.sh`, `utils/roadmap-dashboard.sh`) get a **one-line comment** pointing at the library. Nothing else. Their predicates are simple and stable; the Python lane is authoritative.
+- [x] Replace the byte-identical Step-0 snippet in `skills/marathon-triage/SKILL.md:30-45` and `skills/10days/SKILL.md:91-105` with `eval "$("$L" --env)"` using the locator loop `skills/relay-xyz/SKILL.md:23-30` already documents.
+- [x] **Do not touch the ten FROZEN twins.**
+- [x] **Acceptance:** the symlink-following loop appears once in the tree (`rg -c 'readlink' relay-automation skills --glob '*.sh'` names only `harness-paths.sh` among non-FROZEN files); `test/gh308-frozen-twin-guard.sh` confirms no frozen twin changed; `test/gh448-driver-lock-resolver.sh` still green.
 
 ### Phase 4 — Vendored integration in CI (blocking), and the env-var collision
 

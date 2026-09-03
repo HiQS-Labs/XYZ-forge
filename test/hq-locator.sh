@@ -29,7 +29,8 @@ TMP="$(cd "$TMP" && pwd -P)"
 
 # --- fake harness: utils/hq/hq.sh stub + the real find-hq.sh copied into skills/hq ---
 HARN="$TMP/harness"
-mkdir -p "$HARN/utils/hq" "$HARN/skills/hq"
+mkdir -p "$HARN/utils/hq" "$HARN/skills/hq" "$HARN/relay-automation"
+cp "$HERE/../relay-automation/harness-paths.sh" "$HARN/relay-automation/"
 cat > "$HARN/utils/hq/hq.sh" <<'EOF'
 #!/usr/bin/env bash
 echo "STUB-HQ ok"

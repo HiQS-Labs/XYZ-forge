@@ -31,13 +31,12 @@ set -u
 _has_hq() { [ -n "${1:-}" ] && [ -x "$1/utils/hq/hq.sh" ]; }
 
 # --- resolve this script's real directory (symlink-safe) ---
-_src="${BASH_SOURCE[0]}"
-while [ -h "$_src" ]; do
-  _dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-  _src="$(readlink "$_src")"
-  case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
-done
-SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"   # …/skills/hq
+_hp_lib="$(dirname "${BASH_SOURCE[0]}")/../../relay-automation/harness-paths.sh"
+if [ -f "$_hp_lib" ]; then
+  # shellcheck source=relay-automation/harness-paths.sh
+  . "$_hp_lib"
+fi
+SELF_DIR="$(xyz_resolve_self_dir "${BASH_SOURCE[0]}")"   # …/skills/hq
 
 ROOT=""
 # 1. explicit override (same env vars find-harness.sh honors — one knob for the whole harness)

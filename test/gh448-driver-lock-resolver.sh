@@ -208,7 +208,7 @@ HARNESS_MAIN="$WORK/harness-main"
 mkdir -p "$HARNESS_MAIN/relay-automation" "$HARNESS_MAIN/skills/relay-xyz"
 printf '#!/usr/bin/env bash\n:\n' >"$HARNESS_MAIN/relay-automation/relay-drive.sh"
 chmod +x "$HARNESS_MAIN/relay-automation/relay-drive.sh"
-cp "$LIB" "$HARNESS_MAIN/relay-automation/driver-lock-lib.sh"
+cp "$LIB" "$ROOT/relay-automation/harness-paths.sh" "$HARNESS_MAIN/relay-automation/"
 cp "$FH" "$HARNESS_MAIN/skills/relay-xyz/find-harness.sh"
 git init -q "$HARNESS_MAIN"
 git -C "$HARNESS_MAIN" config user.email t@example.com
@@ -235,7 +235,7 @@ grep -qF "$HARNESS_COMMON_LOCK" <<<"$(printf '%s' "$fh_out")" \
 
 # ---------------------------------------------------------------------------
 echo "-- syntax check --"
-for s in "$LIB" "$LS" "$LIVE" "$FH" "$HERE/gh448-driver-lock-resolver.sh"; do
+for s in "$LIB" "$ROOT/relay-automation/harness-paths.sh" "$LS" "$LIVE" "$FH" "$HERE/gh448-driver-lock-resolver.sh"; do
   bash -n "$s" 2>/dev/null && pass "syntax OK: $(basename "$s")" || fail "syntax error in: $s"
 done
 
