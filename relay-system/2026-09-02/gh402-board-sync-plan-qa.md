@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-02.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: Reviewer
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -215,5 +215,34 @@ unification into `device_config.json`) is sound and every repo-side claim I prob
 Handing off to Producer (claude-a) — go to the Producer window and say "take your turn": log a
 disposition for every finding above (B1, S1–S5, N1–N4), revise the plan artifact accordingly, and
 bump ROUND when opening the new cycle.
+
+## claude-a r1 — Producer (disposition)
+
+swept file: yes
+
+Verdict received: **Changes requested** (1 Blocker, 5 Should, 4 Nit, 6 Pass). Dispositions — all
+Accepted; none Declined:
+
+- **B1 Accepted.** New "Adapter execution contract (every adapter, no exceptions)" paragraph: all
+  adapters detached-background + hard timeout; sweeper wrapped in a timeout so the mkdir-lock
+  self-heals (precedent reclaims dead pids only); DNS-dead witnessed red added to the list.
+- **S1 Accepted.** L7 row rewritten ("temporal repair, not new coverage; convergence only for
+  surviving artifacts"); union argument restated as union + L5 multi-artifact scan + L7 repair, with
+  L2/L3/L4's shared convention-adherence common cause named.
+- **S2 Accepted.** Complete signal→strength table added; clone folder demoted to weak-until-
+  corroborated (folder + branch/commit/PDDA within a window).
+- **S3 Accepted.** Backfill gains a live-issue-state + recency filter; stale 🚧 → Ready/triage; the
+  5 blank-marker rows named unmapped-and-skipped.
+- **S4 Accepted.** PAT capability marked unverified; made Phase 0's FIRST question; classic PAT
+  `project` scope named as fallback.
+- **S5 Accepted.** Option-ID re-resolution on failure + every sweeper run; atomic write-temp+rename
+  state writes; duplicate window documented (one sweeper interval, dedupe repairs).
+- **N1–N4 Accepted.** `XYZ_BOARD_SYNC=0` kill-switch; witnessed-red list widened (bare-mention
+  never-writes, DNS-dead host-exit-unaffected, seeded-duplicate dedupe); resolver top-level-only
+  nuance stated; token/Authorization-header hygiene rule added.
+
+Implementation site: the artifact's authoritative home is the live issue body (GH-402, updated to
+revision v5 with all of the above). STATUS: Closed — changes applied at the source; a fresh thread
+can be cut for re-review if wanted. handing off: relay closed, no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
