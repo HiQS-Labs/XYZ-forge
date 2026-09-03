@@ -16,24 +16,28 @@
 #     untracked files, no ignored files, nothing that was ever deleted. The isolation is structural
 #     rather than maintained.
 #
-# THIS SCRIPT IS THE BUILD, NOT A ONE-OFF SANITIZATION PASS. It is meant to be re-run freely: the
-# artifact is a build output, so /front-door and /shakedown can review a real artifact early instead
-# of waiting for a hand-sanitized folder to exist at the end. Re-running always yields exactly one
-# commit — history is recreated, never appended to.
+# THIS SCRIPT IS THE BUILD, NOT A ONE-OFF SANITIZATION PASS. The artifact is a build output, so
+# /front-door and /shakedown can review a real artifact early instead of waiting for a hand-sanitized
+# folder to exist at the end. Rebuild an empty destination or an artifact with its single initial
+# commit; rebuilding a destination with more history requires an explicit --discard-history opt-in.
 #
 # Usage:
-#   utils/build-launch-artifact.sh <dest> [--remote <url>] [--no-commit]
+#   utils/build-launch-artifact.sh <dest> [--remote <url>] [--no-commit] [--discard-history]
 #
 #   <dest>        absolute path to build into. Created if absent. If it already exists it must be
-#                 SAFE TO REBUILD (see the marker rule below) or the script refuses.
+#                 SAFE TO REBUILD (see the history rule below) or the script refuses.
 #   --remote URL  origin to set on the artifact. Default: the launch destination in RELEASES.md.
 #   --no-commit   extract and prune but leave the tree uncommitted, for inspecting a diff.
+#   --discard-history
+#                 explicitly permit replacing a git destination with more than one commit.
 #
 # SAFETY. This script deletes files. It refuses unless <dest> is one of:
 #   - absent (it creates it),
 #   - empty,
 #   - a git repository with ZERO commits (an empty clone of the destination repo), or
-#   - a previous artifact, proven by the marker file this script writes.
+#   - a previous artifact with its single initial commit.
+# A copied marker file is never authority to erase a directory. Replacing a destination with more
+# than one commit needs --discard-history, so destroying established history is always explicit.
 # Anything else — including any path inside this repository — is refused. #564's lesson applies
 # directly: an empty or wrong path fed to a recursive delete is the whole failure mode, so the path
 # is validated at the point of USE, not merely where it is derived.
@@ -42,14 +46,14 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 
-MARKER=".xyz-launch-artifact"
 DEFAULT_REMOTE="https://github.com/HiQS-Labs/XYZ-forge.git"
 
-DEST=""; REMOTE="$DEFAULT_REMOTE"; DO_COMMIT=1
+DEST=""; REMOTE="$DEFAULT_REMOTE"; DO_COMMIT=1; DISCARD_HISTORY=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --remote)    REMOTE="${2:-}"; shift 2 ;;
     --no-commit) DO_COMMIT=0; shift ;;
+    --discard-history) DISCARD_HISTORY=1; shift ;;
     --help|-h)   sed -n '2,40p' "$0"; exit 0 ;;
     -*)          printf 'unknown option: %s\n' "$1" >&2; exit 2 ;;
     *)           DEST="$1"; shift ;;
@@ -66,6 +70,7 @@ DROP_PATHS=(
   "temp"              # scratch
   "PARKED"            # parked-findings ledger, internal
   ".tick"             # runtime event log (untracked here, listed for belt-and-braces)
+  ".xyz-launch-artifact" # legacy marker — must not ship as a copyable destruction capability
   "AUDIT"             # internal audit workspace
   "phases"            # internal phase logs (operator decision 2026-08-15)
   "decisions"         # internal ADR workspace (operator decision 2026-08-15) — see KEEP_FILES:
@@ -152,17 +157,28 @@ esac
 
 if [ -e "$DEST_NORM" ]; then
   [ -d "$DEST_NORM" ] || die "destination '$DEST' exists and is not a directory"
-  if [ -f "$DEST_NORM/$MARKER" ]; then
-    :   # a previous artifact — safe to rebuild
-  elif [ -z "$(ls -A "$DEST_NORM" 2>/dev/null)" ]; then
+  if [ -z "$(ls -A "$DEST_NORM" 2>/dev/null)" ]; then
     :   # empty
-  elif [ -d "$DEST_NORM/.git" ] \
-       && [ "$(git -C "$DEST_NORM" rev-list --count --all 2>/dev/null || echo x)" = "0" ] \
-       && [ -z "$(git -C "$DEST_NORM" ls-files 2>/dev/null)" ]; then
-    :   # an empty clone of the destination repo — exactly what `gh repo clone` of a new repo gives
   else
-    die "destination '$DEST' is not empty, carries no $MARKER marker, and is not an empty clone.
+    [ -d "$DEST_NORM/.git" ] || die "destination '$DEST' is not empty and is not a git repository.
     Refusing to delete files this script did not create. Remove it by hand, or point at a fresh path."
+    n_commits="$(git -C "$DEST_NORM" rev-list --count --all 2>/dev/null || echo x)"
+    case "$n_commits" in
+      0)
+        non_git_entry="$(find "$DEST_NORM" -mindepth 1 -maxdepth 1 ! -name .git -print -quit 2>/dev/null)"
+        [ -z "$non_git_entry" ] || die "destination '$DEST' has no commits but contains files outside .git.
+        Refusing to delete an initialized directory that is not an empty clone."
+        ;; # an empty clone of the destination repo — exactly what `gh repo clone` of a new repo gives
+      1)
+        : # a prior artifact's required fresh, single-commit history
+        ;;
+      ''|*[!0-9]*)
+        die "could not determine destination history for '$DEST' — refusing to clear it"
+        ;;
+      *)
+        [ "$DISCARD_HISTORY" -eq 1 ] || die "destination '$DEST' has $n_commits commits; refusing to discard history without --discard-history"
+        ;;
+    esac
   fi
 fi
 
@@ -309,14 +325,6 @@ if [ "$residual" != "0" ]; then
   LC_ALL=C grep -rlF "$REDACT_USER" "$DEST_NORM" --exclude-dir=.git 2>/dev/null \
     | sed "s|^$DEST_NORM/|    |" | head -20
 fi
-
-# ── Marker, so a rebuild can prove it owns this directory ─────────────────────────────────────────
-{
-  printf 'This directory is a generated XYZ public launch artifact.\n'
-  printf 'Built by utils/build-launch-artifact.sh from source commit %s.\n' "$SRC_SHA"
-  printf 'Do not edit by hand: rebuild instead. The presence of this file authorises the build\n'
-  printf 'script to clear this directory on the next run.\n'
-} > "$DEST_NORM/$MARKER"
 
 # ── Fresh history: exactly one commit, no inherited objects ──────────────────────────────────────
 if [ "$DO_COMMIT" -eq 1 ]; then

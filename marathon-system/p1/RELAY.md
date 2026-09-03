@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -97,3 +97,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-413 in `utils/build-launch-artifact.sh`: removed the copyable marker as rebuild
+authority and artifact output, reject non-git nonempty directories (including marker-only ones),
+and require explicit `--discard-history` before clearing a destination with more than one commit.
+The legacy marker is pruned from generated artifacts. Added the focused destination-guard suite and
+recorded the pre-fix destructive control in `test/baselines/GH-413-negative-control.md`; the suite
+checks marker refusal/payload preservation, multi-commit refusal, explicit opt-in rebuild, marker
+absence, and retention of the two cited launch decision records. Per the phase scope lock, I did not
+run tests; the harness will run the gate outside this worktree.
