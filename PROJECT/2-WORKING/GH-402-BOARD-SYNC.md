@@ -59,3 +59,18 @@ what ran, what proved, and what's next.
 | 2026-09-02 | `bash test/gh402-board-sync.sh` (after 2 red iterations: containment misapply, `--root` placement, env coercion, clone-dir fixture leak, argparse `parents=`) | **18/0** |
 | 2026-09-02 | `board_sync.py scan` on this clone | strong: 2-WORKING docs; weak: 🚧 markers + cross-repo `rebalanceOS-gh144` clone (correctly unwritable) |
 | 2026-09-02 | `board_sync.py touch gh-402 --write` — **first live write** | `gh-402: added + Status='In progress'` — on the board now |
+| 2026-09-02 | Implementation QA r1 (Qwen 3.8 Max relay `gh402-board-sync-impl-qa.md`): Changes requested — 1 Blocker / 6 Should / 5 Nit / 9 Pass; all 12 accepted | B-1 repo-qualified check-first; S-1 status-only retry; S-2 unconditional void refusal; S-4 weak-only writer pin; S-5 portable sed; S-6 `$f` as a real GraphQL variable; N-1..N-5 (null guards, loud-error pins, `XYZ_BOARD_SYNC_STATE_PATH`, hardened containment, `adapters` key) |
+| 2026-09-02 | `bash test/gh402-board-sync.sh` after QA fixes | **23/0** |
+| 2026-09-02 | `touch gh-402` (dry-run) after B-1 fix | `already on board (HiQS-Labs/XYZ-forge) — no-op` — repo-qualified check-first verified against the live board |
+
+## Named deviations from the plan (QA r1 S-3)
+
+- **Events cursor not implemented (deferred to Phase 2):** plan v5 names a "last-events cursor"
+  in the state file; Phase 1's scan re-reads all `.tick/events/*.jsonl` each run. Justified for
+  Phase 1 — the per-device event dir is hundreds of small files and scan runs are
+  operator-invoked, so the cost is sub-second; the cursor becomes load-bearing only when the
+  Phase 2 hourly sweeper makes it recurring. The cursor lands with the sweeper.
+- **Live write path suite-pinned? No — receipted instead:** the suite is offline by design; the
+  add→status→refresh path is pinned by Phase 0 spike receipts + the first live write above.
+  QA r1's calibration answer (a stubbable `gh` seam + `XYZ_BOARD_SYNC_STATE_PATH` so the writer
+  is offline-pinnable) is the top Phase 2 candidate — the state-path half landed now (N-3).

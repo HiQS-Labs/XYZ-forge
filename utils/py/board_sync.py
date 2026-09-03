@@ -45,7 +45,9 @@ except ImportError:  # direct execution outside utils/py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from device_config import get_device_config_path, load_local_device_config
 
-STATE_PATH = Path("~/.xyz/board_sync_state.json").expanduser()
+STATE_PATH = Path(
+    os.environ.get("XYZ_BOARD_SYNC_STATE_PATH", "~/.xyz/board_sync_state.json")
+).expanduser()
 
 DEFAULTS = {
     "project_owner": "noelsaw1",
@@ -55,6 +57,7 @@ DEFAULTS = {
     "repos": ["HiQS-Labs/XYZ-forge"],
     "clone_dirs": ["~/Documents/GH Repos"],
     "mention_policy": "strong-signals-write",
+    "adapters": ["pdda", "git-hooks", "harness-fires", "sweeper"],  # consumed in Phase 2
     "token_file": "~/secrets/gh/board-sync.txt",  # reserved (PAT fallback); v1 uses gh
 }
 
@@ -205,11 +208,11 @@ def scan(root, cfg):
     ):
         found.setdefault(num, []).append((source, detail))
 
-    # Empty-input refusal: a scan over a real checkout that extracts NOTHING means the
-    # extractors are broken (or pointed at the void) — never report a green emptiness.
-    has_any_surface = (root / "PROJECT").is_dir() or (root / ".git").exists() or (root / "releases.db").is_file()
-    if has_any_surface and not found:
-        _die("scan extracted zero candidates from a populated checkout — refusing (empty input is not a pass)", 1)
+    # Empty-input refusal, unconditional (QA r1 S-2): a scan that extracts nothing is a
+    # broken extractor or a wrong root — never a green. Every legitimate checkout has at
+    # least one scannable surface, so nothing honest changes by refusing always.
+    if not found:
+        _die("scan extracted zero candidates — refusing (empty input is not a pass)", 1)
     return found
 
 
@@ -257,12 +260,16 @@ def resolve_ids(cfg, force=False):
     ids = state.get("ids", {}) if not force else {}
     if not ids:
         data = _gql(
-            "query($o:String!,$n:Int!){user(login:$o){projectV2(number:$n){id "
-            "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}}}".replace("$f", '"' + cfg["status_field"] + '"'),
-            {"o": cfg["project_owner"], "n": int(cfg["project_number"])},
+            "query($o:String!,$n:Int!,$f:String!){user(login:$o){projectV2(number:$n){id "
+            "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}}}",
+            {"o": cfg["project_owner"], "n": int(cfg["project_number"]), "f": cfg["status_field"]},
         )
         proj = data["user"]["projectV2"]
+        if proj is None:
+            raise RuntimeError(f"project {cfg['project_owner']}/{cfg['project_number']} not found")
         field = proj["field"]
+        if field is None:
+            raise RuntimeError(f"field {cfg['status_field']!r} not found on the project")
         option = next((o for o in field["options"] if o["name"] == cfg["in_progress"]), None)
         if option is None:
             raise RuntimeError(
@@ -276,7 +283,10 @@ def resolve_ids(cfg, force=False):
 
 
 def fetch_board_issues(cfg):
-    """Paginate project items once; cache the issue-number snapshot in state."""
+    """Paginate project items once; cache the snapshot in state. Keyed by
+    (nameWithOwner, number) — the board is user-level and multi-repo, and a
+    number-only key makes another repo's card with the same number silently
+    disable writes for this repo forever (QA r1 B-1)."""
     ids = resolve_ids(cfg)
     q = (
         "query($id:ID!,$cur:String){node(id:$id){... on ProjectV2{"
@@ -290,51 +300,63 @@ def fetch_board_issues(cfg):
         for item in node["nodes"]:
             content = item.get("content") or {}
             if "number" in content:
-                issues.append((content["number"], content.get("repository", {}).get("nameWithOwner", "?")))
+                issues.append((content.get("repository", {}).get("nameWithOwner", "?"), content["number"]))
         if not node["pageInfo"]["hasNextPage"]:
             break
         cur = node["pageInfo"]["endCursor"]
     state = _load_state()
     state["snapshot"] = {"issues": [list(i) for i in issues], "fetched_at": int(time.time())}
     _atomic_state_write(state)
-    return dict(issues)
+    return set(issues)
 
 
 def issue_node_id(cfg, num):
+    if not cfg.get("repos"):
+        raise RuntimeError("no repos configured (board_sync.repos / XYZ_BOARD_SYNC_REPOS)")
     owner_name = cfg["repos"][0].split("/", 1)  # v1: primary repo (multi-repo: Phase 3)
+    if len(owner_name) != 2:
+        raise RuntimeError(f"repos entry {cfg['repos'][0]!r} is not owner/name")
     data = _gql(
         "query($o:String!,$n:String!,$i:Int!){repository(owner:$o,name:$n){issue(number:$i){id state}}}",
         {"o": owner_name[0], "n": owner_name[1], "i": int(num)},
     )
-    issue = data["repository"]["issue"]
+    repo = data.get("repository") or {}
+    issue = repo.get("issue")
     if issue is None:
         raise RuntimeError(f"issue #{num} not found in {cfg['repos'][0]}")
     return issue
 
 
+def _add_item(cfg, ids, content_id):
+    return _gql(
+        "mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}",
+        {"p": ids["project"], "c": content_id},
+    )["addProjectV2ItemById"]["item"]["id"]
+
+
 def board_add(cfg, num, write):
-    """Add issue + set In progress. Idempotent: check-first against a fresh snapshot."""
+    """Add issue + set In progress. Idempotent: check-first (repo-qualified, B-1)
+    against a fresh snapshot."""
+    repo = cfg["repos"][0]
     on_board = fetch_board_issues(cfg)
-    if num in on_board:
-        return f"gh-{num}: already on board ({on_board[num]}) — no-op"
+    if (repo, num) in on_board:
+        return f"gh-{num}: already on board ({repo}) — no-op"
     issue = issue_node_id(cfg, num)
     if not write:
         return f"gh-{num} ({issue['state']}): dry-run — would add + set {cfg['in_progress']!r}"
     ids = resolve_ids(cfg)
+    item_id = None
     try:
-        item = _gql(
-            "mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}",
-            {"p": ids["project"], "c": issue["id"]},
-        )["addProjectV2ItemById"]["item"]
-        _set_status(cfg, ids, item["id"])
+        item_id = _add_item(cfg, ids, issue["id"])
+        _set_status(cfg, ids, item_id)
     except RuntimeError as exc:
-        ids = resolve_ids(cfg, force=True)  # S5: stale-ID self-heal, one retry
-        item = _gql(
-            "mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}",
-            {"p": ids["project"], "c": issue["id"]},
-        )["addProjectV2ItemById"]["item"]
-        _set_status(cfg, ids, item["id"])
-        _warn(f"first add attempt failed ({exc}); re-resolved IDs and succeeded")
+        ids = resolve_ids(cfg, force=True)  # S5: stale-ID self-heal
+        # S-1: if the ADD already succeeded, retrying it would duplicate the card —
+        # retry only the status write in that case.
+        if item_id is None:
+            item_id = _add_item(cfg, ids, issue["id"])
+        _set_status(cfg, ids, item_id)
+        _warn(f"first attempt failed ({exc}); re-resolved IDs and succeeded")
     fetch_board_issues(cfg)  # refresh snapshot post-write
     return f"gh-{num}: added + Status={cfg['in_progress']!r}"
 

@@ -21,14 +21,22 @@ ok()  { PASS=$((PASS + 1)); echo "  ok  - $1"; }
 bad() { FAIL=$((FAIL + 1)); echo "  FAIL- $1"; }
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh402-board-sync.XXXXXX")"
+WORK="$(cd "$WORK" && pwd)"   # canonicalize ($TMPDIR's trailing slash makes a literal // that
+                              # resolved-parent comparisons would otherwise mismatch)
 cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
 
-require_fixture() {  # containment, not a null check (GH-567): must exist AND live under $WORK
-  local p="$1"
+require_fixture() {  # containment, not a null check (GH-567): must exist AND live under $WORK.
+  local p="$1" parent
   case "$p" in
-    "$WORK"/*) [ -e "$p" ] ;;
+    "$WORK"/*) ;;
     *) echo "  FAIL- fixture escapes sandbox: $p" >&2; return 1 ;;
+  esac
+  # Lexical only so far — resolve the parent to catch $WORK/../../real (QA r1 N-4).
+  parent="$(cd "${p%/*}" 2>/dev/null && pwd)" || return 1
+  case "$parent" in
+    "$WORK"|"$WORK"/*) [ -e "$p" ] ;;
+    *) echo "  FAIL- fixture resolves outside sandbox: $p" >&2; return 1 ;;
   esac
 }
 
@@ -104,6 +112,11 @@ EMPTY_OUT="$(XYZ_BOARD_SYNC_CLONE_DIRS="" python3 "$TOOL" scan --root "$EMPTY" 2
 if [ "$EMPTY_RC" -ne 0 ] && printf '%s\n' "$EMPTY_OUT" | grep -q "refusing"; then
   ok "zero candidates over a populated checkout refuses (rc=$EMPTY_RC)"
 else bad "empty scan passed green (rc=$EMPTY_RC): $EMPTY_OUT"; fi
+VOID="$WORK/void"; mkdir -p "$VOID"
+VOID_OUT="$(XYZ_BOARD_SYNC_CLONE_DIRS="" python3 "$TOOL" scan --root "$VOID" 2>&1)"; VOID_RC=$?
+if [ "$VOID_RC" -ne 0 ] && printf '%s\n' "$VOID_OUT" | grep -q "refusing"; then
+  ok "surface-less (void) root refuses too (S-2 residual gap closed)"
+else bad "void scan passed green (rc=$VOID_RC): $VOID_OUT"; fi
 
 # ── 5. kill-switch: XYZ_BOARD_SYNC=0 no-ops everywhere (N1) ─────────────────────
 echo "5. kill-switch"
@@ -128,7 +141,9 @@ MUT="$WORK/mutated"; mkdir -p "$MUT"
 cp "$ROOT/utils/py/board_sync.py" "$MUT/board_sync.py"
 cp "$ROOT/utils/py/device_config.py" "$MUT/device_config.py"
 require_fixture "$MUT/board_sync.py" || { bad "mutation copy missing"; exit 1; }
-sed -i '' 's/GH-\*\.md/ZZ-*.md/' "$MUT/board_sync.py"    # pdda glob now matches nothing
+# Portable rewrite (QA r1 S-5): `sed -i ''` is BSD-only and silently no-ops the mutation
+# under GNU sed (the ubuntu canary runs this suite) — which would fake the witnessed red.
+sed 's/GH-\*\.md/ZZ-*.md/' "$MUT/board_sync.py" > "$MUT/board_sync.py.tmp" && mv "$MUT/board_sync.py.tmp" "$MUT/board_sync.py"
 MUT_OUT="$(python3 "$MUT/board_sync.py" scan --root "$FIX" 2>&1)"; MUT_RC=$?
 if [ "$MUT_RC" -eq 0 ] && ! printf '%s\n' "$MUT_OUT" | grep -q "gh-123"; then
   ok "broken extractor drops gh-123 (this suite would be red — the pin holds)"
@@ -136,6 +151,38 @@ else bad "mutated extractor still found gh-123 — the witnessed red did not fir
 if printf '%s\n' "$MUT_OUT" | grep -Eq "gh-124.*branch"; then
   ok "mutation isolated to the pdda extractor (branches still found)"
 else bad "mutation leaked beyond the pdda extractor"; fi
+
+# ── 8. weak-only reconcile NEVER writes, even with --write (entry≠start at the
+#     writer — the plan's core invariant, pinned fully offline: no strong candidate
+#     means board_add is never called, so no network is touched) ──────────────────
+echo "8. weak-only reconcile refuses to write (S-4)"
+WONLY="$WORK/weakonly"; mkdir -p "$WONLY/PROJECT/2-WORKING" "$WORK/clones2/Repo2-gh125"
+python3 - "$WONLY/releases.db" <<'PY'
+import sqlite3, sys
+conn = sqlite3.connect(sys.argv[1])
+conn.execute("CREATE TABLE roadmap_items (gh_number INTEGER, status_marker TEXT)")
+conn.execute("INSERT INTO roadmap_items VALUES (128, '🚧')")
+conn.commit(); conn.close()
+PY
+require_fixture "$WONLY/releases.db" || { bad "weak-only fixture missing"; exit 1; }
+REC_OUT="$(XYZ_BOARD_SYNC_CLONE_DIRS="$WORK/clones2" python3 "$TOOL" reconcile --root "$WONLY" --write 2>&1)"; REC_RC=$?
+if [ "$REC_RC" -eq 0 ] \
+   && printf '%s\n' "$REC_OUT" | grep -q "gh-128.*weak-only" \
+   && printf '%s\n' "$REC_OUT" | grep -q "gh-125.*weak-only" \
+   && ! printf '%s\n' "$REC_OUT" | grep -Eq "would add|added \+ Status"; then
+  ok "weak-only candidates log and never write, even with --write"
+else bad "weak-only reconcile wrote or misreported (rc=$REC_RC): $REC_OUT"; fi
+
+# ── 9. loud-error contracts (QA r1 N-2, N-3) ────────────────────────────────────
+echo "9. loud errors + state-path override"
+python3 "$TOOL" --write scan --root "$FIX" >/dev/null 2>&1
+if [ $? -ne 0 ]; then ok "flag-before-subcommand is a loud usage error"; else bad "--write before subcommand silently accepted"; fi
+GARBAGE_OUT="$(python3 "$TOOL" touch nonsense-issue 2>&1)"; GARBAGE_RC=$?
+if [ "$GARBAGE_RC" -ne 0 ]; then ok "touch with unparseable issue fails (rc=$GARBAGE_RC)"; else bad "touch accepted garbage"; fi
+STATE_OUT="$(XYZ_BOARD_SYNC_STATE_PATH="$WORK/state.json" python3 "$TOOL" config 2>&1)"
+if printf '%s\n' "$STATE_OUT" | grep -q "\"state_path\": \"$WORK/state.json\""; then
+  ok "XYZ_BOARD_SYNC_STATE_PATH overrides state path (offline-pinnable)"
+else bad "state path override ignored: $STATE_OUT"; fi
 
 echo
 echo "GH-402 board_sync Phase 1: $PASS passed, $FAIL failed"
