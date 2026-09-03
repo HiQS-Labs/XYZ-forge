@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -108,3 +108,16 @@ recorded the pre-fix destructive control in `test/baselines/GH-413-negative-cont
 checks marker refusal/payload preservation, multi-commit refusal, explicit opt-in rebuild, marker
 absence, and retention of the two cited launch decision records. Per the phase scope lock, I did not
 run tests; the harness will run the gate outside this worktree.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+The implementation correctly handles the marker-only directory and multi-commit destination checks. However, the requirement to "add both cited ADRs to `KEEP_FILES` (umbrella finding 1.5, same file)" was missed:
+- The builder did not change `KEEP_FILES` in `utils/build-launch-artifact.sh` at all.
+- The test checks for `PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md` and `decisions/2026-08-10-marathon-gate-baseline-strategy.md`. Neither of these are the missing cited ADRs.
+- Per finding 1.5, the two cited ADRs are `decisions/2026-06-18-epoch-fencing.md` (cited in `src/events.js`) and `decisions/2026-07-01-cross-agent-dep-conflict.md` (cited in `src/project.js`).
+- Please add BOTH `decisions/2026-06-18-epoch-fencing.md` and `decisions/2026-07-01-cross-agent-dep-conflict.md` to `KEEP_FILES` in `utils/build-launch-artifact.sh`.
+- Update the assertions in `test/gh413-launch-artifact-destination-guard.sh` to verify these two ADRs specifically.
