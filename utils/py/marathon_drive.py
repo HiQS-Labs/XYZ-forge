@@ -17,6 +17,7 @@ import datetime as _dt
 # which does NOT put the script's own directory on sys.path (GH-448 regression, test/gh322-runlog-
 # python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
@@ -1035,12 +1036,8 @@ def main():
         except subprocess.CalledProcessError:
             die(f"invalid --target-root (not a git repo): {args.target_root}")
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    xyz_harness = os.path.abspath(os.path.join(here, "..", ".."))
-    if os.path.basename(xyz_harness) == ".xyz":
-        default_root = os.path.abspath(os.path.join(xyz_harness, ".."))
-    else:
-        default_root = xyz_harness
+    xyz_harness = harness_home()
+    default_root = repo_root()
     
     root = get_env("MARATHON_ROOT", default_root)
     tick_bin = get_env("TICK_BIN", os.path.join(xyz_harness, "bin", "tick"))
@@ -1175,7 +1172,7 @@ def main():
                 return p
             return p if r.startswith("..") else r
 
-        harness_root = os.path.dirname(os.path.dirname(mantra_file))
+        harness_root = harness_home()
         mantra_rel = _rel(mantra_file, harness_root)          # relay-automation/DEBUG-MANTRA.md
         phase_rel = _rel(phase_dir_, root)
         out = (f"\n## Debug mantra (auto-triggered — {prior} prior attempt(s) on this phase did not reach Approved)\n\n"

@@ -79,6 +79,7 @@ grep -q 'move the foreign issue URL into `related:`' <<<"$out_bad" \
 # pre-GH-425 false green; a control that stays red cannot demonstrate this check's discrimination.
 PREFIX="$WORK/swarm_preflight.pre-gh425.py"
 cp "$PY" "$PREFIX"
+cp "$(dirname "$PY")/harness_paths.py" "$WORK/"
 python3 - "$PREFIX" <<'PYEOF'
 from pathlib import Path
 import sys

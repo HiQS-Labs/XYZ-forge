@@ -140,6 +140,11 @@ def _kill_turn_group(proc):
 
 
 def main():
+    if "--print-bin" in sys.argv[1:]:
+        b = default_deepseek_bin()
+        print(b)
+        sys.exit(0 if (b and os.path.exists(b)) else 1)
+
     if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
         print("Usage: deepseek-turn.py")
         print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")

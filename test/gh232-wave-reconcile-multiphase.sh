@@ -26,7 +26,7 @@ git -C "$REPO" config user.name "Test Agent"
 git -C "$REPO" config user.email "test@example.com"
 mkdir -p "$REPO/PROJECT/2-WORKING" "$REPO/PROJECT/3-COMPLETED" "$REPO/PROJECT/4-MISC" \
   "$REPO/utils/py" "$REPO/utils/pdda" "$REPO/utils/timeline" "$REPO/TESTS-RESULTS/$TODAY"
-cp "$RECONCILE_PY" "$REPO/utils/py/wave_reconcile.py"
+cp "$RECONCILE_PY" "$XYZ_ROOT/utils/py/harness_paths.py" "$REPO/utils/py/"
 require_fixture_file "$REPO/utils/py/wave_reconcile.py" "reconciler-copy"
 
 cat > "$REPO/ROADMAP.md" <<ROADMAPEOF

@@ -33,6 +33,7 @@ import tempfile
 
 # Ensure utils/py is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from harness_paths import harness_home, repo_root, is_vendored, resolve_tool  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
 from releases_app import (  # noqa: E402
     _ensure_jog_schema,
@@ -181,16 +182,6 @@ JOG_RELAY_DEPRECATION_NOTICE = (
     "one release cycle after the Phase 5 flip — see "
     "PROJECT/3-COMPLETED/GH-280-JOG-MARATHON-RECALIBRATION.md)"
 )
-
-
-def harness_home():
-    """Dir containing relay-automation/ + utils/py/: repo root, or <repo>/.xyz when vendored.
-
-    Derived from THIS file's location (utils/py/jog_run.py), never from the caller's cwd or an
-    assumed repository root — the exact root-relative-path defect (GH-279 #2) that silently
-    skipped preflight on every vendored install.
-    """
-    return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 
 
 def validate_marathon_executor(args):

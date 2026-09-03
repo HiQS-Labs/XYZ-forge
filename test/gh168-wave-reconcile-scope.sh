@@ -27,7 +27,7 @@ make_repo() {
   git -C "$repo" config user.email "test@example.com"
   mkdir -p "$repo/PROJECT/2-WORKING" "$repo/PROJECT/3-COMPLETED" \
     "$repo/PROJECT/4-MISC" "$repo/utils/py" "$repo/utils/pdda" "$repo/utils/timeline"
-  cp "$RECONCILE_PY" "$repo/utils/py/wave_reconcile.py"
+  cp "$RECONCILE_PY" "$XYZ_ROOT/utils/py/harness_paths.py" "$repo/utils/py/"
 
   cat > "$repo/ROADMAP.md" <<'ROADMAPEOF'
 # Test Roadmap

@@ -6,7 +6,7 @@ source "$(dirname "$0")/_setup.sh" gh372-escalation-log-tail
 ROOT_REPO="$(cd "$(dirname "$0")/.." && pwd)"
 HARNESS="$WORK/harness"
 mkdir -p "$HARNESS/utils/py" "$HARNESS/relay-automation"
-cp "$ROOT_REPO/utils/py/marathon_drive.py" "$ROOT_REPO/utils/py/relay_drive.py" "$ROOT_REPO/utils/py/rtl.py" "$HARNESS/utils/py/"
+cp "$ROOT_REPO/utils/py/marathon_drive.py" "$ROOT_REPO/utils/py/relay_drive.py" "$ROOT_REPO/utils/py/rtl.py" "$ROOT_REPO/utils/py/harness_paths.py" "$HARNESS/utils/py/"
 cp "$ROOT_REPO/relay-automation/relay-turn-lib.sh" "$ROOT_REPO/relay-automation/durable-log-lib.sh" "$ROOT_REPO/relay-automation/non-durable-log-roots.conf" "$HARNESS/relay-automation/"
 chmod +x "$HARNESS/utils/py/relay_drive.py"
 RELAY_DRIVE="$WORK/relay-drive"

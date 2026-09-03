@@ -81,6 +81,7 @@ done
 # Negative control: replay the old cwd/PATH lookup in an executable copy of the real Python lane.
 PREFIX="$WORK/swarm_preflight.pre-gh343.py"
 cp "$PY" "$PREFIX"
+cp "$(dirname "$PY")/harness_paths.py" "$WORK/"
 python3 - "$PREFIX" <<'PY'
 from pathlib import Path
 import sys
