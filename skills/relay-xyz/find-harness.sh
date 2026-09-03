@@ -63,6 +63,34 @@ _find_case_collision_pair() {
   '
 }
 
+# --- parse arguments ---
+QUIET=0
+ACTION="root"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --quiet|-q)
+      QUIET=1
+      shift
+      ;;
+    ""|--root)
+      ACTION="root"
+      shift
+      ;;
+    --env)
+      ACTION="env"
+      shift
+      ;;
+    --check)
+      ACTION="check"
+      shift
+      ;;
+    *)
+      echo "usage: find-harness.sh [--root|--env|--check] [--quiet]" >&2
+      exit 2
+      ;;
+  esac
+done
+
 # --- resolve this script's real directory (symlink-safe) ---
 _src="${BASH_SOURCE[0]}"
 while [ -h "$_src" ]; do
@@ -83,19 +111,31 @@ LIVE_HARNESS=""
 LIVE_HARNESS_HEAD=""
 VENDORED_STATUS=""
 MAIN_CHECKOUT_VENDORED=""
+VIA=""
+
+_g="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+
 # 1. explicit override
 for _o in "${XYZ_HARNESS:-}" "${XYZ_REPO_ROOT:-}"; do
-  if _has_harness "$_o"; then HARNESS="$(cd "$_o" && pwd)"; break; fi
+  if _has_harness "$_o"; then
+    HARNESS="$(cd "$_o" && pwd)"
+    VIA="override"
+    if [ "$(basename "$HARNESS")" = ".xyz" ]; then
+      VENDORED=1
+      CALLER_ROOT="${_g:-$(git -C "$_o" rev-parse --show-toplevel 2>/dev/null || dirname "$(cd "$_o" && pwd)")}"
+    fi
+    break
+  fi
 done
 # 2. vendored .xyz/ copy in the repo/PWD I'm standing in
 if [ -z "$HARNESS" ]; then
-  _g="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   CALLER_ROOT="$_g"
   [ -n "$CALLER_ROOT" ] || CALLER_ROOT="${PWD:-$(pwd)}"
   _vendored="$CALLER_ROOT/.xyz"
   if _has_vendored_harness "$_vendored"; then
     HARNESS="$(cd "$_vendored" && pwd)"
     VENDORED=1
+    VIA="caller-.xyz"
   fi
 fi
 # 3. vendored .xyz/ copy in the main checkout, when the caller is a linked
@@ -110,19 +150,26 @@ if [ -z "$HARNESS" ] && [ -n "$_g" ] && [ "$(git rev-parse --is-bare-repository 
       if _has_vendored_harness "$MAIN_CHECKOUT_VENDORED"; then
         HARNESS="$MAIN_CHECKOUT_VENDORED"
         VENDORED=1
+        VIA="worktree-.xyz"
       fi
     fi
   fi
 fi
 # 4. current git repo (preserves "operate on the clone I'm standing in")
 if [ -z "$HARNESS" ]; then
-  if _has_harness "$_g"; then HARNESS="$_g"; fi
+  if _has_harness "$_g"; then
+    HARNESS="$_g"
+    VIA="git-root"
+  fi
 fi
 # 5. relative to this script (…/<repo>/skills/relay-xyz → <repo>) — fixes the
 #    cross-repo case: the skill is global but the harness ships beside it.
 if [ -z "$HARNESS" ]; then
   _cand="$(cd "$SELF_DIR/../.." >/dev/null 2>&1 && pwd || true)"
-  if _has_harness "$_cand"; then HARNESS="$_cand"; fi
+  if _has_harness "$_cand"; then
+    HARNESS="$_cand"
+    VIA="self"
+  fi
 fi
 
 if [ -z "$HARNESS" ]; then
@@ -136,6 +183,10 @@ fi
 # directory too deep — so use the already-resolved caller root instead.
 TICK_REPO_ROOT="$HARNESS"
 [ "$VENDORED" = 1 ] && TICK_REPO_ROOT="$CALLER_ROOT"
+
+if [ "$QUIET" = 0 ]; then
+  echo "find-harness: HARNESS=$HARNESS REPO_ROOT=$TICK_REPO_ROOT vendored=$VENDORED via=$VIA" >&2
+fi
 
 # Vendored copies are opt-in fallbacks: warn on reachable drift, never block.
 if [ "$VENDORED" = 1 ]; then
@@ -167,7 +218,7 @@ if [ "$VENDORED" = 1 ]; then
           echo "find-harness: WARNING — vendored .xyz harness is behind the live harness."
           echo "  vendored: $(_short_sha "$VENDORED_COMMIT")"
           echo "  live:     $(_short_sha "$LIVE_HARNESS_HEAD")"
-          echo "  remedy:   xyz-sync --update $CALLER_ROOT"
+          echo "  remedy:   bash $LIVE_HARNESS/relay-automation/xyz-sync.sh update $CALLER_ROOT"
         } >&2
       else
         VENDORED_STATUS="different"
@@ -201,20 +252,27 @@ fi
 # marathon-agent.sh key on the *_AGENT vars, not these), exactly like RELAY_HAS_CODEX/AGY. They
 # close a discoverability gap, not a functional one.
 COMMANDCODE_PATH="$(_bin "${COMMANDCODE_BIN:-cmd}")"
-# deepseek-turn.py's default_deepseek_bin() prefers an absolute entrypoint over `which dsh`, so a
-# PATH-only probe would under-report this worker on a machine where the lane runs fine.
-DEEPSEEK_PATH="$(_bin "${DEEPSEEK_BIN:-dsh}")"
-if [ -z "$DEEPSEEK_PATH" ] && [ -n "${DEEPSEEK_BIN:-}" ] && [ -f "${DEEPSEEK_BIN}" ]; then
-  DEEPSEEK_PATH="$DEEPSEEK_BIN"
+DEEPSEEK_PATH=""
+if [ -f "$HARNESS/utils/py/deepseek-turn.py" ] && command -v python3 >/dev/null 2>&1 \
+   && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null; then
+  _dsh_out="$(python3 "$HARNESS/utils/py/deepseek-turn.py" --print-bin 2>/dev/null || true)"
+  if [ -n "$_dsh_out" ] && [ -e "$_dsh_out" ]; then
+    DEEPSEEK_PATH="$_dsh_out"
+  fi
+fi
+
+HAS_DEEPSEEK=0
+if [ -n "$DEEPSEEK_PATH" ] && { [ -n "${OPENROUTER_API_KEY:-}" ] || [ -n "${DEEPSEEK_API_KEY:-}" ]; }; then
+  HAS_DEEPSEEK=1
 fi
 
 _flag() { [ -n "${1:-}" ] && echo 1 || echo 0; }
 
-case "${1:-}" in
-  ""|--root)
+case "$ACTION" in
+  root)
     printf '%s\n' "$HARNESS"
     ;;
-  --env)
+  env)
     printf 'export HARNESS=%q\n'         "$HARNESS"
     printf 'export TICK_REPO_ROOT=%q\n'  "$TICK_REPO_ROOT"
     [ -n "$TICK" ]       && printf 'export TICK=%q\n'       "$TICK"
@@ -226,9 +284,14 @@ case "${1:-}" in
     printf 'export RELAY_HAS_CODEX=%s\n' "$(_flag "$CODEX_PATH")"
     printf 'export RELAY_HAS_AGY=%s\n'   "$(_flag "$AGY_PATH")"
     printf 'export RELAY_HAS_COMMANDCODE=%s\n' "$(_flag "$COMMANDCODE_PATH")"
-    printf 'export RELAY_HAS_DEEPSEEK=%s\n'    "$(_flag "$DEEPSEEK_PATH")"
+    printf 'export RELAY_HAS_DEEPSEEK=%s\n'    "$HAS_DEEPSEEK"
+    printf 'export XYZ_VENDORED=%s\n'    "$VENDORED"
+    [ -n "$CALLER_ROOT" ]     && printf 'export XYZ_CALLER_ROOT=%q\n'     "$CALLER_ROOT"
+    [ -n "$VENDORED_STATUS" ] && printf 'export XYZ_VENDORED_STATUS=%q\n' "$VENDORED_STATUS"
+    [ -n "$VENDORED_COMMIT" ] && printf 'export XYZ_VENDORED_COMMIT=%q\n' "$VENDORED_COMMIT"
+    true
     ;;
-  --check)
+  check)
     mark() { if [ -n "${1:-}" ]; then echo "  ok  $2  ($1)"; else echo "  --  $2  (not found)"; fi; }
     _caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"
     echo "relay harness readiness:"
@@ -240,7 +303,7 @@ case "${1:-}" in
           echo "  ok  vendored copy is current with the live harness ($(_short_sha "$VENDORED_COMMIT") = $(_short_sha "$LIVE_HARNESS_HEAD"))"
           ;;
         behind)
-          echo "  !   vendored copy is behind the live harness ($(_short_sha "$VENDORED_COMMIT") < $(_short_sha "$LIVE_HARNESS_HEAD")); run: xyz-sync --update $CALLER_ROOT"
+          echo "  !   vendored copy is behind the live harness ($(_short_sha "$VENDORED_COMMIT") < $(_short_sha "$LIVE_HARNESS_HEAD")); run: bash $LIVE_HARNESS/relay-automation/xyz-sync.sh update $CALLER_ROOT"
           ;;
         different)
           echo "  !   vendored copy differs from or can't be compared to the live harness"
@@ -290,9 +353,5 @@ case "${1:-}" in
       echo "      git mv one variant to match the other's casing, commit, then re-run --check."
     fi
     true   # --check is advisory: always exit 0 (fail-open), never block a relay on a warning
-    ;;
-  *)
-    echo "usage: find-harness.sh [--root|--env|--check]" >&2
-    exit 2
     ;;
 esac

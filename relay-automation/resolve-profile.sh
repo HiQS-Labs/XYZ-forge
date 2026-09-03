@@ -25,4 +25,12 @@ fi
 xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export XYZ_ROOT="${XYZ_ROOT:-$xyz_root}"
 export PYTHONPATH="$xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
+if [ ! -f "$xyz_root/utils/py/profile_resolve.py" ]; then
+  if [ "${XYZ_VENDORED_STATUS:-}" = "behind" ]; then
+    echo "resolve-profile: vendored copy is behind (${XYZ_VENDORED_COMMIT:-unknown}); this script landed after it" >&2
+  else
+    echo "resolve-profile: $xyz_root/utils/py/profile_resolve.py not found" >&2
+  fi
+  exit 1
+fi
 exec python3 "$xyz_root/utils/py/profile_resolve.py" "$@"

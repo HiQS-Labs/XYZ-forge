@@ -143,7 +143,7 @@ else bad "#394: auto-discovery warns that the vendored copy is behind (stderr: $
 _err_over="$(cd "$VF_REPO" && XYZ_HARNESS="$VF_HARNESS" XYZ_REPO_ROOT= bash "$FH" --env 2>&1 >/dev/null || true)"
 if grep -q 'behind the live harness' <<<"$_err_over"; then ok "#394: the warning still fires when XYZ_HARNESS points at the stale .xyz"
 else bad "#394: the warning still fires when XYZ_HARNESS points at the stale .xyz (stderr: ${_err_over:-<empty>})"; fi
-_remedy="$(grep -E '^\s*remedy:' <<<"$_err_auto" | sed -E 's/^\s*remedy:\s*//' || true)"
+_remedy="$(grep -E '^[[:space:]]*remedy:' <<<"$_err_auto" | sed -E 's/^[[:space:]]*remedy:[[:space:]]*//' || true)"
 if [ -n "$_remedy" ]; then
   _cmd="${_remedy%% *}"
   if [ -x "$_cmd" ] || command -v "$_cmd" >/dev/null 2>&1 || { [ "$_cmd" = bash ] && [ -f "$(cut -d' ' -f2 <<<"$_remedy")" ]; }; then

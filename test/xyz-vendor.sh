@@ -158,7 +158,7 @@ XYZ_REGISTRY="$WORK/reg2.tsv" "$VENDOR" --no-register "$REPO2" >/dev/null 2>&1
 # Baseline = the same script run where CWD has no .xyz. Compare --root/--env from a neutral non-.xyz
 # git repo: resolution must be the live harness (script-relative), identical whether or not .xyz logic exists.
 NOXYZ="$WORK/plain"; mkdir -p "$NOXYZ"; git init -q "$NOXYZ"
-( cd "$NOXYZ" && "$FH" --env >"$WORK/plain.env" 2>"$WORK/plain.enverr" )
+( cd "$NOXYZ" && "$FH" --quiet --env >"$WORK/plain.env" 2>"$WORK/plain.enverr" )
 # --env uses printf %q (paths with spaces get escaped), so eval rather than grep the raw line.
 ( unset HARNESS; eval "$(cat "$WORK/plain.env")"; [ "$HARNESS" = "$ROOT" ] ) \
   && pass "no-.xyz: resolves to the live harness (default path intact)" || fail "no-.xyz default resolution changed"
@@ -175,7 +175,7 @@ got="$( cd "$REPO" && XYZ_HARNESS="$ROOT" "$FH" --root 2>/dev/null )"
 HEAD="$(git -C "$ROOT" rev-parse HEAD)"
 ANCESTOR="$(git -C "$ROOT" rev-list --max-parents=0 HEAD | tail -1)"
 printf 'source_commit=%s\ntick_version=x\nvendored_utc=x\n' "$HEAD" > "$REPO/.xyz/VERSION"
-( cd "$REPO" && "$FH" --root 2>"$WORK/cur.err" >/dev/null )
+( cd "$REPO" && "$FH" --quiet --root 2>"$WORK/cur.err" >/dev/null )
 [ ! -s "$WORK/cur.err" ] && pass "staleness: current copy is silent" || fail "current copy warned: $(cat "$WORK/cur.err")"
 # The BEHIND state needs a commit that is an ancestor of HEAD and is not HEAD itself —
 # find-harness.sh decides it with `merge-base --is-ancestor` (skills/relay-xyz/find-harness.sh:164).

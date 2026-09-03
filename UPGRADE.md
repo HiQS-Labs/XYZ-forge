@@ -569,13 +569,6 @@ When executing elsewhere:
    "$L" --check                 # prints the resolved harness root + which type
    eval "$("$L" --env)"; cd "$HARNESS"   # canonical: exports HARNESS + TICK_REPO_ROOT, cds into the harness
    ```
-   The current locator already corrects the vendored case — it sets `TICK_REPO_ROOT="$CALLER_ROOT"`
-   (not `$HARNESS/.xyz`, "one directory too deep") when it detects a `.xyz/` install
-   (`find-harness.sh:113-117`). **Residual (GH-234, still open):** the issue tracks a
-   `TICK_REPO_ROOT`-too-deep case that the current code appears to fix but the issue is not yet closed,
-   AND a leaf that has **not** been re-vendored since that fix may still ship the older locator. So on a
-   Type-B leaf, after `--env`, sanity-check `echo "$TICK_REPO_ROOT"` points at the **consumer repo root**,
-   not its `.xyz/` — if it ends in `/.xyz`, re-vendor the leaf (or `cd` to the caller root by hand).
 2. **Type A only — re-run §2 preconditions incl. the two-mode baseline.** `python3`/`node` presence, a
    clean/current branch, and a same-commit sweep are repo-local facts, not inherited from here. §3's
    gap *numbers* are this repo's snapshot; regenerate them on a Type-A target — the *method* ports, the

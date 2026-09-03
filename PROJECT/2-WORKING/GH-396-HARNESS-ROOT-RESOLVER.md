@@ -1,7 +1,8 @@
 ---
 title: Harness root resolution — one resolver, two roots, pinned; retire RADAR-class-vendored-root-resolution
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-09-02
+updated: 2026-09-02
 owner: noel
 gh_issue: 396
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/396
@@ -10,8 +11,8 @@ complexity: 4
 risk: 3
 effort: 4
 phases: 5
-revision: 3
-ratings_provisional: true
+revision: 4
+ratings_provisional: false
 recon: PROJECT/1-INBOX/recon-harness-root-resolution.md
 radar_target: RADAR-class-vendored-root-resolution
 closes:
@@ -40,10 +41,30 @@ goal: >
 
 # GH-396 — Harness root resolution: one resolver, two roots, pinned
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward.
+## Status
 
-The plan body is the issue body, verbatim, so the two cannot drift. Revision 2 folds in both reviews.
+| What was just completed | What's next |
+|---|---|
+| Phase 1: `find-harness.sh`: two roots, one precedence, announced (gh396: 25/0, gh393: 9/0) | Phase 2: Python: one `harness_paths` module, extracted not invented |
+
+## Table of contents
+
+- [Why this issue exists](#why-this-issue-exists)
+- [What the trace found](#what-the-trace-found-the-part-that-changes-the-plan)
+- [The strategy, in one paragraph](#the-strategy-in-one-paragraph)
+- [Phases](#phases)
+  - [Phase 0 — Pin the defect (gate first, arrives RED)](#phase-0--pin-the-defect-gate-first-arrives-red--built-at-87e30924-as-built-checklist-and-what-it-changed-are-under-phase-0--built-below)
+  - [Phase 1 — find-harness.sh: two roots, one precedence, announced](#phase-1--find-harnesssh-two-roots-one-precedence-announced)
+  - [Phase 2 — Python: one harness_paths module, extracted not invented](#phase-2--python-one-harness_paths-module-extracted-not-invented)
+  - [Phase 3 — Bash: one sourceable library, six files, not fifteen](#phase-3--bash-one-sourceable-library-six-files-not-fifteen)
+  - [Phase 4 — Vendored integration in CI (blocking), and the env-var collision](#phase-4--vendored-integration-in-ci-blocking-and-the-env-var-collision)
+- [Closes](#closes)
+- [Non-goals](#non-goals--named-so-they-stop-resurfacing)
+- [Blast radius](#blast-radius)
+- [Definition of done](#definition-of-done)
+- [Reviewed by](#reviewed-by)
+- [Phase 0 — built](#phase-0--built-revision-3-2026-09-02)
+- [Review findings](#review-findings--two-headless-rounds-consolidated)
 
 ---
 
@@ -92,14 +113,14 @@ Each phase is independently shippable and leaves the tree green. Order is fixed:
 - [x] **Acceptance:** the new suites are registered in `validate.sh`'s `TESTS` array (bidirectional guard, PR #308, will refuse otherwise) and **all fail** at the pre-fix commit. Record that commit SHA and the red output in the 2-WORKING doc.
 
 ### Phase 1 — `find-harness.sh`: two roots, one precedence, announced
-
-- [ ] In the override branch (`:86-89`): after a candidate passes `_has_harness`, **if its basename is `.xyz`, set `VENDORED=1` and `CALLER_ROOT="$(git -C "$_o" rev-parse --show-toplevel 2>/dev/null || dirname "$(cd "$_o" && pwd)")"`** — the override selects *which harness*, it does not get to redefine *which repo*. The `||` fallback is load-bearing (symlink-outside case, correction A); keep **logical** `pwd`, not `pwd -P`. This alone closes #395. *(review change 4)*
-- [ ] Move the staleness block (`:140-181`) out from under the `VENDORED=1`-only gate so an override pointing at a stale vendored copy still warns. Rewrite the remedy at `:170` to the confirmed grammar, absolute, copy-paste runnable (exact form settled in Phase 0).
-- [ ] When a documented script is requested from a vendored tree and is absent, and staleness was detected, the error names the staleness as the cause (#394's second half): `--env` exports `XYZ_VENDORED_STATUS=behind|current|different|unknown` and `XYZ_VENDORED_COMMIT`; `resolve-profile.sh:25` reads them and says "vendored copy is behind (`<sha>`); this script landed after it" instead of `No such file or directory`.
-- [ ] `--env` additionally exports `XYZ_VENDORED=0|1` and `XYZ_CALLER_ROOT` so no downstream consumer re-derives them.
-- [ ] **#393 (rewritten):** `RELAY_HAS_DEEPSEEK` = `python3 ≥ 3.8` AND binary-by-the-shim's-rule AND an API key. `find-harness.sh:204-206` must call the **same** resolution the shim uses — expose `default_deepseek_bin()` as a `--print-bin` mode of `deepseek-turn.py` or a tiny shared helper, so the check cannot drift from the runtime again. The hardcoded path itself is #398, not this issue. *(review change 6, correction B)*
-- [ ] **Announce every resolution** on stderr unless `--quiet`: `find-harness: HARNESS=<h> REPO_ROOT=<r> vendored=<0|1> via=<override|caller-.xyz|worktree-.xyz|git-root|self>`. Mirrors `validate.sh:41-52`'s "announced, never silent" idiom.
-- [ ] **Acceptance:** Phase 0 suites go green; `test/gh346-gateway-allowlists.sh:387-394` still passes (no exported name removed); `--quiet` suppresses the announcement and nothing else; `UPGRADE.md:571-578`'s GH-234 workaround paragraph is deleted and GH-234 closed citing this commit. **Known and accepted:** after this change `find-harness.sh` warns from `.xyz/VERSION` and `xyz-sync.sh check` warns from `~/.config/xyz/registry.tsv`; the two can disagree (two writers, no single write path — recon map §State). A single store is a `spike-360` non-goal, stated so nobody is surprised by two answers. *(review changes 5, 7)*
+ 
+- [x] In the override branch (`:86-89`): after a candidate passes `_has_harness`, **if its basename is `.xyz`, set `VENDORED=1` and `CALLER_ROOT="${_g:-$(git -C "$_o" rev-parse --show-toplevel 2>/dev/null || dirname "$(cd "$_o" && pwd)")}"`** — the override selects *which harness*, it does not get to redefine *which repo*. The `||` fallback is load-bearing (symlink-outside case, correction A); keep **logical** `pwd`, not `pwd -P`. This alone closes #395. *(review change 4)*
+- [x] Move the staleness block (`:140-181`) out from under the `VENDORED=1`-only gate so an override pointing at a stale vendored copy still warns. Rewrite the remedy at `:170` to the confirmed grammar, absolute, copy-paste runnable (exact form settled in Phase 0).
+- [x] When a documented script is requested from a vendored tree and is absent, and staleness was detected, the error names the staleness as the cause (#394's second half): `--env` exports `XYZ_VENDORED_STATUS=behind|current|different|unknown` and `XYZ_VENDORED_COMMIT`; `resolve-profile.sh:25` reads them and says "vendored copy is behind (`<sha>`); this script landed after it" instead of `No such file or directory`.
+- [x] `--env` additionally exports `XYZ_VENDORED=0|1` and `XYZ_CALLER_ROOT` so no downstream consumer re-derives them.
+- [x] **#393 (rewritten):** `RELAY_HAS_DEEPSEEK` = `python3 ≥ 3.8` AND binary-by-the-shim's-rule AND an API key. `find-harness.sh:204-206` must call the **same** resolution the shim uses — expose `default_deepseek_bin()` as a `--print-bin` mode of `deepseek-turn.py` or a tiny shared helper, so the check cannot drift from the runtime again. The hardcoded path itself is #398, not this issue. *(review change 6, correction B)*
+- [x] **Announce every resolution** on stderr unless `--quiet`: `find-harness: HARNESS=<h> REPO_ROOT=<r> vendored=<0|1> via=<override|caller-.xyz|worktree-.xyz|git-root|self>`. Mirrors `validate.sh:41-52`'s "announced, never silent" idiom.
+- [x] **Acceptance:** Phase 0 suites go green; `test/gh346-gateway-allowlists.sh:387-394` still passes (no exported name removed); `--quiet` suppresses the announcement and nothing else; `UPGRADE.md:571-578`'s GH-234 workaround paragraph is deleted and GH-234 closed citing this commit. **Known and accepted:** after this change `find-harness.sh` warns from `.xyz/VERSION` and `xyz-sync.sh check` warns from `~/.config/xyz/registry.tsv`; the two can disagree (two writers, no single write path — recon map §State). A single store is a `spike-360` non-goal, stated so nobody is surprised by two answers. *(review changes 5, 7)*
 
 ### Phase 2 — Python: one `harness_paths` module, extracted not invented
 
@@ -292,7 +313,7 @@ and the oracle's own existing→1 / missing→0 check.
 
 So the `||` fallback in change 4 is load-bearing, not decorative, and the Phase 0 symlink-outside test must assert that the **fallback** produced the answer. `dirname "$(pwd -P)"` would be wrong there (it gives the physical parent, outside the repo) — the formula must keep logical `pwd`.
 
-**B. #393 — the issue's own premise was wrong, and the plan inherited it.** Issue #393 says the shim "never shells out to any `dsh` binary." `deepseek-turn.py:176-186` does: `subprocess.Popen(["node", deepseek_bin, "--profile", "headless", …])`. It succeeded on this machine with no `dsh` on PATH because `deepseek-turn.py:22` hardcodes `/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js`, which exists here. That hardcoded absolute path is itself a recon-map strategy-6 site the map missed, and it is why the readiness check (`command -v dsh`) and the runtime (`default_deepseek_bin()`) disagree. Change 6 above is the honest fix; **replacing the hardcoded path with a discoverable one is a separate issue** and should be filed as its own issue.
+**B. #393 — the issue's own premise was wrong, and the plan inherited it.** Issue #393 says the shim "never shells out to any `dsh` binary." `deepseek-turn.py:176-186` does: `subprocess.Popen(["node", deepseek_bin, "--profile", "headless", …])`. It succeeded on this machine with no `dsh` on PATH because `deepseek-turn.py:22` hardcodes `$HOME/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js`, which exists here. That hardcoded absolute path is itself a recon-map strategy-6 site the map missed, and it is why the readiness check (`command -v dsh`) and the runtime (`default_deepseek_bin()`) disagree. Change 6 above is the honest fix; **replacing the hardcoded path with a discoverable one is a separate issue** and should be filed as its own issue.
 
 ### Unchanged after review
 - The scope re-sort (4 of 12 are root resolution; PR #350 touched zero root lines) — DeepSeek 1 agree, Qwen did not contest.
