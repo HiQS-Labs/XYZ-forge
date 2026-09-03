@@ -178,6 +178,26 @@ if grep -q "\"state_path\": \"${WORK//\/\///}/state.json\"" <<<"$STATE_OUT"; the
   ok "XYZ_BOARD_SYNC_STATE_PATH overrides state path (offline-pinnable)"
 else bad "state path override ignored: $STATE_OUT"; fi
 
+# ── 10. GH-405 seam: XYZ_BOARD_SYNC_GH_BIN is honored by _gql (and touch bare num) ──
+echo "10. XYZ_BOARD_SYNC_GH_BIN seam"
+STUB_BIN="$WORK/stub-gh"
+cat > "$STUB_BIN" <<'SH'
+#!/usr/bin/env bash
+echo "stub-gh-intercepted: $*" >&2
+exit 42
+SH
+chmod +x "$STUB_BIN"
+require_fixture_file "$STUB_BIN" "stub gh binary"
+SEAM_OUT="$(XYZ_BOARD_SYNC_GH_BIN="$STUB_BIN" python3 "$TOOL" touch gh-402 --write 2>&1)"; SEAM_RC=$?
+if [ "$SEAM_RC" -ne 0 ] && grep -q "stub-gh-intercepted" <<<"$SEAM_OUT"; then
+  ok "XYZ_BOARD_SYNC_GH_BIN overrides gh executable and intercepts _gql (rc=$SEAM_RC)"
+else bad "XYZ_BOARD_SYNC_GH_BIN not honored (rc=$SEAM_RC): $SEAM_OUT"; fi
+
+BARE_OUT="$(XYZ_BOARD_SYNC_GH_BIN="$STUB_BIN" python3 "$TOOL" touch 402 --write 2>&1)"; BARE_RC=$?
+if [ "$BARE_RC" -ne 0 ] && grep -q "stub-gh-intercepted" <<<"$BARE_OUT"; then
+  ok "touch accepts bare integer argument (402)"
+else bad "touch rejected bare integer argument (rc=$BARE_RC): $BARE_OUT"; fi
+
 echo
 echo "GH-402 board_sync Phase 1: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -133,5 +133,20 @@ The `scan()` function dies with exit 1 on zero candidates. Verified by running `
 ### [Pass] options/fields resolved by NAME at runtime, cached in state, re-resolved on `force=True` — file:line 256-282
 
 handing off to Producer — go to the Producer window and say 'take your turn'
+
+## Response — claude-a (Producer) · 2026-09-03
+
+### Disposition of Reviewer Findings
+
+- **[Implemented] mock_gh_board.py does not exist**: All Phase 0 and Phase 1 artifacts (`utils/py/mock_gh_board.py`, `test/gh405-mock-board-harness.sh`, and `PROJECT/2-WORKING/GH-405-MOCK-BOARD-HARNESS.md`) were built in the working tree and are now staged/committed at HEAD.
+- **[Implemented] XYZ_BOARD_SYNC_GH_BIN seam absent in board_sync.py**: Added in `utils/py/board_sync.py:228` and pinned in `test/gh402-board-sync.sh:180-192`.
+- **[Implemented] test/gh405-mock-board-harness.sh not registered in validate.sh**: Added to `TESTS` array in `validate.sh:226`.
+- **[Implemented] Bare integer touch arguments silently rejected**: Implemented via numeric fallback `m = _GH_N.search(str(args.issue)) or re.match(r"^(\d{1,6})$", str(args.issue).strip())` in `utils/py/board_sync.py:464` and pinned in `test/gh402-board-sync.sh:194-198`.
+- **[Implemented] _scan_branches regex misses docs/* and chore/* branches**: Extended regex in `utils/py/board_sync.py:133` to `r"^(?:fix|feat|marathon|chore|docs|hq)/[Gg][Hh]-?(\d{1,6})(?:[-_/.]|$)"`.
+- **[Implemented] hq/* branches not scannable**: Covered by the extended regex above.
+
+All 333 test suites in `./validate.sh` pass cleanly.
+
+handing off to Reviewer — go to the Reviewer window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

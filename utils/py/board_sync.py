@@ -100,6 +100,10 @@ def resolve_settings():
             cfg[key] = raw
         elif key in local:
             cfg[key] = local[key]
+    if isinstance(cfg.get("repos"), str):
+        cfg["repos"] = [p.strip() for p in cfg["repos"].split(",") if p.strip()]
+    if isinstance(cfg.get("clone_dirs"), str):
+        cfg["clone_dirs"] = [p.strip() for p in cfg["clone_dirs"].split(",") if p.strip()]
     return cfg
 
 
@@ -125,10 +129,10 @@ def _scan_branches(root):
     except (OSError, subprocess.TimeoutExpired) as exc:
         _warn(f"branch scan skipped: {exc}")
         return out
-    for ref in refs.stdout.splitlines():
-        m = re.match(r"(?:fix|feat|marathon)/gh-?(\d{1,6})(?:[-_/.]|$)", ref.strip())
+    for b in refs.stdout.splitlines():
+        m = re.match(r"^(?:fix|feat|marathon|chore|docs|hq)/[Gg][Hh]-?(\d{1,6})(?:[-_/.]|$)", b)
         if m:
-            out.append((int(m.group(1)), "branch", ref.strip()))
+            out.append((int(m.group(1)), "branch", b))
     return out
 
 
@@ -166,7 +170,7 @@ def _scan_releases_db(root):
             ):
                 out.append((int(n), "stale_marker", f"roadmap_items gh-{n} 🚧"))
             for (n,) in conn.execute(
-                "SELECT gh_number FROM jog_queue WHERE status = 'running'"
+                "SELECT gh_number FROM jog_queue WHERE status = 'running' AND gh_number IS NOT NULL"
             ):
                 out.append((int(n), "jog_running", f"jog_queue gh-{n}"))
         finally:
@@ -220,15 +224,16 @@ def scan(root, cfg):
 
 
 def _gql(query, variables=None):
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    gh_bin = os.environ.get("XYZ_BOARD_SYNC_GH_BIN", "gh")
+    cmd = [gh_bin, "api", "graphql", "-f", f"query={query}"]
     for k, v in (variables or {}).items():
         cmd += ["-F", f"{k}={v}"]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise RuntimeError(f"gh api graphql failed: {exc}") from exc
+        raise RuntimeError(f"gh api graphql failed ({gh_bin}): {exc}") from exc
     if proc.returncode != 0:
-        raise RuntimeError(f"gh api graphql rc={proc.returncode}: {proc.stderr.strip()[:300]}")
+        raise RuntimeError(f"gh api graphql rc={proc.returncode} ({gh_bin}): {proc.stderr.strip()[:300]}")
     try:
         payload = json.loads(proc.stdout)
     except ValueError as exc:
@@ -261,20 +266,26 @@ def resolve_ids(cfg, force=False):
     if not ids:
         data = _gql(
             "query($o:String!,$n:Int!,$f:String!){user(login:$o){projectV2(number:$n){id "
+            "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}} "
+            "organization(login:$o){projectV2(number:$n){id "
             "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}}}",
             {"o": cfg["project_owner"], "n": int(cfg["project_number"]), "f": cfg["status_field"]},
         )
-        proj = data["user"]["projectV2"]
+        owner = data.get("user") or data.get("organization")
+        if owner is None:
+            raise RuntimeError(f"project owner {cfg['project_owner']!r} not found as user or organization")
+        proj = owner.get("projectV2")
         if proj is None:
             raise RuntimeError(f"project {cfg['project_owner']}/{cfg['project_number']} not found")
-        field = proj["field"]
+        field = proj.get("field")
         if field is None:
             raise RuntimeError(f"field {cfg['status_field']!r} not found on the project")
-        option = next((o for o in field["options"] if o["name"] == cfg["in_progress"]), None)
+        options = field.get("options") or []
+        option = next((o for o in options if o["name"] == cfg["in_progress"]), None)
         if option is None:
             raise RuntimeError(
                 f"option {cfg['in_progress']!r} not found on field {cfg['status_field']!r} "
-                f"(options: {[o['name'] for o in field['options']]})"
+                f"(options: {[o['name'] for o in options]})"
             )
         ids = {"project": proj["id"], "status_field": field["id"], "in_progress_option": option["id"]}
         state["ids"] = ids
@@ -400,6 +411,8 @@ def dedupe(cfg, write):
         _gql("mutation($p:ID!,$i:ID!){deleteProjectV2Item(input:{projectId:$p,itemId:$i}){deletedItemId}}",
              {"p": ids["project"], "i": drop})
         lines.append(f"deleted duplicate card {drop} for {key} (kept {keep})")
+    if write and duplicates:
+        fetch_board_issues(cfg)  # refresh snapshot post-dedupe
     return "\n".join(lines)
 
 
@@ -451,7 +464,7 @@ def main(argv=None):
         return 0
 
     if args.cmd == "touch":
-        m = _GH_N.search(str(args.issue))
+        m = _GH_N.search(str(args.issue)) or re.match(r"^(\d{1,6})$", str(args.issue).strip())
         if not m:
             _die(f"cannot parse an issue number out of {args.issue!r}")
         print(board_add(cfg, int(m.group(1)), args.write))

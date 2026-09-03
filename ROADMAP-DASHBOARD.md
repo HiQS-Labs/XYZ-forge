@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 38 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 39 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -48,6 +48,7 @@ Summary: 38 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-396 · Harness root resolution: one resolver, two roots, pinned | — | — |
 | GH-399 — let the profile carry the route | — | [#399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) · [PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md](PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md) |
 | GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work | — | [GH-402-BOARD-SYNC.md](PROJECT/2-WORKING/GH-402-BOARD-SYNC.md) · [#402](https://github.com/HiQS-Labs/XYZ-forge/issues/402) |
+| GH-405 · Local debugging mock harness for GitHub Projects V2 API | — | [GH-405-MOCK-BOARD-HARNESS.md](PROJECT/2-WORKING/GH-405-MOCK-BOARD-HARNESS.md) · [#405](https://github.com/HiQS-Labs/XYZ-forge/issues/405) |
 
 ## Queue
 
