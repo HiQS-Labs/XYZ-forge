@@ -39,6 +39,8 @@ git -C "$FIX" init -q
 git -C "$FIX" commit -q --allow-empty -m "seed" 2>/dev/null
 git -C "$FIX" branch "fix/gh124-lane"                  # strong: branch
 git -C "$FIX" branch "marathon/gh-391-emit"            # strong: branch (digits only, no suffix bleed)
+git -C "$FIX" branch "feat/GH-132-case"                # strong: uppercase GH- (review r1 F2)
+git -C "$FIX" branch "chore/gh133-cleanup"             # strong: non-fix/feat/marathon prefix (review r2 #4)
 git -C "$FIX" branch "unrelated"                       # negative: no gh ref
 printf '%s\n' '{"schema_version":"0.2.0","type":"task.claimed","task":"RELAY-gh126-lane","agent":"agy"}' \
   > "$FIX/.tick/events/2026-09-02T00-00-00.000Z-agy-claimed-RELAY-gh126-lane.jsonl"   # strong: tick_event
@@ -72,6 +74,8 @@ for want in \
   "gh-402.*strong.*pdda_doc" \
   "gh-124.*strong.*branch" \
   "gh-391.*strong.*branch" \
+  "gh-132.*strong.*branch" \
+  "gh-133.*strong.*branch" \
   "gh-126.*strong.*tick_event" \
   "gh-127.*strong.*jog_running"; do
   if grep -Eq "$want" <<<"$SCAN_OUT"; then ok "$want"; else bad "$want (scan rc=$SCAN_RC)"; fi
@@ -177,6 +181,26 @@ STATE_OUT="$(XYZ_BOARD_SYNC_STATE_PATH="$WORK/state.json" python3 "$TOOL" config
 if grep -q "\"state_path\": \"${WORK//\/\///}/state.json\"" <<<"$STATE_OUT"; then
   ok "XYZ_BOARD_SYNC_STATE_PATH overrides state path (offline-pinnable)"
 else bad "state path override ignored: $STATE_OUT"; fi
+
+# ── 10. reconcile over an idle clone: "nothing to reconcile" is reachable (r1 F3) ──
+# The empty-input refusal belongs to the explicit scan verb; the sweeper-shaped entry
+# point must exit 0 on a clean repo or Phase 2 hooks crash on idle clones.
+echo "10. reconcile on empty"
+IDLE="$WORK/idle"; mkdir -p "$IDLE/PROJECT/2-WORKING"
+IDLE_OUT="$(XYZ_BOARD_SYNC_CLONE_DIRS="" python3 "$TOOL" reconcile --root "$IDLE" --write 2>&1)"; IDLE_RC=$?
+if [ "$IDLE_RC" -eq 0 ] && grep -q "nothing to reconcile" <<<"$IDLE_OUT"; then
+  ok "reconcile over an idle clone exits 0 with 'nothing to reconcile'"
+else bad "idle reconcile failed (rc=$IDLE_RC): $IDLE_OUT"; fi
+
+# ── 11. JSON-file string→list coercion (r1 F6) — via a fixture device_config ────
+echo "11. config coercion"
+DEVCFG="$WORK/device_config.json"
+printf '%s\n' '{"board_sync": {"repos": "HiQS-Labs/XYZ-forge"}}' > "$DEVCFG"
+require_fixture_file "$DEVCFG" "fixture device config"
+CO_OUT="$(XYZ_DEVICE_CONFIG_PATH="$DEVCFG" XYZ_BOARD_SYNC_CLONE_DIRS="" python3 "$TOOL" config 2>&1)"
+if grep -q '"repos": \[' <<<"$CO_OUT" && grep -q '"HiQS-Labs/XYZ-forge"' <<<"$CO_OUT"; then
+  ok "a string repos value from device_config.json is coerced to a list"
+else bad "string repos not coerced: $CO_OUT"; fi
 
 echo
 echo "GH-402 board_sync Phase 1: $PASS passed, $FAIL failed"
