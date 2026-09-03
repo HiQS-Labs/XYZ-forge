@@ -202,6 +202,67 @@ for _case in "$KEYDIR/absent-fixture.txt" "$KEYDIR/empty-fixture.txt"; do
   esac
 done
 
+# --- 11. GH-399 round 1 (codex): the three claims the first 24 assertions left unguarded ---
+# Codex reproduced every existing route assertion as failable, and found these gaps:
+#   a. the key test always supplied ..._FILE, so the route's OWN default key file was unobserved;
+#   b. nothing asserted the emitted model id, so a future alias step could re-prefix it silently;
+#   c. only the OpenRouter route had a non-regression check.
+
+# (a) Drive the route's configured key-file default, with ..._FILE UNSET. HOME is redirected at a
+# fixture so this exercises the third tuple element without reading the operator's real key file.
+FAKEHOME="$WORK/fakehome"
+DEFAULT_KEYREL="$(DS_PROVIDER=alibaba python3 - "$PY_SHIM" <<'REL_EOF'
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[1])))
+spec = importlib.util.spec_from_file_location("dst", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+kf = m.provider_route(os.environ["DS_PROVIDER"])[2] or ""
+print(kf[2:] if kf.startswith("~/") else "")
+REL_EOF
+)"
+if [ -n "$DEFAULT_KEYREL" ]; then
+  pass "alibaba route declares a HOME-relative default key file"
+  mkdir -p "$FAKEHOME/$(dirname "$DEFAULT_KEYREL")"
+  printf 'default-path-fixture-not-a-credential\n' >"$FAKEHOME/$DEFAULT_KEYREL"
+  DEFOUT="$(env -u "$KEYVAR" -u "${KEYVAR}_FILE" HOME="$FAKEHOME" DS_PROVIDER=alibaba DS_KEYVAR="$KEYVAR" \
+    python3 - "$PY_SHIM" 2>/dev/null <<'DEF_EOF'
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[1])))
+spec = importlib.util.spec_from_file_location("dst", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+m.load_provider_key(os.environ["DS_PROVIDER"], os.environ["DS_KEYVAR"])
+print(os.environ.get(os.environ["DS_KEYVAR"], ""))
+DEF_EOF
+)"
+  [ "$DEFOUT" = "default-path-fixture-not-a-credential" ] \
+    && pass "alibaba loads its key from the route's own default path when ..._FILE is unset" \
+    || fail "route default key path unused (got '$DEFOUT')"
+else
+  fail "alibaba route has no HOME-relative default key file to exercise"
+fi
+
+# (b) The overlay must carry the model id it was given, unprefixed. The Token Plan serves Qwen under
+# bare ids; an OpenRouter-style "qwen/" prefix is a 404 there, not a synonym.
+case "$ALI_OVERLAY" in
+  *"- id: qwen3.8-max"*) pass "overlay emits the bare model id it was given" ;;
+  *) fail "overlay did not emit the bare model id" ;;
+esac
+case "$ALI_OVERLAY" in
+  *"qwen/"*) fail "overlay re-prefixed the model id with an OpenRouter-style vendor segment" ;;
+  *) pass "overlay does not vendor-prefix the model id" ;;
+esac
+
+# (c) The DeepSeek route had no non-regression check of its own.
+DS_OVERLAY="$(overlay_for deepseek 2>/dev/null)"
+case "$DS_OVERLAY" in
+  *"api.deepseek.com"*) pass "deepseek route unchanged by the table rewrite" ;;
+  *) fail "deepseek route regressed" ;;
+esac
+case "$DS_OVERLAY" in
+  *"apiKeyEnv: DEEPSEEK_API_KEY"*) pass "deepseek route keeps its own key variable" ;;
+  *) fail "deepseek route lost its key variable" ;;
+esac
+
 echo "  gh148-deepseek-turn: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0

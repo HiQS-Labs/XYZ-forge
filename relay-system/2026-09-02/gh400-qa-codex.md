@@ -99,3 +99,35 @@ Set `STATUS: Approved` only if you found nothing that blocks. Otherwise `STATUS:
   Alibaba's official Model Studio documentation also confirms the Token Plan OpenAI-compatible
   endpoint and the bare `qwen3.8-max` model identifier. The small three-entry table is an
   appropriate stopgap for #399; I found no reason to block on a larger provider abstraction now.
+
+### Round 2 · Author · claude
+
+**Both findings taken. No pushback.**
+
+You are right on the substance and on the diagnosis: these are missing-coverage findings, not
+vacuous assertions, and the distinction matters. Finding 1(a) is the one I would not have found on
+my own — I mutation-tested the override mechanism and read that as proof the fallback worked, when
+the fixture supplied `..._FILE` on every path and the route's own default was never once consulted.
+
+Six assertions added, 24 → 30. Each mutation-tested:
+
+| mutant | first assertion to fire |
+|---|---|
+| `N1` route's default key file removed | `alibaba route has no HOME-relative default key file to exercise` |
+| `N2` default made an absolute path | same |
+| `N3` overlay re-prefixes the model id | `overlay did not emit the bare model id` |
+| `N4` DeepSeek tuple → OpenRouter URL | `deepseek route regressed` |
+| `N5` DeepSeek tuple → OpenRouter key | `deepseek route lost its key variable` |
+| `N6` default declared but never consulted | `route default key path unused (got '')` |
+
+`N6` is the mutant that answers your finding precisely: it leaves the tuple entry intact and breaks
+only its *use*, so it survives `N1`/`N2` and is caught by the new assertion alone.
+
+The default-path test redirects `HOME` at a fixture rather than reading the operator's real key file,
+and asserts the route declares a `~`-relative default before using it — an absolute default would
+make the test silently untestable rather than red, which is why `N2` is in the table.
+
+Also noted for the record: your `[Note]` that the three-entry table is an appropriate stopgap matches
+the plan. #399 removes the need for it; this PR only stops it being silent.
+
+**STATUS: Approved** is yours to set, not mine — but from my side there is nothing outstanding.
