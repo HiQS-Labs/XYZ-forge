@@ -54,7 +54,12 @@ slow way to lose it.
 Single phase: derive the expected set; add an enumeration test that walks the tree; fix the
 substring match to target the executed command rather than any occurrence.
 
-Red control: the pre-fix hook lets `deepseek-turn.sh` and `consult.sh` through.
+## Acceptance
+
+- [ ] Every Tier-A entry point in `AGENTS.md` is blocked by the hook, asserted by a test that **enumerates the tree** rather than a fixed list.
+- [ ] Adding a new `*-turn.sh` or driver without updating the hook **fails** that test.
+- [ ] A command that only references a driver path as an argument or in text is **not** blocked.
+- [ ] Red control witnessed: the pre-fix hook lets `deepseek-turn.sh` and `consult.sh` through.
 
 ## Swarm Preflight Contract
 
@@ -62,9 +67,17 @@ Red control: the pre-fix hook lets `deepseek-turn.sh` and `consult.sh` through.
 {
   "target":      { "repo": ".", "ref": "development" },
   "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "relay-automation/hooks/relay-xyz-guard.sh", "pattern": "TIER_A" } ],
+  "fix_probes":  [
+    { "type": "path_absent", "path": "test/gh415-guard-hook-entrypoints.sh" },
+    { "type": "path_absent", "path": "test/baselines/GH-415-negative-control.md" },
+    { "type": "grep_absent", "path": "relay-automation/hooks/relay-xyz-guard.sh", "pattern": "TIER_A" }
+  ],
   "artifacts":   [
     "relay-automation/hooks/relay-xyz-guard.sh",
+    "test/gh415-guard-hook-entrypoints.sh",
+    "test/baselines/GH-415-negative-control.md"
+  ],
+  "artifacts_new": [
     "test/gh415-guard-hook-entrypoints.sh",
     "test/baselines/GH-415-negative-control.md"
   ],

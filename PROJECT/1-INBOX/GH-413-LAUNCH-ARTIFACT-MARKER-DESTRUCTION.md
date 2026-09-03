@@ -55,7 +55,12 @@ Single phase, four small changes: delete the marker (or make it authority-free);
 destination with >1 commit absent `--discard-history`; rewrite the "re-run freely" header; add
 both cited ADRs to `KEEP_FILES` (umbrella finding 1.5, same file).
 
-Red control: the pre-fix script wipes the marker-only fixture; the fixed one refuses it.
+## Acceptance
+
+- [ ] A marker-only directory with no git history is **refused**.
+- [ ] A destination with >1 commit is refused without `--discard-history`.
+- [ ] Both cited ADRs survive into the built artifact.
+- [ ] Red control recorded: the pre-fix script wipes the marker-only fixture; the fixed one refuses it.
 
 ## Swarm Preflight Contract
 
@@ -63,9 +68,17 @@ Red control: the pre-fix script wipes the marker-only fixture; the fixed one ref
 {
   "target":      { "repo": ".", "ref": "development" },
   "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/build-launch-artifact.sh", "pattern": "discard-history" } ],
+  "fix_probes":  [
+    { "type": "path_absent", "path": "test/gh413-launch-artifact-destination-guard.sh" },
+    { "type": "path_absent", "path": "test/baselines/GH-413-negative-control.md" },
+    { "type": "grep_absent", "path": "utils/build-launch-artifact.sh", "pattern": "discard-history" }
+  ],
   "artifacts":   [
     "utils/build-launch-artifact.sh",
+    "test/gh413-launch-artifact-destination-guard.sh",
+    "test/baselines/GH-413-negative-control.md"
+  ],
+  "artifacts_new": [
     "test/gh413-launch-artifact-destination-guard.sh",
     "test/baselines/GH-413-negative-control.md"
   ],

@@ -52,7 +52,12 @@ existing stream is in scope, not just adding to it.
    `decisions` drop rather than by the source.
 2. Triage the existing markdown warning stream to zero or explicit acceptances.
 
-Red control: the two ADR citations in `src/events.js` fail pre-fix.
+## Acceptance
+
+- [ ] A source comment citing a non-existent path **fails** the check.
+- [ ] The check runs against the built artifact, not only the source tree.
+- [ ] Existing markdown dead-reference warnings are at zero or explicitly accepted.
+- [ ] Red control witnessed: the two ADR citations in `src/events.js` fail pre-fix.
 
 ## Swarm Preflight Contract
 
@@ -60,9 +65,17 @@ Red control: the two ADR citations in `src/events.js` fail pre-fix.
 {
   "target":      { "repo": ".", "ref": "development" },
   "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/pdda/pdda.sh", "pattern": "comment_reference" } ],
+  "fix_probes":  [
+    { "type": "path_absent", "path": "test/gh414-comment-reference-check.sh" },
+    { "type": "path_absent", "path": "test/baselines/GH-414-negative-control.md" },
+    { "type": "grep_absent", "path": "utils/pdda/pdda.sh", "pattern": "comment_reference" }
+  ],
   "artifacts":   [
     "utils/pdda/pdda.sh",
+    "test/gh414-comment-reference-check.sh",
+    "test/baselines/GH-414-negative-control.md"
+  ],
+  "artifacts_new": [
     "test/gh414-comment-reference-check.sh",
     "test/baselines/GH-414-negative-control.md"
   ],
