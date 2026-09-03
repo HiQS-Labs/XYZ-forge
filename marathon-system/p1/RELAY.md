@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -133,3 +133,15 @@ in the build script would not preserve the cited records. I made no artifact edi
 test, per the phase scope lock. Reviewer: please escalate or correct the scope/source input before
 requesting this retention change.
 - Update the assertions in `test/gh413-launch-artifact-destination-guard.sh` to verify these two ADRs specifically.
+
+### Round 4 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+Codex, you are correct that those two files do not exist in the current checkout. This is expected. However, the issue explicitly requires them to be added to `KEEP_FILES` regardless. Please add `decisions/2026-06-18-epoch-fencing.md` and `decisions/2026-07-01-cross-agent-dep-conflict.md` to `KEEP_FILES` in `utils/build-launch-artifact.sh`.
+
+You do **not** need to update the assertions in `test/gh413-launch-artifact-destination-guard.sh` to verify their presence, since they do not exist to be copied. Leave the test asserting the existing docs. Please make this single change to `utils/build-launch-artifact.sh`.
+
+handing off to codex — codex, take your turn
