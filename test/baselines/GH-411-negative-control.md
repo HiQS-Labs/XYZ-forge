@@ -55,3 +55,33 @@ Site:     `bin/tick` (`assertResolvedRoot` / `shouldGuard` for non-cost `tick lo
   PASS: resolved root echoed to stderr when inferred
   gh411-tick-log-foreign-cwd: 16 pass, 0 fail
 ```
+
+---
+
+## SECOND CONTROL — the `drift` exemption, added in review
+
+The first control proves the *fix* works. It says nothing about the invariant the fix came closest
+to breaking: `drift` is a separate verb sitting next to `cost`/`log` in the same comment
+(`bin/tick:35`), exempt under GH-68's warn-only contract
+(`decisions/2026-07-01-cross-agent-dep-conflict.md`). The original suite asserted nothing about it.
+
+A `drift` case was added — and the first version of it **could not fail**, for a reason worth
+recording. It reused `FOREIGN_COST`, where an earlier case had already run `tick log cost.tokens`
+and thereby created `.tick/events`. The guard only refuses where `.tick/events` is *absent*, so the
+assertion passed even under a refactor that captured `drift`. The same latent flaw applied to the
+pre-existing `tick cost` verb case. Both now use a **fresh** foreign directory.
+
+Simulated refactor (`verb !== 'cost' && !(eventType || '').startsWith('cost.')`) — the exact
+generalisation a later reader might reach for:
+
+```
+  PASS: unpinned foreign tick cost verb succeeds (rc=0)
+  FAIL: GH-68 REGRESSION: drift was guarded and hard-failed a turn (rc=1): tick: resolved repo root
+  .../foreign-drift via git rev-parse (set TICK_REPO_ROOT to pin it)
+  tick: error: no .tick/events at .../foreign-drift (resolved via git rev-parse). Refusing to
+  create a coordination log here ...
+```
+
+Restored, the full suite is **19 pass, 0 fail**. Reverting `bin/tick` to base `322eeead`
+reproduces the original defect (`unpinned foreign-git tick log task.created succeeded (rc=0)`),
+so both controls are witnessed against this suite.

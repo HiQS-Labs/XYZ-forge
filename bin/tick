@@ -39,9 +39,16 @@ const MUTATING_GUARD_VERBS = new Set([
   'claim', 'take', 'scope', 'release', 'break', 'done', 'ping', 'reap',
 ]);
 
+// GH-411: the guard decision is verb + event-type, not verb alone. Every `tick log` type is
+// guarded EXCEPT `cost.*` — the only prefix the exemption above actually argues for. The `drift`
+// VERB stays exempt (it is not `log`), preserving GH-68's warn-only invariant; that is pinned by
+// test/gh411-tick-log-foreign-cwd.sh so a later "guard everything that isn't cost" refactor fails
+// loudly rather than silently capturing it.
 function shouldGuard(verb, eventType) {
   if (MUTATING_GUARD_VERBS.has(verb)) return true;
-  if (verb === 'log' && eventType && !eventType.startsWith('cost.') && eventType !== 'cost') return true;
+  // A bare `tick log` (no type) is left unguarded here and rejected by the `log` case below
+  // before anything is written — asserted, not assumed, in the suite's bare-log case.
+  if (verb === 'log' && eventType && !eventType.startsWith('cost.')) return true;
   return false;
 }
 
