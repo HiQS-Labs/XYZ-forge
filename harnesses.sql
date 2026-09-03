@@ -897,6 +897,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260902052615-64eca020','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260902053133-94ec54ec','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh-384-agentchorus-cf-bridge-qa-r2',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-02 05:31:33');
 INSERT INTO "invocation_logs" VALUES('inv-20260903023311-3fe76c8e','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh400-qa-codex',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 02:33:11');
 INSERT INTO "invocation_logs" VALUES('inv-20260903024807-ceef93c7','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh399-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 02:48:07');
+INSERT INTO "invocation_logs" VALUES('inv-20260903050759-a0769cdc','noels-Mac-Studio.local','dsh','qwen3.8-max','alibaba','high','deepseek-turn.py','["--patch", "/Users/noelsaw/.xyz/qwen-token-plan-overlay.cordis.yml"]','RELAY-gh402-board-sync-impl-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 05:07:59');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
@@ -923,6 +924,7 @@ INSERT INTO "models" VALUES('Gemini 3.5 Flash','Auto','Gemini 3.5 Flash','google
 INSERT INTO "models" VALUES('stealth/ox-alpha','Stealth','stealth/ox-alpha','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('qwen/qwen3.8-max','Qwen','qwen/qwen3.8-max','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('zai-org/glm-5.3','Zai-org','zai-org/glm-5.3','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
+INSERT INTO "models" VALUES('qwen3.8-max','Auto','qwen3.8-max','alibaba',1000000,0.0,0.0,0.0,'["none"]',0);
 CREATE TABLE user_configs (
             config_id TEXT PRIMARY KEY,
             device_id TEXT NOT NULL REFERENCES devices(device_id),

@@ -27,6 +27,12 @@ goal: >
 
 # GH-402: board sync — execution record
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase 0+1: token spike green (gh-token writes the board, no PAT), board_sync.py + 23/0 suite, first live write (gh-402 → In progress), two Qwen QA rounds folded (plan v5 + 12 implementation findings). | Push, PR into `development`; Phase 2 adapters (pdda/git-hook/fire wiring + stubbable-gh seam + sweeper) in the next lane. |
+
 **Plan of record:** the live issue body at
 https://github.com/HiQS-Labs/XYZ-forge/issues/402 (revision v5, QA'd by Qwen 3.8 Max relay
 2026-09-02 — 10 findings accepted and folded). Do not duplicate the plan here; this doc records

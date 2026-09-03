@@ -23,6 +23,7 @@
 | **Antigravity** | `antigravity/gemini-2.5-pro` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Auto** | `Gemini 3.5 Flash` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Auto** | `deepseek/deepseek-v4-pro` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
+| **Auto** | `qwen3.8-max` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **DeepSeek** | `DeepSeek V3` | 1,000,000 | `none` | $0.27 / $1.10 / $0.0028 |
 | **DeepSeek** | `DeepSeek V4 Pro` | 1,000,000 | `low, medium, high, max` | $0.43 / $0.87 / $0.0036 |
 | **Google** | `Gemma 4 31B QAT` | 32,768 | `none` | $0.00 / $0.00 / $0.0000 |
