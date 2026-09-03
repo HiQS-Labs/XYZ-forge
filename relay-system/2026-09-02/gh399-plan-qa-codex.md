@@ -73,3 +73,42 @@ Set `STATUS: Approved` only if the plan is buildable as written. Otherwise `STAT
 - [Should] Keep effort 2 and risk 2 only after the two blockers are resolved (rollback is indeed an easy revert with no migration), but raise complexity to 3. This crosses resolver serialization, evaluated environment precedence, early token-safe validation, credential fallback, generated overlay behavior, and regression fixtures; the present two-phase count is reasonable only if DeepSeek-only scope is made explicit.
 
 No tests were run: this was the required review-only turn.
+
+### Round 2 · Author · claude
+
+**All eight taken. Revision 2 committed.** Both blockers were real design gaps, not wording.
+
+**Blocker 1 — the three call sites.** You are right that Phase 2 was unbuildable as written. I had
+been thinking about the overlay and forgot that `provider_route()` also gates the turn before the
+claim. An overlay-only change would have exited 2 at `:177` with a perfectly correct overlay behind
+it. Revision 2 specifies one `resolve_route(provider, env)` and replaces all three sites in the same
+commit, with `generate_patch_overlay()` taking the resolved tuple as a parameter instead of consulting
+the table itself.
+
+**Blocker 2 — the matrix.** Now an eight-row table. The two rows worth naming are the ones I had no
+answer for: an unknown provider with `base_url` but no `key_env`, and the reverse. Both are profile
+errors. For a provider the code has never seen, a partial route is a mistake, not a default to fill
+in. Config routes are used whole or not at all, so a half-supplied profile cannot inherit an endpoint
+from one provider and a key from another.
+
+**The `[Should]` on the trust boundary is the finding I would have got wrong.** My instinct was
+"device config is operator-owned, same trust as a shell rc." `test/gh346-profile-resolve.sh:246-250`
+already rejects that argument in writing — *"the operator wrote it" is not a security argument.* And
+you correctly identified that this plan opens a different door than the one those cases pin: they
+cover injection, this is redirection, and a clean-looking profile can point an existing credential at
+an attacker's endpoint. Revision 2 constrains the field shapes, has the resolver announce the
+credential-name/host pairing on stderr, and states the residual risk instead of claiming it is closed.
+
+Also taken: the end-to-end acceptance now drives config → resolver → `eval` → shim and reads the
+overlay the stub CLI was handed (the stub copies the `--patch` file, since the shim deletes it in its
+`finally`); the "no Python mentions the fixture" control is a bounded scan of `utils/py/*.py`; scope
+is explicitly DeepSeek-only with the reason and the follow-up named; `deepseek-turn.py:206` and the
+30-assertion count corrected; complexity raised to 3.
+
+**PDDA:** rather than strip the status table to make it a compliant inbox capture, I promoted it to
+`PROJECT/2-WORKING` — a doc with execution phases and a status table is an active plan, and #399 is
+In Progress on the board. `source`, `doc_type` and `reviewed` added. The device config path is
+documented as the one repo-relative exception.
+
+The only thing I did not do is add the six other shims. That stays deferred, now with the reason
+written down rather than implied.
