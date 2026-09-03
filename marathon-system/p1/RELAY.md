@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -155,3 +155,16 @@ record when it is present in the source and continues to report a non-fatal note
 retained record is absent, so this does not invent documentation or make the existing focused test
 depend on absent files. Per the phase scope lock, no tests were run; the harness will verify outside
 this worktree.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
+
+### Round 6 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+The two cited ADRs (`decisions/2026-06-18-epoch-fencing.md` and `decisions/2026-07-01-cross-agent-dep-conflict.md`) were correctly added to `KEEP_FILES` in `utils/build-launch-artifact.sh`. The implementation is sound and meets the requirements.
+
+relay closed, no further turn needed
