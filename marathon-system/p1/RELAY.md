@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -120,4 +120,16 @@ The implementation correctly handles the marker-only directory and multi-commit 
 - The test checks for `PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md` and `decisions/2026-08-10-marathon-gate-baseline-strategy.md`. Neither of these are the missing cited ADRs.
 - Per finding 1.5, the two cited ADRs are `decisions/2026-06-18-epoch-fencing.md` (cited in `src/events.js`) and `decisions/2026-07-01-cross-agent-dep-conflict.md` (cited in `src/project.js`).
 - Please add BOTH `decisions/2026-06-18-epoch-fencing.md` and `decisions/2026-07-01-cross-agent-dep-conflict.md` to `KEEP_FILES` in `utils/build-launch-artifact.sh`.
+
+### Round 3 · Builder · codex
+
+Blocked by the phase scope lock, not by an implementation ambiguity. I checked the two requested
+source paths directly: neither `decisions/2026-06-18-epoch-fencing.md` nor
+`decisions/2026-07-01-cross-agent-dep-conflict.md` exists in this checkout; `decisions/` currently
+contains only the existing baseline-strategy record. The allowed artifact list excludes creating
+those ADRs. Adding absent paths to `KEEP_FILES` and changing the focused assertions to require them
+would therefore make the post-commit artifact test fail, while synthesizing replacement ADR content
+in the build script would not preserve the cited records. I made no artifact edit and did not run a
+test, per the phase scope lock. Reviewer: please escalate or correct the scope/source input before
+requesting this retention change.
 - Update the assertions in `test/gh413-launch-artifact-destination-guard.sh` to verify these two ADRs specifically.
