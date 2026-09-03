@@ -45,7 +45,7 @@ git -C "$REPO" config user.name "Test Agent"
 git -C "$REPO" config user.email "test@example.com"
 
 mkdir -p "$REPO/PROJECT/2-WORKING" "$REPO/PROJECT/3-COMPLETED" "$REPO/PROJECT/4-MISC" "$REPO/utils/py" "$REPO/utils/pdda" "$REPO/utils/timeline" "$REPO/TESTS-RESULTS/2026-08-22"
-cp "$RECONCILE_PY" "$REPO/utils/py/wave_reconcile.py"
+cp "$RECONCILE_PY" "$XYZ_ROOT/utils/py/harness_paths.py" "$REPO/utils/py/"
 
 # Create minimal ROADMAP.md
 cat << 'EOF' > "$REPO/ROADMAP.md"

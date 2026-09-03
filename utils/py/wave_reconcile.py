@@ -19,6 +19,9 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
+sys.dont_write_bytecode = True
+from harness_paths import harness_home, harness_tool, is_vendored, repo_root, resolve_tool
+
 
 class ReconcileError(Exception):
     """Custom exception class ensuring proper rollback catching."""
@@ -26,47 +29,6 @@ class ReconcileError(Exception):
     def __init__(self, message, code=2):
         super().__init__(message)
         self.code = code
-
-
-def harness_home():
-    """Dir containing relay-automation/ + utils/: repo root, or <repo>/.xyz when vendored.
-
-    Derived from THIS file's location, never from the caller's cwd or an assumed repository
-    root — the same rule jog_run.harness_home() states and marathon_plan.py already follows.
-    """
-    return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-
-
-def harness_tool(repo_root, rel_path):
-    """Resolve a HARNESS tool (releases_app, the dashboard/plan/timeline scripts) for a run
-    whose cwd is `repo_root`.
-
-    The target repo wins when it carries the tool itself. That ordering is not a preference,
-    it is the existing contract: every wave-reconcile test suite installs its mocks at
-    `$REPO/utils/...` and relies on them shadowing the real thing, and a canonical checkout is
-    its own harness home, so repo-first is a no-op there.
-
-    Only when the target repo does NOT carry the tool do we fall back to the harness home —
-    the vendored (Tier 2) case, where these five files exist solely under `<repo>/.xyz/`.
-    Before GH-358 there was no fallback at all, so every vendored install died on the first
-    downstream step with `can't open file '<repo>/utils/py/releases_app.py'`.
-
-    Returns a path relative to `repo_root` when the repo owns the tool, else an absolute path
-    into the harness home. Both are correct as argv[1] for a subprocess run with cwd=repo_root.
-
-    NOTE: harness tools only. TARGET-repo tools (notably utils/pdda/pdda.sh, which LTVera-Pandas
-    ships at its own root) must stay plain repo-root-relative — see run_validation_gate().
-    Prefixing those would point the doc-hygiene gate at the harness instead of the repository
-    actually under reconciliation.
-    """
-    if os.path.exists(os.path.join(repo_root, rel_path)):
-        return rel_path
-    vendored = os.path.join(harness_home(), rel_path)
-    if os.path.exists(vendored):
-        return vendored
-    # Neither location has it: return the repo-relative path so the failure names the tool the
-    # caller asked for, exactly as it did before this helper existed.
-    return rel_path
 
 
 def log(msg):

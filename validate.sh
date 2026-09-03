@@ -222,6 +222,7 @@ TESTS=(
   "improve-loop-dogfood.sh"
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
+  "gh402-board-sync.sh"             # GH-402 (Projects-board mirror: strong/weak signal classification, empty-input refusal, kill-switch, settings env tier, witnessed-red extractor break) — offline by design; live write path receipted in the Phase 0 spike
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
   "gh379-canary-uses-validate.sh"      # GH-379 (the canary CALLS validate.sh; it must never re-implement the runner)
   "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 78/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
@@ -267,7 +268,7 @@ TESTS=(
   "gh141-synthetic-registry.sh"  # #141 Phase 1 (single selector: every test/synthetic suite is registry-reachable AND fuzz-loop's derived selection matches — no suite selectable by one path but not the other; a dropped-in unregistered suite is CAUGHT)
   "gh141-fuzz-inputs.sh"         # #141 Phase 3 (fuzz_inputs.py parser-only slice positive/negative controls)
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
-  "gh148-deepseek-turn.sh"       # #148 (DeepSeek Harness integration & deepseek-turn shim with OpenRouter route, 11/11 assertions)
+  "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
   "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
   "gh155-phase2-differential-oracle.sh" # #155 Phase 2 (Differential Multi-Harness Cross-Testing Oracle across all 7 turn shims)
@@ -556,6 +557,8 @@ TESTS=(
   "wave-reconcile.sh"               # GH-165 (canonical post-merge reconciler behavior)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
   "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
+  "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
+  "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
 )
 
 PASSED=()

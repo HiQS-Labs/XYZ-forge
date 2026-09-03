@@ -12,14 +12,27 @@ DEFAULT_ORCHESTRATOR_ONLY = (
     "bin/", ".tick/", "relay-automation/relay-turn-lib.sh",
 )
 
-def compute_default_root(this_file):
-    # GH-267: this_file lives one directory deeper than its Bash sibling (utils/py/ vs
-    # utils/), so it needs two ".." to reach the same anchor (repo root, or vendored .xyz/).
-    here = os.path.dirname(os.path.abspath(this_file))
-    here_parent = os.path.abspath(os.path.join(here, "..", ".."))
-    if os.path.basename(here_parent) == ".xyz":
-        return os.path.abspath(os.path.join(here_parent, "..")), ".xyz/relay-automation/marathon-drive.sh"
-    return here_parent, "relay-automation/marathon-drive.sh"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from harness_paths import harness_home, repo_root, resolve_tool, is_vendored
+except ImportError:
+    for _cand in [os.environ.get("XYZ_HARNESS"), os.environ.get("SWARM_PREFLIGHT_ROOT"), os.environ.get("MARATHON_ROOT")]:
+        if _cand and os.path.isdir(os.path.join(_cand, "utils", "py")):
+            sys.path.insert(0, os.path.join(_cand, "utils", "py"))
+            break
+    from harness_paths import harness_home, repo_root, resolve_tool, is_vendored
+
+
+def compute_default_root(this_file=None):
+    # GH-267 / GH-396: root and drive command resolution delegated to harness_paths
+    if this_file is not None:
+        h = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(this_file)), "..", ".."))
+        root = repo_root(h)
+        drive_cmd = ".xyz/relay-automation/marathon-drive.sh" if is_vendored(h) else "relay-automation/marathon-drive.sh"
+        return root, drive_cmd
+    root = repo_root()
+    drive_cmd = ".xyz/relay-automation/marathon-drive.sh" if is_vendored() else "relay-automation/marathon-drive.sh"
+    return root, drive_cmd
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)

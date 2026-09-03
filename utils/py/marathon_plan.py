@@ -110,15 +110,15 @@ def main():
 
     here = os.path.dirname(os.path.abspath(__file__))
     here_parent = os.path.dirname(here)
-    is_vendored = os.path.basename(os.path.dirname(here_parent)) == ".xyz"
+    from harness_paths import repo_root, is_vendored
 
-    if is_vendored:
-        root = os.environ.get("QUEUE_PLAN_ROOT", os.path.dirname(os.path.dirname(here_parent)))
+    default_root = repo_root()
+    root = os.environ.get("QUEUE_PLAN_ROOT", default_root)
+    if is_vendored():
         sp_cmd = ".xyz/utils/swarm-preflight.sh"
         md_cmd = ".xyz/relay-automation/marathon-drive.sh"
         mp_cmd = ".xyz/utils/marathon-plan.sh"
     else:
-        root = os.environ.get("QUEUE_PLAN_ROOT", os.path.dirname(here_parent))
         sp_cmd = "utils/swarm-preflight.sh"
         md_cmd = "relay-automation/marathon-drive.sh"
         mp_cmd = "utils/marathon-plan.sh"

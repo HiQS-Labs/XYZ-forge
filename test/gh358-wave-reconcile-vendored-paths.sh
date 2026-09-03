@@ -37,10 +37,11 @@ git -C "$REPO" config user.name "Test Agent"
 git -C "$REPO" config user.email "test@example.com"
 
 # ── Vendored layout: harness under .xyz/, target repo owns only its OWN tools (pdda).
+printf '/.xyz/\n/.tick/\n' >> "$REPO/.gitignore"
 mkdir -p "$REPO/PROJECT/2-WORKING" "$REPO/PROJECT/3-COMPLETED" "$REPO/PROJECT/4-MISC" \
   "$REPO/TESTS-RESULTS/$TODAY" "$REPO/utils/pdda" \
   "$REPO/.xyz/utils/py" "$REPO/.xyz/utils/timeline"
-cp "$XYZ_ROOT/utils/py/wave_reconcile.py" "$REPO/.xyz/utils/py/wave_reconcile.py"
+cp "$XYZ_ROOT/utils/py/wave_reconcile.py" "$XYZ_ROOT/utils/py/harness_paths.py" "$REPO/.xyz/utils/py/"
 require_fixture_file "$REPO/.xyz/utils/py/wave_reconcile.py" "vendored-reconciler-copy"
 
 # The five harness tools exist ONLY under .xyz — this is the whole point of the fixture.
@@ -128,7 +129,7 @@ echo "-- section 2: PDDA is a TARGET-repo tool and must NOT be redirected into .
 echo "-- section 3: a canonical (non-vendored) checkout still prefers its own tools --"
 CANON="$WORK/canonical-repo"
 mkdir -p "$CANON/utils/py" "$CANON/utils/timeline" "$CANON/utils/pdda"
-cp "$XYZ_ROOT/utils/py/wave_reconcile.py" "$CANON/utils/py/wave_reconcile.py"
+cp "$XYZ_ROOT/utils/py/wave_reconcile.py" "$XYZ_ROOT/utils/py/harness_paths.py" "$CANON/utils/py/"
 printf '#!/usr/bin/env python3\npass\n' > "$CANON/utils/py/releases_app.py"
 chmod +x "$CANON/utils/py/releases_app.py"
 canon_out="$(cd "$CANON" && python3 - <<'PY'

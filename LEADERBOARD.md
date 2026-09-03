@@ -97,9 +97,10 @@ while the four axes keep their honest values underneath.
 | 85 | **160** | [GH-18](https://github.com/HiQS-Labs/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
 | 86 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | — | Queue / parked intake | 3 | 3 | 3 | 3 | 12 | — |
 | 87 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
-| 88 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Cargo | queue | 3 | 2 | 2 | 1 | 8 | — |
-| 89 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Cargo | queue | 1 | 1 | 1 | 1 | 4 | — |
-| 90 | **4** | [GH-406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) — External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | Queue / parked intake | 3 | 3 | 4 | 3 | 13 | 4 |
+| 88 | **9** | [GH-399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) — Let the profile carry the route | — | Queue / parked intake | 2 | 3 | 2 | 2 | 9 | — |
+| 89 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Cargo | queue | 3 | 2 | 2 | 1 | 8 | — |
+| 90 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Cargo | queue | 1 | 1 | 1 | 1 | 4 | — |
+| 91 | **4** | [GH-406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) — External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | Queue / parked intake | 3 | 3 | 4 | 3 | 13 | 4 |
 
 **Top of the line:** GH-413 — launch-artifact marker authorises destructive rebuild (score 365).
 
