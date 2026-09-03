@@ -100,6 +100,108 @@ rc=0; run_shim T-badwt deepseek badwt RELAY_WORKTREE_ISOLATION=1 >/dev/null 2>&1
 [ "$rc" -eq 6 ] && pass "worktree off-lane edits fail turn (exit 6)" || fail "expected exit 6 on offlane worktree edit, got $rc"
 [ ! -f "$A/offlane.md" ] && pass "off-lane edits in worktree were discarded from root" || fail "off-lane edits leaked into root"
 
+# --- 8. GH-397: the provider routing table ---
+# Before GH-397 the route was an if/else whose `else` swallowed EVERY unrecognised provider and
+# sent it to api.deepseek.com. These assertions read the generated cordis overlay, which is the
+# artifact that actually decides where the request goes -- not the variable that names it.
+overlay_for(){  # <provider> -> the overlay text generate_patch_overlay() would write
+  DS_PROVIDER="$1" python3 - "$PY_SHIM" <<'OVERLAY_EOF'
+import importlib.util, os, sys
+# the shim imports its siblings (rtl, model_alias) by bare name -- load it the way it is run
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[1])))
+spec = importlib.util.spec_from_file_location("dst", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+path = m.generate_patch_overlay(os.environ["DS_PROVIDER"], "qwen3.8-max", None)
+sys.stdout.write(open(path).read()); os.remove(path)
+OVERLAY_EOF
+}
+
+ALI_OVERLAY="$(overlay_for alibaba 2>/dev/null)"
+case "$ALI_OVERLAY" in
+  *"token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1"*)
+    pass "alibaba provider routes to the Alibaba Token Plan endpoint" ;;
+  *) fail "alibaba overlay does not carry the Token Plan base URL" ;;
+esac
+case "$ALI_OVERLAY" in
+  *"apiKeyEnv: ALIBABA_TOKEN_PLAN_API_KEY"*)
+    pass "alibaba provider reads its own key variable" ;;
+  *) fail "alibaba overlay does not name the Alibaba key variable" ;;
+esac
+# The pre-GH-397 bug is exactly this: alibaba fell through to DeepSeek's endpoint.
+case "$ALI_OVERLAY" in
+  *"api.deepseek.com"*) fail "alibaba overlay still falls through to the DeepSeek endpoint" ;;
+  *) pass "alibaba does NOT fall through to the DeepSeek endpoint" ;;
+esac
+
+OR_OVERLAY="$(overlay_for openrouter 2>/dev/null)"
+case "$OR_OVERLAY" in
+  *"openrouter.ai/api/v1"*) pass "openrouter route unchanged by the table rewrite" ;;
+  *) fail "openrouter route regressed" ;;
+esac
+
+# --- 9. GH-397: an unknown provider refuses, and refuses BEFORE claiming ---
+seed_token T-badprov
+rm -f "$WORK/dsh-args"
+rc=0; run_shim T-badprov deepseek good DEEPSEEK_PROVIDER=not-a-provider >"$WORK/out-badprov.log" 2>&1 || rc=$?
+[ "$rc" -eq 2 ] && pass "unknown DEEPSEEK_PROVIDER exits 2" || fail "expected exit 2 on unknown provider, got $rc"
+BADPROV_ERR="$(cat "$WORK/out-badprov.log" 2>/dev/null)"
+case "$BADPROV_ERR" in
+  *"unknown DEEPSEEK_PROVIDER"*) pass "unknown provider names the offending variable on stderr" ;;
+  *) fail "unknown provider gave no diagnostic naming the variable" ;;
+esac
+[ ! -f "$WORK/dsh-args" ] && pass "unknown provider never launched the CLI" || fail "unknown provider still launched the CLI"
+[ "$(tok_field T-badprov handoff-to)" = deepseek ] \
+  && pass "unknown provider left the relay token where it was - no stranded claim" \
+  || fail "unknown provider disturbed the relay token"
+
+# --- 10. GH-397: the key-file fallback ---
+# The Token Plan key is issued as a file, not a variable. The fallback must load it, and must not
+# print the path (turn stderr lands in relay transcripts, which are committed).
+KEYDIR="$WORK/keys"; mkdir -p "$KEYDIR"
+KEYPATH="$KEYDIR/token-plan-fixture.txt"
+KEYVAR=ALIBABA_TOKEN_PLAN_API_KEY
+printf 'fixture-value-not-a-credential\n' >"$KEYPATH"
+KEYOUT="$(env -u "$KEYVAR" "${KEYVAR}_FILE=$KEYPATH" DS_PROVIDER=alibaba DS_KEYVAR="$KEYVAR" \
+  python3 - "$PY_SHIM" 2>"$WORK/keyerr.log" <<'KEY_EOF'
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[1])))
+spec = importlib.util.spec_from_file_location("dst", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+m.load_provider_key(os.environ["DS_PROVIDER"], os.environ["DS_KEYVAR"])
+print(os.environ.get(os.environ["DS_KEYVAR"], ""))
+KEY_EOF
+)"
+[ "$KEYOUT" = "fixture-value-not-a-credential" ] \
+  && pass "key-file fallback populates the provider key variable" \
+  || fail "key-file fallback did not populate the key variable (got '$KEYOUT')"
+# The path-leak check has to run against a path that actually PRODUCES a diagnostic. On the happy
+# path the fallback prints nothing at all, so asserting "the path is absent" there cannot fail --
+# it would be green no matter what the failure branches say. Drive both failure branches instead.
+key_diag(){  # <key file path> -> stderr from load_provider_key
+  env -u "$KEYVAR" "${KEYVAR}_FILE=$1" DS_PROVIDER=alibaba DS_KEYVAR="$KEYVAR" \
+    python3 - "$PY_SHIM" >/dev/null 2>"$WORK/keyerr.log" <<'DIAG_EOF'
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[1])))
+spec = importlib.util.spec_from_file_location("dst", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+m.load_provider_key(os.environ["DS_PROVIDER"], os.environ["DS_KEYVAR"])
+DIAG_EOF
+  cat "$WORK/keyerr.log" 2>/dev/null
+}
+
+: >"$KEYDIR/empty-fixture.txt"
+for _case in "$KEYDIR/absent-fixture.txt" "$KEYDIR/empty-fixture.txt"; do
+  _diag="$(key_diag "$_case")"
+  case "$_diag" in
+    *"$KEYVAR"*) pass "unusable key file ($(basename "$_case")) reports a diagnostic naming the variable" ;;
+    *) fail "unusable key file ($(basename "$_case")) produced no diagnostic" ;;
+  esac
+  case "$_diag" in
+    *"$KEYDIR"*) fail "key-file diagnostic ($(basename "$_case")) leaked the key file path" ;;
+    *) pass "key-file diagnostic ($(basename "$_case")) never prints the key file path" ;;
+  esac
+done
+
 echo "  gh148-deepseek-turn: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0
