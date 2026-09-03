@@ -45,7 +45,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1: `find-harness.sh`: two roots, one precedence, announced (gh396: 25/0, gh393: 9/0) | Phase 2: Python: one `harness_paths` module, extracted not invented |
+| Phase 2: Python: one `harness_paths` module, extracted not invented (validated green) | Phase 3: Bash: one sourceable library, six files, not fifteen |
 
 ## Table of contents
 
@@ -124,13 +124,13 @@ Each phase is independently shippable and leaves the tree green. Order is fixed:
 
 ### Phase 2 — Python: one `harness_paths` module, extracted not invented
 
-- [ ] Create `utils/py/harness_paths.py` by **moving** `harness_home()` and `harness_tool()` out of `wave_reconcile.py:31-68` verbatim, plus `is_vendored(path)` (single spelling: `os.path.basename(os.path.realpath(p)) == ".xyz"`) and `repo_root()` (= `dirname(harness_home())` when vendored, else `harness_home()`). It **raises**, never defaults — same rule as `rtl.py:281`.
-- [ ] **The module docstring states, verbatim in spirit:** *"Two resolution questions live here and they are deliberately separate. `resolve_harness()` selects which clone/install to use — env override → caller `.xyz` → worktree `.xyz` → git root → self. `resolve_tool(repo_root, rel, prefer_repo=True)` selects which copy of a tool file inside that install — repo-first so a canonical checkout and test mocks shadow the harness copy (`test/gh358-…:128-131`), harness-home fallback. Their orderings differ by design and are never merged into one ladder."* *(review change 8)*
-- [ ] **Shadow risk is exposed, not hidden:** `resolve_tool(rel, prefer_repo=True)` is the existing contract for the five harness tools `wave_reconcile` runs. A consumer repo carrying its own same-named `utils/…` file would win silently under repo-first. New consumers pass `prefer_repo=False`; the docstring names the risk and the flag. *(review change 9)*
-- [ ] Replace the duplicates: `jog_run.py:186-193` (delete, import); `marathon_plan.py:111-124` (the literal `.xyz/utils/…` strings become `resolve_tool(…)`); `swarm_preflight.py:16-21` `compute_default_root` (import; **keep** the deliberate second anchor at `:1171` — Qwen read it and confirmed it is the `utils/` sibling lookup, a different question — and say so in a comment); `marathon_drive.py:1038-1042` and `:1178-1179`.
-- [ ] **Do not touch** `rtl.py:288 resolve_turn_root` or its five call sites — `test/gh308-turn-shim-parity.sh:73-88` asserts the literal call shape. `harness_paths` may be *called by* `rtl`, never the reverse.
-- [ ] **Keep** the `utils/pdda/pdda.sh` carve-out at `wave_reconcile.py:762` repo-relative; `test/gh358-…` plants a decoy at `.xyz/utils/pdda/pdda.sh` that must never run.
-- [ ] **Acceptance:** `rg -n 'basename\(.*\)\s*==\s*"\.xyz"' utils/py` returns exactly one hit (inside `harness_paths.py`); `test/gh358-wave-reconcile-vendored-paths.sh`, `test/gh273-marathon-root-audit-python-shape.sh`, `test/gh280-jog-marathon-adapter.sh`, `test/gh308-turn-shim-parity.sh` all green.
+- [x] Create `utils/py/harness_paths.py` by **moving** `harness_home()` and `harness_tool()` out of `wave_reconcile.py:31-68` verbatim, plus `is_vendored(path)` (single spelling: `os.path.basename(os.path.realpath(p)) == ".xyz"`) and `repo_root()` (= `dirname(harness_home())` when vendored, else `harness_home()`). It **raises**, never defaults — same rule as `rtl.py:281`.
+- [x] **The module docstring states, verbatim in spirit:** *"Two resolution questions live here and they are deliberately separate. `resolve_harness()` selects which clone/install to use — env override → caller `.xyz` → worktree `.xyz` → git root → self. `resolve_tool(repo_root, rel, prefer_repo=True)` selects which copy of a tool file inside that install — repo-first so a canonical checkout and test mocks shadow the harness copy (`test/gh358-…:128-131`), harness-home fallback. Their orderings differ by design and are never merged into one ladder."* *(review change 8)*
+- [x] **Shadow risk is exposed, not hidden:** `resolve_tool(rel, prefer_repo=True)` is the existing contract for the five harness tools `wave_reconcile` runs. A consumer repo carrying its own same-named `utils/…` file would win silently under repo-first. New consumers pass `prefer_repo=False`; the docstring names the risk and the flag. *(review change 9)*
+- [x] Replace the duplicates: `jog_run.py:186-193` (delete, import); `marathon_plan.py:111-124` (the literal `.xyz/utils/…` strings become `resolve_tool(…)`); `swarm_preflight.py:16-21` `compute_default_root` (import; **keep** the deliberate second anchor at `:1171` — Qwen read it and confirmed it is the `utils/` sibling lookup, a different question — and say so in a comment); `marathon_drive.py:1038-1042` and `:1178-1179`.
+- [x] **Do not touch** `rtl.py:288 resolve_turn_root` or its five call sites — `test/gh308-turn-shim-parity.sh:73-88` asserts the literal call shape. `harness_paths` may be *called by* `rtl`, never the reverse.
+- [x] **Keep** the `utils/pdda/pdda.sh` carve-out at `wave_reconcile.py:762` repo-relative; `test/gh358-…` plants a decoy at `.xyz/utils/pdda/pdda.sh` that must never run.
+- [x] **Acceptance:** `rg -n 'basename\(.*\)\s*==\s*"\.xyz"' utils/py` returns exactly one hit (inside `harness_paths.py`); `test/gh358-wave-reconcile-vendored-paths.sh`, `test/gh273-marathon-root-audit-python-shape.sh`, `test/gh280-jog-marathon-adapter.sh`, `test/gh308-turn-shim-parity.sh` all green.
 
 ### Phase 3 — Bash: one sourceable library, **six files, not fifteen**
 
