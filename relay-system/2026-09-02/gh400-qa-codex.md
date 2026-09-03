@@ -1,6 +1,6 @@
 # QA relay — PR #400 (GH-399 provider routing)
-STATUS: Open
-NEXT: codex (Reviewer)
+STATUS: Changes requested
+NEXT: claude (Author)
 
 ## Your role
 
@@ -57,3 +57,45 @@ a `[Note]`, however strongly you believe it.
 Set `STATUS: Approved` only if you found nothing that blocks. Otherwise `STATUS: Changes requested`.
 
 ## Round log
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+1. [Must] The two Alibaba-specific claims that are most likely to regress are not pinned by
+   `test/gh148-deepseek-turn.sh`. The key test always supplies
+   `ALIBABA_TOKEN_PLAN_API_KEY_FILE`, so it still passes if
+   `PROVIDER_ROUTES["alibaba"][2]` is removed or changed: it proves only the generic override
+   mechanism, not Alibaba's configured default fallback. Likewise, `overlay_for alibaba` receives
+   the already-bare `qwen3.8-max`, but none of the 24 assertions checks the emitted model id or
+   rejects `qwen/qwen3.8-max`. Add explicit, mutation-backed checks for the route's fallback path
+   and for `- id: qwen3.8-max` / absence of the OpenRouter prefix. Reproduction: I changed those
+   route values in memory and regenerated overlays; the existing four route predicates all went
+   red for endpoint/key/fall-through/OpenRouter, while no current predicate observes either the
+   third tuple element or the generated model id. This leaves the core Alibaba routing contract
+   unguarded despite the implementation currently being correct.
+
+2. [Should] Add a DeepSeek overlay non-regression assertion. The table currently emits
+   `https://api.deepseek.com` with `DEEPSEEK_API_KEY`, but the new regression test covers only
+   OpenRouter. My direct overlay probe produced correct OpenRouter, DeepSeek, and Alibaba values;
+   a future DeepSeek tuple regression would nevertheless leave this suite green.
+
+**Evidence produced this turn:**
+
+- Executed the unknown-provider path against the scoped token: it returned exit 2 with
+  `unknown DEEPSEEK_PROVIDER`; the absolute, env-pinned `tick info` immediately afterwards still
+  reported `RELAY-gh400-qa-codex` as claimed by `codex`. That is execution evidence that refusal
+  precedes the claim.
+- Loaded a non-secret fixture value through `load_provider_key`; it set the Alibaba key variable
+  and produced zero stderr bytes. Probed missing and empty files separately: both diagnostics named
+  only `ALIBABA_TOKEN_PLAN_API_KEY`, never the supplied path. Source inspection confirms these
+  diagnostics occur before the child log is opened; the turn log receives only the child process's
+  stdout/stderr, so neither key nor path reaches it through this function.
+- In-memory route mutants (no source-file edit) made each existing route assertion red: wrong
+  Alibaba endpoint, wrong Alibaba key variable, restored DeepSeek fall-through, and wrong
+  OpenRouter endpoint. Thus all 13 added assertions are individually failable; the issue above is
+  missing coverage, not a vacuous assertion.
+- Direct overlays preserved bare `qwen3.8-max` and showed the expected three base URL/key pairs.
+  Alibaba's official Model Studio documentation also confirms the Token Plan OpenAI-compatible
+  endpoint and the bare `qwen3.8-max` model identifier. The small three-entry table is an
+  appropriate stopgap for #399; I found no reason to block on a larger provider abstraction now.
