@@ -3,13 +3,15 @@
 
 Resolves active harness, gateway, model, and reasoning effort across:
 1. Local per-device file: ~/.xyz/device_config.json
-2. Environment variables: XYZ_HARNESS, XYZ_MODEL, XYZ_REASONING_EFFORT, XYZ_GATEWAY
+2. Environment variables: XYZ_DEFAULT_HARNESS (or deprecated XYZ_HARNESS), XYZ_MODEL, XYZ_REASONING_EFFORT, XYZ_GATEWAY
+   Note: XYZ_HARNESS is the harness root path variable; use XYZ_DEFAULT_HARNESS for the harness name.
 3. Global repository defaults
 """
 
 import json
 import os
 import platform
+import sys
 from typing import Any, Dict, Optional
 
 
@@ -44,7 +46,15 @@ def load_local_device_config() -> Dict[str, Any]:
 def resolve_device_setting(key: str, env_var: Optional[str] = None) -> Any:
     """Resolve single configuration key across 3-tier hierarchy."""
     # 1. Environment override
-    if env_var and env_var in os.environ:
+    if key == "default_harness":
+        if "XYZ_DEFAULT_HARNESS" in os.environ:
+            return os.environ["XYZ_DEFAULT_HARNESS"]
+        if "XYZ_HARNESS" in os.environ:
+            val = os.environ["XYZ_HARNESS"]
+            if not os.path.isdir(val):
+                print("device_config.py: warning: XYZ_HARNESS is deprecated for harness name; use XYZ_DEFAULT_HARNESS instead (XYZ_HARNESS is the harness root path)", file=sys.stderr)
+                return val
+    elif env_var and env_var in os.environ:
         return os.environ[env_var]
 
     # 2. Local device JSON
@@ -67,7 +77,7 @@ def get_effective_runtime_config() -> Dict[str, Any]:
     return {
         "device_id": resolve_device_setting("device_id", "XYZ_DEVICE_ID"),
         "user_name": resolve_device_setting("user_name", "XYZ_USER_NAME"),
-        "harness": resolve_device_setting("default_harness", "XYZ_HARNESS"),
+        "harness": resolve_device_setting("default_harness", "XYZ_DEFAULT_HARNESS"),
         "gateway": resolve_device_setting("default_gateway", "XYZ_GATEWAY"),
         "model": resolve_device_setting("default_model", "XYZ_MODEL"),
         "reasoning_effort": resolve_device_setting("default_reasoning_effort", "XYZ_REASONING_EFFORT"),

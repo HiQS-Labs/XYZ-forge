@@ -557,6 +557,8 @@ TESTS=(
   "wave-reconcile.sh"               # GH-165 (canonical post-merge reconciler behavior)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
   "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
+  "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
+  "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
 )
 
 PASSED=()

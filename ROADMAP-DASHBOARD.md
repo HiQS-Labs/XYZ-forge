@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 37 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 38 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -45,6 +45,7 @@ Summary: 37 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-353 · audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates | — | [GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md](PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md) · [#353](https://github.com/HiQS-Labs/XYZ-forge/issues/353) |
 | GH-360 · releases check receipt chain failure phrasing and scoped --rebuild | — | [GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md](PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md) · [#360](https://github.com/HiQS-Labs/XYZ-forge/issues/360) |
 | GH-384 · Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel | — | [GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md](PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md) · [#384](https://github.com/HiQS-Labs/XYZ-forge/issues/384) |
+| GH-396 · Harness root resolution: one resolver, two roots, pinned | — | — |
 | GH-399 — let the profile carry the route | — | [#399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) · [PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md](PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md) |
 | GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work | — | [GH-402-BOARD-SYNC.md](PROJECT/2-WORKING/GH-402-BOARD-SYNC.md) · [#402](https://github.com/HiQS-Labs/XYZ-forge/issues/402) |
 
