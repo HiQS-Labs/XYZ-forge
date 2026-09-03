@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: none
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -148,5 +148,31 @@ handing off to Producer — go to the Producer window and say 'take your turn'
 All 333 test suites in `./validate.sh` pass cleanly.
 
 handing off to Reviewer — go to the Reviewer window and say 'take your turn'
+
+## Review — deepseek (DeepSeek v4 Pro) · 2026-09-03
+
+**Verdict: Approved**
+
+swept files: `utils/py/mock_gh_board.py`, `utils/py/board_sync.py`, `test/gh405-mock-board-harness.sh`, `test/gh402-board-sync.sh`, `validate.sh`, `PROJECT/2-WORKING/GH-405-MOCK-BOARD-HARNESS.md`
+
+### [Pass] mock_gh_board.py implements complete gh api graphql contract — file:line `utils/py/mock_gh_board.py:1-260`
+Implements owner/project/field resolution, repository issue resolution, Projects V2 item pagination, item addition, item deletion, and field value updates with accurate error shapes.
+
+### [Pass] Duplicate card creation faithfully reproduced — file:line `utils/py/mock_gh_board.py:195-205`
+`addProjectV2ItemById` appends a new card on every invocation without deduplicating, matching live GitHub Projects V2 behavior and allowing offline deduplication testing.
+
+### [Pass] Fault injection support (`--fault stale_option_once`) — file:line `utils/py/mock_gh_board.py:228-235`
+Simulates stale option IDs with realistic error responses (`"Field value ... does not exist"`), verifying self-healing re-resolution logic.
+
+### [Pass] Bare integer touch argument parsing — file:line `utils/py/board_sync.py:464`
+`board_sync.py touch 405` correctly parses numeric issue integers without requiring `gh-` prefix.
+
+### [Pass] Branch scanning regex extended — file:line `utils/py/board_sync.py:133`
+Now recognizes `fix/`, `feat/`, `marathon/`, `chore/`, `docs/`, and `hq/` branch prefixes.
+
+### [Pass] Comprehensive test coverage and hermetic execution — file:line `test/gh405-mock-board-harness.sh:1-170`
+13/13 unit tests pass cleanly offline; `test/gh402-board-sync.sh` passes 25/25 tests; full `./validate.sh` suite passes 333/333 tests.
+
+**Final Verdict: Approved.** The implementation meets all stated acceptance criteria, passes full test verification, and raises the harness’s quality bar for reliability engineering.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
