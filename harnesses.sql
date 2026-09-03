@@ -898,6 +898,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260902053133-94ec54ec','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260903023311-3fe76c8e','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh400-qa-codex',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 02:33:11');
 INSERT INTO "invocation_logs" VALUES('inv-20260903024807-ceef93c7','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh399-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 02:48:07');
 INSERT INTO "invocation_logs" VALUES('inv-20260903050759-a0769cdc','noels-Mac-Studio.local','dsh','qwen3.8-max','alibaba','high','deepseek-turn.py','["--patch", "/Users/noelsaw/.xyz/qwen-token-plan-overlay.cordis.yml"]','RELAY-gh402-board-sync-impl-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 05:07:59');
+INSERT INTO "invocation_logs" VALUES('inv-20260903042417-5a1a0fc0','noels-Mac-Studio.local','dsh','qwen3.8-max','alibaba','high','deepseek-turn.py','["--patch", "/tmp/qwen-token-plan-overlay.cordis.yml"]','RELAY-gh402-board-sync-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-03 04:24:17');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,

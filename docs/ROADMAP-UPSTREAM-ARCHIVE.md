@@ -12,6 +12,16 @@ from the live ledger and preserved here verbatim.
 not this repo's. Do not cross-file against `HiQS-Labs/XYZ-forge` issue numbers. The removal commit
 is the second backup: `git log --follow ROADMAP.md`.
 
+**Upstream numbers cited from shipped code.** A `GH-nnn` that appears in a source comment or test
+name here — not just in a ledger entry — is mirrored as a **closed `[upstream archive]` issue** in
+this repo so the citation resolves locally instead of dead-ending. Mirrored so far:
+[#407](https://github.com/HiQS-Labs/XYZ-forge/issues/407) (gate-ran attribution, cited from
+`test/gh407-gate-ran-attribution.sh` and `test/gh390-gate-guard.sh:154`) and
+[#408](https://github.com/HiQS-Labs/XYZ-forge/issues/408) (tick failure visibility, cited from
+`bin/tick:116` and `bin/tick:182`). Each mirror carries the verbatim upstream text plus a header
+recording where its fix landed here. Add to this list when mirroring another; the rule lives in
+`ROUTER.md` → "Canonical rules".
+
 **This file is not parsed by anything.** It is outside the planner's `## Ledger` scan and carries
 no roadmap contract. 256 entries, grouped by the section they were removed from.
 
