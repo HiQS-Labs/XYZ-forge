@@ -55,20 +55,20 @@ xyz_repo_root() {
 }
 
 xyz_harness_tool() {
-  local _r _rel _h
+  local _r="" _rel="" _h=""
   if [ "$#" -ge 2 ]; then
     _r="$1"
     _rel="$2"
   else
     _r="$(xyz_repo_root)"
-    _rel="$1"
+    _rel="${1:-}"
   fi
-  if [ -e "$_r/$_rel" ]; then
+  if [ -n "$_rel" ] && [ -e "$_r/$_rel" ]; then
     printf '%s\n' "$_rel"
     return 0
   fi
   _h="$(xyz_harness_home)"
-  if [ -e "$_h/$_rel" ]; then
+  if [ -n "$_rel" ] && [ -e "$_h/$_rel" ]; then
     printf '%s\n' "$_h/$_rel"
     return 0
   fi
@@ -76,8 +76,8 @@ xyz_harness_tool() {
 }
 
 xyz_emit_env_exports() {
-  local _harness="$1"
-  local _caller_root="$2"
+  local _harness="${1:-}"
+  local _caller_root="${2:-}"
   local _vendored="${3:-0}"
   local _status="${4:-}"
   local _commit="${5:-}"

@@ -35,12 +35,20 @@ _is_pdda_repo() {
 _canon_dir() { [ -n "${1:-}" ] && (cd "$1" >/dev/null 2>&1 && pwd); }
 
 # --- resolve this script's real directory (symlink-safe) ---
-_hp_lib="$(dirname "${BASH_SOURCE[0]}")/../../relay-automation/harness-paths.sh"
+_src="${BASH_SOURCE[0]}"
+while [ -h "$_src" ] || [ -L "$_src" ]; do
+  _dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
+  _src="$(readlink "$_src")"
+  case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
+done
+SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"   # …/skills/vendor-stack
+
+_hp_lib="$SELF_DIR/../../relay-automation/harness-paths.sh"
 if [ -f "$_hp_lib" ]; then
   # shellcheck source=relay-automation/harness-paths.sh
   . "$_hp_lib"
 fi
-SELF_DIR="$(xyz_resolve_self_dir "${BASH_SOURCE[0]}")"   # …/skills/vendor-stack
+
 # skills/vendor-stack → skills → <harness root>
 HARNESS_ROOT="$(_canon_dir "$SELF_DIR/../.." || true)"
 HARNESS_PARENT="$(_canon_dir "$HARNESS_ROOT/.." || true)"

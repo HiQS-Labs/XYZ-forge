@@ -73,6 +73,43 @@ assert_roots_agree() {  # assert_roots_agree <label> <cwd> <override> <expected-
   _ov_p="$(cd -P "$_ov" 2>/dev/null && pwd || printf '%s' "$_ov")"
   if [ "$_h_over_p" = "$_ov_p" ]; then ok "$_label: override still selects the harness it names"
   else bad "$_label: override still selects the harness it names (got $_h_over)"; fi
+
+  # Python harness_paths parity (Finding 1)
+  # 1. Path-based check: is_vendored on the harness path is True
+  _py_v="$(python3 -c "
+import sys, os
+sys.path.insert(0, '$HARNESS_DIR/utils/py')
+import harness_paths
+print(str(harness_paths.is_vendored('$_ov')))
+" 2>&1 || true)"
+  if [ "$_py_v" = "True" ]; then
+    ok "$_label (python): is_vendored('$_ov') is True"
+  else
+    bad "$_label (python): is_vendored('$_ov') is True (got '$_py_v')"
+  fi
+
+  # 2. Environment/CWD check: with XYZ_HARNESS and XYZ_CALLER_ROOT, repo_root() matches expected consumer root
+  _py_env_out="$(cd "$_cwd" && XYZ_HARNESS="$_ov" XYZ_CALLER_ROOT="$_auto" XYZ_VENDORED=1 python3 -c "
+import sys, os
+sys.path.insert(0, '$HARNESS_DIR/utils/py')
+import harness_paths
+print('VENDORED=' + str(harness_paths.is_vendored()))
+print('REPO_ROOT=' + harness_paths.repo_root())
+" 2>&1 || true)"
+  _py_vendored="$(grep -E '^VENDORED=' <<<"$_py_env_out" | sed 's/^VENDORED=//' || true)"
+  _py_root="$(grep -E '^REPO_ROOT=' <<<"$_py_env_out" | sed 's/^REPO_ROOT=//' || true)"
+  _py_root_p=""
+  [ -n "$_py_root" ] && _py_root_p="$(cd -P "$_py_root" 2>/dev/null && pwd || printf '%s' "$_py_root")"
+  if [ "$_py_vendored" = "True" ]; then
+    ok "$_label (python): is_vendored() with override is True"
+  else
+    bad "$_label (python): is_vendored() with override is True (got '$_py_vendored', out: $_py_env_out)"
+  fi
+  if [ -n "$_py_root_p" ] && [ "$_py_root_p" = "$_want" ]; then
+    ok "$_label (python): repo_root() with override matches consumer repo"
+  else
+    bad "$_label (python): repo_root() with override matches consumer repo (got '$_py_root', want '$_want')"
+  fi
 }
 
 echo "gh396 find-harness two-roots contract:"
@@ -195,6 +232,47 @@ _quiet="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT bash "$FH" --quie
 if [ -n "$_quiet" ] && [ "$_loud" = "$_quiet" ]; then ok "--quiet: exported names and values are identical to the loud form"
 else bad "--quiet: exported names and values are identical to the loud form"; fi
 remove_vendored_fixture
+
+# ── File-symlinked locator test (Finding 2) ────────────────────────────────────────────────────
+_link_dir="$WORK/filelink-test"; mkdir -p "$_link_dir"
+ln -s "$FH" "$_link_dir/find-harness.sh"
+_fl_root="$(bash "$_link_dir/find-harness.sh" --root 2>/dev/null || true)"
+_fl_root_p="$(cd -P "$_fl_root" 2>/dev/null && pwd || printf '%s' "$_fl_root")"
+if [ "$_fl_root_p" = "$HARNESS_DIR" ]; then
+  ok "file-symlinked locator: resolves root correctly via file symlink"
+else
+  bad "file-symlinked locator: resolves root correctly via file symlink (got '$_fl_root', want '$HARNESS_DIR')"
+fi
+rm -rf "$_link_dir"
+
+# ── harness-paths.sh Bash library unit checks (Finding 3) ──────────────────────────────────────
+if [ -f "$HARNESS_DIR/relay-automation/harness-paths.sh" ]; then
+  _hp_out="$(bash -c "
+    . '$HARNESS_DIR/relay-automation/harness-paths.sh'
+    echo HOME=\$(xyz_harness_home)
+    echo VENDORED=\$(xyz_is_vendored && echo 1 || echo 0)
+    echo ROOT=\$(xyz_repo_root)
+    echo TOOL=\$(xyz_harness_tool utils/py/releases_app.py)
+    echo EXPORT=\$(xyz_emit_env_exports /h /r 1 status commit | tr '\n' ';')
+  ")"
+  _hp_home="$(grep '^HOME=' <<<"$_hp_out" | cut -d= -f2-)"
+  _hp_tool="$(grep '^TOOL=' <<<"$_hp_out" | cut -d= -f2-)"
+  if [ "$_hp_home" = "$HARNESS_DIR" ]; then
+    ok "harness-paths.sh: xyz_harness_home matches harness directory"
+  else
+    bad "harness-paths.sh: xyz_harness_home matches harness directory (got '$_hp_home')"
+  fi
+  if [ -n "$_hp_tool" ]; then
+    ok "harness-paths.sh: xyz_harness_tool resolves tool"
+  else
+    bad "harness-paths.sh: xyz_harness_tool resolves tool"
+  fi
+  if grep -q 'export HARNESS=' <<<"$_hp_out" && grep -q 'export TICK_REPO_ROOT=' <<<"$_hp_out"; then
+    ok "harness-paths.sh: xyz_emit_env_exports emits correct format"
+  else
+    bad "harness-paths.sh: xyz_emit_env_exports emits correct format (got '$_hp_out')"
+  fi
+fi
 
 echo "  gh396-find-harness-roots: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

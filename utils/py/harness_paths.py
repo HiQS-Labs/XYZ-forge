@@ -1,45 +1,86 @@
 #!/usr/bin/env python3
 """harness_paths.py (GH-396 Phase 2) — single resolver for harness_home, repo_root, is_vendored, and harness_tool.
 
-Two resolution questions live here and they are deliberately separate.
-`resolve_harness()` selects which clone/install to use — env override -> caller `.xyz` ->
-worktree `.xyz` -> git root -> self. `resolve_tool(repo_root, rel, prefer_repo=True)` selects
-which copy of a tool file inside that install — repo-first so a canonical checkout and test
-mocks shadow the harness copy (`test/gh358-…:128-131`), harness-home fallback. Their orderings
-differ by design and are never merged into one ladder.
+Provides:
+- harness_home(path=None, anchor_file=None): directory containing relay-automation/ + utils/ (repo root, or <repo>/.xyz)
+- is_vendored(path=None): boolean check for vendored (.xyz) layout
+- repo_root(path=None, anchor_file=None): consumer repo root (dirname of .xyz if vendored, else harness_home)
+- resolve_tool(repo_root, rel_path, prefer_repo=True): resolves tool file with repo-first mock shadow preference
 
-Shadow risk is exposed, not hidden: `resolve_tool(rel, prefer_repo=True)` is the existing
-contract for the five harness tools `wave_reconcile` runs. A consumer repo carrying its own
-same-named `utils/…` file would win silently under repo-first. New consumers pass
-`prefer_repo=False`; the docstring names the risk and the flag.
+Two resolution questions live here and they are deliberately separate:
+1. Install / layout resolution (harness_home, repo_root, is_vendored) determines whether
+   the execution is standing in a canonical checkout or a vendored leaf, preserving symlinks.
+2. Tool resolution (resolve_tool(repo_root, rel, prefer_repo=True)) selects which copy of a tool
+   file inside that install — repo-first so a canonical checkout and test mocks shadow the harness
+   copy (test/gh358-…:128-131), harness-home fallback. Their orderings differ by design and are never
+   merged into one ladder.
+
+Shadow risk is exposed, not hidden: resolve_tool(rel, prefer_repo=True) is the existing
+contract for the five harness tools wave_reconcile runs. A consumer repo carrying its own
+same-named utils/… file would win silently under repo-first. New consumers pass
+prefer_repo=False; the docstring names the risk and the flag.
 """
 
 import os
 import sys
 
 
-def harness_home(path=None):
+def harness_home(path=None, anchor_file=None):
     """Dir containing relay-automation/ + utils/: repo root, or <repo>/.xyz when vendored.
 
-    Derived from THIS file's location, never from the caller's cwd or an assumed repository
-    root — the same rule jog_run.harness_home() states and marathon_plan.py already follows.
+    Derived from THIS file's location (or anchor_file if provided), or XYZ_HARNESS environment variable.
+    Never uses os.path.realpath so symlinked .xyz directories preserve their .xyz identity.
     """
     if path is not None:
+        if os.path.isfile(path):
+            return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(path)), "..", ".."))
         return os.path.abspath(path)
+    if anchor_file is not None:
+        if os.path.isfile(anchor_file):
+            return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(anchor_file)), "..", ".."))
+        return os.path.abspath(anchor_file)
+    if os.environ.get("XYZ_HARNESS") and os.path.isdir(os.environ["XYZ_HARNESS"]):
+        return os.path.abspath(os.environ["XYZ_HARNESS"])
+    # If the main running script is under .xyz/, use its location to preserve symlinked .xyz
+    main_mod = sys.modules.get("__main__")
+    main_file = getattr(main_mod, "__file__", None)
+    if main_file and os.path.isfile(main_file):
+        main_abs = os.path.abspath(main_file)
+        if "/.xyz/" in main_abs or main_abs.endswith("/.xyz"):
+            parts = main_abs.split(os.sep)
+            if ".xyz" in parts:
+                idx = parts.index(".xyz")
+                return os.sep.join(parts[:idx + 1])
     return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 
 
 def is_vendored(path=None):
     """Check if the harness is installed in a vendored (.xyz) layout."""
-    p = harness_home() if path is None else os.path.abspath(path)
-    return os.path.basename(os.path.realpath(p)) == ".xyz"
+    if path is None:
+        if os.environ.get("XYZ_VENDORED") in ("1", "true", "True"):
+            return True
+        if os.environ.get("XYZ_VENDORED") in ("0", "false", "False"):
+            return False
+        if os.environ.get("XYZ_HARNESS"):
+            p = os.path.abspath(os.environ["XYZ_HARNESS"])
+            if os.path.basename(p.rstrip("/\\")) == ".xyz":
+                return True
+    p = harness_home() if path is None else (
+        os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(path)), "..", ".."))
+        if os.path.isfile(path) else os.path.abspath(path)
+    )
+    return os.path.basename(p.rstrip("/\\")) == ".xyz"
 
 
-def repo_root(path=None):
+def repo_root(path=None, anchor_file=None):
     """Return the consumer repo root (dirname(harness_home) if vendored, else harness_home). Raises on failure."""
-    h = harness_home(path)
+    h = harness_home(path, anchor_file=anchor_file)
     if is_vendored(h):
-        return os.path.dirname(h)
+        if path is None and anchor_file is None:
+            caller = os.environ.get("XYZ_CALLER_ROOT")
+            if caller and os.path.isdir(caller):
+                return os.path.abspath(caller)
+        return os.path.dirname(h.rstrip("/\\"))
     return h
 
 
@@ -80,4 +121,5 @@ def resolve_tool(repo_root, rel_path, prefer_repo=True):
         return rel_path
 
 
+# Backward compatibility alias for wave_reconcile
 harness_tool = resolve_tool
