@@ -152,3 +152,64 @@ Starts from the recon map's current-state radius and adds what this plan introdu
 ## Reviewed by
 
 Two `/relay-xyz` review rounds are scheduled on this plan before any code: DeepSeek V4 Pro, then Qwen 3.8 Max. Their findings land as comments here and in the 2-WORKING doc.
+
+---
+
+## Review findings — two headless rounds, consolidated
+
+**Reviewers.** DeepSeek V4 Pro (`relay-system/2026-09-02/gh396-plan-review-deepseek.md`, commit `8f18997d`) then Qwen 3.8 Max (`relay-system/2026-09-02/gh396-plan-review-qwen.md`, commit `c9f42ce7`). Both returned `STATUS: Open` — directionally sound, build only after the changes below. Qwen adjudicated all ten of DeepSeek's changes (**ten upheld, one with a corrected premise**) and added three. The orchestrator then re-tested two claims both reviewers made and found both reversed by evidence; those corrections are marked **[orchestrator]**.
+
+**Infra note.** Qwen's first attempt via Command Code failed on `insufficient credits` (exit 10, wrote nothing); its second via OpenRouter hung on an external call and was timeout-killed at 25 min (exit 7, wrote nothing); the third via OpenRouter with a 45-min ceiling completed. Both no-op failures were correctly classified by the shim and the token was released each time (GH-409). `relay-drive --review-once` reported the first failure as **exit 5 "non-approval handback"** — a failed turn read as a successful review. That is `RADAR-class-dark-telemetry` and should be filed as a follow-up, not folded into this plan.
+
+### Required changes — 15, ordered by phase
+
+**Phase 0**
+1. Add three topologies to the #395 test: (a) override pointing at a **linked worktree's** main-checkout `.xyz` while CWD is the worktree; (b) **symlinked `.xyz` inside the repo** (`.xyz -> ./vendor/xyz`); (c) **symlinked `.xyz` to a directory outside the repo**. *(DeepSeek 1, Qwen upheld, orchestrator split the symlink case in two — see correction A.)*
+2. Add a `--quiet` case: `find-harness.sh --quiet --env 2>&1 | grep -c '^find-harness:'` is 0. *(DeepSeek 9, Qwen upheld.)*
+3. `test/_vendored_fixture.sh` **must vendor into `$TMPDIR` only, never the harness checkout** — `xyz-vendor.sh:411-412` is `rm -rf "$VENDOR_DIR" && mv`, destructive if pointed at the real `.xyz/`. State it in the checklist item, not just the acceptance line. *(Qwen 13.)*
+
+**Phase 1**
+4. Derive `CALLER_ROOT` as `git -C "$_o" rev-parse --show-toplevel 2>/dev/null || dirname "$(cd "$_o" && pwd)"`, not bare `dirname`. The formula is right; the stated reason is not — see correction A. *(DeepSeek 2, Qwen upheld.)*
+5. Add `--quiet` to the acceptance criteria. *(DeepSeek 8, Qwen upheld.)*
+6. **#393 readiness fix is rewritten.** `RELAY_HAS_DEEPSEEK` = `python3 ≥ 3.8` **AND** a resolvable binary **AND** an API key. "Resolvable binary" must use the **same rule as the shim** (`utils/py/deepseek-turn.py:19-28` `default_deepseek_bin()`: `$DEEPSEEK_BIN` → hardcoded `bin.js` path → `which dsh`), not a separate `command -v dsh`. Today the check and the runtime disagree, which is the whole #393 symptom. *(Qwen 16 — upheld and sharpened; correction B.)*
+7. Acknowledge in the Phase 1 acceptance text that after this change `find-harness.sh` warns from `.xyz/VERSION` and `xyz-sync.sh check` warns from `registry.tsv`, and they can disagree. The single store stays a `spike-360` non-goal. *(Qwen 13 advisory — promoted to required because an unstated known gap is how #394 happened.)*
+
+**Phase 2**
+8. `harness_paths.py` docstring states that `resolve_harness()` (env → caller `.xyz` → worktree `.xyz` → git root → self) and `resolve_tool(repo_root, rel)` (repo-first, harness-home fallback) answer **different questions with deliberately different precedence** and are never merged into one ladder. *(DeepSeek 3, Qwen upheld.)*
+9. Document the **shadow risk** — a consumer repo carrying its own `utils/py/releases_app.py` would silently win under repo-first — and expose it: `resolve_tool(rel, prefer_repo=True)` keeps the `test/gh358-…:128-131` contract for the five harness tools; new consumers pass `prefer_repo=False`. *(Qwen 11.)*
+
+**Phase 3**
+10. **Shrink** to the five symlink-loop copies (`find-harness.sh:66-73`, `find-hq.sh:34-58`, `find-xyz.sh:37-75`, `find-pdda.sh:38-46`, `gate-env.sh:27-35`), the four `find-*.sh` locators, and `gate-env.sh`. The other ~10 live scripts get a one-line comment pointing at the library, nothing more. *(DeepSeek 6, Qwen upheld.)*
+11. `find-harness.sh:76` sources `driver-lock-lib.sh`; the shared library must either source it or leave that line in place. *(DeepSeek 7, Qwen upheld.)*
+12. `find-xyz.sh:22-25` refuses a vendored `.xyz` by policy ("filing a bug into one writes the report where nobody reads it"). It **does not adopt** `xyz_harness_home()`; it may adopt only the symlink loop. *(Qwen 12.)*
+
+**Phase 4**
+13. `vendored-smoke` is **blocking (`continue-on-error: false`) on both `development` and `main`**. Corrected premise: `boundary-macos` runs on `main` only (`ci.yml:152`), and `canary-ubuntu` is advisory (`:243`) — there is no existing "boundary on development" pattern to copy, which is exactly why the one vendored-integration job must not inherit the advisory default. *(DeepSeek 9 with wrong rationale; Qwen 5 + 17a corrected it; orchestrator confirms from Lane D.)*
+14. Update `device_config.py:5-7`'s module docstring: `XYZ_DEFAULT_HARNESS` is the harness-**name** env var; `XYZ_HARNESS` is the **path** env var with a deprecation fallback. *(DeepSeek 10, Qwen upheld.)*
+
+**Cut**
+15. Remove the `XYZ_RESOLVER_LEGACY=1` kill switch. The only behaviour delta is wrong→right in one topology, the sole documented workaround (`UPGRADE.md:571-578`) is being deleted, and the repo's kill-switch idiom is for trade-offs, not bug fixes. *(DeepSeek 4, Qwen upheld.)*
+
+### Two corrections to the reviewers [orchestrator]
+
+**A. Symlinks — both reviewers had it backwards.** Both claimed `git -C` resolves a symlinked `.xyz` "via the kernel" where `dirname(pwd)` fails. Tested at `1b6058d7`:
+
+| Topology | `git -C <link> rev-parse --show-toplevel` | `dirname "$(cd <link> && pwd)"` |
+|---|---|---|
+| `.xyz` gitignored, real dir | consumer root ✓ | consumer root ✓ |
+| linked worktree, `.xyz` inside it | worktree root ✓ | worktree root ✓ |
+| `.xyz-link -> dir outside repo` | **`fatal: not a git repository`** | consumer root ✓ (logical) |
+
+So the `||` fallback in change 4 is load-bearing, not decorative, and the Phase 0 symlink-outside test must assert that the **fallback** produced the answer. `dirname "$(pwd -P)"` would be wrong there (it gives the physical parent, outside the repo) — the formula must keep logical `pwd`.
+
+**B. #393 — the issue's own premise was wrong, and the plan inherited it.** Issue #393 says the shim "never shells out to any `dsh` binary." `deepseek-turn.py:176-186` does: `subprocess.Popen(["node", deepseek_bin, "--profile", "headless", …])`. It succeeded on this machine with no `dsh` on PATH because `deepseek-turn.py:22` hardcodes `/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js`, which exists here. That hardcoded absolute path is itself a recon-map strategy-6 site the map missed, and it is why the readiness check (`command -v dsh`) and the runtime (`default_deepseek_bin()`) disagree. Change 6 above is the honest fix; **replacing the hardcoded path with a discoverable one is a separate issue** and should be filed as its own issue.
+
+### Unchanged after review
+- The scope re-sort (4 of 12 are root resolution; PR #350 touched zero root lines) — DeepSeek 1 agree, Qwen did not contest.
+- Blast radius: no in-tree consumer captures `--env` stderr or counts its lines — DeepSeek 6 verified each of the eight script callers.
+- `swarm_preflight.py:1171`'s second anchor stays — Qwen 14 read it and confirms it is a different question (the `utils/` sibling, not the root).
+
+### Follow-ups to file separately, not folded in
+- `relay-drive --review-once` classifies a shim that wrote nothing as exit 5 "non-approval handback" (observed twice today). Dark-telemetry class.
+- `deepseek-turn.py:22` hardcoded machine path.
+- Command Code account out of credits (`glm 5.3 max` profile is unusable until topped up).
