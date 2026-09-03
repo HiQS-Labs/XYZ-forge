@@ -1,0 +1,8 @@
+FIRSTHAND_COUNT=3
+ECHOED_COUNT=6
+ECHOED `marathon.sh`
+ECHOED `umbrella:`
+ECHOED `umbrella:`
+ECHOED `marathon.sh`
+ECHOED `umbrella:`
+ECHOED `umbrella:`

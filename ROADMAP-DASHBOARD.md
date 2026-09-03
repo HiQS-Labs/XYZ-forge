@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 35 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 36 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -45,6 +45,7 @@ Summary: 35 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-353 · audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates | — | [GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md](PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md) · [#353](https://github.com/HiQS-Labs/XYZ-forge/issues/353) |
 | GH-360 · releases check receipt chain failure phrasing and scoped --rebuild | — | [GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md](PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md) · [#360](https://github.com/HiQS-Labs/XYZ-forge/issues/360) |
 | GH-384 · Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel | — | [GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md](PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md) · [#384](https://github.com/HiQS-Labs/XYZ-forge/issues/384) |
+| GH-405 · Local debugging mock harness for GitHub Projects V2 API | — | [GH-405-MOCK-BOARD-HARNESS.md](PROJECT/1-INBOX/GH-405-MOCK-BOARD-HARNESS.md) · [#405](https://github.com/HiQS-Labs/XYZ-forge/issues/405) |
 
 ## Queue
 

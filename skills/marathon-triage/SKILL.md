@@ -43,6 +43,72 @@ Reference every script below as `$HARNESS/utils/swarm-preflight.sh` and
 `$HARNESS/utils/marathon-plan.sh` — not bare `utils/...` paths, which resolve to nothing (or to an
 unrelated `utils/` directory) in a vendored `.xyz/` install.
 
+### 0b. Every marathon has an umbrella tracking issue — open it first
+
+**A marathon without a GitHub umbrella issue does not start.** The umbrella is the marathon's
+identity: waves, clone folder, ledger row and closeout all key off its number.
+
+Today this is under-enforced and the gap is measurable: `releases_app.py marathon add` requires
+`--tracking-issue` (`utils/py/releases_app.py:4901`) and `marathons.tracking_ref_id` is `NOT NULL`
+(`:479`) — but the executor never reads either. `marathon_drive.py` has no `--tracking-issue` flag
+and the `MARATHON.yaml` schema has no field for one, so the requirement binds only if someone
+chooses to create the ledger row. Most runs have not: **at least eight marathons are visible in
+committed transcripts and `marathon-system/`, against two rows in the `marathons` table.**
+
+Procedure, before any triage work:
+
+1. Open the umbrella issue. Title it for the arc, not the first item. Body lists the candidate
+   member issues, the wave sketch, and the acceptance rule for the marathon as a whole.
+2. Register it in the ledger immediately:
+   ```bash
+   python3 "$HARNESS/utils/py/releases_app.py" marathon add \
+     --tracking-issue https://github.com/<org>/<repo>/issues/<n> --status planned
+   ```
+   Offline, `TMP-XXXXXX` is an accepted placeholder — but reconcile it before the marathon closes,
+   or the ledger row permanently names an issue that does not exist. The token is **shape-checked
+   only** (`check_tracking_token`, `:1675-1694`); GitHub is never queried, so a typo in the URL is
+   accepted silently.
+3. Dial every member issue into the same release, and link them to this marathon.
+
+Carry the umbrella number into every downstream artifact: the clone folder name (step 0c), the
+plan doc, each phase brief, and the closeout. If you cannot name the umbrella issue, you are not
+ready to triage — you are still deciding what the marathon is.
+
+### 0c. Marathons run in a full clone, deterministically named
+
+**Two rules, both currently unenforced by code.** State them explicitly in the plan so a reviewer
+can check them.
+
+**A full clone, never a linked worktree and never the primary checkout.** The mechanism that makes
+this necessary is real but indirect: `validate.sh:16-53` refuses to run inside a linked worktree
+(GH-45, exit 2), and `driver_lock_path_for_repo` (`relay-automation/driver-lock-lib.sh:20-35`)
+resolves a linked worktree's lock to its **parent's** `.git/relay-driver.lock`, so a worktree
+cannot run a second driver concurrently. Nothing refuses a marathon launched from the primary
+checkout — `test/gh35-test-tiers.sh:367-370` proves the primary checkout runs the gate normally —
+so this rule is on the operator, not the harness.
+
+**Clone folder name is derived, not chosen:**
+
+```
+marathon-gh-<umbrella-issue-number>-<short-description>
+```
+
+`<short-description>` is lowercase, hyphen-separated, three words or fewer, describing the arc —
+not a wave label, not a phase number. One clone per marathon; a second attempt at the same arc
+reuses the name with a `-r2` suffix rather than inventing a new slug.
+
+```bash
+CLONE="$HOME/marathon-clones/marathon-gh-${UMBRELLA}-${SLUG}"
+git clone <remote> "$CLONE"
+```
+
+This replaces the current free-form convention, which has drifted badly and is the reason a
+salvage operation once could not find its own artifacts: live folders are `gh271-waveA`,
+`gh396-phase0` and `gh405-mock-board` — a wave label, a phase number and a feature name, three
+different meanings under one shape — while committed transcripts also show `gh-8-…` and `gh-115-…`
+with a different separator, plus a `gh-115-clean` retry folder with no stated relationship to its
+original.
+
 ### 1. Inventory intake and active work
 
 List open issues and all issue capture docs in deterministic order:

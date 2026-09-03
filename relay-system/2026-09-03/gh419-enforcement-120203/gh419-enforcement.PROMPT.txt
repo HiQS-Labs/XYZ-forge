@@ -1,0 +1,42 @@
+# Consult: vote APPROVE or REVISE on GH-419's design
+
+Read `PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md` in this worktree. Also read, because the design claims to reuse them rather than invent anything:
+
+- `GUIDING-PRINCIPLES.md` — the section "Marathon builder default & plan location (GH-212)"
+- `validate.sh` lines 16–53 — the GH-45 linked-worktree refusal and its announced override
+- `relay-automation/driver-lock-lib.sh` lines 12–35 — the `--git-common-dir` lock resolver
+- `test/gh35-test-tiers.sh` lines 337–380 — especially the CONTROL at 367–370
+- `relay-automation/marathon.sh` — the orchestrator being modified
+- `AGENTS.md` §13 (red-control rule) and the frozen-twin policy around line 230
+
+## Background you need
+
+Three marathon process rules are currently documented-only in `skills/marathon-triage/SKILL.md` §0b/§0c and enforced by nothing:
+
+1. Every marathon has a GitHub umbrella tracking issue.
+2. Every marathon runs in a full clone — never a linked worktree, never the primary checkout.
+3. Clone folders are named `marathon-gh-<umbrella>-<short-description>`.
+
+Measured evidence that they are not followed: at least eight marathons appear in committed transcripts against **two** rows in the `marathons` ledger table; live clone folders are `gh271-waveA`, `gh396-phase0`, `gh405-mock-board` — a wave label, a phase number and a feature name under one shape — with `gh-8-…` / `gh-115-…` in older transcripts using a different separator.
+
+The proposal: add three conditions to the refusal block that **already exists** in `marathon.sh --plan` (per GH-212 it already refuses exit 2 for a plan outside `PROJECT/2-WORKING/`), plus exactly one new `MARATHON.yaml` key (`umbrella:`). No new script, module, config file, or write path.
+
+## Vote on exactly these
+
+**1. APPROVE or REVISE the overall design.** Judge through a strict YAGNI / "laziest thing that actually works" lens. Specifically:
+   - Does anything here invent a subsystem, module, abstraction or write path it does not need?
+   - Is extending `marathon.sh`'s existing GH-212 refusal genuinely the cheapest reliable hook, or is there a cheaper one already in the tree that was missed? (Consider: `swarm-preflight.sh`, `validate.sh`, a PDDA check, the ledger CLI, a git hook.)
+   - Is `umbrella:` in `MARATHON.yaml` the right single new input, or is there an existing field that already carries the marathon's identity?
+
+**2. Rule specifically on the open question — should rule 2 refuse the PRIMARY CHECKOUT?**
+   This is the one rule with no precedent in the tree. GH-45 deliberately *allows* the primary checkout for `validate.sh`, and `test/gh35-test-tiers.sh:367-370` asserts that as an explicit CONTROL. Refusing it for marathons is a new posture, not an extension of an existing one. Answer directly: **refuse it, warn on it, or drop that half of rule 2 entirely?** Give your reasoning in two or three sentences, and say what breaks if you are wrong.
+
+**3. Name the single biggest risk in the plan as written** — the thing most likely to make this ship and then be quietly bypassed, or to refuse a legitimate marathon. Rule 3's name regex is a candidate (too strict and it refuses every real marathon while looking like a working guard) but say what you actually think.
+
+## What "good" looks like in your answer
+
+- A clear **APPROVE** or **REVISE** in the first line. If REVISE, list the specific changes required, each one a concrete edit.
+- A direct verdict on the primary-checkout question — do not hedge to "it depends".
+- Cite file:line for any claim about what the tree currently does. If you cannot verify something, say so rather than assuming.
+- Be blunt about over-engineering. If a rule is not worth enforcing mechanically at all — if a doc line and reviewer attention are the correct amount of machinery — say that plainly. Saying "enforce less" is a valid and welcome answer.
+- Do not write or modify any files. Advisory only.
