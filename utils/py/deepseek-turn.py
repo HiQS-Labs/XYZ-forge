@@ -32,14 +32,72 @@ def default_deepseek_flags():
     return shlex.split(os.environ.get("DEEPSEEK_FLAGS", ""))
 
 
+# GH-397: the provider routing table. This was an if/else whose `else` was a SILENT catch-all --
+# any DEEPSEEK_PROVIDER that was not exactly "openrouter" got api.deepseek.com and the DeepSeek
+# key. A profile naming a third provider therefore resolved cleanly, recorded the provider it
+# asked for in telemetry, and sent the request somewhere else entirely. An unrecognised provider
+# now refuses the turn instead of being quietly rewritten.
+#   provider -> (base URL, default key variable, key-file fallback or None)
+PROVIDER_ROUTES = {
+    "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", None),
+    "deepseek": ("https://api.deepseek.com", "DEEPSEEK_API_KEY", None),
+    # Alibaba Cloud Model Studio "Token Plan" -- an OpenAI-compatible endpoint serving the Qwen
+    # catalog under BARE ids ("qwen3.8-max"), not OpenRouter's vendor-prefixed "qwen/..." slugs.
+    # Its key is issued as a file rather than an environment variable, hence the third element.
+    "alibaba": (
+        "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
+        "ALIBABA_TOKEN_PLAN_API_KEY",
+        "~/secrets/xyz/qwen-token-plan.txt",
+    ),
+}
+
+
+def provider_route(provider):
+    """Resolve a provider to (base_url, key_env, key_file). Refuse an unknown one."""
+    try:
+        return PROVIDER_ROUTES[provider]
+    except KeyError:
+        die(
+            "unknown DEEPSEEK_PROVIDER %r -- known providers: %s"
+            % (provider, ", ".join(sorted(PROVIDER_ROUTES)))
+        )
+
+
+def load_provider_key(provider, key_env):
+    """Fill key_env from the provider's key file when the environment does not already carry it.
+
+    Warns rather than dies on a miss: the DeepSeek CLI carries its own credential config, so an
+    unset variable here is not proof the turn has no key. Never prints the file path -- turn
+    stderr lands in relay transcripts, which are committed.
+    """
+    if os.environ.get(key_env):
+        return
+    key_file = os.environ.get(key_env + "_FILE") or provider_route(provider)[2]
+    if not key_file:
+        print(
+            f"deepseek-turn: {key_env} is unset and provider {provider!r} has no key-file fallback",
+            file=sys.stderr,
+        )
+        return
+    try:
+        with open(os.path.expanduser(key_file)) as fh:
+            secret = fh.readline().strip()
+    except OSError as exc:
+        print(
+            f"deepseek-turn: {key_env} unset and its key file could not be read ({exc.strerror})",
+            file=sys.stderr,
+        )
+        return
+    if not secret:
+        print(f"deepseek-turn: {key_env} unset and its key file is empty", file=sys.stderr)
+        return
+    os.environ[key_env] = secret
+
+
 def generate_patch_overlay(provider, model_id, api_key_env):
     """Generate a temporary cordis patch overlay configuring the LLM route."""
-    if provider == "openrouter":
-        base_url = "https://openrouter.ai/api/v1"
-        key_env = api_key_env or "OPENROUTER_API_KEY"
-    else:
-        base_url = "https://api.deepseek.com"
-        key_env = api_key_env or "DEEPSEEK_API_KEY"
+    base_url, default_key_env, _key_file = provider_route(provider)
+    key_env = api_key_env or default_key_env
 
     content = f"""- id: llm-deepseek
   name: '@deepseek-ai/dsh-llm-deepseek'
@@ -118,6 +176,11 @@ def main():
         )
         sys.exit(0)
 
+    # GH-397: validate the provider here, ABOVE claim_task_or_exit. provider_route() exits 2 on
+    # an unknown value; doing that after the claim would leave the relay token held by a turn that
+    # never ran.
+    provider_route(os.environ.get("DEEPSEEK_PROVIDER", "openrouter"))
+
     allow_paths = os.environ.get("ALLOW_PATHS", "")
     peer = os.environ.get("RELAY_PEER", "")
 
@@ -148,7 +211,8 @@ def main():
         os.environ.get("DEEPSEEK_MODEL", "deepseek/deepseek-v4-pro"), xyz_root
     )
     deepseek_provider = os.environ.get("DEEPSEEK_PROVIDER", "openrouter")
-    api_key_env = "OPENROUTER_API_KEY" if deepseek_provider == "openrouter" else "DEEPSEEK_API_KEY"
+    _base_url, api_key_env, _key_file = provider_route(deepseek_provider)
+    load_provider_key(deepseek_provider, api_key_env)
 
     patch_file = generate_patch_overlay(deepseek_provider, deepseek_model, api_key_env)
 
