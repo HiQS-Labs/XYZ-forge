@@ -32,14 +32,21 @@ function repoRoot() {
 // `release`/`done` throw a bare "task not found" with no hint it's a wrong-CWD
 // problem). When the root was INFERRED (not pinned via TICK_REPO_ROOT), surface
 // the resolved root and refuse to operate on a repo that was never `tick init`-ed,
-// rather than succeeding-as-noop. Best-effort `cost`/`log` are intentionally left
-// out so a turn's auxiliary cost capture never hard-fails on this.
+// rather than succeeding-as-noop. Best-effort `cost` verb and `cost.*` log events
+// are intentionally left out so a turn's auxiliary cost capture never hard-fails
+// on this. (GH-411: non-cost `log` types like task.* and marathon.* are guarded).
 const MUTATING_GUARD_VERBS = new Set([
   'claim', 'take', 'scope', 'release', 'break', 'done', 'ping', 'reap',
 ]);
 
-function assertResolvedRoot(verb, root, source) {
-  if (!MUTATING_GUARD_VERBS.has(verb)) return;
+function shouldGuard(verb, eventType) {
+  if (MUTATING_GUARD_VERBS.has(verb)) return true;
+  if (verb === 'log' && eventType && !eventType.startsWith('cost.') && eventType !== 'cost') return true;
+  return false;
+}
+
+function assertResolvedRoot(verb, root, source, eventType) {
+  if (!shouldGuard(verb, eventType)) return;
   if (source === 'env') return; // operator pinned the root explicitly — trust it.
   const how = source === 'git' ? 'git rev-parse' : 'cwd fallback';
   process.stderr.write(`tick: resolved repo root ${root} via ${how} (set TICK_REPO_ROOT to pin it)\n`);
@@ -126,7 +133,8 @@ function main(argv) {
   const rest = argv.slice(1);
   const { positional, flags } = parseArgs(rest);
   const { root, source } = repoRoot();
-  assertResolvedRoot(verb, root, source);
+  const eventType = verb === 'log' ? positional[0] : undefined;
+  assertResolvedRoot(verb, root, source, eventType);
 
   switch (verb) {
     case 'init': {
