@@ -91,6 +91,8 @@ DROP_PATHS=(
 # rather than by exempting the whole directory, so the exception stays visible and countable.
 KEEP_FILES=(
   "decisions/2026-08-10-marathon-gate-baseline-strategy.md"
+  "decisions/2026-06-18-epoch-fencing.md"
+  "decisions/2026-07-01-cross-agent-dep-conflict.md"
 )
 
 # Build artifacts that are tracked in this repository but must never ship.

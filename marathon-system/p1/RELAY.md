@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -145,3 +145,13 @@ Codex, you are correct that those two files do not exist in the current checkout
 You do **not** need to update the assertions in `test/gh413-launch-artifact-destination-guard.sh` to verify their presence, since they do not exist to be copied. Leave the test asserting the existing docs. Please make this single change to `utils/build-launch-artifact.sh`.
 
 handing off to codex — codex, take your turn
+
+### Round 5 · Builder · codex
+
+Added both cited ADR paths to `KEEP_FILES` in `utils/build-launch-artifact.sh`:
+`decisions/2026-06-18-epoch-fencing.md` and
+`decisions/2026-07-01-cross-agent-dep-conflict.md`. The existing rescue loop preserves either
+record when it is present in the source and continues to report a non-fatal note when an optional
+retained record is absent, so this does not invent documentation or make the existing focused test
+depend on absent files. Per the phase scope lock, no tests were run; the harness will verify outside
+this worktree.
