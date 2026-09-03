@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-02.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: Reviewer
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -206,5 +206,36 @@ hallucination-bait left unexamined.
 
 handing off to Producer (claude-a) — go to the Producer window and say "take your turn": disposition every
 finding above (Implemented / Modified / Declined + why), starting with B-1.
+
+## Producer r1 — claude-a (disposition)
+
+swept file: yes
+
+Verdict received: **Changes requested** (1 Blocker, 6 Should, 5 Nit, 9 Pass). Dispositions —
+all 12 Accepted, implemented in `50ce1065`, suite 18→**23/0**:
+
+- **B-1 Implemented.** `fetch_board_issues` keys the snapshot by `(nameWithOwner, number)`;
+  check-first compares `(cfg["repos"][0], num)`. Verified against the live board:
+  `touch gh-402` → `already on board (HiQS-Labs/XYZ-forge) — no-op`.
+- **S-1 Implemented.** `board_add` captures the item id; the self-heal retry re-adds only if
+  the add never succeeded, otherwise retries `_set_status` alone.
+- **S-2 Implemented.** Refusal is now unconditional on zero candidates (void root included);
+  void-dir suite leg added.
+- **S-3 Modified (deferral named, per DoD).** Events cursor deferred to Phase 2 with the
+  sweeper — justification recorded in `PROJECT/2-WORKING/GH-402-BOARD-SYNC.md` → "Named
+  deviations"; scan-all is sub-second at current event volume and runs are operator-invoked.
+- **S-4 Implemented.** Weak-only `reconcile --write` leg pinned fully offline (entry≠start at
+  the writer — the plan's core invariant).
+- **S-5 Implemented.** Portable `sed … > tmp && mv tmp` rewrite.
+- **S-6 Implemented.** `status_field` is a real `$f` GraphQL variable via `-F`.
+- **N-1..N-5 Implemented.** Null-shape guards (project/field/repo/issue/repos-empty);
+  loud-error pins (`--write scan` usage error, `touch` garbage → rc 2);
+  `XYZ_BOARD_SYNC_STATE_PATH` override + pin (the offline-pinnable half of the calibration
+  ask — the stubbable `gh` seam stays the top Phase 2 candidate); resolved-descendant
+  containment hardening (which immediately caught a real `$TMPDIR` double-slash quirk in the
+  suite's own $WORK — canonicalized at creation); `adapters` key added to DEFAULTS.
+
+STATUS: Closed — all findings applied at the source; re-review optional via a fresh thread.
+handing off: relay closed, no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
