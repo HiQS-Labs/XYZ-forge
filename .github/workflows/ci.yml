@@ -515,3 +515,48 @@ jobs:
           echo "$verdict"
           echo "$detail"
           { echo "### $verdict"; echo; echo "$detail"; } >> "$GITHUB_STEP_SUMMARY"
+
+  # GH-396 Phase 4 — Vendored smoke gate: verifies the vendored .xyz/ layout end-to-end in CI.
+  # Blocking on development and main (continue-on-error: false).
+  vendored-smoke:
+    name: vendored smoke gate (blocking on development + main)
+    runs-on: starsling-ubuntu-24.04-8
+    continue-on-error: false
+    timeout-minutes: 15
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare git environment
+        run: |
+          set -euo pipefail
+          git config --global init.defaultBranch main
+          git config --global user.email "ci@runner.invalid"
+          git config --global user.name "CI Runner"
+
+      - name: Vendor harness into scratch repo and run vendored suites
+        run: |
+          set -euo pipefail
+          HARNESS_DIR="$(pwd)"
+          SCRATCH="$(mktemp -d)"
+          git -C "$SCRATCH" init -q -b main
+          git -C "$SCRATCH" config user.email "ci@runner.invalid"
+          git -C "$SCRATCH" config user.name "CI Runner"
+          touch "$SCRATCH/README.md"
+          git -C "$SCRATCH" add README.md
+          git -C "$SCRATCH" commit -qm "init scratch repo"
+
+          # Materialize vendored harness without touching global ~/.xyz registries
+          bash "$HARNESS_DIR/relay-automation/xyz-vendor.sh" --no-register "$SCRATCH"
+
+          # Run vendored suites from inside scratch repo against .xyz/
+          (
+            cd "$SCRATCH"
+            bash .xyz/test/gh396-find-harness-roots.sh
+            bash .xyz/test/gh393-deepseek-readiness.sh
+            bash .xyz/test/gh358-wave-reconcile-vendored-paths.sh
+            bash .xyz/test/gh292-worktree-vendored-discovery.sh
+          )
+

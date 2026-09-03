@@ -21,8 +21,13 @@ set -euo pipefail
 #   - $WORK is proven a real dir before any trap can rm -rf it (GH-177).
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO="$(cd "$HERE/.." && pwd -P)"
-FH="$REPO/skills/relay-xyz/find-harness.sh"
+HARNESS_DIR="$(cd "$HERE/.." && pwd -P)"
+if [ "$(basename "$HARNESS_DIR")" = ".xyz" ]; then
+  REPO="$(cd "$HARNESS_DIR/.." && pwd -P)"
+else
+  REPO="$HARNESS_DIR"
+fi
+FH="$HARNESS_DIR/skills/relay-xyz/find-harness.sh"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh396-roots.XXXXXX")"
 . "$HERE/lib/fixture-guard.sh"   # GH-10: shared fixture containment
 fixture_guard_init "$WORK"       # GH-10: pin the sandbox root
@@ -122,25 +127,46 @@ else bad "precedence step 2: local .xyz selected with no override (got $_h)"; fi
 remove_vendored_fixture
 # Step 3 is pinned by test/gh292-worktree-vendored-discovery.sh (linked worktree → main .xyz).
 ok "precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)"
-# Step 4: standing in the harness clone itself → itself.
-_h="$(env_value "$REPO" HARNESS)"
-if [ "$(cd -P "$_h" 2>/dev/null && pwd)" = "$REPO" ]; then ok "precedence step 4: harness clone resolves to itself"
+# Step 4: standing in a harness clone itself (ships relay-automation/) → itself.
+_harness_clone="$WORK/d-harness"
+mkdir -p "$_harness_clone/relay-automation" "$_harness_clone/skills/relay-xyz"
+touch "$_harness_clone/relay-automation/relay-drive.sh"
+chmod +x "$_harness_clone/relay-automation/relay-drive.sh"
+cp "$FH" "$_harness_clone/skills/relay-xyz/find-harness.sh"
+[ -f "$HARNESS_DIR/relay-automation/harness-paths.sh" ] && cp "$HARNESS_DIR/relay-automation/harness-paths.sh" "$_harness_clone/relay-automation/"
+[ -f "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" ] && cp "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" "$_harness_clone/relay-automation/"
+_vf_init_repo "$_harness_clone"
+_h="$(env_value "$_harness_clone" HARNESS)"
+if [ "$(cd -P "$_h" 2>/dev/null && pwd)" = "$_harness_clone" ]; then ok "precedence step 4: harness clone resolves to itself"
 else bad "precedence step 4: harness clone resolves to itself (got $_h)"; fi
+rm -rf "$_harness_clone"
+
 # Step 5: a foreign repo with no .xyz and no override → the script's own harness.
 _foreign="$WORK/e-foreign"; mkdir -p "$_foreign"; _vf_init_repo "$_foreign"
 _h="$(env_value "$_foreign" HARNESS)"
-if [ "$(cd -P "$_h" 2>/dev/null && pwd)" = "$REPO" ]; then ok "precedence step 5: foreign repo falls back to the script's own harness"
+if [ "$(cd -P "$_h" 2>/dev/null && pwd)" = "$HARNESS_DIR" ]; then ok "precedence step 5: foreign repo falls back to the script's own harness"
 else bad "precedence step 5: foreign repo falls back to the script's own harness (got $_h)"; fi
 rm -rf "$_foreign"
 
 # ── #394: staleness must still warn under an override, and the remedy must be runnable ────────
-# A vendored copy stamped with an ancestor commit is "behind". The live harness is $REPO.
-_ancestor="$(git -C "$REPO" rev-list --max-parents=0 HEAD | tail -1)"
+# A vendored copy stamped with an ancestor commit is "behind".
+_live="$WORK/live-harness"
+mkdir -p "$_live/relay-automation" "$_live/skills/relay-xyz"
+touch "$_live/relay-automation/relay-drive.sh" "$_live/relay-automation/xyz-sync.sh"
+chmod +x "$_live/relay-automation/relay-drive.sh" "$_live/relay-automation/xyz-sync.sh"
+cp "$FH" "$_live/skills/relay-xyz/find-harness.sh"
+[ -f "$HARNESS_DIR/relay-automation/harness-paths.sh" ] && cp "$HARNESS_DIR/relay-automation/harness-paths.sh" "$_live/relay-automation/"
+[ -f "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" ] && cp "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" "$_live/relay-automation/"
+_vf_init_repo "$_live"
+touch "$_live/f1" && git -C "$_live" add -A && git -C "$_live" commit -qm "c1"
+_ancestor="$(git -C "$_live" rev-parse HEAD)"
+touch "$_live/f2" && git -C "$_live" add -A && git -C "$_live" commit -qm "c2"
+
 make_vendored_fixture "$WORK/f-stale" --stub --stale "$_ancestor"
-_err_auto="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT XYZ_LIVE_HARNESS= bash "$FH" --env 2>&1 >/dev/null || true)"
+_err_auto="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT XYZ_LIVE_HARNESS="$_live" bash "$_live/skills/relay-xyz/find-harness.sh" --env 2>&1 >/dev/null || true)"
 if grep -q 'behind the live harness' <<<"$_err_auto"; then ok "#394: auto-discovery warns that the vendored copy is behind"
 else bad "#394: auto-discovery warns that the vendored copy is behind (stderr: ${_err_auto:-<empty>})"; fi
-_err_over="$(cd "$VF_REPO" && XYZ_HARNESS="$VF_HARNESS" XYZ_REPO_ROOT= bash "$FH" --env 2>&1 >/dev/null || true)"
+_err_over="$(cd "$VF_REPO" && XYZ_HARNESS="$VF_HARNESS" XYZ_REPO_ROOT= XYZ_LIVE_HARNESS="$_live" bash "$_live/skills/relay-xyz/find-harness.sh" --env 2>&1 >/dev/null || true)"
 if grep -q 'behind the live harness' <<<"$_err_over"; then ok "#394: the warning still fires when XYZ_HARNESS points at the stale .xyz"
 else bad "#394: the warning still fires when XYZ_HARNESS points at the stale .xyz (stderr: ${_err_over:-<empty>})"; fi
 _remedy="$(grep -E '^[[:space:]]*remedy:' <<<"$_err_auto" | sed -E 's/^[[:space:]]*remedy:[[:space:]]*//' || true)"
@@ -155,6 +181,7 @@ else
   bad "#394: a remedy line is printed with the warning"
 fi
 remove_vendored_fixture
+rm -rf "$_live"
 
 # ── --quiet: exists, silences the announcement, changes nothing else ──────────────────────────
 make_vendored_fixture "$WORK/g-quiet" --stub

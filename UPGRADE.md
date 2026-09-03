@@ -653,3 +653,14 @@ rollback a rename-restore instead of an env var, and left copies with no escape 
 future cleanup, "tidy up" by extracting or deleting the Bash bodies until the Python default has held
 across the whole fleet for a long, boring time — and even then, keep one tagged commit that still has
 them.
+
+## Appendix C — Environment Variable Disambiguation: `XYZ_HARNESS` vs `XYZ_DEFAULT_HARNESS` (GH-396)
+
+Previously, `XYZ_HARNESS` was overloaded:
+1. In locator/root resolution (`find-harness.sh`, `harness_paths.py`), `XYZ_HARNESS` is the filesystem path override pointing to an `XYZ-forge` harness root directory or vendored `.xyz` directory.
+2. In device configuration (`device_config.py`), `XYZ_HARNESS` was checked as an override for the active harness identifier/name (e.g., `"dsh"`, `"codex"`, `"agy"`).
+
+To resolve this collision:
+- Use **`XYZ_DEFAULT_HARNESS`** to set the default harness identifier in `device_config.py`.
+- **`XYZ_HARNESS`** is reserved strictly for the filesystem path to the harness root. If `XYZ_HARNESS` is set to a non-directory value, `device_config.py` falls back with a deprecation warning.
+

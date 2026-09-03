@@ -45,7 +45,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 3: Bash: one sourceable library, six files, not fifteen (validated green) | Phase 4: Vendored integration in CI (blocking), and the env-var collision |
+| Phase 4: Vendored integration in CI (blocking), and the env-var collision (all phases green) | PR submission, ledger closeout, and working folder teardown |
 
 ## Table of contents
 
@@ -144,10 +144,10 @@ Each phase is independently shippable and leaves the tree green. Order is fixed:
 
 ### Phase 4 — Vendored integration in CI (blocking), and the env-var collision
 
-- [ ] Add a `vendored-smoke` job to `.github/workflows/ci.yml`: checkout, `xyz-vendor.sh --no-register` into a scratch repo under the runner's temp dir, then run the Phase 0 suites plus `test/gh358-…` and `test/gh292-…` **from inside the scratch repo** against `.xyz/`. **`continue-on-error: false` on both `development` and `main`.** Corrected premise: `boundary-macos` runs on `main` only (`ci.yml:152`) and `canary-ubuntu` is advisory (`:243`) — there is no existing "blocking on development" pattern to copy, and the one job that exercises the vendored surface must not inherit the advisory default. *(review change 13)*
-- [ ] Resolve the `XYZ_HARNESS` collision: `device_config.py:6,61,70` reads `XYZ_DEFAULT_HARNESS` first and falls back to `XYZ_HARNESS` **only if the value is not an existing directory**, with a one-line deprecation warning. **Update the module docstring at `device_config.py:5-7`** to name `XYZ_DEFAULT_HARNESS` as the harness-name var and `XYZ_HARNESS` as the path var with the deprecation note. Document in `UPGRADE.md`. *(review change 14)*
-- [ ] Migrate the 21 open-coded vendored fixtures to `test/_vendored_fixture.sh` **only where a suite is already being edited** by Phases 1–3; the rest are a follow-up, listed by name in the 2-WORKING doc.
-- [ ] **Acceptance:** `vendored-smoke` is green and blocking on `development`; `rg -n 'XYZ_HARNESS' utils/py/device_config.py` shows only the deprecation fallback and the docstring note.
+- [x] Add a `vendored-smoke` job to `.github/workflows/ci.yml`: checkout, `xyz-vendor.sh --no-register` into a scratch repo under the runner's temp dir, then run the Phase 0 suites plus `test/gh358-…` and `test/gh292-…` **from inside the scratch repo** against `.xyz/`. **`continue-on-error: false` on both `development` and `main`.** Corrected premise: `boundary-macos` runs on `main` only (`ci.yml:152`) and `canary-ubuntu` is advisory (`:243`) — there is no existing "blocking on development" pattern to copy, and the one job that exercises the vendored surface must not inherit the advisory default. *(review change 13)*
+- [x] Resolve the `XYZ_HARNESS` collision: `device_config.py:6,61,70` reads `XYZ_DEFAULT_HARNESS` first and falls back to `XYZ_HARNESS` **only if the value is not an existing directory**, with a one-line deprecation warning. **Update the module docstring at `device_config.py:5-7`** to name `XYZ_DEFAULT_HARNESS` as the harness-name var and `XYZ_HARNESS` as the path var with the deprecation note. Document in `UPGRADE.md`. *(review change 14)*
+- [x] Migrate the 21 open-coded vendored fixtures to `test/_vendored_fixture.sh` **only where a suite is already being edited** by Phases 1–3; the rest are a follow-up, listed by name in the 2-WORKING doc.
+- [x] **Acceptance:** `vendored-smoke` is green and blocking on `development`; `rg -n 'XYZ_HARNESS' utils/py/device_config.py` shows only the deprecation fallback and the docstring note.
 
 ## Closes
 
@@ -180,6 +180,13 @@ Starts from the recon map's current-state radius and adds what this plan introdu
 ## Definition of done
 
 `validate.sh` green on macOS boundary; `vendored-smoke` green and **blocking** on `development`; the Phase 0 suites exist and were observed red at the pre-fix commit and green at the fix commit (both SHAs recorded); #393/#394/#395/GH-234 closed citing commits; the `rg` acceptance greps in Phases 2–3 hold; `PROJECT/2-WORKING/GH-396-*.md` has a Lessons Learned section; #293's `RADAR-class-vendored-root-resolution` items 1–2 struck with the commit SHA.
+
+## Lessons Learned
+
+1. **Two roots, not one**: The harness must distinguish the *harness home* (where `relay-automation/` and `utils/` reside) from the *caller/consumer repo root* (`TICK_REPO_ROOT` / `XYZ_CALLER_ROOT`). Overriding `XYZ_HARNESS` to point at a vendored `.xyz` directory previously collapsed both roots into the subdirectory, breaking tick coordination.
+2. **Precedence order differs by question**: Install resolution (`resolve_harness()`) is env-first, caller `.xyz` second, worktree `.xyz` third, git root fourth, self fifth. Internal tool resolution (`resolve_tool()`) is repo-first (allowing consumer repo mocks and test harnesses to shadow defaults), fallback to harness home second. Keeping these separate prevents shadow ambiguity.
+3. **Hermetic test fixtures**: Test fixtures that test locator behaviour or copy single python scripts into temporary scratch directories must either copy dependency modules (`harness_paths.py`, `driver-lock-lib.sh`) or allow hermetic fallback resolution to prevent brittle `ModuleNotFoundError` failures.
+4. **Disambiguating overloaded env vars**: `XYZ_HARNESS` was historically used for both the filesystem path and the harness name identifier in `device_config.py`. Separating `XYZ_DEFAULT_HARNESS` for configuration identifiers while reserving `XYZ_HARNESS` for the filesystem root path cleanly isolates configuration from path resolution.
 
 ## Reviewed by
 
