@@ -10,7 +10,7 @@ complexity: 4
 risk: 3
 effort: 4
 phases: 5
-revision: 2
+revision: 3
 ratings_provisional: true
 recon: PROJECT/1-INBOX/recon-harness-root-resolution.md
 radar_target: RADAR-class-vendored-root-resolution
@@ -81,15 +81,15 @@ Make the two-root distinction explicit and single-sourced: one Python module and
 
 Each phase is independently shippable and leaves the tree green. Order is fixed: 0 must land red-then-green before 1; 1 before 2–3; 4 can run beside 2–3.
 
-### Phase 0 — Pin the defect (gate first, arrives RED)
+### Phase 0 — Pin the defect (gate first, arrives RED) — **BUILT at `87e30924`; as-built checklist and what it changed are under “Phase 0 — built” below**
 
-- [ ] `test/_vendored_fixture.sh` — one sourceable builder: `make_vendored_fixture <dir> [--stale <sha>] [--tier 1|2] [--symlink-inside|--symlink-outside] [--worktree]` that runs the real `relay-automation/xyz-vendor.sh --no-register` into a scratch repo and returns `<dir>` and `<dir>/.xyz`. **It MUST vendor into `$TMPDIR` only — never the harness's own checkout.** `xyz-vendor.sh:411-412` is `rm -rf "$VENDOR_DIR" && mv`, destructive if pointed at the real `.xyz/`. Guard it: refuse if the target resolves inside `$(git rev-parse --show-toplevel)` of the harness. *(review change 3)*
-- [ ] Add to `test/find-harness.sh` — **the #395 repro, five topologies**, each asserting `TICK_REPO_ROOT` from an `XYZ_HARNESS`-override run equals the value from an unset-override run of the same fixture: (a) plain vendored `.xyz`; (b) override pointing at a **linked worktree's** main-checkout `.xyz` while CWD is the worktree; (c) **symlinked `.xyz` inside the repo** (`.xyz -> ./vendor/xyz`); (d) **symlinked `.xyz` to a directory outside the repo** — this one must additionally assert that the `dirname` **fallback** fired, because `git -C <link> rev-parse` returns `fatal: not a git repository` there (orchestrator correction A); (e) a **precedence table** — one assertion per step 1–5 of `find-harness.sh:86-126` so any reordering is a visible diff. *(review change 1)*
-- [ ] Add to `test/find-harness.sh` — **the #394 shape**: vendored fixture with an older `source_commit` in `VERSION`, assert the WARNING fires *even when `XYZ_HARNESS` is exported*, and assert the remedy line is executable as printed (`bash -n` it, then run it with `--dry-run`).
-- [ ] Add to `test/find-harness.sh` — **`--quiet`**: `find-harness.sh --quiet --env 2>&1 | grep -c '^find-harness:'` is 0, and the exported names are unchanged. *(review change 2)*
-- [ ] Add `test/gh393-deepseek-readiness.sh`: `RELAY_HAS_DEEPSEEK=1` iff `python3 ≥ 3.8` **AND** the binary resolves by **the shim's own rule** (`$DEEPSEEK_BIN` → `dsh` on PATH → the documented sibling-clone path; see #398) **AND** (`OPENROUTER_API_KEY` or `DEEPSEEK_API_KEY`). Negative controls: binary present + no key → 0; key present + no binary → 0. *(review change 6)*
-- [ ] Settle the two recon unknowns that gate the tests: `xyz-sync.sh`'s `update` grammar (`sed -n '1,60p' relay-automation/xyz-sync.sh`) and whether any of the ~19 unread root-named tests pins a precedence Phase 1 changes (`rg -n 'XYZ_HARNESS|TICK_REPO_ROOT|CALLER_ROOT' test/gh129-relay-tick-root.sh test/gh131-marathon-target-root.sh test/gh292-worktree-vendored-discovery.sh test/gh293-vendored-guard-drift.sh test/gh304-vendored-relay-path.sh test/gh417-turn-root-symlink-prefix.sh test/marathon-root-audit.sh test/relay-target-root*.sh`). Record the answers in the 2-WORKING doc.
-- [ ] **Acceptance:** the new suites are registered in `validate.sh`'s `TESTS` array (bidirectional guard, PR #308, will refuse otherwise) and **all fail** at the pre-fix commit. Record that commit SHA and the red output in the 2-WORKING doc.
+- [x] `test/_vendored_fixture.sh` — one sourceable builder: `make_vendored_fixture <dir> [--stale <sha>] [--tier 1|2] [--symlink-inside|--symlink-outside] [--worktree]` that runs the real `relay-automation/xyz-vendor.sh --no-register` into a scratch repo and returns `<dir>` and `<dir>/.xyz`. **It MUST vendor into `$TMPDIR` only — never the harness's own checkout.** `xyz-vendor.sh:411-412` is `rm -rf "$VENDOR_DIR" && mv`, destructive if pointed at the real `.xyz/`. Guard it: refuse if the target resolves inside `$(git rev-parse --show-toplevel)` of the harness. *(review change 3)*
+- [x] Add to `test/find-harness.sh` — **the #395 repro, five topologies**, each asserting `TICK_REPO_ROOT` from an `XYZ_HARNESS`-override run equals the value from an unset-override run of the same fixture: (a) plain vendored `.xyz`; (b) override pointing at a **linked worktree's** main-checkout `.xyz` while CWD is the worktree; (c) **symlinked `.xyz` inside the repo** (`.xyz -> ./vendor/xyz`); (d) **symlinked `.xyz` to a directory outside the repo** — this one must additionally assert that the `dirname` **fallback** fired, because `git -C <link> rev-parse` returns `fatal: not a git repository` there (orchestrator correction A); (e) a **precedence table** — one assertion per step 1–5 of `find-harness.sh:86-126` so any reordering is a visible diff. *(review change 1)*
+- [x] Add to `test/find-harness.sh` — **the #394 shape**: vendored fixture with an older `source_commit` in `VERSION`, assert the WARNING fires *even when `XYZ_HARNESS` is exported*, and assert the remedy line is executable as printed (`bash -n` it, then run it with `--dry-run`).
+- [x] Add to `test/find-harness.sh` — **`--quiet`**: `find-harness.sh --quiet --env 2>&1 | grep -c '^find-harness:'` is 0, and the exported names are unchanged. *(review change 2)*
+- [x] Add `test/gh393-deepseek-readiness.sh`: `RELAY_HAS_DEEPSEEK=1` iff `python3 ≥ 3.8` **AND** the binary resolves by **the shim's own rule** (`$DEEPSEEK_BIN` → `dsh` on PATH → the documented sibling-clone path; see #398) **AND** (`OPENROUTER_API_KEY` or `DEEPSEEK_API_KEY`). Negative controls: binary present + no key → 0; key present + no binary → 0. *(review change 6)*
+- [x] Settle the two recon unknowns that gate the tests: `xyz-sync.sh`'s `update` grammar (`sed -n '1,60p' relay-automation/xyz-sync.sh`) and whether any of the ~19 unread root-named tests pins a precedence Phase 1 changes (`rg -n 'XYZ_HARNESS|TICK_REPO_ROOT|CALLER_ROOT' test/gh129-relay-tick-root.sh test/gh131-marathon-target-root.sh test/gh292-worktree-vendored-discovery.sh test/gh293-vendored-guard-drift.sh test/gh304-vendored-relay-path.sh test/gh417-turn-root-symlink-prefix.sh test/marathon-root-audit.sh test/relay-target-root*.sh`). Record the answers in the 2-WORKING doc.
+- [x] **Acceptance:** the new suites are registered in `validate.sh`'s `TESTS` array (bidirectional guard, PR #308, will refuse otherwise) and **all fail** at the pre-fix commit. Record that commit SHA and the red output in the 2-WORKING doc.
 
 ### Phase 1 — `find-harness.sh`: two roots, one precedence, announced
 
@@ -163,6 +163,85 @@ Starts from the recon map's current-state radius and adds what this plan introdu
 ## Reviewed by
 
 DeepSeek V4 Pro and Qwen 3.8 Max, 2026-09-02, both `STATUS: Open` on revision 1. Revision 2 (this body) applies their 15 upheld changes and two orchestrator corrections; see the first comment on this issue for the adjudication.
+
+---
+
+## Phase 0 — built (revision 3, 2026-09-02)
+
+Built in a full clone at `~/marathon-clones/gh396-phase0` on `feat/gh396-harness-root-resolver`,
+commit `87e30924`. Every guard the repo runs on new test code is green (`gh139`, `security-scan`,
+`mktemp-trap-guard`, `gh306-registry-bidirectional`). **Both suites arrive red, as designed:**
+
+| Suite | Observed at `1114627b` | What the reds are |
+|---|---|---|
+| `test/gh396-find-harness-roots.sh` | **17 pass / 8 fail** | the four #395 topologies (plain, linked-worktree override, symlink-inside, symlink-outside); both #394 halves (warning suppressed under override; remedy `xyz-sync --update <dir>` not runnable as printed); `--quiet` (exit 2 usage) ×2 |
+| `test/gh393-deepseek-readiness.sh` | **6 pass / 3 fail** | ambient flag is 0 while the shim's own rule resolves the hardcoded path (#398 leg); the flag ignores the API key in both directions |
+
+Every control assertion passed — the precedence table (steps 1, 2, 4, 5; step 3 delegated to
+`gh292`), the symlink-outside proof that `git -C <link>` fails and the fallback is load-bearing,
+and the oracle's own existing→1 / missing→0 check.
+
+### What building it changed in the plan (the reason this revision exists)
+
+1. **The fixture builder lives at `test/lib/vendored-fixture.sh`, not `test/_vendored_fixture.sh`.**
+   `test/lib/` is the established helper home (`fixture-guard.sh`, `clone-identity.sh`,
+   `runner-envelope.sh`) and the bidirectional registry guard (`gh306`) already exempts it. A
+   top-level `test/_*.sh` would have needed a new exemption.
+2. **The builder has two modes, and locator tests use the fast one.** `--stub` (default) plants the
+   two marker files `find-harness.sh` probes plus a `VERSION` file — milliseconds, and it is what
+   `test/find-harness.sh` and `gh292` already do by hand. `--real` runs `xyz-vendor.sh --no-register`
+   — seconds and megabytes per fixture, right only for suites that *execute* vendored tools. The
+   plan's "runs the real `xyz-vendor.sh`" wording was correct for integration and wrong as a default.
+3. **The safety refusal is two-sided and on physical paths.** The target must be under `$WORK`
+   *and* must not be under the harness checkout, both resolved with `cd -P`, so a symlink cannot
+   smuggle the real tree past the guard. Refusal names both paths.
+4. **The #395 suite is a new file, not an extension of `test/find-harness.sh`.** The existing suite
+   uses a grandfathered `ok "$1" "$2"` eval helper that the GH-64 security gate rejects in new
+   code. New assertions use the decided-verdict `ok`/`bad` form (`gh292`'s idiom) and
+   capture-then-match (`gh139`). Leaving the GH-70 suite untouched also keeps its history clean.
+5. **The #395 oracle is "override agrees with auto-discovery on the same fixture," not a hardcoded
+   expected path.** That makes the test immune to being "fixed" by redefining the right answer —
+   it passes only when both resolution paths agree. Each topology additionally asserts the
+   override still selects the harness it names, so Phase 1 cannot pass by ignoring overrides.
+6. **The #393 pin is parity, not a value.** `RELAY_HAS_DEEPSEEK` must equal
+   `python3 ≥ 3.8 ∧ shim-rule-resolves-existing-file ∧ API-key` in the same environment. The
+   shim's rule is **ast-extracted** (`default_deepseek_bin` only) because `deepseek-turn.py`'s
+   module-level imports are not importable without the harness `PYTHONPATH`; `ast.fix_missing_locations`
+   is required on the synthesized module. Case 3 neutralises the hardcoded-path leg by `sed`-ing a
+   copy of the shim — the only way to make "unresolvable" true on a machine where that path exists.
+7. **A lesson the suite taught its own author, kept as a header comment:** the first draft wrapped
+   cases in `( … )` subshells; `pass`/`fail` incremented inside were lost and the suite printed
+   two `FAIL` lines then reported `0 fail, exit 0`. *A check that cannot fail is not a check*
+   (`AGENTS.md:100`). Cases now use `env -u … bash -c "$(declare -f actual_flag); …"` — which
+   also sidesteps the security scan's `credential-literal` rule, which fires on the literal text
+   `API_KEY=` even when clearing a variable.
+8. **Tests run unsandboxed or not at all.** The repo's GH-177 hook refuses any test invocation
+   under the sandboxed Bash tool (a sandbox-broken `mktemp` once fed an `rm -rf` trap that wiped
+   the checkout twice). Every Phase 0 run used `dangerouslyDisableSandbox: true`. Phase 1–4
+   executors must know this up front.
+9. **1-INBOX docs are not coverage-exempt in this repo.** `pdda-check-roadmap-coverage` refused
+   the push until #396 was parked via `releases_app.py roadmap add` (the DB is roadmap truth;
+   `ROADMAP.md` is regenerated, never hand-edited). The radar skill's "1-INBOX carries no
+   coverage requirement" is wrong for XYZ-forge; the radar SKILL.md should be corrected.
+10. **Recon unknowns settled.** `xyz-sync.sh` accepts both `update <dir>` and `--update <dir>`
+    (`:12-19`); the #394 remedy defect is that neither `xyz-sync` is on PATH, not the verb. None of
+    the 16 unread root-named suites references `XYZ_HARNESS`/`CALLER_ROOT`; `gh292` pins step 3
+    (linked worktree → main `.xyz`) via `--root` and `--env`, which Phase 1 preserves.
+
+### Phase 0 checklist, as built
+
+- [x] `test/lib/vendored-fixture.sh` — `make_vendored_fixture <dir> [--stub|--real] [--stale <sha>] [--tier 1|2] [--symlink-inside|--symlink-outside] [--worktree <path>]`, `remove_vendored_fixture`; refuses targets outside `$WORK` or inside the harness checkout.
+- [x] `test/gh396-find-harness-roots.sh` — five #395 topologies with the agree-with-auto oracle; #394 warn-under-override + remedy-runnable; `--quiet` accepted / silences only the announcement / exports identical.
+- [x] `test/gh393-deepseek-readiness.sh` — parity pin with ast-extracted oracle, two negative controls, oracle self-check.
+- [x] Both registered in `validate.sh`'s `TESTS` (with "arrives RED by design" in the comment); `gh306` green.
+- [x] Recon unknowns settled (item 10) — recorded here rather than in a 2-WORKING doc, since the doc has not been promoted yet.
+- [x] Red observed and recorded: `1114627b` → 17/8 and 6/3.
+
+### What Phase 1 inherits from this
+
+- The `--quiet` flag must be added to the `case` at `find-harness.sh:213` **before** the announcement is added, or every existing caller's stderr changes in the same commit as the flag that silences it.
+- The #394 remedy line must print `bash <live-harness>/relay-automation/xyz-sync.sh update <caller-root>` — `LIVE_HARNESS` is already resolved at `:140-153` when the warning fires, so the absolute path is available.
+- `RELAY_HAS_DEEPSEEK` needs a shared binary rule. The cheapest honest form: `deepseek-turn.py --print-bin` (prints `default_deepseek_bin()` and exits 0/1 on existence), called from `find-harness.sh:204-206`. Then the suite's ast oracle and the runtime cannot drift.
 
 ---
 
