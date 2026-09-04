@@ -62,6 +62,7 @@ TESTS=(
   "scope-change.sh"
   "tick-foreign-cwd.sh"
   "gh411-tick-log-foreign-cwd.sh" # GH-411 (tick log guarded for all event types except cost.*)
+  "gh251-validate-pytest-skip.sh" # GH-251 (pytest absence handled as named skip in validate.sh)
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"
@@ -1317,14 +1318,19 @@ done
 fi
 
 # The Python layer follows the change set on tier 2 (a *.py path or a python-bearing subsystem
-# pulls it in); on tier 3 it is unconditional, as it always was.
+_pytest_skipped=0
 if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
   echo
   echo "==============================="
   echo "Running python3 -m pytest test/test_python_layer.py"
   echo "==============================="
   _s="$(rt_now_ms)"
-  if $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py"; then
+  if ! python3 -c "import pytest" >/dev/null 2>&1; then
+    echo "  SKIPPED: python:test_python_layer.py (pytest not importable — install it to cover utils/py/)"
+    _pytest_skipped=1
+    SKIPPED_SUITES+=("python:test_python_layer.py")
+    rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
+  elif $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py"; then
     PASSED+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
   else
@@ -1384,7 +1390,9 @@ echo "==============================="
 # fixed probes the tier selected. The pytest/identity/gamma conditions here are the same ones
 # that gated execution above, so the tally cannot drift from what ran.
 TOTAL=$(( ${#RUN_TESTS[@]} + 1 ))                       # suites + the identity bracket (always)
-[ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ] && TOTAL=$((TOTAL + 1))
+if { [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; } && [ "$_pytest_skipped" -eq 0 ]; then
+  TOTAL=$((TOTAL + 1))
+fi
 if [ "$TIER" -eq 3 ]; then TOTAL=$((TOTAL + 1)); fi     # gamma-poison staleness probe
 [ "$TIER" -eq 2 ] && [ "$T2_PDDA" -eq 1 ] && TOTAL=$((TOTAL + 1))
 [ "$TIER" -eq 2 ] && [ -n "$T2_PATHS" ] && TOTAL=$((TOTAL + 1))
