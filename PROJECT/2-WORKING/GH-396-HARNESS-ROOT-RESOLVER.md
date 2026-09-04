@@ -331,3 +331,7 @@ So the `||` fallback in change 4 is load-bearing, not decorative, and the Phase 
 - `relay-drive --review-once` classifies a shim that wrote nothing as exit 5 "non-approval handback" (observed twice today). Dark-telemetry class.
 - `deepseek-turn.py:22` hardcoded machine path.
 - Command Code account out of credits (`glm 5.3 max` profile is unusable until topped up).
+
+## Merge evidence
+
+- PR #430 merged 2026-09-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
