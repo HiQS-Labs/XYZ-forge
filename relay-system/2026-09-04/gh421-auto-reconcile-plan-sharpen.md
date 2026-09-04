@@ -82,3 +82,28 @@ Write your verdict below. Set `STATUS: Approved` only if the plan is implementab
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+**1. The new scope — a lifecycle write verb**
+We should add an explicit `--status-marker` enum to `roadmap update`. Deriving `status_marker` from `raw_text` reintroduces the exact markdown-as-schema coupling that releases-mode was created to avoid (`ROADMAP.md` is frozen legacy). 
+CLI shape: `python3 utils/py/releases_app.py roadmap update --issue-num <N> --status-marker "✅" --section "### Completed"` (or `--status-marker SHIPPED`).
+
+**2. Is Phase 1 now too big to be one phase?**
+Yes. Split line: The ledger-CLI additions (adding the `--status-marker` write support to `roadmap update`, updating the rollback journal snapshots to cover missing artifacts) should be split into a prerequisite issue. GH-421 should remain purely the automation of the reconciler.
+
+**3. Atomicity across two CLI processes**
+The journal snapshot is INSUFFICIENT because it leaks generated artifacts. `wave_reconcile.py:688-693` snapshots `releases.db`, `releases.sql`, and several `.html`/`.md` files, but it does NOT snapshot `RELEASES.generated.md`. When `manifest ship` runs, it updates the DB generation counter and writes a new `RELEASES.generated.md` matching that generation. If `roadmap update` fails and the DB is rolled back, the DB's generation is rewound but `RELEASES.generated.md` is not restored. This breaks `releases check`, which will subsequently fail with a `generation-mismatch` (`releases_app.py:4134-4137`). The receipt chain in SQLite does not break (since `op_receipts` is completely restored via `shutil.copy2`), but the DB/dump/gen trio diverges.
+
+**4. Does the catch-up scan need a persisted "reconciled" marker?**
+Yes, the plan quietly requires a new state, contradicting its non-goals. There is no GitHub API label or local file state that efficiently tracks "reconciled" PRs by PR number. Since `manifest ship` tracks the issue number and the merge evidence (but not the PR number as a queryable index), and local idempotency relies on parsing the doc text, the catch-up scan would have to fetch and parse every historical merged PR to decide if it was reconciled. Avoiding this O(N) scan requires a new persisted state (e.g. a `.reconciled-prs` file or a GitHub label), which violates the "no new state" rule.
+
+**5. Is `--gate`'s disposition right?**
+Deferring is wrong. Shipping automation without a working provenance gate creates a worse hole: it enables the automated merging of unproven work at machine speed, completely circumventing the manual verification step. The broken `check_provenance_receipts` must be filed as a blocking prerequisite issue and fixed before GH-421 can safely automate this path.
+
+**6. What breaks the first time this runs for real?**
+It stops at the branch push.
+* The 8 standing warnings in `releases check` (`rule=mig-ref-stale`) and the 24 grandfather entries do NOT break the script. `releases check` returns exit 0 on warnings, and `wave_reconcile.py` only fails if `returncode != 0`.
+* `marathon-plan.sh` generates a new file `MARATHON-PLAN-<date>.md`. If the bot's commit uses a strict path allowlist (as proposed in Phase 3), this new file will be left untracked and dropped from the commit.
+* The real break: `ci.yml` currently runs with `permissions: contents: read` (lines 111-112). Without `contents: write`, the Actions token cannot push the bot's commit back to `development`. Furthermore, if `development` has branch protection requiring a PR, direct push automation will fail after doing all the local work.
+
+**7. Anything Codex got wrong or over-corrected?**
+Codex's suggestion that Phase 1 must "extend `roadmap update` to derive and set the marker from the new raw text" was an over-correction. As identified in Question 1, extracting the marker from `raw_text` re-couples the schema to Markdown parsing. The correct solution is a dedicated flag, not parsing.

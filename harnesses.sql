@@ -904,6 +904,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260903154303-01515efa','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260903155442-fbc3dc35','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh405-mock-board-harness-impl-qa',0.0,0,0,NULL,NULL,0.0,' 10 files changed, 54 insertions(+), 15 deletions(-)','2026-09-03 15:54:42');
 INSERT INTO "invocation_logs" VALUES('inv-20260903161106-a9f06987','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh405-mock-board-harness-impl-qa',0.0,7,0,NULL,NULL,0.0,'0 files changed','2026-09-03 16:11:06');
 INSERT INTO "invocation_logs" VALUES('inv-20260904013158-756367f5','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh421-auto-reconcile-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-04 01:31:58');
+INSERT INTO "invocation_logs" VALUES('inv-20260904014925-1a205dfa','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh421-auto-reconcile-plan-sharpen',0.0,6,0,NULL,NULL,0.0,' 1 file changed, 25 insertions(+)','2026-09-04 01:49:25');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,

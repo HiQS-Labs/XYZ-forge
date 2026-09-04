@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -61,6 +61,8 @@ Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal | — | [GH-419-MARATHON-RULE-ENFORCEMENT.md](PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md) · [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) |
 | GH-421 · Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first | — | [GH-421-AUTO-WAVE-RECONCILE.md](PROJECT/1-INBOX/GH-421-AUTO-WAVE-RECONCILE.md) · [#421](https://github.com/HiQS-Labs/XYZ-forge/issues/421) |
 | GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on | — | [GH-423-ROADMAP-RENDER.md](PROJECT/1-INBOX/GH-423-ROADMAP-RENDER.md) · [#423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) |
+| GH-424 · roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕 | — | [GH-424-ROADMAP-STATUS-MARKER-WRITER.md](PROJECT/1-INBOX/GH-424-ROADMAP-STATUS-MARKER-WRITER.md) · [#424](https://github.com/HiQS-Labs/XYZ-forge/issues/424) |
+| GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified | — | [GH-425-GATE-PROVENANCE-CHECK.md](PROJECT/1-INBOX/GH-425-GATE-PROVENANCE-CHECK.md) · [#425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) |
 
 ## Queue
 
