@@ -2,7 +2,7 @@
 title: Full switchover to Releases DB — retire ROADMAP.md
 status: Proposed (1-INBOX — not yet active)
 created: 2026-08-27
-updated: 2026-08-27
+updated: 2026-09-04
 owner: noel
 gh_issue: 269
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/269
@@ -44,6 +44,12 @@ https://github.com/HiQS-Labs/XYZ-forge/issues/269
 | What was just completed | What's next |
 |---|---|
 | Captured with a preflight contract; queued in jog (position 2), but its 900s-idle build turn was parked as marathon-scale — a single-turn build cannot cover the 6-phase reader/writer/gate migration. | Route via marathon rather than jog; none of the 6 issue checkboxes have started. |
+
+## Lessons Learned (For Future Agents)
+
+- **Retiring a source file means rewiring every reader in the same change** — or naming the ones you deliberately leave behind. Four tools moved to the DB with this switchover; the residual `ROADMAP.md` readers (frozen Bash twin, HQ tooling, leaderboard fallback strings) were verified graceful and recorded rather than silently absorbed.
+- **An absent file is a mode signal, not an error** when a second authoritative source exists: `[ ! -f ROADMAP.md ] && releases.db present` = releases-mode. The inverse of the "empty input passes every check" trap — here absence decides the code path, so it needed its own coverage (`test/gh269-roadmap-retired.sh` pins both the retirement and the DB reads).
+- The rollback is real: reverting restores `ROADMAP.md` from history while the `releases.db` rows survive harmlessly, so the switchover is reversible without data loss — that is what made this Costly-class flip safe to land.
 
 ## Swarm Preflight Contract
 

@@ -2,7 +2,7 @@
 title: "GH-251: validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent"
 status: Active
 created: 2026-08-25
-updated: 2026-08-26
+updated: 2026-09-04
 owner: orchestrator (Claude Code)
 goal: an absent pytest reads as a named SKIP, never as a failure, so a green run claim can be read honestly
 gh_issue: 251
@@ -55,6 +55,12 @@ Blocks 0.7.4's exit criterion, which is a *qualifying 100% green* hosted run.
 ## Related
 
 - `validate.sh:574,1048-1053` · `test/test_python_layer.py` · GH-249 · 0.7.4 Linux-RC
+
+## Lessons Learned (For Future Agents)
+
+- An absent tool is a **named SKIP**, never a failure — and the skip must be loud (`SKIPPED: python:test_python_layer.py (pytest not importable …)`), because an unnamed hole in coverage reads as health. The mirror of gh342's rule: do not report a failure the run did not earn, and do not report coverage it did not run.
+- **The denominator is part of the verdict.** A suite that cannot run must be removed from `TOTAL` at the same time it is named as skipped, or the green fraction is manufactured out of runs that never happened. `SKIPPED_SUITES` keeps the disqualification visible for promotion evidence.
+- Probe the capability (`python3 -c "import pytest"`), not the last run's exit code: "pytest missing" and "assertion failed" are different states and must never share a verdict.
 
 ## Swarm Preflight Contract
 
