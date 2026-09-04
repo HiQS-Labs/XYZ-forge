@@ -61,6 +61,7 @@ TESTS=(
   "path-overlap.sh"
   "scope-change.sh"
   "tick-foreign-cwd.sh"
+  "gh411-tick-log-foreign-cwd.sh" # GH-411 (tick log guarded for all event types except cost.*)
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"

@@ -132,15 +132,27 @@ def handle_graphql(query, variables, state, state_path):
         if proj_id != state["project_id"]:
             return {"data": {"node": None}}
 
+        # The real items query also asks for fieldValueByName(name:$f) so a caller can tell an
+        # already-correct card from one that merely exists (board_sync review r2 #2). Answer it
+        # from the item's stored field_values: field NAME -> field id -> option id -> option
+        # name. Without this every card reads as status null, and an idempotent second write
+        # looks like a status change that was never needed.
+        want_field = variables.get("f", "Status")
+        field_info = state["fields"].get(want_field, {})
+        opt_names = {opt["id"]: opt["name"] for opt in field_info.get("options", [])}
         nodes = []
         for item in state.get("items", []):
-            nodes.append({
+            node = {
                 "id": item["id"],
                 "content": {
                     "number": item["number"],
                     "repository": {"nameWithOwner": item["repository"]},
                 },
-            })
+            }
+            if "fieldValueByName" in query:
+                opt_id = (item.get("field_values") or {}).get(field_info.get("id"))
+                node["fieldValueByName"] = {"name": opt_names[opt_id]} if opt_id in opt_names else None
+            nodes.append(node)
 
         return {
             "data": {
@@ -300,14 +312,27 @@ def main(argv=None):
         if arg in ("api", "graphql"):
             i += 1
             continue
+        # `-f` is gh's RAW-STRING field flag, not a query-only flag: `-f o=HiQS-Labs` is a
+        # variable exactly as `-F o=HiQS-Labs` is. Dropping non-query `-f` pairs made every
+        # string variable arrive as null, which reads as "project not found" rather than as
+        # a mock defect. board_sync.py sends strings via -f on purpose (review r2 #7: -F
+        # applies @file expansion, so an owner of "@noelsaw1" would read a FILE).
         if arg == "-f" and i + 1 < len(argv):
             val = argv[i + 1]
             if val.startswith("query="):
                 query = val[len("query="):]
+            elif "=" in val:
+                k, v = val.split("=", 1)
+                variables[k] = v
             i += 2
             continue
         if arg.startswith("-fquery="):
             query = arg[len("-fquery="):]
+            i += 1
+            continue
+        if arg.startswith("-f") and "=" in arg:
+            k, v = arg[2:].split("=", 1)
+            variables[k] = v
             i += 1
             continue
         if arg == "-F" and i + 1 < len(argv):

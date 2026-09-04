@@ -45,6 +45,16 @@ except ImportError:  # direct execution outside utils/py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from device_config import get_device_config_path, load_local_device_config
 
+# --root default: the CONSUMER repo, not the harness copy this file lives in. In a
+# vendored install XYZ_ROOT is <consumer>/.xyz — scanning there reads the harness's own
+# state (the two-roots disagreement #403 fixed). Prefer #403's shared resolver when the
+# branch carries it; fall back to XYZ_ROOT where it does not (review r2 #3).
+try:
+    from harness_paths import repo_root as _consumer_repo_root
+    DEFAULT_SCAN_ROOT = str(_consumer_repo_root())
+except Exception:  # ImportError, or repo_root's own resolution failing pre-merge
+    DEFAULT_SCAN_ROOT = str(XYZ_ROOT)
+
 STATE_PATH = Path(
     os.environ.get("XYZ_BOARD_SYNC_STATE_PATH", "~/.xyz/board_sync_state.json")
 ).expanduser()
@@ -100,10 +110,12 @@ def resolve_settings():
             cfg[key] = raw
         elif key in local:
             cfg[key] = local[key]
-    if isinstance(cfg.get("repos"), str):
-        cfg["repos"] = [p.strip() for p in cfg["repos"].split(",") if p.strip()]
-    if isinstance(cfg.get("clone_dirs"), str):
-        cfg["clone_dirs"] = [p.strip() for p in cfg["clone_dirs"].split(",") if p.strip()]
+    # JSON-file values skip the env tier's comma-splitting, so a bare string where a
+    # list belongs ("repos": "owner/name") would iterate characters downstream —
+    # coerce (review r1 F6).
+    for key in ("repos", "clone_dirs", "adapters"):
+        if isinstance(cfg.get(key), str):
+            cfg[key] = [cfg[key]]
     return cfg
 
 
@@ -129,10 +141,13 @@ def _scan_branches(root):
     except (OSError, subprocess.TimeoutExpired) as exc:
         _warn(f"branch scan skipped: {exc}")
         return out
-    for b in refs.stdout.splitlines():
-        m = re.match(r"^(?:fix|feat|marathon|chore|docs|hq)/[Gg][Hh]-?(\d{1,6})(?:[-_/.]|$)", b)
+    for ref in refs.stdout.splitlines():
+        # Any `prefix/gh-?N` shape counts (review r2: the fix|feat|marathon allow-list
+        # missed this repo's own chore/ and docs/ lanes — half the live branches); the
+        # gh is case-insensitive to match `feat/GH-402-…` conventions.
+        m = re.match(r"[^/\s]+/[Gg][Hh]-?(\d{1,6})(?:[-_/.]|$)", ref.strip())
         if m:
-            out.append((int(m.group(1)), "branch", b))
+            out.append((int(m.group(1)), "branch", ref.strip()))
     return out
 
 
@@ -197,8 +212,10 @@ def _scan_clone_dirs(cfg):
     return out
 
 
-def scan(root, cfg):
-    """Return {issue_number: [(source, detail), ...]} — every candidate, strong and weak."""
+def scan(root, cfg, allow_empty=False):
+    """Return {issue_number: [(source, detail), ...]} — every candidate, strong and weak.
+    allow_empty is for internal callers (reconcile over an idle clone is "nothing to
+    reconcile", not an error); the explicit `scan` verb keeps the refusal (review r1 F3)."""
     root = Path(root).resolve()
     if not root.is_dir():
         _die(f"scan root is not a directory: {root}")
@@ -212,10 +229,9 @@ def scan(root, cfg):
     ):
         found.setdefault(num, []).append((source, detail))
 
-    # Empty-input refusal, unconditional (QA r1 S-2): a scan that extracts nothing is a
-    # broken extractor or a wrong root — never a green. Every legitimate checkout has at
-    # least one scannable surface, so nothing honest changes by refusing always.
-    if not found:
+    # Empty-input refusal (QA r1 S-2): an explicit scan that extracts nothing is a
+    # broken extractor or a wrong root — never a green.
+    if not found and not allow_empty:
         _die("scan extracted zero candidates — refusing (empty input is not a pass)", 1)
     return found
 
@@ -224,10 +240,18 @@ def scan(root, cfg):
 
 
 def _gql(query, variables=None):
+    # GH-405: the gh executable is a seam so the mock board (utils/py/mock_gh_board.py) can
+    # stand in for the real API offline. Default is the real `gh` — nothing changes unless
+    # XYZ_BOARD_SYNC_GH_BIN is set, and the binary is named in every error below so a run
+    # against the mock can never be mistaken for a run against the live board.
     gh_bin = os.environ.get("XYZ_BOARD_SYNC_GH_BIN", "gh")
     cmd = [gh_bin, "api", "graphql", "-f", f"query={query}"]
     for k, v in (variables or {}).items():
-        cmd += ["-F", f"{k}={v}"]
+        # -F applies type inference and @file expansion — a project_owner of "@noelsaw1"
+        # would read a FILE named noelsaw1 (review r2 #7). Raw -f for strings; -F only
+        # where the schema wants a typed scalar (Int).
+        flag = "-F" if isinstance(v, int) and not isinstance(v, bool) else "-f"
+        cmd += [flag, f"{k}={v}"]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -260,10 +284,26 @@ def _load_state():
 
 def resolve_ids(cfg, force=False):
     """Resolve project / field / option IDs BY NAME, cached in state, re-resolved on
-    demand (S5) — a board edit (renamed option) must self-heal, not persist stale IDs."""
+    demand (S5) — a board edit (renamed option) must self-heal, not persist stale IDs.
+    The cache records the SETTINGS it was resolved from: change project_number (or any
+    input) and the cache self-invalidates instead of silently writing to the old board
+    (review r2 #1)."""
+    wanted_inputs = {
+        "project_owner": cfg["project_owner"],
+        "project_number": int(cfg["project_number"]),
+        "status_field": cfg["status_field"],
+        "in_progress": cfg["in_progress"],
+    }
     state = _load_state()
     ids = state.get("ids", {}) if not force else {}
+    if ids and ids.get("_inputs") != wanted_inputs:
+        _warn("cached board IDs were resolved from different settings — re-resolving")
+        ids = {}
     if not ids:
+        # GH-405: ask for BOTH owner shapes in one round trip. `user(login:)` returns null
+        # for an organization and vice versa, so the v1 user-only query could never reach an
+        # org board — and this repo's own owner (HiQS-Labs) is an org, which is why the mock
+        # models both (mock_gh_board.py:100-108). One query, no extra call, no guessing.
         data = _gql(
             "query($o:String!,$n:Int!,$f:String!){user(login:$o){projectV2(number:$n){id "
             "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}} "
@@ -271,12 +311,13 @@ def resolve_ids(cfg, force=False):
             "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}}}",
             {"o": cfg["project_owner"], "n": int(cfg["project_number"]), "f": cfg["status_field"]},
         )
-        owner = data.get("user") or data.get("organization")
-        if owner is None:
-            raise RuntimeError(f"project owner {cfg['project_owner']!r} not found as user or organization")
+        owner = data.get("user") or data.get("organization") or {}
         proj = owner.get("projectV2")
         if proj is None:
-            raise RuntimeError(f"project {cfg['project_owner']}/{cfg['project_number']} not found")
+            raise RuntimeError(
+                f"project {cfg['project_owner']}/{cfg['project_number']} not found "
+                f"as either a user or an organization"
+            )
         field = proj.get("field")
         if field is None:
             raise RuntimeError(f"field {cfg['status_field']!r} not found on the project")
@@ -287,7 +328,12 @@ def resolve_ids(cfg, force=False):
                 f"option {cfg['in_progress']!r} not found on field {cfg['status_field']!r} "
                 f"(options: {[o['name'] for o in options]})"
             )
-        ids = {"project": proj["id"], "status_field": field["id"], "in_progress_option": option["id"]}
+        ids = {
+            "_inputs": wanted_inputs,
+            "project": proj["id"],
+            "status_field": field["id"],
+            "in_progress_option": option["id"],
+        }
         state["ids"] = ids
         _atomic_state_write(state)
     return ids
@@ -297,28 +343,38 @@ def fetch_board_issues(cfg):
     """Paginate project items once; cache the snapshot in state. Keyed by
     (nameWithOwner, number) — the board is user-level and multi-repo, and a
     number-only key makes another repo's card with the same number silently
-    disable writes for this repo forever (QA r1 B-1)."""
+    disable writes for this repo forever (QA r1 B-1). Also captures each item's
+    id and Status value so a card that predates its work-start signal can be
+    status-flipped without a re-add (review r2 #2)."""
     ids = resolve_ids(cfg)
     q = (
-        "query($id:ID!,$cur:String){node(id:$id){... on ProjectV2{"
-        "items(first:100,after:$cur){pageInfo{endCursor hasNextPage}nodes{"
-        "content{... on Issue{number repository{nameWithOwner}}}}}}}}"
+        "query($id:ID!,$cur:String,$f:String!){node(id:$id){... on ProjectV2{"
+        "items(first:100,after:$cur){pageInfo{endCursor hasNextPage}nodes{id "
+        "content{... on Issue{number repository{nameWithOwner}}} "
+        "fieldValueByName(name:$f){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}}"
     )
+    base_vars = {"id": ids["project"], "f": cfg["status_field"]}
     cur, issues = None, []
     while True:
-        data = _gql(q, {"id": ids["project"], "cur": cur} if cur else {"id": ids["project"]})
+        data = _gql(q, dict(base_vars, cur=cur) if cur else base_vars)
         node = data["node"]["items"]
         for item in node["nodes"]:
             content = item.get("content") or {}
             if "number" in content:
-                issues.append((content.get("repository", {}).get("nameWithOwner", "?"), content["number"]))
+                key = (content.get("repository", {}).get("nameWithOwner", "?"), content["number"])
+                fv = item.get("fieldValueByName") or {}
+                issues.append({
+                    "repo": key[0], "num": key[1],
+                    "item_id": item.get("id"),
+                    "status": fv.get("name"),
+                })
         if not node["pageInfo"]["hasNextPage"]:
             break
         cur = node["pageInfo"]["endCursor"]
     state = _load_state()
-    state["snapshot"] = {"issues": [list(i) for i in issues], "fetched_at": int(time.time())}
+    state["snapshot"] = {"issues": issues, "fetched_at": int(time.time())}
     _atomic_state_write(state)
-    return set(issues)
+    return {(i["repo"], i["num"]): i for i in issues}
 
 
 def issue_node_id(cfg, num):
@@ -345,16 +401,37 @@ def _add_item(cfg, ids, content_id):
     )["addProjectV2ItemById"]["item"]["id"]
 
 
-def board_add(cfg, num, write):
+def board_add(cfg, num, write, snapshot=None):
     """Add issue + set In progress. Idempotent: check-first (repo-qualified, B-1)
-    against a fresh snapshot."""
+    against the snapshot (fetched when not supplied — reconcile passes one in so N
+    candidates cost one pagination, not 2N, review r2 #5). A card that already exists
+    with a DIFFERENT status gets a status-only write — the work-start event must not be
+    missed just because the card predates it (review r2 #2)."""
     repo = cfg["repos"][0]
-    on_board = fetch_board_issues(cfg)
-    if (repo, num) in on_board:
-        return f"gh-{num}: already on board ({repo}) — no-op"
+    board_name = f"{cfg['project_owner']}/projects/{cfg['project_number']}"
+    on_board = snapshot if snapshot is not None else fetch_board_issues(cfg)
+    existing = on_board.get((repo, num))
+    if existing and existing.get("status") == cfg["in_progress"]:
+        return f"gh-{num}: already {cfg['in_progress']!r} on {board_name} ({repo}) — no-op"
     issue = issue_node_id(cfg, num)
+    if issue.get("state") == "CLOSED":
+        return f"gh-{num}: issue is CLOSED — a closed issue is not a work-start, skipping"
+    if existing and existing.get("item_id"):
+        if not write:
+            return (f"gh-{num} ({issue['state']}): dry-run — card exists with status "
+                    f"{existing.get('status')!r}, would set {cfg['in_progress']!r}")
+        ids = resolve_ids(cfg)
+        try:
+            _set_status(cfg, ids, existing["item_id"])
+        except RuntimeError as exc:
+            ids = resolve_ids(cfg, force=True)  # S5: stale-ID self-heal
+            _set_status(cfg, ids, existing["item_id"])
+            _warn(f"status write failed ({exc}); re-resolved IDs and succeeded")
+        if snapshot is None:
+            fetch_board_issues(cfg)  # refresh snapshot post-write
+        return f"gh-{num}: card existed as {existing.get('status')!r} — set Status={cfg['in_progress']!r} on {board_name}"
     if not write:
-        return f"gh-{num} ({issue['state']}): dry-run — would add + set {cfg['in_progress']!r}"
+        return f"gh-{num} ({issue['state']}): dry-run — would add + set {cfg['in_progress']!r} on {board_name}"
     ids = resolve_ids(cfg)
     item_id = None
     try:
@@ -368,8 +445,9 @@ def board_add(cfg, num, write):
             item_id = _add_item(cfg, ids, issue["id"])
         _set_status(cfg, ids, item_id)
         _warn(f"first attempt failed ({exc}); re-resolved IDs and succeeded")
-    fetch_board_issues(cfg)  # refresh snapshot post-write
-    return f"gh-{num}: added + Status={cfg['in_progress']!r}"
+    if snapshot is None:
+        fetch_board_issues(cfg)  # refresh snapshot post-write
+    return f"gh-{num}: added + Status={cfg['in_progress']!r} on {board_name}"
 
 
 def _set_status(cfg, ids, item_id):
@@ -411,8 +489,7 @@ def dedupe(cfg, write):
         _gql("mutation($p:ID!,$i:ID!){deleteProjectV2Item(input:{projectId:$p,itemId:$i}){deletedItemId}}",
              {"p": ids["project"], "i": drop})
         lines.append(f"deleted duplicate card {drop} for {key} (kept {keep})")
-    if write and duplicates:
-        fetch_board_issues(cfg)  # refresh snapshot post-dedupe
+    fetch_board_issues(cfg)  # keep the cached snapshot honest after deletions (review r1 F8)
     return "\n".join(lines)
 
 
@@ -428,7 +505,8 @@ def main(argv=None):
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--write", action="store_true",
                         help="perform board mutations (default is dry-run — the safe first cut)")
-    common.add_argument("--root", default=str(XYZ_ROOT), help="repo root to scan (default: this repo)")
+    common.add_argument("--root", default=DEFAULT_SCAN_ROOT,
+                        help="repo root to scan (default: the consumer repo this runs in)")
     ap = argparse.ArgumentParser(prog="board_sync.py",
                                  description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -464,28 +542,45 @@ def main(argv=None):
         return 0
 
     if args.cmd == "touch":
-        m = _GH_N.search(str(args.issue)) or re.match(r"^(\d{1,6})$", str(args.issue).strip())
+        # The help promises "issue number or gh-<n>" — a bare number is the documented
+        # spelling and must work (review r1 F1).
+        m = _GH_N.search(str(args.issue)) or re.fullmatch(r"(\d{1,6})", str(args.issue).strip())
         if not m:
             _die(f"cannot parse an issue number out of {args.issue!r}")
-        print(board_add(cfg, int(m.group(1)), args.write))
+        try:
+            print(board_add(cfg, int(m.group(1)), args.write))
+        except RuntimeError as exc:
+            _die(str(exc), 1)  # clean diagnostic, no traceback (review r2 #6)
         return 0
 
     if args.cmd == "dedupe":
-        print(dedupe(cfg, args.write))
+        try:
+            print(dedupe(cfg, args.write))
+        except RuntimeError as exc:
+            _die(str(exc), 1)
         return 0
 
     if args.cmd == "reconcile":
-        found = scan(args.root, cfg)
+        # allow_empty: an idle clone reconciles to "nothing to reconcile" — the refusal
+        # belongs to the explicit scan verb, not the sweeper-shaped entry point (r1 F3).
+        found = scan(args.root, cfg, allow_empty=True)
         lines = []
+        snapshot = None
         for num in sorted(found):
             sources = [s for s, _ in found[num]]
             if any(s in STRONG_SOURCES for s in sources):
                 try:
-                    lines.append(board_add(cfg, num, args.write))
+                    # One snapshot for the whole run (r2 #5): fetched on the first
+                    # strong candidate, reused for the rest, persisted at the end.
+                    if snapshot is None:
+                        snapshot = fetch_board_issues(cfg)
+                    lines.append(board_add(cfg, num, args.write, snapshot=snapshot))
                 except RuntimeError as exc:
                     _warn(f"gh-{num}: add failed — {exc} (degraded; board is a projection)")
             else:
                 lines.append(f"gh-{num}: weak-only ({', '.join(sources)}) — log, no write")
+        if snapshot is not None and args.write:
+            fetch_board_issues(cfg)  # persist the post-run snapshot once
         print("\n".join(lines) if lines else "nothing to reconcile")
         return 0
 

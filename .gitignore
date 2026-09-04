@@ -97,3 +97,9 @@ relay-system/**/runtime/
 # Audit probe output when --out is pointed at the worktree (default is a scratch dir).
 audit/out/
 .relay-scratch/
+
+# SQLite side files. Opening either ledger DB with the sqlite3 CLI creates a -wal/-shm pair;
+# they are transient (checkpoint them into the .db before committing) and must never be tracked —
+# a committed -wal makes the .db bytes an incomplete picture of the ledger.
+*.db-wal
+*.db-shm

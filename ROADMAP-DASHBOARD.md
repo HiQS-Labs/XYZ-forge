@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 39 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -47,8 +47,18 @@ Summary: 39 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-384 · Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel | — | [GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md](PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md) · [#384](https://github.com/HiQS-Labs/XYZ-forge/issues/384) |
 | GH-396 · Harness root resolution: one resolver, two roots, pinned | — | — |
 | GH-399 — let the profile carry the route | — | [#399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) · [PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md](PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md) |
-| GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work | — | [GH-402-BOARD-SYNC.md](PROJECT/2-WORKING/GH-402-BOARD-SYNC.md) · [#402](https://github.com/HiQS-Labs/XYZ-forge/issues/402) |
 | GH-405 · Local debugging mock harness for GitHub Projects V2 API | — | [GH-405-MOCK-BOARD-HARNESS.md](PROJECT/2-WORKING/GH-405-MOCK-BOARD-HARNESS.md) · [#405](https://github.com/HiQS-Labs/XYZ-forge/issues/405) |
+| GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work | — | [GH-402-BOARD-SYNC.md](PROJECT/2-WORKING/GH-402-BOARD-SYNC.md) · [#402](https://github.com/HiQS-Labs/XYZ-forge/issues/402) |
+| GH-406 · External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | [GH-406-RUSS-EXTERNAL-REVIEW.md](PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md) · [#406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) |
+| GH-410 · The structural relay-block validator never runs on the driven path, and rejects the bold STATUS format real threads write | — | [GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md](PROJECT/1-INBOX/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md) · [#410](https://github.com/HiQS-Labs/XYZ-forge/issues/410) |
+| GH-412 · A transient O_EXCL claim collision exits 1, identical to a durable loss — no retry channel under marathon load | — | [GH-412-TRANSIENT-CLAIM-EXIT-CODE.md](PROJECT/1-INBOX/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md) · [#412](https://github.com/HiQS-Labs/XYZ-forge/issues/412) |
+| GH-413 · The launch-artifact marker authorises a destructive rebuild of any directory — marker alone, no git history required | — | [GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md](PROJECT/1-INBOX/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md) · [#413](https://github.com/HiQS-Labs/XYZ-forge/issues/413) |
+| GH-411 · tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus the whole marathon namespace | — | [GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md](PROJECT/1-INBOX/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md) · [#411](https://github.com/HiQS-Labs/XYZ-forge/issues/411) |
+| GH-414 · Nothing deterministic checks whether an inline code comment is still true — extend the dead-reference resolver past the doc boundary | — | [GH-414-COMMENT-REFERENCE-CHECK.md](PROJECT/1-INBOX/GH-414-COMMENT-REFERENCE-CHECK.md) · [#414](https://github.com/HiQS-Labs/XYZ-forge/issues/414) |
+| GH-415 · The skill-first guard hook covers 6 of 12 Tier-A entrypoints — derive the set from AGENTS.md instead of hardcoding it | — | [GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md](PROJECT/1-INBOX/GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md) · [#415](https://github.com/HiQS-Labs/XYZ-forge/issues/415) |
+| GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer | — | [GH-416-DOC-TRUES-UP-BATCH.md](PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md) · [#416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) |
+| GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip | — | [GH-418-MARATHON-ADOPT-RELEASES-DB.md](PROJECT/1-INBOX/GH-418-MARATHON-ADOPT-RELEASES-DB.md) · [#418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) |
+| GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal | — | [GH-419-MARATHON-RULE-ENFORCEMENT.md](PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md) · [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) |
 
 ## Queue
 

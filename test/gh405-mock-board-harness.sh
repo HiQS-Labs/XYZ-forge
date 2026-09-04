@@ -107,11 +107,26 @@ if [ "$TOUCH_RC" -eq 0 ] && grep -q "gh-405: added + Status='In progress'" <<<"$
   ok "board_sync touch 405 --write completes via mock"
 else bad "touch failed (rc=$TOUCH_RC): $TOUCH_OUT"; fi
 
-# Idempotent second touch
+# Idempotent second touch. The no-op message names the STATUS, not just board membership
+# (board_sync review r2 #2): a card that exists with the wrong status is a status write, so
+# "already there" alone would no longer prove idempotency. This asserts the stronger claim,
+# and it only passes because the mock now answers fieldValueByName.
 TOUCH2_OUT="$(python3 "$SYNC_TOOL" touch 405 --write 2>&1)"
-if grep -q "already on board.*no-op" <<<"$TOUCH2_OUT"; then
-  ok "board_sync check-first reports already on board (no-op)"
+if grep -q "already 'In progress'.*no-op" <<<"$TOUCH2_OUT"; then
+  ok "board_sync check-first reports already In progress (no-op)"
 else bad "check-first failed: $TOUCH2_OUT"; fi
+
+# Red control for the line above: a card sitting at a DIFFERENT status must NOT read as a
+# no-op. Flip the seeded card to Todo through the mock, then re-touch — this is the case the
+# old "already on board" assertion silently passed and r2 #2 exists to catch.
+ITEM_ID="$(python3 "$TOOL" --dump --state "$MOCK_STATE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["items"][0]["id"])')"
+python3 "$TOOL" --state "$MOCK_STATE" api graphql \
+  -f query='mutation($p:ID!,$f:ID!,$i:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,fieldId:$f,itemId:$i,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}' \
+  -F p=PVT_mock_proj_001 -F f=PVTF_status_001 -F i="$ITEM_ID" -F o=OPT_todo_001 >/dev/null
+FLIP_OUT="$(python3 "$SYNC_TOOL" touch 405 --write 2>&1)"
+if grep -q "card existed as 'Todo'" <<<"$FLIP_OUT" && ! grep -q "no-op" <<<"$FLIP_OUT"; then
+  ok "a card at the wrong status is a status write, not a no-op (r2 #2 red control)"
+else bad "wrong-status card was not corrected: $FLIP_OUT"; fi
 
 # ── 5. Fault injection and self-heal retry (Demo 2) ─────────────────────────────
 echo "5. fault injection and self-heal retry"
@@ -129,6 +144,21 @@ DEDUPE_OUT="$(python3 "$SYNC_TOOL" dedupe 2>&1)"
 if grep -q "no duplicate cards" <<<"$DEDUPE_OUT"; then
   ok "dedupe confirms single item preserved after self-heal retry"
 else bad "unexpected duplicates found: $DEDUPE_OUT"; fi
+
+# ── 6. Organization-owned board resolves ───────────────────────────────────────
+# `user(login:)` returns null for an org and vice versa, so a user-only resolve_ids can never
+# reach an org board — and THIS repo's owner (HiQS-Labs) is an org. Witnessed red: with the
+# organization() half of the query removed, this exact case fails with "project noelsaw1/3
+# not found as either a user or an organization". The mock models both shapes (is_org), which
+# is what makes the org path testable offline at all.
+echo "6. organization-owned board"
+python3 "$TOOL" --reset --state "$MOCK_STATE" >/dev/null
+python3 -c "import json,sys;p=sys.argv[1];s=json.load(open(p));s['is_org']=True;json.dump(s,open(p,'w'))" "$MOCK_STATE"
+rm -f "$SYNC_STATE"
+ORG_OUT="$(python3 "$SYNC_TOOL" touch 405 --write 2>&1)"; ORG_RC=$?
+if [ "$ORG_RC" -eq 0 ] && grep -q "gh-405: added + Status='In progress'" <<<"$ORG_OUT"; then
+  ok "an organization-owned project resolves and accepts the write"
+else bad "org-owned board not resolved (rc=$ORG_RC): $ORG_OUT"; fi
 
 echo
 echo "GH-405 mock_gh_board harness: $PASS passed, $FAIL failed"
