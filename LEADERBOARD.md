@@ -23,7 +23,7 @@ while the four axes keep their honest values underneath.
 | 11 | **295** | [GH-14](https://github.com/HiQS-Labs/XYZ-forge/issues/14) — appendEvent writes non-atomically, so concurrent readers can observe torn event files | — | Completed | 85 | 85 | 70 | 55 | 295 | — |
 | 12 | **295** | [GH-155](https://github.com/HiQS-Labs/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing | — | Completed | 85 | 70 | 90 | 50 | 295 | — |
 | 13 | **295** | [GH-165](https://github.com/HiQS-Labs/XYZ-forge/issues/165) — Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | — | Completed | 90 | 80 | 90 | 35 | 295 | — |
-| 14 | **295** | [GH-411](https://github.com/HiQS-Labs/XYZ-forge/issues/411) — tick log exempt from the foreign-cwd guard | Front-Door | queue | 75 | 70 | 70 | 80 | 295 | — |
+| 14 | **295** | [GH-411](https://github.com/HiQS-Labs/XYZ-forge/issues/411) — tick log exempt from the foreign-cwd guard | Front-Door | completed | 75 | 70 | 70 | 80 | 295 | — |
 | 15 | **292** | [GH-23](https://github.com/HiQS-Labs/XYZ-forge/issues/23) — Kernel invariant: enforce path-overlap rejection on direct tick claim and tick scope | — | Completed | 82 | 78 | 72 | 60 | 292 | — |
 | 16 | **290** | [GH-113](https://github.com/HiQS-Labs/XYZ-forge/issues/113) — headless agy builder writes root scratch files, tripping containment (exit 6) | Bulkhead | completed | 85 | 60 | 85 | 60 | 290 | — |
 | 17 | **290** | [GH-123](https://github.com/HiQS-Labs/XYZ-forge/issues/123) — Linux portability canary — remainder: gh358 lock contention on shared runners | Linux-RC | cut | 90 | 80 | 75 | 45 | 290 | — |
