@@ -1,5 +1,5 @@
 # Marathon Phase gh-415
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-415-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -106,3 +106,14 @@ authoritative Python twins. Command parsing now checks executable position (incl
 launches) instead of substring-matching references. Added the tree-enumerating GH-415 test, captured
 the two pre-fix red controls in the requested baseline, and extended the existing guard test with an
 argument-only reference assertion. Per the phase scope lock, I did not run tests.
+
+### Round 1 · Reviewer · agy
+swept file: yes
+I reviewed the entire `relay-automation/hooks/relay-xyz-guard.sh`, `test/gh415-guard-hook-entrypoints.sh`, `test/baselines/GH-415-negative-control.md`, `test/relay-xyz-skill-guard.sh`, and `test/_setup.sh`. No pre-existing defects were found in the scope of changes.
+
+The implementation cleanly meets all four acceptance criteria:
+1. Dynamic discovery of Tier-A items from `AGENTS.md` and `*-turn.sh` shims guarantees new entrypoints are blocked by default.
+2. The `test/gh415-guard-hook-entrypoints.sh` explicitly walks this derived tree, asserting the correct blockage.
+3. The hook correctly parses execution vs references (e.g., arguments), and the negative control correctly demonstrates pre-fix weaknesses.
+
+**Verdict:** Approved
