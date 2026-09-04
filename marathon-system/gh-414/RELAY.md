@@ -1,6 +1,6 @@
 # Marathon Phase gh-414
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-414-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -102,3 +102,23 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the GH-414 comment-reference check in the allowed artifacts:
+
+- `utils/pdda/pdda.sh` now scans path-shaped references in source comments as fail-closed findings,
+  checks both `PDDA_REPO_ROOT` and the opt-in built-artifact root
+  (`PDDA_COMMENT_REFERENCE_ARTIFACT`, with `XYZ_LAUNCH_ARTIFACT` compatibility), and rejects a
+  supplied missing artifact. The scan also runs for minimal fixtures with no governance docs.
+- `test/gh414-comment-reference-check.sh` supplies the executable red control: the two ADR citations
+  resolve in the source fixture, fail after the artifact drops them, pass once restored, and an
+  independently missing source-comment path fails.
+- `test/baselines/GH-414-negative-control.md` records the observed pre-fix dropped-ADR shape.
+
+Key decision: markdown prose remains warn-only because its extraction is heuristic; source-comment
+path citations use the narrower, deterministic scanner and therefore fail in full mode. I read the
+previous containment escalation and made no off-lane edits. No test or gate was run, per the phase
+scope lock; the harness will run the gate outside this worktree.
+
+handing off to agy — agy, take your turn.
