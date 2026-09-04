@@ -1,6 +1,6 @@
 ---
 title: "GH-251: validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent"
-status: Active
+status: Complete
 created: 2026-08-25
 updated: 2026-09-04
 owner: orchestrator (Claude Code)
