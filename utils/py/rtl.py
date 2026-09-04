@@ -6,6 +6,7 @@ import signal
 import subprocess
 import tempfile
 import sys
+import time
 
 # GH-375 — agy's auth pre-flight cannot decide on exit status alone. `agy whoami` EXITS 0 while
 # failing to run at all when there is no TTY ("CLI error: bubbletea: error opening TTY: ... open
@@ -351,12 +352,22 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
     #
     # Captured rather than inherited, deliberately: a successful claim must stay silent. Printing
     # tick's `won:` line on every turn would add noise to every transcript in exchange for nothing.
-    claim_res = subprocess.run(
-        [tick_bin, "claim", task, "--agent", agent, "--paths", claim_paths],
-        env=tick_env,
-        capture_output=True,
-        text=True,
-    )
+    # GH-412: transient claim retry on exit 75 (EX_TEMPFAIL / lock collision).
+    # Durable losses (exit 1) are NOT retried and fail fast.
+    max_retries = 5
+    backoff = 0.05
+    for attempt in range(max_retries):
+        claim_res = subprocess.run(
+            [tick_bin, "claim", task, "--agent", agent, "--paths", claim_paths],
+            env=tick_env,
+            capture_output=True,
+            text=True,
+        )
+        if claim_res.returncode == 75 and attempt < max_retries - 1:
+            time.sleep(backoff)
+            backoff *= 2
+            continue
+        break
     claim_output = ((claim_res.stdout or "") + (claim_res.stderr or "")).strip()
 
     info_res = subprocess.run([tick_bin, "info", task], env=tick_env, capture_output=True, text=True)
