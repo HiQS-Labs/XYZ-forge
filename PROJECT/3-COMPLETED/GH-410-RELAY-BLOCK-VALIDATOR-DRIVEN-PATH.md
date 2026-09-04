@@ -1,8 +1,8 @@
 ---
 title: The structural relay-block validator never runs on the driven path, and rejects the format real threads write
-status: In Progress (2-WORKING — active)
+status: Complete
 created: 2026-09-03
-updated: 2026-09-03
+updated: 2026-09-04
 owner: noelsaw1
 gh_issue: 410
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/410
