@@ -11,7 +11,7 @@ tick_a init >/dev/null
 
 # Committed baseline. NEXT: Reviewer ⇒ rtl_init scopes the allowlist to the relay file only (the real
 # artifact-review shape). The artifact lives OUTSIDE the repo (an external PR/diff file in $WORK).
-printf 'STATUS: Open\nNEXT: Reviewer\n# relay body\n' >"$A/relay.md"
+printf 'STATUS: Open\nNEXT: Reviewer\n# relay body\n\n## Log\n' >"$A/relay.md"
 printf '.tick/\n' >"$A/.gitignore"
 git -C "$A" add relay.md .gitignore >/dev/null 2>&1
 git -C "$A" commit -q -m "seed" >/dev/null 2>&1
@@ -28,9 +28,9 @@ set -u
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "relay.md" >/dev/null 2>&1
 if [ -f ".relay-artifacts/external-pr.diff" ]; then
   sent="$(grep -o 'ARTIFACT_SENTINEL_42' .relay-artifacts/external-pr.diff | head -1)"
-  printf '\n### Review · saw artifact: %s\n' "$sent" >> relay.md
+  printf '\n### Review · saw artifact: %s\nVERDICT: PASS\nBasis: verified artifact\n' "$sent" >> relay.md
 else
-  printf '\n### Review · ARTIFACT MISSING\n' >> relay.md
+  printf '\n### Review · ARTIFACT MISSING\nVERDICT: FAIL\nBasis: artifact missing\n' >> relay.md
 fi
 [ "${STUB_MODE:-read}" = edit ] && printf 'tampered\n' >> .relay-artifacts/external-pr.diff
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to producer >/dev/null 2>&1
