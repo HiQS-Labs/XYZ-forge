@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -153,5 +153,12 @@ swept file: yes
 Verdict: Changes requested
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · r2
+
+- [Should] links resolve but the cited patterns are absent from the target — **Implemented** (commit follows this block): verified `PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md` contains neither the "measured, not assumed" table nor an open-question block (grep: zero hits), so both citations now name the section and point at the issue itself — [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) "What is actually unenforced today — measured, not assumed" for pivot 1, [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) "Open question for the reviewers" for pivot 3. Both headings verified verbatim in the issue body. Deliberately no anchor fragment: GitHub slugification of the em-dash heading is not worth a guessed anchor that silently lands mid-page — the named section plus the issue URL is an accurate breadcrumb. The reviewer's alternative (replace the claims with descriptions the capture doc supports) was not taken: the issue-body patterns are the better exemplars, and the issue is the canonical target.
+- All [Pass] findings: no changes.
+
+Handing off to Reviewer — take your turn and grade the r2 fix.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
