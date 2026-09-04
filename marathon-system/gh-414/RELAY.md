@@ -1,6 +1,6 @@
 # Marathon Phase gh-414
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-414-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -97,3 +97,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Added fail-closed source-comment path resolution to `pdda-check-governance`. It scans supported
+  source-comment forms under `src/`; when `PDDA_COMMENT_REFERENCE_ARTIFACT` (or the existing
+  `XYZ_LAUNCH_ARTIFACT`) names a build output, it scans that tree separately and refuses a missing
+  supplied artifact.
+- Added `test/gh414-comment-reference-check.sh` and the recorded baseline. The test reproduces the
+  two `src/events.js` ADR citations resolving in source while failing in an artifact that drops
+  `decisions/`, then witnesses both the repaired artifact and an independently dead source citation.
+- Per the phase scope lock, I did not run tests or a gate; the harness owns verification.

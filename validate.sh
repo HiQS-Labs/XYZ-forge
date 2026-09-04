@@ -63,6 +63,7 @@ TESTS=(
   "tick-foreign-cwd.sh"
   "gh411-tick-log-foreign-cwd.sh" # GH-411 (tick log guarded for all event types except cost.*)
   "gh413-launch-artifact-destination-guard.sh" # GH-413 (launch artifact marker deletion & destination history guard)
+  "gh414-comment-reference-check.sh" # GH-414 (source-comment references resolution in source and built trees)
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"
