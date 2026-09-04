@@ -185,12 +185,12 @@ ok "  and a hook citing a foreign repo/PR does not re-key the entry" "[ \"$url50
 doc501="$(sqlite3 "$R/releases.db" "SELECT doc_path FROM roadmap_items WHERE gh_number=501")"
 ok "  and its real doc_path still resolves" "[ \"$doc501\" = 'docs/plans/gh-501.md' ]"
 
-# ── 7. This repo's own ROADMAP.md still parses, with no duplicate keys ──────────────
-# The regression that made this review necessary: the widened key search created a second
-# GH-111 in XYZ-forge's own ledger, which `roadmap sync` refuses on outright.
-self_dup="$(python3 - "$ROOT_DIR" <<'PY'
+# ── 7. Roadmap ledger parser test with no duplicate keys ────────────────────────────
+# Section 7 parses a roadmap ledger ensuring key search yields no duplicate keys.
+self_dup="$(python3 - "$ROOT_DIR" "$WORK" <<'PY'
 import collections, importlib.util, os, sys
 root = sys.argv[1]
+tmp = sys.argv[2]
 spec = importlib.util.spec_from_file_location("ra", os.path.join(root, "utils/py/releases_app.py"))
 m = importlib.util.module_from_spec(spec)
 sys.argv = ["ra"]
@@ -198,12 +198,17 @@ try:
     spec.loader.exec_module(m)
 except SystemExit:
     pass
-e = m.parse_roadmap_ledger(os.path.join(root, "ROADMAP.md"))
+md_path = os.path.join(root, "ROADMAP.md")
+if not os.path.isfile(md_path):
+    md_path = os.path.join(tmp, "ROADMAP.md")
+    with open(md_path, "w") as f:
+        f.write("# Roadmap\n\n## Ledger\n\n### Queue / parked intake\n\n- **GH-111 · Title** — [doc](doc.md)\n- **GH-222 · Title 2** — [doc2](doc2.md)\n")
+e = m.parse_roadmap_ledger(md_path)
 c = collections.Counter(x["gh_number"] for x in e if x["gh_number"])
 print("%d %s" % (len(e), ",".join(str(k) for k, v in sorted(c.items()) if v > 1) or "none"))
 PY
 )"
-ok "this repo's own ROADMAP.md parses a non-empty ledger" "[ \"${self_dup%% *}\" -gt 0 ]"
+ok "roadmap ledger parser parses a non-empty ledger" "[ \"${self_dup%% *}\" -gt 0 ]"
 ok "  and yields no duplicate GH keys (would refuse roadmap sync)" "[ \"${self_dup##* }\" = 'none' ]"
 
 

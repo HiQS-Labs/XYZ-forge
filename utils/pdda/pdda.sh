@@ -329,24 +329,29 @@ check_roadmap_coverage() {
   local PDDA_ROADMAP="${PDDA_ROADMAP:-$PDDA_REPO_ROOT/ROADMAP.md}"
   local file rel
 
-  # GH-243: in a releases-mode repo the ledger lives in the DB — a doc parked via
-  # `releases roadmap add` has a doc_path row and no ROADMAP.md line (that file is frozen).
+  # GH-243/GH-269: in a releases-mode repo the ledger lives in the DB — a doc parked via
+  # `releases roadmap add` has a doc_path/raw_text row and no ROADMAP.md line (that file is retired).
   # Coverage passes when the pointer exists in EITHER surface; legacy repos are unaffected
   # (db_doc_paths stays empty and only the ROADMAP.md grep decides).
   local db_doc_paths=""
-  if grep -q "ROADMAP_SOURCE=releases" "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null \
+  local db_raw_texts=""
+  if (grep -q "ROADMAP_SOURCE=releases" "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null || [ ! -f "$PDDA_ROADMAP" ]) \
      && [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
     db_doc_paths="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
       "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL" 2>/dev/null)" || db_doc_paths=""
+    db_raw_texts="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
+      "SELECT raw_text FROM roadmap_items WHERE raw_text IS NOT NULL" 2>/dev/null)" || db_raw_texts=""
   fi
-  pdda_roadmap_covers() {  # <relpath> -> 0 iff parked in ROADMAP.md text or a DB doc_path row
-    grep -Fq "$1" "$PDDA_ROADMAP" && return 0
-    [ -n "$db_doc_paths" ] && grep -Fq "$1" <<<"$db_doc_paths"
+  pdda_roadmap_covers() {  # <relpath> -> 0 iff parked in ROADMAP.md text or a DB doc_path/raw_text row
+    [ -f "$PDDA_ROADMAP" ] && grep -Fq "$1" "$PDDA_ROADMAP" && return 0
+    [ -n "$db_doc_paths" ] && grep -Fq "$1" <<<"$db_doc_paths" && return 0
+    [ -n "$db_raw_texts" ] && grep -Fq "$1" <<<"$db_raw_texts" && return 0
+    return 1
   }
 
-  if [ ! -f "$PDDA_ROADMAP" ]; then
+  if [ ! -f "$PDDA_ROADMAP" ] && [ -z "$db_doc_paths" ] && [ -z "$db_raw_texts" ]; then
     pdda_record_finding error "$CHECK_NAME" "$PDDA_ROADMAP" 0 \
-      "ROADMAP.md not found; cannot verify working-doc coverage" "add-roadmap"
+      "ROADMAP.md not found and no releases.db ledger present; cannot verify working-doc coverage" "add-roadmap"
     pdda_emit_summary "$CHECK_NAME" 1
     return "$(pdda_gated_exit 1)"
   fi

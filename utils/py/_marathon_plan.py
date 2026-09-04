@@ -757,14 +757,82 @@ class Engine:
                 out.append(full)
         return out
 
+    def _load_ledger_from_db(self, db_path):
+        import sqlite3
+        if not os.path.isfile(db_path):
+            return []
+        try:
+            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='roadmap_items'")
+            if not cur.fetchone():
+                conn.close()
+                return []
+            rows = cur.execute("SELECT * FROM roadmap_items ORDER BY position").fetchall()
+            conn.close()
+            out = []
+            for r in rows:
+                raw = (r["raw_text"] or "").strip()
+                section = r["section"] or "Queue / parked intake"
+                if raw:
+                    out.append(self._parse_bullet([raw], section))
+                else:
+                    title = r["title"] or ""
+                    gh_number = r["gh_number"]
+                    gh = f"GH-{gh_number} · " if gh_number is not None else ""
+                    status = r["status_marker"] or "—"
+                    links = []
+                    if r["doc_path"]:
+                        links.append({"label": os.path.basename(r["doc_path"]), "target": r["doc_path"]})
+                    if r["issue_url"]:
+                        links.append({"label": f"#{gh_number}" if gh_number else "issue", "target": r["issue_url"]})
+                    raw_synth = f"- **{gh}{title}** {status}"
+                    out.append({"title": title, "status": status, "links": links, "raw": raw_synth, "section": section})
+            return out
+        except Exception:
+            return []
+
     # ── main compute ────────────────────────────────────────────────────────────
     def run(self, render_out):
         """Parse → resolve → score → wave-pack → render. Prints the report to stdout,
         writes the rendered doc to ``render_out``, returns the exit code."""
-        raw = self._read_file_safe(self.ROADMAP)
-        if raw is None:
-            raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
-        ledger = self._parse_ledger(raw)
+        db_path = os.path.join(self.ROOT, "releases.db")
+        pdda_mode_path = os.path.join(self.ROOT, ".pdda-mode")
+        is_releases_mode = False
+        if os.path.isfile(pdda_mode_path):
+            try:
+                with open(pdda_mode_path, "r", encoding="utf-8") as f:
+                    if "ROADMAP_SOURCE=releases" in f.read():
+                        is_releases_mode = True
+            except OSError:
+                pass
+
+        explicit_roadmap_env = os.environ.get("QUEUE_PLAN_ROADMAP")
+
+        ledger = None
+        if explicit_roadmap_env:
+            raw = self._read_file_safe(self.ROADMAP)
+            if raw is None:
+                raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
+            ledger = self._parse_ledger(raw)
+        elif is_releases_mode and os.path.isfile(db_path):
+            ledger = self._load_ledger_from_db(db_path)
+            if not ledger and os.path.isfile(self.ROADMAP):
+                raw = self._read_file_safe(self.ROADMAP)
+                if raw is not None:
+                    ledger = self._parse_ledger(raw)
+        elif not os.path.isfile(self.ROADMAP) and os.path.isfile(db_path):
+            ledger = self._load_ledger_from_db(db_path)
+        else:
+            raw = self._read_file_safe(self.ROADMAP)
+            if raw is not None:
+                ledger = self._parse_ledger(raw)
+            elif os.path.isfile(db_path):
+                ledger = self._load_ledger_from_db(db_path)
+            else:
+                raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
+
         if not ledger:
             raise EngineExit(3, "marathon-plan: no ledger items parsed (is '## Ledger' present?)")
 

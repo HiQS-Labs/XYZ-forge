@@ -878,9 +878,9 @@ onto the rails deliberately.
   `error` blocks. Every check ends with `exit "$(pdda_gated_exit "$EXIT_CODE")"`, which returns the
   real code only in `full`.
 
-## ROADMAP.md contract
+## Roadmap ledger contract (ROADMAP.md / releases.db)
 
-`ROADMAP.md` is a pointer file, not a plan body.
+The roadmap ledger (stored as `ROADMAP.md` in legacy repos or in `releases.db` in releases-mode repos) is a pointer file/ledger, not a plan body.
 
 It should contain:
 

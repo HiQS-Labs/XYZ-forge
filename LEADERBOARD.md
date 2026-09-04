@@ -34,7 +34,7 @@ while the four axes keep their honest values underneath.
 | 22 | **290** | [GH-148](https://github.com/HiQS-Labs/XYZ-forge/issues/148) — DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | — | Completed | 85 | 75 | 90 | 40 | 290 | — |
 | 23 | **290** | [GH-168](https://github.com/HiQS-Labs/XYZ-forge/issues/168) — wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | Bulkhead | completed | 80 | 55 | 85 | 70 | 290 | — |
 | 24 | **290** | [GH-226](https://github.com/HiQS-Labs/XYZ-forge/issues/226) — xyz-vendor.sh transcript gate refuses repos that gitignore transcripts | Linux-RC | completed | 75 | 50 | 80 | 85 | 290 | — |
-| 25 | **285** | [GH-141](https://github.com/HiQS-Labs/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | Cargo | ad-hoc detour | 80 | 65 | 85 | 55 | 285 | — |
+| 25 | **285** | [GH-141](https://github.com/HiQS-Labs/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | In progress | 80 | 65 | 85 | 55 | 285 | — |
 | 26 | **285** | [GH-221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) — GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI >=1.1.19 — whoami subcommand removed | — | Queue / parked intake | 70 | 65 | 70 | 80 | 285 | — |
 | 27 | **285** | [GH-412](https://github.com/HiQS-Labs/XYZ-forge/issues/412) — transient claim collision indistinguishable from durable loss | Front-Door | queue | 80 | 75 | 75 | 55 | 285 | — |
 | 28 | **285** | [GH-419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) — make the three marathon process rules deterministic | Front-Door | queue | 72 | 60 | 75 | 78 | 285 | — |
@@ -88,7 +88,7 @@ while the four axes keep their honest values underneath.
 | 76 | **220** | [GH-57](https://github.com/HiQS-Labs/XYZ-forge/issues/57) — test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | — | Completed | 60 | 45 | 65 | 50 | 220 | — |
 | 77 | **218** | GH-135 — GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | — | Completed | 58 | 45 | 60 | 55 | 218 | — |
 | 78 | **215** | [GH-233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) — AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | Linux-RC | completed | 65 | 45 | 75 | 30 | 215 | — |
-| 79 | **210** | [GH-5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | Cargo | ad-hoc detour | 45 | 40 | 45 | 80 | 210 | — |
+| 79 | **210** | [GH-5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | — | In progress | 45 | 40 | 45 | 80 | 210 | — |
 | 80 | **195** | [GH-35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
 | 81 | **190** | [GH-39](https://github.com/HiQS-Labs/XYZ-forge/issues/39) — RELEASES app: one-way GitHub Project release-card projection | — | Completed | 50 | 30 | 65 | 45 | 190 | — |
 | 82 | **190** | [GH-61](https://github.com/HiQS-Labs/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
