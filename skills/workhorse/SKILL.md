@@ -94,6 +94,9 @@ Validate that the proposed minimal solution complies with the repository's found
 4. **`CHANGELOG.md` Check:**
    - Review recent entries in `CHANGELOG.md` across relevant repos (`XYZ-forge`, `rebalanceOS`, etc.).
    - Ensure terms, patterns, and architectural conventions match the active codebase state rather than legacy/superseded patterns.
+5. **PDDA & Releases Ledger Intake:**
+   - *Tracking Doc:* For non-trivial tasks, confirm a capture doc exists in `PROJECT/1-INBOX/` or `PROJECT/2-WORKING/` with frontmatter `status: active`.
+   - *Releases DB / Roadmap:* Verify the issue is registered in `releases.db` (`releases roadmap add <GH-NUM>` / `releases jog add`) in releases-mode repos.
 
 ---
 
@@ -123,7 +126,10 @@ Stress-test the finalized plan or architecture across independent AI models befo
    - Run the runnable check left behind in Rung 2.
    - Execute the repository validation suite (e.g., `validate.sh` in XYZ-forge or `pytest` in rebalanceOS).
    - Ensure working tree and tests are green.
-3. **Report & Close:**
+3. **Ledger Closeout & PDDA Reconciliation:**
+   - *Doc Promotion:* If a working doc was created, update frontmatter to `status: completed` and move to `PROJECT/3-COMPLETED/` (or let `wave_reconcile` handle it).
+   - *Ledger Integrity:* Run local PDDA/releases checks (e.g. `pdda-local-checks.sh` or `releases roadmap list`) to ensure zero orphaned or unanchored states remain.
+4. **Report & Close:**
    - Present a concise completion summary:
      - Root cause & ground truth established (Rung 1).
      - Minimal diff & reused modules (Rung 2).
