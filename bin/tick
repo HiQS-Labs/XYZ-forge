@@ -477,5 +477,5 @@ try {
   process.exit(main(process.argv.slice(2)) || 0);
 } catch (err) {
   process.stderr.write(`tick: error: ${err.message}\n`);
-  process.exit(1);
+  process.exit(err.exitCode || (err.code === 'EX_TEMPFAIL' ? 75 : 1));
 }

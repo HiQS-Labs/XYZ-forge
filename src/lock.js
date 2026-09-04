@@ -44,10 +44,13 @@ function withClaimLock(repoRoot, fn) {
     fd = fs.openSync(lp, 'wx');
   } catch (err) {
     if (err.code === 'EEXIST') {
-      throw new Error(
+      const lockErr = new Error(
         'another tick claim is in progress for this clone (lock held) — retry shortly, ' +
         `or remove ${path.relative(repoRoot, lp)} if a prior claim was killed`
       );
+      lockErr.code = 'EX_TEMPFAIL';
+      lockErr.exitCode = 75;
+      throw lockErr;
     }
     throw err;
   }
