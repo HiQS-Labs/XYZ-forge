@@ -47,7 +47,7 @@ RENDERED="$TMP_DIR/ROADMAP-DASHBOARD.md"
 # instead of the legacy file. An explicit ROADMAP_DASHBOARD_SOURCE still wins (test seam), and
 # any failure here falls back to the legacy file rather than emitting an empty dashboard.
 if [ -z "${ROADMAP_DASHBOARD_SOURCE:-}" ] \
-   && grep -q "ROADMAP_SOURCE=releases" "$ROOT/.pdda-mode" 2>/dev/null \
+   && (grep -q "ROADMAP_SOURCE=releases" "$ROOT/.pdda-mode" 2>/dev/null || [ ! -f "$ROOT/ROADMAP.md" ]) \
    && [ -f "$ROOT/releases.db" ] && command -v python3 >/dev/null 2>&1; then
   DB_SRC="$TMP_DIR/roadmap-from-db.md"
   DB_JSON="$TMP_DIR/roadmap-rows.json"
@@ -79,6 +79,11 @@ PY
   then
     [ -s "$DB_SRC" ] && SOURCE_FILE="$DB_SRC"
   fi
+fi
+
+if [ ! -f "$SOURCE_FILE" ]; then
+  echo "roadmap-dashboard: source not found: $SOURCE_FILE" >&2
+  exit 3
 fi
 
 node - "$SOURCE_FILE" >"$RENDERED" <<'NODE'

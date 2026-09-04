@@ -28,7 +28,7 @@ Read `GUIDING-PRINCIPLES.md` for the product north stars — its "The North Star
 reversible, DRY; extend what exists rather than forking a parallel system) is canonical and governs
 everything below.
 
-Read `PROJECT/PDDA.md` when the task touches project docs, `ROADMAP.md`, or `CHANGELOG.md`.
+Read `PROJECT/PDDA.md` when the task touches project docs or `CHANGELOG.md`.
 
 Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibility grades, and CLI flags.
 
@@ -154,13 +154,12 @@ local change.
 
 - **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
   release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
-  flip (GH-169/GH-238/GH-243) the DB is the roadmap's source of truth in THIS repo: park intake
-  with `releases roadmap add` (or `hq park`), read with `roadmap list` / `ROADMAP-DASHBOARD.md`,
-  and never edit `ROADMAP.md` (frozen legacy). `roadmap sync` is for legacy-mode repos only and
-  no-ops here — it mirrors markdown and would delete `add`-parked rows. Never hand-edit
-  `releases.sql` or `releases.db`. Merge conflicts on the dump have a one-command resolver
-  (`utils/releases-merge-resolve.sh`). The whole contract, including what a real merge conflict
-  looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+  flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: park intake
+  with `releases roadmap add` (or `hq park`), and read with `roadmap list` / `ROADMAP-DASHBOARD.md`.
+  `roadmap sync` is for legacy-mode repos only and no-ops here — it mirrors markdown and would delete
+  `add`-parked rows. Never hand-edit `releases.sql` or `releases.db`. Merge conflicts on the dump have
+  a one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a real
+  merge conflict looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
 
 - **The local gate runs at the push boundary; hosted CI independently attests public-repo changes
   (GH-544, XYZ-forge #16).** The private-phase bridge ended when this repository became public on
@@ -205,7 +204,7 @@ local change.
 - `ROUTER.md` owns startup order, canonical files, command rails, and the issue-first SOP.
 - `GUIDING-PRINCIPLES.md` owns the product/runtime priorities: local event-log coordination,
   containment, skill-first relay work, durable fixes, and verified done.
-- `PROJECT/PDDA.md` owns doc lifecycle, `ROADMAP.md` pointer-ledger rules, and `CHANGELOG.md`
+- `PROJECT/PDDA.md` owns doc lifecycle, roadmap pointer-ledger rules, and `CHANGELOG.md`
   governance.
 - Before approving a PDDA dependency sync, follow the repo-owned
   [PDDA sync review policy](PROJECT/PDDA-SYNC-POLICY.md); a green suite after fixups does not by

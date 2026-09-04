@@ -59,8 +59,7 @@ This document outlines the standard operating procedure for designing, executing
 ### Step 1: Intake & Working Doc
 1. File the tracking GitHub issue.
 2. Scaffold the active doc in `PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
-3. Park the ledger row **in the RELEASES DB** — never by editing `ROADMAP.md`, which is frozen
-   since the `ROADMAP_SOURCE=releases` flip (GH-169/GH-243):
+3. Park the ledger row **in the RELEASES DB** (`ROADMAP.md` is retired per GH-269):
    `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P`
    (`hq park` routes there automatically). Note `roadmap sync` is a **legacy-mode-only** verb — in
    this repo it refuses with "releases-mode repo" and is never part of the flow.
@@ -68,9 +67,7 @@ This document outlines the standard operating procedure for designing, executing
 
 ### Step 1b: Promoting a capture from 1-INBOX to 2-WORKING (releases-mode)
 
-Observed 2026-08-26 (GH-259 promotion): an agent following the pre-flip habit hand-edited
-`ROADMAP.md` and lost time to two avoidable gate failures. The whole procedure is four DB/file
-steps, none of which touch `ROADMAP.md`:
+The promotion procedure is four DB/file steps on the RELEASES DB:
 
 1. `git mv PROJECT/1-INBOX/GH-<n>-<SLUG>.md PROJECT/2-WORKING/GH-<n>-<SLUG>.md`, then bring the
    doc up to the 2-WORKING contract: full frontmatter **including the `updated:` key**

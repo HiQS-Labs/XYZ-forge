@@ -129,7 +129,12 @@ def main():
     now = os.environ.get("QUEUE_PLAN_NOW", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     today = os.environ.get("QUEUE_PLAN_TODAY", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"))
 
-    if not os.path.isfile(roadmap):
+    db_path = os.path.join(root, "releases.db")
+    if "QUEUE_PLAN_ROADMAP" in os.environ:
+        if not os.path.isfile(roadmap):
+            emit(f"ROADMAP not found: {roadmap}")
+            sys.exit(3)
+    elif not os.path.isfile(roadmap) and not os.path.isfile(db_path):
         emit(f"ROADMAP not found: {roadmap}")
         sys.exit(3)
 

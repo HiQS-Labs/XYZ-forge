@@ -3371,6 +3371,11 @@ def cmd_roadmap_update(args):
         conn.close()
 
 
+def cmd_roadmap_move(args):
+    """GH-269: move a roadmap row to a new section (e.g. 'Completed', 'Deferred / cancelled')."""
+    return cmd_roadmap_update(args)
+
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
     # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
@@ -4988,6 +4993,13 @@ def build_parser():
     sp_ru.add_argument("--section", help="move the row to a new section (e.g. Completed/Deferred)")
     sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
+    sp_rm = rsub.add_parser("move", help="move an existing roadmap row to a new section (GH-269)")
+    sp_rm.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
+    sp_rm.add_argument("--gid", help="the row's rmi- global id")
+    sp_rm.add_argument("--section", required=True, help="new section name (e.g. 'Completed', 'Deferred / cancelled')")
+    sp_rm.add_argument("--raw-text", default=None, help="optional updated raw_text for the row")
+    sp_rm.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
     sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
@@ -5096,7 +5108,8 @@ def main(argv=None):
         # form was already one subcommand past readable.
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
-                              "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update}[a.roadmap_cmd](a),
+                              "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
+                              "move": cmd_roadmap_move}[a.roadmap_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,

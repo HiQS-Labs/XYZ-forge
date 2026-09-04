@@ -465,107 +465,135 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
 
     return dest_path, ship_date
 
-
 def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True, dry_run=False, journal=None):
-    """Move multiline entry block in ROADMAP.md to Completed/Deferred section with shipping badge."""
+    """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
-    if not os.path.isfile(roadmap_path):
-        log_err("ROADMAP.md not found; skipping roadmap update")
-        return False
-
-    with open(roadmap_path, "r", encoding="utf-8", errors="replace") as f:
-        lines = f.readlines()
-
-    # Locate every matching entry block. Older reconciler runs could leave the same
-    # issue in both an active and terminal section (#163); selecting only the first
-    # match and then inserting it again preserves that duplicate forever.
-    entry_pattern = re.compile(rf"^-\s+\*\*GH-{issue_num}\b")
-    starts = [i for i, line in enumerate(lines) if entry_pattern.search(line)]
-    if not starts:
-        log(f"No entry found in ROADMAP.md for GH-{issue_num} (skipping roadmap move)")
-        return False
-
-    blocks = []
-    for start_idx in starts:
-        end_idx = len(lines)
-        for j in range(start_idx + 1, len(lines)):
-            if lines[j].startswith("- **") or lines[j].startswith("### ") or lines[j].startswith("## "):
-                end_idx = j
-                break
-        blocks.append((start_idx, end_idx, lines[start_idx:end_idx]))
-
-    expected_marker = "SHIPPED" if is_merged else "DECLINED"
-    canonical = next(
-        (block for _, _, block in blocks if expected_marker in block[0]),
-        blocks[0][2],
-    )
-    block_lines = list(canonical)
-    first_line = block_lines[0]
-
-    # A single canonical terminal entry is a true no-op on a second run.
-    if len(blocks) == 1 and expected_marker in first_line:
-        log(f"GH-{issue_num} is already marked {expected_marker} in ROADMAP.md")
-        return True
-
-    target_section = "### Completed" if is_merged else "### Deferred / cancelled"
+    db_path = os.path.join(repo_root, "releases.db")
+    target_section_md = "### Completed" if is_merged else "### Deferred / cancelled"
+    target_section_db = "Completed" if is_merged else "Deferred · vision"
     badge_sub = f"✅ **SHIPPED {ship_date} (PR #{pr_num})**" if is_merged else f"🛑 **DECLINED {ship_date} (PR #{pr_num})**"
 
-    title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", first_line)
-    if title_match:
-        title_part = title_match.group(1).strip()
-    else:
-        title_part = f"GH-{issue_num}"
+    updated = False
 
-    if "—" in first_line:
-        rest = first_line.split("—", 1)[1]
-    else:
-        after_title = first_line[title_match.end():] if title_match else first_line
-        rest = re.sub(r"^(?:\s*✅\s*(?:\*\*.*?\*\*)?|\s*🚧\s*(?:\*\*.*?\*\*)?|\s*🛑\s*(?:\*\*.*?\*\*)?|\s*)", "", after_title)
-        if not rest.startswith(" ") and rest != "\n" and rest != "":
-            rest = " " + rest
-        if not rest.endswith("\n"):
-            rest += "\n"
+    # 1. Update releases.db if present
+    if os.path.isfile(db_path):
+        import sqlite3
+        try:
+            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            conn.row_factory = sqlite3.Row
+            row = conn.execute("SELECT * FROM roadmap_items WHERE gh_number = ?", (issue_num,)).fetchone()
+            conn.close()
+            if row:
+                raw_text = row["raw_text"] or ""
+                title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", raw_text)
+                title_part = title_match.group(1).strip() if title_match else f"GH-{issue_num} · {row['title']}"
+                if "—" in raw_text:
+                    rest = raw_text.split("—", 1)[1]
+                else:
+                    after_title = raw_text[title_match.end():] if title_match else raw_text
+                    rest = re.sub(r"^(?:\s*✅\s*(?:\*\*.*?\*\*)?|\s*🚧\s*(?:\*\*.*?\*\*)?|\s*🛑\s*(?:\*\*.*?\*\*)?|\s*🆕\s*(?:\*\*.*?\*\*)?|\s*)", "", after_title)
+                    if not rest.startswith(" ") and rest != "\n" and rest != "":
+                        rest = " " + rest
+                    if not rest.endswith("\n"):
+                        rest += "\n"
+                dest_dir = "3-COMPLETED" if is_merged else "4-MISC"
+                rest = re.sub(r"PROJECT/(?:1-INBOX|2-WORKING)/", f"PROJECT/{dest_dir}/", rest)
+                new_raw_text = f"- **{title_part}** {badge_sub} —{rest}".strip()
 
-    new_first_line = f"- **{title_part}** {badge_sub} —{rest}"
+                releases_app = harness_tool(repo_root, "utils/py/releases_app.py")
+                cmd = ["python3", releases_app, "--root", repo_root, "roadmap", "update",
+                       "--issue-num", str(issue_num),
+                       "--section", target_section_db,
+                       "--raw-text", new_raw_text]
+                if dry_run:
+                    cmd.append("--dry-run")
+                r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
+                if r.returncode == 0:
+                    updated = True
+        except Exception as e:
+            log_err(f"Failed to update releases.db roadmap entry for GH-{issue_num}: {e}")
 
-    block_lines[0] = new_first_line
+    # 2. Update ROADMAP.md if present (legacy mode)
+    if os.path.isfile(roadmap_path):
+        with open(roadmap_path, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
 
-    # Remove every old occurrence, then insert exactly one canonical block. This
-    # is a move, never an add, and repairs the historical double-listing shape.
-    removed = set()
-    for start_idx, end_idx, _ in blocks:
-        removed.update(range(start_idx, end_idx))
-    new_lines = [line for idx, line in enumerate(lines) if idx not in removed]
+        entry_pattern = re.compile(rf"^-\s+\*\*GH-{issue_num}\b")
+        starts = [i for i, line in enumerate(lines) if entry_pattern.search(line)]
+        if not starts:
+            log(f"No entry found in ROADMAP.md for GH-{issue_num} (skipping roadmap move)")
+            return updated
 
-    # Locate target section header
-    target_idx = None
-    for k, line in enumerate(new_lines):
-        if line.strip() == target_section:
-            target_idx = k
-            break
+        blocks = []
+        for start_idx in starts:
+            end_idx = len(lines)
+            for j in range(start_idx + 1, len(lines)):
+                if lines[j].startswith("- **") or lines[j].startswith("### ") or lines[j].startswith("## "):
+                    end_idx = j
+                    break
+            blocks.append((start_idx, end_idx, lines[start_idx:end_idx]))
 
-    if target_idx is None and not is_merged:
-        # Fallback to ### Completed if ### Deferred is absent
-        target_section = "### Completed"
+        expected_marker = "SHIPPED" if is_merged else "DECLINED"
+        canonical = next(
+            (block for _, _, block in blocks if expected_marker in block[0]),
+            blocks[0][2],
+        )
+        block_lines = list(canonical)
+        first_line = block_lines[0]
+
+        if len(blocks) == 1 and expected_marker in first_line:
+            log(f"GH-{issue_num} is already marked {expected_marker} in ROADMAP.md")
+            return True
+
+        title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", first_line)
+        title_part = title_match.group(1).strip() if title_match else f"GH-{issue_num}"
+
+        if "—" in first_line:
+            rest = first_line.split("—", 1)[1]
+        else:
+            after_title = first_line[title_match.end():] if title_match else first_line
+            rest = re.sub(r"^(?:\s*✅\s*(?:\*\*.*?\*\*)?|\s*🚧\s*(?:\*\*.*?\*\*)?|\s*🛑\s*(?:\*\*.*?\*\*)?|\s*)", "", after_title)
+            if not rest.startswith(" ") and rest != "\n" and rest != "":
+                rest = " " + rest
+            if not rest.endswith("\n"):
+                rest += "\n"
+
+        new_first_line = f"- **{title_part}** {badge_sub} —{rest}"
+        block_lines[0] = new_first_line
+
+        removed = set()
+        for start_idx, end_idx, _ in blocks:
+            removed.update(range(start_idx, end_idx))
+        new_lines = [line for idx, line in enumerate(lines) if idx not in removed]
+
+        target_idx = None
         for k, line in enumerate(new_lines):
-            if line.strip() == target_section:
+            if line.strip() == target_section_md:
                 target_idx = k
                 break
 
-    if target_idx is None:
-        die(f"Could not find '{target_section}' section in ROADMAP.md", code=5)
+        if target_idx is None and not is_merged:
+            target_section_md = "### Completed"
+            for k, line in enumerate(new_lines):
+                if line.strip() == target_section_md:
+                    target_idx = k
+                    break
 
-    # Insert block right under section header
-    insert_pos = target_idx + 1
-    new_lines = new_lines[:insert_pos] + block_lines + new_lines[insert_pos:]
+        if target_idx is None:
+            die(f"Could not find '{target_section_md}' section in ROADMAP.md", code=5)
 
-    if not dry_run:
-        if journal:
-            journal.snapshot(roadmap_path)
-        with open(roadmap_path, "w", encoding="utf-8") as f:
-            f.writelines(new_lines)
+        insert_pos = target_idx + 1
+        new_lines = new_lines[:insert_pos] + block_lines + new_lines[insert_pos:]
 
-    return True
+        if not dry_run:
+            if journal:
+                journal.snapshot(roadmap_path)
+            with open(roadmap_path, "w", encoding="utf-8") as f:
+                f.writelines(new_lines)
+
+        updated = True
+
+    return updated
 
 
 def fix_mangled_roadmap_entries(repo_root, dry_run=False, journal=None):
