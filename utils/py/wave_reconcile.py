@@ -20,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-from harness_paths import harness_home, harness_tool, is_vendored, repo_root, resolve_tool
+from harness_paths import github_slug_from_origin, harness_home, harness_tool, is_vendored, repo_root, resolve_tool
 
 
 class ReconcileError(Exception):
@@ -309,6 +309,15 @@ CLOSING_KEYWORD_CLAUSE = re.compile(
     re.IGNORECASE,
 )
 REF_IN_CLAUSE = re.compile(r"(?:#|GH-)([0-9]{1,6})\b", re.IGNORECASE)
+# GH-429: GitHub also honours a closing keyword followed by the issue's full URL. Captured as
+# (slug, number); extract_linked_issues keeps only the target repo's own slug, because
+# fetch_issue_state and find_active_doc_for_issue key on the bare number and a foreign repo's
+# "Closes https://github.com/other/repo/issues/7" must not promote this repo's GH-7.
+CLOSING_KEYWORD_URL = re.compile(
+    r"\b(?:closes?|closed|fix(?:es|ed)?|resolves?|resolved)[ \t]*:?[ \t]+"
+    r"https?://github\.com/([\w.\-]+/[\w.\-]+?)/issues/([0-9]{1,6})\b",
+    re.IGNORECASE,
+)
 # A `#N`/`GH-N` inside a URL (fragment `/#123`, path `/GH-123`, query `?#123`, `?issue=#123`,
 # `&#123`) is part of the link, not a reference — GH-271 QA rounds 1+3. The lookbehind is one
 # fixed-width character class.
@@ -326,7 +335,7 @@ def _strip_code_blocks(text):
     return INLINE_CODE.sub(" ", CODE_FENCE.sub(" ", text))
 
 
-def extract_linked_issues(pr_meta):
+def extract_linked_issues(pr_meta, repo_slug=None):
     """Split a PR's issue references into (closers, mentions) — GH-271.
 
     closers: refs introduced by a GitHub closing keyword (close/closes/closed/fix/fixes/
@@ -351,6 +360,9 @@ def extract_linked_issues(pr_meta):
     scan_text = title + "\n" + body
     for m in CLOSING_KEYWORD_CLAUSE.finditer(scan_text):
         closers.update(int(n) for n in REF_IN_CLAUSE.findall(m.group(1)))
+    if repo_slug:
+        closers.update(int(n) for slug, n in CLOSING_KEYWORD_URL.findall(scan_text)
+                       if slug.lower() == repo_slug.lower())
     trailer = TITLE_TRAILER.search(title)
     if trailer:
         closers.update(int(n) for n in REF_IN_CLAUSE.findall(trailer.group(1)))
@@ -743,7 +755,11 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     try:
         for name, cmd in steps:
             log(f"  -> {name}")
-            r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
+            # GH-429: roadmap-dashboard.sh derives ROOT from its own location and lands on <repo>/.xyz
+            # when vendored (#215 item 2); it honours this override, and the reconciler already knows
+            # the repo root. Harmless for the other steps, which ignore the variable.
+            step_env = dict(os.environ, ROADMAP_DASHBOARD_ROOT=str(repo_root))
+            r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False, env=step_env)
             if name.startswith("marathon-plan"):
                 handle_marathon_plan_result(r, reconciled_issues or set())
             elif r.returncode != 0:
@@ -774,9 +790,16 @@ def run_validation_gate(repo_root):
         text=True,
         check=False,
     )
-    # Check for error lines
-    if r.returncode != 0 or "ERROR" in r.stdout:
+    # GH-429: the exit status IS the consuming repo's enforcement decision — pdda-lib.sh makes
+    # `observe`/`light` exit 0 and `full` exit non-zero on errors. Grepping stdout for ERROR
+    # overrode that mode and made a live reconciliation impossible on any repo with a standing
+    # observe-mode backlog. Block on the status; surface the findings when it reports but passes.
+    if r.returncode != 0:
         die(f"PDDA validation gate failed:\n{r.stdout}", code=7)
+    if "ERROR" in r.stdout:
+        found = re.search(r"(\d+) error\(s\) found", r.stdout)
+        count = found.group(1) if found else "some"
+        log(f"  WARNING — pdda reported {count} finding(s) but exited 0 (repo enforcement mode is not blocking); continuing")
 
 
 def main():
@@ -875,6 +898,7 @@ def main():
 
         with ReconcilerLock(lock_file):
             reconciled_issues = set()
+            repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
             for pr_id in pr_list:
                 log(f"Processing PR #{pr_id}...")
                 pr_meta = fetch_pr_metadata(repo_root, pr_id, offline_manifest, dry_run=args.dry_run)
@@ -894,7 +918,7 @@ def main():
                 if args.require_receipts:
                     check_provenance_receipts(repo_root, pr_meta)
 
-                linked_issues, mentioned_issues = extract_linked_issues(pr_meta)
+                linked_issues, mentioned_issues = extract_linked_issues(pr_meta, repo_slug=repo_slug)
                 reconciled_issues.update(linked_issues)
                 log(f"  PR #{pr_id} closes {linked_issues}; references {mentioned_issues}")
                 # GH-271: mentions never act on their own. --force-promote is the one
