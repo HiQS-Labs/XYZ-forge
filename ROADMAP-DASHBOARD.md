@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -59,6 +59,8 @@ Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer | — | [GH-416-DOC-TRUES-UP-BATCH.md](PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md) · [#416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) |
 | GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip | — | [GH-418-MARATHON-ADOPT-RELEASES-DB.md](PROJECT/1-INBOX/GH-418-MARATHON-ADOPT-RELEASES-DB.md) · [#418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) |
 | GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal | — | [GH-419-MARATHON-RULE-ENFORCEMENT.md](PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md) · [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) |
+| GH-421 · Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first | — | [GH-421-AUTO-WAVE-RECONCILE.md](PROJECT/1-INBOX/GH-421-AUTO-WAVE-RECONCILE.md) · [#421](https://github.com/HiQS-Labs/XYZ-forge/issues/421) |
+| GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on | — | [GH-423-ROADMAP-RENDER.md](PROJECT/1-INBOX/GH-423-ROADMAP-RENDER.md) · [#423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) |
 
 ## Queue
 
