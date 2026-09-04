@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -53,7 +53,6 @@ Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-412 · A transient O_EXCL claim collision exits 1, identical to a durable loss — no retry channel under marathon load | — | [GH-412-TRANSIENT-CLAIM-EXIT-CODE.md](PROJECT/1-INBOX/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md) · [#412](https://github.com/HiQS-Labs/XYZ-forge/issues/412) |
 | GH-413 · The launch-artifact marker authorises a destructive rebuild of any directory — marker alone, no git history required | — | [GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md](PROJECT/1-INBOX/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md) · [#413](https://github.com/HiQS-Labs/XYZ-forge/issues/413) |
 | GH-411 · tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus the whole marathon namespace | — | [GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md](PROJECT/1-INBOX/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md) · [#411](https://github.com/HiQS-Labs/XYZ-forge/issues/411) |
-| GH-415 · The skill-first guard hook covers 6 of 12 Tier-A entrypoints — derive the set from AGENTS.md instead of hardcoding it | — | [GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md](PROJECT/1-INBOX/GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md) · [#415](https://github.com/HiQS-Labs/XYZ-forge/issues/415) |
 | GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer | — | [GH-416-DOC-TRUES-UP-BATCH.md](PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md) · [#416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) |
 | GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip | — | [GH-418-MARATHON-ADOPT-RELEASES-DB.md](PROJECT/1-INBOX/GH-418-MARATHON-ADOPT-RELEASES-DB.md) · [#418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) |
 | GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal | — | [GH-419-MARATHON-RULE-ENFORCEMENT.md](PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md) · [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) |
@@ -92,7 +91,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 55 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 53 · 🔮 0 · 🔲 0
+Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 54 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -141,6 +140,7 @@ Summary: 55 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 53 · �
 | GH-103 · technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | ✅ | [GH-103-TIMELINE-LEDGER-SPIKE.md](PROJECT/1-INBOX/GH-103-TIMELINE-LEDGER-SPIKE.md) · [#103](https://github.com/HiQS-Labs/XYZ-forge/issues/103) |
 | GH-414 · Nothing deterministic checks whether an inline code comment is still true — extend the dead-reference resolver past the doc boundary | ✅ | [GH-414-COMMENT-REFERENCE-CHECK.md](PROJECT/3-COMPLETED/GH-414-COMMENT-REFERENCE-CHECK.md) · [#414](https://github.com/HiQS-Labs/XYZ-forge/issues/414) |
 | GH-102 · Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | ✅ | [GH-102-UNIFIED-TELEMETRY-TOOLING.md](PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Labs/XYZ-forge/issues/102) |
+| GH-415 · The skill-first guard hook covers 6 of 12 Tier-A entrypoints — derive the set from AGENTS.md instead of hardcoding it | ✅ | [GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md](PROJECT/3-COMPLETED/GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md) · [#415](https://github.com/HiQS-Labs/XYZ-forge/issues/415) |
 | GH-94 · research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment | ✅ | [GH-94-PROGRAMMATIC-TOOL-CALLING.md](PROJECT/3-COMPLETED/GH-94-PROGRAMMATIC-TOOL-CALLING.md) · [#94](https://github.com/HiQS-Labs/XYZ-forge/issues/94) |
 | GH-57 · test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | ✅ | [GH-57-RELEASES-SQLITE-FUZZING.md](PROJECT/3-COMPLETED/GH-57-RELEASES-SQLITE-FUZZING.md) · [#57](https://github.com/HiQS-Labs/XYZ-forge/issues/57) |
 | GH-45 · validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | ✅ | [GH-45-WORKTREE-GATE-REFUSAL.md](PROJECT/3-COMPLETED/GH-45-WORKTREE-GATE-REFUSAL.md) · [#45](https://github.com/HiQS-Labs/XYZ-forge/issues/45) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) |
