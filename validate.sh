@@ -407,6 +407,11 @@ TESTS=(
                                   #   not wrong. Asserts BOTH engines (XYZ_PYTHON=1 and 0), that the GH key
                                   #   comes from the link label and not from prose, and that `- [ ]` task
                                   #   items are still not entries.
+  "gh429-wave-reconcile-vendored-observe.sh" # GH-429 (a LIVE reconcile completes on a vendored,
+                                  #   observe-mode consumer: the PDDA gate blocks on pdda.sh's exit status
+                                  #   instead of grepping ERROR out of stdout; roadmap-dashboard.sh is handed
+                                  #   ROADMAP_DASHBOARD_ROOT=<repo>; `Closes https://github.com/<origin>/issues/N`
+                                  #   is a closer for the origin slug only, a foreign URL stays a mention)
   "gh358-wave-reconcile-vendored-paths.sh" # GH-358 (wave_reconcile's five HARNESS tools resolved
                                   #   repo-root-relative, so on a vendored install — where they exist only under
                                   #   <repo>/.xyz/ — the reconciler died on its first downstream step with

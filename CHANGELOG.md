@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-09-03
+
+### Fixed
+- **GH-429: `wave_reconcile` completes a LIVE run on a vendored, observe-mode consumer.** Three residual gaps, reproduced from BinoidCBD/LTVera-Pandas against head `bc49850` after GH-358, #349 and #362 had already landed: (1) `run_validation_gate` died on `"ERROR" in stdout` even when `pdda.sh` exited 0 — `pdda-lib.sh` makes `observe`/`light` exit 0 by design, so the grep overrode the consumer's declared enforcement mode and a repo with a standing backlog could never finish a reconciliation; the gate now blocks on the exit status only and logs the reported count as a WARNING. (2) `roadmap-dashboard.sh` still resolves ROOT to `<repo>/.xyz` when vendored (#215 item 2); `run_subprocesses` now hands every downstream step `ROADMAP_DASHBOARD_ROOT=<repo root>`, which the script already honours — its own root logic is left to #396 Phase 3. (3) `Closes https://github.com/<org>/<repo>/issues/N`, which GitHub honours, was not a closing reference; it is now, for the **origin slug only** (`harness_paths.github_slug_from_origin`, extracted so a Tier 1 install without `releases_app.py` can import it), because `fetch_issue_state` and `find_active_doc_for_issue` key on the bare number and a foreign repo's URL must stay a mention. Pinned by `test/gh429-wave-reconcile-vendored-observe.sh` (16 assertions incl. two negative controls: a full-mode exit 1 still rolls back with exit 7; a foreign-slug URL leaves the doc active). Reversibility: **Easy** — one commit, three call sites. Verification: gh429 16/16, gh358 9/9, gh168 7/7, gh202 37/37, gh232 13/13, wave-reconcile 14/14, gh165 4/4.
+
 ## [Unreleased] - 2026-09-01
 
 ### Changed

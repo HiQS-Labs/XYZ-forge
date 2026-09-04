@@ -22,6 +22,8 @@ prefer_repo=False; the docstring names the risk and the flag.
 """
 
 import os
+import re
+import subprocess
 import sys
 
 
@@ -123,3 +125,21 @@ def resolve_tool(repo_root, rel_path, prefer_repo=True):
 
 # Backward compatibility alias for wave_reconcile
 harness_tool = resolve_tool
+
+
+def github_slug_from_origin(root):
+    """Best-effort '<org>/<repo>' from a github.com origin remote; None when unresolved.
+
+    GH-429: extracted here (the module every harness tool already imports) so wave_reconcile can
+    recognise `Closes https://github.com/<org>/<repo>/issues/N` for THIS repo only; the Tier 2
+    twin `releases_app._github_slug_from_origin` keeps its own copy — releases_app is not vendored
+    on a Tier 1 install, so it cannot be the import.
+    """
+    try:
+        out = subprocess.check_output(["git", "-C", root, "remote", "get-url", "origin"],
+                                      stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return None
+    m = re.search(r"github\.com[/:]([\w.\-]+/[\w.\-]+?)(?:\.git)?$", out)
+    return m.group(1) if m else None
+
