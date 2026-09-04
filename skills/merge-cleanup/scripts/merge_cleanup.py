@@ -145,11 +145,12 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
 
         log(f"Removing verified clean standalone clone: {path}...")
         try:
-            # Check for trash
-            trash_path = Path.home() / ".Trash" / f"{path.name}-{os.getpid()}"
-            if Path.home() / ".Trash" and (Path.home() / ".Trash").exists():
-                shutil.move(str(path), str(trash_path))
-                log(f"✅ Moved clone {path.name} to Trash ({trash_path})")
+            # Prefer Trash if available
+            trash_dir = Path.home() / ".Trash"
+            if trash_dir.exists() and trash_dir.is_dir():
+                trash_target = trash_dir / f"{path.name}-{os.getpid()}"
+                shutil.move(str(path), str(trash_target))
+                log(f"✅ Moved clone {path.name} to Trash ({trash_target})")
             else:
                 shutil.rmtree(path)
                 log(f"✅ Removed clone directory {path}")

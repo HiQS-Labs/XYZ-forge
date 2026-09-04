@@ -139,9 +139,8 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                     queue.sort()
 
     # If cycle remains
-    unsorted_prs = []
     if len(ordered_nums) < len(prs):
-        remaining = [num for num in pr_by_num if num not in ordered_nums]
+        remaining = sorted(num for num in pr_by_num if num not in ordered_nums)
         warnings.append(f"Cycle or unresolved dependency detected among PRs: {remaining}. Appending in numerical order.")
         for r in remaining:
             ordered_nums.append(r)

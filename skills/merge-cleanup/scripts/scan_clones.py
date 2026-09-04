@@ -13,13 +13,12 @@ import json
 import subprocess
 import shutil
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 DEFAULT_SAFE_ROOTS = [
     Path.home() / "Documents" / "GH Repos",
     Path.home() / "agent-workspaces",
     Path.home() / "Documents" / "agent-workspaces",
-    Path("/tmp"),
 ]
 
 DEFAULT_NEVER_DELETE = {
@@ -45,7 +44,7 @@ def _within(child: Path, parent: Path) -> bool:
         return False
 
 
-def is_safe_deletable_path(path: Path, safe_roots: Optional[List[Path]] = None, never_delete: Optional[set] = None) -> (bool, str):
+def is_safe_deletable_path(path: Path, safe_roots: Optional[List[Path]] = None, never_delete: Optional[set] = None) -> Tuple[bool, str]:
     """Verifies that a path is safe to delete according to WORKTREE-SAFETY.md §16.1."""
     if safe_roots is None:
         safe_roots = DEFAULT_SAFE_ROOTS
@@ -134,6 +133,31 @@ def inspect_driver_lock(repo_path: Path) -> Dict[str, Any]:
     return {"locked": False}
 
 
+def inspect_tick_claims(repo_path: Path) -> Dict[str, Any]:
+    """Inspects .tick/STATE.md or .tick/locks/ for active claims."""
+    state_file = repo_path / ".tick" / "STATE.md"
+    if state_file.is_file():
+        try:
+            content = state_file.read_text()
+            if "## Claimed" in content:
+                claimed_section = content.split("## Claimed", 1)[1].split("##", 1)[0].strip()
+                if claimed_section and not claimed_section.startswith("- (none)") and claimed_section != "- none":
+                    return {"has_claims": True, "details": claimed_section.splitlines()[0]}
+        except Exception:
+            pass
+
+    locks_dir = repo_path / ".tick" / "locks"
+    if locks_dir.is_dir():
+        try:
+            locks = [f for f in locks_dir.iterdir() if f.is_file()]
+            if locks:
+                return {"has_claims": True, "details": f"{len(locks)} active lock file(s) in .tick/locks"}
+        except Exception:
+            pass
+
+    return {"has_claims": False}
+
+
 def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None, exclude_patterns: Optional[List[str]] = None) -> Dict[str, Any]:
     """Inspects a single git checkout for status, locks, stashes, and disposition."""
     path = repo_path.resolve()
@@ -154,6 +178,7 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None, 
         "linked_worktrees": [],
         "parent_clone": None,
         "driver_lock": {"locked": False},
+        "tick_claims": {"has_claims": False},
         "safe_deletable": False,
         "safe_deletable_reason": "",
         "disposition": "UNKNOWN",
@@ -266,6 +291,12 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None, 
     if res["driver_lock"].get("locked") and res["driver_lock"].get("alive"):
         res["disposition"] = "ACTIVE_LOCKED"
         res["disposition_reason"] = f"Active relay/marathon driver lock held by PID {res['driver_lock'].get('pid')}"
+        return res
+
+    # Check active tick claims
+    if res["tick_claims"].get("has_claims"):
+        res["disposition"] = "ACTIVE_TICK_CLAIM"
+        res["disposition_reason"] = f"Active task claim in .tick: {res['tick_claims'].get('details')}"
         return res
 
     # Check safety violations
