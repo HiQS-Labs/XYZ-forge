@@ -1,5 +1,7 @@
-Dumped database to /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh409-merge/harnesses.sql
-         title TEXT NOT NULL,
+BEGIN TRANSACTION;
+CREATE TABLE blog_stories (
+            story_id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
             slug TEXT NOT NULL UNIQUE,
             theme TEXT NOT NULL,
             source_evaluations TEXT NOT NULL,
@@ -901,6 +903,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260903152711-b7804279','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260903154303-01515efa','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh405-mock-board-harness-impl-qa',0.0,7,0,NULL,NULL,0.0,' 10 files changed, 53 insertions(+), 15 deletions(-)','2026-09-03 15:43:03');
 INSERT INTO "invocation_logs" VALUES('inv-20260903155442-fbc3dc35','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh405-mock-board-harness-impl-qa',0.0,0,0,NULL,NULL,0.0,' 10 files changed, 54 insertions(+), 15 deletions(-)','2026-09-03 15:54:42');
 INSERT INTO "invocation_logs" VALUES('inv-20260903161106-a9f06987','noels-Mac-Studio.local','dsh','deepseek/deepseek-v4-pro','openrouter','high','deepseek-turn.py','[]','RELAY-gh405-mock-board-harness-impl-qa',0.0,7,0,NULL,NULL,0.0,'0 files changed','2026-09-03 16:11:06');
+INSERT INTO "invocation_logs" VALUES('inv-20260904013158-756367f5','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh421-auto-reconcile-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-04 01:31:58');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
