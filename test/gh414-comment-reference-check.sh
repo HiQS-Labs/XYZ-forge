@@ -59,5 +59,32 @@ grep -q '^# Red control' "$ROOT/test/baselines/GH-414-negative-control.md" \
   && pass "the observed pre-fix artifact failure is recorded" \
   || fail "GH-414 negative-control baseline is missing"
 
+# -- gitignored runtime state is not a dead reference (pristine-checkout control) ---------------
+# src/project.js legitimately cites .tick/STATE.md -- generated, gitignored state that a pristine
+# checkout never has. With the ignore rule present the citation must pass; with it removed the
+# same citation must fail again (the red direction: the exemption is what carries control A).
+PRISTINE="$WORK/pristine"
+mkdir -p "$PRISTINE/src"
+require_fixture "$PRISTINE" "GH-414 pristine fixture"
+cat >"$PRISTINE/src/project.js" <<'JSEOF'
+/**
+ * Reads the event log, projects it, and writes both `.tick/STATE.md` and
+ * `.tick/rejected.jsonl`.
+ */
+module.exports = {};
+JSEOF
+printf '/.tick/\n' >"$PRISTINE/.gitignore"
+git -C "$PRISTINE" init -q .
+rc=0; out="$(PDDA_MODE=full PDDA_REPO_ROOT="$PRISTINE" PDDA_GOVERNANCE_DOCS="" PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" governance 2>&1)" || rc=$?
+[ "$rc" -eq 0 ] \
+  && pass "gitignored runtime citation (.tick/STATE.md) is not a dead reference" \
+  || fail "gitignored citation still reported dead (fresh-clone false positive persists): $out"
+mv "$PRISTINE/.gitignore" "$PRISTINE/.gitignore.bak"
+rc=0; out="$(PDDA_MODE=full PDDA_REPO_ROOT="$PRISTINE" PDDA_GOVERNANCE_DOCS="" PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" governance 2>&1)" || rc=$?
+mv "$PRISTINE/.gitignore.bak" "$SOURCE/.gitignore"
+[ "$rc" -ne 0 ] \
+  && pass "red control: the same citation fails without the ignore rule (check can fail)" \
+  || fail "red control: governance passed without the ignore rule -- the exemption is not what carried control A: $out"
+
 echo "== gh414-comment-reference-check: $PASS passed, $FAIL failed =="
 [ "$FAIL" -eq 0 ]

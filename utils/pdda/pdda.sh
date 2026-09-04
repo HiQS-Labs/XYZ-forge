@@ -1127,6 +1127,12 @@ _pdda_check_comment_references_at() {
         [ -n "$ref" ] || continue
         candidate="$root/$ref"
         [ -f "$candidate" ] && continue
+        # A path the repo deliberately does not track is not a dead reference: gitignored runtime
+        # state (e.g. .tick/STATE.md, cited by src/project.js) exists in any working tree that has
+        # run the harness, but never in a pristine checkout — reporting it dead made governance
+        # fail on every fresh clone. In a non-repo root (a built artifact) check-ignore errors to
+        # /dev/null and returns non-zero, so the fallthrough stays fail-closed there.
+        git -C "$root" check-ignore --quiet -- "$ref" 2>/dev/null && continue
         pdda_record_finding error "$check_name" "$file" "$line_no" \
           "comment reference '$ref' in $label has no file at $ref" "fix-comment-reference"
         rc=1
