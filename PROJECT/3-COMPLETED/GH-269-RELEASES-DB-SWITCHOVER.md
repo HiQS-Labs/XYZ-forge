@@ -1,6 +1,6 @@
 ---
 title: Full switchover to Releases DB — retire ROADMAP.md
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-27
 updated: 2026-09-04
 owner: noel

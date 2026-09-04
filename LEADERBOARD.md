@@ -69,7 +69,7 @@ while the four axes keep their honest values underneath.
 | 57 | **257** | [GH-215](https://github.com/HiQS-Labs/XYZ-forge/issues/215) — GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth | — | Queue / parked intake | 72 | 60 | 65 | 60 | 257 | — |
 | 58 | **255** | [GH-10](https://github.com/HiQS-Labs/XYZ-forge/issues/10) — prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | — | Completed | 55 | 70 | 50 | 80 | 255 | — |
 | 59 | **255** | [GH-144](https://github.com/HiQS-Labs/XYZ-forge/issues/144) — Agent2Agent 3+ participant onboarding + read-only status quick wins | — | Completed | 55 | 30 | 80 | 90 | 255 | — |
-| 60 | **255** | [GH-269](https://github.com/HiQS-Labs/XYZ-forge/issues/269) — Full switchover to Releases DB — retire ROADMAP.md | — | Queue / parked intake | 75 | 65 | 65 | 50 | 255 | — |
+| 60 | **255** | [GH-269](https://github.com/HiQS-Labs/XYZ-forge/issues/269) — Full switchover to Releases DB — retire ROADMAP.md | — | Completed | 75 | 65 | 65 | 50 | 255 | — |
 | 61 | **255** | [GH-45](https://github.com/HiQS-Labs/XYZ-forge/issues/45) — validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | — | Completed | 65 | 60 | 60 | 70 | 255 | — |
 | 62 | **255** | [GH-91](https://github.com/HiQS-Labs/XYZ-forge/issues/91) — a build turn has nowhere to write verification output | — | Completed | 60 | 65 | 55 | 75 | 255 | — |
 | 63 | **250** | [GH-153](https://github.com/HiQS-Labs/XYZ-forge/issues/153) — RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | Completed | 70 | 55 | 80 | 45 | 250 | — |

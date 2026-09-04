@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 55 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 54 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -32,7 +32,6 @@ Summary: 55 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-275 · medium-level write-ops logging of agent disk-write commands | — | [GH-275-WRITE-OPS-LOGGING.md](PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md) |
 | GH-267 · /express — hotfix fast lane through the whole paper trail | — | [doc](PROJECT/3-COMPLETED/GH-267-EXPRESS-HOTFIX-LANE.md) · [#267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) |
 | GH-272 · releases-merge-resolve regenerates derived views | — | — |
-| GH-269 · full switchover to Releases DB — retire ROADMAP.md | — | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md) |
 | GH-273 · marathon-root-audit python spellings | — | — |
 | GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries | — | [GH-314-ARCHIVE-TEMPLATE-MANGLE.md](PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md) · [#314](https://github.com/HiQS-Labs/XYZ-forge/issues/314) |
 | GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status | — | [GH-254-PREVIEW-DRAFT-SORT.md](PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md) · [#254](https://github.com/HiQS-Labs/XYZ-forge/issues/254) |
@@ -94,7 +93,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 50 · 🔮 0 · 🔲 0
+Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 51 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -119,6 +118,7 @@ Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 50 · �
 | GH-183 · active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | ✅ | [GH-183-EXPLORER-ENV-SOUNDNESS.md](PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md) · [#183](https://github.com/HiQS-Labs/XYZ-forge/issues/183) |
 | GH-184 · committed scratch artifact .relay-scratch/probe_telemetry.json makes every real turn a tracked-file mutation | ✅ | [GH-184-TRACKED-SCRATCH-ARTIFACT.md](PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md) · [#184](https://github.com/HiQS-Labs/XYZ-forge/issues/184) |
 | GH-195 · marathon-root-audit's blind spot: a direct python3 marathon_drive.py call | ✅ | [GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md) · [#195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) |
+| GH-269 · full switchover to Releases DB — retire ROADMAP.md | ✅ | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md) |
 | GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | ✅ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Labs/XYZ-forge/issues/10) |
 | GH-107 · Connect /10days, /radar, and PARKED to the RELEASES DB (read-only seams) | — | [GH-107-RELEASES-DB-READ-SEAMS.md](PROJECT/3-COMPLETED/GH-107-RELEASES-DB-READ-SEAMS.md) · [#107](https://github.com/HiQS-Labs/XYZ-forge/issues/107) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | ✅ | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) |
