@@ -1,6 +1,6 @@
 # Marathon Phase gh-415
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-415-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -95,5 +95,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    is wanted; verifying in-tree is what costs you the turn.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
-   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
-   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the derived guard surface in `relay-automation/hooks/relay-xyz-guard.sh`: it reads the
+Tier-A inventory from `AGENTS.md`, adds every `relay-automation/*-turn.sh` shim, and includes the
+authoritative Python twins. Command parsing now checks executable position (including shell/Python
+launches) instead of substring-matching references. Added the tree-enumerating GH-415 test, captured
+the two pre-fix red controls in the requested baseline, and extended the existing guard test with an
+argument-only reference assertion. Per the phase scope lock, I did not run tests.

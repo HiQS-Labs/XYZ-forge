@@ -66,6 +66,9 @@ run "sess-fp" Bash "bash -n relay-automation/codex-turn.sh"
 run "sess-fp" Bash "git status"
 [ "$RC" = 0 ] && pass "unrelated command (git status) is allowed" \
               || fail "unrelated command should exit 0, got $RC"
+run "sess-fp" Bash 'printf "%s\\n" relay-automation/relay-drive.sh'
+[ "$RC" = 0 ] && pass "driver path used only as an argument is allowed" \
+              || fail "argument-only driver path should not block, got $RC"
 
 # 6. Malformed event → fail open (allow), never a hard error.
 RC=0; printf 'not json' | bash "$GUARD" >/dev/null 2>&1 || RC=$?
