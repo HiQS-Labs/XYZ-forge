@@ -11,7 +11,7 @@ refuse() { # <destination> <expected diagnostic>
   if output="$(bash "$builder" "$dest" 2>&1)"; then
     fail "expected destination '$dest' to be refused"
   fi
-  printf '%s\n' "$output" | grep -qF -- "$needle" \
+  grep -qF -- "$needle" <<<"$output" \
     || fail "refusal for '$dest' did not name '$needle': $output"
 }
 
