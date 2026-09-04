@@ -133,8 +133,26 @@ Stress-test the finalized plan or architecture across independent AI models befo
 
 ---
 
+## Proportional Rigor & Escape Hatches
+
+- **Fast-Track (Trivial / 1-Step Changes):**
+  For obvious, mechanical, or trivial edits (typos, single config values, version bumps):
+  - Execute Rungs 1, 2, and 5 directly (observe ground truth → shortest diff → verify).
+  - Explicitly skip Rung 4 (consult) in one line: `[workhorse fast-track: trivial edit, skipped consult]`.
+
+- **Handoff to Specialized Skills:**
+  - **Iterative 1:1 Co-Authoring:** If Rung 4 reveals that an artifact requires multiple iterative drafting rounds, hand off to `/relay-xyz`.
+  - **Open-Ended Research / Ideation:** If the task is purely investigatory without code modifications, hand off to `/recon` or `/feynman`.
+  - **Immediate Landing / Fleet Cleanup:** When the task is purely about consolidating branches and merging PRs, route to `/merge-cleanup`.
+
+- **Pushback & Routing Authority:**
+  If an operator invokes `/workhorse` on an emergency fire drill (incident rollback) or pure open-ended Q&A, the agent is explicitly authorized to state: *"Fast-tracking to immediate remedy / routing to research mode."*
+
+---
+
 ## Operating Rules
 
 - Apply all 5 rungs in order. Never skip Rung 1 (ground truth) to jump to Rung 5 (execution).
 - Keep communication concise and results-driven.
 - If a consult or verification surfaces unexpected failure, loop back to Rung 1 (falsify hypothesis & trace fail path) rather than guessing a patch.
+
