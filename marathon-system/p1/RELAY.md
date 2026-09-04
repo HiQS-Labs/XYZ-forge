@@ -168,3 +168,6 @@ swept file: yes
 The two cited ADRs (`decisions/2026-06-18-epoch-fencing.md` and `decisions/2026-07-01-cross-agent-dep-conflict.md`) were correctly added to `KEEP_FILES` in `utils/build-launch-artifact.sh`. The implementation is sound and meets the requirements.
 
 relay closed, no further turn needed
+
+### Extension · System
+relay-drive: round cap (6) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 7
