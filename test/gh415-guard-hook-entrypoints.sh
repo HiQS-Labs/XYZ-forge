@@ -59,13 +59,21 @@ targets="$(mapfile_compat)" || fail "every Tier-A name resolves to an executable
 # AGENTS.md edit that SHRINKS the inventory fails here instead of silently narrowing the guard
 # (the GH-422 review drift trap: rewording prose once ungated marathon-plan at 24/0 "green").
 # New entrypoints may join freely via AGENTS.md or the *-turn.sh glob; these may never leave.
-for must in relay-automation/relay-drive.sh relay-automation/marathon-drive.sh \
-            utils/marathon-plan.sh relay-automation/consult.sh \
-            relay-automation/codex-turn.sh utils/py/relay_drive.py utils/py/marathon_plan.py; do
-  grep -Fxq "$must" <<<"$targets" \
-    && pass "anchor present: $must" \
-    || fail "anchor MISSING from the enumerated guard surface: $must"
-done
+check_anchor() {
+  grep -Fxq "$1" <<<"$targets" \
+    && pass "anchor present: $1" \
+    || fail "anchor MISSING from the enumerated guard surface: $1"
+}
+# NOTE: one call per line, deliberately — the root-audit (GH-401/GH-195) reads driver-path
+# literals in invocation-shaped text, and a whitespace list would put `…relay-drive.sh` right
+# before `relay-automation/marathon-drive.sh`, whose trailing `.sh` reads as the interpreter.
+check_anchor relay-automation/relay-drive.sh
+check_anchor relay-automation/marathon-drive.sh
+check_anchor utils/marathon-plan.sh
+check_anchor relay-automation/consult.sh
+check_anchor relay-automation/codex-turn.sh
+check_anchor utils/py/relay_drive.py
+check_anchor utils/py/marathon_plan.py
 
 seen_deepseek=0
 seen_consult=0
