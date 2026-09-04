@@ -1,7 +1,8 @@
 ---
 title: The structural relay-block validator never runs on the driven path, and rejects the format real threads write
-status: Proposed (1-INBOX — not yet active)
+status: In Progress (2-WORKING — active)
 created: 2026-09-03
+updated: 2026-09-03
 owner: noelsaw1
 gh_issue: 410
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/410
@@ -27,8 +28,11 @@ goal: >
 
 # GH-410: relay-block validator off the driven path
 
-> **1-INBOX capture**, not an active-work doc. On promotion to `PROJECT/2-WORKING/`, create the
-> status table and outline the three execution phases.
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Implemented tolerant STATUS parser in bin/validate-relay-block and relay-turn-lib.sh; wired validation into rtl_enforce before staging; shipped test/gh410-relay-block-driven-path.sh (20/20 pass) and test/baselines/GH-410-negative-control.md | Verify full test gate via validate.sh, push, and open PR |
 
 ## Why this is R1
 
@@ -55,6 +59,11 @@ Coverage today: **zero**. No test feeds the validator a relay file — no red co
 3. Red control + paired green control (bold-format file) recorded in `test/baselines/`.
 
 Acceptance criteria are enumerated on the issue and are the source of record.
+
+## Lessons Learned (For Future Agents)
+
+- Always extract and share existing robust parsing routines (like `rtl_relay_field`) rather than writing brittle duplicates in individual scripts.
+- Guardrails must be placed at the right execution seam (`rtl_enforce` before staging/committing) to cover both standard and idempotent fallback paths.
 
 ## Swarm Preflight Contract
 

@@ -244,6 +244,31 @@ rtl_tick_bin() {  # [<tick_repo_root>] → absolute tick executable path
   printf '%s/bin/tick' "$_rtl_harness"
 }
 
+# GH-410: Single shared STATUS/NEXT parser tolerating markdown bold/backticks (e.g. **STATUS:** Open).
+rtl_relay_field() {  # <field_name> [relay_file] — extract field value tolerating markdown bold/backticks
+  local key="$1" file="${2:-${RELAY_FILE:-}}"
+  [[ -f "$file" ]] || return 1
+  sed -n "s/^[[\`*]*${key}[[\`*]*:[[\`*]*[[:space:]]*//p" "$file" 2>/dev/null \
+    | head -n 1 \
+    | sed -E 's/[`*]+[[:space:]]*$//; s/[[:space:]]*$//'
+}
+
+# GH-410: Resolve absolute path to validate-relay-block executable.
+rtl_validator_bin() {  # [<tick_repo_root>] → absolute validate-relay-block executable path
+  local tickroot="${1:-${TICK_REPO_ROOT:-${RTL_ROOT:-}}}"
+  [[ -n "${VALIDATE_RELAY_BLOCK_BIN:-}" ]] && { printf '%s' "$VALIDATE_RELAY_BLOCK_BIN"; return 0; }
+  [[ -n "$tickroot" && -x "$tickroot/bin/validate-relay-block" ]] && { printf '%s/bin/validate-relay-block' "$tickroot"; return 0; }
+  [[ -n "$tickroot" && -x "$tickroot/.xyz/bin/validate-relay-block" ]] && { printf '%s/.xyz/bin/validate-relay-block' "$tickroot"; return 0; }
+  local _rtl_here _rtl_harness
+  _rtl_here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  _rtl_harness="$(cd "$_rtl_here/.." && pwd)"
+  if [[ -x "$_rtl_harness/bin/validate-relay-block" ]]; then
+    printf '%s/bin/validate-relay-block' "$_rtl_harness"
+  elif command -v validate-relay-block >/dev/null 2>&1; then
+    command -v validate-relay-block
+  fi
+}
+
 rtl_init() {  # <root> <relay_file> <allow_csv>
   # ROOT routing (GH-11): a foreign --target-root (exported by relay-drive as RELAY_TARGET_ROOT)
   # routes the WHOLE turn — worktree base, allowlist copyback, file-scoped commit, enforce — from this
@@ -1323,6 +1348,40 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     rtl_check_uncited_findings "$RELAY_FILE"
     rtl_trace "rtl_enforce: checked $RELAY_FILE for uncited [Pass]/verified findings"
   fi
+  # GH-410 / GH-21 / AGENTS.md §12: structural relay-block validation before staging.
+  # The Reviewer turn must append a structurally valid review block (STATUS not In Progress,
+  # ## Log present, VERDICT, and Basis).
+  # If validation fails, exit 8 (relay block structural validation failed) so the harness
+  # escalates rather than staging/committing a malformed block or handing off an invalid turn.
+  if [[ "${RTL_WAS_REVIEWER_TURN:-0}" == "1" && -n "${RELAY_FILE:-}" ]]; then
+    local _val_rf="${RELAY_FILE:-}" _val_tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}"
+    if [[ "$_val_rf" != /* && ! -f "$_val_rf" ]]; then
+      if [[ -f "$_val_tickroot/$_val_rf" ]]; then
+        _val_rf="$_val_tickroot/$_val_rf"
+      elif [[ -f "$RTL_ROOT/$_val_rf" ]]; then
+        _val_rf="$RTL_ROOT/$_val_rf"
+      fi
+    fi
+    if [[ -f "$_val_rf" ]]; then
+      # Structural relay-block validation applies to /relay threads (which structure rounds under ## Log / ## Setup).
+      # Marathon-drive phase briefs use a distinct lifecycle managed by marathon-drive.
+      if grep -qE '^[[:space:]]*##[[:space:]]*(Log|Setup)' "$_val_rf" 2>/dev/null; then
+        local _val_bin
+        _val_bin="$(rtl_validator_bin "$_val_tickroot")"
+        [[ -z "$_val_bin" ]] && _val_bin="$(rtl_validator_bin "$RTL_ROOT")"
+        if [[ -n "$_val_bin" && -x "$_val_bin" ]]; then
+          local _val_out _val_rc=0
+          _val_out="$("$_val_bin" "$_val_rf" 2>&1)" || _val_rc=$?
+          if (( _val_rc != 0 )); then
+            printf '%s-turn: relay block structural validation failed (exit %d):\n%s\n' "$RTL_TOOL" "$_val_rc" "$_val_out" >&2
+            rtl_log_always "rtl_enforce: VALIDATION_FAILED exit=$_val_rc agent=$agent relay=$_val_rf"
+            exit 8
+          fi
+          rtl_trace "rtl_enforce: relay block structural validation passed for $_val_rf"
+        fi
+      fi
+    fi
+  fi
   # (3) stage ONLY the allowlist; commit file-scoped; NO push.
   # Stage each allowlisted path INDEPENDENTLY (not one batched `git add -- a b c`): a single pathspec
   # that matches nothing — e.g. an allowlist entry the turn was permitted to create but didn't — makes
@@ -1426,7 +1485,7 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     _tstatus="$(printf '%s\n' "$_info"  | sed -n 's/^status:[[:space:]]*//p'     | head -n1)"
     _thandoff="$(printf '%s\n' "$_info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -n1)"
     # Same bold-markdown-tolerant STATUS read poll.sh uses (real threads write `**STATUS:** Approved`).
-    _rstatus="$(sed -n 's/^[*]*STATUS[*]*:[*]*[[:space:]]*//p' "$_relay_file" 2>/dev/null | head -n1 | sed 's/[[:space:]]*$//')"
+    _rstatus="$(rtl_relay_field STATUS "$_relay_file" || true)"
     if [[ "$_tstatus" == "done" || "$_tstatus" == "circuit_broken" ]]; then
       rtl_trace "rtl_enforce: token-handoff branch=already-terminal status=$_tstatus task=$task"
     elif [[ "$_rstatus" == "Approved" || "$_rstatus" == "Closed" ]]; then
