@@ -226,9 +226,10 @@ local change.
   A file that turns out to be worth keeping gets *promoted* deliberately — into `PROJECT/1-INBOX/`
   as a capture doc, into `test/baselines/` as recorded evidence, or into the CHANGELOG — rather than
   being left at the root in the hope that someone later works out what it was.
-- **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the eleven Tier-A
+- **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the twelve Tier-A
   entry points (`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`,
-  `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, and `swarm-preflight`). Their `.sh`
+  `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, and
+  `swarm-preflight`). Their `.sh`
   files are historical `XYZ_PYTHON=0` fallbacks: put behavior fixes in the named Python twin, not
   the Bash body. Before committing, run `bash test/gh308-frozen-twin-guard.sh --check --staged`; the
   `Frozen Bash twin guard (GH-308)` step in `.github/workflows/ci.yml` runs the same guard with
