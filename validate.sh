@@ -65,6 +65,7 @@ TESTS=(
   "gh251-validate-pytest-skip.sh" # GH-251 (pytest absence handled as named skip in validate.sh)
   "gh412-transient-claim-exit.sh" # GH-412 (transient claim lock collision exits 75 and is retried)
   "gh413-launch-artifact-destination-guard.sh" # GH-413 (launch artifact marker deletion & destination history guard)
+  "gh414-comment-reference-check.sh" # GH-414 (source-comment references resolution in source and built trees)
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"

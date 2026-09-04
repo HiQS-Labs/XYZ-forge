@@ -1081,6 +1081,77 @@ _pdda_gov_doc_refs() {
   _pdda_gov_extract_doc_refs "$abs_file"
 }
 
+# GH-414: comments are part of the shipped interface when they cite a repository path.  The
+# governance-doc resolver deliberately stays warn-only because prose extraction is heuristic; this
+# narrower scanner is different: it accepts only source-comment lines and path-shaped local refs, so
+# a missing target is an ERROR in full mode.  Check the source tree and, when supplied, the built
+# artifact separately: a build can drop a cited decision while the source tree still resolves it.
+#
+# PDDA_COMMENT_REFERENCE_ARTIFACT is intentionally opt-in.  PDDA runs in target repos that do not
+# have a launch artifact, while release gates can set it to the exact built tree.  XYZ_LAUNCH_ARTIFACT
+# is accepted as the launch workflow's existing spelling.  A supplied-but-missing artifact is an
+# error rather than a silent source-only pass.
+_pdda_comment_scannable_lines() {
+  local file="$1"
+  case "$file" in
+    *.js|*.mjs|*.cjs|*.ts|*.tsx|*.jsx|*.c|*.cc|*.cpp|*.h|*.hpp|*.java|*.go|*.rs)
+      awk '
+        /\/\// { text=$0; sub(/^.*\/\//, "", text); print NR "\t" text; next }
+        /\/\*/ { text=$0; sub(/^.*\/\*/, "", text); sub(/\*\/.*$/, "", text); print NR "\t" text; in_block=($0 ~ /\*\//)?0:1; next }
+        in_block { text=$0; sub(/\*\/.*$/, "", text); print NR "\t" text; if ($0 ~ /\*\//) in_block=0 }
+      ' "$file"
+      ;;
+    *.sh|*.bash|*.zsh|*.py|*.rb|*.pl)
+      awk '/^[[:space:]]*#/ { text=$0; sub(/^[[:space:]]*#[[:space:]]?/, "", text); print NR "\t" text }' "$file"
+      ;;
+  esac
+}
+
+_pdda_comment_extract_refs() {
+  # Paths must name a file under the repository root, not a URL, bare filename, or arbitrary prose.
+  # The optional anchor is deliberately ignored: this check proves existence, not heading fidelity.
+  printf '%s\n' "$1" \
+    | grep -oE '[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)+\.(md|sh)(#[A-Za-z0-9_-]+)?' \
+    | sed -E 's/#[A-Za-z0-9_-]+$//' \
+    | LC_ALL=C sort -u
+}
+
+_pdda_check_comment_references_at() {
+  # <check-name> <label> <root>; return 1 after recording one or more unresolved citations.
+  local check_name="$1" label="$2" root="$3" file line_no text ref candidate rc=0
+  [ -d "$root/src" ] || return 0
+  while IFS= read -r -d '' file; do
+    while IFS=$'\t' read -r line_no text; do
+      [ -n "$line_no" ] || continue
+      while IFS= read -r ref; do
+        [ -n "$ref" ] || continue
+        candidate="$root/$ref"
+        [ -f "$candidate" ] && continue
+        pdda_record_finding error "$check_name" "$file" "$line_no" \
+          "comment reference '$ref' in $label has no file at $ref" "fix-comment-reference"
+        rc=1
+      done < <(_pdda_comment_extract_refs "$text")
+    done < <(_pdda_comment_scannable_lines "$file")
+  done < <(find "$root/src" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.sh' -o -name '*.bash' -o -name '*.zsh' -o -name '*.py' -o -name '*.rb' -o -name '*.pl' \) -print0 2>/dev/null)
+  return "$rc"
+}
+
+_pdda_check_comment_references() {
+  local check_name="$1" artifact_root rc=0
+  _pdda_check_comment_references_at "$check_name" "source tree" "$PDDA_REPO_ROOT" || rc=1
+  artifact_root="${PDDA_COMMENT_REFERENCE_ARTIFACT:-${XYZ_LAUNCH_ARTIFACT:-}}"
+  if [ -n "$artifact_root" ]; then
+    if [ -d "$artifact_root" ]; then
+      _pdda_check_comment_references_at "$check_name" "built artifact" "$artifact_root" || rc=1
+    else
+      pdda_record_finding error "$check_name" "$artifact_root" 0 \
+        "configured comment-reference artifact is not a directory" "build-artifact"
+      rc=1
+    fi
+  fi
+  return "$rc"
+}
+
 check_governance() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-governance" rc=0
@@ -1097,10 +1168,13 @@ check_governance() {
   done
 
   if [ -z "$(pdda_trim "$present_docs")" ]; then
+    # Comment references are not governance-doc prose.  A minimal source/artifact fixture (or a
+    # target repo without this curated doc set) still needs the fail-closed source scan below.
     pdda_record_finding info "$CHECK_NAME" "$PDDA_REPO_ROOT" 0 \
       "no governance docs found in the configured set ($docs)" "skip"
-    pdda_emit_summary "$CHECK_NAME" 0
-    return "$(pdda_gated_exit 0)"
+    _pdda_check_comment_references "$CHECK_NAME" || rc=1
+    pdda_emit_summary "$CHECK_NAME" "$rc"
+    return "$(pdda_gated_exit "$rc")"
   fi
 
   # --- (1) dead references: every .md ref in a governance doc must resolve to a real file ---------
@@ -1218,6 +1292,11 @@ check_governance() {
   done
   [ -n "$gov_ref_cache_dir" ] && rm -rf "$gov_ref_cache_dir"
   [ -n "$gov_refs_dir" ] && [ -d "$gov_refs_dir" ] && rm -rf "$gov_refs_dir"
+
+  # Source citations are a precise, fail-closed complement to the warn-only prose scan above.
+  # When a release gate provides the build output, inspect it too: the source may retain a file that
+  # the public artifact intentionally drops, which is the exact GH-414 failure shape.
+  _pdda_check_comment_references "$CHECK_NAME" || rc=1
 
   # --- (2) orphan governance docs: a present doc the index doc never points at --------------------
   index_abs="$PDDA_REPO_ROOT/$index_doc"
