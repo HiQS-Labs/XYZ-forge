@@ -29,9 +29,10 @@ mapfile_compat() {
 import glob, os, re, sys
 root = sys.argv[1]
 text = open(os.path.join(root, "AGENTS.md"), encoding="utf-8").read()
-start = text.index("entry points (`", text.index("Tier-A"))
-end = text.index("Their `.sh` files", start)
-names = set(re.findall(r"`([^`]+)`", text[start:end]))
+m = re.search(r"Tier-A[\s\S]*?entry points\s*\(([^)]+)\)", text)
+if not m:
+    raise SystemExit("Could not find Tier-A entry points in AGENTS.md")
+names = set(re.findall(r"`([^`]+)`", m.group(1)))
 if "marathon-plan is now the **12th frozen" in text:
     names.add("marathon-plan")
 paths = set()

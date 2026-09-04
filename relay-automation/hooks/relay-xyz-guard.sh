@@ -116,12 +116,13 @@ agents = os.path.join(root, "AGENTS.md")
 
 try:
     text = open(agents, encoding="utf-8").read()
-    start = text.index("entry points (`", text.index("Tier-A"))
-    end = text.index("Their `.sh` files", start)
+    m = re.search(r"Tier-A[\s\S]*?entry points\s*\(([^)]+)\)", text)
+    if not m:
+        raise SystemExit(1)
+    names = set(re.findall(r"`([^`]+)`", m.group(1)))
 except (OSError, ValueError):
     raise SystemExit(1)  # Fail open when the source inventory cannot be read.
 
-names = set(re.findall(r"`([^`]+)`", text[start:end]))
 if "marathon-plan is now the **12th frozen" in text:
     names.add("marathon-plan")
 
