@@ -240,7 +240,12 @@ def scan(root, cfg, allow_empty=False):
 
 
 def _gql(query, variables=None):
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    # GH-405: the gh executable is a seam so the mock board (utils/py/mock_gh_board.py) can
+    # stand in for the real API offline. Default is the real `gh` — nothing changes unless
+    # XYZ_BOARD_SYNC_GH_BIN is set, and the binary is named in every error below so a run
+    # against the mock can never be mistaken for a run against the live board.
+    gh_bin = os.environ.get("XYZ_BOARD_SYNC_GH_BIN", "gh")
+    cmd = [gh_bin, "api", "graphql", "-f", f"query={query}"]
     for k, v in (variables or {}).items():
         # -F applies type inference and @file expansion — a project_owner of "@noelsaw1"
         # would read a FILE named noelsaw1 (review r2 #7). Raw -f for strings; -F only
@@ -250,9 +255,9 @@ def _gql(query, variables=None):
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise RuntimeError(f"gh api graphql failed: {exc}") from exc
+        raise RuntimeError(f"gh api graphql failed ({gh_bin}): {exc}") from exc
     if proc.returncode != 0:
-        raise RuntimeError(f"gh api graphql rc={proc.returncode}: {proc.stderr.strip()[:300]}")
+        raise RuntimeError(f"gh api graphql rc={proc.returncode} ({gh_bin}): {proc.stderr.strip()[:300]}")
     try:
         payload = json.loads(proc.stdout)
     except ValueError as exc:
@@ -295,26 +300,33 @@ def resolve_ids(cfg, force=False):
         _warn("cached board IDs were resolved from different settings — re-resolving")
         ids = {}
     if not ids:
+        # GH-405: ask for BOTH owner shapes in one round trip. `user(login:)` returns null
+        # for an organization and vice versa, so the v1 user-only query could never reach an
+        # org board — and this repo's own owner (HiQS-Labs) is an org, which is why the mock
+        # models both (mock_gh_board.py:100-108). One query, no extra call, no guessing.
         data = _gql(
             "query($o:String!,$n:Int!,$f:String!){user(login:$o){projectV2(number:$n){id "
+            "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}} "
+            "organization(login:$o){projectV2(number:$n){id "
             "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}}}",
             {"o": cfg["project_owner"], "n": int(cfg["project_number"]), "f": cfg["status_field"]},
         )
-        user = data.get("user") or {}
-        proj = user.get("projectV2")
+        owner = data.get("user") or data.get("organization") or {}
+        proj = owner.get("projectV2")
         if proj is None:
             raise RuntimeError(
                 f"project {cfg['project_owner']}/{cfg['project_number']} not found "
-                f"(an organization owner needs the organization() query — unsupported in v1)"
+                f"as either a user or an organization"
             )
         field = proj.get("field")
         if field is None:
             raise RuntimeError(f"field {cfg['status_field']!r} not found on the project")
-        option = next((o for o in field["options"] if o["name"] == cfg["in_progress"]), None)
+        options = field.get("options") or []
+        option = next((o for o in options if o["name"] == cfg["in_progress"]), None)
         if option is None:
             raise RuntimeError(
                 f"option {cfg['in_progress']!r} not found on field {cfg['status_field']!r} "
-                f"(options: {[o['name'] for o in field['options']]})"
+                f"(options: {[o['name'] for o in options]})"
             )
         ids = {
             "_inputs": wanted_inputs,
