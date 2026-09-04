@@ -17,14 +17,19 @@
 #   - PROOF-OF-LOAD signals → record this session as "skill loaded", then allow:
 #       * Skill tool invoked with skill == relay-xyz
 #       * Bash command that runs the skill's own locator (find-harness.sh)
-#   - BLOCK (exit 2, message to the model) when a Bash command EXECUTES a harness driver
-#       entrypoint under relay-automation/ AND this session has not loaded the skill.
+#   - BLOCK (exit 2, message to the model) when a Bash command EXECUTES a harness entrypoint
+#       derived from AGENTS.md's Tier-A inventory, or any relay-automation/*-turn.sh shim,
+#       AND this session has not loaded the skill.
 #       Exit 2 feeds stderr back to the model and cancels the tool call.
 #   - Everything else → exit 0 (allow). Fail-open: any parse error allows the call.
 #
 # Precision notes:
-#   - Only relay-automation/<driver>.sh paths block — test/<driver>.sh and reads are exempt,
-#     so `validate.sh` and the shim tests never trip it.
+#   - The command is parsed to identify programs in execution position. A read, echo, grep, or
+#     other command that only mentions an entrypoint path is exempt.
+#   - KNOWN RESIDUALS (fail-open by design, recorded so it stays a decision): eval '…', `source`/`.`,
+#     `… | bash`, combined short-flag forms like `bash -ec '…'` (only the exact `-c` token is
+#     recognised), subshell parens, and `bash -nv` combined with other short flags being read as
+#     execution. Closing these is future work, not a silent gap.
 #   - Session-scoped via the event's session_id, so a marker from one session never
 #     suppresses the guard in another.
 set -u
@@ -94,23 +99,113 @@ case "$FIELD" in
   *find-harness.sh*) : > "$MARKER" 2>/dev/null || true; exit 0 ;;
 esac
 
-# Inspection (read-only) of a harness file is not "driving" — never block it.
-first="${FIELD%% *}"
-case "$first" in
-  cat|head|tail|less|more|wc|grep|rg|ls|bat|file|stat|chmod|git|find|awk|sed) exit 0 ;;
-esac
-case "$FIELD" in *"bash -n "*) exit 0 ;; esac
+# --- harness entrypoints: derive the surface; do not maintain a second hand-written list ---
+#
+# AGENTS.md is the authoritative Tier-A inventory (GH-308). New model shims are intentionally
+# included by the tree glob as well: a new *-turn.sh must not wait for somebody to remember this
+# hook. Python names are included because calling the authoritative Python twin directly drives the
+# same harness just as much as invoking its historical Bash shim.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+is_harness_entrypoint() {
+  RELAY_GUARD_ROOT="$ROOT" RELAY_GUARD_COMMAND="$FIELD" python3 - <<'PY' 2>/dev/null
+import glob
+import os
+import re
+import shlex
+import sys
 
-# --- driver entrypoints: executing these IS driving the harness ---
-case "$FIELD" in
-  *relay-automation/relay-drive.sh*|\
-  *relay-automation/marathon-drive.sh*|\
-  *relay-automation/marathon.sh*|\
-  *relay-automation/poll.sh*|\
-  *relay-automation/codex-turn.sh*|\
-  *relay-automation/agy-turn.sh*)
-    if [ ! -f "$MARKER" ]; then
-      cat >&2 <<'MSG'
+root = os.environ["RELAY_GUARD_ROOT"]
+command = os.environ["RELAY_GUARD_COMMAND"]
+agents = os.path.join(root, "AGENTS.md")
+
+try:
+    text = open(agents, encoding="utf-8").read()
+    m = re.search(r"Tier-A[\s\S]*?entry points\s*\(([^)]+)\)", text)
+    if not m:
+        raise SystemExit(1)
+    names = set(re.findall(r"`([^`]+)`", m.group(1)))
+except (OSError, ValueError):
+    raise SystemExit(1)  # Fail open when the source inventory cannot be read.
+
+entrypoints = set()
+for name in names:
+    for base in ("relay-automation", "utils"):
+        candidate = os.path.join(root, base, name + ".sh")
+        if os.path.isfile(candidate):
+            entrypoints.add(os.path.realpath(candidate))
+    python_name = name.replace("-", "_") + ".py"
+    candidate = os.path.join(root, "utils", "py", python_name)
+    if os.path.isfile(candidate):
+        entrypoints.add(os.path.realpath(candidate))
+
+for candidate in glob.glob(os.path.join(root, "relay-automation", "*-turn.sh")):
+    if os.path.isfile(candidate):
+        entrypoints.add(os.path.realpath(candidate))
+
+def is_entrypoint(value):
+    if not value or value.startswith("-"):
+        return False
+    candidate = value if os.path.isabs(value) else os.path.join(root, value)
+    return os.path.realpath(candidate) in entrypoints
+
+def segments(source):
+    try:
+        lexer = shlex.shlex(source, posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        return []
+    result, current = [], []
+    for token in tokens:
+        if token and set(token) <= set(";&|"):
+            if current:
+                result.append(current)
+                current = []
+        else:
+            current.append(token)
+    if current:
+        result.append(current)
+    return result
+
+def executes(argv):
+    index = 0
+    while index < len(argv) and re.match(r"[A-Za-z_][A-Za-z0-9_]*=", argv[index]):
+        index += 1
+    if index >= len(argv):
+        return False
+    if os.path.basename(argv[index]) == "env":
+        index += 1
+        while index < len(argv) and (argv[index].startswith("-") or re.match(r"[A-Za-z_][A-Za-z0-9_]*=", argv[index])):
+            index += 1
+    while index < len(argv) and os.path.basename(argv[index]) in {"command", "exec", "sudo"}:
+        index += 1
+        while index < len(argv) and argv[index].startswith("-"):
+            index += 1
+    if index >= len(argv):
+        return False
+
+    program = os.path.basename(argv[index])
+    if program in {"bash", "sh", "zsh"}:
+        options = argv[index + 1:]
+        if "-n" in options or "--noexec" in options:
+            return False
+        if "-c" in options:
+            command_index = options.index("-c") + 1
+            return any(executes(part) for part in segments(options[command_index])) if command_index < len(options) else False
+        script = next((arg for arg in options if not arg.startswith("-")), "")
+        return is_entrypoint(script)
+    if program in {"python", "python3"}:
+        script = next((arg for arg in argv[index + 1:] if not arg.startswith("-")), "")
+        return is_entrypoint(script)
+    return is_entrypoint(argv[index])
+
+raise SystemExit(0 if any(executes(part) for part in segments(command)) else 1)
+PY
+}
+
+if is_harness_entrypoint; then
+  if [ ! -f "$MARKER" ]; then
+    cat >&2 <<'MSG'
 relay-xyz guard — STOP. You are about to drive the relay harness, but the relay-xyz
 skill has not been loaded in this session.
 
@@ -122,9 +217,8 @@ or build your own harness from `ls relay-automation/`. The skill owns:
 
 If you have already read it, run the skill's Preconditions block (find-harness.sh) and retry.
 MSG
-      exit 2
-    fi
-    ;;
-esac
+    exit 2
+  fi
+fi
 
 exit 0

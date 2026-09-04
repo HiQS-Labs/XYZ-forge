@@ -66,6 +66,9 @@ TESTS=(
   "gh412-transient-claim-exit.sh" # GH-412 (transient claim lock collision exits 75 and is retried)
   "gh413-launch-artifact-destination-guard.sh" # GH-413 (launch artifact marker deletion & destination history guard)
   "gh414-comment-reference-check.sh" # GH-414 (source-comment references resolution in source and built trees)
+  "gh415-guard-hook-entrypoints.sh"  # GH-415 (guard hook entrypoints derived from the AGENTS.md
+                                     #   Tier-A inventory + the *-turn.sh glob; anchor-set pins the
+                                     #   surface against inventory shrinkage)
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"
