@@ -64,6 +64,7 @@ TESTS=(
   "gh411-tick-log-foreign-cwd.sh" # GH-411 (tick log guarded for all event types except cost.*)
   "gh251-validate-pytest-skip.sh" # GH-251 (pytest absence handled as named skip in validate.sh)
   "gh412-transient-claim-exit.sh" # GH-412 (transient claim lock collision exits 75 and is retried)
+  "gh413-launch-artifact-destination-guard.sh" # GH-413 (launch artifact marker deletion & destination history guard)
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"
