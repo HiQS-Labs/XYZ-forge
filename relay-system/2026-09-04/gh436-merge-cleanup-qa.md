@@ -30,5 +30,5 @@ Read the following files:
 Please review and provide concrete citations (`file:line`). If the implementation is sound and meets all safety requirements, change the STATUS to `Approved/Closed`.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (commandcode)
+▶ TAKE YOUR TURN (aider)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
