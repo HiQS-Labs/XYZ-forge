@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-09-04
+
+### Changed
+- **GH-269: the releases DB is the roadmap's sole source of truth — `ROADMAP.md` is retired.** The physical ledger file is deleted in releases-mode repos and every harness reader was moved to `releases.db` in the same change: `wave_reconcile`, `marathon_plan`/`_marathon_plan`, `pdda.sh` roadmap-coverage, and `roadmap-dashboard.sh` now read the ledger directly from the DB, and `releases roadmap sync` skips gracefully in releases-mode. Legacy repos are unaffected — the carve-out is structural, not a flag: missing `ROADMAP.md` + present `releases.db` decides releases-mode, and with `ROADMAP.md` present nothing changes. An absent source file is now a mode signal, and the failure shape is named instead of silent: `roadmap-dashboard.sh` exits 3 with `source not found` rather than rendering from nothing. **Residuals are recorded, not absorbed:** the frozen Bash twin `marathon-plan.sh` (GH-308) still expects `ROADMAP.md` on the `XYZ_PYTHON=0` opt-out path and now diverges from its Python twin by design; remaining executable references (`pdda-local-checks.sh`, `router_audit.py`, HQ tooling, leaderboard fallback strings) were verified graceful. `test/gh269-roadmap-retired.sh` pins both directions — the retirement (a restored stub `ROADMAP.md` fails the suite) and the DB reads. Reversibility: **Easy** — reverting restores `ROADMAP.md` from history while the DB rows survive harmlessly, so the flip is undoable without data loss. Verification: 13 suites green in a fresh disposable clone (gh269, gh349 54/0, gh243, gh257, gh362, wave-reconcile 14/0, gh202 37/0, gh168 7/0, gh232 13/0, gh353 108/0, gh238, gh239, gh32 144/0), `pdda-repo-contract` rc 0 on the ROADMAP-less tree, live smoke of dashboard/marathon-plan/`releases roadmap list` from the DB, hosted vendored smoke gate green.
+
 ## [Unreleased] - 2026-09-03
 
 ### Fixed
