@@ -1116,29 +1116,93 @@ _pdda_comment_extract_refs() {
     | LC_ALL=C sort -u
 }
 
-_pdda_check_comment_references_at() {
-  # <check-name> <label> <root>; return 1 after recording one or more unresolved citations.
-  local check_name="$1" label="$2" root="$3" file line_no text ref candidate rc=0
-  [ -d "$root/src" ] || return 0
+_pdda_comment_rows_fallback() {
+  # <root> <rows_out> — bash builder used when the Python scanner is unavailable or fails.
+  # GH-414 merge-train lesson: the streaming version of this scan (nested `done < <(…)` process
+  # substitutions running per-line pipelines over the whole src tree) died intermittently by
+  # signal under macOS /bin/bash 3.2. Both engines therefore hand rows over as a REGULAR FILE;
+  # this fallback additionally avoids process substitution entirely (the <<< here-string from
+  # command substitution is the long-established GH-365 legacy shape). Same rows, only slower.
+  local root="$1" rows_out="$2" file line_no text ref
+  : > "$rows_out"
+  local find_tmp="${rows_out}.find" lines_tmp="${rows_out}.lines"
+  find "$root/src" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.sh' -o -name '*.bash' -o -name '*.zsh' -o -name '*.py' -o -name '*.rb' -o -name '*.pl' \) -print0 2>/dev/null > "$find_tmp"
   while IFS= read -r -d '' file; do
+    _pdda_comment_scannable_lines "$file" > "$lines_tmp"
     while IFS=$'\t' read -r line_no text; do
       [ -n "$line_no" ] || continue
       while IFS= read -r ref; do
         [ -n "$ref" ] || continue
-        candidate="$root/$ref"
-        [ -f "$candidate" ] && continue
-        # A path the repo deliberately does not track is not a dead reference: gitignored runtime
-        # state (e.g. .tick/STATE.md, cited by src/project.js) exists in any working tree that has
-        # run the harness, but never in a pristine checkout — reporting it dead made governance
-        # fail on every fresh clone. In a non-repo root (a built artifact) check-ignore errors to
-        # /dev/null and returns non-zero, so the fallthrough stays fail-closed there.
-        git -C "$root" check-ignore --quiet -- "$ref" 2>/dev/null && continue
-        pdda_record_finding error "$check_name" "$file" "$line_no" \
-          "comment reference '$ref' in $label has no file at $ref" "fix-comment-reference"
-        rc=1
-      done < <(_pdda_comment_extract_refs "$text")
-    done < <(_pdda_comment_scannable_lines "$file")
-  done < <(find "$root/src" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.sh' -o -name '*.bash' -o -name '*.zsh' -o -name '*.py' -o -name '*.rb' -o -name '*.pl' \) -print0 2>/dev/null)
+        printf '%s\t%s\t%s\n' "$file" "$line_no" "$ref" >> "$rows_out"
+      done <<< "$(_pdda_comment_extract_refs "$text")"
+    done < "$lines_tmp"
+  done < "$find_tmp"
+  rm -f "$find_tmp" "$lines_tmp"
+}
+
+_pdda_comment_ref_ignored() {
+  # <ign_out> <ref> → 0 iff git says the path is ignored by a NON-negated final rule.
+  # GH-514: check-ignore exit 0 means "a pattern matched", NOT "this path is ignored" — a
+  # negation rule (`!keep.md`) also exits 0 and re-includes the path, so a missing re-included
+  # reference must still fail. check-ignore -v prints the final matching rule as
+  # `<source>:<linenum>:<pattern>`; the pattern is what follows the line-number colon field.
+  awk -F'\t' -v ref="$2" '
+    $NF == ref {
+      rule = $1
+      if (match(rule, /:[0-9]+:/)) {
+        pat = substr(rule, RSTART + RLENGTH)
+        if (pat !~ /^!/) found = 1
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$1"
+}
+
+_pdda_check_comment_references_at() {
+  # <check-name> <label> <root>; return 1 after recording one or more unresolved citations.
+  # One scanner process per tree (utils/py/pdda_comment_refs.py, the GH-365 pattern), rows
+  # consumed from a regular file. A missing or failing scanner degrades to the bash row
+  # builder above — to slow, never to silence. Non-repo roots (a built artifact) never exempt:
+  # check-ignore fails there and every missing reference stays an error.
+  local check_name="$1" label="$2" root="$3" file line_no ref rc=0
+  [ -d "$root/src" ] || return 0
+  local scan_tmp refs_tmp ign_out scanner
+  if ! scan_tmp="$(mktemp "${TMPDIR:-/tmp}/pdda-comment-rows.XXXXXX")"; then
+    pdda_record_finding error "$check_name" "$root" 0 \
+      "cannot create temp file for the comment-reference scan — failing closed" "scan-temp"
+    return 1
+  fi
+  refs_tmp="${scan_tmp}.refs"; ign_out="${scan_tmp}.ign"
+  scanner="${PDDA_COMMENT_SCAN:-$HERE/../py/pdda_comment_refs.py}"
+  if command -v python3 >/dev/null 2>&1 && [ -f "$scanner" ] \
+     && python3 "$scanner" "$root" > "$scan_tmp" 2>/dev/null; then
+    : # preferred engine
+  else
+    _pdda_comment_rows_fallback "$root" "$scan_tmp"
+  fi
+  # Classify only what is actually missing: one batched check-ignore -v query for the root.
+  : > "$refs_tmp"
+  while IFS=$'\t' read -r file line_no ref; do
+    [ -n "$ref" ] || continue
+    [ -f "$root/$ref" ] || printf '%s\n' "$ref"
+  done < "$scan_tmp" | sort -u > "$refs_tmp"
+  git -C "$root" check-ignore -v --stdin < "$refs_tmp" > "$ign_out" 2>/dev/null
+  while IFS=$'\t' read -r file line_no ref; do
+    [ -n "$ref" ] || continue
+    [ -f "$root/$ref" ] && continue
+    if _pdda_comment_ref_ignored "$ign_out" "$ref"; then
+      # Runtime-generated, deliberately untracked state (e.g. .tick/STATE.md, cited by
+      # src/project.js): exists in any used tree, never in a pristine checkout. Reported, not
+      # silent — an invisible exemption becomes unverifiable debt.
+      pdda_record_finding info "$check_name" "$file" "$line_no" \
+        "comment reference '$ref' in $label cites generated/ignored state — exempt from existence check" "generated-state-skip"
+      continue
+    fi
+    pdda_record_finding error "$check_name" "$file" "$line_no" \
+      "comment reference '$ref' in $label has no file at $ref" "fix-comment-reference"
+    rc=1
+  done < "$scan_tmp"
+  rm -f "$scan_tmp" "$refs_tmp" "$ign_out"
   return "$rc"
 }
 

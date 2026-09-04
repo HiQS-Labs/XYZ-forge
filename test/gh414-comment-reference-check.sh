@@ -86,5 +86,41 @@ mv "$PRISTINE/.gitignore.bak" "$SOURCE/.gitignore"
   && pass "red control: the same citation fails without the ignore rule (check can fail)" \
   || fail "red control: governance passed without the ignore rule -- the exemption is not what carried control A: $out"
 
+
+# -- GH-514: a negation rule re-includes the path, so a missing re-included ref must FAIL ----
+# check-ignore exit 0 means "a pattern matched", not "ignored" — the exemption must read the
+# final matching RULE and treat `!`-rules as re-included, or a dead re-included ref goes silent.
+cat >"$PRISTINE/.gitignore" <<'IGNEOF'
+*.md
+!docs/real.md
+IGNEOF
+cat >"$PRISTINE/src/reexport.js" <<'JSEOF'
+// See docs/real.md for the companion note.
+JSEOF
+rc=0; out="$(PDDA_MODE=full PDDA_REPO_ROOT="$PRISTINE" PDDA_GOVERNANCE_DOCS="" PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" governance 2>&1)" || rc=$?
+if [ "$rc" -ne 0 ] && grep -Fq "comment reference 'docs/real.md'" <<<"$out"; then
+  pass "a re-included (negation-rule) missing reference still fails — not swallowed by the exemption"
+else
+  fail "negation control: rc=$rc, expected docs/real.md reported dead: $out"
+fi
+
+# -- the generated-state skip is REPORTED (INFO), not silent ---------------------------------
+rm -f "$PRISTINE/src/reexport.js"
+printf '/.tick/\n' >"$PRISTINE/.gitignore"
+rc=0; out="$(PDDA_MODE=full PDDA_REPO_ROOT="$PRISTINE" PDDA_GOVERNANCE_DOCS="" PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" governance 2>&1)" || rc=$?
+[ "$rc" -eq 0 ] && grep -Fq "generated/ignored state" <<<"$out" \
+  && pass "generated-state exemption is reported as an INFO finding, not invisible" \
+  || fail "expected rc 0 with a visible generated-state INFO finding: rc=$rc out=$out"
+
+# -- scanner failure degrades to the bash row builder — to slow, never to silence ------------
+rm -f "$PRISTINE/.gitignore"
+rc=0; out="$(PDDA_MODE=full PDDA_REPO_ROOT="$PRISTINE" PDDA_COMMENT_SCAN=/bin/false \
+  PDDA_GOVERNANCE_DOCS="" PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" governance 2>&1)" || rc=$?
+if [ "$rc" -ne 0 ] && grep -Fq "comment reference '.tick/STATE.md'" <<<"$out"; then
+  pass "a failing Python scanner degrades to the bash builder and still catches the dead ref"
+else
+  fail "scanner-degrade control: rc=$rc — silence instead of findings: $out"
+fi
+
 echo "== gh414-comment-reference-check: $PASS passed, $FAIL failed =="
 [ "$FAIL" -eq 0 ]
