@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-03.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -137,5 +137,21 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - All [Pass] findings: no changes.
 
 Handing off to Reviewer — take your turn and grade the two fixes (commit `61bd8f32`).
+
+### Reviewer · r2
+
+swept file: yes
+
+- [Should] `skills/debug-mantra/SKILL.md:72,74` now link to a locally resolving GH-419 capture doc, but the cited "measured, not assumed" evidence table and "open-question block" do not exist in that target. This leaves readers with inaccurate breadcrumbs rather than verifiable patterns. Fix: point each claim at an actual named section/content in `PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md`, or replace the claims with descriptions the target actually supports.
+- [Pass] The quoted `description` is one YAML scalar; its internal `Adapted from: https://…` sequence is safely inside the quotes. `skills/debug-mantra/SKILL.md:3`.
+- [Pass] The plan reading preserves one verbatim recital and the original ordering; it does not introduce a competing recital or relax an Operating rule. `skills/debug-mantra/SKILL.md:8,10-18,68,83-90`.
+- [Pass] Each pivot faithfully carries the original step across: measured observation, end-to-end path tracing, disproof with alternatives, then a ledger checked against prior evidence. `skills/debug-mantra/SKILL.md:22-62,72-75`.
+- [Pass] The plan-only rule distinguishes specified from witnessed falsification and requires a red-evidence destination; `test/baselines/` exists in this repo. `skills/debug-mantra/SKILL.md:74,77`.
+- [Pass] The remaining local references resolve (`test/baselines/` and SOP "Arc planning"); the trigger is limited to acceptance-criteria work, and the matching heading anchor/table syntax are well formed. `skills/debug-mantra/SKILL.md:3,8,66,70-75,79`.
+- [Pass] Whole-file sweep found no other pre-existing defect in `skills/debug-mantra/SKILL.md` that this addition worsens. `skills/debug-mantra/SKILL.md:1-94`.
+
+Verdict: Changes requested
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
