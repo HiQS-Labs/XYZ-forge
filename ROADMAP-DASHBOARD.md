@@ -92,7 +92,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 54 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 52 · 🔮 0 · 🔲 0
+Summary: 55 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 53 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -150,6 +150,7 @@ Summary: 54 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 52 · �
 | GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files | ✅ | [GH-14-ATOMIC-EVENT-APPEND.md](PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md) · [#14](https://github.com/HiQS-Labs/XYZ-forge/issues/14) |
 | GH-15 · parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract | ✅ | [GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#15](https://github.com/HiQS-Labs/XYZ-forge/issues/15) |
 | GH-3 · improve-loop.sh --state-dir durability — provenance evidence must not evaporate | ✅ | [GH-3-IMPROVE-LOOP-STATE-DIR.md](PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md) · [#3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) |
+| GH-436 · feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe teardown | ✅ | [GH-436-MERGE-CLEANUP-SKILL.md](PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md) · [#436](https://github.com/HiQS-Labs/XYZ-forge/issues/436) |
 
 ## Deferred · vision
 

@@ -2,7 +2,7 @@
 gh_issue: 436
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/436
 title: "feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe teardown"
-status: Active (2-WORKING — execution started)
+status: Complete
 created: 2026-09-04
 updated: 2026-09-04
 owner: noelsaw1
@@ -57,3 +57,9 @@ goal: >
 2. CLI dry-run and execution modes verified on fixture repositories.
 3. QA consultation via `/relay-xyz` with Qwen 3.8 max.
 4. Full validation pass in a clean task clone.
+
+## Lessons Learned (For Future Agents)
+
+1. **Path Safety & Containment:** Component-aware containment (`_within`) that rejects root and exact identity is essential to prevent catastrophic deletes on parent directories.
+2. **Worktree Protocol Integrity:** Linked worktrees must always be removed with `git worktree remove` and pruned with `git worktree prune` — never deleted directly with `rm -rf`.
+3. **Multi-Ref Inspection:** When validating disposable standalone clones, checking only `HEAD` is insufficient; checking all local branch refs against `origin` and inspecting `git stash list` guarantees zero unpushed work loss.
