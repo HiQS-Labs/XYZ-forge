@@ -1,0 +1,189 @@
+{
+  "started_at": "2026-09-04T20:34:16-0700",
+  "repo": "/Users/noelsaw/marathon-clones/gh299-gen4",
+  "sandbox": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-campaign._ige6pnh/clone",
+  "duration_s": 1500.0,
+  "targets": [
+    "ci-route",
+    "releases-roadmap",
+    "releases-check",
+    "pdda-frontmatter",
+    "domain-oracles-cli",
+    "adaptive-ate-cli",
+    "codex-turn-twins",
+    "agy-turn-twins",
+    "marathon-plan"
+  ],
+  "batches": 20,
+  "mutations": 400,
+  "counts": {
+    "pass": 20,
+    "fail": 337,
+    "anomaly": 43
+  },
+  "handled_rejections": 333,
+  "counterexamples": 43,
+  "parity_divergences": 34,
+  "contamination_events": [
+    {
+      "round": 18,
+      "target": "marathon-plan",
+      "seed": 20260922,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    }
+  ],
+  "host_violations": [],
+  "per_target": {
+    "ci-route": {
+      "batches": 3,
+      "mutations": 60,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "releases-roadmap": {
+      "batches": 3,
+      "mutations": 60,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "releases-check": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "pdda-frontmatter": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 4,
+      "parity_divergences": 0
+    },
+    "domain-oracles-cli": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "adaptive-ate-cli": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "codex-turn-twins": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 20,
+      "parity_divergences": 20
+    },
+    "agy-turn-twins": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 14,
+      "parity_divergences": 14
+    },
+    "marathon-plan": {
+      "batches": 2,
+      "mutations": 40,
+      "counterexamples": 5,
+      "parity_divergences": 0
+    }
+  },
+  "errors": [],
+  "elapsed_s": 259.3,
+  "mutations_per_min": 92.6,
+  "telemetry": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/e1a512dc-7dbc-47f6-bd87-0b87d153d0c1/scratchpad/campaign-evidence/telemetry.jsonl",
+  "telemetry_valid": true,
+  "clusters": [
+    {
+      "digest": "e3b0c44298fc1c14",
+      "members": 42,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly",
+        "fail"
+      ],
+      "reasons": [
+        "parity: authoritative rc=0 vs twin rc=2",
+        "rc=0 but 36411ms > slow_ms 30000.0",
+        "rc=0 but 36714ms > slow_ms 30000.0",
+        "rc=0 but 36902ms > slow_ms 30000.0",
+        "rc=0 but 37353ms > slow_ms 30000.0",
+        "rc=1 class=silent"
+      ],
+      "representative": [
+        "bash",
+        "utils/pdda/pdda.sh"
+      ],
+      "rep_size": 24,
+      "exit_code": 0,
+      "signal": 0,
+      "cwd": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-campaign._ige6pnh/clone",
+      "stderr_head": ""
+    },
+    {
+      "digest": "738c4aa1f77b7a53",
+      "members": 5,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=4 outside calibrated sets"
+      ],
+      "representative": [
+        "python3",
+        "utils/py/marathon_plan.py"
+      ],
+      "rep_size": 34,
+      "exit_code": 4,
+      "signal": 0,
+      "cwd": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-campaign._ige6pnh/clone",
+      "stderr_head": "wrote PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md\n"
+    }
+  ],
+  "false_positives": [],
+  "synthesized": {
+    "emitted": [
+      {
+        "digest": "738c4aa1f77b7a53",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/e1a512dc-7dbc-47f6-bd87-0b87d153d0c1/scratchpad/campaign-evidence/synth/gh299-gen4-738c4aa1-rc4.sh",
+        "members": 5,
+        "argv": [
+          "python3",
+          "utils/py/marathon_plan.py"
+        ],
+        "env": {},
+        "exit_code": 4,
+        "signature": "",
+        "minimized_from": 2,
+        "minimized_to": 2
+      }
+    ],
+    "skipped": [
+      {
+        "digest": "e3b0c44298fc1c14",
+        "why": "did not reproduce rc=0 in /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-campaign._ige6pnh/clone",
+        "argv": [
+          "bash",
+          "utils/pdda/pdda.sh"
+        ]
+      }
+    ],
+    "clusters": 2
+  },
+  "verdict": {
+    "zero_host_violations": true,
+    "zero_sandbox_contamination": false,
+    "zero_host_contamination": false,
+    "zero_false_positives": true,
+    "telemetry_line_valid": true
+  },
+  "finished_at": "2026-09-04T20:40:04-0700"
+}
