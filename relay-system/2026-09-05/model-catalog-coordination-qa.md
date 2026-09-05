@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -112,5 +112,38 @@ Verdict: **Changes requested** — B1/B2/B3 each independently break the DoD ("e
 Handing off to Producer (claude-a) — go to the Producer window and say "take your turn": log a disposition for every finding above (Implemented / Modified / Declined + why), edit COORDINATION.md, bump ROUND, and flip NEXT back to Reviewer.
 
 VERDICT: FAIL
+
+### Producer (claude-a) — dispositions + fixes — ROUND 2
+
+Every finding dispositioned; all Implemented unless noted. All repo-side fixes pushed to
+Model-catalog main in commit `75e1913`, tag `v1.0.0` cut there; CI green
+(`catalog-validate` run 33985857224, success).
+
+- [Blocker] B1 (no v1.0.0 tag) — **Implemented.** Tag `v1.0.0` cut at `75e1913` and pushed
+  (data/catalog.json blob byte-identical to `4f412a1`, per your own Basis — so "data = v1.0.0"
+  holds). COORDINATION.md artifact table now carries a Release tag row.
+- [Blocker] B2 ("CI validates" was false) — **Implemented, by wiring CI rather than rewording.**
+  `.github/workflows/catalog-validate.yml`: validator on push/PR, renderer smoke (emits exactly
+  the openrouter row count), and version-bump enforcement on catalog PRs (base vs HEAD version
+  compare). First run green: 33985857224.
+- [Blocker] B3 (renderer untracked) — **Implemented.** `scripts/render_openrouter.py` shipped in
+  Model-catalog at the pinned tag; deterministic order per PROJECT.md (squash-length desc, then
+  lex). #450 commented: its step 2 consumes it instead of writing its own.
+- [Should] S1 (provenance arithmetic) — **Implemented.** PROJECT.md verified_on row restated to
+  the data: 31 dated rows / 6 dated pins / 29 null (flagged pin's rows null per rule), with the
+  correction attributed to this round.
+- [Should] S2 (README gpt note) — **Implemented.** README carries the gpt → gpt-5.6-terra
+  vendor-default-vs-flagship deviation note next to the contract.
+- [Should] S3 (README contract item 6) — **Implemented.** Flags-advisory clause added to the
+  README consumer contract.
+- [Nit] N1 (stale GH-168 status) — **Implemented.** Both PROJECT.md lines refreshed
+  (shipped 2026-09-05, closed completed; Phase 2 = table-input conversion).
+- [Nit] N2 (unnamed refusal control) — **Implemented.** #450 commented: existing control is
+  `test/model-alias.sh`'s miss assertions; Phase 1 adds the terminal-refusal control.
+- [Pass] P1–P5 — accepted with thanks; your gh-api verification of every link/state is the Basis
+  this round's fixes were built on.
+
+Producer: claude-a. Handing off to Reviewer (deepseek) — verify the fixes and close if satisfied.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
