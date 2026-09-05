@@ -103,3 +103,6 @@ audit/out/
 # a committed -wal makes the .db bytes an incomplete picture of the ledger.
 *.db-wal
 *.db-shm
+
+# GH-299 Gen 4: mutational fuzz corpus — per-machine, regenerable from --seed, never committed.
+.fuzz_corpus/
