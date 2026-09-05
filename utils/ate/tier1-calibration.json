@@ -1,0 +1,48 @@
+{
+  "anomaly_signals": [
+    6,
+    9,
+    11,
+    15
+  ],
+  "benchmark": {
+    "fail": 20,
+    "pass": 50,
+    "rows": 70
+  },
+  "benign_keywords": [
+    "warning:",
+    "deprecat",
+    "notice:"
+  ],
+  "calibrated": true,
+  "fail_exit_codes": [
+    1,
+    2,
+    126,
+    127
+  ],
+  "fail_keywords": [
+    "traceback",
+    "error:",
+    "fatal:",
+    "assert",
+    "panic",
+    "segmentation fault",
+    "command not found",
+    "no such file"
+  ],
+  "pass_exit_codes": [
+    0
+  ],
+  "score": {
+    "anomalies": 9,
+    "anomaly_rate_pct": 12.86,
+    "false_negative_pct": 0.0,
+    "false_negatives": 0,
+    "false_positives": 0,
+    "rows": 70
+  },
+  "slow_ms": 30000.0,
+  "version": 1
+}

@@ -33,14 +33,14 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 landed on `feat/gh299-gen4-ate`: `utils/py/telemetry_schema.py` (shared contract) + `utils/py/domain_oracles.py` (zero-state, containment, idempotence, crash-recovery) pinned by `test/gh-gen4-phase1-domain-oracles.sh` (17/17, 4 positive + 4 negative controls) | Phase 2: constraint-aware pairwise ATE + calibrated Tier-1 classifier (`utils/py/adaptive_ate.py`, `utils/py/calibrate_tier1.py`) |
+| Phase 2 landed on `feat/gh299-gen4-ate`: `utils/py/adaptive_ate.py` (constraint-aware all-pairs generator, $0 Tier-1 classifier, Tier-2 escalation hook) + `utils/py/calibrate_tier1.py` (50/20 benchmark, FN=0 floor → `utils/ate/tier1-calibration.json`) pinned by `test/gh-gen4-phase2-adaptive-ate.sh` (18/18, independent brute-force coverage walk) | Phase 3: seeded mutational fuzz engine + novelty-weighted 500-cap corpus + differential cross-twin parity (`utils/py/fuzz_engine.py`) |
 
 ## QA gates
 
 | Phase | Gate | Evidence |
 |---|---|---|
 | 1 | `bash test/gh-gen4-phase1-domain-oracles.sh` green; each oracle has a positive and a negative control | 17/17 on 2026-09-04 |
-| 2 | `bash test/gh-gen4-phase2-adaptive-ate.sh`: 12-flag grid with conflicts ≤200 cases, 100% 2-way coverage, Tier-1 0% false negatives on the 50/20 benchmark | pending |
+| 2 | `bash test/gh-gen4-phase2-adaptive-ate.sh`: 12-flag grid with conflicts ≤200 cases, 100% 2-way coverage, Tier-1 0% false negatives on the 50/20 benchmark | 18/18 on 2026-09-04 — 13 cases vs 13,824 Cartesian (99.9% reduction), 327/327 valid pairs, FN=0 FP=0 |
 | 3 | `bash test/gh-gen4-phase3-fuzz-engine.sh`: seed replay deterministic, corpus grows, novelty eviction holds the 500 cap | pending |
 | 4 | `bash test/gh-gen4-phase4-repro-synth.sh`: a counterexample cluster emits one runnable `test/ghXXX-*.sh` | pending |
 | 5 | `bash test/gh-gen4-phase5-campaign.sh` (bounded soak) + the unattended multi-hour soak: 0 host contamination, 0 false positives | pending |

@@ -1,0 +1,29 @@
+# GH-299 Gen 4 Phase 2 — constraint-aware pairwise grid (grammar reference).
+# Rendered by utils/py/adaptive_ate.py: `--mode generate|coverage|run --grid <this file>`.
+# true -> flag emitted; false/null -> omitted; scalar -> `--flag VALUE`.
+flags:
+  --parallel: [true, false]
+  --burst: [true, false]
+  --throttle: [true, false]
+  --check: [true, false]
+  --auto: [true, false]
+  --quiet: [true, false]
+  --verbose: [true, false]
+  --dry-run: [true, false]
+  --jobs: [1, 2, 4]
+  --tier: [1, 2, 3]
+  --mode: [fast, full, null]
+  --fmt: [json, text]
+conflicts:
+  - {--burst: true, --throttle: true}      # width levers are mutually exclusive
+  - {--burst: true, --check: true}
+  - {--quiet: true, --verbose: true}
+  - {--mode: fast, --tier: 3}
+requires:
+  - if:   {--mode: full}
+    then: {--parallel: true}
+  - if:   {--jobs: 4}
+    then: {--parallel: true}
+# Target under test; {flags} is replaced by the rendered case. Override with --command.
+command: "python3 -c 'import sys; sys.exit(0)' {flags}"
+per_case_timeout_seconds: 60

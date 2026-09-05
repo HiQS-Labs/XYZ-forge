@@ -160,8 +160,12 @@ def event_from_completed(
     env: Optional[Dict[str, str]] = None,
     **extra: Any,
 ) -> TelemetryEvent:
-    """Build an event from a finished subprocess. Negative returncodes are POSIX signals."""
+    """Build an event from a finished subprocess. Negative returncodes are POSIX signals.
+
+    The argv is always recorded in `extra["argv"]` so a reader can replay the case.
+    """
     signal_no = -exit_code if exit_code < 0 else 0
+    extra = {"argv": list(argv), **extra}
     return TelemetryEvent(
         phase=phase,
         run_id=run_id or new_run_id(),
