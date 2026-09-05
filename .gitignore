@@ -106,3 +106,6 @@ audit/out/
 
 # GH-299 Gen 4: mutational fuzz corpus — per-machine, regenerable from --seed, never committed.
 .fuzz_corpus/
+
+# browserbase skill: local env files must never be tracked (key lives in ~/secrets/)
+skills/browserbase/.env*
