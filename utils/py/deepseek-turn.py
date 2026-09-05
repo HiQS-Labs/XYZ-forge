@@ -51,6 +51,14 @@ PROVIDER_ROUTES = {
     ),
 }
 
+# Per-provider max output tokens the endpoint will accept. The dsh agent requests the model's
+# maxTokens verbatim as `max_tokens`; a catalog gateway (OpenRouter) serves any id and its own
+# default silently, but Alibaba hard-rejects values above 131072 with a 400, so the route must
+# size the model entry. Providers absent here keep the bundle default.
+PROVIDER_MAX_TOKENS = {
+    "alibaba": 131072,
+}
+
 
 def provider_route(provider):
     """Resolve a provider to (base_url, key_env, key_file). Refuse an unknown one."""
@@ -99,6 +107,15 @@ def generate_patch_overlay(provider, model_id, api_key_env):
     base_url, default_key_env, _key_file = provider_route(provider)
     key_env = api_key_env or default_key_env
 
+    # The route's `models` list only REGISTERS models; the model the agent actually runs comes
+    # from the base bundle's `agent-default-model` entry (deepseek-v4-flash). Without the second
+    # patch entry below, every turn ran the bundle default while telemetry recorded model_id --
+    # invisible on OpenRouter (any id resolves), fatal on a catalog gateway (HTTP 403 denied).
+    model_entry = f"      - id: {model_id}\n        name: {model_id}"
+    cap = PROVIDER_MAX_TOKENS.get(provider)
+    if cap:
+        model_entry += f"\n        maxTokens: {cap}"
+
     content = f"""- id: llm-deepseek
   name: '@deepseek-ai/dsh-llm-deepseek'
   config:
@@ -107,8 +124,12 @@ def generate_patch_overlay(provider, model_id, api_key_env):
     thinking: enabled
     reasoningEffort: high
     models:
-      - id: {model_id}
-        name: {model_id}
+{model_entry}
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: deepseek-official
+    model: {model_id}
 """
     fd, path = tempfile.mkstemp(prefix="dsh-patch-", suffix=".cordis.yml")
     with os.fdopen(fd, "w") as f:
