@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 4 landed on `feat/gh299-gen4-ate`: `utils/py/repro_synth.py` (select → cluster by `stderr_digest` → ddmin via the Gen 3 minimizers → emit one hermetic `test/ghXXX-gen4-*.sh` per root cause; `repro_builder.py --mode synth` delegates) pinned by `test/gh-gen4-phase4-repro-synth.sh` (17/17: 50 same-cause mutations → exactly 1 suite; emitted suites go red once the defect is fixed) | Phase 5: `utils/py/gen4_campaign.py` sandboxed campaign runner + bounded soak suite; then the unattended multi-hour soak (Agy, tonight) |
+| All 5 phases landed on `feat/gh299-gen4-ate`. Phase 5: `utils/py/gen4_campaign.py` runs the whole stack unattended against a disposable full clone (`cwd=sandbox_root`), round-robins 10 real harness targets through the fuzz engine, checks sandbox zero-state + host identity after every batch (resets on contamination), replay-verifies clusters (false positives reported, never synthesized) and synthesizes suites into `<out>/synth/`; pinned by `test/gh-gen4-phase5-campaign.sh` (17/17 incl. a poisoning-target control). Evidence run: `TESTS-RESULTS/2026-09-04+GH-299/campaign/` | The unattended 3-hour soak (Agy, tonight; prompt in `relay-system/2026-09-04/gh299-gen4-soak-agy-PROMPT.md`) → Phase 5 gate verdict (>10,000 mutations, 0 contamination, 0 false positives) → `/relay-xyz` QA → PR review (not merged) |
 
 ## QA gates
 
@@ -43,7 +43,7 @@ goal: >
 | 2 | `bash test/gh-gen4-phase2-adaptive-ate.sh`: 12-flag grid with conflicts ≤200 cases, 100% 2-way coverage, Tier-1 0% false negatives on the 50/20 benchmark | 18/18 on 2026-09-04 — 13 cases vs 13,824 Cartesian (99.9% reduction), 327/327 valid pairs, FN=0 FP=0 |
 | 3 | `bash test/gh-gen4-phase3-fuzz-engine.sh`: seed replay deterministic, corpus grows, novelty eviction holds the 500 cap | 20/20 on 2026-09-04 — byte-identical plan replay, 150 mutants/0 misclassified, cap held at 6 under eviction pressure, parity oracle +/- controls, real twin run contained |
 | 4 | `bash test/gh-gen4-phase4-repro-synth.sh`: a counterexample cluster emits one runnable `test/ghXXX-*.sh` | 17/17 on 2026-09-04 — 14 counterexamples → 2 clusters → 2 minimized suites (6→3 argv), both pass while the defect reproduces and fail after the fix; 50 same-cause rows → 1 suite |
-| 5 | `bash test/gh-gen4-phase5-campaign.sh` (bounded soak) + the unattended multi-hour soak: 0 host contamination, 0 false positives | pending |
+| 5 | `bash test/gh-gen4-phase5-campaign.sh` (bounded soak) + the unattended multi-hour soak: 0 host contamination, 0 false positives | bounded suite 17/17 on 2026-09-04; 400-mutation evidence run in `TESTS-RESULTS/2026-09-04+GH-299/campaign/`; the >10,000-mutation multi-hour soak is OWED (Agy tonight) — not claimed here |
 
 ## 1. Executive Summary & ROI Thesis
 

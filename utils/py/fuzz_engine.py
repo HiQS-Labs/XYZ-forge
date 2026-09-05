@@ -228,16 +228,30 @@ def build_argv(target: str, mutant: Sequence[str]) -> List[str]:
 
 
 def execute(argv: List[str], cwd: str, timeout: float, env: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """Run one mutant in its own process group; on timeout the WHOLE group is SIGKILLed.
+
+    A target like a test runner forks grandchildren; killing only the parent (what
+    subprocess.run does) leaves them running the suite in the sandbox for minutes — observed
+    on the first real campaign run, where orphaned validate.sh runs outlived their mutant.
+    """
     full_env = dict(os.environ)
     full_env.update(env or {})
     t0 = time.monotonic()
+    proc = None
     try:
-        res = subprocess.run(argv, cwd=cwd, env=full_env, capture_output=True, timeout=timeout)
-        rc = res.returncode
-        err = res.stderr.decode("utf-8", "replace")
-    except subprocess.TimeoutExpired as exc:
+        proc = subprocess.Popen(argv, cwd=cwd, env=full_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                stdin=subprocess.DEVNULL, start_new_session=True)
+        _, err_b = proc.communicate(timeout=timeout)
+        rc = proc.returncode
+        err = err_b.decode("utf-8", "replace")
+    except subprocess.TimeoutExpired:
+        _kill_group(proc)
+        try:
+            _, err_b = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            err_b = b""
         rc = 124
-        err = (exc.stderr or b"").decode("utf-8", "replace") + f"\n[timeout after {timeout}s]"
+        err = err_b.decode("utf-8", "replace") + f"\n[timeout after {timeout}s; process group killed]"
     except (FileNotFoundError, OSError, ValueError) as exc:  # ValueError: embedded NUL in argv
         rc, err = 127, f"spawn failed: {exc}"
     ms = (time.monotonic() - t0) * 1000.0
@@ -246,6 +260,19 @@ def execute(argv: List[str], cwd: str, timeout: float, env: Optional[Dict[str, s
         rc = 128 + signal_no
     return {"rc": rc, "signal": signal_no, "stderr": err, "duration_ms": ms,
             "vector": [rc, signal_no, stderr_digest(err), duration_bucket(ms)]}
+
+
+def _kill_group(proc: Optional["subprocess.Popen"]) -> None:
+    if proc is None:
+        return
+    import signal as _signal
+    try:
+        os.killpg(proc.pid, _signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        try:
+            proc.kill()
+        except OSError:
+            pass
 
 
 def fuzz(
