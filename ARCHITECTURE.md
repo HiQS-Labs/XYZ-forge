@@ -70,6 +70,7 @@ without reading all of them first.
 | [shakedown](skills/shakedown/SKILL.md) | Audit script-calling skills across CWD, install, symlink, and permission scenarios. |
 | [skills-sync-trinity](skills/skills-sync-trinity/SKILL.md) | Keep a skill's PDDA doc, SKILL.md, and helper scripts aligned. |
 | [spike-360](skills/spike-360/SKILL.md) | Interrogate authority before introducing or moving a source of truth. |
+| [start-task](skills/start-task/SKILL.md) | Carry one or more issues through governed intake, grounded planning, relay QA, execution, and ready PRs. |
 | [standup](skills/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
 | [swe](skills/swe/SKILL.md) | Software-engineering governance lens for build/spec/PRD docs. |
 | [swe-diagram](skills/swe-diagram/SKILL.md) | Generate interactive architecture and Git-history diagrams from local evidence. |

@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -62,6 +62,7 @@ Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified | — | [GH-425-GATE-PROVENANCE-CHECK.md](PROJECT/1-INBOX/GH-425-GATE-PROVENANCE-CHECK.md) · [#425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) |
 | GH-349 · releases ledger roadmap layer never generalised to a vendored install | — | [GH-349-RELEASES-ROADMAP-VENDORED.md](PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md) · [#349](https://github.com/HiQS-Labs/XYZ-forge/issues/349) |
 | GH-351 · manifest unship, the retraction verb | — | [GH-351-MANIFEST-UNSHIP.md](PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md) · [#351](https://github.com/HiQS-Labs/XYZ-forge/issues/351) |
+| GH-443 · marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the marathon before it fires | — | [capture](PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md) |
 
 ## Queue
 
@@ -73,7 +74,7 @@ Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -88,6 +89,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
 | GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
+| GH-439 · start-task governed workflow skill | 🟡 | [plan](PROJECT/2-WORKING/GH-439-START-TASK-SKILL.md) · [#439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) · [PR #440](https://github.com/HiQS-Labs/XYZ-forge/pull/440) |
 
 ## Completed
 
