@@ -1,9 +1,12 @@
 ---
 title: "GH-299: Gen 4 ATE & True Evolutionary Fuzzing — High-ROI Phasing: Semantic Invariant Oracles, Constraint-Aware Pairwise ATE, and Feedback-Guided Fuzzing"
-status: active
+status: Active
 created: 2026-08-28
-updated: 2026-08-28
-owner: noelsaw1
+updated: 2026-09-04
+owner: orchestrator (Claude Code)
+gh_issue: 299
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/299
+branch: feat/gh299-gen4-ate
 doc_type: plan
 effort: 3
 complexity: 3
@@ -25,6 +28,22 @@ goal: >
 ---
 
 # GH-299: Gen 4 ATE & True Evolutionary Fuzzing — Architectural Plan (ROI-Optimized & Fine-Tuned)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase 1 landed on `feat/gh299-gen4-ate`: `utils/py/telemetry_schema.py` (shared contract) + `utils/py/domain_oracles.py` (zero-state, containment, idempotence, crash-recovery) pinned by `test/gh-gen4-phase1-domain-oracles.sh` (17/17, 4 positive + 4 negative controls) | Phase 2: constraint-aware pairwise ATE + calibrated Tier-1 classifier (`utils/py/adaptive_ate.py`, `utils/py/calibrate_tier1.py`) |
+
+## QA gates
+
+| Phase | Gate | Evidence |
+|---|---|---|
+| 1 | `bash test/gh-gen4-phase1-domain-oracles.sh` green; each oracle has a positive and a negative control | 17/17 on 2026-09-04 |
+| 2 | `bash test/gh-gen4-phase2-adaptive-ate.sh`: 12-flag grid with conflicts ≤200 cases, 100% 2-way coverage, Tier-1 0% false negatives on the 50/20 benchmark | pending |
+| 3 | `bash test/gh-gen4-phase3-fuzz-engine.sh`: seed replay deterministic, corpus grows, novelty eviction holds the 500 cap | pending |
+| 4 | `bash test/gh-gen4-phase4-repro-synth.sh`: a counterexample cluster emits one runnable `test/ghXXX-*.sh` | pending |
+| 5 | `bash test/gh-gen4-phase5-campaign.sh` (bounded soak) + the unattended multi-hour soak: 0 host contamination, 0 false positives | pending |
 
 ## 1. Executive Summary & ROI Thesis
 
