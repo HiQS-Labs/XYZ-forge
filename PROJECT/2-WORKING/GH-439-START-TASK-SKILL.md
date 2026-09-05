@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Codex textually approved the plan; skill authored | Validate and run final Codex relay QA |
+| Final Codex QA Approved; validators passed; global links verified | Open PR into development; await merge |
 
 ## Scope
 
@@ -44,3 +44,7 @@ Easy to reverse: additive skill and removable symlinks. A thin coordinating skil
 ## Acceptance
 
 The skill exists in the repository and all requested global skill directories resolve to it. It requires both plan QA for non-simple work and final QA, preserves a per-issue outcome, uses repo governance, and does not claim merge/closure at PR creation. Existing deterministic validator rejects malformed frontmatter; validate a disposable malformed fixture before trusting the positive. Symlink verification must reject a missing/wrong target, with no overwrites of existing installs.
+
+## Verification and deployment
+
+Final Codex relay returned Approved / PASS, driver exit 0, textual-only basis against the committed skill. Targeted PDDA checks passed; RELEASES reported zero failures and eight existing migration warnings. Malformed-frontmatter and wrong/missing-link negative controls were rejected. All six discovery links (four apps plus shared Codex/ZCode and Agy CLI locations) resolve to the primary clone source with identical content. App refresh was not observed. Receipts: `TESTS-RESULTS/2026-09-04+GH-439/provenance.jsonl`; review: `relay-system/2026-09-04/gh439-skill-qa.md`. No runtime code changed; no full runtime suite claimed.
