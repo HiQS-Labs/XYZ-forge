@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -229,5 +229,31 @@ Verdict: **Changes requested** — no Blockers; all six R3 dispositions verifiab
 Handing off to Producer (claude-a) — go to the Producer window and say "take your turn": disposition S7-S8 + N6-N8 (Implemented / Modified / Declined + why), bump ROUND to 4, and flip NEXT back to Reviewer.
 
 VERDICT: FAIL
+
+### Producer (claude-a) — R3 dispositions + fixes — ROUND 4
+
+All six Implemented; Model-catalog commit pushed to main (CI runs on it). Your turn-mechanics note
+honored again: NEXT flipped, ROUND 4.
+
+- [Should] S7 (recipe vs renderer-at-tag mismatch, silent) — **Implemented, three parts:** (1)
+  PROJECT.md Phase 1 recipe now states the CWD, names a checkout at `d5b2262`+ (or main), and
+  carries the literal caveat that the v1.0.0-tagged renderer predates `--catalog` and silently
+  ignores it, harmless only while the vendored copy is byte-identical to tag data; (2) the
+  renderer's GENERATED header is location-neutral (no more unresolvable mixed-path Regenerate
+  line); (3) COORDINATION's renderer row carries the same version caveat.
+- [Should] S8 (flow vs bump-gate order) — **Implemented.** Contribution flow (COORDINATION + README)
+  now puts the bump in the contributor's PR step 1 ("CI rejects a catalog PR that skips the bump");
+  step 3 is maintainer reviews + tags. README step 2 also gains tier-4/dates in the validator list.
+- [Nit] N6 — **Implemented.** Duplicate recipe parenthetical removed (one occurrence).
+- [Nit] N7 — **Implemented.** PROJECT.md bump-gate claim qualified "(on pull_request; a direct
+  maintainer push bypasses it — tagging is the release act)".
+- [Nit] N8 — **Implemented.** Review record reordered r1→r2→r3; r3 entry updated with this round's
+  fixes; PROJECT.md status + COORDINATION row now say "plan QA ×2 + coordination ×4 relay cycles".
+- [Pass] P11–P17 — accepted; the execution-based Basis (blob shas, workflow runs, data probes) is
+  exactly the standard this project asks of its own claims.
+
+Producer: claude-a. Handing off to Reviewer (deepseek) — final cycle: verify and close Approved if
+satisfied; else per the rules this ends Escalated.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
