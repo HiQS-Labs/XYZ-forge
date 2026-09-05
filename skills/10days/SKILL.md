@@ -3,41 +3,41 @@ name: 10days
 description: >
   Sweep GitHub issues opened or updated in an age window (default: last 10 days; the
   window is adjustable, e.g. an 11-14-day slice to avoid overlapping another sweep),
-  verify each one is still valid, reproducible, and not already fixed (fan out
-  subagents to check issue state, comments, and git/commit history for completion
+  evaluate PRS 4-axis ratings (priority, severity, appeal, effort cheapness, calc sum,
+  and manual ovr overrides) taking highest-scored issues and operator overrides as a strong
+  prioritization signal, verify each issue is still valid, reproducible, and not already
+  fixed (fan out subagents to check issue state, comments, and git/commit history for completion
   evidence), build a marathon plan from the survivors, run swarm-preflight on it, then
-  cut a branch and execute the marathon end-to-end with no pause. This skill is a
-  deliberate, operator-authorized exception to this repo's default "ask before cutting
-  a branch / firing a marathon" rule (GUIDING-PRINCIPLES.md §8) — it exists specifically
-  to run unattended. Trigger on "/10days", "run the 10 day sweep", or the operator's
-  canned request: "look through recent GH issues within the last 10 days and check if
-  they are still valid, reproducible, not completed already... add each one to a
-  marathon file, run preflight, cut a new branch and execute on the marathon."
+  cut a branch and execute the marathon end-to-end with no pause inside a dedicated
+  disposable full clone folder (using worktree isolation or throwaway sub-clones for
+  individual parallel lanes underneath). This skill is a deliberate, operator-authorized
+  exception to this repo's default "ask before cutting a branch / firing a marathon" rule
+  (GUIDING-PRINCIPLES.md §8) — it exists specifically to run unattended. Trigger on "/10days",
+  "run the 10 day sweep", or the operator's canned request: "look through recent GH issues within
+  the last 10 days and check if they are still valid, reproducible, not completed already... add
+  each one to a marathon file, run preflight, cut a new branch and execute on the marathon."
   Requires swarm-preflight.sh + marathon-plan.sh resolved from the harness root (bare repo
   root or a vendored `.xyz/` install — see Procedure Step 0), plus the swept repo's
-  PROJECT/** + ROADMAP.md + gh (authenticated) + jq.
+  PROJECT/** + releases.db + gh (authenticated) + jq.
 ---
 
-# /10days — recent-issue sweep → marathon → fire
+# /10days — recent-issue sweep → PRS rating prioritization → marathon → fire
 
 Turn "what's landed in GitHub in the last N days that's still worth doing" into a fired
 marathon, unattended. This is `marathon-triage`'s more automated sibling: where
 `marathon-triage` stops at a plan and hands it to the operator, `/10days` carries the
-plan through preflight, branch-cut, and execution in one run — because that is
+plan through PRS rating evaluation, preflight, branch-cut, and execution in one run — because that is
 literally what it was built for (a canned macOS text-replacement snippet that expects
 one shot, no back-and-forth).
 
 **Read this whole file before running anything.** The auto-fire behavior below is a
 named exception to house convention, not an oversight — know why before you invoke it.
 
-**Reviewed 2026-07-16** via `/consult --models agy` (static review, no execution;
-transcript: `relay-system/2026-07-16/10days-review-222405/10days-review.agy.md`). That
-review found five real problems, all fixed below before this skill was ever run live:
-unsafe hand-rolled JSON in `find-doc.sh`, a `swarm-preflight.sh` multi-`--gh-issue`
-bundling behavior the original Step 6 got wrong, no check for a concurrently-running
-marathon before cutting a branch, no check for a behind-origin `main` (swarm-preflight
-itself only warns on this, never blocks), and no containment story for the parallel
-lane dispatch in Step 7. See each fix inline below.
+**Reviewed 2026-07-16 & Refined 2026-09-05** via `/consult --models agy` and `/relay-xyz` Codex:
+incorporates PRS 4-axis rating system prioritization (GH-108: `pri/sev/appeal/effort`, `calc` sum,
+and `ovr` manual overrides), full clone folder isolation per GH-564 and `WORKTREE-SAFETY.md`,
+safe JSON in `find-doc.sh`, per-issue `swarm-preflight.sh` invocations, live marathon collision guards,
+origin sync verification, and robust multi-lane execution containment.
 
 ## Guardrails (read first)
 
@@ -51,6 +51,23 @@ lane dispatch in Step 7. See each fix inline below.
   still runs every gate, still stops the run cold on a red gate or a git-safety
   violation, and still prints every command it runs. If any precondition in Step 7
   fails, stop and report — do not force through it.
+- **Prioritize via PRS 4-Axis Ratings & Manual Overrides (GH-108).**
+  - The canonical task rating system has four 1–100 axes: **pri** (priority/queue position),
+    **sev** (severity/pain if left undone), **appeal** (attraction/energy), and **effort**
+    (cheapness/ease — inverted, so 100 = easiest/cheapest, 1 = hardest). Higher is better on every axis.
+  - **`calc` = equal-weighted sum of the four axes (range 4–400).** High-scoring issues provide a
+    strong signal to prioritize candidates into earlier marathon waves.
+  - **`ovr` (operator override) = manual score on the 4–400 scale.** An `ovr` score overrides `calc`
+    arithmetic and represents an explicit operator pin to the front of the queue. Always sort
+    manual overrides ahead of calculated scores when selecting and ordering marathon candidates.
+- **Execute in a Disposable Full Clone Folder, Not the Primary Checkout (GH-564 & WORKTREE-SAFETY.md).**
+  - Linked worktrees isolate working-tree files but share `.git/config`, remotes, refs, hooks, and
+    stashes with their parent clone. Running mutation-heavy gates (`validate.sh`, `test/*.sh`) in a
+    linked worktree can contaminate or corrupt the parent clone's `.git/config` and origin URLs (GH-564).
+  - Always run the marathon and test gate validation in a **dedicated disposable full clone folder**
+    (e.g. `~/marathon-clones/10days-YYYY-MM-DD-<repo-slug>` or `~/marathon-clones/marathon-gh-<umbrella>-<slug>`).
+  - Within the marathon, parallel runner subagents may use isolated worktrees (`isolation: "worktree"`)
+    or disposable sub-clones for independent edits, but the parent repo must remain protected.
 - **Never mark an issue "already done" without evidence.** A hunch is not evidence. A
   merged commit/PR that references the issue number, or an existing capture doc parked
   in `PROJECT/3-COMPLETED`, is evidence.
@@ -59,16 +76,13 @@ lane dispatch in Step 7. See each fix inline below.
   `PROJECT/2-WORKING/MARATHON-*` directory all mean something else is mid-flight —
   cutting a branch or firing on top of that state will collide with it. Step 7 checks
   all three, not just `git branch --show-current`.
-- **Parallel lanes run in isolated worktrees, not on the shared tree.** Dispatching
+- **Parallel lanes run in isolated worktrees or sub-clones, not on the shared tree.** Dispatching
   concurrent Agent calls directly against one working tree is a containment violation
   (GUIDING-PRINCIPLES.md §3/§4) — two lanes writing at once with no isolation can orphan
-  each other's commits exactly like the documented GH-13/14/17 incidents. Step 7 uses
-  the Agent tool's `isolation: "worktree"` for every parallel lane specifically to avoid
-  this, without falling back to headless `marathon-drive.sh` (ruled out separately —
-  it can't run a `claude` builder headlessly and the `codex` builder self-commits).
+  each other's commits. Step 7 uses the Agent tool's `isolation: "worktree"` or disposable full
+  clones for every parallel lane.
 - **A lane only ever touches its contract's `artifacts` allowlist.** No lane edits
-  ROADMAP.md execution detail (pointer/ledger only, GUIDING-PRINCIPLES.md §9) beyond the
-  one queued-intake line this skill itself adds in Step 4.
+  the roadmap ledger beyond the intake row/pointer line this skill itself registers in Step 4.
 - **Auto-drafted preflight contracts are a best-effort guess, not a verified fact —
   and the fix for a wrong guess has to land before firing, not in the after-the-fact
   report.** A wrong `artifacts` list makes `marathon-plan.sh`'s wave/collision map
@@ -78,17 +92,16 @@ lane dispatch in Step 7. See each fix inline below.
 
 ## Preconditions — install once
 
-Claude Code only scans `~/.claude/skills/`, not this repo's top-level `skills/`. Run this once,
-**from a harness clone** (this is the one step that is genuinely clone-relative — there is no
-`skills/` directory in a repo you are merely sweeping):
+Claude Code and Antigravity only scan their respective global skill directories, not this repo's
+top-level `skills/`. Run this once from a harness clone:
 
 ```bash
-bash skills/10days/install.sh   # symlinks this clone's skills/10days into ~/.claude/skills/ (idempotent)
+bash skills/10days/install.sh   # symlinks this clone's skills/10days into ~/.claude/skills/ and ~/.gemini/config/skills/
 ```
 
 ## Procedure
 
-### 0. Resolve the harness root, and confirm which repo is being swept
+### 0. Resolve harness root, confirm sweep target, and prepare full clone workspace
 
 Resolve the harness root via the locator loop and evaluate its exported environment:
 
@@ -120,20 +133,45 @@ swept repo; when sweeping a foreign repo that path does not exist:
 SKILL_DIR=/absolute/path/to/this/skill/directory   # substitute the real one
 ```
 
-**Also confirm the sweep target before spending anything.** Every step below is
-working-directory-bound: `gh` resolves the repo from the cwd's git remote, `find-doc.sh` looks for
-capture docs, and Step 7 cuts a branch. Standing in the wrong repo sweeps the wrong issues *and
-succeeds*, which is the expensive failure. Print it once and check it:
+**Confirm the target repository and prepare a verified, collision-free full clone folder (GH-564 & WORKTREE-SAFETY.md):**
 
 ```bash
-gh repo view --json nameWithOwner -q .nameWithOwner   # must be the repo you intend to sweep
-git rev-parse --show-toplevel                         # and its checkout
+TARGET_REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"   # repo you intend to sweep
+REPO_REMOTE="$(git remote get-url origin)"
+REPO_SLUG="$(echo "$TARGET_REPO" | tr '/:' '--')"
+SWEEP_DATE="$(date +%Y-%m-%d)"
+SWEEP_TS="$(date +%Y%m%d-%H%M%S)"
+MARATHON_CLONE="$HOME/marathon-clones/10days-${SWEEP_DATE}-${REPO_SLUG}-${SWEEP_TS}"
+
+CURRENT_TOPLEVEL="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+# Pre-clone coordination check: assert source repo has clean tree, no active locks, and no untracked plans
+SOURCE_STATUS="$(git -C "$CURRENT_TOPLEVEL" status --porcelain 2>/dev/null || true)"
+[[ -z "$SOURCE_STATUS" ]] || { echo "Fatal: source repo has uncommitted/dirty state ($SOURCE_STATUS)" >&2; exit 1; }
+
+if [[ -d "$CURRENT_TOPLEVEL/.tick/locks" ]]; then
+  SOURCE_LOCKS="$(ls "$CURRENT_TOPLEVEL/.tick/locks" 2>/dev/null || true)"
+  [[ -z "$SOURCE_LOCKS" ]] || { echo "Fatal: source repo has active tick locks in .tick/locks/ ($SOURCE_LOCKS)" >&2; exit 1; }
+fi
+
+# Prepare unique dedicated disposable full clone (never reuse/reset an existing dirty workspace):
+mkdir -p "$HOME/marathon-clones"
+git clone "$REPO_REMOTE" "$MARATHON_CLONE"
+cd "$MARATHON_CLONE"
+
+# Unconditional assertion: must be inside verified full clone matching REPO_REMOTE
+[[ -d ".git" ]] || { echo "Fatal: workspace is not a full clone root (.git missing or worktree)" >&2; exit 1; }
+[[ "$(git config --get remote.origin.url 2>/dev/null)" == "$REPO_REMOTE" ]] || { echo "Fatal: origin URL mismatch" >&2; exit 1; }
+
+# Establish canonical base tracking checkout in the disposable clone before planning:
+BASE_BRANCH="${XYZ_BASE_BRANCH:-development}"
+git fetch origin "$BASE_BRANCH" --quiet
+git checkout "$BASE_BRANCH"
+git reset --hard "origin/$BASE_BRANCH"
+[[ "$(git rev-list --count HEAD..origin/"$BASE_BRANCH")" -eq 0 ]] || { echo "Fatal: HEAD is behind origin/$BASE_BRANCH" >&2; exit 1; }
 ```
 
-Run every subsequent step from the swept repo's **root**, not a subdirectory — a contract whose
-`gate` names a repo-relative program (e.g. `.venv/bin/python`) is currently checked against the
-process cwd rather than the target root, so a ready lane reports NOT-READY from a subdirectory
-(GH-343).
+Run every subsequent step from the swept repo's **root** in the full clone.
 
 ### 1. Pull the candidate window (deterministic — no judgment calls)
 
@@ -150,53 +188,82 @@ Emits one JSON object per OPEN issue updated in the window (`{number, title, cre
 updatedAt, url, labels}`), sorted by issue number. This is a plain `gh issue list`
 wrapper — it makes no validity/completion judgment, so it is safe to re-run and diff.
 
-### 2. Cheap local reconcile before spending any subagents
+### 2. Cheap local reconcile and PRS ratings lookup
 
 For every issue number from Step 1:
 
-```bash
-bash "$SKILL_DIR/find-doc.sh" <N>
-```
+1. **Doc & Bucket Check:**
+   ```bash
+   bash "$SKILL_DIR/find-doc.sh" <N>
+   ```
+   - `bucket: "3-COMPLETED"` → strong already-done signal. Exclude immediately; note on the "propose closing #<N>" list.
+   - `bucket: "2-WORKING"` with `has_contract: true` → preflight contract exists; route through Step 3 for freshness check.
+   - `bucket: null` or `has_contract: false` → needs full Step 3 check and contract authoring in Step 4.
 
-- `bucket: "3-COMPLETED"` → strong already-done signal. Exclude immediately; note it on
-  the "propose closing #<N>" list rather than spending a subagent on it.
-- `bucket: "2-WORKING"` with `has_contract: true` → a real preflight verdict already
-  exists or can be re-run cheaply; still route it through Step 3 (docs go stale —
-  see the swarm-preflight fix-probe gotcha below), but it needs no new contract.
-- `bucket: null` or `has_contract: false` → no shortcut; needs the full Step 3 check and,
-  if it survives, a contract authored in Step 4.
+2. **PRS Ratings Extraction & Validation (GH-108):**
+   Query `releases.db` (or capture doc frontmatter) for existing ratings:
+   ```bash
+   python3 "$HARNESS/utils/py/releases_app.py" roadmap show <N> 2>/dev/null || true
+   ```
+   - **Validate & Recompute Stored Ratings**:
+     - Verify each axis (`rating_pri`, `rating_sev`, `rating_appeal`, `rating_effort`) is an integer in range `[1, 100]`.
+     - Always recompute `calc = rating_pri + rating_sev + rating_appeal + rating_effort` (range `[4, 400]`) rather than trusting stored sums.
+     - If `rating_ovr` (`ovr`) is present: verify it is an integer in range `[4, 400]`. If malformed or out of range, invalidate and mark it for clearing (`ovr: null`, `is_manual_override: false`).
 
 **Gotcha to carry into Step 3:** `swarm-preflight.sh` fix-probes detect the *bug*, not
 the *fix* (`grep_present` = bug still there, `grep_absent` = fix landed). Read a stale
 doc's own probe definitions before trusting its verdict — don't assume "has a contract"
 means "verdict is current."
 
-### 3. Validity / reproducibility / completion fan-out (subagents)
+### 3. Validity / reproducibility / completion / PRS evaluation fan-out (subagents)
 
-For every issue that survives Step 2, spawn one subagent (Explore or general-purpose;
-batch in groups of ~5-6 concurrent, not all at once) to answer, with receipts:
+For every issue that survives Step 2, spawn subagents (batch in groups of ~5-6 concurrent) to answer, with receipts:
 
-- `gh issue view <N> --json title,body,comments,state,labels,url` — read the actual ask.
-- **Ledger cross-check**: query `releases.db` for manifest, marathon, or roadmap rows by GH number to confirm if the issue is already recorded or tracked.
-- `git log --all --oneline -i --grep="#<N>\b" --grep="GH-<N>\b"` — any commit that
-  references this issue number by either convention, providing completion evidence.
-- `gh pr list --state merged --search "<N> in:body"` (and `--search "#<N>"`) — any
-  merged PR that references it, even without a matching commit message.
-- If a capture doc exists (from Step 2), read its own "Status" table for a prior
-  completion note.
+- `gh issue view <N> --json title,body,comments,state,labels,url` — read the actual ask, comments, and any operator-posted scores.
+- **Ledger & PRS cross-check**: query `releases.db` for roadmap items by GH number to extract existing PRS ratings and manual overrides.
+- **Deterministic PRS Scoring Rubric for Unscored or Incomplete Issues (GH-108)**:
+  If a candidate has no stored rating, or if stored axis values are partial, non-integer, or out of range `[1, 100]` (or `ovr` is malformed/out of range `[4, 400]`), assign deterministic integer point values based on observable properties:
+  - **pri** (queue priority): `90` = critical path blocker / front-of-line ask; `60` = standard backlog task; `30` = minor/niche improvement.
+  - **sev** (severity / pain): `90` = crash, data corruption, or severe gate blocker; `60` = functional bug / incorrect output; `30` = cosmetic / documentation / typo.
+  - **appeal** (motivation / clarity): `90` = clear reproduction steps and unambiguous fix locus; `60` = clear ask needing modest investigation; `30` = open-ended or underspecified report.
+  - **effort** (cheapness / ease — inverted): `90` = surgical single-file change ≤ 20 lines; `60` = moderate multi-file change ≤ 200 lines; `30` = massive architectural rework > 200 lines.
+  - Compute `calc = pri + sev + appeal + effort` (range `[4, 400]`). Mark `provisional: true`.
+  - **Override Handling & Explicit Clear**: If `ovr` is invalid or absent, clear it by running `roadmap rate --issue-num <N> --rated <P>/<S>/<A>/<E> --force` (omitting `--ovr`), and assert read-back via `roadmap show <N>` returns `ovr: null` and `is_manual_override: false`. Set `is_manual_override: true` if and only if a valid, verified `ovr` in range `[4, 400]` is present.
+  - Persist newly evaluated ratings to `releases.db` via `releases roadmap rate` (see Step 4).
+- `git log --all --oneline -i --grep="#<N>\b" --grep="GH-<N>\b"` — commit evidence.
+- `gh pr list --state merged --search "<N> in:body"` (and `--search "#<N>"`) — merged PR evidence.
+- If a capture doc exists (from Step 2), read its own "Status" table and frontmatter.
 
 Return one structured verdict per issue:
 
 ```json
-{"issue": N, "decision": "INCLUDE|EXCLUDE", "reason": "...",
- "evidence": ["commit abc123 fixes this", "..."],
- "already_done": false, "duplicate_of": null, "needs_contract": true}
+{
+  "issue": N,
+  "decision": "INCLUDE|EXCLUDE",
+  "reason": "...",
+  "evidence": ["commit abc123 fixes this", "..."],
+  "already_done": false,
+  "duplicate_of": null,
+  "needs_contract": true,
+  "prs": {
+    "pri": 70,
+    "sev": 80,
+    "appeal": 60,
+    "effort": 75,
+    "calc": 285,
+    "ovr": null,
+    "effective_score": 285,
+    "is_manual_override": false,
+    "provisional": true
+  }
+}
 ```
 
-`EXCLUDE` when: commit/PR evidence shows the work already landed; the issue is a
-duplicate of another open issue; the issue isn't reproducible/actionable (vague report,
-no repro steps, no clear acceptance criteria); or it's not a work item at all
-(question, discussion, meta/process issue). `INCLUDE` only when none of those hold.
+**Prioritization Rules:**
+- `effective_score` = `ovr` if present and valid (`[4, 400]`), else recomputed `calc` (`pri + sev + appeal + effort`).
+- **Manual override items (`is_manual_override: true`) are operator pins**: rank them at the very front of the candidate queue regardless of arithmetic.
+- **High calculated scores (`calc >= 250`, or `sev >= 75` / `pri >= 75`)**: serve as a strong signal to prioritize the candidate into earlier waves.
+- `EXCLUDE` when: already fixed by commit/PR, duplicate, unreproducible, or not a work item.
 
 > **Runtime-aware reproducibility (`runtime:*`-labeled issues only).** If an issue carries a
 > `runtime:bash` label, reproduce it under `XYZ_PYTHON=0` before ruling it not-reproducible or
@@ -224,26 +291,33 @@ For each `INCLUDE` verdict:
 
 - **Doc already exists** (1-INBOX or 2-WORKING): move it to `2-WORKING` if it isn't
   there yet; add a `## Swarm Preflight Contract` block if `has_contract` was false.
+  Update frontmatter with PRS ratings and override fields if newly evaluated.
   **If it has no `## Acceptance` section and the issue does, add one — copied verbatim.**
 - **No doc exists**: author `PROJECT/2-WORKING/GH-<N>-<slug>.md` using this repo's
   standard capture-doc frontmatter (`gh_issue`, `source`, `title`, `status`, `created`,
-  `updated`, `owner`, `doc_type`, `rating` (GH-108: `"pri/sev/appeal/effort 70/40/55/60 · calc
-  225"` — four axes 1-100, higher is better on every one, effort scoring cheapness; add
-  `ratings_provisional: true` when the numbers are a first guess), `goal`), where **`source` is the full tracking-issue URL** so a
+  `updated`, `owner`, `doc_type`, `rating` (GH-108: `"pri/sev/appeal/effort <pri>/<sev>/<appeal>/<effort> · calc <calc>"`), `rating_ovr` (nullable integer `4–400`), `is_manual_override` (`true|false`), `ratings_provisional: true`, `goal`), where **`source` is the full tracking-issue URL** so a
   reader can diff the doc against the issue it claims to implement in one step. Give it an `## Acceptance` section copied
   verbatim from the issue's, plus a best-effort contract:
 
-  ```
+  ```markdown
   ## Swarm Preflight Contract
   ```json
   {
-    "target":      { "repo": ".", "ref": "main" },
+    "target":      { "repo": ".", "ref": "development" },
     "gate":        "bash validate.sh",
     "fix_probes":  [ /* inferred from the issue body — grep for the bug it describes */ ],
     "artifacts":   [ /* files the issue names, or the subagent identified as the touch surface */ ],
     "remediation": { "source": "issue#<N>", "criteria": "<one-line SUMMARY for ranking — NOT the definition of done; that is the verbatim ## Acceptance block>" },
     "lanes":       { "agy_safe": [], "orchestrator_only": [ /* kernel/.tick paths, if any */ ] }
   }
+  ```
+  ```
+
+  **Persist ratings to releases.db**:
+  ```bash
+  python3 "$HARNESS/utils/py/releases_app.py" roadmap rate --issue-num <N> \
+    --rated <P>/<S>/<A>/<E> [--ovr <O>] [--force]
+  ```
   ```
 
   **`source:` is always the tracking issue (GH-425).** It must name this repository and the
@@ -294,10 +368,9 @@ For each `INCLUDE` verdict:
   collision map can't be trusted at all; drop that issue back to `needs_contract` and
   exclude it from this run rather than firing on an untrustworthy guess.
 
-- Append one queued-intake pointer line for `GH-<N>` under ROADMAP.md's ledger (pointer
-  only — no execution detail) so `$HARNESS/utils/marathon-plan.sh` picks it up in Step 5.
+- Park intake via `python3 "$HARNESS/utils/py/releases_app.py" roadmap add` (the canonical roadmap ledger since GH-169/GH-269; for legacy repos using ROADMAP.md, append a pointer line) so `$HARNESS/utils/marathon-plan.sh` discovers it in Step 5.
 
-### 5. Build the marathon file
+### 5. Build and rank the marathon file
 
 ```bash
 "$HARNESS/utils/marathon-plan.sh" --deep
@@ -311,17 +384,13 @@ operator's snippet refers to. Read its Held/Flagged section: anything held here 
 out of the fire list in Step 6, with the reason already stated by the planner.
 
 **`marathon-plan.sh` ranks the ENTIRE ROADMAP ledger, not just this sweep's issues —
-filter its waves down to this run's candidate set before treating anything as
-fireable.** The generated waves will very likely include other ready ROADMAP items this
-sweep never touched (a prior operator triage, a different marathon's queued work, an
-old item that just became unblocked). Confirmed live on the first real run of this
-skill: the generated plan's Wave 1 included issues already claimed by a separate,
-concurrently-running marathon. Before Step 6: intersect the plan's wave assignments
-with this run's own INCLUDE list from Step 3, drop everything else from consideration
-(their wave slot, zone, and score are irrelevant to this run), and keep each surviving
-issue's *relative* wave ordering the planner assigned (it already serialized same-zone
-kernel items across separate waves correctly) — just don't fire the issues that aren't
-yours.
+filter its waves down to this run's candidate set and order by effective PRS score before treating anything as fireable:**
+1. Intersect the plan's assigned items with this sweep's `INCLUDE` set. Drop unrelated or unselected issues.
+2. Order surviving issues by **effective PRS score**:
+   - **Manual overrides (`ovr`)** first — operator front-of-line pins supersede calculated arithmetic.
+   - **Highest `calc` sums (`pri + sev + appeal + effort`)** next.
+   - Secondary tiebreakers: highest `sev` (severity), then highest `pri` (priority).
+3. Respect the planner's zone constraints (kernel ≤ 1 per wave) and wave serialization, slotting the highest-scored candidates into the earliest available wave slots.
 
 ### 6. Preflight the fire list — one issue per invocation
 
@@ -370,36 +439,50 @@ include auto-drafted ones. Before accepting a wave's concurrency as safe:
 - Log every serialization decision so Step 8 can report it — a silently-reordered wave
   is still a surprise the operator should see.
 
-### 7. Cut the branch and execute — no pause (see Guardrails)
+### 7. Cut the branch, commit planning artifacts, and execute — no pause (see Guardrails)
 
-**Preconditions — stop the whole run if any fails:**
+**Preconditions & Collision Predicates — verify inside the dedicated full clone workspace:**
 
 ```bash
-git status --porcelain                                  # must be empty
-git branch --show-current                                # not already on a marathon/* branch
-ls .tick/locks/ 2>/dev/null                               # must be empty — a claim means something is live
-find PROJECT/2-WORKING -maxdepth 1 -iname 'MARATHON-*' -newer .git/HEAD 2>/dev/null   # unexpected fresh marathon dir → stop, don't assume it's yours
-git fetch origin main --quiet && git rev-list --count HEAD..origin/main   # must be 0 — swarm-preflight only WARNS on behind, never blocks; this skill has to check itself
+BASE_BRANCH="${XYZ_BASE_BRANCH:-development}"
+
+# 1. Assert not already on a marathon/* branch
+CURRENT_BRANCH="$(git branch --show-current)"
+[[ "$CURRENT_BRANCH" != marathon/* ]] || { echo "Fatal: already on a marathon branch ($CURRENT_BRANCH)" >&2; exit 1; }
+
+# 2. Assert no active tick locks / claims
+ACTIVE_LOCKS="$(ls .tick/locks/ 2>/dev/null || true)"
+[[ -z "$ACTIVE_LOCKS" ]] || { echo "Fatal: active tick locks found in .tick/locks/" >&2; exit 1; }
+
+# 3. Assert no foreign untracked marathon plan in PROJECT/2-WORKING
+FOREIGN_UNTRACKED_PLANS="$(git status --porcelain --untracked-files=all -- PROJECT/2-WORKING 2>/dev/null | grep -E '^\?\?[[:space:]]+PROJECT/2-WORKING/MARATHON-' | grep -v "MARATHON-PLAN-${SWEEP_DATE}.md" || true)"
+[[ -z "$FOREIGN_UNTRACKED_PLANS" ]] || { echo "Fatal: foreign untracked marathon plan found: $FOREIGN_UNTRACKED_PLANS" >&2; exit 1; }
 ```
 
-If the fetch/behind check is nonzero, do **not** rebase or pull automatically — stop and
-report it; the operator decides how to reconcile. If any other check fails, stop and
-report which one, and do not touch the branch.
+If any check fails, stop and report which one, and do not touch the branch.
 
 Then:
 
-1. Branch: use the packet's own `suggested_branch` (single-issue run) or
-   `marathon/10days-<today>` (multi-issue bundle). `git checkout -b <branch>`.
-2. Execute per the proven **Marathon execution pattern**: Claude-direct kernel lanes +
-   parallel Sonnet subagents for independent lanes — **not** headless
-   `marathon-drive.sh` (it can't run a `claude` builder headlessly, and the `codex`
-   builder is known to self-commit mid-turn). Walk the MARATHON-PLAN doc's waves in
-   order, respecting any Step 6.5 serialization:
-   - Within a wave, dispatch one Agent tool call **per lane, each with
-     `isolation: "worktree"`** — this is the containment substitute for
-     `marathon-drive.sh`'s worktree isolation, so concurrent lanes cannot write over
-     each other on a shared tree. Respect the wave's zone caps (kernel ≤ 1 per wave).
-   - Each lane agent writes only inside its contract's `artifacts` allowlist.
+1. **Branch Cut & Planning Artifact Commit**:
+   - Cut branch from canonical base: `BRANCH_NAME="${packet_suggested_branch:-marathon/10days-${SWEEP_DATE}}" && git checkout -b "$BRANCH_NAME"`.
+   - Stage and commit the deliberate intake capture docs (including any `1-INBOX` moves), marathon plan, and updated roadmap ledger:
+     ```bash
+     git add -A -- PROJECT/1-INBOX PROJECT/2-WORKING releases.db releases.sql
+     if [[ -f "ROADMAP.md" ]]; then git add ROADMAP.md; fi
+     git commit -m "chore(marathon): initialize 10days marathon plan and roadmap ledger for ${SWEEP_DATE}"
+     ```
+   - Assert clean working tree before dispatching lane agents:
+     ```bash
+     [[ -z "$(git status --porcelain)" ]] || { echo "Fatal: uncommitted state remaining after plan commit" >&2; exit 1; }
+     ```
+   - Ensure the final PR targets `$BASE_BRANCH` (`development`), never `main`.
+2. Execute per the proven **Marathon execution pattern (GH-221 builder/orchestrator split)**:
+   - **Claude Code is the orchestrator and reviewer**, not a default builder. It plans waves, dispatches builder lanes, and verifies emitted artifacts / test gates.
+   - **Agy CLI and Codex CLI are the default headless builders** (`--builder agy` / `--builder codex`, subscription-billed / cost-blind).
+   - **Claude CLI is NOT a builder by default** — use a headless Claude CLI builder only with explicit user confirmation/cost acknowledgement.
+   - Walk the MARATHON-PLAN doc's waves in order, respecting any Step 6.5 serialization:
+     - Within a wave, dispatch one builder turn per lane with `isolation: "worktree"` (or in dedicated disposable sub-clones beneath the full clone) to prevent concurrent lanes from writing over each other. Respect zone caps (kernel ≤ 1 per wave).
+     - Each lane agent writes only inside its contract's `artifacts` allowlist.
    - After all of a wave's lane agents return, before merging any lane's worktree
      commit(s), verify that lane's worktree base against the marathon branch's start
      commit: `git merge-base --is-ancestor <marathon-branch-start-sha> <lane-worktree-HEAD>`.
@@ -420,28 +503,34 @@ Then:
      removal failure does not stop the run: record the lane, path, and error for the
      Step 8 report and continue.
    - After a wave's merges land, run its gate (the contract's `gate`, default
-     `bash validate.sh`) **before starting the next wave.** A red gate stops the run —
-     do not advance to the next wave, do not force-merge, report it in Step 8 and leave
-     the branch as-is for the operator to inspect.
+     `bash validate.sh`) **before starting the next wave.** Running this gate inside the
+     full clone folder ensures tests cannot contaminate the primary repo (GH-564). A red gate
+     stops the run — do not advance to the next wave, do not force-merge, report it in Step 8
+     and leave the branch as-is for the operator to inspect.
 3. Commit per lane/wave with a message referencing the GH issue number(s) it closes.
 
 ### 8. Report
 
 One final summary, always — even (especially) on a partial or stopped run:
 
-- Window scanned (N days, issue count).
-- Excluded, with reason, grouped by bucket (already-done / duplicate / not
+- **Scan Window & Intake Counts**: N days scanned, total open issues reviewed.
+- **PRS Ratings & Prioritization Table**:
+  - Issue number, title, 4-axis ratings (`pri/sev/appeal/effort`), `calc` sum, `ovr` override, effective score, and ranking verdict.
+  - Explicitly highlight any **manual overrides (`ovr`)** and high-scoring quick wins.
+- **Exclusion Ledger**: items excluded with reasons (already-done / duplicate / not
   reproducible / not-a-work-item / held-by-preflight / held-by-planner).
-- Included and fired, with their issue numbers and final commit(s).
-- Every **auto-drafted contract**, named individually, flagged for operator review.
-- Every **Step 6.5 serialization** — which lane pairs were pulled out of a concurrent
-  wave and why, so a wave that ran slower than expected isn't a mystery.
-- Every gate result per wave (green/red) and, if red, exactly where the run stopped.
-- Every **worktree-cleanup failure** — lane, worktree path, and the `git worktree
-  remove` error — if any lane's worktree failed to remove after its merge. Never
-  silently ignore a leftover worktree; if none failed, say so explicitly (all
-  worktrees removed cleanly).
-- Branch name, and whether it's ready for a PR or still mid-marathon.
+- **Execution Ledger**:
+  - Included and fired issues, with their issue numbers, branch, and final commit(s).
+  - Full clone folder path used for execution.
+  - Every **auto-drafted contract**, named individually, flagged for operator review.
+  - Every **Step 6.5 serialization** — which lane pairs were pulled out of a concurrent
+    wave and why, so a wave that ran slower than expected isn't a mystery.
+  - Every gate result per wave (green/red) and, if red, exactly where the run stopped.
+  - Every **worktree-cleanup failure** — lane, worktree path, and the `git worktree
+    remove` error — if any lane's worktree failed to remove after its merge. Never
+    silently ignore a leftover worktree; if none failed, say so explicitly (all
+    worktrees removed cleanly).
+  - Branch name, and whether it's ready for a PR or still mid-marathon.
 
 Never mask a stopped run as a finished one — an honest partial report is the point of
 this whole skill (GUIDING-PRINCIPLES.md §8: the operator decides, but only if they know
