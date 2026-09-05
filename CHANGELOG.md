@@ -4,7 +4,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-05
 
-- **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the full gate is pending. Reconstruct the start-task lessons from committed review records to unblock PR #440 reconciliation.
+- **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
 
 ## [Unreleased] - 2026-09-04
 
