@@ -6,9 +6,9 @@
     15
   ],
   "benchmark": {
-    "fail": 20,
+    "fail": 24,
     "pass": 50,
-    "rows": 70
+    "rows": 74
   },
   "benign_keywords": [
     "warning:",
@@ -37,11 +37,11 @@
   ],
   "score": {
     "anomalies": 9,
-    "anomaly_rate_pct": 12.86,
+    "anomaly_rate_pct": 12.16,
     "false_negative_pct": 0.0,
     "false_negatives": 0,
     "false_positives": 0,
-    "rows": 70
+    "rows": 74
   },
   "slow_ms": 30000.0,
   "version": 1

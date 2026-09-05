@@ -296,7 +296,10 @@ def classify_stderr(stderr: str) -> Optional[str]:
     s = normalize_stderr(stderr).lower()
     if not s:
         return None
-    if "usage:" in s or "unrecognized argument" in s or "invalid option" in s:
+    if ("usage:" in s or "unrecognized argument" in s or "invalid option" in s or "unknown option" in s
+            or " required" in s or "unknown subsystem" in s or "unknown verb" in s or "unsupported " in s
+            or "unknown flag" in s or "unknown command" in s or "unknown argument" in s or "expected one argument" in s
+            or "invalid choice" in s or "missing required" in s or "no such option" in s):
         return "usage"
     if "no such file" in s or "not found" in s:
         return "missing_file"

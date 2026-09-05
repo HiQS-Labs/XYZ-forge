@@ -37,7 +37,7 @@ Row = Dict[str, Any]
 
 
 def builtin_benchmark(seed: int = 299) -> List[Row]:
-    """50 known-pass / 20 known-fail rows shaped like this harness's real outputs."""
+    """50 known-pass / 24 known-fail rows shaped like this harness's real outputs (4 added from the first Gen 4 campaign)."""
     rng = random.Random(seed)
     rows: List[Row] = []
     pass_stderr = [
@@ -72,6 +72,10 @@ def builtin_benchmark(seed: int = 299) -> List[Row]:
         (0, 0, "AssertionError: silent pass with assertion in stderr"),  # rc=0 lie
         (0, 0, "Segmentation fault"),                 # rc=0 lie
         (143, 15, "Terminated"),
+        (2, 0, "agy-turn: RELAY_AGENT required"),
+        (2, 0, "ci-route: unknown subsystem: 'a=b=c' (known: hq,releases,telemetry,ate)"),
+        (2, 0, "ci-route: unsupported event: <empty>"),
+        (2, 0, "tick: unknown verb: status"),
     ]
     for rc, sig, err in fails:
         rows.append({"label": "fail", "exit_code": rc, "signal": sig, "stderr": err, "duration_ms": rng.choice([5, 40, 300, 2000])})

@@ -49,6 +49,9 @@ _NORMALIZERS = (
     (re.compile(r"\b[0-9a-f]{12,64}\b"), "<HEX>"),
     (re.compile(r"\b0x[0-9a-fA-F]+\b"), "<ADDR>"),
     (re.compile(r"line \d+", re.IGNORECASE), "line <N>"),
+    (re.compile(r"'[^'\n]{0,200}'"), "'<Q>'"),
+    (re.compile(r'"[^"\n]{0,200}"'), '"<Q>"'),
+    (re.compile(r"<[^<>\n]{1,60}>"), "<PH>"),
     (re.compile(r"[ \t]+"), " "),
 )
 
@@ -237,6 +240,8 @@ def _suite() -> int:
     b = stderr_digest("error at /tmp/zzz999/x.py   line 7 pid=1 2026-01-01 00:00:00")
     check(a == b, "normalizer must erase paths/pids/timestamps/line numbers")
     check(stderr_digest("boom") != stderr_digest("bang"), "distinct errors must not collide")
+    check(stderr_digest("ci-route: unknown subsystem: 'a=b=c'") == stderr_digest("ci-route: unknown subsystem: 'subsystems'"), "quoted payload masked")
+    check(stderr_digest("unsupported event: <empty>") == stderr_digest("unsupported event: <2147483647>"), "angle placeholder masked")
     check(duration_bucket(3) == "fast_<100ms" and duration_bucket(999) == "fast_<1s", "bucket edges")
     check(duration_bucket(30000) == "slow_>=30s", "top bucket")
 

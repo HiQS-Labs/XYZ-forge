@@ -239,7 +239,9 @@ def run_campaign(
             stats["self_heal"] = {"error": str(exc)}
 
     stats["verdict"] = {
-        "zero_host_contamination": not stats["contamination_events"] and not stats["host_violations"],
+        "zero_host_violations": not stats["host_violations"],                    # the HOST clone never moved — the hard bar
+        "zero_sandbox_contamination": not stats["contamination_events"],           # no mutant wrote into the sandbox tree (a finding when false)
+        "zero_host_contamination": not stats["contamination_events"] and not stats["host_violations"],  # both, kept for older readers
         "zero_false_positives": not fps,
         "telemetry_line_valid": stats["telemetry_valid"],
     }
@@ -276,7 +278,7 @@ def render_summary(s: Dict[str, Any]) -> str:
         f"- elapsed: {s.get('elapsed_s')}s · batches: {s['batches']} · **mutations: {s['mutations']}** ({s.get('mutations_per_min')}/min)",
         f"- tier-1 counts: {s['counts']} · handled rejections: {s['handled_rejections']} · counterexamples: {s['counterexamples']} · parity divergences: {s['parity_divergences']}",
         f"- clusters: {len(s.get('clusters', []))} · synthesized suites: {len(s['synthesized'].get('emitted', []))} · false positives: {len(s['false_positives'])}",
-        f"- **zero host contamination: {v['zero_host_contamination']}** (contamination events {len(s['contamination_events'])}, host violations {len(s['host_violations'])})",
+        f"- **zero host violations: {v['zero_host_violations']}** (host violations {len(s['host_violations'])}) · **zero sandbox contamination: {v['zero_sandbox_contamination']}** (events {len(s['contamination_events'])} — each one is a mutant that wrote into the tree, reset and recorded)",
         f"- **zero false positives: {v['zero_false_positives']}** · telemetry line-valid: {v['telemetry_line_valid']}",
         "",
         "## Per target",
@@ -338,7 +340,7 @@ def run_suite(as_json: bool = False) -> int:
         poison = [{"name": "poison", "target": "bash poison.sh {mutant}", "base": ["x"], "timeout": 10}]
         s2 = run_campaign(host, os.path.join(td, "out2"), duration=20, targets=poison, sandbox_root=os.path.join(td, "sb2"), batch=5, seed=1, max_mutations=10, synth=False, progress=False, keep_sandbox=True)
         ok("contamination detected for a tree-writing target", len(s2["contamination_events"]) >= 1, str(len(s2["contamination_events"])))
-        ok("verdict flags contamination", not s2["verdict"]["zero_host_contamination"])
+        ok("verdict flags sandbox contamination, host bar still met", not s2["verdict"]["zero_sandbox_contamination"] and s2["verdict"]["zero_host_violations"])
         ok("sandbox restored after contamination (no POISON.txt)", not os.path.exists(os.path.join(td, "sb2", "clone", "POISON.txt")))
         ok("host repo never received POISON.txt", not os.path.exists(os.path.join(host, "POISON.txt")))
         # vacuous-sandbox refusal
@@ -400,7 +402,7 @@ def main() -> int:
     else:
         print(render_summary(s))
     v = s["verdict"]
-    return 0 if v["zero_host_contamination"] and v["telemetry_line_valid"] else 1
+    return 0 if v["zero_host_violations"] and v["telemetry_line_valid"] else 1
 
 
 if __name__ == "__main__":

@@ -110,8 +110,8 @@ else
 fi
 python3 "$CAL" --emit-benchmark "$WORK/bench.jsonl" >/dev/null
 n_pass="$(grep -c '"label": "pass"' "$WORK/bench.jsonl")"; n_fail="$(grep -c '"label": "fail"' "$WORK/bench.jsonl")"
-if [ "$n_pass" -eq 50 ] && [ "$n_fail" -eq 20 ]; then
-  pass "benchmark is 50 known-pass / 20 known-fail"
+if [ "$n_pass" -eq 50 ] && [ "$n_fail" -eq 24 ]; then
+  pass "benchmark is 50 known-pass / 24 known-fail (20 + 4 shapes from the first Gen 4 campaign)"
 else
   fail "benchmark shape $n_pass/$n_fail"
 fi

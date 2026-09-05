@@ -51,7 +51,7 @@ d = json.load(open(sys.argv[1]))
 v = d["verdict"]
 sys.exit(0 if d["mutations"] == 60 and not d["contamination_events"] and not d["host_violations"] and v["telemetry_line_valid"] else 1)
 PY
-[ -f "$OUT/campaign-summary.md" ] && grep -q 'zero host contamination: True' "$OUT/campaign-summary.md" && pass "markdown summary written with the containment verdict" || fail "summary missing/incorrect"
+[ -f "$OUT/campaign-summary.md" ] && grep -q 'zero host violations: True' "$OUT/campaign-summary.md" && pass "markdown summary written with the containment verdict" || fail "summary missing/incorrect"
 python3 "$SCHEMA" --mode validate --path "$OUT/telemetry.jsonl" >/dev/null && pass "campaign telemetry validates as TelemetryEvent JSONL" || fail "campaign telemetry invalid"
 [ "$(grep -c '"phase":"fuzz"' "$OUT/telemetry.jsonl")" -eq 60 ] && pass "one telemetry row per mutation" || fail "telemetry row count != 60"
 
@@ -72,9 +72,9 @@ J
 rc2=0
 python3 "$CAMPAIGN" --mode run --repo "$ROOT" --sandbox-root "$WORK/sb2" --out "$WORK/out2" --duration 120 --max-mutations 10 --batch 5 --seed 3 \
   --targets "$WORK/poison-targets.json" --no-synth --keep-sandbox --quiet --json > "$WORK/run2.json" 2>/dev/null || rc2=$?
-[ "$rc2" -eq 1 ] && pass "poisoning target makes the campaign exit 1" || fail "poison campaign rc=$rc2"
-python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if len(d['contamination_events'])>=1 and not d['verdict']['zero_host_contamination'] else 1)" "$WORK/out2/campaign-report.json" \
-  && pass "contamination events recorded and verdict flipped" || fail "contamination not recorded"
+[ "$rc2" -eq 0 ] && pass "poisoning target: host bar still met (exit 0) — sandbox drift is a recorded finding, not a host violation" || fail "poison campaign rc=$rc2"
+python3 -c "import json,sys; d=json.load(open(sys.argv[1])); v=d['verdict']; sys.exit(0 if len(d['contamination_events'])>=1 and not v['zero_sandbox_contamination'] and v['zero_host_violations'] else 1)" "$WORK/out2/campaign-report.json" \
+  && pass "contamination events recorded; verdict: zero_sandbox_contamination=false, zero_host_violations=true" || fail "contamination not recorded"
 [ ! -e "$WORK/sb2/clone/POISON.txt" ] && pass "sandbox restored to baseline after contamination" || fail "POISON.txt survived in the sandbox"
 [ ! -e "$ROOT/POISON.txt" ] && pass "host clone never received the poison" || fail "POISON.txt reached the host"
 
