@@ -6,6 +6,19 @@ source test/_setup.sh "GH-413" || { echo "setup failed"; exit 1; }
 root="$(cd "$HERE/.." && pwd)"
 builder="$root/utils/build-launch-artifact.sh"
 
+# The builder archives HEAD and correctly refuses dirty sources. Give destination checks their
+# own committed source; unrelated caller edits (including other suites' output) are not the target.
+# Overlay the current builder so this fixture still catches uncommitted builder regressions.
+build_source="$WORK/build-source"
+mkdir -p "$build_source"
+require_fixture "$build_source" "artifact source"
+git clone -q --no-hardlinks "$root" "$build_source"
+cp "$builder" "$build_source/utils/build-launch-artifact.sh"
+git -C "$build_source" add utils/build-launch-artifact.sh
+git -C "$build_source" -c user.email=fixture@t -c user.name=fixture \
+  commit -q --allow-empty -m "snapshot current artifact builder"
+builder="$build_source/utils/build-launch-artifact.sh"
+
 refuse() { # <destination> <expected diagnostic>
   local dest="$1" needle="$2" output
   if output="$(bash "$builder" "$dest" 2>&1)"; then
