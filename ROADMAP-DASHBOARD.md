@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -62,6 +62,7 @@ Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified | — | [GH-425-GATE-PROVENANCE-CHECK.md](PROJECT/1-INBOX/GH-425-GATE-PROVENANCE-CHECK.md) · [#425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) |
 | GH-349 · releases ledger roadmap layer never generalised to a vendored install | — | [GH-349-RELEASES-ROADMAP-VENDORED.md](PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md) · [#349](https://github.com/HiQS-Labs/XYZ-forge/issues/349) |
 | GH-351 · manifest unship, the retraction verb | — | [GH-351-MANIFEST-UNSHIP.md](PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md) · [#351](https://github.com/HiQS-Labs/XYZ-forge/issues/351) |
+| GH-443 · marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the marathon before it fires | — | [capture](PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md) |
 
 ## Queue
 
