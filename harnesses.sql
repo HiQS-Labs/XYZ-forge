@@ -917,6 +917,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260904043820-88b7d2cc','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260904043821-fb26986c','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','MARATHON-GH131-80171-TURN',0.0,0,0,NULL,NULL,0.0,' 13 files changed, 121 insertions(+), 96 deletions(-)','2026-09-04 04:38:21');
 INSERT INTO "invocation_logs" VALUES('inv-20260904154740-341b078b','noels-Mac-Studio.local','commandcode','qwen/qwen3.8-max','commandcode','max','commandcode-turn.py','["--no-session", "--skip-onboarding", "--no-auto-update", "--yolo"]','RELAY-gh436-merge-cleanup-qa',0.0,10,0,NULL,NULL,0.0,'0 files changed','2026-09-04 15:47:40');
 INSERT INTO "invocation_logs" VALUES('inv-20260904160130-3f82ec75','noels-Mac-Studio.local','aider','openrouter/qwen/qwen3.8-max','openrouter','high','aider-turn.py','["--edit-format", "diff"]','RELAY-gh436-merge-cleanup-qa-v2',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-04 16:01:30');
+INSERT INTO "invocation_logs" VALUES('inv-20260905031057-6a5d6f04','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh299-gen4-qa-agy',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-05 03:10:57');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
