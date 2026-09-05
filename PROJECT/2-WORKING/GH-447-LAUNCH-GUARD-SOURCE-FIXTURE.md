@@ -35,3 +35,15 @@ Easy to reverse: change only the test's source fixture. Clone the committed call
 ## Related handoff
 
 PR #440 is merged and issue #439 is closed, but its project doc lacks the required lessons section. Reconstruct only lessons supported by its committed review/verification records, then use `wave_reconcile.py` for the document and ledger transition. No original-author-only rule was found in PDDA.
+
+## Handoff outcome
+
+The canonical PR #440 reconciliation completed with exit 0 and its PDDA gate passed. It reported unrelated existing roadmap drift without blocking this transition. The original author was not required: the lessons are explicitly reconstructed from committed evidence.
+
+The optional closes-on-mention claim is not reproduced in the reconciler: bare references remain mentions, while closing keywords and trailing issue tags in PR titles are closers. No separate closer was found in the inspected repository workflows, Git hooks, or global Claude hook commands. Leave any external automation unchanged until its owning script or a concrete closure event identifies it.
+
+## Lessons Learned (For Future Agents)
+
+- Reproduce reported baseline failures in a clean full clone and vary caller dirt separately; a correct source precondition can mask the behavior the suite intends to test.
+- A source fixture must overlay the current implementation before committing it. Otherwise an uncommitted regression can pass because the fixture silently tests the older HEAD. The negative control here caught that distinction.
+- A dry-run previews lifecycle changes without applying them, so its downstream planner can still flag the closed issue against the unchanged active document. The actual scoped reconcile successfully moves the document before planning.
