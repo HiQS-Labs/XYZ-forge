@@ -5,6 +5,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-04
 
 ### Added
+- **GH-439: `/start-task` workflow skill.** Adds grounded intake through ready PRs for one or more issues, requiring plan QA beyond simple changes, surgical DRY implementation, and final Codex relay QA. Requires canonical RELEASES task ratings with recurrence-aware severity, user-led priority, neutral appeal and preserved overrides. Reuses existing governance and execution tools; merge and teardown remain separate. Global deployment uses symlinks to the maintained repo source. Easy to reverse: remove the additive skill and its links.
 - **`/workhorse` skill — governed 5-rung problem resolution ladder.** Introduces `skills/workhorse/SKILL.md` chaining `/debug-mantra` (ground truth & diagnostics), `/ponytail` (least-mechanism architecture & zero parallel subsystems), repository governance checks (`AGENTS.md`, `SOP.md`, `GUIDING-PRINCIPLES.md`, `CHANGELOG.md`), `/consult` (cross-model consensus with Codex & Agy), and verified execution. Installed globally across Claude Code, Codex, and Gemini/Antigravity environments. Reversibility: **Easy** (remove skill folder and symlinks).
 
 ### Changed
