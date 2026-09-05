@@ -1,6 +1,6 @@
 # GH-439 rating amendment — Agy QA
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## Setup
@@ -29,3 +29,20 @@ Only edit this relay file. Append graded findings and `VERDICT: PASS` or `VERDIC
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 1 · Reviewer · 2026-09-04
+
+**Graded Findings:**
+1. **Rating rules reflected:** Yes. The 4-axis 1–100 schema (`pri/sev/appeal/effort`) is explicitly documented (SKILL.md L173-177). The prompt's "impact" is correctly framed as rationale rather than a new field (L175). It prohibits a three-level scale (L175), new rank formulas (L182, L212), and alternative write paths (L66-67).
+2. **Scenario walkthroughs:** 
+   - *Corrupting crash without history:* Correctly assigned to the 80-100 severity band, with a strict directive not to downgrade due to missing history (L181, L190-192).
+   - *Duplicate vs. new incidents:* The policy explicitly requires distinguishing new incidents from duplicate reports (L81, L188).
+   - *Recurring same-class bugs:* Requires raising the severity/priority assessment but forbids making up a numeric multiplier (L181, L192).
+   - *Overrides on resume:* The policy strictly dictates preserving explicit user appeal, priority, and `ovr` overrides (L208-210).
+   - *Grouped PR:* Each tracked task must be scored separately; aggregate scoring is prohibited (L71, L214).
+   - *Untracked simple task:* Still requires a rating and rationale in the task report (L198).
+3. **Override policy & CLI agreement:** The CLI's `--force` behavior is handled safely by warning not to use it as an automatic reflex and to pass `--ovr` explicitly to prevent silent dropping of overrides (L206-210). Missing history is flagged as "unknown trend" safely. Old PDDA metadata (like phases or change risk) is explicitly protected from deletion (L219-222).
+4. **Blocking issues:** None. The instructions are surgical and correctly defer to existing repos, CLI mechanisms, and tracking files.
+
+**VERDICT: PASS**
+Basis: textual only
