@@ -27,3 +27,18 @@ Write your verdict below and change the STATUS to Approved/Closed if it passes.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex reviewer findings — revision requested
+
+The direction and placement are sound, but the specification is not yet deterministic enough to approve.
+
+1. The four coaching cases are appropriately tied to observable signals, but three predicates remain subjective: “sustained single-trunk progress is high,” “continuous high-intensity execution,” and “stalls repeatedly.” Define the exact input and threshold for each (for example, qualifying cycles/commits/handoffs and repeated failure count), and require the emitted nudge to name the triggering signal. This keeps the guidance falsifiable rather than motivational prose.
+2. Step 4 correctly owns both the morning retrospective and Monday horizon, and Step 5 presents them in the right order. Define the local timezone plus an exactly-once rule for the first qualifying daily-log entry; “~8:00 AM / Cycle 0” can otherwise skip a late first run or duplicate the retrospective/horizon on several runs.
+3. Apple Reminders is not integrated concretely enough. `apple_reminders.py` is a read-only snapshot extractor and explicitly does not upsert records into the resolved Rebalance database in Phase 1. Step 2 should name the read-only extractor/API to invoke, its failure/freshness behavior (including unavailable macOS/TCC access), and how incomplete/completed reminders are filtered. Do not imply it is queried alongside the resolved SQLite tables until a managed-table integration exists.
+4. The Step 5 section order is clear, but “deterministic” needs an entry template: timestamp/timezone, fixed headings and omission rules, source/freshness notation, bounded item ordering, and duplicate/idempotency handling for a 15-minute cycle. Without those, different agents can append materially different records from the same inputs.
+
+## Log
+
+- 2026-09-04 — Codex reviewer: revision requested; four concrete specification gaps recorded above.
+VERDICT: FAIL
+Basis: Coaching thresholds, cadence idempotency, Apple Reminders extraction/error semantics, and the deterministic log-entry contract require specification before approval.
