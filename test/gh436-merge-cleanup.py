@@ -26,6 +26,7 @@ from scan_clones import (
     DEFAULT_SAFE_ROOTS,
     DEFAULT_NEVER_DELETE
 )
+from merge_cleanup import prune_dangling_skill_symlinks
 from toposort_prs import (
     parse_pr_dependencies,
     extract_touched_files,
@@ -140,6 +141,75 @@ class TestCheckoutInspection(unittest.TestCase):
         self.assertTrue(lock_info["locked"])
         self.assertTrue(lock_info["alive"])
         self.assertEqual(lock_info["pid"], os.getpid())
+
+
+class TestDanglingSymlinkPrune(unittest.TestCase):
+    """Phase 6 prune missed two whole classes of dangling link (fixed 2026-09-05).
+
+    Found when a run reported a clean prune and two dead links survived it:
+      1. a hardcoded dir list skipped real installs (~/.gemini/antigravity-cli/skills)
+      2. a depth-1 iterdir() could not see a dead link INSIDE a real skill directory
+         (~/.claude/skills/front-door/SKILL.md)
+    Sibling defect from the same run — Phase 5 merging vetoed PRs — is GH-444.
+    """
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self._real_home = Path.home
+        # merge_cleanup resolves search roots through Path.home() at call time.
+        Path.home = staticmethod(lambda: self.tmp)
+        self.gone = self.tmp / "deleted-source-repo"
+
+    def tearDown(self):
+        Path.home = self._real_home
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _link(self, rel_path):
+        p = self.tmp / rel_path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.symlink_to(self.gone / rel_path.split("/")[-1])
+        return p
+
+    def test_finds_globbed_and_nested_dangling_links(self):
+        # (2) dead link nested inside a real skill dir — invisible to a depth-1 scan
+        nested = self._link(".claude/skills/front-door/SKILL.md")
+        # (1) a skills dir that was never in the hardcoded list
+        globbed = self._link(".gemini/antigravity-cli/skills/recon")
+        live_target = self.tmp / "live-repo" / "real"
+        live_target.mkdir(parents=True)
+        healthy = self.tmp / ".claude" / "skills" / "healthy"
+        healthy.symlink_to(live_target)
+
+        prune_dangling_skill_symlinks(dry_run=False)
+
+        self.assertFalse(nested.is_symlink(), "nested dangling link survived the prune")
+        self.assertFalse(globbed.is_symlink(), "globbed-dir dangling link survived the prune")
+        self.assertTrue(healthy.is_symlink(), "prune must not remove a healthy link")
+        self.assertFalse(
+            nested.parent.exists(), "skill dir left empty by the prune should be cleared"
+        )
+
+    def test_dry_run_mutates_nothing(self):
+        nested = self._link(".claude/skills/front-door/SKILL.md")
+        prune_dangling_skill_symlinks(dry_run=True)
+        self.assertTrue(nested.is_symlink(), "dry run must not delete anything")
+
+    def test_never_descends_through_a_symlinked_skills_dir(self):
+        # A skills/ dir that is itself a symlink points back at a source repo; walking it
+        # would delete real links there rather than install stubs.
+        source = self.tmp / "source-repo" / "skills"
+        source.mkdir(parents=True)
+        (source / "dead").symlink_to(self.gone / "dead")
+        linked_root = self.tmp / ".codex" / "skills"
+        linked_root.parent.mkdir(parents=True, exist_ok=True)
+        linked_root.symlink_to(source)
+
+        prune_dangling_skill_symlinks(dry_run=False)
+
+        self.assertTrue(
+            (source / "dead").is_symlink(),
+            "prune walked through a symlinked skills root into the source repo",
+        )
 
 
 if __name__ == "__main__":

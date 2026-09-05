@@ -162,20 +162,46 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
     return False
 
 
-def prune_dangling_skill_symlinks(dry_run: bool = True):
-    """Scans ~/.claude/skills/ and ~/.gemini/**/skills/ for dangling symlinks."""
-    search_dirs = [
-        Path.home() / ".claude" / "skills",
-        Path.home() / ".codex" / "skills",
-        Path.home() / ".gemini" / "config" / "skills",
-        Path.home() / ".gemini" / "antigravity" / "skills",
-    ]
+# Agent homes whose `skills/` directories hold symlinked skill installs. Each entry is
+# GLOBBED, not hardcoded one level down: a fixed list silently skipped
+# ~/.gemini/antigravity-cli/skills (a real install dir that simply was not in the list),
+# leaving dangling links behind while the run reported a clean prune.
+SKILL_SEARCH_GLOBS = [
+    (".claude", ["skills", "*/skills"]),
+    (".codex", ["skills", "*/skills"]),
+    (".gemini", ["skills", "*/skills", "*/*/skills"]),
+]
 
-    for d in search_dirs:
-        if not d.exists() or not d.is_dir():
+
+def _iter_skill_dirs():
+    """Yield every existing skills/ directory across the agent homes, glob-discovered."""
+    seen = set()
+    for home_rel, patterns in SKILL_SEARCH_GLOBS:
+        base = Path.home() / home_rel
+        if not base.is_dir():
             continue
+        for pattern in patterns:
+            for d in base.glob(pattern):
+                # Never descend through a symlinked skills/ dir — that would walk into the
+                # source repo and delete real links there rather than the install stubs.
+                if d.is_dir() and not d.is_symlink() and d not in seen:
+                    seen.add(d)
+                    yield d
+
+
+def prune_dangling_skill_symlinks(dry_run: bool = True):
+    """Remove dangling symlinks under every agent home's skills/ directories.
+
+    Walks each skills/ tree recursively rather than only its top level: a dangling link
+    can sit INSIDE a real skill directory (e.g. ~/.claude/skills/front-door/SKILL.md ->
+    a deleted repo path), which a depth-1 `iterdir()` scan cannot see.
+    """
+    for d in _iter_skill_dirs():
         try:
-            for item in d.iterdir():
+            touched_parents = set()
+            # rglob does not follow symlinked directories, so the walk stays inside this
+            # install tree and cannot wander into the repos the links point at.
+            for item in d.rglob("*"):
                 if item.is_symlink() and not item.exists():
                     target = os.readlink(item)
                     if dry_run:
@@ -183,6 +209,21 @@ def prune_dangling_skill_symlinks(dry_run: bool = True):
                     else:
                         item.unlink()
                         log(f"✅ Removed dangling skill symlink: {item}")
+                    if item.parent != d:
+                        touched_parents.add(item.parent)
+
+            # A skill dir whose only content was the dead link is now an empty stub that
+            # still advertises itself as an installed skill. Clear it, deepest first, and
+            # never the skills root itself.
+            for parent in sorted(touched_parents, key=lambda p: len(p.parts), reverse=True):
+                if parent == d or d not in parent.parents:
+                    continue
+                if dry_run:
+                    if parent.is_dir() and not any(parent.iterdir()):
+                        log(f"[DRY RUN] Would remove empty skill directory: {parent}")
+                elif parent.is_dir() and not any(parent.iterdir()):
+                    parent.rmdir()
+                    log(f"✅ Removed empty skill directory: {parent}")
         except Exception as exc:
             log_warn(f"Error checking skill dir {d}: {exc}")
 
