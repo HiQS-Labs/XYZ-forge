@@ -69,6 +69,8 @@ Pair = Tuple[str, Any, str, Any]  # (flagA, valA, flagB, valB) with flagA < flag
 
 # ---- grid loading ------------------------------------------------------------------------------
 def load_grid(path: str) -> Dict[str, Any]:
+    if not os.path.isfile(path):
+        raise ValueError(f"grid file not found: {path!r}")
     with open(path, "r", encoding="utf-8") as fh:
         text = fh.read()
     if path.endswith(".json"):
@@ -491,9 +493,13 @@ def main() -> int:
     thresholds = load_thresholds(a.calibration)
     if a.mode in ("generate", "coverage", "run"):
         if not a.grid:
-            print("--grid required", file=sys.stderr)
+            print("adaptive_ate: --grid required", file=sys.stderr)
             return 2
-        grid = load_grid(a.grid)
+        try:
+            grid = load_grid(a.grid)
+        except Exception as e:
+            print(f"adaptive_ate: invalid --grid: {e}", file=sys.stderr)
+            return 2
         cases = generate_pairwise(grid, seed=a.seed)
         rep = coverage_report(cases, grid)
         if a.mode == "generate":

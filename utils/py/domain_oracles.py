@@ -557,7 +557,17 @@ def main() -> int:
 
     env = dict(kv.split("=", 1) for kv in a.env if "=" in kv) or None
     cwd = os.path.abspath(a.cwd or os.getcwd())
-    cmd = shlex.split(a.cmd) if a.cmd else []
+
+    def parse_cmd(s: Optional[str], name: str) -> List[str]:
+        if not s:
+            return []
+        try:
+            return shlex.split(s)
+        except ValueError as e:
+            print(f"domain_oracles: invalid {name}: {e}", file=sys.stderr)
+            sys.exit(2)
+
+    cmd = parse_cmd(a.cmd, "--cmd")
     run_id = new_run_id()
     results: List[Dict[str, Any]] = []
 
@@ -583,12 +593,12 @@ def main() -> int:
             results.append(check_idempotence_oracle(cmd, cwd, a.repetitions, env, a.timeout, receipts=a.receipts))
         elif m == "crash-recovery":
             need(bool(a.hold_cmd) and bool(a.recover_cmd), "--hold-cmd and --recover-cmd required")
-            results.append(check_crash_recovery(shlex.split(a.hold_cmd), shlex.split(a.recover_cmd), cwd, env,
+            results.append(check_crash_recovery(parse_cmd(a.hold_cmd, "--hold-cmd"), parse_cmd(a.recover_cmd, "--recover-cmd"), cwd, env,
                                                 a.ready_file, a.hold_delay, a.timeout, a.jsonl))
 
     if a.telemetry_out:
         for r in results:
-            append_jsonl(a.telemetry_out, result_to_event(r, cmd or shlex.split(a.recover_cmd or ""), run_id, env))
+            append_jsonl(a.telemetry_out, result_to_event(r, cmd or parse_cmd(a.recover_cmd, "--recover-cmd"), run_id, env))
     all_ok = all(r["passed"] for r in results)
     if a.json:
         slim = [{k: v for k, v in r.items() if k not in ("run",)} | {"rc": (r.get("run") or {}).get("rc")} for r in results]
