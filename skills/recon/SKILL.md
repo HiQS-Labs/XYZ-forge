@@ -11,7 +11,7 @@ description: >-
   write any plan step whose blast radius names code you have not read. Uses the
   codebase-memory knowledge graph when installed, falls back to grep, and fans
   wide traces out across parallel read-only subagents. Produces a Recon Map file
-  and hands off; it does not grade the plan. Do NOT fire on greenfield work with
+  and hands off. Skip greenfield work with
   no existing system to trace, on a change confined to a file already read in
   full, on a typo or copy edit, on a non-code plan, or when a current Recon Map
   for the same subsystem already exists.
@@ -61,7 +61,7 @@ No graph installed? Say so in one line and trace with grep, glob, and reads. The
 
 ## Step 3 — Fan out, sized to the radius
 
-Recon is wide, shallow, and parallel — the ideal subagent shape. Launch the lanes **in one message so they run concurrently**, each read-only, each returning the Step 4 envelope. Use the `Explore` agent type where available, `general-purpose` otherwise.
+Recon is wide, shallow, and parallel — the ideal sub-agent shape. Launch the lanes **in one message so they run concurrently**, each read-only, each returning the Step 4 envelope. Use sub-agents available to the current model through its own runtime and model provider; inherit the current model where supported, without requiring a named model, model lab, or vendor-specific agent type.
 
 Scale the lane count to the radius, and say which you ran: a two-file change with one caller is one lane in your own context; a subsystem with external consumers is all four.
 
@@ -74,7 +74,7 @@ Scale the lane count to the radius, and say which you ran: a two-file change wit
 
 Budget each lane: **read-only, no edits, roughly 8 minutes, report what you found and what the budget cut off.** The budget is a prompt instruction, not a timeout — which is exactly why the report-what-you-cut rule is the part that has to hold. An empty lane is a finding, not a failure. Give every lane the same honesty instruction: *`file:line` for everything claimed; anything inferred, unverified, or graph-only is listed as an unknown, never smoothed into the findings.*
 
-No Agent tool? Run the lanes serially in the main context, same budget, same schema — and name in the map which lanes you curtailed and where you stopped. Serial is not licence to go shallow; it is licence to record what you skipped.
+No sub-agent capability? Run the lanes serially in the main context, same budget, same schema — and name in the map which lanes you curtailed and where you stopped. Serial is not licence to go shallow; it is licence to record what you skipped.
 
 ## Step 4 — What each lane returns
 
