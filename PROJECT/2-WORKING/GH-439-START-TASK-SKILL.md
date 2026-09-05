@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Recon and intake recorded | Codex plan QA, then author the skill |
+| Codex textually approved the plan; skill authored | Validate and run final Codex relay QA |
 
 ## Scope
 
