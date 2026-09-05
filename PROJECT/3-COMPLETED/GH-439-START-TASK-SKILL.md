@@ -2,9 +2,9 @@
 title: Start-task governed workflow skill
 gh_issue: 439
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/439
-status: active
+status: Complete
 created: 2026-09-04
-updated: 2026-09-04
+updated: 2026-09-05
 owner: Codex
 goal: Carry one or more issues from grounded intake to reviewed PRs using existing workflows.
 doc_type: project
@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| PR #440 merged into development on 2026-09-05; issue #439 closed | Complete the post-merge document and ledger reconciliation |
+| PR #440 merged; canonical reconciler completed document and ledger transition on 2026-09-05 | No implementation work remains; reconciliation changes await merge |
 
 ## Scope
 

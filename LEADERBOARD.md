@@ -78,7 +78,7 @@ while the four axes keep their honest values underneath.
 | 66 | **250** | [GH-232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) — wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | Linux-RC | completed | 70 | 55 | 65 | 60 | 250 | — |
 | 67 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Queue | 70 | 55 | 65 | 60 | 250 | — |
 | 68 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Queue / parked intake | 60 | 35 | 70 | 85 | 250 | — |
-| 69 | **250** | [GH-439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) — start-task governed workflow skill | — | In progress | 80 | 35 | 50 | 85 | 250 | — |
+| 69 | **250** | [GH-439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) — start-task governed workflow skill | — | Completed | 80 | 35 | 50 | 85 | 250 | — |
 | 70 | **245** | [GH-108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 71 | **235** | [GH-222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) — GH-222 — releases update cannot re-point a release's tracking issue | Cargo | completed | 60 | 40 | 60 | 75 | 235 | — |
 | 72 | **235** | [GH-416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) — four documentation trues-ups | Front-Door | queue | 50 | 30 | 60 | 95 | 235 | — |
