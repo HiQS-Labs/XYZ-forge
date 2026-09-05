@@ -1,0 +1,898 @@
+{
+  "started_at": "2026-09-04T20:54:52-0700",
+  "repo": "/Users/noelsaw/marathon-clones/gh299-gen4",
+  "sandbox": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone",
+  "duration_s": 9900.0,
+  "targets": [
+    "ci-route",
+    "releases-roadmap",
+    "releases-check",
+    "pdda-frontmatter",
+    "domain-oracles-cli",
+    "adaptive-ate-cli",
+    "codex-turn-twins",
+    "agy-turn-twins",
+    "marathon-plan"
+  ],
+  "batches": 593,
+  "mutations": 14825,
+  "counts": {
+    "pass": 617,
+    "fail": 12761,
+    "anomaly": 1447
+  },
+  "handled_rejections": 12672,
+  "counterexamples": 1455,
+  "parity_divergences": 1144,
+  "contamination_events": [
+    {
+      "round": 18,
+      "target": "marathon-plan",
+      "seed": 20260922,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 27,
+      "target": "marathon-plan",
+      "seed": 20260931,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 36,
+      "target": "marathon-plan",
+      "seed": 20260940,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 45,
+      "target": "marathon-plan",
+      "seed": 20260949,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 54,
+      "target": "marathon-plan",
+      "seed": 20260958,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 63,
+      "target": "marathon-plan",
+      "seed": 20260967,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 72,
+      "target": "marathon-plan",
+      "seed": 20260976,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 81,
+      "target": "marathon-plan",
+      "seed": 20260985,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 90,
+      "target": "marathon-plan",
+      "seed": 20260994,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 99,
+      "target": "marathon-plan",
+      "seed": 20261003,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 108,
+      "target": "marathon-plan",
+      "seed": 20261012,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 117,
+      "target": "marathon-plan",
+      "seed": 20261021,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 126,
+      "target": "marathon-plan",
+      "seed": 20261030,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 135,
+      "target": "marathon-plan",
+      "seed": 20261039,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 144,
+      "target": "marathon-plan",
+      "seed": 20261048,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 153,
+      "target": "marathon-plan",
+      "seed": 20261057,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 162,
+      "target": "marathon-plan",
+      "seed": 20261066,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 180,
+      "target": "marathon-plan",
+      "seed": 20261084,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 189,
+      "target": "marathon-plan",
+      "seed": 20261093,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 198,
+      "target": "marathon-plan",
+      "seed": 20261102,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 207,
+      "target": "marathon-plan",
+      "seed": 20261111,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 234,
+      "target": "marathon-plan",
+      "seed": 20261138,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 243,
+      "target": "marathon-plan",
+      "seed": 20261147,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 252,
+      "target": "marathon-plan",
+      "seed": 20261156,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 261,
+      "target": "marathon-plan",
+      "seed": 20261165,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 270,
+      "target": "marathon-plan",
+      "seed": 20261174,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 279,
+      "target": "marathon-plan",
+      "seed": 20261183,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 297,
+      "target": "marathon-plan",
+      "seed": 20261201,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 306,
+      "target": "marathon-plan",
+      "seed": 20261210,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 315,
+      "target": "marathon-plan",
+      "seed": 20261219,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 324,
+      "target": "marathon-plan",
+      "seed": 20261228,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 333,
+      "target": "marathon-plan",
+      "seed": 20261237,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 342,
+      "target": "marathon-plan",
+      "seed": 20261246,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 351,
+      "target": "marathon-plan",
+      "seed": 20261255,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 360,
+      "target": "marathon-plan",
+      "seed": 20261264,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 369,
+      "target": "marathon-plan",
+      "seed": 20261273,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 378,
+      "target": "marathon-plan",
+      "seed": 20261282,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 387,
+      "target": "marathon-plan",
+      "seed": 20261291,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 396,
+      "target": "marathon-plan",
+      "seed": 20261300,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 405,
+      "target": "marathon-plan",
+      "seed": 20261309,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 414,
+      "target": "marathon-plan",
+      "seed": 20261318,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 423,
+      "target": "marathon-plan",
+      "seed": 20261327,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 432,
+      "target": "marathon-plan",
+      "seed": 20261336,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 441,
+      "target": "marathon-plan",
+      "seed": 20261345,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 450,
+      "target": "marathon-plan",
+      "seed": 20261354,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 459,
+      "target": "marathon-plan",
+      "seed": 20261363,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 477,
+      "target": "marathon-plan",
+      "seed": 20261381,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 486,
+      "target": "marathon-plan",
+      "seed": 20261390,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 495,
+      "target": "marathon-plan",
+      "seed": 20261399,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 504,
+      "target": "marathon-plan",
+      "seed": 20261408,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 513,
+      "target": "marathon-plan",
+      "seed": 20261417,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 522,
+      "target": "marathon-plan",
+      "seed": 20261426,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 531,
+      "target": "marathon-plan",
+      "seed": 20261435,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 540,
+      "target": "marathon-plan",
+      "seed": 20261444,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 558,
+      "target": "marathon-plan",
+      "seed": 20261462,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 567,
+      "target": "marathon-plan",
+      "seed": 20261471,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    },
+    {
+      "round": 585,
+      "target": "marathon-plan",
+      "seed": 20261489,
+      "changed": [
+        "?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md"
+      ]
+    }
+  ],
+  "host_violations": [],
+  "per_target": {
+    "ci-route": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "releases-roadmap": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "releases-check": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "pdda-frontmatter": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 180,
+      "parity_divergences": 0
+    },
+    "domain-oracles-cli": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 3,
+      "parity_divergences": 0
+    },
+    "adaptive-ate-cli": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 5,
+      "parity_divergences": 0
+    },
+    "codex-turn-twins": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 568,
+      "parity_divergences": 568
+    },
+    "agy-turn-twins": {
+      "batches": 66,
+      "mutations": 1650,
+      "counterexamples": 576,
+      "parity_divergences": 576
+    },
+    "marathon-plan": {
+      "batches": 65,
+      "mutations": 1625,
+      "counterexamples": 123,
+      "parity_divergences": 0
+    }
+  },
+  "errors": [],
+  "elapsed_s": 9900.4,
+  "mutations_per_min": 89.8,
+  "telemetry": "TESTS-RESULTS/2026-09-04+GH-299/soak-agy/telemetry.jsonl",
+  "telemetry_valid": true,
+  "clusters": [
+    {
+      "digest": "e3b0c44298fc1c14",
+      "members": 1405,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly",
+        "fail"
+      ],
+      "reasons": [
+        "parity: authoritative rc=0 vs twin rc=2",
+        "rc=0 but 34658ms > slow_ms 30000.0",
+        "rc=0 but 34860ms > slow_ms 30000.0",
+        "rc=0 but 34934ms > slow_ms 30000.0",
+        "rc=0 but 35180ms > slow_ms 30000.0",
+        "rc=0 but 35192ms > slow_ms 30000.0",
+        "rc=0 but 35202ms > slow_ms 30000.0",
+        "rc=0 but 35210ms > slow_ms 30000.0",
+        "rc=0 but 35225ms > slow_ms 30000.0",
+        "rc=0 but 35230ms > slow_ms 30000.0",
+        "rc=0 but 35248ms > slow_ms 30000.0",
+        "rc=0 but 35269ms > slow_ms 30000.0",
+        "rc=0 but 35272ms > slow_ms 30000.0",
+        "rc=0 but 35274ms > slow_ms 30000.0",
+        "rc=0 but 35318ms > slow_ms 30000.0",
+        "rc=0 but 35325ms > slow_ms 30000.0",
+        "rc=0 but 35343ms > slow_ms 30000.0",
+        "rc=0 but 35360ms > slow_ms 30000.0",
+        "rc=0 but 35378ms > slow_ms 30000.0",
+        "rc=0 but 35380ms > slow_ms 30000.0",
+        "rc=0 but 35389ms > slow_ms 30000.0",
+        "rc=0 but 35423ms > slow_ms 30000.0",
+        "rc=0 but 35452ms > slow_ms 30000.0",
+        "rc=0 but 35455ms > slow_ms 30000.0",
+        "rc=0 but 35461ms > slow_ms 30000.0",
+        "rc=0 but 35488ms > slow_ms 30000.0",
+        "rc=0 but 35511ms > slow_ms 30000.0",
+        "rc=0 but 35523ms > slow_ms 30000.0",
+        "rc=0 but 35530ms > slow_ms 30000.0",
+        "rc=0 but 35531ms > slow_ms 30000.0",
+        "rc=0 but 35533ms > slow_ms 30000.0",
+        "rc=0 but 35540ms > slow_ms 30000.0",
+        "rc=0 but 35541ms > slow_ms 30000.0",
+        "rc=0 but 35565ms > slow_ms 30000.0",
+        "rc=0 but 35566ms > slow_ms 30000.0",
+        "rc=0 but 35567ms > slow_ms 30000.0",
+        "rc=0 but 35577ms > slow_ms 30000.0",
+        "rc=0 but 35583ms > slow_ms 30000.0",
+        "rc=0 but 35586ms > slow_ms 30000.0",
+        "rc=0 but 35589ms > slow_ms 30000.0",
+        "rc=0 but 35595ms > slow_ms 30000.0",
+        "rc=0 but 35606ms > slow_ms 30000.0",
+        "rc=0 but 35625ms > slow_ms 30000.0",
+        "rc=0 but 35636ms > slow_ms 30000.0",
+        "rc=0 but 35637ms > slow_ms 30000.0",
+        "rc=0 but 35640ms > slow_ms 30000.0",
+        "rc=0 but 35651ms > slow_ms 30000.0",
+        "rc=0 but 35672ms > slow_ms 30000.0",
+        "rc=0 but 35685ms > slow_ms 30000.0",
+        "rc=0 but 35698ms > slow_ms 30000.0",
+        "rc=0 but 35706ms > slow_ms 30000.0",
+        "rc=0 but 35711ms > slow_ms 30000.0",
+        "rc=0 but 35719ms > slow_ms 30000.0",
+        "rc=0 but 35730ms > slow_ms 30000.0",
+        "rc=0 but 35737ms > slow_ms 30000.0",
+        "rc=0 but 35743ms > slow_ms 30000.0",
+        "rc=0 but 35744ms > slow_ms 30000.0",
+        "rc=0 but 35790ms > slow_ms 30000.0",
+        "rc=0 but 35793ms > slow_ms 30000.0",
+        "rc=0 but 35814ms > slow_ms 30000.0",
+        "rc=0 but 35820ms > slow_ms 30000.0",
+        "rc=0 but 35852ms > slow_ms 30000.0",
+        "rc=0 but 35854ms > slow_ms 30000.0",
+        "rc=0 but 35856ms > slow_ms 30000.0",
+        "rc=0 but 35879ms > slow_ms 30000.0",
+        "rc=0 but 35892ms > slow_ms 30000.0",
+        "rc=0 but 35932ms > slow_ms 30000.0",
+        "rc=0 but 35938ms > slow_ms 30000.0",
+        "rc=0 but 35950ms > slow_ms 30000.0",
+        "rc=0 but 35951ms > slow_ms 30000.0",
+        "rc=0 but 35963ms > slow_ms 30000.0",
+        "rc=0 but 35968ms > slow_ms 30000.0",
+        "rc=0 but 35978ms > slow_ms 30000.0",
+        "rc=0 but 35983ms > slow_ms 30000.0",
+        "rc=0 but 35994ms > slow_ms 30000.0",
+        "rc=0 but 36002ms > slow_ms 30000.0",
+        "rc=0 but 36005ms > slow_ms 30000.0",
+        "rc=0 but 36012ms > slow_ms 30000.0",
+        "rc=0 but 36020ms > slow_ms 30000.0",
+        "rc=0 but 36025ms > slow_ms 30000.0",
+        "rc=0 but 36042ms > slow_ms 30000.0",
+        "rc=0 but 36044ms > slow_ms 30000.0",
+        "rc=0 but 36053ms > slow_ms 30000.0",
+        "rc=0 but 36070ms > slow_ms 30000.0",
+        "rc=0 but 36077ms > slow_ms 30000.0",
+        "rc=0 but 36083ms > slow_ms 30000.0",
+        "rc=0 but 36092ms > slow_ms 30000.0",
+        "rc=0 but 36095ms > slow_ms 30000.0",
+        "rc=0 but 36132ms > slow_ms 30000.0",
+        "rc=0 but 36143ms > slow_ms 30000.0",
+        "rc=0 but 36162ms > slow_ms 30000.0",
+        "rc=0 but 36184ms > slow_ms 30000.0",
+        "rc=0 but 36192ms > slow_ms 30000.0",
+        "rc=0 but 36202ms > slow_ms 30000.0",
+        "rc=0 but 36211ms > slow_ms 30000.0",
+        "rc=0 but 36237ms > slow_ms 30000.0",
+        "rc=0 but 36280ms > slow_ms 30000.0",
+        "rc=0 but 36287ms > slow_ms 30000.0",
+        "rc=0 but 36288ms > slow_ms 30000.0",
+        "rc=0 but 36289ms > slow_ms 30000.0",
+        "rc=0 but 36298ms > slow_ms 30000.0",
+        "rc=0 but 36330ms > slow_ms 30000.0",
+        "rc=0 but 36332ms > slow_ms 30000.0",
+        "rc=0 but 36370ms > slow_ms 30000.0",
+        "rc=0 but 36381ms > slow_ms 30000.0",
+        "rc=0 but 36392ms > slow_ms 30000.0",
+        "rc=0 but 36418ms > slow_ms 30000.0",
+        "rc=0 but 36438ms > slow_ms 30000.0",
+        "rc=0 but 36443ms > slow_ms 30000.0",
+        "rc=0 but 36445ms > slow_ms 30000.0",
+        "rc=0 but 36479ms > slow_ms 30000.0",
+        "rc=0 but 36486ms > slow_ms 30000.0",
+        "rc=0 but 36488ms > slow_ms 30000.0",
+        "rc=0 but 36506ms > slow_ms 30000.0",
+        "rc=0 but 36512ms > slow_ms 30000.0",
+        "rc=0 but 36521ms > slow_ms 30000.0",
+        "rc=0 but 36538ms > slow_ms 30000.0",
+        "rc=0 but 36593ms > slow_ms 30000.0",
+        "rc=0 but 36664ms > slow_ms 30000.0",
+        "rc=0 but 36734ms > slow_ms 30000.0",
+        "rc=0 but 36746ms > slow_ms 30000.0",
+        "rc=0 but 36764ms > slow_ms 30000.0",
+        "rc=0 but 36770ms > slow_ms 30000.0",
+        "rc=0 but 36836ms > slow_ms 30000.0",
+        "rc=0 but 36878ms > slow_ms 30000.0",
+        "rc=0 but 36907ms > slow_ms 30000.0",
+        "rc=0 but 36944ms > slow_ms 30000.0",
+        "rc=0 but 37028ms > slow_ms 30000.0",
+        "rc=0 but 37064ms > slow_ms 30000.0",
+        "rc=0 but 37071ms > slow_ms 30000.0",
+        "rc=0 but 37139ms > slow_ms 30000.0",
+        "rc=0 but 37141ms > slow_ms 30000.0",
+        "rc=0 but 37206ms > slow_ms 30000.0",
+        "rc=0 but 37240ms > slow_ms 30000.0",
+        "rc=0 but 37244ms > slow_ms 30000.0",
+        "rc=0 but 37255ms > slow_ms 30000.0",
+        "rc=0 but 37272ms > slow_ms 30000.0",
+        "rc=0 but 37337ms > slow_ms 30000.0",
+        "rc=0 but 37372ms > slow_ms 30000.0",
+        "rc=0 but 37497ms > slow_ms 30000.0",
+        "rc=0 but 37518ms > slow_ms 30000.0",
+        "rc=0 but 37658ms > slow_ms 30000.0",
+        "rc=0 but 37699ms > slow_ms 30000.0",
+        "rc=0 but 37705ms > slow_ms 30000.0",
+        "rc=0 but 37737ms > slow_ms 30000.0",
+        "rc=0 but 37767ms > slow_ms 30000.0",
+        "rc=0 but 37861ms > slow_ms 30000.0",
+        "rc=0 but 37987ms > slow_ms 30000.0",
+        "rc=0 but 37998ms > slow_ms 30000.0",
+        "rc=0 but 38122ms > slow_ms 30000.0",
+        "rc=0 but 38145ms > slow_ms 30000.0",
+        "rc=0 but 38165ms > slow_ms 30000.0",
+        "rc=0 but 38482ms > slow_ms 30000.0",
+        "rc=0 but 38518ms > slow_ms 30000.0",
+        "rc=0 but 38522ms > slow_ms 30000.0",
+        "rc=0 but 38647ms > slow_ms 30000.0",
+        "rc=0 but 38796ms > slow_ms 30000.0",
+        "rc=0 but 38810ms > slow_ms 30000.0",
+        "rc=0 but 38950ms > slow_ms 30000.0",
+        "rc=0 but 39006ms > slow_ms 30000.0",
+        "rc=0 but 39108ms > slow_ms 30000.0",
+        "rc=0 but 42211ms > slow_ms 30000.0",
+        "rc=0 but 42510ms > slow_ms 30000.0",
+        "rc=0 but 44017ms > slow_ms 30000.0",
+        "rc=0 but 44968ms > slow_ms 30000.0",
+        "rc=0 but 45804ms > slow_ms 30000.0",
+        "rc=0 but 50624ms > slow_ms 30000.0",
+        "rc=0 but 51352ms > slow_ms 30000.0",
+        "rc=0 but 52363ms > slow_ms 30000.0",
+        "rc=0 but 52853ms > slow_ms 30000.0",
+        "rc=0 but 55059ms > slow_ms 30000.0",
+        "rc=0 but 55485ms > slow_ms 30000.0",
+        "rc=0 but 63784ms > slow_ms 30000.0",
+        "rc=0 but 67570ms > slow_ms 30000.0",
+        "rc=1 class=silent"
+      ],
+      "representative": [
+        "bash",
+        "utils/pdda/pdda.sh"
+      ],
+      "rep_size": 24,
+      "exit_code": 0,
+      "signal": 0,
+      "cwd": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone",
+      "stderr_head": ""
+    },
+    {
+      "digest": "738c4aa1f77b7a53",
+      "members": 123,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=4 outside calibrated sets"
+      ],
+      "representative": [
+        "python3",
+        "utils/py/marathon_plan.py"
+      ],
+      "rep_size": 34,
+      "exit_code": 4,
+      "signal": 0,
+      "cwd": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone",
+      "stderr_head": "wrote PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md\n"
+    },
+    {
+      "digest": "9553f3b817475f28",
+      "members": 5,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "fail"
+      ],
+      "reasons": [
+        "rc=1 class=generic_error"
+      ],
+      "representative": [
+        "python3",
+        "utils/py/adaptive_ate.py",
+        "--mode",
+        "coverage",
+        "--grid",
+        "utils/"
+      ],
+      "rep_size": 63,
+      "exit_code": 1,
+      "signal": 0,
+      "cwd": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone",
+      "stderr_head": "Traceback (most recent call last):\n  File \"/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-soak-2026-09-04/clone/utils/py/adaptive_ate.py\", line 536, in <module>\n    sys.exit(main())\n   "
+    },
+    {
+      "digest": "67702091c1b3d906",
+      "members": 3,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "fail"
+      ],
+      "reasons": [
+        "rc=1 class=generic_error"
+      ],
+      "representative": [
+        "python3",
+        "utils/py/domain_oracles.py",
+        "--mode",
+        "zero-state",
+        "--cmd",
+        "\"",
+        "--cwd",
+        "."
+      ],
+      "rep_size": 69,
+      "exit_code": 1,
+      "signal": 0,
+      "cwd": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone",
+      "stderr_head": "Traceback (most recent call last):\n  File \"/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-soak-2026-09-04/clone/utils/py/domain_oracles.py\", line 603, in <module>\n    sys.exit(main())\n "
+    }
+  ],
+  "false_positives": [],
+  "synthesized": {
+    "emitted": [
+      {
+        "digest": "738c4aa1f77b7a53",
+        "path": "TESTS-RESULTS/2026-09-04+GH-299/soak-agy/synth/gh299-gen4-738c4aa1-rc4.sh",
+        "members": 123,
+        "argv": [
+          "python3",
+          "utils/py/marathon_plan.py"
+        ],
+        "env": {},
+        "exit_code": 4,
+        "signature": "",
+        "minimized_from": 2,
+        "minimized_to": 2
+      },
+      {
+        "digest": "9553f3b817475f28",
+        "path": "TESTS-RESULTS/2026-09-04+GH-299/soak-agy/synth/gh299-gen4-9553f3b8-cluster.sh",
+        "members": 5,
+        "argv": [
+          "python3",
+          "utils/py/adaptive_ate.py",
+          "--mode",
+          "coverage",
+          "--grid",
+          "utils/"
+        ],
+        "env": {},
+        "exit_code": 1,
+        "signature": "~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "minimized_from": 6,
+        "minimized_to": 6
+      },
+      {
+        "digest": "67702091c1b3d906",
+        "path": "TESTS-RESULTS/2026-09-04+GH-299/soak-agy/synth/gh299-gen4-67702091-raise-valueerror-no-closing-quotation.sh",
+        "members": 3,
+        "argv": [
+          "python3",
+          "utils/py/domain_oracles.py",
+          "--mode",
+          "zero-state",
+          "--cmd",
+          "\"",
+          "--cwd",
+          "."
+        ],
+        "env": {},
+        "exit_code": 1,
+        "signature": "raise ValueError(\"No closing quotation\")",
+        "minimized_from": 8,
+        "minimized_to": 8
+      }
+    ],
+    "skipped": [
+      {
+        "digest": "e3b0c44298fc1c14",
+        "why": "did not reproduce rc=0 in /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone",
+        "argv": [
+          "bash",
+          "utils/pdda/pdda.sh"
+        ]
+      }
+    ],
+    "clusters": 4
+  },
+  "verdict": {
+    "zero_host_violations": true,
+    "zero_sandbox_contamination": false,
+    "zero_host_contamination": false,
+    "zero_false_positives": true,
+    "telemetry_line_valid": true
+  },
+  "finished_at": "2026-09-04T23:41:12-0700"
+}

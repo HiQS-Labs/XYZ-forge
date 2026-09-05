@@ -1,0 +1,25 @@
+[20:34:16] sandbox clone at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-campaign._ige6pnh/clone (repo /Users/noelsaw/marathon-clones/gh299-gen4)
+[20:34:16] sandbox baseline: clean tree at c5e396103999
+[20:34:17] round 1 ci-route: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=11 total=20
+[20:34:19] round 2 releases-roadmap: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=4 total=40
+[20:34:21] round 3 releases-check: 20 mutants {'pass': 1, 'fail': 19, 'anomaly': 0} cex=0 parity=0 corpus=9 total=60
+[20:35:53] round 4 pdda-frontmatter: 20 mutants {'pass': 4, 'fail': 14, 'anomaly': 2} cex=2 parity=0 corpus=12 total=80
+[20:36:01] round 5 domain-oracles-cli: 20 mutants {'pass': 4, 'fail': 16, 'anomaly': 0} cex=0 parity=0 corpus=12 total=100
+[20:36:02] round 6 adaptive-ate-cli: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=10 total=120
+[20:36:05] round 7 codex-turn-twins: 20 mutants {'pass': 0, 'fail': 5, 'anomaly': 15} cex=15 parity=15 corpus=2 total=140
+[20:36:07] round 8 agy-turn-twins: 20 mutants {'pass': 0, 'fail': 14, 'anomaly': 6} cex=6 parity=6 corpus=2 total=160
+[20:36:08] round 9 marathon-plan: 20 mutants {'pass': 4, 'fail': 16, 'anomaly': 0} cex=0 parity=0 corpus=17 total=180
+[20:36:08] round 10 ci-route: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=19 total=200
+[20:36:10] round 11 releases-roadmap: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=6 total=220
+[20:36:12] round 12 releases-check: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=15 total=240
+[20:37:45] round 13 pdda-frontmatter: 20 mutants {'pass': 4, 'fail': 14, 'anomaly': 2} cex=2 parity=0 corpus=20 total=260
+[20:37:49] round 14 domain-oracles-cli: 20 mutants {'pass': 1, 'fail': 19, 'anomaly': 0} cex=0 parity=0 corpus=21 total=280
+[20:37:51] round 15 adaptive-ate-cli: 20 mutants {'pass': 1, 'fail': 19, 'anomaly': 0} cex=0 parity=0 corpus=20 total=300
+[20:37:53] round 16 codex-turn-twins: 20 mutants {'pass': 0, 'fail': 15, 'anomaly': 5} cex=5 parity=5 corpus=2 total=320
+[20:37:55] round 17 agy-turn-twins: 20 mutants {'pass': 0, 'fail': 12, 'anomaly': 8} cex=8 parity=8 corpus=2 total=340
+[20:38:33] round 18 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[20:38:33] round 18 marathon-plan: 20 mutants {'pass': 1, 'fail': 14, 'anomaly': 5} cex=5 parity=0 corpus=27 total=360
+[20:38:34] round 19 ci-route: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=30 total=380
+[20:38:35] round 20 releases-roadmap: 20 mutants {'pass': 0, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=11 total=400
+[20:40:04] synthesized 1 suite(s) into /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/e1a512dc-7dbc-47f6-bd87-0b87d153d0c1/scratchpad/campaign-evidence/synth
+[20:40:04] report -> /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/e1a512dc-7dbc-47f6-bd87-0b87d153d0c1/scratchpad/campaign-evidence/campaign-report.json

@@ -466,10 +466,15 @@ exit 0
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Hermetic Reproducer & Delta Minimization (GH-155 Phase 3)")
-    parser.add_argument("--mode", choices=["suite", "build", "minimize"], default="suite", help="Execution mode")
+    parser.add_argument("--mode", choices=["suite", "build", "minimize", "synth"], default="suite", help="Execution mode (synth: GH-299 Gen 4 clustered synthesizer, delegates to repro_synth.py)")
     parser.add_argument("--telemetry", help="Path to telemetry JSON file or raw JSON string")
     parser.add_argument("--output", help="Output path for synthesized repro.sh")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON output")
+
+    if "--mode" in sys.argv and sys.argv[sys.argv.index("--mode") + 1 : sys.argv.index("--mode") + 2] == ["synth"]:
+        # GH-299 Phase 4: the clustered synthesizer owns its own flags; hand the whole argv over.
+        from repro_synth import main as synth_main
+        return synth_main(sys.argv[1:])
 
     args = parser.parse_args()
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

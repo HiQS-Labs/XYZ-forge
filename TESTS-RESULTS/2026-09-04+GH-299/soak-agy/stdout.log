@@ -1,0 +1,744 @@
+[20:54:51] sandbox clone at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone (repo /Users/noelsaw/marathon-clones/gh299-gen4)
+[20:54:52] sandbox baseline: clean tree at 894660269fb9
+[20:54:52] round 1 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=14 total=25
+[20:54:55] round 2 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=4 total=50
+[20:54:57] round 3 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=11 total=75
+[20:56:32] round 4 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 19, 'anomaly': 2} cex=2 parity=0 corpus=13 total=100
+[20:56:40] round 5 domain-oracles-cli: 25 mutants {'pass': 4, 'fail': 21, 'anomaly': 0} cex=0 parity=0 corpus=15 total=125
+[20:56:42] round 6 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=11 total=150
+[20:56:46] round 7 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 8, 'anomaly': 17} cex=17 parity=17 corpus=4 total=175
+[20:56:49] round 8 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=3 total=200
+[20:56:50] round 9 marathon-plan: 25 mutants {'pass': 5, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=20 total=225
+[20:56:51] round 10 ci-route: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=27 total=250
+[20:56:53] round 11 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=8 total=275
+[20:56:56] round 12 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=19 total=300
+[21:00:29] round 13 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 15, 'anomaly': 5} cex=5 parity=0 corpus=21 total=325
+[21:00:35] round 14 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=27 total=350
+[21:00:37] round 15 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=20 total=375
+[21:00:40] round 16 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 21, 'anomaly': 4} cex=4 parity=4 corpus=4 total=400
+[21:00:43] round 17 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=3 total=425
+[21:01:12] round 18 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:01:13] round 18 marathon-plan: 25 mutants {'pass': 2, 'fail': 19, 'anomaly': 4} cex=4 parity=0 corpus=31 total=450
+[21:01:13] round 19 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=41 total=475
+[21:01:15] round 20 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=14 total=500
+[21:01:18] round 21 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=25 total=525
+[21:04:28] round 22 pdda-frontmatter: 25 mutants {'pass': 1, 'fail': 19, 'anomaly': 5} cex=5 parity=0 corpus=32 total=550
+[21:04:33] round 23 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=39 total=575
+[21:04:34] round 24 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=30 total=600
+[21:04:37] round 25 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=625
+[21:04:40] round 26 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 11, 'anomaly': 14} cex=14 parity=14 corpus=3 total=650
+[21:04:48] round 27 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:04:48] round 27 marathon-plan: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=39 total=675
+[21:04:48] round 28 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=54 total=700
+[21:04:51] round 29 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=18 total=725
+[21:04:53] round 30 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=29 total=750
+[21:09:01] round 31 pdda-frontmatter: 25 mutants {'pass': 7, 'fail': 12, 'anomaly': 6} cex=6 parity=0 corpus=35 total=775
+[21:09:04] round 32 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=51 total=800
+[21:09:06] round 33 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=43 total=825
+[21:09:09] round 34 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=850
+[21:09:12] round 35 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=3 total=875
+[21:09:26] round 36 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:09:27] round 36 marathon-plan: 25 mutants {'pass': 5, 'fail': 18, 'anomaly': 2} cex=2 parity=0 corpus=47 total=900
+[21:09:27] round 37 ci-route: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=63 total=925
+[21:09:29] round 38 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=21 total=950
+[21:09:32] round 39 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=34 total=975
+[21:12:13] round 40 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=41 total=1000
+[21:12:18] round 41 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=63 total=1025
+[21:12:19] round 42 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=53 total=1050
+[21:12:22] round 43 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 21, 'anomaly': 4} cex=4 parity=4 corpus=4 total=1075
+[21:12:25] round 44 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=3 total=1100
+[21:12:39] round 45 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:12:39] round 45 marathon-plan: 25 mutants {'pass': 3, 'fail': 20, 'anomaly': 2} cex=2 parity=0 corpus=57 total=1125
+[21:12:40] round 46 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=73 total=1150
+[21:12:42] round 47 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=29 total=1175
+[21:12:44] round 48 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=38 total=1200
+[21:14:04] round 49 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=46 total=1225
+[21:14:09] round 50 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=73 total=1250
+[21:14:11] round 51 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=62 total=1275
+[21:14:14] round 52 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=1300
+[21:14:16] round 53 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=3 total=1325
+[21:14:31] round 54 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:14:31] round 54 marathon-plan: 25 mutants {'pass': 5, 'fail': 18, 'anomaly': 2} cex=2 parity=0 corpus=60 total=1350
+[21:14:31] round 55 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=80 total=1375
+[21:14:34] round 56 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=32 total=1400
+[21:14:36] round 57 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=42 total=1425
+[21:15:52] round 58 pdda-frontmatter: 25 mutants {'pass': 1, 'fail': 22, 'anomaly': 2} cex=2 parity=0 corpus=51 total=1450
+[21:15:57] round 59 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=81 total=1475
+[21:15:59] round 60 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=72 total=1500
+[21:16:02] round 61 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 12, 'anomaly': 13} cex=13 parity=13 corpus=4 total=1525
+[21:16:04] round 62 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 22, 'anomaly': 3} cex=3 parity=3 corpus=3 total=1550
+[21:16:34] round 63 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:16:34] round 63 marathon-plan: 25 mutants {'pass': 2, 'fail': 19, 'anomaly': 4} cex=4 parity=0 corpus=66 total=1575
+[21:16:35] round 64 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=88 total=1600
+[21:16:37] round 65 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=37 total=1625
+[21:16:39] round 66 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=50 total=1650
+[21:19:17] round 67 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 19, 'anomaly': 4} cex=4 parity=0 corpus=57 total=1675
+[21:19:21] round 68 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=92 total=1700
+[21:19:23] round 69 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=84 total=1725
+[21:19:26] round 70 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=1750
+[21:19:28] round 71 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=3 total=1775
+[21:19:51] round 72 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:19:51] round 72 marathon-plan: 25 mutants {'pass': 7, 'fail': 15, 'anomaly': 3} cex=3 parity=0 corpus=72 total=1800
+[21:19:52] round 73 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=91 total=1825
+[21:19:54] round 74 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=42 total=1850
+[21:19:56] round 75 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=53 total=1875
+[21:22:41] round 76 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=61 total=1900
+[21:22:46] round 77 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=99 total=1925
+[21:22:47] round 78 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=99 total=1950
+[21:22:50] round 79 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=1975
+[21:22:53] round 80 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=3 total=2000
+[21:23:01] round 81 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:23:01] round 81 marathon-plan: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=78 total=2025
+[21:23:01] round 82 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=101 total=2050
+[21:23:04] round 83 releases-roadmap: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=49 total=2075
+[21:23:06] round 84 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=58 total=2100
+[21:26:32] round 85 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=65 total=2125
+[21:26:38] round 86 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=108 total=2150
+[21:26:40] round 87 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=108 total=2175
+[21:26:43] round 88 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=2200
+[21:26:46] round 89 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=3 total=2225
+[21:26:54] round 90 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:26:55] round 90 marathon-plan: 25 mutants {'pass': 7, 'fail': 17, 'anomaly': 1} cex=1 parity=0 corpus=84 total=2250
+[21:26:55] round 91 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=105 total=2275
+[21:26:58] round 92 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=54 total=2300
+[21:27:00] round 93 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=66 total=2325
+[21:30:56] round 94 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 16, 'anomaly': 5} cex=5 parity=0 corpus=69 total=2350
+[21:30:59] round 95 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=123 total=2375
+[21:31:01] round 96 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=123 total=2400
+[21:31:04] round 97 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=2425
+[21:31:08] round 98 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=3 total=2450
+[21:31:34] round 99 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:31:35] round 99 marathon-plan: 25 mutants {'pass': 2, 'fail': 20, 'anomaly': 3} cex=3 parity=0 corpus=92 total=2475
+[21:31:35] round 100 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=112 total=2500
+[21:31:38] round 101 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=59 total=2525
+[21:31:41] round 102 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=72 total=2550
+[21:34:38] round 103 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 18, 'anomaly': 4} cex=4 parity=0 corpus=71 total=2575
+[21:35:03] round 104 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=138 total=2600
+[21:35:07] round 105 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=139 total=2625
+[21:35:12] round 106 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=2650
+[21:35:18] round 107 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=2675
+[21:35:53] round 108 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:35:53] round 108 marathon-plan: 25 mutants {'pass': 5, 'fail': 17, 'anomaly': 3} cex=3 parity=0 corpus=98 total=2700
+[21:35:54] round 109 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=115 total=2725
+[21:35:57] round 110 releases-roadmap: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=62 total=2750
+[21:36:00] round 111 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=81 total=2775
+[21:43:39] round 112 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 12, 'anomaly': 8} cex=8 parity=0 corpus=71 total=2800
+[21:43:47] round 113 domain-oracles-cli: 25 mutants {'pass': 4, 'fail': 21, 'anomaly': 0} cex=0 parity=0 corpus=149 total=2825
+[21:43:49] round 114 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=152 total=2850
+[21:43:52] round 115 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=2875
+[21:43:56] round 116 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=2900
+[21:44:13] round 117 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:44:13] round 117 marathon-plan: 25 mutants {'pass': 6, 'fail': 17, 'anomaly': 2} cex=2 parity=0 corpus=104 total=2925
+[21:44:13] round 118 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=121 total=2950
+[21:44:16] round 119 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=73 total=2975
+[21:44:18] round 120 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=86 total=3000
+[21:46:35] round 121 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 17, 'anomaly': 3} cex=3 parity=0 corpus=73 total=3025
+[21:46:40] round 122 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=159 total=3050
+[21:46:41] round 123 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=159 total=3075
+[21:46:44] round 124 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=3100
+[21:46:47] round 125 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=3125
+[21:46:56] round 126 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:46:56] round 126 marathon-plan: 25 mutants {'pass': 6, 'fail': 18, 'anomaly': 1} cex=1 parity=0 corpus=108 total=3150
+[21:46:57] round 127 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=123 total=3175
+[21:46:59] round 128 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=79 total=3200
+[21:47:02] round 129 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=90 total=3225
+[21:49:05] round 130 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 19, 'anomaly': 3} cex=3 parity=0 corpus=74 total=3250
+[21:49:09] round 131 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=166 total=3275
+[21:49:11] round 132 adaptive-ate-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=168 total=3300
+[21:49:13] round 133 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=3325
+[21:49:16] round 134 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=3350
+[21:49:24] round 135 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:49:24] round 135 marathon-plan: 25 mutants {'pass': 4, 'fail': 20, 'anomaly': 1} cex=1 parity=0 corpus=113 total=3375
+[21:49:25] round 136 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=126 total=3400
+[21:49:27] round 137 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=81 total=3425
+[21:49:29] round 138 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=96 total=3450
+[21:50:54] round 139 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=78 total=3475
+[21:50:58] round 140 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=176 total=3500
+[21:50:59] round 141 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=180 total=3525
+[21:51:02] round 142 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=3550
+[21:51:05] round 143 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=3575
+[21:51:27] round 144 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:51:27] round 144 marathon-plan: 25 mutants {'pass': 4, 'fail': 18, 'anomaly': 3} cex=3 parity=0 corpus=123 total=3600
+[21:51:27] round 145 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=134 total=3625
+[21:51:30] round 146 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=91 total=3650
+[21:51:32] round 147 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=103 total=3675
+[21:53:42] round 148 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 18, 'anomaly': 3} cex=3 parity=0 corpus=81 total=3700
+[21:53:45] round 149 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=181 total=3725
+[21:53:47] round 150 adaptive-ate-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=190 total=3750
+[21:53:49] round 151 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 21, 'anomaly': 4} cex=4 parity=4 corpus=4 total=3775
+[21:53:52] round 152 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=3800
+[21:54:00] round 153 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:54:00] round 153 marathon-plan: 25 mutants {'pass': 7, 'fail': 17, 'anomaly': 1} cex=1 parity=0 corpus=128 total=3825
+[21:54:00] round 154 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=138 total=3850
+[21:54:03] round 155 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=96 total=3875
+[21:54:05] round 156 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=111 total=3900
+[21:57:41] round 157 pdda-frontmatter: 25 mutants {'pass': 7, 'fail': 13, 'anomaly': 5} cex=5 parity=0 corpus=83 total=3925
+[21:57:47] round 158 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=186 total=3950
+[21:57:48] round 159 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=198 total=3975
+[21:57:51] round 160 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=4000
+[21:57:54] round 161 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=4025
+[21:58:09] round 162 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[21:58:09] round 162 marathon-plan: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=133 total=4050
+[21:58:10] round 163 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=143 total=4075
+[21:58:12] round 164 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=102 total=4100
+[21:58:14] round 165 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=123 total=4125
+[22:01:04] round 166 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=84 total=4150
+[22:01:10] round 167 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=195 total=4175
+[22:01:13] round 168 adaptive-ate-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=209 total=4200
+[22:01:16] round 169 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=4225
+[22:01:19] round 170 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=4250
+[22:01:20] round 171 marathon-plan: 25 mutants {'pass': 4, 'fail': 21, 'anomaly': 0} cex=0 parity=0 corpus=143 total=4275
+[22:01:20] round 172 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=147 total=4300
+[22:01:23] round 173 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=113 total=4325
+[22:01:25] round 174 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=128 total=4350
+[22:03:24] round 175 pdda-frontmatter: 25 mutants {'pass': 1, 'fail': 21, 'anomaly': 3} cex=3 parity=0 corpus=87 total=4375
+[22:03:27] round 176 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=209 total=4400
+[22:03:29] round 177 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=222 total=4425
+[22:03:32] round 178 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 20, 'anomaly': 5} cex=5 parity=5 corpus=4 total=4450
+[22:03:35] round 179 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=4475
+[22:04:10] round 180 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:04:10] round 180 marathon-plan: 25 mutants {'pass': 3, 'fail': 17, 'anomaly': 5} cex=5 parity=0 corpus=145 total=4500
+[22:04:11] round 181 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=153 total=4525
+[22:04:13] round 182 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=121 total=4550
+[22:04:15] round 183 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=134 total=4575
+[22:05:09] round 184 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=91 total=4600
+[22:05:13] round 185 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=226 total=4625
+[22:05:16] round 186 adaptive-ate-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=232 total=4650
+[22:05:19] round 187 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=4675
+[22:05:21] round 188 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 11, 'anomaly': 14} cex=14 parity=14 corpus=4 total=4700
+[22:05:45] round 189 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:05:45] round 189 marathon-plan: 25 mutants {'pass': 1, 'fail': 21, 'anomaly': 3} cex=3 parity=0 corpus=151 total=4725
+[22:05:46] round 190 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=158 total=4750
+[22:05:48] round 191 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=128 total=4775
+[22:05:51] round 192 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=138 total=4800
+[22:06:35] round 193 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=91 total=4825
+[22:06:40] round 194 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=236 total=4850
+[22:06:42] round 195 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=245 total=4875
+[22:06:45] round 196 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=4900
+[22:06:47] round 197 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=4925
+[22:07:02] round 198 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:07:03] round 198 marathon-plan: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=154 total=4950
+[22:07:03] round 199 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=163 total=4975
+[22:07:05] round 200 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=133 total=5000
+[22:07:08] round 201 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=143 total=5025
+[22:07:57] round 202 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=95 total=5050
+[22:08:00] round 203 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=243 total=5075
+[22:08:02] round 204 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=256 total=5100
+[22:08:04] round 205 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=5125
+[22:08:07] round 206 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=5150
+[22:08:22] round 207 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:08:22] round 207 marathon-plan: 25 mutants {'pass': 7, 'fail': 16, 'anomaly': 2} cex=2 parity=0 corpus=157 total=5175
+[22:08:22] round 208 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=165 total=5200
+[22:08:25] round 209 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=142 total=5225
+[22:08:27] round 210 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=149 total=5250
+[22:09:38] round 211 pdda-frontmatter: 25 mutants {'pass': 0, 'fail': 23, 'anomaly': 2} cex=2 parity=0 corpus=95 total=5275
+[22:09:40] round 212 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=256 total=5300
+[22:09:42] round 213 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=268 total=5325
+[22:09:45] round 214 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=5350
+[22:09:47] round 215 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=5375
+[22:09:49] round 216 marathon-plan: 25 mutants {'pass': 5, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=165 total=5400
+[22:09:49] round 217 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=165 total=5425
+[22:09:51] round 218 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=152 total=5450
+[22:09:54] round 219 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=160 total=5475
+[22:11:24] round 220 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 19, 'anomaly': 2} cex=2 parity=0 corpus=96 total=5500
+[22:11:29] round 221 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=267 total=5525
+[22:11:31] round 222 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=285 total=5550
+[22:11:34] round 223 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=5575
+[22:11:37] round 224 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=5600
+[22:11:38] round 225 marathon-plan: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=171 total=5625
+[22:11:38] round 226 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=167 total=5650
+[22:11:41] round 227 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=156 total=5675
+[22:11:43] round 228 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=169 total=5700
+[22:14:18] round 229 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 19, 'anomaly': 4} cex=4 parity=0 corpus=97 total=5725
+[22:14:22] round 230 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=283 total=5750
+[22:14:24] round 231 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=296 total=5775
+[22:14:27] round 232 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=5800
+[22:14:29] round 233 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=5825
+[22:14:38] round 234 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:14:38] round 234 marathon-plan: 25 mutants {'pass': 5, 'fail': 19, 'anomaly': 1} cex=1 parity=0 corpus=179 total=5850
+[22:14:38] round 235 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=176 total=5875
+[22:14:40] round 236 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=164 total=5900
+[22:14:43] round 237 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=175 total=5925
+[22:15:23] round 238 pdda-frontmatter: 25 mutants {'pass': 1, 'fail': 23, 'anomaly': 1} cex=1 parity=0 corpus=98 total=5950
+[22:15:25] round 239 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=297 total=5975
+[22:15:27] round 240 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=306 total=6000
+[22:15:30] round 241 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 12, 'anomaly': 13} cex=13 parity=13 corpus=4 total=6025
+[22:15:32] round 242 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=6050
+[22:15:40] round 243 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:15:41] round 243 marathon-plan: 25 mutants {'pass': 4, 'fail': 20, 'anomaly': 1} cex=1 parity=0 corpus=184 total=6075
+[22:15:41] round 244 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=178 total=6100
+[22:15:43] round 245 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=171 total=6125
+[22:15:46] round 246 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=181 total=6150
+[22:15:59] round 247 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=100 total=6175
+[22:16:03] round 248 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=307 total=6200
+[22:16:05] round 249 adaptive-ate-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=318 total=6225
+[22:16:08] round 250 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=6250
+[22:16:11] round 251 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=6275
+[22:16:26] round 252 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:16:26] round 252 marathon-plan: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=190 total=6300
+[22:16:27] round 253 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=183 total=6325
+[22:16:29] round 254 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=181 total=6350
+[22:16:31] round 255 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=187 total=6375
+[22:17:25] round 256 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 20, 'anomaly': 1} cex=1 parity=0 corpus=102 total=6400
+[22:17:29] round 257 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=318 total=6425
+[22:17:31] round 258 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=325 total=6450
+[22:17:34] round 259 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=6475
+[22:17:37] round 260 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=6500
+[22:17:45] round 261 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:17:45] round 261 marathon-plan: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=195 total=6525
+[22:17:46] round 262 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=192 total=6550
+[22:17:48] round 263 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=185 total=6575
+[22:17:50] round 264 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=196 total=6600
+[22:19:11] round 265 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=104 total=6625
+[22:19:17] round 266 domain-oracles-cli: 25 mutants {'pass': 6, 'fail': 19, 'anomaly': 0} cex=0 parity=0 corpus=328 total=6650
+[22:19:19] round 267 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=336 total=6675
+[22:19:22] round 268 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=6700
+[22:19:24] round 269 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=6725
+[22:19:32] round 270 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:19:32] round 270 marathon-plan: 25 mutants {'pass': 4, 'fail': 20, 'anomaly': 1} cex=1 parity=0 corpus=202 total=6750
+[22:19:33] round 271 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=196 total=6775
+[22:19:35] round 272 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=192 total=6800
+[22:19:37] round 273 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=202 total=6825
+[22:21:11] round 274 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 18, 'anomaly': 2} cex=2 parity=0 corpus=106 total=6850
+[22:21:16] round 275 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=339 total=6875
+[22:21:17] round 276 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=345 total=6900
+[22:21:20] round 277 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=6925
+[22:21:23] round 278 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 22, 'anomaly': 3} cex=3 parity=3 corpus=4 total=6950
+[22:21:31] round 279 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:21:31] round 279 marathon-plan: 25 mutants {'pass': 0, 'fail': 24, 'anomaly': 1} cex=1 parity=0 corpus=204 total=6975
+[22:21:31] round 280 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=199 total=7000
+[22:21:34] round 281 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=202 total=7025
+[22:21:36] round 282 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=205 total=7050
+[22:22:52] round 283 pdda-frontmatter: 25 mutants {'pass': 1, 'fail': 22, 'anomaly': 2} cex=2 parity=0 corpus=109 total=7075
+[22:22:58] round 284 domain-oracles-cli: 25 mutants {'pass': 7, 'fail': 18, 'anomaly': 0} cex=0 parity=0 corpus=348 total=7100
+[22:23:00] round 285 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=356 total=7125
+[22:23:03] round 286 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=7150
+[22:23:06] round 287 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=7175
+[22:23:07] round 288 marathon-plan: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=207 total=7200
+[22:23:07] round 289 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=204 total=7225
+[22:23:10] round 290 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=210 total=7250
+[22:23:12] round 291 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=214 total=7275
+[22:24:24] round 292 pdda-frontmatter: 25 mutants {'pass': 0, 'fail': 23, 'anomaly': 2} cex=2 parity=0 corpus=109 total=7300
+[22:24:28] round 293 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=357 total=7325
+[22:24:30] round 294 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=367 total=7350
+[22:24:32] round 295 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=7375
+[22:24:35] round 296 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=7400
+[22:24:43] round 297 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:24:43] round 297 marathon-plan: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=212 total=7425
+[22:24:44] round 298 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=204 total=7450
+[22:24:46] round 299 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=215 total=7475
+[22:24:48] round 300 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=222 total=7500
+[22:26:52] round 301 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 18, 'anomaly': 3} cex=3 parity=0 corpus=109 total=7525
+[22:26:54] round 302 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=366 total=7550
+[22:26:56] round 303 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=378 total=7575
+[22:26:58] round 304 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=7600
+[22:27:01] round 305 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=7625
+[22:27:16] round 306 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:27:16] round 306 marathon-plan: 25 mutants {'pass': 4, 'fail': 19, 'anomaly': 2} cex=2 parity=0 corpus=214 total=7650
+[22:27:16] round 307 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=207 total=7675
+[22:27:19] round 308 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=223 total=7700
+[22:27:21] round 309 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=232 total=7725
+[22:30:02] round 310 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=110 total=7750
+[22:30:07] round 311 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=377 total=7775
+[22:30:08] round 312 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=391 total=7800
+[22:30:11] round 313 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=7825
+[22:30:14] round 314 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=7850
+[22:30:28] round 315 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:30:28] round 315 marathon-plan: 25 mutants {'pass': 6, 'fail': 17, 'anomaly': 2} cex=2 parity=0 corpus=216 total=7875
+[22:30:29] round 316 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=215 total=7900
+[22:30:31] round 317 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=233 total=7925
+[22:30:33] round 318 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=237 total=7950
+[22:34:16] round 319 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 17, 'anomaly': 6} cex=6 parity=0 corpus=111 total=7975
+[22:34:19] round 320 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=389 total=8000
+[22:34:20] round 321 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=401 total=8025
+[22:34:23] round 322 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=8050
+[22:34:26] round 323 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=8075
+[22:34:40] round 324 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:34:40] round 324 marathon-plan: 25 mutants {'pass': 3, 'fail': 20, 'anomaly': 2} cex=2 parity=0 corpus=220 total=8100
+[22:34:41] round 325 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=218 total=8125
+[22:34:43] round 326 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=238 total=8150
+[22:34:45] round 327 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=244 total=8175
+[22:35:44] round 328 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 19, 'anomaly': 1} cex=1 parity=0 corpus=115 total=8200
+[22:35:48] round 329 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=397 total=8225
+[22:35:49] round 330 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=414 total=8250
+[22:35:52] round 331 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=8275
+[22:35:55] round 332 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=8300
+[22:36:16] round 333 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:36:16] round 333 marathon-plan: 25 mutants {'pass': 5, 'fail': 17, 'anomaly': 3} cex=3 parity=0 corpus=224 total=8325
+[22:36:17] round 334 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=221 total=8350
+[22:36:19] round 335 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=240 total=8375
+[22:36:21] round 336 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=254 total=8400
+[22:38:31] round 337 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 17, 'anomaly': 3} cex=3 parity=0 corpus=115 total=8425
+[22:38:36] round 338 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=405 total=8450
+[22:38:37] round 339 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=426 total=8475
+[22:38:40] round 340 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=8500
+[22:38:43] round 341 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=8525
+[22:38:50] round 342 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:38:51] round 342 marathon-plan: 25 mutants {'pass': 0, 'fail': 24, 'anomaly': 1} cex=1 parity=0 corpus=227 total=8550
+[22:38:51] round 343 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=225 total=8575
+[22:38:53] round 344 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=248 total=8600
+[22:38:56] round 345 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=261 total=8625
+[22:40:38] round 346 pdda-frontmatter: 25 mutants {'pass': 7, 'fail': 16, 'anomaly': 2} cex=2 parity=0 corpus=115 total=8650
+[22:40:42] round 347 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=414 total=8675
+[22:40:43] round 348 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=436 total=8700
+[22:40:46] round 349 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=8725
+[22:40:49] round 350 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=8750
+[22:41:25] round 351 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:41:25] round 351 marathon-plan: 25 mutants {'pass': 3, 'fail': 17, 'anomaly': 5} cex=5 parity=0 corpus=229 total=8775
+[22:41:26] round 352 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=231 total=8800
+[22:41:28] round 353 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=255 total=8825
+[22:41:31] round 354 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=264 total=8850
+[22:41:40] round 355 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=117 total=8875
+[22:41:42] round 356 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=428 total=8900
+[22:41:44] round 357 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=444 total=8925
+[22:41:47] round 358 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=8950
+[22:41:49] round 359 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=8975
+[22:41:57] round 360 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:41:58] round 360 marathon-plan: 25 mutants {'pass': 4, 'fail': 20, 'anomaly': 1} cex=1 parity=0 corpus=234 total=9000
+[22:41:58] round 361 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=240 total=9025
+[22:42:00] round 362 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=264 total=9050
+[22:42:03] round 363 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=270 total=9075
+[22:45:15] round 364 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 17, 'anomaly': 5} cex=5 parity=0 corpus=117 total=9100
+[22:45:18] round 365 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=439 total=9125
+[22:45:20] round 366 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=453 total=9150
+[22:45:22] round 367 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=9175
+[22:45:25] round 368 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=9200
+[22:45:47] round 369 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:45:48] round 369 marathon-plan: 25 mutants {'pass': 6, 'fail': 16, 'anomaly': 3} cex=3 parity=0 corpus=235 total=9225
+[22:45:48] round 370 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=246 total=9250
+[22:45:50] round 371 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=273 total=9275
+[22:45:53] round 372 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=279 total=9300
+[22:46:10] round 373 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 21, 'anomaly': 0} cex=0 parity=0 corpus=118 total=9325
+[22:46:14] round 374 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=450 total=9350
+[22:46:16] round 375 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=463 total=9375
+[22:46:19] round 376 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=9400
+[22:46:21] round 377 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=9425
+[22:46:44] round 378 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:46:44] round 378 marathon-plan: 25 mutants {'pass': 4, 'fail': 18, 'anomaly': 3} cex=3 parity=0 corpus=238 total=9450
+[22:46:44] round 379 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=253 total=9475
+[22:46:47] round 380 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=282 total=9500
+[22:46:49] round 381 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=285 total=9525
+[22:48:55] round 382 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 18, 'anomaly': 3} cex=3 parity=0 corpus=118 total=9550
+[22:48:58] round 383 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=460 total=9575
+[22:48:59] round 384 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=476 total=9600
+[22:49:02] round 385 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=9625
+[22:49:05] round 386 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=9650
+[22:49:13] round 387 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:49:13] round 387 marathon-plan: 25 mutants {'pass': 0, 'fail': 24, 'anomaly': 1} cex=1 parity=0 corpus=239 total=9675
+[22:49:14] round 388 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=258 total=9700
+[22:49:16] round 389 releases-roadmap: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=290 total=9725
+[22:49:19] round 390 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=295 total=9750
+[22:51:22] round 391 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 19, 'anomaly': 3} cex=3 parity=0 corpus=119 total=9775
+[22:51:27] round 392 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=467 total=9800
+[22:51:29] round 393 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=486 total=9825
+[22:51:31] round 394 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=9850
+[22:51:34] round 395 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=9875
+[22:51:49] round 396 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:51:50] round 396 marathon-plan: 25 mutants {'pass': 0, 'fail': 23, 'anomaly': 2} cex=2 parity=0 corpus=243 total=9900
+[22:51:50] round 397 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=264 total=9925
+[22:51:52] round 398 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=295 total=9950
+[22:51:55] round 399 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=299 total=9975
+[22:52:45] round 400 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=121 total=10000
+[22:52:48] round 401 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=477 total=10025
+[22:52:50] round 402 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=493 total=10050
+[22:52:52] round 403 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=10075
+[22:52:55] round 404 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=10100
+[22:53:17] round 405 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:53:17] round 405 marathon-plan: 25 mutants {'pass': 7, 'fail': 15, 'anomaly': 3} cex=3 parity=0 corpus=245 total=10125
+[22:53:18] round 406 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=269 total=10150
+[22:53:20] round 407 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=303 total=10175
+[22:53:22] round 408 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=307 total=10200
+[22:55:46] round 409 pdda-frontmatter: 25 mutants {'pass': 8, 'fail': 14, 'anomaly': 3} cex=3 parity=0 corpus=121 total=10225
+[22:55:52] round 410 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=490 total=10250
+[22:55:54] round 411 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=500 total=10275
+[22:55:57] round 412 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=10300
+[22:55:59] round 413 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=10325
+[22:56:22] round 414 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:56:23] round 414 marathon-plan: 25 mutants {'pass': 3, 'fail': 19, 'anomaly': 3} cex=3 parity=0 corpus=251 total=10350
+[22:56:23] round 415 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=271 total=10375
+[22:56:25] round 416 releases-roadmap: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=310 total=10400
+[22:56:28] round 417 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=317 total=10425
+[22:58:25] round 418 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 20, 'anomaly': 3} cex=3 parity=0 corpus=122 total=10450
+[22:58:28] round 419 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=10475
+[22:58:30] round 420 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=10500
+[22:58:33] round 421 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 12, 'anomaly': 13} cex=13 parity=13 corpus=4 total=10525
+[22:58:36] round 422 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=10550
+[22:58:58] round 423 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[22:58:58] round 423 marathon-plan: 25 mutants {'pass': 4, 'fail': 18, 'anomaly': 3} cex=3 parity=0 corpus=258 total=10575
+[22:58:58] round 424 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=274 total=10600
+[22:59:01] round 425 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=319 total=10625
+[22:59:03] round 426 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=325 total=10650
+[22:59:48] round 427 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=127 total=10675
+[22:59:51] round 428 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=500 total=10700
+[22:59:53] round 429 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=500 total=10725
+[22:59:56] round 430 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 21, 'anomaly': 4} cex=4 parity=4 corpus=4 total=10750
+[22:59:58] round 431 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 22, 'anomaly': 3} cex=3 parity=3 corpus=4 total=10775
+[23:00:14] round 432 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:00:14] round 432 marathon-plan: 25 mutants {'pass': 2, 'fail': 21, 'anomaly': 2} cex=2 parity=0 corpus=262 total=10800
+[23:00:15] round 433 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=277 total=10825
+[23:00:17] round 434 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=326 total=10850
+[23:00:19] round 435 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=332 total=10875
+[23:01:08] round 436 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=130 total=10900
+[23:01:10] round 437 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=10925
+[23:01:12] round 438 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=10950
+[23:01:15] round 439 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=10975
+[23:01:17] round 440 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=11000
+[23:01:33] round 441 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:01:33] round 441 marathon-plan: 25 mutants {'pass': 6, 'fail': 17, 'anomaly': 2} cex=2 parity=0 corpus=263 total=11025
+[23:01:34] round 442 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=282 total=11050
+[23:01:36] round 443 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=328 total=11075
+[23:01:38] round 444 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=338 total=11100
+[23:04:08] round 445 pdda-frontmatter: 25 mutants {'pass': 1, 'fail': 20, 'anomaly': 4} cex=4 parity=0 corpus=132 total=11125
+[23:04:11] round 446 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11150
+[23:04:13] round 447 adaptive-ate-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11175
+[23:04:16] round 448 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=11200
+[23:04:19] round 449 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=11225
+[23:04:27] round 450 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:04:28] round 450 marathon-plan: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=264 total=11250
+[23:04:28] round 451 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=291 total=11275
+[23:04:30] round 452 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=334 total=11300
+[23:04:33] round 453 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=345 total=11325
+[23:05:26] round 454 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 20, 'anomaly': 1} cex=1 parity=0 corpus=135 total=11350
+[23:05:29] round 455 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11375
+[23:05:31] round 456 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11400
+[23:05:34] round 457 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=11425
+[23:05:36] round 458 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=11450
+[23:05:59] round 459 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:05:59] round 459 marathon-plan: 25 mutants {'pass': 6, 'fail': 16, 'anomaly': 3} cex=3 parity=0 corpus=265 total=11475
+[23:06:00] round 460 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=294 total=11500
+[23:06:02] round 461 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=340 total=11525
+[23:06:04] round 462 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=350 total=11550
+[23:07:30] round 463 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 20, 'anomaly': 2} cex=2 parity=0 corpus=137 total=11575
+[23:07:35] round 464 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11600
+[23:07:37] round 465 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11625
+[23:07:40] round 466 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=11650
+[23:07:43] round 467 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=11675
+[23:07:44] round 468 marathon-plan: 25 mutants {'pass': 6, 'fail': 19, 'anomaly': 0} cex=0 parity=0 corpus=269 total=11700
+[23:07:45] round 469 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=300 total=11725
+[23:07:47] round 470 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=348 total=11750
+[23:07:49] round 471 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=356 total=11775
+[23:09:15] round 472 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 20, 'anomaly': 2} cex=2 parity=0 corpus=138 total=11800
+[23:09:19] round 473 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11825
+[23:09:21] round 474 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=11850
+[23:09:23] round 475 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=11875
+[23:09:26] round 476 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=11900
+[23:09:49] round 477 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:09:49] round 477 marathon-plan: 25 mutants {'pass': 3, 'fail': 19, 'anomaly': 3} cex=3 parity=0 corpus=273 total=11925
+[23:09:50] round 478 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=305 total=11950
+[23:09:52] round 479 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=352 total=11975
+[23:09:54] round 480 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=362 total=12000
+[23:10:40] round 481 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=138 total=12025
+[23:10:42] round 482 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=500 total=12050
+[23:10:44] round 483 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12075
+[23:10:46] round 484 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 21, 'anomaly': 4} cex=4 parity=4 corpus=4 total=12100
+[23:10:49] round 485 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=12125
+[23:10:57] round 486 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:10:57] round 486 marathon-plan: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=277 total=12150
+[23:10:58] round 487 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=308 total=12175
+[23:11:00] round 488 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=356 total=12200
+[23:11:02] round 489 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=371 total=12225
+[23:12:01] round 490 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 19, 'anomaly': 1} cex=1 parity=0 corpus=140 total=12250
+[23:12:05] round 491 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12275
+[23:12:07] round 492 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12300
+[23:12:10] round 493 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=12325
+[23:12:13] round 494 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=12350
+[23:12:28] round 495 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:12:29] round 495 marathon-plan: 25 mutants {'pass': 3, 'fail': 20, 'anomaly': 2} cex=2 parity=0 corpus=279 total=12375
+[23:12:29] round 496 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=314 total=12400
+[23:12:31] round 497 releases-roadmap: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=361 total=12425
+[23:12:34] round 498 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=377 total=12450
+[23:15:27] round 499 pdda-frontmatter: 25 mutants {'pass': 7, 'fail': 14, 'anomaly': 4} cex=4 parity=0 corpus=140 total=12475
+[23:15:32] round 500 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12500
+[23:15:33] round 501 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12525
+[23:15:36] round 502 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=12550
+[23:15:39] round 503 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=12575
+[23:15:47] round 504 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:15:47] round 504 marathon-plan: 25 mutants {'pass': 8, 'fail': 16, 'anomaly': 1} cex=1 parity=0 corpus=281 total=12600
+[23:15:48] round 505 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=322 total=12625
+[23:15:50] round 506 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=369 total=12650
+[23:15:52] round 507 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=383 total=12675
+[23:16:53] round 508 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 19, 'anomaly': 1} cex=1 parity=0 corpus=140 total=12700
+[23:16:56] round 509 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12725
+[23:16:58] round 510 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12750
+[23:17:01] round 511 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=12775
+[23:17:03] round 512 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 11, 'anomaly': 14} cex=14 parity=14 corpus=4 total=12800
+[23:17:26] round 513 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:17:26] round 513 marathon-plan: 25 mutants {'pass': 3, 'fail': 19, 'anomaly': 3} cex=3 parity=0 corpus=281 total=12825
+[23:17:26] round 514 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=328 total=12850
+[23:17:29] round 515 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=376 total=12875
+[23:17:31] round 516 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=392 total=12900
+[23:19:02] round 517 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 19, 'anomaly': 2} cex=2 parity=0 corpus=144 total=12925
+[23:19:06] round 518 domain-oracles-cli: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12950
+[23:19:08] round 519 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=12975
+[23:19:10] round 520 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=13000
+[23:19:13] round 521 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 15, 'anomaly': 10} cex=10 parity=10 corpus=4 total=13025
+[23:19:21] round 522 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:19:21] round 522 marathon-plan: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=282 total=13050
+[23:19:22] round 523 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=329 total=13075
+[23:19:24] round 524 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=383 total=13100
+[23:19:26] round 525 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=396 total=13125
+[23:22:43] round 526 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 16, 'anomaly': 5} cex=5 parity=0 corpus=144 total=13150
+[23:22:50] round 527 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13175
+[23:22:51] round 528 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13200
+[23:22:54] round 529 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 20, 'anomaly': 5} cex=5 parity=5 corpus=4 total=13225
+[23:22:57] round 530 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=13250
+[23:23:26] round 531 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:23:26] round 531 marathon-plan: 25 mutants {'pass': 5, 'fail': 16, 'anomaly': 4} cex=4 parity=0 corpus=285 total=13275
+[23:23:26] round 532 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=333 total=13300
+[23:23:28] round 533 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=391 total=13325
+[23:23:31] round 534 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=405 total=13350
+[23:26:16] round 535 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 16, 'anomaly': 4} cex=4 parity=0 corpus=146 total=13375
+[23:26:20] round 536 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13400
+[23:26:22] round 537 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13425
+[23:26:24] round 538 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 11, 'anomaly': 14} cex=14 parity=14 corpus=4 total=13450
+[23:26:27] round 539 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=13475
+[23:26:57] round 540 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:26:57] round 540 marathon-plan: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=287 total=13500
+[23:26:57] round 541 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=338 total=13525
+[23:27:00] round 542 releases-roadmap: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=402 total=13550
+[23:27:02] round 543 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=410 total=13575
+[23:28:36] round 544 pdda-frontmatter: 25 mutants {'pass': 5, 'fail': 18, 'anomaly': 2} cex=2 parity=0 corpus=147 total=13600
+[23:28:43] round 545 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13625
+[23:28:45] round 546 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13650
+[23:28:47] round 547 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=13675
+[23:28:50] round 548 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 11, 'anomaly': 14} cex=14 parity=14 corpus=4 total=13700
+[23:28:51] round 549 marathon-plan: 25 mutants {'pass': 8, 'fail': 17, 'anomaly': 0} cex=0 parity=0 corpus=288 total=13725
+[23:28:52] round 550 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=342 total=13750
+[23:28:54] round 551 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=411 total=13775
+[23:28:57] round 552 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=413 total=13800
+[23:29:45] round 553 pdda-frontmatter: 25 mutants {'pass': 3, 'fail': 21, 'anomaly': 1} cex=1 parity=0 corpus=148 total=13825
+[23:29:49] round 554 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13850
+[23:29:51] round 555 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=13875
+[23:29:53] round 556 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=13900
+[23:29:56] round 557 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 17, 'anomaly': 8} cex=8 parity=8 corpus=4 total=13925
+[23:30:12] round 558 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:30:12] round 558 marathon-plan: 25 mutants {'pass': 3, 'fail': 20, 'anomaly': 2} cex=2 parity=0 corpus=292 total=13950
+[23:30:13] round 559 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=345 total=13975
+[23:30:15] round 560 releases-roadmap: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=421 total=14000
+[23:30:17] round 561 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=419 total=14025
+[23:33:18] round 562 pdda-frontmatter: 25 mutants {'pass': 0, 'fail': 20, 'anomaly': 5} cex=5 parity=0 corpus=151 total=14050
+[23:33:21] round 563 domain-oracles-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14075
+[23:33:23] round 564 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14100
+[23:33:25] round 565 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=14125
+[23:33:28] round 566 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=14150
+[23:33:51] round 567 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:33:51] round 567 marathon-plan: 25 mutants {'pass': 3, 'fail': 19, 'anomaly': 3} cex=3 parity=0 corpus=293 total=14175
+[23:33:51] round 568 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=351 total=14200
+[23:33:54] round 569 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=432 total=14225
+[23:33:56] round 570 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=429 total=14250
+[23:35:27] round 571 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 19, 'anomaly': 2} cex=2 parity=0 corpus=153 total=14275
+[23:35:33] round 572 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14300
+[23:35:34] round 573 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14325
+[23:35:37] round 574 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=14350
+[23:35:40] round 575 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 13, 'anomaly': 12} cex=12 parity=12 corpus=4 total=14375
+[23:35:41] round 576 marathon-plan: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=297 total=14400
+[23:35:41] round 577 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=355 total=14425
+[23:35:44] round 578 releases-roadmap: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=441 total=14450
+[23:35:46] round 579 releases-check: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=437 total=14475
+[23:38:30] round 580 pdda-frontmatter: 25 mutants {'pass': 4, 'fail': 17, 'anomaly': 4} cex=4 parity=0 corpus=154 total=14500
+[23:38:35] round 581 domain-oracles-cli: 25 mutants {'pass': 2, 'fail': 23, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14525
+[23:38:36] round 582 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=1 parity=0 corpus=500 total=14550
+[23:38:39] round 583 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 14, 'anomaly': 11} cex=11 parity=11 corpus=4 total=14575
+[23:38:42] round 584 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=6 corpus=4 total=14600
+[23:38:51] round 585 marathon-plan: CONTAMINATION — ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']; resetting sandbox
+[23:38:51] round 585 marathon-plan: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=299 total=14625
+[23:38:51] round 586 ci-route: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=358 total=14650
+[23:38:54] round 587 releases-roadmap: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=448 total=14675
+[23:38:56] round 588 releases-check: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=447 total=14700
+[23:39:41] round 589 pdda-frontmatter: 25 mutants {'pass': 2, 'fail': 22, 'anomaly': 1} cex=1 parity=0 corpus=157 total=14725
+[23:39:45] round 590 domain-oracles-cli: 25 mutants {'pass': 1, 'fail': 24, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14750
+[23:39:47] round 591 adaptive-ate-cli: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=500 total=14775
+[23:39:49] round 592 codex-turn-twins: 25 mutants {'pass': 0, 'fail': 18, 'anomaly': 7} cex=7 parity=7 corpus=4 total=14800
+[23:39:52] round 593 agy-turn-twins: 25 mutants {'pass': 0, 'fail': 16, 'anomaly': 9} cex=9 parity=9 corpus=4 total=14825
+[23:41:12] synthesized 3 suite(s) into TESTS-RESULTS/2026-09-04+GH-299/soak-agy/synth
+[23:41:12] report -> TESTS-RESULTS/2026-09-04+GH-299/soak-agy/campaign-report.json
+# GH-299 Gen 4 campaign — 2026-09-04T20:54:52-0700 → 2026-09-04T23:41:12-0700
+
+- sandbox: `/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gen4-soak-2026-09-04/clone` (disposable full clone of `/Users/noelsaw/marathon-clones/gh299-gen4`)
+- elapsed: 9900.4s · batches: 593 · **mutations: 14825** (89.8/min)
+- tier-1 counts: {'pass': 617, 'fail': 12761, 'anomaly': 1447} · handled rejections: 12672 · counterexamples: 1455 · parity divergences: 1144
+- clusters: 4 · synthesized suites: 3 · false positives: 0
+- **zero host violations: True** (host violations 0) · **zero sandbox contamination: False** (events 57 — each one is a mutant that wrote into the tree, reset and recorded)
+- **zero false positives: True** · telemetry line-valid: True
+
+## Per target
+
+| target | batches | mutations | counterexamples | parity divergences |
+|---|---:|---:|---:|---:|
+| ci-route | 66 | 1650 | 0 | 0 |
+| releases-roadmap | 66 | 1650 | 0 | 0 |
+| releases-check | 66 | 1650 | 0 | 0 |
+| pdda-frontmatter | 66 | 1650 | 180 | 0 |
+| domain-oracles-cli | 66 | 1650 | 3 | 0 |
+| adaptive-ate-cli | 66 | 1650 | 5 | 0 |
+| codex-turn-twins | 66 | 1650 | 568 | 568 |
+| agy-turn-twins | 66 | 1650 | 576 | 576 |
+| marathon-plan | 65 | 1625 | 123 | 0 |
+
+## Counterexample clusters
+
+- `e3b0c44298fc1c14` × 1405 rc=0 anomaly,fail — ''
+- `738c4aa1f77b7a53` × 123 rc=4 anomaly — 'wrote PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md\n'
+- `9553f3b817475f28` × 5 rc=1 fail — 'Traceback (most recent call last):\n  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-soak-2026-09-04'
+- `67702091c1b3d906` × 3 rc=1 fail — 'Traceback (most recent call last):\n  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gen4-soak-2026-09-04'
+
+## Contamination events
+
+- round 18 target marathon-plan seed 20260922: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 27 target marathon-plan seed 20260931: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 36 target marathon-plan seed 20260940: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 45 target marathon-plan seed 20260949: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 54 target marathon-plan seed 20260958: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 63 target marathon-plan seed 20260967: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 72 target marathon-plan seed 20260976: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 81 target marathon-plan seed 20260985: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 90 target marathon-plan seed 20260994: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 99 target marathon-plan seed 20261003: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 108 target marathon-plan seed 20261012: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 117 target marathon-plan seed 20261021: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 126 target marathon-plan seed 20261030: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 135 target marathon-plan seed 20261039: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 144 target marathon-plan seed 20261048: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 153 target marathon-plan seed 20261057: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 162 target marathon-plan seed 20261066: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 180 target marathon-plan seed 20261084: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 189 target marathon-plan seed 20261093: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 198 target marathon-plan seed 20261102: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 207 target marathon-plan seed 20261111: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 234 target marathon-plan seed 20261138: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 243 target marathon-plan seed 20261147: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 252 target marathon-plan seed 20261156: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 261 target marathon-plan seed 20261165: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 270 target marathon-plan seed 20261174: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 279 target marathon-plan seed 20261183: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 297 target marathon-plan seed 20261201: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 306 target marathon-plan seed 20261210: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 315 target marathon-plan seed 20261219: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 324 target marathon-plan seed 20261228: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 333 target marathon-plan seed 20261237: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 342 target marathon-plan seed 20261246: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 351 target marathon-plan seed 20261255: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 360 target marathon-plan seed 20261264: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 369 target marathon-plan seed 20261273: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 378 target marathon-plan seed 20261282: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 387 target marathon-plan seed 20261291: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 396 target marathon-plan seed 20261300: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 405 target marathon-plan seed 20261309: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 414 target marathon-plan seed 20261318: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 423 target marathon-plan seed 20261327: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 432 target marathon-plan seed 20261336: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 441 target marathon-plan seed 20261345: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 450 target marathon-plan seed 20261354: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 459 target marathon-plan seed 20261363: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 477 target marathon-plan seed 20261381: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 486 target marathon-plan seed 20261390: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 495 target marathon-plan seed 20261399: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 504 target marathon-plan seed 20261408: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 513 target marathon-plan seed 20261417: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 522 target marathon-plan seed 20261426: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 531 target marathon-plan seed 20261435: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 540 target marathon-plan seed 20261444: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 558 target marathon-plan seed 20261462: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 567 target marathon-plan seed 20261471: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+- round 585 target marathon-plan seed 20261489: ['?? PROJECT/2-WORKING/MARATHON-PLAN-2026-09-05.md']
+
