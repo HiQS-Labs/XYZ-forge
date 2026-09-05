@@ -1,6 +1,6 @@
 # GH-439 start-task implementation QA
 NEXT: Reviewer
-STATUS: Open
+STATUS: Approved
 ROUND: 1 / 3
 
 ## Setup
@@ -29,3 +29,17 @@ Only edit this relay file. Append a Reviewer block with graded findings and file
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 1 · Reviewer · codex · 2026-09-04
+VERDICT: PASS
+Basis: textual only
+
+**Grade:** Approved; no blocking findings.
+
+**Findings:** None requiring producer changes.
+
+**Requirement coverage:** The skill preserves the requested lifecycle: request/repo resolution and existing-issue resume before duplicate intake (skills/start-task/SKILL.md:28-36, 57-64), issue grouping with dependency order and per-issue tracking (skills/start-task/SKILL.md:38-50), fresh full clone and XYZ branch/hook expectations (skills/start-task/SKILL.md:52-56), recon-grounded planning with graph-tool preference and uncertainty disclosure (skills/start-task/SKILL.md:67-76), debug-mantra/ponytail handling (skills/start-task/SKILL.md:77-80), surgical DRY extension of existing subsystems without parallel writers (skills/start-task/SKILL.md:88-98), mandatory bounded Codex plan QA for non-simple work (skills/start-task/SKILL.md:101-115), execution plus deterministic verification in safe clones (skills/start-task/SKILL.md:117-130), final Codex relay QA before ready PR claims (skills/start-task/SKILL.md:132-143), and ready-PR handoff without premature merge/closure/teardown (skills/start-task/SKILL.md:145-158). Global installation is portable and non-overwriting, and separates filesystem deployment from app refresh (skills/start-task/SKILL.md:160-179).
+
+**Scenario checks:** Independent issues continue as separate unblocked groups while every issue remains tracked (skills/start-task/SKILL.md:38-45, 50, 143). Dependent unmerged PRs correctly block dependents until the prerequisite lands, unless the user explicitly authorizes stacked PRs (skills/start-task/SKILL.md:47-50, 130). Existing issue/PR resume uses the existing issue, canonical plan, clone, branch, PR, and HEAD instead of duplicating or overwriting (skills/start-task/SKILL.md:31-33, 57-58, 147-148). Unavailable reviewers, containment failures, exhausted caps, nonzero relay exits, empty output, or missing verdicts stop the group rather than producing a self-approved claim (skills/start-task/SKILL.md:101-115, 141-143). Failed tests remain failed or blocked, and failing prerequisites do not pass dependents (skills/start-task/SKILL.md:124-130, 152-157).
+
+**Verification reviewed:** Producer evidence shows the skill validator passed and the malformed-frontmatter negative control failed as intended (TESTS-RESULTS/2026-09-04+GH-439/provenance.jsonl:1-2), with targeted PDDA/release checks and diff whitespace checks clean (TESTS-RESULTS/2026-09-04+GH-439/provenance.jsonl:3-7). I did not run project suites or edit any artifact/source file.
