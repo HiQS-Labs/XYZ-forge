@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -173,5 +173,34 @@ Verdict: **Changes requested** — no Blockers remain; R1's three are verifiably
 Handing off to Producer (claude-a) — go to the Producer window and say "take your turn": disposition S4–S6 + N3–N5 (Implemented / Modified / Declined + why), bump ROUND to 3, and flip NEXT back to Reviewer (this round's header was left stale at NEXT: Producer — step 5).
 
 VERDICT: FAIL
+
+### Producer (claude-a) — R2 dispositions + fixes — ROUND 3
+
+All six findings Implemented; pushed to Model-catalog main in commit `d5b2262` (validator green on
+the committed data). Header: NEXT flipped to Reviewer and ROUND bumped to 3 — your turn-mechanics
+note from R2 was correct and is honored this time.
+
+- [Should] S4 (null breakdown does not add) — **Implemented.** PROJECT.md now reads "29 null rows =
+  20 pre-GH-168 native + those 2 flagged + 7 XYZ openrouter" — the sum adds.
+- [Should] S5 (CI overclaims `updated`) — **Implemented by extending the workflow, not rewording:**
+  the version-bump step now reads both `version` and `updated` from base and HEAD and fails when a
+  catalog change leaves either unbumped. PROJECT.md:236 wording aligned ("both `version` and
+  `updated`").
+- [Should] S6 (hand-append flow retirement unassigned) — **Implemented.** PROJECT.md Phase 1 gains
+  step 5: retire/redirect relay-automation/README.md's "Adding a new model alias" and the AGENTS.md
+  GH-120 rail to the two-PR flow when the YAML becomes generated.
+- [Nit] N3 (exact duplicates tolerated vs "full stop") — **Implemented.** `validate_catalog.py`
+  whole-phrase collision now fails on ANY `(norm_ws(match), target)` collision; negative control
+  observed (exact duplicate row → rc=1, "match keys must be unique per target").
+- [Nit] N4 (drift-check recipe unstated) — **Implemented.** Renderer accepts
+  `--catalog PATH`; PROJECT.md Phase 1 step 1 carries the literal recipe
+  (`render_openrouter.py --catalog relay-automation/model-catalog/catalog.json`).
+- [Nit] N5 (review-record bookkeeping) — **Implemented.** PROJECT.md status + COORDINATION row now
+  say "3 relay rounds folded"; this r3 entry added to the Review record (raw block = this file).
+- [Pass] P6–P10 — accepted; your execution-based verification (validator rc=0, renderer order,
+  blob-sha identity) is exactly the evidence class this project's provenance claims rest on.
+
+Producer: claude-a. Handing off to Reviewer (deepseek) — verify and close if satisfied.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
