@@ -155,7 +155,7 @@ bash "$ROUTER" subsystems | cut -f2 | tr ' ' '\n' | while IFS= read -r _t; do
   [ -n "$_t" ] && : > "$DRIFT_ROOT/test/$_t"
 done
 cp "$ROUTER" "$DRIFT_DIR/ci-route.sh"
-sed 's/SUBSYSTEM_TESTS_ate="ate-run-variations.sh"/SUBSYSTEM_TESTS_ate="ate-run-variations.sh ghost-suite.sh"/' \
+sed 's/^SUBSYSTEM_TESTS_ate="\(.*\)"$/SUBSYSTEM_TESTS_ate="\1 ghost-suite.sh"/' \
   "$DRIFT_DIR/ci-route.sh" > "$DRIFT_DIR/ci-route.sh.new" && mv "$DRIFT_DIR/ci-route.sh.new" "$DRIFT_DIR/ci-route.sh"
 chmod +x "$DRIFT_DIR/ci-route.sh"
 rc=0; out="$(bash "$DRIFT_DIR/ci-route.sh" subsystems 2>&1)" || rc=$?

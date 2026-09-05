@@ -28,12 +28,12 @@ echo "== test: gh-gen4-phase1-domain-oracles =="
 # 0. Contract + module presence
 [ -x "$ORACLES" ] && pass "utils/py/domain_oracles.py exists and is executable" || fail "domain_oracles.py missing/not executable"
 [ -x "$SCHEMA" ]  && pass "utils/py/telemetry_schema.py exists and is executable" || fail "telemetry_schema.py missing/not executable"
-if python3 "$SCHEMA" --mode suite 2>&1 | grep -q 'SUITE_RESULT=PASS'; then
+if grep -q 'SUITE_RESULT=PASS' <<<"$(python3 "$SCHEMA" --mode suite 2>&1)"; then
   pass "telemetry_schema.py --mode suite passes"
 else
   fail "telemetry_schema.py --mode suite failed"
 fi
-if python3 "$ORACLES" --mode suite 2>&1 | grep -q 'SUITE_RESULT=PASS'; then
+if grep -q 'SUITE_RESULT=PASS' <<<"$(python3 "$ORACLES" --mode suite 2>&1)"; then
   pass "domain_oracles.py --mode suite passes (embedded +/- controls)"
 else
   fail "domain_oracles.py --mode suite failed"
