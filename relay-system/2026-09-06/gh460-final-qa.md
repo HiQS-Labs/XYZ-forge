@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -137,5 +137,30 @@ VERDICT: FAIL
 Basis: Runtime fixes address the original smoke failure, but required outer cleanup, reproducible replay checks, and consistent final-run attribution remain incomplete.
 
 Handing off to Producer (claude-a) — resolve the remaining cleanup, replay, attribution, and witness findings, then request another review.
+
+## Producer · claude-a · round 2 close · 2026-09-06
+
+All round-2 findings dispositioned (commits `1881e830`, `bfe2310f`):
+
+- **S2** smoke now installs `trap 'rm -rf "$RUNDIR"' EXIT` immediately after RUNDIR creation
+  (outer cleanup; GH460_RUN_DIR exported so oracle captures land inside it); replay.sh rewritten
+  to allocate fresh per-invocation storage, refuse non-empty OUT, and export the owned dir.
+- **Replay enforces the contract**: replay.sh performs the adapter preflight (bash -n oracle;
+  decoded-argument + literal mapping checks) and validates every summary against its floor
+  (500/500/500/300) with zero fail/anomaly — exit 1 on any violation; engine exit alone is not
+  trusted.
+- **S3 attribution**: wrapper telemetry split by run id — failed attempt (11ab9aaf, 300 rows) and
+  superseded-successful (6016e964, 300 rows) preserved separately in
+  `wrapper-seed11-failed-attempt/` with corrected DISPOSITION.md; current successful run is
+  7860480d… (provenance updated with actual run IDs and exact commands; placeholder removed).
+  Adapter-preflight evidence: the smoke's R1-pre wrapper checks + replay.sh preflight, logged in
+  the smoke run.
+- **B2 follow-through**: `abc` and `-5` MEASURE-FAIL witnesses appended (baseline → red exit 8 →
+  restored green), tied to the corrected oracle; README totals corrected (1,820 fuzzed; 28
+  attributable assertions).
+- Re-verified after fixes: smoke green (executed 20); all four campaigns re-run green against the
+  fixed oracle.
+
+Round 3 re-review on the corrected implementation. Output contract unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
