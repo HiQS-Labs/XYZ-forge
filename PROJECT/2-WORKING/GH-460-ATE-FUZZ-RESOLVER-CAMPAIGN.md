@@ -22,7 +22,7 @@ related:
   - GH-450
 non_goals:
   - engine changes to utils/py/fuzz_engine.py — used as-is (GH-299)
-  - new Bash files — the invariant oracle inlines into the --target string (GH-551)
+  - new production Bash — the invariant oracle inlines into the --target string; test/ files are GH-551-exempt
   - tier-4 matcher semantics — #450 owns the matcher contract work
   - D1/D2/D3 defect fixes — #457 owns those; this loop feeds them
   - cache/latency work — #346
@@ -61,43 +61,63 @@ the pre-fix rewrite reproduces by restoring that row)
   matching tiers, file-order-wins; `MODEL_ALIASES_FILE` accepts pipes.
 - `utils/py/model_alias.py` `resolve_model_slug` — never raises, never empty for non-empty
   input; caller literal is the floor; 10 s ceiling.
-- Call sites: `deepseek-turn.py:231-235` (DEEPSEEK_MODEL), `review_xyz.py`; no other lane
-  canonicalizes at runtime.
-- Prior probes: tier-2 squash rewrite of bare ids (the #457 incident, fixed at HEAD
-  `96c21555`); tier-4 substring over-match (`qwen`→`qwen/qwen3-coder`, `glm`→`z-ai/glm-5.2`).
+- Call sites (inspected): `deepseek-turn.py:231-233` (DEEPSEEK_MODEL canonicalization;
+  provider validated earlier at `:200-203`), `review_xyz.py:629,85`. No other lane is known to
+  canonicalize at runtime among the inspected shims (codex/agy/commandcode/pi take model ids
+  verbatim); any wrapper change must re-verify callers.
+- Prior probes (dated producer observations, 2026-09-05): tier-2 squash rewrite of bare ids
+  (the #457 incident; mitigated by removing the colliding row, commit `96c21555` — the tier-2
+  matcher at `resolve-model-alias.sh:97-104` is unchanged, so a future colliding row re-arms it);
+  tier-4 substring over-match (`qwen`→`qwen/qwen3-coder`, `glm`→`z-ai/glm-5.2`).
 - The fuzz engine: `--mode fuzz --target "<cmd> {mutant}"`, seeded PRNG, four mutator families,
   feedback-guided corpus, `--mode replay --id`, per-mutant process-group kill.
 
 ## Requirements
 
 - **R1 (smoke, standing):** `test/gh460-fuzz-resolver-smoke.sh` runs the engine (pinned seed 7,
-  ≥20 iterations) with the oracle inlined verbatim (not delegated): the target is
-  `bash -c 'out=$(bash relay-automation/resolve-model-alias.sh "$1" 2>/dev/null); rc=$?; [ $rc -le 2 ] || { echo "BADRC:$rc"; exit 9; }; [ $rc -ne 1 ] || [ -z "$out" ] || { echo "LEAK-STDOUT-ON-MISS"; exit 9; }; exit 0' _ {mutant}`
-  from `--cwd <repo-root>` — resolver rc must be 0/1/2, stdout empty on miss, nonempty on hit.
-  The test parses the engine's JSON summary (`fuzz_engine.py:339,470`), fails closed on
-  missing/malformed JSON, and asserts `executed >= 20`, `counts.fail == 0`, `counts.anomaly == 0`
-  (an empty run is a failure — "an empty input passes every check").
+  ≥20 iterations) with this exact oracle target (base argv = one placeholder; `fuzz_engine.py:223`
+  inserts every mutant token, so the wrapper reads only `"$1"` and the plan bounds mutants to
+  single-token relevance):
+  `bash -c 'unset MODEL_ALIASES_FILE; t=$(mktemp); bash relay-automation/resolve-model-alias.sh "$1" >"$t" 2>/dev/null; rc=$?; bytes=$(wc -c <"$t"); rm -f "$t"; case $rc in 0|1|2) ;; *) echo "BADRC:$rc" >&2; exit 9;; esac; [ $rc -eq 1 ] && [ "$bytes" -gt 0 ] && { echo "LEAK-STDOUT-ON-MISS" >&2; exit 9; }; [ $rc -eq 0 ] && [ "$bytes" -eq 0 ] && { echo "HIT-EMPTY-ON-MATCH" >&2; exit 9; }; exit 0' _ {mutant}`
+  — byte-exact stdout via tmpfile (`wc -c`; command substitution would hide newline-only leaks),
+  diagnostics on **stderr** (the engine records stderr, `fuzz_engine.py:244,326`, and discards
+  stdout), `unset MODEL_ALIASES_FILE` so an inherited env cannot turn iterations into rc-2
+  usage exits (`resolve-model-alias.sh:32,59-61`). Violation invariants: rc outside 0/1/2
+  (BADRC), stdout bytes on a miss (LEAK), empty stdout on a hit (HIT-EMPTY). The test parses
+  the engine's JSON summary (`fuzz_engine.py:339,470`), fails closed on missing/malformed JSON,
+  and asserts `executed >= 20`, `counts.fail == 0`, `counts.anomaly == 0`.
 - **R1b (gate registration):** register the smoke in `validate.sh`'s TESTS list (next to
   `model-alias.sh`, ~line 102) so `ci-local.sh`'s qualifying suite derives it too
   (`ci-local.sh:246,269`). An unregistered test does not continuously guard.
-- **R2 (red control, witnessed + attributable):** install the cp-backup FIRST
-  (`cp resolve-model-alias.sh /tmp/...`, restored unconditionally before the smoke re-run, even
-  on failure), then sed-inject `exit 3` on the terminal miss path (`resolve-model-alias.sh:124`,
-  NOT the usage exit at `:52` or tier exits). Use a pinned input witnessed to MISS at HEAD
-  (`totally-unknown-model-xyz`, as in `test/model-alias.sh`) so the mutant is the only variable;
-  the smoke must go red with telemetry showing the oracle caught rc 3 for that input. A syntax
-  error, timeout, or missing JSON does NOT qualify as the red witness. Use a fresh corpus dir for
-  the red run (existing corpus state affects generation, `fuzz_engine.py:298`).
-- **R3 (campaigns):** 3 seeds (pinned in the evidence dir) × ≥500 iterations against the
-  resolver; plus the wrapper-floor campaign through `resolve_model_slug` (≥300 iterations,
-  string model inputs + the fixed valid harness root only). Every counterexample dispositioned
-  on #460 per the loop contract.
+- **R2 (red control, deterministic + attributable):** the smoke itself (not only fuzzed
+  mutants — `fuzz_engine.py:114-127` mutates every parent and never executes the base unchanged)
+  ALSO invokes the same oracle directly on a pinned miss input (`totally-unknown-model-xyz`,
+  witnessed to miss at HEAD) and asserts pass. Red protocol, in order: (a) `cp` the resolver to a
+  backup and `trap` restore-before-exit covering failure/interruption; (b) mutate EXACTLY the
+  terminal miss exit — the `exit 1` at `resolve-model-alias.sh:128` — to `exit 3` (not the usage
+  exit at `:52`, not the tier loops); (c) run the direct oracle on the pinned miss → it must exit
+  9 with `BADRC:3` on stderr (telemetry/PR records this — a syntax error, timeout, or missing
+  JSON does not qualify as the red witness); (d) restore, re-run direct oracle + smoke → green,
+  with a fresh corpus dir per run (corpus state affects generation, `fuzz_engine.py:298`).
+  Smoke/red runs execute in a disposable full clone per the AGENTS.md `test/*.sh` rail — the
+  resolver body has no git writes, but the rail covers the test script, not its target.
+- **R3 (campaigns):** 3 seeds × ≥500 iterations against the resolver (each with the exact
+  executed-count asserted from its JSON summary), plus the wrapper-floor campaign through
+  `resolve_model_slug` (≥300 iterations) with target
+  `python3 -c 'import sys; sys.path.insert(0,"utils/py"); from model_alias import resolve_model_slug as r; v=sys.argv[1]; out=r(v,"."); assert isinstance(out,str); assert v=="" or out!=""; sys.exit(0)' _ {mutant}`
+  (empty-input identity asserted separately with a direct call). Passthrough-on-failure is
+  checked against an independently observed resolver miss on the same input — reusing the
+  resolver, never a second matcher. Environment/table policy: unset `MODEL_ALIASES_FILE`,
+  shipped table, fixed locale. Every counterexample dispositioned on #460 per the loop
+  contract.
 - **R3b (durable evidence):** commit `test/baselines/gh460-campaign/` containing per-campaign
-  seeds, JSON summaries, telemetry JSONL, any regression inputs (exact argv + replay command),
-  and `provenance.jsonl` for every run cited in the PR (AGENTS.md §6). Do not depend on
-  ephemeral corpus ids — `fuzz_engine.py:185-190` replaces/evicts entries; regression success
-  after a fix is asserted from the pinned input, not from replaying a surviving corpus id.
-  Campaign evidence and cited-run provenance land in the PR.
+  seeds, initial corpus state (or the empty-corpus-per-run requirement), JSON summaries,
+  telemetry JSONL, target/base/timeout/environment identity, any regression inputs (exact argv
+  + replay command), and `provenance.jsonl` for every run cited in the PR (AGENTS.md §6) —
+  including baseline/red/restored-green evidence from R2. Seed-only replay is insufficient with
+  differing corpus state (`fuzz_engine.py:122,298`); do not depend on ephemeral corpus ids
+  (`:185-190` replaces/evicts). Regression success after a future fix is asserted from the
+  pinned input, not from replaying a surviving corpus id.
 - **R4 (defect routing):** defects already spec'd → #457; new defects → filed + fixed under
   #460 with corpus-derived regression tests.
 
@@ -113,9 +133,11 @@ the pre-fix rewrite reproduces by restoring that row)
 
 ## Implementation order (one list, verification inline)
 
-1. Write `test/gh460-fuzz-resolver-smoke.sh` (engine invocation, pinned seed 7, 20 iterations,
-   invariant target from the #457 comment; assert `executed ≥ 20 && fail == 0 && anomaly == 0`).
-   -> `bash test/gh460-fuzz-resolver-smoke.sh` exits 0 with the executed-count printed.
+1. Write `test/gh460-fuzz-resolver-smoke.sh` implementing R1 verbatim (engine invocation, seed 7,
+   20 iterations, R1 oracle target; assert `executed >= 20 && counts.fail == 0 &&
+   counts.anomaly == 0`, fail-closed on bad JSON) + register it in `validate.sh`'s TESTS list (R1b).
+   -> `bash test/gh460-fuzz-resolver-smoke.sh` exits 0 with the executed-count printed;
+   `grep gh460 validate.sh` shows the registration.
 2. Witness the red control: cp the resolver to a backup, sed-inject `exit 3` on the miss path,
    run the smoke (expect exit ≠ 0), restore from the backup, re-run (expect green).
    -> red then green, both observed; noted in the PR.
@@ -128,9 +150,9 @@ the pre-fix rewrite reproduces by restoring that row)
 - Risk: flaky fuzz failure in CI from a genuinely nondeterministic resolver (none known — the
   matcher is deterministic; replay from seed adjudicates). Rollback: revert the PR; the test
   file is self-contained and touches no other surface.
-- The campaigns run in this task clone only; they spawn short-lived bash/python subprocesses
-  and touch nothing under git control (corpus/telemetry under `temp/`, gitignored). Gate runs
-  that execute the wider suite use a separate disposable full clone (AGENTS.md).
+- The campaigns and smoke runs spawn short-lived bash/python subprocesses. The PR touches the
+  registry, the committed evidence dir, and (during R2 only, restored + witnessed) the resolver
+  file. Full-suite gate runs use a separate disposable full clone (AGENTS.md `test/*.sh` rail).
 - Reversibility: **Easy** — test-only PR; rollback = revert (delete the test file + registry
   line + evidence dir). Ratings rationale: pri 60 (operator-directed; guards model selection
   that silently misrouted turns 2026-09-05), sev 40 (coverage for a consequence-bearing defect
