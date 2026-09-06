@@ -78,7 +78,11 @@ the pre-fix rewrite reproduces by restoring that row)
   ≥20 iterations) with this exact oracle target (base argv = one placeholder; `fuzz_engine.py:223`
   inserts every mutant token, so the wrapper reads only `"$1"` and the plan bounds mutants to
   single-token relevance):
-  `bash -c 'unset MODEL_ALIASES_FILE; t=$(mktemp) || { echo "SETUP-FAIL" >&2; exit 8; }; bash relay-automation/resolve-model-alias.sh "$1" >"$t" 2>/dev/null; rc=$?; bytes=$(wc -c <"$t"); wc_rc=$?; rm -f "$t"; if [ $wc_rc -ne 0 ] || [[ ! $bytes =~ ^[0-9]+$ ]]; then echo "MEASURE-FAIL" >&2; exit 8; fi; case $rc in 0|1|2) ;; *) echo "BADRC:$rc" >&2; exit 9;; esac; [ $rc -eq 1 ] && [ "$bytes" -gt 0 ] && { echo "LEAK-STDOUT-ON-MISS" >&2; exit 9; }; [ $rc -eq 0 ] && [ "$bytes" -eq 0 ] && { echo "HIT-EMPTY-ON-MATCH" >&2; exit 9; }; exit 0' _ {mutant}`
+  `bash -c 'unset MODEL_ALIASES_FILE; t=$(mktemp) || { echo "SETUP-FAIL" >&2; exit 8; }; trap 'rm -f "$t"' EXIT; bash relay-automation/resolve-model-alias.sh "$1" >"$t" 2>/dev/null; rc=$?; bytes=$(wc -c <"$t"); wc_rc=$?; if [ $wc_rc -ne 0 ] || [ -z "$bytes" ]; then echo "MEASURE-FAIL" >&2; exit 8; fi; bytes=$(printf '%s' "$bytes" | tr -d '[:space:]'); case $bytes in ''|*[!0-9]*) echo "MEASURE-FAIL" >&2; exit 8;; esac; case $rc in 0|1|2) ;; *) echo "BADRC:$rc" >&2; exit 9;; esac; [ $rc -eq 1 ] && [ "$bytes" -gt 0 ] && { echo "LEAK-STDOUT-ON-MISS" >&2; exit 9; }; [ $rc -eq 0 ] && [ "$bytes" -eq 0 ] && { echo "HIT-EMPTY-ON-MATCH" >&2; exit 9; }; exit 0' _ {mutant}`
+  — the byte parse strips surrounding whitespace (macOS `wc -c` pads with leading spaces:
+  `/usr/bin/wc -c </dev/null` yields `       0`; the whitespace-stripped value must be exactly
+  one decimal integer) and the tmpfile carries an EXIT-trap cleanup so no failure path leaves
+  captures behind.
   — byte-exact stdout via tmpfile (`wc -c`; command substitution would hide newline-only leaks),
   diagnostics on **stderr** (the engine records stderr, `fuzz_engine.py:244,326`, and discards
   stdout), `unset MODEL_ALIASES_FILE` so an inherited env cannot turn iterations into rc-2
@@ -109,17 +113,24 @@ the pre-fix rewrite reproduces by restoring that row)
   cp-backed/trap-restored mutation witnesses, each requiring the exact stderr diagnostic, oracle
   exit 9, and restored green (an unrelated failure is not a witness): LEAK — terminal miss
   `exit 1` → `printf 'LEAK\n'; exit 1`, direct oracle on the pinned miss must emit
-  `LEAK-STDOUT-ON-MISS`; HIT-EMPTY — the four tier `printf '%s\n' "${canonicals[$i]}"`
-  statements → no-output, direct oracle on the known hit `glm-5.2` must emit
-  `HIT-EMPTY-ON-MATCH`; MEASURE-FAIL — a PATH-shim `wc` that exits 1 must make the oracle emit
-  `MEASURE-FAIL` with exit 8 (witnesses the fail-open path fixed above). Smoke/red runs execute
+  `LEAK-STDOUT-ON-MISS`; NEWLINE-ONLY-LEAK — terminal miss → `printf '\n'; exit 1` (one bare
+  newline) must ALSO emit `LEAK-STDOUT-ON-MISS` — this is the control that falsifies a
+  regression to command-substitution capture, which would strip the newline and pass; HIT-EMPTY
+  — the four tier `printf '%s\n' "${canonicals[$i]}"` statements → no-output, direct oracle on
+  the known hit `glm-5.2` must emit `HIT-EMPTY-ON-MATCH`; MEASURE-FAIL — a PATH-shim `wc` that
+  exits 1 must make the oracle emit `MEASURE-FAIL` with exit 8 (witnesses the fail-open path
+  fixed above). The padded-count positive control is the known-hit precondition itself: on
+  macOS the observed byte count arrives whitespace-padded and MUST be accepted. Oracle temp
+  captures live in a per-run temporary directory owned and cleaned by the outer test/campaign
+  runner (the engine SIGKILLs target process groups on timeout — `fuzz_engine.py:247-254,265-270`
+  — so no cleanup inside a killed target can be relied on). Smoke/red runs execute
   in a disposable full clone per the AGENTS.md `test/*.sh` rail — the resolver body has no git
   writes, but the rail covers the test script, not its target.
 - **R3 (campaigns):** reusable recipe (per run; `--json` is REQUIRED — the engine prints a
   human summary without it, `fuzz_engine.py:466-469`, and the green criteria parse JSON):
   `python3 utils/py/fuzz_engine.py --mode fuzz --target "$ORACLE" --base "glm-5.2" --seed $S --iterations 500 --timeout 30 --cwd <repo-root> --corpus <fresh>/.fuzz_corpus --telemetry-out <fresh>/telemetry.jsonl --json > <fresh>/summary.json`
-  with `$S` ∈ {7,8,9} for the resolver, seed 11 pinned for the wrapper campaign, `--timeout 30`
-  (the engine's current default, `fuzz_engine.py:430`, stated explicitly), `$ORACLE` = the R1
+  with `$S` ∈ {7,8,9} for the resolver, seed 11 pinned for the wrapper campaign, `--timeout-budget 30`
+  (the registered full flag name; the engine's current default is 30, `fuzz_engine.py:430`), `$ORACLE` = the R1
   target string, `LC_ALL=C` pinned, fresh corpus and telemetry/summary paths per run. Green
   criteria per run: engine exit 0 AND a nonempty valid JSON summary AND parsed
   `executed >= <floor>` (500 resolver / 300 wrapper), `counts.fail == 0`,
