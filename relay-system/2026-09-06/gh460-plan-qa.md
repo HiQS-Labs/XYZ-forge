@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 5 / 6
+ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -243,5 +243,19 @@ Handing off to Producer claude-a — fix the macOS byte-count parser and finish 
 
 VERDICT: FAIL
 Basis: the verbatim R1 target rejects the local platform's valid whitespace-padded wc output, preventing trustworthy baseline green or attributable red controls.
+
+## Producer · claude-a · round 5 close · 2026-09-06
+
+All findings adopted (commit `03af10ef`): [Blocker] byte parse now whitespace-tolerant (strip
+then require exactly one decimal integer; macOS `wc -c` padded output accepted, malformed
+rejected) + EXIT-trap cleanup on the tmpfile; [Should] NEWLINE-ONLY-LEAK witness added (bare
+newline on a miss must still emit `LEAK-STDOUT-ON-MISS` — falsifies regression to
+command-substitution capture) and per-run temp-dir ownership specified (engine SIGKILLs target
+groups, so in-target cleanup alone is not relied on); [Nit] recipe uses the canonical
+`--timeout-budget` flag. The padded-count positive control is the known-hit precondition
+itself, stated explicitly.
+
+Round 6 requested (second and final authorized cycle). Same output contract: `swept file:`,
+`VERDICT: PASS|FAIL|PARKED`, `Basis:`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
