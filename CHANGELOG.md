@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased] - 2026-09-05
+
+### Changed
+- **GH-453: revised the governance identity audit instructions and registered its Stage 1 plan.** Separate document subject, maintenance ownership and XYZ applicability; refresh stale claims; require durable sync dispositions and disposable full-clone validation. Governance policies are unchanged. Stage 2 still requires maintainer approval of the report. Execution status and evidence are recorded in [the task plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md).
+
 ## [Unreleased] - 2026-09-04
 
 ### Added

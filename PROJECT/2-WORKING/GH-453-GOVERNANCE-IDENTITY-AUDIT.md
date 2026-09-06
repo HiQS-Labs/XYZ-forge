@@ -109,7 +109,11 @@ No competing writer or system is introduced: existing RELEASES CLI owns all ledg
 ## Evidence and execution log
 
 - Initial source checks: upstream manifest names runtime + PDDA.md; launch scaffold names all five.
-- Preflight full suite is running in a separate disposable full clone; no passing claim yet.
+- Preflight full suite exited 0 on the unchanged base; Git identity stayed intact. Five pooled
+  failures passed automatic single-suite retries. This is not proof of reliable parallel execution.
+  Evidence: TESTS-RESULTS/2026-09-05+GH-453/provenance.jsonl and validate.log.
+- Report/intake PDDA aggregate exited 0 (24 warnings, no errors); frontmatter and status-table
+  checks exited 0. Changelog reminder addressed by a new dated entry, without rewriting history.
 - Upstream PDDA reference: `2a762f28432da074794e5adfa845108cfe037601`; its manifest
   (`utils/pdda/pdda-sync-manifest.conf:16–23`) distributes only runtime + PROJECT/PDDA.md.
 - Predecessor reference: `67dd324487c1fc470b2c539f1cebe2a9c3fb3651`; all four non-PDDA.md

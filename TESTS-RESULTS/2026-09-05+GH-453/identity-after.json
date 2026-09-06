@@ -1,0 +1,37 @@
+[
+  {
+    "cmd": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "result": "9a8eb8a59ea2ce9617a77149e198505bb2263f04\n"
+  },
+  {
+    "cmd": [
+      "git",
+      "config",
+      "--get",
+      "core.bare"
+    ],
+    "result": "false\n"
+  },
+  {
+    "cmd": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "result": "origin\t/private/tmp/xyz-forge-gh453-governance (fetch)\norigin\t/private/tmp/xyz-forge-gh453-governance (push)\n"
+  },
+  {
+    "cmd": [
+      "git",
+      "config",
+      "--local",
+      "--get-regexp",
+      "^user\\."
+    ],
+    "result": ""
+  }
+]
