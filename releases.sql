@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 440
+-- generation: 441
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -10,7 +10,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('5', '2026-08-21T05:37
 INSERT INTO schema_migrations(version, applied_at) VALUES('6', '2026-08-27T04:35:28Z');
 -- table: settings
 INSERT INTO settings(key, value) VALUES('enforcement', 'lenient');
-INSERT INTO settings(key, value) VALUES('generation', '440');
+INSERT INTO settings(key, value) VALUES('generation', '441');
 INSERT INTO settings(key, value) VALUES('repo_slug', 'XYZ-forge');
 -- table: repos
 INSERT INTO repos(global_id, slug) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge');
@@ -85,9 +85,11 @@ INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M1M3DT
 INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M1M3WWJPRG2GGK16EMA0RSZC', 'https://github.com/HiQS-Labs/XYZ-forge/issues/417', NULL, '2026-09-03T17:08:38Z');
 INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M1M9HXP6MAVCEM5RDPX29BSP', 'https://github.com/HiQS-Labs/XYZ-forge/issues/418', NULL, '2026-09-03T18:47:30Z');
 INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M1MAQ799D901VHERKBBJZVFA', 'https://github.com/HiQS-Labs/XYZ-forge/issues/419', NULL, '2026-09-03T19:07:52Z');
+INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M1WGEW2HVGPEQYD84BA9V27T', 'https://github.com/HiQS-Labs/XYZ-forge/issues/462', NULL, '2026-09-06T23:22:05Z');
 -- table: marathons
 INSERT INTO marathons(global_id, repo_gid, tracking_ref_gid, status, created_at) VALUES('mar-01M0EC2ZXJCCJ88KASQPDBTBJ9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'ref-01M0EC2ZXN2SS1XD2N3E56GT18', 'planned', '2026-08-20T01:20:38Z');
 INSERT INTO marathons(global_id, repo_gid, tracking_ref_gid, status, created_at) VALUES('mar-01M1M3WWJDKKTRP5PSCG9HNEYW', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'ref-01M1M3WWJPRG2GGK16EMA0RSZC', 'planned', '2026-09-03T17:08:38Z');
+INSERT INTO marathons(global_id, repo_gid, tracking_ref_gid, status, created_at) VALUES('mar-01M1WGEW28WPZT6CDJSZ9JF99X', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'ref-01M1WGEW2HVGPEQYD84BA9V27T', 'planned', '2026-09-06T23:22:05Z');
 -- table: releases
 INSERT INTO releases(global_id, repo_gid, version, codename, status, target_date, shipped_date, description, exit_criterion, tracking_ref_gid, marathon_gid, gh_release_url, milestone, front_door_reviewed, shakedown_reviewed, license_file, baseline_count, baseline_at, baseline_source) VALUES('rel-01M0BTBRMJJHRS147J73WWGGEJ', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '0.1.0', 'Quicksilver', 'shipped', '2026-08-01', NULL, 'Python-authoritative Tier-A twins. Licensed AGPL-3.0-only (`LICENSE`) with a commercial option (`LICENSE-COMMERCIAL.md`), adopted 2026-07-29 post-ship; the pre-existing conflicting `LICENSE.md` was removed 2026-07-30 (#372).', NULL, 'ref-01M0BTBRMJKGF9H80N3ZMF92DS', NULL, 'https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308', 'Quicksilver', 'No', 'No', 'Yes', NULL, NULL, NULL);
 INSERT INTO releases(global_id, repo_gid, version, codename, status, target_date, shipped_date, description, exit_criterion, tracking_ref_gid, marathon_gid, gh_release_url, milestone, front_door_reviewed, shakedown_reviewed, license_file, baseline_count, baseline_at, baseline_source) VALUES('rel-01M0BTBRMJW4B6HWAHKW82GFGS', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '0.2.0', 'Litmus', 'shipped', '2026-09-05', '2026-08-14', 'Make the checks capable of failing. Every gate in the Litmus manifest is shown to report red against a real defect, or is explicitly downgraded to advisory — a check never observed failing is not evidence (#419). Ordered first because it is the release that makes the next one measurable. It is also what the self-improvement chain (#431) is blocked on: a Reviewer is a gate, so #419 applies to it, and its qualification gate is currently un-runnable (#428) and has only ever been measured once (#429).', '`bash test/litmus-release.sh --release-gate` exits 0. Red today by design; turning it green is what "done" means. Its own negative control is `--mutate-evidence`, which must detect a stripped declaration and an unregistered gate. NOTE the honest limit, stated in that file: the audit proves registration, declaration shape and the absence of false completion claims. It does NOT prove a control was truly observed, because `gate_inventory.py` reads a declaration authored by the same person who wrote the gate. Recorded execution of each control is deliberately out of scope for this release.', 'ref-01M0BTBRMJJT3BG3V8F58X2NYZ', NULL, NULL, 'Litmus', 'No', 'No', 'Yes', NULL, NULL, NULL);
@@ -1021,3 +1023,4 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-01M1W2CCFARE6BFDVGVX1DJFFW', '2026-09-06T19:16:04Z', 'b160d642a8cd4d2e88f930dc4c75de36', 'default', '384c48ea6a5120ddd95b6e1d0adaacb9bc53803d37f40265edeeed49a29a429a', '270e0e84badb8d40cb69bc0ba2a78d9b73a4e23659608c420617ea89bf9b38eb');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M1W2CCFARE6BFDVGVX1DJFFW', '2026-09-06T19:16:04Z', '38cce9f1d55c4464b1f6cb525796b2a7', 'default', '270e0e84badb8d40cb69bc0ba2a78d9b73a4e23659608c420617ea89bf9b38eb', 'a3bba161e9846d64c01d5aa4d608f49b03d956bb2a2f1decfbcef1dfcdc42b0d');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M1W2CCFARE6BFDVGVX1DJFFW', '2026-09-06T19:29:32Z', 'b8fc26111b324668b879ac2c73b7896f', 'default', 'a3bba161e9846d64c01d5aa4d608f49b03d956bb2a2f1decfbcef1dfcdc42b0d', 'de28592e51a09461e3de24427ce6d8f51b104a652fdc672e12432280ccae1b86');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('marathon-add', 'mar-01M1WGEW28WPZT6CDJSZ9JF99X', '2026-09-06T23:22:05Z', 'f06550b2114c42b394ae79865f9701f5', 'default', 'de28592e51a09461e3de24427ce6d8f51b104a652fdc672e12432280ccae1b86', '1d89396f54fa7d49f1b81d2f9233e868b949f06bd80e536af7c1662e666af189');
