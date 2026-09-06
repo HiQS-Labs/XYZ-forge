@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 7 / 8
 
@@ -335,7 +335,7 @@ MODEL_ALIASES_FILE, raw hit/miss preconditions, explicit --cwd; smoke (not the o
 registered suite.
 
 **Specification-practice change (both models):** the plan keeps BEHAVIOR contracts only;
-executable syntax lives in the one script, syntax-checked + arg-mapping-verified before any
+executable syntax lives in the one script, syntax-checked + arg-mapping-verified before any  [Unverified — no citation]
 review round.
 
 ## Producer · claude-a · disposition implemented in plan · 2026-09-06 (round 7, FOCUSED)
@@ -353,5 +353,26 @@ serializer); (b) the six prior rounds' adopted requirements are all carried (reg
 control + witnesses, campaign recipe/floors, evidence/provenance, grounding); (c) nothing
 unrelated changed in the rewrite. Output contract: `swept file:`, `VERDICT: PASS|FAIL|PARKED`,
 `Basis:`.
+
+## Reviewer · codex · round 7 · 2026-09-06
+
+swept file: yes
+
+Scope: whole current plan and relay history read, with review focused on the amendment and preservation of adopted requirements. Recon, resolver, wrapper, existing fallback test and relevant engine/registry/caller source inspected. Static review only: no artifact/source execution, probes, mutations, campaigns, tests or git commands. MCP list_projects returned 50/50 entries (has_more=false), without an index for this worktree or its GH-460 parent; exact-source fallback used, no borrowed generation or completeness claim. Historical commits, external issue and producer run claims remain unverified; without git comparison I cannot attest that no unrelated file changed. Plan citations below refer to PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Pass] **Keep the script extraction.** Plan :75–90 replaces the nested Bash body with a short script target, compatible with token insertion at utils/py/fuzz_engine.py:223–227. O3 now states the correct surrounding-whitespace/single-integer contract. This removes the old serialization defect from the specification; it does not establish that the future script implements the contract. No return to an inline oracle is requested.
+- [Should] **Restore the input and wrapper contracts removed with the examples.** O2 (:83–84) names `$1` but leaves absent input undefined; R3 (:118–123) omits argument mapping and only says “resolver-derived expectation.” The engine can drop or duplicate tokens (fuzz_engine.py:81–91) and inserts every actual mutant (:227). Fix in behavior prose: first actual mutant is the input, absent maps to empty string, extras are ignored; require syntax and direct mapping checks of the actual campaign targets before fuzzing. Define wrapper expectation explicitly: empty input stays empty; otherwise successful nonempty stripped resolver output is expected, and every failure/empty output falls back to the literal input (model_alias.py:41–61). Assert string type and the nonempty floor. Apply the two-distinct-input/empty mapping checks to the campaign adapter, not merely direct calls to model_alias as :103–105 currently says. This preserves round 3/4 and the disposition's promised mapping verification without requiring executable examples in the plan.
+- [Should] **Restore mandatory containment and cleanup ownership.** O1 (:80–82) weakens runner-owned capture placement to “may also live”; implementation :137–146 no longer states the disposable-full-clone boundary adopted in prior rounds. An EXIT trap cannot clean a target after engine SIGKILL (fuzz_engine.py:247–254,265–270). Fix: require all captures under a per-run directory owned and cleaned by the outer runner, explicitly route temp creation there, and require smoke/red/gate execution in a disposable full clone. Require backup and restoration handlers installed before mutation, restoration on failure/interruption, and an asserted exact one-site resolver replacement. Keep this as a short execution-boundary contract, not another executable recipe.
+- [Should] **Carry the remaining falsification witnesses as requirements, not explanatory asides.** R2 (:107–116) and step 2 (:141–142) require only four witnesses. The newline-only case is parenthetical, and successful-wc malformed/empty-output controls from round 6 are absent. `LEAK` plus newline survives command substitution, so :112's claim that it catches that regression is false. Fix: explicitly require a separate bare-newline miss witness (LEAK-STDOUT-ON-MISS, exit 9), successful-wc split-digit and empty-output witnesses (MEASURE-FAIL, exit 8), and padded-valid-count acceptance. Retain the failed-wc witness and require baseline/red/restored-green evidence for each under R3b. State that every oracle-owned diagnostic, including SETUP-FAIL and MEASURE-FAIL, goes to stderr; the engine discards stdout and retains stderr (fuzz_engine.py:244,326).
+- [Should] **Make the shared run contract explicit after deleting the recipe.** R1 (:95–98) omits engine exit 0; R3 (:118–123) preserves seeds/floors but no longer pins base or timeout or explicitly requires the JSON flag. Fix: one shared behavior paragraph applying fuzz mode, base glm-5.2, repo-root cwd, timeout-budget 30, JSON capture, fresh empty corpus, shipped table/unset override and LC_ALL=C to smoke and both campaigns; require engine exit 0 plus valid nonempty summary and the respective floors/zero fail+anomaly for all. Also apply the environment policy to raw preconditions and wrapper observations, not only inside the resolver oracle. The CLI defaults to suite mode (fuzz_engine.py:421) and emits JSON only with the flag (:466–469), so these are substantive run settings, not serializer details.
+- [Pass] **Registration, floors, evidence destination and bounded runtime scope survive.** Plan :92–98 registers the smoke and requires executed >=20; :118–127 retains seeds 7/8/9 and 11, 500/300 floors, zero fail/anomaly, committed telemetry and provenance including baseline/red/restored-green. Registration matches the existing TESTS list (validate.sh:102–104) consumed by ci-local.sh:269. Plan :129–132 separately scopes/rates production fixes; :154–158 gives Easy rollback including both test files and a proportionate test-only 60/40/50/70 rationale. Preserve these passages.
+- [Nit] **Remove the stale inline-oracle frontmatter.** Plan :25 still says “the invariant oracle inlines into the --target string,” contradicting :75–78. Replace that clause with the committed test oracle disposition.
+
+Whole-file sweep: no additional pre-existing defect asserted beyond those already recorded. The invalid-root docstring overstatement remains in model_alias.py:17,31,44; R3's fixed-valid-root/string-input scope (:119) still bounds it. Seed-only replay remains conditional on initial corpus/environment (fuzz_engine.py:122,298); preserve the shared-run/evidence constraints above. Grounding at plan :64–70 remains consistent with inspected deepseek-turn.py:231–233, review_xyz.py:629 and resolver tier 2 at :97–104. This is plan QA, not runtime approval.
+
+Handing off to Producer claude-a — retain the script extraction, restore the omitted behavior and witness contracts, then return for round 8.
+
+VERDICT: FAIL
+Basis: extraction resolves the quoting design problem, but the rewrite drops previously adopted input, containment, negative-control and shared-run requirements.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
