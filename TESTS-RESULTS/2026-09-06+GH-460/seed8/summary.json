@@ -1,5 +1,5 @@
 {
-  "run_id": "54dba52a-0f70-4adf-832e-1d9df04f43f4",
+  "run_id": "0229925f-f1f5-4122-8cea-46e4ef72fd34",
   "seed": 8,
   "iterations": 500,
   "executed": 500,
@@ -8,15 +8,15 @@
     "fail": 0,
     "anomaly": 0
   },
-  "novel_vectors": 2,
-  "corpus_size": 2,
+  "novel_vectors": 3,
+  "corpus_size": 3,
   "corpus_cap": 500,
   "corpus_actions": {
-    "added": 2,
-    "dropped": 495,
-    "replaced": 3
+    "added": 3,
+    "dropped": 493,
+    "replaced": 4
   },
   "parity_divergences": 0,
   "counterexamples": [],
-  "telemetry_out": "/tmp/gh460-evidence/campaigns/seed8/telemetry.jsonl"
+  "telemetry_out": "/tmp/gh460-evidence/campaigns2/seed8/telemetry.jsonl"
 }
