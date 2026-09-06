@@ -288,7 +288,7 @@ local change.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),
-  install, and the resolution ladder are in [README.md → HQ — multi-repo command center](README.md#hq--multi-repo-command-center); agent-facing invocation flow + guardrails live in [skills/hq/SKILL.md](skills/hq/SKILL.md). Write paths preview by default; `fire` never drives the harness.
+  install, and the resolution ladder and agent-facing invocation flow + guardrails are in [skills/hq/SKILL.md](skills/hq/SKILL.md). Write paths preview by default; `fire` never drives the harness.
 - Changes to `.tick/events/`, `src/project.js`, relay containment, or event/verb shape are usually
   broader than they look. Treat them as at least Costly until proven otherwise.
 - **Contain tree-touching subagents with `isolation: "worktree"` (GH-177/GH-233).** A Claude Code
