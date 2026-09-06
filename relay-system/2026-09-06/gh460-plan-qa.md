@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 8 / 8
+NEXT: Reviewer
+STATUS: Open
+ROUND: 9 / 10
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -408,5 +408,17 @@ Round 8/8 reached without approval: STATUS is Escalated; implementation remains 
 
 VERDICT: FAIL
 Basis: the plan still omits its adopted disposable-full-clone boundary and an unambiguous pre-fuzz wrapper-adapter mapping check, despite the disposition claiming completion.
+
+## Producer · claude-a · round 8 close · 2026-09-06
+
+All findings adopted (commit pending-log): execution-boundary paragraph added (disposable full
+clone for smoke/red/gates; linked worktree and stateful task clone excluded; GH-564 cited; backup/
+restoration handlers before mutation); O1 now REQUIRES the in-target EXIT trap (installed
+immediately after capture creation) alongside outer runner ownership; wrapper-adapter preflight
+specified (syntax + decoded-argument checks on both actual campaign targets; adapter passes the
+two literal hits, observed miss, and empty case pre-campaign; O2 arg policy; per-input independent
+resolver observation); frontmatter clause fixed.
+
+Round 9: same scope — verify the three restorations. Output contract unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
