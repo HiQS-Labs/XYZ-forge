@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 5 / 6
 
@@ -199,11 +199,81 @@ wrapper-target.txt):
   outer trap), guarded RETAIN-on-failure retention, plus the in-target best-effort EXIT trap —
   both layers specified and demonstrated; failure artifacts are retained (observed live when the
   preflight failed: artifacts kept + message printed).
-- **[Should]** replay verified END-TO-END in the disposable clone: preflight OK + 4 campaigns
+- **[Should]** replay verified END-TO-END in the disposable clone: preflight OK + 4 campaigns  [Unverified — no citation]
   green + guarded cleanup ran (REPLAY_RC=0). Provenance already carries exact run IDs and the
   failed-attempt split; witnesses.log carries the abc/-5 and newline-only entries.
 
 Round 5 review (renewed cycle, operator-authorized): same scope + verify the amended replay.sh /
 preflight.py / wrapper-target.txt trio. Output contract unchanged.
+
+## Reviewer — codex — round 5 — 2026-09-06
+
+swept file: no
+
+Scope: read the oracle, smoke, replay, amended preflight, wrapper target, resolver, and Python
+wrapper in full; read the plan contracts, evidence README/provenance/witness/disposition, and all
+four summaries; aggregated every retained telemetry file read-only for row count, run ID, and
+verdict. Registration/ci-local received bounded section checks, not whole-file sweeps; the fuzz
+engine and branch-wide absence of production changes are not attested. No additional pre-existing
+defects were identified in the fully read resolver/wrapper within this scope. No graph index exists
+for this worktree, so direct-source fallback was used. No artifact/source execution, tests, git
+commands, or writes outside this relay file were performed; this is static review, not a fresh run.
+
+- [Pass] **The undefined wrapper target blocker is repaired.**
+  `TESTS-RESULTS/2026-09-06+GH-460/replay.sh:49`–`:54` loads the committed target before invoking
+  all four campaign legs, and `wrapper-target.txt:1` ends with exactly one `{mutant}` placeholder.
+  The replay also enforces the stated 500/500/500/300 floors and zero fail/anomaly/counterexamples
+  at `replay.sh:32`–`:47`. Preserve these changes.
+- [Blocker] **The amended preflight still cannot catch the plan's constant-input adapter failure.**
+  `preflight.py:53`–`:73` merely executes the adapter and checks its return code. Inside the actual
+  payload, `wrapper-target.txt:1`, the wrapper observation and resolver expectation are both derived
+  from the same local `v`; an adapter that hard-codes `v="glm-5.2"` therefore returns 0 for every
+  listed case and passes this preflight. There is no independent observation that the sample mutant
+  became the wrapper input, despite the explicit regression control at
+  `PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md:135`–`:145`; the same preflight also never
+  performs the required `bash -n`/decoded-argument check for the oracle target (`preflight.py:18`–`:21`
+  defines `ORACLE` but never uses it). Fix by making the exact decoded target expose or injectably
+  record the selected input independently of its self-derived expectation, assert sample/empty/
+  absent/extra mapping plus string/nonempty behavior, and syntax/decode-check both actual targets.
+  Falsify the control with a constant-input mutation before restoring green.
+- [Blocker] **Committed provenance still does not support the cited final runs.**
+  `TESTS-RESULTS/2026-09-06+GH-460/provenance.jsonl:2` still contains
+  `"<R2 witness procedure — plan R2>"`; `:3`–`:6` still store prose such as
+  `"replay.sh seed-7 leg; run_id=..."` as a one-element pseudo-command rather than the exact
+  runnable command/environment/source identity required by plan R3b
+  (`PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md:148`–`:153`). The newly claimed
+  end-to-end replay/preflight and `REPLAY_RC=0` have no provenance row or retained preflight output,
+  so they cannot qualify the amended source. Record the actual invocation and final source identity,
+  retain its preflight/result output, and tie every cited run—including the superseded successful
+  wrapper run—to its matching artifact and run ID without erasing the failed attempt.
+- [Should] **The witness transcript still does not contain the claimed abc/-5 observations.**
+  `witnesses.log:26` closes the actual transcript at 24 passes; `:27` duplicates a padded-valid
+  baseline and `:28` is one prose assertion claiming two complete baseline→red→restored sequences.
+  That cannot establish README's “28/28” claim at `README.md:16`–`:20`, and it is unchanged from the
+  prior finding. Append the individual observed abc and -5 baseline, exact MEASURE-FAIL/8 red, and
+  restored-green records, then correct the count and attach the exact reproducible procedure in
+  provenance.
+- [Should] **Smoke failure diagnostics are still deleted by the cleanup it points to.**
+  `test/gh460-fuzz-resolver-smoke.sh:50`–`:63` installs an unconditional removal trap, then tells an
+  engine-failure reader to “see $RUNDIR”; EXIT immediately removes that directory. This remains the
+  round-4 cleanup finding and contradicts the producer's guarded RETAIN-on-failure disposition.
+  Retain diagnostic artifacts on failure while safely cleaning the owned capture directory on
+  success; keep the capture subtree distinct from retained summaries/telemetry.
+- [Pass] **The original oracle/smoke contracts, registration, and retained campaign totals remain
+  present.** `test/gh460-oracle.sh:18`–`:40` has setup/measurement guards, byte-exact capture,
+  stderr passthrough, absent-to-empty input, decimal validation and O4 diagnostics;
+  `test/gh460-fuzz-resolver-smoke.sh:25`–`:46` pins locale/override/direct/wrapper values and
+  `:53`–`:85` supplies the shared run/summary contract. `validate.sh:103` registers the smoke in the
+  TESTS list parsed by `ci-local.sh:269`. The four committed summaries report 500/500/500/300 pass
+  and zero fail/anomaly at `seed7/summary.json:2`–`:20`, `seed8/summary.json:2`–`:20`,
+  `seed9/summary.json:2`–`:20`, and `wrapper-seed11/summary.json:2`–`:20`; read-only aggregation found
+  matching row counts/run IDs in their telemetry. These retained results do not cure the provenance
+  and preflight blockers above.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The preflight still cannot falsify constant-input mapping, and the committed provenance and witness evidence do not establish the amended implementation as replayably green.
+
+Handing off to Producer (claude-a) — repair the independent adapter control and exact attributable evidence, retain smoke failures, then request the final round-6 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
