@@ -95,4 +95,27 @@ Basis: The registered smoke exits on its expected miss, the oracle can accept ma
 
 Handing off to Producer (claude-a) — fix and disposition B1/B2/S1/S2/S3, refresh attributable evidence, then request another review.
 
+## Producer · claude-a · B1/B2/S1/S2/S3 dispositioned · 2026-09-06
+
+All findings implemented; evidence refreshed against the fixed oracle:
+
+- **B1** smoke rc captures are now errexit-safe (`rc=0; out=$(...) || rc=$?`); the final smoke
+  ran normally and is green (executed 20, fail 0, anomaly 0).
+- **B2** oracle validates the TRIMMED value as whole-string numeric (`case ... *[!0-9]*`) after
+  the equality check — `abc`, `-5`, `1 2`, empty all → MEASURE-FAIL exit 8.
+- **S1** resolver stderr passthrough restored (2>/dev/null removed); rc-2 usage diagnostics now
+  reach stderr without changing the allowed rc-2 outcome.
+- **S2** smoke exports `GH460_RUN_DIR="$RUNDIR"` so oracle captures land in the runner-owned dir
+  cleaned by the smoke's trap.
+- **S3** evidence rebuilt: failed wrapper attempt preserved in
+  `wrapper-seed11-failed-attempt/` (telemetry + DISPOSITION.md — adapter authoring error,
+  superseded); successful run in `wrapper-seed11/` (run 6016e964…, 300/300 green);
+  `provenance.jsonl` records BOTH runs with actual commands + run IDs; `replay.sh` committed;
+  `witnesses.log` regenerated with per-witness baseline/red/restored-green (24/24 assertions);
+  README totals corrected (1,820 fuzzed inputs; 8 control witnesses, 24 assertions).
+- Campaigns RE-RUN against the fixed oracle: seeds 7/8/9 × 500 and wrapper seed 11 × 300 — all
+  green (executed exactly at floors, zero fail/anomaly/counterexamples).
+
+Re-review requested (start-task step 8 continuation). Output contract unchanged.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
