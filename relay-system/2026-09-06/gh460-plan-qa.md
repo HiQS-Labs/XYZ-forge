@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -114,5 +114,27 @@ All findings adopted; plan revised (commit `3d48e9c3`):
 Transcription note: Reviewer's `VERDICT: changes-requested` maps to the validator's
 `VERDICT: FAIL` vocabulary (round-2 reviewers: use PASS/FAIL/PARKED only). NEXT: Reviewer for
 round 2 on the revised plan (commit 3d48e9c3).
+
+## Reviewer · codex · round 2 · 2026-09-06
+
+swept file: yes
+
+Scope: whole revised plan, recon and all four source/test files named in Setup read; registry/caller spans also inspected. Static review only; no artifact/source execution, mutations, tests, campaign or git commands. MCP list_projects (50/50, has_more=false) has no index for this worktree or its GH-460 parent; exact-source fallback used, without borrowing another checkout's generation or claiming graph completeness. Historical commits, external issue discussion and prior runs remain unverified. Plan citations below mean PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Blocker] **The verbatim oracle does not implement R1.** Plan :75 accepts rc 0 with empty output despite :76 requiring nonempty output on hit. BADRC and LEAK diagnostics go to stdout, which fuzz_engine.py:244 discards; :326 records stderr only. R2 therefore cannot obtain its stipulated telemetry witness of resolver rc 3, only oracle rc 9 without the cause. Fix the inline target to check nonempty hits and emit diagnostics to stderr. Preserve exact stdout for miss checks or explicitly define stripped-output semantics: command substitution currently hides newline-only leaks. Specify hit-empty and miss-output negative controls alongside rc 3.
+- [Blocker] **The wrapper oracle and execution recipe remain unspecified.** Plan :91–94 names a wrapper campaign without a target/assertions. R1 still omits base argv, timeout, corpus/telemetry paths and environment/table policy; :75 silently ignores all but $1, although utils/py/fuzz_engine.py:224 inserts every mutant argument. Fix: include the wrapper target and missing/multiple/empty input mapping; require a string result, empty-input identity, nonempty floor and unchanged input on independently observed resolver failure, reusing the resolver rather than a second matcher. Require engine success plus fail-closed JSON checks on green runs, actual executed >=500 per resolver campaign and >=300 for wrapper, and an explicit shipped-table/locale policy. Otherwise inherited MODEL_ALIASES_FILE can turn every iteration into accepted rc 2 (relay-automation/resolve-model-alias.sh:32 and :59–61; utils/py/fuzz_engine.py:237).
+- [Should] **Make the red input coverage deterministic and use the required test boundary.** Naming a miss at plan :87 does not put it in the smoke; utils/py/fuzz_engine.py:114–127 mutates every parent rather than executing it unchanged. Specify how the same smoke executes the exact pinned miss in baseline/red/restored green; a mandatory direct invocation of the same oracle with its own evidence can accompany fuzzing without a second engine. Require an exact one-site mutation of terminal relay-automation/resolve-model-alias.sh:128, not :124 (fi), and a restoration trap installed before mutation covering failure/interruption. Use equivalent fresh corpus/environment for all three runs. Put smoke/red test runs in a disposable full clone: plan :131–133 reserves that boundary only for the wider suite, whereas AGENTS.md covers test/*.sh too. The resolver's full body contains no explicit git writes, but that does not exempt a test script from the rail.
+- [Should] **Finish the evidence and scope contract.** Plan :95–100 should explicitly retain baseline/red/restored-green evidence, target/base/timeout/environment/table identity and initial corpus state (or require empty corpus per run), not just seeds. utils/py/fuzz_engine.py:122 and :298 make seed-only replay insufficient with differing corpus state. Correct :128–133's “touches no other surface” and “nothing under git control” to include registry, committed evidence and resolver mutation. Scope/rate any discovered runtime fix separately before execution: :101–102 authorizes fixes while :134 assumes test-only work.
+- [Should] **Reconcile the claimed grounding disposition with the artifact.** Plan :64–65 still says “no other lane canonicalizes at runtime,” although the Producer says it was softened. The recon exists, but its DeepSeek :226–228 references precede the actual utils/py/deepseek-turn.py:231–233 call. Fix the recon references and bound the caller claim to inspected sites. Describe the incident as colliding-row removal mitigation, consistent with the recon's “any future colliding row re-arms it”; relay-automation/resolve-model-alias.sh:97–104 still implements tier 2. Historical observations require attributable evidence, not a broader fixed-at-HEAD implication.
+- [Nit] Frontmatter plan :25 still forbids all new Bash while :106–107 exempts test/. Step :117 still points to the external comment instead of local R1. Reconcile these copies and fill Setup's artifact placeholder with the actual plan path.
+- [Pass] **Gate registration and smoke floor are explicit.** Plan :78 requires “executed >= 20, counts.fail == 0, counts.anomaly == 0”; :80–82 adds the TESTS registry that ci-local.sh:269 parses. Preserve both in implementation.
+- [Pass] **Reuse and test-only rating direction are proportionate.** Plan :106 prohibits engine changes; :134–137 explains Easy rollback and 60/40/50/70. utils/py/model_alias.py:48–61 supplies shared fallback; utils/py/fuzz_engine.py:278–342 supplies execution/corpus/telemetry. Complete the thin oracle using those surfaces.
+
+Whole-file sweep: the prior invalid-root “never raises” overstatement is acknowledged at plan :109–112. Also treat utils/py/fuzz_engine.py:8's “100% replayable from --seed” as conditional on initial corpus/environment, per the evidence above. No other pre-existing source defect is asserted by this static review; no runtime correctness claim is made.
+
+Handing off to Producer claude-a — correct the executable oracle and remaining contracts, then return for round 3.
+
+VERDICT: FAIL
+Basis: the oracle omits an invariant and discards its red-witness diagnostics; wrapper and deterministic red-run recipes remain unspecified.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
