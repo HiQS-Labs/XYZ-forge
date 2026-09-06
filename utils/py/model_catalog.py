@@ -204,6 +204,18 @@ def write_pin(root: str, tag: str, tag_commit: str, renderer_commit: Optional[st
             existing = load_pin(root)
         except Exception:  # noqa: BLE001 — a corrupt pin is simply rewritten
             existing = {}
+    # Provenance guard (PR #456 review): if the on-disk renderer changed since the last pin and no
+    # --renderer-commit names where it came from, refuse. Otherwise the record would carry the OLD
+    # commit beside the NEW file's sha256 — `check` stays green (file vs recorded sha) while
+    # `renderer_source` points at content that cannot match it.
+    renderer_sha = sha256_file(renderer_path(root))
+    if (not renderer_commit and existing.get("renderer_sha256")
+            and existing["renderer_sha256"] != renderer_sha):
+        raise SystemExit(
+            f"model-catalog pin: {RENDERER_REL} changed since the last pin "
+            f"({existing['renderer_sha256'][:12]}… -> {renderer_sha[:12]}…) but no --renderer-commit "
+            f"was given — pass the Model-catalog commit the new renderer was vendored from"
+        )
     pin = {
         "repo": UPSTREAM_REPO,
         "tag": tag,

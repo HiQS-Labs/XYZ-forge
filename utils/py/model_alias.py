@@ -50,6 +50,8 @@ def resolve_model_slug(model_name, xyz_root, timeout_s=RESOLVE_TIMEOUT_S):
     # guard lives here, at the one seam every shim resolves through. An OpenRouter id is
     # `provider/slug[:variant]`; a colloquial alias never contains a slash. `resolve-model-alias.sh`
     # itself is untouched (test/model-alias.sh pins what its raw tier 4 does, on purpose).
+    # Known exception: the /open-router skill (skills/open-router/SKILL.md) calls the raw resolver
+    # directly with operator input; it documents "an exact id never needs resolving" instead.
     if "/" in model_name:
         return model_name
 

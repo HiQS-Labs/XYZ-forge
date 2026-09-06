@@ -119,6 +119,19 @@ python3 "$MC" pin --root "$T" --tag "v9.9.9-test" --tag-commit "0000000" >/dev/n
 out="$(run_check "$T")"; rc=$?
 [ "$rc" = 0 ] && pass "sync recipe: 'pin' then re-check is green" || fail "pin did not make the scratch tree green: $out"
 
+# --- 2a'. Provenance guard (PR #456 review): a changed renderer needs --renderer-commit. ---
+T="$WORK/renderer"; fresh_copy "$T"
+printf '\n# vendored-renderer change for the guard control\n' >> "$T/$CAT_DIR/render_openrouter.py"
+if python3 "$MC" pin --root "$T" --tag "v1.0.0" --tag-commit "75e19139" >/dev/null 2>"$T/pin.err"; then
+  fail "pin accepted a changed renderer without --renderer-commit (provenance would carry the old commit beside the new sha)"
+else
+  case "$(cat "$T/pin.err")" in *"no --renderer-commit"*) pass "negative control: pin refuses a changed renderer without --renderer-commit, by name" ;;
+    *) fail "pin refused for the wrong reason: $(cat "$T/pin.err")" ;; esac
+fi
+python3 "$MC" pin --root "$T" --tag "v1.0.0" --tag-commit "75e19139" --renderer-commit "deadbeef" >/dev/null 2>&1 \
+  && pass "pin accepts the changed renderer once --renderer-commit names its origin" \
+  || fail "pin refused even with --renderer-commit"
+
 # --- 2b. The retired hand-append flow: one line appended to the YAML is a drift failure. ---
 T="$WORK/append"; fresh_copy "$T"
 printf 'kimi k3: moonshot/kimi-k3\n' >> "$T/$YAML"
