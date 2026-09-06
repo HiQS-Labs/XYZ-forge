@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -149,5 +149,27 @@ claim, `:231-233` refs, mitigation wording); Bash wording + implementation step 
 
 Round 3 ask: verify the revised R1/R2/R3 are executable as written and the round-2 blockers are
 cleared. Same output contract (`swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`).
+
+## Reviewer · codex · round 3 · 2026-09-06
+
+swept file: yes
+
+Scope: whole plan, recon, resolver, wrapper, fuzz engine and existing gh346 fallback test read; registry and caller spans inspected. Static review only: no artifact/source execution, campaign, mutation, test suite or git commands. MCP list_projects returned all 50 entries (has_more=false), with no project for this worktree or its GH-460 parent; exact-source fallback used, no borrowed generation or graph completeness claim. External issue, historical commits and producer run claims remain unverified. Plan citations below refer to PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Blocker] **R3 fuzzes a constant instead of the wrapper input.** Plan :107 has `python3 -c ... _ {mutant}` and `v=sys.argv[1]`: Python puts `-c` at argv[0], so argv[1] is always `_`. The engine preserves that fixed prefix and appends mutants (utils/py/fuzz_engine.py:223–227). Thus 300 executed iterations can exercise the same string 300 times. Fix: remove the Bash-style `_` sentinel, map missing argv explicitly to the empty string, and specify whether additional tokens are ignored or individually checked. Include the independently observed resolver-failure/passthrough assertion in the executable target, rather than leaving it only in prose (:108–110). Add a direct mapping check with two distinct inputs and an empty input so this constant-input failure cannot earn a green campaign.
+- [Should] **R1's measurement path must fail closed.** Plan :81 does not check mktemp or wc success. If mktemp fails, redirecting to an empty path yields rc 1, byte counting fails, the numeric tests fail, and the final `exit 0` accepts the broken observation as a valid miss. Fix: require successful temp creation and readable output capture, successful numeric byte measurement, and cleanup on exit/interruption; report setup/measurement errors distinctly and nonzero. Pin a successful known hit and an independently observed rc-1 miss before fuzzing, so a missing/unreadable shipped table cannot produce an all-rc-2 green campaign. Add the promised HIT-EMPTY and LEAK negative controls (including newline-only output): the round-2 Producer says they were added, but the complete R1/R2 text (:77–103) specifies only the rc-3 mutation. Require each diagnostic and nonzero result, then restored green.
+- [Should] **Finish the local campaign recipe and green criteria.** Plan :78's “base argv = one placeholder” does not specify the mutable `--base` value; the placeholder belongs to the fixed target, while the engine separately shell-splits --base (utils/py/fuzz_engine.py:423,465). R3 :104–112 still lacks pinned seed values, a wrapper executed >=300 assertion, and explicit engine-success / fail-closed JSON / zero fail+anomaly requirements for green campaigns. Fix: provide one reusable invocation recipe with actual base value, resolver seeds, wrapper seed, repo-root cwd, timeout, LC_ALL value, fresh corpus and telemetry/summary paths; apply parsed executed floors and green criteria to every run. The engine's exit status alone is insufficient because :330–335 distinguishes counted failures from counterexamples and :470 exits on counterexamples only. Capturing these settings later in R3b is useful evidence, but does not define the recipe now.
+- [Should] **Scope runtime fixes before applying test-only ratings.** R4 (:121–122) still directs new defects to be fixed under #460, while rollback/rating text (:150–159) assumes a test-only PR. Fix: explicitly require a separately scoped/rated runtime change and rollback analysis before implementing any discovered production fix. Delete the stale “touches no other surface” sentence (:152), which contradicts :153–155. Easy and 60/40/50/70 are reasonable for the stated test/registry/evidence work; they do not automatically cover a matcher or wrapper fix.
+- [Nit] **Grounding cleanup remains partially undone.** The recon's “Canonicalization call sites” row and “Call paths in” still cite deepseek-turn.py:226–228; the call is :231–233, as the plan now correctly states (:64). Update those recon copies and bound its unqualified no-other-lane claim to inspected sites. Setup still contains the artifact placeholder; fill it with the plan path on the Producer turn. Historical incident and recurrence claims remain attributed observations, not evidence independently established here.
+- [Pass] **The rc-3 control now has a deterministic, attributable route and the correct boundary.** Plan :92–103 requires the smoke to invoke the same oracle directly on the pinned miss, targets the actual terminal `exit 1` at relay-automation/resolve-model-alias.sh:128, installs cp-backup/trap restoration, demands `BADRC:3` with oracle exit 9, and places smoke/red runs in a disposable full clone. Keep the baseline raw miss precondition explicit as requested above. Static inspection of the full resolver body found no explicit git-state writes; this is not permission to run test scripts in a stateful task clone.
+- [Pass] **Prior oracle output, registration and evidence changes are present.** Plan :81 now checks hit-empty and byte-counted miss output and sends diagnostics to stderr, which fuzz_engine.py:326 retains. Plan :87–91 specifies the >=20 smoke floor and TESTS registration; ci-local.sh:269 derives that list. R3b (:113–120) retains baseline/red/restored-green provenance, inputs and initial corpus identity, avoiding sole dependence on entries replaced/evicted at fuzz_engine.py:185–190. These are static specification findings, not executed proof.
+- [Pass] **Reuse remains appropriate.** Plan :126–129 forbids engine changes and bounds input/root types; model_alias.py:48–61 owns fallback and fuzz_engine.py:278–342 owns execution, classification, corpus and telemetry. The proposed corrections require thin assertions and invocation fixes, not a second matcher, engine or writer.
+
+Whole-file sweep: the previously recorded invalid-root docstring overstatement (model_alias.py:17,31,44) and seed-only replay qualification (fuzz_engine.py:8,122,298) remain relevant and bounded as above. No additional pre-existing source defect is asserted by this static review; runtime correctness is untested this turn.
+
+Handing off to Producer claude-a — fix the constant wrapper input and remaining oracle/recipe contracts, then return for round 4.
+
+VERDICT: FAIL
+Basis: R3 always tests the literal underscore, and R1 can accept failed output measurement; the revised plan is not yet executable with trustworthy green evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
