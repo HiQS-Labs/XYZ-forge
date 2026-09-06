@@ -611,7 +611,9 @@ appended by hand is exactly what `test/gh450-model-catalog-pin.sh` turns red
 
    ```bash
    git -C <model-catalog-checkout> show vX.Y.Z:data/catalog.json > relay-automation/model-catalog/catalog.json
-   python3 utils/py/model_catalog.py pin --tag vX.Y.Z --tag-commit <tag commit sha>
+   python3 utils/py/model_catalog.py pin --tag vX.Y.Z --tag-commit <tag commit sha> \
+     --expect-sha256 <catalog sha256 from the release>   # required on a tag move; a pin is never self-certifying
+     # add --renderer-commit <sha> if model-catalog/render_openrouter.py was re-vendored too
    python3 utils/py/model_catalog.py render      # rewrites openrouter-model-aliases.yml
    python3 utils/py/model_catalog.py check       # pin sha256s + drift; must exit 0
    ```

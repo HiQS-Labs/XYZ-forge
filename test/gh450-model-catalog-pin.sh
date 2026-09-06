@@ -115,9 +115,24 @@ case "$out" in *"drift:"*) fail "render did not close the drift edge: $out" ;;
   *) pass "sync recipe: 'render' closes the drift edge" ;; esac
 case "$out" in *"catalog sha256 mismatch"*) pass "sync recipe: 'render' alone leaves the pin edge red (a re-pin is a deliberate act)" ;;
   *) fail "render silently re-pinned the copy: $out" ;; esac
-python3 "$MC" pin --root "$T" --tag "v9.9.9-test" --tag-commit "0000000" >/dev/null 2>&1
+# A pin is never self-certifying (PR #180 review, mirrored here): moving to a NEW tag must carry
+# the release's sha256, or it would certify whatever bytes are on disk as "the tag".
+if python3 "$MC" pin --root "$T" --tag "v9.9.9-test" --tag-commit "0000000" >/dev/null 2>"$T/pin-move.err"; then
+  fail "pin accepted a tag move without --expect-sha256"
+else
+  case "$(cat "$T/pin-move.err")" in *"needs --expect-sha256"*) pass "negative control: pin refuses a tag move without --expect-sha256, by name" ;;
+    *) fail "pin refused a tag move for the wrong reason: $(cat "$T/pin-move.err")" ;; esac
+fi
+if python3 "$MC" pin --root "$T" --tag "v9.9.9-test" --tag-commit "0000000" --expect-sha256 "$(printf '0%.0s' $(seq 64))" >/dev/null 2>"$T/pin-wrong.err"; then
+  fail "pin accepted a tag move whose --expect-sha256 does not match the copy"
+else
+  case "$(cat "$T/pin-wrong.err")" in *"re-vendor from the tag before pinning"*) pass "negative control: a wrong --expect-sha256 is refused, by name" ;;
+    *) fail "wrong-hash refusal named the wrong reason: $(cat "$T/pin-wrong.err")" ;; esac
+fi
+flipped_sha="$(python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$T/$CAT_DIR/catalog.json")"
+python3 "$MC" pin --root "$T" --tag "v9.9.9-test" --tag-commit "0000000" --expect-sha256 "$flipped_sha" >/dev/null 2>&1
 out="$(run_check "$T")"; rc=$?
-[ "$rc" = 0 ] && pass "sync recipe: 'pin' then re-check is green" || fail "pin did not make the scratch tree green: $out"
+[ "$rc" = 0 ] && pass "sync recipe: 'pin --expect-sha256 <release hash>' then re-check is green" || fail "pin did not make the scratch tree green: $out"
 
 # --- 2a'. Provenance guard (PR #456 review): a changed renderer needs --renderer-commit. ---
 T="$WORK/renderer"; fresh_copy "$T"

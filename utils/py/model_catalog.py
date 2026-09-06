@@ -196,7 +196,7 @@ def check(root: str) -> List[str]:
 
 
 def write_pin(root: str, tag: str, tag_commit: str, renderer_commit: Optional[str],
-              vendored_on: Optional[str]) -> Dict[str, Any]:
+              vendored_on: Optional[str], expect_sha256: Optional[str] = None) -> Dict[str, Any]:
     catalog = load_catalog(root)
     existing: Dict[str, Any] = {}
     if os.path.isfile(pin_path(root)):
@@ -204,6 +204,21 @@ def write_pin(root: str, tag: str, tag_commit: str, renderer_commit: Optional[st
             existing = load_pin(root)
         except Exception:  # noqa: BLE001 — a corrupt pin is simply rewritten
             existing = {}
+    # A pin is never self-certifying (mirrors AEGIS-Sleuth's sync rule, PR #180 review): moving to
+    # a NEW tag records whatever bytes are on disk as "the tag" unless the operator supplies the
+    # hash from the Model-catalog release. Re-pinning the SAME tag verifies against the old record.
+    catalog_sha = sha256_file(catalog_path(root))
+    expected = expect_sha256 or (existing.get("catalog_sha256") if existing.get("tag") == tag else None)
+    if not expected:
+        raise SystemExit(
+            f"model-catalog pin: moving to {tag} needs --expect-sha256 <hex> (the catalog sha256 from "
+            f"the {UPSTREAM_REPO} release) — a pin must not certify whatever bytes happen to be on disk"
+        )
+    if catalog_sha != expected:
+        raise SystemExit(
+            f"model-catalog pin: {CATALOG_REL} sha256 {catalog_sha[:12]}… != expected "
+            f"{expected[:12]}… for {tag} — re-vendor from the tag before pinning"
+        )
     # Provenance guard (PR #456 review): if the on-disk renderer changed since the last pin and no
     # --renderer-commit names where it came from, refuse. Otherwise the record would carry the OLD
     # commit beside the NEW file's sha256 — `check` stays green (file vs recorded sha) while
@@ -253,6 +268,8 @@ def main(argv: List[str]) -> int:
     sp.add_argument("--tag-commit", required=True)
     sp.add_argument("--renderer-commit", default=None)
     sp.add_argument("--vendored-on", default=None)
+    sp.add_argument("--expect-sha256", default=None,
+                    help="catalog sha256 from the Model-catalog release; required when moving to a new tag")
     args = p.parse_args(argv)
     root = os.path.abspath(args.root)
 
@@ -272,7 +289,8 @@ def main(argv: List[str]) -> int:
         return 0
 
     if args.cmd == "pin":
-        pin = write_pin(root, args.tag, args.tag_commit, args.renderer_commit, args.vendored_on)
+        pin = write_pin(root, args.tag, args.tag_commit, args.renderer_commit, args.vendored_on,
+                        expect_sha256=args.expect_sha256)
         print(f"model-catalog: pinned {pin['repo']} {pin['tag']} (v{pin['version']}, "
               f"catalog {pin['catalog_sha256'][:12]}…) -> {PIN_REL}")
         return 0
