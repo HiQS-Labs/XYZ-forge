@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 5 / 6
 
@@ -223,5 +223,25 @@ restored green). Operator authorized rounds 5–6 ("one more cycle or two if nee
 un-escalated accordingly.
 
 Round 5 requested. Same output contract: `swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`.
+
+## Reviewer · codex · round 5 · 2026-09-06
+
+swept file: yes
+
+Scope: whole plan, recon, resolver, wrapper, fuzz engine and gh346 fallback test read; registry, shipped table and caller spans inspected. No artifact/source execution, campaign, mutation, test suite or git commands. One read-only system-utility probe used `/usr/bin/wc -c </dev/null`, yielding `<       0>` when bracketed for visibility; no probe file was created. MCP list_projects returned all 50 entries (has_more=false), with no index for this worktree or its GH-460 parent; exact-source fallback used, with no borrowed generation or graph-completeness claim. External issue, historical commits and producer run claims remain unverified. Plan citations below refer to PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Blocker] **R1 rejects valid macOS byte counts.** Plan :81 now checks wc status, but applies `^[0-9]+$` to its untrimmed output. The local system-utility probe returned seven spaces followed by `0`; command substitution preserves those leading spaces, so the exact target emits MEASURE-FAIL for a valid empty capture before reaching BADRC/LEAK/HIT-EMPTY. Fix: accept optional surrounding whitespace around exactly one nonempty decimal integer, normalize that captured integer before arithmetic, and still reject failed wc, empty output and malformed text. Specify a positive padded-count control as well as the existing failed-wc negative control. This is a target-formatting defect, not a resolver defect; implementation :164 must not copy the current target verbatim.
+- [Should] **Complete the outstanding cleanup and newline-only controls in the artifact itself.** Plan :81 still has only a normal-path `rm`, no cleanup trap, while fuzz_engine.py:247–254,265–270 kills the entire target process group on timeout. Fix: install cleanup immediately after successful temp creation and put captures inside a per-run temporary directory owned and cleaned by the outer test/campaign runner, so SIGKILL does not leave unowned captures. Plan :111 injects `LEAK` plus newline; that does not falsify a regression back to command substitution, which would retain `LEAK`. Add a separate newline-only miss mutation (`printf '\n'; exit 1`) requiring LEAK-STDOUT-ON-MISS, exit 9, and restored green. Keep these witnesses in R3b's baseline/red/restored evidence (:138–145).
+- [Pass] **JSON, campaign floors and wrapper mapping/fallback are now locally specified.** Plan :120 includes `--json` and summary redirection; :121–126 pins resolver seeds 7/8/9, wrapper seed 11, timeout, valid-summary/engine-success and 500/300 floors with zero fail/anomaly. This matches fuzz_engine.py:339,466–470. Plan :131 maps the first actual mutant without a sentinel and compares each result against an independent resolver observation; empty input expects identity, matching model_alias.py:41–42,48–61. Direct literal cases at plan :133–136 agree with test/gh346-resolver-fallback.sh:30–35. Preserve these contracts while fixing R1.
+- [Pass] **The core red procedure, continuous gate and durable evidence are specified.** Plan :88–92 requires raw hit/miss preconditions, :98–117 requires cp-backed restoration and attributable BADRC/HIT-EMPTY/LEAK/MEASURE-FAIL witnesses in a disposable full clone, and :95–97 registers the smoke in the existing list at validate.sh:102–104 consumed by ci-local.sh:269. R3b :138–145 retains provenance and exact inputs instead of relying on replaceable/evictable corpus entries (fuzz_engine.py:185–191). Full resolver inspection found no explicit git-state writes; this is static source evidence, not exemption from the disposable-clone test boundary.
+- [Pass] **Reuse, scope and ratings remain proportionate.** Plan :146–159 separately scopes/rates any runtime fix and prohibits a second engine or production Bash oracle; model_alias.py:48–61 and fuzz_engine.py:278–342 supply the existing behavior/execution/writers. Plan :176–188 includes registry/evidence and Easy rollback with 60/40/50/70 rationale. Inspected caller references at plan :64–70 and recon :13,19 align with deepseek-turn.py:231–233 and review_xyz.py:629; historical incident and recurrence claims remain attributed observations.
+- [Nit] **Use the canonical timeout flag spelling.** Plan :120–122 uses `--timeout`, an abbreviation of the registered `--timeout-budget` at fuzz_engine.py:430. The current argparse parser permits the abbreviation, so this is not an execution blocker. Use the full name to avoid making the recipe depend on abbreviation remaining unambiguous.
+
+Whole-file sweep: the previously recorded invalid-root docstring overstatement (model_alias.py:17,31,44) and conditional seed replay claim (fuzz_engine.py:8,122,298) remain bounded by plan :157–160 and :138–145. No additional pre-existing source defect is asserted by this review; source runtime correctness remains untested this turn.
+
+Handing off to Producer claude-a — fix the macOS byte-count parser and finish the outstanding controls, then return for the authorized round 6.
+
+VERDICT: FAIL
+Basis: the verbatim R1 target rejects the local platform's valid whitespace-padded wc output, preventing trustworthy baseline green or attributable red controls.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
