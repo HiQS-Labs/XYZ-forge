@@ -26,9 +26,9 @@ export LC_ALL=C
 unset MODEL_ALIASES_FILE
 
 # --- R1-pre: environment pins at EXACT observed values (resolver, direct) ---
-out=$(bash "$RESOLVER" "glm-5.2" 2>/dev/null); rc=$?
+rc=0; out=$(bash "$RESOLVER" "glm-5.2" 2>/dev/null) || rc=$?
 if [ $rc -ne 0 ] || [ -z "$out" ]; then fail "known hit glm-5.2 observed rc=$rc out='${out:-}' (want rc 0, nonempty)"; fi
-out=$(bash "$RESOLVER" "totally-unknown-model-xyz" 2>/dev/null); rc=$?
+rc=0; out=$(bash "$RESOLVER" "totally-unknown-model-xyz" 2>/dev/null) || rc=$?
 if [ $rc -ne 1 ] || [ -n "$out" ]; then fail "observed miss rc=$rc out='${out:-}' (want rc 1, empty)"; fi
 
 # --- R1-pre: the oracle must pass both pins ---
@@ -48,6 +48,7 @@ PY
 
 # --- R1: the fuzz run under the shared run contract ---
 RUNDIR=$(mktemp -d "${TMPDIR:-/tmp}/gh460-smoke.XXXXXX")
+export GH460_RUN_DIR="$RUNDIR"
 TARGET="bash \"$ORACLE\" {mutant}"
 python3 "$ENGINE" --mode fuzz \
   --target "$TARGET" \
