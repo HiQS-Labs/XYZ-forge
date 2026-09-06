@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """GH-460 adapter preflight — verifies the ACTUAL decoded wrapper adapter before campaigns.
 
-Reads the campaign target from wrapper-target.txt (single source of truth), decodes it the
-same way fuzz_engine.build_argv does (shlex.split), asserts the argv mapping, syntax-checks
-and exercises the DECODED adapter payload on: a sample mutant, two known hits, an observed
-miss, the empty input, absent input, and extra-argument input.
+Decodes the campaign target exactly as fuzz_engine.build_argv does (shlex.split), then:
+  1. syntax-checks the bash oracle and the decoded Python payload (ast.parse)
+  2. exercises the decoded adapter on seven cases, comparing its printed output against an
+     INDEPENDENT direct resolver invocation (a hard-coded-input adapter fails this — the
+     constant-input falsification below proves it)
+  3. constant-input falsification: a mutated payload that hard-codes the input must FAIL at
+     least one case (proves the observation can catch the round-3 failure class)
 
-Exit 0 = preflight OK; exit 1 = any failure (with the case named on stderr).
-Run from the repo root: python3 TESTS-RESULTS/2026-09-06+GH-460/preflight.py
+Exit 0 = preflight OK; exit 1 = any failure. Run from the repo root.
 """
 import ast
 import shlex
@@ -19,42 +21,43 @@ TARGET_FILE = Path(__file__).parent / "wrapper-target.txt"
 ORACLE = "test/gh460-oracle.sh"
 RESOLVER = "relay-automation/resolve-model-alias.sh"
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "."
-
 failures = []
-
 
 def fail(msg):
     failures.append(msg)
     print(f"PREFLIGHT FAIL: {msg}", file=sys.stderr)
 
+def resolver_stdout(inp):
+    r = subprocess.run(["bash", RESOLVER, inp], cwd=ROOT, capture_output=True, text=True)
+    return r.returncode, r.stdout
 
 target = TARGET_FILE.read_text().strip()
 head, _, tail = target.partition("{mutant}")
+if not target.endswith("{mutant}") or target.count("{mutant}") != 1:
+    fail(f"target must end with exactly one trailing {{mutant}} (got ...{target[-40:]!r})")
 
-# 1. decoded argv mapping: engine inserts every mutant token after the fixed prefix
 prefix_argv = shlex.split(head)
 if prefix_argv[:2] != ["python3", "-c"]:
     fail(f"decoded prefix is {prefix_argv[:2]!r}, want ['python3', '-c']")
 payload = prefix_argv[2] if len(prefix_argv) > 2 else ""
-if not target.endswith("{mutant}") or target.count("{mutant}") != 1:
-    fail(f"target must end with exactly one trailing {{mutant}} (target repr: {target[-60:]!r})")
 if "{mutant}" in payload:
-    fail("decoded adapter payload must not contain the {mutant} placeholder")
+    fail("decoded adapter payload contains the placeholder")
 
-# 2. the DECODED payload must be valid Python
 try:
     ast.parse(payload)
 except SyntaxError as exc:
     fail(f"decoded adapter payload does not parse: {exc}")
-    print("PREFLIGHT: FAILURES —", len(failures), file=sys.stderr)
-    sys.exit(1)
 
-# 3. exercise the DECODED adapter exactly as the engine would build it
-def adapter(args):
-    """Run the decoded payload with the engine's argv shape: payload, then mutant tokens."""
-    argv = ["python3", "-c", payload] + list(args)
+oracle_target_prefix = shlex.split("bash " + ORACLE + " ")
+if oracle_target_prefix[0] != "bash" or not oracle_target_prefix[1].endswith("gh460-oracle.sh"):
+    fail(f"oracle target decode wrong: {oracle_target_prefix[:2]!r}")
+if subprocess.run(["bash", "-n", ORACLE], cwd=ROOT).returncode != 0:
+    fail("oracle script fails bash -n")
+
+def adapter(args, payload_text=None):
+    body = payload_text if payload_text is not None else payload
+    argv = ["python3", "-c", body] + list(args)
     return subprocess.run(argv, cwd=ROOT, capture_output=True, text=True)
-
 
 cases = [
     ("sample mutant", ["sample-mutant"]),
@@ -66,13 +69,40 @@ cases = [
     ("extra arguments", ["glm-5.2", "extra-token"]),
 ]
 for name, args in cases:
+    inp = args[0] if args else ""
+    rc_expected, expected = resolver_stdout(inp)
+    expected = expected.strip()
     res = adapter(args)
     if res.returncode != 0:
         fail(f"adapter case '{name}': rc={res.returncode} stderr={res.stderr[-200:]!r}")
-    else:
-        print(f"preflight: adapter case '{name}' OK")
+        continue
+    observed = res.stdout.strip()
+    # independent observation: the adapter's printed output must equal what the resolver
+    # actually produces for that input (or the literal on an expected miss)
+    want = expected if rc_expected == 0 else inp
+    if observed != want:
+        fail(f"adapter case '{name}': observed output {observed!r} != independent resolver expectation {want!r}")
+    elif not isinstance(observed, str):
+        fail(f"adapter case '{name}': non-string output")
+
+# constant-input falsification: hard-coding the input must be CAUGHT by the independent check
+mutated = payload.replace('a[0] if a else ""', '"glm-5.2"')
+caught = False
+for name, args in cases[1:5]:  # second hit, miss, empty, absent: hard-coded input diverges
+    inp = args[0] if args else ""
+    rc_expected, expected = resolver_stdout(inp)
+    expected = expected.strip()
+    want = expected if rc_expected == 0 else inp
+    res = adapter(args, payload_text=mutated)
+    observed = res.stdout.strip()
+    if observed != want:
+        caught = True
+        print(f"falsification: constant-input mutation caught at case '{name}' ({observed!r} != {want!r})")
+        break
+if not caught:
+    fail("constant-input falsification FAILED: the mutated (hard-coded) adapter passed every case — the independent observation cannot catch the round-3 failure class")
 
 if failures:
     print(f"PREFLIGHT: FAILURES — {len(failures)}", file=sys.stderr)
     sys.exit(1)
-print("PREFLIGHT: OK — decoded adapter exercised on all cases")
+print("PREFLIGHT: OK — decoded adapter exercised on all cases; constant-input control falsified correctly")

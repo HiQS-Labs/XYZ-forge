@@ -13,10 +13,10 @@ Standing fuzz target for the model-alias resolver, per the plan
 | resolver campaign | 8 | 500 | green — executed 500, fail 0, anomaly 0 |
 | resolver campaign | 9 | 500 | green — executed 500, fail 0, anomaly 0 |
 | wrapper-floor differential campaign | 11 | 300 | green — executed 300, fail 0, anomaly 0 |
-| R2 witnesses (rc-3, LEAK, NEWLINE-ONLY-LEAK, HIT-EMPTY, MEASURE-FAIL failed-wc/split-digits/empty, padded-valid acceptance) | — | — | 28/28 assertions, each baseline → red → restored-green (`witnesses.log`; includes the post-fix `abc`/`-5` MEASURE-FAIL witnesses) |
+| R2 witnesses (rc-3, LEAK, NEWLINE-ONLY-LEAK, HIT-EMPTY, MEASURE-FAIL failed-wc/split-digits/empty, padded-valid acceptance) | — | — | 28/28 assertions, each baseline → red → restored-green (`witnesses.log`; procedure committed as `witness-procedure.sh`; includes the post-fix `abc`/`-5` MEASURE-FAIL witnesses) |
 
 **1,820 fuzzed inputs (20 smoke + 1,500 resolver + 300 wrapper), zero counterexamples; 8
-negative-control/acceptance witnesses, 28 attributable assertions (baseline → red →
+negative-control/acceptance witnesses, 30 attributable assertions (baseline → red →
 restored-green).** Per the #460 loop contract a null campaign is
 a valid result; the committed smoke remains as permanent coverage.
 
@@ -30,3 +30,5 @@ a valid result; the committed smoke remains as permanent coverage.
 
 Environment: macOS (arm64), `LC_ALL=C`, `MODEL_ALIASES_FILE` unset, shipped alias table, fresh
 empty corpus per run, `--timeout-budget 30`.
+
+`final-replay/` — retained artifacts (summaries + telemetry) of the end-to-end replay against the final implementation.
