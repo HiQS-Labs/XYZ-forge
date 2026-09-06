@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 57 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 58 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -66,6 +66,7 @@ Summary: 57 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-445 · runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0 | — | [GH-445-TURN-SHIM-HELP-PARITY.md](PROJECT/1-INBOX/GH-445-TURN-SHIM-HELP-PARITY.md) · [#445](https://github.com/HiQS-Labs/XYZ-forge/issues/445) |
 | GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run | — | [GH-446-MARATHON-PLAN-WRITE-GUARD.md](PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md) · [#446](https://github.com/HiQS-Labs/XYZ-forge/issues/446) |
 | GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) | — | [GH-452-RELEASE-TAGS.md](PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md) · [#452](https://github.com/HiQS-Labs/XYZ-forge/issues/452) |
+| GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/1-INBOX/GH-454-RECONCILE-GATE-DEFECTS.md) |
 | GH-453 · Governance document identity audit | — | [Plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md) · [#453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) |
 
 ## Queue
@@ -78,7 +79,7 @@ Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -93,11 +94,10 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
 | GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
-| GH-439 · start-task governed workflow skill | 🟡 | [plan](PROJECT/2-WORKING/GH-439-START-TASK-SKILL.md) · [#439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) · [PR #440](https://github.com/HiQS-Labs/XYZ-forge/pull/440) |
 
 ## Completed
 
-Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 54 · 🔮 0 · 🔲 0
+Summary: 58 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 56 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -157,6 +157,8 @@ Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 54 · �
 | GH-15 · parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract | ✅ | [GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#15](https://github.com/HiQS-Labs/XYZ-forge/issues/15) |
 | GH-3 · improve-loop.sh --state-dir durability — provenance evidence must not evaporate | ✅ | [GH-3-IMPROVE-LOOP-STATE-DIR.md](PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md) · [#3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) |
 | GH-436 · feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe teardown | ✅ | [GH-436-MERGE-CLEANUP-SKILL.md](PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md) · [#436](https://github.com/HiQS-Labs/XYZ-forge/issues/436) |
+| GH-439 · start-task governed workflow skill | ✅ | [plan](PROJECT/3-COMPLETED/GH-439-START-TASK-SKILL.md) · [#439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) · [PR #440](https://github.com/HiQS-Labs/XYZ-forge/pull/440) |
+| GH-447 · Isolate launch destination checks from dirty caller source | ✅ | [GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md](PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md) · [#447](https://github.com/HiQS-Labs/XYZ-forge/issues/447) |
 
 ## Deferred · vision
 

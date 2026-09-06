@@ -263,6 +263,35 @@ case "$DS_OVERLAY" in
   *) fail "deepseek route lost its key variable" ;;
 esac
 
+
+# (d) GH-448: the overlay must OVERRIDE agent-default-model, not just register the model. The base
+# bundle pins deepseek-v4-flash; a models: list entry only REGISTERS an id, so without this entry
+# every turn ran the bundle default while telemetry recorded DEEPSEEK_MODEL.
+OR_OVERLAY="$(overlay_for openrouter 2>/dev/null)"
+case "$ALI_OVERLAY" in
+  *"agent-default-model"*"model: qwen3.8-max"*)
+    pass "alibaba overlay overrides agent-default-model with DEEPSEEK_MODEL" ;;
+  *) fail "alibaba overlay never overrides agent-default-model (turn runs deepseek-v4-flash)" ;;
+esac
+case "$OR_OVERLAY" in
+  *"agent-default-model"*"model: qwen3.8-max"*)
+    pass "openrouter overlay overrides agent-default-model too" ;;
+  *) fail "openrouter overlay lost the agent-default-model override" ;;
+esac
+
+# (e) GH-448: catalog gateways hard-reject oversized max_tokens; the alibaba model entry must carry
+# the route cap. The route-level defaultMaxTokens sizes the catalog, not the request, so this must
+# sit ON the model entry. Uncapped routes must stay byte-compatible (no cap emitted).
+case "$ALI_OVERLAY" in
+  *"- id: qwen3.8-max"*"maxTokens: 131072"*)
+    pass "alibaba model entry carries the 131072 max_tokens cap" ;;
+  *) fail "alibaba model entry missing the maxTokens cap (endpoint 400s above 131072)" ;;
+esac
+case "$OR_OVERLAY" in
+  *"maxTokens"*) fail "openrouter overlay grew a maxTokens cap it must not have" ;;
+  *) pass "openrouter overlay stays cap-free (provider has no cap)" ;;
+esac
+
 echo "  gh148-deepseek-turn: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0

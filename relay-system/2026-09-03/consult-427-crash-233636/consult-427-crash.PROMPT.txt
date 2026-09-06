@@ -1,0 +1,72 @@
+# Disposition question: PR #427 (GH-414 fail-closed source-comment reference scanner)
+
+You are advising on a blocked PR in HiQS-Labs/XYZ-forge. Advisory only — no edits.
+
+## What the PR built (branch feat/gh414-comment-reference-check, NOT in your worktree — facts inlined)
+
+A new fail-closed scanner in `utils/pdda/pdda.sh` (`check_governance`): extracts path-shaped
+references (`foo/bar.md`, optionally `#anchor`) from comment lines of source files under `src/`
+(js/ts/py/sh/...), and asserts each target EXISTS — ERROR in full mode if not. Runs against the
+source tree and, when `PDDA_COMMENT_REFERENCE_ARTIFACT` is set, the built artifact separately.
+The PR also restores two real ADRs (`decisions/2026-06-18-epoch-fencing.md`,
+`decisions/2026-07-01-cross-agent-dep-conflict.md`) that `src/events.js` and `src/project.js`
+cite but which had been dropped from the shipped tree — that was the original defect (GH-414
+finding 1.5), and the scanner catches it. Hosted CI green; reviewer (me) verified the artifact
+semantics, the fail-closed polarity, and mutation controls.
+
+## Blocker 1 — design tension (found in review, fix already on the branch)
+
+`src/project.js:334` legitimately cites `.tick/STATE.md` and `.tick/rejected.jsonl` —
+runtime-GENERATED, gitignored state. They exist in any working tree that has run the harness,
+but NEVER in a pristine checkout. So on any fresh clone (CI, contributor, launch build):
+`governance` exits 1 with `comment reference '.tick/STATE.md' has no file at .tick/STATE.md`.
+The lane's own tree passed because it had run the harness — the claim was masked by untracked
+local files. My fix, now committed on the branch: exempt paths matching
+`git -C "$root" check-ignore` (fail-closed preserved in non-repo roots, where check-ignore
+errors), plus a two-direction pristine-fixture control in the suite (suite now 9/0, fresh-clone
+governance rc 0).
+
+## Blocker 2 — intermittent signal death (NEW, found during the merge train; why the PR is held)
+
+`bash utils/pdda/pdda.sh governance` on a pristine clone dies by signal stochastically:
+SIGSEGV 139 / SIGABRT 134, roughly 3-5 times in 20 runs (macOS arm64, /bin/bash 3.2).
+Controlled attribution:
+- With the check-ignore line removed: crash still occurs (1 in 7) — not my exemption line.
+- Direct `git check-ignore` × 50: zero crashes — git is not the crasher.
+- Unsandboxed runs: still crash — not the test harness sandbox.
+- `bash -x` capture: death occurs mid-`read` while consuming the scanner's process-substitution
+  feeds (`done < <(_pdda_comment_scannable_lines "$file")`, and the
+  `printf | grep -oE | sed | sort -u` pipeline in `_pdda_comment_extract_refs`) — i.e. the new
+  scanner's streaming plumbing (bash 3.2 process-substitution interaction suspected).
+Consequence: governance — and therefore validate.sh — would fail stochastically for everyone if
+merged. The pre-existing pdda code also uses `done < <(…)` constructs but at much lower
+frequency/size; the new pipelines run per-line over every src file.
+
+Suggested fix direction (not yet implemented): temp-file intermediates instead of process
+substitutions, or a single awk pass per file; then a documented ~20× zero-signal-exit loop under
+/bin/bash 3.2 as the stability control.
+
+## The goal in question (GH-414, verbatim key parts)
+
+"Nothing deterministic checks whether an inline code comment is still true… Extend the
+dead-reference check to extract filesystem-path-shaped references from source comments and
+assert the target exists. Pure path resolution — no semantics… Run it against both trees…
+A source comment citing a non-existent path fails the check… Explicit non-goal: this verifies
+that references resolve, not that prose is accurate." Status: OPEN, remediation rank R5 of an
+external-review umbrella; the two dropped ADRs were real and are now restored.
+
+## Questions (answer all three, be specific and opinionated)
+
+1. **Disposition of PR #427**: fix-on-branch (which approach for the crash — temp files? single
+   awk? something else?), or restructure (e.g. make the scanner Python — utils/py/ is the
+   authoritative runtime for Tier-A tooling in this repo), or split (land artifact-check +
+   ADR restoration without the fail-closed source scan)? What would YOU do next, concretely?
+2. **Was the goal invalid?** The issue's own acceptance says "a comment citing a non-existent
+   path FAILS" — but the false-positive class is "path exists in a used tree, is deliberately
+   untracked, absent in a fresh clone". Is `git check-ignore` exemption the right category model,
+   or is fail-closed-on-source-comments the wrong polarity entirely (should source-scan be
+   warn-only and only the ARTIFACT check fail-closed)? Where is the line between "the goal was
+   fine, the implementation hit a real category it didn't model" and "the goal was over-broad"?
+3. **Amended acceptance criteria** for GH-414: what should the issue's Acceptance section say
+   after this lesson (e.g. about fresh-clone determinism, generated-state citations, runtime
+   choice)? Keep it in the issue's own voice (deterministic, verifiable, red-control-oriented).
