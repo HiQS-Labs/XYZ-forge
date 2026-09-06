@@ -48,6 +48,7 @@ PY
 
 # --- R1: the fuzz run under the shared run contract ---
 RUNDIR=$(mktemp -d "${TMPDIR:-/tmp}/gh460-smoke.XXXXXX")
+trap 'rm -rf "$RUNDIR"' EXIT
 export GH460_RUN_DIR="$RUNDIR"
 TARGET="bash \"$ORACLE\" {mutant}"
 python3 "$ENGINE" --mode fuzz \
