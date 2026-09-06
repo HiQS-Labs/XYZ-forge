@@ -2,7 +2,7 @@
 gh_issue: 453
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/453
 title: Governance document identity audit
-status: Stage 1 report — Stage 2 awaiting maintainer approval
+status: Stage 2 approved — implementation planning
 updated: 2026-09-05
 owner: Codex
 goal: Establish document ownership and propose corrections without changing governance authority.
@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Stage 1 report independently approved; documentation and ledger checks passed with warnings recorded. | Maintainer decision on proposed dispositions; Stage 2 remains unapproved. |
+| Maintainer approved Stage 2; incorporated development at 923fbdac. | Review the bounded execution plan, implement, verify, and open PR. |
 
 ## Quad Concepts
 
@@ -323,9 +323,58 @@ have **not** been claimed as completed for unimplemented Stage 2 edits.
 
 ## Stage 2 — approved corrections only
 
-Not authorized. Its exact scope and executable sequence will be set from the maintainer-approved
-report, then reviewed before edits. It must preserve the user's upstream-policy, checker-behavior,
-frozen-twin, package-name and historical-CHANGELOG exclusions. No deployment or merge authorized.
+Maintainer instruction: “Ok go to Stage 2” after delivery of the report. Execute the recommended
+path-preserving strategy. Treat PDDA.md's sync-safe first-line marker as the explicitly disclosed
+upstream follow-up, not a prerequisite to the local clarification; do not claim that narrower
+outcome meets the original all-five-after-sync target. Keep the imported PDDA.md untouched.
+Draft an upstream request in this report only; no upstream publication or new sync system.
+
+Resume checkpoint `97620bc4` incorporates origin/development `923fbdac`. Its newer README describes
+spec generation as a current capability gap, not a permanent prohibition. Preserve that distinction
+when extending GUIDING Purpose; do not revert it to the earlier Stage 1 proposed permanent wording.
+Primary graph generation `2026-09-06T03:40:56Z` returned no recorded gaps for the candidate docs;
+.pdda-mode requires direct source. Material edits use this clone's reads, not graph freshness alone.
+The merge selected the incoming ledger then replayed only #453 through add/rate/update and the
+supported merge resolver. Current row id is `rmi-01M1TCY9N489VPX9H9QZ0J0A1F`, rating 70/65/50/55,
+no override. The previous row identity is historical, not a duplicate current row. Incidental
+reviewer registry changes are preserved in a file-scoped named stash, excluded from the task diff.
+
+### Ordered implementation and verification
+
+1. Add subject/maintenance/applicability first lines to CONSTITUTION, DO-NOT-BUILD, PDDA-MODE-GUIDE
+   and PDDA-SYNC-POLICY; link their verified predecessor origin. Retain actual policy bodies and
+   file paths. Make Constitution's advisory split PDDA-specific and refer XYZ product scope to
+   GUIDING Purpose; anti-scope is for the PDDA layer, not a ban on XYZ orchestration. Repair the four
+   missing source links and the mode guide's dead heading references using existing sections →
+   expect first-line identity for all four local files, no missing replacement targets, no deletion.
+2. Apply reviewed GUIDING replacements (name, kernel dependencies, event-state scope, conditional
+   hook claim, roadmap authority, Python convention, billing qualification, Purpose and appendix),
+   with the current README spec-generation caveat preserved. Update README ownership and scope
+   pointer, ROUTER role split/hosted CI, and .pdda-mode comment. Add concise ownership pointers in
+   ARCHITECTURE and AGENTS if needed for their existing routing → expect no obsolete attribution,
+   unchanged package name and no checker/frozen-twin diff. Skills-index repairs stay separate.
+3. Sweep inbound references in the named top-level documents, skills and PDDA tree. Use a retained
+   one-off Python link resolver under test/baselines/gh453-governance (not a production gate) over
+   changed governance docs plus their current inbound Markdown referrers, excluding CHANGELOG and
+   historical PROJECT/3-COMPLETED, PROJECT/4-MISC and relay transcripts. Compare base and candidate,
+   and separately report old defects. Exercise non-empty input, missing-file and missing-heading
+   controls in a temporary fixture → expect controls fail and no newly broken links. Hand-check
+   ROUTER startup targets. No new .sh file, no runtime tool/check behavior changes.
+4. Commit the candidate; run PDDA run, tier 1, full validate and targeted governance in a disposable
+   full clone. Record exact SHA, commands, statuses, warnings and Git identity before/after. Keep
+   logs/provenance in the PR → expect attributable passing gates, or investigate concrete failures.
+5. Run independent Codex final QA against the committed implementation and evidence; resolve real
+   findings within three rounds. Record new CHANGELOG outcome and ledger status through its CLI,
+   push from a disposable full clone through the installed push gate, and open a PR to development
+   → expect reviewed, verified PR, issue left open, no merge or clone teardown.
+
+### Upstream follow-up draft (not published)
+
+Request a portable first-line subject marker in Hypercart-Dev-Tools/pdda's PROJECT/PDDA.md,
+explaining it defines PDDA's document contract and each consuming repository determines adoption.
+The current manifest replaces that file, so an XYZ-only banner is not durable. Acceptance: marker
+is present in upstream source and survives a normal sync replay in a disposable consumer. No claim
+of that upstream change or replay is made in this PR.
 
 ## Risks and rollback
 
