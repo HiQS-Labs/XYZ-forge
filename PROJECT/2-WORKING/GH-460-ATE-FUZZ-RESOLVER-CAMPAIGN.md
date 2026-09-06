@@ -72,61 +72,80 @@ the pre-fix rewrite reproduces by restoring that row)
 - The fuzz engine: `--mode fuzz --target "<cmd> {mutant}"`, seeded PRNG, four mutator families,
   feedback-guided corpus, `--mode replay --id`, per-mutant process-group kill.
 
-## Requirements (behavior contracts; executable syntax lives in `test/gh460-oracle.sh` — the one runnable source, per the round-6 disposition)
+## Requirements (behavior contracts; executable syntax lives in `test/gh460-oracle.sh` — the one runnable source)
+
+**Shared run contract (applies to the smoke and BOTH campaigns):** fuzz mode with `--base "glm-5.2"`,
+`--cwd <repo-root>`, `--timeout-budget 30`, `--json` with summary redirected to a file (REQUIRED —
+the engine prints a human summary without it, `fuzz_engine.py:466-469`), fresh EMPTY corpus and
+telemetry/summary paths per run, shipped alias table with `MODEL_ALIASES_FILE` unset,
+`LC_ALL=C`. Green per run: engine exit 0 AND a nonempty valid JSON summary (fail-closed on
+missing/malformed) AND parsed `executed >= <floor>` with `counts.fail == 0`,
+`counts.anomaly == 0` (exit status alone is insufficient — `fuzz_engine.py:330-335,470`).
+The environment policy (unset override, shipped table, locale) applies to raw preconditions and
+wrapper observations too, not only inside the oracle.
 
 **The oracle script** (`test/gh460-oracle.sh`, GH-551 test/-exempt; invoked as
-`fuzz_engine.py --target 'bash test/gh460-oracle.sh {mutant}'` from `--cwd <repo-root>`):
+`fuzz_engine.py --target 'bash test/gh460-oracle.sh {mutant}'` from the shared-run `--cwd`):
 
-- **O1** `unset MODEL_ALIASES_FILE`; mktemp capture file with `SETUP-FAIL` guard (exit 8) and an
-  EXIT-trap cleanup (captures may also live in the runner-owned per-run directory, which the
-  engine's SIGKILL on timeout cannot be relied on to clean — `fuzz_engine.py:247-254,265-270`).
-- **O2** runs `relay-automation/resolve-model-alias.sh "$1"` capturing stdout byte-exactly to
-  the temp file (never command substitution — it strips newline-only leaks); stderr passes through.
+- **O1** `unset MODEL_ALIASES_FILE`; capture file created under the per-run temporary directory
+  owned and cleaned by the outer test/campaign runner (the engine SIGKILLs target process groups
+  on timeout — `fuzz_engine.py:247-254,265-270` — so an in-target EXIT trap is best-effort only,
+  not the ownership boundary); mktemp failure → `SETUP-FAIL` (exit 8).
+- **O2** runs `relay-automation/resolve-model-alias.sh "$1"` capturing stdout BYTE-EXACTLY to
+  the capture file (never command substitution — it strips newline-only leaks); resolver stderr
+  passes through. Input mapping: the FIRST actual mutant argument is the input; absent input
+  maps to the empty string; additional arguments are ignored (documented, bounded).
 - **O3** fail-closed measurement: resolver rc captured; `wc -c` rc checked; raw wc output
-  validated as optional surrounding whitespace around exactly one decimal integer (macOS pads —
-  `/usr/bin/wc -c </dev/null` yields `       0`); any violation emits `MEASURE-FAIL` (exit 8).
-- **O4** invariants: rc outside 0/1/2 → `BADRC:<rc>` (exit 9); miss with stdout bytes →
-  `LEAK-STDOUT-ON-MISS` (exit 9); hit with empty stdout → `HIT-EMPTY-ON-MATCH` (exit 9);
-  otherwise exit 0.
+  validated as optional surrounding whitespace around exactly one decimal integer — internal
+  whitespace, split digits, empty output, and wc failure all emit `MEASURE-FAIL` (exit 8);
+  whitespace-padded valid counts are ACCEPTED (macOS pads: `/usr/bin/wc -c </dev/null` yields
+  `       0`).
+- **O4** invariants: resolver rc outside 0/1/2 → `BADRC:<rc>` (exit 9); miss with any stdout
+  bytes → `LEAK-STDOUT-ON-MISS` (exit 9); hit with zero stdout bytes → `HIT-EMPTY-ON-MATCH`
+  (exit 9); otherwise exit 0. Every oracle-owned diagnostic goes to STDERR (the engine discards
+  target stdout, `fuzz_engine.py:244,326`).
 
 **The smoke test** (`test/gh460-fuzz-resolver-smoke.sh`, registered in `validate.sh`'s TESTS list
-next to `model-alias.sh` so `ci-local.sh:269` derives it):
+next to `model-alias.sh` so `ci-local.sh:269` derives it): R1 (shared run contract, floor 20) —
+plus, before fuzzing, direct EXACT-value pins: known hit `glm-5.2` observes rc 0 with nonempty
+output; observed miss `totally-unknown-model-xyz` observes rc 1 with zero bytes (invoking the
+resolver directly — the oracle also accepts rc 2, so an all-rc-2 environment fails here); both
+must also pass the oracle. Wrapper mapping checks through `model_alias.resolve_model_slug`:
+`glm-5.2` → `z-ai/glm-5.2`; `deepseek v4 pro` → `deepseek/deepseek-v4-pro`; observed-miss input
+→ identity; empty input → identity.
 
-- **R1** runs the engine: seed 7, ≥20 iterations, `--base "glm-5.2"`, `--timeout-budget 30`,
-  `--json` (REQUIRED — human summary otherwise, `fuzz_engine.py:466-469`), `LC_ALL=C`, fresh
-  corpus + summary/telemetry paths per run. Parses the JSON summary fail-closed (missing/malformed
-  = failure) and asserts `executed >= 20`, `counts.fail == 0`, `counts.anomaly == 0`.
-- **R1-pre (environment pins, EXACT observed values):** a known hit `glm-5.2` observes rc 0 with
-  nonempty output; an observed miss `totally-unknown-model-xyz` observes rc 1 with zero output
-  bytes (invoking the resolver directly, not only through the oracle — the oracle also accepts
-  rc 2, so an all-rc-2 environment must fail here); both must pass the oracle too. Plus wrapper
-  mapping checks: `glm-5.2` → `z-ai/glm-5.2`; `deepseek v4 pro` → `deepseek/deepseek-v4-pro`;
-  observed-miss input → identity; empty input → identity (through
-  `model_alias.resolve_model_slug`, reusing the resolver as its own differential reference).
+**R2 (red control + falsification witnesses; witnessed once in this effort, evidence in
+`test/baselines/gh460-campaign/`):** with a cp-backup installed and restoration handlers
+(restore-on-exit AND restore-on-failure/interruption) in place BEFORE mutation, and an asserted
+EXACT one-site resolver replacement, each witness runs the direct oracle on a pinned input and
+must produce the exact stderr diagnostic + oracle exit, then restore to green (baseline → red →
+restored-green evidence per witness): (a) terminal miss `exit 1` → `exit 3`
+(`resolve-model-alias.sh:128` only; not the usage exit `:52`, not tier exits) → `BADRC:3`;
+(b) terminal miss → `printf 'LEAK\n'; exit 1` → `LEAK-STDOUT-ON-MISS`; (c) SEPARATE bare-newline
+witness — terminal miss → `printf '\n'; exit 1` → also `LEAK-STDOUT-ON-MISS` (catches regression
+to command-substitution capture, which strips the newline and would pass); (d) tier hit
+`printf '%s\n' "${canonicals[$i]}"` → no-output → `HIT-EMPTY-ON-MATCH`; (e) MEASURE-FAIL
+witnesses: a PATH-shim `wc` exiting 1 (failed wc), wc output with split digits, and wc output
+that is empty — all → `MEASURE-FAIL` exit 8; plus the padded-valid-count acceptance control. An
+unrelated failure is not a witness.
 
-**R2 (red control + negative-control witnesses, witnessed once in this effort, evidence in
-`test/baselines/gh460-campaign/`):** with a cp-backup + trap-restored resolver copy, each
-mutation is exercised through the direct oracle on a pinned input and must produce the exact
-stderr diagnostic + oracle exit, then restore to green: (a) terminal miss `exit 1` → `exit 3`
-(`resolve-model-alias.sh:128` only) → `BADRC:3`; (b) terminal miss → `printf 'LEAK\n'; exit 1`
-→ `LEAK-STDOUT-ON-MISS` (catches regression to command substitution — a bare `printf '\n'`
-newline-only variant is caught by byte counting, not substitution); (c) tier hit
-`printf '%s\n' "${canonicals[$i]}"` → no-output → `HIT-EMPTY-ON-MATCH`; (d) a PATH-shim `wc`
-exiting 1 → `MEASURE-FAIL`. An unrelated failure is not a witness; fresh corpus dir per run
-(`fuzz_engine.py:298`).
+**R3 (campaigns):** resolver oracle — seeds {7,8,9} × ≥500 iterations under the shared run
+contract. Wrapper-floor campaign — seed 11 × ≥300 through `model_alias.resolve_model_slug`,
+with the campaign adapter (not merely direct calls) applying the mapping checks from R1-pre to
+fuzzed inputs; wrapper expectation defined explicitly: empty input stays empty; otherwise a
+successful nonempty stripped resolver output is expected and every resolver failure/empty output
+falls back to the literal input (`model_alias.py:41-61`); string type and the nonempty floor are
+asserted. Every counterexample dispositioned on #460 per the loop contract.
 
-**R3 (campaigns):** 3 seeds {7,8,9} × ≥500 iterations (resolver oracle) + wrapper-floor campaign
-seed 11 × ≥300 through `model_alias.resolve_model_slug` (string inputs + fixed valid root;
-wrapper output must equal the resolver-derived expectation per iteration — resolver invoked as
-the observation, never a second matcher). Green per run: engine exit 0 AND nonempty valid JSON
-summary AND `executed >= <floor>` with `counts.fail == 0`, `counts.anomaly == 0`. Fresh corpus +
-paths per run; `LC_ALL=C`; unset `MODEL_ALIASES_FILE`.
+**R3b (evidence):** `test/baselines/gh460-campaign/` commits per-campaign seeds, initial corpus
+state, JSON summaries, telemetry JSONL, target/base/timeout/environment identity, regression
+inputs + replay commands, and `provenance.jsonl` for every run cited in the PR (AGENTS.md §6) —
+including baseline/red/restored-green evidence for every R2 witness. Seed-only replay is
+insufficient with differing corpus state (`fuzz_engine.py:122,298`); regression success after a
+future fix is asserted from pinned inputs, not from replaying a surviving corpus id
+(`:185-190` replaces/evicts).
 
-**R3b (evidence):** `test/baselines/gh460-campaign/` commits seeds, JSON summaries, telemetry
-JSONL, target/base/timeout/environment identity, regression inputs + replay commands, and
-`provenance.jsonl` for every run cited (AGENTS.md §6) — including baseline/red/restored-green.
-
-**R4 (defect routing):** spec'd defects → #457; new defects → filed + fixed here with
+**R4 (defect routing):** spec'd defects → #457; new defects → filed + fixed under #460 with
 corpus-derived regression tests. Any runtime (production) fix is separately scoped, rated, and
 rollback-analyzed before implementation — this PR's test-only rating covers smoke/registry/
 evidence only.
@@ -134,15 +153,18 @@ evidence only.
 
 ## Implementation order (one list, verification inline)
 
-1. Write `test/gh460-oracle.sh` (O1–O4) and `test/gh460-fuzz-resolver-smoke.sh` (R1 + R1-pre);
-   register the smoke in `validate.sh`'s TESTS list (R1b line next to `model-alias.sh`).
+1. Write `test/gh460-oracle.sh` (O1–O4) and `test/gh460-fuzz-resolver-smoke.sh` (shared run
+   contract, floor 20, R1-pre pins and wrapper mapping checks); register the smoke in
+   `validate.sh`'s TESTS list next to `model-alias.sh`.
    -> `bash test/gh460-fuzz-resolver-smoke.sh` exits 0 printing the executed count;
-   `grep gh460 validate.sh` shows the registration.
-2. Witness R2: run the four mutation witnesses (each cp-backed/trap-restored, exact diagnostic,
-   restored green). -> all four observed; evidence files land in `test/baselines/gh460-campaign/`.
-3. Campaigns (R3): resolver seeds 7/8/9 × 500 + wrapper seed 11 × 300, green criteria as specified.
-   -> summaries + telemetry + provenance committed under `test/baselines/gh460-campaign/`;
-   counterexamples (if any) triaged on #460 before the PR.
+   `grep gh460 validate.sh` shows the registration; the oracle passes `bash -n` and its decoded
+   engine argv mapping is verified (one mutant in, one input).
+2. Witness R2: run the five witness families (rc-3, LEAK, NEWLINE-ONLY-LEAK, HIT-EMPTY,
+   MEASURE-FAIL variants), each baseline → red → restored-green with evidence files.
+   -> all observed; evidence lands in `test/baselines/gh460-campaign/`.
+3. Campaigns (R3): resolver seeds 7/8/9 × 500 + wrapper seed 11 × 300 under the shared run
+   contract. -> summaries + telemetry + provenance committed under
+   `test/baselines/gh460-campaign/`; counterexamples (if any) triaged on #460 before the PR.
 4. Final Codex relay QA on the committed implementation; PR to `development`.
 
 ## Risks & rollback
