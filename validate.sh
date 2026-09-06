@@ -100,6 +100,7 @@ TESTS=(
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
+  "gh460-fuzz-resolver-smoke.sh" # GH-460 (standing fuzz smoke: resolver structural contract via Gen4 engine)
   "gh346-model-telemetry-honesty.sh" # GH-346 Phase 0 (a shim may not log a model id no dispatch path can produce)
   "gh346-resolver-fallback.sh"  # GH-346 Phase 1 (alias resolver is an enhancement over a literal floor, never a dependency)
   "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
