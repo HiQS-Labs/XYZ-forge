@@ -97,7 +97,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 61 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 59 · 🔮 0 · 🔲 0
+Summary: 62 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 60 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -162,6 +162,7 @@ Summary: 61 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 59 · �
 | GH-461 · Homepage quality proposition | ✅ | [GH-461-HOMEPAGE-QUALITY-COPY.md](PROJECT/3-COMPLETED/GH-461-HOMEPAGE-QUALITY-COPY.md) · [#461](https://github.com/HiQS-Labs/XYZ-forge/issues/461) |
 | GH-465 · Other Apps & Tools directory | ✅ | [GH-465-OTHER-APPS-TOOLS.md](PROJECT/3-COMPLETED/GH-465-OTHER-APPS-TOOLS.md) · [#465](https://github.com/HiQS-Labs/XYZ-forge/issues/465) |
 | GH-450 · Consume Model-catalog v1 (Phase 1) | ✅ | [doc](PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md) · [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/450) |
+| GH-471 · feat(skill): add a preservation gate to workhorse for irreversible operations | ✅ | [doc](PROJECT/3-COMPLETED/GH-471-WORKHORSE-PRESERVATION-GATE.md) · [#471](https://github.com/HiQS-Labs/XYZ-forge/issues/471) |
 
 ## Deferred · vision
 
