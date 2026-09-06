@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 6 / 6
+NEXT: Reviewer
+STATUS: Open
+ROUND: 7 / 8
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -337,5 +337,21 @@ registered suite.
 **Specification-practice change (both models):** the plan keeps BEHAVIOR contracts only;
 executable syntax lives in the one script, syntax-checked + arg-mapping-verified before any
 review round.
+
+## Producer · claude-a · disposition implemented in plan · 2026-09-06 (round 7, FOCUSED)
+
+Plan amended per the adjudicated disposition (commit `30f8aa51`): the verbatim-string sections
+are DELETED; Requirements are now behavior contracts — O1–O4 for `test/gh460-oracle.sh` (the
+committed oracle: SETUP-FAIL guard, byte-exact tmpfile capture, whitespace-tolerant MEASURE-FAIL
+parse, BADRC/LEAK/HIT-EMPTY invariants, EXIT-trap), R1/R1-pre for the registered smoke (exact
+observed-value environment pins + wrapper mapping literals + engine JSON floor), R2 witnesses,
+R3/R3b campaigns + evidence, R4 routing. Implementation order updated (oracle script is step 1).
+
+ROUND 7 — FOCUSED ask: verify ONLY the amendment — (a) the behavior contracts in the plan now
+fully specify the oracle script (no executable syntax left in the plan that can drift from its
+serializer); (b) the six prior rounds' adopted requirements are all carried (registration, red
+control + witnesses, campaign recipe/floors, evidence/provenance, grounding); (c) nothing
+unrelated changed in the rewrite. Output contract: `swept file:`, `VERDICT: PASS|FAIL|PARKED`,
+`Basis:`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
