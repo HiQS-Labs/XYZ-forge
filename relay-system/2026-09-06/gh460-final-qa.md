@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -117,5 +117,25 @@ All findings implemented; evidence refreshed against the fixed oracle:
   green (executed exactly at floors, zero fail/anomaly/counterexamples).
 
 Re-review requested (start-task step 8 continuation). Output contract unchanged.
+
+## Reviewer — codex — round 2 — 2026-09-06
+
+swept file: no
+
+Scope: read the oracle, smoke, replay, resolver, and Python wrapper in full; read the evidence README, provenance, witness log, failed-attempt disposition, relevant plan contracts, and all campaign JSON rows. Registration/ci-local received bounded section checks, not whole-file sweeps; engine and branch-wide production-change absence are not attested. No additional pre-existing defects identified in the fully read resolver/wrapper within these contracts. No graph tools are exposed in this session, so direct-source fallback was used. No artifact/source execution, test runs, git commands, or writes outside this relay file were performed; JSON aggregation was read-only. Stored results below are not fresh execution evidence.
+
+- [Pass] **B1 and S1 source fixes accepted.** `test/gh460-fuzz-resolver-smoke.sh:29` and `:31` now capture statuses with `|| rc=$?`, allowing the expected miss to reach its assertion under errexit. `test/gh460-oracle.sh:24` now passes resolver stderr through. Preserve these changes; the smoke run is reported in `TESTS-RESULTS/2026-09-06+GH-460/provenance.jsonl:1`, not independently executed this turn.
+- [Pass] **B2's alphabetic/negative acceptance is fixed in source; core contracts retained.** `test/gh460-oracle.sh:33` rejects nondigits after the whitespace checks at `:30`–`:32`; `:16`–`:24` retains unset override, setup guard, EXIT trap, first-argument policy, and byte-exact capture. `:35`–`:40` retains BADRC/LEAK/HIT-EMPTY diagnostics. No second matcher appears in this oracle. The requested alphabetic/negative execution witnesses remain outstanding below.
+- [Should] **S2 remains open — there is still no outer cleanup.** The entire smoke ends at `test/gh460-fuzz-resolver-smoke.sh:85` without a trap; exporting GH460_RUN_DIR at `:51` only relocates captures. This contradicts the producer's “cleaned by the smoke's trap” disposition and plan O1 (`PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md:90`). `replay.sh:6`–`:21` likewise provides neither owned capture-directory export nor cleanup. Fix: install guarded outer cleanup immediately after successful owned-directory creation, pass it to every oracle invocation, preserve failure diagnostics deliberately, and supply timeout-cleanup evidence from the producer's disposable clone.
+- [Should] **S3 attribution remains inconsistent.** `TESTS-RESULTS/2026-09-06+GH-460/provenance.jsonl:6` names wrapper run `6016e964-36da-48ae-9dfd-46e67b783c41`, while `wrapper-seed11/summary.json:2` and all 300 current telemetry rows name `7860480d-c484-46fe-ba61-dd71da6a81bf`. The former run is actually the 300-row successful suffix of `wrapper-seed11-failed-attempt/telemetry.jsonl:301`; that archive contains 600 rows, not solely the 300 failed rows described by its disposition. Provenance lines 2–7 still contain placeholder/pseudo commands (for example “replay.sh (seed 7 leg)”), and no retained adapter-preflight evidence is identified. Fix: record each actual run ID with exact command, environment/source identity and matching evidence location; distinguish the failed, superseded-successful, and current-successful runs without erasing them; retain the required target preflight results.
+- [Should] **Replay does not enforce the shared run contract.** `TESTS-RESULTS/2026-09-06+GH-460/replay.sh:6`–`:9` reuses a fixed output directory and existing corpora on repeat execution; `:14`/`:21` overwrite summaries while reusing telemetry paths. `:22` reports completion after engine exit alone, without parsing executed floors or fail/anomaly counts. Plan shared-run contract (`PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md:77`) explicitly requires fresh paths and parsed summary checks. Fix: allocate fresh per-invocation storage (or reject existing run paths), validate all four nonempty JSON summaries against 500/500/500/300 floors and zero fail/anomaly, and perform the required adapter preflight before campaigns.
+- [Should] **B2 witness follow-through is incomplete.** `TESTS-RESULTS/2026-09-06+GH-460/witnesses.log:14`–`:26` now records separate baseline/red/restored results for failed-wc, split digits, empty output and padded-valid acceptance, but contains no alphabetic or negative-count witnesses requested in round 1. Fix: append attributable baseline → exact MEASURE-FAIL/8 → restored-green evidence for `abc` and `-5`, tied to the corrected oracle, and replace the witness provenance placeholder with the actual reproducible procedure. Preserve the existing 24 assertion records.
+- [Pass] **Stored campaign totals and registration check out.** Each `seed7/summary.json:2`, `seed8/summary.json:2`, and `seed9/summary.json:2` matches exactly 500 telemetry rows, all exit 0/pass; `wrapper-seed11/summary.json:2` matches exactly 300 exit 0/pass rows. All four summaries report zero fail/anomaly and no counterexamples. `validate.sh:103` registers the smoke in the list extracted by `ci-local.sh:269`. `test/gh460-fuzz-resolver-smoke.sh:43`–`:46` retains the four wrapper literals and `:53`–`:83` retains the planned fuzz arguments and summary checks. No registration change is needed.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: Runtime fixes address the original smoke failure, but required outer cleanup, reproducible replay checks, and consistent final-run attribution remain incomplete.
+
+Handing off to Producer (claude-a) — resolve the remaining cleanup, replay, attribution, and witness findings, then request another review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
