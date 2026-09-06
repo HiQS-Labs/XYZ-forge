@@ -99,3 +99,41 @@ Evidence: `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`.
 Reversibility **Easy**: revert the PR. The YAML returns to its hand-maintained form (same 7 rows),
 the resolver never changed, and the `model_catalog_version` column is nullable — rows written
 while it existed survive a revert harmlessly.
+
+## Lessons Learned (For Future Agents)
+
+1. **Making a file generated is a documentation sweep, not a file edit.** Three places taught the
+   hand-append flow; the first pass updated two. The reviewer found the third
+   (`skills/open-router/SKILL.md`), and the failure mode was sharp: an operator following the
+   repo's own skill would turn the new drift check red. Before landing a "this file is now
+   generated" change, grep for every doc that names the file — the skill directory counts.
+2. **Put the guard at the single seam every caller uses, not in the file you were told not to
+   touch.** `resolve-model-alias.sh` had to stay byte-untouched, and the catalog's own CI rule
+   cannot see an ID that has already left the data. `utils/py/model_alias.py:resolve_model_slug`
+   is the one place every shim resolves through, so the tier-4 post-correction guard lives there.
+   The residual — callers that invoke the raw `.sh` directly — is named in code and in the skill
+   rather than pretended away.
+3. **Witness a control at the candidate sha, not an earlier one.** All four mutation reds were
+   first observed at `1f3743f5`; a later commit then changed the suite itself. The green gate did
+   run the final suite, but the *reds* predated it, so the controls were technically witnessed
+   against an older shape. Re-witnessing one mutation at the candidate is cheap; do it whenever a
+   test file changes after its controls were recorded.
+4. **A long-lived branch against an active `development` will conflict on generated ledger
+   artifacts, repeatedly.** This branch conflicted twice, on up to 7 files
+   (`releases.db`/`.sql`, `harnesses.db`/`.sql`, `ROADMAP-DASHBOARD.md`, `LEADERBOARD.html`,
+   `RELEASES-PREVIEW.html`). The resolution is never a hand-merge of a binary: take
+   `development`'s copy of every generated artifact, then re-apply your own contribution through
+   the CLI verbs (`init_db` + `dump` for the schema migration; `roadmap add`/`update` for the
+   ledger row) and regenerate the dashboards. Refresh early — the conflict set grows.
+5. **The error path deserves the same scrutiny as the happy path.** Making a swallowed `None`
+   diagnosable introduced a `sys` alias bound *inside* the `try` whose handler then referenced it —
+   the exact swallowed-`NameError` shape `test/gh346-telemetry-row-written.sh` was written to
+   catch. Anything an exception handler touches must be bound before the `try`.
+6. **Touching `relay-automation/**` means regenerating `relay-pkg.tar.gz`.** A one-line README
+   edit failed the pre-push gate on `relay-pkg-freshness`; `skills/relay-automation/make-pkg.sh`
+   is the fix and it is easy to forget because the tarball is not what you edited.
+7. **A pin record must not certify itself.** Both consumers converged on the same rule from
+   opposite directions: the Sleuth sync refused a tag move without an operator-supplied
+   `--expect-sha256`, and that review fed back here, where `pin` now refuses a tag move without
+   the release hash and refuses a re-vendored renderer without its commit. If a verification
+   artifact can be written from whatever bytes happen to be on disk, it verifies nothing.
