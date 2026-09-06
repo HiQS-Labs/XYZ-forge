@@ -122,6 +122,11 @@
     Maintain tested, independent backups, keep the verification gates on, and read the recovery
     report after any interrupted run before trusting its commits.</p>
 
+    <h2>How is code review and quality assurance handled across a Marathon or Jog run?</h2>
+    <p>Through a strict two-tier architecture that decouples deep code auditing from macro delivery gates:</p>
+    <p><strong>1. Per-issue code-level QA:</strong> For every individual GitHub issue or marathon phase, the harness drives an autonomous Builder ↔ Reviewer relay loop using separate model roles (e.g. Agy builder, Codex reviewer). The Reviewer audits modified files in full (<code>swept file: yes</code>), checks acceptance probes, and must emit an explicit <code>Approved</code> status before the harness runs local test suites (<code>validate.sh</code>) and generates an on-disk cryptographic gate receipt (<code>.xyz/receipts/&lt;SHA&gt;.json</code>).</p>
+    <p><strong>2. PR-level mechanical framework checks:</strong> On final branch PR closeout and landing, deterministic scripts (<code>marathon-closeout.sh</code>, <code>gate_receipt.py</code>, <code>githooks/pre-push</code>) and the main orchestrator model verify system invariants: base branch targeting (strictly <code>development</code>, never <code>main</code>), diff size sanity (&lt; 500 lines for targeted bugs), gate qualification receipts, and CI mergeability. The orchestrator performs a mechanical framework check rather than an ungrounded second-pass diff read.</p>
+
     <h2>Where does the Roadmap page's data come from?</h2>
     <p>Straight from the repository's committed releases ledger
     (<code>releases.db</code> / <code>releases.sql</code>) — the same source of truth the repo's

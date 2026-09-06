@@ -143,6 +143,15 @@
       </table>
     </div>
 
+    <h2>Quality assurance &amp; verification architecture: two-tier review</h2>
+    <p>XYZ Forge treats code and repository quality as a top priority. Quality assurance is divided into two decoupled tiers so that fine-grained code correctness and macro system delivery are both rigorously verified:</p>
+    <ul>
+      <li><strong>Tier 1 — Per-issue code-level QA (Builder ↔ Reviewer relay):</strong>
+      Detailed code analysis is performed for every individual GitHub issue or marathon phase. A distinct Reviewer agent (separated from the Builder model) reviews modified files in full (<code>swept file: yes</code>), validates acceptance probes, and must emit an explicit <code>Approved</code> status. The harness then runs real test suites (<code>validate.sh</code>) and generates a machine-checkable on-disk gate receipt (<code>.xyz/receipts/&lt;SHA&gt;.json</code>).</li>
+      <li><strong>Tier 2 — Final branch PR &amp; orchestrator framework checks:</strong>
+      When closing out a marathon branch or landing a jog queue, the main orchestrator model acts as the <strong>outer supervisor</strong> performing a mechanical framework system check rather than a superficial second-pass diff read. Deterministic tooling (<code>marathon-closeout.sh</code>, <code>gate_receipt.py</code>, <code>githooks/pre-push</code>) hard-locks the base branch against <code>main</code>, verifies on-disk gate receipts for the final commit SHA, confirms CI attestation, and validates that diff sizes match the task scope before merging.</li>
+    </ul>
+
     <h2>How “done” is defined</h2>
     <p>XYZ separates a claim from evidence: an uncommitted run artifact is not proof. Gates are
     real commands that must pass on the final state; a passing assertion counts only once it has

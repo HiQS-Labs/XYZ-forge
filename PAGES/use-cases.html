@@ -72,6 +72,10 @@
         and may block. LLM review may warn, rank, or propose — it may never block.</p>
       </div>
       <div class="card">
+        <h3>Code &amp; repo quality first</h3>
+        <p>Two-tier QA pairs separate builder and reviewer models for whole-file per-task code audits, backed by deterministic on-disk gate receipts and orchestrator mechanical PR checks.</p>
+      </div>
+      <div class="card">
         <h3>Docs are runtime state</h3>
         <p>Work has to be resumable from <code>PROJECT/**</code> alone, so drift between docs
         and code is a defect with teeth, not project-management paperwork.</p>
@@ -90,7 +94,7 @@
           <tr><td><strong>Rate</strong></td><td><code>pri</code> / <code>sev</code> / <code>appeal</code> / <code>effort</code> scores decide what runs next — and why that.</td></tr>
           <tr><td><strong>Plan</strong></td><td>The wave planner batches lanes with exact write-set intersection, zone caps, and dependency gating.</td></tr>
           <tr><td><strong>Preflight</strong></td><td>Freshness probes, already-landed detection, and a readiness verdict before anything fires unattended.</td></tr>
-          <tr><td><strong>Gate &amp; land</strong></td><td>Verification gates with CPU/wall/RSS caps at every boundary; a killed gate escalates distinctly instead of failing silently.</td></tr>
+          <tr><td><strong>Gate &amp; land</strong></td><td>Verification gates with CPU/wall/RSS caps at every boundary, on-disk gate receipts, and orchestrator mechanical PR sanity checks.</td></tr>
           <tr><td><strong>Record</strong></td><td>A receipted release ledger (SQLite + a git-mergeable SQL dump) answers what shipped with evidence.</td></tr>
         </tbody>
       </table>

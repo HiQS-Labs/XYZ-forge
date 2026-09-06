@@ -83,6 +83,19 @@
       </div>
     </div>
 
+    <h2>Core Value Proposition: Code and repo quality are a top priority</h2>
+    <p>Running autonomous coding agents at scale becomes a liability if quality verification is an afterthought or left to model self-reports. XYZ Forge enforces a strict, multi-tier verification architecture that separates deep, file-level code audits from outer system-level delivery gates:</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3>1 · Per-task code QA: Builder ↔ Reviewer relays</h3>
+        <p>Code-level review happens <strong>per GitHub issue/phase</strong>. A dedicated Reviewer agent (strictly separated from the Builder model) performs a comprehensive whole-file sweep (<code>swept file: yes</code>), validates acceptance probes, and must emit an explicit <code>Approved</code> verdict. Every approved change is executed against real test suites and stamped with a deterministic on-disk gate receipt (<code>.xyz/receipts/&lt;SHA&gt;.json</code>).</p>
+      </div>
+      <div class="card">
+        <h3>2 · Final branch PR: Deterministic framework gates</h3>
+        <p>The main orchestrator model acts as the <strong>outer supervisor</strong> performing a mechanical framework system check rather than a superficial second-pass diff read. Deterministic tooling (<code>marathon-closeout.sh</code>, <code>gate_receipt.py</code>, <code>pre-push</code> hooks) hard-locks the base branch against <code>main</code>, verifies on-disk gate receipts, checks CI mergeability, and enforces diff-size sanity before anything lands.</p>
+      </div>
+    </div>
+
     <h2>The operations layer — what makes it a lifecycle system</h2>
     <p>Unattended agents fail for boring reasons: the work was under-specified, two lanes
     collided, a gate never ran, or nobody can tell afterward what actually landed. Each of those
@@ -96,6 +109,7 @@
           <tr><td><strong>Wave planner</strong> — exact write-set intersection, zone caps, dependency gating</td><td>“Can these lanes run together without colliding?”</td></tr>
           <tr><td><strong>Preflight</strong> — freshness probes, already-landed detection, readiness verdict</td><td>“Is this specified well enough to run while I sleep?”</td></tr>
           <tr><td><strong>Verification gates</strong> — a gate must be able to <em>start</em> before turn 1, with CPU/wall/RSS caps</td><td>“Did anything actually prove this works?”</td></tr>
+          <tr><td><strong>Deterministic gate receipts</strong> — machine-checkable on-disk proof before PR or push</td><td>“Did the exact commit SHA pass the qualification suite?”</td></tr>
           <tr><td><strong>Release ledger</strong> — SQLite + a git-mergeable SQL dump, receipted writes</td><td>“What did we promise, and what shipped with evidence?”</td></tr>
           <tr><td><strong>Doc governance (PDDA)</strong> — frontmatter, status tables, ledger coverage</td><td>“Can an agent resume this work tomorrow from the docs alone?”</td></tr>
           <tr><td><strong>HQ</strong> — multi-repo resolution, capability tiers, previewed writes</td><td>“Do that, for project Acme, from wherever I am”</td></tr>
