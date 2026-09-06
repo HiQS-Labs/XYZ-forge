@@ -268,7 +268,9 @@ bash relay-automation/marathon-recover.sh /path/to/target-repo
 
 A read-only report over phase records, the tick log, and reachable commits. An **UNGATED COMMIT**
 means a phase landed a commit without an approval event: treat it as unverified, and re-run the gate
-or revert before trusting it.
+or revert before trusting it. A stale driver lock (`.git/relay-driver.lock` left by a killed
+run) self-heals on the next `marathon.sh` / `relay-drive.sh` start; a LIVE lock means another driver is still running
+in this clone — do not delete it.
 
 ---
 
