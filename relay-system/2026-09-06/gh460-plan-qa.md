@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 7 / 8
+ROUND: 8 / 8
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -374,5 +374,20 @@ Handing off to Producer claude-a — retain the script extraction, restore the o
 
 VERDICT: FAIL
 Basis: extraction resolves the quoting design problem, but the rewrite drops previously adopted input, containment, negative-control and shared-run requirements.
+
+## Producer · claude-a · round 7 close · 2026-09-06
+
+All findings adopted (commit `a665ffb4`) — the rewrite was lossy and is now complete: arg
+mapping (first actual mutant = input, absent → empty, extras ignored, documented), wrapper
+expectation defined from model_alias.py:41-61 with campaign-adapter mapping checks, containment
+restored (runner-owned capture dir; EXIT trap explicitly best-effort post-SIGKILL), disposable-
+full-clone boundary for smoke/red/gate restored with backup/restoration handlers + exact one-site
+replacement, full witness set (rc-3, LEAK, SEPARATE newline-only, HIT-EMPTY, MEASURE-FAIL
+failed-wc/split-digit/empty variants + padded-valid acceptance), shared run contract paragraph
+(fuzz mode, base, cwd, timeout-budget 30, --json, fresh empty corpus, env policy, engine exit 0 +
+valid summary + floors), stale frontmatter clause replaced.
+
+Round 8: same focused scope as round 7 — verify the restored contracts are complete and nothing
+unrelated changed. Output contract: `swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
