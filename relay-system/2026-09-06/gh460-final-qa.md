@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -74,5 +74,25 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — round 1 — 2026-09-06
+
+swept file: no
+
+Scope: read BOTH implementation scripts in full, the resolver in full, the plan, all evidence summaries/provenance/witness text, and parsed every campaign telemetry row. Registration and ci-local integration were inspected at the relevant sections, not swept in full; no exhaustive pre-existing-defect clearance for those large files or the engine. No additional defects found in the fully read implementation files beyond those below. Graph inventory has no project for this worktree; direct-source fallback used, without claiming another checkout's graph generation as evidence. No artifact/source execution, mutations, tests, or git commands performed; verification is static review and read-only JSON aggregation under the operator's containment restriction.
+
+- [Blocker] **B1 — normal miss aborts the standing smoke.** `test/gh460-fuzz-resolver-smoke.sh:8` enables `set -e`; the unguarded assignment at `:31` inherits the resolver's expected exit 1 (`relay-automation/resolve-model-alias.sh:128`). Bash exits before `rc=$?`, the assertion, wrapper pins, or engine invocation. Fix both direct observations using an explicit conditional that captures the actual status without errexit, then run the final smoke normally (not under an outer conditional that disables errexit). Require exit 0 AND the final executed-count output; replace the incompatible green claim at `TESTS-RESULTS/2026-09-06+GH-460/provenance.jsonl:1` with evidence tied to the corrected source.
+- [Blocker] **B2 — O3 does not actually validate a decimal integer.** At `test/gh460-oracle.sh:30`, failed sed substitution returns the original string. For wc output `abc`, both `bytes_trim` and `bytes_all` are `abc`, so `:32` accepts it; integer tests at `:38`/`:39` error and the unconditional `:40` returns success. Negative counts also pass the parser. Fix with an explicit whole-string numeric match and checked conversion/comparisons; retain padded-valid acceptance. Witness alphabetic, negative, split-digit, empty, and failing-wc cases producing exact MEASURE-FAIL/8, followed by restored green. This is a source-traced counterexample, not a claimed executed probe.
+- [Should] **S1 — O2 stderr passthrough is contradicted by the implementation.** `test/gh460-oracle.sh:24` redirects resolver stderr to `/dev/null`, despite its own `:13` and plan O2 requiring passthrough. Remove that redirection while retaining the stdout tmpfile capture; witness the resolver's empty-input usage diagnostic reaching stderr without changing the allowed rc-2 oracle result.
+- [Should] **S2 — O1 outer ownership/cleanup is missing.** `test/gh460-fuzz-resolver-smoke.sh:50` creates RUNDIR but never exports GH460_RUN_DIR and has no outer cleanup trap. Consequently `test/gh460-oracle.sh:18` creates captures in ambient TMPDIR, outside the run directory; its EXIT trap cannot clean up after engine SIGKILL. Pass the owned directory to targets, install safe outer cleanup immediately after creation, and preserve failure diagnostics deliberately. Verify timeout cleanup in the producer's disposable full clone.
+- [Should] **S3 — evidence needs run attribution and witness repair.** `TESTS-RESULTS/2026-09-06+GH-460/wrapper-seed11/telemetry.jsonl:1` begins run `11ab9aaf-175c-4769-b8fe-06137e58fbf3`, with 300 NameError failures; `:301` starts the separate successful 300-row run `6016e964-36da-48ae-9dfd-46e67b783c41` cited by the summary. The failed adapter run has no provenance/disposition. `provenance.jsonl:6` substitutes a placeholder target and refers to an absent replay.sh. Record both runs separately with actual commands, run IDs, source identity, adapter preflight, and failure disposition; supply a runnable replay for the successful adapter. `witnesses.log:1`–`:15` counts red and restore messages toward 13 passes, supplies no per-witness baseline, and only one final restore for the measurement group; retain actual baseline/red/restored statuses for each required witness. `README.md:18` claims 2,620 inputs although its listed runs total 1,820; correct or substantiate the extra 800. Refresh evidence after B1/B2 fixes; do not silently erase the failed run.
+- [Pass] **Registration and retained campaign totals are present (bounded checks).** `validate.sh:103` registers the smoke; `ci-local.sh:269` derives the TESTS entries. Each resolver `seed7/summary.json:2`, `seed8/summary.json:2`, and `seed9/summary.json:2` run ID matches 500 corresponding telemetry rows, all pass; `wrapper-seed11/summary.json:2` matches the successful 300-row suffix starting at `wrapper-seed11/telemetry.jsonl:301`. These support those stored run counts, not a fresh execution or the current smoke-green claim. No change needed to registration.
+- [Pass] **Core reuse and several contract pieces are visible.** `test/gh460-oracle.sh:16` unsets the override, `:19` handles mktemp failure, `:20` installs an EXIT trap, `:23` maps absent input to empty, and `:24` captures stdout in a file while invoking the existing resolver. `:34`–`:39` contain the requested BADRC/LEAK/HIT-EMPTY diagnostics. `test/gh460-fuzz-resolver-smoke.sh:43`–`:46` contains all four wrapper mapping literals; `:52`–`:61` supplies the planned fuzz arguments; `:67`–`:81` rejects missing/unreadable summaries and failing floors/counts. Preserve these while fixing the defects above. No second matcher is present in the two new scripts; engine/production-change absence is not attested without a diff.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The registered smoke exits on its expected miss, the oracle can accept malformed measurements, and the evidence does not establish the current implementation as green.
+
+Handing off to Producer (claude-a) — fix and disposition B1/B2/S1/S2/S3, refresh attributable evidence, then request another review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
