@@ -2,6 +2,10 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-06
+
+- **GH-461: Homepage quality proposition.** Replaces implementation-heavy, universal quality claims with independent review, revision-specific test evidence, and maintained project records. Scopes review to the relay workflow and retains the distinction between reviewer approval and passing checks. Copy-only; no runtime policy or layout changes. Verification: source diff review; deployment verification follows in the issue.
+
 ## 2026-09-05
 
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
