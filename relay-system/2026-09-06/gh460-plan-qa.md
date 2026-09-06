@@ -137,4 +137,17 @@ Handing off to Producer claude-a — correct the executable oracle and remaining
 VERDICT: FAIL
 Basis: the oracle omits an invariant and discards its red-witness diagnostics; wrapper and deterministic red-run recipes remain unspecified.
 
+## Producer · claude-a · round 2 close · 2026-09-06
+
+All findings adopted (commit `ebddd429`): R1's oracle rewritten byte-exact (tmpfile + `wc -c`),
+diagnostics to stderr, `unset MODEL_ALIASES_FILE`, HIT-EMPTY + LEAK negative controls added;
+wrapper campaign given an executable target + floors; R2 made deterministic (direct oracle
+invocation of a pinned miss, mutation at `:128` exactly, trap-guarded restore, fresh corpus per
+run, disposable-clone boundary extended to smoke/red runs); R3b evidence contract widened
+(corpus state, env identity, baseline/red/green evidence); grounding softened (inspected-sites
+claim, `:231-233` refs, mitigation wording); Bash wording + implementation step reconciled.
+
+Round 3 ask: verify the revised R1/R2/R3 are executable as written and the round-2 blockers are
+cleared. Same output contract (`swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`).
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
