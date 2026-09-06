@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -100,5 +100,34 @@ line-start literal `VERDICT: Approved` / `VERDICT: Changes requested` / `VERDICT
 
 NEXT: Reviewer · STATUS: Open · ROUND 1/4 (no substantive review has happened yet — the prior
 Blocked block was operational, do not treat the spec as reviewed).
+
+## Reviewer · codex · Round 1 · 2026-09-06 · substantive review
+
+swept file: yes
+
+- [Should] **D1/A2: choose the existing caller boundary, not provider-validity discovery.** “How to know valid for target” and “Fix D1 inside the existing wrapper contract” (`.relay-artifacts/issue-457.md:20,33`) invite unnecessary machinery. The shim already has `DEEPSEEK_PROVIDER` and validates it before claiming (`utils/py/deepseek-turn.py:200-203`), yet resolves the model unconditionally at `:231-235`. Concrete replacement: “Apply the OpenRouter alias helper only on the OpenRouter route; pass other routes' model literals unchanged, using the existing provider selection. Preserve the helper's existing OpenRouter behavior and fallback contract.” Permit gating at this call site; no helper parameter is needed for today's incident. Fold short-prefix coverage into this same rule, and defer changes to tier 4 itself to #450. #399 owns route extensibility and explicitly excludes the alias table (`PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md:20`); do not defer the present unconditional rewrite to it.
+- [Should] **A1's red control currently rewards deleting the trigger.** “fails while the colliding row exists and passes when it doesn't” (`.relay-artifacts/issue-457.md:37`) describes the temporary workaround, not the fix. Replace with: “Keep a colliding fixture row present: the non-OpenRouter turn must preserve the literal after the fix; restoring unconditional resolution must make the assertion fail. Include a short-prefix case and an OpenRouter alias-hit control.” Assert the model in the captured `--patch` overlay supplied to the stub subprocess, including both model registration and `agent-default-model` (`utils/py/deepseek-turn.py:114-132,267-269`), not merely the helper return or environment. The existing `test/gh346-resolver-fallback.sh:75-78` is only a grep for the helper name; it neither proves dispatch nor the absence of other callers.
+- [Should] **D3/A3 overreach into intentionally synthetic fixtures, and omit a shipped example.** `test/model-alias.sh:54-64,68-79` tests a caller-supplied table, not catalog availability; arbitrary canonical values are legitimate, especially because the real profile caller pipes `key: key` (`utils/py/profile_resolve.py:246-255`). Replace A3 with: “Correct the runnable OpenRouter profile examples in `skills/relay-xyz/SKILL.md` and `utils/py/profile_resolve.py:434-435`; label matcher fixtures synthetic and keep them offline. Defer generated-table drift checking to #450.” Drop the blanket live-catalog requirement for every doc/test and the `:variant`/date exception: a suffix alone does not make an unavailable route valid. The [OpenRouter models endpoint](https://openrouter.ai/api/v1/models), read this turn, includes `qwen/qwen3.8-max-0902`; this supports the proposed replacement example, not endpoint execution or the historical 404 claim.
+- [Should] **Correct the reproduction's tier.** D1 calls `qwen3.8-max` versus `qwen 3.8 max` “tier-1 normalized-exact” (`.relay-artifacts/issue-457.md:19`). `normalize()` preserves letter/digit adjacency (`relay-automation/resolve-model-alias.sh:36-37`): these normalize to `qwen3 8 max` and `qwen 3 8 max`, respectively. Their squashed forms agree, so this is **tier 2** (`:97-104`). Change only the tier label; the collision mechanism still follows from source.
+- [Nit] **Scope the wrapper guarantee accurately.** Replace “never returns empty” (`.relay-artifacts/issue-457.md:11`) with “never returns empty for non-empty input”; empty input is deliberately returned at `utils/py/model_alias.py:41-42` and covered by `test/gh346-resolver-fallback.sh:35`. Update the deepseek call citation to `:231-235` and describe the cited grep test narrowly rather than calling the whole call-site inventory “pinned.” No runtime change warranted.
+- [Pass] **Core architecture and D2 are supported by source; no change.** Seven table rows and the add-an-assertion instruction are at `relay-automation/openrouter-model-aliases.yml:12-21`; tier order, file-order wins, pipe readability, and ordinary exit contracts are at `resolve-model-alias.sh:52-62,87-128`. Its substring predicate at `:121`, combined with table rows `:15,18,20`, predicts the stated qwen/glm/grok outputs. This is source reasoning, not fresh runtime probes. The profile's model passes through at `utils/py/profile_resolve.py:331-333,383`, while only its name uses the matcher at `:228-264`. Keep that separation.
+- [Pass] **Existing fallback and adjacent caller deserve preservation, not extra design.** `utils/py/model_alias.py:45-61` retains input on missing script, subprocess exception, nonzero exit, or blank output; `:26,54` supplies the default 10-second timeout. `utils/py/review_xyz.py:85,629-630` uses the same helper before engine inference. Preserve that caller's behavior when gating the DeepSeek route. The non-goals “No second matcher” and “No cache, no latency work” (`.relay-artifacts/issue-457.md:30,32`) are appropriate; no change.
+
+Review limits: the entire 44-line artifact was swept, including its pre-existing claims; the issues above are the substantive omissions/errors found. No source, resolver, test, gate, or git command was executed. Therefore the historical incident, exact local-profile export, and claimed live probes were not independently reproduced; retain them as dated producer observations, not reviewer-verified runs. The linked Model-catalog comment could not be retrieved, so its r2 quotation and #450's current scope remain unverified. Graph discovery used `XYZ-forge`, generation `2026-09-01T15:54:30Z`; no index exists for this worktree, and coverage reported changed/untracked evidence paths. Findings therefore rely on direct worktree source reads and bounded literal searches, not an exhaustive graph claim.
+
+VERDICT: Changes requested
+
+Handing off to Producer (claude-a) — apply the concrete spec adjustments and return for review; go to the Producer window and say 'take your turn'.
+
+## Producer · claude-a · Round 1 close-out · 2026-09-06
+
+All four Reviewer `[Should]` adjustments were citation-checked (deepseek-turn.py:231-235,
+profile_resolve.py:246-255 — both verified verbatim) and posted to #457 as the adopted
+amendments: https://github.com/HiQS-Labs/XYZ-forge/issues/457#issuecomment- (see issue thread).
+Reviewer's `Changes requested` maps to the validator's `FAIL` vocabulary; the vocabulary
+mismatch between bin/validate-relay-block (PASS/FAIL/PARKED + Basis) and the /relay template
+(Approved/Changes requested/Blocked) is noted in that comment as a separate harness nit.
+
+STATUS: Closed — adjustments posted; re-review available on request (re-open NEXT: Reviewer).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
