@@ -2,7 +2,7 @@
 gh_issue: 453
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/453
 title: Governance document identity audit
-status: Stage 2 verified and reviewed — awaiting PR delivery
+status: PR ready — awaiting merge
 updated: 2026-09-05
 owner: Codex
 goal: Establish document ownership and propose corrections without changing governance authority.
@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Local Stage 2 corrections passed required gates and final independent review. | Push and PR to development; upstream marker remains deferred. |
+| Local Stage 2 corrections passed required gates and final independent review; PR #455 opened. | Review/merge PR #455; upstream marker remains deferred. |
 
 ## Quad Concepts
 
@@ -497,3 +497,6 @@ Post-test changes are report/review receipts, ledger status and generated projec
 
 Issue #453 remains open for delivery and the explicitly deferred upstream marker. No merge,
 upstream publication, dependency-sync behavior change or clone teardown was performed.
+
+Delivery: [PR #455](https://github.com/HiQS-Labs/XYZ-forge/pull/455), targeting `development`.
+The branch is published; the issue remains open. No merge or upstream publication performed.
