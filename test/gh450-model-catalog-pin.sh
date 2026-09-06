@@ -51,14 +51,15 @@ pin_tag="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tag"
 
 # The generated YAML says where it came from, in its first line, with the version — a fresh reader
 # must never mistake it for the hand-maintained GH-120 table it replaced.
-head -1 "$ROOT/$YAML" | grep -q "GENERATED from HiQS-Labs/Model-catalog v$ver" \
-  && pass "YAML header names the catalog version (v$ver) and says it is generated" \
-  || fail "YAML header does not name Model-catalog v$ver: $(head -1 "$ROOT/$YAML")"
+yaml_head="$(head -1 "$ROOT/$YAML")"
+case "$yaml_head" in *"GENERATED from HiQS-Labs/Model-catalog v$ver"*)
+  pass "YAML header names the catalog version (v$ver) and says it is generated" ;;
+  *) fail "YAML header does not name Model-catalog v$ver: $yaml_head" ;; esac
 
 # Every non-comment YAML line is exactly one `openrouter` row from the copy, and every openrouter
 # row is present — the native (AEGIS-Sleuth) rows must never leak into a table an OpenRouter
 # resolver reads (Model-catalog consumer contract: same-target scoping).
-yaml_rows="$(grep -v '^#' "$ROOT/$YAML" | grep -c ':' )"
+yaml_rows="$(grep -c '^[^#].*:' "$ROOT/$YAML")"
 cat_rows="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(sum(1 for a in d["aliases"] if a["target"]=="openrouter"))' "$ROOT/$CAT_DIR/catalog.json")"
 native_rows="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(sum(1 for a in d["aliases"] if a["target"]=="native"))' "$ROOT/$CAT_DIR/catalog.json")"
 [ "$yaml_rows" = "$cat_rows" ] && [ "$cat_rows" -gt 0 ] \
