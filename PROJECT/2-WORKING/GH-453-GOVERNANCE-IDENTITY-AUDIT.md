@@ -83,7 +83,8 @@ misreading is one reported example, not a measured rising rate.
 - [ ] Every requested file and numbered principle has a row; evidence boundaries are explicit.
 - [ ] Missing upstream provenance or local-authority ambiguity is not silently resolved.
 - [ ] Revised prompt retains the original requirements, except expressly corrected statements.
-- [ ] Only prompt, intake/report, ledger projections and review evidence changed.
+- [ ] Only prompt, intake/report, ledger projections, review evidence and a new CHANGELOG
+  end-of-iteration entry changed; no historical changelog rewrite.
 - [ ] Review and hygiene results are recorded honestly; no Stage 2 completion claim.
 
 The final reviewer gets an omission-diff question comparing the issue-body requirements, revised

@@ -109,7 +109,8 @@ coverage, and fall back to direct source for changed, missing, or excluded evide
 
 ### Stage 1 — inventory and proposal. Do not edit governance content yet.
 
-Intake metadata, this revised task prompt, the report, and review/evidence artifacts are permitted.
+Intake metadata, this revised task prompt, the report, review/evidence artifacts, and a new
+CHANGELOG end-of-iteration entry are permitted. Do not rewrite historical changelog entries.
 The report belongs in the issue's canonical project document, not a competing plan. No policy,
 filename, import mechanism, checker behavior, or applicability change is authorized in Stage 1.
 

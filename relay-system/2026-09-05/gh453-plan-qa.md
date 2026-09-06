@@ -2,7 +2,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN
 
@@ -20,6 +20,11 @@ approval; otherwise stays Open. Do not execute the audit: this is plan QA.
 - Handoff: cli-driven Codex, review-once; maximum three review rounds.
 - Definition of Done: a bounded, complete, evidence-aware Stage 1 plan preserving the explicit
   maintainer stop before Stage 2, and conforming to the start-task rating/containment requirements.
+
+For harness compatibility, your new reviewer block must also include a standalone line
+`VERDICT: PASS` when approved, `VERDICT: FAIL` when requesting changes, or `VERDICT: PARKED` when
+blocked, plus a non-empty `Basis:` line. Set STATUS: Approved only with PASS. Descriptive prose
+“Changes requested” alone is not a machine-valid VERDICT. Do not edit the previous reviewer block.
 
 ## Ground rules
 
@@ -46,6 +51,48 @@ runs separately in a disposable full clone and is not report implementation evid
    documentation-only stage? Is a requirement untestable or satisfiable by an empty report?
 5. Are any blockers hidden by workflow prose? Report concrete omissions rather than rephrasing it.
 **Open questions:** none beyond those listed.
+**Commit:** harness-managed checkpoint.
+
+### Round 1 · Reviewer · 2026-09-05
+
+**Verdict:** Changes requested.
+
+**Basis:** Reviewed the relay thread, `PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md`, `PROJECT/1-INBOX/CODEX-GOVERNANCE-DOC-AUDIT-PROMPT.md`, and current `PROJECT/*.md` / `GUIDING-PRINCIPLES.md` / `ROUTER.md` surfaces for the plan-only QA questions. I did not execute the audit or run project gates.
+
+**Findings & proposals:**
+
+- **Should** — The Stage 1 changed-file boundary contradicts itself around `CHANGELOG.md`. The revised prompt permits “Intake metadata, this revised task prompt, the report, and review/evidence artifacts” for Stage 1 (`PROJECT/1-INBOX/CODEX-GOVERNANCE-DOC-AUDIT-PROMPT.md:112-114`), while the plan checklist says “Only prompt, intake/report, ledger projections and review evidence changed” (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:83-87`). But the execution log also says a “new dated” changelog entry addressed the reminder (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:115-116`). That leaves the plan unable to pass its own checklist if `CHANGELOG.md` really changed, and unclear if a changelog entry is Stage 1 evidence, PDDA end-of-iteration metadata, or out-of-scope governance content. Proposed correction: explicitly add `CHANGELOG.md` to the allowed Stage 1 metadata/evidence boundary as “PDDA end-of-iteration record only; no historical rewrite,” or remove the changelog-change claim until Stage 2/closeout.
+
+- **Pass** — The required document inventory is bounded correctly: current `PROJECT/*.md` contains five files, and the prompt adds `GUIDING-PRINCIPLES.md`, `AGENTS.md`, and `ROUTER.md`, matching the plan’s “eight documents” wording (`PROJECT/1-INBOX/CODEX-GOVERNANCE-DOC-AUDIT-PROMPT.md:118-123`; `PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:68-69`).
+
+- **Pass** — The Stage 1/Stage 2 split preserves the maintainer stop. The scope and Stage 2 sections both prohibit governance edits before approval (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:34-37`, `PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:95-99`), aligning with the prompt’s explicit stop (`PROJECT/1-INBOX/CODEX-GOVERNANCE-DOC-AUDIT-PROMPT.md:149-151`).
+
+- **Pass** — The plan keeps uncertain authority and sync durability unresolved rather than papering them over. It requires provenance/import inspection, ambiguity handling, strategy trade-offs, and no sync-persistence claim without evidence (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:70-77`, `PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:83-93`).
+
+- **Pass** — The rating `70/65/50/55` is grounded and recurrence-neutral. The plan explains impact, effort, appeal neutrality, and explicitly refuses to turn nearby issues or query counts into a measured recurrence trend (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:56-64`).
+
+**Answers:**
+
+1. Yes, with the changelog-boundary correction above. The revised prompt preserves the original deliverables while correcting ownership/authority, stale claims, sync durability and clone-safety framing.
+2. Yes. The Stage 1 plan covers the eight required documents and every numbered principle, preserves uncertain evidence, and stops before governance edits.
+3. Yes. The rating is sufficiently grounded, appeal-neutral and recurrence-unknown.
+4. Mostly yes. Consumer/import paths, rollback, surface limits and checks are sufficient for a documentation-only report stage. The plan also guards against an empty report by requiring non-empty inventory rows and exact replacement text, but the changed-file boundary needs clarification.
+5. No hidden blocker found beyond the changelog Stage 1 scope contradiction.
+
+**Commit:** harness-managed checkpoint.
+
+### Round 2 · Producer · 2026-09-05
+
+**Decisions on proposals:** Implemented the changelog-scope correction in the prompt and plan
+checklist: new end-of-iteration record allowed; historical entries remain untouched. All other
+findings were Pass and need no change.
+**Did:** Clarified the required machine verdict in this thread. Round 1's text was returned but
+its driver exited 8 because Changes requested is not one of PASS/FAIL/PARKED; it is not approval.
+The earlier no-output attempt failed on the installed CLI's unsupported configured model.
+**Verification:** Read the corrected prompt and checklist; full unchanged-base preflight exited 0
+with five retry recoveries and unchanged identity. No governance content changed.
+**Re-review this:** Confirm the scope correction and give a final plan verdict. Read the two
+artifacts, but do not repeat the full repository audit. Output VERDICT: PASS/FAIL/PARKED and Basis.
 **Commit:** harness-managed checkpoint.
 
 <!-- ↓↓↓ NEXT TURN GOES ABOVE THIS LINE ↓↓↓ -->
