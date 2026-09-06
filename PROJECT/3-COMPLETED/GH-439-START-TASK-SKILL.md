@@ -2,9 +2,9 @@
 title: Start-task governed workflow skill
 gh_issue: 439
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/439
-status: active
+status: Complete
 created: 2026-09-04
-updated: 2026-09-04
+updated: 2026-09-05
 owner: Codex
 goal: Carry one or more issues from grounded intake to reviewed PRs using existing workflows.
 doc_type: project
@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Agy approved rating policy; canonical score persisted; global links refreshed | Update PR #440; await merge |
+| PR #440 merged; canonical reconciler completed document and ledger transition on 2026-09-05 | No implementation work remains; reconciliation changes await merge |
 
 ## Scope
 
@@ -59,3 +59,12 @@ Amendment plan: add one rating policy to the existing skill, link it into intake
 Task GH-439 rating (2026-09-04): **80/35/50/85** (priority/severity/appeal/cheapness), persisted through `roadmap rate` and read back. Priority reflects the operator's explicit importance; severity is moderate workflow misprioritization risk, with no observed crash or corruption; appeal is neutral; cheapness reflects a localized documentation extension. Recurrence recon searched skill-related issues created since 2026-08-08 (87 broad matches, not 87 incidents), including workflow sibling #436 and canonical rating issue #108. These do not establish repeated incidents of this omission; incident velocity remains unknown. No operator rank override was present. The windows for future incident assessment are the most recent 14 days versus the preceding 14 days, with dated evidence required.
 
 Rating amendment QA: Agy Approved / PASS with textual-only basis, driver exit 0; thread `relay-system/2026-09-04/gh439-ratings-agy-qa.md`. Validator passed; canonical CLI rejected a three-value rating and preserved an explicit rank override in dry-run. All global links read the revised source. Receipts appended to the existing provenance file.
+
+## Lessons Learned (For Future Agents)
+
+Reconstructed during the 2026-09-05 handoff from this document, the three committed GH-439 review threads, and `TESTS-RESULTS/2026-09-04+GH-439/provenance.jsonl`.
+
+- Textual approval and a successful relay run are separate facts: the first plan reviewer approved the content, but the driver returned exit 8 for verdict formatting. Preserve both outcomes and use the required machine verdict in subsequent reviews.
+- Use the canonical four-axis RELEASES rating and preserve explicit rank overrides during re-rating. The recorded negative control rejected three values; impact belongs in rationale, and PDDA planning metadata is a separate contract.
+- Resolve and compare discovery links against the maintained source after an amendment. The recorded checks establish identical file content, not that each application refreshed its skill cache.
+- A merged PR still owes PDDA reconciliation. Add this lessons section before moving a completed doc, then use the canonical reconciler to update the lifecycle and ledger; a closed issue alone does not perform that work.
