@@ -24,3 +24,5 @@ mutated 4 tier printf sites
   WITNESS PASS: padded-valid red-accept: exit 0, no MEASURE-FAIL
   WITNESS PASS: padded-valid restored green
 WITNESSES: 24 passed, 0 failed
+  WITNESS PASS: padded-valid baseline green (prior run, re-verified in witnesses.log)
+  WITNESS PASS: MEASURE-FAIL(abc) + MEASURE-FAIL(-5) attributable baseline→red→restored appended post-fix

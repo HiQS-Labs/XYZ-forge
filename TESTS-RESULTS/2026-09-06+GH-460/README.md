@@ -15,8 +15,9 @@ Standing fuzz target for the model-alias resolver, per the plan
 | wrapper-floor differential campaign | 11 | 300 | green — executed 300, fail 0, anomaly 0 |
 | R2 witnesses (rc-3, LEAK, NEWLINE-ONLY-LEAK, HIT-EMPTY, MEASURE-FAIL failed-wc/split-digits/empty, padded-valid acceptance) | — | — | 24/24 assertions, each baseline → red → restored-green (`witnesses.log`) |
 
-**1,820 fuzzed inputs, zero counterexamples; 8 negative-control/acceptance witnesses, all
-attributable (baseline → red → restored-green).** Per the #460 loop contract a null campaign is
+**1,820 fuzzed inputs (20 smoke + 1,500 resolver + 300 wrapper), zero counterexamples; 8
+negative-control/acceptance witnesses, 28 attributable assertions (baseline → red →
+restored-green).** Per the #460 loop contract a null campaign is
 a valid result; the committed smoke remains as permanent coverage.
 
 ## Layout
