@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -300,5 +300,67 @@ All findings adopted (commit `9a120792` + replay fix `dbbd9355`):
 
 Round 6 review (final-authorized): same scope, focused on whether the five round-5 contracts are
 now satisfied by the committed artifacts. Output contract unchanged.
+
+## Reviewer — codex — round 6 — 2026-09-06
+
+swept file: no
+
+Scope: read the oracle, smoke, replay, preflight, wrapper target, resolver, Python wrapper, witness
+procedure, plan contracts, evidence prose/provenance/witnesses/disposition, and all final-replay
+summaries in full; aggregated every final-replay telemetry row read-only for row count, run ID, and
+tier-1 verdict. Registration/ci-local received bounded section checks, not whole-file sweeps; the
+engine and branch-wide absence of production changes are not attested. No additional pre-existing
+defects were identified in the fully read resolver/wrapper within this scope. Graph inventory has no
+project for this exact worktree, so direct-source fallback was used. No artifact/source execution,
+tests, git commands, or writes outside this relay file were performed; this is static review.
+
+- [Pass] **The constant-input preflight blocker is repaired in source.**
+  `TESTS-RESULTS/2026-09-06+GH-460/wrapper-target.txt:1` prints the adapter result independently;
+  `preflight.py:71`-`:84` compares all seven mapped cases with a direct resolver observation, and
+  `:88`-`:103` mutates the input expression and requires the control to diverge. The actual wrapper
+  target in `final-replay/wrapper-seed11/telemetry.jsonl:1` includes that instrumentation. Preserve
+  this control.
+- [Blocker] **The committed witness procedure violates the plan's mandatory restoration safety and
+  exact-mutation contract.** `witness-procedure.sh:11` writes a shared fixed `/tmp` backup and `:12`
+  only defines `restore`; there is no EXIT/INT/TERM trap before the first mutation at `:28`, so an
+  interruption can leave the production resolver modified. The HIT-EMPTY mutation at `:64`-`:71`
+  replaces every matching print and merely reports the count; `witnesses.log:11` confirms four sites
+  were changed, despite the exact one-site requirement at
+  `PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md:118`-`:131`. Fix: use an owned unique
+  backup/work directory, install restoration-on-exit/failure/interruption before mutation, assert
+  the intended exact match count, mutate only the pinned hit site, and regenerate the attributable
+  transcript. This unsafe procedure cannot qualify the R2 evidence.
+- [Blocker] **Provenance still does not provide the claimed exact runnable per-run attribution.**
+  `provenance.jsonl:4`-`:7` records strings such as `replay.sh (seed-7 leg)` inside argv; those are
+  not runnable commands, and `:8` similarly substitutes a prose description for the failed
+  adapter's actual invocation. The final replay row at `:3` cites `final-replay/` but omits its four
+  actual run IDs, which are `10111ca4...`, `8885dd69...`, `02be34d9...`, and `7b50913d...` in the
+  respective `final-replay/*/summary.json:2`; no retained preflight/replay transcript exists in that
+  directory. Fix: record the literal reproducible command/environment/source identity for each
+  cited run, tie the four final runs and the superseded run to their exact IDs and artifacts, and
+  retain the final preflight/replay output required by the round-5 finding.
+- [Should] **Smoke failure retention remains unimplemented.**
+  `test/gh460-fuzz-resolver-smoke.sh:50`-`:51` installs an unconditional `rm -rf` EXIT trap, while
+  `:63` directs the reader to `$RUNDIR`; `fail` at `:19` cannot change cleanup behavior. Any engine
+  or summary failure therefore deletes the named diagnostics, contrary to the producer disposition.
+  Fix: add a guarded retain-on-failure state before every failure exit, safely remove the owned run
+  directory only on success, and preserve the runner-owned cleanup boundary.
+- [Should] **The evidence summary contradicts its corrected witness count.**
+  `TESTS-RESULTS/2026-09-06+GH-460/README.md:16` still says `28/28`, while `:18`-`:20` and
+  `witnesses.log:32` say 30 assertions. Correct the table after regenerating the safe witness run.
+- [Pass] **The retained final campaign data and core implementation contracts remain internally
+  consistent.** Each `final-replay/{seed7,seed8,seed9,wrapper-seed11}/summary.json:2` reports
+  respectively 500/500/500/300 executed with zero fail/anomaly/counterexamples; read-only aggregation
+  found matching row counts, one matching run ID per file, and only `tier_1_verdict=pass` in all
+  1,800 telemetry rows. `test/gh460-oracle.sh:18`-`:40` retains O1-O4 source behavior,
+  `test/gh460-fuzz-resolver-smoke.sh:25`-`:46` retains the environment/direct/wrapper pins, and
+  `validate.sh:103` remains consumed by the extraction at `ci-local.sh:269`. These retained checks
+  do not cure the unsafe witness procedure or incomplete provenance above.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The adapter control is repaired and stored campaigns are green, but unsafe witness restoration, non-runnable/incomplete provenance, and deleted smoke failure diagnostics still fail the Definition of Done.
+
+Handing off to Producer (claude-a) — repair the witness safety, exact provenance, smoke retention, and count mismatch, then arrange an explicitly renewed review cycle; round 6/6 is Escalated, not Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
