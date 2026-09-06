@@ -1,0 +1,40 @@
+# Question: adjudicate this RCA disposition before implementation
+
+Context: GH-460 adds a standing fuzz target for the model-alias resolver
+(`relay-automation/resolve-model-alias.sh`) via `utils/py/fuzz_engine.py`. The plan
+(`PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md`) went through SIX plan-QA review
+rounds without reaching Approved. Read the plan and the full review thread
+(`relay-system/2026-09-06/gh460-plan-qa.md`, rounds 1-6) plus the resolver and
+`utils/py/fuzz_engine.py` (`build_argv` at lines 223-227, run/timeout at 230-270).
+
+## The RCA
+
+Every blocker from round 3 onward located in ONE artifact: the plan's verbatim inline
+`bash -c '...'` oracle target string, which must (a) survive `build_argv`'s `shlex.split`,
+(b) capture resolver stdout byte-exactly, (c) fail closed on measurement errors, (d) parse
+platform-variant `wc` output (macOS pads with leading spaces). Each round's patch perturbed one
+axis and re-serialized the others (r3: constant argv from a `_` sentinel; r5: `^[0-9]+$`
+rejecting padded counts; r6: nested `trap '...'` quotes splitting the body).
+
+## The proposed disposition
+
+Replace the inline `bash -c` oracle with a committed `test/gh460-oracle.sh` (bash, ~15 lines:
+mktemp with SETUP-FAIL guard, run resolver capturing stdout to the temp file, rc + whitespace-
+tolerant byte count with MEASURE-FAIL guard, BADRC/LEAK-STDOUT-ON-MISS/HIT-EMPTY-ON-MATCH
+invariants on stderr, EXIT-trap cleanup), invoked as
+`fuzz_engine.py --target 'bash test/gh460-oracle.sh {mutant}'`. The plan deletes its
+verbatim-string section and specifies the script's BEHAVIOR contract instead (identical to what
+rounds 2-6 already converged on: rc 0/1/2 domain, empty stdout on miss, nonempty on hit,
+fail-closed measurement). `test/` is exempt from the repo's no-new-Bash rail (GH-551).
+
+## Questions
+
+1. Is the script-file disposition the MINIMAL correct fix for the root cause, or is there a
+   simpler/lazier correct alternative we missed (keeping the engine unchanged)?
+2. Does moving the oracle into a committed `test/gh460-oracle.sh` introduce any NEW risk the
+   inline string didn't have (e.g., cwd/relative-path resolution when fuzz_engine runs the
+   target from its own cwd argument, table resolution, test-rail interactions)?
+3. Does the six-round review loop suggest any change to HOW the plan should specify executable
+   contracts (or is the loop itself just the review working correctly)?
+
+Answer concretely with file:line citations. Flag anything over-engineered in the disposition.

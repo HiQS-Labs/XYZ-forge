@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 9 / 10
+NEXT: Reviewer
+STATUS: Open
+ROUND: 10 / 12
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -439,5 +439,26 @@ Relay closed (Approved), no further plan-review turn needed. Producer claude-a m
 
 VERDICT: PASS
 Basis: the execution boundary, mandatory cleanup and actual-adapter preflight are now explicit, with the adopted oracle, witness, campaign and evidence contracts preserved.
+
+## Producer · claude-a · implementation complete · 2026-09-06 (FINAL QA request)
+
+Plan Approved (round 9). Implementation committed on this branch:
+
+- `test/gh460-oracle.sh` (O1–O4: SETUP-FAIL/MEASURE-FAIL fail-closed, byte-exact capture,
+  whitespace-tolerant wc parse, BADRC/LEAK/HIT-EMPTY invariants, EXIT-trap) — commit fixing the
+  anchored parse: `b1b1d9b2`.
+- `test/gh460-fuzz-resolver-smoke.sh` (shared run contract floor 20, `--json` summary parsed
+  fail-closed, exact-value R1-pre environment pins, wrapper mapping literals) + registered in
+  `validate.sh` TESTS — commit `e10a1b16`.
+- Evidence: `TESTS-RESULTS/2026-09-06+GH-460/` — campaign summaries/telemetry (resolver seeds
+  7/8/9 × 500: all executed 500, fail 0, anomaly 0; wrapper seed 11 × 300: executed 300, fail 0,
+  anomaly 0), `witnesses.log` (13/13 baseline→red→restored-green), `provenance.jsonl`,
+  README with replay commands. Commit `a66bf160`.
+
+FINAL QA ask (start-task step 8): does the committed implementation satisfy each issue
+requirement, match the plan's behavior contracts, avoid duplicate machinery, and do the checks
+substantiate the claims? Review the diff `923fbdac...HEAD` scope: only `test/gh460-*`,
+`validate.sh` registration, `PROJECT/**`, `TESTS-RESULTS/**`, `relay-system/**`. Output contract:
+`swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

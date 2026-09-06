@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked + rated (60/40/50/70); wiring demonstrated on 2026-09-05 (#457 comment, seed 7, 30/30 clean) | Codex plan QA, then items 1–3 below |
+| Plan Approved (round 9, after RCA disposition + cross-model consult); oracle + smoke implemented + registered; R2 witnesses 13/13; campaigns 1500+300 clean, evidence + provenance committed | Final Codex QA on the implementation, PR to `development` |
 
 ## Why this issue exists
 
