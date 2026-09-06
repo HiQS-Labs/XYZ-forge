@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -186,5 +186,26 @@ replaced; [Nit] recon `:231-233` refs + bounded caller claim; Setup placeholder 
 Round 4 is beyond the workflow's default 3-round cap — operator-directed execution ("Go 460");
 if this round is not Approved, implementation stops and the blocked state is reported. Same
 output contract (`swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`).
+
+## Reviewer · codex · round 4 · 2026-09-06
+
+swept file: yes
+
+Scope: whole plan, recon, resolver, wrapper, fuzz engine and gh346 fallback test read; registry and caller spans inspected. Static review only; no artifact/source execution, tests, mutation, campaigns or git commands. MCP list_projects returned all 50 entries (has_more=false), with no index for this worktree or its GH-460 parent; exact-source fallback used, without a borrowed generation or graph-completeness claim. External issue, historical commits and producer run claims remain unverified. Plan citations below refer to PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Blocker] **The exact campaign recipe cannot emit the required JSON.** Plan :110 omits `--json`, while :112–114 requires parsed JSON. `utils/py/fuzz_engine.py:466–469` emits JSON only with that flag; otherwise it prints a human summary. Fix: add `--json` and explicit summary capture to the reusable recipe and use it for smoke and wrapper campaigns. Explicitly apply engine-success, nonempty valid summary, zero fail/anomaly and the appropriate executed floor (20/500/300) to each run; pin the wrapper seed instead of “own seed” (:115), and state the timeout (the current omitted-flag default is 30 seconds at fuzz_engine.py:430). A fail-closed implementation of the recipe as written would reject every campaign.
+- [Should] **R1 still contradicts its fail-closed measurement requirement.** Plan :81 guards mktemp, but `bytes=$(wc -c <"$t")` remains unchecked, has no numeric validation, and has no cleanup trap. On wc failure with empty output, both numeric tests fail and the target reaches `exit 0`; the promised `MEASURE-FAIL` (:86–87) does not exist in the exact target that :151 says to implement verbatim. Fix the target itself to check capture/readability and successful numeric measurement, emit a distinct nonzero measurement error, and install cleanup before resolver execution. Preserve the raw rc/output assertions in the known-hit and observed-miss preconditions (:88–91): merely invoking this oracle and seeing success cannot distinguish rc 2 from the expected hit/miss, because :81 accepts rc 2.
+- [Should] **The wrapper campaign still omits fallback invariants from its executable target.** Plan :118 correctly removes the sentinel, but only asserts type and nonempty output for nonempty input; any nonempty wrong value on a mutated resolver miss passes, and empty input returning a nonempty value also passes. The one pinned passthrough check at :120–123 does not check mutated misses. Fix: for each mapped input, independently invoke the existing resolver and assert unchanged wrapper output on observed failure; assert empty-input identity in the target too. Keep the two-distinct-input mapping checks, and give their literal inputs/expected outputs (existing examples are test/gh346-resolver-fallback.sh:30–35). This extends the shared resolver/wrapper without adding a matcher.
+- [Should] **The promised negative controls are still absent.** Whole R1/R2 (:77–108) names HIT-EMPTY and LEAK invariants but defines only the rc-3 control; round-2/3 requests for hit-empty and miss-output controls, including newline-only output, remain undispositioned in the artifact. Fix: specify independent cp-backed, trap-restored mutations for these conditions, require their exact stderr diagnostic plus nonzero oracle exit, and require restored green after each. Add a measurement-failure control for the fail-open path above. Retain baseline/red/restored evidence under R3b (:125–132); an unrelated failure is not a witness.
+- [Pass] **The sentinel and scope corrections are present.** Plan :118 now uses `a=sys.argv[1:]; v=a[0] if a else ""` without `_`, matching the engine's token insertion at fuzz_engine.py:223–227. Plan :133–137 separately scopes/rates runtime fixes; :165–175 includes registry/evidence and gives Easy rollback with 60/40/50/70 rationale. These ratings are proportionate to the bounded test work, not automatic approval of a future runtime fix.
+- [Pass] **Gate integration, deterministic rc-3 control and durable evidence remain specified.** Plan :92–96 requires executed >=20 and registration in the TESTS list consumed at ci-local.sh:269. Plan :99–108 pins the direct miss, exact terminal resolver :128 mutation, cp/trap restoration, BADRC:3 with exit 9 and disposable-full-clone boundary. R3b :125–132 retains provenance and exact inputs instead of relying solely on corpus entries replaced/evicted at fuzz_engine.py:185–190. Full resolver inspection shows no explicit git-state writes; this is static evidence, not a test-run safety exemption.
+- [Pass] **Reuse and corrected local grounding are sound.** Plan :64–70 and recon :13,19 now cite deepseek-turn.py:231–233 and bound caller claims to inspected shims; the unchanged tier-2 matcher remains at resolve-model-alias.sh:97–104. model_alias.py:48–61 owns fallback, and fuzz_engine.py:278–342 owns execution/corpus/telemetry; plan :141 appropriately keeps those implementations rather than growing parallel machinery.
+
+Whole-file sweep: the previously recorded invalid-root docstring overstatement (model_alias.py:17,31,44) and conditional seed replay claim (fuzz_engine.py:8,122,298) remain bounded by plan :144–147 and :125–132. No additional pre-existing source defect is asserted by this static review; no runtime correctness claim is made.
+
+Round cap reached: STATUS is Escalated; implementation remains stopped. Handing off to Producer claude-a — report the unresolved contracts and obtain operator direction before another review cycle or implementation.
+
+VERDICT: FAIL
+Basis: the campaign recipe lacks JSON output, and the exact targets still do not enforce the measurement and wrapper fallback contracts they are meant to prove.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
