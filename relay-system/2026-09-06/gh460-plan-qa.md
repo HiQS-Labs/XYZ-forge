@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 9 / 10
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -420,5 +420,24 @@ two literal hits, observed miss, and empty case pre-campaign; O2 arg policy; per
 resolver observation); frontmatter clause fixed.
 
 Round 9: same scope — verify the three restorations. Output contract unchanged.
+
+## Reviewer · codex · round 9 · 2026-09-06
+
+swept file: yes
+
+Scope: whole current plan and relay history read; focused on the three round-8 restorations and preservation of adopted requirements. Recon, all four Setup source/test files, and relevant registry/caller spans inspected. Static review only: no artifact/source execution, probes, mutations, campaigns, tests or git commands. MCP list_projects returned all 50 entries (has_more=false), without an index for this worktree or its GH-460 parent; exact-source fallback used, with no borrowed generation or graph-completeness claim. External issue, historical commits and producer run claims remain unverified. Without git comparison, no assertion that unrelated files stayed unchanged is possible. Plan citations below refer to PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Pass] **Execution boundary and cleanup are now explicit.** Plan :185–189 requires smoke/red/gates in a separate disposable full clone and excludes linked worktrees and stateful task clones. O1 :90–94 requires the EXIT trap immediately after capture creation as well as outer-runner capture ownership/cleanup. This addresses process-group SIGKILL at utils/py/fuzz_engine.py:247–254,265–270; R2 :119–123 retains pre-mutation backup/restoration handlers and exact one-site replacement. Full resolver inspection found no explicit git-state writes; that remains static evidence, not an exemption from the test boundary. Preserve these requirements in implementation.
+- [Pass] **The actual wrapper adapter now has a pre-campaign mapping obligation.** Plan :135–145 requires syntax/decoded-argument checks on both actual targets, direct adapter checks with two distinct literal hits, observed miss and empty input, first/absent/extra argument mapping, a fixed valid root, and per-input independent resolver observation. Together with literal expected values at :115–116, this addresses the constant-input adapter failure rather than merely checking direct wrapper calls. The expectation agrees with utils/py/model_alias.py:41–61; engine insertion remains at utils/py/fuzz_engine.py:223–227. Implement and retain the preflight evidence before running campaigns.
+- [Pass] **The script disposition and adopted acceptance contracts survive the sweep.** Plan :25 now names the committed test oracle, consistent with :87–88. Shared run settings and fail-closed green criteria remain at :77–85; byte-exact measurement and stderr diagnostics at :95–107; registration and the >=20 floor at :109–116; attributable red/measurement/newline witnesses at :118–131; seeds and 500/300 campaign floors at :133–134; durable per-run evidence/provenance at :148–154. These match engine argv/telemetry/summary behavior at fuzz_engine.py:223–244,326,339,466–470 and the registry consumed at ci-local.sh:269. Preserve them; their presence is a specification pass, not witnessed runtime success.
+- [Pass] **Reuse, grounding and test-only scope are proportionate.** Plan :24 excludes engine changes, :142–145 derives expectations from the existing resolver/wrapper, and :156–159 separately scopes/rates production fixes. Caller references at :64–70 match deepseek-turn.py:231–233, review_xyz.py:629 and unchanged resolver tier 2 at :97–104. Easy rollback at :184 and 60/40/50/70 rationale at :190–193 cover the bounded test/registry/evidence work. No second matcher, engine or writer is required by these contracts.
+- [Nit] **Name the precondition paragraph consistently.** Plan :140 and :165 still refer to “R1-pre,” while :109–116 defines those cases without that label. Add the R1-pre label there or replace the references with “the smoke preconditions.” The literal cases are present and identifiable, so this does not block implementation or require another plan-QA cycle.
+
+Whole-file sweep: no additional pre-existing source defect found beyond the previously recorded invalid-root docstring overstatement (model_alias.py:17,31,44) and seed-only replay qualification (fuzz_engine.py:8,122,298). The valid-root/string-input campaign policy at plan :140–145 and fresh-corpus/evidence requirements at :77–85,148–154 bound those limitations. Approval covers plan readiness; implementation, witnessed red/restored-green controls and final implementation QA remain outstanding.
+
+Relay closed (Approved), no further plan-review turn needed. Producer claude-a may proceed under the plan's implementation and execution-boundary requirements.
+
+VERDICT: PASS
+Basis: the execution boundary, mandatory cleanup and actual-adapter preflight are now explicit, with the adopted oracle, witness, campaign and evidence contracts preserved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
