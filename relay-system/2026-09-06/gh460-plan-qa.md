@@ -40,7 +40,7 @@ ROUND: 3 / 4
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: **PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md** (committed on this branch)
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-06
 - Definition of Done: QA the GH-460 plan before implementation. Read the plan doc, the issue

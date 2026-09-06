@@ -10,13 +10,13 @@ The model-name resolution stack: colloquial/bare id → canonical slug → per-l
 | Alias table data | relay-automation/openrouter-model-aliases.yml (7 rows at HEAD) | relay lane model selection; #450 will make it GENERATED from Model-catalog | hand-edit vs generated drift; row order (file-order-wins per tier) |
 | Matcher | relay-automation/resolve-model-alias.sh:36-45,63-124 — 4 tiers, normalize/squash/sorted_tokens, tier-4 substring both-directions | every consumer | tier semantics change breaks profile-name matching reuse (same matcher) |
 | Canonicalization wrapper | utils/py/model_alias.py — resolve_model_slug: never-raise, input-as-floor, 10s timeout | deepseek lane + review_xyz.py | contract change breaks turn shims on miss |
-| Canonicalization call sites | utils/py/deepseek-turn.py:11,226-228 (DEEPSEEK_MODEL); utils/py/review_xyz.py; pinned by test/gh346-resolver-fallback.sh:75-78 | DEEPSEEK lane turns only (codex/agy/commandcode/pi/aider do NOT canonicalize at runtime — aider-turn.sh:62 is a comment) | — |
+| Canonicalization call sites | utils/py/deepseek-turn.py:11,231-233 (DEEPSEEK_MODEL); utils/py/review_xyz.py; pinned by test/gh346-resolver-fallback.sh:75-78 | DEEPSEEK lane turns only among INSPECTED shims, codex/agy/commandcode/pi/aider do not canonicalize at runtime — aider-turn.sh:62 is a comment; unlisted lanes unverified | — |
 | Profile resolver | relay-automation/resolve-profile.sh + utils/py/profile_resolve.py — reuses matcher for profile-NAME matching only (MODEL_ALIASES_FILE=/dev/stdin seam, -r guard); passes profile model value through UNCANONICALIZED | device_config.json profiles → lane env | if profile values ever got canonicalized, bare per-provider ids hijack (today they don't — verified --env emits qwen3.8-max) |
 | Test seam | MODEL_ALIASES_FILE env (resolve-model-alias.sh:31, -r readability guard); test/model-alias.sh STDIN_TABLE | test/model-alias.sh:64,79 carry stale slug qwen/qwen3.8-max (absent from live OpenRouter catalog; live = -0902) | doc-rot with green tests |
 | Docs | AGENTS.md:405-408 (GH-120 rail); relay-automation/README.md:582-588; skills/relay-xyz/SKILL.md:265 (stale slug in example profile) | agent behavior | stale example teaches the hijack shape |
 
 ## Call paths in
-- relay turn: DEEPSEEK_MODEL env → deepseek-turn.py:226-228 → resolve_model_slug → resolve-model-alias.sh → yml rows → canonical slug → dsh request model
+- relay turn: DEEPSEEK_MODEL env → deepseek-turn.py:231-233 → resolve_model_slug → resolve-model-alias.sh → yml rows → canonical slug → dsh request model
 - profile: resolve-profile.sh --env → profile_resolve.py (matcher for NAME match) → DEEPSEEK_MODEL=<profile model verbatim>
 - review lane: review_xyz.py → resolve_model_slug
 - aid lane: aider-turn.sh — docs pointer only (GH-120), no runtime call
