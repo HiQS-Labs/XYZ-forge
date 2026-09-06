@@ -115,6 +115,12 @@ Four execution modes, in increasing order of autonomy:
 Start at [`relay-automation/README.md`](relay-automation/README.md). Live turns need each agent CLI
 installed and authenticated first.
 
+Two marathon knobs worth knowing before the first unattended run: headless builders default to
+subscription-billed `codex`/`agy`, and `--builder claude` is an explicit per-call API opt-in capped by
+`CLAUDE_MAX_BUDGET` (default $0.50) and `CLAUDE_MAX_TURNS` (default 12). A target repo with known
+pre-existing test failures can pass `--pre-advance-baseline <rc>` (or `MARATHON_GATE_BASELINE=<rc>`)
+so the gate tolerates the existing exit code while still halting on regressions.
+
 ### 3. The operations layer — the part that made this a lifecycle system
 
 This is the half that grew, and the half worth explaining plainly.
