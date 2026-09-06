@@ -13,7 +13,7 @@ Standing fuzz target for the model-alias resolver, per the plan
 | resolver campaign | 8 | 500 | green — executed 500, fail 0, anomaly 0 |
 | resolver campaign | 9 | 500 | green — executed 500, fail 0, anomaly 0 |
 | wrapper-floor differential campaign | 11 | 300 | green — executed 300, fail 0, anomaly 0 |
-| R2 witnesses (rc-3, LEAK, NEWLINE-ONLY-LEAK, HIT-EMPTY, MEASURE-FAIL failed-wc/split-digits/empty, padded-valid acceptance) | — | — | 24/24 assertions, each baseline → red → restored-green (`witnesses.log`) |
+| R2 witnesses (rc-3, LEAK, NEWLINE-ONLY-LEAK, HIT-EMPTY, MEASURE-FAIL failed-wc/split-digits/empty, padded-valid acceptance) | — | — | 28/28 assertions, each baseline → red → restored-green (`witnesses.log`; includes the post-fix `abc`/`-5` MEASURE-FAIL witnesses) |
 
 **1,820 fuzzed inputs (20 smoke + 1,500 resolver + 300 wrapper), zero counterexamples; 8
 negative-control/acceptance witnesses, 28 attributable assertions (baseline → red →
