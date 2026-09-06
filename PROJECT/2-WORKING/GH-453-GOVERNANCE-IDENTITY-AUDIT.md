@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Revised prompt and plan approved by independent Codex review; Stage 1 report drafted. | Report QA and hygiene checks, then maintainer approval; Stage 2 remains unapproved. |
+| Stage 1 report independently approved; documentation and ledger checks passed with warnings recorded. | Maintainer decision on proposed dispositions; Stage 2 remains unapproved. |
 
 ## Quad Concepts
 
@@ -80,12 +80,12 @@ misreading is one reported example, not a measured rising rate.
 
 ### QA checklist
 
-- [ ] Every requested file and numbered principle has a row; evidence boundaries are explicit.
-- [ ] Missing upstream provenance or local-authority ambiguity is not silently resolved.
-- [ ] Revised prompt retains the original requirements, except expressly corrected statements.
-- [ ] Only prompt, intake/report, ledger projections, review evidence and a new CHANGELOG
+- [x] Every requested file and numbered principle has a row; evidence boundaries are explicit.
+- [x] Missing upstream provenance or local-authority ambiguity is not silently resolved.
+- [x] Revised prompt retains the original requirements, except expressly corrected statements.
+- [x] Only prompt, intake/report, ledger projections, review evidence and a new CHANGELOG
   end-of-iteration entry changed; no historical changelog rewrite.
-- [ ] Review and hygiene results are recorded honestly; no Stage 2 completion claim.
+- [x] Review and hygiene results are recorded honestly; no Stage 2 completion claim.
 
 The final reviewer gets an omission-diff question comparing the issue-body requirements, revised
 prompt and report. A report can fail on a missing row, unsupported authority decision or absent
@@ -311,7 +311,7 @@ mutation-heavy suites in a separate disposable full clone and compare Git identi
 Finally inspect all ROUTER startup targets and every PROJECT document's first line. These checks
 have **not** been claimed as completed for unimplemented Stage 2 edits.
 
-### Lessons Learned (For Future Agents)
+## Lessons Learned (For Future Agents)
 
 - A file can discuss another project and still be a locally adopted rule. Track subject, maintenance
   and applicability separately; a reassuring blanket banner can silently withdraw a guardrail.
@@ -356,6 +356,29 @@ No competing writer or system is introduced: existing RELEASES CLI owns all ledg
   Thread: relay-system/2026-09-05/gh453-plan-qa.md. The first model attempt was unsupported;
   the first substantive review requested the CHANGELOG allowance and had an invalid verdict shape.
   Both were corrected; no guard was weakened.
+
+### Final Stage 1 verification
+
+- Independent report review: `relay-system/2026-09-05/gh453-report-qa.md`, driver exit 0,
+  STATUS Approved, VERDICT PASS. Its non-blocking suggestion is retained for Stage 2: preserve
+  the normative/implementation/history/external distinction when drafting final principles.
+- `./validate.sh --tier 1`: exit 0 on candidate `3eadeb7f` in the disposable full clone.
+  Warnings include unavailable issue-state lookups and pre-existing completed-document drift;
+  they are not silently reported as checked or fixed.
+- `GH_REPO=HiQS-Labs/XYZ-forge bash utils/pdda/pdda.sh run`: exit 0, 23 warnings, no errors.
+  The explicit slug lets the local-origin test clone query the intended GitHub project.
+- `GH_REPO=HiQS-Labs/XYZ-forge bash utils/pdda/pdda.sh governance`: exit 0, 8 warnings.
+  Existing reference/discoverability findings remain outside this report-only change.
+- `python3 utils/py/releases_app.py check`: exit 0, 0 failures, 8 migration-debt warnings.
+  An earlier attempted `roadmap check` was rejected as an unsupported verb (exit 2); the supported
+  top-level check above was then used. No ledger was hand-edited.
+- Pre/post Git identity for the candidate checks matched. Logs and hashes are retained under
+  TESTS-RESULTS/2026-09-05+GH-453/final-stage1 and provenance.jsonl.
+- Full `./validate.sh` was run on the unchanged base only (exit 0 after five serial retry
+  recoveries). It was not rerun on the report candidate; Stage 1 requires relevant report/intake
+  hygiene, while the full candidate suite remains a Stage 2 requirement for the proposed edits.
+- Changes following report approval are status/check receipts and the required Lessons Learned
+  heading level only; no ownership conclusion, proposed policy or runtime implementation changed.
 
 ## Non-goals
 
