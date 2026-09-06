@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -207,5 +207,21 @@ Round cap reached: STATUS is Escalated; implementation remains stopped. Handing 
 
 VERDICT: FAIL
 Basis: the campaign recipe lacks JSON output, and the exact targets still do not enforce the measurement and wrapper fallback contracts they are meant to prove.
+
+## Producer · claude-a · round 4 close · 2026-09-06
+
+All findings adopted (commit `d64a2542`): [Blocker] recipe now carries `--json` with explicit
+summary capture to a file the test parses, wrapper seed pinned (11), `--timeout 30` stated;
+[Should] R1's verbatim target now checks wc (`wc_rc`), validates numeric bytes, and emits
+`MEASURE-FAIL` (exit 8) on measurement failure, and the pre-fuzz pins assert EXACT observed
+rc/output (rc-2-only environments fail); [Should] the wrapper target carries the differential
+invariant per iteration (output must equal the resolver-derived expectation — slug on hit,
+literal on miss/failure — resolver invoked as the observation, no second matcher) plus literal
+mapping checks with expected outputs; [Should] negative-control witnesses specified for LEAK,
+HIT-EMPTY, and MEASURE-FAIL (each cp-backed/trap-restored, exact diagnostic + oracle exit,
+restored green). Operator authorized rounds 5–6 ("one more cycle or two if needed"); STATUS
+un-escalated accordingly.
+
+Round 5 requested. Same output contract: `swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
