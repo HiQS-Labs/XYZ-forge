@@ -128,6 +128,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
             completion_tokens INTEGER,
             estimated_cost_usd REAL,
             repo_diff_stat TEXT,
+            model_catalog_version TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -162,6 +163,12 @@ def init_db(db_path: str) -> sqlite3.Connection:
         CREATE INDEX IF NOT EXISTS idx_invocation_model ON invocation_logs(model_id);
         CREATE INDEX IF NOT EXISTS idx_eval_grade ON evaluations(grade);
         """)
+        # GH-450: a database created before the Model-catalog integration has no
+        # model_catalog_version column, and CREATE TABLE IF NOT EXISTS will not add one. Additive,
+        # nullable, idempotent — rows logged before the column simply carry NULL.
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(invocation_logs);").fetchall()}
+        if "model_catalog_version" not in cols:
+            conn.execute("ALTER TABLE invocation_logs ADD COLUMN model_catalog_version TEXT;")
     return conn
 
 
@@ -348,6 +355,8 @@ def main() -> int:
     log_parser.add_argument("--tokens", type=int, default=0)
     log_parser.add_argument("--cost", type=float, default=0.0)
     log_parser.add_argument("--diff-stat", default="")
+    log_parser.add_argument("--catalog-version", default=None,
+                            help="GH-450: Model-catalog version the alias table was rendered from")
 
     # Subcommand: eval
     eval_parser = subparsers.add_parser("eval", help="Record a post-turn AI evaluation")
@@ -425,12 +434,13 @@ def main() -> int:
             INSERT INTO invocation_logs (
                 invocation_id, device_id, harness_id, model_id, gateway, reasoning_effort,
                 entry_point_shim, cli_flags, task_scope, wall_clock_seconds, exit_code,
-                total_tokens, estimated_cost_usd, repo_diff_stat
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                total_tokens, estimated_cost_usd, repo_diff_stat, model_catalog_version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """, (
                 inv_id, args.device_id, args.harness_id, args.model_id, args.gateway,
                 args.reasoning_effort, args.shim, args.flags, args.task_scope,
-                args.seconds, args.exit_code, args.tokens, args.cost, args.diff_stat
+                args.seconds, args.exit_code, args.tokens, args.cost, args.diff_stat,
+                args.catalog_version or None
             ))
         dump_sql(conn, sql_p)
         print(inv_id)

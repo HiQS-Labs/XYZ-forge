@@ -1,0 +1,555 @@
+{
+  "schema": "hiqs.model-catalog/1",
+  "version": "1.0.0",
+  "updated": "2026-09-05",
+  "sources": [
+    "https://github.com/HiQS-Labs/XYZ-forge (relay-automation/openrouter-model-aliases.yml, GH-120)",
+    "https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot (data/static/ai/command-normalization.json, GH-168)"
+  ],
+  "aliases": [
+    {
+      "match": "anthropic",
+      "replace": "claude-haiku-4-5-20251001",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "anthropic claude fable 5",
+      "replace": "claude-fable-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "anthropic fable 5",
+      "replace": "claude-fable-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "claude",
+      "replace": "claude-haiku-4-5-20251001",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "claude fable 5",
+      "replace": "claude-fable-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "claude haiku",
+      "replace": "claude-haiku-4-5-20251001",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "claude haiku 4.5",
+      "replace": "claude-haiku-4-5-20251001",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "claude opus",
+      "replace": "claude-opus-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "claude opus 5",
+      "replace": "claude-opus-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "claude sonnet",
+      "replace": "claude-sonnet-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "claude sonnet 5",
+      "replace": "claude-sonnet-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "fable 5",
+      "replace": "claude-fable-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "fable5",
+      "replace": "claude-fable-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "haiku",
+      "replace": "claude-haiku-4-5-20251001",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "haiku 4.5",
+      "replace": "claude-haiku-4-5-20251001",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "opus",
+      "replace": "claude-opus-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "opus 5",
+      "replace": "claude-opus-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "sonnet",
+      "replace": "claude-sonnet-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "sonnet 5",
+      "replace": "claude-sonnet-5",
+      "target": "native",
+      "provider": "anthropic",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "flash",
+      "replace": "gemini-3.8-flash",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gemini",
+      "replace": "gemini-3.8-flash",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gemini 2.5 pro",
+      "replace": "gemini-2.5-pro",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": null,
+      "flags": [
+        "unverified-generation"
+      ]
+    },
+    {
+      "match": "gemini 3.8 flash",
+      "replace": "gemini-3.8-flash",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gemini flash",
+      "replace": "gemini-3.8-flash",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gemini pro",
+      "replace": "gemini-2.5-pro",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": null,
+      "flags": [
+        "unverified-generation"
+      ]
+    },
+    {
+      "match": "google",
+      "replace": "gemini-3.8-flash",
+      "target": "native",
+      "provider": "gemini",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "astra",
+      "replace": "gpt-6-astra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "chat gpt",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "chatgpt",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "chatgpt 4o",
+      "replace": "gpt-4o",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "chatgpt 4o mini",
+      "replace": "gpt-4o-mini",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "chatgpt 5",
+      "replace": "gpt-5",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "chatgpt 5 mini",
+      "replace": "gpt-5-mini",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "chatgpt 5.5",
+      "replace": "gpt-5.5",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "chatgpt 5.6 terra",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gpt",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gpt 4o",
+      "replace": "gpt-4o",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt 4o mini",
+      "replace": "gpt-4o-mini",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt 5",
+      "replace": "gpt-5",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt 5 mini",
+      "replace": "gpt-5-mini",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt 5.5",
+      "replace": "gpt-5.5",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt 5.6 terra",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gpt 6",
+      "replace": "gpt-6-astra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gpt 6 astra",
+      "replace": "gpt-6-astra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "gpt4o",
+      "replace": "gpt-4o",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt4o mini",
+      "replace": "gpt-4o-mini",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt5",
+      "replace": "gpt-5",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt5 mini",
+      "replace": "gpt-5-mini",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt5.5",
+      "replace": "gpt-5.5",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "gpt6",
+      "replace": "gpt-6-astra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "open ai",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "openai",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "terra",
+      "replace": "gpt-5.6-terra",
+      "target": "native",
+      "provider": "openai",
+      "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
+      "verified_on": "2026-09-04",
+      "flags": []
+    },
+    {
+      "match": "deepseek v4 pro",
+      "replace": "deepseek/deepseek-v4-pro",
+      "target": "openrouter",
+      "provider": "deepseek",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "nemotron ultra 3",
+      "replace": "nvidia/nemotron-3-ultra-550b-a55b",
+      "target": "openrouter",
+      "provider": "nvidia",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "nemotron ultra 3 free",
+      "replace": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "target": "openrouter",
+      "provider": "nvidia",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "qwen3 coder",
+      "replace": "qwen/qwen3-coder",
+      "target": "openrouter",
+      "provider": "qwen",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "stealth ox-alpha",
+      "replace": "stealth/ox-alpha",
+      "target": "openrouter",
+      "provider": "stealth",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "grok 4.6",
+      "replace": "x-ai/grok-4.6",
+      "target": "openrouter",
+      "provider": "x-ai",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "glm-5.2",
+      "replace": "z-ai/glm-5.2",
+      "target": "openrouter",
+      "provider": "z-ai",
+      "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
+      "verified_on": null,
+      "flags": []
+    }
+  ]
+}

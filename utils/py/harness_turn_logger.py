@@ -14,6 +14,19 @@ from typing import Any, Dict, List, Optional
 from device_config import get_effective_runtime_config
 
 
+def _vendored_catalog_version(repo_root: str) -> Optional[str]:
+    """GH-450: read the vendored Model-catalog's version under repo_root; None on any failure."""
+    try:
+        import sys as _sys
+        here = os.path.dirname(os.path.abspath(__file__))
+        if here not in _sys.path:
+            _sys.path.insert(0, here)
+        from model_catalog import catalog_version  # noqa: E402
+        return catalog_version(repo_root)
+    except Exception:
+        return None
+
+
 class HarnessTurnLogger:
     """Context manager for transparently logging turn execution into harnesses.db."""
 
@@ -27,6 +40,7 @@ class HarnessTurnLogger:
         reasoning_effort: Optional[str] = None,
         cli_flags: Optional[List[str]] = None,
         repo_root: Optional[str] = None,
+        catalog_version: Optional[str] = None,
     ):
         self.cfg = get_effective_runtime_config()
         self.device_id = self.cfg["device_id"]
@@ -38,6 +52,15 @@ class HarnessTurnLogger:
         self.reasoning_effort = reasoning_effort or self.cfg["reasoning_effort"]
         self.cli_flags = cli_flags or []
         self.repo_root = repo_root or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        # GH-450: the Model-catalog version the alias table was rendered from, so the invocation
+        # row can say which catalog resolved this turn. Explicit arg > the export block
+        # resolve-profile.sh emits (XYZ_MODEL_CATALOG_VERSION) > the vendored copy under
+        # repo_root. None when nothing is readable; never raises, never blocks the turn.
+        self.catalog_version = (
+            catalog_version
+            or os.environ.get("XYZ_MODEL_CATALOG_VERSION")
+            or _vendored_catalog_version(self.repo_root)
+        )
         self.start_time: float = 0.0
         self.invocation_id: Optional[str] = None
         self.exit_code: int = 0
@@ -89,6 +112,8 @@ class HarnessTurnLogger:
                 "--cost", f"{self.cost:.4f}",
                 "--diff-stat", str(self.diff_stat),
             ]
+            if self.catalog_version:
+                cmd += ["--catalog-version", str(self.catalog_version)]
             res = subprocess.run(cmd, cwd=self.repo_root, capture_output=True, text=True, check=False)
             if res.returncode == 0:
                 self.invocation_id = res.stdout.strip()

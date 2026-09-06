@@ -405,8 +405,12 @@ local change.
 - **Resolving an OpenRouter model name before setting `AIDER_MODEL` (GH-120)**: don't probe
   `aider --list-models` or curl `openrouter.ai/api/v1/models` by hand — run
   `relay-automation/resolve-model-alias.sh "<colloquial name>"` first (local alias table, no live
-  query) or use the `/open-router` skill. Only fall back to the live catalog on a miss, and add the
-  resolved slug back to `relay-automation/openrouter-model-aliases.yml` so the next lookup is instant.
+  query) or use the `/open-router` skill. Only fall back to the live catalog on a miss. **Do not
+  append the resolved slug to `relay-automation/openrouter-model-aliases.yml` — it is a generated
+  file (GH-450)** rendered from the vendored HiQS-Labs/Model-catalog copy, and a hand-added line
+  fails `test/gh450-model-catalog-pin.sh`. Add the row upstream in Model-catalog, then land a sync
+  PR here (`utils/py/model_catalog.py pin` / `render` / `check`); the exact two-PR recipe is in
+  `relay-automation/README.md` → "Adding a new model alias".
 
 ## Conflict order
 

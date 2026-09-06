@@ -595,12 +595,37 @@ variants ("nemotron-ultra3") resolve to the same entry. Exit codes: `0` +
 canonical slug on stdout for a match, `1` (no stdout) if nothing matches, `2`
 on a usage error.
 
-**Adding a new model alias when testing a new model:** append one line to
-`openrouter-model-aliases.yml` in `alias: canonical-slug` format (get the
-canonical slug from the OpenRouter models list), then add a matching
-assertion in `test/model-alias.sh` and run `bash test/model-alias.sh` to
-confirm it resolves. `test/model-alias.sh` is wired into `validate.sh`
-alongside the other shim tests.
+**Adding a new model alias (GH-450 — the two-PR flow; the hand-append flow is
+retired):** `openrouter-model-aliases.yml` is a **generated file**. Its rows are
+rendered from `model-catalog/catalog.json`, a byte-identical vendored copy of
+[HiQS-Labs/Model-catalog](https://github.com/HiQS-Labs/Model-catalog) at the tag
+recorded in `model-catalog/catalog.pin.json`, by that repo's own renderer
+(`model-catalog/render_openrouter.py`, vendored at a pinned commit). A line
+appended by hand is exactly what `test/gh450-model-catalog-pin.sh` turns red
+(byte-equality drift check). To add or correct a model:
+
+1. **PR the row to Model-catalog** (`data/catalog.json`, `target: "openrouter"`,
+   `source` = first-party URL, bump `version` + `updated`); the maintainer tags
+   the release.
+2. **Sync PR here**, once the tag exists:
+
+   ```bash
+   git -C <model-catalog-checkout> show vX.Y.Z:data/catalog.json > relay-automation/model-catalog/catalog.json
+   python3 utils/py/model_catalog.py pin --tag vX.Y.Z --tag-commit <tag commit sha>
+   python3 utils/py/model_catalog.py render      # rewrites openrouter-model-aliases.yml
+   python3 utils/py/model_catalog.py check       # pin sha256s + drift; must exit 0
+   ```
+
+   Then add a **hand-written** assertion for the new row in `test/model-alias.sh`
+   (the assertions drive the real resolver and are never generated from the
+   catalog — a test derived from its own input is a tautology) and run the two
+   suites un-sandboxed in a disposable clone. Both are wired into `validate.sh`.
+
+`resolve-model-alias.sh` is unchanged by this: it still reads `alias: slug`
+lines, nothing in Bash parses the JSON, and `MODEL_ALIASES_FILE` remains the
+test seam. The vendored copy's `version` also rides `resolve-profile.sh --env`
+as `XYZ_MODEL_CATALOG_VERSION` and lands in `harnesses.db` invocation rows
+(`model_catalog_version`), so a turn can say which catalog resolved it.
 
 ## Known OpenRouter edit-format quirks (GH-118)
 
