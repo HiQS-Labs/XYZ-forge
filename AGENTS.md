@@ -29,6 +29,8 @@ reversible, DRY; extend what exists rather than forking a parallel system) is ca
 everything below.
 
 Read `PROJECT/PDDA.md` when the task touches project docs or `CHANGELOG.md`.
+Its document contract is adopted here; [ROUTER’s role split](ROUTER.md#role-split) distinguishes
+XYZ-owned policy from PDDA-layer scope.
 
 Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibility grades, and CLI flags.
 

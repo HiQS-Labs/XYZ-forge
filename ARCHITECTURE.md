@@ -18,6 +18,9 @@ verified_against:
 
 # Relay Architecture
 
+For XYZ’s product purpose, see [Guiding Principles](GUIDING-PRINCIPLES.md#purpose).
+[ROUTER’s role split](ROUTER.md#role-split) separates XYZ policy from PDDA-layer governance.
+
 The relay is a process supervisor around a shared `tick` task, not an in-process multi-agent API.
 
 That distinction matters: Claude does not call Codex or agy as functions. The system shells out to

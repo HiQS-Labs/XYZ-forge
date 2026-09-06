@@ -5,7 +5,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 ## Role split
 
 - `ROUTER.md` = startup order and canonical entry points
-- `GUIDING-PRINCIPLES.md` = the *why*, and the canonical North Star: durable, reversible, DRY — extend what exists rather than forking a parallel system
+- `GUIDING-PRINCIPLES.md` = XYZ Forge’s product purpose, scope and *why*, and the canonical North Star: durable, reversible, DRY — extend what exists rather than forking a parallel system
 - `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof
 - `README.md` = human-facing repo/product overview
 - `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh`); the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth (`ROADMAP.md` retired per GH-269)
@@ -14,9 +14,11 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - `HARNESS-MODELS-REGISTRY.md` = evaluated agent harnesses, supported model grades (A/B/C), and CLI flags
 - `MACHINE-CONTRACTS.md` = the Jog ↔ Preflight ↔ Marathon machine-contract reference (`marathon-invocation@1`, `marathon-drive/result@1`) and their version/deprecation policy
 - `PROJECT/**` docs = canonical execution detail for a specific effort
-- `PROJECT/PDDA.md` = document contract and automation rules (incl. the CHANGELOG contract)
-- `PROJECT/CONSTITUTION.md` = the policy of record: PDDA's lane and its non-negotiables (deterministic-before-LLM, verified-success-only, reversibility, local-first)
-- `PROJECT/DO-NOT-BUILD.md` = the anti-scope list — product directions PDDA must not become (companion to `CONSTITUTION.md`)
+- `PROJECT/PDDA.md` = imported PDDA document contract adopted by XYZ (incl. CHANGELOG); protected local adaptations are reviewed under the repo-owned sync policy
+- `PROJECT/CONSTITUTION.md` = locally maintained PDDA-layer policy of record, with verified-success, reversibility and local-first safeguards adopted by XYZ; advisory-only LLM checking is PDDA-specific and does not replace XYZ relay approval
+- `PROJECT/DO-NOT-BUILD.md` = locally maintained PDDA anti-scope; XYZ product scope remains in GUIDING-PRINCIPLES, not a blanket prohibition on coordination or execution
+- `PROJECT/PDDA-MODE-GUIDE.md` = XYZ-maintained guidance for selecting PDDA’s enforcement mode
+- `PROJECT/PDDA-SYNC-POLICY.md` = binding XYZ-owned review policy for PDDA dependency updates
 
 ## Startup sequence
 
@@ -60,17 +62,18 @@ bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate
 
 **Both gate entry points refuse to run from a linked git worktree (GH-45)** — a worktree shares
 the parent clone's `.git`, and an observed suite escape corrupted the parent (core.bare, origin,
-remote refs, development). Run the gate from a normal clone; `XYZ_ALLOW_WORKTREE_GATE=1` is the
+remote refs, development). Run the gate from a separate disposable full clone; `XYZ_ALLOW_WORKTREE_GATE=1` is the
 announced override for disposable runs.
 
-**Hosted CI fires on nothing while this repo is private (GH-544).** The gate runs locally at the push
-boundary instead, so `githooks/install.sh` is part of setting up a clone — the hook lives in
-`.git/hooks/`, which does not travel with a clone, and an uninstalled one pushes unverified. One
-install covers every branch and every linked worktree of that clone (GH-549). Bypass with
-`git push --no-verify` or `XYZ_SKIP_PREPUSH=1`; both announce themselves. Re-arm CI when the repo
-goes public (free there).
+**Local push checks and hosted CI both apply.** This repository is public; the workflow covers
+pushes and pull requests to `main` and `development`. Hosted macOS promotion evidence requires an
+actual passing run for the exact commit; the Ubuntu canary remains advisory. Install the local
+hook with `githooks/install.sh` for each clone — `.git/hooks/` does not travel with a clone. One
+installation covers that clone’s branches and linked worktrees. Run mutation-heavy gates and
+pushes that invoke them from a separate disposable full clone, as required by AGENTS.md.
+Bypasses (`git push --no-verify`, `XYZ_SKIP_PREPUSH=1`) announce that the local gate was skipped.
 
-**Parallel became the default on 2026-08-14 (GH-544)** because the local gate is the only gate during
+**Parallel became the default on 2026-08-14 (GH-544)** when the local gate was the only gate during
 the private phase, and a 16-minute gate does not get run — it gets skipped, which is worse than a
 3-minute one. **GH-35 (2026-08-18) rebalanced the width to `cores/2` (floor 2, cap 4) and put every
 worker under `nice -n 10`** — the original `cores − 2` (up to 8) saturated developer machines badly

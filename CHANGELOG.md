@@ -9,6 +9,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-05
 
 ### Changed
+- **GH-453: clarified XYZ/PDDA document authority and corrected guiding-principles drift.** Keep governance paths, label the four locally maintained PDDA-layer documents, repair predecessor provenance and dead mode-guide headings, and distinguish XYZ product scope from PDDA anti-scope. Correct kernel dependency, roadmap, runtime, hook and billing claims; preserve the newer README spec-generation caveat. Imported PDDA.md is unchanged; its sync-safe first-line marker remains an explicitly recorded upstream follow-up. Verification and review receipts live in [the audit](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md).
 - **GH-453: revised the governance identity audit instructions and registered its Stage 1 plan.** Separate document subject, maintenance ownership and XYZ applicability; refresh stale claims; require durable sync dispositions and disposable full-clone validation. Governance policies are unchanged. Stage 2 still requires maintainer approval of the report. Execution status and evidence are recorded in [the task plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md).
 
 ## [Unreleased] - 2026-09-04

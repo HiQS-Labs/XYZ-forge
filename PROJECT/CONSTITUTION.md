@@ -1,4 +1,12 @@
+> **PDDA governance-layer policy, maintained and adopted by XYZ Forge; XYZ product scope is defined in [Guiding Principles](../GUIDING-PRINCIPLES.md#purpose).**
+
 # Constitution
+
+Maintained here from the [XYZ predecessor’s version](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/CONSTITUTION.md).
+PDDA itself is a separate project: [Hypercart-Dev-Tools/pdda](https://github.com/Hypercart-Dev-Tools/pdda).
+In XYZ, the advisory-only LLM rule below governs PDDA doc-readiness checks; it does not replace
+the relay approvals required by [AGENTS.md](../AGENTS.md). Verified success, reversibility and
+local-first safeguards remain adopted rules.
 
 **PDDA's lane, stated in one line: a thin repo-governance and safety layer.** Not a general AI
 project-management framework, not a spec-driven-development platform, and not a coding-agent runner.
@@ -6,8 +14,8 @@ This document states that lane's non-negotiables so later scripts, docs, and age
 canonical policy instead of re-arguing it inside every plan.
 
 This is a synthesis of the June 23, 2026 external feedback review (Perplexity, ChatGPT, Gemini),
-reduced and agreed by the operator, and reviewed by agy (`relay-system/2026-06-23/pdda-feedback-synthesis.md`).
-See [`PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
+reduced and agreed by the operator, and reviewed by agy ([predecessor relay review](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/relay-system/2026-06-23/pdda-feedback-synthesis.md)).
+See [`predecessor PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
 for the full synthesis this document distills. This file states the non-negotiables the synthesis
 already agreed on; it does not add new ones the synthesis did not name.
 
@@ -61,14 +69,14 @@ What this layer should build more of, and what it must not become, is recorded s
 
 ## Sources
 
-- [`PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
+- [`predecessor PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
   — the synthesis this document distills (Decision summary, "What to preserve" sections).
-- [`PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md`](1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md) — Step 1
+- [`PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md) — Step 1
   (shared constitution), Step 12 (deterministic-vs-LLM rules).
-- [`PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md`](1-INBOX/PDDA/FEEDBACK-CHATGPT.md) — "The decision" /
+- [`PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md) — "The decision" /
   "Do keep the parts that are genuinely opinionated" (pointer ledger, deterministic-then-advisory,
   verified-success-only, safety rails) and the positioning statement quoted at the top of this doc.
-- [`PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md`](1-INBOX/PDDA/FEEDBACK-GEMINI.md) — freeze-the-Bash and
+- [`PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md) — freeze-the-Bash and
   `PDDA_MODE`-as-escape-hatch signal behind the enforcement-mode default above.
 - [`PROJECT/PDDA.md`](PDDA.md) — canonical enforcement mechanics for the deterministic/advisory split
   and the `PDDA_MODE` precedence rule.

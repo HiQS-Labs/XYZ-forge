@@ -1,4 +1,9 @@
+> **XYZ Forge’s locally maintained guidance for selecting PDDA’s enforcement mode.**
+
 # PDDA mode guide — when to stay in observe/light mode
+
+Maintained here from the [XYZ predecessor’s version](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/PDDA-MODE-GUIDE.md).
+PDDA itself is a separate project: [Hypercart-Dev-Tools/pdda](https://github.com/Hypercart-Dev-Tools/pdda).
 
 This is the short operator guide the Phase 2 hardening pass (GH-144) calls for: concrete triggers for
 staying in `observe` or `light` mode, and for graduating to `full`. It does not restate the mode
@@ -39,7 +44,7 @@ Stay below `full` — do not flip `.pdda-mode` to `full` yet — when any of the
   findings are consistently either false positives or trivial ("forgot to update one date field"), that
   is itself a signal to either fix the check (open an issue, do not silently mute it) or accept staying
   in `light` rather than escalate friction for low-value catches — the same calibration principle behind
-  every warn-only check in [`PROJECT/PDDA.md`](PDDA.md)'s severity table.
+  the [individual check contracts](PDDA.md#1-deterministic-hygiene-checks) in PDDA.md.
 - **Single-operator or low-traffic repo.** When one person owns all doc edits and already reads every
   `observe` report, the marginal safety value of `full`'s hard block is small relative to the friction
   of a build failing on a doc typo mid-flow.
@@ -57,8 +62,9 @@ Move up a rung when:
 
 ## What never blocks, regardless of mode
 
-Some findings are warn-only by construction and will never gate a build even in `full` — see
-[`PROJECT/PDDA.md`](PDDA.md) → "Check severity contract" for the authoritative table. In short: the LLM
+The [individual deterministic check contracts](PDDA.md#1-deterministic-hygiene-checks) and
+[LLM readiness contract](PDDA.md#2-llm-assisted-doc-readiness-review) describe which findings
+remain advisory even in `full`. The LLM
 readiness layer, the stale-doc flag, the changelog nudge, and the issue-doc-sync drift flag are all
 warn-only/flag-only. Choosing `full` mode governs only the deterministic structural checks
 (frontmatter, status table, hardcoded paths, roadmap leak/coverage) — it does not turn any advisory
@@ -66,9 +72,10 @@ signal into a blocker.
 
 ## Sources
 
-- [`PROJECT/PDDA.md`](PDDA.md) — "Enforcement modes" (mechanics), "Check severity contract" (which
-  checks can block at all).
+- [`PROJECT/PDDA.md` — Enforcement modes](PDDA.md#enforcement-modes) (mechanics),
+  [deterministic checks](PDDA.md#1-deterministic-hygiene-checks) and
+  [LLM readiness](PDDA.md#2-llm-assisted-doc-readiness-review) (individual check contracts).
 - [`PROJECT/CONSTITUTION.md`](CONSTITUTION.md) — "Enforcement-mode default" (why `observe` is the
   ratified default).
-- [`PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
+- [`predecessor PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
   — Phase 2 checklist item that called for this guide.
