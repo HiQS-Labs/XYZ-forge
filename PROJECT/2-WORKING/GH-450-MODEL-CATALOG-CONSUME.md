@@ -84,7 +84,8 @@ phases: 1
 
 ## Acceptance (from #450)
 
-- [ ] Green `validate.sh` on the PR (disposable full clone, un-sandboxed) — see PR body.
+- [x] Green `validate.sh` on the PR (disposable full clone, un-sandboxed) — 351/351, exit 0 at
+      candidate `559b9cda`, clone identity unchanged (`provenance.jsonl`, `qualifying-gate` row).
 - [x] Flipping a row in the vendored copy turns CI red via the drift check — `provenance.jsonl`
       `mutation-a-*` (both edges named); hand-written resolver assertions still drive the real binary.
 - [x] Refusal-contract negative control still fails when mutated — `mutation-c-default-on-miss`.
