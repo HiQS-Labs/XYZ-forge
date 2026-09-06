@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -257,5 +257,25 @@ itself, stated explicitly.
 
 Round 6 requested (second and final authorized cycle). Same output contract: `swept file:`,
 `VERDICT: PASS|FAIL|PARKED`, `Basis:`.
+
+## Reviewer · codex · round 6 · 2026-09-06
+
+swept file: yes
+
+Scope: whole plan, recon, resolver, wrapper, fuzz engine and gh346 fallback test read; registry, shipped table and caller spans inspected. Static review only; no artifact/source execution, probes, campaigns, mutations, tests or git commands. MCP list_projects returned all 50 entries (has_more=false), with no index for this worktree or its GH-460 parent; exact-source fallback used without a borrowed generation or graph-completeness claim. External issue, historical commits and producer run claims remain unverified. Plan citations below refer to PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md.
+
+- [Blocker] **The added trap breaks the verbatim target's quoting.** Plan :81 nests `trap 'rm -f "$t"' EXIT` inside the already single-quoted `bash -c` body. The engine shell-splits the target at utils/py/fuzz_engine.py:223–227: the quote before `rm` closes the outer quote, so the spaces before `-f` and `"$t"` split the intended script into extra arguments. Bash's command body consequently ends at `trap rm`; the resolver and invariant checks are not in that body. Fix: serialize the complete Bash body as one shell-quoted argument (escape embedded single quotes for the shlex layer, or construct the target with a standard shell-quoting function). Preserve the inner trap quotes in the resulting body. Specify an argv-shape check that the decoded prefix is exactly bash, -c, complete body, underscore, followed by actual mutants, and a syntax check on that decoded body before the existing baseline/red controls. Do not copy :81 verbatim as :175 requires. These are parsing/source-trace findings, not an executed probe.
+- [Should] **Whitespace normalization still accepts malformed measurements.** Plan :81 uses `tr -d '[:space:]'`, which removes internal whitespace too: `1 2` or two numeric lines become accepted `12`, contradicting :82–84's surrounding-whitespace/exactly-one-integer contract. Fix: validate the raw successful wc output against optional surrounding whitespace and one nonempty decimal digit group, then use only that captured group; reject internal whitespace. Specify malformed-successful-wc controls alongside the failed-wc control at :120–123, with MEASURE-FAIL/exit 8 for split digits and empty output and acceptance of padded valid counts.
+- [Nit] **The timeout spelling disposition is only in prose.** Plan :131 still contains `--timeout 30`; :132 names `--timeout-budget 30`, matching utils/py/fuzz_engine.py:430. Fix the command copy too. Current argparse abbreviation makes this nonblocking.
+- [Pass] **The newline-only witness and outer cleanup ownership are now specified.** Plan :116–118 requires a bare-newline miss to produce LEAK-STDOUT-ON-MISS, and :124–128 assigns captures to a runner-owned temporary directory and smoke/red runs to a disposable full clone. This addresses process-group SIGKILL at fuzz_engine.py:247–254,265–270. Preserve these requirements while repairing target serialization; in implementation, explicitly route mktemp into that owned directory.
+- [Pass] **The remaining campaign, oracle and evidence contracts are locally reviewable.** Plan :92–101 pins raw hit/miss preconditions, the >=20 smoke floor and gate registration; :129–147 specifies JSON, seeds 7/8/9 and 11, 500/300 floors, zero fail/anomaly, environment and per-input differential wrapper assertions. These align with fuzz_engine.py:339,466–470, model_alias.py:41–61 and test/gh346-resolver-fallback.sh:30–35. R2 :102–123 names attributable cp-backed/restored red witnesses; R3b :149–156 retains baseline/red/restored provenance and exact inputs despite corpus replacement/eviction at fuzz_engine.py:185–191. These are specification passes, not witnessed runtime results.
+- [Pass] **Reuse, grounding and test-only ratings remain appropriate.** Plan :157–171 separately scopes production fixes and reuses model_alias.py:48–61 and fuzz_engine.py:278–342 instead of adding a matcher, engine or writer. Plan :189–199 includes registry/evidence and Easy rollback with 60/40/50/70 rationale. Caller references at plan :64–70 align with deepseek-turn.py:231–233 and review_xyz.py:629; the unchanged tier-2 implementation remains at resolve-model-alias.sh:97–104. Full resolver inspection found no explicit git-state writes; this does not exempt test scripts from the disposable-clone boundary.
+
+Whole-file sweep: the previously recorded invalid-root docstring overstatement (model_alias.py:17,31,44) and conditional seed replay claim (fuzz_engine.py:8,122,298) remain bounded by plan :168–171 and :149–156. No additional pre-existing source defect is asserted by this static review; source runtime correctness remains untested.
+
+Final authorized round reached: STATUS is Escalated; implementation remains stopped. Handing off to Producer claude-a — report the unresolved target serialization and measurement contracts and obtain operator direction before another cycle or implementation.
+
+VERDICT: FAIL
+Basis: the new nested trap quotes split the exact oracle body before its resolver checks, and whitespace deletion still accepts malformed byte counts.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
