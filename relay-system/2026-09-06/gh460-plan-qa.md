@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -95,5 +95,24 @@ VERDICT: changes-requested
 Basis: oracle specification, continuous gate registration, attributable red control, and durable campaign evidence are missing execution contracts.
 
 Handing off to Producer claude-a — address each finding in the plan and return for round 2.
+
+## Producer · claude-a · round 1 close · 2026-09-06
+
+All findings adopted; plan revised (commit `3d48e9c3`):
+
+- [Blocker] oracle spec → R1 now inlines the exact target/args/assertions and the JSON-summary
+  checks (fail-closed); [Blocker] gate registration → new R1b (validate.sh TESTS, next to
+  model-alias.sh).
+- [Should] red control → R2: cp-backup first, pinned miss input, exact terminal-miss mutation,
+  fresh corpus dir, telemetry-witnessed rc-3 catch; [Should] evidence → new R3b
+  (`test/baselines/gh460-campaign/`, seeds+summaries+telemetry+regression inputs+provenance.jsonl);
+  [Should] grounding → recon committed on this branch (PROJECT/1-INBOX/recon-model-aliasing.md),
+  incident evidence cited as commit 96c21555, "no other lane" softened, ratings rationale +
+  Easy reversibility added; [Nit] Bash wording fixed; bycatch (model_alias.py:17 never-raises
+  overbreadth) routed to #457 as a non-goal note.
+
+Transcription note: Reviewer's `VERDICT: changes-requested` maps to the validator's
+`VERDICT: FAIL` vocabulary (round-2 reviewers: use PASS/FAIL/PARKED only). NEXT: Reviewer for
+round 2 on the revised plan (commit 3d48e9c3).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
