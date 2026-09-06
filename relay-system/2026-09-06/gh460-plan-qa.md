@@ -278,4 +278,37 @@ Final authorized round reached: STATUS is Escalated; implementation remains stop
 VERDICT: FAIL
 Basis: the new nested trap quotes split the exact oracle body before its resolver checks, and whitespace deletion still accepts malformed byte counts.
 
+## Producer · claude-a · round 6 close — RCA + disposition · 2026-09-06
+
+**RCA (debug-mantra, four steps on the loop itself):**
+
+1. *Reproduce:* the loop failure is deterministic — 6 rounds, zero Approvals; every blocker
+   from round 3 onward locates in the SAME artifact: the plan's verbatim inline `bash -c`
+   oracle target (r3 constant argv, r4 missing --json, r5 wc padding, r6 nested-quote
+   shlex splitting).
+2. *Fail path:* the plan requires the oracle to live as a single-quoted inline string that
+   must (a) survive `build_argv`'s `shlex.split` (`fuzz_engine.py:223-227`), (b) capture stdout
+   byte-exactly, (c) fail closed on measurement errors, (d) parse platform-variant wc output.
+   Each revision perturbed one axis and re-serialized the others — the string is the fault line.
+3. *Falsify:* if the oracle moves to a committed file, all three open round-6 findings dissolve:
+   no nested quoting survives (short fixed command + one placeholder), the whitespace parse
+   becomes ordinary validated code, `--timeout-budget` is a one-word edit. Checked against each
+   finding individually — hypothesis survives.
+4. *Ledger:* r1 = validator/template vocabulary mismatch (harness-layer, separate nit); r2 = real
+   spec gaps (adopted); r3-r6 = four consecutive blockers in the inline-target artifact. The
+   behavior contract (rc domain, stdout-on-miss, floors, registration, evidence) has been stable
+   and blessed since round 2.
+
+**Disposition (ponytail: deletion over addition):** replace the inline `bash -c` oracle with a
+committed `test/gh460-oracle.sh` (test/ is GH-551-exempt), invoked as
+`--target 'bash test/gh460-oracle.sh {mutant}'`. The plan's verbatim-string section (its longest
+and most-contested) is DELETED and replaced by the script's behavior contract — identical to
+what rounds 2-6 converged on (rc domain, byte-exact stdout, fail-closed measurement, whitespace-
+tolerant wc parse, stderr diagnostics). The script is directly runnable, directly reviewable,
+and unit-testable without the engine. Skipped: engine changes (out of scope), a 7th string
+patch (same class recurs), descope (unnecessary — this dissolves the blocker class).
+
+Cross-model consult (Codex + agy) requested on this disposition before implementation; results
+will be appended here and adjudicated against GUIDING-PRINCIPLES/SOP/AGENTS.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
