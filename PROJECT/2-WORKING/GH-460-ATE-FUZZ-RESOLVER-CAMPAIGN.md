@@ -22,7 +22,7 @@ related:
   - GH-450
 non_goals:
   - engine changes to utils/py/fuzz_engine.py — used as-is (GH-299)
-  - new production Bash — the invariant oracle inlines into the --target string; test/ files are GH-551-exempt
+  - new production Bash — the invariant oracle is a committed test/gh460-oracle.sh; test/ files are GH-551-exempt
   - tier-4 matcher semantics — #450 owns the matcher contract work
   - D1/D2/D3 defect fixes — #457 owns those; this loop feeds them
   - cache/latency work — #346
@@ -88,9 +88,10 @@ wrapper observations too, not only inside the oracle.
 `fuzz_engine.py --target 'bash test/gh460-oracle.sh {mutant}'` from the shared-run `--cwd`):
 
 - **O1** `unset MODEL_ALIASES_FILE`; capture file created under the per-run temporary directory
-  owned and cleaned by the outer test/campaign runner (the engine SIGKILLs target process groups
-  on timeout — `fuzz_engine.py:247-254,265-270` — so an in-target EXIT trap is best-effort only,
-  not the ownership boundary); mktemp failure → `SETUP-FAIL` (exit 8).
+  owned and cleaned by the outer test/campaign runner; an in-target EXIT trap (installed
+  immediately after successful capture creation) is ALSO required as best-effort cleanup — the
+  engine SIGKILLs target process groups on timeout (`fuzz_engine.py:247-254,265-270`), which no
+  in-target trap survives, hence the outer ownership; mktemp failure → `SETUP-FAIL` (exit 8).
 - **O2** runs `relay-automation/resolve-model-alias.sh "$1"` capturing stdout BYTE-EXACTLY to
   the capture file (never command substitution — it strips newline-only leaks); resolver stderr
   passes through. Input mapping: the FIRST actual mutant argument is the input; absent input
@@ -130,12 +131,19 @@ that is empty — all → `MEASURE-FAIL` exit 8; plus the padded-valid-count acc
 unrelated failure is not a witness.
 
 **R3 (campaigns):** resolver oracle — seeds {7,8,9} × ≥500 iterations under the shared run
-contract. Wrapper-floor campaign — seed 11 × ≥300 through `model_alias.resolve_model_slug`,
-with the campaign adapter (not merely direct calls) applying the mapping checks from R1-pre to
-fuzzed inputs; wrapper expectation defined explicitly: empty input stays empty; otherwise a
-successful nonempty stripped resolver output is expected and every resolver failure/empty output
-falls back to the literal input (`model_alias.py:41-61`); string type and the nonempty floor are
-asserted. Every counterexample dispositioned on #460 per the loop contract.
+contract. Wrapper-floor campaign — seed 11 × ≥300 through `model_alias.resolve_model_slug`.
+**Pre-fuzz adapter preflight (both actual campaign targets):** before any campaign, each target
+string must pass a syntax check (`bash -n` for the oracle; `ast.parse` for the wrapper) and a
+decoded-argument check (the exact decoded argv prefix + one sample mutant maps the sample to the
+wrapper input — this is the control that catches the round-3 constant-input adapter). The
+wrapper adapter must additionally pass, pre-campaign and directly: the two distinct literal hit
+cases, the observed miss, and the empty case (from R1-pre). Adapter policy = O2's: first actual
+mutant is the input, absent maps to empty, extras ignored; fixed valid repo root; the resolver is
+independently invoked per mapped input to derive the expectation. Wrapper expectation: empty
+input stays empty; otherwise successful nonempty stripped resolver output is expected and every
+resolver failure/empty output falls back to the literal input (`model_alias.py:41-61`); string
+type and the nonempty floor are asserted. Every counterexample dispositioned on #460 per the
+loop contract.
 
 **R3b (evidence):** `test/baselines/gh460-campaign/` commits per-campaign seeds, initial corpus
 state, JSON summaries, telemetry JSONL, target/base/timeout/environment identity, regression
@@ -174,6 +182,11 @@ evidence only.
 - Risk: flaky smoke in CI → the matcher is deterministic; replay from seed adjudicates; a
   genuinely nondeterministic resolver is itself a finding.
 - Rollback: **Easy** — revert the PR (delete the two test files, registry line, evidence dir).
+- **Execution boundary (required):** smoke, red-control, and gate runs execute in a SEPARATE
+  DISPOSABLE FULL CLONE — never a linked worktree, never a stateful task clone (AGENTS.md GH-564
+  rail governs the clone boundary; it covers `test/*.sh` execution, and the resolver's absence
+  of git writes does not exempt the test script). The R2 mutation protocol's backup/restoration
+  handlers are installed before any mutation, with restoration on failure/interruption.
 - Ratings rationale: pri 60 (operator-directed; guards model selection that silently misrouted
   turns 2026-09-05), sev 40 (coverage for a consequence-bearing defect class; no direct data
   loss), appeal 50 (neutral), effort 70 (engine exists; small diff). Recurrence: one distinct
