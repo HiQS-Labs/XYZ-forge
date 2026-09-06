@@ -110,6 +110,15 @@ No competing writer or system is introduced: existing RELEASES CLI owns all ledg
 
 - Initial source checks: upstream manifest names runtime + PDDA.md; launch scaffold names all five.
 - Preflight full suite is running in a separate disposable full clone; no passing claim yet.
+- Upstream PDDA reference: `2a762f28432da074794e5adfa845108cfe037601`; its manifest
+  (`utils/pdda/pdda-sync-manifest.conf:16–23`) distributes only runtime + PROJECT/PDDA.md.
+- Predecessor reference: `67dd324487c1fc470b2c539f1cebe2a9c3fb3651`; all four non-PDDA.md
+  PROJECT governance docs are byte-identical to that predecessor. Constitution/anti-scope were
+  introduced at `1019503`, mode guide at `2ad905e` for predecessor #144, sync policy via #416.
+  The four missing provenance sources exist in the predecessor: synthesis moved to PROJECT/4-MISC;
+  three feedback docs remain in PROJECT/1-INBOX/PDDA. They are not in the current PDDA repo.
+- The current README's “all ... sync inputs / not XYZ Forge policy” paragraph contradicts that
+  narrower manifest and the locally owned sync policy; include this refreshed drift in the report.
 - Independent plan review pending. Report contents below will be filled only after plan approval.
 
 ## Non-goals
