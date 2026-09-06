@@ -78,7 +78,7 @@ Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -93,11 +93,10 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
 | GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
-| GH-447 · Isolate launch destination checks from dirty caller source | — | [GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md](PROJECT/2-WORKING/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md) · [#447](https://github.com/HiQS-Labs/XYZ-forge/issues/447) |
 
 ## Completed
 
-Summary: 57 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 55 · 🔮 0 · 🔲 0
+Summary: 58 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 56 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -158,6 +157,7 @@ Summary: 57 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 55 · �
 | GH-3 · improve-loop.sh --state-dir durability — provenance evidence must not evaporate | ✅ | [GH-3-IMPROVE-LOOP-STATE-DIR.md](PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md) · [#3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) |
 | GH-436 · feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe teardown | ✅ | [GH-436-MERGE-CLEANUP-SKILL.md](PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md) · [#436](https://github.com/HiQS-Labs/XYZ-forge/issues/436) |
 | GH-439 · start-task governed workflow skill | ✅ | [plan](PROJECT/3-COMPLETED/GH-439-START-TASK-SKILL.md) · [#439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) · [PR #440](https://github.com/HiQS-Labs/XYZ-forge/pull/440) |
+| GH-447 · Isolate launch destination checks from dirty caller source | ✅ | [GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md](PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md) · [#447](https://github.com/HiQS-Labs/XYZ-forge/issues/447) |
 
 ## Deferred · vision
 

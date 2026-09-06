@@ -1,8 +1,8 @@
 ---
 title: "GH-447: isolate launch destination checks from dirty caller source"
-status: active
+status: Complete
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 owner: Codex
 gh_issue: 447
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/447
