@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 58 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -68,6 +68,7 @@ Summary: 58 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) | — | [GH-452-RELEASE-TAGS.md](PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md) · [#452](https://github.com/HiQS-Labs/XYZ-forge/issues/452) |
 | GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/1-INBOX/GH-454-RECONCILE-GATE-DEFECTS.md) |
 | GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/1-INBOX/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
+| GH-465 · Other Apps & Tools directory | — | [GH-465-OTHER-APPS-TOOLS.md](PROJECT/1-INBOX/GH-465-OTHER-APPS-TOOLS.md) · [#465](https://github.com/HiQS-Labs/XYZ-forge/issues/465) |
 
 ## Queue
 
