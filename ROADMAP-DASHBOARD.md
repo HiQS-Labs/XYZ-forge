@@ -98,7 +98,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 57 · 🔮 0 · 🔲 0
+Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 58 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -161,6 +161,7 @@ Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 57 · �
 | GH-439 · start-task governed workflow skill | ✅ | [plan](PROJECT/3-COMPLETED/GH-439-START-TASK-SKILL.md) · [#439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) · [PR #440](https://github.com/HiQS-Labs/XYZ-forge/pull/440) |
 | GH-447 · Isolate launch destination checks from dirty caller source | ✅ | [GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md](PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md) · [#447](https://github.com/HiQS-Labs/XYZ-forge/issues/447) |
 | GH-461 · Homepage quality proposition | ✅ | [GH-461-HOMEPAGE-QUALITY-COPY.md](PROJECT/3-COMPLETED/GH-461-HOMEPAGE-QUALITY-COPY.md) · [#461](https://github.com/HiQS-Labs/XYZ-forge/issues/461) |
+| GH-465 · Other Apps & Tools directory | ✅ | [GH-465-OTHER-APPS-TOOLS.md](PROJECT/3-COMPLETED/GH-465-OTHER-APPS-TOOLS.md) · [#465](https://github.com/HiQS-Labs/XYZ-forge/issues/465) |
 
 ## Deferred · vision
 

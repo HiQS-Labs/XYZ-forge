@@ -4,6 +4,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-06
 
+- **GH-465: Other Apps & Tools.** Adds a directory of the seven other public HiQS-Labs repositories, linked from static and generated site navigation and the sitemap. Descriptions use public project documentation and distinguish research from usable tools. Verification: generated-page build and desktop/mobile navigation checks; live deployment checked after merge.
+
+## 2026-09-06
+
 - **GH-461: Homepage quality proposition.** Replaces implementation-heavy, universal quality claims with independent review, revision-specific test evidence, and maintained project records. Scopes review to the relay workflow and retains the distinction between reviewer approval and passing checks. Copy-only; no runtime policy or layout changes. Verification: source diff review; deployment verification follows in the issue.
 
 ## 2026-09-05
