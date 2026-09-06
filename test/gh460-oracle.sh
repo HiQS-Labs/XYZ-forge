@@ -25,8 +25,12 @@ bash "$script_dir/../relay-automation/resolve-model-alias.sh" "$in" >"$t" 2>/dev
 rc=$?
 bytes=$(wc -c <"$t"); wc_rc=$?
 if [ $wc_rc -ne 0 ] || [ -z "$bytes" ]; then echo "MEASURE-FAIL" >&2; exit 8; fi
-bytes=$(printf '%s' "$bytes" | tr -d '[:space:]')
-case $bytes in ''|*[!0-9]*) echo "MEASURE-FAIL" >&2; exit 8;; esac
+# Anchored parse (GH-460 O3): optional surrounding whitespace around exactly ONE decimal
+# integer. Internal whitespace (split digits like "1 2") must NOT be stripped into acceptance.
+bytes_trim=$(printf '%s' "$bytes" | sed -E 's/^[[:space:]]*([0-9]+)[[:space:]]*$/\1/')
+bytes_all=$(printf '%s' "$bytes" | tr -d '[:space:]')
+if [ -z "$bytes_trim" ] || [ "$bytes_trim" != "$bytes_all" ]; then echo "MEASURE-FAIL" >&2; exit 8; fi
+bytes=$bytes_trim
 case $rc in
   0|1|2) ;;
   *) echo "BADRC:$rc" >&2; exit 9;;
