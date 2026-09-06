@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 57 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -66,6 +66,7 @@ Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-445 · runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0 | — | [GH-445-TURN-SHIM-HELP-PARITY.md](PROJECT/1-INBOX/GH-445-TURN-SHIM-HELP-PARITY.md) · [#445](https://github.com/HiQS-Labs/XYZ-forge/issues/445) |
 | GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run | — | [GH-446-MARATHON-PLAN-WRITE-GUARD.md](PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md) · [#446](https://github.com/HiQS-Labs/XYZ-forge/issues/446) |
 | GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) | — | [GH-452-RELEASE-TAGS.md](PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md) · [#452](https://github.com/HiQS-Labs/XYZ-forge/issues/452) |
+| GH-453 · Governance document identity audit | — | [GH-453-GOVERNANCE-IDENTITY-AUDIT.md](PROJECT/1-INBOX/GH-453-GOVERNANCE-IDENTITY-AUDIT.md) · [#453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) |
 
 ## Queue
 
