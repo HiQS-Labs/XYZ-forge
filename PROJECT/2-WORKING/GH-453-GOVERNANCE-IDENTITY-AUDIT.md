@@ -452,3 +452,15 @@ package rename, new sync mechanism, historical-log repairs, merge or clone teard
 - The original all-five durable first-line target remains narrowed as approved: all four locally
   maintained PROJECT files now identify authority in their first line; PDDA.md retains its upstream
   title and contract. The upstream marker draft above is not published or implemented.
+
+### Verification environment correction
+
+The first Stage 2 full run exited 1: swarm-preflight had 99 passes / 1 failure even on serial retry.
+Its T30 fixture names issues 15/16 in a temporary repository; utils/py/swarm_preflight.py:647 calls
+`gh issue view` with inherited environment. I had passed `GH_REPO=HiQS-Labs/XYZ-forge` to validate,
+so the fixture read the real XYZ issue #15 and rejected its intentionally different acceptance
+text. The gh CLI documents that GH_REPO selects the repository. Neither fixture nor preflight code
+changed in this branch. Removing that override produced 100/100 in the focused suite. The complete
+suite is being rerun without GH_REPO; no test or gate was weakened. Both identities matched after
+the failed run. Six pooled failures recovered on automatic serial retries; the failed full result
+remains a failed result, not converted to green by the focused recovery.
