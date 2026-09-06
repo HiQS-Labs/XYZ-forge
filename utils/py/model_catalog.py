@@ -132,7 +132,8 @@ def check_pin(root: str) -> List[str]:
     except Exception as e:  # noqa: BLE001
         return [f"{CATALOG_REL}: unreadable ({e})"]
 
-    for key in ("repo", "tag", "tag_commit", "version", "catalog_sha256", "renderer_sha256"):
+    for key in ("repo", "tag", "tag_commit", "version", "catalog_sha256",
+                "renderer_sha256", "renderer_commit"):
         if not pin.get(key):
             problems.append(f"{PIN_REL}: missing field {key!r}")
     if problems:
@@ -171,17 +172,19 @@ def check_drift(root: str) -> List[str]:
         return []
     fresh_lines = fresh.decode("utf-8", "replace").splitlines()
     committed_lines = committed.decode("utf-8", "replace").splitlines()
-    only_committed = [l for l in committed_lines if l not in fresh_lines]
-    only_fresh = [l for l in fresh_lines if l not in committed_lines]
+    only_committed = [line for line in committed_lines if line not in fresh_lines]
+    only_fresh = [line for line in fresh_lines if line not in committed_lines]
     detail = []
     if only_committed:
         detail.append("committed-only: " + "; ".join(only_committed[:3]))
     if only_fresh:
         detail.append("render-only: " + "; ".join(only_fresh[:3]))
     return [
-        f"drift: {YAML_REL} is not byte-identical to a render of {CATALOG_REL} "
-        f"({' | '.join(detail) or 'byte-level difference'}) — this file is GENERATED; change the "
-        f"catalog and run `python3 utils/py/model_catalog.py render`, never hand-edit the YAML"
+        (
+            f"drift: {YAML_REL} is not byte-identical to a render of {CATALOG_REL} "
+            f"({' | '.join(detail) or 'byte-level difference'}) — this file is GENERATED; change the "
+            f"catalog and run `python3 utils/py/model_catalog.py render`, never hand-edit the YAML"
+        )
     ]
 
 
@@ -231,18 +234,27 @@ def write_pin(root: str, tag: str, tag_commit: str, renderer_commit: Optional[st
             f"({existing['renderer_sha256'][:12]}… -> {renderer_sha[:12]}…) but no --renderer-commit "
             f"was given — pass the Model-catalog commit the new renderer was vendored from"
         )
+    # The renderer's provenance is resolved ONCE and used for both fields; a record with no
+    # renderer commit at all (first pin without --renderer-commit) is refused rather than written
+    # with a `/None/` source URL that check_pin would then accept.
+    resolved_renderer_commit = renderer_commit or existing.get("renderer_commit")
+    if not resolved_renderer_commit:
+        raise SystemExit(
+            f"model-catalog pin: no renderer provenance — pass --renderer-commit <sha> (the "
+            f"{UPSTREAM_REPO} commit {RENDERER_REL} was vendored from)"
+        )
     pin = {
         "repo": UPSTREAM_REPO,
         "tag": tag,
         "tag_commit": tag_commit,
         "version": str(catalog.get("version")),
         "updated": catalog.get("updated"),
-        "catalog_sha256": sha256_file(catalog_path(root)),
+        "catalog_sha256": catalog_sha,
         "catalog_source": f"https://raw.githubusercontent.com/{UPSTREAM_REPO}/{tag}/data/catalog.json",
-        "renderer_commit": renderer_commit or existing.get("renderer_commit"),
-        "renderer_sha256": sha256_file(renderer_path(root)),
+        "renderer_commit": resolved_renderer_commit,
+        "renderer_sha256": renderer_sha,
         "renderer_source": f"https://github.com/{UPSTREAM_REPO}/blob/"
-                           f"{renderer_commit or existing.get('renderer_commit')}/scripts/render_openrouter.py",
+                           f"{resolved_renderer_commit}/scripts/render_openrouter.py",
         "vendored_on": vendored_on or existing.get("vendored_on"),
         "_comment": (
             "GH-450: pin record for the vendored Model-catalog copy. Verified by "

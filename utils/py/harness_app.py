@@ -168,7 +168,14 @@ def init_db(db_path: str) -> sqlite3.Connection:
         # nullable, idempotent — rows logged before the column simply carry NULL.
         cols = {r[1] for r in conn.execute("PRAGMA table_info(invocation_logs);").fetchall()}
         if "model_catalog_version" not in cols:
-            conn.execute("ALTER TABLE invocation_logs ADD COLUMN model_catalog_version TEXT;")
+            try:
+                conn.execute("ALTER TABLE invocation_logs ADD COLUMN model_catalog_version TEXT;")
+            except sqlite3.OperationalError as e:
+                # Two shims opening the same pre-GH-450 db concurrently can both see the column
+                # missing; the loser's ALTER fails with "duplicate column name". That is the
+                # migration having succeeded, not a failure — a turn must never lose its row to it.
+                if "duplicate column" not in str(e).lower():
+                    raise
     return conn
 
 

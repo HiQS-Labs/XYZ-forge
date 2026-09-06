@@ -37,7 +37,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Vendored `v1.0.0` + pin record, generated YAML, `test/gh450-model-catalog-pin.sh` (26/0) with four red controls, tier-4 seam guard + terminal-refusal control in `test/model-alias.sh` (26/0), catalog version in `resolve-profile` + `harnesses.db` rows, hand-append flow retired in README/AGENTS. | Full `validate.sh` on the final candidate in the disposable clone; PR to `development` with `Closes #450`; Phase 2 (Sleuth#173). |
+| Vendored `v1.0.0` + pin record, generated YAML, `test/gh450-model-catalog-pin.sh` (26/0) with four red controls, tier-4 seam guard + terminal-refusal control in `test/model-alias.sh` (26/0), catalog version in `resolve-profile` + `harnesses.db` rows, hand-append flow retired in README/AGENTS. | Full `validate.sh` **done**: 351/351 at candidate `559b9cda` in the disposable clone (and again on each pre-push gate); PR #456 open against `development` with `Closes #450`, independent review + CodeRabbit items folded. Phase 2 (Sleuth#173 / PR #180) merged and in production. Next: review sign-off → merge → `wave_reconcile.py --pr 456`. |
 
 ## What shipped (Model-catalog PROJECT.md Phase 1, steps 1–5)
 

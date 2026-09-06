@@ -168,6 +168,25 @@ PY
 out="$(run_check "$T")"; rc=$?
 [ "$rc" != 0 ] && pass "negative control: a stale pin sha turns check RED" || fail "stale pin NOT caught: $out"
 
+# --- 2c'. A pin record with no renderer provenance is a named problem (CodeRabbit on #456). ---
+T="$WORK/norc"; fresh_copy "$T"
+python3 - "$T/$CAT_DIR/catalog.pin.json" <<'PY'
+import json, sys
+p = sys.argv[1]; d = json.load(open(p)); d.pop("renderer_commit", None)
+json.dump(d, open(p, "w"), indent=2)
+PY
+out="$(run_check "$T")"; rc=$?
+{ [ "$rc" != 0 ] && case "$out" in *"missing field 'renderer_commit'"*) true ;; *) false ;; esac; } \
+  && pass "negative control: a pin record without renderer_commit is refused by name" \
+  || fail "pin without renderer_commit: rc=$rc $out"
+rm -f "$T/$CAT_DIR/catalog.pin.json"
+if python3 "$MC" pin --root "$T" --tag "v1.0.0" --tag-commit "75e19139" --expect-sha256 "$(python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$T/$CAT_DIR/catalog.json")" >/dev/null 2>"$T/first.err"; then
+  fail "a FIRST pin with no --renderer-commit was written (would carry a /None/ renderer_source)"
+else
+  case "$(cat "$T/first.err")" in *"no renderer provenance"*) pass "negative control: a first pin without --renderer-commit is refused by name" ;;
+    *) fail "first pin refused for the wrong reason: $(cat "$T/first.err")" ;; esac
+fi
+
 # --- 2d. A missing vendored file is a named problem, not a crash or a pass. ---
 T="$WORK/missing"; fresh_copy "$T"; rm -f "$T/$CAT_DIR/render_openrouter.py"
 out="$(run_check "$T")"; rc=$?
