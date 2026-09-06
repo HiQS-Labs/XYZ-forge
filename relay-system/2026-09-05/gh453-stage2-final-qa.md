@@ -1,6 +1,6 @@
 # RELAY · GH-453 Stage 2 final QA
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -41,6 +41,64 @@ Are changed claims true within stated boundaries? Are provenance and headings va
 one-off link controls and base comparison meaningful? Does the unchanged 70/65/50/55 rating remain
 appropriate with no override? Any new unsupported success claim, duplicate writer or missed original
 requirement beyond the explicitly approved upstream follow-up? Do not repeat the entire history audit.
+**Commit:** harness-managed checkpoint.
+
+### Round 1 · Reviewer · 2026-09-05
+
+**Verdict:** Parked pending the required clean full-suite receipt.
+
+VERDICT: PARKED
+
+Basis: Reviewed the final-QA relay instructions, Stage 2 plan, Stage 2 execution receipts, the four
+local PROJECT governance first-line clarifications, GUIDING/README/ROUTER/AGENTS/ARCHITECTURE
+wording, and the committed Stage 2 evidence under `TESTS-RESULTS/2026-09-05+GH-453/stage2/`. I did
+not run git, project gates, or tests; this reviewer turn edits only this relay file. The document
+implementation appears within the approved authority/scope boundaries, but final approval is blocked
+because the required full candidate gate is not yet evidenced as clean.
+
+**Findings & corrections:**
+
+- **PARKED** -- The Stage 2 DoD requires attributable gates before approval, including the full
+  candidate suite after edits (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:363` and
+  `PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:365`). The committed receipt instead says
+  the first full Stage 2 run exited 1 and that the clean-env full suite “is being rerun,” not that it
+  passed (`PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:458` and
+  `PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:464`). Evidence currently includes the
+  failed full run (`TESTS-RESULTS/2026-09-05+GH-453/stage2/validate-with-gh-repo-failed.log:1`) and
+  the focused `swarm-preflight` clean-env recovery (`TESTS-RESULTS/2026-09-05+GH-453/stage2/swarm-clean-env.log:1`),
+  but no completed clean full-suite log. Correction: add the clean no-`GH_REPO` full-suite receipt,
+  record its exit/status in the Stage 2 execution receipts, and only then request final PASS.
+
+- **Pass** -- The four locally maintained PROJECT governance files now meet the approved first-line
+  identity boundary without moving files or touching imported `PROJECT/PDDA.md`: Constitution names
+  PDDA governance-layer policy and points XYZ product scope to GUIDING
+  (`PROJECT/CONSTITUTION.md:1`); anti-scope says it is not a prohibition on XYZ coordination and
+  execution (`PROJECT/DO-NOT-BUILD.md:1`); the mode guide is local XYZ guidance for selecting PDDA
+  mode (`PROJECT/PDDA-MODE-GUIDE.md:1`); and the sync policy is binding XYZ policy for PDDA dependency
+  updates (`PROJECT/PDDA-SYNC-POLICY.md:1`). No correction requested.
+
+- **Pass** -- GUIDING preserves the approved local charter shape and the newer README caveat. The
+  Purpose section describes XYZ as capture -> rate -> plan -> preflight -> execute -> gate -> land ->
+  record, narrows containment guarantees, and keeps spec/PRD generation as a current capability gap
+  rather than a permanent ban (`GUIDING-PRINCIPLES.md:36`, `GUIDING-PRINCIPLES.md:39`,
+  `GUIDING-PRINCIPLES.md:43`, and `GUIDING-PRINCIPLES.md:45`). The README keeps the same current
+  product loop and local-first framing (`README.md:10` and `README.md:16`). No correction requested.
+
+- **Pass with caveat** -- The link evidence is bounded and falsifiable as planned: the one-off
+  comparison reports 112 scanned current documents, 689 local links, zero new findings, nine resolved
+  findings, and controls for valid link, missing file, missing heading, and empty scope
+  (`TESTS-RESULTS/2026-09-05+GH-453/stage2/links.json:2`,
+  `TESTS-RESULTS/2026-09-05+GH-453/stage2/links.json:4`,
+  `TESTS-RESULTS/2026-09-05+GH-453/stage2/links.json:112`,
+  `TESTS-RESULTS/2026-09-05+GH-453/stage2/links.json:113`). PDDA governance still warns on
+  generated/ignored `.tick/STATE.md` and inherited `blank.md` references, with zero errors
+  (`TESTS-RESULTS/2026-09-05+GH-453/stage2/governance.log:1` and
+  `TESTS-RESULTS/2026-09-05+GH-453/stage2/governance.log:10`). No correction requested unless the
+  missing full-suite rerun adds a new failure.
+
+**Handoff:** Producer should append the completed clean full-suite evidence and final receipt status,
+or explicitly mark the task not ready. The current reviewer block is intentionally not approval.
+
 **Commit:** harness-managed checkpoint.
 
 <!-- ↓↓↓ NEXT TURN GOES ABOVE THIS LINE ↓↓↓ -->
