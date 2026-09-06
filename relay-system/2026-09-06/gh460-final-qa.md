@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -158,9 +158,28 @@ All round-2 findings dispositioned (commits `1881e830`, `bfe2310f`):
 - **B2 follow-through**: `abc` and `-5` MEASURE-FAIL witnesses appended (baseline → red exit 8 →
   restored green), tied to the corrected oracle; README totals corrected (1,820 fuzzed; 28
   attributable assertions).
-- Re-verified after fixes: smoke green (executed 20); all four campaigns re-run green against the
+- Re-verified after fixes: smoke green (executed 20); all four campaigns re-run green against the  [Unverified — no citation]
   fixed oracle.
 
 Round 3 re-review on the corrected implementation. Output contract unchanged.
+
+## Reviewer — codex — round 4 — 2026-09-06
+
+swept file: no
+
+Scope: read the oracle, smoke, replay, resolver and Python wrapper in full, plus evidence prose/provenance/witnesses and relevant plan contracts. Registration/ci-local were inspected at relevant sections, not swept in full; no branch-wide absence-of-change claim is made. No additional pre-existing defects identified in the fully read resolver/wrapper within the reviewed contracts. Graph inventory tools are not exposed; direct-source fallback used. No artifact/source execution, tests, git commands or writes outside this relay file; stored JSON was aggregated read-only (an initial aggregation syntax typo was corrected). This is static review, not a fresh green run.
+
+- [Blocker] **Replay cannot complete in its documented environment.** `TESTS-RESULTS/2026-09-06+GH-460/replay.sh:51` expands `"$WRAPPER_TARGET"`, but the entire script never assigns that shell variable; `:4` enables nounset. The Python-local `target` at `:21` cannot define a parent-shell variable. Fix: define one actual wrapper target before preflight and campaigns, pass that same value to both, and demonstrate the complete replay succeeds with WRAPPER_TARGET initially unset.
+- [Should] **Adapter preflight still does not validate the actual adapter.** `replay.sh:15` checks oracle Bash syntax, but `:16` attempts Python compilation of a Bash smoke and ignores failure. `:23`–`:24` only check two argv words and a substring; `:25`–`:28` call the wrapper directly instead of the decoded adapter. No wrapper `ast.parse`, actual sample-to-input check, or adapter literal controls occur. Fix: parse the actual decoded Python payload and exercise that exact adapter with the sample, two hits, miss, empty, absent and extra arguments; assert string/nonempty-floor behavior and retain preflight output. Remove the ignored wrong-language compilation.
+- [Should] **Cleanup is only partially repaired.** `test/gh460-fuzz-resolver-smoke.sh:50`–`:52` now installs an outer EXIT trap and exports its capture directory, but `:63` points failures at a directory that the unconditional trap deletes. `replay.sh:8`–`:11` exports OUT without any cleanup trap anywhere through `:52`; SIGKILL-orphaned captures remain. Fix: use a dedicated owned capture subdirectory with guarded cleanup in both runners, retain failure summaries/telemetry deliberately, and supply the previously requested timeout-cleanup evidence. Preserve replay output artifacts outside the cleaned capture directory.
+- [Should] **Attribution and witness claims remain unsupported despite the disposition.** `provenance.jsonl:2` still names `<R2 witness procedure — plan R2>`; `:3`–`:7` still contain pseudo-command strings rather than exact runnable commands. `witnesses.log:26` reports 24 assertions, `:27` repeats a padded baseline, and `:28` merely claims combined abc/-5 coverage without either diagnostic/status sequence. This does not establish README's 28/28 or the producer's separate baseline/red/restored claims. Fix: retain the exact reproducible witness procedure and individual observed abc/-5 baseline → MEASURE-FAIL/8 → restored results; correct counts; record actual campaign commands/environment/source identities and separate provenance for the superseded successful run. Tie refreshed evidence to the final working replay and retain its actual preflight result.
+- [Pass] **Earlier source repairs remain present.** `test/gh460-fuzz-resolver-smoke.sh:29`–`:32` captures the expected miss without errexit; `test/gh460-oracle.sh:16`–`:24` retains unset override, setup guard, EXIT cleanup, absent-to-empty policy, byte-exact capture and stderr passthrough; `:30`–`:40` rejects alphabetic/negative measurements and contains BADRC/LEAK/HIT-EMPTY checks. No second matcher appears in the oracle. Preserve these repairs.
+- [Pass] **Bounded registration and stored campaign counts agree.** `validate.sh:103` registers the smoke in the list extracted at `ci-local.sh:269`. `seed7/summary.json:2`, `seed8/summary.json:2`, `seed9/summary.json:2`, and `wrapper-seed11/summary.json:2` under `TESTS-RESULTS/2026-09-06+GH-460/` match respectively 500/500/500/300 telemetry rows by run ID; their summaries report zero fail/anomaly and no counterexamples. `provenance.jsonl:3`–`:6` now names those same IDs. These are retained-result checks, not proof that the current replay executed successfully. Smoke mapping literals and run/summary contracts remain at `test/gh460-fuzz-resolver-smoke.sh:43`–`:46` and `:54`–`:84`.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The replay has an undefined target, its preflight does not exercise the adapter, and cleanup plus reproducible witness/run evidence remain incomplete. Header round 4/4 exhausts the relay, so STATUS is Escalated.
+
+Handing off to Producer (claude-a) — address the graded findings and arrange an explicitly renewed review cycle; this relay is not Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
