@@ -171,10 +171,14 @@ matrix for regulatory submission. Those require multi-user, server-backed, permi
 **local-first is a deliberate constraint here, not a missing feature.** If you need Polarion or Azure
 DevOps, you need Polarion or Azure DevOps.
 
-**It is not a spec-driven-development framework or an agent marketplace.** It does not generate specs
-or PRDs from prompts, and it does not host third-party agents. Adjacent tools cover those well —
-GitHub Spec Kit for spec-driven flows, Task Master for PRD-to-task breakdown, LangGraph and similar
-for orchestration primitives, GitHub Agent HQ for enterprise multi-vendor agent management.
+**It is not, yet, a spec-generation system.** XYZ Forge has no structured intake → spec → PRD →
+project-plan generator of its own. The machinery underneath *assumes* specified work — PDDA's doc
+lifecycle expects a capture doc with a why, phases, and a verification contract, and preflight grades
+readiness against exactly that — but nothing here authors the spec. Writing it is left to the
+operator and the LLM working with them; `/idea` and `/triage` are thin front doors that scaffold the
+capture doc and synthesize a first-pass "why," not a rigid intake pipeline. If you want prompt-to-spec
+generation, adjacent tools cover it — GitHub Spec Kit for spec-driven flows, Task Master for
+PRD-to-task breakdown — and their output can land in `PROJECT/1-INBOX/` as a capture doc.
 
 ---
 
