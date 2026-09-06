@@ -53,7 +53,9 @@ against the resolver on 2026-09-05 (#457, fuzzing comment): seed 7, 30 iteration
 test, runs real campaigns, and enforces the loop contract: **every counterexample → fix +
 pinned replayable regression test, or documented non-defect with the oracle narrowed.**
 
-## Recon summary (full map: `PROJECT/1-INBOX/recon-model-aliasing.md`, primary clone)
+## Recon summary (full map committed on this branch: `PROJECT/1-INBOX/recon-model-aliasing.md`;
+historical-incident evidence: commit `96c21555` on this branch removed the colliding alias —
+the pre-fix rewrite reproduces by restoring that row)
 
 - `resolve-model-alias.sh` — pure function of (argv, static table) → (slug, rc 0|1|2); four
   matching tiers, file-order-wins; `MODEL_ALIASES_FILE` accepts pipes.
@@ -68,22 +70,46 @@ pinned replayable regression test, or documented non-defect with the oracle narr
 
 ## Requirements
 
-- **R1 (smoke, standing):** `test/gh460-fuzz-resolver-smoke.sh` runs the engine (pinned seed,
-  ≥20 iterations) with the structural-contract oracle; asserts `executed ≥ 20` (an empty run is
-  a failure — "an empty input passes every check") and `fail == 0`, `anomaly == 0`.
-- **R2 (red control, witnessed):** with the resolver mutated to violate the contract
-  (`exit 3` on miss — a cp-backup edit, restored after), the smoke test must go red. Witnessed
-  in this effort's PR description, not asserted.
-- **R3 (campaigns):** ≥3 seeds × ≥500 iterations against the resolver; plus the wrapper-floor
-  campaign through `resolve_model_slug` (never-raises / never-empty / passthrough-on-miss).
-  Every counterexample dispositioned on #460 per the loop contract.
+- **R1 (smoke, standing):** `test/gh460-fuzz-resolver-smoke.sh` runs the engine (pinned seed 7,
+  ≥20 iterations) with the oracle inlined verbatim (not delegated): the target is
+  `bash -c 'out=$(bash relay-automation/resolve-model-alias.sh "$1" 2>/dev/null); rc=$?; [ $rc -le 2 ] || { echo "BADRC:$rc"; exit 9; }; [ $rc -ne 1 ] || [ -z "$out" ] || { echo "LEAK-STDOUT-ON-MISS"; exit 9; }; exit 0' _ {mutant}`
+  from `--cwd <repo-root>` — resolver rc must be 0/1/2, stdout empty on miss, nonempty on hit.
+  The test parses the engine's JSON summary (`fuzz_engine.py:339,470`), fails closed on
+  missing/malformed JSON, and asserts `executed >= 20`, `counts.fail == 0`, `counts.anomaly == 0`
+  (an empty run is a failure — "an empty input passes every check").
+- **R1b (gate registration):** register the smoke in `validate.sh`'s TESTS list (next to
+  `model-alias.sh`, ~line 102) so `ci-local.sh`'s qualifying suite derives it too
+  (`ci-local.sh:246,269`). An unregistered test does not continuously guard.
+- **R2 (red control, witnessed + attributable):** install the cp-backup FIRST
+  (`cp resolve-model-alias.sh /tmp/...`, restored unconditionally before the smoke re-run, even
+  on failure), then sed-inject `exit 3` on the terminal miss path (`resolve-model-alias.sh:124`,
+  NOT the usage exit at `:52` or tier exits). Use a pinned input witnessed to MISS at HEAD
+  (`totally-unknown-model-xyz`, as in `test/model-alias.sh`) so the mutant is the only variable;
+  the smoke must go red with telemetry showing the oracle caught rc 3 for that input. A syntax
+  error, timeout, or missing JSON does NOT qualify as the red witness. Use a fresh corpus dir for
+  the red run (existing corpus state affects generation, `fuzz_engine.py:298`).
+- **R3 (campaigns):** 3 seeds (pinned in the evidence dir) × ≥500 iterations against the
+  resolver; plus the wrapper-floor campaign through `resolve_model_slug` (≥300 iterations,
+  string model inputs + the fixed valid harness root only). Every counterexample dispositioned
+  on #460 per the loop contract.
+- **R3b (durable evidence):** commit `test/baselines/gh460-campaign/` containing per-campaign
+  seeds, JSON summaries, telemetry JSONL, any regression inputs (exact argv + replay command),
+  and `provenance.jsonl` for every run cited in the PR (AGENTS.md §6). Do not depend on
+  ephemeral corpus ids — `fuzz_engine.py:185-190` replaces/evicts entries; regression success
+  after a fix is asserted from the pinned input, not from replaying a surviving corpus id.
+  Campaign evidence and cited-run provenance land in the PR.
 - **R4 (defect routing):** defects already spec'd → #457; new defects → filed + fixed under
   #460 with corpus-derived regression tests.
 
 ## Non-goals
 
-- No engine changes; no new Bash files (the oracle inlines into the `--target` string, GH-551);
-  no tier-4 semantics changes (#450); no D1/D2/D3 fixes here (#457); no cache/latency (#346).
+- No engine changes; no new *production* Bash — the oracle inlines into the `--target` string
+  and `test/` files are exempt from the GH-551 rail; no tier-4 semantics changes (#450); no
+  D1/D2/D3 fixes here (#457); no cache/latency (#346).
+- Campaign scope bounded to string model inputs and the fixed valid harness root.
+  Bycatch for #457: `model_alias.py:17`'s "never raises" docstring exceeds the implementation
+  for invalid root types (`resolver_path` runs outside the try, `:31,44`) — a contract finding
+  to route, not fuzz.
 
 ## Implementation order (one list, verification inline)
 
@@ -103,4 +129,10 @@ pinned replayable regression test, or documented non-defect with the oracle narr
   matcher is deterministic; replay from seed adjudicates). Rollback: revert the PR; the test
   file is self-contained and touches no other surface.
 - The campaigns run in this task clone only; they spawn short-lived bash/python subprocesses
-  and touch nothing under git control (corpus/telemetry under `temp/`, gitignored).
+  and touch nothing under git control (corpus/telemetry under `temp/`, gitignored). Gate runs
+  that execute the wider suite use a separate disposable full clone (AGENTS.md).
+- Reversibility: **Easy** — test-only PR; rollback = revert (delete the test file + registry
+  line + evidence dir). Ratings rationale: pri 60 (operator-directed; guards model selection
+  that silently misrouted turns 2026-09-05), sev 40 (coverage for a consequence-bearing defect
+  class; no direct data loss), appeal 50 (neutral), effort 70 (engine exists; small diff).
+  Recurrence: one distinct incident in a 14-day lookback; no same-class reports found.
