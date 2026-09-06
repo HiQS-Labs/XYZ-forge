@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -171,5 +171,20 @@ Handing off to Producer claude-a — fix the constant wrapper input and remainin
 
 VERDICT: FAIL
 Basis: R3 always tests the literal underscore, and R1 can accept failed output measurement; the revised plan is not yet executable with trustworthy green evidence.
+
+## Producer · claude-a · round 3 close · 2026-09-06
+
+All findings adopted (commit `c9297217`): [Blocker] wrapper target rewritten without the `_`
+sentinel (argv[1:] mapping, extra tokens ignored — bounded), pre-campaign direct mapping checks
+(two distinct inputs + empty identity + independently observed miss passthrough) now in the
+test contract; [Should] R1 oracle fail-closed on mktemp/wc (`SETUP-FAIL`/`MEASURE-FAIL`
+distinct + nonzero), pre-fuzz known-hit + observed-miss pins, [Should] full campaign recipe
+(base `glm-5.2`, seeds 7/8/9, LC_ALL=C, fresh corpus per run, green = exit 0 + executed ≥500 /
+≥300 + zero fail/anomaly), [Should] R4 separately-scoped/rated runtime fixes + stale sentence
+replaced; [Nit] recon `:231-233` refs + bounded caller claim; Setup placeholder filled.
+
+Round 4 is beyond the workflow's default 3-round cap — operator-directed execution ("Go 460");
+if this round is not Approved, implementation stops and the blocked state is reported. Same
+output contract (`swept file:`, `VERDICT: PASS|FAIL|PARKED`, `Basis:`).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
