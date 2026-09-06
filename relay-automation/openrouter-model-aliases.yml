@@ -16,7 +16,6 @@ glm-5.2: z-ai/glm-5.2
 nemotron ultra 3: nvidia/nemotron-3-ultra-550b-a55b
 nemotron ultra 3 free: nvidia/nemotron-3-ultra-550b-a55b:free
 qwen3 coder: qwen/qwen3-coder
-qwen 3.8 max: qwen/qwen3.8-max-0902
 deepseek v4 pro: deepseek/deepseek-v4-pro
 grok 4.6: x-ai/grok-4.6
 stealth ox-alpha: stealth/ox-alpha
