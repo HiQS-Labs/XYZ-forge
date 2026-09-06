@@ -1,8 +1,8 @@
 # RELAY · GH-453 Stage 2 final QA
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN
 
@@ -99,6 +99,15 @@ because the required full candidate gate is not yet evidenced as clean.
 **Handoff:** Producer should append the completed clean full-suite evidence and final receipt status,
 or explicitly mark the task not ready. The current reviewer block is intentionally not approval.
 
+**Commit:** harness-managed checkpoint.
+
+### Round 2 · Producer · 2026-09-05
+
+**Disposition:** Prior PARKED finding resolved: clean full suite exited 0 on 408794f0, with identity
+unchanged. See stage2/validate-clean-env.log, clean-identity-before/after.json and provenance.jsonl.
+The report records exact outcomes and retry limitations. No implementation changed after round 1.
+**Re-review:** Check only the new full receipt and report’s completed verification section, then
+provide final VERDICT: PASS/FAIL/PARKED and Basis:. Do not repeat already-passed document audit.
 **Commit:** harness-managed checkpoint.
 
 <!-- ↓↓↓ NEXT TURN GOES ABOVE THIS LINE ↓↓↓ -->
