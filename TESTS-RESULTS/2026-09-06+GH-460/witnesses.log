@@ -1,0 +1,15 @@
+  WITNESS PASS: rc-3 -> exit 9 BADRC:3 (BADRC:3)
+  WITNESS PASS: rc-3 restored green
+  WITNESS PASS: LEAK -> exit 9 LEAK-STDOUT-ON-MISS (LEAK-STDOUT-ON-MISS)
+  WITNESS PASS: LEAK restored green
+  WITNESS PASS: NEWLINE-ONLY -> exit 9 LEAK-STDOUT-ON-MISS
+  WITNESS PASS: NEWLINE-ONLY restored green
+replaced 4 tier printf sites
+  WITNESS PASS: HIT-EMPTY -> exit 9 HIT-EMPTY-ON-MATCH (HIT-EMPTY-ON-MATCH)
+  WITNESS PASS: HIT-EMPTY restored green
+  WITNESS PASS: MEASURE-FAIL(failed wc) -> exit 8 (MEASURE-FAIL)
+  WITNESS PASS: MEASURE-FAIL(split digits) -> exit 8
+  WITNESS PASS: MEASURE-FAIL(empty output) -> exit 8
+  WITNESS PASS: padded-valid count accepted (exit 0, no MEASURE-FAIL)
+  WITNESS PASS: final restore green
+WITNESSES: 13 passed, 0 failed

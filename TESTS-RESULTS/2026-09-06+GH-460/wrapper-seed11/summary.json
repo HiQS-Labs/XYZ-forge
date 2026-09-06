@@ -1,0 +1,22 @@
+{
+  "run_id": "6016e964-36da-48ae-9dfd-46e67b783c41",
+  "seed": 11,
+  "iterations": 300,
+  "executed": 300,
+  "counts": {
+    "pass": 300,
+    "fail": 0,
+    "anomaly": 0
+  },
+  "novel_vectors": 2,
+  "corpus_size": 3,
+  "corpus_cap": 500,
+  "corpus_actions": {
+    "added": 2,
+    "replaced": 2,
+    "dropped": 296
+  },
+  "parity_divergences": 0,
+  "counterexamples": [],
+  "telemetry_out": "/tmp/gh460-evidence/campaigns/wrapper-seed11/telemetry.jsonl"
+}
