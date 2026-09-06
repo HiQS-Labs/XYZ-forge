@@ -9,21 +9,36 @@ post-turn AI/reviewer grading.
 import json
 import os
 import subprocess
+import sys as _sys
 import time
 from typing import Any, Dict, List, Optional
 from device_config import get_effective_runtime_config
 
 
 def _vendored_catalog_version(repo_root: str) -> Optional[str]:
-    """GH-450: read the vendored Model-catalog's version under repo_root; None on any failure."""
+    """GH-450: read the vendored Model-catalog's version under repo_root; None on any failure.
+
+    `_sys` is imported at module scope on purpose: the handler below writes to stderr, and a name
+    bound inside the `try` would be unbound exactly when the handler runs — the swallowed-NameError
+    shape `test/gh346-telemetry-row-written.sh` exists to catch.
+    """
     try:
-        import sys as _sys
         here = os.path.dirname(os.path.abspath(__file__))
         if here not in _sys.path:
             _sys.path.insert(0, here)
         from model_catalog import catalog_version  # noqa: E402
-        return catalog_version(repo_root)
-    except Exception:
+        v = catalog_version(repo_root)
+        if not v:
+            # Never fatal — telemetry must not break a turn (GH-346 Phase 0) — but never silent
+            # either: a NULL model_catalog_version column is undiagnosable after the fact, and the
+            # cause is always one of "no vendored copy under this root" or "copy unreadable".
+            print(f"harness-turn-logger: no readable Model-catalog version under {repo_root} — "
+                  f"invocation row will carry a NULL model_catalog_version", file=_sys.stderr)
+        return v
+    except Exception as e:
+        print(f"harness-turn-logger: could not read the vendored Model-catalog version "
+              f"({type(e).__name__}: {e}) — invocation row will carry a NULL "
+              f"model_catalog_version", file=_sys.stderr)
         return None
 
 

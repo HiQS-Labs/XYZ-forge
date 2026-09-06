@@ -33,6 +33,47 @@
     <a href="https://github.com/HiQS-Labs/XYZ-forge#readme">README</a> and
     <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/GUIDING-PRINCIPLES.md">GUIDING-PRINCIPLES.md</a>.</p>
 
+    <h2>What is XYZ Forge, in one paragraph?</h2>
+    <p>A <strong>local-first engineering operations system for running AI coding agents as a
+    workforce</strong>. It coordinates several agents — Claude Code, Codex, <code>agy</code>
+    (Google's Antigravity CLI), and others — working on the same repositories, and carries the
+    machinery an unattended run actually needs: specified work, collision-free lanes,
+    verification gates, and a receipted record of what happened. It started as a coordination
+    kernel and became the loop around it:
+    <code>capture → rate → plan → preflight → execute → gate → land → record</code>.</p>
+
+    <h2>Is it application lifecycle management (ALM)?</h2>
+    <p>No, and the boundary is deliberate. There is no multi-user identity, no role-based access
+    control, no SSO, no cross-team capacity planning, and no compliance certification. Those
+    require multi-user, server-backed, permissioned state — <strong>local-first is a deliberate
+    constraint here, not a missing feature</strong>. If you need Polarion or Azure DevOps, you
+    need Polarion or Azure DevOps.</p>
+
+    <h2>Does it generate specs from a prompt?</h2>
+    <p>Not yet. XYZ Forge has no structured intake → spec → PRD → project-plan generator; the
+    machinery <em>assumes</em> specified work, and nothing here authors the spec. Writing it is
+    left to the operator and the LLM working with them — <code>/idea</code> and
+    <code>/triage</code> are thin front doors that scaffold a capture doc, not a rigid intake
+    pipeline. If you want prompt-to-spec generation, adjacent tools cover it — GitHub Spec Kit
+    for spec-driven flows, Task Master for PRD-to-task breakdown — and their output can land in
+    <code>PROJECT/1-INBOX/</code> as a capture doc.</p>
+
+    <h2>What is PDDA, and why do Swarm and Marathon need it?</h2>
+    <p>PDDA is a separate repo-governance project whose checkers are vendored into XYZ Forge;
+    the dependency runs one way only (the harness reads governance structure; PDDA never calls
+    the harness). Consult and Relay need only this repo — preflight degrades every doc-shaped
+    check to advisory and still reaches a verdict. Swarm and Marathon <em>effectively
+    require</em> PDDA: the unattended path refuses any repo that isn't Tier A (PDDA plus a
+    vendored XYZ install), because the wave planner cannot rank a backlog it cannot read. PDDA
+    is a prerequisite for the unattended path, not an optional enhancement.</p>
+
+    <h2>The test suite prints nothing for minutes, then fails — is it broken?</h2>
+    <p>Probably not. Under a sandboxed agent harness (Claude Code's default Bash sandbox, for
+    example), the suite's <code>mktemp -d</code> scratch directories are blocked: it sits silent
+    for several minutes and then fails. It looks like a hang, not a permissions error, and it is
+    the repo's single most common false alarm. Run <code>./validate.sh</code> un-sandboxed
+    before concluding anything is broken.</p>
+
     <h2>Is XYZ a “graph” — does it do graph engineering?</h2>
     <p>Partly, and the parts it leaves out are deliberate.</p>
     <p><strong>What matches:</strong> phases are real nodes — each gets a relay doc, a tick
@@ -81,6 +122,11 @@
     Maintain tested, independent backups, keep the verification gates on, and read the recovery
     report after any interrupted run before trusting its commits.</p>
 
+    <h2>How is code review and quality assurance handled across a Marathon or Jog run?</h2>
+    <p>Through a strict two-tier architecture that decouples deep code auditing from macro delivery gates:</p>
+    <p><strong>1. Per-issue code-level QA:</strong> For every individual GitHub issue or marathon phase, the harness drives an autonomous Builder ↔ Reviewer relay loop using separate model roles (e.g. Agy builder, Codex reviewer). The Reviewer audits modified files in full (<code>swept file: yes</code>), checks acceptance probes, and must emit an explicit <code>Approved</code> status before the harness runs local test suites (<code>validate.sh</code>) and generates an on-disk cryptographic gate receipt (<code>.xyz/receipts/&lt;SHA&gt;.json</code>).</p>
+    <p><strong>2. PR-level mechanical framework checks:</strong> On final branch PR closeout and landing, deterministic scripts (<code>marathon-closeout.sh</code>, <code>gate_receipt.py</code>, <code>githooks/pre-push</code>) and the main orchestrator model verify system invariants: base branch targeting (strictly <code>development</code>, never <code>main</code>), diff size sanity (&lt; 500 lines for targeted bugs), gate qualification receipts, and CI mergeability. The orchestrator performs a mechanical framework check rather than an ungrounded second-pass diff read.</p>
+
     <h2>Where does the Roadmap page's data come from?</h2>
     <p>Straight from the repository's committed releases ledger
     (<code>releases.db</code> / <code>releases.sql</code>) — the same source of truth the repo's
@@ -96,7 +142,7 @@
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
     <span>
       <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
       <a href="issues.html">Issues</a> ·

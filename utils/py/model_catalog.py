@@ -36,6 +36,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from typing import Any, Dict, List, Optional
@@ -136,6 +137,19 @@ def check_pin(root: str) -> List[str]:
                 "renderer_sha256", "renderer_commit"):
         if not pin.get(key):
             problems.append(f"{PIN_REL}: missing field {key!r}")
+    if problems:
+        return problems
+
+    # Neither commit field can be verified offline (the sha256s bind the actual bytes; these name
+    # where the bytes came from). A format assert is the part that IS checkable here, and it is
+    # what catches a typo'd or truncated provenance reference that would otherwise pass forever.
+    # Full 40-hex only: an abbreviation can grow ambiguous as the upstream repo gains commits.
+    for key in ("tag_commit", "renderer_commit"):
+        if not re.fullmatch(r"[0-9a-f]{40}", str(pin[key])):
+            problems.append(
+                f"{PIN_REL}: {key}={pin[key]!r} is not a full 40-character commit sha — a pin must "
+                f"name an immutable, unambiguous {UPSTREAM_REPO} commit"
+            )
     if problems:
         return problems
 

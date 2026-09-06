@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How it Works — XYZ Forge</title>
-<meta name="description" content="Two layers: the tick coordination kernel (a local event log with O_EXCL-serialized path claims) and relay-automation (headless build→review turns with a gate at every boundary).">
+<meta name="description" content="Four layers: the tick kernel (an append-only event log with O_EXCL-serialized path claims), the execution layer (headless turns in a shared containment core), the operations layer (intake → backlog → wave plan → preflight → gates → ledger), and docs as runtime state.">
 <link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/how-it-works.html">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
@@ -29,9 +29,10 @@
 <main>
   <div class="wrap">
     <h1>How it Works</h1>
-    <p class="page-intro">Two layers: a small coordination kernel that makes overlapping edits
-    safe, and an automation stack that drives headless agents through build→review turns with
-    hard verification gates.</p>
+    <p class="page-intro">It started as a coordination kernel. It has become the loop around it:
+    <code>capture → rate → plan → preflight → execute → gate → land → record</code> — with the
+    execution layer driving headless agents through build→review turns under hard verification
+    gates, and the operations layer carrying everything an unattended run needs around that.</p>
 
     <h2>Layer 1 — the <code>tick</code> kernel</h2>
     <p><code>tick</code> coordinates agents through a shared local event log under
@@ -48,12 +49,53 @@
     <code>src/</code>, <code>test/</code> in the repo, and <code>install.sh</code> can
     materialize it into any other repo.</p>
 
-    <h2>Layer 2 — relay automation</h2>
+    <h2>Layer 2 — the execution layer</h2>
     <p><code>relay-automation/</code> runs agents headlessly in <strong>turns</strong>: a
     <strong>Producer</strong> builds an artifact, a <strong>Reviewer</strong> critiques and
     proposes fixes, and the loop hands off through files — a relay thread plus the artifact
     under review — until it converges. The Reviewer's <code>STATUS:</code> line drives the loop:
     approved/closed is terminal, anything else is another round, bounded by a round cap.</p>
+    <p>Every turn runs inside a shared containment core
+    (<code>relay-automation/relay-turn-lib.sh</code>):</p>
+    <ul>
+      <li>a <strong>path allowlist</strong> per turn, tightened further for reviewer turns;</li>
+      <li><strong>worktree isolation</strong> by default under the driver — the agent writes to
+      a throwaway worktree and only allowlisted files are copied back;</li>
+      <li>a <strong>commit-bypass guard</strong> that resets the repo if an agent commits
+      mid-turn;</li>
+      <li>a <strong>wall-clock watchdog</strong> and <strong>typed exit codes</strong>, so a
+      timeout is never mistaken for a defect;</li>
+      <li><strong>no pushes, ever</strong>, from a turn shim.</li>
+    </ul>
+
+    <h2>Layer 3 — the operations layer</h2>
+    <p>Execution alone doesn't survive contact with an unattended run. Work that is
+    under-specified, colliding, ungated, or unrecorded fails for boring reasons, so each failure
+    mode got a durable surface — and the stages compose into one loop:</p>
+    <ul>
+      <li><strong>Issue-first intake.</strong> A GH issue becomes a capture doc and a parked row
+      in the release ledger — work is written down before anyone asks an agent to do it.</li>
+      <li><strong>A scored backlog.</strong> <code>pri</code> / <code>sev</code> / <code>appeal</code> /
+      <code>effort</code> ratings decide what runs next.</li>
+      <li><strong>A wave planner.</strong> Exact write-set intersection, zone caps, and
+      dependency gating decide which lanes can run together without colliding.</li>
+      <li><strong>Preflight.</strong> Freshness probes, already-landed detection, and a
+      readiness verdict — is this specified well enough to run while you sleep?</li>
+      <li><strong>Verification gates.</strong> A gate must be able to <em>start</em> before
+      turn 1, and gates run under CPU, wall-clock, and RSS caps; a killed gate exits distinctly
+      so a runaway is never triaged as a defect.</li>
+      <li><strong>A release ledger.</strong> SQLite plus a git-mergeable SQL dump with receipted
+      writes — what did we promise, and what shipped with evidence?</li>
+      <li><strong>PDDA doc governance.</strong> Frontmatter, status tables, and ledger coverage
+      keep the doc tree resumable by an agent tomorrow; drift between docs and code is a
+      defect.</li>
+      <li><strong>HQ.</strong> Multi-repo resolution with capability tiers and previewed writes
+      — the operator front door across every repo on the machine.</li>
+    </ul>
+    <p>Two design commitments hold the layer together: <strong>machine-readable boundaries</strong>
+    (state crossing a subsystem boundary travels as a schema-stamped JSON artifact, never parsed
+    out of logs or prose) and <strong>deterministic before advisory</strong> (regex, schema, and
+    file checks may block; LLM review may warn, rank, or propose but never block).</p>
 
     <h3>Marathon — chaining relays unattended</h3>
     <p>A marathon chains several build→review phases from a <code>MARATHON.yaml</code> plan:</p>
@@ -101,6 +143,15 @@
       </table>
     </div>
 
+    <h2>Quality assurance &amp; verification architecture: two-tier review</h2>
+    <p>XYZ Forge treats code and repository quality as a top priority. Quality assurance is divided into two decoupled tiers so that fine-grained code correctness and macro system delivery are both rigorously verified:</p>
+    <ul>
+      <li><strong>Tier 1 — Per-issue code-level QA (Builder ↔ Reviewer relay):</strong>
+      Detailed code analysis is performed for every individual GitHub issue or marathon phase. A distinct Reviewer agent (separated from the Builder model) reviews modified files in full (<code>swept file: yes</code>), validates acceptance probes, and must emit an explicit <code>Approved</code> status. The harness then runs real test suites (<code>validate.sh</code>) and generates a machine-checkable on-disk gate receipt (<code>.xyz/receipts/&lt;SHA&gt;.json</code>).</li>
+      <li><strong>Tier 2 — Final branch PR &amp; orchestrator framework checks:</strong>
+      When closing out a marathon branch or landing a jog queue, the main orchestrator model acts as the <strong>outer supervisor</strong> performing a mechanical framework system check rather than a superficial second-pass diff read. Deterministic tooling (<code>marathon-closeout.sh</code>, <code>gate_receipt.py</code>, <code>githooks/pre-push</code>) hard-locks the base branch against <code>main</code>, verifies on-disk gate receipts for the final commit SHA, confirms CI attestation, and validates that diff sizes match the task scope before merging.</li>
+    </ul>
+
     <h2>How “done” is defined</h2>
     <p>XYZ separates a claim from evidence: an uncommitted run artifact is not proof. Gates are
     real commands that must pass on the final state; a passing assertion counts only once it has
@@ -111,7 +162,7 @@
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
     <span>
       <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
       <a href="issues.html">Issues</a> ·
