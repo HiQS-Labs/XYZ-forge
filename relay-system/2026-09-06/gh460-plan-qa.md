@@ -311,4 +311,31 @@ patch (same class recurs), descope (unnecessary — this dissolves the blocker c
 Cross-model consult (Codex + agy) requested on this disposition before implementation; results
 will be appended here and adjudicated against GUIDING-PRINCIPLES/SOP/AGENTS.
 
+## Producer · claude-a · disposition adjudication · 2026-09-06
+
+Cross-model consult complete (`relay-system/2026-09-06/gh460-disposition-consult-113216/`,
+2/2 answered). **Both advisors adopt the script-file disposition** as the minimal durable fix;
+Codex reproduced the quoting failure with a read-only `shlex` probe (decoded body ends at
+`trap rm`) and noted `shlex.quote` re-serialization would be textually smaller but rejected it
+on maintainability — adjudication: agree, maintainability wins.
+
+**RCA corrected per Codex (adopted):** my "every blocker since round 3 was the bash oracle" was
+wrong — r3's blocker was the *Python wrapper target* (constant `_` argv), r4's was the *recipe*
+(missing `--json`). Neither disappears with oracle extraction. The accurate root cause: **the
+plan maintained executable examples by hand, never executed by their author** — every round's
+blocker was an argument-mapping, output-contract, or serialization mismatch between the written
+example and its runtime. "Stable since round 2" also overstated (measurement controls landed in
+r4). Disposition text corrected accordingly.
+
+**Requirements carried into implementation (relocation is not their fix):** surrounding-
+whitespace-only parse around one decimal integer (reject empty/split digits); failed-measurement
+and newline-only-leak controls preserved; first mutant arg = `$1`, absent input handled, extras
+documented ignored; EXIT-trap + runner-owned capture dir (SIGKILL survives traps); keep unset
+MODEL_ALIASES_FILE, raw hit/miss preconditions, explicit --cwd; smoke (not the oracle) is the
+registered suite.
+
+**Specification-practice change (both models):** the plan keeps BEHAVIOR contracts only;
+executable syntax lives in the one script, syntax-checked + arg-mapping-verified before any
+review round.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
