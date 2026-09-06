@@ -690,9 +690,23 @@ ln -s "$REPO/skills/agent2agent" "$MIG_DIR/agent2agent"   # the pre-rename insta
 mig_out="$(CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
   bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
 mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
-[ "$mig_target" = "$REPO/skills/agent-chorus" ] \
+# GH-458/GH-463: compare the two paths as DIRECTORIES, not as path spellings. install.sh derives
+# its target with `cd -P` (physical) while $REPO above is a plain `cd` (logical), so on a clone
+# whose path contains a symlinked segment the two spellings of the same directory differ and this
+# assertion failed while the repoint was in fact correct — deterministic on stock macOS for any
+# disposable clone under /tmp (-> /private/tmp) or /var (-> /private/var), which is the house
+# convention for running this suite.
+#
+# `-ef` (same device+inode) is the whole fix: it resolves both sides without caring how either was
+# spelled, and it stays strict — a dangling target fails (nothing to stat) and a wrong-but-existing
+# directory fails (different inode). Deliberately NOT `cd -P`: this suite creates mktemp fixtures,
+# and introducing a directory change would put it in gh1-adoption-guard's "creates fixtures and
+# drives them" class, which is a real signal that should not be silenced with an exemption marker
+# for the sake of a string comparison. (That guard's detector greps the raw file, comments
+# included, so even naming the construct here would trip it.)
+[ -n "$mig_target" ] && [ "$mig_target" -ef "$REPO/skills/agent-chorus" ] \
   && pass "installer repoints the legacy agent2agent symlink at the renamed skill" \
-  || fail "legacy symlink not repointed (now -> '$mig_target'): $mig_out"
+  || fail "legacy symlink not repointed (now -> '$mig_target', which is not the same directory as '$REPO/skills/agent-chorus'): $mig_out"
 
 MIG_DIR2="$WORK/legacy-realdir"
 mkdir -p "$MIG_DIR2/agent2agent"
