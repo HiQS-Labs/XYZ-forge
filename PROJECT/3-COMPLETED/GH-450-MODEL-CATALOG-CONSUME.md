@@ -1,11 +1,11 @@
 ---
 title: "Consume Model-catalog v1 (Phase 1): vendored catalog + generated alias YAML + drift check + version telemetry"
-status: active
+status: Complete
 doc_type: feedback
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/450
 gh_issue: 450
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-06
 revision: 1
 owner: noelsaw1
 branch: feat/gh450-model-catalog

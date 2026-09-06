@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 58 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -68,7 +68,6 @@ Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) | — | [GH-452-RELEASE-TAGS.md](PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md) · [#452](https://github.com/HiQS-Labs/XYZ-forge/issues/452) |
 | GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/1-INBOX/GH-454-RECONCILE-GATE-DEFECTS.md) |
 | GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/1-INBOX/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
-| GH-450 · Consume Model-catalog v1 (Phase 1) | — | [doc](PROJECT/2-WORKING/GH-450-MODEL-CATALOG-CONSUME.md) · [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/450) |
 
 ## Queue
 
@@ -98,7 +97,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 58 · 🔮 0 · 🔲 0
+Summary: 61 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 59 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -162,6 +161,7 @@ Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 58 · �
 | GH-447 · Isolate launch destination checks from dirty caller source | ✅ | [GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md](PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md) · [#447](https://github.com/HiQS-Labs/XYZ-forge/issues/447) |
 | GH-461 · Homepage quality proposition | ✅ | [GH-461-HOMEPAGE-QUALITY-COPY.md](PROJECT/3-COMPLETED/GH-461-HOMEPAGE-QUALITY-COPY.md) · [#461](https://github.com/HiQS-Labs/XYZ-forge/issues/461) |
 | GH-465 · Other Apps & Tools directory | ✅ | [GH-465-OTHER-APPS-TOOLS.md](PROJECT/3-COMPLETED/GH-465-OTHER-APPS-TOOLS.md) · [#465](https://github.com/HiQS-Labs/XYZ-forge/issues/465) |
+| GH-450 · Consume Model-catalog v1 (Phase 1) | ✅ | [doc](PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md) · [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/450) |
 
 ## Deferred · vision
 
