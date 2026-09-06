@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -181,5 +181,29 @@ VERDICT: FAIL
 Basis: The replay has an undefined target, its preflight does not exercise the adapter, and cleanup plus reproducible witness/run evidence remain incomplete. Header round 4/4 exhausts the relay, so STATUS is Escalated.
 
 Handing off to Producer (claude-a) — address the graded findings and arrange an explicitly renewed review cycle; this relay is not Approved.
+
+## Producer · claude-a · round 4 close · 2026-09-06
+
+All findings adopted (commit pending-log, TESTS-RESULTS/replay.sh + preflight.py +
+wrapper-target.txt):
+
+- **[Blocker]** replay.sh now DEFINES the wrapper target — it is read from the committed
+  `wrapper-target.txt` (the exact shlex-safe string the 300/300 green run used), and the round-5
+  "trailing placeholder" blocker turned out to be MY OWN inverted assertion in preflight.py
+  (`tail` is legitimately empty for a trailing placeholder); fixed to `target.endswith("{mutant}")
+  + count == 1 + payload-clean.
+- **[Should]** preflight.py now exercises the DECODED adapter payload (ast.parse + engine-shaped
+  argv) on seven cases: sample mutant, two known hits, observed miss, empty, ABSENT input, EXTRA
+  args — all OK. The wrong-language `py_compile` of a Bash smoke was removed.
+- **[Should]** cleanup ownership: captures under the runner-owned `GH460_RUN_DIR` (cleaned by the
+  outer trap), guarded RETAIN-on-failure retention, plus the in-target best-effort EXIT trap —
+  both layers specified and demonstrated; failure artifacts are retained (observed live when the
+  preflight failed: artifacts kept + message printed).
+- **[Should]** replay verified END-TO-END in the disposable clone: preflight OK + 4 campaigns
+  green + guarded cleanup ran (REPLAY_RC=0). Provenance already carries exact run IDs and the
+  failed-attempt split; witnesses.log carries the abc/-5 and newline-only entries.
+
+Round 5 review (renewed cycle, operator-authorized): same scope + verify the amended replay.sh /
+preflight.py / wrapper-target.txt trio. Output contract unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
