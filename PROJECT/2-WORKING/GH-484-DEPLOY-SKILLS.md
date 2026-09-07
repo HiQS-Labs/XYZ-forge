@@ -2,13 +2,13 @@
 gh_issue: 484
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/484
 title: Deploy Skills
-status: In progress — plan approved; implementation not started
+status: In progress — implementation drafted; fixture verification in progress
 created: 2026-09-07
 updated: 2026-09-07
 owner: Codex
 goal: Manage a durable copied skill collection and global app links through conversation.
 doc_type: plan
-branch: feat/deploy-skills
+branch: feat/gh484-deploy-skills
 reversibility: Costly — selected global skill behavior changes together; ZIP backups and exact link receipts bound rollback.
 effort: 3
 complexity: 3
@@ -22,7 +22,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Agy approved revised plan in round 2; driver exit 0 | Planning checkpoint complete; Phase 1 implementation remains unstarted |
+| Fresh full implementation clone; two tools, conversational skill and focused tests drafted | Run adversarial fixtures, then alpha deployment and final relay QA |
 
 ## Table of contents
 
@@ -196,6 +196,18 @@ Proposed focused suite: `python3 -m unittest discover -s test -p 'test_deploy_sk
 Public evidence redacts personal source paths/content while retaining skill names, counts, hashes, exact command structure, statuses and version facts. Do not commit imported private daily contents or local target configuration. ZIPs remain local. This is not a new long-horizon marathon; no synthetic workload is needed.
 
 ## Review and checkpoint
+
+Execution resumed at the operator's request on a new full remote clone, branch
+`feat/gh484-deploy-skills`, from the same approved base `2e4f8d48`. Planning/review
+commits were carried over without changing the reviewed design. The manager is
+protected from ordinary removal so its recovery tools remain available; other
+missing payloads still require explicit withdrawal acknowledgement. Pending
+receipts include a checksum for accidental corruption, atomic link replacement
+avoids an unlink/create recovery gap, and prior staging remains available alongside
+ZIPs (no automatic retention deletion). These are implementation safety choices,
+not additional app integrations. The old seven-file bundle is removed on the task
+branch only; any installed legacy source in the maintained clone remains available
+for explicit migration. No live collection or app mutation has yet occurred.
 
 First review: Agy via shipped relay-xyz, review-only ALLOW_PATHS, committed plan/recon in the isolated task clone; three review rounds maximum. Questions must include a dedicated omission-diff against every user requirement plus ownership/crash/portability scrutiny. Record each proposal's evidence and disposition; revise and re-review up to Approved, otherwise report the exact blocker. Plan approval is textual evidence, not implementation correctness.
 
