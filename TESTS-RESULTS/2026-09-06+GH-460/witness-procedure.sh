@@ -23,7 +23,7 @@ err=$(bash "$O" "$input" 2>&1 >/dev/null); rc=$?
 { [ $rc -eq 0 ] && [ -z "$err" ]; } && ok "rc-3 baseline green" || bad "rc-3 baseline: rc=$rc err='$err'"
 restore
 before=$(grep -c "^exit 1$" "$R")
-sed -i '' '$s/^exit 1$/exit 3/' "$R"
+sed '$s/^exit 1$/exit 3/' "$R" > "$R.tmp" && mv "$R.tmp" "$R"
 after=$(grep -c "^exit 3$" "$R")
 { [ "$before" = "1" ] && [ "$after" = "1" ]; } && ok "rc-3 exact one-site mutation verified" || bad "rc-3 mutation count before=$before after=$after"
 err=$(bash "$O" "$input" 2>&1 >/dev/null); rc=$?
@@ -38,8 +38,14 @@ for MODE in LEAK NEWLINE; do
   err=$(bash "$O" "$input" 2>&1 >/dev/null); rc=$?
   { [ $rc -eq 0 ] && [ -z "$err" ]; } && ok "$label baseline green" || { bad "$label baseline: rc=$rc err='$err'"; continue; }
   restore
-  if [ "$MODE" = "LEAK" ]; then sed -i '' '$s/^exit 1$/printf "LEAK\\n"; exit 1/' "$R"
-  else sed -i '' '$s/^exit 1$/printf "\\n"; exit 1/' "$R"; fi
+  # deterministic mutation via python (sed \n replacement semantics are platform-ambiguous)
+  python3 - "$R" "$MODE" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); t = p.read_text().rstrip("\n")
+assert t.endswith("exit 1"), "terminal miss line not found"
+repl = 'printf "LEAK\\n"; exit 1' if sys.argv[2] == "LEAK" else "printf '\\n'; exit 1"
+p.write_text(t[: -len("exit 1")] + repl + "\n")
+PY
   err=$(bash "$O" "$input" 2>&1 >/dev/null); rc=$?
   { [ $rc -eq 9 ] && printf '%s' "$err" | grep -q "LEAK-STDOUT-ON-MISS"; } && ok "$label red: LEAK-STDOUT-ON-MISS exit 9" || bad "$label red: rc=$rc err='$err'"
   restore
