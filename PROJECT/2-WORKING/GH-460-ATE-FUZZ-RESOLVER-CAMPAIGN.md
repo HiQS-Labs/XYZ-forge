@@ -191,3 +191,7 @@ evidence only.
   turns 2026-09-05), sev 40 (coverage for a consequence-bearing defect class; no direct data
   loss), appeal 50 (neutral), effort 70 (engine exists; small diff). Recurrence: one distinct
   incident in a 14-day lookback; no same-class reports found.
+
+## Merge evidence
+
+- PR #476 merged 2026-09-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

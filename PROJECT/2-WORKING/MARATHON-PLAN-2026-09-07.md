@@ -152,8 +152,8 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #446 GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run — `needs-contract`
 - #452 GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) — `needs-contract`
 - #454 GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo — `needs-contract`
+- #460 GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes — `needs-contract`
 - #453 GH-453 · Governance document identity audit — `needs-contract`
-- #460 GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes — `unrated`
 - #474 GH-474 · Remove rendered MD views (ROADMAP-DASHBOARD.md & LEADERBOARD.md) to eliminate staleness guards — `needs-doc`
 
 ## How to fire a lane
