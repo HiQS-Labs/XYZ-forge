@@ -48,6 +48,7 @@ EXEMPT=(
   "_scratch-repo.sh"             # sourced hardened scratch-repo helper (GH-44) — never executed directly
   "test-agy-standalone-repo.sh"  # legacy manual mock from the initial public release; no assertions, prints git status only
   "test-agy-isolation.sh"        # pre-existing RED at GH-306 filing: stale expectation vs gh308-consult-guards.sh's Python-lane coverage of the same detector; needs its own fix lane, not a silent skip
+  "gh460-oracle.sh"              # GH-460 fuzz ORACLE, not a suite: takes one model name as $1 and answers for THAT input (0=contract holds, 8=setup/measure failure, 9=violation). The Gen4 engine calls it once per mutant; running it bare in the gate would resolve the empty string once and assert nothing. Its contract is exercised by gh460-fuzz-resolver-smoke.sh, which IS registered.
 )
 
 # drift_of <test_dir> <tests_blob> — prints one basename per top-level *.sh directly inside
