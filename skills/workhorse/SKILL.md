@@ -199,6 +199,11 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
     simple the command or small the diff.
 
 - **Handoff to Specialized Skills:**
+  - **Stalled Loop / No Goal Movement:** If successive passes only polish supporting machinery,
+    reopen settled decisions, or exhaust a review cap **without qualifying movement**, invoke
+    `/unstuck` as a blocking interrupt. Cap exhaustion alone is insufficient while evidenced
+    correctness findings are still converging. When movement resumes, return here; Rung 5 and Rung 6
+    remain mandatory. Do not restart the ladder or add another consult cycle by default.
   - **Iterative 1:1 Co-Authoring:** If Rung 4 reveals that an artifact requires multiple iterative drafting rounds, hand off to `/relay-xyz`.
   - **Open-Ended Research / Ideation:** If the task is purely investigatory without code modifications, hand off to `/recon` or `/feynman`.
   - **Ambiguous Stale State:** For each stale clone or folder whose disposition is not already

@@ -4,6 +4,16 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-06
 
+- **GH-473: `/unstuck` restores goal movement when an AI session starts servicing its own cogs.**
+  Adds a five-rung mid-flight interrupt that freezes new machinery, re-anchors the latest
+  authoritative goal, separates evidenced blockers and safety requirements from polish/process,
+  chooses one bounded action, and verifies the milestone itself. Review caps trigger it only when
+  qualifying movement has stopped; one optional binary `/consult` cannot recurse; and an interrupt
+  invoked by `/workhorse` returns to its preservation and closeout rungs. `/workhorse` gains only the
+  routing handoff. Reversibility: **Easy** — remove the additive skill and its pointer. Verification:
+  skill validator, three scenario walkthroughs, one-shot Codex+Agy architecture consult, and PDDA
+  checks.
+
 - **GH-465: Other Apps & Tools.** Adds a directory of the seven other public HiQS-Labs repositories, linked from static and generated site navigation and the sitemap. Descriptions use public project documentation and distinguish research from usable tools. Verification: generated-page build and desktop/mobile navigation checks; live deployment checked after merge.
 
 ## 2026-09-06
