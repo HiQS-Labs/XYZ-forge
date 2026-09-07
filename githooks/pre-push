@@ -95,28 +95,74 @@ fi
 
 # A docs-only commit is still checked, but by the deterministic documentation gate instead of the
 # full runtime suite. Reuse the CI classifier rather than growing a second definition of "docs".
-# These routes are intentionally narrow: a new branch, force push, unavailable remote base, missing
-# classifier, non-linear history, or anything other than an exact `route=docs` (tier 1) or
+# These routes are intentionally narrow: a force push, an unavailable remote base, a URL push,
+# missing classifier, non-linear history, or anything other than an exact `route=docs` (tier 1) or
 # `route=fast`+`tier=2` (registered utility subsystems) falls back to the full gate. A bad range
-# must cost time, never coverage.
+# must cost time, never coverage. GH-487: the FIRST push of a new branch (all-zero remote SHA) no
+# longer refuses classification outright — it classifies against a verified merge-base with the
+# push's own remote's integration branch (development, then main), and still falls back to the
+# full gate the moment that base evidence is missing, ambiguous, or yields an empty range.
+
+# GH-487: resolve each pushed ref pair to the range that classifies it. An existing remote ref
+# uses its own SHA (the update range, exactly as before). A first push of a new branch has no
+# update range — it classifies against the integration branch on the remote being pushed to
+# (git hands the hook the remote's NAME as $1). A stale remote-tracking ref is safe by
+# construction: it is an ancestor of the true tip, so the computed merge-base is an
+# ancestor-or-equal of the true one and the classified range can only be a SUPERSET of the
+# branch's own diff — staleness escalates, never under-tests. A force-push that rewrote the
+# integration branch itself either merges against the pre-rewrite commit (superset, safe) or
+# fails resolution (full gate). Every unresolvable pair refuses the narrow routes wholesale.
+_base_pairs=()
+_base_note=""
+_push_remote="${1:-}"
+resolve_base_pairs() {
+  _base_pairs=()
+  _base_note=""
+  [ "${#_real_ref_pairs[@]}" -gt 0 ] || { _base_note="pre-push: no ref pairs to classify — running the full gate."; return 1; }
+  local pair local_sha remote_sha cand base
+  for pair in "${_real_ref_pairs[@]}"; do
+    IFS='|' read -r local_sha remote_sha <<<"$pair"
+    base=""
+    case "$remote_sha" in
+      ''|0000000000000000000000000000000000000000)
+        case "$_push_remote" in
+          ''|*://*|*@*:*)
+            _base_note="pre-push: remote '${_push_remote:-<none>}' is not a configured remote name (a URL push?) — no integration base to classify against, running the full gate."
+            return 1
+            ;;
+        esac
+        for cand in "refs/remotes/$_push_remote/development" "refs/remotes/$_push_remote/main"; do
+          git rev-parse --verify --quiet "$cand^{commit}" >/dev/null 2>&1 || continue
+          base="$(git merge-base "$cand" "$local_sha" 2>/dev/null)" || { base=""; continue; }
+          git cat-file -e "$base^{commit}" 2>/dev/null || { base=""; continue; }
+          [ "$base" != "$local_sha" ] || { base=""; continue; }   # empty range: nothing to classify
+          break
+        done
+        if [ -z "$base" ]; then
+          _base_note="pre-push: no verifiable merge-base with $_push_remote's integration branch (development, then main) — running the full gate."
+          return 1
+        fi
+        ;;
+      *)
+        git cat-file -e "${remote_sha}^{commit}" 2>/dev/null || return 1
+        git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null || return 1
+        base="$remote_sha"
+        ;;
+    esac
+    _base_pairs+=("$local_sha|$base")
+  done
+  return 0
+}
+
 classify_push() {
   [ -x "$REPO/utils/ci-route.sh" ] || return 1
-  [ "${#_real_ref_pairs[@]}" -gt 0 ] || return 1
+  [ "${#_base_pairs[@]}" -gt 0 ] || return 1
 
-  local pair local_sha remote_sha
-  for pair in "${_real_ref_pairs[@]}"; do
-    IFS='|' read -r local_sha remote_sha <<<"$pair"
-    case "$remote_sha" in
-      ''|0000000000000000000000000000000000000000) return 1 ;;
-    esac
-    git cat-file -e "${remote_sha}^{commit}" 2>/dev/null || return 1
-    git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null || return 1
-  done
-
-  for pair in "${_real_ref_pairs[@]}"; do
-    IFS='|' read -r local_sha remote_sha <<<"$pair"
+  local pair local_sha base
+  for pair in "${_base_pairs[@]}"; do
+    IFS='|' read -r local_sha base <<<"$pair"
     # `--no-renames` is load-bearing: the classifier must see the removed side of a renamed test.
-    git diff --no-renames --name-only "$remote_sha" "$local_sha" || return 1
+    git diff --no-renames --name-only "$base" "$local_sha" || return 1
   done | "$REPO/utils/ci-route.sh" push
 }
 
@@ -145,7 +191,15 @@ run_tier2_gate() {
   "$REPO/validate.sh" --paths-file "$paths_file"
 }
 
-_cls="$(classify_push 2>/dev/null || true)"
+_base_ok=0
+resolve_base_pairs && _base_ok=1
+if [ "$_base_ok" -ne 1 ] && [ -n "$_base_note" ]; then
+  printf '%s\n' "$_base_note" >&2
+fi
+_cls=""
+if [ "$_base_ok" -eq 1 ]; then
+  _cls="$(classify_push 2>/dev/null || true)"
+fi
 _route="$(printf '%s\n' "$_cls" | sed -n 's/^route=//p')"
 _tier="$(printf '%s\n' "$_cls" | sed -n 's/^tier=//p')"
 _t2tests="$(printf '%s\n' "$_cls" | sed -n 's/^tier2_tests=//p')"
@@ -166,9 +220,10 @@ elif [ "$_route" = "fast" ] && [ "$_tier" = "2" ] && [ -n "$_t2tests" ]; then
   # must say tier 2 AND name runnable suites, or this arm is skipped and the full gate runs.
   _paths_file="$(mktemp "${TMPDIR:-/tmp}/prepush-paths.XXXXXX")"
   if [ -n "$_paths_file" ]; then
-    for pair in "${_real_ref_pairs[@]}"; do
-      IFS='|' read -r _ls _rs <<<"$pair"
-      git diff --no-renames --name-only "$_rs" "$_ls" >> "$_paths_file" 2>/dev/null
+    # Same resolved bases as classify_push — the range is computed ONCE per push, never twice.
+    for pair in "${_base_pairs[@]}"; do
+      IFS='|' read -r _ls _bs <<<"$pair"
+      git diff --no-renames --name-only "$_bs" "$_ls" >> "$_paths_file" 2>/dev/null
     done
     _gate_name="tier 2 subsystem gate (GH-35)"
     if run_tier2_gate "$_paths_file"; then
