@@ -1,0 +1,87 @@
+# Adjudicate PR #485: the push guard should read the renderer's stderr instead of classifying by table name
+
+You are reviewing a change in THIS repository, in the working tree you are running in. **Read the
+real files.** Do not answer from memory, from a cached copy of this repo, or from any scratch
+directory elsewhere on disk — if a file you expect is absent here, say so and treat this worktree as
+authoritative. Cite `file:line` for every load-bearing claim and name the command you ran.
+
+The worktree is checked out on `fix/gh474-dropped-row-signal`, so the change is ALREADY APPLIED in
+the files you read. Compare against `development` with
+`git diff development -- githooks/dashboard-staleness-guard.sh` to see what changed. Say which state
+you read — a review of the wrong side is worse than no review.
+
+## Background: the defect
+
+`githooks/dashboard-staleness-guard.sh` runs from `githooks/pre-push`. It refuses a push whose range
+writes the roadmap ledger (`releases.sql` / `releases.db`) without also moving
+`ROADMAP-DASHBOARD.md`.
+
+When regenerating the dashboard produces NO diff, one hazard survives: a roadmap row the renderer
+DROPPED. A dropped row renders to nothing, so the committed artifact still matches a fresh render
+byte-for-byte while the ledger row is invisible in the view. A byte comparison cannot see it.
+
+To detect that, the guard used to classify the `releases.sql` diff BY TABLE NAME against a
+hand-maintained allowlist. That allowlist went short twice and left 8 dump tables unclassified, each
+producing a FALSE refusal.
+
+## The change
+
+One file: `githooks/dashboard-staleness-guard.sh`.
+
+1. Capture the renderer's stderr instead of discarding it:
+   `render_err="$(bash "$TMP_PROJ/utils/roadmap-dashboard.sh" --check 2>&1 >/dev/null)"`
+2. In the no-drift arm, refuse if and only if `render_err` contains
+   `roadmap-dashboard: warning: dropped ` — and quote the matched line in the refusal.
+3. Delete the table classifier.
+
+`utils/roadmap-dashboard.sh` is NOT modified.
+
+## Questions — answer each, adversarially
+
+1. **Is the premise true?** Does `utils/roadmap-dashboard.sh --check` really emit
+   `roadmap-dashboard: warning: dropped N unparseable row(s): <ids>` on stderr? Trace it: where does
+   the node render run relative to the `MODE == "check"` branch? Quote line numbers. If the render
+   is NOT unconditional, the whole change rests on a false premise — say so loudly.
+
+2. **Is the stderr capture correct Bash?** Scrutinise `render_err="$(cmd 2>&1 >/dev/null)"` under
+   `set -uo pipefail` (note: NO `set -e`).
+   - Does it capture stderr only, or does stdout leak in?
+   - Does the assignment carry `cmd`'s exit status to the enclosing `if`, so the drift verdict is
+     genuinely unchanged?
+   - The guard reads `render_err` with a `while IFS= read -r` loop over an UNQUOTED heredoc
+     (`<<EOF_ERR` / `$render_err` / `EOF_ERR`). Is that safe, or can renderer output containing `$`,
+     backticks or backslashes be expanded or mangled? **This is the line I most want attacked.**
+   - The refusal `cat >&2 <<EOF` heredoc is also unquoted so it can interpolate `$dropped_line`.
+     Can renderer-controlled text cause command substitution or any injection there?
+
+3. **Does it fail in the right direction?** The old mechanism failed CLOSED for an unknown table
+   (catch-all, then refuse). The new one ALLOWS when the renderer is silent. Enumerate the ways the
+   renderer can be silent while a row is effectively missing from the view — a crash before the
+   warning, a `node`/`python3` lookup failure, an empty `roadmap list --json`, the legacy
+   `ROADMAP.md` fallback path. For each: does the guard refuse, or silently allow? Is any of those a
+   real regression versus the old behaviour?
+
+4. **The projection.** The guard renders from `git archive <local_sha> | tar -x` into a private temp
+   root, not the working tree. Does the warning survive that projection in every case the guard
+   cares about? What if the projected commit lacks `releases.db`, or lacks
+   `utils/py/releases_app.py`? Trace `utils/roadmap-dashboard.sh`'s fallbacks.
+
+5. **The exit contract.** The change deliberately does NOT give `--check` a new exit code, because
+   five consumers read its status and four are suites that treat any non-zero as failure
+   (`githooks/dashboard-staleness-guard.sh`, `test/gh269-roadmap-retired.sh:26`,
+   `test/gh280-jog-marathon-adapter.sh:1021` and `:1033`, `test/gh57-live-merge-resolve.sh:290`,
+   `test/roadmap-dashboard.sh:49`). Verify that enumeration — is it complete, and is the reasoning
+   sound? Is "signal on stderr" genuinely better than "new exit code plus fix four suites", or is it
+   dodging a one-time cost at the price of a fragile string match?
+
+6. **Are the tests real proof or theatre?** In `test/gh243-dashboard-staleness-guard.sh`, tests 7,
+   7b and 8b use a STUB renderer (a shell script that exits 0, optionally echoing to stderr). Only
+   `test/gh257-roadmap-ledger-fixes.sh` case 11 exercises the real renderer through the real
+   projection. Is the red control (test 8) genuinely red — would it fail against the pre-change
+   guard? Would any of these pass for the wrong reason? **Name a mutation to the guard that every
+   one of these tests would MISS.**
+
+7. **Should this ship?** Pick one: SHIP, SHIP WITH CHANGES (name them precisely), or DO NOT SHIP
+   (name what would change your mind). A balanced survey is a failed answer.
+
+Grade findings [Blocker] / [Should] / [Nit]. End with a one-line verdict.
