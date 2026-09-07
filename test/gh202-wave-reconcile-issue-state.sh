@@ -348,5 +348,46 @@ out="$(GH_MOCK_FAIL=1 PATH="$REPO/bin:$PATH" python3 "$REPO/utils/py/wave_reconc
 [ "$rc" -ne 0 ] && grep -q "refusing to guess issue state" <<<"$out"   && pass "live gh FAILURE: reconcile dies loudly instead of promoting blindly (fail-closed)"   || fail "live gh failure was swallowed (rc=$rc): $out"
 [ -f "$REPO/PROJECT/2-WORKING/GH-3001-OPEN.md" ] && [ ! -f "$REPO/PROJECT/3-COMPLETED/GH-3001-OPEN.md" ]   && pass "live gh FAILURE: no mis-promotion occurred" || fail "live gh failure caused mis-promotion"
 
+# ── GH-474: RELEASES-PREVIEW.html is adopted-by-presence in the reconciler too ────────────────
+# The reconciler used to run `export_timeline.py --preview` UNCONDITIONALLY, which made it the
+# one consumer that could RESURRECT a view the repo had deliberately un-adopted: delete the
+# file, run any reconcile, and it is back. Every other consumer (releases_app.refresh_preview,
+# releases-merge-resolve.sh, express.py, jog_run.py) gates on presence.
+#
+# The stub exporter WRITES the file when invoked, so "the file is absent afterwards" is a real
+# assertion about the step not running, not an artifact of a no-op mock. Against the pre-fix
+# reconciler the first two assertions below fail.
+cat > "$REPO/utils/timeline/export_timeline.py" <<'EXPEOF'
+#!/usr/bin/env python3
+import os, sys
+print("MOCK: timeline OK")
+# prove the step ran by leaving the artifact behind, exactly as the real exporter would
+if "--preview" in sys.argv:
+    open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                      "RELEASES-PREVIEW.html"), "w").write("<html>regenerated</html>")
+EXPEOF
+chmod +x "$REPO/utils/timeline/export_timeline.py"
+git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: exporter that leaves an artifact" 2>/dev/null || true
+
+# 1. Un-adopted (file absent) -> the step is SKIPPED and the file stays gone.
+rm -f "$REPO/RELEASES-PREVIEW.html"
+out="$(PATH="$REPO/bin:$PATH" python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --skip-pull 2>&1)"; rc=$?
+[ ! -e "$REPO/RELEASES-PREVIEW.html" ] \
+  && pass "GH-474: un-adopted RELEASES-PREVIEW.html is NOT resurrected by a reconcile" \
+  || fail "GH-474: reconcile recreated an un-adopted RELEASES-PREVIEW.html (rc=$rc): $out"
+grep -q "not adopted here" <<<"$out" \
+  && pass "GH-474: the skip is logged, not silent" \
+  || fail "GH-474: preview step was skipped without saying so: $out"
+
+# 2. RED CONTROL: adopted (file present) -> the step still RUNS and refreshes it.
+# Without this, gating the step to nothing would also pass assertion 1.
+echo "stale" > "$REPO/RELEASES-PREVIEW.html"
+# the reconciler refuses a dirty tree, so adoption has to be COMMITTED to be real adoption
+git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: adopt RELEASES-PREVIEW.html"
+out="$(PATH="$REPO/bin:$PATH" python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --skip-pull 2>&1)"; rc=$?
+grep -q "regenerated" "$REPO/RELEASES-PREVIEW.html" \
+  && pass "GH-474: an ADOPTED RELEASES-PREVIEW.html is still refreshed (gate is not a mute button)" \
+  || fail "GH-474: adopted preview was not refreshed (rc=$rc): $out"
+
 echo "  gh202-wave-reconcile-issue-state: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

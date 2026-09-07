@@ -1,5 +1,50 @@
 # Recovery and explicit migration
 
+## Retargeted owned links
+
+`--adopt`, `--migrate`, and `--migrate-from` do not override a retargeted link that
+already has an ownership receipt. Stop the competing installer first. With explicit
+operator approval, inspect the exact app entry with `ls -ld` and `readlink`, and
+record its old link text in a separate recovery note outside the app's discovery
+folder. Verify the intended copied skill is intact. Remove **only that symlink**
+with `unlink /exact/app/skills/skill-name` (no trailing slash, no recursive command,
+never a real directory). This is the narrow manual recovery exception to the
+normal script-only rule; do not edit receipts. Preview `sync.py --status`: it must
+plan to recreate that exact entry pointing into the collection. Apply `sync.py
+--apply`, then verify read-through and the new sync event in `changelog.md`.
+Unrelated conflicts may still yield exit 2; inspect each result. The separate note
+preserves the external link text, which sync cannot recover after it is removed.
+
+## Interrupted first initialization
+
+If `.deploy-skills-pending.json` exists, use the source bundle's `intake.py --root
+/exact/collection recover`, then the same command with `--apply` before `recover`.
+Recovery works even before the first state file has been published.
+
+A failure **before** the pending receipt is written may leave a lock file or staged
+copy but no recoverable transaction. Do not blindly ignore or delete these names:
+they do not prove ownership. Confirm no initializer is running, inspect the exact
+folder, and obtain approval to move the whole failed collection to a uniquely named
+backup outside any app discovery root. Retry `init` at the now-absent original path,
+using the intact source bundle. Preserve the failed folder until the new collection
+is verified. This conservative alpha procedure is intentional; retry does not
+silently erase partial state or user files.
+
+## Moving the collection and concurrent previews
+
+Do not rename or move an initialized collection as routine file housekeeping: its
+absolute root and link destinations are recorded in metadata. If accidentally
+moved, restore the original path before operating. A deliberate relocation is not
+automated in this alpha: preserve the old collection, withdraw its owned app links
+through disable/sync, initialize a new empty `--root`, and re-import local source
+skills and configure targets there. Retain old backups/history separately; never
+rewrite receipts to pretend they belong to the new root. Locally edited payloads
+need preservation in a local source repository before re-import.
+
+Previews deliberately take no write lock. Do not run them during an apply: they
+can observe intermediate state and report transient conflicts. Wait for the writer
+to finish, then preview again; never delete its lock file.
+
 ## Renaming an existing deploy-skills alpha collection
 
 Keep the existing collection and its `.deploy-skills*` metadata filenames; the

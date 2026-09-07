@@ -95,6 +95,23 @@ class DeploySkillsTest(unittest.TestCase):
         self.cli("init", code=2)
         self.assertEqual(tree(self.work), old)
 
+    def test_a1_failed_init_preserved_then_retry_after_backup(self):
+        fresh = self.work / "fresh collection"
+        with patch.object(intake.shutil, "copytree", side_effect=OSError("init copy failure")), patch("sys.stdout", new_callable=io.StringIO):
+            self.assertEqual(intake.main(["--root", str(fresh), "--apply", "init"]), 2)
+        self.assertFalse((fresh / intake.STATE).exists())
+        self.assertFalse((fresh / intake.PENDING).exists())
+        before = tree(fresh)
+        with patch("sys.stdout", new_callable=io.StringIO):
+            self.assertEqual(intake.main(["--root", str(fresh), "--apply", "init"]), 2)
+        self.assertEqual(tree(fresh), before)
+        backup = self.work / "failed init backup"
+        fresh.rename(backup)
+        with patch("sys.stdout", new_callable=io.StringIO):
+            self.assertEqual(intake.main(["--root", str(fresh), "--apply", "init"]), 0)
+        self.assertEqual(tree(backup), before)
+        self.assertTrue((fresh / "skills-army-hq" / "SKILL.md").is_file())
+
     def test_a1_legacy_manager_activation_preserves_collection(self):
         manager = self.root / "skills-army-hq"
         legacy = self.root / "deploy-skills"

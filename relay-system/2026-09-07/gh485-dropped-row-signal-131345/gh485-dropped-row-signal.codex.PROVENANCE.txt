@@ -1,0 +1,13 @@
+FIRSTHAND_COUNT=1
+ECHOED_COUNT=11
+ECHOED `--check`
+ECHOED `--check`
+ECHOED `--check`
+ECHOED `render_err="$(cmd 2>&1 >/dev/null)"`
+ECHOED `render_err="$(cmd 2>&1 >/dev/null)"`
+ECHOED `$render_err`
+ECHOED `--check`
+ECHOED `render_err="$(cmd 2>&1 >/dev/null)"`
+ECHOED `render_err="$(cmd 2>&1 >/dev/null)"`
+ECHOED `$render_err`
+ECHOED `--check`

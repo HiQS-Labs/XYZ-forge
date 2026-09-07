@@ -2,10 +2,10 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-06-22
+updated: 2026-09-07
 owner: noelsaw
 doc_type: architecture
-summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work.
+summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap view pipeline and the push guard that keeps the committed dashboard honest.
 verified_against:
   - relay-automation/relay-drive.sh
   - relay-automation/relay-turn-lib.sh
@@ -14,6 +14,10 @@ verified_against:
   - relay-automation/agy-turn.sh
   - relay-automation/poll.sh
   - bin/tick
+  - githooks/dashboard-staleness-guard.sh
+  - utils/roadmap-dashboard.sh
+  - utils/py/wave_reconcile.py
+  - utils/releases-merge-resolve.sh
 ---
 
 # Relay Architecture
@@ -359,6 +363,171 @@ The GH-32 RELEASES ledger has its own authority split (SQLite at runtime, a GID-
 merge boundaries) and its own transform triggers — see [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
 The same DB also carries the GH-69 ROADMAP shadow: `releases roadmap sync` mirrors `ROADMAP.md`'s
 ledger into a `roadmap_items` table (one-way, lossless; the markdown stays the source of truth).
+
+## The Ledger and its Derived Views
+
+`releases.db` is the source of truth for this repo's roadmap and release ledger. Four human-readable
+views are *derived* from it, and every one of them is **adopted by presence**: a generator refreshes
+a view only if that file already exists at the repo root. A repo that never baked one — a fixture, a
+fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error.
+
+That single rule is what makes a view addable and removable without editing a single consumer.
+
+```mermaid
+flowchart TD
+    subgraph truth["Source of truth — GH-32"]
+        DB[("releases.db<br/>SQLite, runtime")]
+        SQL["releases.sql<br/>GID-keyed dump,<br/>the git merge surface"]
+        DB <-. "dump / rebuild" .-> SQL
+    end
+
+    subgraph gens["Generators — always available, never deleted"]
+        G1["utils/roadmap-dashboard.sh"]
+        G2["utils/leaderboard.sh"]
+        G3["export_timeline.py --preview"]
+        G4["export_timeline.py --leaderboard"]
+    end
+
+    subgraph views["Derived views at the repo root"]
+        V1["ROADMAP-DASHBOARD.md<br/>REQUIRED"]
+        V2["LEADERBOARD.md<br/>adopted"]
+        V3["RELEASES-PREVIEW.html<br/>adopted"]
+        V4["LEADERBOARD.html<br/>adopted"]
+    end
+
+    subgraph consumers["Every write path that refreshes a view"]
+        C1["releases_app.py<br/>refresh_preview() — after a DB write"]
+        C2["releases-merge-resolve.sh<br/>— after a ledger merge"]
+        C3["wave_reconcile.py<br/>— after a merged PR"]
+        C4["express.py / jog_run.py<br/>— stage into a lane commit"]
+    end
+
+    GATE{{"does the file already<br/>exist at the repo root?"}}
+
+    DB --> gens
+    consumers --> GATE
+    GATE -- "no: NOT adopted" --> SKIP["skip — silent no-op"]
+    GATE -- "yes: adopted" --> gens
+    G1 --> V1
+    G2 --> V2
+    G3 --> V3
+    G4 --> V4
+
+    V1 -. "and ONLY this one" .-> REQ["githooks/dashboard-staleness-guard.sh<br/>refuses a push without it<br/>·<br/>utils/py/router_audit.py<br/>gates ROUTER.md's declaration of it"]
+
+    style GATE fill:#fff3cd,stroke:#997404
+    style REQ fill:#f8d7da,stroke:#842029
+    style V1 fill:#f8d7da,stroke:#842029
+```
+
+### The asymmetry is the load-bearing part
+
+`ROADMAP-DASHBOARD.md` is **not** adopted-by-presence. It is *required*: the staleness guard refuses
+a push that writes the ledger without it, and `router_audit.py` (gated by
+`test/gh353-vendored-router-audit.sh`) requires `ROUTER.md` to declare it as the generated roadmap
+view and route startup to it. Regenerating a required view unconditionally is correct.
+
+The other three are opt-in. Delete one and every consumer stops refreshing it; run its generator and
+commit the result and every consumer resumes. That is why retiring a view is a deletion rather than
+a refactor — and why **un-adopting `ROADMAP-DASHBOARD.md` is not available at all** without first
+rewriting a gate.
+
+### Two ways the gate used to leak, and how they were closed (GH-474)
+
+The rule above was stated everywhere and enforced almost everywhere. Two paths ignored it, and
+either one silently resurrected a view somebody had deliberately removed:
+
+- **`wave_reconcile.py` refreshed `RELEASES-PREVIEW.html` unconditionally.** This repo reconciles
+  after every merged PR, so an un-adopted preview came back within a day. Now presence-gated like
+  the rest. Pinned by `test/gh202-wave-reconcile-issue-state.sh`, whose stub exporter *writes* the
+  artifact when invoked — so "absent afterwards" proves the step did not run, and a companion
+  assertion proves an adopted view is still refreshed, so the gate cannot decay into a mute button.
+- **`releases-merge-resolve.sh` treated every unmerged view as "take either side and regenerate."**
+  For a delete/modify conflict that restores a deleted file. Working-tree presence cannot detect
+  this and that is the trap: during a delete/modify the surviving side's copy is sitting right
+  there, so a `-f` test reports "adopted" for a file one side just removed. The resolver now reads
+  both commits and honours the deletion. The hole was symmetric, so
+  `test/gh57-live-merge-resolve.sh` scenario 9 drives a real `git merge` in **both** directions.
+
+The lesson generalises past these two files: **an adoption rule enforced by four consumers out of
+six is not an adoption rule.** A view is only removable if every write path agrees it is optional.
+## The Roadmap View Pipeline and its Push Guard
+
+`releases.db` is the roadmap's source of truth; `ROADMAP-DASHBOARD.md` is a committed *derivation*
+of it. Two artifacts that must agree, updated by two different commands, is a drift hazard — so a
+push guard enforces the agreement. This is the shape of that loop and the one question it turns on.
+
+```mermaid
+flowchart TD
+    subgraph truth["Source of truth"]
+        DB[("releases.db<br/>roadmap_items")]
+        SQL["releases.sql<br/>GID-keyed dump"]
+        DB -. "dump at merge boundaries" .-> SQL
+    end
+
+    subgraph render["Renderer — utils/roadmap-dashboard.sh"]
+        JSON["releases_app.py roadmap list --json<br/>flat SELECT, roadmap_items only"]
+        NODE["node render<br/>parses each row's raw_text"]
+        DROP{{"row parses as<br/>- **GH-N · title** ?"}}
+        WARN["stderr: warning: dropped N<br/>unparseable row(s): ids"]
+        OUT["rendered view<br/>(tmp)"]
+        JSON --> NODE --> DROP
+        DROP -- no --> WARN
+        DROP -- yes --> OUT
+    end
+
+    DB --> JSON
+    VIEW["ROADMAP-DASHBOARD.md<br/>committed derivation"]
+    OUT -- "default mode: write" --> VIEW
+    OUT -- "--check: compare only" --> CMP{{"matches the<br/>committed file?"}}
+
+    subgraph guard["Push guard — githooks/dashboard-staleness-guard.sh"]
+        RANGE{{"range writes the ledger<br/>but not the view?"}}
+        PROJ["git archive local_sha into a<br/>private tmp projection, render there"]
+        DRIFT{{"--check exit"}}
+        SIGNAL{{"did stderr name<br/>a dropped row?"}}
+        REFUSE1["REFUSE: regenerate the dashboard"]
+        REFUSE2["REFUSE: fix the named row<br/>(releases roadmap update)"]
+        ALLOW["allow the push"]
+        RANGE -- no --> ALLOW
+        RANGE -- yes --> PROJ --> DRIFT
+        DRIFT -- "non-zero: drift" --> REFUSE1
+        DRIFT -- "0: in sync" --> SIGNAL
+        SIGNAL -- yes --> REFUSE2
+        SIGNAL -- no --> ALLOW
+    end
+
+    PUSH(["git push"]) --> HOOK["githooks/pre-push"] --> RANGE
+    PROJ -.-> JSON
+    CMP -.-> DRIFT
+    WARN -.-> SIGNAL
+
+    style WARN fill:#fff3cd,stroke:#997404
+    style SIGNAL fill:#fff3cd,stroke:#997404
+```
+
+**The one non-obvious edge is the dashed `WARN → SIGNAL` line, and it is the whole design.** A
+dropped row is invisible to a byte comparison: it renders to nothing, so the committed file still
+matches a fresh render and `--check` exits 0 while the ledger row is missing from the view. Drift
+detection alone cannot see it.
+
+`--check` runs the full render *before* it reaches its mode branch, so it emits the dropped-row
+warning in both modes. The guard keeps that stderr (`2>&1 >/dev/null` — order matters) and reads it.
+Before GH-474 the guard discarded it and inferred the same fact from the *table names* in the
+`releases.sql` diff, which meant a hand-maintained allowlist of write shapes; it went short twice
+(GH-315 for `jog_queue`, then `marathons`/`issue_refs`) and eight dump tables were still
+unclassified, each a latent false refusal. Reading the renderer's own report cannot go short,
+because an unknown table is no longer a question the guard asks.
+
+Two properties worth keeping if this is ever touched again:
+
+- **The projection is commit-pinned.** The guard renders from `git archive <local_sha>` in a private
+  temp root, never the working tree, so uncommitted edits cannot change the verdict. It fails
+  *closed*: a projection that cannot run the renderer is treated as drift.
+- **`--check`'s exit contract is load-bearing beyond the guard.** Four test suites also treat
+  non-zero as failure (`gh269-roadmap-retired`, `gh280-jog-marathon-adapter` twice,
+  `gh57-live-merge-resolve`, `roadmap-dashboard`). That is why the dropped-row signal travels on
+  stderr rather than as a new exit code.
 
 ## Non-Claims
 

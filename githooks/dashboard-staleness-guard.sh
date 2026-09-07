@@ -118,9 +118,16 @@ while [ "$#" -ge 2 ]; do
     mkdir -p "$TMP_PROJ"
 
     drift_detected=1
+    render_err=""
     if git -C "$REPO" archive "$local_sha" 2>/dev/null | tar -x -C "$TMP_PROJ" 2>/dev/null \
        && [ -f "$TMP_PROJ/utils/roadmap-dashboard.sh" ]; then
-      if bash "$TMP_PROJ/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1; then
+      # GH-474: KEEP the renderer's stderr. `--check` runs the full render before it reaches its
+      # mode branch (utils/roadmap-dashboard.sh — node render, then `if [[ "$MODE" == "check" ]]`),
+      # so the dropped-row warning it already emits is available here. Discarding it is what
+      # forced the no-drift arm below to infer the same fact from table names.
+      # `2>&1 >/dev/null` keeps stderr and drops stdout (order matters); the assignment carries
+      # the renderer's own exit status, so the drift verdict is unchanged.
+      if render_err="$(bash "$TMP_PROJ/utils/roadmap-dashboard.sh" --check 2>&1 >/dev/null)"; then
         drift_detected=0
       else
         drift_detected=1
@@ -139,49 +146,40 @@ Fix (one command, then commit the result into the same push):
 Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
 EOF
     else
-      # The other legitimate no-diff case: a ledger change the dashboard cannot render.
-      # The renderer's only data input is `releases_app.py roadmap list --json`, a flat
-      # SELECT * FROM roadmap_items with no join or reference resolution — so roadmap_items
-      # is the ONLY projected table, and a write confined to anything else can never stale
-      # the view. Two write shapes are classified here, by their full dump fan-out:
-      #   jog     (GH-315) — jog_queue     + op_receipts + the settings generation counter
-      #   marathon         — marathons + issue_refs + op_receipts + that same counter
-      # `marathon add` creates the issue_refs row itself when the tracking URL is new, so the
-      # two tables must be allowed together or the refusal returns for any unseen issue.
-      # If every changed data line targets that set, allow; anything else keeps the
-      # dropped-row refusal below.
+      # No drift: the committed dashboard matches a fresh render. Exactly one hazard survives
+      # that — a roadmap row the renderer DROPPED. A dropped row renders to nothing, so the
+      # artifact still matches byte-for-byte while the ledger row is invisible in the view.
       #
-      # KNOWN GAP, deliberate: this is an allowlist, so the 8 remaining tables in the dump
-      # (doc_lines, grandfather_entries, legacy_lines, manifest_items, manifest_state_events,
-      # releases, repos, schema_migrations) still hit the catch-all and still produce the same
-      # FALSE refusal this arm exists to stop — a `releases add` will trip it. Enumerating
-      # tables is the wrong mechanism and is being replaced: the renderer already knows which
-      # rows it dropped and throws that away (see #474). Do not "simplify" this into a
-      # roadmap_items-only denylist in the meantime — that fails OPEN if the renderer ever
-      # gains a second projected table, where this fails closed.
-      projected_or_unknown_data=0
-      while IFS= read -r dline; do
-        case "$dline" in
-          '-'INSERT\ INTO\ jog_queue*|'+'INSERT\ INTO\ jog_queue*) ;;
-          '-'INSERT\ INTO\ marathons*|'+'INSERT\ INTO\ marathons*) ;;
-          '-'INSERT\ INTO\ issue_refs*|'+'INSERT\ INTO\ issue_refs*) ;;
-          '-'INSERT\ INTO\ op_receipts*|'+'INSERT\ INTO\ op_receipts*) ;;
-          *INSERT\ INTO\ settings*generation*) ;;
-          '-'INSERT\ INTO\ *|'+'INSERT\ INTO\ *) projected_or_unknown_data=1; break ;;
+      # GH-474: ASK the renderer instead of guessing. It already names every dropped row on
+      # stderr ("roadmap-dashboard: warning: dropped N unparseable row(s): <ids>", emitted from
+      # the droppedRows array), and $render_err above holds it. This replaces the GH-243/GH-315
+      # table-name allowlist, which had to infer the same fact from the dump's fan-out per write
+      # shape (jog, then marathon) and went short twice — 8 dump tables were still unclassified
+      # and still produced the FALSE refusal this arm exists to prevent.
+      #
+      # Direction of failure, deliberately: this reads the renderer's own report, so it cannot
+      # go short as a table list does. If the renderer is silent, the row rendered — allow.
+      dropped_line=""
+      while IFS= read -r eline; do
+        case "$eline" in
+          *"roadmap-dashboard: warning: dropped "*) dropped_line="$eline"; break ;;
         esac
-      done < <(git -C "$REPO" diff --no-renames "$remote_sha" "$local_sha" -- releases.sql 2>/dev/null)
-      if [ "$projected_or_unknown_data" -eq 0 ]; then
+      done <<EOF_ERR
+$render_err
+EOF_ERR
+      if [ -z "$dropped_line" ]; then
         continue
       fi
-      cat >&2 <<'EOF'
+      cat >&2 <<EOF
 dashboard-staleness-guard: REFUSING the push — this range writes the roadmap ledger
 (releases.sql / releases.db) without modifying ROADMAP-DASHBOARD.md, but regenerating the
 dashboard produces NO diff (GH-243 / GH-257).
 
-This happens when a parked row was dropped by the renderer (e.g. malformed raw_text).
-To diagnose:
-    bash utils/roadmap-dashboard.sh
-and inspect stderr for warnings on dropped rows. Correct the row with:
+The renderer dropped a roadmap row, so it contributes nothing to the view and the artifact
+still matches. It reported:
+    $dropped_line
+
+Correct the named row with:
     releases roadmap update --issue-num <N> --raw-text "- **GH-<N> · <title>** ..."
 then regenerate and commit:
     bash utils/roadmap-dashboard.sh && git add releases.db releases.sql ROADMAP-DASHBOARD.md && git commit -m "docs: fix roadmap row and regenerate dashboard"

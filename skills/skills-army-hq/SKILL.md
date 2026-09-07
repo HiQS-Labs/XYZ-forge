@@ -20,7 +20,8 @@ Resolve this loaded skill's physical folder to locate `scripts/intake.py` and
 After initialization, root `intake.py` and `sync.py` are convenience links into the
 copied manager. Exactly these two scripts own mutation; do not hand-edit receipts
 or imitate their filesystem operations. Read [recovery.md](references/recovery.md)
-for interruptions, backups, or legacy migration, and [targets.md](references/targets.md)
+for interruptions, backups, legacy migration and narrowly authorized manual recovery
+exceptions, and [targets.md](references/targets.md)
 before choosing app paths or claiming discovery.
 
 Keep [README.md](README.md) with the bundle: it identifies the upstream project for
