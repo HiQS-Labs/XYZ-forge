@@ -299,7 +299,157 @@ else
   pass "bash lib only probes (kill -0); killing stays in proc_group.py --kill-pgid"
 fi
 
-echo "== 12. identity recheck: lstart is load-bearing, containment alone never suffices =="
+echo "== 11. sweep: token-aware match, dry run signals nothing =="
+SWEEP="$ROOT/utils/py/ate_runaway_sweep.py"
+[ -x "$SWEEP" ] && pass "ate_runaway_sweep.py exists and is executable" || fail "sweep missing"
+
+mkdir -p "$WORK/ok" "$WORK/near"
+cat > "$WORK/ok/adaptive_ate.py" <<'PY'
+import time
+time.sleep(60)
+PY
+cat > "$WORK/near/my_adaptive_ate.py" <<'PY'
+import time
+time.sleep(60)
+PY
+python3 "$WORK/ok/adaptive_ate.py" &
+OKPID=$!
+python3 "$WORK/near/my_adaptive_ate.py" &
+NEARPID=$!
+grep -r "adaptive_ate" "$WORK/ok" >/dev/null 2>&1 &
+GREPPID=$!
+# Shape B, exactly as the 2026-09-06 incident rendered: a SPACED python -c block —
+# ps splits the quoted code, so the module mark lands in a LATER token.
+python3 -c 'import time; time.sleep(60); import utils.py.adaptive_ate' &
+CSHAPE_PID=$!
+sleep 0.5
+require_fixture_file "$WORK/ok/adaptive_ate.py" "sweep ok fixture"
+DRY_OUT="$(python3 "$SWEEP" --max-age-minutes 0 --limit-pids "$OKPID,$NEARPID,$GREPPID,$CSHAPE_PID")"
+case "$DRY_OUT" in
+  *"pid=$OKPID "*) pass "dry run lists the real ATE shape (age 0)" ;;
+  *) fail "real ATE shape missing from dry run: $DRY_OUT" ;;
+esac
+case "$DRY_OUT" in
+  *"pid=$CSHAPE_PID"*) pass "spaced python -c import shape (the incident shape) is listed" ;;
+  *) fail "incident python -c shape missing from dry run: $DRY_OUT" ;;
+esac
+case "$DRY_OUT" in
+  *"$NEARPID"*|*"pid=$GREPPID "*) fail "near-match/substring process was listed: $DRY_OUT" ;;
+  *) pass "near-match and bare-substring processes are never listed" ;;
+esac
+kill -0 "$OKPID" 2>/dev/null && pass "dry run left the candidate alive" || fail "dry run signalled the candidate"
+
+echo "== 12. non-python interpreter before -c is refused (shape B interpreter gate) =="
+perl -e 'use POSIX; sleep 60' -c '"from utils.py.adaptive_ate import x"' 2>/dev/null &
+PERLPID=$!
+sleep 0.4
+PERL_OUT="$(python3 "$SWEEP" --max-age-minutes 0 --limit-pids "$PERLPID")"
+case "$PERL_OUT" in
+  *"pid=$PERLPID"*) fail "non-python -c process was listed: $PERL_OUT" ;;
+  *) pass "shape B requires a python-ish interpreter before -c" ;;
+esac
+kill "$PERLPID" 2>/dev/null
+
+echo "== 13. sweep --kill: TERM stops a cooperative target (--limit-pids containment) =="
+python3 "$SWEEP" --kill --max-age-minutes 0 --grace-seconds 1 --limit-pids "$OKPID" > "$WORK/kill.out" 2>&1
+sleep 0.3
+if kill -0 "$OKPID" 2>/dev/null; then
+  fail "cooperative candidate $OKPID survived --kill"
+else
+  pass "cooperative candidate stopped by --kill"
+fi
+kill "$NEARPID" "$GREPPID" 2>/dev/null   # never-matched controls: cleaned up by hand
+
+echo "== 13. sweep --kill escalates to SIGKILL on a TERM-resistant target =="
+mkdir -p "$WORK/resist"
+cat > "$WORK/resist/adaptive_ate.py" <<'PY'
+import signal, time
+signal.signal(signal.SIGTERM, signal.SIG_IGN)
+time.sleep(60)
+PY
+python3 "$WORK/resist/adaptive_ate.py" &
+RID=$!
+sleep 0.5
+T0=$(date +%s)
+python3 "$SWEEP" --kill --max-age-minutes 0 --grace-seconds 1 --limit-pids "$RID" > "$WORK/kill2.out" 2>&1
+T1=$(date +%s)
+sleep 0.3
+if kill -0 "$RID" 2>/dev/null; then
+  fail "TERM-resistant candidate $RID survived --kill escalation"
+else
+  pass "TERM-resistant candidate killed after the grace window"
+fi
+[ $((T1 - T0)) -ge 1 ] && pass "escalation waited out the configured grace" || fail "escalation skipped the grace window"
+grep -q "ESCALATE" "$WORK/kill2.out" && pass "escalation logged" || fail "no escalation line: $(cat "$WORK/kill2.out")"
+
+echo "== 14. age gate: a young candidate above --max-age-minutes is not touched =="
+python3 "$WORK/ok/adaptive_ate.py" &
+YOUNG=$!
+sleep 0.5
+YOUNG_OUT="$(python3 "$SWEEP" --max-age-minutes 1 --limit-pids "$YOUNG")"
+case "$YOUNG_OUT" in
+  *"pid=$YOUNG"*) fail "young candidate was listed past the age gate" ;;
+  *) pass "age gate holds (etime < 1m excluded)" ;;
+esac
+kill -0 "$YOUNG" 2>/dev/null && pass "young candidate untouched" || fail "young candidate signalled"
+kill "$YOUNG" 2>/dev/null
+
+echo "== 15. sweep never lists itself or its ancestors =="
+SELF_OUT="$(python3 "$SWEEP" --max-age-minutes 0)"
+case "$SELF_OUT" in
+  *"ate_runaway_sweep"*) fail "the sweep matched its own lineage: $SELF_OUT" ;;
+  *) pass "self/ancestor exclusion holds" ;;
+esac
+
+echo "== 16. witnessed matcher mutations → red (baseline: GH-478-negative-control.md) =="
+cp "$SWEEP" "$WORK/mutant-sweep-broad.py"
+sed -i.bak 's/^MATCH_BASENAME_EXACT = True/MATCH_BASENAME_EXACT = False/' "$WORK/mutant-sweep-broad.py"; rm -f "$WORK/mutant-sweep-broad.py.bak"
+grep -q "MATCH_BASENAME_EXACT = False" "$WORK/mutant-sweep-broad.py" || fail "mutation B did not apply"
+python3 "$WORK/near/my_adaptive_ate.py" &
+NEAR2=$!
+sleep 0.5
+B_OUT="$(python3 "$WORK/mutant-sweep-broad.py" --max-age-minutes 0 --limit-pids "$NEAR2")"
+case "$B_OUT" in
+  *"pid=$NEAR2"*) pass "broadened matcher caught by the near-match control (red witnessed)" ;;
+  *) fail "broadened matcher NOT caught — near-match control is vacuous" ;;
+esac
+kill "$NEAR2" 2>/dev/null
+cp "$SWEEP" "$WORK/mutant-sweep-narrow.py"
+sed -i.bak 's/^REQUIRE_ARGV_AFTER_SCRIPT = False/REQUIRE_ARGV_AFTER_SCRIPT = True/' "$WORK/mutant-sweep-narrow.py"; rm -f "$WORK/mutant-sweep-narrow.py.bak"
+grep -q "REQUIRE_ARGV_AFTER_SCRIPT = True" "$WORK/mutant-sweep-narrow.py" || fail "mutation C did not apply"
+python3 "$WORK/ok/adaptive_ate.py" &   # signature shape WITHOUT following args
+SIGPID=$!
+sleep 0.5
+N_OUT="$(python3 "$WORK/mutant-sweep-narrow.py" --max-age-minutes 0 --limit-pids "$SIGPID")"
+case "$N_OUT" in
+  *"pid=$SIGPID "*) fail "narrowed matcher still lists the bare signature — control vacuous" ;;
+  *) pass "narrowed matcher caught by the signature control (red witnessed)" ;;
+esac
+kill "$SIGPID" 2>/dev/null
+
+echo "== 18. pgid publication fails CLOSED, never open =="
+(  # proc_group refuses to leave an untrackable child when publication fails
+  OUT="$(python3 "$ROOT/utils/py/proc_group.py" --timeout 5 --grace 1 \
+    --pgid-file "$WORK/no-such-dir/cpu-watch.pgid" -- sleep 30 2>&1)"
+  RC=$?
+  [ "$RC" -eq 125 ] || exit 1
+  case "$OUT" in *"pgid publication FAILED"*) exit 0 ;; *) exit 2 ;; esac
+) && pass "proc_group kills the just-started group when pgid publication fails (rc 125)" \
+  || fail "proc_group left an untrackable child after a publication failure"
+(  # the bash seam refuses to run when its own scratch path cannot be created
+  . "$ROOT/test/lib/runaway-guard.sh"
+  SAVED_TMPDIR="$TMPDIR"
+  TMPDIR="/nonexistent-gh478-tmpdir"
+  export TMPDIR
+  run_with_timeout 1 true >/dev/null 2>&1
+  RC=$?
+  TMPDIR="$SAVED_TMPDIR"
+  [ "$RC" -eq 2 ] || exit 1
+  exit 0
+) && pass "run_with_timeout refuses (rc 2) when the pgid scratch file cannot be created" \
+  || fail "run_with_timeout ran untracked instead of refusing"
+
+echo "== 17. identity recheck: lstart is load-bearing, containment alone never suffices =="
 python3 - <<'PY' || fail "identity-recheck controls failed"
 import os, sys, time
 sys.path.insert(0, "utils/py")

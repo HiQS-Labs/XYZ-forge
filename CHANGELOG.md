@@ -24,6 +24,8 @@ All notable changes to this repo. Newest first. Dates are PDT.
   skill validator, three scenario walkthroughs, one-shot Codex+Agy architecture consult, and PDDA
   checks.
 
+- **GH-478: ATE runaway guard — one shared process-group runner, suite-layer watchdog, machine sweep.** A gen4 adaptive-ate engine call ran 2d21h at ~98% duty because nothing capped, reaped, or reported it. `utils/py/proc_group.py` is now the one bounded process-group runner (start_new_session, group TERM/grace/KILL, witnessed-timeout rc 124), and the two ATE callers that each kept their own copy (`run_variations.run_harness`, `fuzz_engine.execute`) consume it. `test/lib/runaway-guard.sh` exposes the seam to suites: `run_with_timeout` caps invocations, the reaper tracks PGIDs so even a leader-less group with a TERM-resistant descendant is reaped at the composed, status-preserving EXIT trap; `gh-gen4-phase2-adaptive-ate.sh` wires it and caps every engine call. `utils/py/ate_runaway_sweep.py` is the machine-wide report-only backstop (token-aware match, uid/age gates, identity recheck, explicit `--kill`, `--limit-pids` containment). 36-case suite with witnessed mutation controls; registered in the gate and the ate subsystem.
+
 - **GH-465: Other Apps & Tools.** Adds a directory of the seven other public HiQS-Labs repositories, linked from static and generated site navigation and the sitemap. Descriptions use public project documentation and distinguish research from usable tools. Verification: generated-page build and desktop/mobile navigation checks; live deployment checked after merge.
 
 ## 2026-09-06

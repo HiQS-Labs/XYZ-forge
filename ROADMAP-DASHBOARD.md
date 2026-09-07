@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 47 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 48 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -52,6 +52,7 @@ Summary: 47 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-482 · relay-drive.sh --artifact-file silently seeds nothing — the reviewer never sees the artifact | — | — |
 | GH-491 · roadmap move/update --section help advertises section names the renderer drops, and nothing validates the value | — | [GH-491-ROADMAP-SECTION-VALIDATION.md](PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md) · [#491](https://github.com/HiQS-Labs/XYZ-forge/issues/491) |
 | GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR | — | [GH-492-ROADMAP-STATE-SWEEP.md](PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md) · [#492](https://github.com/HiQS-Labs/XYZ-forge/issues/492) |
+| GH-478 · ATE exit-cleanup / runaway-process guard — gen4 adaptive-ate test hung ~3 days at ~100% CPU | — | [GH-478-ATE-RUNAWAY-GUARD.md](PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md) |
 | GH-355 · Migration 007: updated_at across all releases.db tables, so consumers can detect what changed | — | [GH-355-UPDATED-AT-MIGRATION.md](PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md) · [#355](https://github.com/HiQS-Labs/XYZ-forge/issues/355) |
 | GH-508 · Git Sync Pulse as a portable Skills Army HQ projection | — | [GH-508-GIT-PULSE-SKILLS.md](PROJECT/1-INBOX/GH-508-GIT-PULSE-SKILLS.md) · [#508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) |
 | GH-514 · skills: new co-author skill "keel" — balance modularity, flexibility, maintainability, and ponytail for spec writing and total refactors | — | [GH-514-KEEL-SKILL.md](PROJECT/1-INBOX/GH-514-KEEL-SKILL.md) · [#514](https://github.com/HiQS-Labs/XYZ-forge/issues/514) |
