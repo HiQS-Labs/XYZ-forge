@@ -1,5 +1,5 @@
 ---
-name: deploy-skills
+name: skills-army-hq
 description: >-
   Manage a durable local skill collection and global app symlinks through conversation.
   Use to import, update, list, remove, or deploy skill folders from repositories already
@@ -7,7 +7,7 @@ description: >-
   downloads, publishing skills, or installing their runtime dependencies.
 ---
 
-# Deploy skills
+# Skills Army HQ
 
 Keep actual skill folders in the user's `Documents/Deployed Skills`. Apps discover
 directory symlinks to these stable copies, not disposable task clones. This skill is
@@ -25,7 +25,7 @@ before choosing app paths or claiming discovery.
 
 Keep [README.md](README.md) with the bundle: it identifies the upstream project for
 users. Existing whole-folder intake copies it on initialization and update into
-`Deployed Skills/deploy-skills/`; do not deploy only the scripts or `SKILL.md`.
+`Deployed Skills/skills-army-hq/`; do not deploy only the scripts or `SKILL.md`.
 Applied transactions also copy it to `Deployed Skills/README.md`, the collection's
 installer-managed landing document. Keep personal notes in a separate file.
 
@@ -56,8 +56,8 @@ Put global options **before** the intake subcommand. Substitute local paths/name
 the examples below are templates, not a hardcoded source inventory.
 
 ```bash
-python3 /path/to/deploy-skills/scripts/intake.py init
-python3 /path/to/deploy-skills/scripts/intake.py --apply init
+python3 /path/to/skills-army-hq/scripts/intake.py init
+python3 /path/to/skills-army-hq/scripts/intake.py --apply init
 python3 "$HOME/Documents/Deployed Skills/intake.py" list
 python3 "$HOME/Documents/Deployed Skills/intake.py" add /path/to/local-repo/skills/example
 python3 "$HOME/Documents/Deployed Skills/intake.py" --apply add /path/to/local-repo/skills/example

@@ -18,7 +18,7 @@ import zipfile
 
 sys.dont_write_bytecode = True
 REPO = Path(__file__).resolve().parents[1]
-BUNDLE = REPO / "skills" / "deploy-skills"
+BUNDLE = REPO / "skills" / "skills-army-hq"
 spec = importlib.util.spec_from_file_location("deploy_intake_test", BUNDLE / "scripts" / "intake.py")
 intake = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(intake)
@@ -43,7 +43,7 @@ class DeploySkillsTest(unittest.TestCase):
         self.work = Path(self.temp.name).resolve()
         self.repo = self.work / "source repo"
         self.repo.mkdir()
-        self.bundle = self.repo / "skills" / "deploy-skills"
+        self.bundle = self.repo / "skills" / "skills-army-hq"
         shutil.copytree(BUNDLE, self.bundle, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         self.git("init", "-q")
         self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-qm", "fixture")
@@ -86,8 +86,8 @@ class DeploySkillsTest(unittest.TestCase):
         self.cli("list", copied=True)
         self.cli("--apply", "catalog", copied=True)
         self.cli("--status", sync=True, copied=True)
-        self.assertTrue((self.root / "deploy-skills" / "SKILL.md").is_file())
-        self.assertEqual(len(list((self.root / "deploy-skills").rglob("*.py"))), 2)
+        self.assertTrue((self.root / "skills-army-hq" / "SKILL.md").is_file())
+        self.assertEqual(len(list((self.root / "skills-army-hq").rglob("*.py"))), 2)
 
     def test_a1_incomplete_manager_refused(self):
         (self.bundle / "scripts" / "sync.py").unlink()
@@ -95,9 +95,38 @@ class DeploySkillsTest(unittest.TestCase):
         self.cli("init", code=2)
         self.assertEqual(tree(self.work), old)
 
+    def test_a1_legacy_manager_activation_preserves_collection(self):
+        manager = self.root / "skills-army-hq"
+        legacy = self.root / "deploy-skills"
+        manager.rename(legacy)
+        skill = legacy / "SKILL.md"
+        skill.write_text(skill.read_text().replace("name: skills-army-hq", "name: deploy-skills"))
+        state = self.state()
+        identity = state["collection"]
+        record = state["skills"].pop("skills-army-hq")
+        record.update(name="deploy-skills", digest=intake.digest(legacy))
+        state["skills"]["deploy-skills"] = record
+        intake.atomic_json(self.root / intake.STATE, state)
+        for name in ("intake.py", "sync.py"):
+            (self.root / name).unlink()
+            (self.root / name).symlink_to(f"deploy-skills/scripts/{name}")
+        self.cli("--apply", "remove", "deploy-skills", code=2)
+        self.cli("--apply", "add", self.bundle)
+        before = tree(self.root)
+        self.cli("activate-manager")
+        self.assertEqual(tree(self.root), before)
+        self.cli("--apply", "activate-manager")
+        self.cli("--apply", "remove", "deploy-skills", copied=True)
+        self.cli("list", copied=True)
+        self.assertEqual(self.state()["collection"], identity)
+        self.assertFalse(legacy.exists())
+        self.assertTrue(list((self.root / "backups").glob("deploy-skills-*.zip")))
+        for name in ("intake.py", "sync.py"):
+            self.assertEqual(os.readlink(self.root / name), f"skills-army-hq/scripts/{name}")
+
     def test_a1_readme_copied_updated_and_archived(self):
         source = self.bundle / "README.md"
-        deployed = self.root / "deploy-skills" / "README.md"
+        deployed = self.root / "skills-army-hq" / "README.md"
         landing = self.root / "README.md"
         original = source.read_bytes()
         self.assertTrue(original)
@@ -106,16 +135,16 @@ class DeploySkillsTest(unittest.TestCase):
         self.assertEqual(landing.read_bytes(), original)
         revised = original + b"\nFixture provenance update.\n"
         source.write_bytes(revised)
-        self.cli("update", "deploy-skills")
+        self.cli("update", "skills-army-hq")
         self.assertEqual(deployed.read_bytes(), original)
         self.assertEqual(landing.read_bytes(), original)
-        self.cli("--apply", "update", "deploy-skills")
+        self.cli("--apply", "update", "skills-army-hq")
         self.assertEqual(deployed.read_bytes(), revised)
         self.assertEqual(landing.read_bytes(), revised)
-        archives = list((self.root / "backups").glob("deploy-skills-*.zip"))
+        archives = list((self.root / "backups").glob("skills-army-hq-*.zip"))
         self.assertEqual(len(archives), 1)
         with zipfile.ZipFile(archives[0]) as archive:
-            self.assertEqual(archive.read("deploy-skills/README.md"), original)
+            self.assertEqual(archive.read("skills-army-hq/README.md"), original)
         self.repo.rename(self.work / "source hidden")
         self.assertEqual(deployed.read_bytes(), revised)
         landing.unlink()
@@ -178,10 +207,10 @@ class DeploySkillsTest(unittest.TestCase):
 
     def test_a2_self_update_preserves_runnable_manager(self):
         (self.bundle / "SKILL.md").write_text((self.bundle / "SKILL.md").read_text() + "\nFixture update.\n")
-        self.cli("--apply", "update", "deploy-skills")
+        self.cli("--apply", "update", "skills-army-hq")
         self.cli("list", copied=True)
         self.cli("--status", sync=True, copied=True)
-        self.assertEqual(len(list((self.root / "backups").glob("deploy-skills-*.zip"))), 1)
+        self.assertEqual(len(list((self.root / "backups").glob("skills-army-hq-*.zip"))), 1)
 
     def test_a3_previews_write_nothing(self):
         source = self.source()
@@ -231,7 +260,7 @@ class DeploySkillsTest(unittest.TestCase):
         self.enable(); self.enable(ident="same-physical-root")
         first = json.loads(self.cli("--apply", sync=True).stdout)
         self.assertEqual(len(first["actions"]), 2)
-        self.assertEqual(set(p.name for p in self.target.iterdir()), {"deploy-skills", "sample"})
+        self.assertEqual(set(p.name for p in self.target.iterdir()), {"skills-army-hq", "sample"})
         old = (self.root / "changelog.md").read_bytes()
         self.assertEqual(json.loads(self.cli("--apply", sync=True).stdout)["actions"], [])
         self.assertEqual((self.root / "changelog.md").read_bytes(), old)
@@ -249,8 +278,8 @@ class DeploySkillsTest(unittest.TestCase):
         self.enable(); self.cli("--apply", sync=True)
         (self.target / "sample").unlink()
         (self.target / "sample").symlink_to("foreign-dangling")
-        (self.target / "deploy-skills").unlink()
-        (self.target / "deploy-skills").mkdir()
+        (self.target / "skills-army-hq").unlink()
+        (self.target / "skills-army-hq").mkdir()
         old = tree(self.target)
         self.cli("--apply", "remove", "sample")
         self.cli("--apply", sync=True, code=2)
@@ -262,22 +291,22 @@ class DeploySkillsTest(unittest.TestCase):
         self.cli("--apply", "add", source)
         self.enable(); self.target.mkdir()
         (self.target / "sample").symlink_to(source)
-        (self.target / "deploy-skills").symlink_to(self.root / "deploy-skills")
+        (self.target / "skills-army-hq").symlink_to(self.root / "skills-army-hq")
         self.cli(sync=True, code=2)
-        self.cli("--apply", "--migrate", "sample", "--adopt", "deploy-skills", sync=True)
+        self.cli("--apply", "--migrate", "sample", "--adopt", "skills-army-hq", sync=True)
         self.assertEqual(os.readlink(self.target / "sample"), str(self.root / "sample"))
         self.assertEqual(self.state()["links"][str(self.target / "sample")]["previous"], str(source))
 
     def test_a4_partial_sync_reports_failure_and_keeps_success(self):
         self.enable(); self.target.mkdir()
-        (self.target / "deploy-skills").mkdir()
+        (self.target / "skills-army-hq").mkdir()
         other = self.work / "other app"
         self.enable(other, "other")
         run = self.cli("--apply", sync=True, code=2)
         result = json.loads(run.stdout)
         self.assertEqual(len(result["errors"]), 1)
         self.assertEqual(len(result["actions"]), 1)
-        self.assertTrue((other / "deploy-skills").is_symlink())
+        self.assertTrue((other / "skills-army-hq").is_symlink())
         self.assertIn("sync-partial", (self.root / "changelog.md").read_text())
 
     def test_a4_alternative_source_requires_exact_explicit_selection(self):
@@ -384,7 +413,7 @@ raise SystemExit(mod.main(sys.argv[3:]))
         self.assertEqual(tree(self.target), old)
         pending.write_bytes(good)
         self.cli("--apply", "recover")
-        self.assertEqual(os.readlink(self.target / "deploy-skills"), str(self.root / "deploy-skills"))
+        self.assertEqual(os.readlink(self.target / "skills-army-hq"), str(self.root / "skills-army-hq"))
 
     def test_a10_retirement_is_explicit_and_recoverable(self):
         legacy = self.source("skills-sync-trinity")

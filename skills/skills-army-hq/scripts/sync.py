@@ -75,9 +75,9 @@ def retirement(root, state, config, source_arg, archive_directories, apply):
         if not path.exists() and not path.is_symlink():
             continue
         try:
-            shared.require(shared.link_text(parent / "deploy-skills") == str(root / "deploy-skills")
-                           and (parent / "deploy-skills" / "scripts" / "sync.py").is_file(),
-                           f"Install and verify deploy-skills first: {parent}")
+            shared.require(shared.link_text(parent / "skills-army-hq") == str(root / "skills-army-hq")
+                           and (parent / "skills-army-hq" / "scripts" / "sync.py").is_file(),
+                           f"Install and verify skills-army-hq first: {parent}")
             if path.is_symlink():
                 before = os.readlink(path)
                 shared.require(path.resolve(strict=False) == source, f"Unrelated legacy link preserved: {path}")
@@ -155,7 +155,7 @@ def main(argv=None):
                 shared.transact(root, state, config, actions, "sync-partial" if errors else "sync", result)
             return 2 if errors else 0
     except (shared.DeployError, OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
-        print(f"deploy-skills sync: {exc}", file=sys.stderr)
+        print(f"skills-army-hq sync: {exc}", file=sys.stderr)
         return 2
 
 

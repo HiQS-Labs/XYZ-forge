@@ -1,8 +1,35 @@
-# Deploy Skills
+# Skills Army HQ
+
+## Primary Use Case
+
+You're a developer working across three or more agentic coding environments:
+Claude Code in VS Code, the Codex app, ZCode, and Antigravity. You've built an army
+of skills you love, but they're scattered across different installations. Some
+are up to date, some are older copies, and others never made it to every app.
+
+Then you discover a great new skill. You ask Claude Code to install it for itself
+and Codex, but forget Antigravity. Days later, you try to invoke that shiny new
+skill in Antigravity—only to discover it isn't available.
+
+Or you're fine-tuning a skill and forget to copy the latest version into every
+target folder. Now each agent is working from different instructions.
+Frustrating, right?
+
+Skills Army HQ gives your skill army one headquarters. Talk to one system to
+import and update your skills, then deploy them to your configured apps. It knows
+your target folders and updates their links on your command.
+
+The actual skill folders stay in a separate `Documents/Deployed Skills` collection.
+Each app points to those same copies through directory symlinks, so you can see
+exactly what's deployed without maintaining separate versions for every agent.
+Run a health check to spot missing links or conflicts; app discovery and runtime
+readiness are verified separately.
+
+## Origin
 
 This skill comes from **XYZ Forge**, maintained in the
 [HiQS-Labs/XYZ-forge repository](https://github.com/HiQS-Labs/XYZ-forge),
-at `skills/deploy-skills/`. It replaces `skills-sync-trinity`.
+at `skills/skills-army-hq/`. It replaces `skills-sync-trinity`.
 
 It gives your existing coding agent a conversational interface for managing a
 durable collection of local skills. Ask it to “list my deployed skills”, “import
@@ -12,7 +39,7 @@ The agent instructions live in the skill folder's `SKILL.md`.
 ## Where this copy lives
 
 Initialization copies the **entire skill folder**, including this README, into
-`~/Documents/Deployed Skills/deploy-skills/`. Updating the manager refreshes this
+`~/Documents/Deployed Skills/skills-army-hq/`. Updating the manager refreshes this
 README along with its scripts and instructions. The installer also writes a real
 copy at **`~/Documents/Deployed Skills/README.md`**, beside `catalog.md`.
 That top-level README is installer-managed and refreshed during applied operations;
@@ -32,8 +59,8 @@ Requires Python 3.9+; macOS is the supported alpha platform. From an existing lo
 checkout, preview initialization, then apply it:
 
 ```bash
-python3 /path/to/XYZ-forge/skills/deploy-skills/scripts/intake.py init
-python3 /path/to/XYZ-forge/skills/deploy-skills/scripts/intake.py --apply init
+python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py init
+python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py --apply init
 python3 "$HOME/Documents/Deployed Skills/intake.py" list
 ```
 
@@ -68,5 +95,5 @@ This is a filesystem deployment health check, not proof that an app or extension
 has loaded a skill or that its runtime dependencies work. Report app discovery and
 runtime readiness separately as verified or unverified.
 
-Inside the `deploy-skills` folder, see `references/targets.md` for app-specific
+Inside the `skills-army-hq` folder, see `references/targets.md` for app-specific
 verification and `references/recovery.md` for backups, interruptions and migration.

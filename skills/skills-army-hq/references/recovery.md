@@ -1,5 +1,16 @@
 # Recovery and explicit migration
 
+## Renaming an existing deploy-skills alpha collection
+
+Keep the existing collection and its `.deploy-skills*` metadata filenames; the
+brand change does not reset history or ownership. Preview each command, then repeat
+with `--apply` (before intake subcommands): use the new bundle's intake to `add`
+the local `skills-army-hq` folder, then `activate-manager`. Run the collection's
+`sync.py` to install the new app links. Finally `remove deploy-skills` (creates a
+ZIP), and sync again to withdraw only its owned old-name links. Inspect conflicts;
+never delete foreign entries. The new manager is protected from removal, and the
+old manager cannot be removed while its convenience links remain active.
+
 All mutations default to preview. Exit 0 means the requested operation succeeded
 (or a clean preview/no-op); exit 2 means failure or sync with preserved conflicts.
 An OS advisory lock serializes both tools. A dead process releases its lock; a live
@@ -42,7 +53,7 @@ cannot replace a real directory, and records the old link text for rollback.
 ## Retiring skills-sync-trinity
 
 The replacement ships no old-name alias. If an old installation exists, keep its
-known local source until migration finishes. Install and verify deploy-skills first,
+known local source until migration finishes. Install and verify skills-army-hq first,
 then preview `sync.py --retire-trinity /repo/skills/skills-sync-trinity` against
 enabled targets. Apply only the reviewed matches. Symlinks must point to that exact
 known source. Real directories are preserved unless the operator explicitly selects

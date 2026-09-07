@@ -71,7 +71,7 @@ without reading all of them first.
 | [review-xyz](skills/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [rpr](skills/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |
 | [shakedown](skills/shakedown/SKILL.md) | Audit script-calling skills across CWD, install, symlink, and permission scenarios. |
-| [deploy-skills](skills/deploy-skills/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
+| [skills-army-hq](skills/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
 | [spike-360](skills/spike-360/SKILL.md) | Interrogate authority before introducing or moving a source of truth. |
 | [start-task](skills/start-task/SKILL.md) | Carry one or more issues through governed intake, grounded planning, relay QA, execution, and ready PRs. |
 | [standup](skills/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
