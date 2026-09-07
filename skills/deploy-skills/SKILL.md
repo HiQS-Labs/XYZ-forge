@@ -23,6 +23,10 @@ or imitate their filesystem operations. Read [recovery.md](references/recovery.m
 for interruptions, backups, or legacy migration, and [targets.md](references/targets.md)
 before choosing app paths or claiming discovery.
 
+Keep [README.md](README.md) with the bundle: it identifies the upstream project for
+users. Existing whole-folder intake copies it on initialization and update into
+`Deployed Skills/deploy-skills/`; do not deploy only the scripts or `SKILL.md`.
+
 ## Conversational workflow
 
 Translate requests such as “deploy recon from this repo”, “what is deployed?”,

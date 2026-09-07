@@ -95,6 +95,28 @@ class DeploySkillsTest(unittest.TestCase):
         self.cli("init", code=2)
         self.assertEqual(tree(self.work), old)
 
+    def test_a1_readme_copied_updated_and_archived(self):
+        source = self.bundle / "README.md"
+        deployed = self.root / "deploy-skills" / "README.md"
+        original = source.read_bytes()
+        self.assertTrue(original)
+        self.assertEqual(deployed.read_bytes(), original)
+        revised = original + b"\nFixture provenance update.\n"
+        source.write_bytes(revised)
+        self.cli("update", "deploy-skills")
+        self.assertEqual(deployed.read_bytes(), original)
+        self.cli("--apply", "update", "deploy-skills")
+        self.assertEqual(deployed.read_bytes(), revised)
+        archives = list((self.root / "backups").glob("deploy-skills-*.zip"))
+        self.assertEqual(len(archives), 1)
+        with zipfile.ZipFile(archives[0]) as archive:
+            self.assertEqual(archive.read("deploy-skills/README.md"), original)
+        self.repo.rename(self.work / "source hidden")
+        self.assertEqual(deployed.read_bytes(), revised)
+        deployed.write_bytes(b"corrupted copy")
+        with self.assertRaises(AssertionError):
+            self.assertEqual(deployed.read_bytes(), revised)
+
     def test_a2_archives_round_trip_and_same_day_collisions(self):
         source = self.source()
         self.cli("--apply", "add", source)
