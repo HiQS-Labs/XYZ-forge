@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 61 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -67,8 +67,10 @@ Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run | — | [GH-446-MARATHON-PLAN-WRITE-GUARD.md](PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md) · [#446](https://github.com/HiQS-Labs/XYZ-forge/issues/446) |
 | GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) | — | [GH-452-RELEASE-TAGS.md](PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md) · [#452](https://github.com/HiQS-Labs/XYZ-forge/issues/452) |
 | GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/1-INBOX/GH-454-RECONCILE-GATE-DEFECTS.md) |
-| GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/1-INBOX/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
+| GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
+| GH-453 · Governance document identity audit | — | [Plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md) · [#453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) |
 | GH-473 · feat(skill): add /unstuck goal-movement interrupt | — | [doc](PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md) · [#473](https://github.com/HiQS-Labs/XYZ-forge/issues/473) |
+| GH-474 · Remove rendered MD views (ROADMAP-DASHBOARD.md & LEADERBOARD.md) to eliminate staleness guards | — | — |
 
 ## Queue
 

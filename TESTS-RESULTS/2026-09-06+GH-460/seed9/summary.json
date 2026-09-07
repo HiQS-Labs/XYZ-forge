@@ -1,0 +1,22 @@
+{
+  "run_id": "5493a6c1-92f8-4ab9-b705-27a6aef82ec7",
+  "seed": 9,
+  "iterations": 500,
+  "executed": 500,
+  "counts": {
+    "pass": 500,
+    "fail": 0,
+    "anomaly": 0
+  },
+  "novel_vectors": 3,
+  "corpus_size": 3,
+  "corpus_cap": 500,
+  "corpus_actions": {
+    "added": 3,
+    "replaced": 2,
+    "dropped": 495
+  },
+  "parity_divergences": 0,
+  "counterexamples": [],
+  "telemetry_out": "/tmp/gh460-evidence/campaigns2/seed9/telemetry.jsonl"
+}

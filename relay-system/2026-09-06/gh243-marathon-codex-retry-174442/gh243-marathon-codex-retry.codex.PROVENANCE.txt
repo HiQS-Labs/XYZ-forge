@@ -1,0 +1,13 @@
+FIRSTHAND_COUNT=3
+ECHOED_COUNT=11
+ECHOED `ROADMAP-DASHBOARD.md`
+ECHOED `roadmap list --json`
+ECHOED `issue_refs`
+ECHOED `roadmap_items.issue_url`
+ECHOED `ROADMAP-DASHBOARD.md`
+ECHOED `roadmap_items`
+ECHOED `roadmap list --json`
+ECHOED `issue_refs`
+ECHOED `roadmap_items.issue_url`
+ECHOED `ROADMAP-DASHBOARD.md`
+ECHOED `roadmap_items`

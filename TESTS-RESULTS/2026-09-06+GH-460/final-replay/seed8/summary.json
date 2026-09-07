@@ -1,0 +1,22 @@
+{
+  "run_id": "8885dd69-b63c-4091-962e-96e4354d011b",
+  "seed": 8,
+  "iterations": 500,
+  "executed": 500,
+  "counts": {
+    "pass": 500,
+    "fail": 0,
+    "anomaly": 0
+  },
+  "novel_vectors": 3,
+  "corpus_size": 3,
+  "corpus_cap": 500,
+  "corpus_actions": {
+    "added": 3,
+    "dropped": 494,
+    "replaced": 3
+  },
+  "parity_divergences": 0,
+  "counterexamples": [],
+  "telemetry_out": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh460-replay.RAkmd9/artifacts/seed8/telemetry.jsonl"
+}

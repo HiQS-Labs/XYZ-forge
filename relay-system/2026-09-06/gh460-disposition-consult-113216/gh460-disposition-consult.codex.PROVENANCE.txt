@@ -1,0 +1,10 @@
+FIRSTHAND_COUNT=61
+ECHOED_COUNT=8
+ECHOED `_`
+ECHOED `_`
+ECHOED `_`
+ECHOED `_`
+ECHOED `build_argv`
+ECHOED `test/`
+ECHOED `build_argv`
+ECHOED `test/`

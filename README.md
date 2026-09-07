@@ -161,6 +161,9 @@ between docs and code is a defect rather than untidiness. That is why the checks
 
 ## Scope — what this is and is not
 
+The canonical product purpose is in [Guiding Principles](GUIDING-PRINCIPLES.md#purpose); this section
+explains that scope for operators.
+
 **It is:** a local-first operations system for a small number of humans directing a larger number of
 agents across their own repositories. The operator is the sole decision authority; every write path
 of consequence previews first or requires an explicit gate.
@@ -197,10 +200,13 @@ The relationship is not symmetrical, and earlier versions of this README stated 
   PDDA is a prerequisite for the unattended path, not an optional enhancement.
 
 The dependency runs one way only: the harness reads governance structure; PDDA never calls the
-harness. `PROJECT/CONSTITUTION.md`, `PROJECT/DO-NOT-BUILD.md`, and `PROJECT/PDDA*.md` are **PDDA's own
-governance documents, vendored here as sync inputs** — they describe PDDA's scope, not this project's.
-Do not read them as XYZ Forge policy. This project's principles live in
-[`GUIDING-PRINCIPLES.md`](GUIDING-PRINCIPLES.md); its behavioral rules for agents live in
+harness. [`PROJECT/PDDA.md`](PROJECT/PDDA.md) is an imported document contract adopted here; changes to
+its local adaptations require [XYZ’s sync review policy](PROJECT/PDDA-SYNC-POLICY.md).
+The constitution, anti-scope and mode guide are locally maintained PDDA-layer documents inherited
+from XYZ’s predecessor, not a blanket limit on XYZ’s product. The sync review policy is XYZ-owned
+and binding. [ROUTER’s role split](ROUTER.md#role-split) identifies their specific authority.
+XYZ’s canonical product purpose and principles live in
+[`GUIDING-PRINCIPLES.md`](GUIDING-PRINCIPLES.md#purpose); its behavioral rules live in
 [`AGENTS.md`](AGENTS.md).
 
 ---

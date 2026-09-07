@@ -276,3 +276,7 @@ echo "== GH-298 SMOKE ALL PASSED ($PASS/4) =="
 ## Merge evidence
 
 - PR #441 merged 2026-09-05 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #476 merged 2026-09-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

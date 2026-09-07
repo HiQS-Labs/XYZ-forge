@@ -86,7 +86,34 @@ cd "$root"
 bash "$GUARD" "$R" "$JOG_ONLY" "$RENDERED" \
   || fail "jog-queue-only ledger write must pass the no-drift branch (GH-315), got $?"
 
+# 7b. Same shape, marathon fan-out: `releases marathon add` writes marathons + issue_refs
+# alongside the op_receipts/generation rows test 7 already covers, and neither new table is
+# projected by the renderer -> ALLOW. issue_refs is included because `marathon add` creates
+# that row itself whenever the tracking URL is new, so a marathons-only allowance would still
+# refuse the common case.
+#
+# WHAT THIS PROVES, EXACTLY: that the shell classifier accepts the canonical marathon dump
+# lines. It does NOT prove the two tables lack a dashboard projection — the fixture renderer
+# above is a stub that always exits 0, so no real rendering happens here. That claim rests on
+# `roadmap list` being a flat SELECT * FROM roadmap_items (utils/py/releases_app.py:3554) with
+# issue_url a denormalized TEXT column, not a foreign key (:605). See #474.
+cd "$R"
+{ echo "-- dump v3b"
+  echo "INSERT INTO settings(key, value) VALUES('generation', '10');"
+  echo "INSERT INTO issue_refs(global_id, url) VALUES('ref-1', 'https://example.invalid/1');"
+  echo "INSERT INTO marathons(global_id, tracking_ref_gid) VALUES('mar-1', 'ref-1');"
+  echo "INSERT INTO op_receipts(op, target_gid) VALUES('marathon-add', 'mar-1');"
+} > releases.sql
+git add releases.sql
+git -c user.email=t@t -c user.name=t commit -q -m "marathon-only ledger write"
+MARATHON_ONLY="$(git rev-parse HEAD)"
+cd "$root"
+bash "$GUARD" "$R" "$MARATHON_ONLY" "$RENDERED" \
+  || fail "marathon-only ledger write must pass the no-drift branch, got $?"
+
 # 8. Control: a roadmap_items data change in the same no-drift shape still refuses.
+# This is the red control for 7 AND 7b — it is what proves the allowlist opened the gate for
+# unprojected tables only, and not for everything.
 cd "$R"
 { echo "-- dump v4"; echo "INSERT INTO roadmap_items VALUES('r1');"; } > releases.sql
 git add releases.sql
