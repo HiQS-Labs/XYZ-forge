@@ -36,7 +36,13 @@ phases: 4
 
 ## Requirements and design
 
-The user wants to talk to an agent in their existing VS Code extensions and agent apps to manage one durable collection of globally available skills. `skills/deploy-skills/SKILL.md` is the conversational interface, not a new VS Code extension. Two deterministic Python scripts perform intake/catalog maintenance and symlink synchronization. Current request is to write this plan and QA it with Agy first; code and live installation come after that checkpoint.
+The user wants to talk to an agent in their existing VS Code extensions and agent apps to manage one durable collection of globally available skills. `skills/deploy-skills/SKILL.md` is the conversational interface, not a new VS Code extension. Two deterministic Python scripts perform intake/catalog maintenance and symlink synchronization. **Operator amendment: deploy-skills replaces skills-sync-trinity; only deploy-skills remains discoverable.** Current request is to write this plan and QA it with Agy first; code and live installation come after that checkpoint.
+
+### Replacement of skills-sync-trinity
+
+Retire the seven tracked files under `skills/skills-sync-trinity/`: README.md, SKILL.md, install.sh and scripts/{export_skills_sync_trinity.py,render_working_doc.py,sync_trinity.py,validate_trinity.py}. Replace its active `ARCHITECTURE.md:76` row with deploy-skills. Its deployment-relevant inventory is superseded by catalog/status; its general PDDA scaffold generation and validation commands are deliberately retired, not copied into a third tool. Existing general skill-authoring workflows remain outside this feature. Preserve historical transcripts and test evidence mentioning the former name; no old-name alias or duplicate SKILL.md is shipped.
+
+Local migration is a narrowly named intake operation followed by sync: show an old `skills-sync-trinity` entry only in the selected target roots, validate that its symlink resolves (or its stored text unambiguously points) to this known retired repo skill, persist its old link text, then unlink only that entry after deploy-skills is installed and verified. Never remove a real directory or an unrelated link automatically: archive a real legacy skill with the normal ZIP procedure and require the explicit migration selection before moving it out of discovery; conflicts are reported. Readlink/lstat must still match at mutation time. The generic adoption rule does not grant ownership of arbitrary old links. Dry-run migration writes nothing. Rollback restores the old verified source/link only if it still exists and the name remains free; otherwise give the archive recovery path. On this device the exact old name was absent at all seven inspected conventional roots; recheck at deployment time. Removing source files waits until migration has a durable backup/receipt if any installed link depends on them.
 
 ### Folder and ownership contract
 
@@ -86,7 +92,7 @@ Before each operation, persist an atomic pending receipt containing operation ID
 
 ### Recon, reuse and alternatives
 
-See [Recon Map](GH-484-DEPLOY-SKILLS/recon-deploy-skills.md), pinned to origin/development `2e4f8d48831b2265a29eeaca8ce93a61bc39e386`. Existing installers implement folder symlinks but replace unrelated entries; scaffold sync explicitly excludes installation. Therefore reuse folder layout and failure reporting patterns, not those mutation functions. Extend existing locator environment/caller-repo support for runtime prerequisites; do not invent a runtime path registry or silently bundle the harness. New files stay inside `skills/deploy-skills/`, with a focused Python test under `test/` and narrow start-task documentation alignment. Use existing test/test_python_layer.py discovery entry to invoke the new tests or explicitly register a test-only launcher after reading that integration surface; do not assume arbitrary Python files run under validate.sh.
+See [Recon Map](GH-484-DEPLOY-SKILLS/recon-deploy-skills.md), pinned to origin/development `2e4f8d48831b2265a29eeaca8ce93a61bc39e386`. Existing installers implement folder symlinks but replace unrelated entries; scaffold sync explicitly excludes installation. Therefore reuse folder layout and failure reporting patterns, not those mutation functions. The operator has explicitly chosen retirement of that scaffold skill in favor of deploy-skills. Extend existing locator environment/caller-repo support for runtime prerequisites; do not invent a runtime path registry or silently bundle the harness. New runtime files stay inside `skills/deploy-skills/`, with retirement of the seven old files, a replacement architecture row, a focused Python test under `test/` and narrow start-task documentation alignment. Use existing test/test_python_layer.py discovery entry to invoke the new tests or explicitly register a test-only launcher after reading that integration surface; do not assume arbitrary Python files run under validate.sh.
 
 Alternatives ranked: (1) requested actual-copy collection plus managed symlinks; (2) links directly to maintained repos, simplest but does not survive source relocation; (3) separate app copies, which multiply drift; (4) full package/runtime manager, which adds unrequested distribution scope. Strongest counterargument to (1): copied skills with source-relative runtime dependencies can become discoverable but unusable. Phase 3 must expose and prove these prerequisites; no blanket “portable skill” claim.
 
@@ -102,12 +108,12 @@ RELEASES read-back: `rated 72/58/50/55` (priority/severity/appeal/cheapness), no
 
 **Goal:** A copied deploy-skills bundle can initialize and manage a local collection through its two Python entrypoints and agent instructions.
 
-1. Implement SKILL.md and intake.py plus sync.py's shared-helper import; bootstrap the complete manager, root convenience links and configurable targets -> expect operation from a neutral CWD with the source clone absent.
+1. Replace the old skills-sync-trinity bundle with SKILL.md and intake.py plus sync.py's shared-helper import; update its architecture entry and bootstrap the complete manager, root convenience links and configurable targets -> expect operation from a neutral CWD with the source clone absent, and one discoverable management skill (A10).
 2. Implement local add/update/remove, archive verification, metadata, generated catalog and append-only changelog under one lock -> expect old content survives deliberate copy/ZIP failures and repeated same-day updates preserve every archive.
 
 ### QA checklist
 
-- [ ] DRY/responsibility check: one persistence implementation; no copied installer mutation code or new dependency framework.
+- [ ] DRY/responsibility check: one persistence implementation; no copied installer mutation code or new dependency framework; former scaffold skill is retired (A10).
 - [ ] Empty/malformed input, name collision, external/cyclic links and overlapping roots refuse without changing prior files (A1–A3).
 - [ ] ZIP restore verifies bytes, relative links and executable permissions; self-update remains runnable (A2).
 - [ ] Errors name the operation/path/cause; previews do not write; debug-mantra is used for implementation failures.
@@ -135,7 +141,17 @@ RELEASES read-back: `rated 72/58/50/55` (priority/severity/appeal/cheapness), no
 6. Preview and deploy manager plus one simple skill, then the full alpha after that succeeds. Import relay-xyz, consult, marathon-triage, marathon-cleanup, unstuck, swe, ponytail, recon, daily, workhorse, merge-cleanup, start-task, debug-mantra -> expect copies and links point only to the stable collection, with ZIP-backed migration of selected existing entries (A6).
 7. Exercise conversational list/import/update/preview/remove on a harmless fixture; verify each consumer's discovery and a bounded read-only invocation, then runtime-dependent skills from a neutral CWD with explicit stable prerequisites. Update start-task's installation guidance narrowly to accept this deployment option -> expect no global shell startup rewrites and no unrequested dependency installation (A7).
 
-Candidate roots from existing repo instructions, **pending current consumer verification**: Claude `~/.claude/skills`; Codex `~/.codex/skills` and shared `~/.agents/skills` (choose verified shared discovery without duplicate names); Antigravity `~/.gemini/antigravity/skills`; Zcode `~/.zcode/skills`. App/extension labels may map to one physical root. Do not enable obsolete Gemini paths merely because an installer lists them. Custom targets remain supported with an unverified consumer label. Record app version, discovery path and evidence; a directory existing is insufficient.
+Verify these **five distinct consumers**, each with its own app/extension version and observed discovery result:
+
+| Consumer | Candidate root from existing repo guidance, not verified support |
+|---|---|
+| VS Code Claude Code extension | `~/.claude/skills` |
+| VS Code Codex extension | `~/.codex/skills` or shared `~/.agents/skills` |
+| Codex desktop app | `~/.codex/skills` or shared `~/.agents/skills` |
+| Antigravity app | `~/.gemini/antigravity/skills` |
+| Zcode GLM app | `~/.zcode/skills` |
+
+Validate the actual extension/app, not just its CLI counterpart. Distinct consumer results may map to one physical root; deduplicate writes, not verification. Do not enable obsolete Gemini paths merely because an installer lists them. Custom targets remain supported with an unverified consumer label. A directory existing is insufficient. Include the targeted legacy-entry migration above when applicable (A10).
 
 Daily source is rebalanceOS `.agents/skills/daily/`; personal references stay in its private copied payload. Unstuck may be copied from its existing local branch checkout after recording exact dirty state/hash/commit; no forced merge or checkout. Marathon-related means the two actual marathon skill folders found in recon. Additional referenced skills are reported as prerequisites, not silently imported. Use the existing XYZ_HARNESS override scoped to commands/agent instructions and the maintained primary harness; caller .xyz is also supported. Deploy-skills's own agent instructions consult local source receipts for these prerequisites without rewriting imported payloads. Daily requires its Rebalance context. If a consumer cannot expose skills or a payload requires unavailable runtime context, leave that alpha check blocked; filesystem success is reported separately.
 
@@ -175,6 +191,7 @@ Proposed focused suite: `python3 -m unittest discover -s test -p 'test_deploy_sk
 | A7 | Per-app discovery and agent conversational management observed; runtime prerequisites exercised | Remove fixture prerequisite or manager link; do not report usability success. `a7-consumers-redacted.log` |
 | A8 | Focused tests, full gate, PDDA, committed relay Approved on final revision | Nonzero/empty/missing-verdict fixture is rejected as QA evidence. `a8-qa.log` |
 | A9 | Remote PR/SHA and evidence verified; task path retired; stable copies still usable | Fixture clone with unique commit/stash/active process/dependent link is preserved. `a9-teardown-redacted.log` |
+| A10 | Only deploy-skills shipped/discovered; architecture points to it; retired commands no longer advertised; known old link migration recoverable | Leave old SKILL.md installed -> inventory test fails; foreign link/real folder fixture remains untouched without explicit migration. Historical references remain. `a10-replacement.log` |
 
 Public evidence redacts personal source paths/content while retaining skill names, counts, hashes, exact command structure, statuses and version facts. Do not commit imported private daily contents or local target configuration. ZIPs remain local. This is not a new long-horizon marathon; no synthetic workload is needed.
 
@@ -182,4 +199,4 @@ Public evidence redacts personal source paths/content while retaining skill name
 
 First review: Agy via shipped relay-xyz, review-only ALLOW_PATHS, committed plan/recon in the isolated task clone; three review rounds maximum. Questions must include a dedicated omission-diff against every user requirement plus ownership/crash/portability scrutiny. Record each proposal's evidence and disposition; revise and re-review up to Approved, otherwise report the exact blocker. Plan approval is textual evidence, not implementation correctness.
 
-Current checkpoint: plan authored; first Agy review pending. Implementation, actual collection, backups and live app links are not yet built. The user's immediate-teardown instruction applies when the reviewed branch and PR are on origin; do not discard unpushed plan/review evidence merely to satisfy a folder-cleanliness claim.
+Round 1: Agy requested explicit five-consumer verification; implemented in Phase 3. Driver exited 8 because the generated reviewer used Changes requested rather than the structural validator's PASS/FAIL/PARKED vocabulary. This is a failed QA run, not an approval. Round 2 includes the operator's replacement amendment, updated recon, and both human Verdict plus machine VERDICT fields. Implementation, actual collection, backups and live app links are not yet built. The user's immediate-teardown instruction applies when the reviewed branch and PR are on origin; do not discard unpushed plan/review evidence merely to satisfy a folder-cleanliness claim.
