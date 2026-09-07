@@ -10,13 +10,7 @@ description: >-
   "make this less ChatGPT-ish", or hands over writing samples and asks for new
   copy in that register. Also fires on /timbre. Produces a voice map, a draft,
   a blind review with a falsification control, and a receipt stating what the
-  pass did and did not achieve. Do NOT use this to defeat AI-text detectors,
-  to pass work off as a human's in an academic-integrity or legal-attestation
-  context, or to impersonate a named person without their consent — see
-  Non-negotiables. Do NOT fire for plain explanation of technical material
-  (that is /feynman), for shortening text that is already clear (a summary),
-  or when no voice samples exist and none can be obtained — say so instead of
-  inventing a voice from adjectives.
+  pass did and did not achieve. Do NOT use this to pass work off as a human's in an academic-integrity or legal-attestation context, or to impersonate a named person without their consent — see Non-negotiables. Do NOT fire for plain explanation of technical material (that is /feynman), for shortening text that is already clear (a summary), or when no voice samples exist and none can be obtained — say so instead of inventing a voice from adjectives.
 argument-hint: "[target artifact] [voice-sample paths or 'paste']"
 ---
 
@@ -24,10 +18,7 @@ argument-hint: "[target artifact] [voice-sample paths or 'paste']"
 
 Copy in a named voice, produced by three roles that are not allowed to grade each other's work.
 
-Nothing here needs to be installed. No `tick`, no Node, no Python, no shell script — the whole
-pipeline runs on one markdown thread file you name and three role-switches inside a session (or
-three sub-agents, if the host supports them). It borrows XYZ's *handoff discipline*, not its
-runtime.
+Nothing here needs to be installed. No `tick`, no Node, no Python, no shell script — the whole pipeline runs on one markdown thread file you name and three role-switches inside a session (or three sub-agents, if the host supports them). It borrows XYZ's *handoff discipline*, not its runtime.
 
 ## TL;DR of what this skill does
 
