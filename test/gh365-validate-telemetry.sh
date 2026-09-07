@@ -49,7 +49,12 @@ pass "A2: every line is valid JSON; suite events carry the full key set with int
 _sk="$(grep -c '"skip_lines":1' "$RT_FILE" || true)"
 [ "$_sk" = "1" ] || fail "A3: skip_lines did not count this suite's own SKIP line"
 pass "A3: skip_lines counted the SKIP line in the input log"
-unset XYZ_VALIDATE_TELEMETRY RT_FILE
+# GH-487: RT_SHARD comes from the OUTER validate.sh pool (validate.sh exports it to every worker)
+# and shards this suite's telemetry writes to $RT_FILE.w$BASHPID while A1–A3 read $RT_FILE — the
+# pool failure that passed every serial retry (rc=1, 345 bytes, A2, reproduced 2026-09-07). Same
+# self-defense as the unset RELAY_DRIVER_LOCKED in gh376. Do not widen: gh35-test-tiers.sh, the
+# only other runner-telemetry.sh consumer, passes under RT_SHARD=1 untouched.
+unset XYZ_VALIDATE_TELEMETRY RT_FILE RT_SHARD
 
 # ── B. end-to-end: REAL validate.sh in a fixture, real telemetry, stub suites ────────────────────
 mkfixture() {
