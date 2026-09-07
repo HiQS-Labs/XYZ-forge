@@ -21,7 +21,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # and list its suites in SUBSYSTEM_TESTS_<name>. Every listed suite must exist in test/ AND
 # be registered in validate.sh's TESTS array — test/gh35-test-tiers.sh enforces both, because
 # a registry naming a suite that never runs is a green lie (the releases-skill lesson).
-SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup"
+SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup skills-army-hq"
 SUBSYSTEM_TESTS_hq="hq.sh hq-park.sh hq-park-synthesis.sh hq-dispatch.sh hq-next.sh hq-locator.sh hq-hardening.sh hq-promote.sh hq-marathon-scan.sh hq-rollup.sh hq-marathon-live.sh roadmap-dashboard.sh gh238-hq-releases-mode.sh gh239-hq-status-releases-mode.sh"
 SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh"
 SUBSYSTEM_TESTS_telemetry="xyz-completion.sh gh358-lock-instrumentation.sh archive-telemetry.sh"
@@ -30,6 +30,7 @@ SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
 SUBSYSTEM_TESTS_pdda="pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh"
 SUBSYSTEM_TESTS_agent_chorus="agent-chorus.sh"
 SUBSYSTEM_TESTS_standup="gh77-standup-triage.sh"
+SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh"
 
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
@@ -41,6 +42,7 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
     utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh) printf '%s\n' pdda ;;
     skills/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
     skills/standup/*)                                                                      printf '%s\n' standup ;;
+    skills/skills-army-hq/*|test/test_deploy_skills.py|test/skills-army-hq.sh)             printf '%s\n' skills-army-hq ;;
   esac
 }
 
@@ -114,6 +116,8 @@ tier2_subsystems=""
 tier2_tests=""
 test_touched=""
 unmapped=""
+claimed_test_subs=""
+code_touched_subs=""
 path_count=0
 
 # Existence checks below are deliberately CWD-relative, not ROOT-relative: classification
@@ -145,10 +149,12 @@ while IFS= read -r path || [[ -n "$path" ]]; do
 
   # Docs surfaces (GH-35 Phase 1 widened the GH-509 list): evidence, transcripts, notes, and
   # governance levers (*.txt anywhere, decisions/, .pdda-* levers, .xyz-launch-artifact).
-  # skills/**/SKILL.md lands here via *.md — explanatory markdown is a docs change; the
-  # skill's CODE paths route through the subsystem registry instead.
+  # GH-487: TESTS-RESULTS receipts join the evidence side — a provenance.jsonl follow-up used
+  # to re-run the full gate as an unmapped path. skills/**/SKILL.md lands here via *.md —
+  # explanatory markdown is a docs change; the skill's CODE paths route through the subsystem
+  # registry instead.
   case "$path" in
-    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact)
+    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
       pdda_needed=true
       ;;
     *)
@@ -187,13 +193,28 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   # (GH-35 review guardrail — the contract must not be weakened unnoticed), while route stays
   # fast so CI keeps running the edited suite as a changed-area test (GH-509 behavior).
   case "$path" in
-    test/*) test_touched=true ;;
+    test/*)
+      # GH-487: a test path CLAIMED by a subsystem (listed in subsystem_of) is that subsystem's
+      # dedicated evidence; it escalates only when the same push touches none of that
+      # subsystem's code (co-touch resolved after the loop). A dedicated suite edited alone
+      # would otherwise judge itself — the weakened artifact reporting a green nothing in the
+      # push disagrees with. Unclaimed test paths keep the full GH-35 escalation.
+      _dedicated_sub="$(subsystem_of "$path" || true)"
+      if [ -n "$_dedicated_sub" ]; then
+        case " $claimed_test_subs " in
+          *" $_dedicated_sub "*) ;;
+          *) claimed_test_subs="${claimed_test_subs:+$claimed_test_subs }$_dedicated_sub" ;;
+        esac
+      else
+        test_touched=true
+      fi
+      ;;
   esac
 
   # Tier-2 membership: only explicitly registered subsystem paths qualify; every other
   # non-doc path fails closed to tier 3.
   case "$path" in
-    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact)
+    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
       : # docs — neither disqualifies tier 1 nor joins a subsystem
       ;;
     *)
@@ -202,6 +223,12 @@ while IFS= read -r path || [[ -n "$path" ]]; do
         case " $tier2_subsystems " in
           *" $sub "*) ;;
           *) tier2_subsystems="${tier2_subsystems:+$tier2_subsystems }$sub" ;;
+        esac
+        # GH-487: remember which subsystems this push touches through NON-test code — the
+        # co-touch half of the dedicated-test exemption.
+        case "$path" in
+          test/*) ;;
+          *) code_touched_subs="${code_touched_subs:+$code_touched_subs }$sub" ;;
         esac
       else
         unmapped="$path"
@@ -232,6 +259,15 @@ while IFS= read -r path || [[ -n "$path" ]]; do
       normalized_stem="$(printf '%s' "$stem" | tr '_' '-')"
       add_changed_test "$normalized_stem.sh"
       ;;
+  esac
+done
+
+# GH-487 co-touch resolution: a claimed dedicated test forces tier 3 when this push touches no
+# code of its subsystem — the edited artifact is not coverage of anything else in the push.
+for _s in $claimed_test_subs; do
+  case " $code_touched_subs " in
+    *" $_s "*) ;;
+    *) test_touched=true ;;
   esac
 done
 
