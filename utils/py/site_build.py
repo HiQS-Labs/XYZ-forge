@@ -41,6 +41,7 @@ NAV = [
     ("models-harnesses.html", "Models &amp; Harnesses"),
     ("roadmap.html", "Roadmap"),
     ("issues.html", "Issues"),
+    ("other-apps-tools.html", "Other Apps &amp; Tools"),
     ("contact.html", "Contact"),
 ]
 

@@ -1,4 +1,9 @@
+> **XYZ Forge policy: binding review rules for this repository’s PDDA dependency updates.**
+
 # PDDA sync review policy
+
+Maintained here from the [XYZ predecessor’s version](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/PDDA-SYNC-POLICY.md).
+PDDA itself is a separate project: [Hypercart-Dev-Tools/pdda](https://github.com/Hypercart-Dev-Tools/pdda).
 
 ## Purpose and scope
 

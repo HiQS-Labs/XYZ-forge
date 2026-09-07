@@ -44,22 +44,27 @@ curl -s https://openrouter.ai/api/v1/models | grep -i '"id":"<partial-name>'
 Find the exact `provider/slug[:variant]` id. Confirm it's the model the operator
 meant (check context length / pricing / provider if there's ambiguity).
 
-## Step 3 — write the alias back (always, once resolved via Step 2)
+## Step 3 — write the alias back (always, once resolved via Step 2) — the two-PR flow (GH-450)
 
-Append one line to `relay-automation/openrouter-model-aliases.yml`:
+**Do not append to `relay-automation/openrouter-model-aliases.yml`.** It is a
+generated file (rendered from the vendored HiQS-Labs/Model-catalog copy), and a
+hand-added line turns `python3 utils/py/model_catalog.py check` and
+`test/gh450-model-catalog-pin.sh` red. Instead:
 
-```
-<colloquial name>: <canonical-slug>
-```
+1. PR the row to [Model-catalog](https://github.com/HiQS-Labs/Model-catalog)
+   `data/catalog.json` (`target: "openrouter"`, `source` = first-party URL, bump
+   `version` + `updated`); the maintainer tags it.
+2. Sync PR here once the tag exists — exact recipe in `relay-automation/README.md`
+   → "Adding a new model alias" (`model_catalog.py pin` / `render` / `check`), plus
+   a hand-written assertion for the new row in `test/model-alias.sh`.
 
-Then add a matching assertion in `test/model-alias.sh` and run it to confirm:
+This is still the whole point of the skill: every miss should shrink the miss set
+for next time, not repeat the probe — it just lands upstream first.
 
-```bash
-bash test/model-alias.sh
-```
-
-This is the whole point of the skill: every miss should shrink the miss set for
-next time, not repeat the probe.
+Note: this skill calls `resolve-model-alias.sh` directly with the operator's raw
+input. An **exact `provider/slug` id never needs resolving** — use it as is. Feeding
+one to the raw resolver can hit its tier-4 substring fallback (the GH-450 seam guard
+in `utils/py/model_alias.py` protects the shims, not this manual path).
 
 ## Known adjacent issue — edit-format quirk (GH-118)
 

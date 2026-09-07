@@ -1,0 +1,32 @@
+{
+  "fixed_startup_targets_exist": [
+    "ROUTER.md",
+    "AGENTS.md",
+    "ROADMAP-DASHBOARD.md",
+    "PROJECT/PDDA.md",
+    "validate.sh",
+    "utils/pdda/pdda.sh"
+  ],
+  "first_lines": {
+    "PROJECT/CONSTITUTION.md": "> **PDDA governance-layer policy, maintained and adopted by XYZ Forge; XYZ product scope is defined in [Guiding Principles](../GUIDING-PRINCIPLES.md#purpose).**",
+    "PROJECT/DO-NOT-BUILD.md": "> **PDDA anti-scope, maintained by XYZ Forge; applies to the PDDA layer, not a prohibition on XYZ\u2019s coordination and execution product.**",
+    "PROJECT/PDDA-MODE-GUIDE.md": "> **XYZ Forge\u2019s locally maintained guidance for selecting PDDA\u2019s enforcement mode.**",
+    "PROJECT/PDDA-SYNC-POLICY.md": "> **XYZ Forge policy: binding review rules for this repository\u2019s PDDA dependency updates.**",
+    "PROJECT/PDDA.md": "# Project-Driven Doc Automation (PDDA)"
+  },
+  "implementation_unchanged_since_tested_candidate": "408794f0",
+  "implementation_sha256": {
+    ".pdda-mode": "346767fa182828bec2ee59cc3d7ea5bf9441ca0ee32e4a512dd0001d564c5c35",
+    "AGENTS.md": "fe8fff68e9cc87a6ac48779003cc52bd71ebf6ce9b8cad5e2b0a84c8de75813a",
+    "ARCHITECTURE.md": "5d58f8ccae72c8de5fcf5c61c94d32b36e255e20d3cabdcae2b2d1f6563213fb",
+    "GUIDING-PRINCIPLES.md": "be298c025c33d836f969fd238c5a7da91b15d7767b9281f9c619373ae55fbc2e",
+    "PROJECT/CONSTITUTION.md": "abad36156059e97b5286dc64577b54539f7bac41e2894f0ac9b127302ad8b487",
+    "PROJECT/DO-NOT-BUILD.md": "dc25ae5a01711545f05bf9721518fc9696ee4c758e9bd6895a7429031532f5ba",
+    "PROJECT/PDDA-MODE-GUIDE.md": "3272c3ef374dec8137a12b837483025bc85b97c6098312aed9ef1701eda53d0a",
+    "PROJECT/PDDA-SYNC-POLICY.md": "474bad01506cfd3cc0eb4ab36b9a1f9ac6846ff1e47be21abdc7b477a5172cfa",
+    "README.md": "f61df9682f7ac77ef70ffea8e452e89cfb15835673d4278540337f2ffc929822",
+    "ROUTER.md": "47c4329d6eafdc7bcf672ee7db01c776dbc605fb555165945101f807f6726dac",
+    "test/baselines/gh453-governance/check_links.py": "3d695057ee2ba155424a6882941ea99ef332b0beaa41bda4fee0f6f2d886e456"
+  },
+  "limitation": "PDDA.md upstream marker deferred as approved; no sync replay claimed."
+}

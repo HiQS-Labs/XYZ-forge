@@ -41,6 +41,20 @@ def resolve_model_slug(model_name, xyz_root, timeout_s=RESOLVE_TIMEOUT_S):
     if not model_name:
         return model_name
 
+    # GH-450 (Model-catalog Phase 1, relay QA r2 F2b): an exact-ID form never goes through the
+    # fuzzy table. The resolver's tier 4 is a squashed-substring fallback in BOTH directions, so
+    # after a pin correction (say `deepseek v4 pro` moves from `deepseek/deepseek-v4-pro` to
+    # `.../deepseek-v4-pro-2`) the OLD exact id still contains the row's squashed key and tier 4
+    # would silently redirect it to the new pin. The catalog's CI rule blocks that shape between
+    # rows in the data, but nothing in the data can see an id that has already left it — so the
+    # guard lives here, at the one seam every shim resolves through. An OpenRouter id is
+    # `provider/slug[:variant]`; a colloquial alias never contains a slash. `resolve-model-alias.sh`
+    # itself is untouched (test/model-alias.sh pins what its raw tier 4 does, on purpose).
+    # Known exception: the /open-router skill (skills/open-router/SKILL.md) calls the raw resolver
+    # directly with operator input; it documents "an exact id never needs resolving" instead.
+    if "/" in model_name:
+        return model_name
+
     script = resolver_path(xyz_root)
     if not os.path.isfile(script):
         return model_name

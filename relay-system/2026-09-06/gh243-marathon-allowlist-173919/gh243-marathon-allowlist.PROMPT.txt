@@ -1,0 +1,109 @@
+# Consult: QA a two-line change to a git pre-push guard
+
+You are reviewing a plan, not writing code. Be adversarial. The two questions I most want attacked
+are marked **ATTACK 1** and **ATTACK 2** at the end. Read the real files in this worktree — do not
+take my summaries on trust.
+
+Relevant files, all present in your worktree:
+
+- `githooks/dashboard-staleness-guard.sh` — the guard. The block in question is at lines 147-158.
+- `test/gh243-dashboard-staleness-guard.sh` — its suite; tests 7 and 8 are the matched pair from GH-315.
+- `utils/roadmap-dashboard.sh` — the renderer whose staleness the guard protects.
+- `utils/py/releases_app.py` — the ledger CLI; `roadmap list --json` is the renderer's only data input.
+
+## What "good" looks like for this review
+
+A verdict of **Approve**, **Approve with changes**, or **Changes requested**, followed by findings
+each labelled Blocker / Should / Nit. A finding must cite a file:line or a command whose output
+would settle it. "Consider being careful about X" with no anchor is not a finding. If you believe
+the plan is correct, say so plainly rather than manufacturing objections — but if the safety
+argument has a hole, that hole is the most valuable thing you can hand back.
+
+## Context: the defect
+
+`dashboard-staleness-guard.sh` refuses a push whose commit range writes `releases.sql`/`releases.db`
+without also modifying `ROADMAP-DASHBOARD.md`. GH-243 built that for one cause: a parked roadmap row
+silently dropped by the renderer because of malformed `raw_text`. The guard detects the situation by
+regenerating the dashboard and checking for drift.
+
+GH-315 (closed 2026-08-29) found a second, legitimate reason a ledger write produces no dashboard
+diff: the write targets a table the dashboard does not render at all. Its fix was an allowlist of
+literal INSERT prefixes — `jog_queue`, `op_receipts`, and the `settings` generation counter — with
+everything else falling through to the refusal.
+
+Today a `releases marathon add --tracking-issue .../issues/462` write was refused by that same
+branch. The marathon write's dump fan-out is `marathons` + `issue_refs` + `op_receipts` + the
+generation counter. The last two are allowlisted; the first two are not, so the range hits the
+catch-all and gets the "a parked row was dropped by the renderer" message — which is false. Nothing
+was dropped. This is GH-315's defect recurring with different table names.
+
+Reproduction: the push of merge commit `196424fb` was refused 2 seconds after start (the guard runs
+before the test suite). `bash utils/roadmap-dashboard.sh` emits no warnings and produces no diff.
+
+## The proposed fix
+
+Two case arms added to the existing GH-315 classifier, above the catch-all:
+
+```bash
+    '-'INSERT\ INTO\ marathons*|'+'INSERT\ INTO\ marathons*) ;;
+    '-'INSERT\ INTO\ issue_refs*|'+'INSERT\ INTO\ issue_refs*) ;;
+```
+
+Plus a new test 7b in `test/gh243-dashboard-staleness-guard.sh`, mirroring test 7 exactly but with a
+marathon fan-out as the payload, asserting rc 0. Test 8 (a `roadmap_items` write in the same shape
+still refuses) is left untouched as the red control. Negative control: revert the two arms, confirm
+7b fails and 8 still passes.
+
+## ATTACK 1 — the safety proof
+
+The governing rule in this repo is **never weaken a check to make a gate pass.** Allowlisting these
+two tables is only legitimate if they genuinely have no dashboard projection. My evidence:
+
+1. `utils/roadmap-dashboard.sh` contains no SQL; its only data input is
+   `releases_app.py roadmap list --json` (line 59).
+2. That command returns 132 rows whose `global_id` values carry exactly one prefix, `rmi-`. No
+   `mar-`, no `ref-`. The field set is the `roadmap_items` column list: `doc_path, gh_number,
+   global_id, issue_url, position, raw_text, section, status_marker, title`.
+3. The substrings `marathon` and `ref-` do appear in that JSON but only inside `raw_text`/`title` —
+   prose in issue titles, e.g. "GH-202 · wave_reconcile aborts on marathon-plan exit 5".
+
+**Attack this.** Specifically:
+
+- Is there any path by which a `marathons` or `issue_refs` row reaches `ROADMAP-DASHBOARD.md`?
+  Trace `roadmap list` in `releases_app.py` yourself. Does it join, subquery, or resolve
+  `issue_refs` to populate `issue_url`? A row reachable as a *value* through a join is still a
+  projection, and my evidence (3) would not catch it.
+- Does anything else the guard protects — not just `ROADMAP-DASHBOARD.md` — consume these tables?
+- Is empirical output from one database a sound basis at all, given the current DB may simply have
+  no marathon whose issue also sits in the roadmap? What input would falsify my claim?
+
+## ATTACK 2 — allowlist vs. inverting the check
+
+The allowlist has now gone short twice: jog in GH-315, marathon today. The obvious alternative is to
+invert it — refuse only when a `roadmap_items` line changed, one arm replacing four:
+
+```bash
+    '-'INSERT\ INTO\ roadmap_items*|'+'INSERT\ INTO\ roadmap_items*) non_jog_data=1; break ;;
+```
+
+I **rejected** this on the grounds that the allowlist fails closed (an unclassified table refuses
+and forces a human to look) while the inverted denylist fails open (a future second projected table
+would ship stale, silently, with the guard reporting success).
+
+**Attack this too.** Is my fail-closed/fail-open framing right? Consider that the current allowlist
+has produced two false refusals and zero true catches in its lifetime — does a guard that cries wolf
+twice and never catches anything actually fail closed in any useful sense, or does it just train
+people to reach for `git push --no-verify`, which skips the entire test suite? Is there a third
+option better than both — for example, having the guard ask `releases_app.py` which tables the
+renderer projects, at the cost of a git hook depending on the app at push time? Name the option you
+would ship and why.
+
+## Also worth your attention
+
+- `issue_refs` is reachable from `roadmap_items.issue_url` as a value. Is allowlisting it separable
+  from `marathons`, or should only `marathons` be added?
+- GH-315 explicitly recorded that its classifier does not match non-INSERT dump grammars. Is the
+  literal `INSERT INTO <table> ` prefix match still the right granularity, or does adding a fourth
+  and fifth entry make the fragility worse?
+- Is a two-line guard change the right scope at all, or should this be filed and the marathon write
+  simply parked out of the current push?
