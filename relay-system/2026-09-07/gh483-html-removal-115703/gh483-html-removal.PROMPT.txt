@@ -1,0 +1,69 @@
+# Adjudicate PR #483: delete LEADERBOARD.html and RELEASES-PREVIEW.html from this repo
+
+You are reviewing a proposed deletion in THIS repository, at the working tree you are running in.
+**Read the real files.** Do not answer from memory, from a cached copy of this repo, or from any
+scratch directory outside this worktree. If a file you expect is absent here, say so and treat this
+worktree as authoritative — it is. Cite `file:line` for every load-bearing claim, and name the
+command you ran.
+
+## The change
+
+PR #483 deletes exactly two files from the repo root and nothing else — 1,618 deletions, zero
+insertions:
+
+- `LEADERBOARD.html`
+- `RELEASES-PREVIEW.html`
+
+No generator is removed. No consumer is edited. No test is changed. The generators
+(`utils/timeline/export_timeline.py --leaderboard` and `--preview`) stay.
+
+Note: those two files still exist in this worktree — you are checking whether deleting them is safe,
+not observing an already-applied change.
+
+## The claim I want attacked
+
+**"Both files are pure adoption-by-presence: every consumer regenerates them only when the file
+already exists at the repo root, so deleting the file simply makes every consumer stop refreshing
+it."**
+
+The evidence I am relying on:
+
+- `utils/py/express.py:202-207` — `paths.update(p for p in RELEASES_PROJECTIONS if os.path.lexists(...))`
+- `utils/py/releases_app.py:1170-1201` — the post-write refresh
+- `utils/releases-merge-resolve.sh:196-214` — the merge-resolution refresh
+
+## Questions — answer each
+
+1. **Is the presence-gating claim actually true for BOTH files, on EVERY write path?** Enumerate
+   every place either filename appears (`git grep -n 'LEADERBOARD.html\|RELEASES-PREVIEW.html'`) and
+   say, for each, whether it is presence-gated, unconditional, or something else. Name any path that
+   would ERROR rather than no-op when the file is absent. I care most about a path I have not
+   listed above.
+
+2. **Do any tests break?** Four suites mention these filenames: `test/gh103-timeline-exporter.sh`,
+   `test/gh153-releases-sidebar-rollup.sh`, `test/gh267-express-skill.sh`,
+   `test/gh57-live-merge-resolve.sh`. Read them. Does any of them assert that either committed
+   artifact EXISTS at the repo root, as opposed to exercising the exporter or the presence gate?
+
+3. **Is there a route to these files I missed?** Check governance docs (`ROUTER.md`, `AGENTS.md`,
+   `GUIDING-PRINCIPLES.md`, `README.md`), skills (`skills/**/SKILL.md`), CI workflows
+   (`.github/workflows/`), the vendoring path (`relay-automation/xyz-vendor.sh`,
+   `relay-automation/xyz-sync.sh`), and `utils/py/router_audit.py`. Does anything require these two
+   HTML files to be present or tracked? Does anything PUBLISH or SERVE them?
+
+4. **Is the asymmetry justified?** The same #474 work is deliberately NOT removing the two rendered
+   MARKDOWN views (`ROADMAP-DASHBOARD.md`, `LEADERBOARD.md`) — those stay tracked, because
+   `AGENTS.md:139-143` and `GUIDING-PRINCIPLES.md:77` route to the dashboard with no CLI
+   alternative, and `utils/py/router_audit.py` is a hard gate (run by
+   `test/gh353-vendored-router-audit.sh`) requiring `ROUTER.md` to declare the dashboard as the
+   generated view. Verify those three citations. Is "the HTML has no guard, no governance route and
+   no router_audit clause" a real distinction in this tree, or am I drawing a line that is not
+   there?
+
+5. **Rollback.** The PR claims rollback is "run the generator, commit the file, and every consumer
+   resumes refreshing it." Is that complete and testable, or is something harder than stated?
+
+6. **Should this ship at all?** Pick one: SHIP, SHIP WITH CHANGES (name them), or DO NOT SHIP (say
+   what would change your mind). A balanced survey is a failed answer.
+
+Grade findings [Blocker] / [Should] / [Nit]. End with a one-line verdict.

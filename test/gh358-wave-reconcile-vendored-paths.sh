@@ -106,8 +106,16 @@ cat > "$REPO/manifest.json" <<'MANIFESTEOF'
 }
 MANIFESTEOF
 
+# GH-474: the reconciler runs export_timeline.py --preview only when RELEASES-PREVIEW.html is
+# already ADOPTED (opt-in by presence, like every other consumer of that view). This suite is
+# about WHERE the five harness tools resolve from, not about whether the preview step is
+# unconditional — so the fixture has to adopt the view, or the export_timeline resolution
+# assertion below silently tests a step that never ran.
+printf '<html>fixture preview</html>\n' > "$REPO/RELEASES-PREVIEW.html"
+
 git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: vendored layout, stubs, manifest"
 require_fixture_file "$REPO/manifest.json" "manifest"
+require_fixture_file "$REPO/RELEASES-PREVIEW.html" "adopted preview (so the --preview step runs)"
 
 out="$(python3 "$REPO/.xyz/utils/py/wave_reconcile.py" --root "$REPO" --pr 4581 \
         --offline "$REPO/manifest.json" --skip-pull 2>&1)"; rc=$?

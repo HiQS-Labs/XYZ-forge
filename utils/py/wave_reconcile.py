@@ -767,9 +767,25 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
         ("releases check", check_cmd),
     ]
     if not dry_run:
+        # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence. Every other
+        # consumer already treats it that way: releases_app.refresh_preview() skips it when
+        # absent (utils/py/releases_app.py:1170-1201), the merge resolver regenerates only what
+        # is already there (utils/releases-merge-resolve.sh:160-172), express.py snapshots it
+        # under os.path.lexists (utils/py/express.py:202-207) and jog_run.py stages it the same
+        # way. This step was the ONE consumer that regenerated it unconditionally, so a repo
+        # that had deliberately un-adopted the view got it silently recreated on the next
+        # reconcile — the deletion would not stick.
+        #
+        # ROADMAP-DASHBOARD.md stays unconditional on purpose, and the asymmetry is the point:
+        # it is NOT adopted-by-presence. It is required — githooks/dashboard-staleness-guard.sh
+        # refuses a push without it and utils/py/router_audit.py gates ROUTER.md's declaration
+        # of it. Regenerating a required view is correct; resurrecting an un-adopted one is not.
+        if os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
+            steps.append(("export_timeline.py --preview", timeline_cmd))
+        else:
+            log("  (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)")
         steps.extend(
             [
-                ("export_timeline.py --preview", timeline_cmd),
                 ("roadmap-dashboard.sh", dash_cmd),
                 ("marathon-plan.sh", plan_cmd),
             ]

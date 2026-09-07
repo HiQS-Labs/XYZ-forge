@@ -1,0 +1,12 @@
+Review the proposed new skill at `skills/unstuck/SKILL.md`, its boundary decision in
+`PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md`, and the three-line handoff added to
+`skills/workhorse/SKILL.md`.
+
+Answer one binary architectural question: should this mid-flight recovery behavior remain a
+separate `/unstuck` skill with a narrow `/workhorse` handoff, or should it be folded into
+`/workhorse` itself?
+
+Good means: it reliably interrupts overengineering and review-loop churn, restores movement toward
+the original goal, does not dismiss real correctness/safety blockers, and does not become another
+heavy process that keeps the agent stuck. Identify any blocking defect in the proposed five-rung
+contract. Advisory only; do not edit files.
