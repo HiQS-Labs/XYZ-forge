@@ -172,7 +172,15 @@ for (const heading of ledgerSections) sections.set(heading, []);
 
 let inLedger = false;
 let currentSection = null;
+let unknownSection = null;
 const droppedRows = [];
+// GH-474: rows under a heading this renderer does not recognise. They parse fine — they are
+// simply never rendered, because `sections` has no bucket for their heading. That makes them
+// INVISIBLE in the view while the ledger still carries them, and invisible without a byte
+// difference: the row was never in the output, so a fresh render still matches the committed
+// file. `releases roadmap update/move --section` writes the section verbatim with no
+// validation (utils/py/releases_app.py), so one typo is all it takes.
+const unknownSectionRows = [];
 
 for (let i = 0; i < lines.length; i++) {
   const line = lines[i];
@@ -187,11 +195,32 @@ for (let i = 0; i < lines.length; i++) {
   const sectionMatch = line.match(/^###\s+(.+?)\s*$/);
   if (sectionMatch) {
     const heading = sectionMatch[1].trim();
-    currentSection = sections.has(heading) ? heading : null;
+    if (sections.has(heading)) {
+      currentSection = heading;
+      unknownSection = null;
+    } else {
+      currentSection = null;
+      unknownSection = heading;
+    }
     continue;
   }
 
-  if (!currentSection) continue;
+  if (!currentSection) {
+    // GH-474: silence here used to be indistinguishable from "there was nothing to render".
+    // Report the rows an unrecognised heading swallowed, so a consumer reading stderr (the
+    // push guard) can tell "rendered everything" apart from "rendered everything I recognised".
+    // Only list items are counted: a bullet's continuation lines ride with their bullet.
+    if (unknownSection && /^\s*[-*+]\s+/.test(line)) {
+      const t = line.trim();
+      const m = t.match(/(?:GH-?|#)(\d+)/i);
+      unknownSectionRows.push({
+        section: unknownSection,
+        id: m ? `#${m[1]}` : JSON.stringify(t.length > 30 ? t.slice(0, 30) + "..." : t),
+        line: t,
+      });
+    }
+    continue;
+  }
 
   const trimmed = line.trim();
   if (!trimmed || trimmed.startsWith("<!--") || trimmed.startsWith("#")) continue;
@@ -217,6 +246,18 @@ for (let i = 0; i < lines.length; i++) {
 if (droppedRows.length > 0) {
   const ids = droppedRows.map((d) => d.id).join(", ");
   process.stderr.write(`roadmap-dashboard: warning: dropped ${droppedRows.length} unparseable row(s): ${ids}\n`);
+}
+
+// GH-474: a SECOND way to go missing, reported separately because the cause and the fix differ —
+// the row is well-formed, its heading is not one this renderer renders. Both lines start with the
+// same "warning: dropped " prefix on purpose: githooks/dashboard-staleness-guard.sh refuses on
+// that prefix, so a new omission mode is caught by the existing guard without touching it.
+if (unknownSectionRows.length > 0) {
+  const ids = unknownSectionRows.map((d) => d.id).join(", ");
+  const heads = [...new Set(unknownSectionRows.map((d) => d.section))].map((s) => JSON.stringify(s)).join(", ");
+  process.stderr.write(
+    `roadmap-dashboard: warning: dropped ${unknownSectionRows.length} row(s) under unrecognised section heading(s) ${heads}: ${ids}\n`
+  );
 }
 
 const output = [];

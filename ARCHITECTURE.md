@@ -5,7 +5,7 @@ created: 2026-06-22
 updated: 2026-09-07
 owner: noelsaw
 doc_type: architecture
-summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work.
+summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap view pipeline and the push guard that keeps the committed dashboard honest.
 verified_against:
   - relay-automation/relay-drive.sh
   - relay-automation/relay-turn-lib.sh
@@ -14,6 +14,8 @@ verified_against:
   - relay-automation/agy-turn.sh
   - relay-automation/poll.sh
   - bin/tick
+  - githooks/dashboard-staleness-guard.sh
+  - utils/roadmap-dashboard.sh
   - utils/py/wave_reconcile.py
   - utils/releases-merge-resolve.sh
 ---
@@ -449,6 +451,83 @@ either one silently resurrected a view somebody had deliberately removed:
 
 The lesson generalises past these two files: **an adoption rule enforced by four consumers out of
 six is not an adoption rule.** A view is only removable if every write path agrees it is optional.
+## The Roadmap View Pipeline and its Push Guard
+
+`releases.db` is the roadmap's source of truth; `ROADMAP-DASHBOARD.md` is a committed *derivation*
+of it. Two artifacts that must agree, updated by two different commands, is a drift hazard — so a
+push guard enforces the agreement. This is the shape of that loop and the one question it turns on.
+
+```mermaid
+flowchart TD
+    subgraph truth["Source of truth"]
+        DB[("releases.db<br/>roadmap_items")]
+        SQL["releases.sql<br/>GID-keyed dump"]
+        DB -. "dump at merge boundaries" .-> SQL
+    end
+
+    subgraph render["Renderer — utils/roadmap-dashboard.sh"]
+        JSON["releases_app.py roadmap list --json<br/>flat SELECT, roadmap_items only"]
+        NODE["node render<br/>parses each row's raw_text"]
+        DROP{{"row parses as<br/>- **GH-N · title** ?"}}
+        WARN["stderr: warning: dropped N<br/>unparseable row(s): ids"]
+        OUT["rendered view<br/>(tmp)"]
+        JSON --> NODE --> DROP
+        DROP -- no --> WARN
+        DROP -- yes --> OUT
+    end
+
+    DB --> JSON
+    VIEW["ROADMAP-DASHBOARD.md<br/>committed derivation"]
+    OUT -- "default mode: write" --> VIEW
+    OUT -- "--check: compare only" --> CMP{{"matches the<br/>committed file?"}}
+
+    subgraph guard["Push guard — githooks/dashboard-staleness-guard.sh"]
+        RANGE{{"range writes the ledger<br/>but not the view?"}}
+        PROJ["git archive local_sha into a<br/>private tmp projection, render there"]
+        DRIFT{{"--check exit"}}
+        SIGNAL{{"did stderr name<br/>a dropped row?"}}
+        REFUSE1["REFUSE: regenerate the dashboard"]
+        REFUSE2["REFUSE: fix the named row<br/>(releases roadmap update)"]
+        ALLOW["allow the push"]
+        RANGE -- no --> ALLOW
+        RANGE -- yes --> PROJ --> DRIFT
+        DRIFT -- "non-zero: drift" --> REFUSE1
+        DRIFT -- "0: in sync" --> SIGNAL
+        SIGNAL -- yes --> REFUSE2
+        SIGNAL -- no --> ALLOW
+    end
+
+    PUSH(["git push"]) --> HOOK["githooks/pre-push"] --> RANGE
+    PROJ -.-> JSON
+    CMP -.-> DRIFT
+    WARN -.-> SIGNAL
+
+    style WARN fill:#fff3cd,stroke:#997404
+    style SIGNAL fill:#fff3cd,stroke:#997404
+```
+
+**The one non-obvious edge is the dashed `WARN → SIGNAL` line, and it is the whole design.** A
+dropped row is invisible to a byte comparison: it renders to nothing, so the committed file still
+matches a fresh render and `--check` exits 0 while the ledger row is missing from the view. Drift
+detection alone cannot see it.
+
+`--check` runs the full render *before* it reaches its mode branch, so it emits the dropped-row
+warning in both modes. The guard keeps that stderr (`2>&1 >/dev/null` — order matters) and reads it.
+Before GH-474 the guard discarded it and inferred the same fact from the *table names* in the
+`releases.sql` diff, which meant a hand-maintained allowlist of write shapes; it went short twice
+(GH-315 for `jog_queue`, then `marathons`/`issue_refs`) and eight dump tables were still
+unclassified, each a latent false refusal. Reading the renderer's own report cannot go short,
+because an unknown table is no longer a question the guard asks.
+
+Two properties worth keeping if this is ever touched again:
+
+- **The projection is commit-pinned.** The guard renders from `git archive <local_sha>` in a private
+  temp root, never the working tree, so uncommitted edits cannot change the verdict. It fails
+  *closed*: a projection that cannot run the renderer is treated as drift.
+- **`--check`'s exit contract is load-bearing beyond the guard.** Four test suites also treat
+  non-zero as failure (`gh269-roadmap-retired`, `gh280-jog-marathon-adapter` twice,
+  `gh57-live-merge-resolve`, `roadmap-dashboard`). That is why the dropped-row signal travels on
+  stderr rather than as a new exit code.
 
 ## Non-Claims
 

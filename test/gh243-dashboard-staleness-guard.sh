@@ -63,10 +63,11 @@ rc=0; bash "$GUARD" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "expected usage exit 2, got $rc"
 
 
-# 7. GH-315: jog-queue-only ledger write, renderer in-sync, no dashboard change -> ALLOW
-# (jog rows have no dashboard projection; a no-diff regen is the expected outcome, not a
-# dropped-row symptom). The fixture needs a renderer whose --check passes to reach the
-# guard's no-drift branch at all.
+# 7. GH-474: a ledger write the renderer renders cleanly -> ALLOW, whatever table it touched.
+# The guard no longer classifies by table name; it asks the renderer whether it dropped a row.
+# `jog_queue` is the GH-315 shape that first exposed the old allowlist going short. The fixture
+# needs a renderer whose --check passes to reach the guard's no-drift branch at all; this stub
+# exits 0 and says nothing on stderr, which is exactly "rendered fine, dropped nothing".
 mkdir -p "$R/utils"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$R/utils/roadmap-dashboard.sh"
 chmod +x "$R/utils/roadmap-dashboard.sh"
@@ -86,42 +87,61 @@ cd "$root"
 bash "$GUARD" "$R" "$JOG_ONLY" "$RENDERED" \
   || fail "jog-queue-only ledger write must pass the no-drift branch (GH-315), got $?"
 
-# 7b. Same shape, marathon fan-out: `releases marathon add` writes marathons + issue_refs
-# alongside the op_receipts/generation rows test 7 already covers, and neither new table is
-# projected by the renderer -> ALLOW. issue_refs is included because `marathon add` creates
-# that row itself whenever the tracking URL is new, so a marathons-only allowance would still
-# refuse the common case.
-#
-# WHAT THIS PROVES, EXACTLY: that the shell classifier accepts the canonical marathon dump
-# lines. It does NOT prove the two tables lack a dashboard projection — the fixture renderer
-# above is a stub that always exits 0, so no real rendering happens here. That claim rests on
-# `roadmap list` being a flat SELECT * FROM roadmap_items (utils/py/releases_app.py:3554) with
-# issue_url a denormalized TEXT column, not a foreign key (:605). See #474.
+# 7b. THE REGRESSION THIS CHANGE FIXES. Every one of these tables hit the old allowlist's
+# catch-all and produced a FALSE refusal — `releases add` alone tripped it. They are not
+# enumerated anywhere in the guard any more, which is the point: the guard reads the renderer's
+# report, so a table it has never heard of cannot make it go short.
 cd "$R"
 { echo "-- dump v3b"
   echo "INSERT INTO settings(key, value) VALUES('generation', '10');"
-  echo "INSERT INTO issue_refs(global_id, url) VALUES('ref-1', 'https://example.invalid/1');"
-  echo "INSERT INTO marathons(global_id, tracking_ref_gid) VALUES('mar-1', 'ref-1');"
-  echo "INSERT INTO op_receipts(op, target_gid) VALUES('marathon-add', 'mar-1');"
+  echo "INSERT INTO releases(global_id, name) VALUES('rel-1', 'v9');"
+  echo "INSERT INTO repos(repo_id, name) VALUES(2, 'other');"
+  echo "INSERT INTO manifest_items(global_id) VALUES('mi-1');"
+  echo "INSERT INTO doc_lines(global_id) VALUES('dl-1');"
+  echo "INSERT INTO schema_migrations(version) VALUES('077');"
+  echo "INSERT INTO totally_new_table_v9(global_id) VALUES('nt-1');"
 } > releases.sql
 git add releases.sql
-git -c user.email=t@t -c user.name=t commit -q -m "marathon-only ledger write"
-MARATHON_ONLY="$(git rev-parse HEAD)"
+git -c user.email=t@t -c user.name=t commit -q -m "previously-unclassified ledger write"
+UNCLASSIFIED="$(git rev-parse HEAD)"
 cd "$root"
-bash "$GUARD" "$R" "$MARATHON_ONLY" "$RENDERED" \
-  || fail "marathon-only ledger write must pass the no-drift branch, got $?"
+bash "$GUARD" "$R" "$UNCLASSIFIED" "$RENDERED" \
+  || fail "GH-474: a clean render must allow any table, including ones no allowlist knows, got $?"
 
-# 8. Control: a roadmap_items data change in the same no-drift shape still refuses.
-# This is the red control for 7 AND 7b — it is what proves the allowlist opened the gate for
-# unprojected tables only, and not for everything.
+# 8. RED CONTROL for 7 and 7b. Same no-drift shape, same tables 7b just allowed — but now the
+# renderer reports a dropped row. The guard must refuse AND name the row it was told about.
+# This is what proves 7/7b pass because the renderer said "clean", not because the arm is inert.
 cd "$R"
-{ echo "-- dump v4"; echo "INSERT INTO roadmap_items VALUES('r1');"; } > releases.sql
-git add releases.sql
-git -c user.email=t@t -c user.name=t commit -q -m "roadmap-only ledger write"
-ROADMAP_ONLY="$(git rev-parse HEAD)"
+cat > utils/roadmap-dashboard.sh <<'EOFSTUB'
+#!/usr/bin/env bash
+echo "roadmap-dashboard: warning: dropped 1 unparseable row(s): #256" >&2
+exit 0
+EOFSTUB
+chmod +x utils/roadmap-dashboard.sh
+git add utils/roadmap-dashboard.sh
+git -c user.email=t@t -c user.name=t commit -q -m "renderer drops a row"
+DROPPED="$(git rev-parse HEAD)"
 cd "$root"
-rc=0; out="$(bash "$GUARD" "$R" "$ROADMAP_ONLY" "$RENDERED" 2>&1)" || rc=$?
-[ "$rc" -eq 1 ] || fail "expected no-drift refusal (1) for non-jog data, got $rc"
+rc=0; out="$(bash "$GUARD" "$R" "$DROPPED" "$RENDERED" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "expected no-drift refusal (1) when the renderer drops a row, got $rc"
 grep -q "NO diff" <<<"$out" || fail "expected the no-diff refusal message"
+grep -q "dropped 1 unparseable row(s): #256" <<<"$out" \
+  || fail "GH-474: refusal must NAME the dropped row the renderer reported, got: $out"
+
+# 8b. Negative control on the signal itself: renderer exits 0 with unrelated stderr chatter ->
+# ALLOW. Guards against matching any stderr output rather than the dropped-row warning.
+cd "$R"
+cat > utils/roadmap-dashboard.sh <<'EOFSTUB2'
+#!/usr/bin/env bash
+echo "roadmap-dashboard: note: rendered 41 rows" >&2
+exit 0
+EOFSTUB2
+chmod +x utils/roadmap-dashboard.sh
+git add utils/roadmap-dashboard.sh
+git -c user.email=t@t -c user.name=t commit -q -m "renderer chatters but drops nothing"
+CHATTY="$(git rev-parse HEAD)"
+cd "$root"
+bash "$GUARD" "$R" "$CHATTY" "$RENDERED" \
+  || fail "unrelated renderer stderr must not be read as a dropped row, got $?"
 
 echo "== GH-243 ALL PASSED =="

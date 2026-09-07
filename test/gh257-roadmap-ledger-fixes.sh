@@ -209,6 +209,51 @@ case "$err_out" in
 esac
 
 # -----------------------------------------------------------------------------
+# Case 10b (GH-474): a WELL-FORMED row under an UNRECOGNISED section heading is also
+# invisible, and must also be reported.
+#
+# This is the second way a roadmap row goes missing, and it is nastier than a malformed one:
+# the row parses perfectly. The renderer simply has no bucket for its heading, so it is never
+# emitted — and because it was never emitted, a fresh render still matches the committed file
+# byte-for-byte. Drift detection cannot see it and, before this case, neither could stderr.
+#
+# It is reachable from the public CLI: `roadmap update --section` / `roadmap move --section`
+# write the section verbatim with no validation, so one typo hides a row indefinitely.
+UNSEC_SRC="$WORK/mock_unknown_section.md"
+cat > "$UNSEC_SRC" <<'EOFUNSEC'
+# ROADMAP
+## Ledger
+### Queue / parked intake
+- **GH-1 · valid row in a known section** 🟢 — [doc](doc.md)
+### Backlog
+- **GH-4741 · well-formed row nobody will ever see** 🆕
+- **GH-4742 · second invisible row** 🆕
+  continuation line that rides with its bullet
+EOFUNSEC
+
+UNSEC_OUT="$WORK/mock_unknown_section_out.md"
+unsec_err="$(ROADMAP_DASHBOARD_SOURCE="$UNSEC_SRC" ROADMAP_DASHBOARD_OUTPUT="$UNSEC_OUT" bash "$RENDERER" 2>&1 >/dev/null)" || true
+case "$unsec_err" in
+  *"warning: dropped 2 row(s) under unrecognised section heading(s) \"Backlog\": #4741, #4742"*)
+    pass "GH-474: renderer names rows hidden by an unrecognised section heading (continuation not double-counted)"
+    ;;
+  *) fail "expected an unrecognised-section warning naming #4741 and #4742, got: $unsec_err" ;;
+esac
+# The prefix matters as much as the content: githooks/dashboard-staleness-guard.sh refuses on
+# "warning: dropped ", so this new omission mode reaches the guard without the guard changing.
+case "$unsec_err" in
+  *"roadmap-dashboard: warning: dropped "*) pass "GH-474: the new warning carries the prefix the push guard matches on" ;;
+  *) fail "unrecognised-section warning must share the 'warning: dropped ' prefix, got: $unsec_err" ;;
+esac
+# Red control on the finding itself: the hidden rows really are absent from the render, and the
+# known-section row really is present — so this is reporting an omission, not inventing one.
+grep -q "GH-4741" "$UNSEC_OUT" && fail "GH-4741 should NOT be rendered — the fixture's premise is wrong" \
+  || pass "GH-474: the unrecognised-section rows are genuinely absent from the rendered view"
+grep -q "valid row in a known section" "$UNSEC_OUT" \
+  && pass "GH-474: a known-section row alongside them still renders (the warning is not a blanket failure)" \
+  || fail "known-section row vanished too — the fix over-reached"
+
+# -----------------------------------------------------------------------------
 # Case 11: End-to-end historical reproduction of malformed row diagnosis & fix
 # -----------------------------------------------------------------------------
 cd "$R"
@@ -252,6 +297,17 @@ case "$guard_out" in
     pass "end-to-end: staleness guard accurately diagnosed no-diff dropped row (even with dirty working tree)"
     ;;
   *) fail "expected no-diff diagnostic output from guard, got: $guard_out" ;;
+esac
+# GH-474: the guard reads the RENDERER's dropped-row warning rather than inferring it from table
+# names, and the renderer here is the real one, reached through the guard's `git archive`
+# projection. Asserting the row id proves the signal survives that projection — if it did not,
+# the guard would fall through to "allow" and this case would go red instead of quietly passing
+# for the wrong reason. This is the runnable check the #474 recon listed as its one unknown.
+case "$guard_out" in
+  *"dropped 1 unparseable row(s): #256"*)
+    pass "GH-474: refusal names the dropped row, so the renderer's warning survived the projection"
+    ;;
+  *) fail "expected the guard to name dropped row #256 from the renderer's own stderr, got: $guard_out" ;;
 esac
 [ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after no-diff refusal"
 pass "guard cleaned up temporary root after no-diff refusal"
@@ -410,5 +466,60 @@ cd "$root"
 TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$REMEDIATED_COMMIT" "$BASE_COMMIT"
 [ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after clean pass"
 pass "end-to-end: staleness guard passes after roadmap update and leaves 0 temporary artifacts"
+
+# -----------------------------------------------------------------------------
+# Case 12 (GH-474): END-TO-END — a row hidden by an unrecognised section is REFUSED by the
+# push guard, through the real renderer and the real git-archive projection.
+#
+# WHY THIS CASE EXISTS. GH-474 replaced the guard's table-name classifier with "ask the
+# renderer". A cross-model review then falsified the premise behind that: "the renderer said
+# nothing" did NOT mean "every row rendered", because a row under an unrecognised heading was
+# skipped in silence. That was a FAIL-OPEN regression — the old classifier's catch-all refused
+# this exact range, and the first version of the new guard allowed it.
+#
+# Case 10b proves the renderer now reports it. This proves the whole chain does: real ledger
+# write -> real renderer -> git archive projection -> guard refusal naming the row.
+cd "$R"
+git checkout -q "$REMEDIATED_COMMIT"
+CLEAN_BASE="$(git rev-parse HEAD)"
+
+# The hazard is a row that lands in an unrecognised section and was NEVER visible. (MOVING an
+# already-rendered row out of a known section does change the dashboard, so ordinary drift
+# detection catches that one — measured while writing this case, and the reason it is worded
+# this way.) Both steps run before a single regeneration, so the row never appears in the view.
+# Note --section is a PUBLIC CLI path that accepts any string: one typo is the whole bug.
+app --root "$R" roadmap add --issue-num 4741 \
+  --issue-url "https://github.com/org/repo/issues/4741" --title "hidden row" \
+  --created "2026-09-07" --doc-path "PROJECT/1-INBOX/GH-255-test.md" \
+  --raw-text "- **GH-4741 · well-formed row nobody will ever see** 🆕" >/dev/null
+app --root "$R" roadmap update --issue-num 4741 --section "Backlog" >/dev/null
+bash "$R/utils/roadmap-dashboard.sh" >/dev/null 2>&1 || true
+
+# THE PREMISE: the dashboard is byte-identical, which is exactly what makes this invisible to
+# drift detection and why the guard needs a signal rather than a comparison.
+if git diff --quiet -- ROADMAP-DASHBOARD.md; then
+  pass "GH-474 e2e: a row added into an unrecognised section leaves the dashboard byte-identical"
+else
+  fail "fixture premise wrong: the hidden row changed the dashboard, so drift detection would already catch it"
+fi
+
+git add releases.db releases.sql
+git -c user.email=t@t -c user.name=t commit -q -m "ledger gains #4741 in an unrecognised section; dashboard unchanged"
+HIDDEN_COMMIT="$(git rev-parse HEAD)"
+cd "$root"
+
+rc=0
+hidden_out="$(TMPDIR="$GUARD_TMP" bash "$GUARD" "$R" "$HIDDEN_COMMIT" "$CLEAN_BASE" 2>&1)" || rc=$?
+[ "$rc" -eq 1 ] || fail "GH-474 e2e: guard must REFUSE a range that hides a row in an unrecognised section, got rc=$rc: $hidden_out"
+pass "GH-474 e2e: guard refuses the range (fail-closed restored)"
+case "$hidden_out" in
+  *"unrecognised section heading"*"#4741"*)
+    pass "GH-474 e2e: the refusal names the heading and the row, through the real projection"
+    ;;
+  *) fail "expected the refusal to name the unrecognised heading and #4741, got: $hidden_out" ;;
+esac
+[ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] \
+  || fail "expected no leftover guard roots after the unrecognised-section refusal"
+pass "GH-474 e2e: guard cleaned up its temporary root"
 
 echo "== GH-257 ALL PASSED =="
