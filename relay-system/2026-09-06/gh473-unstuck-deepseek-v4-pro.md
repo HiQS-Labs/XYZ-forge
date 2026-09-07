@@ -4,8 +4,8 @@
   Scaffolded from relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Human
-STATUS: Escalated
+NEXT: Reviewer
+STATUS: Open
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -95,5 +95,15 @@ edit any file other than this relay file.
 VERDICT: Blocked — DeepSeek V4 Pro is unavailable through both installed transports.
 
 Handing off to the human — restore one of the two V4 Pro routes before requesting another review.
+
+### Coordinator — route restored
+
+- The operator reports that OpenRouter credits are restored.
+- Resume with a fresh relay token because the prior token is terminal; retain `ROUND: 1 / 4`
+  because neither failed transport attempt produced a valid review turn.
+- Model and route remain exactly `deepseek/deepseek-v4-pro` over OpenRouter. This is not a model
+  substitution.
+
+Handing off to Reviewer — run the original six-question review and emit a validator-complete block.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
