@@ -72,6 +72,11 @@ hook with `githooks/install.sh` for each clone — `.git/hooks/` does not travel
 installation covers that clone’s branches and linked worktrees. Run mutation-heavy gates and
 pushes that invoke them from a separate disposable full clone, as required by AGENTS.md.
 Bypasses (`git push --no-verify`, `XYZ_SKIP_PREPUSH=1`) announce that the local gate was skipped.
+**Draft-review publication is distinct from merge readiness (GH-487):** an operator-requested WIP
+draft may use a bypass only with (a) current focused evidence for the changed area — e.g. the
+mapped subsystem's suites run green — (b) the hook's skipped-gate disclosure echoed into the PR
+description, and (c) merge readiness still outstanding. A bypassed push never authorises merge,
+promotion, or teardown, and a published draft is never approval.
 
 **Parallel became the default on 2026-08-14 (GH-544)** when the local gate was the only gate during
 the private phase, and a 16-minute gate does not get run — it gets skipped, which is worse than a
@@ -86,11 +91,11 @@ and the reason, so a fallback is never silent.
 
 **GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
 owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
-agent-chorus); a push the classifier rates `tier=2` runs only those focused suites at the boundary,
-`--tier 1` runs the docs gate, and everything else — unknown paths, test edits, kernel surfaces —
-runs the full suite. `--auto` classifies a local diff the same way. Tiers 1 and 2 are pre-push
-speed and are labelled NOT promotion evidence; only `ci-local.sh`'s sequential full run qualifies
-(GH-509).
+agent-chorus, standup, skills-army-hq); a push the classifier rates `tier=2` runs only those focused
+suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
+test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
+Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
+sequential full run qualifies (GH-509).
 
 **What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
 `ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it

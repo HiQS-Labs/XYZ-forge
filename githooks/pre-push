@@ -33,6 +33,11 @@
 # BYPASS, both deliberately loud:
 #   git push --no-verify        # native git; cannot be removed, and should not be
 #   XYZ_SKIP_PREPUSH=1 git push # for automation that has already gated
+#
+# DRAFT-REVIEW PUBLICATION (GH-487) is a legitimate bypass use, and is NOT merge readiness: an
+# operator-requested WIP draft may push past this gate only with current focused evidence for the
+# changed area, the skipped-gate disclosure echoed into the PR description, and merge readiness
+# still outstanding. A bypassed push never authorises merge, promotion, or teardown.
 set -uo pipefail
 
 # FAIL CLOSED. An earlier draft exited 0 here on the theory that "not in a repo" means there is

@@ -181,6 +181,10 @@ local change.
     the evidence record — it stays sequential and does not call `validate.sh`.
   - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
     deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
+    Draft-review publication (GH-487) is a legitimate bypass use and is NOT merge readiness: an
+    operator-requested WIP draft may bypass only with current focused evidence for the changed area,
+    the skipped-gate disclosure echoed into the PR description, and merge readiness still
+    outstanding — a bypassed push never authorises merge, promotion, or teardown.
   - **PR checks are meaningful again only after a hosted run actually appears for the commit.** A
     configured workflow is not evidence; query the run and cite its SHA.
 
