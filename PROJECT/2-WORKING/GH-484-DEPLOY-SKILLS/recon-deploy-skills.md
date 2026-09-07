@@ -14,7 +14,7 @@ roadmap_exempt: true
 
 | What was just completed | What's next |
 |---|---|
-| Read-only installation and payload dependency trace | Agy review of the parent plan |
+| Read-only trace and replacement amendment reviewed by Agy | Use the approved parent plan for implementation |
 
 Commit: `2e4f8d48831b2265a29eeaca8ce93a61bc39e386` (fresh origin/development clone).
 Mode: graph leads plus direct source; Verify tier; lanes A/C and B/D in two read-only agents, governance/intake in parent.

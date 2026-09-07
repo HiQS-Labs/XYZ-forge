@@ -2,6 +2,10 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-07
+
+- **GH-484: deploy-skills plan reviewed with Agy.** Records a durable copied skill collection, two Python tools, ZIP backups, catalog/history, managed app links and a 14-skill alpha. The operator chose replacement of skills-sync-trinity, including its old discovery entry and scaffold commands. Agy round 1 requested explicit five-consumer verification; round 2 approved the revised plan with driver exit 0. Plan-only: no implementation or device deployment claimed. Bet: stable copied payloads prevent temporary-clone link breakage while runtime prerequisites stay explicit; deployment is Costly and requires verified archive/link rollback. Revisit at alpha if any copied payload cannot execute with its stated prerequisite. Recommendation: implement the reviewed scope. Review/provenance live under GH-484's plan and TESTS-RESULTS; the separate full baseline gate is not green and is not implementation evidence.
+
 ## 2026-09-06
 
 - **GH-465: Other Apps & Tools.** Adds a directory of the seven other public HiQS-Labs repositories, linked from static and generated site navigation and the sitemap. Descriptions use public project documentation and distinguish research from usable tools. Verification: generated-page build and desktop/mobile navigation checks; live deployment checked after merge.

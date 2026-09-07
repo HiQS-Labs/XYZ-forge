@@ -2,7 +2,7 @@
 gh_issue: 484
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/484
 title: Deploy Skills
-status: In progress — plan QA; implementation not started
+status: In progress — plan approved; implementation not started
 created: 2026-09-07
 updated: 2026-09-07
 owner: Codex
@@ -22,7 +22,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Requirements confirmed, issue registered, initial recon recorded | First plan QA with Agy through relay-xyz; implementation remains unstarted |
+| Agy approved revised plan in round 2; driver exit 0 | Planning checkpoint complete; Phase 1 implementation remains unstarted |
 
 ## Table of contents
 
@@ -199,4 +199,4 @@ Public evidence redacts personal source paths/content while retaining skill name
 
 First review: Agy via shipped relay-xyz, review-only ALLOW_PATHS, committed plan/recon in the isolated task clone; three review rounds maximum. Questions must include a dedicated omission-diff against every user requirement plus ownership/crash/portability scrutiny. Record each proposal's evidence and disposition; revise and re-review up to Approved, otherwise report the exact blocker. Plan approval is textual evidence, not implementation correctness.
 
-Round 1: Agy requested explicit five-consumer verification; implemented in Phase 3. Driver exited 8 because the generated reviewer used Changes requested rather than the structural validator's PASS/FAIL/PARKED vocabulary. This is a failed QA run, not an approval. Round 2 includes the operator's replacement amendment, updated recon, and both human Verdict plus machine VERDICT fields. Implementation, actual collection, backups and live app links are not yet built. The user's immediate-teardown instruction applies when the reviewed branch and PR are on origin; do not discard unpushed plan/review evidence merely to satisfy a folder-cleanliness claim.
+Round 1: Agy requested explicit five-consumer verification; implemented in Phase 3. Driver exited 8 because the generated reviewer used Changes requested rather than the structural validator's PASS/FAIL/PARKED vocabulary. This is a failed QA run, not an approval. Round 2 includes the operator's replacement amendment, updated recon, and both human Verdict plus machine VERDICT fields. Agy **Approved** the revised artifact at `1245d427`; driver exit **0**, token done, relay commit `17db8f91`. The generic Basis sentence was mechanically flagged uncited, but the three substantive Pass findings cite the plan's consumer table, replacement contract and A10. This is textual plan approval only. See [review thread](../../relay-system/2026-09-07/gh484-deploy-skills-plan.md) and [provenance](../../TESTS-RESULTS/2026-09-07+GH-484/provenance.jsonl). Implementation, actual collection, backups and live app links are not yet built. The user's immediate-teardown instruction applies when the reviewed branch and PR are on origin; do not discard unpushed plan/review evidence merely to satisfy a folder-cleanliness claim.
