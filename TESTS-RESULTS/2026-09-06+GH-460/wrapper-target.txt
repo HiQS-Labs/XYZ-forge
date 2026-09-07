@@ -1,0 +1,1 @@
+python3 -c 'import sys,subprocess;sys.path.insert(0,"utils/py");from model_alias import resolve_model_slug as r;a=sys.argv[1:];v=a[0] if a else "";out=r(v,".");print(out);ref=subprocess.run(["bash","relay-automation/resolve-model-alias.sh",v],capture_output=True);exp=(ref.stdout.decode().strip() or v) if ref.returncode==0 else v;sys.exit(0) if out==exp else sys.exit(9)' {mutant}

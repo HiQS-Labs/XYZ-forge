@@ -1,0 +1,7 @@
+falsification: constant-input mutation caught at case 'second known hit' ('z-ai/glm-5.2' != 'deepseek/deepseek-v4-pro')
+PREFLIGHT: OK — decoded adapter exercised on all cases; constant-input control falsified correctly
+replay: seed7 green - executed=500
+replay: seed8 green - executed=500
+replay: seed9 green - executed=500
+replay: wrapper-seed11 green - executed=300
+replay: all campaigns green — artifacts under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh460-replay.mgeOCy/artifacts

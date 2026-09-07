@@ -1,0 +1,14 @@
+**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional (agy's answer carries an unsupported [Pass]/verified/confirmed-style claim with no quoted span or file:line citation nearby, despite the consult PREAMBLE asking advisors to cite evidence.)
+
+**1. ANSWER**
+Extracting the oracle to a committed script (`test/gh460-oracle.sh`) is the minimal correct fix. The root cause of the 6-round churn is the inherent conflict between complex Bash quoting and Python's `shlex.split()`. By moving the logic to a dedicated file, you bypass the parser escaping puzzle entirely, keep the fuzz engine unchanged, enable standard linting, and appropriately shift syntax-level review from the Plan phase to the PR phase. 
+
+**2. FINDINGS**
+
+- [Pass] **Minimal Fix**: The script-file disposition is the simplest and most robust solution. `utils/py/fuzz_engine.py:226-227` uses `shlex.split()` on the target string's prefix. As identified in round 6 (`gh460-plan-qa.md:267`), feeding a dense script with nested quotes (e.g., `trap 'rm -f "$t"'`) through `shlex.split` breaks the intended Bash body. Writing `bash test/gh460-oracle.sh {mutant}` completely circumvents this by passing a clean, two-argument string to the engine parser.
+- [Nit] **New Risks (CWD & Argv Mapping)**: Moving to a script introduces no new pathing risks as long as the engine runs with `--cwd <repo-root>`. Both the script path and the `relay-automation/resolve-model-alias.sh` invocation inside it will resolve correctly from the repo root. However, note a minor shift in argv mapping: the inline target used `_ {mutant}`, mapping the first mutant to `$1` and absorbing the sentinel as `$0`. The script invocation `bash test/gh460-oracle.sh {mutant}` maps the first mutant directly to `$1`. The script should just ensure it explicitly handles or safely ignores if `{mutant}` yields multiple tokens.
+- [Should] **Plan Specifications**: The six-round loop functioned exactly as intended by catching genuine platform bugs (macOS `wc` whitespace padding) and parser bugs (`shlex` splitting). However, it highlights that **plans should not inline complex execution logic**. Reviewing compressed, single-line Bash in a Markdown plan defeats readability and static analysis tools (like ShellCheck). Plans should define the *behavioral contract* (invariants, fail-closed measurement rules) and leave the executable syntax to the PR.
+- [Pass] **Engineering scale**: The 15-line disposition is not over-engineered. The defensive guards (fail-closed temp files, strict output parsing, EXIT-traps) are mandatory for a fuzzing oracle, where a fail-open measurement error would silently accept broken code as green.
+
+**3. RECOMMENDATION**
+Adopt the script-file disposition, replace the verbatim inline string in the plan with its behavioral contract, and proceed to implementation.
