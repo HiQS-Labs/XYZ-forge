@@ -62,6 +62,14 @@ Existing consult installer aggregates failures across targets (`install.sh:45–
 
 ## Unknowns
 
+### Operator amendment — replace skills-sync-trinity
+
+Read-only followup on 2026-09-07: bounded complete tracked literal searches for `skills-sync-trinity`, `skill-sync-trinity` and the four old script filenames found one active external catalog reference (`ARCHITECTURE.md:76`), a historical link-check receipt (`TESTS-RESULTS/2026-09-05+GH-453/stage2/links.json:111`) and a historical relay (`relay-system/2026-08-18/merge-order-230056/merge-order.codex.md:89`). Historical records stay unchanged. No external literal script consumer was found in tracked files; dynamic/untracked consumers remain unknown.
+
+Seven tracked retirement files: old README.md, SKILL.md, install.sh, and scripts/export_skills_sync_trinity.py, render_working_doc.py, sync_trinity.py, validate_trinity.py. Unique retired functions are PDDA skeleton rendering (`render_working_doc.py:25–105`), skill/pointer/helper scaffolding (`sync_trinity.py:102–158`), structural trinity validation (`validate_trinity.py:38–87`) and optional installed-file inventory exports (`export_skills_sync_trinity.py:99–169,244–264`). The new catalog replaces the deployment-relevant inventory role; do not silently retain general scaffolding under another name. README.md's old PROJECT pointer has no tracked target by that name.
+
+Exact-name checks with both ordinary and broken-symlink existence found no installed skills-sync-trinity entry under Claude, Codex, shared agents, Gemini config, Antigravity, Antigravity CLI or Zcode roots on this device. This is timestamped local evidence, not a universal absence claim. Replacement adds that named legacy discovery entry and ARCHITECTURE to the radius; public users may need explicit migration.
+
 | Unknown | Why it matters | Settlement |
 |---|---|---|
 | Current app discovery and symlink support | Filesystem placement cannot prove app recognition | Official current docs/local app help plus discovery smoke test per consumer in Phase 3 |

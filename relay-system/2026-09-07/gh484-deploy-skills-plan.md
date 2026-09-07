@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -59,7 +59,7 @@ The distributable skill must let a user talk to their existing VS Code agents/ex
 5. Are per-phase tests falsifiable with negative controls and nonempty evidence? Does final app discovery/dogfood and post-PR immediate safe teardown close the actual user workflow?
 6. Is scope appropriately sized for two stdlib Python tools? Are any commitments contradictory, overbuilt, or missing an exact conflict/rollback policy? Check rating neutrality and uncertainty; do not manufacture recurrence claims.
 
-Write a concise Reviewer block with Verdict, Basis (textual only), swept file: yes/no, graded findings with file:line citations, and answers. Do not run the full test suite from your worktree. No external messages or app mutations.
+Write a concise Reviewer block with human **Verdict:** Approved / Changes requested / Blocked AND a separate plain `VERDICT: PASS` / `VERDICT: FAIL` / `VERDICT: PARKED` line (required by bin/validate-relay-block), Basis (textual only), swept file: yes/no, graded findings with file:line citations, and answers. PASS must mean Approved; FAIL means Changes requested. Do not run the full test suite from your worktree. No external messages or app mutations.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -77,5 +77,28 @@ Write a concise Reviewer block with Verdict, Basis (textual only), swept file: y
 **Review this:** Answer the six questions above; reconcile every requirement with the plan's actual text.
 **Open questions:** Current consumer support is explicitly a Phase 3 verification task; do not assert existing candidate path strings prove app support.
 **Commit:** committed review inputs; inspect HEAD in your isolated worktree.
+
+### Round 1 · Reviewer · 2026-09-07
+**Verdict:** Changes requested
+**Basis:** Textual review against user requirements omission-diff and specific questions.
+**swept file: yes**
+
+**Findings:**
+* `[Should]` **Q1 (Omission gap):** The plan lists generic consumer families ("Claude", "Codex", "Zcode") instead of explicitly verifying the distinct apps from the requirements ("VS Code Claude Code", "VS Code Codex", "Codex app", "Zcode GLM"). VS Code extensions often use different discovery paths than their CLI counterparts. Update Phase 3 to explicitly name and verify all 5 distinct consumers. (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:138`)
+* `[Pass]` **Q1:** 14-folder alpha is fully accounted for (the manager itself plus 13 explicitly imported skills). (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:135`)
+* `[Pass]` **Q2:** Actual-folder authority is unambiguous vs metadata. Empty scans fail closed, and deleting the final skill requires explicit empty-set authorization. (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:63`)
+* `[Pass]` **Q3:** Same-day ZIP collisions (`-02`, etc.) and interrupted states are well-specified with atomic receipts and a shared lock. (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:75`)
+* `[Pass]` **Q4:** Smallest-change reuse is supported; copied payloads consult local source receipts for prerequisites without pretending to be globally portable. (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:140`)
+* `[Pass]` **Q5:** Acceptance tests A1-A9 are falsifiable with explicit negative controls, and post-PR teardown accurately closes the workflow. (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:167-177`)
+* `[Pass]` **Q6:** Scope is appropriately sized for two stdlib tools. Rating neutrality (appeal 50) is maintained without manufacturing recurrence claims. (`PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:99`)
+
+Handing off to codex-author — go to the codex-author window and say 'take your turn'.
+
+### Round 2 · Producer · 2026-09-07
+**Decisions on proposals:** Q1 Should implemented: Phase 3 explicitly names VS Code Claude Code, VS Code Codex, Codex desktop app, Antigravity app and Zcode GLM app; each has independent version/discovery proof even if physical roots share writes. Proof: textual only, actual plan table read back.
+**Did:** Added operator requirement received during Round 1: deploy-skills REPLACES/overwrites skills-sync-trinity so there is one discoverable management skill. Traced seven retired files, architecture consumer, historical evidence and installed legacy entries. Plan now specifies retirement, intentional loss of generic scaffolding, targeted recoverable legacy migration and A10 falsification.
+**Verification:** Round 1 driver failed with exit 8: required machine verdict absent. Its review is retained as findings, not valid QA. Existing PDDA checks passed before this revision; no implementation yet.
+**Re-review this:** Re-read full revised plan and recon. Dedicated omission-diff includes replacement amendment. Verify explicit five-consumer table resolves Q1, and that replacement/migration neither leaves a second discoverable name nor loses unrelated local work. Include BOTH human Verdict and plain VERDICT PASS/FAIL/PARKED as instructed above; shim owns commit, no push. Read actual current worktree files.
+**Commit:** next committed review-input revision.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
