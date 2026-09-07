@@ -1,0 +1,10 @@
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:44 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:53 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] README.md:86 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:42 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:428 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:498 dead reference 'blank.md' — no file at blank.md
+INFO [pdda-check-governance] src/project.js:334 comment reference '.tick/STATE.md' in source tree cites generated/ignored state — exempt from existence check
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=8 info=1

@@ -1,0 +1,104 @@
+== test: swarm-preflight ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//swarm-preflight.swQgBq
+  PASS: T1 happy path exit 0
+  PASS: T1 verdict ready
+  PASS: T1 packet is self-contained (6 files)
+  PASS: T1 run-candidate.json is valid JSON
+  PASS: T1 marathon-invocation.txt carries swarm/session/isolation context (GH-75/GH-294)
+  PASS: T1 GH-294 packet invocation enables worktree isolation
+  PASS: T1 GH-294 Bash/Python invocations are byte-identical
+  PASS: T1b packet has a scope-lock block
+  PASS: T1b scope-lock forbids self-running the gate
+  PASS: T1b acceptance criteria inlined from the capture doc
+  PASS: T1b packet recommends a turn budget
+  PASS: T1b the recommendation names the field that applies it (GH-386)
+  PASS: T1c same-repo invocation omits --target-root (GH-51 off-lane fix)
+  PASS: T1d small build needs no budget override (GH-386: the 900s default already covers it)
+  PASS: T1d no numeric override is emitted for work that fits the default
+  PASS: T16 GH-51[4]/GH-386: 4-artifact build scales the budget above the default (1800s)
+  PASS: T16b foreign target emits --target-root <repo>
+  PASS: T2 stale → exit 4
+  PASS: T2 no packet written for stale
+  PASS: T3 not-ready → exit 5
+  PASS: T3 names one concrete next action
+  PASS: T4 non-git target → exit 6
+  PASS: T5 missing GH capture → exit 6
+  PASS: T5 cites the §11 rationale
+  PASS: T6 missing contract → exit 3
+  PASS: T6 names the literal phrase minimal valid contract
+  PASS: T6 names the file it belongs in
+  PASS: T7 disagreeing bundle → exit 7
+  PASS: T8 dry-run exit 0
+  PASS: T8 dry-run writes no packet
+  PASS: T8b dry-run, XYZ_ARCHIVE_ROOT unset → $ROOT/relay-system/preflight/ (regression-safe)
+  PASS: T8c dry-run, XYZ_ARCHIVE_ROOT set → $archive/relay-system/<slug>/preflight/ (namespaced)
+  PASS: T8d explicit --out wins over the resolver/archive default
+  PASS: T8e invalid XYZ_ARCHIVE_ROOT → hard fail (rc=1)
+  PASS: T8e no packet leaked into $ROOT on invalid archive
+  PASS: T9 both modes produce structurally identical shape
+  PASS: T10a no input mode → exit 2
+  PASS: T10b mutually exclusive → exit 2
+  PASS: T11 ref-honoring: fix on non-checked-out ref → stale (exit 4)
+  PASS: T11 report surfaces stale checkout vs evaluated ref
+  PASS: T12 unresolvable target.ref → exit 6
+  PASS: T12 names the unresolvable ref
+  PASS: T13 GH-39: missing artifact path → not-ready (exit 5)
+  PASS: T13 names the missing artifact path
+  PASS: T14 GH-39: unrunnable gate (missing script) → not-ready (exit 5)
+  PASS: T14 names the missing gate script
+  PASS: T15 GH-39: gate with flags resolves the script, not the flag (ready)
+  PASS: T17a suggested_branch is slug+run-date
+  PASS: T17b branch_ready=false when the branch doesn't exist yet
+  PASS: T17c run-candidate.json.provenance carries suggested_branch + branch_ready=false
+  PASS: T17d packet.md tells the orchestrator to ask before proceeding
+  PASS: T17e branch_ready=true once the suggested branch exists
+  PASS: T18a risk=1 + independent artifacts → skip_branch_prompt=true
+  PASS: T18b packet.md documents the carve-out instead of the ask-operator note
+  PASS: T19a risk=2 → skip_branch_prompt=false (carve-out needs risk==1)
+  PASS: T20a risk=1 but kernel-zone artifact → skip_branch_prompt=false
+  PASS: T21a risk=1 but kernel-ADJACENT artifact (bin/tick+helper.sh) → skip_branch_prompt=false
+  PASS: T22a differently-cased shim path (Codex-turn.sh) still classifies as shim, not independent
+  PASS: T23a nested-subdirectory shim-shaped path is independent zone, not shim (risk=1 skips)
+  PASS: T24 GH-89 baseline: unmarked new-file artifact still NOT-READY (exit 5) — strict-by-default unchanged
+  PASS: T24 names the missing artifact path
+  PASS: T25 GH-89: greenfield contract (artifacts_new + matching path_absent probe) reads READY where T24's unmarked twin reads NOT-READY
+  PASS: T25 verdict ready
+  PASS: T25 packet written for the greenfield lane
+  PASS: T26 GH-89: artifacts_new entry with no matching path_absent probe → contract error (exit 3)
+  PASS: T26 names the pairing violation
+  PASS: T27 GH-89: artifacts_new entry not present in artifacts[] → contract error (exit 3)
+  PASS: T27 names the subset violation
+  PASS: T28 GH-89 regression: GH-87-shaped contract (deep-research.mjs) now reads READY
+  PASS: T29 GH-89 regression: GH-88-shaped contract (3 viewer scripts + test) now reads READY
+  PASS: T30 GH-89: artifacts_new in one bundle doc + matching path_absent probe in a sibling doc → bundle merge satisfies the pairing, reads READY
+  PASS: T31 GH-55: covering-test fixture reads READY
+  PASS: T31 GH-55: packet names the auto-included covering test + helper
+  PASS: T31 GH-55: effective artifact list includes declared artifact + test + helper
+  PASS: T31 GH-55: marathon invocation uses the expanded allowlist
+  PASS: T32 GH-55: dedupe fixture reads READY
+  PASS: T32 GH-55: already-declared covering test is not duplicated in the invocation
+  PASS: T33 GH-54: fs-touching fixture reads READY
+  PASS: T33 GH-54: packet escalates to the stronger no-test rule
+  PASS: T33 GH-54: packet names the fs-touching tests it is forbidding in-turn
+  PASS: T33 GH-54: generic self-verify instruction is suppressed for fs-touching tests
+  PASS: T34 GH-108: filtered-looking gate fixture reads READY
+  PASS: T34 GH-108: packet emits the gate-scoping caveat for a ' -- ' filtered-looking gate
+  PASS: T34b GH-108: plain gate fixture reads READY
+  PASS: T34b GH-108: an already-plain gate (no ' -- ') is unaffected — no caveat emitted
+  PASS: T35 GH-126: tightened covering-test fixture reads READY
+  PASS: T35 GH-126: a genuine require()-adjacent reference is still auto-included
+  PASS: T35 GH-126: a bare substring mention (comment) is NOT auto-included
+  PASS: T35b GH-137: sanitized inference fixture reads READY
+  PASS: T35b GH-137: effective artifacts keep the declared artifact + real covering test/helper only
+  PASS: T36 GH-127: bare-redirect fixture reads READY
+  PASS: T36 GH-127: bare-redirect artifact escalates the packet to the stronger no-test rule
+  PASS: T36 GH-127: bare '>' redirect classified fs-touching; '2>&1'/'->'/'>=' usage is not
+  PASS: T37a GH-203: stale index.lock warning stays fail-open (exit 0)
+  PASS: T37b GH-203: stale index.lock does not change the ready verdict
+  PASS: T37c GH-203: text report warns on a stale, unheld index.lock
+  PASS: T38 GH-203: JSON report carries the stale-lock warning/path without changing candidate_state
+  PASS: T39a GH-203: clean repo with no index.lock stays ready
+  PASS: T39b GH-203: clean text report omits the stale-lock warning
+  PASS: T39c GH-203: clean JSON report omits the stale-lock warning fields
+
+  swarm-preflight: 100 passed, 0 failed

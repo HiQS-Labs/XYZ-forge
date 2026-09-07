@@ -1,9 +1,17 @@
+> **PDDA anti-scope, maintained by XYZ Forge; applies to the PDDA layer, not a prohibition on XYZ’s coordination and execution product.**
+
 # Do-not-build list
+
+Maintained here from the [XYZ predecessor’s version](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/DO-NOT-BUILD.md).
+PDDA itself is a separate project: [Hypercart-Dev-Tools/pdda](https://github.com/Hypercart-Dev-Tools/pdda).
+XYZ-wide product decisions follow [Guiding Principles](../GUIDING-PRINCIPLES.md#purpose);
+its reuse, agent-instruction and Python/frozen-Bash rules remain in that document and
+[AGENTS.md](../AGENTS.md). The inherited list below describes the PDDA layer’s boundaries.
 
 This is the explicit anti-scope list for PDDA (and any repo-governance/safety layer built alongside
 it), distilled from the June 23, 2026 external feedback review (Perplexity, ChatGPT, Gemini) and the
 synthesis at
-[`PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
+[`predecessor PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
 (see its "What to avoid building" section). Its purpose is the same as any anti-scope list: prevent
 the same "should we build this?" argument from being re-litigated inside every plan, script, and PR
 review. Pair with [`PROJECT/CONSTITUTION.md`](CONSTITUTION.md), which states what PDDA *is*; this
@@ -60,11 +68,11 @@ and the synthesis doc together, not add scope silently through an unrelated PR.
 
 ## Sources
 
-- [`PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
+- [`predecessor PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/4-MISC/GH-144-PDDA-FEEDBACK-SYNTHESIS.md)
   — "What to avoid building," "Decision summary," "Open questions before promotion to 2-WORKING."
-- [`PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md`](1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md) — Step 20
+- [`PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md) — Step 20
   ("Decide what to delete or defer") and its "likely avoid building" list.
-- [`PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md`](1-INBOX/PDDA/FEEDBACK-CHATGPT.md) — the incumbent
+- [`PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md) — the incumbent
   comparison table and "What I'd stop refining."
-- [`PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md`](1-INBOX/PDDA/FEEDBACK-GEMINI.md) — "freeze the Bash" /
+- [`PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md) — "freeze the Bash" /
   offload deterministic checks to `.markdownlint.json` signal.
