@@ -328,7 +328,7 @@ printf '#!/usr/bin/env bash\nexit 0\n' > "$R_RW/test/hq.sh"   # suite on disk: w
 git -C "$R_RW" add utils/hq >/dev/null 2>&1; git -C "$R_RW" commit -qm work >/dev/null 2>&1
 RW_HEAD="$(git -C "$R_RW" rev-parse HEAD)"
 [ "$(bare_dev_tip "$RW_B")" != "$(git -C "$R_RW" rev-parse refs/remotes/origin/development)" ] \
-  || fail "rewrite fixture is degenerate: advertised tip equals the stale tracking ref"
+  || { echo "  FAIL: rewrite fixture is degenerate: advertised tip equals the stale tracking ref" >&2; exit 1; }
 out="$(drive_as "$R_RW" origin "refs/heads/feature $RW_HEAD refs/heads/feature $ZEROS")"; rc=$?
 ok "a BACKWARD-rewritten integration branch fails closed to full (GH-487 round 1)" \
    "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
@@ -346,7 +346,7 @@ git -C "$SB_MOVE" init -q; git -C "$SB_MOVE" config user.email t@t; git -C "$SB_
 git -C "$SB_MOVE" pull -q "$SB_B" development 2>/dev/null
 printf 'moved on\n' > "$SB_MOVE/moved.txt"
 git -C "$SB_MOVE" add -A >/dev/null 2>&1; git -C "$SB_MOVE" commit -qm moved-on >/dev/null 2>&1
-git -C "$SB_MOVE" push -q origin HEAD:refs/heads/development 2>/dev/null   # advertised = T, tracking still A
+git -C "$SB_MOVE" push -q "$SB_B" HEAD:refs/heads/development 2>/dev/null   # advertised = T, tracking still A
 git -C "$R_SB" checkout -q -b feature
 mkdir -p "$R_SB/utils/hq" "$R_SB/test"
 printf 'x\n' > "$R_SB/utils/hq/hq.sh"
@@ -354,7 +354,7 @@ printf '#!/usr/bin/env bash\nexit 0\n' > "$R_SB/test/hq.sh"   # suite on disk: w
 git -C "$R_SB" add utils/hq >/dev/null 2>&1; git -C "$R_SB" commit -qm work >/dev/null 2>&1
 SB_HEAD="$(git -C "$R_SB" rev-parse HEAD)"
 [ "$(bare_dev_tip "$SB_B")" != "$(git -C "$R_SB" rev-parse refs/remotes/origin/development)" ] \
-  || fail "stale-behind fixture is degenerate: advertised tip equals the tracking ref"
+  || { echo "  FAIL: stale-behind fixture is degenerate: advertised tip equals the tracking ref" >&2; exit 1; }
 out="$(drive_as "$R_SB" origin "refs/heads/feature $SB_HEAD refs/heads/feature $ZEROS")"; rc=$?
 ok "a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)" \
    "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
@@ -368,12 +368,12 @@ git -C "$R_CC" checkout -q -b Q main
 printf 'q\n' > "$R_CC/q.txt"; git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm Q1 >/dev/null 2>&1
 Q1="$(git -C "$R_CC" rev-parse HEAD)"
 git -C "$R_CC" checkout -q P
-git -C "$R_CC" merge -q --no-edit Q1 >/dev/null 2>&1          # M1 on P
+git -C "$R_CC" merge -q --no-edit "$Q1" >/dev/null 2>&1          # M1 on P
 M1="$(git -C "$R_CC" rev-parse HEAD)"
 git -C "$R_CC" branch -f development "$M1"
-mkorigin "$R_CC" development                                   # HEAD is P=M1: bare development=M1, fetched fresh
+mkorigin "$R_CC" development                                       # HEAD is P=M1: bare development=M1, fetched fresh
 git -C "$R_CC" checkout -q Q
-git -C "$R_CC" merge -q --no-edit P1 >/dev/null 2>&1          # M2 on Q — criss-cross complete
+git -C "$R_CC" merge -q --no-edit "$P1" >/dev/null 2>&1          # M2 on Q — criss-cross complete
 git -C "$R_CC" checkout -q Q
 mkdir -p "$R_CC/utils/hq" "$R_CC/test"
 printf 'x\n' > "$R_CC/utils/hq/hq.sh"
@@ -381,7 +381,7 @@ printf '#!/usr/bin/env bash\nexit 0\n' > "$R_CC/test/hq.sh"   # suite on disk: w
 git -C "$R_CC" add utils/hq >/dev/null 2>&1; git -C "$R_CC" commit -qm work >/dev/null 2>&1
 CC_HEAD="$(git -C "$R_CC" rev-parse HEAD)"
 [ "$(git -C "$R_CC" merge-base --all origin/development HEAD | wc -l | tr -d ' ')" -ge 2 ] \
-  || fail "criss-cross fixture is degenerate: fewer than two best common ancestors"
+  || { echo "  FAIL: criss-cross fixture is degenerate: fewer than two best common ancestors" >&2; exit 1; }
 out="$(drive_as "$R_CC" origin "refs/heads/feature $CC_HEAD refs/heads/feature $ZEROS")"; rc=$?
 ok "an AMBIGUOUS base (multiple best common ancestors) fails closed to full (GH-487 round 1)" \
    "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
