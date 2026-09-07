@@ -16,7 +16,14 @@ ITERS=20
 FLOOR=20
 RESOLVER="$ROOT/relay-automation/resolve-model-alias.sh"
 
-fail(){ echo "gh460-smoke: FAIL: $*" >&2; exit 1; }
+# --- R1: the fuzz run under the shared run contract ---
+RUNDIR=$(mktemp -d "${TMPDIR:-/tmp}/gh460-smoke.XXXXXX")
+RETAIN=0
+cleanup(){ if [ "${RETAIN:-0}" = "1" ]; then echo "gh460-smoke: artifacts retained at $RUNDIR" >&2; else rm -rf "$RUNDIR"; fi }
+trap cleanup EXIT
+export GH460_RUN_DIR="$RUNDIR"
+
+fail(){ RETAIN=1; echo "gh460-smoke: FAIL: $* (artifacts retained at $RUNDIR)" >&2; exit 1; }
 
 [ -x "$ORACLE" ] || fail "oracle missing: $ORACLE"
 [ -f "$ENGINE" ] || fail "engine missing: $ENGINE"
@@ -47,9 +54,6 @@ assert r("", root) == "", "empty input identity broken"
 PY
 
 # --- R1: the fuzz run under the shared run contract ---
-RUNDIR=$(mktemp -d "${TMPDIR:-/tmp}/gh460-smoke.XXXXXX")
-trap 'rm -rf "$RUNDIR"' EXIT
-export GH460_RUN_DIR="$RUNDIR"
 TARGET="bash \"$ORACLE\" {mutant}"
 python3 "$ENGINE" --mode fuzz \
   --target "$TARGET" \

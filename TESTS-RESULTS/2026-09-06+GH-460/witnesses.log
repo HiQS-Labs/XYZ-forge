@@ -1,14 +1,16 @@
   WITNESS PASS: rc-3 baseline green
+  WITNESS PASS: rc-3 exact one-site mutation verified
   WITNESS PASS: rc-3 red: BADRC:3 exit 9
   WITNESS PASS: rc-3 restored green
   WITNESS PASS: LEAK baseline green
   WITNESS PASS: LEAK red: LEAK-STDOUT-ON-MISS exit 9
   WITNESS PASS: LEAK restored green
-  WITNESS PASS: NEWLINE-ONLY baseline green
-  WITNESS PASS: NEWLINE-ONLY red: LEAK-STDOUT-ON-MISS exit 9
-  WITNESS PASS: NEWLINE-ONLY restored green
+  WITNESS PASS: NEWLINE-ONLY-LEAK baseline green
+  WITNESS PASS: NEWLINE-ONLY-LEAK red: LEAK-STDOUT-ON-MISS exit 9
+  WITNESS PASS: NEWLINE-ONLY-LEAK restored green
   WITNESS PASS: HIT-EMPTY baseline green
-mutated 4 tier printf sites
+mutated exactly 1 of 4 sites
+  WITNESS PASS: HIT-EMPTY exact one-site mutation verified (1 of 4)
   WITNESS PASS: HIT-EMPTY red: HIT-EMPTY-ON-MATCH exit 9
   WITNESS PASS: HIT-EMPTY restored green
   WITNESS PASS: MEASURE-FAIL(failed wc) baseline green
@@ -20,13 +22,13 @@ mutated 4 tier printf sites
   WITNESS PASS: MEASURE-FAIL(empty output) baseline green
   WITNESS PASS: MEASURE-FAIL(empty output) red: MEASURE-FAIL exit 8
   WITNESS PASS: MEASURE-FAIL(empty output) restored green
-  WITNESS PASS: MEASURE-FAIL(abc) baseline green
-  WITNESS PASS: MEASURE-FAIL(abc) red: MEASURE-FAIL exit 8
-  WITNESS PASS: MEASURE-FAIL(abc) restored green
-  WITNESS PASS: MEASURE-FAIL(-5) baseline green
-  WITNESS PASS: MEASURE-FAIL(-5) red: MEASURE-FAIL exit 8
-  WITNESS PASS: MEASURE-FAIL(-5) restored green
+  WITNESS PASS: MEASURE-FAIL(alphabetic) baseline green
+  WITNESS PASS: MEASURE-FAIL(alphabetic) red: MEASURE-FAIL exit 8
+  WITNESS PASS: MEASURE-FAIL(alphabetic) restored green
+  WITNESS PASS: MEASURE-FAIL(negative) baseline green
+  WITNESS PASS: MEASURE-FAIL(negative) red: MEASURE-FAIL exit 8
+  WITNESS PASS: MEASURE-FAIL(negative) restored green
   WITNESS PASS: padded-valid baseline green
-  WITNESS PASS: padded-valid red-accept: exit 0, no MEASURE-FAIL
+  WITNESS PASS: padded-valid accepted: exit 0, no MEASURE-FAIL
   WITNESS PASS: padded-valid restored green
-WITNESSES: 30 passed, 0 failed
+WITNESSES: 32 passed, 0 failed
