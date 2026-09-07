@@ -257,6 +257,10 @@ def load(root, pending=False):
     require(pending or not (root / PENDING).exists(), "Interrupted operation: run intake.py recover --apply")
     state = validate_state(root, read_json(root / STATE))
     config = validate_targets(root, read_json(root / "targets.json"))
+    for name in ("intake.py", "sync.py"):
+        link = root / name
+        require(link.is_symlink() and os.readlink(link) == f"deploy-skills/scripts/{name}"
+                and link.is_file(), f"Manager entry missing or changed: {link}; preserve state and inspect recovery")
     return state, config
 
 

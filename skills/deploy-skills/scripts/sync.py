@@ -20,11 +20,12 @@ def owned_record(root, state, target, name, previous=None):
             "text": str(root / name), **({"previous": previous} if previous is not None else {})}
 
 
-def reconcile(root, state, config, found, adopt=(), migrate=()):
+def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=None):
     """Plan only; unexpected entries are errors, not implicit ownership grants."""
     targets = sorted({shared.location(t["path"]) for t in config["targets"] if t["enabled"]})
     desired = {str(target / name): (target, name) for target in targets for name in found}
     actions, errors, changes = [], [], []
+    migrate_from = migrate_from or {}
     for key in sorted(set(desired) | set(state["links"])):
         receipt = state["links"].get(key)
         parent, name = desired.get(key, (Path(receipt["root"]), receipt["name"])) if receipt else desired[key]
@@ -40,12 +41,14 @@ def reconcile(root, state, config, found, adopt=(), migrate=()):
                     shared.require(name in adopt, f"Correct but unowned link; explicitly --adopt {name}: {path}")
                     changes.append({"adopt": key})
                 else:
-                    shared.require(name in migrate, f"Foreign link preserved; review before --migrate {name}: {path}")
-                    source = state["skills"].get(name, {}).get("source")
+                    shared.require(name in migrate or name in migrate_from,
+                                   f"Foreign link preserved; review before explicit migration: {path}")
+                    source = migrate_from.get(name) or state["skills"].get(name, {}).get("source")
                     shared.require(source and path.resolve(strict=True) == Path(source).resolve(strict=True),
-                                   f"Migration must match the recorded local source: {path}")
-                    shared.require(shared.digest(path.resolve()) == found[name]["digest"],
-                                   f"Migration source differs from copied payload: {path}")
+                                   f"Migration must match the explicitly selected local source: {path}")
+                    if name not in migrate_from:
+                        shared.require(shared.digest(path.resolve()) == found[name]["digest"],
+                                       f"Migration source differs from copied payload: {path}")
                     changes.append({"migrate": key, "previous": current})
             if current != wanted:
                 actions.append({"kind": "link", "root": str(parent), "name": name,
@@ -109,6 +112,8 @@ def main(argv=None):
     p.add_argument("--status", action="store_true", help="Read-only reconciliation report")
     p.add_argument("--adopt", action="append", default=[], metavar="SKILL")
     p.add_argument("--migrate", action="append", default=[], metavar="SKILL")
+    p.add_argument("--migrate-from", action="append", default=[], metavar="SKILL=LOCAL_SOURCE",
+                   help="Explicitly replace a selected alternative source link; preserve old link text")
     p.add_argument("--retire-trinity", metavar="LOCAL_SOURCE", help="Withdraw only the known replaced skill")
     p.add_argument("--archive-legacy", action="store_true", help="Explicitly archive a matching real legacy folder")
     args = p.parse_args(argv)
@@ -117,6 +122,21 @@ def main(argv=None):
         apply = args.apply and not args.dry_run and not args.status
         for name in args.adopt + args.migrate:
             shared.safe_name(name)
+        migrate_from = {}
+        for selection in args.migrate_from:
+            name, separator, raw = selection.partition("=")
+            shared.require(separator and raw, "--migrate-from requires SKILL=LOCAL_SOURCE")
+            shared.safe_name(name)
+            source = Path(raw).expanduser().resolve(strict=True)
+            shared.require(name not in migrate_from and shared.skill_info(source)["name"] == name,
+                           "Duplicate or mismatched alternative source")
+            # The prior instructions may differ from the new copy. Only inspect its
+            # identity here: explicit selection retires a link, never copies its payload.
+            run = shared.subprocess.run(["git", "--no-optional-locks", "-C", str(source),
+                                         "rev-parse", "--show-toplevel"], text=True, capture_output=True)
+            shared.require(run.returncode == 0 and shared.within(source, Path(run.stdout.strip()).resolve()),
+                           "Alternative source must be a skill folder inside a local Git repo")
+            migrate_from[name] = str(source)
         shared.load(root)
         with shared.locked(root) if apply else contextlib.nullcontext():
             state, config = shared.load(root)
@@ -127,7 +147,7 @@ def main(argv=None):
                                                      args.archive_legacy, apply)
             else:
                 shared.require(not args.archive_legacy, "--archive-legacy requires --retire-trinity")
-                actions, errors, changes = reconcile(root, state, config, found, args.adopt, args.migrate)
+                actions, errors, changes = reconcile(root, state, config, found, args.adopt, args.migrate, migrate_from)
             result = {"apply": apply, "skills": sorted(found), "actions": actions, "changes": changes,
                       "errors": errors, "prerequisites": {n: r.get("prerequisites", []) for n, r in state["skills"].items()}}
             print(json.dumps(result, indent=2))

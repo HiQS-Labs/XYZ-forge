@@ -32,6 +32,13 @@ resolve to that skill's recorded local source and match the copied digest. Old l
 text is retained in ownership metadata and history. These flags do not authorize
 replacement of arbitrary symlinks or real directories.
 
+When the operator deliberately chooses a different source version (or retires an
+equivalent link into a different clone), preview `--migrate-from SKILL=/old/repo/skill`.
+This one-time selection must match the existing link's resolved destination and
+local repo/skill identity. Unlike `--migrate`, it permits different prior content;
+explain that difference and obtain that specific choice before apply. It still
+cannot replace a real directory, and records the old link text for rollback.
+
 ## Retiring skills-sync-trinity
 
 The replacement ships no old-name alias. If an old installation exists, keep its

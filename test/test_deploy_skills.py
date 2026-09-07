@@ -247,6 +247,28 @@ class DeploySkillsTest(unittest.TestCase):
         self.assertTrue((other / "deploy-skills").is_symlink())
         self.assertIn("sync-partial", (self.root / "changelog.md").read_text())
 
+    def test_a4_alternative_source_requires_exact_explicit_selection(self):
+        source = self.source()
+        self.cli("--apply", "add", source)
+        prior = self.repo / "alternate" / "sample"
+        prior.parent.mkdir(); shutil.copytree(source, prior, symlinks=True)
+        (prior / "run.py").write_text("different version\n")
+        self.enable(); self.target.mkdir()
+        (self.target / "sample").symlink_to(prior)
+        self.cli("--apply", "--migrate", "sample", sync=True, code=2)
+        self.assertEqual(os.readlink(self.target / "sample"), str(prior))
+        self.cli("--apply", "--migrate-from", f"sample={source}", sync=True, code=2)
+        self.assertEqual(os.readlink(self.target / "sample"), str(prior))
+        self.cli("--apply", "--migrate-from", f"sample={prior}", sync=True)
+        self.assertEqual(os.readlink(self.target / "sample"), str(self.root / "sample"))
+        self.assertEqual((prior / "run.py").read_text(), "different version\n")
+
+    def test_a7_missing_manager_entry_blocks_usability(self):
+        (self.root / "sync.py").unlink()
+        before = tree(self.work)
+        self.cli("--status", sync=True, code=2)
+        self.assertEqual(tree(self.work), before)
+
     def test_a5_missing_payload_corrupt_state_and_history_refuse_prune(self):
         source = self.source()
         self.cli("--apply", "add", source); self.enable(); self.cli("--apply", sync=True)
