@@ -26,6 +26,8 @@ before choosing app paths or claiming discovery.
 Keep [README.md](README.md) with the bundle: it identifies the upstream project for
 users. Existing whole-folder intake copies it on initialization and update into
 `Deployed Skills/deploy-skills/`; do not deploy only the scripts or `SKILL.md`.
+Applied transactions also copy it to `Deployed Skills/README.md`, the collection's
+installer-managed landing document. Keep personal notes in a separate file.
 
 ## Conversational workflow
 

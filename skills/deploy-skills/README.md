@@ -7,13 +7,16 @@ at `skills/deploy-skills/`. It replaces `skills-sync-trinity`.
 It gives your existing coding agent a conversational interface for managing a
 durable collection of local skills. Ask it to “list my deployed skills”, “import
 this local skill folder”, or “preview syncing my skills to the configured apps”.
-The agent instructions live in [SKILL.md](SKILL.md).
+The agent instructions live in the skill folder's `SKILL.md`.
 
 ## Where this copy lives
 
 Initialization copies the **entire skill folder**, including this README, into
 `~/Documents/Deployed Skills/deploy-skills/`. Updating the manager refreshes this
-README along with its scripts and instructions. It is an actual copy, not a link
+README along with its scripts and instructions. The installer also writes a real
+copy at **`~/Documents/Deployed Skills/README.md`**, beside `catalog.md`.
+That top-level README is installer-managed and refreshed during applied operations;
+keep personal notes in a separate file. It is an actual copy, not a link
 back to the source checkout, so deleting a temporary clone does not remove it.
 Configured apps receive directory symlinks to the durable skill folders.
 
@@ -40,5 +43,5 @@ Only local Git skill folders are imported; runtime dependencies are not installe
 Overwritten skill folders are backed up as dated ZIPs, with same-day suffixes.
 Foreign app folders and unrelated links are preserved rather than overwritten.
 
-See [target discovery](references/targets.md) for app-specific verification and
-[recovery](references/recovery.md) for backups, interrupted operations and migration.
+Inside the `deploy-skills` folder, see `references/targets.md` for app-specific
+verification and `references/recovery.md` for backups, interruptions and migration.

@@ -98,21 +98,32 @@ class DeploySkillsTest(unittest.TestCase):
     def test_a1_readme_copied_updated_and_archived(self):
         source = self.bundle / "README.md"
         deployed = self.root / "deploy-skills" / "README.md"
+        landing = self.root / "README.md"
         original = source.read_bytes()
         self.assertTrue(original)
         self.assertEqual(deployed.read_bytes(), original)
+        self.assertFalse(landing.is_symlink())
+        self.assertEqual(landing.read_bytes(), original)
         revised = original + b"\nFixture provenance update.\n"
         source.write_bytes(revised)
         self.cli("update", "deploy-skills")
         self.assertEqual(deployed.read_bytes(), original)
+        self.assertEqual(landing.read_bytes(), original)
         self.cli("--apply", "update", "deploy-skills")
         self.assertEqual(deployed.read_bytes(), revised)
+        self.assertEqual(landing.read_bytes(), revised)
         archives = list((self.root / "backups").glob("deploy-skills-*.zip"))
         self.assertEqual(len(archives), 1)
         with zipfile.ZipFile(archives[0]) as archive:
             self.assertEqual(archive.read("deploy-skills/README.md"), original)
         self.repo.rename(self.work / "source hidden")
         self.assertEqual(deployed.read_bytes(), revised)
+        landing.unlink()
+        self.cli("--apply", "catalog", copied=True)
+        self.assertEqual(landing.read_bytes(), revised)
+        landing.write_bytes(b"corrupted landing copy")
+        with self.assertRaises(AssertionError):
+            self.assertEqual(landing.read_bytes(), revised)
         deployed.write_bytes(b"corrupted copy")
         with self.assertRaises(AssertionError):
             self.assertEqual(deployed.read_bytes(), revised)

@@ -505,6 +505,10 @@ def finish(root, receipt):
     atomic_json(root / STATE, receipt["state"])
     atomic_json(root / "targets.json", receipt["targets"])
     atomic_bytes(root / "catalog.md", render_catalog(root, receipt["state"], receipt["targets"]).encode())
+    # The collection's front door is a real copy, refreshed with other generated docs.
+    readme = root / "deploy-skills" / "README.md"
+    if readme.exists():
+        atomic_bytes(root / "README.md", regular_bytes(readme))
     history(root, receipt["event"])
     (root / PENDING).unlink()
     # Staging is retained (not silently recursively deleted); ZIPs are the user-facing backups.
