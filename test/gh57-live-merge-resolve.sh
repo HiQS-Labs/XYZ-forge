@@ -341,7 +341,7 @@ for direction in "deleted-on-incoming" "deleted-on-head"; do
   fi
 
   ok "[$direction] the view really is a delete/modify conflict" \
-     "git -C '$R9' status --porcelain -- '$DEL_VIEW' | grep -qE '^(DU|UD)'"
+     "grep -qE '^(DU|UD)' <<<\"\$(git -C '$R9' status --porcelain -- '$DEL_VIEW')\""
   resolve_dump "$R9"
   out9="$(resolver "$R9")"; rc9=$?
   ok "[$direction] resolver completes (rc=$rc9)" "[ $rc9 -eq 0 ]"
