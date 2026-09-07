@@ -500,3 +500,7 @@ upstream publication, dependency-sync behavior change or clone teardown was perf
 
 Delivery: [PR #455](https://github.com/HiQS-Labs/XYZ-forge/pull/455), targeting `development`.
 The branch is published; the issue remains open. No merge or upstream publication performed.
+
+## Merge evidence
+
+- PR #455 merged 2026-09-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
