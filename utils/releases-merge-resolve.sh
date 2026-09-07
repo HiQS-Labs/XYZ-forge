@@ -161,6 +161,25 @@ VIEWS="ROADMAP-DASHBOARD.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.m
 REGEN=""
 for f in $VIEWS; do
   if printf '%s\n' "$UNMERGED" | grep -qx "$f"; then
+    # GH-474: a delete/modify conflict is the one unmerged shape where "take either side" is
+    # WRONG. If EITHER side deleted the view, someone un-adopted it deliberately, and
+    # regenerating would silently resurrect a file that was removed on purpose — the deletion
+    # would not survive its first conflicted merge in either direction. Honour the deletion.
+    #
+    # Working-tree presence cannot answer this and that is the whole trap: during a
+    # delete/modify the surviving side's copy is sitting right there, so the `-f` test below
+    # says "adopted" for a view that one side just removed. The two commits are the only
+    # honest source, so read them. Absent MERGE_HEAD (a rebase or cherry-pick drives this
+    # resolver too) there is no second side to read, so fall through to the old behaviour.
+    if git -C "$ROOT" rev-parse --verify --quiet MERGE_HEAD^{commit} >/dev/null 2>&1 \
+       && { ! git -C "$ROOT" cat-file -e "MERGE_HEAD:$f" 2>/dev/null \
+            || ! git -C "$ROOT" cat-file -e "HEAD:$f" 2>/dev/null; }; then
+      git -C "$ROOT" rm -q -f --ignore-unmatch -- "$f" 2>/dev/null \
+        || die "failed to honour the deletion of $f. The merge is left open on purpose."
+      rm -f "$ROOT/$f"
+      say "honoured the DELETION of $f (un-adopted on one side) — not regenerating it"
+      continue
+    fi
     # --ours is arbitrary and that is the point: both sides are stale the moment the dump
     # merged. The working-tree copy is replaced because the generators write in place; the
     # index stays unmerged until the regen below has succeeded, same discipline as releases.db.
