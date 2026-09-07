@@ -325,7 +325,7 @@ git -C "$R_RW" checkout -q -b feature
 mkdir -p "$R_RW/utils/hq" "$R_RW/test"
 printf 'x\n' > "$R_RW/utils/hq/hq.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$R_RW/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
-git -C "$R_RW" add -A >/dev/null 2>&1; git -C "$R_RW" commit -qm work >/dev/null 2>&1
+git -C "$R_RW" add utils/hq >/dev/null 2>&1; git -C "$R_RW" commit -qm work >/dev/null 2>&1
 RW_HEAD="$(git -C "$R_RW" rev-parse HEAD)"
 [ "$(bare_dev_tip "$RW_B")" != "$(git -C "$R_RW" rev-parse refs/remotes/origin/development)" ] \
   || fail "rewrite fixture is degenerate: advertised tip equals the stale tracking ref"
@@ -351,7 +351,7 @@ git -C "$R_SB" checkout -q -b feature
 mkdir -p "$R_SB/utils/hq" "$R_SB/test"
 printf 'x\n' > "$R_SB/utils/hq/hq.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$R_SB/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
-git -C "$R_SB" add -A >/dev/null 2>&1; git -C "$R_SB" commit -qm work >/dev/null 2>&1
+git -C "$R_SB" add utils/hq >/dev/null 2>&1; git -C "$R_SB" commit -qm work >/dev/null 2>&1
 SB_HEAD="$(git -C "$R_SB" rev-parse HEAD)"
 [ "$(bare_dev_tip "$SB_B")" != "$(git -C "$R_SB" rev-parse refs/remotes/origin/development)" ] \
   || fail "stale-behind fixture is degenerate: advertised tip equals the tracking ref"
@@ -378,7 +378,7 @@ git -C "$R_CC" checkout -q Q
 mkdir -p "$R_CC/utils/hq" "$R_CC/test"
 printf 'x\n' > "$R_CC/utils/hq/hq.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$R_CC/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
-git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm work >/dev/null 2>&1
+git -C "$R_CC" add utils/hq >/dev/null 2>&1; git -C "$R_CC" commit -qm work >/dev/null 2>&1
 CC_HEAD="$(git -C "$R_CC" rev-parse HEAD)"
 [ "$(git -C "$R_CC" merge-base --all origin/development HEAD | wc -l | tr -d ' ')" -ge 2 ] \
   || fail "criss-cross fixture is degenerate: fewer than two best common ancestors"
