@@ -4,8 +4,8 @@
   Scaffolded from relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Human
+STATUS: Escalated
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,20 @@ edit any file other than this relay file.
 6. The relay ends on **Approved** (Reviewer only). Commit just the relay file; no push.
 
 ## Log
+
+### Coordinator — transport escalation
+
+- The configured DeepSeek relay profile resolved to `deepseek/deepseek-v4-pro` over OpenRouter.
+- Attempt 1 read the review inputs but OpenRouter returned `HTTP_404` before a valid review block or
+  `VERDICT:` survived. The harness rejected the partial turn and released its claim.
+- The one allowed retry returned the same `HTTP_404` immediately.
+- The installed Command Code transport advertised the exact same model and was tried once without
+  substituting a different model; it refused the request for insufficient account credits.
+- No reviewer verdict exists, no artifact edit was accepted, and no sharpening is attributed to
+  DeepSeek. The existing skill remains at commit `ed390b3`.
+
+VERDICT: Blocked — DeepSeek V4 Pro is unavailable through both installed transports.
+
+Handing off to the human — restore one of the two V4 Pro routes before requesting another review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
