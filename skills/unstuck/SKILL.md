@@ -72,12 +72,16 @@ For every claimed blocker, ask:
 
 > **If this item were fixed now, could the next milestone proceed?**
 
+Then ask whether required evidence exposed the blocker or optional activity begun after the stall
+manufactured it. A newly discovered issue still blocks when it demonstrates an acceptance failure,
+safety invariant, or required gate; otherwise classify the new work as polish or a cog.
+
 Classify it from evidence, not discomfort:
 
 | Class | Meaning | Disposition |
 |---|---|---|
 | Goal blocker | Its absence directly prevents the next milestone | Fix the narrow blocker |
-| Required correctness or safety | A failing check, violated contract, data-loss/security risk, or explicit gate | Satisfy it; never dismiss it as a cog |
+| Required correctness or safety | A failing check, violated contract, data-loss/security risk, or explicit gate | Satisfy it or name the exact external dependency; never dismiss it as a cog |
 | External decision or dependency | Progress genuinely requires authority, input, credentials, or outside state | Ask one exact question or name the dependency |
 | Polish | Improves confidence or elegance but does not gate the milestone | Park it |
 | Cog | New machinery, process, or review about doing the work | Stop it and use the existing path |
@@ -101,9 +105,8 @@ park them.
 
 If two plausible paths remain and the choice materially affects the outcome, run **one** `/consult`
 with a binary question: “Which option advances the stated milestone with fewer new assumptions?”
-The coordinator breaks the tie. No second consult, no review of the review, and no cap extension.
-If consult is unavailable, already failed, or is itself part of the stall, do not retry it: choose
-the simpler supported path when safe, otherwise ask the operator the binary question directly.
+The coordinator breaks the tie. Do not retry if consult failed or is part of the stall; choose the
+simpler safe path or ask the operator directly. No review of the review and no cap extension.
 
 Before acting, retain normal authorization and safety boundaries. `/unstuck` removes self-created
 process debt; it never grants permission to push, publish, delete, spend money, bypass a gate, or
@@ -138,6 +141,7 @@ still apply. `/unstuck` is a blocking interrupt, not an escape from the parent w
 - Start a complex problem from scratch with `/workhorse`.
 - Minimize an implementation that is otherwise moving with `/ponytail`.
 - Diagnose an unknown failure with `/debug-mantra`.
+- Park scope creep and close a chapter with `/finish-line`.
 - Interrupt a live process whose activity no longer advances its goal with `/unstuck`.
 
 The shortest path back to the plan is the product.
