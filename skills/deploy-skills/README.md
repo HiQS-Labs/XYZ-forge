@@ -43,5 +43,30 @@ Only local Git skill folders are imported; runtime dependencies are not installe
 Overwritten skill folders are backed up as dated ZIPs, with same-day suffixes.
 Foreign app folders and unrelated links are preserved rather than overwritten.
 
+## Health check
+
+Ask your agent: **“Run a health check on my deployed skills.”** The health check
+uses the existing sync tool's read-only status command; no separate script is needed:
+
+```bash
+python3 "$HOME/Documents/Deployed Skills/sync.py" --status
+```
+
+It validates the local collection and reports missing or incorrect directory
+symlinks for enabled targets, stale managed links, ownership conflicts, and recorded
+runtime prerequisites. It does not copy, delete, repair, or change settings.
+Apps share the durable skill copies through symlinks, not separate payload copies.
+
+Read the report: `actions` are pending link changes, `changes` are pending ownership
+updates, and `errors` are conflicts or validation failures. Deployment is in sync
+when all three are empty. Exit code `2` indicates errors; **exit code `0` alone does
+not prove health**, because pending changes can still be reported. Disabled targets
+are not required deployment destinations. Ask for a sync separately to apply repairs;
+foreign entries require explicit review rather than automatic replacement.
+
+This is a filesystem deployment health check, not proof that an app or extension
+has loaded a skill or that its runtime dependencies work. Report app discovery and
+runtime readiness separately as verified or unverified.
+
 Inside the `deploy-skills` folder, see `references/targets.md` for app-specific
 verification and `references/recovery.md` for backups, interruptions and migration.
