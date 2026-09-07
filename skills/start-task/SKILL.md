@@ -225,7 +225,8 @@ not raw SQL, guessed field mappings, or silently deleting governance metadata.
 
 Maintain this skill in the XYZ Forge repository's `skills/start-task/` directory.
 When installation is requested, symlink app discovery entries to that directory
-in the **maintained primary clone**, never to a temporary review/task checkout.
+in the **maintained primary clone**, or use `skills-army-hq` to copy it into the user's
+durable Deployed Skills collection and symlink that copy. Never link discovery to a temporary review/task checkout.
 Resolve the location on the current machine; do not embed an operator-specific path.
 
 | Consumer | Global skill entry |

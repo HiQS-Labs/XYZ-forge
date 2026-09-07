@@ -10,6 +10,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
+def test_deploy_skills_behavioral_suite():
+    result = subprocess.run(
+        [sys.executable, "-B", "-m", "unittest", "discover", "-s", "test", "-p", "test_deploy_skills.py"],
+        cwd=REPO_ROOT, text=True, capture_output=True, timeout=180,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Ran " in result.stderr and "Ran 0 tests" not in result.stderr
+
 def load_module(module_name, relative_path):
     module_path = os.path.join(REPO_ROOT, relative_path)
     spec = importlib.util.spec_from_file_location(module_name, module_path)
