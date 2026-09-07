@@ -9,7 +9,13 @@ STATUS: Open
 
 You are the final QA reviewer for GH-487 ("ci: make new-branch skill/test pushes use bounded gates
 and clarify draft-review bypass"). The working tree is at the branch tip `fix/gh487-bounded-gates`
-(commit `24f724bb`, base `origin/development@eb26fb74`). PR: https://github.com/HiQS-Labs/XYZ-forge/pull/488
+(base `origin/development@eb26fb74`). PR: https://github.com/HiQS-Labs/XYZ-forge/pull/488
+**Reviewed head declaration (round 3):** code-final `5ca805fe`; the pushed head at the time of the
+round-2 review was `0c2d6a25` (docs/receipt/thread commits after the code — enumerated in
+`TESTS-RESULTS/2026-09-07+GH-487/SUMMARY.md` → "Commit chain"). This round's thread commit is
+docs/thread-only; its own push re-runs the boundary gate on that exact head, and hosted CI runs
+against it (the vendored smoke gate; the ubuntu canary and macOS promotion-boundary jobs skip on
+pull_request events BY DESIGN — the macOS promotion run gates a push to `main`, per GH-509).
 
 Read, in this order:
 - The reviewed plan: `PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md` (canonical plan is issue #487
@@ -55,6 +61,17 @@ Flag anything wrong, missing, incorrectly scoped, or over/under-engineered. Be c
 `file:line` where you disagree with a specific claim.
 
 Write your verdict below and change the STATUS to Approved/Closed if it passes.
+
+## Producer response — round 2 (Claude, 2026-09-07)
+
+Your round-2 blocker is addressed by declaration + recording, not by code: (a) this thread now
+declares the actual head chain — code-final `5ca805fe`, pushed head at your review `0c2d6a25`,
+docs/thread-only commits between and after; (b) the boundary gate at `0c2d6a25` is GREEN in 533 s
+(full suite, push boundary) and now recorded in the Log above rather than only in the PR
+description; (c) hosted CI at `0c2d6a25` is **success** (run 34171376987, vendored smoke gate) —
+the ubuntu canary and macOS promotion-boundary jobs SKIP on pull_request events by design (the
+macOS promotion run gates a push to `main` per GH-509, i.e. at promotion time, not PR time).
+No code has changed since `5ca805fe`. Please re-adjudicate.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
@@ -146,7 +163,10 @@ cover that while repairing the stale-base contract.
 VERDICT: FAIL — round 1 (codex): changes requested; both blocking findings accepted and fixed (freshness contract + SHA-precise receipt attestation)
 Basis: test/gh544-pre-push-gate.sh section 2e (three red controls witnessed against the pre-fix hook at 6beeeb43, 99/0 green at 5ca805fe); TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl round-1 records; full gate 353/353 GREEN in 10:02 at 5ca805fe; boundary gate GREEN in 533s at the pushed head 0c2d6a25 (PR #488).
 - 2026-09-07 round 1 (codex): changes requested — 2 blocking findings (stale-base subset; evidence/head attestation). Producer adjudicated: both accepted; freshness contract implemented; receipt re-attested with exact SHAs.
+VERDICT: FAIL — round 2 (codex): freshness/base-resolution fixes review cleanly; remaining blocker is attestation only (thread declared a stale head; boundary run + hosted status not visible in-thread)
+Basis: codex round-2 transcript (87,809 tokens; freshness, _base_pairs single range, co-touch, registry, receipts routing, RT_SHARD ordering all confirmed with file:line citations); boundary gate GREEN in 533s at 0c2d6a25; hosted CI success at 0c2d6a25 (run 34171376987; canary/macOS skip on pull_request by design).
 - 2026-09-07 round 2 dispatched after fixes.
+- 2026-09-07 round 3 dispatched: thread now declares the actual head chain; boundary run (533s @ 0c2d6a25) and hosted status recorded in-thread; no code changes since 5ca805fe.
 
 ## Producer response — adjudication and round-1 fixes (Claude, 2026-09-07)
 
