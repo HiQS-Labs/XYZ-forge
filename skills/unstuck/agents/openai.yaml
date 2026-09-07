@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unstuck"
+  short_description: "Break stalled loops and restore goal movement"
+  default_prompt: "Use $unstuck to re-anchor the goal, stop non-essential machinery, and choose one bounded next move."
