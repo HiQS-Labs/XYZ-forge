@@ -294,6 +294,98 @@ out="$( cd "$R_NB" && printf '' | bash githooks/pre-push origin 2>&1 )"; rc=$?
 ok "an EMPTY stdin still announces the full gate (nothing narrow can run on no input, GH-487)" \
    "printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
 
+# --- (2e) GH-487 review round 1: freshness of the base evidence is verified, not assumed ---------
+# The original implementation trusted the local remote-tracking ref; a force-push that REWROTE the
+# integration branch backward leaves the tracking ref NEWER than the true tip, and the classified
+# range becomes a SUBSET of the true integration diff. The hook therefore verifies the tracking ref
+# EQUALS the tip the remote currently advertises (git ls-remote) and fails closed on any mismatch,
+# ambiguity, or verification failure — "missing, ambiguous or stale base evidence must fall back"
+# is the issue's own contract.
+bare_dev_tip() {  # <bare> -> sha the bare's development points at
+  git -C "$1" rev-parse refs/heads/development
+}
+
+# (a) integration branch rewritten BACKWARD: tracking ref newer than the advertised tip.
+R_RW="$(mkrepo 0)"
+RW_B="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$RW_B" "rewrite bare"
+git init -q --bare "$RW_B"
+git -C "$R_RW" remote add origin "$RW_B"
+git -C "$R_RW" branch development
+git -C "$R_RW" push -q origin development 2>/dev/null
+git -C "$R_RW" fetch -q origin 2>/dev/null            # tracking = advertised = seed
+git -C "$R_RW" checkout -q development
+printf 'dev work\n' > "$R_RW/dev.txt"
+git -C "$R_RW" add -A >/dev/null 2>&1; git -C "$R_RW" commit -qm dev-work >/dev/null 2>&1
+RW_TIP="$(git -C "$R_RW" rev-parse HEAD)"              # pre-rewrite tip X
+git -C "$R_RW" push -q origin development 2>/dev/null
+git -C "$R_RW" fetch -q origin 2>/dev/null
+RW_SEED="$(git -C "$RW_B" rev-parse refs/heads/development^)"   # an OLDER commit = rollback target
+git -C "$RW_B" update-ref refs/heads/development "$RW_SEED"      # THE BACKWARD REWRITE
+git -C "$R_RW" checkout -q -b feature
+mkdir -p "$R_RW/utils/hq" "$R_RW/test"
+printf 'x\n' > "$R_RW/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_RW/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
+git -C "$R_RW" add -A >/dev/null 2>&1; git -C "$R_RW" commit -qm work >/dev/null 2>&1
+RW_HEAD="$(git -C "$R_RW" rev-parse HEAD)"
+[ "$(bare_dev_tip "$RW_B")" != "$(git -C "$R_RW" rev-parse refs/remotes/origin/development)" ] \
+  || fail "rewrite fixture is degenerate: advertised tip equals the stale tracking ref"
+out="$(drive_as "$R_RW" origin "refs/heads/feature $RW_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a BACKWARD-rewritten integration branch fails closed to full (GH-487 round 1)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (b) stale-behind: the remote moved on after our last fetch — evidence is stale either way.
+R_SB="$(mkrepo 0)"
+SB_B="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$SB_B" "stale-behind bare"
+git init -q --bare "$SB_B"
+git -C "$R_SB" remote add origin "$SB_B"
+git -C "$R_SB" branch development
+git -C "$R_SB" push -q origin development 2>/dev/null
+git -C "$R_SB" fetch -q origin 2>/dev/null             # tracking = A
+SB_MOVE="$(mktemp -d "$WORK/sbmove.XXXXXX")"; require_fixture "$SB_MOVE" "stale-behind mover"
+git -C "$SB_MOVE" init -q; git -C "$SB_MOVE" config user.email t@t; git -C "$SB_MOVE" config user.name t
+git -C "$SB_MOVE" pull -q "$SB_B" development 2>/dev/null
+printf 'moved on\n' > "$SB_MOVE/moved.txt"
+git -C "$SB_MOVE" add -A >/dev/null 2>&1; git -C "$SB_MOVE" commit -qm moved-on >/dev/null 2>&1
+git -C "$SB_MOVE" push -q origin HEAD:refs/heads/development 2>/dev/null   # advertised = T, tracking still A
+git -C "$R_SB" checkout -q -b feature
+mkdir -p "$R_SB/utils/hq" "$R_SB/test"
+printf 'x\n' > "$R_SB/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_SB/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
+git -C "$R_SB" add -A >/dev/null 2>&1; git -C "$R_SB" commit -qm work >/dev/null 2>&1
+SB_HEAD="$(git -C "$R_SB" rev-parse HEAD)"
+[ "$(bare_dev_tip "$SB_B")" != "$(git -C "$R_SB" rev-parse refs/remotes/origin/development)" ] \
+  || fail "stale-behind fixture is degenerate: advertised tip equals the tracking ref"
+out="$(drive_as "$R_SB" origin "refs/heads/feature $SB_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (c) ambiguous base: criss-cross history gives merge-base --all two equally-best answers.
+R_CC="$(mkrepo 0)"
+git -C "$R_CC" checkout -q -b P
+printf 'p\n' > "$R_CC/p.txt"; git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm P1 >/dev/null 2>&1
+P1="$(git -C "$R_CC" rev-parse HEAD)"
+git -C "$R_CC" checkout -q -b Q main
+printf 'q\n' > "$R_CC/q.txt"; git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm Q1 >/dev/null 2>&1
+Q1="$(git -C "$R_CC" rev-parse HEAD)"
+git -C "$R_CC" checkout -q P
+git -C "$R_CC" merge -q --no-edit Q1 >/dev/null 2>&1          # M1 on P
+M1="$(git -C "$R_CC" rev-parse HEAD)"
+git -C "$R_CC" branch -f development "$M1"
+mkorigin "$R_CC" development                                   # HEAD is P=M1: bare development=M1, fetched fresh
+git -C "$R_CC" checkout -q Q
+git -C "$R_CC" merge -q --no-edit P1 >/dev/null 2>&1          # M2 on Q — criss-cross complete
+git -C "$R_CC" checkout -q Q
+mkdir -p "$R_CC/utils/hq" "$R_CC/test"
+printf 'x\n' > "$R_CC/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_CC/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
+git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm work >/dev/null 2>&1
+CC_HEAD="$(git -C "$R_CC" rev-parse HEAD)"
+[ "$(git -C "$R_CC" merge-base --all origin/development HEAD | wc -l | tr -d ' ')" -ge 2 ] \
+  || fail "criss-cross fixture is degenerate: fewer than two best common ancestors"
+out="$(drive_as "$R_CC" origin "refs/heads/feature $CC_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "an AMBIGUOUS base (multiple best common ancestors) fails closed to full (GH-487 round 1)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
 # --- (3) bypasses work AND announce themselves -----------------------------------------------------
 # A silent bypass is the failure mode: a skipped gate that says nothing looks exactly like a passing one.
 out="$(drive "$R_RED" "$NORMAL" XYZ_SKIP_PREPUSH=1)"; rc=$?
