@@ -4,8 +4,8 @@
   Scaffolded from relay-automation/new-relay.sh on 2026-09-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -286,3 +286,58 @@ VERDICT: FAIL — fixes are implemented but still require Reviewer verification.
 
 Handing off to Reviewer — verify the revised artifact, adjudicate the declined metadata change, and
 finish with literal `swept file: yes`, a non-empty `Basis:`, and `VERDICT: PASS`, `FAIL`, or `PARKED`.
+
+### Reviewer (DeepSeek V4 Pro) — Round 2
+
+swept file: yes
+
+The revised artifact is sound. All five Round 1 findings are disposed, and a full sweep of the 147-line
+SKILL.md against the seven DoD items finds no new defects. The Producer's declination of finding #3
+(`$unstuck` → `/unstuck`) is correct by cross-reference: every skill in this repo —
+`skills/agent-chorus/agents/openai.yaml:4` (`$agent-chorus`),
+`skills/marathon-cleanup/agents/openai.yaml:4` (`$marathon-cleanup`),
+`skills/marathon-triage/agents/openai.yaml:4` (`$marathon-triage`) — uses the identical
+`$skill-name` variable-reference convention. Changing this one would break uniformity. Declination
+**accepted**.
+
+---
+
+#### Disposition verification — all five findings
+
+| # | Round 1 finding | Producer action | R2 ruling |
+|---|---|---|---|
+| 1 | `[Should]` Self-manufactured-finding bootstrap at Rung 3 | Modified — evidence-origin question added | **Verified** at `SKILL.md:75-77`: "Then ask whether required evidence exposed the blocker or optional activity begun after the stall manufactured it. A newly discovered issue still blocks when it demonstrates an acceptance failure, safety invariant, or required gate; otherwise classify the new work as polish or a cog." Non-destructive: preserves legitimate newly-discovered blockers tied to evidence, closes the hypothetical-finding bootstrap. |
+| 2 | `[Should]` Redundant consult-retry in Rung 4 | Implemented — collapsed into one sentence | **Verified** at `SKILL.md:108-109`: "Do not retry if consult failed or is part of the stall; choose the simpler safe path or ask the operator directly. No review of the review and no cap extension." Lean, retains all three protections (circuit-breaker, operator fallback, no-cap-extension). |
+| 3 | `[Should]` `$unstuck` → `/unstuck` in openai.yaml | Declined — `$skill-name` is the Codex variable-reference convention | **Declination accepted** — all four skills' `openai.yaml` files use `$skill-name` uniformly (`$agent-chorus`, `$marathon-cleanup`, `$marathon-triage`, `$unstuck`). The slash form remains correct in the skill's cross-harness trigger text (`SKILL.md:9`). |
+| 4 | `[Nit]` "Satisfy it" ambiguous re: external dependencies | Implemented | **Verified** at `SKILL.md:84`: "Satisfy it or name the exact external dependency; never dismiss it as a cog." |
+| 5 | `[Nit]` Missing `/finish-line` in Routing boundary | Implemented | **Verified** at `SKILL.md:144`: "- Park scope creep and close a chapter with `/finish-line`." |
+
+---
+
+#### Full-sweep verification — seven DoD items
+
+| # | DoD item | Verdict | Evidence |
+|---|---|---|---|
+| 1 | Interrupts polishing-while-idle including review-cap/cache-fingerprint failure | **[Pass]** | Rung 1 (`SKILL.md:43-45`) freezes all machinery addition; Rung 1 cap-boundary clause (`SKILL.md:54`) explicitly closes cap-extension as escape; Rung 3 Cog class (`SKILL.md:87`) catches "New machinery, process, or review about doing the work." Forward-trace the screenshot scenario: cap exhausts → Rung 1 classifies it as boundary → Rung 3 classifies further review as Cog → Rung 4 selects "execute the already accepted plan." No escape hatch survives. |
+| 2 | Distinguishes real blocker from correctness/safety, external dep, polish, cog | **[Pass]** | Five-row classification table (`SKILL.md:81-87`) with explicit disposition per class. Rung 3 evidence-origin guard (`SKILL.md:75-77`) closes manufactured-finding bootstrap. Anti-relabel clause (`SKILL.md:90-91`) prevents the reverse exploit. |
+| 3 | Selects one smallest goal-moving action, acts once, verifies, exits | **[Pass]** | Rung 4 (`SKILL.md:95-109`) is a four-option ordered-preference list with explicit "do not produce a new multi-step plan" guard. Rung 5 (`SKILL.md:117-133`) enforces one-action-then-receipt. Exit clause (`SKILL.md:133`): "The skill ends when movement resumes or the real blocker is legible." No recursive loop surface. |
+| 4 | Cap exhaustion ≠ proof of blockage; recent movement + user goal govern | **[Pass]** | `SKILL.md:54`: "A cap exhausted **without qualifying movement** is a boundary, not an invitation to raise the cap." `SKILL.md:55-57` preserves bounded extensions for evidenced correctness findings. The `qualifying movement` definition (`SKILL.md:28`) ties to next milestone or demonstrated failure — not activity volume. |
+| 5 | Preserves authorization, parent governance; no silent delete, bypass, or invention | **[Pass]** | `SKILL.md:111-113`: explicit prohibition on push/publish/delete/spend/bypass/irreversible. `SKILL.md:135-137`: explicit return-to-parent-ladder contract with governance preservation. Rung 1: "Do not discard working changes either" (`SKILL.md:45`). |
+| 6 | Routes precisely vs. workhorse, debug-mantra, recon, finish-line | **[Pass]** | Routing boundary (`SKILL.md:141-145`) lists all five neighbors with one-line discriminators. Workhorse handoff (`skills/workhorse/SKILL.md` — cross-referenced) has exactly one `/unstuck` handoff as a blocking interrupt. No duplication across skills. |
+| 7 | Lean enough to help a stuck model; no ceremony, duplication, or ambiguous rules | **[Pass]** | 147 lines total. Five rungs average ~22 lines each. One table. One receipt block. No repeated concepts. Rung 2 header "Re-anchor the finish line" (`SKILL.md:59`) uses "finish line" while body says "milestone" — both resolve to the same concept; a valid synonym, not a defect. |
+
+---
+
+#### New sweep: two trivial observations (no grade change)
+
+- **[Nit]** `SKILL.md:59` header "Re-anchor the finish line" uses "finish line" while the rung body consistently says "milestone." The header is the only occurrence of "finish line" outside the `/finish-line` routing entry. Both terms resolve to the same concept — not ambiguous, just slightly inconsistent diction. **No fix needed.**
+
+- **[Pass]** `SKILL.md:144` uses both "scope creep" and "chapter" — terms that align with `/finish-line`'s documented behavior of parking scope creep for later pickup. Consistent.
+
+---
+
+Basis: all five Round 1 findings dispositioned and verified; declined finding #3 confirmed correct by cross-referencing all four `openai.yaml` files. Full sweep of revised SKILL.md (147 lines) against all seven DoD items passes. Two trivial nits noted above, neither rises to `[Should]`. No blockers, no new defects, no ambiguity surfacing under adversarial read.
+
+VERDICT: PASS — the `/unstuck` skill is approved as of the revised artifact at `.relay-artifacts/SKILL.md`.
+
+Relay closed (Approved), no further turn needed.
