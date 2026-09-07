@@ -180,13 +180,13 @@ def digest(folder):
 def source_record(raw):
     source = Path(raw).expanduser().resolve(strict=True)
     info = skill_info(source)
-    result = subprocess.run(["git", "-C", str(source), "rev-parse", "--show-toplevel"],
+    result = subprocess.run(["git", "--no-optional-locks", "-C", str(source), "rev-parse", "--show-toplevel"],
                             text=True, capture_output=True)
     require(result.returncode == 0, f"Source must be in a local Git repository: {source}")
     repo = Path(result.stdout.strip()).resolve()
     require(within(source, repo), f"Select a skill folder inside the repository: {source}")
     def git(*args):
-        run = subprocess.run(["git", "-C", str(repo), *args], text=True, capture_output=True)
+        run = subprocess.run(["git", "--no-optional-locks", "-C", str(repo), *args], text=True, capture_output=True)
         require(run.returncode == 0, f"Cannot inspect source repository: {run.stderr.strip()}")
         return run.stdout.strip()
     return source, {**info, "source": str(source), "repository": str(repo),
@@ -201,7 +201,7 @@ def defaults():
          "consumers": ["VS Code Claude Code extension"]},
         {"id": "codex", "path": "~/.agents/skills", "enabled": False,
          "consumers": ["VS Code Codex extension", "Codex desktop app"]},
-        {"id": "antigravity", "path": "~/.gemini/antigravity/skills", "enabled": False,
+        {"id": "antigravity", "path": "~/.gemini/config/skills", "enabled": False,
          "consumers": ["Antigravity app"]},
         {"id": "zcode", "path": "~/.zcode/skills", "enabled": False,
          "consumers": ["Zcode GLM app"]}]}

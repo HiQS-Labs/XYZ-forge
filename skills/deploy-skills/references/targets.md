@@ -11,13 +11,14 @@ are written once, while each consuming app is verified separately.
 | VS Code Claude Code extension | `~/.claude/skills` | [Skills](https://code.claude.com/docs/en/skills), [VS Code](https://code.claude.com/docs/en/vs-code) |
 | VS Code Codex extension | `~/.agents/skills` | [Codex skills](https://developers.openai.com/codex/skills/) |
 | Codex desktop app | same `~/.agents/skills` | [Codex skills](https://developers.openai.com/codex/skills/) |
-| Antigravity app | `~/.gemini/antigravity/skills` | [Antigravity skills](https://antigravity.google/docs/skills) |
+| Antigravity app | `~/.gemini/config/skills` | [Antigravity skills](https://antigravity.google/docs/skills) |
 | Zcode GLM app | `~/.zcode/skills` | [ZCode skills](https://zcode.z.ai/en/docs/skill) |
 
 Some Codex installations also discover `~/.codex/skills`; inspect existing selected
 entries to avoid duplicate names or stale overrides. Do not deploy to both by
-default. Do not enable historical Gemini CLI/config paths merely because an old
-installer used them. Project-local skills may shadow global ones; a filesystem link
+default. Current Antigravity 2.12.2 docs name `~/.gemini/config/skills`; older repo
+installers used `~/.gemini/antigravity/skills`. Select the path supported by the
+installed app, not every historical path. Project-local skills may shadow global ones; a filesystem link
 and readable SKILL.md do not prove a running app has refreshed its skill inventory.
 
 For each consumer, observe its skill picker/settings or a read-only agent invocation.
