@@ -197,6 +197,103 @@ ok "a RED tier 2 gate still refuses the utility push (exit 1)" "[ $rc -eq 1 ]"
 ok "  and names the tier 2 gate in the refusal" \
    "printf '%s' \"\$out\" | grep 'tier 2 subsystem gate.*RED' >/dev/null"
 
+# --- (2d) GH-487: the FIRST push of a new branch classifies against its integration base ---------
+# A first push arrives with an all-zero remote SHA — there is no update range to diff. The hook
+# resolves the push's own remote's integration branch (refs/remotes/<remote>/development, then
+# main), verifies a merge-base, and classifies that range; anything missing, ambiguous, or empty
+# falls back to the full gate. git passes the remote's NAME as $1, so these cases drive the hook
+# the way git does — with the argument, not just the stdin pairs.
+drive_as() {  # <repo> <remote-name-arg> <stdin-line> [env...] — git passes the remote as $1
+  local r="$1" rn="$2" line="$3"; shift 3
+  require_fixture "$r" "drive_as repo"
+  ( cd "$r" && printf '%s\n' "$line" | env "$@" bash githooks/pre-push "$rn" 2>&1 )
+}
+mkorigin() {  # <repo> <branch> -> bare origin carrying <branch> (the repo's current HEAD), fetched
+  local r="$1" br="$2" b
+  require_fixture "$r" "mkorigin repo"
+  b="$(mktemp -d "$WORK/bare.XXXXXX")"
+  require_fixture "$b" "mkorigin bare"
+  git init -q --bare "$b"
+  git -C "$r" remote add origin "$b"
+  git -C "$r" push -q origin "HEAD:refs/heads/$br" 2>/dev/null
+  git -C "$r" fetch -q origin 2>/dev/null
+}
+ZEROS="0000000000000000000000000000000000000000"
+
+# The positive case: a feature branch off development, first push, utility-only change.
+R_NB="$(mkrepo 0)"
+git -C "$R_NB" branch development
+mkorigin "$R_NB" development
+git -C "$R_NB" checkout -q -b feature
+mkdir -p "$R_NB/utils/hq" "$R_NB/test"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_NB/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_NB/test/hq.sh"   # on disk, outside the range (the 2c pattern)
+git -C "$R_NB" add utils/hq >/dev/null 2>&1
+git -C "$R_NB" commit -qm hq-feature >/dev/null 2>&1
+NB_HEAD="$(git -C "$R_NB" rev-parse HEAD)"
+NB_LINE="refs/heads/feature $NB_HEAD refs/heads/feature $ZEROS"
+ARGS_NB="$WORK/nb-args.txt"; : > "$ARGS_NB"
+out="$(drive_as "$R_NB" origin "$NB_LINE" STUB_ARGS="$ARGS_NB")"; rc=$?
+ok "the FIRST push of a new branch with a verifiable base runs the tier 2 gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null"
+ok "  and validate.sh received the paths file (the shared narrow invocation)" \
+   "grep -q -- '--paths-file' '$ARGS_NB'"
+ok "  and the narrow gate really ran" "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
+
+# Fail-closed fallbacks. Each must stay on the full gate — a bad base must cost time, never coverage.
+R_NOREMOTE="$(mkrepo 0)"
+git -C "$R_NOREMOTE" checkout -q -b feature
+mkdir -p "$R_NOREMOTE/utils/hq"; printf 'x\n' > "$R_NOREMOTE/utils/hq/hq.sh"
+git -C "$R_NOREMOTE" add -A >/dev/null 2>&1; git -C "$R_NOREMOTE" commit -qm work >/dev/null 2>&1
+NR_HEAD="$(git -C "$R_NOREMOTE" rev-parse HEAD)"
+out="$(drive_as "$R_NOREMOTE" origin "refs/heads/feature $NR_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a new branch with NO origin/development base evidence falls back to the full gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+R_ORPH="$(mkrepo 0)"
+ORB_B="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$ORB_B" "orphan bare"
+git init -q --bare "$ORB_B"
+git -C "$R_ORPH" remote add origin "$ORB_B"
+ORB_SEED="$(mktemp -d "$WORK/orphan.XXXXXX")"; require_fixture "$ORB_SEED" "orphan seed"
+git -C "$ORB_SEED" init -q; git -C "$ORB_SEED" config user.email t@t; git -C "$ORB_SEED" config user.name t
+printf 'orphan\n' > "$ORB_SEED/o.txt"
+git -C "$ORB_SEED" add -A >/dev/null 2>&1; git -C "$ORB_SEED" commit -qm orphan-root >/dev/null 2>&1
+git -C "$ORB_SEED" push -q "$ORB_B" HEAD:refs/heads/development 2>/dev/null
+git -C "$R_ORPH" fetch -q origin 2>/dev/null   # origin/development is a DIFFERENT root: no common ancestor
+git -C "$R_ORPH" checkout -q -b feature
+mkdir -p "$R_ORPH/utils/hq"; printf 'x\n' > "$R_ORPH/utils/hq/hq.sh"
+git -C "$R_ORPH" add -A >/dev/null 2>&1; git -C "$R_ORPH" commit -qm work >/dev/null 2>&1
+ORPH_HEAD="$(git -C "$R_ORPH" rev-parse HEAD)"
+out="$(drive_as "$R_ORPH" origin "refs/heads/feature $ORPH_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a new branch with NO common ancestor to the integration branch fails closed to full (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+SAME_TIP="$(git -C "$R_NB" merge-base origin/development HEAD)"
+out="$(drive_as "$R_NB" origin "refs/heads/same $SAME_TIP refs/heads/same $ZEROS")"; rc=$?
+ok "a base equal to the pushed SHA (empty range) fails closed to full (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+out="$(drive_as "$R_NB" "https://example.invalid/example/repo.git" "$NB_LINE")"; rc=$?
+ok "a push by URL has no configured remote name and takes the full gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+ok "  and says WHY instead of leaving the slowness unexplained" \
+   "printf '%s' \"\$out\" | grep 'URL' >/dev/null"
+
+# A mixed push (new branch + an up-to-date development ref) classifies every pair; the union of
+# ranges — not just the first — is what reaches the classifier.
+DEV_TIP="$(git -C "$R_NB" rev-parse origin/development)"
+MX_LINE="$(printf '%s\n%s' "refs/heads/feature $NB_HEAD refs/heads/feature $ZEROS" \
+                        "refs/heads/development $DEV_TIP refs/heads/development $DEV_TIP")"
+ARGS_MX="$WORK/mx-args.txt"; : > "$ARGS_MX"
+out="$(drive_as "$R_NB" origin "$MX_LINE" STUB_ARGS="$ARGS_MX")"; rc=$?
+ok "a MIXED new-branch + integration-ref push still selects the narrow gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null" \
+   && ok "  and validate.sh received the paths file" "grep -q -- '--paths-file' '$ARGS_MX'"
+
+out="$( cd "$R_NB" && printf '' | bash githooks/pre-push origin 2>&1 )"; rc=$?
+ok "an EMPTY stdin still announces the full gate (nothing narrow can run on no input, GH-487)" \
+   "printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
 # --- (3) bypasses work AND announce themselves -----------------------------------------------------
 # A silent bypass is the failure mode: a skipped gate that says nothing looks exactly like a passing one.
 out="$(drive "$R_RED" "$NORMAL" XYZ_SKIP_PREPUSH=1)"; rc=$?
