@@ -1,8 +1,8 @@
 ---
 gh_issue: 484
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/484
-title: Deploy Skills
-status: In progress — implementation drafted; fixture verification in progress
+title: Skills Army HQ
+status: In progress — draft PR requested for GLM implementation QA
 created: 2026-09-07
 updated: 2026-09-07
 owner: Codex
@@ -16,13 +16,29 @@ risk: 3
 phases: 4
 ---
 
-# Deploy Skills — Build Plan
+# Skills Army HQ — Build Plan
+
+## Current review checkpoint — 2026-09-07
+
+The operator renamed this feature to **Skills Army HQ** (`skills/skills-army-hq/`).
+Earlier deploy-skills references below describe the reviewed design and history;
+the collection remains `Documents/Deployed Skills` and `.deploy-skills*` metadata
+names remain stable. The README now includes a Primary Use Case and Health check.
+The installer copies it to the collection root. `activate-manager` migrates the
+old manager entry links without resetting collection identity or history.
+
+24 focused tests pass, including manager migration. The committed provenance records
+the exact checkpoints. The full gate at adc6cbfd predates later implementation changes
+and is not final-state evidence. On operator request, open a **draft** PR for GLM QA
+now; final implementation review and final-state gate remain required before ready.
+Keep the clone until the original QA-plus-remote-PR teardown condition is satisfied.
+No merge is authorized. Alpha evidence is partial; see the dated follow-up there.
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| Fresh full implementation clone; two tools, conversational skill and focused tests drafted | Run adversarial fixtures, then alpha deployment and final relay QA |
+| Implementation, 24 focused tests, renamed manager and live alpha deployment | Draft PR for GLM QA; final-state gate and review before ready |
 
 ## Table of contents
 
