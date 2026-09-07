@@ -104,19 +104,20 @@ fi
 # missing classifier, non-linear history, or anything other than an exact `route=docs` (tier 1) or
 # `route=fast`+`tier=2` (registered utility subsystems) falls back to the full gate. A bad range
 # must cost time, never coverage. GH-487: the FIRST push of a new branch (all-zero remote SHA) no
-# longer refuses classification outright — it classifies against a verified merge-base with the
-# push's own remote's integration branch (development, then main), and still falls back to the
-# full gate the moment that base evidence is missing, ambiguous, or yields an empty range.
+# longer refuses classification outright — it classifies against the integration branch
+# (development, then main) of the remote being pushed to, and only when the base evidence is
+# FRESH: the local tracking ref must equal the tip the remote currently advertises (git
+# ls-remote), because a stale ref cannot tell "behind" from "the branch was rewritten under us",
+# and only the first direction is safe. Stale, ambiguous (multiple best common ancestors),
+# unverifiable, or empty-range evidence all fall back to the full gate with a named reason.
 
 # GH-487: resolve each pushed ref pair to the range that classifies it. An existing remote ref
 # uses its own SHA (the update range, exactly as before). A first push of a new branch has no
-# update range — it classifies against the integration branch on the remote being pushed to
-# (git hands the hook the remote's NAME as $1). A stale remote-tracking ref is safe by
-# construction: it is an ancestor of the true tip, so the computed merge-base is an
-# ancestor-or-equal of the true one and the classified range can only be a SUPERSET of the
-# branch's own diff — staleness escalates, never under-tests. A force-push that rewrote the
-# integration branch itself either merges against the pre-rewrite commit (superset, safe) or
-# fails resolution (full gate). Every unresolvable pair refuses the narrow routes wholesale.
+# update range, so the integration base is verified against the LIVE remote — not merely the
+# local tracking ref: a backward force-push of the integration branch leaves the tracking ref
+# newer than the true tip, and a range computed from it can be a SUBSET of the true integration
+# diff (review round 1, issue #487 comment 6). The freshness proof is `git ls-remote` equality;
+# every unresolvable, stale, or ambiguous pair refuses the narrow routes wholesale.
 _base_pairs=()
 _base_note=""
 _push_remote="${1:-}"
@@ -124,27 +125,61 @@ resolve_base_pairs() {
   _base_pairs=()
   _base_note=""
   [ "${#_real_ref_pairs[@]}" -gt 0 ] || { _base_note="pre-push: no ref pairs to classify — running the full gate."; return 1; }
-  local pair local_sha remote_sha cand base
+  local pair local_sha remote_sha cand base adv mbs
+  local _adv_dev="" _adv_main="" _lsremote_needed=0
+  for pair in "${_real_ref_pairs[@]}"; do
+    case "${pair#*|}" in
+      ''|0000000000000000000000000000000000000000) _lsremote_needed=1 ;;
+    esac
+  done
+  if [ "$_lsremote_needed" -eq 1 ]; then
+    case "$_push_remote" in
+      ''|*://*|*@*:*)
+        _base_note="pre-push: remote '${_push_remote:-<none>}' is not a configured remote name (a URL push?) — no verifiable integration base, running the full gate."
+        return 1
+        ;;
+    esac
+    # One round trip for both candidates; bounded so a wedged connection costs seconds, not minutes.
+    while read -r _sha _ref; do
+      [ -n "${_sha:-}" ] || continue
+      case "$_ref" in
+        refs/heads/development) _adv_dev="$_sha" ;;
+        refs/heads/main)        _adv_main="$_sha" ;;
+      esac
+    done <<EOFADV
+$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 git ls-remote "$_push_remote" refs/heads/development refs/heads/main 2>/dev/null)
+EOFADV
+    if [ -z "$_adv_dev" ] && [ -z "$_adv_main" ]; then
+      _base_note="pre-push: could not verify the integration tip on '$_push_remote' (git ls-remote empty) — running the full gate."
+      return 1
+    fi
+  fi
   for pair in "${_real_ref_pairs[@]}"; do
     IFS='|' read -r local_sha remote_sha <<<"$pair"
     base=""
     case "$remote_sha" in
       ''|0000000000000000000000000000000000000000)
-        case "$_push_remote" in
-          ''|*://*|*@*:*)
-            _base_note="pre-push: remote '${_push_remote:-<none>}' is not a configured remote name (a URL push?) — no integration base to classify against, running the full gate."
+        for cand in "development:$_adv_dev" "main:$_adv_main"; do
+          local cand_name="${cand%%:*}" adv="${cand#*:}"
+          [ -n "$adv" ] || continue
+          cand="refs/remotes/$_push_remote/$cand_name"
+          # Freshness proof: the tracking ref must equal the tip the remote advertises RIGHT NOW.
+          # "Behind" and "rewritten under us" are indistinguishable locally, and only the first
+          # direction is safe — so any mismatch means stale evidence, which is the full gate's
+          # job (the issue's own contract). A fetch makes the narrow route available again.
+          [ "$(git rev-parse --verify --quiet "$cand^{commit}" 2>/dev/null)" = "$adv" ] || continue
+          mbs="$(git merge-base --all "$cand" "$local_sha" 2>/dev/null)" || { continue; }
+          [ "$(printf '%s\n' "$mbs" | grep -c .)" -eq 1 ] || {
+            _base_note="pre-push: ambiguous integration base (multiple best common ancestors with $_push_remote/$cand_name) — running the full gate."
             return 1
-            ;;
-        esac
-        for cand in "refs/remotes/$_push_remote/development" "refs/remotes/$_push_remote/main"; do
-          git rev-parse --verify --quiet "$cand^{commit}" >/dev/null 2>&1 || continue
-          base="$(git merge-base "$cand" "$local_sha" 2>/dev/null)" || { base=""; continue; }
+          }
+          base="$mbs"
           git cat-file -e "$base^{commit}" 2>/dev/null || { base=""; continue; }
           [ "$base" != "$local_sha" ] || { base=""; continue; }   # empty range: nothing to classify
           break
         done
         if [ -z "$base" ]; then
-          _base_note="pre-push: no verifiable merge-base with $_push_remote's integration branch (development, then main) — running the full gate."
+          [ -n "$_base_note" ] || _base_note="pre-push: no fresh merge-base with $_push_remote's integration branch (tracking ref stale or absent — fetch and retry, or take the full gate)."
           return 1
         fi
         ;;
