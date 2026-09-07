@@ -99,5 +99,68 @@ default_out="$(bash "$R" "glm 5.2" 2>/dev/null)"
   && pass "shipped table remains the default when MODEL_ALIASES_FILE is unset" \
   || fail "default table regressed: got '$default_out'"
 
+# --- GH-450 (Model-catalog Phase 1, relay QA r2 F2b): tier-4 post-correction guard ---
+#
+# The catalog's CI rule forbids two rows where one's squashed key is a substring of the other's
+# canonical id — that is the shape under which tier 4 (squashed substring, EITHER direction)
+# would capture an exact-ID query. What no data rule can see is a PIN CORRECTION: once
+# `deepseek v4 pro` is repinned to `.../deepseek-v4-pro-2`, the OLD exact id
+# `deepseek/deepseek-v4-pro` has left the data but still contains the row's squashed key, so a
+# caller that hands it to the raw resolver is silently redirected to the new pin.
+#
+# Two assertions, deliberately: (1) pin what the RAW resolver does — it captures, and this test
+# says so out loud rather than leaving it a surprise (resolve-model-alias.sh is untouched by
+# GH-450 on purpose: no Bash-parses-JSON, no GH-551 adjacency); (2) the guard that makes it
+# impossible in practice lives at utils/py/model_alias.py:resolve_model_slug, the ONE seam every
+# shim resolves through — an exact-ID form (`provider/slug`) never reaches the fuzzy table.
+CORRECTED_TABLE=$'deepseek v4 pro: deepseek/deepseek-v4-pro-2\n'
+GUARD_TABLE_FILE="${TMPDIR:-/tmp}/model-alias-gh450-$$.yml"
+printf '%s' "$CORRECTED_TABLE" > "$GUARD_TABLE_FILE"
+
+raw_out="$(printf '%s' "$CORRECTED_TABLE" | MODEL_ALIASES_FILE=/dev/stdin bash "$R" "deepseek/deepseek-v4-pro" 2>/dev/null)"; raw_rc=$?
+{ [ "$raw_rc" = 0 ] && [ "$raw_out" = "deepseek/deepseek-v4-pro-2" ]; } \
+  && pass "tier-4 documented: the RAW resolver captures the old exact id after a repin ('deepseek/deepseek-v4-pro' -> $raw_out) — this is why the seam guard below exists" \
+  || fail "raw tier-4 behavior changed: rc=$raw_rc out='$raw_out' (resolve-model-alias.sh must be untouched by GH-450; if this moved, re-read Model-catalog PROJECT.md Phase 1)"
+
+seam_out="$(MODEL_ALIASES_FILE="$GUARD_TABLE_FILE" python3 -c "
+import sys; sys.path.insert(0, '$HERE/../utils/py')
+from model_alias import resolve_model_slug
+print(resolve_model_slug('deepseek/deepseek-v4-pro', '$HERE/..'))" 2>/dev/null)"
+[ "$seam_out" = "deepseek/deepseek-v4-pro" ] \
+  && pass "tier-4 guard: the Python seam returns an exact id UNCHANGED even when a repinned row would capture it" \
+  || fail "tier-4 guard: exact id 'deepseek/deepseek-v4-pro' was redirected to '$seam_out' at the seam"
+
+# The guard must not have broken the seam's alias path: a colloquial name against the same
+# corrected table still resolves to the NEW pin (the correction is the point of a correction).
+seam_alias="$(MODEL_ALIASES_FILE="$GUARD_TABLE_FILE" python3 -c "
+import sys; sys.path.insert(0, '$HERE/../utils/py')
+from model_alias import resolve_model_slug
+print(resolve_model_slug('DeepSeek V4 Pro', '$HERE/..'))" 2>/dev/null)"
+[ "$seam_alias" = "deepseek/deepseek-v4-pro-2" ] \
+  && pass "tier-4 guard: a colloquial name still resolves to the corrected pin through the seam" \
+  || fail "seam alias path regressed: 'DeepSeek V4 Pro' -> '$seam_alias'"
+rm -f "$GUARD_TABLE_FILE"
+
+# --- GH-450 terminal-refusal control (Model-catalog consumer contract item 2) ---
+#
+# Lookup miss != refusal. A miss passes the value through UNRESOLVED to the shim's own validation
+# (the gateway rejects an unknown model at dispatch — that is the terminal refusal, and it is
+# never a default). This control is the named negative for that contract on the XYZ side, at both
+# layers: the resolver says nothing on a miss (no output, exit 1 — never a fallback row), and the
+# seam hands the input back byte-for-byte (never blank, never a substituted default). Mutating
+# either — a catch-all row, a default on miss — turns this red; that is what it is for.
+refusal_in="no-such-model-gh450-control"
+refusal_raw="$(bash "$R" "$refusal_in" 2>/dev/null)"; refusal_rc=$?
+{ [ "$refusal_rc" = 1 ] && [ -z "$refusal_raw" ]; } \
+  && pass "terminal-refusal control: resolver miss is exit 1 with NO output (no default row can answer)" \
+  || fail "terminal-refusal control: resolver answered a miss: rc=$refusal_rc out='$refusal_raw'"
+refusal_seam="$(python3 -c "
+import sys; sys.path.insert(0, '$HERE/../utils/py')
+from model_alias import resolve_model_slug
+print(resolve_model_slug('$refusal_in', '$HERE/..'))" 2>/dev/null)"
+[ "$refusal_seam" = "$refusal_in" ] \
+  && pass "terminal-refusal control: the seam passes an unknown name through unresolved (never a default, never blank) for the gateway to refuse" \
+  || fail "terminal-refusal control: seam turned '$refusal_in' into '$refusal_seam'"
+
 echo "  model-alias: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]

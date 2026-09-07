@@ -140,20 +140,37 @@ Bypass (deliberately loud, e.g. a WIP branch): git push --no-verify
 EOF
     else
       # The other legitimate no-diff case: a ledger change the dashboard cannot render.
-      # jog_queue rows have no dashboard projection, and a jog write's full dump fan-out is
-      # jog_queue + its op_receipts audit rows + the settings generation counter — none of
-      # which the dashboard renders (GH-315). If every changed data line targets exactly
-      # that set, allow; any other table's data change keeps the dropped-row refusal below.
-      non_jog_data=0
+      # The renderer's only data input is `releases_app.py roadmap list --json`, a flat
+      # SELECT * FROM roadmap_items with no join or reference resolution — so roadmap_items
+      # is the ONLY projected table, and a write confined to anything else can never stale
+      # the view. Two write shapes are classified here, by their full dump fan-out:
+      #   jog     (GH-315) — jog_queue     + op_receipts + the settings generation counter
+      #   marathon         — marathons + issue_refs + op_receipts + that same counter
+      # `marathon add` creates the issue_refs row itself when the tracking URL is new, so the
+      # two tables must be allowed together or the refusal returns for any unseen issue.
+      # If every changed data line targets that set, allow; anything else keeps the
+      # dropped-row refusal below.
+      #
+      # KNOWN GAP, deliberate: this is an allowlist, so the 8 remaining tables in the dump
+      # (doc_lines, grandfather_entries, legacy_lines, manifest_items, manifest_state_events,
+      # releases, repos, schema_migrations) still hit the catch-all and still produce the same
+      # FALSE refusal this arm exists to stop — a `releases add` will trip it. Enumerating
+      # tables is the wrong mechanism and is being replaced: the renderer already knows which
+      # rows it dropped and throws that away (see #474). Do not "simplify" this into a
+      # roadmap_items-only denylist in the meantime — that fails OPEN if the renderer ever
+      # gains a second projected table, where this fails closed.
+      projected_or_unknown_data=0
       while IFS= read -r dline; do
         case "$dline" in
           '-'INSERT\ INTO\ jog_queue*|'+'INSERT\ INTO\ jog_queue*) ;;
+          '-'INSERT\ INTO\ marathons*|'+'INSERT\ INTO\ marathons*) ;;
+          '-'INSERT\ INTO\ issue_refs*|'+'INSERT\ INTO\ issue_refs*) ;;
           '-'INSERT\ INTO\ op_receipts*|'+'INSERT\ INTO\ op_receipts*) ;;
           *INSERT\ INTO\ settings*generation*) ;;
-          '-'INSERT\ INTO\ *|'+'INSERT\ INTO\ *) non_jog_data=1; break ;;
+          '-'INSERT\ INTO\ *|'+'INSERT\ INTO\ *) projected_or_unknown_data=1; break ;;
         esac
       done < <(git -C "$REPO" diff --no-renames "$remote_sha" "$local_sha" -- releases.sql 2>/dev/null)
-      if [ "$non_jog_data" -eq 0 ]; then
+      if [ "$projected_or_unknown_data" -eq 0 ]; then
         continue
       fi
       cat >&2 <<'EOF'

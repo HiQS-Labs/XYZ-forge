@@ -1,0 +1,4 @@
+FIRSTHAND_COUNT=4
+ECHOED_COUNT=2
+ECHOED `run_tests`
+ECHOED `run_tests`

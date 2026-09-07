@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>XYZ Forge — Multi-Agent Coordination</title>
-<meta name="description" content="XYZ lets several AI coding agents — Claude Code, Codex, and agy — work on the same repo concurrently, with path claims and isolated turns that reduce accidental overwrites.">
-<meta property="og:title" content="XYZ Forge — Multi-Agent Coordination">
-<meta property="og:description" content="Several AI coding agents, one repo, no accidental overwrites: path-scoped claims, turn-based relays, and verified gates.">
+<title>XYZ Forge — Run AI Coding Agents as a Workforce</title>
+<meta name="description" content="XYZ Forge is a local-first engineering operations system for running AI coding agents — Claude Code, Codex, agy — as a workforce: specified work, collision-free lanes, verification gates, and a receipted record of what happened.">
+<meta property="og:title" content="XYZ Forge — Run AI Coding Agents as a Workforce">
+<meta property="og:description" content="Several AI coding agents on the same repositories, plus the machinery an unattended run actually needs: capture → rate → plan → preflight → execute → gate → land → record.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://hiqs-labs.github.io/XYZ-forge/">
 <link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/">
@@ -25,6 +25,7 @@
       <a href="models-harnesses.html">Models &amp; Harnesses</a>
       <a href="roadmap.html">Roadmap</a>
       <a href="issues.html">Issues</a>
+      <a href="other-apps-tools.html">Other Apps &amp; Tools</a>
       <a href="contact.html">Contact</a>
     </nav>
   </div>
@@ -32,16 +33,22 @@
 
 <section class="hero">
   <div class="wrap">
-    <h1>XYZ — Multi-Agent Coordination <span class="badge">Beta</span></h1>
+    <h1>Run AI coding agents as a workforce <span class="badge warn">Alpha</span></h1>
     <p class="tagline">
-      XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) —
-      work on the same repo concurrently, with path claims and isolated turns that reduce
-      accidental overwrites.
+      XYZ Forge is a local-first engineering operations system. It coordinates several AI coding
+      agents — Claude Code, Codex, <code>agy</code> (Google's Antigravity CLI), and others —
+      working on the same repositories, and it carries the surrounding machinery an unattended
+      agent run actually needs: specified work, collision-free lanes, verification gates, and a
+      receipted record of what happened.
     </p>
+    <p class="tagline">It started as a coordination kernel. It has become the loop around it:</p>
+    <p><code>capture → rate → plan → preflight → execute → gate → land → record</code></p>
+    <p class="tagline">Every stage is a CLI verb or a skill, every artifact is on your disk, and no
+    stage requires a server, an account, or an API key for the coordination layer itself.</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="https://github.com/HiQS-Labs/XYZ-forge">View on GitHub</a>
       <a class="btn" href="how-it-works.html">How it Works</a>
-      <a class="btn" href="https://github.com/HiQS-Labs/XYZ-forge#quickstart--prove-it-works-no-accounts-needed">Get Started</a>
+      <a class="btn" href="https://github.com/HiQS-Labs/XYZ-forge#prove-the-kernel-works--60-seconds-no-accounts">Get Started</a>
     </div>
   </div>
 </section>
@@ -49,29 +56,95 @@
 <main>
   <div class="wrap">
     <h2>What XYZ is</h2>
-    <p>It's built in two layers:</p>
+    <p>Built in four layers, all local-first:</p>
     <div class="card-grid">
       <div class="card">
-        <h3><code>tick</code> — the kernel</h3>
-        <p>A tiny local event-log CLI that hands out path-scoped work claims to serialize
-        overlapping edits. No server, no API keys, no remote.</p>
+        <h3>1 · The kernel — <code>tick</code></h3>
+        <p>A dependency-free Node CLI over an append-only event log. Agents take
+        <em>path-scoped claims</em> serialized by an <code>O_EXCL</code> lock, so two agents
+        editing overlapping paths serialize instead of racing. No server, no remote.</p>
       </div>
       <div class="card">
-        <h3><code>relay-automation/</code> — the product</h3>
-        <p>Runs agents in <em>turns</em> (one builds, another reviews) headlessly, so you can hand a
-        task to Codex or agy and let them iterate toward done without babysitting the handoff.</p>
+        <h3>2 · The execution layer</h3>
+        <p>Headless turns driven through each agent's own CLI — Consult, Relay, Swarm, Marathon —
+        with path allowlists, worktree isolation, a commit-bypass guard, wall-clock watchdogs,
+        and typed exit codes enforced by one shared containment core.</p>
+      </div>
+      <div class="card">
+        <h3>3 · The operations layer</h3>
+        <p>Issue-first intake, a scored backlog, a collision-checking wave planner, preflight
+        readiness, verification gates with resource caps, a receipted release ledger, PDDA doc
+        governance, HQ for multi-repo control, and ~50 reusable skills.</p>
+      </div>
+      <div class="card">
+        <h3>4 · Docs as runtime state</h3>
+        <p>Agent work has to be stoppable, resumable, and handed off from <code>PROJECT/**</code>
+        alone — the doc tree is serialized machine state, and drift between docs and code is a
+        defect rather than untidiness.</p>
       </div>
     </div>
-    <p>It's a working beta, not a polished product — but the kernel is test-covered and the relay
-    stack is the main active surface.</p>
 
-    <h2>The four modes — they stack</h2>
+    <h2>Code quality you can verify. Repositories you can maintain.</h2>
+    <p>Autonomous coding is useful when you can check the result and continue the work later.
+    XYZ Forge brings independent review, executable checks, and maintained project records
+    into the delivery workflow.</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Independent review for each task</h3>
+        <p>In a Builder–Reviewer relay, a separate reviewer examines the implementation against
+        the agreed requirements. Findings return to the builder for correction, and the review
+        records what was checked and what remains unresolved.</p>
+      </div>
+      <div class="card">
+        <h3>Test evidence tied to the delivered revision</h3>
+        <p>Configured automated gates run the required checks and record their results against
+        the exact commit. Delivery checks verify that the evidence matches the proposed change
+        and that the repository’s configured requirements are satisfied. A reviewer’s approval
+        does not replace passing tests.</p>
+      </div>
+      <div class="card">
+        <h3>Project records that support the next change</h3>
+        <p>Plans, decisions, verification results, and delivery status stay with the repository,
+        giving the next maintainer or agent the context needed to resume.</p>
+      </div>
+    </div>
+    <p>These checks reduce avoidable mistakes and make gaps visible. Their strength depends on
+    the requirements, tests, and review behind them.</p>
+
+    <h2>The operations layer — what makes it a lifecycle system</h2>
+    <p>Unattended agents fail for boring reasons: the work was under-specified, two lanes
+    collided, a gate never ran, or nobody can tell afterward what actually landed. Each of those
+    failures produced a durable surface:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Surface</th><th>Answers</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Issue-first intake</strong> — GH issue → capture doc → parked ledger row</td><td>“Is this work written down anywhere?”</td></tr>
+          <tr><td><strong>Scored backlog</strong> — <code>pri</code> / <code>sev</code> / <code>appeal</code> / <code>effort</code> ratings</td><td>“What should run next, and why that?”</td></tr>
+          <tr><td><strong>Wave planner</strong> — exact write-set intersection, zone caps, dependency gating</td><td>“Can these lanes run together without colliding?”</td></tr>
+          <tr><td><strong>Preflight</strong> — freshness probes, already-landed detection, readiness verdict</td><td>“Is this specified well enough to run while I sleep?”</td></tr>
+          <tr><td><strong>Verification gates</strong> — a gate must be able to <em>start</em> before turn 1, with CPU/wall/RSS caps</td><td>“Did anything actually prove this works?”</td></tr>
+          <tr><td><strong>Deterministic gate receipts</strong> — machine-checkable on-disk proof before PR or push</td><td>“Did the exact commit SHA pass the qualification suite?”</td></tr>
+          <tr><td><strong>Release ledger</strong> — SQLite + a git-mergeable SQL dump, receipted writes</td><td>“What did we promise, and what shipped with evidence?”</td></tr>
+          <tr><td><strong>Doc governance (PDDA)</strong> — frontmatter, status tables, ledger coverage</td><td>“Can an agent resume this work tomorrow from the docs alone?”</td></tr>
+          <tr><td><strong>HQ</strong> — multi-repo resolution, capability tiers, previewed writes</td><td>“Do that, for project Acme, from wherever I am”</td></tr>
+          <tr><td><strong>~50 skills</strong></td><td>Reusable procedures for all of the above</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Two design commitments hold this together: <strong>machine-readable boundaries</strong> —
+    state crossing a subsystem boundary travels as a schema-stamped JSON artifact with explicit
+    nulls, never parsed out of logs or prose — and <strong>deterministic before advisory</strong> —
+    anything expressible as a regex, schema, or file check may block, while LLM review may warn,
+    rank, or propose but never block.</p>
+
+    <h2>The four execution modes — they stack</h2>
     <div class="card-grid">
       <div class="card">
         <h3>1 · Consult</h3>
         <p>Answers <em>“what do the other models think?”</em> A one-shot, parallel second opinion:
-        the same question fans out to Codex and agy, each answers in an isolated copy of the repo,
-        and the answers are reconciled into one. Nothing is modified.</p>
+        the same question fans out to two models, each answers in an isolated copy of the repo,
+        and the answers are reconciled into one. Advisory; nothing is modified.</p>
       </div>
       <div class="card">
         <h3>2 · Relay</h3>
@@ -81,28 +154,45 @@
       </div>
       <div class="card">
         <h3>3 · Swarm</h3>
-        <p>Answers <em>“do several independent things at once.”</em> Two or more agents working
-        concurrently, each claiming a non-overlapping, path-scoped lane via the <code>tick</code>
-        kernel so they never collide.</p>
+        <p>Answers <em>“do several independent things at once.”</em> Multiple agents working
+        concurrently on disjoint, path-scoped lanes across separate clones, coordinated by the
+        <code>tick</code> kernel so they never collide.</p>
       </div>
       <div class="card">
         <h3>4 · Marathon</h3>
-        <p>Answers <em>“do all of today's queued work while I sleep.”</em> A queue of pre-flighted
-        tasks fired as one long autonomous run — typically end-of-day or overnight, with a
-        verification gate at every phase boundary.</p>
+        <p>Answers <em>“do all of today's queued work while I sleep.”</em> A queue of preflighted
+        work runs unattended, gated at every phase boundary — end-of-day or overnight.</p>
       </div>
     </div>
-    <p>Consult and Relay need only this repo. Swarm and Marathon earn their setup cost when you add
-    the PDDA doc structure. See <a href="use-cases.html">Use Cases</a> for the full picture.</p>
+    <p><strong>Consult and Relay need only this repo.</strong> <strong>Swarm and Marathon
+    effectively require PDDA</strong>, a separate repo-governance project whose checkers ship
+    alongside: the unattended path refuses any repo without it. PDDA is a prerequisite for the
+    unattended path, not an optional enhancement. See <a href="use-cases.html">Use Cases</a> and
+    the <a href="faq.html">FAQ</a>.</p>
 
-    <h2>Prove it works — no accounts needed</h2>
+    <h2>Scope, stated plainly</h2>
+    <p><strong>It is:</strong> a local-first operations system for a small number of humans
+    directing a larger number of agents across their own repositories. The operator is the sole
+    decision authority; every write path of consequence previews first or requires an explicit
+    gate.</p>
+    <p><strong>It is not application lifecycle management.</strong> No multi-user identity, no
+    role-based access control, no SSO, no compliance certification. Those require multi-user,
+    server-backed, permissioned state — and local-first is a deliberate constraint here, not a
+    missing feature.</p>
+    <p><strong>It is not, yet, a spec-generation system.</strong> The machinery assumes specified
+    work; nothing here authors the spec. Writing it is left to the operator and the LLM working
+    with them — <code>/idea</code> and <code>/triage</code> are thin front doors, and adjacent
+    tools (GitHub Spec Kit, Task Master) can land their output as a capture doc.</p>
+
+    <h2>Prove the kernel works — 60 seconds, no accounts</h2>
     <pre><code>git clone https://github.com/HiQS-Labs/XYZ-forge.git
 cd XYZ-forge
 npm install
-npm run test:unit   # ~1 second — fast proof the kernel logic is sound
+npm run test:unit   # ~1 second — 14 kernel unit tests
 ./validate.sh       # full suite — budget 5–10 minutes</code></pre>
-    <p>Requires Node 18+ and git; Python 3.8+ for the default runtime. See the
-    <a href="https://github.com/HiQS-Labs/XYZ-forge#readme">README</a> for the full quickstart.</p>
+    <p>Tested on Node 18+; requires git. See the
+    <a href="https://github.com/HiQS-Labs/XYZ-forge#readme">README</a> for the full quickstart,
+    install paths, and hardware sizing for unattended runs.</p>
 
     <div class="note warn">
       <strong>Safety and warranty:</strong> XYZ Forge is provided “AS IS,” without warranty.
@@ -115,7 +205,7 @@ npm run test:unit   # ~1 second — fast proof the kernel logic is sound
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
     <span>
       <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
       <a href="issues.html">Issues</a> ·

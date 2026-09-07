@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Use Cases — XYZ Forge</title>
-<meta name="description" content="Why use XYZ: local-first agent coordination, verified gates, subscription-billed builders — and the four stacked modes: Consult, Relay, Swarm, Marathon.">
+<meta name="description" content="Why use XYZ Forge: local-first agent operations, verified gates, subscription-billed builders — the four execution modes (Consult, Relay, Swarm, Marathon) and the operations layer around them: intake, scored backlog, wave planning, preflight, and a receipted release ledger.">
 <link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/use-cases.html">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
@@ -21,6 +21,7 @@
       <a href="models-harnesses.html">Models &amp; Harnesses</a>
       <a href="roadmap.html">Roadmap</a>
       <a href="issues.html">Issues</a>
+      <a href="other-apps-tools.html">Other Apps &amp; Tools</a>
       <a href="contact.html">Contact</a>
     </nav>
   </div>
@@ -30,8 +31,9 @@
   <div class="wrap">
     <h1>Use Cases &amp; Why Use It</h1>
     <p class="page-intro">If you regularly have more than one AI coding agent open — or you want
-    unattended runs you can actually trust — XYZ turns that into a coordinated, inspectable
-    system instead of copy-paste between windows.</p>
+    unattended runs you can actually trust — XYZ Forge turns that into a coordinated, inspectable
+    operations system instead of copy-paste between windows: specified work, collision-free
+    lanes, verification gates, and a receipted record of what happened.</p>
 
     <h2>Why use XYZ</h2>
     <div class="card-grid">
@@ -65,6 +67,38 @@
         <p>Path-scoped claims serialize overlapping edits between concurrent agents, so two
         sessions can't quietly shred the same file.</p>
       </div>
+      <div class="card">
+        <h3>Deterministic before advisory</h3>
+        <p>Anything expressible as a regex, schema, or file check is checked deterministically
+        and may block. LLM review may warn, rank, or propose — it may never block.</p>
+      </div>
+      <div class="card">
+        <h3>Code &amp; repo quality first</h3>
+        <p>Two-tier QA pairs separate builder and reviewer models for whole-file per-task code audits, backed by deterministic on-disk gate receipts and orchestrator mechanical PR checks.</p>
+      </div>
+      <div class="card">
+        <h3>Docs are runtime state</h3>
+        <p>Work has to be resumable from <code>PROJECT/**</code> alone, so drift between docs
+        and code is a defect with teeth, not project-management paperwork.</p>
+      </div>
+    </div>
+
+    <h2>The operations loop — more than execution</h2>
+    <p>The execution modes are one stage of a longer loop:
+    <code>capture → rate → plan → preflight → execute → gate → land → record</code>. The stages
+    before and after execution are what make unattended runs trustworthy:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Stage</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Capture / intake</strong></td><td>Issues land as capture docs and parked rows in a release ledger, so work is written down before anyone asks an agent to do it.</td></tr>
+          <tr><td><strong>Rate</strong></td><td><code>pri</code> / <code>sev</code> / <code>appeal</code> / <code>effort</code> scores decide what runs next — and why that.</td></tr>
+          <tr><td><strong>Plan</strong></td><td>The wave planner batches lanes with exact write-set intersection, zone caps, and dependency gating.</td></tr>
+          <tr><td><strong>Preflight</strong></td><td>Freshness probes, already-landed detection, and a readiness verdict before anything fires unattended.</td></tr>
+          <tr><td><strong>Gate &amp; land</strong></td><td>Verification gates with CPU/wall/RSS caps at every boundary, on-disk gate receipts, and orchestrator mechanical PR sanity checks.</td></tr>
+          <tr><td><strong>Record</strong></td><td>A receipted release ledger (SQLite + a git-mergeable SQL dump) answers what shipped with evidence.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <h2>What you can do with it</h2>
@@ -114,6 +148,7 @@
           <tr><td>Node 18+ and git</td><td>The <code>tick</code> kernel and the test suite.</td></tr>
           <tr><td>Python 3.8+</td><td>Default runtime for the harness entry points (Bash fallback retained inline).</td></tr>
           <tr><td>Codex CLI, agy CLI</td><td>For live Consult/Relay/Marathon turns — install and authenticate both before you start.</td></tr>
+          <tr><td>16&nbsp;GB RAM (unattended runs)</td><td>Recommended minimum for the serial marathon route; budget 1.5–2&nbsp;GB per concurrent lane plus your target repo's own test-suite memory.</td></tr>
           <tr><td>macOS</td><td>The platform XYZ ships for and gates on today; Linux and Windows are on the <a href="roadmap.html">roadmap</a>.</td></tr>
         </tbody>
       </table>
@@ -126,7 +161,7 @@
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
     <span>
       <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
       <a href="issues.html">Issues</a> ·

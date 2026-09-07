@@ -1,0 +1,14 @@
+{
+  "repo": "HiQS-Labs/Model-catalog",
+  "tag": "v1.0.0",
+  "tag_commit": "75e191391fbc001ac9755c7a7d87e388ce6e375b",
+  "version": "1.0.0",
+  "updated": "2026-09-05",
+  "catalog_sha256": "9ff019fd40320183c531c519644835c9586e92475bae3f30b9ee893cec948a97",
+  "catalog_source": "https://raw.githubusercontent.com/HiQS-Labs/Model-catalog/v1.0.0/data/catalog.json",
+  "renderer_commit": "324b0b34bec7542354e7cea56b7c3169ecd35a34",
+  "renderer_sha256": "c11b408e24e5bc37f684446913bbc5c63aa0dc17609ed7c0a4fba550832ace1c",
+  "renderer_source": "https://github.com/HiQS-Labs/Model-catalog/blob/324b0b34bec7542354e7cea56b7c3169ecd35a34/scripts/render_openrouter.py",
+  "vendored_on": "2026-09-05",
+  "_comment": "GH-450: pin record for the vendored Model-catalog copy. Verified by `python3 utils/py/model_catalog.py check` (test/gh450-model-catalog-pin.sh). Rewrite with `model_catalog.py pin --tag ... --tag-commit ...` in a sync PR; never by hand."
+}

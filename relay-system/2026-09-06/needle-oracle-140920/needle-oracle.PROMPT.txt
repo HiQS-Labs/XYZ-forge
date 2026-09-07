@@ -1,0 +1,11 @@
+# Consult Question: Needle Oracle Tool Extraction Simplification
+
+Context: We are building a "what to do next" Oracle using the 45M Needle model to run on the M1 Max ANE (Orion runtime) for RebalanceOS. The goal is to train it on historical XYZ-CLIO markdown logs.
+
+The original issue (#467) proposed extracting full JSON tool calls (name + arguments) to form the training dataset.
+
+I proposed a "ponytail" simplification:
+Instead of building a robust parser to extract and validate full JSON tool schemas and arguments, we just use a simple regex to extract the **tool name only** (e.g., `run_tests`, `create_pr`, `read_file`) from the markdown. We then train Needle to predict ONLY the tool name string.
+
+Question:
+Does stripping the tool arguments from the training data fundamentally break the usefulness of this Oracle for its intended role in RebalanceOS, or is predicting just the tool name sufficient for a "real-time recommendations" sentinel? What are the concrete risks of skipping JSON argument extraction?

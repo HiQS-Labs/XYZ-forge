@@ -51,6 +51,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from device_config import load_local_device_config, get_device_config_path  # noqa: E402
 from model_alias import resolver_path  # noqa: E402
+from model_catalog import catalog_version  # noqa: E402
 
 # The resolver is a local bash script over a small in-memory table. Anything near this bound means
 # it is wedged, not slow, and a turn is worth more than a name lookup.
@@ -306,6 +307,11 @@ def resolve(name: Optional[str], xyz_root: str) -> Dict[str, Any]:
         "query": name, "tier": None, "why": "", "profile": None,
         "harness": None, "gateway": None, "model": None, "effort": None, "flags": None,
         "problems": [], "lanes": lane_map,
+        # GH-450: which Model-catalog version this harness resolves aliases against (the vendored
+        # copy's `version` field). Provenance, not a tier: it rides every resolution unchanged so
+        # the invocation row can say "resolved by catalog vX.Y.Z". None when the copy is missing —
+        # a data file can never block a turn.
+        "catalog_version": catalog_version(xyz_root),
     }
 
     # ---- Tier 1: an explicit manual path already in the environment. Always wins. ----
@@ -360,10 +366,21 @@ def _sh_quote(v: str) -> str:
     return "'" + str(v).replace("'", "'\\''") + "'"
 
 
+def _catalog_export_line(res: Dict[str, Any]) -> str:
+    """GH-450: the catalog version rides the export block so HarnessTurnLogger can stamp the
+    invocation row with it. Exported on every tier, including the tier-4 floor: the catalog
+    still answered any alias lookup the shim did on its own literal."""
+    v = res.get("catalog_version")
+    if not v:
+        return "# resolve-profile: no vendored Model-catalog copy readable — XYZ_MODEL_CATALOG_VERSION not set\n"
+    return f"export XYZ_MODEL_CATALOG_VERSION={_sh_quote(v)}\n"
+
+
 def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
     """The export block a relay review turn needs, and nothing it does not."""
     if res["tier"] == 4:
-        return ("# resolve-profile: nothing to export — the shims' own defaults apply.\n", 0)
+        return ("# resolve-profile: nothing to export — the shims' own defaults apply.\n"
+                + _catalog_export_line(res), 0)
 
     lane_map, harness = res["lanes"], res["harness"]
     if not harness or harness not in lane_map:
@@ -418,7 +435,7 @@ def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
     tick = os.path.join(xyz_root, "bin", "tick")
     if os.path.isfile(tick):
         lines.append(f"export TICK={_sh_quote(tick)}")
-    return ("\n".join(lines) + "\n", 0)
+    return ("\n".join(lines) + "\n" + _catalog_export_line(res), 0)
 
 
 def emit_list(xyz_root: str) -> int:
@@ -461,6 +478,8 @@ def emit_explain(res: Dict[str, Any]) -> int:
     print(f"model:   {res['model']}")
     if res["effort"]:
         print(f"effort:  {res['effort']}")
+    print(f"catalog: {('v' + res['catalog_version']) if res.get('catalog_version') else 'none'}"
+          "   (Model-catalog version the alias table was rendered from, GH-450)")
     for p in res["problems"]:
         print(f"PROBLEM: {p}")
     return 1 if res["problems"] else 0

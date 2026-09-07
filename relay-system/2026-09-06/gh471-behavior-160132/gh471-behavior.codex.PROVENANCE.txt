@@ -1,0 +1,3 @@
+FIRSTHAND_COUNT=4
+ECHOED_COUNT=1
+ECHOED `skills/workhorse/SKILL.md`

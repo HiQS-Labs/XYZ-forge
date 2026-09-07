@@ -41,6 +41,7 @@ NAV = [
     ("models-harnesses.html", "Models &amp; Harnesses"),
     ("roadmap.html", "Roadmap"),
     ("issues.html", "Issues"),
+    ("other-apps-tools.html", "Other Apps &amp; Tools"),
     ("contact.html", "Contact"),
 ]
 
@@ -200,7 +201,7 @@ def render_page(title, description, active, body, gen_source=None):
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>XYZ Forge — multi-agent coordination. Provided “AS IS,” without warranty.</span>
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
     <span>
       <a href="%(repo)s">GitHub</a> ·
       <a href="issues.html">Issues</a> ·

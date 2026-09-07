@@ -31,6 +31,7 @@
 | **Openai** | `openai/gpt-mini-latest` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Qwen** | `openrouter/qwen/qwen3.8-max` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Qwen** | `qwen/qwen3.8-max` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
+| **Qwen** | `qwen/qwen3.8-max-0902` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Stealth** | `Stealth Ox-Alpha` | 1,000,000 | `high, max` | $1.50 / $4.50 / $0.2000 |
 | **Stealth** | `stealth/ox-alpha` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Z.ai** | `GLM 5.3 High` | 1,000,000 | `low, high, max` | $1.40 / $4.40 / $0.2600 |
