@@ -60,10 +60,58 @@ Write your verdict below and change the STATUS to Approved/Closed if it passes.
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Reviewer findings — Codex, round 2 (2026-09-07)
+
+**Verdict: changes requested; do not approve.** Read-only review only; no gate or artifact was
+executed under reviewer containment.
+
+VERDICT: FAIL
+
+1. **Blocking — the repaired receipt still does not attest the relay-declared head.** This relay
+   declares `24f724bb` the branch tip (`relay-system/2026-09-07/gh487-final-qa.md:11-12`), but
+   every `provenance.jsonl` record is for an earlier SHA: its latest code-final/full-gate record is
+   `5ca805fe` (`TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl:11-13`). `SUMMARY.md` calls that
+   SHA code-final (`.../SUMMARY.md:3,30`) yet does not identify the pushed head; it delegates the
+   claimed boundary result to the PR description (`.../SUMMARY.md:31,55-59`). That is not a
+   committed, SHA-precise evidence receipt for `24f724bb`, and the plan's final-QA criterion
+   explicitly requires a hosted macOS run attesting the head (`PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md:62-66`).
+   Re-attest the actual reviewed/pushed head (or correct this relay's head declaration), commit the
+   resulting provenance, and record the exact hosted macOS run/SHA before approval.
+
+2. **Non-blocking — the claimed `ls-remote` bound is not transport-independent.** The hook says a
+   wedged remote costs seconds (`githooks/pre-push:142`), but its only control is the HTTP
+   low-speed environment at `githooks/pre-push:150`. That is not an absolute timeout and does not
+   bound DNS/connect/SSH hangs. The freshness result otherwise fails closed correctly, so this is a
+   follow-up hardening item unless the bounded-latency claim itself is a release requirement.
+
+Re-adjudication checks that pass from the reviewed source:
+
+- First-push resolution uses the hook-supplied remote name, prefers `development` then `main`,
+  compares each local tracking ref to the live advertised tip, requires exactly one merge base, and
+  rejects absent, stale, no-common-ancestor, ambiguous, empty, and URL evidence (`githooks/pre-push:123-194`).
+  Consequently an accepted local integration ref is equal to the advertised tip rather than a
+  stale subset; the backward-rewrite, stale-behind, and criss-cross red controls exercise that
+  contract (`test/gh544-pre-push-gate.sh:297-387`). `_base_pairs` is the single range definition
+  consumed by both classification and the tier-2 paths file (`githooks/pre-push:197-206,258-267`).
+- Co-touch is correctly subsystem-specific: claimed dedicated tests are tier 2 only when their own
+  non-test subsystem path is present; unclaimed tests remain tier 3 (`utils/ci-route.sh:192-212,265-318`; 
+  `test/ci-route.sh:179-184`). Registry, wrapper named-pytest skip, validate registration, and
+  reverse-family coverage are present (`utils/ci-route.sh:24-45`; `test/skills-army-hq.sh:8-15`;
+  `validate.sh:474`; `test/gh365-tier-fail-closed.sh:63-75`).
+- `TESTS-RESULTS/*` is in both docs matches (`utils/ci-route.sh:156-163,214-242`), and `RT_SHARD`
+  is unset before the telemetry library's first write without widening the change
+  (`test/gh365-validate-telemetry.sh:23-33`). The receipt's recorded 27.4 s tier-2 and 353/353
+  results are internally consistent with those source controls, but they remain evidence for the
+  listed earlier SHAs only (`provenance.jsonl:8-13`).
+
 ## Reviewer findings — Codex (2026-09-07)
 
 **Verdict: changes requested; do not approve.** I performed read-only review only and did not run a
 gate under the reviewer containment rule.
+
+VERDICT: FAIL
+(producer note: the line above is round 1's verdict recorded in the validator's grammar —
+the prose verdict is unchanged; the round-2 reviewer writes their own below)
 
 1. **Blocking — stale-base safety claim is false after an integration-branch rewrite.** The first-push
    resolver uses the local `refs/remotes/<remote>/development` or `main` tracking ref
@@ -92,6 +140,13 @@ stated contract (`utils/ci-route.sh:24-45`, `192-235`, `265-318`; `test/skills-a
 `test/gh365-validate-telemetry.sh:23-33`). The resolver also does not explicitly reject multiple
 best merge-bases (`githooks/pre-push:141`), despite the plan's "ambiguous" fail-closed wording;
 cover that while repairing the stale-base contract.
+
+## Log
+
+VERDICT: FAIL — round 1 (codex): changes requested; both blocking findings accepted and fixed (freshness contract + SHA-precise receipt attestation)
+Basis: test/gh544-pre-push-gate.sh section 2e (three red controls witnessed against the pre-fix hook at 6beeeb43, 99/0 green at 5ca805fe); TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl round-1 records; full gate 353/353 GREEN in 10:02 at 5ca805fe; boundary gate GREEN in 533s at the pushed head 0c2d6a25 (PR #488).
+- 2026-09-07 round 1 (codex): changes requested — 2 blocking findings (stale-base subset; evidence/head attestation). Producer adjudicated: both accepted; freshness contract implemented; receipt re-attested with exact SHAs.
+- 2026-09-07 round 2 dispatched after fixes.
 
 ## Producer response — adjudication and round-1 fixes (Claude, 2026-09-07)
 
