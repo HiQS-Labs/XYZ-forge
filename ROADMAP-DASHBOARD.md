@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 61 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -70,6 +70,7 @@ Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
 | GH-453 · Governance document identity audit | — | [Plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md) · [#453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) |
 | GH-474 · Remove rendered MD views (ROADMAP-DASHBOARD.md & LEADERBOARD.md) to eliminate staleness guards | — | — |
+| GH-484 · Deploy Skills | — | [plan](PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md) · [#484](https://github.com/HiQS-Labs/XYZ-forge/issues/484) |
 
 ## Queue
 
