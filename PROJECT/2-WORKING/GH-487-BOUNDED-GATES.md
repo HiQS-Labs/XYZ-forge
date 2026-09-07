@@ -11,9 +11,9 @@ branch: fix/gh487-bounded-gates
 doc_type: bugfix
 related: [GH-484, GH-486, GH-35, GH-509, GH-544]
 context_tags: [ci, pre-push, routing, tier2, contention]
-effort: 60
-complexity: M
-risk: L
+effort: 3
+complexity: 3
+risk: 2
 phases: 4
 ---
 
