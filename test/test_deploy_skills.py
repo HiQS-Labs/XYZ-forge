@@ -375,6 +375,10 @@ raise SystemExit(mod.main(sys.argv[3:]))
         self.assertFalse((REPO / "skills" / "skills-sync-trinity" / "SKILL.md").exists())
         self.assertTrue((BUNDLE / "SKILL.md").is_file())
 
+    def test_a6_shipped_consult_has_no_recursive_install_artifact(self):
+        self.assertEqual(intake.skill_info(REPO / "skills" / "consult")["name"], "consult")
+        self.assertGreater(len(intake.snapshot(REPO / "skills" / "consult")), 1)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
