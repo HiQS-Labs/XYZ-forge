@@ -253,6 +253,17 @@ case "$guard_out" in
     ;;
   *) fail "expected no-diff diagnostic output from guard, got: $guard_out" ;;
 esac
+# GH-474: the guard reads the RENDERER's dropped-row warning rather than inferring it from table
+# names, and the renderer here is the real one, reached through the guard's `git archive`
+# projection. Asserting the row id proves the signal survives that projection — if it did not,
+# the guard would fall through to "allow" and this case would go red instead of quietly passing
+# for the wrong reason. This is the runnable check the #474 recon listed as its one unknown.
+case "$guard_out" in
+  *"dropped 1 unparseable row(s): #256"*)
+    pass "GH-474: refusal names the dropped row, so the renderer's warning survived the projection"
+    ;;
+  *) fail "expected the guard to name dropped row #256 from the renderer's own stderr, got: $guard_out" ;;
+esac
 [ "$(find "$GUARD_TMP" -maxdepth 1 -name "staleness-guard.*" | wc -l)" -eq 0 ] || fail "expected no leftover guard roots in GUARD_TMP after no-diff refusal"
 pass "guard cleaned up temporary root after no-diff refusal"
 
