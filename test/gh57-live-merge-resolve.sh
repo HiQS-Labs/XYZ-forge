@@ -297,6 +297,66 @@ ok "staged LEADERBOARD.md matches a fresh render (--check in sync)" \
 ok "staged RELEASES-PREVIEW.html reflects the MERGED ledger (both sides' releases present)" \
    "grep -q '\"releasesTotal\": 2' '$R8/RELEASES-PREVIEW.html'"
 
+# ── Scenario 9 (GH-474): a delete/modify conflict on an adopted view HONOURS the deletion ──────
+# Scenario 8 proves "both sides touched it -> take either side and regenerate". That rule is
+# wrong for exactly one shape: one side DELETED the view. Regenerating there resurrects a file
+# somebody un-adopted on purpose, so a deletion would not survive its first conflicted merge.
+#
+# THIS IS THE RED CONTROL FOR THAT FIX. Against the pre-fix resolver the deleted view is added
+# to REGEN regardless of presence, the generator recreates it, and the "is gone" assertions
+# below fail. Both merge directions are exercised, because the pre-fix hole was symmetric:
+# HEAD-deletes-theirs-modifies AND theirs-deletes-HEAD-modifies both resurrected the file.
+DEL_VIEW="RELEASES-PREVIEW.html"
+for direction in "deleted-on-incoming" "deleted-on-head"; do
+  R9="$WORK/c9-$direction"
+  mkdir -p "$R9"
+  require_fixture "$R9" "delete/modify views fixture ($direction)"
+  git -C "$R9" init -q -b main
+  git -C "$R9" config user.email gh57live@test.invalid
+  git -C "$R9" config user.name gh57live
+  ra "$R9" init --slug "c9$direction" >/dev/null
+  printf 'ROADMAP_SOURCE=releases\n' > "$R9/.pdda-mode"
+  bake_views "$R9"
+  git -C "$R9" add -A; git -C "$R9" commit -qm base
+  git -C "$R9" branch side
+
+  # side: un-adopt the view (delete it) plus a ledger write, so releases.sql conflicts too
+  git -C "$R9" checkout -q side
+  ra "$R9" add --version 1.0.0 --status draft --description 'side one.' --tracking-issue TMP-SIDE09 >/dev/null
+  git -C "$R9" rm -q "$DEL_VIEW"
+  git -C "$R9" commit -qam "side un-adopts $DEL_VIEW"
+
+  # main: keep the view and modify it, so the merge is a genuine delete/modify
+  git -C "$R9" checkout -q main
+  ra "$R9" add --version 2.0.0 --status draft --description 'main one.' --tracking-issue TMP-MAIN09 >/dev/null
+  printf 'main touched %s\n' "$DEL_VIEW" >> "$R9/$DEL_VIEW"
+  git -C "$R9" commit -qam "main modifies $DEL_VIEW"
+
+  if [ "$direction" = "deleted-on-head" ]; then
+    # flip which side HEAD is: merge main INTO side, so HEAD is the deleting side
+    git -C "$R9" checkout -q side
+    git -C "$R9" merge main -m merge >/dev/null 2>&1 || true
+  else
+    git -C "$R9" merge side -m merge >/dev/null 2>&1 || true
+  fi
+
+  ok "[$direction] the view really is a delete/modify conflict" \
+     "git -C '$R9' status --porcelain -- '$DEL_VIEW' | grep -qE '^(DU|UD)'"
+  resolve_dump "$R9"
+  out9="$(resolver "$R9")"; rc9=$?
+  ok "[$direction] resolver completes (rc=$rc9)" "[ $rc9 -eq 0 ]"
+  ok "[$direction] it says it honoured the deletion" "has \"\$out9\" 'honoured the DELETION of $DEL_VIEW'"
+  ok "[$direction] $DEL_VIEW is GONE from the working tree (not regenerated)" "[ ! -e '$R9/$DEL_VIEW' ]"
+  ok "[$direction] $DEL_VIEW is GONE from the index" \
+     "! git -C '$R9' ls-files --error-unmatch -- '$DEL_VIEW' >/dev/null 2>&1"
+  ok "[$direction] no unmerged paths remain" \
+     "[ -z \"\$(git -C '$R9' diff --name-only --diff-filter=U)\" ]"
+  # The views that were NOT deleted must still be regenerated — honouring one deletion must not
+  # switch the whole regen step off.
+  ok "[$direction] the still-adopted dashboard was regenerated anyway" \
+     "[ -f '$R9/ROADMAP-DASHBOARD.md' ] && ! grep -q '^<<<<<<< ' '$R9/ROADMAP-DASHBOARD.md'"
+done
+
 echo
 echo "  gh57-live-merge-resolve: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
