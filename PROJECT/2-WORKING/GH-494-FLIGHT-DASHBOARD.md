@@ -133,3 +133,56 @@ design checkpoint; no ready PR or shipping claim is made.
 Swift planning remains explicitly held for operator visual approval.
 
 Final HTML review: `relay-system/2026-09-08/gh494-html-review.md`, round 2 Approved, driver exit 0. Three first-round context defects were reproduced and corrected; current artifact hashes are retained in provenance. The task remains at the operator visual-approval checkpoint.
+
+## Layout B — focused carousel design checkpoint
+
+The operator approved the first visual direction and explicitly requested that it
+be saved to disk, committed and pushed as **Layout A**, without losing it. The exact
+approved HTML is now `docs/mockups/flight-dashboard/layout-a.html`; its SHA-256 is in
+`layout-a.sha256`. Treat that file as frozen. New iterations use separate files.
+
+User choices: one repo per card, three fully visible tall cards on a second monitor,
+neighboring cards peeking at both edges, horizontal swipe, a fade limited to the edge
+peeks, and X at top right returning to Layout A. Quiet/stalled repos stay visible.
+The only persistent UI is the cards and X. The last-hour view shows meaningful
+activity, agent names, issues associated with those events and clone/worktree counts
+with names. Historical/unconfirmed issues must not masquerade as last-hour activity.
+Existing two-hour warning semantics and unknown-vs-quiet distinctions carry forward.
+
+Reversibility: Easy. Preserve the exact A snapshot, build B separately, keep the
+previous entry view. Existing synthetic repo/lane/PR definitions and progressEvents
+are the single source for the working views. No new collector or store. Extract the
+already-read fixture/icon definitions from index.html to a small local demo-data.js
+used by current index and B; the frozen A remains self-contained as explicitly
+requested. B uses those events, not a second invented activity stream.
+
+1. Verify the frozen A byte hash and push its preservation commit through the normal
+   hook from a disposable full clone; verify remote branch SHA and remote A bytes.
+2. Build layout-b.html with native horizontal overflow, scroll snap, touch pan and
+   pinch-zoom permitted, overscroll containment, keyboard arrows/Home/End and mouse
+   dragging. Native touch/trackpad scrolling supplies multi-touch gestures; do not
+   claim a physical Mac trackpad test from synthetic browser events.
+3. Size three tall full cards at 1920×1080; start one card into the collection so both
+   edge peeks are visible. Fade ends before the fully visible cards. Narrow views
+   show one readable card plus peeks; no page-wide horizontal overflow. Keep rows
+   and any longer content scrollable inside each card.
+4. Filter progressEvents to 0 <= age < 60 minutes on the fixed sample clock. Join
+   each event to its explicit lane for issue/agent attribution; deduplicate issue
+   references per repo. Repos without events show a quiet state; unavailable data
+   shows unknown. Show old waiting lanes separately from last-hour events. At the
+   60-minute boundary remove that event and its issue from last-hour activity.
+5. Browser-check three full cards and two peeks, first/last carousel boundaries,
+   mouse, horizontal wheel, touch input and keyboard navigation, native zoom policy,
+   X destination, last-hour event/issue boundary, quiet/unknown states, responsive
+   overflow, and unchanged frozen A hash. Retain evidence with artifact hashes.
+6. Run final independent review, then commit/push B to the same task branch and
+   present the separate layouts for operator comparison. Swift planning stays at
+   the later design checkpoint while the operator explores B.
+
+Existing task rating retained (65/45/50/80), no operator rank override. This is an
+extension of the same inexpensive design task, no new incident/recurrence claim.
+
+Review questions: Does this match the requested cards-only presentation and exact
+A preservation? Is the shared-fixture extraction bounded? Are last-hour issues
+correctly scoped, quiet/unknown honest, and gestures/fades/edge behavior specified
+without claiming untested hardware support? Does the plan preserve the Swift hold?
