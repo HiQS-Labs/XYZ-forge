@@ -1,12 +1,12 @@
 ---
 gh_issue: 425
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/425
-title: "GH-425"
+title: "GH-425: the --gate provenance check never compares the PR number"
 status: 2-WORKING
 created: 2026-09-04
 updated: 2026-09-08
 owner: unassigned
-goal: GH-425
+goal: "--gate verifies receipts by PR number, not just directory non-emptiness"
 doc_type: bugfix
 complexity: 1
 risk: 3
@@ -17,7 +17,6 @@ related:
   - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
 
-# GH-425 — GH-425
 
 ## Status
 
@@ -27,7 +26,6 @@ related:
 
 # GH-425: a gate that cannot fail
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## The defect
 

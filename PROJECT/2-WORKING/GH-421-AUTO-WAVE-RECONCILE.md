@@ -1,12 +1,12 @@
 ---
 gh_issue: 421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/421
-title: "GH-421"
+title: "GH-421: wave reconciliation is never invoked automatically — fix its ledger write, then wire it post-merge"
 status: 2-WORKING
 created: 2026-09-04
 updated: 2026-09-08
 owner: unassigned
-goal: GH-421
+goal: "wave_reconcile writes the releases ledger correctly and is then invoked automatically on merged PRs"
 doc_type: bugfix
 complexity: 3
 risk: 4
@@ -17,7 +17,6 @@ related:
   - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
 
-# GH-421 — GH-421
 
 ## Status
 
@@ -27,7 +26,6 @@ related:
 
 # GH-421: automate the reconciler, after giving it a lifecycle write it does not have
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 Phases that must land in order. Automating before the ledger writes are real is actively worse
 than the status quo — that ordering is the plan's whole thesis, and it survived two review rounds.
@@ -307,7 +305,10 @@ is one policy change away from failing every automated run.
   },
   "lanes": {
     "agy_safe": [],
-    "orchestrator_only": []
+    "orchestrator_only": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/wave-reconcile.yml"
+    ]
   },
   "artifacts_new": [
     ".github/workflows/wave-reconcile.yml",

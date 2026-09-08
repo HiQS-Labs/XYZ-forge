@@ -1,12 +1,12 @@
 ---
 gh_issue: 423
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/423
-title: "GH-423"
+title: "GH-423: releases roadmap render — emit the DB as the ledger markdown the planner parses"
 status: 2-WORKING
 created: 2026-09-04
 updated: 2026-09-08
 owner: unassigned
-goal: GH-423
+goal: "a render verb emits roadmap_items as ledger markdown that marathon-plan parses unchanged"
 doc_type: bugfix
 complexity: 1
 risk: 1
@@ -17,7 +17,6 @@ related:
   - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
 
-# GH-423 — GH-423
 
 ## Status
 
@@ -27,7 +26,6 @@ related:
 
 # GH-423: the renderer GH-418 actually needs
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## Why this exists as its own issue
 

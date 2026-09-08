@@ -1,12 +1,12 @@
 ---
 gh_issue: 454
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/454
-title: "GH-454"
+title: "GH-454: wave_reconcile dies on an unnamed release and enforces PDDA full-mode on an observe-mode repo"
 status: 2-WORKING
 created: 2026-09-05
 updated: 2026-09-08
 owner: unassigned
-goal: GH-454
+goal: "both reconciler defects fixed: unnamed releases render, PDDA gating scoped to mode"
 doc_type: bugfix
 complexity: 1
 risk: 2
@@ -17,7 +17,6 @@ related:
   - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
 
-# GH-454 — GH-454
 
 ## Status
 
@@ -27,7 +26,6 @@ related:
 
 # GH-454 — Reconciler dies on an unnamed release, and overrides the repo's PDDA mode
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
 > `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
 > (`PROJECT/PDDA.md` → GitHub issue intake).
 
@@ -146,6 +144,12 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   "fix_probes": [
     {
       "type": "grep_present",
+      "path": "utils/py/wave_reconcile.py",
+      "pattern": "\"ERROR\" in r\\.stdout",
+      "note": "bug evidence \u2014 un-scoped PDDA error check (run_validation_gate) must be present pre-fix"
+    },
+    {
+      "type": "grep_present",
       "path": "utils/timeline/export_timeline.py",
       "pattern": "codename or version",
       "note": "bug evidence \u2014 must fire unfixed at pre-work time"
@@ -159,7 +163,6 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   "artifacts": [
     "utils/timeline/export_timeline.py",
     "utils/py/wave_reconcile.py",
-    "test/gh454-reconciler-defects.sh",
     "test/gh454-reconciler-defects.sh"
   ],
   "remediation": {

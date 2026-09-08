@@ -1,12 +1,12 @@
 ---
 gh_issue: 424
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/424
-title: "GH-424"
+title: "GH-424: roadmap_items.status_marker has no CLI writer"
 status: 2-WORKING
 created: 2026-09-04
 updated: 2026-09-08
 owner: unassigned
-goal: GH-424
+goal: "a CLI verb transitions roadmap_items.status_marker with dashboard regen and receipted writes"
 doc_type: bugfix
 complexity: 2
 risk: 2
@@ -17,7 +17,6 @@ related:
   - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
 
-# GH-424 — GH-424
 
 ## Status
 
@@ -27,7 +26,6 @@ related:
 
 # GH-424: the ledger cannot say "done"
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## The gap
 
@@ -118,6 +116,7 @@ Two fixes, both here because GH-421's writes are unsafe without them:
   ],
   "artifacts": [
     "utils/py/releases_app.py",
+    "utils/py/wave_reconcile.py",
     "ROADMAP-DASHBOARD.md",
     "test/gh424-roadmap-status-marker.sh",
     "test/baselines/GH-424-negative-control.md"

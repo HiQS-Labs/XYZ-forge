@@ -1,12 +1,12 @@
 ---
 gh_issue: 418
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/418
-title: "GH-418"
+title: "GH-418: the marathon planner reads the frozen ROADMAP.md — adopt the releases DB"
 status: 2-WORKING
 created: 2026-09-03
 updated: 2026-09-08
 owner: unassigned
-goal: GH-418
+goal: "marathon-plan ranks lanes from releases.db (via the rendered ledger), with zero DB-parked items invisible"
 doc_type: bugfix
 complexity: 2
 risk: 3
@@ -17,7 +17,6 @@ related:
   - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
 
-# GH-418 — GH-418
 
 ## Status
 
@@ -27,7 +26,6 @@ related:
 
 # GH-418: the planner reads a file the repo froze
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## The finding, and the correction that produced it
 
