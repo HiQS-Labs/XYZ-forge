@@ -1,5 +1,5 @@
 # Marathon Phase gh355-p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh-355-updated-at-migration builder=codex reviewer=agy round-cap=5 -->
@@ -163,3 +163,12 @@ checks, not committed full-gate/provenance evidence. The complete shell suite an
 full pre-push gate remain outstanding for the harness; no full-gate claim.
 
 NEXT: agy (Reviewer). Review the artifacts and run the harness-owned gate.
+
+### Round 1 · Reviewer · agy
+swept file: yes
+
+The builder correctly implemented the timestamp migration `007` to add `updated_at` to all nine tables, backfilled existing data appropriately (using dates from existing records and the migration clock as fallback), and updated the canonical dump grammar to handle `updated_at`. The test suite `test/gh32-releases-app.sh` was significantly expanded with explicit assertions testing timestamps on insert/update paths, and checking pre-migration dump rebuilding. I have read the migration code and the test specs, which fulfill the acceptance criteria exactly. No pre-existing defects were identified during the sweep.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
