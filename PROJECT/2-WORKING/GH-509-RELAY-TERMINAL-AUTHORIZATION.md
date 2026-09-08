@@ -28,3 +28,16 @@ Option chosen by the operator from the six written on the issue: **2 + 1** — r
 invocation, driver as the only writer of a counting verdict, the attestation block as the
 evidence. Options 3, 4, 5 are explicit non-goals; option 6's audit trail falls out of the
 attestation block for free.
+
+## Rating rationale — 2026-09-08
+
+`rated 75/85/50/25` (pri/sev/appeal/effort; effort scores cheapness).
+
+- **Severity 85.** Same consequence as #505 — unreviewed code merges while the transcript says it
+  was reviewed — because this is the half of #505 that makes the word `Approved` mean anything.
+- **Priority 75.** Below #505's 85 only because #505 is the operator-facing defect and this is its
+  mechanism; the two land in one PR, so the ordering is nominal.
+- **Appeal 50.** Neutral — no operator preference stated.
+- **Effort 25.** Provisional. Three QA rounds established that the cost is identity, commit
+  ordering, recovery paths and falsifiable integration tests across driver, containment, marathon
+  and jog — not the ~60-line record module. Re-estimate after implementation.

@@ -3,7 +3,7 @@ Goal: Plan QA for GH-505 / GH-509 design v2 — driver-attested approval
 Date: 2026-09-08
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 ---
 
 # Context
@@ -245,3 +245,45 @@ The required reviewer/equality/review-once precedence is otherwise resolved. In 
 SWE disposition: **Recon Fix; Minimal acceptable; Diagnosable Fix; Blast Block; Proof Block.** Costly classification, one-PR rollback, bounded QA rounds and named debug-mantra are accepted. The next revision can remain in the same plan and module design; resolve the three contracts and align their fixtures rather than add review machinery.
 
 NEXT: Producer (claude-b)
+
+## Round 2 — Producer (claude-b) — 2026-09-08
+
+All findings accepted; none rejected. Plan revised in place
+(`PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md`, "Round 2 dispositions" table); #509
+rating rationale added to `PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md`.
+
+- **B1** → comparison is on *canonical* bytes: the first `STATUS:`/`NEXT:`/`ROUND:` lines reduced
+  to bare keys, nothing else touched — so marathon's and jog's title-first renders, frontmatter
+  threads and bare-header threads all work, and header edits never disturb the body prefix.
+  Record and trailer carry `added_start`+`added_len`; the reader validates range, digest and the
+  trailer *by offset*, never by heading. B/B2/B3 use the real marathon and jog renderers, a
+  multi-round body and a quoted attestation heading.
+- **B2 checkout** → the driver exports `RELAY_REVIEWED_HEAD`; `rtl_worktree_begin` cuts the
+  worktree at that SHA instead of live HEAD. Non-isolated turns are `isolated:false` and refused
+  by every merge consumer (new non-goal). Seeded artifacts recorded by digest. B4 (parent commit
+  during the turn) and F3 (cut-at-SHA) added.
+- **B2 landing** → one `_merge_reviewed_pr` for all three jog branches, comparing record R with
+  the PR candidate C and passing exactly C. M1/M2 added for the marathon-executor branch.
+- **B2 success** → `candidate_ok` runs after the post-approve command and before the approved
+  receipt; drift escalates instead of writing an approved receipt. H4 added.
+- **Q9** → contract chosen explicitly: ancestor + preserved endpoint content outside
+  `relay-system/` and the relay file's repo-relative path; `.relay-scratch` dropped; git errors
+  refuse; archive relays carry `transcript_repo`.
+- **B3** → `load(task, expected_reviewer=…, relay_file, target_repo)`; compares reviewer, status
+  (record = current file = trailer), range/digest/trailer; consumers require the token to read
+  `done`, not merely actorless; publish failure is `attest-publish-failed` with no partial record.
+  L and K2 added.
+- **F1** → gate inside shared `rtl_is_reviewer_turn`; permission direction corrected (stale
+  *builder* widens); recipes migrated per their own variables; custom `--agent-cmd` contract stated.
+- **F2** → H1 asserts loud refusal + no dispatch; I1 substitutes an `isatty()`-true stdin; I5's
+  merge-failure case labelled preservation; integration fixtures run the real `relay-turn-lib.sh`;
+  mutations named where base is not red.
+- **F3** → `judge_terminal` returns a verdict; the shim-failure path preserves 6/7 and reports
+  `revert-commit-failed` without masking the original code.
+
+This is round 3 of 3. Please review the revision against the same ten questions and set
+`STATUS: Approved` if it is sound as written; otherwise list what remains, ranked.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
