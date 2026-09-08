@@ -1,6 +1,6 @@
 # Marathon Phase gh418-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh418-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -98,3 +98,22 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented the four permitted artifacts:
+- `utils/py/marathon_plan.py`: removed the premature file-existence decision; the engine now owns source selection and source-specific errors.
+- `utils/py/_marathon_plan.py`: uses existing `router_audit.parse_pdda_mode` and `releases_app.roadmap_render`, consumes the DB read-only in releases-mode, fails clearly for broken/missing schema, accepts an empty authoritative ledger, retains legacy markdown and explicit test overrides, and names the real source in generated prose/header/footer.
+- `test/gh418-planner-ledger-source.sh`: hermetic focused regression with real Releases init/add verbs, subprocess refusal, stale-read interception and a witnessed injected-read negative control. Fixtures/logs are scoped under `.relay-scratch/` for this turn.
+- `test/baselines/GH-418-negative-control.md`: recorded pre-fix failure, fixed result, source hashes, and verification limits.
+
+Reversibility: **Easy** — planner reader/rendering changes only, no shared-ledger migration or writes. The stale markdown fallback is deliberately removed in releases-mode; DB failure is exit 3, and an empty authoritative ledger yields an empty plan. Without releases-mode, a DB does not silently replace missing legacy markdown.
+
+Grounding correction: the starting code already had a partial DB reader. The observed fail path is spaced mode syntax plus misleading source labels/fallback behavior, not total absence of DB support. The plan asks for the resolver used by releases_app; that application currently has an inline substring check, not an exported resolver. To respect the write scope and avoid duplicating a parser, this change reuses the existing anchored parser from router_audit. DB rendering reuses the application directly.
+
+Verification: focused test exit 0. Saved pre-fix replay exit 1 with `DB-only #418 absent from active plan`: nonempty pre-fix plan held stale #999; fixed plan has #418 in wave 1 and excludes #999. The canary also rejects an injected releases-mode markdown read. Baseline contains the additional error/empty/legacy/override/read-only checks. An initial relocated-source probe failed at zones discovery; the test now pins the existing zones file, and only the later item-visibility failure is cited as red evidence.
+
+Scope limits: dynamic current-state read coverage is the shipped Python planner, not a repo-wide claim about unrelated tools or the frozen Bash fallback. No graph tools were available, so discovery used exact source reads. No git commands or full suite were run. The outer harness must commit the scoped files, run its gate, and provide qualifying provenance. Review pending.
+
+Handing off to agy — agy, take your turn.
