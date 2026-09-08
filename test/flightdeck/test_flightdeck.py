@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.flightdeck.aggregate import FlightdeckAggregator
-from src.flightdeck.connectors import REGISTRY, canonical_github_key, read_clio, read_connectors, read_git_pulse
+from src.flightdeck.connectors import REGISTRY, canonical_github_key, issue_numbers, read_clio, read_connectors, read_git_pulse
 from src.flightdeck.contract import ConnectorConfig
 from src.flightdeck.tokens import OUTPUT, audit_css, render
 from src.flightdeck.server import FlightdeckServer
@@ -29,6 +29,24 @@ def config(root: Path, enabled: frozenset[str]) -> ConnectorConfig:
 
 
 class ConnectorTests(unittest.TestCase):
+    def test_issue_parser_accepts_urls_and_multiple_explicit_references(self) -> None:
+        self.assertEqual(
+            issue_numbers("Start https://github.com/BinoidCBD/LTVera-Pandas/issues/440, then GH-421 and #390"),
+            [440, 421, 390],
+        )
+
+    def test_clio_extracts_issue_beyond_display_summary_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prompt = "x" * 260 + " https://github.com/BinoidCBD/LTVera-Pandas/issues/440"
+            root.joinpath("clio.jsonl").write_text(json.dumps({
+                "timestamp": "2026-09-08T15:00:00Z", "repo": "LTVera-Pandas",
+                "session_id": "s1", "prompt": prompt,
+            }) + "\n", encoding="utf-8")
+            lane = read_clio(config(root, frozenset({"clio"})), time.monotonic() + 1)["lanes"][0]
+            self.assertEqual(lane["issues"], [440])
+            self.assertEqual(len(lane["task"]), 240)
+
     def test_item_url_repairs_a_stale_pre_rename_repo_slug(self) -> None:
         self.assertEqual(
             canonical_github_key(
@@ -52,6 +70,7 @@ class ConnectorTests(unittest.TestCase):
             batch = read_clio(config(root, frozenset({"clio"})), time.monotonic() + 1)
             self.assertEqual(batch["source"]["availability"], "ok")
             self.assertEqual(batch["lanes"][0]["issue"], 494)
+            self.assertEqual(batch["lanes"][0]["issues"], [494])
             self.assertIsNone(batch["lanes"][0]["last_progress_at"])
             self.assertEqual(batch["repos"][0]["id"], "github.com/hiqs-labs/xyz-forge")
 

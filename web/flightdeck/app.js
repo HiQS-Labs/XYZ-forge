@@ -65,12 +65,15 @@ function addTimeline(parent, events) {
     parent.append(row);
   });
 }
+function laneIssues(lane) {
+  return [...new Set([...(lane.issues || []), lane.issue].filter(Number.isInteger))];
+}
 function addIssues(parent, issues, lanes) {
   const byNumber = new Map();
   issues.forEach(issue => byNumber.set(issue.number, issue));
-  lanes.filter(lane => lane.issue).forEach(lane => {
-    if (!byNumber.has(lane.issue)) byNumber.set(lane.issue, {number: lane.issue, title: lane.task, inferred: true});
-  });
+  lanes.forEach(lane => laneIssues(lane).forEach(number => {
+    if (!byNumber.has(number)) byNumber.set(number, {number, title: lane.task, inferred: true});
+  }));
   if (!byNumber.size) return addEmpty(parent, 'No source-linked issue context.');
   [...byNumber.values()].slice(0, 4).forEach(issue => {
     const row = node('div', 'row');
@@ -94,7 +97,7 @@ function repoCard(repo, index, total, issue = null) {
   const card = refs.template.content.firstElementChild.cloneNode(true);
   const cardId = issue ? `${repo.id}#${issue.number}` : repo.id;
   const events = recent(repo.events || [], 'occurred_at').filter(event => !issue || event.issue === issue.number);
-  const allLanes = issue ? (repo.lanes || []).filter(lane => lane.issue === issue.number) : (repo.lanes || []);
+  const allLanes = issue ? (repo.lanes || []).filter(lane => laneIssues(lane).includes(issue.number)) : (repo.lanes || []);
   const lanes = issue ? allLanes : recent(allLanes, 'last_prompt_at');
   const issues = issue ? [issue] : recent(repo.issues || [], 'updated_at');
   const prs = issue ? (repo.prs || []).filter(pr => pr.issue === issue.number) : (repo.prs || []);
@@ -159,9 +162,9 @@ function selectedRepos() {
 }
 function issueCards(repo) {
   const byNumber = new Map(recent(repo.issues || [], 'updated_at').map(issue => [issue.number, issue]));
-  recent(repo.lanes || [], 'last_prompt_at').filter(lane => lane.issue).forEach(lane => {
-    if (!byNumber.has(lane.issue)) byNumber.set(lane.issue, {number: lane.issue, title: lane.task, inferred: true});
-  });
+  recent(repo.lanes || [], 'last_prompt_at').forEach(lane => laneIssues(lane).forEach(number => {
+    if (!byNumber.has(number)) byNumber.set(number, {number, title: lane.task, inferred: true});
+  }));
   return [...byNumber.values()];
 }
 function renderSources() {

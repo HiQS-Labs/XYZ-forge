@@ -36,6 +36,12 @@ def canonical_github_key(stored_name: Any, html_url: Any = None) -> str | None:
     return repo_key(stored_name)
 
 
+def issue_numbers(text: str) -> list[int]:
+    """Extract explicit issue references, including GitHub issue URLs."""
+    matches = re.findall(r"(?:GH-|#|\bissue\s+)(\d+)\b|/issues/(\d+)\b", text, re.I)
+    return list(dict.fromkeys(int(left or right) for left, right in matches))
+
+
 def _available(batch: dict[str, Any], observed: str | None, coverage: str = "partial") -> dict[str, Any]:
     batch["source"].update({"availability": "ok", "coverage": coverage, "observed_through": observed, "error": None})
     return batch
@@ -59,23 +65,25 @@ def read_clio(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             continue
         occurred = parse_time(row.get("timestamp"))
         key = repo_key(row.get("repo"))
-        prompt = " ".join(str(row.get("prompt") or "").split())[:240]
-        if not occurred or not key or not prompt:
+        prompt_full = " ".join(str(row.get("prompt") or "").split())
+        prompt = prompt_full[:240]
+        if not occurred or not key or not prompt_full:
             continue
         newest = max(newest or occurred, occurred)
         repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [str(row.get("repo"))], "source_refs": ["clio"]})
-        issue_match = re.search(r"(?:GH-|#|\bissue\s+)(\d+)\b", prompt, re.I)
+        referenced_issues = issue_numbers(prompt_full)
         session = str(row.get("session_id") or row.get("id") or occurred)
         lane_key = (key, session)
         prior = lanes.get(lane_key, {})
         lane = {
             "id": f"clio:{session}",
-            "repo_id": key, "issue": int(issue_match.group(1)) if issue_match else None,
+            "repo_id": key, "issue": referenced_issues[0] if referenced_issues else None,
+            "issues": referenced_issues or prior.get("issues", []),
             "agent": row.get("agent") or "Agent", "session_id": row.get("session_id"),
             "branch": row.get("branch") or prior.get("branch"), "device": row.get("machine") or prior.get("device"),
             "task": prompt, "last_prompt_at": occurred, "last_progress_at": None,
             "confidence": "inferred", "source_ref": "clio",
-            "issue_context_at": occurred if issue_match else prior.get("issue_context_at"),
+            "issue_context_at": occurred if referenced_issues else prior.get("issue_context_at"),
         }
         if not lane["issue"]:
             lane["issue"] = prior.get("issue")
@@ -88,6 +96,7 @@ def read_clio(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             context = datetime.fromisoformat(str(lane["issue_context_at"]).replace("Z", "+00:00"))
             if (latest - context).total_seconds() > 7200:
                 lane["issue"] = None
+                lane["issues"] = []
     batch["lanes"] = list(lanes.values())
     return _available(batch, newest, "partial")
 
