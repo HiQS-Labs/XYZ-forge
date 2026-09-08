@@ -1,6 +1,6 @@
 # Marathon Phase gh454-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh454-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -94,3 +94,22 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-454's remaining exporter defect and pinned both reported failure paths.
+
+- Changed `utils/timeline/export_timeline.py`: select the existing release `global_id`; use `unnamed-<gid8>` (last eight GID characters, lowercase) when both codename and version are absent. The suffix avoids the common ULID timestamp prefix. Reuse that display name for slug/name, the existing ID normalization, and the marathon label. Existing named/versioned slug and ID precedence is preserved; no schema or ledger writes.
+- Added `test/gh454-reconciler-defects.sh`: two unnamed rows with the same GID prefix, codename-only and version-only controls, real JSON/preview export, successful reconciliation, observe-mode completion, full-mode rollback, and a negative control restoring the old stdout gate. The fixture gate sources the actual `pdda-lib.sh` mode resolver and `pdda_gated_exit`; unrelated sync/planning and Git preflight are mocked. The completion and rollback paths in `main` are real. No Git command is executed by this test.
+- `utils/py/wave_reconcile.py` needed no edit: GH-429 already removed the blocking stdout clause. The remaining `"ERROR" in r.stdout` occurrence only reports a warning after a successful exit; it is not the original defect. Preserve that existing fix.
+- Reversibility: Easy — display fallback plus regression coverage. No separate slug helper exists in the exporter; the existing normalization stays inline.
+
+Verification (local focused evidence; full gate remains the harness's responsibility):
+
+- Before the exporter edit, the new focused suite ran four cases: three passed and the unnamed export failed with the exact `AttributeError: 'NoneType' object has no attribute 'lower'` at `release_columns`.
+- After the edit, the same suite passed all four cases (exit 0). The old-PDDA-gate mutation produces reconcile exit 7 and fails the same success assertion used by the observe-mode case. Full mode independently exercises rollback, restores the adopted preview bytes, and removes the newly generated dashboard.
+- Ran only a scratch copy of this focused suite, with all fixture/output paths under `.relay-scratch/gh454-test/`; logs: `.relay-scratch/gh454-red.log` and `.relay-scratch/gh454-green.log`. Scratch is ephemeral and is not committed evidence. No full gate, Git command, or out-of-scope edit was performed.
+- Graph tooling was unavailable in this session; source and covering tests supplied the evidence. No graph completeness claim.
+
+Ready for agy review. The harness still owns committing and the full gate.
