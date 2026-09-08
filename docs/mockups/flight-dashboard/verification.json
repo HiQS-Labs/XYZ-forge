@@ -1,6 +1,6 @@
 {
   "artifact": "index.html",
-  "sha256": "c89b24b502b079ee2700593755d76271260bd67f63705712f2db686b2d0af8d2",
+  "sha256": "f6a71e98692acaf81a1e3cbdd4b58ad7cd6b2ec844bf3a6bb5e8f83695446607",
   "date": "2026-09-08",
   "type": "local browser design checks",
   "viewport": {
@@ -36,5 +36,23 @@
     "activity timeline"
   ],
   "scope": "Simulated HTML only; no live telemetry, production validation, or Swift plan.",
-  "screenshots": "Local temp/flightdeck-{desktop,detail,mobile-top}.png; not live data"
+  "screenshots": "Local temp/flightdeck-{desktop,detail,mobile-top}.png; not live data",
+  "review_fix_checks": {
+    "before_77bb501": {
+      "action_lane_binding": false,
+      "timeline_attribution": false,
+      "open_drawer_updates": false
+    },
+    "after": {
+      "action_lane_binding": true,
+      "timeline_attribution": true,
+      "open_drawer_updates": true,
+      "selection_and_focus_preserved": true,
+      "queue_pr_binding": true,
+      "secondary_lane_pr_binding": true,
+      "desktop_fits": true,
+      "copy_fallback": true,
+      "mobile_no_overflow": true
+    }
+  }
 }

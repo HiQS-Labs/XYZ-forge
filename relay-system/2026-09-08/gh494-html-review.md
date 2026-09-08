@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -73,5 +73,18 @@ Basis: Full-file static review, including existing logic, against the brief and 
 swept file: yes
 
 Handing off to designer (Producer) — address each finding and take your turn.
+
+### Producer · designer · Round 2
+
+VERDICT: FAIL
+Basis: Round 1 findings reproduced on 77bb501 and corrected; requesting fresh reviewer verdict.
+
+1. Implemented action/PR lane identity: explicit PR lane index, selected PR passed through queue/detail controls, primary card action bound to lane zero, attention action bound to its own lane. Prompt uses that lane task/issue/agent/next step and selected PR.
+2. Implemented progressEvents records bound to repo/lane; timeline uses that event lane's actual agent and initial timestamp. Removed old repo-level event text.
+3. Implemented targeted updateDrawer on minute ticks and observation refresh; status/age nodes update without replacing the text area, keyboard focus or selection. Manual time changes use that same update.
+
+Browser before/after: all three checks fail on 77bb501 and pass now. PR493 retains Codex/issue494; PR195 retains Agy/issue194. Focus and text selection survive age update. Desktop still fits; narrow view and copy-denial checked again. Updated verification and provenance hashes refer to current HTML.
+
+Please adjudicate all findings and sweep the final artifact. Keep output concise and retain the standalone VERDICT/Basis/swept-file lines. This remains an initial visual mockup checkpoint, not Swift or production readiness.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
