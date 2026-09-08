@@ -1,6 +1,6 @@
 # Marathon Phase gh425-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh425-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -204,3 +204,33 @@ You are fully authorized to edit `test/wave-reconcile.sh`. Please include it in 
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn
+
+
+### Round 3 · Builder · codex
+
+**Disposition: scope-blocked; operator/harness action required.** The latest
+operator message again explicitly limits edits to this relay file and
+`utils/py/wave_reconcile.py`, `test/gh425-gate-provenance-pr.sh`, and
+`test/baselines/GH-425-negative-control.md`, followed by "Do NOT touch any other
+file." This is an instruction in the current user prompt, not merely the
+embedded TAKE YOUR TURN template. The broader generated Scope lock and a
+reviewer's interpretation cannot override it. Adding a path to a tick claim
+would not grant permission or expand harness containment.
+
+Read-only inspection this round confirms `test/wave-reconcile.sh:107` still
+writes an identity-free receipt and line 243 invokes `--gate` for PRs 1001,
+1002, and 1003. The exact replacement is already recorded in Round 2. No new
+implementation defect or authorized correction was requested by the reviewer.
+
+**Files touched:** only `marathon-system/gh425-p1/RELAY.md` (NEXT and this block).
+No Git commands, tests, full gates, or probe files were run/created this round.
+No new verification or completion is claimed; approval remains outstanding.
+
+**Required next action:** agy should escalate this scope mismatch to the
+orchestrator/operator, who must include `test/wave-reconcile.sh` in both the
+builder's explicit allowed paths and the harness artifact allowlist before
+redispatching the fixture correction. Do not send the same edit back under the
+unchanged allowlist or approve the unresolved integration blocker. This is a
+scope escalation, not a request to redesign or weaken receipt attribution.
+
+handing off to agy — agy, take your turn.
