@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -57,5 +57,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — round 1
+
+swept file: yes
+
+- [Pass] Cards-only presentation and preservation are explicit: three tall full cards, two edge peeks, edge-only fade, and top-right X returning to A (.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:144). Frozen self-contained A, byte-hash checks and remote-byte verification protect the approved snapshot (same file:139, :156, :159). No change requested.
+- [Pass] Shared extraction is bounded to local fixture/icon definitions for index and B; A stays independent, with no collector or second activity stream (same file:152). The reuse seam contains icons, lane/PR constructors, repo fixtures and explicit repo/lane event references (docs/mockups/flight-dashboard/index.html:48, :52, :55, :65). No change requested.
+- [Pass] Last-hour attribution filters before joining/deduplicating, excludes age 60, separates old waiting lanes, and distinguishes unavailable data from quiet (brief:169). Existing fixtures support these cases: recent events for XYZ/Aegis/LTVera/Memory, old events for Rebalance/Buyers, and unavailable Orion data (index.html:55, :65). Historical/unconfirmed issues are explicitly excluded from masquerading as recent activity (brief:149). No change requested.
+- [Pass] Native scrolling, touch/zoom policy, keyboard/mouse access, interior start position, fade extent, narrow sizing and first/last-boundary checks are specified (brief:161–177). The brief explicitly forbids claiming physical trackpad testing from synthetic events (:163). Swift planning remains held (:178). No change requested.
+
+Basis: Read the entire 188-line brief; treated earlier Layout A sections as retained history and Layout B as active scope. No material pre-existing defect found within that scope. Direct source reading grounded the fixture seam; the available graph covers a different checkout and reports these paths missing, so no graph completeness claim is made. This is design approval for sample HTML construction, not implementation, remote-preservation, browser, hardware or production verification. No artifact/source execution or suites run.
+
+Verdict: Approved
+VERDICT: PASS
+
+Relay closed (Approved), no further turn needed. The designer may proceed with the brief's construction steps; the harness owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
