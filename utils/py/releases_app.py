@@ -73,6 +73,16 @@ import uuid
 
 APP = "releases-app"
 
+# GH-491: one vocabulary for CLI writes and the dashboard's ledgerSections.
+# `roadmap sections --json` exposes it without opening a repository or database.
+ROADMAP_SECTIONS = (
+    "Queue / parked intake",
+    "Queue",  # Historical short heading (GH-243).
+    "In progress",
+    "Completed",
+    "Deferred · vision",
+)
+
 EXIT_OK = 0
 EXIT_CHECK_FAILED = 1
 EXIT_USAGE = 2
@@ -3465,6 +3475,21 @@ def cmd_roadmap_repoint(args):
         conn.close()
 
 
+def validate_roadmap_section(section):
+    """Refuse headings the dashboard cannot render; never silently rename input."""
+    if section not in ROADMAP_SECTIONS:
+        hint = (" 'Deferred / cancelled' is a legacy markdown heading; use 'Deferred · vision'."
+                if section == "Deferred / cancelled" else "")
+        refuse("invalid-section", "unknown roadmap section %r.%s Valid sections: %s"
+               % (section, hint, ", ".join(repr(s) for s in ROADMAP_SECTIONS)))
+    return section
+
+
+def cmd_roadmap_sections(args):
+    print(json.dumps(ROADMAP_SECTIONS, ensure_ascii=False) if args.as_json
+          else "\n".join(ROADMAP_SECTIONS))
+
+
 def cmd_roadmap_update(args):
     """GH-257: update an existing parked roadmap row's raw_text.
 
@@ -3472,6 +3497,8 @@ def cmd_roadmap_update(args):
     Nothing edited `raw_text` directly without manually editing releases.sql.
     This command closes that gap with a validated, receipt-backed update path.
     """
+    if args.section is not None:
+        validate_roadmap_section(args.section)
     root = resolve_root(args.root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
@@ -3545,7 +3572,7 @@ def cmd_roadmap_update(args):
 
 
 def cmd_roadmap_move(args):
-    """GH-269: move a roadmap row to a new section (e.g. 'Completed', 'Deferred / cancelled')."""
+    """GH-269: move a roadmap row to a new section (e.g. 'Completed', 'Deferred · vision')."""
     return cmd_roadmap_update(args)
 
 
@@ -5202,6 +5229,9 @@ def build_parser():
 
     sp = sub.add_parser("roadmap", help="Roadmap ledger (GH-269): sync/list the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
+    sp_sections = rsub.add_parser("sections", help="list accepted roadmap section names (no DB required)")
+    sp_sections.add_argument("--json", dest="as_json", action="store_true",
+                             help="emit the dashboard's section vocabulary as a JSON array")
     sp_rs = rsub.add_parser("sync", help="mirror legacy ROADMAP.md's ledger into roadmap_items (one-way)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
     sp_rs.add_argument("--allow-empty", action="store_true",
@@ -5251,13 +5281,14 @@ def build_parser():
     sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
     sp_ru.add_argument("--raw-text", help="new raw_text for the row")
-    sp_ru.add_argument("--section", help="move the row to a new section (e.g. Completed/Deferred)")
+    sp_ru.add_argument("--section", help="new section; accepted names: " + ", ".join(ROADMAP_SECTIONS))
     sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rm = rsub.add_parser("move", help="move an existing roadmap row to a new section (GH-269)")
     sp_rm.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_rm.add_argument("--gid", help="the row's rmi- global id")
-    sp_rm.add_argument("--section", required=True, help="new section name (e.g. 'Completed', 'Deferred / cancelled')")
+    sp_rm.add_argument("--section", required=True,
+                       help="new section; accepted names: " + ", ".join(ROADMAP_SECTIONS))
     sp_rm.add_argument("--raw-text", default=None, help="optional updated raw_text for the row")
     sp_rm.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
@@ -5370,7 +5401,7 @@ def main(argv=None):
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
-                              "move": cmd_roadmap_move}[a.roadmap_cmd](a),
+                              "move": cmd_roadmap_move, "sections": cmd_roadmap_sections}[a.roadmap_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,

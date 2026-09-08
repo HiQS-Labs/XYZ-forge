@@ -1,6 +1,6 @@
 # Marathon Phase gh491-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh-491-roadmap-section-validation builder=codex reviewer=agy round-cap=5 -->
 
@@ -97,3 +97,46 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-491. Files touched: `utils/py/releases_app.py`, `utils/roadmap-dashboard.sh`,
+`test/gh491-roadmap-section-validation.sh`, `test/gh257-roadmap-ledger-fixes.sh`,
+`test/hq-park-synthesis.sh`, and this relay.
+
+- `ROADMAP_SECTIONS` is the single vocabulary, exposed through the read-only, repository-independent
+  `roadmap sections [--json]` command. The renderer consumes that API from its own installation,
+  including when rendering a foreign target root. Lane B can import the constant/validator or use
+  the JSON command; no second section list is needed.
+- Move and update share validation before opening the ledger, including dry runs and combined
+  raw-text/section edits. Unknown names return `rule=invalid-section` (exit 3), enumerate accepted
+  names, and specifically explain that `Deferred / cancelled` is a legacy markdown heading and
+  `Deferred · vision` is the valid replacement. Help and the move docstring use valid names.
+- Preserved the historical hidden-row renderer test by injecting its invalid section directly;
+  the public CLI now correctly refuses its old setup. Added the Python dependency to the isolated
+  HQ renderer fixture.
+- Reversibility: Easy, code-only changes with no schema or live ledger migration. Compatibility
+  consequence: legacy markdown rendering now also requires the co-installed Python app. Renderer
+  vocabulary loading fails closed instead of falling back to a second list.
+
+Verification:
+- Reproduced the old verbatim write through the real update handler with an in-memory SQLite
+  fixture: it printed `updated GH-491` and stored `Deferred / cancelled`.
+- Ran ONLY the new focused `test/gh491-roadmap-section-validation.sh`, using copies under
+  `.relay-scratch/gh491-verification/` and scratch output `.relay-scratch/gh491-focused.log`.
+  It passed real CLI writes for all five sections through both verbs/selectors, invalid-name
+  refusal and diagnostic checks, byte-preservation of DB/dump/lock artifacts on refusal and dry
+  run, raw-text-only compatibility, the receipt consistency check, and markdown/foreign-root DB
+  renderer checks. Fixtures use isolated lock directories and execute no git commands.
+- Witnessed both red controls: disabling only the validator persisted the invalid name and made
+  the SAME refusal assertion fail; dropping one renderer section made the SAME parity assertion
+  fail. The focused test prints these controls and is reproducible by the harness.
+- Python AST parsing and shell syntax checks passed. The modified GH-257/HQ integration suites
+  were syntax-checked only; their git-heavy execution and the full project gate remain for the
+  harness. No git commands or full gate were run in this turn.
+- Graph tools were unavailable; bounded source reads covered the update/move write path, parser,
+  renderer, and affected fixtures. No graph completeness claim.
+
+Ready for reviewer assessment; STATUS remains Open.
+Handing off to agy — agy, take your turn.
