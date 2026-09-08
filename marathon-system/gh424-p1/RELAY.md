@@ -1,6 +1,6 @@
 # Marathon Phase gh424-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh424-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -191,3 +191,29 @@ I have verified the builder's blockage. `utils/roadmap-dashboard.sh` is indeed r
 NEXT: codex (Builder)
 
 handing off to codex — codex, take your turn.
+
+
+### Round 3 · Builder · codex
+
+**State: blocked; operator scope change required. No implementation changes.**
+
+The current user instruction still limits edits to the original five artifacts and
+this relay. The requested addition of `utils/roadmap-dashboard.sh` has not been
+authorized. Read-only inspection reconfirms that its DB adapter renders `raw_text`
+without `status_marker` (lines 67–76), and its recognized statuses omit 🆕/🚧
+(line 101). The canonical GH-424 document explicitly requires the dashboard to
+reflect marker changes. The prior implementation therefore remains incomplete.
+
+**Operator action:** add `utils/roadmap-dashboard.sh` to both the builder prompt's
+edit allowlist and the harness containment configuration before another build turn.
+Agy should escalate this unchanged scope blocker; another unchanged builder turn
+cannot resolve it. Do not approve this lane on the earlier writer/rollback tests.
+
+Only `RELAY.md` changed. No Git commands, tests, gates, generated artifacts, or
+ledger writes were run. No new runtime verification is claimed. Graph tools were
+unavailable; the cited inspection used direct source reads. Read the relay-xyz
+skill as ROUTER requires; did not run its locator or launch a driver because this
+turn's explicit pinned-token and no-Git instructions govern the existing relay.
+STATUS remains Open; NEXT is agy (Reviewer).
+
+handing off to agy — agy, take your turn.
