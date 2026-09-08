@@ -7,9 +7,9 @@ description: >
   landing, and reconciliation in one operator-authorized motion. Requires a
   fresh full task clone branched from origin/development with the canonical
   pre-push gate installed, authenticated gh, and the root releases ledger. The
-  driver opens and immediately merges a PR to development so issue closure and
-  `wave_reconcile --pr` remain available; "direct" means no human pause, not no
-  PR. Refuses shared/stale clones, unsafe Git/Bash/kernel surfaces, oversized or
+  driver commits and fast-forward pushes directly to development, verifies the
+  commit and issue closure, then reconciles with `wave_reconcile --commit`.
+  Refuses shared/stale clones, unsafe Git/Bash/kernel surfaces, oversized or
   multi-subsystem diffs, generated-artifact hand edits, missing/red suites, and
   closed or unresolved issues. Do not use for Costly or one-way-door changes.
 ---
@@ -75,20 +75,20 @@ What each phase asserts (all refusals write `.tick/events/*-express-refused-*.js
    by path and content (`tree-drift`: new paths and changed qualified bytes both
    refuse). Gate identity is re-proven after the suite, staging uses explicit
    pathspecs, and the push never sets `XYZ_SKIP_PREPUSH`.
-8. **Land** — one commit of exactly the qualified paths; push; ghost PR into
-   `development`; immediate merge. The closeout then switches to clean,
+8. **Land** — one commit of exactly the qualified paths with `Closes #N`, then
+   `git push origin HEAD:development`. A concurrent update refuses as a normal
+   non-fast-forward; there is no force push and no PR. The closeout switches to clean,
    current `development` (ship/reconcile state never rides the task branch).
 9. **Ship with evidence** — `manifest ship --gid <rel> --evidence "<sha>; <suite>
-   green; PR #<m> merged"` — post-merge, so the sha and receipts exist when the
+   green; direct development push"` — post-push, so the sha and receipts exist when the
    evidence is written. The GH-205 trap (dialed_in while closed) is structurally
    impossible in this order.
-10. **Close the issue** — the ghost PR body says `Closes #<N>`, so GitHub
-    auto-closes it; the driver verifies and closes explicitly if it did not.
+10. **Close the issue** — the commit message says `Closes #<N>` and lands on the
+    default branch; the driver verifies and closes explicitly if GitHub has not.
 11. **Persist, reconcile cleanly, persist — fail closed.** From `development`,
     ship outputs are committed and pushed first. Only then does
-    `wave_reconcile.py --pr <m>` run from the clean tree (offline-manifest
-    fallback for foreign-tracker citations); its outputs form a second commit
-    and push. Every post-merge fault exits non-zero with an
+    `wave_reconcile.py --commit <sha>` runs from the clean tree; its outputs
+    form a second commit and push. Every post-push fault exits non-zero with an
     `express-reconcile-failed` receipt; success prints only after both boundaries.
 
 ## After the run
@@ -104,5 +104,4 @@ What each phase asserts (all refusals write `.tick/events/*-express-refused-*.js
 - No override flag: a refused run routes to the normal fresh-clone PR lane,
   full stop. An `--force` would make every guardrail negotiable.
 - No Costly/one-way-door work, ever (see step 2 refusals).
-- No true push-to-`development` mode — Phase 2, pending `wave_reconcile
-  --commit` (tracked on #267).
+- No force push and no bypass of the canonical pre-push gate.

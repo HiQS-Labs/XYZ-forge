@@ -56,7 +56,7 @@ check_rule() { # check_rule <expected-rule> <stderr-file>
 # ── fake gh ──────────────────────────────────────────────────────────────────
 cat > "$BIN/gh" <<'GH'
 #!/usr/bin/env bash
-# gh267 suite stub: issue view from $GH_STATE; pr create/merge simulated (PR #777).
+# gh267 suite stub: issue view/close from $GH_STATE.
 set -u
 if [ "$1 $2" = "issue view" ]; then
   n=""; prev=""
@@ -66,12 +66,7 @@ if [ "$1 $2" = "issue view" ]; then
   done
   cat "$GH_STATE/issue-$n.json" && exit 0
 fi
-if [ "$1 $2" = "pr create" ]; then echo "https://github.com/H/H/pull/777"; exit 0; fi
-if [ "$1 $2" = "pr merge" ]; then
-  # Simulate GitHub's merge into the remote development branch.
-  git -C "$EXPRESS_FX" checkout -q development || exit 1
-  git -C "$EXPRESS_FX" merge -q --no-ff task/gh-999 -m "merge express fixture" || exit 1
-  git -C "$EXPRESS_FX" push -q origin development || exit 1
+if [ "$1 $2" = "issue close" ]; then
   printf '{"state":"CLOSED","title":"Demo hotfix","url":"https://github.com/H/H/issues/999","createdAt":"2026-08-27T00:00:00Z"}\n' > "$GH_STATE/issue-999.json"
   exit 0
 fi
@@ -266,7 +261,7 @@ echo "== run: end-to-end happy path (hermetic — stubbed gh/releases/reconcile)
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
 issue_json OPEN "Demo hotfix" 999
 RUNOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary demo 2>"$ERR")"
-if grep -q "express-land: PR #777 merged" <<<"$RUNOUT"; then
+if grep -Eq "express-land: commit [0-9a-f]+ pushed to development" <<<"$RUNOUT"; then
   ok "run accepts the full production projection set"
 else
   bad "run failed: $(tail -2 "$ERR")"
@@ -292,7 +287,7 @@ python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh >/de
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary demo >/dev/null 2>"$ERR" || bad "standalone docs failed: $(cat "$ERR")"
 python3 "$DRIVER" --root "$FX" ledger --issue 999 >/dev/null 2>"$ERR" || bad "standalone ledger failed: $(cat "$ERR")"
 LANDOUT="$(python3 "$DRIVER" --root "$FX" land --issue 999 --suite test/gh999-demo.sh 2>"$ERR")"
-if grep -q "express-land: PR #777 merged" <<<"$LANDOUT"; then
+if grep -Eq "express-land: commit [0-9a-f]+ pushed to development" <<<"$LANDOUT"; then
   ok "standalone land accepts what standalone docs/ledger already wrote (GH-278 review fix)"
 else
   bad "standalone land refused its own driver's earlier docs/ledger output: $(tail -3 "$ERR")"
@@ -326,10 +321,10 @@ WR_FAIL=1 python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo
 FAILED_TICK="$(ls -t "$FX/.tick/events/"*express-reconcile-failed*.jsonl 2>/dev/null | head -1)"
 [ -n "$FAILED_TICK" ] && grep -q '"verb": "express-reconcile-failed"' "$FAILED_TICK" && ok "every closeout failure writes its receipt" || bad "closeout failure tick missing"
 
-echo "== source audit (QA F1) =="
-LAND_BODY="$(awk '/^def cmd_land/,/^def [a-z_]+\(/' "$DRIVER"; true)"
-[ -z "$(printf '%s' "$LAND_BODY" | grep -n "args_repo()")" ] && ok "cmd_land threads --repo (no args_repo fallback)" || bad "cmd_land still calls args_repo() — --repo split-brain (QA F1)"
-grep -q "def build_offline_manifest(root, repo, pr_number)" "$DRIVER" && ok "build_offline_manifest takes repo explicitly" || bad "build_offline_manifest lost its repo param (QA F1)"
+echo "== source audit (direct landing) =="
+LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
+grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
+[ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"

@@ -2,7 +2,7 @@
 title: "GH-267: /express — hotfix fast lane through the whole paper trail"
 status: Complete
 created: 2026-08-27
-updated: 2026-08-27
+updated: 2026-09-08
 owner: orchestrator (ZCode)
 gh_issue: 267
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/267
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Merged in PR #270. PR #278 carries the post-merge review fixes plus a production-path re-review: full generated-output projection, clean two-transaction closeout, canonical gate identity, content-level TOCTOU checks, and failure receipts; suite now 38/38. | First live `/express` run on a real hotfix; Phase 2: true direct-push mode pending `wave_reconcile --commit` |
+| Phase 2 replaces the immediately merged ghost PR with a fast-forward push to `development`, adds commit-aware reconciliation, and preserves the existing PR reconciliation path. Focused suites are 39/39 and 16/16. | Dogfood this change through the direct landing path and deploy the landed skill through Skills Army HQ. |
 
 ## Why
 
@@ -54,15 +54,17 @@ would have satisfied is asserted up front as a refusal, and the operator's
   Express inlines those same three predicates as `check`-time refusals, because
   a pause would defeat the reason the lane exists. This is the one foundational
   divergence, and it is deliberate.
-- **Landing shape (documented deviation from the letter of "direct commit")**:
-  the commit rides the task branch and merges via a PR the driver itself opens
-  and merges immediately. This keeps `wave_reconcile --pr` working and
-  auto-closes the linked issue — a raw push to `development` would strand both.
-  "Direct" means no human gate, not no PR object. Phase 2 tracks a true
-  direct-push mode pending `wave_reconcile --commit`.
-- **Issue closure is load-bearing** (GH-232): no PR means no auto-close —
-  except the ghost PR provides one via its `Closes #N` body; the driver verifies
-  and closes explicitly if GitHub did not.
+- **Landing shape**: the qualified commit fast-forward pushes directly from the
+  task branch to `development`. A concurrent update produces an ordinary
+  non-fast-forward refusal; Express never force-pushes and never bypasses the
+  canonical pre-push gate.
+- **Issue closure is load-bearing** (GH-232): `Closes #N` lives in the commit
+  message and reaches the repository's default branch (`development`); the
+  driver verifies closure and closes explicitly if GitHub has not.
+- **Reconciliation preserves identity**: direct landings use
+  `wave_reconcile.py --commit <sha>`, while the existing `--pr` path remains
+  unchanged for normal lanes. No synthetic PR is created merely to feed the
+  lifecycle reconciler.
 
 ## Mechanics (steps 0–11)
 
@@ -71,20 +73,22 @@ See `skills/express/SKILL.md` for the operator-facing procedure and
 (≤4 core files / ≤150 insertions / single subsystem) → hard refusals (frozen
 twins, new Bash, kernel surfaces) → issue OPEN → suite registered → docs born
 complete + CHANGELOG → ledger (park + dial-in) → suite green → commit/push
-through the pre-push gate → ghost PR + merge → ship with evidence → close
-issue → reconcile (with auto-built offline manifest fallback for
-foreign-tracker PR-body citations).
+through the pre-push gate directly to `development` → verify commit reachability
+and issue closure → ship with evidence → reconcile by commit SHA.
 
 ## Acceptance Criteria
 
-- [x] `test/gh267-express-skill.sh` green (38/38): refusal predicates, faithful
+- [x] `test/gh267-express-skill.sh` green (39/39): refusal predicates, faithful
       projection writes, two-transaction closeout, path/content TOCTOU, gate
-      identity before and after the suite, and failure receipts.
+      identity before and after the suite, failure receipts, and direct landing
+      without a ghost PR.
+- [x] `test/wave-reconcile.sh` green (16/16), including commit-identity
+      reconciliation without inventing a PR.
 - [x] Suite registered in `validate.sh` TESTS; skill indexed in ARCHITECTURE.md.
 - [x] Roadmap row parked via `releases roadmap add` (rated 3/3/3, provisional).
 - [x] QA relay review — deepseek-v4-pro via relay-xyz (`relay-system/2026-08-27/gh267-express-qa.md`):
       Changes Requested → all 7 actionable findings fixed + pinned in the suite (now 21 checks).
-- [ ] First live `/express` run on a real hotfix.
+- [ ] First live direct-push `/express` run on a real hotfix.
 
 ## Non-goals
 
@@ -103,6 +107,8 @@ foreign-tracker PR-body citations).
 ## Merge evidence
 
 - PR #270 merged 2026-08-27 (06:34Z). Post-merge review fixes ride PR #278 (`fix/gh270-express-post-merge-review`).
+- Phase 2 direct-push implementation dogfooded on 2026-09-08; final commit and
+  gate evidence are recorded by the landing and reconciliation transactions.
 
 ## Lessons Learned (For Future Agents)
 
@@ -114,6 +120,9 @@ foreign-tracker PR-body citations).
   complete (GH-232's gate can't dead-end), dial-in and ship in the same motion
   as the commit (GH-205 can't recur), issue closed before reconcile (promotion
   can't stall), evidence written only after the sha exists.
+- **A PR object is not lifecycle state.** Once reconciliation can consume the
+  landed commit and its closing references directly, creating and immediately
+  merging a PR adds latency and ceremony without adding review or rollback.
 - **Consistency with a sibling plan beats local elegance**: following the jog
   plan's conventions (re-use inventory, capture-doc + `roadmap add`
   registration, registered test suite, non-goals section) made the review

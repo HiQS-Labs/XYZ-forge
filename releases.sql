@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 498
+-- generation: 499
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -11,7 +11,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('6', '2026-08-27T04:35
 INSERT INTO schema_migrations(version, applied_at) VALUES('7', '2026-09-08T05:45:05Z');
 -- table: settings
 INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
-INSERT INTO settings(key, value, updated_at) VALUES('generation', '498', '2026-09-08T19:06:28Z');
+INSERT INTO settings(key, value, updated_at) VALUES('generation', '499', '2026-09-08T21:06:54Z');
 INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
 -- table: repos
 INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
@@ -88,6 +88,7 @@ INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at) VALUES('
 INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at) VALUES('ref-01M1MAQ799D901VHERKBBJZVFA', 'https://github.com/HiQS-Labs/XYZ-forge/issues/419', NULL, '2026-09-03T19:07:52Z', '2026-09-03T19:07:52Z');
 INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at) VALUES('ref-01M1WGEW2HVGPEQYD84BA9V27T', 'https://github.com/HiQS-Labs/XYZ-forge/issues/462', NULL, '2026-09-06T23:22:05Z', '2026-09-06T23:22:05Z');
 INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at) VALUES('ref-01M1ZPJKHJZF9XH1NF2M6NP01R', 'https://github.com/HiQS-Labs/XYZ-forge/issues/497', NULL, '2026-09-08T05:06:42Z', '2026-09-08T05:06:42Z');
+INSERT INTO issue_refs(global_id, url, temp_id, created_at, updated_at) VALUES('ref-01M21DGRK5KCMWR4QVZNPRSYF4', 'https://github.com/HiQS-Labs/XYZ-forge/issues/267', NULL, '2026-09-08T21:06:54Z', '2026-09-08T21:06:54Z');
 -- table: marathons
 INSERT INTO marathons(global_id, repo_gid, tracking_ref_gid, status, created_at, updated_at) VALUES('mar-01M0EC2ZXJCCJ88KASQPDBTBJ9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'ref-01M0EC2ZXN2SS1XD2N3E56GT18', 'planned', '2026-08-20T01:20:38Z', '2026-08-20T01:20:38Z');
 INSERT INTO marathons(global_id, repo_gid, tracking_ref_gid, status, created_at, updated_at) VALUES('mar-01M1M3WWJDKKTRP5PSCG9HNEYW', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'ref-01M1M3WWJPRG2GGK16EMA0RSZC', 'planned', '2026-09-03T17:08:38Z', '2026-09-03T17:08:38Z');
@@ -173,6 +174,7 @@ INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M1M3DTRGD1J90Z6FCAQKW5EF', 'rel-01M0BTBRMKX17AQN7Q11A0YCD7', 'ref-01M1M3DTRPMD53CY81B8M6TVNM', 'dialed_in', '2026-09-03T17:00:24Z', 'Flaky turns under concurrency are the first thing a new operator hits and the hardest to attribute; the transient case is indistinguishable from a real loss.', NULL, '2026-09-03T17:00:24Z');
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M1M9HXP0TM9MJED9039542KF', 'rel-01M0BTBRMKX17AQN7Q11A0YCD7', 'ref-01M1M9HXP6MAVCEM5RDPX29BSP', 'dialed_in', '2026-09-03T18:47:30Z', 'A stranger following the documented intake rail parks an item the planner cannot see. Front-Door is about the path a new reader actually walks.', NULL, '2026-09-03T18:47:30Z');
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M1MAQ794AFT5K00B844DE6KP', 'rel-01M0BTBRMKX17AQN7Q11A0YCD7', 'ref-01M1MAQ799D901VHERKBBJZVFA', 'dialed_in', '2026-09-03T19:07:52Z', 'Front-Door is about the path a stranger walks. A marathon process nobody can follow reliably is that path failing one layer up.', NULL, '2026-09-03T19:07:52Z');
+INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M21DGRJYWVDF7W63K7AE2NXD', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M21DGRK5KCMWR4QVZNPRSYF4', 'dialed_in', '2026-09-08T21:06:54Z', 'express hotfix 2026-09-08 (GH-267 lane)', NULL, '2026-09-08T21:06:54Z');
 -- table: manifest_state_events
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M0GT694QQ7Q952E5ZJ6SY1G8', 'open', 'cut', '2026-08-21T02:02:16Z', 'Admission error, not a re-scope: #108 (task rating system) was added 2026-08-20 without meeting the standing admission rule — it does not make Daybreak''s exit command fail, falsifies no named invariant, and carries no reproducer. Daybreak''s manifest is the nine /standup marathon work units (#79-#87); a rating system is not that work. Cut restores the 9-item denominator under a live marathon run. Re-homing to a future release is an open operator decision on #108.');
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M0EC52HXQ1MTWGM1RR27SPP2', 'dialed_in', 'shipped', '2026-08-21T04:22:07Z', 'PR #92 (merge 897e3064) — collect.sh lenses 2, 3 and 7, Daybreak wave 1; issue #79 closed');
@@ -1114,3 +1116,4 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M1ZPEZK9KKQ4747KH0T2GSAN', '2026-09-08T05:36:22Z', '41d697e5b6ab440b8fa237837ec6da62', 'default', '5376b885e527cfbb3497aae9a5e49624a13eafd495e60aec529c9594976cf51e', '2b5b1915684a9be133f7ceefc6e0cd42b6e9fbd669a4e89904b8fc96c77cefb5');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:64', '2026-09-08T15:34:40Z', '7f9d8292857043739288fccada588d3e', 'default', '521ff024597aa05ccce89e786cfb9b7c41a56a126f86b5404ea12cdd940cc174', 'da1654a80547aa02e1f03c996d2cdbd7bc2fa3d1b55ffcd3f2b8a9c85d5686d3');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-01M216M83CJWCED874HQ5GSPZ2', '2026-09-08T19:06:28Z', 'cf4d0439149146e3a70ff48938d946f2', 'default', 'da1654a80547aa02e1f03c996d2cdbd7bc2fa3d1b55ffcd3f2b8a9c85d5686d3', '70ad283368249101185d8ac4a1f20e8af8e4362292b271d16436e2857b912aff');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M21DGRJYWVDF7W63K7AE2NXD', '2026-09-08T21:06:54Z', '960a2a5cda09414fa4eae8e07c4e8ef8', 'default', '70ad283368249101185d8ac4a1f20e8af8e4362292b271d16436e2857b912aff', 'c04e3d8149597e2327dc34f5b1fd7a6ac00e4379cf5c067a46735a99c88f3d47');
