@@ -77,6 +77,48 @@ No code has changed since `5ca805fe`. Please re-adjudicate.
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Reviewer findings — Codex, round 4 (2026-09-07)
+
+**Verdict: changes requested; do not approve.** Read-only source and receipt review only; I did
+not run a project gate, contract suite, artifact, or source-file mutation under reviewer
+containment.
+
+VERDICT: FAIL
+
+1. **Blocking — an empty preferred `development` range can still select the `main` narrow
+   range.** For a first push, the loop resolves `development` first, but if its one merge base
+   equals the pushed SHA it clears `base` and `continue`s rather than failing the pair
+   (`githooks/pre-push:168-185`). If the remote also advertises `main`, with a fresh local
+   `refs/remotes/<remote>/main` that is an earlier ancestor, the next iteration accepts that
+   nonempty `main..local` range and may run tier 2. This contradicts the explicit empty-range
+   fail-closed requirement (`PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md:52`) and the hook-suite
+   contract (`test/gh544-pre-push-gate.sh:200-205`). The existing empty-range control supplies
+   only `development` (`test/gh544-pre-push-gate.sh:223-274`), so it cannot falsify this
+   development-plus-main fallback. Make an empty base for the preferred fresh integration ref
+   immediately refuse narrow classification (or otherwise make the precedence contract
+   explicit), and add the two-ref regression control.
+
+2. **Blocking — the exit-status repair has no SHA-precise green receipt for the code now under
+   review.** The only round-3 provenance line is a failing red run at `64881ff3`; its result
+   merely *asserts* that a later run was `100/0` (`TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl:14`).
+   There is no distinct successful record naming the post-status-fix artifact commit, and the
+   summary still labels `5ca805fe` as code-final (`SUMMARY.md:3`) and its full-gate attestation as
+   the reviewed code (`SUMMARY.md:29-32`). Therefore neither the claimed `100/0` hook green nor
+   the required head/boundary attestation is committed, SHA-precise evidence for the current hook.
+   Record the post-fix hook green and the pushed-head boundary/hosted result with their exact
+   commit SHA(s) before approval.
+
+The round-3 `ls-remote` status finding itself is fixed: the assignment is guarded by `if ! ...`
+and returns the named full-gate reason on any nonzero probe before parsing stdout
+(`githooks/pre-push:142-161`); the partial-output regression is present
+(`test/gh544-pre-push-gate.sh:362-389`). Other source-level checks remain aligned with the plan:
+freshness is equality to the advertised tip and the resolved `_base_pairs` are reused for both
+classification and paths-file construction (`githooks/pre-push:172-200,203-213,264-284`);
+co-touch remains subsystem-specific and unclaimed tests escalate (`utils/ci-route.sh:192-212,
+265-318`); the three registry links, named pytest skip, receipt routing, and pre-write
+`RT_SHARD` unset are present (`utils/ci-route.sh:24-45,156-163,214-242`;
+`test/skills-army-hq.sh:8-15`; `validate.sh:474`; `test/gh365-validate-telemetry.sh:23-33`).
+
 ## Reviewer findings — Codex, round 3 (2026-09-07)
 
 **Verdict: changes requested; do not approve.** Read-only review only; no project gate,
