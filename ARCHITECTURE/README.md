@@ -49,12 +49,28 @@ ask-self RAG, then the written docs — before it reads any source, and records 
 spec's `sources` field so the diagram is auditable. A hand-copied spec skips that and silently
 inherits the wrong `sources`.
 
-Two things the builder will not catch for you, so check them yourself:
+## Checking a spec
 
-- **Dangling edges.** The builder fails on invalid JSON but *not* on an edge whose `source` or
-  `target` names no node — the renderer just drops it, silently. Verify every endpoint resolves.
+The builder fails on invalid JSON but not on graph semantics — an edge whose `source` or `target`
+names no node is dropped by the renderer *silently*, so a spec can ship a picture quietly missing a
+relationship. Run the validator before you commit:
+
+```bash
+node utils/swe-diagram/scripts/validate-spec.js ARCHITECTURE/*.json
+```
+
+It reports **errors** (dangling edge endpoints, duplicate node ids, nodes in an undeclared group,
+unknown layout, an unresolvable `hub` or `lane`) and exits non-zero on any of them. **Warnings** —
+an unknown node `type` or edge `kind` that will fall back to a default, an empty group, a node with
+no edges, and the node-count band below — never fail the run.
+
+`test/swe-diagram.sh` runs it over every committed spec here, with red controls proving each error
+class actually fails. So a dangling edge cannot reach `development`; the manual check is now the
+belt, not the braces.
+
 - **Node count.** Aim for 8–25. Past that the layout stops being readable and the diagram stops
-  being a map.
+  being a map. The four `system-diagram*` files sit at 31 deliberately — hence a warning, not an
+  error.
 
 ## The prose counterpart
 

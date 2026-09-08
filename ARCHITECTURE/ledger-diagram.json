@@ -196,9 +196,9 @@
       "label": "4 suites on --check's exit",
       "type": "external",
       "group": "guard",
-      "tech": "gh269-roadmap-retired · gh280-jog-marathon-adapter (×2) · gh57-live-merge-resolve · roadmap-dashboard",
+      "tech": "3 downstream: gh269-roadmap-retired · gh280-jog-marathon-adapter (2 sites) · gh57-live-merge-resolve — plus the renderer's own suite: roadmap-dashboard",
       "trust": "off-live-path-governance",
-      "description": "Independent consumers that treat a non-zero --check as failure. Their existence is the reason the dropped-row signal is stderr and not a new exit code."
+      "description": "Four suites treat a non-zero --check as failure. Three are downstream consumers that merely borrow the exit contract; the fourth, test/roadmap-dashboard.sh, is the renderer's own suite and tests that contract head-on — its case 4 mutates the artifact to prove --check ACTUALLY fails on drift, which is what makes the other three's reliance on it meaningful. Together they are why the dropped-row signal travels on stderr rather than as a new exit code: a new code would have broken all four."
     }
   ],
   "edges": [

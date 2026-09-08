@@ -314,5 +314,79 @@ else
   fail "Git history generator emits no dangling edge endpoints"
 fi
 
+# --- Spec validator (PR #489 review) -----------------------------------------------------------
+# build-diagram.sh fails on invalid JSON but not on graph semantics, and the renderer DROPS an edge
+# whose endpoint names no node without saying anything. ARCHITECTURE/README.md asks a human to check
+# that by hand; these cases make it mechanical, so the next hand-authored spec cannot ship a
+# silently-missing relationship.
+VALIDATOR="$HERE/../utils/swe-diagram/scripts/validate-spec.js"
+if [ -f "$VALIDATOR" ]; then
+  pass "spec validator is present at utils/swe-diagram/scripts/validate-spec.js"
+
+  # Every committed spec must be clean. This is the assertion that actually protects the repo.
+  if node "$VALIDATOR" "$HERE"/../ARCHITECTURE/*.json >/dev/null 2>&1; then
+    pass "every committed ARCHITECTURE/*.json spec passes the validator"
+  else
+    fail "every committed ARCHITECTURE/*.json spec passes the validator — $(node "$VALIDATOR" "$HERE"/../ARCHITECTURE/*.json 2>&1 | grep ERROR | head -3)"
+  fi
+
+  # RED CONTROLS. Without these the block above decays into "the validator exited 0", which a
+  # validator that checks nothing also does. Each fixture breaks exactly one rule.
+  cat > "$WORK/spec-clean.json" <<'JSEOF'
+{ "title": "clean", "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-clean.json" >/dev/null 2>&1; then
+    pass "validator accepts a clean spec (the control is falsifiable in both directions)"
+  else
+    fail "validator accepts a clean spec"
+  fi
+
+  cat > "$WORK/spec-dangling.json" <<'JSEOF'
+{ "title": "dangling", "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "ghost" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-dangling.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a dangling edge target must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a dangling edge target fails the validator"
+  fi
+
+  cat > "$WORK/spec-dup.json" <<'JSEOF'
+{ "title": "dup", "nodes": [ { "id": "a" }, { "id": "a" } ],
+  "edges": [ { "source": "a", "target": "a" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-dup.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a duplicate node id must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a duplicate node id fails the validator"
+  fi
+
+  cat > "$WORK/spec-badgroup.json" <<'JSEOF'
+{ "title": "badgroup", "groups": [ { "id": "real" } ],
+  "nodes": [ { "id": "a", "group": "nope" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-badgroup.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a node in an undeclared group must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a node in an undeclared group fails the validator"
+  fi
+
+  # A warning must NOT fail the run: the four system-diagram*.json files are deliberately at 31
+  # nodes, over the README's 8-25 band. If this ever flips, every one of them breaks the gate.
+  cat > "$WORK/spec-warn.json" <<'JSEOF'
+{ "title": "warn-only", "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-warn.json" >/dev/null 2>&1; then
+    pass "a spec that only trips WARNINGs (node-count band) still exits 0"
+  else
+    fail "a spec that only trips WARNINGs (node-count band) still exits 0"
+  fi
+else
+  fail "spec validator not found at $VALIDATOR"
+fi
+
 echo "  swe-diagram: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]
