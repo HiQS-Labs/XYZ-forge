@@ -83,6 +83,8 @@ ROADMAP_SECTIONS = (
     "Deferred · vision",
 )
 
+ROADMAP_STATUS_MARKERS = ("🆕", "🚧", "✅")
+
 EXIT_OK = 0
 EXIT_CHECK_FAILED = 1
 EXIT_USAGE = 2
@@ -3492,12 +3494,15 @@ def cmd_roadmap_sections(args):
 
 
 def cmd_roadmap_update(args):
-    """GH-257: update an existing parked roadmap row's raw_text.
+    """Update a parked row's explicit fields through the receipt-backed writer.
 
-    `roadmap add` refuses duplicates, `rate` scores an existing row, and `repoint` moves doc_path.
-    Nothing edited `raw_text` directly without manually editing releases.sql.
-    This command closes that gap with a validated, receipt-backed update path.
+    GH-257 adds raw_text/section updates; GH-424 adds an explicit status marker.
+    Marker-only updates preserve raw_text, ratings, section and doc_path.
     """
+    marker = getattr(args, "status_marker", None)  # `move` shares this handler.
+    if marker is not None and marker not in ROADMAP_STATUS_MARKERS:
+        refuse("invalid-status-marker", "--status-marker must be one of %s"
+               % ", ".join(ROADMAP_STATUS_MARKERS))
     if args.section is not None:
         validate_roadmap_section(args.section)
     root = resolve_root(args.root)
@@ -3520,15 +3525,15 @@ def cmd_roadmap_update(args):
         if not row:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
 
-        if args.raw_text is None and args.section is None:
-            refuse("no-update", "pass at least one of --raw-text or --section")
+        if args.raw_text is None and args.section is None and marker is None:
+            refuse("no-update", "pass at least one of --raw-text, --section or --status-marker")
 
         new_raw_text = None
         rating = None
         if args.raw_text is not None:
             new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
             old_raw_text = row["raw_text"] or ""
-            if new_raw_text == old_raw_text.strip() and args.section is None:
+            if new_raw_text == old_raw_text.strip() and args.section is None and marker is None:
                 print("roadmap update: %s raw_text unchanged; nothing written" % label)
                 return
             rating = parse_rating(new_raw_text, row["title"])
@@ -3546,6 +3551,8 @@ def cmd_roadmap_update(args):
                         print("ovr: %d" % rating["rating_ovr"])
             if args.section:
                 print("section: -> %s" % args.section)
+            if marker is not None:
+                print("status_marker: -> %s" % marker)
             return
 
         def mutate(conn):
@@ -3562,7 +3569,10 @@ def cmd_roadmap_update(args):
             if args.section is not None:
                 updates.append("section = ?")
                 params.append(args.section)
-            
+            if marker is not None:
+                updates.append("status_marker = ?")
+                params.append(marker)
+
             params.append(param)
             conn.execute("UPDATE roadmap_items SET %s WHERE %s" % (", ".join(updates), where), params)
 
@@ -5441,10 +5451,12 @@ def build_parser():
     sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
     sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
-    sp_ru = rsub.add_parser("update", help="update an existing roadmap row's raw_text (GH-257)")
+    sp_ru = rsub.add_parser("update", help="update a roadmap row's text, section or status marker")
     sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
     sp_ru.add_argument("--raw-text", help="new raw_text for the row")
+    sp_ru.add_argument("--status-marker", choices=ROADMAP_STATUS_MARKERS,
+                       help="explicit lifecycle marker; never inferred from raw_text")
     sp_ru.add_argument("--section", help="new section; accepted names: " + ", ".join(ROADMAP_SECTIONS))
     sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 

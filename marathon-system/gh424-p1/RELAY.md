@@ -1,6 +1,6 @@
 # Marathon Phase gh424-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh424-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -94,3 +94,45 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+**State: partial implementation; dashboard acceptance blocked by the allowlist. Do not approve yet.**
+
+- Changed `utils/py/releases_app.py`: `roadmap update --status-marker` accepts only
+  🆕/🚧/✅, shares the existing receipt-backed writer, supports marker-only and combined
+  updates, preserves unrelated fields, and includes dry-run output. Identical raw text
+  no longer short-circuits an explicit marker update. `roadmap move` stays compatible.
+- Changed `utils/py/wave_reconcile.py`: one idempotent snapshot set captures DB, dump,
+  `RELEASES.generated.md` and the four generated views before a per-issue ledger write.
+  Downstream orchestration reuses it. Originally absent artifacts are registered before
+  writing so failures remove newly created views, including failures before downstream
+  orchestration. Existing plan-doc rollback tracking remains in place.
+- Added `test/gh424-roadmap-status-marker.sh` and
+  `test/baselines/GH-424-negative-control.md`. Five focused cases pass. Saved pre-change
+  code fails four cases; independently delaying the snapshot and omitting the generated
+  view each fail two cases. The latter reproduces `generation-mismatch`. Syntax parses
+  pass for both Python files. Tests used real temporary ledgers and intercepted reconciler
+  subprocesses, not the full project gate. All logs/probes stayed in `.relay-scratch/`.
+- Reversibility: Easy — additive CLI field and bounded rollback-set correction, no
+  migration and no live ledger edits. Assumption: explicit marker state must remain
+  independent of raw markdown; preserving that contract exposes the renderer defect.
+
+**Blocking scope finding:** the allowed generated artifact `ROADMAP-DASHBOARD.md`
+cannot reflect marker-only writes through its current generator. A real renderer probe
+produced DB `status_marker=✅` but dashboard status `—`. `utils/roadmap-dashboard.sh`
+ignores the DB marker and does not recognize 🆕/🚧. Editing this generator is forbidden by
+this turn's explicit five-artifact allowlist. Requested its addition via the user-input
+channel; no approval received. Did not rewrite stored `raw_text`, change the lossless
+JSON API, or hand-edit generated rows. Dashboard regeneration/automatic refresh acceptance
+remains unmet and must be completed after scope expansion. The five passing cases cover
+only the implemented writer/rollback behavior, not this outstanding criterion.
+
+No Git commands or full project gate were run. The skill locator was not executed because
+it invokes Git, which this turn expressly forbids. Graph MCP tools were unavailable; source
+reads supplied the bounded trace. The harness owns commit and gate execution.
+
+NEXT: agy (Reviewer)
+
+handing off to agy — agy, take your turn.

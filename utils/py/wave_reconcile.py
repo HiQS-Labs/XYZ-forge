@@ -477,6 +477,7 @@ def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True
 
     # 1. Update releases.db if present
     if os.path.isfile(db_path):
+        snapshot_ledger_artifacts(repo_root, dry_run=dry_run, journal=journal)
         import sqlite3
         try:
             conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
@@ -707,33 +708,33 @@ def handle_marathon_plan_result(result, reconciled_issues):
         log(f"    - {describe_finding(finding)}")
 
 
+def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
+    """GH-424: capture the ledger and generated views BEFORE the first write.
+
+    Repeated calls retain the original state, including originally absent artifacts.
+    Both per-issue writes and downstream regeneration use this same snapshot set.
+    """
+    if dry_run or journal is None:
+        return
+    for name in (
+        "releases.db", "releases.sql", "RELEASES.generated.md",
+        "ROADMAP-DASHBOARD.md", "RELEASES-PREVIEW.html",
+        "LEADERBOARD.html", "LEADERBOARD.md",
+    ):
+        path = os.path.abspath(os.path.join(repo_root, name))
+        if path in journal.backups or path in journal.created_files:
+            continue
+        if os.path.exists(path):
+            journal.snapshot(path)
+        else:
+            journal.track_created(path)
+
+
 def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=None):
     """Orchestrate releases sync, view exports, and marathon replanning with DB rollback protection."""
     log("Running downstream database sync and dashboard regeneration...")
 
-    # Snapshot DB files in journal for transactional integrity
-    db_file = os.path.join(repo_root, "releases.db")
-    sql_file = os.path.join(repo_root, "releases.sql")
-    pre_views = set()
-    if not dry_run and journal:
-        journal.snapshot(db_file)
-        journal.snapshot(sql_file)
-        # GH-271: the regen steps below also rewrite the baked views and marathon-plan drops
-        # a dated plan doc — none of which the journal previously knew about, which is how a
-        # failed run's rollback left regenerated dashboards and a stray MARATHON-PLAN behind
-        # while reporting success (2026-08-23). Snapshot existing views (new ones are tracked
-        # as created post-run); plan docs are always new files, so a before/after glob covers
-        # them.
-        for view in (
-            "ROADMAP-DASHBOARD.md",
-            "RELEASES-PREVIEW.html",
-            "LEADERBOARD.html",
-            "LEADERBOARD.md",
-        ):
-            view_path = os.path.join(repo_root, view)
-            if os.path.exists(view_path):
-                journal.snapshot(view_path)
-                pre_views.add(view_path)
+    snapshot_ledger_artifacts(repo_root, dry_run=dry_run, journal=journal)
 
     def _plan_docs():
         found = set()
@@ -810,15 +811,6 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
                 die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
     finally:
         if journal and not dry_run:
-            for view in (
-                "ROADMAP-DASHBOARD.md",
-                "RELEASES-PREVIEW.html",
-                "LEADERBOARD.html",
-                "LEADERBOARD.md",
-            ):
-                view_path = os.path.join(repo_root, view)
-                if os.path.exists(view_path) and view_path not in pre_views:
-                    journal.track_created(view_path)
             for plan_doc in _plan_docs() - pre_plan_docs:
                 journal.track_created(plan_doc)
 
