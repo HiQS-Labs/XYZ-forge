@@ -215,3 +215,18 @@ in either appearance; include visual QA for both modes.
 
 This is future app work only. Do not implement theme switching or light-mode styles
 in the HTML designs; preserve Layout A and the current Layout B unchanged.
+
+## Layout B — card spotlight
+
+Clicking a repo card now dims the other cards and background, retaining the selected
+card at full brightness. A second click, background click, Escape or horizontal
+navigation clears it; clicking another card transfers the spotlight. Repo-name
+buttons provide keyboard activation and pressed state without additional chrome.
+Drag and swipe gestures do not count as card selection. Layout A remains frozen;
+light/dark themes remain deferred to the Swift plan.
+
+Browser checks covered desktop and narrow touch emulation, keyboard activation,
+dismissal, mouse drag, one- and two-finger swipe, reduced motion, refresh persistence
+and X navigation. The negative control removed the dimming class and correctly
+failed the brightness check. See the appended provenance record; physical devices
+were not tested.
