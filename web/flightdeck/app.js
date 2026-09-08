@@ -35,10 +35,13 @@ function sourcesFor(repo) {
 }
 function health(repo) {
   const age = ageMinutes(repo.last_progress_at);
+  const intentAge = ageMinutes(repo.last_intent_at);
   if (age !== null && age < 60) return {tone: 'green', label: 'Progress this hour', detail: `${ageLabel(repo.last_progress_at)} ago`};
+  if (intentAge !== null && intentAge < 60) return {tone: 'green', label: 'Agent active · progress pending', detail: `Prompt ${ageLabel(repo.last_intent_at)} ago`};
   const relevant = (state.snapshot?.sources || []).filter(source => sourcesFor(repo).includes(source.id));
   const complete = relevant.length > 0 && relevant.every(source => source.availability === 'ok' && source.coverage === 'complete');
-  if (!complete || age === null) return {tone: 'unknown', label: 'Progress coverage unknown', detail: age === null ? 'No attested anchor' : `Last known ${ageLabel(repo.last_progress_at)} ago`};
+  if (age !== null && age < 120) return {tone: 'amber', label: 'Quiet · check in', detail: `${ageLabel(repo.last_progress_at)} since progress`};
+  if (!complete || age === null) return {tone: 'unknown', label: 'No recent progress observed', detail: age === null ? 'Attested progress feed has no anchor' : `Last seen ${ageLabel(repo.last_progress_at)} ago · partial sources`};
   if (age < 120) return {tone: 'amber', label: 'Check in with this lane', detail: `${ageLabel(repo.last_progress_at)} ago`};
   return {tone: 'red', label: 'No covered progress for 2h', detail: `${ageLabel(repo.last_progress_at)} ago`};
 }
@@ -113,8 +116,8 @@ function repoCard(repo, index, total, issue = null) {
   card.querySelector('.next-action strong').textContent = nextAction;
   const metrics = card.querySelector('.metrics');
   addMetric(metrics, repo.checkout_count ?? (repo.known_checkout_count ? `${repo.known_checkout_count}+` : '—'), 'checkouts');
-  addMetric(metrics, lanes.length || '—', 'agent lanes');
-  addMetric(metrics, prs.length || '—', 'open PRs');
+  addMetric(metrics, lanes.length, 'agent lanes');
+  addMetric(metrics, prs.length, 'cached open PRs');
   card.querySelector('.hour-count').textContent = `${events.length} updates`;
   addTimeline(card.querySelector('.timeline'), events);
   card.querySelector('.issues-title').textContent = issue ? 'Agents on issue' : 'Issues in flight';

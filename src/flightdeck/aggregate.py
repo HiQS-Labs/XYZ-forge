@@ -9,7 +9,7 @@ from typing import Any
 
 from . import SCHEMA_VERSION
 from .connectors import read_connectors
-from .contract import ConnectorConfig, repo_name, utc_now
+from .contract import ConnectorConfig, repo_key, repo_name, utc_now
 
 MAX_REPOS = 100
 MAX_ITEMS = 2_000
@@ -70,17 +70,31 @@ class FlightdeckAggregator:
         checkouts: dict[tuple[str, str, str], dict[str, Any]] = {}
         source_ok = {b["connector"]: b["source"]["availability"] == "ok" for b in batches}
         github_by_slug: dict[str, set[str]] = defaultdict(set)
+        alias_targets: dict[str, set[str]] = defaultdict(set)
         for batch in batches:
             for incoming in batch["repos"]:
                 key = incoming.get("id")
                 if isinstance(key, str) and key.startswith("github.com/"):
                     github_by_slug[key.rsplit("/", 1)[-1]].add(key)
+                    for alias in incoming.get("aliases", []):
+                        normalized = repo_key(alias)
+                        if normalized and normalized != key:
+                            alias_targets[normalized].add(key)
 
         def canonical(raw: Any) -> Any:
-            if not isinstance(raw, str) or not raw.startswith("local/"):
+            if not isinstance(raw, str):
+                return raw
+            explicit = alias_targets.get(raw, set())
+            if len(explicit) == 1:
+                return next(iter(explicit))
+            if not raw.startswith("local/"):
                 return raw
             candidates = github_by_slug.get(raw.rsplit("/", 1)[-1], set())
-            return next(iter(candidates)) if len(candidates) == 1 else raw
+            if len(candidates) == 1:
+                candidate = next(iter(candidates))
+                redirected = alias_targets.get(candidate, set())
+                return next(iter(redirected)) if len(redirected) == 1 else candidate
+            return raw
 
         for batch in batches:
             for incoming in batch["repos"][:MAX_REPOS]:

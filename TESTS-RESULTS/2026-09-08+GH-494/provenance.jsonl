@@ -1,1 +1,2 @@
 {"schema_version":1,"issue":494,"kind":"focused-verification","artifact":"TESTS-RESULTS/2026-09-08+GH-494/flightdeck-verification.json","branch":"feat/flight-dashboard-mockup","result":"pass","recorded_at":"2026-09-08T17:10:00Z"}
+{"schema_version":1,"issue":494,"kind":"bugfix-verification","checks":{"focused_tests":"13/13","renamed_repo_join":"one Aegis card, 8 lanes, 2 PRs","javascript_syntax":"pass"},"branch":"feat/flight-dashboard-mockup","result":"pass","recorded_at":"2026-09-08T18:55:00Z"}

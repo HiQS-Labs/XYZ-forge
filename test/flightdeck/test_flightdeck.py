@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.flightdeck.aggregate import FlightdeckAggregator
-from src.flightdeck.connectors import REGISTRY, read_clio, read_connectors, read_git_pulse
+from src.flightdeck.connectors import REGISTRY, canonical_github_key, read_clio, read_connectors, read_git_pulse
 from src.flightdeck.contract import ConnectorConfig
 from src.flightdeck.tokens import OUTPUT, audit_css, render
 from src.flightdeck.server import FlightdeckServer
@@ -29,6 +29,15 @@ def config(root: Path, enabled: frozenset[str]) -> ConnectorConfig:
 
 
 class ConnectorTests(unittest.TestCase):
+    def test_item_url_repairs_a_stale_pre_rename_repo_slug(self) -> None:
+        self.assertEqual(
+            canonical_github_key(
+                "HiQS-Labs/aegis-sleuth-slack-bot",
+                "https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot/issues/181",
+            ),
+            "github.com/hiqs-labs/aegis-sleuth-slackbot",
+        )
+
     def test_registry_is_the_expected_static_first_party_set(self) -> None:
         self.assertEqual(set(REGISTRY), {"rebalance", "clio", "git_pulse", "topology", "continuity"})
 
@@ -121,6 +130,22 @@ class ConnectorTests(unittest.TestCase):
             snapshot = FlightdeckAggregator(config(Path(tmp), frozenset())).snapshot()
         self.assertEqual([repo["id"] for repo in snapshot["repos"]], ["github.com/hiqs-labs/xyz-forge"])
         self.assertEqual(snapshot["repos"][0]["source_refs"], ["clio", "rebalance"])
+
+    def test_explicit_stale_slug_alias_merges_after_repo_rename(self) -> None:
+        def batch(connector: str, key: str, aliases: list[str]):
+            return {
+                "connector": connector, "schema_version": 1, "capabilities": [],
+                "source": {"id": connector, "availability": "ok", "coverage": "partial", "observed_through": "2026-09-08T15:00:00Z", "error": None},
+                "repos": [{"id": key, "name": "Aegis", "aliases": aliases, "source_refs": [connector]}],
+                "lanes": [], "events": [], "issues": [], "prs": [], "checkouts": [],
+            }
+        with tempfile.TemporaryDirectory() as tmp, patch("src.flightdeck.aggregate.read_connectors", return_value=[
+            batch("rebalance", "github.com/hiqs-labs/aegis-sleuth-slackbot", ["HiQS-Labs/aegis-sleuth-slack-bot"]),
+            batch("registry", "github.com/hiqs-labs/aegis-sleuth-slack-bot", ["HiQS-Labs/aegis-sleuth-slack-bot"]),
+            batch("clio", "local/aegis-sleuth-slack-bot", ["aegis-sleuth-slack-bot"]),
+        ]):
+            snapshot = FlightdeckAggregator(config(Path(tmp), frozenset())).snapshot()
+        self.assertEqual([repo["id"] for repo in snapshot["repos"]], ["github.com/hiqs-labs/aegis-sleuth-slackbot"])
 
 
 class TokenTests(unittest.TestCase):

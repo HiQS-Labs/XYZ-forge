@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlsplit
 
 from .contract import (
     MAX_RECORDS,
@@ -22,6 +23,17 @@ from .contract import (
 )
 
 Connector = Callable[[ConnectorConfig, float], dict[str, Any]]
+
+
+def canonical_github_key(stored_name: Any, html_url: Any = None) -> str | None:
+    """Prefer GitHub's item URL when a cached repo slug predates a rename."""
+    if isinstance(html_url, str):
+        parts = [part for part in urlsplit(html_url).path.split("/") if part]
+        if len(parts) >= 2:
+            key = repo_key("/".join(parts[:2]))
+            if key:
+                return key
+    return repo_key(stored_name)
 
 
 def _available(batch: dict[str, Any], observed: str | None, coverage: str = "partial") -> dict[str, Any]:
@@ -180,10 +192,12 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
         """)
         for row in items:
             deadline_guard(deadline)
-            key = repo_key(row["repo_full_name"])
+            key = canonical_github_key(row["repo_full_name"], row["html_url"])
             if not key:
                 continue
-            repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [row["repo_full_name"]], "source_refs": ["rebalance"]})
+            repo = repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [], "source_refs": ["rebalance"]})
+            if row["repo_full_name"] not in repo["aliases"]:
+                repo["aliases"].append(row["repo_full_name"])
             target = batch["prs"] if row["item_type"] == "pull_request" else batch["issues"]
             normalized = {"repo_id": key, "number": row["number"], "title": row["title"], "state": row["state"], "updated_at": row["updated_at"], "fetched_at": row["fetched_at"], "url": row["html_url"], "source_ref": "rebalance"}
             if row["item_type"] == "pull_request":
@@ -191,10 +205,12 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
                 normalized["issue"] = pr_issues.get((key, int(row["number"])))
             target.append(normalized)
         for row in _sqlite_rows(conn, "SELECT repo_full_name,sha,message,committed_at,html_url FROM github_direct_commits ORDER BY committed_at DESC LIMIT 2000"):
-            key = repo_key(row["repo_full_name"])
+            key = canonical_github_key(row["repo_full_name"], row["html_url"])
             occurred = parse_time(row["committed_at"])
             if key and occurred:
-                repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [row["repo_full_name"]], "source_refs": ["rebalance"]})
+                repo = repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [], "source_refs": ["rebalance"]})
+                if row["repo_full_name"] not in repo["aliases"]:
+                    repo["aliases"].append(row["repo_full_name"])
                 batch["events"].append({"id": f"rebalance:{key}:{row['sha']}", "repo_id": key, "kind": "commit", "summary": row["message"] or "Commit", "occurred_at": occurred, "observed_at": occurred, "sha": row["sha"], "url": row["html_url"], "source_ref": "rebalance", "confidence": "attested"})
         batch["repos"] = list(repos.values())
         observed = max((str(item.get("fetched_at") or "") for item in items), default=None) or utc_now()
