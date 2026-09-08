@@ -248,6 +248,9 @@ Basis: codex round-2 transcript (87,809 tokens; freshness, _base_pairs single ra
 VERDICT: FAIL — round 3 (codex): one blocker — the ls-remote probe's exit status was discarded, so a nonzero probe emitting partial refs could pass freshness and permit tier 2; freshness/base-resolution otherwise review cleanly.
 Basis: codex round-3 transcript (82,991 tokens); red control witnessed (PATH-stubbed git: partial development ref then exit 1 → narrow gate taken, suite rc=1); after making exit status authoritative: 100 pass / 0 fail at the fix commit; boundary + hosted gates re-run on the pushed head.
 - 2026-09-07 round 4 dispatched after the exit-status fix (final round; convergence: r1 2 blockers → r2 1 attestation blocker → r3 1 narrow hole → r4).
+VERDICT: FAIL — round 4 (codex): two blockers — (a) an empty/absent fresh development base falls through to the main candidate; (b) the post-ls-remote-fix green and boundary attestation lacked a committed SHA-precise receipt record.
+Basis: codex round-4 transcript (78,695 tokens); committed receipt now carries the round-3 fix records (100/0 at f348cc59; boundary GREEN 519s at 6654575c).
+- 2026-09-07 CAP REACHED (4 review rounds; default 3). Producer adjudication of round 4: (a) NOT accepted as a defect — the development→main fall-through is the documented candidate design (plan D1: "development, then main"; a branch whose history yields no verified development base classifies against the next integration candidate); recorded here as a design disposition for the operator. (b) ACCEPTED — the committed receipt now includes the round-3 fix records with exact SHAs. Review loop closed per the start-task cap; approval state: changes-requested on (a) only, which the producer assesses as intended behavior.
 
 ## Producer response — adjudication and round-1 fixes (Claude, 2026-09-07)
 
