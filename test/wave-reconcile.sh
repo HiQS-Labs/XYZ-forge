@@ -103,8 +103,15 @@ updated: 2026-08-22
 Testing unmerged routing to 4-MISC.
 EOF
 
-# Create mock provenance receipt
-echo '{"status": "PASS", "trials": 10}' > "$REPO/TESTS-RESULTS/2026-08-22/provenance.jsonl"
+# Create mock provenance receipts. GH-425: --gate now verifies the receipt actually
+# attributes to the PR being reconciled (pr/pr_number, or an exact merge-commit match) —
+# a bare non-empty TESTS-RESULTS/ no longer satisfies it. One line per PR this fixture
+# reconciles below (1001, 1002, 1003).
+{
+  echo '{"pr": 1001, "status": "PASS", "trials": 10}'
+  echo '{"pr": 1002, "status": "PASS", "trials": 10}'
+  echo '{"pr": 1003, "status": "PASS", "trials": 10}'
+} > "$REPO/TESTS-RESULTS/2026-08-22/provenance.jsonl"
 
 # Create mock offline manifest with both merged and closed/unmerged PRs
 cat << 'EOF' > "$REPO/manifest.json"
