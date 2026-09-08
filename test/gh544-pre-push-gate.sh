@@ -359,6 +359,35 @@ out="$(drive_as "$R_SB" origin "refs/heads/feature $SB_HEAD refs/heads/feature $
 ok "a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)" \
    "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
 
+# (b2) a FAILING ls-remote probe must fail closed EVEN IF it emitted a partial ref first: the
+# probe's exit status is authoritative, because partial output (one ref advertised, then the
+# connection died) is indistinguishable from a complete answer unless the status is checked.
+R_LSFAIL="$(mkrepo 0)"
+git -C "$R_LSFAIL" branch development
+mkorigin "$R_LSFAIL" development
+git -C "$R_LSFAIL" checkout -q -b feature
+mkdir -p "$R_LSFAIL/utils/hq" "$R_LSFAIL/test"
+printf 'x\n' > "$R_LSFAIL/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_LSFAIL/test/hq.sh"
+git -C "$R_LSFAIL" add utils/hq >/dev/null 2>&1; git -C "$R_LSFAIL" commit -qm work >/dev/null 2>&1
+LSF_HEAD="$(git -C "$R_LSFAIL" rev-parse HEAD)"
+# A git shim that answers `ls-remote` with the development ref and then FAILS, delegating
+# everything else to the real git — the partial-answer shape of a dropped connection.
+FAKEBIN="$WORK/lsfail-bin"; mkdir -p "$FAKEBIN"
+REAL_GIT="$(command -v git)"
+cat > "$FAKEBIN/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = "ls-remote" ]; then
+  printf '%s\t%s\n' "$(git -C "$R_LSFAIL" rev-parse refs/remotes/origin/development)" refs/heads/development
+  exit 1
+fi
+exec "$REAL_GIT" "\$@"
+FAKE
+chmod +x "$FAKEBIN/git"
+out="$( ( cd "$R_LSFAIL" && printf '%s\n' "refs/heads/feature $LSF_HEAD refs/heads/feature $ZEROS" | PATH="$FAKEBIN:$PATH" bash githooks/pre-push origin 2>&1 ) )"; rc=$?
+ok "a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)" \
+   "[ \$rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
 # (c) ambiguous base: criss-cross history gives merge-base --all two equally-best answers.
 R_CC="$(mkrepo 0)"
 git -C "$R_CC" checkout -q -b P
