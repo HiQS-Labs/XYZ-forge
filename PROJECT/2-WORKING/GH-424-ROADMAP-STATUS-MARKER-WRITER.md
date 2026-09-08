@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 | --- | --- |
-| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-424: the ledger cannot say "done"
 
@@ -103,7 +103,7 @@ Two fixes, both here because GH-421's writes are unsafe without them:
       "type": "grep_present",
       "path": "utils/py/releases_app.py",
       "pattern": "status_marker",
-      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
     },
     {
       "type": "path_absent",
@@ -124,42 +124,6 @@ Two fixes, both here because GH-421's writes are unsafe without them:
   ],
   "remediation": {
     "source": "issue#424",
-    "criteria": "`roadmap update --status-marker` sets the column through a receipted write and rejects any value outside the enum; the rollback journal snapshots RELEASES.generated.md before the first ledger mutation, so an injected failure restores DB, dump and every generated artifact byte-for-byte and releases check comes back clean"
-  },
-  "lanes": {
-    "agy_safe": [],
-    "orchestrator_only": []
-  },
-  "artifacts_new": [
-    "test/baselines/GH-424-negative-control.md",
-    "test/gh424-roadmap-status-marker.sh"
-  ]
-}
-```
-
-## Swarm Preflight Contract
-
-```json
-{
-  "target": {
-    "repo": ".",
-    "ref": "development"
-  },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    {
-      "kind": "path_absent",
-      "path": "test/gh424-status-marker-writer.sh",
-      "note": "the marker writer has no pin yet"
-    }
-  ],
-  "artifacts": [
-    "utils/py/releases_app.py",
-    "ROADMAP-DASHBOARD.md",
-    "test/gh424-status-marker-writer.sh"
-  ],
-  "remediation": {
-    "source": "issue#424",
     "criteria": "a CLI verb transitions roadmap_items.status_marker (e.g. \ud83c\udd95\u2192\u2705) with the dashboard regenerating; measured: 50 rows currently stuck at \ud83c\udd95"
   },
   "lanes": {
@@ -171,7 +135,8 @@ Two fixes, both here because GH-421's writes are unsafe without them:
     "orchestrator_only": []
   },
   "artifacts_new": [
-    "test/gh424-status-marker-writer.sh"
+    "test/baselines/GH-424-negative-control.md",
+    "test/gh424-roadmap-status-marker.sh"
   ]
 }
 ```
@@ -181,3 +146,11 @@ Two fixes, both here because GH-421's writes are unsafe without them:
 - A CLI verb transitions `status_marker` on a named row and refuses without one.
 - The dashboard regenerates to reflect the marker change.
 - Bulk transition of stale 🆕 rows works without hand-editing SQL; pinned by a new suite.
+
+## Acceptance — reviewer-tightened criteria (CodeRabbit round 1)
+
+- [ ] The verb rejects marker values outside the known enum.
+- [ ] Marker writes are receipted (updated_at + issuing verb recorded).
+- [ ] Unrelated fields on the row are preserved byte-for-byte.
+- [ ] A failed write rolls back the generated dashboard artifacts.
+- [ ] `releases check` is clean after the write.

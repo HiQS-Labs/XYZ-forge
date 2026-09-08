@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 | --- | --- |
-| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-425: a gate that cannot fail
 
@@ -95,7 +95,7 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
       "type": "grep_present",
       "path": "utils/py/wave_reconcile.py",
       "pattern": "os.walk\\(results_dir\\)",
-      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
     },
     {
       "type": "path_absent",
@@ -115,42 +115,6 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
   ],
   "remediation": {
     "source": "issue#425",
-    "criteria": "--gate refuses a merged PR that has no receipt of its own even when other receipts exist in TESTS-RESULTS/; the success line names the receipt that matched; a missing TESTS-RESULTS/ still exits 6; a run without --gate is unaffected \u2014 or the flag is removed outright and its documentation with it"
-  },
-  "lanes": {
-    "agy_safe": [],
-    "orchestrator_only": []
-  },
-  "artifacts_new": [
-    "test/baselines/GH-425-negative-control.md",
-    "test/gh425-gate-provenance-pr.sh"
-  ]
-}
-```
-
-## Swarm Preflight Contract
-
-```json
-{
-  "target": {
-    "repo": ".",
-    "ref": "development"
-  },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    {
-      "kind": "grep_present",
-      "path": "utils/py/wave_reconcile.py",
-      "pattern": "for root, _, files in os.walk(results_dir)",
-      "note": "bug evidence: the receipt walk never compares the PR number"
-    }
-  ],
-  "artifacts": [
-    "utils/py/wave_reconcile.py",
-    "test/gh425-gate-provenance-pr.sh"
-  ],
-  "remediation": {
-    "source": "issue#425",
     "criteria": "--gate fails a PR whose TESTS-RESULTS receipts belong to a different PR number; pinned red-first"
   },
   "lanes": {
@@ -162,6 +126,7 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
     "orchestrator_only": []
   },
   "artifacts_new": [
+    "test/baselines/GH-425-negative-control.md",
     "test/gh425-gate-provenance-pr.sh"
   ]
 }

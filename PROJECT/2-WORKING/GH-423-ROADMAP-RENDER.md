@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 | --- | --- |
-| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-423: the renderer GH-418 actually needs
 
@@ -95,10 +95,10 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "type": "grep_present",
+      "type": "grep_absent",
       "path": "utils/py/releases_app.py",
-      "pattern": "roadmap sync",
-      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+      "pattern": "roadmap_render",
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
     },
     {
       "type": "path_absent",
@@ -118,41 +118,6 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
   ],
   "remediation": {
     "source": "issue#423",
-    "criteria": "`releases roadmap render` emits roadmap_items as a ## Ledger document; both existing ledger-bullet parsers agree on its output and recover every row; rendering twice over an unchanged DB is byte-identical; --out refuses to write a tracked ROADMAP.md; _marathon_plan.py is byte-unchanged"
-  },
-  "lanes": {
-    "agy_safe": [],
-    "orchestrator_only": []
-  },
-  "artifacts_new": [
-    "test/baselines/GH-423-negative-control.md",
-    "test/gh423-roadmap-render.sh"
-  ]
-}
-```
-
-## Swarm Preflight Contract
-
-```json
-{
-  "target": {
-    "repo": ".",
-    "ref": "development"
-  },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    {
-      "kind": "path_absent",
-      "path": "test/gh423-roadmap-render.sh",
-      "note": "the render verb has no pin yet"
-    }
-  ],
-  "artifacts": [
-    "utils/py/releases_app.py",
-    "test/gh423-roadmap-render.sh"
-  ],
-  "remediation": {
-    "source": "issue#423",
     "criteria": "`releases roadmap render` writes ledger markdown that marathon_plan.py's parser accepts; pinned by the new suite"
   },
   "lanes": {
@@ -164,6 +129,7 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
     "orchestrator_only": []
   },
   "artifacts_new": [
+    "test/baselines/GH-423-negative-control.md",
     "test/gh423-roadmap-render.sh"
   ]
 }
@@ -174,3 +140,9 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
 - `releases roadmap render` writes ledger markdown that `marathon_plan.py`'s existing parser accepts, unchanged.
 - Render output covers all `roadmap_items` rows, including the DB-only ones.
 - Render → plan round-trip pinned by a new suite.
+
+## Acceptance — reviewer-tightened criteria (CodeRabbit round 1)
+
+- [ ] Two consecutive renders are byte-identical.
+- [ ] The verb refuses to overwrite a tracked `ROADMAP.md`; `utils/py/_marathon_plan.py` is not modified.
+- [ ] Render output is compared against BOTH parsers: `_marathon_plan._parse_ledger` and the planner's own reader.

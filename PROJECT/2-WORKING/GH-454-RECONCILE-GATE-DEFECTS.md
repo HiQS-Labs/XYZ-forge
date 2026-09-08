@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 | --- | --- |
-| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-454 — Reconciler dies on an unnamed release, and overrides the repo's PDDA mode
 
@@ -148,7 +148,7 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
       "type": "grep_present",
       "path": "utils/timeline/export_timeline.py",
       "pattern": "codename or version",
-      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
     },
     {
       "type": "path_absent",
@@ -159,6 +159,7 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   "artifacts": [
     "utils/timeline/export_timeline.py",
     "utils/py/wave_reconcile.py",
+    "test/gh454-reconciler-defects.sh",
     "test/gh454-reconciler-defects.sh"
   ],
   "remediation": {
@@ -184,3 +185,9 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
 - A release with neither codename nor version no longer aborts `wave_reconcile` (placeholder slug or skip-with-warning).
 - The reconciler's PDDA full-gate overreach is scoped to its documented surface.
 - Both defects pinned red-first in a new suite.
+
+## Acceptance — reviewer-tightened criteria (CodeRabbit round 1)
+
+- [ ] A release with neither codename nor version renders under slug `unnamed-<gid8>`; `wave_reconcile` exits 0 and completes.
+- [ ] Observe mode: the PDDA gate reports `ERROR` findings, prints `not blocking in observe mode`, exits 0, and the reconcile completes.
+- [ ] Full mode: the PDDA gate exits non-zero and the reconcile rolls back.

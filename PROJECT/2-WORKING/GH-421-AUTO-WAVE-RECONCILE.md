@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 | --- | --- |
-| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-421: automate the reconciler, after giving it a lifecycle write it does not have
 
@@ -276,7 +276,7 @@ is one policy change away from failing every automated run.
       "type": "grep_present",
       "path": ".github/workflows/ci.yml",
       "pattern": "contents: read",
-      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
     },
     {
       "type": "path_absent",
@@ -317,43 +317,15 @@ is one policy change away from failing every automated run.
 }
 ```
 
-## Swarm Preflight Contract
-
-```json
-{
-  "target": {
-    "repo": ".",
-    "ref": "development"
-  },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    {
-      "type": "grep_absent",
-      "path": "utils/py/wave_reconcile.py",
-      "pattern": "manifest\", \"ship"
-    }
-  ],
-  "artifacts": [
-    "utils/py/wave_reconcile.py",
-    "utils/py/releases_app.py",
-    ".github/workflows/wave-reconcile.yml",
-    "test/gh421-auto-wave-reconcile.sh",
-    "test/baselines/GH-421-negative-control.md"
-  ],
-  "remediation": {
-    "source": "issue#421",
-    "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte"
-  },
-  "lanes": {
-    "agy_safe": [],
-    "orchestrator_only": []
-  }
-}
-```
-
 ## Acceptance
 
 - `pull_request: closed` + merged + `base.ref == development` invokes `wave_reconcile --pr N --gate`.
 - Idempotent: second run writes nothing and is byte-identical; serialized via a concurrency group (queue, never cancel).
 - Least privilege: `contents: write` on the reconcile job only.
 - Baseline reds witnessed first in `test/baselines/` (dialed_in not left; 2-WORKING+closed not left; releases-mode no fake exit 0).
+
+## Acceptance — reviewer-tightened criteria (CodeRabbit round 1)
+
+- [ ] Every ledger transition records manifest evidence (`manifest ship --evidence <merge commit / PR>`); the CLI refuses empty evidence.
+- [ ] Lifecycle completion, three-event handling (merged PR with: dialed-in item, open issue, no linked issue), and open-issue protection are each asserted.
+- [ ] Regenerated dashboards land with the artifacts, and a rollback (induced failure) leaves releases.db/.sql and docs untouched.

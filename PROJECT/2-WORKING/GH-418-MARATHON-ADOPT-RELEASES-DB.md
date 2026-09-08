@@ -23,7 +23,7 @@ related:
 
 | What was just completed | What's next |
 | --- | --- |
-| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-418: the planner reads a file the repo froze
 
@@ -87,7 +87,7 @@ on hand-curated input; the planner that should remove that curation is wired to 
       "type": "grep_present",
       "path": "utils/py/marathon_plan.py",
       "pattern": "ROADMAP.md",
-      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
     },
     {
       "type": "path_absent",
@@ -108,43 +108,6 @@ on hand-curated input; the planner that should remove that curation is wired to 
   ],
   "remediation": {
     "source": "issue#418",
-    "criteria": "in releases-mode the planner sources items from roadmap_items, legacy mode is unchanged, and the generated plan names its real source"
-  },
-  "lanes": {
-    "agy_safe": [],
-    "orchestrator_only": []
-  },
-  "artifacts_new": [
-    "test/baselines/GH-418-negative-control.md",
-    "test/gh418-planner-ledger-source.sh"
-  ]
-}
-```
-
-## Swarm Preflight Contract
-
-```json
-{
-  "target": {
-    "repo": ".",
-    "ref": "development"
-  },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    {
-      "kind": "grep_present",
-      "path": "utils/py/marathon_plan.py",
-      "pattern": "ROADMAP.md",
-      "note": "bug evidence: the planner still points at the frozen ROADMAP.md"
-    }
-  ],
-  "artifacts": [
-    "utils/py/marathon_plan.py",
-    "utils/py/_marathon_plan.py",
-    "test/gh418-planner-ledger-source.sh"
-  ],
-  "remediation": {
-    "source": "issue#418",
     "criteria": "marathon-plan ranks the DB-parked queue (rendered ledger markdown) without reading ROADMAP.md; repo-wide grep pins no live ROADMAP.md read in the planner"
   },
   "lanes": {
@@ -156,6 +119,7 @@ on hand-curated input; the planner that should remove that curation is wired to 
     "orchestrator_only": []
   },
   "artifacts_new": [
+    "test/baselines/GH-418-negative-control.md",
     "test/gh418-planner-ledger-source.sh"
   ]
 }
