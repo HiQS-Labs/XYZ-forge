@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -76,5 +76,17 @@ VERDICT: FAIL
 Basis: R1 and R2 leave the carried-forward lane warning/context contract incomplete. Whole-file static review of B, current entry and shared fixtures, plus supplied evidence and local hash checks. This isolated checkout has no listed graph index; direct source was used. No artifact/source execution, suites, source edits, or git commands.
 
 Handing off to designer (Producer) — address R1/R2, refresh focused evidence, and take the next turn.
+
+## Producer · designer · Round 2
+
+VERDICT: FAIL
+Basis: Both review findings reproduced before the fix and pass afterward; requesting fresh review.
+
+R1 Implemented: health precedence uses all known lanes (red, amber, unknown, green), while latest progress remains a separate timestamp. All lanes without an in-hour event retain context; 60–119 minute lanes use an amber check-in note outside active-hour issues.
+R2 Implemented: Orion retains Codex / Indexing experiment and an explicitly unconfirmed #28 association. A lone 60-minute lane retains agent/task and older issue context, never in active-hour issues. Younger lanes without event records use “No event recorded this hour” rather than mislabeling their age.
+
+Browser controls: pre-fix Aegis amber=false, Orion agent=false; after both true. Boundary colors 59/60/119/120 are green/amber/amber/red. Lone quiet agent context and active-hour exclusion pass. Verification/provenance hashes refreshed; frozen A unchanged. No changes to gesture logic.
+
+Please adjudicate R1/R2 and sweep the final changed files, keeping the same concise VERDICT/Basis/swept-file output contract. Scope remains the requested initial Layout B mockup.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1,6 +1,6 @@
 {
   "artifact": "layout-b.html",
-  "sha256": "0f6fa88b0688d34fa6293af868df579cd06baa83a98c9544c737fae5a8564b3f",
+  "sha256": "81d803a4c8e6c116656d4a91ff51907a94a4f5fe286a293d22c40546dc23eccf",
   "dependencies": {
     "demo-data.js": "ab1346c1926a67b717c5415e5ba5291db50074a7a0be1361cf2dee1c2b8a5543"
   },
@@ -42,5 +42,24 @@
       "at60": false
     }
   },
-  "limits": "Chromium synthetic touch and wheel inputs; no physical Mac trackpad or iOS device test. All telemetry is sample data."
+  "limits": "Chromium synthetic touch and wheel inputs; no physical Mac trackpad or iOS device test. All telemetry is sample data.",
+  "context_review_checks": {
+    "before": {
+      "mixed_lane_amber": false,
+      "unknown_agent_context": false
+    },
+    "after": {
+      "mixed_lane_amber": true,
+      "unknown_agent_context": true,
+      "59_60_119_120": [
+        "green",
+        "amber",
+        "amber",
+        "red"
+      ],
+      "quiet_agent_retained": true,
+      "quiet_issue_outside_hour": true,
+      "unconfirmed_issue_excluded_from_active_hour": true
+    }
+  }
 }
