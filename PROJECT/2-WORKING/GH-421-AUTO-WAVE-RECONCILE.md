@@ -1,37 +1,29 @@
 ---
-title: Make wave reconciliation automatic post-merge — after giving it a lifecycle write it does not have
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-04
-updated: 2026-09-04
-owner: noelsaw1
 gh_issue: 421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/421
-doc_type: feature
+title: "GH-421"
+status: 2-WORKING
+created: 2026-09-04
+updated: 2026-09-08
+owner: unassigned
+goal: GH-421
+doc_type: bugfix
 complexity: 3
 risk: 4
 effort: 3
 phases: 3
-ratings_provisional: true
-non_goals:
-  - A new runtime script or module. utils/py/wave_reconcile.py exists and is already shaped for unattended use; this wires and corrects it. (A privileged workflow IS a new subsystem — see Phase 2 — and is counted as one.)
-  - Retiring ROADMAP.md or mode-gating the reconciler's markdown writes — GH-269.
-  - Teaching the marathon planner to read the DB — GH-418, blocked on GH-423.
-  - Reconciling any branch other than development.
-  - A bot that opens PRs. The reconciled artifacts commit directly to development or the feature is not automatic.
-depends_on:
-  - GH-424 (status_marker CLI writer + journal snapshot fix — hard prerequisite)
-  - GH-425 (--gate's provenance check is vacuous — prerequisite for Phase 2 only)
+marathon: gh-490
 related:
-  - GH-165 (the reconciler itself — CLOSED, shipped operator-invoked)
-  - GH-269 (retire ROADMAP.md — this is its writer half)
-  - GH-418 (planner still reads the frozen file — the reader half)
-  - GH-423 (roadmap render — GH-418's blocking dependency)
-goal: >
-  Fire utils/py/wave_reconcile.py automatically when a PR merges into development — but only after
-  giving it a supported atomic lifecycle write, which the ledger CLI does not currently expose.
-  Ordering is the point: automating it first would write a confident wrong record at machine speed
-  and exit 0.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+# GH-421 — GH-421
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
 
 # GH-421: automate the reconciler, after giving it a lifecycle write it does not have
 
@@ -286,5 +278,48 @@ is one policy change away from failing every automated run.
   ],
   "remediation": { "source": "issue#421", "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "kind": "grep_present",
+      "path": ".github/workflows/ci.yml",
+      "pattern": "contents: read",
+      "note": "bug evidence: CI cannot commit reconciled artifacts even if it ran the reconciler"
+    }
+  ],
+  "artifacts": [
+    ".github/workflows/ci.yml",
+    "utils/py/wave_reconcile.py",
+    "test/gh421-auto-reconcile.sh",
+    "test/baselines/"
+  ],
+  "remediation": {
+    "source": "issue#421",
+    "criteria": "pull_request closed+merged on development invokes wave_reconcile --pr N --gate; idempotent (dry-run twice byte-identical), serialized (concurrency queue), least-privilege contents:write on the job only; baseline reds in test/baselines/ witnessed first"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": [
+      ".github/workflows/ci.yml"
+    ]
+  },
+  "artifacts_new": [
+    "test/gh421-auto-reconcile.sh"
+  ]
 }
 ```

@@ -1,32 +1,29 @@
 ---
-title: wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-05
-owner: noelsaw1
 gh_issue: 454
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/454
+title: "GH-454"
+status: 2-WORKING
+created: 2026-09-05
+updated: 2026-09-08
+owner: unassigned
+goal: GH-454
 doc_type: bugfix
 complexity: 1
 risk: 2
 effort: 1
 phases: 1
-ratings_provisional: true
-reported_from: rebalanceOS
-harness_commit: fd8bcca8
-non_goals:
-  - The root-propagation defect (roadmap-dashboard.sh / marathon-plan.sh derive their own root).
-    That is the surviving half of GH-215 and is commented there, not re-filed here.
-  - Redesigning the PDDA gate. Either honour pdda.sh's exit code or match a structured marker —
-    not a new validation layer.
+marathon: gh-490
 related:
-  - GH-215 (same run, third defect; its half-two is still live at fd8bcca8)
-  - GH-421 (auto-wave-reconcile — waits on all three of these)
-  - GH-165 (the reconciler this bug lives in)
-goal: >
-  Let wave_reconcile.py complete a wave in a vendored install without the caller knowing two
-  workarounds. Concretely: an unnamed release must not raise, and a repo that declares
-  PDDA observe mode must not be failed as if it declared full.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+# GH-454 — GH-454
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
 
 # GH-454 — Reconciler dies on an unnamed release, and overrides the repo's PDDA mode
 
@@ -136,3 +133,43 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
       fields NULL; one `observe`-mode repo whose findings print `ERROR` while exiting 0
 - [ ] Neither fix adds a parallel code path — reuse the existing gate and the existing slug helper
 - [ ] The `observe`-mode test asserts the reconciler *completes*, not merely that it warns
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "kind": "grep_present",
+      "path": "utils/timeline/export_timeline.py",
+      "pattern": "(codename or version).lower()",
+      "note": "bug evidence: None.lower() crash on a release with neither codename nor version"
+    }
+  ],
+  "artifacts": [
+    "utils/timeline/export_timeline.py",
+    "utils/py/wave_reconcile.py",
+    "test/gh454-reconciler-defects.sh"
+  ],
+  "remediation": {
+    "source": "issue#454",
+    "criteria": "an unnamed release no longer aborts the reconcile; the PDDA full-gate overreach is scoped to its documented surface; both pinned red-first"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/gh454-reconciler-defects.sh"
+  ]
+}
+```

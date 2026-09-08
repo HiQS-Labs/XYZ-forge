@@ -1,27 +1,29 @@
 ---
-title: --gate's provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-04
-owner: noelsaw1
 gh_issue: 425
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/425
-doc_type: bug
+title: "GH-425"
+status: 2-WORKING
+created: 2026-09-04
+updated: 2026-09-08
+owner: unassigned
+goal: GH-425
+doc_type: bugfix
 complexity: 1
 risk: 3
 effort: 2
 phases: 1
-ratings_provisional: true
-non_goals:
-  - Automating the reconciler — GH-421, which this gates.
-  - Redesigning provenance receipts. Either match the PR, or remove the flag.
+marathon: gh-490
 related:
-  - GH-421 (Phase 2 may not pass --gate until this lands)
-  - GH-406 (the external review that catalogued this defect class)
-  - GH-414 (nothing deterministic checks whether a claim in a comment is still true)
-goal: >
-  Make --gate verify what its message claims — that a provenance receipt exists for THIS PR — or
-  remove the flag. A gate that cannot fail is worse than no gate, because it gets cited as evidence.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+# GH-425 — GH-425
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
 
 # GH-425: a gate that cannot fail
 
@@ -93,5 +95,44 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
   ],
   "remediation": { "source": "issue#425", "criteria": "--gate refuses a merged PR that has no receipt of its own even when other receipts exist in TESTS-RESULTS/; the success line names the receipt that matched; a missing TESTS-RESULTS/ still exits 6; a run without --gate is unaffected — or the flag is removed outright and its documentation with it" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "kind": "grep_present",
+      "path": "utils/py/wave_reconcile.py",
+      "pattern": "for root, _, files in os.walk(results_dir)",
+      "note": "bug evidence: the receipt walk never compares the PR number"
+    }
+  ],
+  "artifacts": [
+    "utils/py/wave_reconcile.py",
+    "test/gh425-gate-provenance-pr.sh"
+  ],
+  "remediation": {
+    "source": "issue#425",
+    "criteria": "--gate fails a PR whose TESTS-RESULTS receipts belong to a different PR number; pinned red-first"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/gh425-gate-provenance-pr.sh"
+  ]
 }
 ```

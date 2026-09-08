@@ -1,29 +1,29 @@
 ---
-title: Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-03
-owner: noelsaw1
 gh_issue: 418
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/418
-doc_type: bug
+title: "GH-418"
+status: 2-WORKING
+created: 2026-09-03
+updated: 2026-09-08
+owner: unassigned
+goal: GH-418
+doc_type: bugfix
 complexity: 2
 risk: 3
 effort: 2
 phases: 2
-ratings_provisional: true
-non_goals:
-  - Un-freezing or regenerating ROADMAP.md. It stays frozen; the planner moves to the DB.
-  - Changing the executor. marathon.sh / marathon_drive.py consume a MARATHON.yaml and read neither source.
-  - Retiring ROADMAP.md entirely — that is GH-269. This is the testable slice.
+marathon: gh-490
 related:
-  - GH-269 (full switchover to releases.db — this is its concrete first slice)
-  - GH-169 / GH-238 / GH-239 (the flip itself, commit c97f6176, 2026-08-25)
-  - GH-406 (umbrella — same class: a stated guarantee whose mechanism covers a narrower path)
-goal: >
-  Make the marathon planner read the ledger the repo actually designates as truth, so items parked
-  through the documented `releases roadmap add` rail are plannable, and add the red control plus
-  parity check that would have caught the divergence on day one.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+# GH-418 — GH-418
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
 
 # GH-418: the planner reads a file the repo froze
 
@@ -88,5 +88,45 @@ on hand-curated input; the planner that should remove that curation is wired to 
   ],
   "remediation": { "source": "issue#418", "criteria": "in releases-mode the planner sources items from roadmap_items, legacy mode is unchanged, and the generated plan names its real source" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "kind": "grep_present",
+      "path": "utils/py/marathon_plan.py",
+      "pattern": "ROADMAP.md",
+      "note": "bug evidence: the planner still points at the frozen ROADMAP.md"
+    }
+  ],
+  "artifacts": [
+    "utils/py/marathon_plan.py",
+    "utils/py/_marathon_plan.py",
+    "test/gh418-planner-ledger-source.sh"
+  ],
+  "remediation": {
+    "source": "issue#418",
+    "criteria": "marathon-plan ranks the DB-parked queue (rendered ledger markdown) without reading ROADMAP.md; repo-wide grep pins no live ROADMAP.md read in the planner"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/gh418-planner-ledger-source.sh"
+  ]
 }
 ```

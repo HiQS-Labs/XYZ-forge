@@ -1,30 +1,29 @@
 ---
-title: releases roadmap render — emit the DB as ledger markdown, the missing verb GH-418 depends on
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-04
-owner: noelsaw1
 gh_issue: 423
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/423
-doc_type: feature
+title: "GH-423"
+status: 2-WORKING
+created: 2026-09-04
+updated: 2026-09-08
+owner: unassigned
+goal: GH-423
+doc_type: bugfix
 complexity: 1
 risk: 1
 effort: 1
 phases: 1
-ratings_provisional: true
-non_goals:
-  - Changing utils/py/_marathon_plan.py at all.
-  - Wiring the planner to use the renderer — that is GH-418, which this unblocks.
-  - Retiring ROADMAP.md — GH-269.
-  - Any new file other than the test and its baseline. The verb sits beside `roadmap list`.
+marathon: gh-490
 related:
-  - GH-418 (blocked by this; becomes a three-line change once this lands)
-  - GH-269 (nine skills still read ROADMAP.md and need the same artifact)
-  - GH-421 (post-merge reconciliation — the writer half of the same flip)
-goal: >
-  Add `releases roadmap render` to releases_app.py, emitting roadmap_items as a `## Ledger`
-  document in the grammar both existing parsers already accept, so the marathon planner (and the
-  nine skills that still read ROADMAP.md) have a DB-backed file to read.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+# GH-423 — GH-423
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
 
 # GH-423: the renderer GH-418 actually needs
 
@@ -99,5 +98,43 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
   ],
   "remediation": { "source": "issue#423", "criteria": "`releases roadmap render` emits roadmap_items as a ## Ledger document; both existing ledger-bullet parsers agree on its output and recover every row; rendering twice over an unchanged DB is byte-identical; --out refuses to write a tracked ROADMAP.md; _marathon_plan.py is byte-unchanged" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "kind": "path_absent",
+      "path": "test/gh423-roadmap-render.sh",
+      "note": "the render verb has no pin yet"
+    }
+  ],
+  "artifacts": [
+    "utils/py/releases_app.py",
+    "test/gh423-roadmap-render.sh"
+  ],
+  "remediation": {
+    "source": "issue#423",
+    "criteria": "`releases roadmap render` writes ledger markdown that marathon_plan.py's parser accepts; pinned by the new suite"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/gh423-roadmap-render.sh"
+  ]
 }
 ```

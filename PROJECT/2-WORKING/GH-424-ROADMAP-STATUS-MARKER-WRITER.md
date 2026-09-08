@@ -1,29 +1,29 @@
 ---
-title: roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-04
-owner: noelsaw1
 gh_issue: 424
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/424
-doc_type: feature
+title: "GH-424"
+status: 2-WORKING
+created: 2026-09-04
+updated: 2026-09-08
+owner: unassigned
+goal: GH-424
+doc_type: bugfix
 complexity: 2
 risk: 2
 effort: 2
 phases: 1
-ratings_provisional: true
-non_goals:
-  - Deriving the marker from raw_text. That is the rejected option, and rejecting it is the point.
-  - Automating the reconciler — GH-421, which this unblocks.
-  - Backfilling the 50 existing 🆕 rows. Once the verb exists that is a separate, reversible data pass.
-  - Touching ROADMAP.md — GH-269.
+marathon: gh-490
 related:
-  - GH-421 (blocked by this)
-  - GH-269 (a DB that cannot express "done" is not a replacement for the file)
-goal: >
-  Give roadmap_items.status_marker a CLI writer — an explicit, enum-validated --status-marker on
-  `roadmap update` — and close the rollback-journal gap that leaves RELEASES.generated.md ahead of a
-  rewound DB.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+# GH-424 — GH-424
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in MARATHON-PLAN-gh-490 |
 
 # GH-424: the ledger cannot say "done"
 
@@ -104,5 +104,44 @@ Two fixes, both here because GH-421's writes are unsafe without them:
   ],
   "remediation": { "source": "issue#424", "criteria": "`roadmap update --status-marker` sets the column through a receipted write and rejects any value outside the enum; the rollback journal snapshots RELEASES.generated.md before the first ledger mutation, so an injected failure restores DB, dump and every generated artifact byte-for-byte and releases check comes back clean" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "kind": "path_absent",
+      "path": "test/gh424-status-marker-writer.sh",
+      "note": "the marker writer has no pin yet"
+    }
+  ],
+  "artifacts": [
+    "utils/py/releases_app.py",
+    "ROADMAP-DASHBOARD.md",
+    "test/gh424-status-marker-writer.sh"
+  ],
+  "remediation": {
+    "source": "issue#424",
+    "criteria": "a CLI verb transitions roadmap_items.status_marker (e.g. \ud83c\udd95\u2192\u2705) with the dashboard regenerating; measured: 50 rows currently stuck at \ud83c\udd95"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/gh424-status-marker-writer.sh"
+  ]
 }
 ```
