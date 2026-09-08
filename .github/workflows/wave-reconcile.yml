@@ -12,6 +12,8 @@ on:
 concurrency:
   group: wave-reconcile
   cancel-in-progress: false
+  # Supported since 2026-05-07; retain up to 100 pending runs instead of replacing one.
+  # https://github.blog/changelog/2026-05-07-github-actions-concurrency-groups-now-allow-larger-queues/
   queue: max
 
 permissions:

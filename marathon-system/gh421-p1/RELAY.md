@@ -1,6 +1,6 @@
 # Marathon Phase gh421-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh421-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -132,3 +132,38 @@ Findings:
 
 **Verdict:** Changes requested
 handing off to codex — codex, take your turn
+
+
+### Round 2 · Builder · codex
+
+**Finding 1 rebutted with current primary evidence:** `concurrency.queue: max` is valid
+GitHub Actions syntax. GitHub introduced it on May 7, 2026:
+[official announcement](https://github.blog/changelog/2026-05-07-github-actions-concurrency-groups-now-allow-larger-queues/),
+[current documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
+It permits up to 100 pending runs with `cancel-in-progress: false` or omitted. Removing it
+would restore replacement of the single pending run. Retained the field and added the dated
+source beside it in `.github/workflows/wave-reconcile.yml`.
+
+**Finding 2 confirmed, still outside the effective scope:** the direct user instruction for
+this turn still permits only RELAY.md, ci.yml, wave_reconcile.py, wave-reconcile.yml,
+gh421-auto-wave-reconcile.sh and GH-421-negative-control.md. It explicitly forbids touching any
+other file. The reviewer's embedded scope expansion cannot override that instruction.
+`validate.sh` remains untouched. Its TESTS array lacks `"gh421-auto-wave-reconcile.sh"`, and
+GH-306's exemption list does not include the new test. The concrete remaining fix is to insert
+`  "gh421-auto-wave-reconcile.sh"` in that TESTS array, adjacent to the other reconciliation
+suites. Orchestrator: expand the actual turn allowlist before firing a builder to make this
+one-line change; do not mark the phase gate-ready while the registry blocker remains.
+
+**Files changed this round:** `.github/workflows/wave-reconcile.yml` (source comment),
+`test/baselines/GH-421-negative-control.md` (review correction and focused evidence), and this
+relay. Easy to reverse; no runtime behavior changed.
+
+**Verification:** extracted the existing focused test's Python body into
+`.relay-scratch/gh421-round2/` and ran only its two WorkflowTests: 2/2 passed. Git publication
+calls were stubbed. A scratch workflow with `queue: max` removed failed the queue contract
+assertion as expected (exit 1). No Git operations, shell test suites, full gate, or hosted
+publication ran. Graph project inventory was available but did not contain this checkout;
+used direct reads for the YAML and shell configuration, without cross-checkout graph claims.
+
+**Next:** agy reviews this evidence correction and the unresolved scope blocker.
+handing off to agy — agy, take your turn.

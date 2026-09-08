@@ -80,3 +80,25 @@ The new test is wired into the existing CI macOS and vendored-smoke jobs, but al
 `"gh421-auto-wave-reconcile.sh"` added to the `validate.sh` TESTS array. `validate.sh` is
 outside this relay turn's explicit edit allowlist, so it was not changed. The phase must not
 be called gate-ready until the orchestrator authorizes and lands that registration.
+
+
+## Round 2 review correction — 2026-09-08
+
+The review's claim that `queue: max` is unsupported is disproved by GitHub's
+[May 7, 2026 announcement](https://github.blog/changelog/2026-05-07-github-actions-concurrency-groups-now-allow-larger-queues/)
+and the concurrency documentation linked above. It supports up to 100 pending runs when
+`cancel-in-progress` is false or omitted. The workflow retains that configuration and now
+links the dated announcement beside it. YAML parsing alone does not establish Actions schema
+support; the official documentation supplies that evidence.
+
+This round reran the two existing `WorkflowTests` from the focused test's extracted Python
+body: **2 passed**. Removing the queue field in a scratch copy made
+`test_trigger_permissions_and_queue` fail with the expected missing-field assertion (exit 1).
+Extraction, mutant and logs are under `.relay-scratch/gh421-round2/`; no Git command or full
+gate ran. This is focused evidence only, with the original gate and hosted limitations intact.
+
+The registry blocker remains: the current user instruction excludes `validate.sh` from the
+editable files. A reviewer editing the embedded scope list does not expand that explicit
+allowlist. The orchestrator must authorize the path before the builder can insert
+`"gh421-auto-wave-reconcile.sh"` into its TESTS array. Source inspection confirms the entry
+is still absent and the GH-306 guard does not exempt this test.
