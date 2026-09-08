@@ -227,7 +227,7 @@ out="$(bash "$ROUTER" subsystems hq)"
   && pass "subsystems hq lists its 14 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
-[[ "$(wc -w <<<"$out")" -eq 1 && "$out" == *"skills-army-hq.sh"* ]] \
+[[ "$out" == "skills-army-hq.sh" ]] \
   && pass "subsystems skills-army-hq lists its dedicated suite (GH-487)" \
   || fail "subsystems skills-army-hq listing: $out"
 

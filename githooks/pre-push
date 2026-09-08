@@ -139,13 +139,28 @@ resolve_base_pairs() {
         return 1
         ;;
     esac
-    # One round trip for both candidates; bounded so a wedged connection costs seconds, not minutes.
-    # The probe's EXIT STATUS is authoritative (round 3 review): a nonzero ls-remote that emitted
-    # partial refs (one ref advertised, then the connection died) must fail closed, because
+    # Freshness is proven against the PUSH destination (CodeRabbit #2 on PR #488): a remote may
+    # carry a separate pushurl, and `git ls-remote <name>` resolves the FETCH url — which would
+    # attest a server the push never touches. Resolve the push URL explicitly and probe that.
+    _probe_target="$(git remote get-url --push "$_push_remote" 2>/dev/null)" || _probe_target=""
+    [ -n "$_probe_target" ] || {
+      _base_note="pre-push: cannot resolve a push URL for '$_push_remote' — running the full gate."
+      return 1
+    }
+    # One round trip for both candidates, wall-clock bounded so a wedged connection costs seconds,
+    # not minutes: the HTTP low-speed settings do not bind SSH, so a portable perl alarm wraps the
+    # probe (a missing perl degrades to the HTTP bound only, never to an unbounded hang policy
+    # change). The probe's EXIT STATUS is authoritative (round 3 review): a nonzero ls-remote that
+    # emitted partial refs (one ref advertised, then the connection died) must fail closed, because
     # partial output is indistinguishable from a complete answer unless the status says so.
     _adv_out=""
-    if ! _adv_out="$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 git ls-remote "$_push_remote" refs/heads/development refs/heads/main 2>/dev/null)"; then
-      _base_note="pre-push: could not verify the integration tip on '$_push_remote' (git ls-remote failed) — running the full gate."
+    if command -v perl >/dev/null 2>&1; then
+      _probe_cmd=(perl -e 'alarm shift; exec @ARGV' "${XYZ_PREPUSH_PROBE_TIMEOUT_S:-30}" git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
+    else
+      _probe_cmd=(git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
+    fi
+    if ! _adv_out="$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 "${_probe_cmd[@]}" 2>/dev/null)"; then
+      _base_note="pre-push: could not verify the integration tip on '$_push_remote' via its push URL (git ls-remote failed or timed out) — running the full gate."
       return 1
     fi
     while read -r _sha _ref; do

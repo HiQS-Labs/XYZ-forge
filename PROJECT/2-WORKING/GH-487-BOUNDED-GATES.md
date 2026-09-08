@@ -55,7 +55,7 @@ Red hook tests in `test/gh544-pre-push-gate.sh` (fixture repos gain an origin re
 
 ## Phase 3 — contention fix, characterisation, docs, measurements
 
-gh365 `unset RT_SHARD` (red re-run in this clone first: `RT_SHARD=1 bash test/gh365-validate-telemetry.sh` → rc=1/~345 B/A2; then green both envs, 16 pass; do not widen — `gh35-test-tiers.sh` passes untouched). Characterise the flake surface from the step-8 full-gate logs and post the table to the issue; lane entries only for proven shared resources. Docs per D5 (ROUTER.md, pre-push header, AGENTS.md). Measured timings + contention table into `TESTS-RESULTS/<date>+GH-487/` (provenance.jsonl + SUMMARY.md, committed with the PR).
+gh365 `unset RT_SHARD` (red re-run in this clone first: `RT_SHARD=1 bash test/gh365-validate-telemetry.sh` → rc=1/~345 B/A2; then green both envs, 16 pass; do not widen — `gh35-test-tiers.sh` passes untouched). Characterise the flake surface from the step-8 full-gate logs and post the table to the issue; lane entries only for proven shared resources. Docs per D5 (ROUTER.md, pre-push header, AGENTS.md). Measured timings + contention table into `TESTS-RESULTS/2026-09-07+GH-487/` (provenance.jsonl + SUMMARY.md, committed with the PR).
 
 **QA gate:** gh365 red→green witnessed in this clone; contention table posted; receipts committed.
 
