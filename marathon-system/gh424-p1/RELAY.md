@@ -234,3 +234,6 @@ The dashboard generation is still blocked because `utils/roadmap-dashboard.sh` c
 I am approving this phase to land the CLI and journal fixes. The operator must update `utils/roadmap-dashboard.sh` to add `🆕` and `🚧` to its `knownStatuses` (and ensure it reads the DB marker instead of raw_text) in a follow-up phase.
 
 relay closed, no further turn needed
+
+### Extension · System
+relay-drive: round cap (6) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 7
