@@ -35,6 +35,8 @@ expect_route "CI workflow changes require the full pre-merge gate" pull_request 
 # (issue #35, subsystem 6): the focused PDDA suites run instead of the whole pool. PDDA itself
 # still gates (pdda_needed=true). utils/pdda/** staying tier 3 was the pre-GH-35 posture.
 expect_route "PDDA implementation changes run the PDDA subsystem gate (GH-35)" pull_request fast true utils/pdda/pdda.sh
+expect_route "releases DB changes run the releases subsystem gate (GH-496)" pull_request fast false releases.sql releases.db
+expect_route "wave_reconcile changes run the PDDA subsystem gate (GH-496)" pull_request fast true utils/py/wave_reconcile.py
 shell_suffix=sh
 deleted_test="test/removed-regression.${shell_suffix}"
 expect_route "a deleted regression test fails closed into the full gate" pull_request full true "$deleted_test"
@@ -154,6 +156,9 @@ expect_tier "docs-only changes are tier 1" pull_request 1 README.md PROJECT/x.md
 expect_tier "text and markdown anywhere are docs (GH-35 widened)" pull_request 1 relay-system/2026-08-18/run/NOTE.txt
 expect_tier "HQ utility changes are tier 2" pull_request 2 utils/hq/hq.sh skills/hq/find-hq.sh
 expect_tier "releases subsystem (incl. the one non-twin utils/py file) is tier 2" pull_request 2 utils/py/releases_app.py utils/release-lanes.sh
+expect_tier "releases DB and dump files are tier 2 (GH-496)" pull_request 2 releases.sql releases.db
+expect_tier "releases utilities are tier 2 (GH-496)" pull_request 2 utils/releases-merge-resolve.sh utils/leaderboard.sh utils/roadmap-dashboard.sh
+expect_tier "wave_reconcile is tier 2 under PDDA (GH-496)" pull_request 2 utils/py/wave_reconcile.py
 expect_tier "telemetry is tier 2" pull_request 2 utils/telemetry/health-lib.sh
 expect_tier "ATE + fuzzing are tier 2" pull_request 2 utils/ate/install.sh utils/fuzzing/fuzz-loop.sh
 expect_tier "swe-diagram is tier 2" pull_request 2 utils/swe-diagram/assets/renderer.js
@@ -226,6 +231,14 @@ out="$(bash "$ROUTER" subsystems hq)"
 [[ "$(wc -w <<<"$out")" -eq 14 ]] \
   && pass "subsystems hq lists its 14 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
+out="$(bash "$ROUTER" subsystems releases)"
+[[ "$(wc -w <<<"$out")" -eq 21 ]] \
+  && pass "subsystems releases lists its 21 suites (GH-496)" \
+  || fail "subsystems releases listed $(wc -w <<<"$out") suites: $out"
+out="$(bash "$ROUTER" subsystems pdda)"
+[[ "$(wc -w <<<"$out")" -eq 11 ]] \
+  && pass "subsystems pdda lists its 11 suites (GH-496)" \
+  || fail "subsystems pdda listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
 [[ "$out" == "skills-army-hq.sh" ]] \
   && pass "subsystems skills-army-hq lists its dedicated suite (GH-487)" \

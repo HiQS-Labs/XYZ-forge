@@ -86,7 +86,7 @@ while the four axes keep their honest values underneath.
 | 74 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Completed | 60 | 35 | 70 | 85 | 250 | — |
 | 75 | **250** | [GH-439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) — start-task governed workflow skill | — | Completed | 80 | 35 | 50 | 85 | 250 | — |
 | 76 | **245** | [GH-108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
-| 77 | **245** | [GH-496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) — ci: hermetic local gate runner (retire GH-564 clone requirement) and offline pre-push fallback | — | Queue / parked intake | 75 | 65 | 50 | 55 | 245 | — |
+| 77 | **245** | [GH-496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) — ci: hermetic local gate runner (retire GH-564 clone requirement) and offline pre-push fallback | — | In progress | 75 | 65 | 50 | 55 | 245 | — |
 | 78 | **240** | [GH-453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) — Governance document identity audit | — | Queue / parked intake | 70 | 65 | 50 | 55 | 240 | — |
 | 79 | **240** | [GH-482](https://github.com/HiQS-Labs/XYZ-forge/issues/482) — relay-drive.sh --artifact-file silently seeds nothing — the reviewer never sees the artifact | — | Queue / parked intake | 75 | 80 | 55 | 30 | 240 | — |
 | 80 | **235** | [GH-222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) — GH-222 — releases update cannot re-point a release's tracking issue | Cargo | completed | 60 | 40 | 60 | 75 | 235 | — |

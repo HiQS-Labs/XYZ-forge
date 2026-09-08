@@ -387,6 +387,8 @@ chmod +x "$FAKEBIN/git"
 out="$( ( cd "$R_LSFAIL" && printf '%s\n' "refs/heads/feature $LSF_HEAD refs/heads/feature $ZEROS" | PATH="$FAKEBIN:$PATH" bash githooks/pre-push origin 2>&1 ) )"; rc=$?
 ok "a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)" \
    "[ \$rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+ok "  and names the offline bypass levers (GH-496)" \
+   "printf '%s' \"\$out\" | grep 'XYZ_SKIP_PREPUSH=1 git push' >/dev/null"
 
 # (b3) a separate pushurl: the freshness probe must address the PUSH destination, not the fetch
 # URL. `git ls-remote <name>` resolves the FETCH url, so a remote whose pushurl disagrees would
