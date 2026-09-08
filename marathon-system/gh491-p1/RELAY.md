@@ -1,5 +1,5 @@
 # Marathon Phase gh491-p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh-491-roadmap-section-validation builder=codex reviewer=agy round-cap=5 -->
@@ -140,3 +140,19 @@ Verification:
 
 Ready for reviewer assessment; STATUS remains Open.
 Handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The changes successfully fulfill the acceptance criteria:
+- Section validation is strictly enforced in `roadmap move` and `roadmap update` through the shared `ROADMAP_SECTIONS` vocabulary.
+- The `Deferred / cancelled` section is correctly refused with a helpful message, while `Completed` passes normally.
+- The `test/gh491-roadmap-section-validation.sh` test adequately confirms that both the CLI logic and the dashboard renderer agree on the same section list by failing loudly if there is a mismatch.
+- The pre-fix behavior (writing an unknown section) is appropriately pinned as a failing red control, ensuring safety against regression.
+
+I have thoroughly reviewed the modified files (`utils/py/releases_app.py`, `utils/roadmap-dashboard.sh`, `test/gh491-roadmap-section-validation.sh`, `test/gh257-roadmap-ledger-fixes.sh`, `test/hq-park-synthesis.sh`), and observed no pre-existing defects or adverse consequences. The refactoring elegantly addresses GH-491 without imposing schema or live ledger migrations.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
