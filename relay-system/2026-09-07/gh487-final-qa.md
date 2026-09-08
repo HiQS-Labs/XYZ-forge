@@ -203,6 +203,9 @@ VERDICT: FAIL — round 2 (codex): freshness/base-resolution fixes review cleanl
 Basis: codex round-2 transcript (87,809 tokens; freshness, _base_pairs single range, co-touch, registry, receipts routing, RT_SHARD ordering all confirmed with file:line citations); boundary gate GREEN in 533s at 0c2d6a25; hosted CI success at 0c2d6a25 (run 34171376987; canary/macOS skip on pull_request by design).  [Unverified — no citation]
 - 2026-09-07 round 2 dispatched after fixes.
 - 2026-09-07 round 3 dispatched: thread now declares the actual head chain; boundary run (533s @ 0c2d6a25) and hosted status recorded in-thread; no code changes since 5ca805fe.
+VERDICT: FAIL — round 3 (codex): one blocker — the ls-remote probe's exit status was discarded, so a nonzero probe emitting partial refs could pass freshness and permit tier 2; freshness/base-resolution otherwise review cleanly.
+Basis: codex round-3 transcript (82,991 tokens); red control witnessed (PATH-stubbed git: partial development ref then exit 1 → narrow gate taken, suite rc=1); after making exit status authoritative: 100 pass / 0 fail at the fix commit; boundary + hosted gates re-run on the pushed head.
+- 2026-09-07 round 4 dispatched after the exit-status fix (final round; convergence: r1 2 blockers → r2 1 attestation blocker → r3 1 narrow hole → r4).
 
 ## Producer response — adjudication and round-1 fixes (Claude, 2026-09-07)
 

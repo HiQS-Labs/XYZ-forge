@@ -11,6 +11,7 @@ user email, HEAD) verified before and after every gate run per GH-567. Plan of r
 | Round | Reviewer | Verdict | Dispositions |
 |---|---|---|---|
 | Plan | Claude Opus (issue comment 4) | Approve with item 4 re-aimed | All four points applied; Rev. 2 of the plan. |
+| Implementation (final QA, relay) | Codex, round 3 | **Changes requested** — 1 narrow hole | Accepted: the ls-remote probe's exit status was discarded, so a nonzero probe with partial output could pass freshness; exit status is now authoritative (nonzero → full gate with named reason). Red control (PATH-stubbed git: partial ref then exit 1) witnessed red, then 100/0 green. |
 | Implementation (final QA, relay) | Codex, round 1 | **Changes requested** — 2 blocking | (1) stale-base safety after a backward integration-branch rewrite: **accepted** — freshness now verified against the live remote (`git ls-remote` equality between tracking ref and advertised tip), ambiguous `merge-base --all` fails closed, three red controls added and witnessed; (2) receipt attested an earlier SHA than the reviewed head: **accepted** — every run is now labeled with its exact SHA and the attestation chain to the pushed head is explicit below. |
 
 ## Measured timings (same machine, same default parallel width)
