@@ -3576,6 +3576,85 @@ def cmd_roadmap_move(args):
     return cmd_roadmap_update(args)
 
 
+def cmd_roadmap_reconcile_state(args):
+    """GH-492: preview by default; apply only positively verified terminal issue states.
+
+    Read every candidate before taking the writer lock, so one failed lookup cannot leave a
+    partially swept ledger. Local updated_at is a concurrency fence, not a GitHub freshness
+    watermark: an issue can close without any local row changing.
+    """
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        if not _table_exists(conn, "roadmap_items"):
+            refuse("no-ledger", "this DB has no roadmap_items table; run `releases migrate` first")
+        terminal = tuple(validate_roadmap_section(s) for s in ("Completed", "Deferred · vision"))
+        rows = conn.execute(
+            "SELECT * FROM roadmap_items WHERE section NOT IN (?, ?) AND gh_number IS NOT NULL "
+            "ORDER BY gh_number, global_id", terminal).fetchall()
+        changes = []
+        for row in rows:
+            # Full URLs preserve repository identity, including imported cross-repo references.
+            url = row["issue_url"] or ""
+            if (not GH_ISSUE_URL_RE.fullmatch(url)
+                    or url.rsplit("/", 1)[-1] != str(row["gh_number"])):
+                refuse("roadmap-issue-identity", "GH-%s has no matching issue URL; refusing to guess "
+                       "issue state" % row["gh_number"])
+            try:
+                result = subprocess.run(
+                    [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
+                     "--json", "state,stateReason"], cwd=root,
+                    capture_output=True, text=True, check=False, timeout=30)
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                refuse("roadmap-issue-state", "%s could not be read (%s); refusing to guess issue state"
+                       % (url, exc))
+            if result.returncode:
+                refuse("roadmap-issue-state", "%s failed (exit %d): %s; refusing to guess issue state"
+                       % (url, result.returncode, result.stderr.strip()))
+            try:
+                issue = json.loads(result.stdout)
+            except ValueError:
+                issue = None
+            if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
+                refuse("roadmap-issue-state", "%s returned invalid state; refusing to guess issue state" % url)
+            if issue["state"] == "OPEN":
+                continue
+            reason = issue.get("stateReason")
+            if reason not in ("COMPLETED", "NOT_PLANNED"):
+                refuse("roadmap-issue-state", "%s returned unknown closure reason; refusing to guess "
+                       "issue state" % url)
+            target = terminal[0] if reason == "COMPLETED" else terminal[1]
+            changes.append((row, target))
+
+        if not changes:
+            print("roadmap reconcile-state: no changes; nothing written")
+            return
+        if not args.apply:
+            for row, target in changes:
+                print("would move GH-%d: %s -> %s" % (row["gh_number"], row["section"], target))
+            print("roadmap reconcile-state: dry-run; nothing written (pass --apply to write)")
+            return
+
+        def mutate(conn):
+            # Recheck the observed rows inside BEGIN IMMEDIATE; never overwrite a concurrent edit.
+            for row, target in changes:
+                current = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?",
+                                       (row["global_id"],)).fetchone()
+                if current is None or dict(current) != dict(row):
+                    refuse("roadmap-state-stale", "GH-%d changed during lookup; rerun the sweep"
+                           % row["gh_number"])
+            ts = now_iso()
+            for row, target in changes:
+                conn.execute("UPDATE roadmap_items SET section = ?, updated_at = ? WHERE global_id = ?",
+                             (target, ts, row["global_id"]))
+
+        perform_write(root, conn, "roadmap-reconcile-state", None, mutate)
+        for row, target in changes:
+            print("moved GH-%d: %s -> %s" % (row["gh_number"], row["section"], target))
+    finally:
+        conn.close()
+
+
 def cmd_roadmap_sync(args):
     root = resolve_root(args.root)
     # PR #240 review: sync mirrors ROADMAP.md and DELETES rows absent from it — in a releases-mode
@@ -5239,6 +5318,10 @@ def build_parser():
                             "Without it a 0-entry parse REFUSES (rule=roadmap-empty-parse) so "
                             "format drift can never silently delete the mirror; this flag never "
                             "excuses a ledger that still has content")
+    sp_rs = rsub.add_parser("reconcile-state", help="reconcile nonterminal rows against GitHub issue state")
+    rs_mode = sp_rs.add_mutually_exclusive_group()
+    rs_mode.add_argument("--dry-run", action="store_true", help="preview only (the default)")
+    rs_mode.add_argument("--apply", action="store_true", help="apply verified changes in one transaction")
     sp_rl = rsub.add_parser("list", help="print the shadow rows")
     sp_rl.add_argument("--json", dest="as_json", action="store_true",
                        help="emit rows as a JSON array (machine-readable; the default rendering "
@@ -5401,7 +5484,8 @@ def main(argv=None):
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
-                              "move": cmd_roadmap_move, "sections": cmd_roadmap_sections}[a.roadmap_cmd](a),
+                              "move": cmd_roadmap_move, "sections": cmd_roadmap_sections,
+                              "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,

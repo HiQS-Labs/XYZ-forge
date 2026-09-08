@@ -1,6 +1,6 @@
 # Marathon Phase gh492-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh-492-roadmap-state-sweep builder=codex reviewer=agy round-cap=5 -->
 
@@ -98,3 +98,20 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+**Implemented:** GH-492's five scope-lock acceptance criteria, plus the requested cached PDDA section-drift warning.
+
+- `utils/py/releases_app.py`: added `roadmap reconcile-state [--dry-run | --apply]`. Default/manual invocation previews only. Checks every nonterminal issue-linked row through its full issue URL; positively CLOSED/COMPLETED moves to the shared-vocabulary `Completed`, CLOSED/NOT_PLANNED to `Deferred · vision`. OPEN and already-terminal rows are untouched. Missing CLI, command failure/timeout, malformed response, unknown state/reason, or mismatched issue identity refuses before any sweep write. All changes use one existing `perform_write` transaction and receipt; the transaction rechecks the observed rows (including `updated_at`) before applying anything. No-op/dry-run does not acquire the writer lock or append receipts.
+- `utils/pdda/pdda.sh`: `issue-doc-sync` now warns about CLOSED issues with nonterminal roadmap sections using its existing live/cache issue table. The cache lacks stateReason, so this remains a warning directing users to the preview rather than guessing a destination. Missing SQLite/data/state is reported as unevaluated. This stays warn-only even in full mode.
+- `test/gh492-roadmap-state-sweep.sh`: new focused fixture suite with no git commands or shared setup, stubbed GitHub, and private ledger/lock directories. Covers default/explicit dry-run DB + dump digest/mtime preservation, missing gh, a later lookup failing after an earlier successful lookup, malformed JSON, unknown reason, cached PDDA warnings, both closure destinations, preservation of open/terminal rows and raw text, a single receipt, idempotence, and exclusion of terminal rows from subsequent remote lookups.
+
+**Verification:** `GH492_TMPDIR="$PWD/.relay-scratch" bash test/gh492-roadmap-state-sweep.sh` exited 0; five PASS groups. Output: `.relay-scratch/gh492-focused.log`. Red control: ran the same test against a scratch copy whose UPDATE preserves the old section; it exited 1 at the section-state assertion with GH-1 and GH-3 still In progress. Output: `.relay-scratch/gh492-red-control.log`. Production files were never reverted for this experiment. No git commands, live GitHub calls, or full suite/gate were run. Scratch evidence is local, not a committed qualifying gate receipt; the harness owns the final gate and commit.
+
+**Scope/decision notes for review:** The source doc's post-merge hook would require the out-of-scope `utils/py/wave_reconcile.py`; this turn leaves the existing `roadmap sync` semantics intact and implements the explicit scope-lock acceptance. Local `updated_at` cannot prove an issue has not changed remotely (the original bug is exactly an issue closing without a local write), so it is a concurrency fence rather than a cache watermark. Safe remote-query skipping needs a separately specified remote observation/watermark contract; terminal rows already skip lookups. Reversibility: Easy for the additive code; sweep data changes use the existing journal/dump/receipt protocol and can be reversed by roadmap move. No schema or shared writer-protocol changes.
+
+**Discovery evidence:** Verify-tier graph lookup used `XYZ-forge`, generation `2026-09-01T15:54:30Z`; this worktree has no matching index. Coverage reported changed metadata for releases_app.py, wave_reconcile.py and pdda.sh and missing coverage for the new test, so material implementation decisions used current local source instead of stale snippets.
+
+**Next:** agy reviews the implementation and scoped limitations; harness runs the qualifying gate after handoff.

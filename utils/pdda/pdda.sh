@@ -658,6 +658,34 @@ check_issue_doc_sync() {
     # state=CLOSED in 3-COMPLETED is the fully reconciled end state: no finding.
   done < <(pdda_list_completed_docs)
 
+  # --- (3) roadmap section drift (GH-492), using the SAME offline/live state table --------------
+  # This cache has no closure reason. Report drift without guessing Completed vs Deferred;
+  # the explicit reconcile-state verb obtains stateReason before it writes anything.
+  if grep -q "ROADMAP_SOURCE=releases" "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null && [ -f "$PDDA_REPO_ROOT/releases.db" ]; then
+    local roadmap_rows section
+    if ! command -v sqlite3 >/dev/null 2>&1; then
+      pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+        "sqlite3 unavailable — roadmap section sync NOT evaluated" "state-unavailable"
+    elif ! roadmap_rows="$(sqlite3 -readonly -separator $'\t' "$PDDA_REPO_ROOT/releases.db" \
+      "SELECT gh_number, section FROM roadmap_items WHERE gh_number IS NOT NULL AND section NOT IN ('Completed', 'Deferred · vision')" 2>/dev/null)"; then
+      pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+        "roadmap rows unavailable — roadmap section sync NOT evaluated" "state-unavailable"
+    else
+      while IFS=$'\t' read -r num section; do
+        [ -n "$num" ] || continue
+        state="$(printf '%s\n' "$table" | awk -F'\t' -v n="$num" '$1 == n { print toupper($2); exit }')"
+        if [ "$state" = "CLOSED" ]; then
+          pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+            "issue #$num is CLOSED but roadmap section is '$section' — review: releases roadmap reconcile-state --dry-run" \
+            "reconcile-roadmap-state"
+        elif [ "$state" != "OPEN" ]; then
+          pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+            "issue #$num state unavailable — roadmap section sync NOT evaluated" "state-unavailable"
+        fi
+      done <<< "$roadmap_rows"
+    fi
+  fi
+
   pdda_emit_summary "$CHECK_NAME" "$rc"
   return "$(pdda_gated_exit "$rc")"
 }
