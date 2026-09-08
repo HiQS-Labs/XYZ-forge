@@ -388,6 +388,58 @@ out="$( ( cd "$R_LSFAIL" && printf '%s\n' "refs/heads/feature $LSF_HEAD refs/hea
 ok "a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)" \
    "[ \$rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
 
+# (b3) a separate pushurl: the freshness probe must address the PUSH destination, not the fetch
+# URL. `git ls-remote <name>` resolves the FETCH url, so a remote whose pushurl disagrees would
+# have its freshness "proven" against a server the push never touches (CodeRabbit #2 on PR #488).
+R_PU="$(mkrepo 0)"
+PU_F="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$PU_F" "pushurl fetch bare"
+git init -q --bare "$PU_F"
+git -C "$R_PU" remote add origin "$PU_F"
+git -C "$R_PU" branch development
+git -C "$R_PU" push -q origin development 2>/dev/null           # fetch bare development = seed
+git -C "$R_PU" fetch -q origin 2>/dev/null                      # tracking = seed
+PU_S="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$PU_S" "pushurl push bare"
+git init -q --bare "$PU_S"
+git -C "$R_PU" push -q "$PU_S" development 2>/dev/null          # push bare seeded at the same tip
+git -C "$R_PU" checkout -q development
+printf 'ahead\n' > "$R_PU/ahead.txt"
+git -C "$R_PU" add -A >/dev/null 2>&1; git -C "$R_PU" commit -qm pushurl-ahead >/dev/null 2>&1
+git -C "$R_PU" push -q origin development 2>/dev/null           # FETCH world moves ahead: tip = X'
+git -C "$R_PU" fetch -q origin 2>/dev/null                      # tracking = X'
+git -C "$R_PU" push -q "$PU_S" "development~1:refs/heads/development" 2>/dev/null   # PUSH world stays one behind
+git -C "$R_PU" remote set-url --push origin "$PU_S"             # the disagreement under test
+git -C "$R_PU" checkout -q -b feature
+mkdir -p "$R_PU/utils/hq" "$R_PU/test"
+printf 'x\n' > "$R_PU/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_PU/test/hq.sh"
+git -C "$R_PU" add utils/hq >/dev/null 2>&1; git -C "$R_PU" commit -qm work >/dev/null 2>&1
+PU_HEAD="$(git -C "$R_PU" rev-parse HEAD)"
+[ "$(git -C "$R_PU" ls-remote origin refs/heads/development | cut -f1)" != "$(git -C "$R_PU" ls-remote --push origin refs/heads/development | cut -f1)" ] \
+  || { echo "  FAIL: pushurl fixture is degenerate: both urls advertise the same tip" >&2; exit 1; }
+out="$(drive_as "$R_PU" origin "refs/heads/feature $PU_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a pushurl that disagrees with the fetch url fails closed to full (GH-487 CodeRabbit #2)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (b4) pinned contract: in a mixed push, a NO-OP integration ref (development == local) transfers
+# nothing, contributes no paths, and does NOT force the full gate; the other ref's changes still
+# gate against their own verified base. The empty-range fail-closed rule belongs to the NEW-branch
+# arm (a range too small to classify with), not to a ref that carries no delta at all. CodeRabbit
+# round 5 asked this scenario be pinned or the contract revised — this is the pin.
+R_NOOP="$(mkrepo 0)"
+git -C "$R_NOOP" branch development
+mkorigin "$R_NOOP" development
+git -C "$R_NOOP" checkout -q -b feature
+mkdir -p "$R_NOOP/utils/hq" "$R_NOOP/test"
+printf 'x\n' > "$R_NOOP/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_NOOP/test/hq.sh"
+git -C "$R_NOOP" add utils/hq >/dev/null 2>&1; git -C "$R_NOOP" commit -qm work >/dev/null 2>&1
+NOOP_HEAD="$(git -C "$R_NOOP" rev-parse HEAD)"
+DEV_TIP="$(git -C "$R_NOOP" rev-parse development)"
+NOOP_LINE="$(printf '%s\n%s' "refs/heads/development $DEV_TIP refs/heads/development $DEV_TIP" "refs/heads/feature $NOOP_HEAD refs/heads/feature $ZEROS")"
+out="$(drive_as "$R_NOOP" origin "$NOOP_LINE")"; rc=$?
+ok "a NO-OP integration ref in a mixed push contributes no paths and keeps the narrow gate (GH-487 pin)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null"
+
 # (c) ambiguous base: criss-cross history gives merge-base --all two equally-best answers.
 R_CC="$(mkrepo 0)"
 git -C "$R_CC" checkout -q -b P
