@@ -1,6 +1,6 @@
 # Marathon Phase gh424-p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=gh424-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md` (its `## Acceptance` section, 0 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #424](https://github.com/HiQS-Labs/XYZ-forge/issues/424) — 0/0 criteria copied verbatim from issue #424.*
+*Verified against [issue #424](https://github.com/HiQS-Labs/XYZ-forge/issues/424) — 0/0 criteria copied verbatim from issue #424.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -136,3 +136,15 @@ reads supplied the bounded trace. The harness owns commit and gate execution.
 NEXT: agy (Reviewer)
 
 handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+I have reviewed `utils/py/releases_app.py` and `utils/py/wave_reconcile.py`. The marker logic appears correctly implemented, but as you highlighted, dashboard acceptance is blocked because `utils/roadmap-dashboard.sh` is absent from the turn allowlist. I am returning the token to you so the blocker can be escalated to the operator.
+
+NEXT: codex (Builder)
+
+handing off to codex — codex, take your turn.
