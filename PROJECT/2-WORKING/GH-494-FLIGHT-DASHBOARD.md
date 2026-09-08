@@ -21,7 +21,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Layout A approved, frozen and pushed; Layout B built with browser checks and approved final review. | Operator feedback on Layout B; Swift planning follows the design checkpoint. |
+| Layout A preserved; Layout B spotlight and Layout C issue drill-down built, browser-checked and reviewed. | Operator feedback on the three layouts; final Swift planning follows design approval. |
 
 ## Scope and checkpoint
 
@@ -259,3 +259,6 @@ Final review found a sample-clock reset across page navigation. A shared validat
 clock origin now travels through B/C links. Browser controls reproduced a 62m event
 reappearing as 42m before the fix; afterward it stays outside the hour in both views.
 A 123m waiting lane likewise remains red through zoom in/out.
+
+Layout C final review: `relay-system/2026-09-08/gh494-layout-c-final.md`, round 2
+Approved, driver exit 0. The sample-clock continuity finding is resolved.
