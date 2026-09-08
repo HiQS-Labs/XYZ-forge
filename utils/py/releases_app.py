@@ -3002,7 +3002,8 @@ def _roadmap_issue_url(raw, link_target, gh_number):
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
     from its bullet line (`- **` or `- [`) to the next bullet, `###`, or `##`."""
-    lines = open(path, encoding="utf-8").read().splitlines()
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
     entries = []
     sec = None
     inledger = False
@@ -3399,7 +3400,9 @@ def cmd_roadmap_sync(args):
         if len(parsed) == 0:
             ledger_has_content = False
             in_ledger_check = False
-            for line in open(md_path, encoding="utf-8").read().splitlines():
+            with open(md_path, encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+            for line in lines:
                 if re.match(r"^##\s+Ledger\s*$", line.strip()):
                     in_ledger_check = True
                     continue
@@ -4186,7 +4189,8 @@ def cmd_check(args):
 
             dump_ok = False
             if os.path.exists(paths["dump"]):
-                dump_content = open(paths["dump"], encoding="utf-8").read()
+                with open(paths["dump"], encoding="utf-8") as fh:
+                    dump_content = fh.read()
                 dump_gen = dump_generation_from_text(dump_content)
                 if dump_gen != db_gen:
                     fail("generation-mismatch",
@@ -4206,7 +4210,8 @@ def cmd_check(args):
                 print("OK: generation trio consistent at %d (DB <-> dump)" % db_gen)
 
             if os.path.exists(paths["gen"]):
-                first = open(paths["gen"], encoding="utf-8").readline().strip()
+                with open(paths["gen"], encoding="utf-8") as fh:
+                    first = fh.readline().strip()
                 m = GEN_MARKER_RE.match(first)
                 gen_file_gen = int(m.group(1)) if m else None
                 if gen_file_gen != db_gen:
@@ -4649,7 +4654,8 @@ def _rebuild(root, conn):
                "for git-merge resolution only, never crash recovery")
     if not os.path.exists(paths["dump"]):
         refuse("dump-missing", "nothing to rebuild from")
-    dump_content = open(paths["dump"], encoding="utf-8").read()
+    with open(paths["dump"], encoding="utf-8") as fh:
+        dump_content = fh.read()
     dump_gen = dump_generation_from_text(dump_content)
     if dump_gen is None:
         refuse("dump-generation", "%s carries no generation header — not a canonical dump"

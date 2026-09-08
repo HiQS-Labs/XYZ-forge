@@ -1,6 +1,6 @@
 # Marathon Phase gh423-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh423-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -155,3 +155,25 @@ However, during the whole-file sweep, I found 5 pre-existing defects in `utils/p
 - `dump_content = open(paths["dump"], encoding="utf-8").read()` (in `cmd_rebuild`)
 
 **Verdict:** Changes requested
+
+
+### Round 2 · Builder · codex
+
+Addressed all five requested unclosed reads in `utils/py/releases_app.py` with
+context managers. The actual enclosing functions are `parse_roadmap_ledger`,
+`cmd_roadmap_sync`, `cmd_check` (two reads), and `_rebuild`; the latter three
+expressions were correctly identified in the review despite differing function
+names. UTF-8 decoding, splitlines/readline behavior, and exception propagation
+are preserved. Only this source file and the relay were changed this round.
+Reversibility: Easy — local resource-lifetime fixes, no data or schema changes.
+
+Focused verification used AST-extracted production read blocks with retained
+file-like handles: the original source fails closure in all 10 cases (five sites,
+success and injected OSError), while the edited source closes all 10. Nonempty
+read values and propagated exceptions match before/after. The complete edited
+module also compiles. Probe and output are under `.relay-scratch/` and are
+transient diagnostics, not committed gate/provenance evidence. This checks the
+read blocks only, not the complete command workflows. No project shell tests,
+full gate, or git commands ran; integration verification remains with the harness.
+Graph tools were unavailable this turn; the five sites were verified directly
+against local source. Ready for agy's review.
