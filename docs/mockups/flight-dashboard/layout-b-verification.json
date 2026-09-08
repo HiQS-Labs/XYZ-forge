@@ -1,0 +1,46 @@
+{
+  "artifact": "layout-b.html",
+  "sha256": "0f6fa88b0688d34fa6293af868df579cd06baa83a98c9544c737fae5a8564b3f",
+  "dependencies": {
+    "demo-data.js": "ab1346c1926a67b717c5415e5ba5291db50074a7a0be1361cf2dee1c2b8a5543"
+  },
+  "current_entry_sha256": "89f1448e2575b3d5777c00c83b3a2f4dee8b174634deb4948b36931424639663",
+  "frozen_layout_a_sha256": "f6a71e98692acaf81a1e3cbdd4b58ad7cd6b2ec844bf3a6bb5e8f83695446607",
+  "date": "2026-09-08",
+  "passed": [
+    "1920x1080: three full cards and two edge peeks",
+    "edge mask visually checked; central cards fully opaque",
+    "390x844: one full card and contained page overflow",
+    "long card content scrollable",
+    "horizontal wheel",
+    "mouse drag",
+    "arrow keys, Home and End",
+    "one-finger touch emulation",
+    "parallel two-finger touch emulation advances one card",
+    "pinch emulation still zooms (scale 3)",
+    "X returns to saved Layout A",
+    "current entry shared data renders and links B",
+    "last-hour event/issue included at 59 minutes, excluded at 60",
+    "future events excluded",
+    "Rebalance active-hour issue194; waiting issue196 separate",
+    "quiet repo retained; unknown is not zero",
+    "frozen A hash unchanged; remote copy checked byte-for-byte"
+  ],
+  "negative_controls": {
+    "native_two_finger_before_fix": {
+      "scroll_before": 555,
+      "scroll_after": 570,
+      "result": "did not advance a card"
+    },
+    "two_finger_after_fix": {
+      "scroll_before": 555,
+      "scroll_after": 1110.5,
+      "result": "advanced one card"
+    },
+    "last_hour_cutoff": {
+      "at59": true,
+      "at60": false
+    }
+  },
+  "limits": "Chromium synthetic touch and wheel inputs; no physical Mac trackpad or iOS device test. All telemetry is sample data."
+}

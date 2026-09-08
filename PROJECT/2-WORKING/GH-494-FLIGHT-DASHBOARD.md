@@ -160,7 +160,7 @@ requested. B uses those events, not a second invented activity stream.
    hook from a disposable full clone; verify remote branch SHA and remote A bytes.
 2. Build layout-b.html with native horizontal overflow, scroll snap, touch pan and
    pinch-zoom permitted, overscroll containment, keyboard arrows/Home/End and mouse
-   dragging. Native touch/trackpad scrolling supplies multi-touch gestures; do not
+   dragging. Native scrolling supplies one-finger touch and trackpad gestures; parallel two-finger touchscreen translation uses a small handler that yields to pinch separation. do not
    claim a physical Mac trackpad test from synthetic browser events.
 3. Size three tall full cards at 1920×1080; start one card into the collection so both
    edge peeks are visible. Fade ends before the fully visible cards. Narrow views
@@ -186,3 +186,19 @@ Review questions: Does this match the requested cards-only presentation and exac
 A preservation? Is the shared-fixture extraction bounded? Are last-hour issues
 correctly scoped, quiet/unknown honest, and gestures/fades/edge behavior specified
 without claiming untested hardware support? Does the plan preserve the Swift hold?
+
+### Layout B implementation evidence
+
+Layout A preservation commit `8ad24ce` was pushed through the normal gate (516s)
+and verified via GitHub bytes and branch SHA. Clone identity remained unchanged.
+B is built in `docs/mockups/flight-dashboard/layout-b.html`, using the same local
+`demo-data.js` as the current entry. The frozen A remains byte-identical.
+
+The native two-finger touchscreen probe moved only 15px; a narrow parallel-contact
+handler now advances a card (555 to 1110.5px) while a pinch remains native (scale 3).
+This is a bounded implementation adjustment to meet the explicit gesture request,
+not a new navigation framework. Physical trackpad/device testing remains unclaimed.
+Home/End first appeared short because the assertion ran before smooth scrolling
+finished; the settled endpoint checks pass. Last-hour data filters and named issue
+joins, quiet/unknown states, desktop/narrow views and X destination passed browser
+checks. See layout-b-verification.json and the appended provenance record.
