@@ -257,7 +257,7 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         "view",
         str(pr_id),
         "--json",
-        "number,title,state,mergedAt,baseRefName,headRefName,body,url",
+        "number,title,state,mergedAt,mergeCommit,baseRefName,headRefName,body,url",
     ]
     r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
     if r.returncode != 0:
@@ -279,23 +279,63 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
 
 
 def check_provenance_receipts(repo_root, pr_meta):
-    """Check committed provenance receipts for marathon gate (GH-430)."""
+    """Require a JSONL receipt attributable to this PR (GH-425).
+
+    Accept top-level pr/pr_number (positive integer or decimal string), or an
+    exact full commit matching GitHub's mergeCommit. Explicit PR fields must all
+    match; a conflicting PR cannot be rescued by a commit match. Filenames and
+    issue numbers are not PR identity. This checks attribution, not test success
+    or whether the receipt was committed; report only the identity actually read.
+    """
     pr_num = pr_meta.get("number")
     results_dir = os.path.join(repo_root, "TESTS-RESULTS")
     if not os.path.isdir(results_dir):
         die(f"--gate failure: TESTS-RESULTS directory missing; cannot verify provenance for PR #{pr_num}", code=6)
-    # Search for committed receipts matching PR or recent date
-    found = False
-    for root, _, files in os.walk(results_dir):
-        for f in files:
-            if f in ("error_log.jsonl", "provenance.jsonl"):
-                found = True
-                break
-        if found:
-            break
-    if not found:
-        die(f"--gate failure: No committed provenance.jsonl or error_log.jsonl found in TESTS-RESULTS/ for PR #{pr_num}", code=6)
-    log(f"  Provenance receipts verified for PR #{pr_num} (GH-430 compliant)")
+
+    def pr_number(value):
+        if type(value) is int and value > 0:
+            return str(value)
+        if isinstance(value, str) and re.fullmatch(r"[1-9][0-9]*", value):
+            return value
+        return None
+
+    expected_pr = pr_number(pr_num)
+    merge_commit = pr_meta.get("mergeCommit") or {}
+    merge_sha = merge_commit.get("oid") if isinstance(merge_commit, dict) else None
+    if not isinstance(merge_sha, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", merge_sha):
+        merge_sha = None
+    for root, dirs, files in os.walk(results_dir):
+        dirs.sort()
+        for name in sorted(files):
+            if name not in ("error_log.jsonl", "provenance.jsonl"):
+                continue
+            path = os.path.join(root, name)
+            if os.path.islink(path) or not os.path.isfile(path):
+                continue
+            try:
+                with open(path, encoding="utf-8") as receipt:
+                    for line_num, line in enumerate(receipt, 1):
+                        try:
+                            entry = json.loads(line)
+                        except ValueError:
+                            continue
+                        if not isinstance(entry, dict):
+                            continue
+                        pr_fields = [key for key in ("pr", "pr_number") if key in entry]
+                        matched = None
+                        if pr_fields:
+                            if expected_pr and all(pr_number(entry[key]) == expected_pr for key in pr_fields):
+                                matched = f"{pr_fields[0]}={expected_pr}"
+                        elif merge_sha and entry.get("commit") == merge_sha:
+                            matched = f"commit={merge_sha}"
+                        if matched:
+                            relpath = os.path.relpath(path, repo_root)
+                            log(f"  Provenance receipt matched for PR #{pr_num}: {relpath}:{line_num} ({matched})")
+                            return
+            except (OSError, UnicodeError):
+                continue  # An unreadable receipt cannot establish attribution.
+    die(f"--gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #{pr_num} "
+        "by pr/pr_number or exact merge commit in TESTS-RESULTS/", code=6)
 
 
 # GH-271: closing-keyword clause + trailing title tag decide LINKAGE (what a merged PR may
@@ -893,7 +933,7 @@ def main():
         "--require-receipts",
         action="store_true",
         dest="require_receipts",
-        help="Enforce provenance receipts on merged PRs before marathon closeout (GH-430)",
+        help="Require a receipt matching each PR number or exact merge commit before closeout (GH-425)",
     )
 
     args = parser.parse_args()

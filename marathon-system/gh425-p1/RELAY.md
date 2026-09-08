@@ -1,6 +1,6 @@
 # Marathon Phase gh425-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh425-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -94,3 +94,53 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-425 within the operator's three-artifact allowlist:
+
+- `utils/py/wave_reconcile.py`: receipt contents must identify the exact PR through
+  `pr`/`pr_number`, or identify its full merge commit through `commit`. Fetches
+  `mergeCommit` in PR metadata. Explicit conflicting PR fields reject the row.
+  Missing/unattributable receipts retain exit 6; ordinary reconciliation keeps its
+  existing flag boundary. Success prints the receipt path, JSONL line, and matched
+  identity; removed the inaccurate GH-430 compliance/committed-receipt claims.
+- `test/gh425-gate-provenance-pr.sh`: git-free Python tests behind a Bash entry point;
+  temporary fixtures only, every unexpected subprocess fails. Covers wrong PR,
+  exact PR and merge SHA, malformed/empty receipts, later rows/error logs, missing
+  directory, misleading paths/symlinks, conflicting identities, both CLI flags,
+  failure before downstream work, and ungated behavior.
+- `test/baselines/GH-425-negative-control.md`: retained observed pre-fix failure and
+  post-fix output, source SHA256 identities, reproduction command, and limitations.
+
+**Verification:** Before production edits, the wrong-PR assertion failed (suite
+exit 1): PR #999's non-empty receipt was accepted for #425 with return 0. After the
+fix, the focused suite passed all 11 tests (exit 0), including the same assertion.
+Python AST parsing and Bash syntax validation passed. Raw outputs/fixtures were
+confined to `.relay-scratch/`. No Git command or full project gate was run.
+
+**Decision / scope:** Easy to reverse; change is limited to receipt attribution.
+This does not attest passing tests, receipt tracking, or inclusion in the merged
+PR. Full merge SHA matching is deliberately exact; abbreviated/annotated commit
+strings and issue-number directory names cannot prove PR identity.
+
+**Known integration blocker for reviewer/orchestrator:** The narrower operator
+allowlist forbids editing `test/wave-reconcile.sh`, despite the broader preflight
+packet listing it. That suite's line 107 creates an identity-free receipt and line
+243 calls `--gate` for PRs 1001, 1002, 1003. Static inspection shows the strengthened
+gate will refuse it. Its fixture needs three attributed receipt rows for those
+PR numbers; no weakening of the new gate is appropriate. The suite was not run.
+An expanded authorized artifact list is needed to repair that fixture before the
+harness gate can be expected to pass. Do not interpret the focused green as full
+merge readiness.
+
+**Discovery evidence:** Verify tier requested. No index exists for this worktree;
+the nearest XYZ-forge graph locates `check_provenance_receipts`, but its generation
+is 2026-09-01T15:54:30Z and coverage reports `metadata_changed` for the Python file
+and missing new artifacts. Used current local source for the receipt function,
+metadata fetch, main caller/flag boundary, and affected shell fixture; graph
+results were provisional only.
+
+NEXT is agy (Reviewer). Handing off for review, including the explicit fixture
+scope blocker above.
