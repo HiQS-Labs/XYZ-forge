@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flightdeck — Layout C / Issues</title>
+<link rel="stylesheet" href="focus-cards.css">
+</head>
+<body class="issue-view" data-view="issues">
+<div class="ambient-dim" aria-hidden="true"></div>
+<a class="close" href="layout-b.html" aria-label="Zoom out to repositories in Layout B"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></a>
+<p id="instructions" class="sr-only">Layout C. Issues within one repository. Sample activity, not live telemetry. Swipe horizontally with touch or a trackpad, or drag with a mouse. Use left and right arrow keys, Home, or End. Click a card to spotlight it and dim its surroundings. Click the spotlighted issue again to clear its spotlight. Click the background to clear the spotlight. Escape returns to the repository view. Tab to an issue title and press Enter or Space to toggle its spotlight. The close button returns to the repository view in Layout B.</p>
+<main class="carousel" id="carousel" tabindex="0" aria-label="Focused repository cards" aria-describedby="instructions"></main>
+<script src="demo-data.js"></script>
+<script src="focus-cards.js"></script>
+</body>
+</html>

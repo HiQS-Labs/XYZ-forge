@@ -230,3 +230,27 @@ dismissal, mouse drag, one- and two-finger swipe, reduced motion, refresh persis
 and X navigation. The negative control removed the dimming class and correctly
 failed the brightness check. See the appended provenance record; physical devices
 were not tested.
+
+## Layout C — zoom into repository issues
+
+The operator requested a third HTML mode: a second click on a spotlighted repo
+opens its issues as tall cards. This supersedes B’s previous second-click dismissal;
+background click and Escape still dismiss B’s spotlight. C’s X and Escape return
+to the same repo and horizontal position in B. C issue clicks only spotlight/toggle;
+there is no deeper level. Light/dark mode remains future Swift work.
+
+Easy to reverse: the existing B styling, renderer helpers and gestures are extracted
+to shared focus-cards.css/js, used by B and the new layout-c.html. Frozen A and the
+current index remain unchanged. No telemetry collector or new data store. Issue
+views group the existing sample lanes by issue and retain original lane indices
+for event and PR attribution; workspace names/counts remain explicitly repo-wide.
+All tracked sample issues remain visible, including quiet or unconfirmed context.
+LTVera has two issue cards, centered without invented filler.
+
+Browser verification covered B first-click spotlight/second-click drill-down, C
+issue/event/PR scope, X/Escape return and B scroll/spotlight restoration, keyboard
+activation, narrow layout/inner scroll, two-finger swipe, the 60-minute activity
+boundary, unknown data and invalid repo URLs. Reassigning a source lane makes the
+activity-attribution check fail; restoring it passes. Evidence hashes are in
+provenance.jsonl. Physical gestures remain emulated, and design approval remains
+the checkpoint before final Swift planning.
