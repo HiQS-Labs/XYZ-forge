@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,22 @@ R1 Implemented. focus-cards.js validates a finite positive clock origin no later
 Browser reproduction before fix: after 20 simulated minutes, Memory #72 is absent in B at 62m, then reappears in C at 42m. After fix, it stays 62m and excluded in C and returning B. After 40 minutes, Aegis #169 remains red at 123m in C and returning B. Invalid clock initialization passes. New provenance record pins final JS hash; the prior C record describes the pre-correction ea60b35 artifact. No other implementation changes.
 
 Please adjudicate the correction and close if it passes; keep the same VERDICT/Basis/swept-file contract.
+
+## Reviewer — codex — round 2
+
+swept file: yes
+
+VERDICT: PASS
+
+Verdict: Approved
+
+Basis: Read all 115 lines of the artifact and the complete shared CSS, B/C HTML, sample data, layout notes and provenance records, plus the Layout C contract. Read-only byte comparison shows the artifact equals the source. Graph tools were unavailable; review used exact source. No artifact execution, browser run, source edits, git commands or project suites this turn. Browser checks are producer-reported, not independently reproduced. Approval is for this bounded HTML mockup review.
+
+- [Pass] R1 resolved: `.relay-artifacts/focus-cards.js:16–20` accepts a finite positive clock origin no later than the current time and otherwise initializes a fresh origin; both C's return link (`:59–63`) and B's drill-down (`:82–84`) carry that same `loadedAt`. Aging and the last-hour filter continue to use it (`:19–20`, `:23–31`, `:115`). The source supports continuity across both navigation directions. `docs/mockups/flight-dashboard/provenance.jsonl:6` reports the pre-fix 62m-to-42m negative control, corrected 62m event exclusion, retained 123m waiting status and invalid-clock fallback. No further fix requested.
+- [Pass] Full-file attribution and context sweep: issue grouping retains original lane indices for PR and event joins (`.relay-artifacts/focus-cards.js:7–13`, `:23–28`); all sample issues remain represented even after events age out. Agent context, next actions, unknown association/PR inventory and explicitly shared repository folders remain present (`:35`, `:38–54`). No additional pre-existing defect identified.
+- [Pass] Navigation and interaction source remains coherent: B spotlight/second-click drill-down, C toggle, X/Escape return, horizontal position restoration and gesture/keyboard handling are wired at `.relay-artifacts/focus-cards.js:58–113`. Both pages load the same controller/styles/data (`docs/mockups/flight-dashboard/layout-b.html:6`, `:13–14`; `layout-c.html:6`, `:13–14`); responsive sizing and safe centering are in `focus-cards.css:8–12`. Physical gestures and rendered 1/2/many-card behavior were not independently exercised; browser coverage and its limits are recorded in `provenance.jsonl:5`.
+- [Pass] Artifact/source SHA-256 is `9068632ce5afb7c6a44479b174bf1e61150779898edd5ccf9d52235c8cb120f8`, matching `docs/mockups/flight-dashboard/provenance.jsonl:6`; the other four current dependency/page hashes match `:5`. Frozen A's computed SHA-256 is `f6a71e98692acaf81a1e3cbdd4b58ad7cd6b2ec844bf3a6bb5e8f83695446607`, matching `docs/mockups/flight-dashboard/layout-a.sha256:1`. The earlier C record describes the earlier controller; the appended clock record pins this final controller.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
