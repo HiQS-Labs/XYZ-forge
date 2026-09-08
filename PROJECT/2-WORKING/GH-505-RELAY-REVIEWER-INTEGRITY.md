@@ -1,6 +1,6 @@
 ---
 title: "GH-505 / GH-509: Approved means a reviewer approved — driver-attested terminal status"
-status: In progress
+status: Blocked
 created: 2026-09-08
 updated: 2026-09-08
 owner: agent-b
@@ -38,7 +38,7 @@ reversibility: Costly
 
 | What was just completed | What's next |
 |---|---|
-| QA round 2 (Codex): Block — B1 (body parser rejects the shipped title-first formats; no start offset), B2 (worktree cut from live HEAD, not the captured SHA; marathon landing compared R with R; ancestry unspecified), B3 (reader has no expected reviewer / current-status check), F1–F3. All accepted; revised below — [Round 2 dispositions](#round-2-dispositions) | Round 3 (final at cap) |
+| QA round 3 (Codex, final at the 3-round cap): Block — one blocker (B1: isolation predicate must be the shims' exact `== "1"`; seeded artifact must be verified at seed time and is merge-ineligible) and three fixes (F1: one candidate snapshot carried into the receipt; F2: literal top-anchored pathspec; F3: fixture must run the real shim lifecycle, A3 injection, ignored/archive branch rules). All accepted and folded in below — [Round 3 dispositions](#round-3-dispositions). **Cap reached; no implementation approval; no source changed.** | Operator decision: (a) authorize a round 4 on this revision, (b) authorize implementation on the producer-adjudicated revision with final Codex QA as the check, or (c) narrow. |
 
 ## Issue map
 
@@ -60,7 +60,7 @@ The driver (`utils/py/relay_drive.py`) is the only process in a relay that the p
 
 1. **Roles from the invocation.** `--reviewer AGENT` required, `--builder AGENT` optional; equality refused at startup; roles never derived from the file or the token. A dispatched turn is reviewer-role iff `actor == args.reviewer`; every other actor is builder-role.
 2. **Containment reads the driver.** `RELAY_ROLE` is exported per dispatch and is the first tier of `rtl_is_reviewer_turn` — honoured only when `RELAY_DRIVER_LOCKED=1` is also set, decided inside the shared helper so the `rtl.py` bridge and every shim agree.
-3. **The reviewed revision is pinned, not observed.** The driver captures `reviewed_head = HEAD` of the target repo before dispatch and exports `RELAY_REVIEWED_HEAD`; `rtl_worktree_begin` cuts the isolated worktree at that SHA (`git worktree add --detach <wt> "$RELAY_REVIEWED_HEAD"`) instead of live `HEAD`. A concurrent parent commit during the turn therefore cannot change what the reviewer read. Non-isolated turns cannot be pinned and are marked `isolated: false` in the record (no merge binding, by non-goal). A seeded `--artifact-file` is recorded by `artifact_sha256` as the reviewed input alongside the head.
+3. **The reviewed revision is pinned, not observed.** The driver captures `reviewed_head = HEAD` of the target repo before dispatch and exports `RELAY_REVIEWED_HEAD`; `rtl_worktree_begin` cuts the isolated worktree at that SHA (`git worktree add --detach <wt> "$RELAY_REVIEWED_HEAD"`) instead of live `HEAD`. A concurrent parent commit during the turn therefore cannot change what the reviewer read. Non-isolated turns cannot be pinned and are marked `isolated: false` in the record (no merge binding, by non-goal). A seeded `--artifact-file` is digested by the driver, exported as `RELAY_ARTIFACT_SHA256`, and **verified by `rtl_worktree_begin` after the copy** (`relay-turn-lib.sh:771-774`) — a mismatch fails the turn. Records with an artifact are transcript-only: `candidate_ok` refuses them, because nothing maps an external artifact onto the pinned target tree. Plan-QA relays still get an attestation; they never merge.
 4. **The driver judges the turn it watched** on the *canonical* relay bytes — the file with its first `STATUS:`, `NEXT:` and `ROUND:` lines reduced to their bare keys, so permitted header edits never disturb the body comparison, whatever the file's leading format (title-first as marathon and jog emit, frontmatter, or bare `KEY:` lines). After a builder-role turn a terminal `STATUS:` is reverted, committed as reverted, and escalated `forged-terminal`; after a reviewer-role turn it is accepted only if the canonical post-bytes are an append-only extension of the canonical pre-bytes with non-whitespace new text.
 5. **One record, one module, one validated reader.** `utils/py/relay_attest.py` writes `relay-drive/attest@1` atomically, resolves its path, and loads it **only against trusted expectations** (task, expected reviewer, relay file, target repo) — comparing reviewer, status, the byte range and digest of the added text, and the driver's trailer exactly. Consumers additionally require the token to read `done` (not merely actorless) and the candidate to satisfy the transition rule.
 6. **Reviewed revision → merge candidate.** Permitted transition: `reviewed_head` is an ancestor of the candidate **and** the endpoint tree diff between them is empty outside the transcript paths (`relay-system/` and the relay file's repo-relative path when it lives in the target repo). Consumers enforce both with `git merge-base --is-ancestor` + `git diff --quiet`, refuse on any git error, then merge with `--match-head-commit <candidate>` so the checked and merged SHAs are the same object. This is the "ancestor + preserved final content" contract, chosen explicitly over "every intervening commit is metadata-only".
@@ -79,7 +79,7 @@ Check **J**: `run_single_phase_drive` with a stub `relay-drive.sh` exiting 4 and
 
 **Args and precedence.** `--reviewer` required for any run that may accept a terminal status (`--dry-run` exempt); `--builder` optional. Refusals, exit 2, before any tick mutation: `--reviewer` missing; `--builder == --reviewer`; `--review-once` with a dispatched actor ≠ `--reviewer` (`review-once-actor-mismatch`). A custom `--agent-cmd` must route `RELAY_AGENT` to the corresponding contained shim (as `marathon-agent.sh` does); the token actor names *who*, the shim supplies *containment*, and the driver attests only turns whose shim returned 0.
 
-**Per-turn snapshot** (beside `rfsig`, `:611-615`): `pre_status = s`; `pre_canon = canonical(relay_file)`; `reviewed_head = head_before` (already captured at `:615`); `isolated = get_env("RELAY_WORKTREE_ISOLATION","1") != "0"`; `artifact_sha256` when `--artifact-file`. Exports: `RELAY_ROLE`, `RELAY_REVIEWED_HEAD`, `RELAY_DRIVER_LOCKED=1` (already set by the driver's lock path).
+**Per-turn snapshot** (beside `rfsig`, `:611-615`): `pre_status = s`; `pre_canon = canonical(relay_file)`; `reviewed_head = head_before` (already captured at `:615`); `isolated = get_env("RELAY_WORKTREE_ISOLATION","1") == "1"` — the shims' exact predicate (`codex-turn.py:83-91`, `agy-turn.py:404-412`); any supplied value other than `0` or `1` is refused before dispatch (exit 2); `artifact_sha256` when `--artifact-file`. Exports: `RELAY_ROLE`, `RELAY_REVIEWED_HEAD`, `RELAY_DRIVER_LOCKED=1` (already set by the driver's lock path).
 
 `canonical(path)` = file bytes with the first line matching each of `^STATUS:`, `^NEXT:`, `^ROUND:` replaced by the bare key (`STATUS:\n`). Nothing else is normalised. This accepts marathon's render (`marathon_drive.py:2797-2801`), jog's (`jog_run.py:1322-1325`), frontmatter threads, and bare-header threads alike.
 
@@ -106,15 +106,17 @@ added-sha256: <digest>
 
 `relay_attest.load(task, *, expected_reviewer, relay_file, target_repo)` returns the record or `(None, reason)`; refuses when: file missing/malformed/truncated; `task`/`relay_file`/`target_repo` differ; `reviewer != expected_reviewer`; `status` not terminal; current file's first `STATUS:` ≠ record `status`; `canonical(relay_file)[added_start:added_start+added_len]` digest ≠ `added_sha256`; the bytes immediately after that range are not exactly the trailer whose sha256 is `trailer_sha256` (located by offset, never by heading — a quoted `### Attestation` in the body is inert). Retry identities (`-<n>`) are distinct records; stale records are never deleted, they fail `candidate_ok`.
 
-Checks (`test/gh505-relay-attest.sh`; fixture harness clone as `test/gh376-relay-drive-lock-parity.sh`; the stub `--agent-cmd` runs the **real** `relay-turn-lib.sh` (`rtl_init` → `rtl_worktree_begin` → stub model edits → `rtl_enforce`) so worktree cut, containment and the file-scoped commit are the shipped ones; each stub records that it ran):
+Checks (`test/gh505-relay-attest.sh`; fixture harness clone as `test/gh376-relay-drive-lock-parity.sh`; the `--agent-cmd` is the **real `codex-turn.py`** with a stub `codex` binary on `PATH` that edits the relay file and moves the token, so the full shipped lifecycle runs — `rtl_init` → `rtl_before` → `rtl_worktree_begin` (cut at the pinned SHA) → stub edits in the worktree → `rtl_worktree_end` (copyback, `RTL_WT_USED`) → `rtl_enforce` (file-scoped commit); each fixture asserts the stub edited the *isolated* file and the bytes reached the parent through copyback before judging the driver):
 - **A** builder-role turn writes `STATUS: Approved` + `tick done` → exit 4, reason `forged-terminal`, `STATUS:` restored on disk and in HEAD, no trailer, no record. Red control: base driver invoked without the new flags exits 0.
-- **A2** same, stub exits 6 → driver exits **6**, reason `forged-terminal`, revert committed, no record. **A3** same with the revert commit forced to fail (read-only index) → exit 6, reason `revert-commit-failed`.
+- **A2** same, stub exits 6 → driver exits **6**, reason `forged-terminal`, revert committed, no record. **A3** same with a pre-existing `.git/index.lock` created after the shim's commit succeeded → the corrective commit is reached and refused (`Unable to create index.lock`), exit 6, reason `revert-commit-failed`.
 - **B** reviewer-role turn appends findings + `STATUS: Approved` + done, relay rendered by the **marathon** renderer → exit 0; trailer present; `reviewed-head` = HEAD before dispatch = the worktree's cut revision (asserted from the shim's log) = parent of the shim's commit; `added-sha256` = independently computed sha256 of exactly the appended bytes; `load(...)` with the right reviewer returns the record. **B2** same with the **jog** renderer and a multi-round body. **B3** reviewer also edits `NEXT:`/`ROUND:` and the body contains a quoted `### Attestation · relay-drive` heading → attested, digest unchanged. Positive controls.
 - **B4** a parent commit lands on the target repo during the turn → attested with `reviewed_head` = the pre-dispatch SHA (not the new HEAD); the worktree was cut at the pinned SHA.
 - **C** file already `STATUS: Approved`, token done, no turn → exit 4 `unattested-terminal`. Red control: base exits 0 after 0 turns.
 - **D1** reviewer changes only `STATUS:` → `empty-approval`. **D2** whitespace-only append → `empty-approval`. **D3** rewrites an earlier body paragraph + appends → `review-body-rewritten`.
 - **E** `--review-once --reviewer codex`, token handed to `agy` → exit 2, stub did not run. **E2** `--reviewer` omitted → exit 2 before any tick mutation. **E3** `--builder x --reviewer x` → exit 2.
 - **K** reviewer turn leaves the token claimed → `close-mismatch`, no record. **K2** attestation write forced to fail → exit 4 `attest-publish-failed`, no partial record.
+- **N1** gitignored relay file: trailer still appended on disk (the reader requires it), the commit is skipped deliberately with a logged reason, the record loads. **N2** archive relay (`XYZ_ARCHIVE_ROOT`): checked commit lands in `transcript_repo`; the target repo is untouched; `candidate_ok` excludes only `relay-system`. **N3** tracked relay outside `relay-system/` named `review[1].md` with a neighbouring non-transcript change → `candidate_ok` refuses; with only the relay changed → passes.
+- **S1** `RELAY_WORKTREE_ISOLATION` unset and `1` → pinned worktree created, record `isolated:true`; `0` → in-root turn, `isolated:false`, `candidate_ok` refuses; empty and `false` → exit 2 before dispatch. **S2** `--artifact-file` source modified between the driver's digest and the seed copy → turn fails at seed verification; unmodified → attested, `candidate_ok` refuses (artifact records are transcript-only).
 - **L** reader: record loads for reviewer A, refuses for expected reviewer B; refuses after `STATUS:` is edited `Approved`→`Closed`; refuses after the added text is edited; refuses a truncated JSON.
 
 ### Phase 2 — containment reads the driver; the prompt stops inviting builders to approve (#505)
@@ -132,11 +134,11 @@ Checks:
 
 ### Phase 3 — consumers validate the record (#509, #505, #510)
 
-**`utils/py/relay_attest.py`** (new): `path_for(task, target_repo)` via `git rev-parse --git-common-dir`; `write(record)`; `load(...)` as above; `candidate_ok(record, candidate_sha, target_repo)` → `(bool, reason)`: refuses when `not record.isolated`; `git merge-base --is-ancestor reviewed_head candidate` fails; `git diff --quiet reviewed_head candidate -- . ':(exclude)relay-system' [':(exclude)<relay_file_rel>']` is non-empty; any git error. A gitignored relay needs no exclusion; an archive relay (`XYZ_ARCHIVE_ROOT`) lives in `transcript_repo`, so only `relay-system` is excluded in the target repo.
+**`utils/py/relay_attest.py`** (new): `path_for(task, target_repo)` via `git rev-parse --git-common-dir`; `write(record)`; `load(...)` as above; `candidate_ok(record, candidate_sha, target_repo)` → `(bool, reason)`: refuses when `not record.isolated`; `git merge-base --is-ancestor reviewed_head candidate` fails; `git -C <target_repo> diff --quiet reviewed_head candidate -- ':(top,exclude)relay-system' [':(top,literal,exclude)<relay_file_rel>']` is non-empty (literal, top-anchored — a name like `review[1].md` is matched exactly); any git error. A gitignored relay needs no exclusion; an archive relay (`XYZ_ARCHIVE_ROOT`) lives in `transcript_repo`, so only `relay-system` is excluded in the target repo.
 
 **`utils/py/marathon_drive.py`**
 1. `cmd2` (`:3144-3149`): `"--reviewer", args.reviewer, "--builder", args.builder`.
-2. **Normal success**: in `complete_phase_success()`, after `save_transcript()` and the post-approve command (`:2575`, `:2595-2602`) and immediately before `_write_terminal_result`, `load(task, expected_reviewer=args.reviewer, ...)` and `candidate_ok(record, HEAD)`; refusal → escalate `candidate-drifted-from-reviewed-head` (exit 4) instead of writing an approved receipt. The receipt (`:250-256`) gains `reviewed_head`, `added_sha256`, `attest_path`; `head_sha` keeps meaning receipt-time HEAD.
+2. **Normal success**: in `complete_phase_success()`, after `save_transcript()` and the post-approve command (`:2575`, `:2595-2602`), capture **one** candidate `C = rev-parse HEAD`, `load(task, expected_reviewer=args.reviewer, ...)`, `candidate_ok(record, C)`; refusal → escalate `candidate-drifted-from-reviewed-head` (exit 4). The `marathon.phase.approved` emit, attempt reset and green emit (`:2573-2579`) move **after** this check so no success is published for a drifted candidate. `C` is stored in `_RESULT["reviewed_candidate"]` and the exit writer (`:148-165`) emits it verbatim beside its own observational `head_sha`; the receipt also gains `reviewed_head`, `added_sha256`, `attest_path`. Jog's marathon branch requires PR head == `reviewed_candidate` before `candidate_ok`.
 3. `satisfied_lane_terminal()` (`:2677-2698`), exit-3 probe (`:3218-3222`), exit-7 probe (`:3294-3298`): require `token_state(task).status == "done"` explicitly, a validated `load`, and `candidate_ok(record, HEAD)`. Refusals logged with the reader's reason.
 
 **`utils/py/jog_run.py`**
@@ -168,6 +170,16 @@ Recipes gain the reviewer explicitly, per their own variables: `skills/relay-xyz
 | F2 | Accept | H1 asserts loud refusal + no dispatch; I1 makes `isatty()` true; I5-I2 labelled preservation; integration cases run the real `relay-turn-lib.sh`; mutations named for controls not red at base. |
 | F3 | Accept | Judge returns a verdict; shim-failure path preserves 6/7; `revert-commit-failed` reported without masking the original code. |
 | Ratings | Accept | #509 rationale added to its pointer doc; effort 25 kept provisional. |
+
+## Round 3 dispositions
+
+| # | Verdict | Disposition |
+|---|---|---|
+| B1 isolation | Accept | Predicate is the shims' exact `== "1"`; other supplied values refused pre-dispatch. S1 added. |
+| B1 artifact | Accept | Driver exports the digest; `rtl_worktree_begin` verifies the copied bytes; artifact records are merge-ineligible by `candidate_ok`. S2 added. |
+| F1 | Accept | One candidate `C` captured after post-approve, validated, carried into the receipt as `reviewed_candidate`; success emits moved after the check; jog's marathon branch requires PR head == `C`. H4 inspects the emits. |
+| F2 | Accept | `:(top,exclude)` / `:(top,literal,exclude)` from the target root. N3 added. |
+| F3 | Accept | Fixtures run the real `codex-turn.py` with a stub binary; A3 uses `index.lock`; N1/N2 state the ignored and archive branches. |
 
 ## Dependencies and ordering
 

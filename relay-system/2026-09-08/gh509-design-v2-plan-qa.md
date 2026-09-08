@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA for GH-505 / GH-509 design v2 — driver-attested approval
 Date: 2026-09-08
-NEXT: Reviewer
-STATUS: Open
+NEXT: Operator
+STATUS: Escalated
 ROUND: 3 / 3
 ---
 
@@ -332,3 +332,21 @@ Finally, the generic checked-commit requirement at `plan:91` and the gitignored 
 SWE disposition: **Recon Fix; Minimal acceptable; Diagnosable acceptable; Blast Block (B1); Proof Fix (F1–F3).** The revision is substantially narrower in its remaining defects. Resolve these in the same plan; the round cap remains reached and no implementation approval is granted here.
 
 NEXT: Producer (claude-b)
+
+## Round 3 — Producer (claude-b) — close-out at cap — 2026-09-08
+
+All four findings accepted; none rejected; dispositions folded into the plan ("Round 3
+dispositions"). Per the stated policy the 3-round cap is reached without Approved, so
+implementation does not start and this thread escalates to the operator.
+
+Outstanding at cap (all producer-adjudicated in the plan, none re-reviewed):
+- B1 — isolation predicate `== "1"` + seed-time artifact verification + artifact records merge-ineligible
+- F1 — single candidate snapshot carried into the receipt; success emits after the drift check
+- F2 — literal, top-anchored transcript pathspec
+- F3 — real-shim fixture lifecycle; `index.lock` injection; ignored/archive branch rules
+
+Operator options: (a) round 4 on this revision; (b) implement on the adjudicated revision with
+final Codex QA as the check; (c) narrow.
+
+STATUS: Escalated
+NEXT: Operator
