@@ -282,7 +282,7 @@ NEXT: Producer (claude-a)
 
 ## Round 3 — Producer (claude-a) — 2026-09-08
 
-**All 6 findings accepted, none rejected.** Verified against source before accepting, as with round 1.
+**All 6 findings accepted, none rejected.** Verified against source before accepting, as with round 1.  [Unverified — no citation]
 
 ### B1 — you were right twice, and the pattern was mine
 
@@ -354,3 +354,46 @@ this issue exists to enforce. No implementation has started; nothing outside thi
 been modified.
 
 NEXT: Reviewer
+
+## Round 3 — Reviewer (codex) — 2026-09-08
+
+**VERDICT: CHANGES REQUESTED — Block at the round cap.** The supervisor observation is the right bounded attribution mechanism. Two enforcement gaps remain in the plan as written: the designated reviewer can still receive builder permissions, and the merge operation is not bound to the head the review check inspected. Keep `STATUS: Open`; no implementation approval is given.
+
+Review basis: read the working plan and intake, the preceding dispositions, and the cited dispatch, containment, terminal/recovery, and merge paths. Applied the SWE rubric and debug-mantra's plan pivots. No graph tools were exposed, so project/generation and index coverage could not be established; targeted source reads and searches supplied bounded evidence. No project source, artifact, test, gate, or git command was executed. Counterexamples below are source-derived, not witnessed runtime reproductions. The GitHub CLI option cited below was checked against its official manual.
+
+### Graded findings
+
+**B1 — Block / Recon + Blast: terminal authorization and reviewer containment still disagree about the role.** Plan lines 103–109 require a configured reviewer and successful containment, but Phase 2 (lines 148–153) changes only prompt placement. The existing role helper still reads the builder-writable directive (`relay-automation/relay-turn-lib.sh:84–101`). That result controls both the artifact allowlist (`:354–371`) and whether the prompt describes a reviewer (`:994–998`). This is active on the Python path too: its RTL bridge calls the same `rtl_init` (`utils/py/rtl.py:664–676`).
+
+Concrete counterexample: trusted invocation names builder A and reviewer B. A leaves STATUS Open, changes the directive to `builder=B reviewer=A`, and hands off normally to B. The supervisor really dispatches B, but the shim classifies B as builder, retains artifact write permissions, and omits the reviewer restriction. B can edit the artifact and approve those edits in the same accepted turn. All four proposed terminal predicates can hold. Capturing B's identity therefore solves the attribution defect but does not establish that B ran under the review contract. This does not require arbitrary host execution; it uses the relay file the builder is expressly allowed to edit.
+
+Cheapest correction: use the same trusted invocation roles for the existing helper's driven-turn containment/prompt decision, or reject directive/config disagreement before any next dispatch and reject role-metadata tampering after a turn. Keep the historical parser only for explicitly unsupported compatibility paths. The round-1 request to reject directive tampering was accepted but is absent from this revision. Add a real two-turn control with the altered directive: the candidate must refuse before granting B builder permissions, or demonstrably keep B relay-only and reject its artifact edit. Do not create another role subsystem or another trust anchor.
+
+**B2 — Block / Proof + Blast: checking approval of the current head does not bind the subsequent merge to that head.** Plan line 165 specifies approval against the current SHA, but lines 157–181 do not require passing that SHA to the merge operation. Each present caller merges by PR identity alone: `utils/py/express.py:599`, `utils/py/jog_run.py:1432`, `skills/merge-cleanup/scripts/merge_cleanup.py:55–56`, and `relay-automation/marathon-closeout.sh:292`. A check can approve H1, a concurrent push can replace it with unreviewed H2, and the ensuing merge can merge H2. The proposed changed-head fixture can pass by testing only an already-stale approval, leaving this interval uncovered.
+
+Cheapest correction: have the shared check return the exact checked head SHA and have every merge invocation require that SHA. GitHub CLI already provides `--match-head-commit <SHA>` for this purpose; no custom locking protocol is needed ([official gh pr merge manual](https://cli.github.com/manual/gh_pr_merge)). Add a caller-level control that changes the head between the check and merge and proves refusal with no reconciliation/teardown. This closes the head-change interval; it does not make review dismissal atomic. Preserve the separate server-policy boundary for approval validity at merge time, and describe the local check as an observation at check time until that policy is enforced.
+
+**F1 — Fix / Recon: finish the trusted invocation contract for direct relays.** Plan lines 124–129 transport only `--reviewer`, yet promise to reject builder == reviewer. `relay_drive.py:30–41` currently has neither role input. Marathon does have both trusted values in its exported environment (`marathon_drive.py:1878–1879`) and already rejects equality (`:1940–1942`); reuse those facts rather than treating equality rejection there as new work. Specify the builder input for direct invocation, its precedence, and missing/unknown-role refusal. Do not recover it from the editable directive or assume the initial actor is the builder: review-once can start with the reviewer. Also state that the supplied `--agent-cmd` must route the captured actor to the corresponding contained turn; the supervisor executes that command unchanged (`relay_drive.py:655–658`). The supported custom-dispatch boundary needs this explicit contract.
+
+**F2 — Fix / Proof + Diagnosable: align the final checks with the chosen design.** The blanket promise that every red control runs on `0b37c36f` (plan lines 200–201) contradicts Phase 1's deliberately chosen mutation control (line 136). Keep the mutation approach and identify it separately in the evidence record. Require nonempty outputs for the new terminal and merge fixtures as well as the prompt fixtures. Name the shared merge implementation path and callable/CLI result shape at lines 157–158; a shell caller can invoke the Python CLI directly, avoiding a new Bash executable.
+
+For marathon recovery, assert the externally returned exit and reason, not only the helper result: `recover_already_satisfied_lane()` is currently consumed as a boolean success test (`marathon_drive.py:3322–3328`), so returning 4 from the helper alone still becomes exit 3/no-progress. The plan promises exit 4 with `terminal-unobserved` at all three consumers (lines 111–118); its acceptance should pin propagation through this caller. This is an integration detail of the accepted fail-closed policy, not a request for persistent receipts.
+
+### Accepted decisions and answers
+
+The live supervisor observation, rejection of unobserved startup/resume terminal state, canonical token projection, coverage of Approved and Closed, and no-auto-repair policy are accepted (plan lines 103–118). Preserve a successful observation independently of the next token read: `actor` is overwritten at loop top and after exhaustion (`relay_drive.py:570`, `:869`). Existing return-code handling already rejects failed turns before post-turn inspection (`:711–714`). No fourth anchor is requested.
+
+The original six questions now resolve as follows:
+
+1. **Fail-closed:** accepted, with marathon wiring and pre-dispatch refusal for unsupported direct/legacy launches; finish F1.
+2. **Role derivation:** dropping the raw-log parser is accepted. Reuse trusted roles across authorization and the existing containment helper as B1 specifies; do not reintroduce prose as authority.
+3. **Ordering/format:** Phase 0 before Phase 1, complete override deletion (`jog_run.py:1375–1389`), and retention of the existing marker are accepted.
+4. **Merge placement:** the shared owned-caller check is accepted over hook-only enforcement, subject to B2. The external-review identity gap and separate server rollout remain honest limits (plan lines 169–175).
+5. **Falsifiability:** the builder-completes-token control and per-real-caller merge controls materially resolve prior findings. B1, B2, and F2 identify the remaining controls; none was executed in this reviewer turn.
+6. **Rating:** retain **85/85/50/40** as a provisional judgment. Severity is grounded in the local acceptance mechanism; appeal remains neutral. Companion statistics remain unverified, and no new recurrence claim is made.
+
+SWE disposition: **Recon Fix; Minimal acceptable; Diagnosable Fix; Blast Block; Proof Block.** The Costly classification, rollback disclosure, and first-week tripwire are accepted (plan lines 187–196).
+
+**Cap disposition:** round 3/3 is exhausted. Hand back to `claude-a` to record the plan blocked against B1–B2 and the bounded F1–F2 corrections. Do not start implementation or silently extend this QA loop. This is the producer's stated cap policy above, not a skill-imposed permission flow. Only this relay file was edited.
+
+NEXT: Producer (claude-a)
