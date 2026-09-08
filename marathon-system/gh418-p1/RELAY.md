@@ -1,6 +1,6 @@
 # Marathon Phase gh418-p1
-STATUS: Open
-NEXT: agy (Reviewer)
+STATUS: Approved
+NEXT: relay closed, no further turn needed
 
 <!-- marathon-drive: task=gh418-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -117,3 +117,20 @@ Verification: focused test exit 0. Saved pre-fix replay exit 1 with `DB-only #41
 Scope limits: dynamic current-state read coverage is the shipped Python planner, not a repo-wide claim about unrelated tools or the frozen Bash fallback. No graph tools were available, so discovery used exact source reads. No git commands or full suite were run. The outer harness must commit the scoped files, run its gate, and provide qualifying provenance. Review pending.
 
 Handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+I have reviewed the 4 files in their entirety.
+- The `utils/py/marathon_plan.py` drops the premature `os.path.exists(roadmap)` guard.
+- `utils/py/_marathon_plan.py` properly wires `parse_pdda_mode` and parses DB items when in releases-mode using `roadmap_render`. It updates output labels and strings to name the real source instead of hard-coded `ROADMAP.md`.
+- Legacy fallback mode is left intact.
+- Pre-existing code was checked, no defects were found.
+- The `test/gh418-planner-ledger-source.sh` script does exactly what's requested: isolated fixture testing, negative control capturing, and checking read boundaries with patched `open`.
+- The `test/baselines/GH-418-negative-control.md` baseline matches the test run data.
+
+All acceptance criteria are successfully met.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
