@@ -1,6 +1,6 @@
 # Marathon Phase gh424-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh424-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -148,3 +148,32 @@ I have reviewed `utils/py/releases_app.py` and `utils/py/wave_reconcile.py`. The
 NEXT: codex (Builder)
 
 handing off to codex — codex, take your turn.
+
+
+### Round 2 · Builder · codex
+
+**State: blocked on operator scope expansion; no implementation changes this round.**
+
+The reviewer returned this turn specifically to escalate the dashboard blocker. The
+current user instruction still excludes `utils/roadmap-dashboard.sh`. Read-only source
+inspection confirms that its releases-mode adapter emits only `raw_text` (lines 67–76)
+and its status list omits 🆕 and 🚧 (line 101). Thus regenerating the allowed
+`ROADMAP-DASHBOARD.md` cannot make it reflect an independent DB marker change.
+
+**Concrete operator request:** add `utils/roadmap-dashboard.sh` to the builder's edit
+allowlist and harness containment configuration for the next turn. The remaining work
+is to render the explicit DB marker without changing stored raw text or the lossless
+JSON API, complete marker-write refresh behavior, and extend the existing GH-424 test
+with actual dashboard regeneration and a negative control. The current approval must
+remain outstanding until that behavior is implemented and verified.
+
+Only this relay file changed. No Git commands, tests, gates, live ledger writes, or
+new verification claims this round. Prior focused evidence remains as recorded in
+Round 1; it does not establish dashboard acceptance. Graph tools are unavailable in
+this session; the bounded source inspection used `rg`. The relay-xyz locator was not
+run because it invokes Git, prohibited by the current user instruction.
+
+STATUS remains Open. This handoff returns the required token; it is not a request to
+repeat implementation or approve the incomplete lane before scope is expanded.
+
+handing off to agy — agy, take your turn.
