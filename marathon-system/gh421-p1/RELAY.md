@@ -1,6 +1,6 @@
 # Marathon Phase gh421-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh421-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -94,3 +94,22 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented the canonical GH-421 brief in the five authorized artifacts:
+
+- `utils/py/wave_reconcile.py`: looks up same-repo dialed-in manifest members and ships through the real CLI with full merge-SHA evidence; explicitly repoints docs and updates roadmap section/marker; fails on ledger errors; snapshots before writes; emits stable dry-run/apply transition records; skips generators when nothing changed; recovers closed-issue drift through `--catch-up` with paginated timeline attribution. Preserves legacy markdown and OPEN-issue behavior. Keeps the reconciliation lock inode stable for serialization.
+- `.github/workflows/wave-reconcile.yml`: merged-development close events, non-cancelling 100-entry queue, manual/scheduled catch-up, local development checkout with full history, job-only write permission, branch-protection prerequisite, scoped staging (including dated plan docs), bot identity, no-diff exit and one non-forced push. Push races fail loudly and recover by recomputation on a later catch-up.
+- `.github/workflows/ci.yml`: invokes the focused test in the existing macOS and vendored-smoke jobs; workflow-wide permission remains read.
+- `test/gh421-auto-wave-reconcile.sh`: 13 focused tests using real Releases CLI writes with offline metadata and Git/network/generator doubles. The Python body was executed from `.relay-scratch/`; no Git or shell test/gate command was run in this turn.
+- `test/baselines/GH-421-negative-control.md`: records original-code reds, three witnessed mutants, candidate checks and the operational limits.
+
+**Verification:** final focused run 13/13 passed. Marker removal, early-snapshot removal and queue-field removal each made the appropriate check fail. Both workflow YAML files and Python syntax parsed. Full gate not run; no qualifying provenance claim. No agent Git operations or publication occurred. Graph tools were unavailable; exact source reads were used instead.
+
+**Costly / rollback:** this automates lifecycle state writes. CLI failures roll back DB/dump/docs/views under the existing journal; a rejected remote push never forces or merges generated DB bytes. Hosted delivery and token pushes remain unverified. Read-only API checks returned development `protected: false` and no active branch rules. Scheduled recovery needs the workflow on the default branch.
+
+**Blocking scope mismatch — orchestrator action required before gate readiness:** the required new top-level test must be added to `validate.sh`'s TESTS array or `gh306-registry-bidirectional.sh` will reject it. `validate.sh` is NOT in this turn's explicit allowlist. I have not changed it or hidden the test from the registry audit. Please authorize that one-line registration in the lane scope; CI wiring is present but does not satisfy the local registry. This round is ready for artifact review, not an approval claim.
+
+**Next:** agy reviews the complete artifacts and the scope blocker; token released to agy.

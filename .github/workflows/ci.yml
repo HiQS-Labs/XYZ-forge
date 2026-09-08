@@ -179,6 +179,9 @@ jobs:
       - name: Install pytest for the python lane
         run: python3 -m pip install --quiet --break-system-packages pytest
 
+      - name: Verify automatic wave reconciliation (GH-421)
+        run: bash test/gh421-auto-wave-reconcile.sh
+
       - name: Run the authoritative validator (no skips)
         env:
           # The one documented exclusion, and it is not a coverage skip: this test makes a real
@@ -535,6 +538,9 @@ jobs:
           git config --global init.defaultBranch main
           git config --global user.email "ci@runner.invalid"
           git config --global user.name "CI Runner"
+
+      - name: Verify automatic wave reconciliation (GH-421)
+        run: bash test/gh421-auto-wave-reconcile.sh
 
       - name: Vendor harness into scratch repo and run vendored suites
         run: |
