@@ -172,9 +172,29 @@ def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
 
 
 def _security_dialog_present() -> bool:
-    """True if a process known to present modal auth dialogs is running."""
+    """True if a process known to present modal auth dialogs has a visible window.
+
+    Process existence alone over-triggers: SecurityAgent can linger as a
+    backgrounded MachService (parent pid 1) well after any prompt it raised
+    was answered — observed over an hour after an unrelated Keychain access
+    elsewhere on the machine, with no dialog on screen. Requiring a visible
+    window (System Events' ``visible`` property, scoped to this ONE named
+    process — not "any osascript is running", the general approach already
+    rejected above) is what actually distinguishes a blocking dialog from a
+    quiescent daemon. If the visibility probe itself fails (no Accessibility
+    permission, osascript unavailable), that name is skipped rather than
+    assumed present — this function's caller already treats no-signal as no
+    dialog, and understating a real block costs less than a false alarm.
+    """
     for name in SECURITY_AGENT_PROCS:
-        if _run(["pgrep", "-x", name], timeout=3.0).strip():
+        if not _run(["pgrep", "-x", name], timeout=3.0).strip():
+            continue
+        visible = _run(
+            ["osascript", "-e",
+             'tell application "System Events" to get visible of process "%s"' % name],
+            timeout=3.0,
+        ).strip()
+        if visible == "true":
             return True
     return False
 
