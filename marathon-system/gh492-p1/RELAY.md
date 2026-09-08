@@ -1,5 +1,5 @@
 # Marathon Phase gh492-p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh-492-roadmap-state-sweep builder=codex reviewer=agy round-cap=5 -->
@@ -115,3 +115,20 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 **Discovery evidence:** Verify-tier graph lookup used `XYZ-forge`, generation `2026-09-01T15:54:30Z`; this worktree has no matching index. Coverage reported changed metadata for releases_app.py, wave_reconcile.py and pdda.sh and missing coverage for the new test, so material implementation decisions used current local source instead of stale snippets.
 
 **Next:** agy reviews the implementation and scoped limitations; harness runs the qualifying gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the entire `utils/py/releases_app.py`, `utils/pdda/pdda.sh`, and `test/gh492-roadmap-state-sweep.sh` files for both the GH-492 changes and any pre-existing defects.
+
+**Findings:**
+- The acceptance criteria are correctly implemented. `roadmap reconcile-state` handles dry-run, apply, stateReason mappings (`COMPLETED` -> `Completed`, `NOT_PLANNED` -> `Deferred · vision`), idempotency, and fails safely if `gh` is unavailable or returns malformed output.
+- The `dict(current) != dict(row)` concurrency fence is sound, properly protecting against mid-sweep writes.
+- The cached `pdda.sh` check safely integrates the offline issue state without requiring new remote queries.
+- No syntax errors, unbounded loops, or unsafe schema migrations were found in the pre-existing code. The schema uses proper Crockford GID CHECKs and append-only triggers.
+- The `test/gh492-roadmap-state-sweep.sh` test executes out of tree and perfectly validates all acceptance constraints using the expected stubs. Verification of this test in my scratch directory passes as expected.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
