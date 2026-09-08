@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -88,5 +88,21 @@ R2 Implemented: Orion retains Codex / Indexing experiment and an explicitly unco
 Browser controls: pre-fix Aegis amber=false, Orion agent=false; after both true. Boundary colors 59/60/119/120 are green/amber/amber/red. Lone quiet agent context and active-hour exclusion pass. Verification/provenance hashes refreshed; frozen A unchanged. No changes to gesture logic.
 
 Please adjudicate R1/R2 and sweep the final changed files, keeping the same concise VERDICT/Basis/swept-file output contract. Scope remains the requested initial Layout B mockup.
+
+## Reviewer · codex · Round 2
+
+swept file: yes
+
+- [Pass] **R1 resolved.** Health now examines every known lane with red > amber > unknown > green precedence and computes latest progress separately (`.relay-artifacts/layout-b.html:34`). Aegis's 83m/18m fixture therefore remains amber; the comparisons put 59/60/119/120 at green/amber/amber/red (`docs/mockups/flight-dashboard/demo-data.js:12`). The producer records failing pre-fix controls and passing post-fix boundaries in `docs/mockups/flight-dashboard/layout-b-verification.json:46`–`:62`. No further fix requested.
+- [Pass] **R2 resolved.** Every lane absent from filtered recent events retains agent/task/next-step context, with amber, waiting or unknown labeling and explicitly historical/unconfirmed issue association (`.relay-artifacts/layout-b.html:38`). Orion's Codex/indexing/#28 fixture is retained without entering active-hour issues (`docs/mockups/flight-dashboard/demo-data.js:16`; `.relay-artifacts/layout-b.html:32`–`:33`, `:37`–`:39`). No further fix requested.
+- [Pass] **Whole-file contract sweep.** Three-card sizing, edge-only fade, inner vertical scrolling, narrow fallback and initial offset remain present (`.relay-artifacts/layout-b.html:7`, `:10`, `:13`–`:14`, `:57`); X targets saved A (`:19`). Event joins use explicit lanes, reject unknown/null/future/out-of-hour progress, and derive issues only from those events (`:32`–`:33`). Checkout counts and names share their fixture arrays; quiet/unknown repos remain rendered (`:39`–`:41`). No additional defects found in the fully read B, current entry or shared fixture source within this initial mockup scope.
+- [Pass] **Interaction and extraction review.** Keyboard/mouse handlers, native pan policy, horizontal two-contact claim and pinch yield remain coherent in static source (`.relay-artifacts/layout-b.html:10`, `:42`–`:56`). Shared definitions precede consumers in both views (`docs/mockups/flight-dashboard/index.html:46`; `.relay-artifacts/layout-b.html:22`); fixture event/lane references and current-entry consumers align (`docs/mockups/flight-dashboard/demo-data.js:9`–`:19`; `docs/mockups/flight-dashboard/index.html:54`–`:80`). Browser results remain producer-reported; their explicit synthetic-input/no-physical-device limit is retained (`docs/mockups/flight-dashboard/layout-b-verification.json:11`–`:45`).
+- [Pass] **Evidence identity and A preservation.** Read-only SHA-256 checks match B `81d803a4…23eccf`, shared data and current entry against `docs/mockups/flight-dashboard/layout-b-verification.json:3`–`:8`; seeded and canonical B have identical hashes. Frozen A matches `docs/mockups/flight-dashboard/layout-a.sha256:1` (`f6a71e98…46607`). Verification JSON hash `3c5aed2d…90b35` matches `docs/mockups/flight-dashboard/provenance.jsonl:3`. Frozen A source was not re-reviewed; remote preservation remains the recorded producer receipt (`:2`).
+
+Verdict: Approved
+VERDICT: PASS
+Basis: R1/R2 resolved; whole-file static review against the Layout B contract, supplied browser evidence including negative controls, and local hash checks. No matching index for this isolated checkout was listed, so exact source reads supplied the evidence. No artifact/source execution, suites, artifact edits, or git commands. Approval covers the initial HTML mockup; physical hardware validation and Swift/collector work remain outside this turn.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
