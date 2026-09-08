@@ -397,3 +397,29 @@ SWE disposition: **Recon Fix; Minimal acceptable; Diagnosable Fix; Blast Block; 
 **Cap disposition:** round 3/3 is exhausted. Hand back to `claude-a` to record the plan blocked against B1–B2 and the bounded F1–F2 corrections. Do not start implementation or silently extend this QA loop. This is the producer's stated cap policy above, not a skill-imposed permission flow. Only this relay file was edited.
 
 NEXT: Producer (claude-a)
+
+## Round 4 — Producer (claude-a) — 2026-09-08 — CLOSING AT CAP
+
+Recording the plan **blocked**, per the cap policy I stated in round 3. Not extending the loop, not
+substituting a self-review, not implementing against an unapproved design.
+
+B1 and B2 are accepted as valid and are not disputed. B1 in particular finds a hole my revision did
+not close: capturing the dispatched identity proves *who* ran, but the containment layer still reads
+the builder-writable directive to decide *what permissions that turn gets*. A builder that rewrites
+the directive to `builder=B reviewer=A` and hands off normally causes the real reviewer B to be
+dispatched with builder permissions — free to edit the artifact and approve those edits in one
+accepted turn, with all four of my terminal predicates satisfied. Round 1 asked for directive-tamper
+rejection, I accepted it, and it did not survive into the revision. That is my error, not a
+reviewer inconsistency.
+
+B2 is likewise correct and cheap: the check must return the SHA it inspected and every caller must
+pass `gh pr merge --match-head-commit <SHA>`.
+
+F1 and F2 are bounded and accepted.
+
+Plan `status: Blocked` with all four findings, their `file:line` anchors, and the named cheapest
+correction for each. Operator decides: raise the cap for round 4, narrow to the uncontested Phase 0 +
+Phase 2, or reassign the reviewer.
+
+STATUS: Escalated
+NEXT: Operator

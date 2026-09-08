@@ -1,6 +1,6 @@
 ---
 title: "GH-505: Builder can approve and close its own relay; no merge path checks for a reviewer"
-status: In progress
+status: Blocked
 created: 2026-09-08
 updated: 2026-09-08
 owner: agent-b
@@ -33,7 +33,31 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Codex round 2 blocked the tick-event anchor with source proof that the turn can write `.tick` and spoof `--agent`; verified and accepted. Anchor moved a third time — to the supervisor's own in-process observation, which the child cannot reach | Round 3 Codex QA (cap). Approved → implement Phase 0→3; not approved → stop and record blocked |
+| Codex plan QA ran **3 of 3 rounds and blocked at the cap**. The supervisor-observation anchor was accepted; two enforcement gaps remain open (B1, B2) plus two bounded corrections (F1, F2). Implementation NOT approved and NOT started | Operator decision: raise the cap for round 4, narrow the deliverable to the uncontested Phase 0 + Phase 2, or reassign the reviewer. See [Blocked — outstanding findings](#blocked--outstanding-findings) |
+
+## Blocked — outstanding findings
+
+Plan QA exhausted its 3-round cap without an Approved verdict. Per the stated cap policy,
+implementation stops here. **No source outside this plan and the relay thread has been modified.**
+
+Round 3 accepted: the supervisor-observation anchor, rejection of unobserved startup/resume terminal
+state, canonical token projection, `Approved`+`Closed` coverage, the no-auto-repair policy, Phase 0
+ordering and its corrected deletion range, the shared owned-caller merge check over hook-only
+enforcement, the Costly reversibility read and first-week tripwire, and the `85/85/50/40` rating.
+No fourth trust anchor is requested.
+
+Still open:
+
+| # | Severity | Finding | Where |
+|---|---|---|---|
+| **B1** | Block | **Terminal authorization and reviewer containment disagree about the role.** The existing helper still reads the builder-writable directive to decide the artifact allowlist and whether the prompt describes a reviewer. Counterexample: builder A rewrites the directive to `builder=B reviewer=A` and hands off normally. The supervisor really dispatches B, so all four terminal predicates hold — but the shim classifies B as *builder*, so B keeps artifact write permission and can edit the artifact and approve those edits in one accepted turn. Capturing B's identity fixes attribution but not that B ran under the review contract. Round 1's "reject directive tampering" was accepted and is missing from the revision. | `relay-turn-lib.sh:84-101`, `:354-371`, `:994-998`; `utils/py/rtl.py:664-676` |
+| **B2** | Block | **Approving the current head does not bind the later merge to that head.** All four callers merge by PR identity alone, so a check can approve H1, a concurrent push replaces it with H2, and the merge takes H2. Fix is cheap and already exists: return the checked SHA and pass `gh pr merge --match-head-commit <SHA>`. | `express.py:599`, `jog_run.py:1432`, `merge_cleanup.py:55-56`, `marathon-closeout.sh:292` |
+| **F1** | Fix | **Trusted-invocation contract incomplete for direct relays.** Only `--reviewer` is transported; `relay_drive.py:30-41` has neither role input. Marathon already exports both and already rejects equality — reuse rather than rebuild. Must specify the builder input, precedence, and unknown-role refusal, and must not recover it from the editable directive or assume the initial actor is the builder (review-once can start with the reviewer). | `relay_drive.py:30-41`, `:655-658`; `marathon_drive.py:1878-1879`, `:1940-1942` |
+| **F2** | Fix | **Checks not aligned with the design.** The blanket "every red control red at `0b37c36f`" contradicts Phase 1's deliberately transposed mutation control. Marathon recovery must assert the externally returned exit and reason — `recover_already_satisfied_lane()` is consumed as a boolean, so returning 4 from the helper alone still surfaces as exit 3/no-progress. | plan lines 136 vs 200-201; `marathon_drive.py:3322-3328` |
+
+**Operator options.** (a) Raise the cap for a round 4 — the remaining findings are bounded and each
+has a named cheapest correction. (b) Narrow this PR to Phase 0 and Phase 2, which are small and
+uncontested, and split terminal authorization into its own issue. (c) Reassign the reviewer.
 
 ## Table of contents
 
