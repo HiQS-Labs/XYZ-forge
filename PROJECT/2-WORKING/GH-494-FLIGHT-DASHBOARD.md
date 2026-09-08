@@ -67,7 +67,7 @@ the earlier conversational suggestion to build a new local collector.
 | Dashboard requirement | Existing source to consume | What is actually missing / permitted work |
 |---|---|---|
 | Repo/project names and aliases | Rebalance `registry.get_projects(conn=...)` and existing mirror resolution | New projection composition only; never equate two repos just by basename. |
-| Issue titles/state, open PRs, checks and links | Existing `github_items`, `github_check_runs`, `github_links` and read helpers | Expose omitted fetched times/full SHAs and bounded pagination/completeness. No new GitHub fetching. |
+| Issue titles/state, open PRs, checks and links | Existing `github_items`, `github_check_runs`, `github_links` and read helpers | Expose omitted fetched times/full SHAs and bounded completeness. No new GitHub fetching. |
 | Last-hour commits | Existing cached commit queries plus synced Git Pulse TSV | Adapt/promote existing parser if needed; retain source/device and avoid duplicate commit counting. |
 | Names of agents, requested task and recent attention | Existing CLIO JSONL writer and Rebalance `clio_prompts` projection | Consume cached projection. Branch/machine already captured but dropped by ingest: additive projection/backfill only if needed for joins. No new prompt writer/tailer. |
 | Next actions and handoff context | Persisted ranked next actions, CLIO intent, existing continuity notes | Passive cache access and deterministic presentation. No model call or reranking on refresh. |
@@ -115,8 +115,8 @@ Expose UTC instants; local timezone conversion belongs at the display edge.
 
 | Object | Required semantics |
 |---|---|
-| Snapshot | `generated_at`, `snapshot_id`, `sources[]`, `repos[]`, `coverage`, `truncated`, `next_cursor`. Generation means projection time, not new work. |
-| Source | Stable source/device ID, latest successful observation/ingest time, expected producer schedule when known, `coverage=complete/partial/unknown`, `availability=ok/stale/unavailable`, errors without private content. |
+| Snapshot | `generated_at`, `snapshot_id`, `sources[]`, `repos[]`, `coverage`, `truncated`. One bounded response per cycle; no pagination in v1. Generation means projection time, not new work. |
+| Source | Stable source/device ID, latest successful observation/ingest time, `coverage_from`, `observed_through`, `fresh_until` (nullable), expected producer schedule when known, `coverage=complete/partial/unknown`, `availability=ok/stale/unavailable`, errors without private content. |
 | Repo | Canonical host/owner/repo key, display name, source aliases, participating devices, selected/carry-forward state, source refs. Forks remain separate unless an existing explicit identity mapping says otherwise. |
 | Checkout | Canonical repo key, device, normalized local path/common Git dir, `kind=full_clone/linked_worktree`, branch, observed time and provenance. Incomplete inventory returns exact count `null` plus known members/count. |
 | Issue | Repo key + issue number; title/state; linked lanes; last-hour progress and intent shown separately; evidence/confidence for inferred associations. |
@@ -140,9 +140,25 @@ top-five ranking filter.
 
 Query bounds: selected repo allowlist, default last 24 hours of detail plus latest
 known progress anchor per selected lane; last-hour display filters `0 <= age < 60m`.
-Proposed caps: 100 repos, 2,000 issues/PRs and 5,000 events per response, 2 MiB response,
-explicit pagination/truncation. Fetch all pages needed for a displayed exact total
-or show partial. Never report zero from an unqueried/failed/truncated source.
+V1 uses one bounded snapshot, **no pagination/cursor protocol**. Caps are 100 repos,
+2,000 issues/PRs, 5,000 events and 2 MiB serialized output per cycle; the whole
+projection/read cycle has a 6-second deadline. Stable repo/key/time ordering makes
+truncation reproducible; selected repos have priority. Read SQLite in one read-only
+transaction and materialize each external source once per cycle with its own
+observation watermark. If a file changes during the bounded read, mark that source
+partial rather than combining its versions. Cross-source observation times may
+legitimately differ; they are never represented as one source observation time.
+
+`snapshot_id` is an opaque server-boot ID plus monotonic response sequence. Within
+one boot, reject older sequences; on a different boot accept only the response to
+the currently active request. A local request-generation counter invalidates late
+responses from prior foreground/manual cycles. Do not order opaque boot IDs or
+wall-clock generation timestamps. Unknown pagination fields never trigger another
+request. An exhausted row/byte/time budget returns a bounded partial response or
+explicit failure; retain last-good data on failure. An exact total is allowed only
+for a completely read scope, otherwise return `null` and a known-subset count.
+Never report zero from an unqueried/failed/truncated source. This deliberately avoids
+an unbounded multi-page cycle or mixed-page revisions; broader history is deferred.
 
 ### Phase 1 — delivery and QA
 
@@ -150,6 +166,7 @@ or show partial. Never report zero from an unqueried/failed/truncated source.
 - [ ] Add the shared projection and explicit route on the existing host; a configured empty/missing corpus returns an honest state without source bootstrap.
 - [ ] Prove passive reads: source/DB/sync files unchanged; spy collectors, Git subprocesses, network clients and ingestion functions and assert zero calls during repeated GETs. Negative control deliberately calls a forbidden path and fails the guard.
 - [ ] Test basename collisions, mirror aliases, duplicate SHAs, multiple agents per issue, unlinked PRs, stale checks on another head, and more than 10 PRs. Assert nonempty inputs before checking totals.
+- [ ] Verify aggregate row/byte/time exhaustion, a source changing mid-read, late/out-of-order responses and server restart. Unexpected/repeated cursor fields cause zero additional requests; truncation refuses exact totals. Disable the budget guard as a failing control and retain the red receipt.
 - [ ] Cap pointer/file/query sizes and record invalid-schema/permission/partial-file failures. No malformed input becomes a healthy empty list.
 - [ ] Run focused tests and independent review; commit receipts/provenance in the implementation PR. Keep existing source schedules and consumers unchanged.
 
@@ -245,16 +262,54 @@ a heartbeat, a file read and a dashboard refresh are not progress by themselves.
 Preserve `last_prompt_at` for recent intent separately. Repo health must not let a
 recently active lane hide an older waiting lane.
 
-With sufficient relevant coverage: green <60m, amber 60–119m, red ≥120m without
-meaningful progress. Partial/missing coverage suppresses a definitive inactivity
-verdict and adds an explicit coverage state; preserve any known timestamp as
-last-known evidence. Unknown is never equivalent to healthy or zero. Prompt-only
-issues appear as inferred/requested work, separate from “progress this hour.”
+Colors are **as-of observation verdicts**, never a claim of continuous surveillance.
+For a lane, use the minimum `observed_through` across its required progress sources
+as watermark W; never use consumer time or a heartbeat. Require complete relevant
+coverage from the known progress anchor through W. For a red verdict, complete
+coverage of at least [W−120m, W] plus an anchor at/before W−120m is sufficient.
+Calculate age = W − last meaningful progress: green <60m, amber 60–119m, red ≥120m.
+Show “as of W” beside the verdict and separately show the live last-progress age.
+An observation ending before now does not cover the gap after W. With no known
+progress anchor, incomplete coverage, unknown watermark or a future/invalid anchor,
+show unknown; a prompt does not establish a progress anchor.
 
-The QA queue distinguishes cached needs-QA, review requested, blocked and ready
-candidates. Exact current head/check evidence, source age and missing coverage must
-be visible; the app does not authorize or execute merges. Link to the existing PR
-or copy a scoped handoff for the agent. Avoid destructive Git/process actions in v1.
+The source adapter supplies `fresh_until` from its verified expected maximum active
+interval plus a 25% grace (hourly sources: 75 minutes after W). Inactive overnight
+hours do not extend that cutoff. If the schedule/maximum lag is unknown, freshness
+is unknown and no definitive inactivity color is assigned until an owner-backed
+cutoff is configured; CLIO capture cadence cannot substitute for ingest cadence.
+At the earliest required-source cutoff, color becomes stale/unknown, retaining the
+historical as-of verdict in detail. Reevaluate expiry every UI clock tick even if
+GETs stop; never let an old complete snapshot turn newly red as wall time passes.
+Partial/missing coverage likewise suppresses a definitive inactivity verdict.
+Unknown is never healthy or zero. Prompt-only issues appear as inferred/requested
+work, separate from “progress this hour.”
+
+The QA queue is a deterministic cached classification. Evaluate this table top to
+bottom; first matching row wins. Closed/merged PRs leave the active queue. All
+remaining rows concern open PRs; carry head SHA, evidence times and reasons through
+to the UI. “Current head” always means the latest cached head, not a live guarantee.
+
+| Predicate, in precedence order | Category |
+|---|---|
+| Fresh evidence at cached head explicitly shows merge conflict, required-check failure or effective changes-requested review | Blocked |
+| Draft PR | Needs QA — draft; never ready |
+| Head missing/mismatched, freshness unknown/expired, incomplete check/review data, unknown required policy, or contradictory unresolved review evidence | Needs QA — verification needed; readiness unknown |
+| Known required checks are complete and passing, required review remains pending/requested, no blockers | Review requested |
+| Known required QA/check evidence pending or absent | Needs QA |
+| Non-draft, mergeability affirmative, all known required checks/QA passed and required approvals satisfied for this head, no unresolved review request/blocker, complete fresh evidence and known requirements | Ready candidate — cached/advisory |
+| Anything else | Needs QA — verification needed |
+
+A fresh review request with QA still pending is Needs QA first. A stale old-head
+failure is unknown evidence, not a current blocker. Empty checks pass only if an
+existing explicit policy proves no checks are required. Likewise “no reviews” is
+not approval unless the cached policy explicitly requires none. If required policy
+or exact-head approvals are absent from the existing corpus, ready candidates may
+remain empty: surface the missing evidence, never invent policy or fetch it from
+this consumer. Effective review disposition must be determinable from cached ordered
+events; unresolved conflicts go to verification. Source expiry recomputes categories
+without another GET. The app neither authorizes nor executes merges; link to the PR
+or copy a scoped handoff. Avoid destructive Git/process actions in v1.
 
 6 PM means the operator's local daily wrap-up: QA/merge ready work and carry forward
 unfinished lanes. Store instants in UTC and one configured IANA timezone. Show the
@@ -280,7 +335,7 @@ source remains visibly stale even when its next run is intentionally tomorrow.
 One request in flight, 6-second timeout, no overlapping cycles. A failed request
 retains the last valid snapshot and its original timestamps; show failure/time.
 After three consecutive failures pause automated retries until foreground/manual
-retry; no tight loop. Reject out-of-order/older snapshot revisions. Bound cache size
+retry; no tight loop. Reject late/older responses using the Phase 1 boot/sequence and request-generation rules. Bound cache size
 and lifetime; local display cache contains sanitized summaries, not raw prompts,
 tokens or full email/calendar content. Stale cache cannot satisfy current readiness.
 
@@ -289,6 +344,8 @@ tokens or full email/calendar content. Stale cache cannot satisfy current readin
 - [ ] Wire production A/B/C to the shared contract; demo mode remains clearly labeled and never silently substitutes for unavailable live data.
 - [ ] Verify full navigation, keyboard/gesture paths, source refresh, theme change and parent scroll restoration; hold Escape and prove it does not skip levels.
 - [ ] Verify 59/60 and 119/120 minute boundaries, unrelated prompt arrival, a source heartbeat, partial coverage, clock change, and zoom after aging. Mutate the progress clock to consumer time and observe the test fail.
+- [ ] Verify complete-but-stale snapshots, W before the evaluated wall time, no progress anchor and expiry without GETs. Ignoring W must fail a fixture; retain the red receipt.
+- [ ] Cover every QA table category, empty checks with/without known policy, draft, missing requirements, changes-requested, wrong-head evidence and source expiry. A mutation that treats missing requirements as passing must fail.
 - [ ] Verify 17:59/18:00/18:01, local midnight and DST cases; carry-forward lanes survive restart and date rollover.
 - [ ] Verify unavailable/empty/truncated inputs, schema errors, out-of-order responses, three-failure stop, foreground recovery and a retained stale snapshot.
 - [ ] Verify handoff copy/context is correctly issue/agent-scoped and treats source text as data; HTML-escape text, allowlist link schemes, never execute embedded prompt instructions.

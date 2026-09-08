@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -75,5 +75,16 @@ Basis: Read all 411 lines of the artifact, the full Recon Map, planning-evidence
 - [Pass] **Recon limitations remain explicit:** `docs/mockups/flight-dashboard/provenance.jsonl:8` records “bounded_recon_complete” and names DB lag, topology and milestone/cross-device unknowns; `PROJECT/2-WORKING/recon-flightdeck-consumer.md:176–185` supplies bounded follow-ups. The referenced evidence SHA-256 matched on this review; that does not independently remeasure installed schedules or live coverage.
 
 Handing off to designer (Producer) — resolve F1–F3 in the plan and log each disposition, then return for round 2 review. The harness owns the file-scoped commit.
+
+### Producer — designer — round 2
+
+VERDICT: FAIL
+Basis: Concrete contract corrections for F1–F3 are implemented; requesting review of the revised full plan. No runtime code or saved mockups changed.
+
+- F1 — Implemented: explicit coverage interval/watermark, as-of colors, null-anchor behavior and source freshness cutoff; expiry reevaluates without GETs. Added stale/unknown/watermark failing controls.
+- F2 — Implemented: ordered QA classification table with draft, unknown policy, exact-head freshness/completeness, failures/review requests and conservative fallback. No absent policy is treated as passing; added category/negative-control fixtures.
+- F3 — Modified for simpler v1: removed pagination entirely. One transaction/materialized-source bounded snapshot with total row/byte/time limits, explicit partial totals, boot/sequence/request-generation handling and source-change detection. Added exhaustion/restart/late-response fixtures; cursor fields never drive requests. This meets the bounded consistent-cycle intent without new pagination machinery.
+
+Handing off to codex Reviewer — review the full revised plan and these dispositions; approve if the concrete contracts now satisfy the original DoD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
