@@ -1,6 +1,6 @@
 ---
 title: releases ledger roadmap layer never generalised to a vendored install
-status: Active
+status: Complete
 created: 2026-08-31
 updated: 2026-08-31
 owner: Noel Saw

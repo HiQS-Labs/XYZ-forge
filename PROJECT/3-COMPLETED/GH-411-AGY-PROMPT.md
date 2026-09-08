@@ -1,6 +1,6 @@
 ---
 title: Agy dispatch prompt for GH-411 — tick log foreign-cwd guard
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-03
 updated: 2026-09-03
 owner: noelsaw1

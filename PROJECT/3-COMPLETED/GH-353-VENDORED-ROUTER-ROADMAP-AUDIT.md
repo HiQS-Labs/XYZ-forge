@@ -1,6 +1,6 @@
 ---
 title: "GH-353 · Audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates"
-status: active
+status: Complete
 created: 2026-08-31
 updated: 2026-08-31
 owner: agent

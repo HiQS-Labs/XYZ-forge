@@ -1,6 +1,6 @@
 ---
 title: "GH-249: ubuntu portability canary permanently red — EUID=0 defeats chmod-based assertions"
-status: Active
+status: Complete
 created: 2026-08-25
 updated: 2026-08-26
 owner: orchestrator (Claude Code)

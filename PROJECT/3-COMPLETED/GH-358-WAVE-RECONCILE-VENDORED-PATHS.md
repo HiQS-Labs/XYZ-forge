@@ -2,7 +2,7 @@
 gh_issue: 358
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/358
 title: "GH-358: wave_reconcile resolves its five harness tools repo-root-relative, so it is inert on every vendored install"
-status: Active
+status: Complete
 created: 2026-09-01
 updated: 2026-09-01
 owner: claude

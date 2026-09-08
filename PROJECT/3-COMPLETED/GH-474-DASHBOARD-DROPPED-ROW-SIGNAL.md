@@ -1,6 +1,6 @@
 ---
 title: "GH-474: the staleness guard reads the renderer's dropped-row warning instead of guessing from table names"
-status: Active
+status: Complete
 created: 2026-09-07
 updated: 2026-09-07
 owner: orchestrator (Claude Code)

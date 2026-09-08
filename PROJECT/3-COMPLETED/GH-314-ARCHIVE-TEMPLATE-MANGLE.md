@@ -2,7 +2,7 @@
 gh_issue: 314
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/314
 title: "GH-314: wave_reconcile Completed-archive line mangles ROADMAP entries without the 'GH-N · Title' shape"
-status: Active
+status: Complete
 created: 2026-08-29
 updated: 2026-08-29
 owner: jog

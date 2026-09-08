@@ -1,6 +1,6 @@
 ---
 title: "GH-123: Linux portability canary — remaining failure: gh358 lock contention on shared runners"
-status: Active
+status: Deferred
 created: 2026-08-24
 updated: 2026-08-27
 owner: orchestrator (Claude Code)

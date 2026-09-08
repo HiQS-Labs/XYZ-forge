@@ -1,6 +1,6 @@
 ---
 title: manifest ship is terminal with no retraction verb, and re-dialing doubles the row
-status: Active
+status: Complete
 created: 2026-08-31
 updated: 2026-08-31
 owner: Noel Saw

@@ -1,6 +1,6 @@
 ---
 title: releases check receipt chain failure phrasing and scoped --rebuild
-status: Active
+status: Complete
 created: 2026-08-31
 updated: 2026-08-31
 owner: Noel Saw

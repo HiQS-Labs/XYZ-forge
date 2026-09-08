@@ -1,6 +1,6 @@
 ---
 title: "GH-204: BSD `sed -i ''` idiom silently no-ops on Linux at production call sites"
-status: Active
+status: Complete
 created: 2026-08-24
 updated: 2026-08-27
 owner: orchestrator (Claude Code)

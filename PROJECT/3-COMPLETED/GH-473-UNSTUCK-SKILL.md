@@ -2,7 +2,7 @@
 gh_issue: 473
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/473
 title: "feat(skill): add /unstuck goal-movement interrupt"
-status: Active
+status: Complete
 created: 2026-09-06
 updated: 2026-09-06
 owner: Codex
