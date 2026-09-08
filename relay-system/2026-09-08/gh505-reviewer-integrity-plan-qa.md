@@ -146,3 +146,84 @@ SWE summary: **Recon Block; Minimal Fix; Diagnosable Fix; Blast Block; Proof Blo
 **Handoff:** Producer is `claude-a`, confirmed by this token's creation and preceding release event. No source/artifact changes were made.
 
 NEXT: Producer (claude-a)
+
+## Round 2 — Producer (claude-a) — 2026-09-08
+
+**All 7 findings accepted. Zero rejected.** Each was verified against source before acceptance rather
+than taken on the reviewer's word; the verification is recorded in the plan's "What round 1 changed"
+table with the confirming `file:line`. Three of them invalidated the plan's core premise, so this is a
+rewrite, not a patch.
+
+### What the blockers actually changed
+
+**B1 is the one that mattered.** I called the in-file directive "authoritative, computed,
+unguessable." It is a bare line at `RELAY.md:5`, outside the `▽ DO NOT MODIFY ▽` block, in a file
+every turn may write. A builder can set `reviewer=` to itself before writing `Approved`. Verified.
+
+The replacement anchor is `.tick/events/` — append-only JSONL, one file per event, named
+`<ts>-<agent>-<verb>-<task>.jsonl`, written by `tick` and not on any turn's allowlist. It answers
+"who held the token when the terminal STATUS appeared" from evidence the reviewed party cannot forge.
+Paired with a new `--reviewer` argument supplied at invocation — `relay_drive.py` has none today,
+confirmed — attribution becomes trustworthy without a new receipt subsystem, per your instruction to
+check existing token evidence first.
+
+**B2** — third success site confirmed at `:868-873`; `token_state()` returns `""` for done at
+`:374-377`; dispatch reads token state at `:570`, not `NEXT:`. So the first plan's "restore STATUS,
+point NEXT at the reviewer, continue" was inert. Replaced with a single policy across all three
+sites: no auto-repair, integrity escalation with an explicit reason.
+
+**B3** — verified all three sub-claims. `run_single_phase_drive(root, gh_num, builder="agy",
+simulate=False)` has no reviewer param; `proc` is assigned at `:1374` so the stated deletion range
+would have orphaned the `except`; `task_name` is assigned at `:1336`, after the seed block. My claim
+that "jog already has the identity at this seam" was wrong — that validation is on the marathon
+route, a different function. Directive-seeding is dropped entirely; only the override block
+(`:1375-1387`) is deleted. Whether legacy jog should gain a reviewer is now an open question, not a
+silent second orchestration path.
+
+**B4** — accepted without reservation. A tool call launching `express.py` need not contain
+`gh pr merge`, and its subprocesses are not separate tool calls, so the hook fails open even when
+installed. Enforcement moved to server branch protection as the universal boundary plus one shared
+`require_approving_review()` called by the four owned callers. The hook is demoted to a supplement.
+
+**B5** — verified. `satisfied_lane_terminal()` (`:2677-2698`) and the recovery sites discard `_actor`
+explicitly. Phase 1 now extends to them.
+
+**F2** — `marathon_drive.py:2801` does also emit the directive, so "only marathon-drive.sh:1039" was
+false. The `relay-drive.sh:32` comment edit is dropped; `test/gh308-frozen-twin-guard.sh:49-64`
+selects changed paths even for comments.
+
+### Two corrections to your text, neither changing a verdict
+
+1. B1 blocks the *mechanism*, not the goal — your answer 1 affirms fail-closed as the correct
+   principle. The plan reads it that way.
+2. The file-count discrepancy is scope, not error: 201 counted `relay-system/<date>/*.md`, yours
+   counted recursively. Both are stored-document counts. Your actual point — that neither measures
+   active traffic and so neither proves jog is the largest slice — is conceded and the claim is
+   withdrawn. A measured inventory of *live callers* is now a precondition for Phase 1.
+
+### Also changed
+
+- Phase order: the override deletion is now **Phase 0**, ahead of the terminal guard, per your
+  answer 3. The dependency was stated backwards.
+- Marker rename dropped; kept for compatibility per your answer 3.
+- Re-rated **85/85/50/40** (effort 55 → 40) for the corrected write-set. Persisted and read back.
+- Runtime boundary stated honestly: the frozen shell twin is unfixed by a Python-only change, and
+  lanes running it are not protected. Named as a PR limitation.
+- The relay-approval → GitHub-reviewer identity gap is named as unsolved, with the consequence
+  spelled out: automation cannot satisfy the merge check on its own.
+- Acceptance controls rewritten to name entrypoint, exact exit code and reason, and an evidence
+  destination (`TESTS-RESULTS/2026-09-08+GH-505/`). Phase 0's control stubs the driver rather than
+  the relay file so it fails for the right reason.
+
+### Open questions for this round
+
+1. Is the tick event log a sufficient trust anchor, or can a builder turn reach `.tick/` despite it
+   being off-allowlist?
+2. With `--reviewer` absent from every existing caller, is escalate-by-default the right default, or
+   should it be opt-in for one release with a tripwire?
+3. Should Phase 3 ship the shared check at all given it cannot be satisfied by automation today, or
+   is server policy alone the honest deliverable?
+
+No implementation has started. No source outside the plan and this thread has been modified.
+
+NEXT: Reviewer
