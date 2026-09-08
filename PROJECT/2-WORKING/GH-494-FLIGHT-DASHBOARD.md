@@ -262,3 +262,10 @@ A 123m waiting lane likewise remains red through zoom in/out.
 
 Layout C final review: `relay-system/2026-09-08/gh494-layout-c-final.md`, round 2
 Approved, driver exit 0. The sample-clock continuity finding is resolved.
+
+### Escape navigation refinement
+
+Escape now moves up exactly one level per press: issue spotlight → issue cards →
+repo spotlight → repo cards → Layout A. It clears a spotlight before leaving a
+layout; repeated keydown events are ignored. Browser checks passed the complete
+sequence and the repeat guard. Frozen Layout A is unchanged.

@@ -86,7 +86,12 @@ document.addEventListener('click',e=>{
   }
   spotlight(card===focusedCard?null:card);
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(issueMode)location.href=document.querySelector('.close').href;else spotlight(null);}});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||e.repeat)return;
+  e.preventDefault();
+  if(focusedCard)spotlight(null);
+  else location.href=document.querySelector('.close').href;
+});
 carousel.addEventListener('scroll',()=>{if(focusedCard)spotlight(null);},{passive:true});
 function step(){return carousel.querySelector('.card').getBoundingClientRect().width+parseFloat(getComputedStyle(carousel).gap);}
 function moveTo(index,smooth=true){const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;carousel.scrollTo({left:Math.min(carousel.scrollWidth-carousel.clientWidth,Math.max(0,index)*step()),behavior:smooth&&!reduce?'smooth':'instant'});}
