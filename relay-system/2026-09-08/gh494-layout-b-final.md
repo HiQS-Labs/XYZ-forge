@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -59,5 +59,22 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer · codex · Round 1
+
+swept file: yes
+
+- [Should] **R1 — preserve amber lane health independently of recent activity.** `.relay-artifacts/layout-b.html:33` uses `Math.min(...known.map(progressAge))` to choose amber, so the shipped Aegis fixture (Claude 83m, Codex 18m; `docs/mockups/flight-dashboard/demo-data.js:12`) renders green “Recent progress.” Its older lane also disappears because `waitingMarkup` only includes >=120m (`.relay-artifacts/layout-b.html:37`). The carried-forward contract uses the worst fresh known lane; current entry implements red > amber > unknown > green (`docs/mockups/flight-dashboard/index.html:54` and `:55`). Fix: determine health from all lanes, keeping latest progress as a separate timestamp, and retain the 60–119m lane's check-in context outside “Issues active this hour.” Check mixed 83m/18m and 59/60/119/120 boundaries; a recent event must not clear amber.
+- [Should] **R2 — retain agent context when a lane has no last-hour event.** Agents/tasks appear only in event/issue rows or >=120m waiting rows (`.relay-artifacts/layout-b.html:35`, `:36`, `:37`, `:38`). Orion's existing Codex indexing lane (`docs/mockups/flight-dashboard/demo-data.js:16`) therefore has only an agent count and generic missing-data copy, with no agent name/task to reconnect with. A known lane aged 60–119m has the same omission. Fix: retain compact lane context inside the card, separate from last-hour issues; show the agent/task and quiet/unknown state, and label any historical/unconfirmed issue accordingly. Check Orion and a lone 60m lane without admitting either to active-hour issues.
+- [Pass] Cards/X structure and intended geometry are present: three-card width calculation, edge-only mask, inner vertical overflow, responsive one-card fallback, and initial offset (`.relay-artifacts/layout-b.html:7`, `:10`, `:13`, `:56`); X explicitly targets `layout-a.html` (`:18`). Browser geometry remains producer-reported evidence (`docs/mockups/flight-dashboard/layout-b-verification.json:11`–`:14`), not a new visual run this turn.
+- [Pass] Event attribution uses the explicit lane, excludes unknown/null progress, applies `0 <= age < 60`, and deduplicates issues from those filtered events (`.relay-artifacts/layout-b.html:31`–`:32`). Rebalance's old #196 is separated from recent #194 by the fixture and waiting path (`docs/mockups/flight-dashboard/demo-data.js:11`; `.relay-artifacts/layout-b.html:37`).
+- [Pass] Keyboard/mouse paths and parallel-touch/pinch separation are present (`.relay-artifacts/layout-b.html:41`–`:55`). The recorded gesture checks explicitly limit their claims to synthetic Chromium inputs, with no physical trackpad/iOS test (`docs/mockups/flight-dashboard/layout-b-verification.json:29`–`:45`). No independent gesture execution performed here.
+- [Pass] Read-only SHA-256 checks match frozen A's `f6a71e98…46607` in `layout-a.sha256:1`, B's `0f6fa88b…64b3f`, shared data and current entry hashes in `docs/mockups/flight-dashboard/layout-b-verification.json:3`–`:8`, and the verification receipt hash in `docs/mockups/flight-dashboard/provenance.jsonl:3`. The seeded artifact and canonical B are byte-identical by hash. Shared definitions load before their consumers (`docs/mockups/flight-dashboard/index.html:46`; `.relay-artifacts/layout-b.html:21`). No additional defects found in the fully read current entry or shared fixtures; frozen A source was not re-reviewed.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: R1 and R2 leave the carried-forward lane warning/context contract incomplete. Whole-file static review of B, current entry and shared fixtures, plus supplied evidence and local hash checks. This isolated checkout has no listed graph index; direct source was used. No artifact/source execution, suites, source edits, or git commands.
+
+Handing off to designer (Producer) — address R1/R2, refresh focused evidence, and take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
