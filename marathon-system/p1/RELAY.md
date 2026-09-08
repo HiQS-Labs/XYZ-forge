@@ -1,6 +1,7 @@
 # Marathon Phase p1
-STATUS: Open
-NEXT: codex (Builder)
+STATUS: Closed — stub fixture debris from test/marathon-drive.sh leaking into this real clone
+  (see GH issue for the actual bug). Not real work.
+NEXT: none
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=2 -->
 
