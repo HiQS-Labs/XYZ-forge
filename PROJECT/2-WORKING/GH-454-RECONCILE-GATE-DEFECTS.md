@@ -145,10 +145,15 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "kind": "grep_present",
       "path": "utils/timeline/export_timeline.py",
       "pattern": "(codename or version).lower()",
-      "note": "bug evidence: None.lower() crash on a release with neither codename nor version"
+      "note": "bug evidence: None.lower() crash on a release with neither codename nor version",
+      "type": "grep_present"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh454-reconciler-defects.sh",
+      "note": "new lane artifact \u2014 must not exist yet (pre-work pin)"
     }
   ],
   "artifacts": [
@@ -173,3 +178,9 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   ]
 }
 ```
+
+## Acceptance
+
+- A release with neither codename nor version no longer aborts `wave_reconcile` (placeholder slug or skip-with-warning).
+- The reconciler's PDDA full-gate overreach is scoped to its documented surface.
+- Both defects pinned red-first in a new suite.

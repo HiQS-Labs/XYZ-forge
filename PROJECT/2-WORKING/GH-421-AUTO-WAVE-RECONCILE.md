@@ -266,18 +266,33 @@ is one policy change away from failing every automated run.
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/py/wave_reconcile.py", "pattern": "manifest\", \"ship" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_absent",
+      "path": "utils/py/wave_reconcile.py",
+      "pattern": "manifest\", \"ship"
+    }
+  ],
+  "artifacts": [
     "utils/py/wave_reconcile.py",
     "utils/py/releases_app.py",
     ".github/workflows/wave-reconcile.yml",
     "test/gh421-auto-wave-reconcile.sh",
     "test/baselines/GH-421-negative-control.md"
   ],
-  "remediation": { "source": "issue#421", "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#421",
+    "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte"
+  },
+  "lanes": {
+    "agy_safe": [],
+    "orchestrator_only": []
+  }
 }
 ```
 
@@ -292,34 +307,32 @@ is one policy change away from failing every automated run.
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "kind": "grep_present",
-      "path": ".github/workflows/ci.yml",
-      "pattern": "contents: read",
-      "note": "bug evidence: CI cannot commit reconciled artifacts even if it ran the reconciler"
+      "type": "grep_absent",
+      "path": "utils/py/wave_reconcile.py",
+      "pattern": "manifest\", \"ship"
     }
   ],
   "artifacts": [
-    ".github/workflows/ci.yml",
     "utils/py/wave_reconcile.py",
-    "test/gh421-auto-reconcile.sh",
-    "test/baselines/"
+    "utils/py/releases_app.py",
+    ".github/workflows/wave-reconcile.yml",
+    "test/gh421-auto-wave-reconcile.sh",
+    "test/baselines/GH-421-negative-control.md"
   ],
   "remediation": {
     "source": "issue#421",
-    "criteria": "pull_request closed+merged on development invokes wave_reconcile --pr N --gate; idempotent (dry-run twice byte-identical), serialized (concurrency queue), least-privilege contents:write on the job only; baseline reds in test/baselines/ witnessed first"
+    "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte"
   },
   "lanes": {
-    "agy_safe": [
-      "utils/py/",
-      "utils/timeline/",
-      "test/"
-    ],
-    "orchestrator_only": [
-      ".github/workflows/ci.yml"
-    ]
-  },
-  "artifacts_new": [
-    "test/gh421-auto-reconcile.sh"
-  ]
+    "agy_safe": [],
+    "orchestrator_only": []
+  }
 }
 ```
+
+## Acceptance
+
+- `pull_request: closed` + merged + `base.ref == development` invokes `wave_reconcile --pr N --gate`.
+- Idempotent: second run writes nothing and is byte-identical; serialized via a concurrency group (queue, never cancel).
+- Least privilege: `contents: write` on the reconcile job only.
+- Baseline reds witnessed first in `test/baselines/` (dialed_in not left; 2-WORKING+closed not left; releases-mode no fake exit 0).

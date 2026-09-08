@@ -93,17 +93,32 @@ Two fixes, both here because GH-421's writes are unsafe without them:
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/py/releases_app.py", "pattern": "status-marker" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_absent",
+      "path": "utils/py/releases_app.py",
+      "pattern": "status-marker"
+    }
+  ],
+  "artifacts": [
     "utils/py/releases_app.py",
     "utils/py/wave_reconcile.py",
     "test/gh424-roadmap-status-marker.sh",
     "test/baselines/GH-424-negative-control.md"
   ],
-  "remediation": { "source": "issue#424", "criteria": "`roadmap update --status-marker` sets the column through a receipted write and rejects any value outside the enum; the rollback journal snapshots RELEASES.generated.md before the first ledger mutation, so an injected failure restores DB, dump and every generated artifact byte-for-byte and releases check comes back clean" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#424",
+    "criteria": "`roadmap update --status-marker` sets the column through a receipted write and rejects any value outside the enum; the rollback journal snapshots RELEASES.generated.md before the first ledger mutation, so an injected failure restores DB, dump and every generated artifact byte-for-byte and releases check comes back clean"
+  },
+  "lanes": {
+    "agy_safe": [],
+    "orchestrator_only": []
+  }
 }
 ```
 
@@ -145,3 +160,9 @@ Two fixes, both here because GH-421's writes are unsafe without them:
   ]
 }
 ```
+
+## Acceptance
+
+- A CLI verb transitions `status_marker` on a named row and refuses without one.
+- The dashboard regenerates to reflect the marker change.
+- Bulk transition of stale 🆕 rows works without hand-editing SQL; pinned by a new suite.

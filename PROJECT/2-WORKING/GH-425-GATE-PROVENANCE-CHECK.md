@@ -85,16 +85,31 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "test", "pattern": "gh425-gate-provenance" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_absent",
+      "path": "test",
+      "pattern": "gh425-gate-provenance"
+    }
+  ],
+  "artifacts": [
     "utils/py/wave_reconcile.py",
-    "test/gh425-gate-provenance.sh",
+    "test/gh425-gate-provenance-pr.sh",
     "test/baselines/GH-425-negative-control.md"
   ],
-  "remediation": { "source": "issue#425", "criteria": "--gate refuses a merged PR that has no receipt of its own even when other receipts exist in TESTS-RESULTS/; the success line names the receipt that matched; a missing TESTS-RESULTS/ still exits 6; a run without --gate is unaffected — or the flag is removed outright and its documentation with it" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#425",
+    "criteria": "--gate refuses a merged PR that has no receipt of its own even when other receipts exist in TESTS-RESULTS/; the success line names the receipt that matched; a missing TESTS-RESULTS/ still exits 6; a run without --gate is unaffected \u2014 or the flag is removed outright and its documentation with it"
+  },
+  "lanes": {
+    "agy_safe": [],
+    "orchestrator_only": []
+  }
 }
 ```
 
@@ -136,3 +151,9 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
   ]
 }
 ```
+
+## Acceptance
+
+- `--gate` fails when a merged PR's receipts carry a different PR number than the one being closed out.
+- `--gate` passes when receipts match the PR number.
+- Pinned red-first in a new suite.

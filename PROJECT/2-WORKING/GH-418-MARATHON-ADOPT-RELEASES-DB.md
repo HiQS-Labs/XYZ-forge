@@ -77,17 +77,32 @@ on hand-curated input; the planner that should remove that curation is wired to 
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/py/_marathon_plan.py", "pattern": "ROADMAP_SOURCE" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_absent",
+      "path": "utils/py/_marathon_plan.py",
+      "pattern": "ROADMAP_SOURCE"
+    }
+  ],
+  "artifacts": [
     "utils/py/marathon_plan.py",
     "utils/py/_marathon_plan.py",
     "test/gh418-planner-ledger-source.sh",
     "test/baselines/GH-418-negative-control.md"
   ],
-  "remediation": { "source": "issue#418", "criteria": "in releases-mode the planner sources items from roadmap_items, legacy mode is unchanged, and the generated plan names its real source" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#418",
+    "criteria": "in releases-mode the planner sources items from roadmap_items, legacy mode is unchanged, and the generated plan names its real source"
+  },
+  "lanes": {
+    "agy_safe": [],
+    "orchestrator_only": []
+  }
 }
 ```
 

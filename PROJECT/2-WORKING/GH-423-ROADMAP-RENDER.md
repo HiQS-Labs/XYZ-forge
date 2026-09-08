@@ -88,16 +88,31 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/py/releases_app.py", "pattern": "roadmap_render" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_absent",
+      "path": "utils/py/releases_app.py",
+      "pattern": "roadmap_render"
+    }
+  ],
+  "artifacts": [
     "utils/py/releases_app.py",
     "test/gh423-roadmap-render.sh",
     "test/baselines/GH-423-negative-control.md"
   ],
-  "remediation": { "source": "issue#423", "criteria": "`releases roadmap render` emits roadmap_items as a ## Ledger document; both existing ledger-bullet parsers agree on its output and recover every row; rendering twice over an unchanged DB is byte-identical; --out refuses to write a tracked ROADMAP.md; _marathon_plan.py is byte-unchanged" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#423",
+    "criteria": "`releases roadmap render` emits roadmap_items as a ## Ledger document; both existing ledger-bullet parsers agree on its output and recover every row; rendering twice over an unchanged DB is byte-identical; --out refuses to write a tracked ROADMAP.md; _marathon_plan.py is byte-unchanged"
+  },
+  "lanes": {
+    "agy_safe": [],
+    "orchestrator_only": []
+  }
 }
 ```
 
@@ -138,3 +153,9 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
   ]
 }
 ```
+
+## Acceptance
+
+- `releases roadmap render` writes ledger markdown that `marathon_plan.py`'s existing parser accepts, unchanged.
+- Render output covers all `roadmap_items` rows, including the DB-only ones.
+- Render → plan round-trip pinned by a new suite.
