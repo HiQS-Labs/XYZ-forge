@@ -549,7 +549,7 @@ Reference artifacts: [layout guide](../../docs/mockups/flight-dashboard/LAYOUTS.
 [B](../../docs/mockups/flight-dashboard/layout-b.html),
 [C](../../docs/mockups/flight-dashboard/layout-c.html),
 [design provenance](../../docs/mockups/flight-dashboard/provenance.jsonl).
-Plan review: [consumer contract approved in round 2](../../relay-system/2026-09-08/gh494-consumer-plan.md), then [modularity and tokenization approved by Agy in round 1](../../relay-system/2026-09-08/gh494-modularity-token-qa.md); both review drivers exited 0. This is document review, not runtime verification.
+Plan review: [consumer contract approved in round 2](../../relay-system/2026-09-08/gh494-consumer-plan.md), [modularity and tokenization approved by Agy in round 1](../../relay-system/2026-09-08/gh494-modularity-token-qa.md), and the subsequent [source-neutral connector revision approved by Agy in round 1](../../relay-system/2026-09-08/gh494-connector-architecture-qa.md); all review drivers exited 0. This is document review, not runtime verification.
 
 Historical design decisions remain in Git history and the existing review threads;
 this document is the single current implementation plan.
