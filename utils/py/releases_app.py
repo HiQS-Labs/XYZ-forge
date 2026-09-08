@@ -3593,7 +3593,7 @@ def cmd_roadmap_render(args):
             refuse("roadmap-render-output", "--out must not overwrite a releases ledger artifact")
         # Check the destination's repository, including foreign repos and symlink targets.
         # Fail closed when git cannot establish whether ROADMAP.md is tracked.
-        for candidate in dict.fromkeys((os.path.abspath(args.out), out)):
+        for candidate in dict.fromkeys((out, os.path.abspath(args.out))):
             if os.path.basename(candidate) != ROADMAP_NAME:
                 continue
             try:
