@@ -1,6 +1,5 @@
 # Marathon Phase p1
 STATUS: Closed — stub fixture debris from test/marathon-drive.sh + test/gh280-jog-marathon-adapter.sh leaking into this real clone via bare $PWD (GH issue #507). Not real work.
-  (see GH issue for the actual bug). Not real work.
 NEXT: none
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=2 -->
