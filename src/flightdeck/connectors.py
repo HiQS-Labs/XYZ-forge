@@ -36,10 +36,33 @@ def canonical_github_key(stored_name: Any, html_url: Any = None) -> str | None:
     return repo_key(stored_name)
 
 
-def issue_numbers(text: str) -> list[int]:
-    """Extract explicit issue references, including GitHub issue URLs."""
-    matches = re.findall(r"(?:GH-|#|\bissue\s+)(\d+)\b|/issues/(\d+)\b", text, re.I)
-    return list(dict.fromkeys(int(left or right) for left, right in matches))
+def work_references(text: str, repo: str | None = None) -> dict[str, list[int]]:
+    """Keep issue and PR intent separate; qualified URLs must match this repo."""
+    refs: dict[str, list[int]] = {"issues": [], "prs": []}
+    pattern = r"https?://[^\s<>]+|(?:(?P<kind>PR|pull\s+request)\s*#?|(GH-|#|\bissue\s+))(?P<number>\d+)\b"
+    for match in re.finditer(pattern, text, re.I):
+        if match.group("number"):
+            kind = "prs" if match.group("kind") else "issues"
+            number = int(match.group("number"))
+        else:
+            try:
+                url = urlsplit(match.group().rstrip(').,]'))
+            except ValueError:
+                continue
+            parts = url.path.strip('/').split('/')
+            if url.hostname != "github.com" or len(parts) < 4 or parts[2] not in {"issues", "pull"} or not parts[3].isdigit():
+                continue
+            target = repo_key('/'.join(parts[:2]))
+            if repo and target != repo and not (repo.startswith('local/') and target.rsplit('/', 1)[-1] == repo.rsplit('/', 1)[-1]):
+                continue
+            kind, number = ("prs" if parts[2] == "pull" else "issues"), int(parts[3])
+        if number > 0 and number not in refs[kind]:
+            refs[kind].append(number)
+    return refs
+
+
+def issue_numbers(text: str, repo: str | None = None) -> list[int]:
+    return work_references(text, repo)["issues"]
 
 
 def _available(batch: dict[str, Any], observed: str | None, coverage: str = "partial") -> dict[str, Any]:
@@ -57,12 +80,17 @@ def read_clio(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
     repos: dict[str, dict[str, Any]] = {}
     lanes: dict[tuple[str, str], dict[str, Any]] = {}
     rows = bounded_text(path).splitlines()[-MAX_RECORDS:]
+    parsed = []
     for line in rows:
         deadline_guard(deadline)
         try:
             row = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if isinstance(row, dict) and parse_time(row.get("timestamp")):
+            parsed.append(row)
+    for row in sorted(parsed, key=lambda row: datetime.fromisoformat(parse_time(row["timestamp"]).replace("Z", "+00:00")).timestamp()):
+        deadline_guard(deadline)
         occurred = parse_time(row.get("timestamp"))
         key = repo_key(row.get("repo"))
         prompt_full = " ".join(str(row.get("prompt") or "").split())
@@ -71,32 +99,31 @@ def read_clio(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             continue
         newest = max(newest or occurred, occurred)
         repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [str(row.get("repo"))], "source_refs": ["clio"]})
-        referenced_issues = issue_numbers(prompt_full)
+        refs = work_references(prompt_full, key)
+        referenced_issues = refs["issues"]
         session = str(row.get("session_id") or row.get("id") or occurred)
         lane_key = (key, session)
         prior = lanes.get(lane_key, {})
+        if prior:
+            latest = datetime.fromisoformat(occurred.replace("Z", "+00:00")).timestamp()
+            previous = datetime.fromisoformat(prior["last_prompt_at"].replace("Z", "+00:00")).timestamp()
+            if (latest - previous) > 7200:
+                prior = {}
+        has_reference = bool(referenced_issues or refs["prs"])
         lane = {
-            "id": f"clio:{session}",
+            "id": f"clio:{key}:{session}",
             "repo_id": key, "issue": referenced_issues[0] if referenced_issues else None,
-            "issues": referenced_issues or prior.get("issues", []),
-            "agent": row.get("agent") or "Agent", "session_id": row.get("session_id"),
+            "issues": referenced_issues if has_reference else prior.get("issues", []),
+            "prs": refs["prs"] if has_reference else prior.get("prs", []),
+            "agent": row.get("agent") or prior.get("agent") or "Agent", "session_id": row.get("session_id"),
             "branch": row.get("branch") or prior.get("branch"), "device": row.get("machine") or prior.get("device"),
             "task": prompt, "last_prompt_at": occurred, "last_progress_at": None,
             "confidence": "inferred", "source_ref": "clio",
-            "issue_context_at": occurred if referenced_issues else prior.get("issue_context_at"),
+            "issue_context_at": occurred if has_reference else prior.get("issue_context_at"),
         }
-        if not lane["issue"]:
-            lane["issue"] = prior.get("issue")
-        if not prior or str(occurred) >= str(prior.get("last_prompt_at") or ""):
-            lanes[lane_key] = lane
+        lane["issue"] = next(iter(lane["issues"]), None)
+        lanes[lane_key] = lane
     batch["repos"] = list(repos.values())
-    for lane in lanes.values():
-        if lane.get("issue") and lane.get("issue_context_at"):
-            latest = datetime.fromisoformat(str(lane["last_prompt_at"]).replace("Z", "+00:00"))
-            context = datetime.fromisoformat(str(lane["issue_context_at"]).replace("Z", "+00:00"))
-            if (latest - context).total_seconds() > 7200:
-                lane["issue"] = None
-                lane["issues"] = []
     batch["lanes"] = list(lanes.values())
     return _available(batch, newest, "partial")
 
@@ -126,7 +153,7 @@ def read_git_pulse(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [raw_repo], "source_refs": ["git_pulse"]})
             batch["events"].append({
                 "id": f"pulse:{path.name}:{epoch}:{sha}", "repo_id": key,
-                "kind": "commit", "summary": subject[:240], "occurred_at": occurred,
+                "kind": "commit", "summary": subject[:240], "issues": issue_numbers(subject, key), "occurred_at": occurred,
                 "observed_at": datetime_from_mtime(path), "sha": sha, "branch": branch,
                 "source_ref": "git_pulse", "confidence": "attested",
             })
@@ -187,16 +214,16 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
              ORDER BY CASE link_kind WHEN 'closes' THEN 0 ELSE 1 END, target_number
              LIMIT 5000
         """)
-        pr_issues: dict[tuple[str, int], int] = {}
+        pr_issues: dict[tuple[str, int], list[int]] = {}
         for link in link_rows:
             key = repo_key(link["repo_full_name"])
-            if key:
-                pr_issues.setdefault((key, int(link["source_number"])), int(link["target_number"]))
+            if key and link["link_kind"] == "closes":
+                pr_issues.setdefault((key, int(link["source_number"])), []).append(int(link["target_number"]))
         items = _sqlite_rows(conn, """
             SELECT repo_full_name,item_type,number,title,state,is_draft,is_merged,head_sha,
                    mergeable_state,review_decision,check_status,html_url,updated_at,fetched_at
               FROM github_items
-             WHERE state='open'
+             WHERE item_type='issue' OR state='open'
              ORDER BY COALESCE(updated_at,fetched_at) DESC LIMIT 2000
         """)
         for row in items:
@@ -211,7 +238,10 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             normalized = {"repo_id": key, "number": row["number"], "title": row["title"], "state": row["state"], "updated_at": row["updated_at"], "fetched_at": row["fetched_at"], "url": row["html_url"], "source_ref": "rebalance"}
             if row["item_type"] == "pull_request":
                 normalized.update({k: row[k] for k in ("is_draft", "is_merged", "head_sha", "mergeable_state", "review_decision", "check_status")})
-                normalized["issue"] = pr_issues.get((key, int(row["number"])))
+                title_issues = issue_numbers(row["title"] or "", key)
+                normalized["issues"] = title_issues or pr_issues.get((repo_key(row["repo_full_name"]), int(row["number"])), [])
+                normalized["issue"] = next(iter(normalized["issues"]), None)
+                normalized["issue_basis"] = "PR title (inferred)" if title_issues else "Cached closing link"
             target.append(normalized)
         for row in _sqlite_rows(conn, "SELECT repo_full_name,sha,message,committed_at,html_url FROM github_direct_commits ORDER BY committed_at DESC LIMIT 2000"):
             key = canonical_github_key(row["repo_full_name"], row["html_url"])
@@ -220,7 +250,7 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
                 repo = repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [], "source_refs": ["rebalance"]})
                 if row["repo_full_name"] not in repo["aliases"]:
                     repo["aliases"].append(row["repo_full_name"])
-                batch["events"].append({"id": f"rebalance:{key}:{row['sha']}", "repo_id": key, "kind": "commit", "summary": row["message"] or "Commit", "occurred_at": occurred, "observed_at": occurred, "sha": row["sha"], "url": row["html_url"], "source_ref": "rebalance", "confidence": "attested"})
+                batch["events"].append({"id": f"rebalance:{key}:{row['sha']}", "repo_id": key, "kind": "commit", "summary": row["message"] or "Commit", "issues": issue_numbers((row["message"] or "").split("\n", 1)[0], key), "occurred_at": occurred, "observed_at": occurred, "sha": row["sha"], "url": row["html_url"], "source_ref": "rebalance", "confidence": "attested"})
         batch["repos"] = list(repos.values())
         observed = max((str(item.get("fetched_at") or "") for item in items), default=None) or utc_now()
         return _available(batch, observed, "partial")

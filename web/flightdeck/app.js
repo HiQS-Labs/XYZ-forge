@@ -1,3 +1,4 @@
+import {numbers, laneIssues, issueCards} from './issue-context.mjs';
 'use strict';
 
 const $ = id => document.getElementById(id);
@@ -37,7 +38,7 @@ function health(repo) {
   const age = ageMinutes(repo.last_progress_at);
   const intentAge = ageMinutes(repo.last_intent_at);
   if (age !== null && age < 60) return {tone: 'green', label: 'Progress this hour', detail: `${ageLabel(repo.last_progress_at)} ago`};
-  if (intentAge !== null && intentAge < 60) return {tone: 'green', label: 'Agent active · progress pending', detail: `Prompt ${ageLabel(repo.last_intent_at)} ago`};
+  if (intentAge !== null && intentAge < 60) return {tone: 'green', label: 'Recent intent · progress pending', detail: `Prompt ${ageLabel(repo.last_intent_at)} ago`};
   const relevant = (state.snapshot?.sources || []).filter(source => sourcesFor(repo).includes(source.id));
   const complete = relevant.length > 0 && relevant.every(source => source.availability === 'ok' && source.coverage === 'complete');
   if (age !== null && age < 120) return {tone: 'amber', label: 'Quiet · check in', detail: `${ageLabel(repo.last_progress_at)} since progress`};
@@ -65,15 +66,8 @@ function addTimeline(parent, events) {
     parent.append(row);
   });
 }
-function laneIssues(lane) {
-  return [...new Set([...(lane.issues || []), lane.issue].filter(Number.isInteger))];
-}
-function addIssues(parent, issues, lanes) {
-  const byNumber = new Map();
-  issues.forEach(issue => byNumber.set(issue.number, issue));
-  lanes.forEach(lane => laneIssues(lane).forEach(number => {
-    if (!byNumber.has(number)) byNumber.set(number, {number, title: lane.task, inferred: true});
-  }));
+function addIssues(parent, issues) {
+  const byNumber = new Map(issues.map(issue => [issue.number, issue]));
   if (!byNumber.size) return addEmpty(parent, 'No source-linked issue context.');
   [...byNumber.values()].slice(0, 4).forEach(issue => {
     const row = node('div', 'row');
@@ -96,12 +90,14 @@ function addPrs(parent, prs) {
 function repoCard(repo, index, total, issue = null) {
   const card = refs.template.content.firstElementChild.cloneNode(true);
   const cardId = issue ? `${repo.id}#${issue.number}` : repo.id;
-  const events = recent(repo.events || [], 'occurred_at').filter(event => !issue || event.issue === issue.number);
-  const allLanes = issue ? (repo.lanes || []).filter(lane => laneIssues(lane).includes(issue.number)) : (repo.lanes || []);
+  const events = recent(repo.events || [], 'occurred_at').filter(event => !issue || laneIssues(event, repo).includes(issue.number));
+  const allLanes = issue ? (repo.lanes || []).filter(lane => laneIssues(lane, repo).includes(issue.number)) : (repo.lanes || []);
   const lanes = issue ? allLanes : recent(allLanes, 'last_prompt_at');
-  const issues = issue ? [issue] : recent(repo.issues || [], 'updated_at');
-  const prs = issue ? (repo.prs || []).filter(pr => pr.issue === issue.number) : (repo.prs || []);
-  const status = health(repo);
+  const issues = issue ? [issue] : issueCards(repo);
+  const prs = issue ? (repo.prs || []).filter(pr => numbers(pr).includes(issue.number)) : (repo.prs || []);
+  const status = issue ? health({...repo,
+    last_progress_at: (repo.events || []).find(e => laneIssues(e, repo).includes(issue.number))?.occurred_at,
+    last_intent_at: lanes[0]?.last_prompt_at}) : health(repo);
   card.dataset.cardId = cardId;
   card.dataset.repoId = repo.id;
   if (issue) card.dataset.issue = String(issue.number);
@@ -110,7 +106,7 @@ function repoCard(repo, index, total, issue = null) {
   card.querySelector('.repo-mark').textContent = issue ? `#${issue.number}` : initials(repo.name);
   card.querySelector('.position').textContent = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
   card.querySelector('.repo-name').textContent = issue ? (issue.title || `Issue #${issue.number}`) : repo.name;
-  card.querySelector('.repo-summary').textContent = issue ? repo.name : (repo.summary || 'Keep this lane visible and moving.');
+  card.querySelector('.repo-summary').textContent = issue ? `${repo.name} · ${issue.context_reason} · ${ageLabel(issue.context_at)} ago` : (repo.summary || 'Keep this lane visible and moving.');
   const healthEl = card.querySelector('.health');
   healthEl.classList.add(status.tone);
   healthEl.querySelector('strong').textContent = status.label;
@@ -133,7 +129,7 @@ function repoCard(repo, index, total, issue = null) {
       row.append(node('span', 'badge', lane.agent || 'Agent'), node('p', '', lane.task || 'Intent unavailable'));
       issueBox.append(row);
     });
-  } else addIssues(card.querySelector('.issues'), issues, lanes);
+  } else addIssues(card.querySelector('.issues'), issues);
   card.querySelector('.pr-count').textContent = `${prs.length} cached`;
   addPrs(card.querySelector('.prs'), prs);
   card.querySelector('.connector-evidence').textContent = sourcesFor(repo).join(' · ') || 'source unknown';
@@ -159,13 +155,6 @@ function selectedRepos() {
   const saved = JSON.parse(localStorage.getItem('flightdeck-repos') || '[]');
   const selected = Array.isArray(saved) ? saved.map(id => repos.find(repo => repo.id === id)).filter(Boolean) : [];
   return [...selected, ...repos.filter(repo => !selected.includes(repo))].slice(0, 7);
-}
-function issueCards(repo) {
-  const byNumber = new Map(recent(repo.issues || [], 'updated_at').map(issue => [issue.number, issue]));
-  recent(repo.lanes || [], 'last_prompt_at').forEach(lane => laneIssues(lane).forEach(number => {
-    if (!byNumber.has(number)) byNumber.set(number, {number, title: lane.task, inferred: true});
-  }));
-  return [...byNumber.values()];
 }
 function renderSources() {
   refs.sourceStrip.replaceChildren();
@@ -221,8 +210,8 @@ function render() {
   cards.forEach(card => refs.repos.append(card));
   if (!cards.length && state.view === 'c') {
     const repo = (state.snapshot?.repos || []).find(item => item.id === state.repoId);
-    $('emptyTitle').textContent = 'No issue-linked activity this hour.';
-    $('emptyCopy').textContent = repo ? `${repo.name} remains selected. Recent source data did not establish an active issue; older context is preserved in the overview.` : 'The selected repository is unavailable in this snapshot.';
+    $('emptyTitle').textContent = 'No issue-linked work context observed.';
+    $('emptyCopy').textContent = repo ? `${repo.name} remains selected. No issue context was observed today or linked to a cached open PR. Source coverage may be incomplete.` : 'The selected repository is unavailable in this snapshot.';
   } else {
     $('emptyTitle').textContent = 'Flightdeck is ready for connectors.';
     $('emptyCopy').textContent = 'Start or configure any incoming connector. The dashboard itself remains available.';
@@ -243,7 +232,7 @@ function backOneLevel() {
   if (state.view === 'b') return navigate('a');
 }
 function openDetail(repo, issue = null) {
-  const lanes = issue ? (repo.lanes || []).filter(lane => lane.issue === issue.number) : (repo.lanes || []);
+  const lanes = issue ? (repo.lanes || []).filter(lane => laneIssues(lane, repo).includes(issue.number)) : (repo.lanes || []);
   const lane = lanes[0];
   refs.detailEyebrow.textContent = `${repo.name}${issue ? ` · #${issue.number}` : ''}`;
   refs.detailTitle.textContent = lane?.agent ? `Continue with ${lane.agent}` : 'Re-establish this lane';
