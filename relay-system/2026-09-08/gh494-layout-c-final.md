@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -58,5 +58,22 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — round 1
+
+swept file: yes
+
+VERDICT: FAIL
+
+Verdict: Changes requested
+
+Basis: Read all 114 lines of the artifact and all requested supporting view/data/style/evidence files, plus the Layout C contract. Artifact and source are byte-identical (17,767 bytes). Source review and read-only hash checks only; no artifact execution, browser run, source edits, git commands or project suites. Graph tools were unavailable, so exact source was used. Browser outcomes below remain producer-reported.
+
+- [Should] Preserve the advancing sample clock across B → C → B. `.relay-artifacts/focus-cards.js:16` resets `loadedAt=Date.now()` on every page load, and lines 18–19 derive all aging from that new load. Navigation at lines 82–83 carries only repo/position; the return URL at lines 58–62 likewise carries no clock state. Consequently, after 20 minutes the Memory issue #72 event (initial age 42, `docs/mockups/flight-dashboard/demo-data.js:15`) has aged out at 62 minutes, but opening C makes it 42 minutes old and visible again; returning to B resets it again. Waiting/check-in thresholds can regress in the same way. This violates coherent aging across the new drill-down. Fix: carry one validated sample-clock origin through both navigation directions (or retain it in session state), while preserving direct-open initialization. Have the producer check an event crossing 60 minutes and a lane crossing 120 minutes, then navigate both ways and assert neither becomes younger. This finding follows directly from the clock/navigation expressions; it was not browser-reproduced this turn.
+- [Pass] Issue grouping retains original lane indices; PR filtering uses those indices, and event lookup remaps them into each issue's local lane list (`.relay-artifacts/focus-cards.js:7–13`, `:22–27`). All lane issues are retained independently of recent activity. Unknown association and PR inventory remain explicit (`:43`, `:47`, `:51`); folders are labeled “Shared repo folders; issue-specific ownership is not inferred.” (`:52`). No change requested.
+- [Pass] Source wiring implements B's second-click drill-down, C-only spotlight toggling, X/Escape return, saved horizontal position and repo spotlight restoration (`.relay-artifacts/focus-cards.js:57–88`, `:105–112`). B and C load the same CSS/data/controller (`docs/mockups/flight-dashboard/layout-b.html:6`, `:13–14`; `layout-c.html:6`, `:13–14`); safe centering and responsive card counts are present (`focus-cards.css:8–12`). Physical gesture behavior and 1/2/many-card rendering were not independently exercised. No additional source defect found in the full-file gesture/keyboard sweep (`.relay-artifacts/focus-cards.js:89–104`).
+- [Pass] Frozen A's computed SHA-256 matches `docs/mockups/flight-dashboard/layout-a.sha256`: `f6a71e98692acaf81a1e3cbdd4b58ad7cd6b2ec844bf3a6bb5e8f83695446607`. All five current artifact hashes match the Layout C record in `docs/mockups/flight-dashboard/provenance.jsonl:5`, whose limits explicitly exclude live collection, physical device testing and a repeated runtime suite. No additional pre-existing defect identified beyond the clock reset now exposed by cross-page navigation.
+
+Handing off to designer (Producer) — preserve clock continuity, record the boundary/navigation checks, and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
