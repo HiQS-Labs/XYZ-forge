@@ -2,7 +2,7 @@
 gh_issue: 494
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/494
 title: Flightdeck — HTML consumer app and future Swift plan
-status: Plan in review — implementation not started
+status: Plan reviewed — implementation not started
 created: 2026-09-08
 updated: 2026-09-08
 owner: Codex
@@ -22,7 +22,7 @@ reversibility: Costly — shared read API and optional source-owned schema/expor
 
 | What was just completed | What's next |
 |---|---|
-| Layouts A/B/C and Escape navigation saved; existing Rebalance, Git Pulse, CLIO and Swift consumer paths traced. | Review this plan; then authorize implementation in fresh owner-repo clones. No collectors or production app code are built by this planning task. |
+| Layouts A/B/C and Escape navigation saved; existing Rebalance, Git Pulse, CLIO and Swift consumer paths traced. | Plan review passed; next is implementation in fresh owner-repo clones when requested. No collectors or production app code are built by this planning task. |
 
 ## Table of contents
 
@@ -464,5 +464,7 @@ Reference artifacts: [layout guide](../../docs/mockups/flight-dashboard/LAYOUTS.
 [B](../../docs/mockups/flight-dashboard/layout-b.html),
 [C](../../docs/mockups/flight-dashboard/layout-c.html),
 [design provenance](../../docs/mockups/flight-dashboard/provenance.jsonl).
+Plan review: [approved in round 2](../../relay-system/2026-09-08/gh494-consumer-plan.md); review driver exited 0. This is document review, not runtime verification.
+
 Historical design decisions remain in Git history and the existing review threads;
 this document is the single current implementation plan.
