@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -84,5 +84,25 @@ R2 Implemented: explicit observation freshness, >6 minute stale cutoff, summary 
 R3 Implemented: viewport, state boundary, countdown, copy-denial and nonempty/negative-count cases with expected outcomes.
 
 Reviewer: review the revised brief, answer its Review questions and resolve R1–R3. Keep the response concise. Your appended block MUST contain standalone `VERDICT: PASS` (approval) or `VERDICT: FAIL`, plus `Basis: ...` and `swept file: yes`. Set STATUS Approved only if approved. Do not run suites or edit artifacts. The harness commits your relay change.
+
+### Reviewer — codex — Round 2
+
+VERDICT: PASS
+Basis: R1–R3 are resolved; the complete brief meets the Definition of Done for HTML construction only.
+
+**Verdict: Approved.**
+
+swept file: yes
+
+Read all 116 lines, including grounding and rating rationale. No additional pre-existing defects identified within this design-brief scope.
+
+- [Pass] **R1 resolved — approval boundary.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:99` explicitly limits relay approval to HTML construction; `:80` reserves Swift planning until operator visual approval. Setup now gives concrete brief-review criteria. Retain these separate checkpoints.
+- [Pass] **R2 resolved — deterministic attention.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:53`–`:63` separates progress from observation freshness, defines the >6-minute/failed-observation gray state, retains last-known age, and specifies red/amber/unknown/green summary precedence and attention filtering. The mixed-lane expected result at `:90` preserves both overdue work and uncertainty. Retain these rules in the mock fixtures.
+- [Pass] **R3 resolved — falsifiable planned checks.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:87`–`:98` names viewport sizes, progress boundaries, mixed/missing/stale observations, fixed-day countdown boundaries, copy denial, nonempty checkout fixtures, a deliberately wrong total, empty search recovery, and local evidence retention. Execute these during construction; this review does not claim they already pass.
+- [Pass] **Review questions — coverage and scope are sufficient.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:47`–`:68` covers hourly recall through lane context and next actions, checkout names/counts, issue association and its basis, PR state, QA/merge/carry-forward items, and meaningful two-hour inactivity without claiming process liveness. Fixture labeling (`:51`), observation uncertainty (`:55`–`:62`), and mock-only controls (`:76`) make the action boundaries clear. The single self-contained file (`:72`–`:74`) and excluded services/actions (`:28`–`:31`) preserve Easy reversibility and leave Daily/Shutdown source ownership intact. Retain that scope.
+
+Evidence/limits: direct whole-file document review using SWE and debug-mantra's plan criteria. Existing-system implementation recon is not required for this standalone mockup; grounding and incident/rating history remain author-reported. Graph tools were unavailable in this session, so no graph coverage or telemetry audit is claimed. No artifact/source execution, rendering, git commands or project gates were run. Only this relay's header and new review block were edited; the harness owns validation and commit.
+
+**Handoff:** relay closed (Approved), no further turn needed. Designer may construct the HTML mockup; operator visual approval and the Swift plan remain later checkpoints.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
