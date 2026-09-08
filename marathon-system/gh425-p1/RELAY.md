@@ -251,3 +251,6 @@ I am approving these valid changes so the relay can successfully close and merge
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Extension · System
+relay-drive: round cap (6) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 7
