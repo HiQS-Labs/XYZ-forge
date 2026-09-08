@@ -64,3 +64,26 @@ gh365 `unset RT_SHARD` (red re-run in this clone first: `RT_SHARD=1 bash test/gh
 Full local gate (the PR self-escalates: `utils/ci-route.sh`/`validate.sh` are full_required surfaces), push through the gate, open PR against `development`, final relay QA per start-task, resolve findings.
 
 **QA gate:** PR open with correct base/head/scope; hosted macOS run attests the head SHA; relay QA Approved.
+
+## Lessons Learned (For Future Agents)
+
+1. **`git ls-remote <remote-name>` resolves the FETCH url, not the pushurl.** A remote may carry a
+   separate `pushurl`, so a freshness proof built on the remote's *name* can attest a server the push
+   never touches — and then declare a stale base fresh. Resolve the destination explicitly with
+   `git remote get-url --push` and probe that. Reproduced on a two-bare-repo fixture where the two
+   URLs disagreed by one commit; pinned by *"a pushurl that disagrees with the fetch url fails closed
+   to full"* in `test/gh544-pre-push-gate.sh`.
+2. **A probe's exit status is authoritative; its output is not.** A `ls-remote` that advertised one
+   ref and then lost the connection emits partial output that is byte-indistinguishable from a
+   complete answer. Deciding on "did it print anything" instead of "did it succeed" silently narrows
+   the gate on a failed probe. Every evidence-gathering step must fail closed on nonzero status even
+   when it produced plausible output.
+3. **Map a review comment to its commit before acting on it.** CodeRabbit anchors each finding to the
+   `commit_id` it reviewed. On this PR three of seven findings described commits already superseded at
+   head — including the headline Major, fixed 24 minutes before the review posted. Checking
+   `gh pr view <n> --json commits` against each comment's `commit_id` separates live findings from
+   stale ones and stops an agent from "fixing" code that already carries the fix.
+4. **Bounded gates only narrow on positive evidence.** Missing refs, unrelated histories, an empty
+   range, a push-by-URL, or an unresolvable base all return 1 and run the full suite. The narrow path
+   is the exception that must be earned; anything unproven is not a reason to skip work, it is the
+   reason to do all of it.
