@@ -21,7 +21,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Initial HTML and browser checks complete; brief and final HTML relay reviews approved. | Operator visual approval, then Swift app planning with 2–3 minute telemetry cadence. |
+| Layout A approved, frozen and pushed; Layout B built with browser checks and approved final review. | Operator feedback on Layout B; Swift planning follows the design checkpoint. |
 
 ## Scope and checkpoint
 
@@ -202,3 +202,5 @@ Home/End first appeared short because the assertion ran before smooth scrolling
 finished; the settled endpoint checks pass. Last-hour data filters and named issue
 joins, quiet/unknown states, desktop/narrow views and X destination passed browser
 checks. See layout-b-verification.json and the appended provenance record.
+
+Layout B final review: `relay-system/2026-09-08/gh494-layout-b-final.md`, round 2 Approved, driver exit 0. Amber lane health and unknown agent context were reproduced and corrected. The frozen Layout A hash remains unchanged.
