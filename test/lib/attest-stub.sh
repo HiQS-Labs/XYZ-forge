@@ -39,6 +39,10 @@ if ! "$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 
   "$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 2>&1 || true
 fi
 "$tick" done "$task" --agent "$reviewer" >/dev/null 2>&1 || true
+if ! "$tick" info "$task" 2>/dev/null | grep -qE '^status:[[:space:]]+done$'; then
+  echo "attest-stub: token $task does not read done after claim/done as $reviewer (TICK_REPO_ROOT=$TICK_REPO_ROOT) — the stub manufactured no valid success" >&2
+  exit 3
+fi
 python3 - "$HARNESS" "$relay_file" "$task" "$reviewer" "$target_root" <<'PY'
 import os, sys, time
 harness, relay_file, task, reviewer, target_root = sys.argv[1:6]

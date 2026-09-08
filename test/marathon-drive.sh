@@ -275,10 +275,19 @@ set -euo pipefail
 printf 'drift\n' >> "$A/drifted.txt"; git -C "$A" add drifted.txt; git -C "$A" commit -qm "post-approve source drift"
 HOOK
 chmod +x "$POST_APPROVE_DRIFT"
-RELAY_DRIVE_EXIT=0 run_driver --post-approve-cmd "bash $POST_APPROVE_DRIFT" >/dev/null 2>&1; rc=$?
+H4_RES="$WORK/h4-receipt.json"; rm -f "$H4_RES"
+H4_OUT="$(RELAY_DRIVE_EXIT=0 run_driver --post-approve-cmd "bash $POST_APPROVE_DRIFT" --result-file "$H4_RES" 2>&1)"; rc=$?
 [ "$rc" -eq 4 ] && pass "H4: post-approve source commit → exit 4 (approval not bound to the final candidate)" || fail "H4: exit=$rc (expected 4)"
 grep -q "candidate-drifted-from-reviewed-head" "$A/phases/p1/ESCALATION.md" 2>/dev/null \
   && pass "H4: escalation names candidate-drifted-from-reviewed-head" || fail "H4: ESCALATION.md missing the reason"
+grep -q "drifted.txt" <<<"$(git -C "$A" log -3 --stat)" \
+  && pass "H4: control — the hook really committed source (the SECOND bind is what refused)" || fail "H4: hook did not commit: $(git -C "$A" log -3 --stat | head -12)"
+grep -q "phase p1 post-approve: attested approval found but candidate" <<<"$(printf '%s\n' "$H4_OUT")" \
+  && pass "H4: the refusal came from the post-approve bind, after the approved event" || fail "H4: refusal not attributed to the post-approve bind"
+[ -s "$H4_RES" ] && python3 -c "import json,sys; d=json.load(open('$H4_RES')); sys.exit(0 if d['outcome']!='approved' and d.get('reviewed_candidate') is None else 1)" \
+  && pass "H4: receipt is not approved and carries no validated candidate" || fail "H4: receipt approved or missing: $(cat "$H4_RES" 2>/dev/null | head -c 300)"
+! grep -q "complete — STATUS: Approved, gate passed" <<<"$(printf '%s\n' "$H4_OUT")" \
+  && pass "H4: no green completion was emitted" || fail "H4: a green completion line was emitted"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 

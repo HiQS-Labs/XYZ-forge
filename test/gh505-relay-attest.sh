@@ -290,6 +290,10 @@ import json as _j
 d = _j.loads(rec); d.pop("attested_at"); open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None and "attested_at" in r[1], r
 d = _j.loads(rec); d["added_start"] = "12"; open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None and "integral" in r[1], r
 d = _j.loads(rec); d["relay_file"] = 7; open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None, r
+d = _j.loads(rec); d["relay_file_rel"] = {"x": 1}; open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None and "relay_file_rel" in r[1], r
+d = _j.loads(rec); d["isolated"] = "false"; open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None and "isolated" in r[1], r
+# candidate_ok never raises on a malformed record either
+cok, cwhy = relay_attest.candidate_ok({"isolated": True, "artifact_sha256": None, "reviewed_head": "HEAD", "relay_file_rel": {"x": 1}}, relay_attest.rev_parse(repo), repo); assert cok is False and "candidate check failed" in cwhy, cwhy
 open(rp, "w").write(rec); assert ok()
 PY
 
@@ -402,6 +406,10 @@ open(os.path.join(repo, "code.txt"), "w").write("x\n"); subprocess.run(["git", "
 drift = relay_attest.rev_parse(repo)
 r = land(False, GH_HEAD=drift, GH_MERGE_RC="0"); assert r[1] == "parked" and "candidate-drifted" in r[2], r
 assert "pr merge" not in open(os.environ["GH_ARGS"]).read()
+# I7: a record with malformed candidate fields → parked at the merge boundary, never a traceback
+rp7 = relay_attest.path_for("RELAY-gh7-jog-drive", repo); rec7 = json.load(open(rp7)); rec7["relay_file_rel"] = {"x": 1}; json.dump(rec7, open(rp7, "w"))
+r = land(False, GH_HEAD=head, GH_MERGE_RC="0"); assert r[1] == "parked" and "attestation" in r[2], r
+rec7["relay_file_rel"] = "relay-system/2026-09-08/gh7-jog-drive.md"; json.dump(rec7, open(rp7, "w"))
 # I5: auto branch, same three
 r = land(True, GH_HEAD=drift); assert r[1] == "parked" and "candidate-drifted" in r[2], r
 r = land(True, GH_HEAD=head, GH_MERGE_RC="1"); assert r[1] == "parked", r

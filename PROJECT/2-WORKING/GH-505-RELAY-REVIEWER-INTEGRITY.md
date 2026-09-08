@@ -206,7 +206,7 @@ re-examine with the code in hand.
 
 ## Risks and rollback
 
-- Every driven relay here and in vendored `.xyz/` copies needs `--reviewer`; missing it refuses at startup with a one-line reason. Migrated in this PR: marathon, jog (both executors), relay-xyz recipes, README.
+- Every driven relay here and in vendored `.xyz/` copies should name `--reviewer`; without it the driver warns once at startup and can never accept a terminal status (see Implementation dispositions). Migrated in this PR: marathon, jog (both executors), relay-xyz recipes, README.
 - Two commits per approval/forgery on tracked relay files. Gitignored relay files get the record only.
 - Rollback: revert the PR; `relay-attest/` under `.git` is inert.
 - Tripwire, first week: `forged-terminal`, `unattested-terminal`, `candidate-drifted-from-reviewed-head`, `attest-publish-failed` on stderr or in scratch.

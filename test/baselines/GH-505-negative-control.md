@@ -18,8 +18,8 @@ without the new flags, not the fixed driver with a mutation.
 | A — builder-role turn writes `STATUS: Approved` | exit 4 `forged-terminal`, STATUS reverted on disk and in HEAD, no record | **exit 0** — the forgery is accepted | `RED CONTROL A` |
 | C — file already `Approved` at startup, token done, no turn | exit 4 `unattested-terminal` | **exit 0** after 0 turns | `RED CONTROL C` |
 | B4 — peer commit lands during the turn | worktree cut at the pinned revision; `candidate_ok` refuses the drifted HEAD | base cuts at live HEAD (`rtl_worktree_begin` used `HEAD`); no candidate check exists | asserted in-suite (`wt-cut-*` capture) |
-| I2 / I3 — jog merge refused / no PR (GH-510) | `(False, "parked", …)` | base returned `(True, "completed", None)` (`jog_run.py:1467-1471` at base) | in-suite, documented in #510 |
-| J — jog override | driver exit 4 returned unchanged | base returned 0 when the file said Approved (`jog_run.py:1375-1389` at base) | in-suite |
+| I2 / I3 — jog merge refused / no PR (GH-510) | `(False, "parked", …)` | base returned `(True, "completed", None)` — **source comparison** (`jog_run.py:1467-1471` at base), not an executed base run | in-suite (fixed side only) |
+| J — jog override | driver exit 4 returned unchanged | base returned 0 when the file said Approved — **source comparison** (`jog_run.py:1375-1389` at base) | in-suite (fixed side only) |
 | H — marathon consumers | covered by the shipped marathon suites re-pointed at the attestation (see below) | | |
 
 Guards that are NOT red at base and are recorded as positive controls: B, B5, K1 (the shim closes
@@ -100,8 +100,10 @@ branch (19 failures in `test/marathon-drive.sh` alone, every one `exit 4` with
   PASS: RED CONTROL C: base driver exits 0 on a pre-approved file after 0 turns
 ```
 
-The two `RED CONTROL` lines are the base driver being observed accepting the forgery and the
-pre-approved file — the exact behaviours #505 reports — on the same fixture, in the same run.
+The two `RED CONTROL` lines are the base driver being **observed** accepting the forgery and the
+pre-approved file — the exact behaviours #505 reports — on the same fixture, in the same run. The I/J
+rows above are source comparisons against the base code, not executed base runs; the H row is the
+observed first-gate breakage. The H4 second-bind mutation control is recorded below.
 
 ## Deviations from the reviewed plan, recorded here so final QA can judge them
 
@@ -119,3 +121,32 @@ pre-approved file — the exact behaviours #505 reports — on the same fixture,
 - Marathon binds the candidate **twice** on the success path: before the approved event is
   published (so a drifted candidate never becomes an approved receipt) and again after the
   post-approve command (which may move HEAD); the receipt carries the second, `reviewed_candidate`.
+
+## H4 — second-bind mutation control (observed)
+
+`utils/py/marathon_drive.py` with the post-approve bind replaced by `pass` (mutation applied and
+reverted in the task clone; `git diff --quiet` confirmed the restore), `test/marathon-drive.sh`
+under `TEST_SOFT_FAIL=1`, 2026-09-08:
+
+```
+# MUTATION — post-approve bind disabled
+  FAIL: H4: exit=0 (expected 4)
+  FAIL: H4: ESCALATION.md missing the reason
+  PASS: H4: control — the hook really committed source (the SECOND bind is what refused)
+  FAIL: H4: refusal not attributed to the post-approve bind
+  FAIL: H4: receipt approved or missing: {
+  FAIL: H4: a green completion line was emitted
+
+# RESTORED
+  PASS: H4: post-approve source commit → exit 4 (approval not bound to the final candidate)
+  PASS: H4: escalation names candidate-drifted-from-reviewed-head
+  PASS: H4: control — the hook really committed source (the SECOND bind is what refused)
+  PASS: H4: the refusal came from the post-approve bind, after the approved event
+  PASS: H4: receipt is not approved and carries no validated candidate
+  PASS: H4: no green completion was emitted
+```
+
+With the second bind gone the hook's source commit is accepted as an approved run (exit 0,
+approved receipt, green completion emitted); with it restored the run refuses, the receipt is not
+approved, and the refusal is attributed to the post-approve bind. The first bind alone does not
+catch this — the hook runs after it.

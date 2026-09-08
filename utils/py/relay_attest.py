@@ -45,12 +45,13 @@ _UNCITED = "[Unverified — no citation]".encode("utf-8")
 
 
 def _window():
-    # awk -v win= takes the string as a number; a non-numeric value becomes 0 there, so mirror that.
-    raw = os.environ.get("RTL_CITATION_WINDOW", "3")
-    try:
-        return int(raw)
-    except ValueError:
-        return 0
+    """`${RTL_CITATION_WINDOW:-3}` then awk `-v win=` numeric coercion: unset/empty → 3; otherwise
+    the leading (optionally signed) integer prefix of the string, or 0 when there is none."""
+    raw = os.environ.get("RTL_CITATION_WINDOW", "")
+    if raw == "":
+        return 3
+    m = re.match(r"\s*([+-]?\d+)", raw)
+    return int(m.group(1)) if m else 0
 
 
 def _split_lines(raw):
@@ -218,6 +219,14 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None):
             return None, f"attestation record field {k} is not a non-empty string"
     if not isinstance(rec["added_start"], int) or not isinstance(rec["added_len"], int) or isinstance(rec["added_start"], bool):
         return None, "attestation record added-range is not integral"
+    # fields candidate_ok() consumes — declared shapes, checked here so a malformed record is a
+    # refusal at load time rather than an exception at the merge boundary
+    if not isinstance(rec["isolated"], bool):
+        return None, "attestation record field isolated is not a boolean"
+    for k in ("relay_file_rel", "artifact_sha256", "transcript_repo"):
+        v = rec.get(k)
+        if v is not None and (not isinstance(v, str) or not v):
+            return None, f"attestation record field {k} is neither null nor a non-empty string"
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:
@@ -256,6 +265,16 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None):
 
 def candidate_ok(record, candidate_sha, target_repo):
     """Is `candidate_sha` the reviewed revision plus transcript-only commits? -> (bool, reason).
+    Never raises: a malformed record or a git failure is a refusal.
+    """
+    try:
+        return _candidate_ok(record, candidate_sha, target_repo)
+    except Exception as e:  # noqa: BLE001
+        return False, f"candidate check failed ({e.__class__.__name__}: {e})"
+
+
+def _candidate_ok(record, candidate_sha, target_repo):
+    """
 
     Contract (GH-505 plan, round 2 Q9): reviewed_head must be an ancestor of the candidate AND the
     endpoint tree diff must be empty outside relay-system/, the relay file's own tracked path, and
