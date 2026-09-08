@@ -314,5 +314,123 @@ else
   fail "Git history generator emits no dangling edge endpoints"
 fi
 
+# --- Spec validator (PR #489 review) -----------------------------------------------------------
+# build-diagram.sh fails on invalid JSON but not on graph semantics, and the renderer DROPS an edge
+# whose endpoint names no node without saying anything. ARCHITECTURE/README.md asks a human to check
+# that by hand; these cases make it mechanical, so the next hand-authored spec cannot ship a
+# silently-missing relationship.
+VALIDATOR="$HERE/../utils/swe-diagram/scripts/validate-spec.js"
+if [ -f "$VALIDATOR" ]; then
+  pass "spec validator is present at utils/swe-diagram/scripts/validate-spec.js"
+
+  # Every committed spec must be clean. This is the assertion that actually protects the repo.
+  if node "$VALIDATOR" "$HERE"/../ARCHITECTURE/*.json >/dev/null 2>&1; then
+    pass "every committed ARCHITECTURE/*.json spec passes the validator"
+  else
+    fail "every committed ARCHITECTURE/*.json spec passes the validator — $(node "$VALIDATOR" "$HERE"/../ARCHITECTURE/*.json 2>&1 | grep ERROR | head -3)"
+  fi
+
+  # RED CONTROLS. Without these the block above decays into "the validator exited 0", which a
+  # validator that checks nothing also does. Each fixture breaks exactly one rule.
+  cat > "$WORK/spec-clean.json" <<'JSEOF'
+{ "title": "clean", "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-clean.json" >/dev/null 2>&1; then
+    pass "validator accepts a clean spec (the control is falsifiable in both directions)"
+  else
+    fail "validator accepts a clean spec"
+  fi
+
+  cat > "$WORK/spec-dangling.json" <<'JSEOF'
+{ "title": "dangling", "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "ghost" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-dangling.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a dangling edge target must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a dangling edge target fails the validator"
+  fi
+
+  cat > "$WORK/spec-dup.json" <<'JSEOF'
+{ "title": "dup", "nodes": [ { "id": "a" }, { "id": "a" } ],
+  "edges": [ { "source": "a", "target": "a" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-dup.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a duplicate node id must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a duplicate node id fails the validator"
+  fi
+
+  cat > "$WORK/spec-badgroup.json" <<'JSEOF'
+{ "title": "badgroup", "groups": [ { "id": "real" } ],
+  "nodes": [ { "id": "a", "group": "nope" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-badgroup.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a node in an undeclared group must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a node in an undeclared group fails the validator"
+  fi
+
+  # CodeRabbit on PR #489: a non-object JSON root (null, an array, a bare string) is valid JSON, so
+  # JSON.parse succeeds and the first dereference THROWS. A throw aborts the whole batch, so every
+  # file after it in argv goes unvalidated — the gate reports a crash instead of a verdict.
+  for bad in 'null' '[]' '"a string"' '42'; do
+    printf '%s\n' "$bad" > "$WORK/spec-root.json"
+    out="$(node "$VALIDATOR" "$WORK/spec-root.json" 2>&1)"; rc=$?
+    case "$out" in
+      *"not a JSON object"*) [ "$rc" != 0 ] && pass "RED CONTROL: a JSON root of $bad is rejected cleanly, not by a crash" \
+                                            || fail "RED CONTROL: a JSON root of $bad must exit non-zero" ;;
+      *) fail "RED CONTROL: a JSON root of $bad must be rejected by message, not a stack trace — got: $(printf '%s' "$out" | head -1)" ;;
+    esac
+  done
+
+  # The batch must survive a bad file and still validate the ones after it.
+  printf 'null\n' > "$WORK/spec-root.json"
+  # capture-then-match, not a pipe into grep -q (GH-139: a pipe hides the producer's exit status).
+  if grep -q 'spec-clean.json: ok' <<<"$(node "$VALIDATOR" "$WORK/spec-root.json" "$WORK/spec-clean.json" 2>&1)"; then
+    pass "a rejected spec does not abort the batch — later files are still validated"
+  else
+    fail "a rejected spec does not abort the batch — later files are still validated"
+  fi
+
+  cat > "$WORK/spec-dupgroup.json" <<'JSEOF'
+{ "title": "dupgroup", "groups": [ { "id": "g", "label": "first" }, { "id": "g", "label": "second" } ],
+  "nodes": [ { "id": "a", "group": "g" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-dupgroup.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a duplicate group id must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a duplicate group id fails the validator"
+  fi
+
+  cat > "$WORK/spec-duplane.json" <<'JSEOF'
+{ "title": "duplane", "layout": "git-lanes",
+  "lanes": [ { "id": "main", "order": 0 }, { "id": "main", "order": 1 } ],
+  "nodes": [ { "id": "c1", "lane": "main" } ], "edges": [] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-duplane.json" >/dev/null 2>&1; then
+    fail "RED CONTROL: a duplicate lane id must fail the validator (it passed)"
+  else
+    pass "RED CONTROL: a duplicate lane id fails the validator"
+  fi
+
+  # A warning must NOT fail the run: the four system-diagram*.json files are deliberately at 31
+  # nodes, over the README's 8-25 band. If this ever flips, every one of them breaks the gate.
+  cat > "$WORK/spec-warn.json" <<'JSEOF'
+{ "title": "warn-only", "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [ { "source": "a", "target": "b" } ] }
+JSEOF
+  if node "$VALIDATOR" "$WORK/spec-warn.json" >/dev/null 2>&1; then
+    pass "a spec that only trips WARNINGs (node-count band) still exits 0"
+  else
+    fail "a spec that only trips WARNINGs (node-count band) still exits 0"
+  fi
+else
+  fail "spec validator not found at $VALIDATOR"
+fi
+
 echo "  swe-diagram: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]

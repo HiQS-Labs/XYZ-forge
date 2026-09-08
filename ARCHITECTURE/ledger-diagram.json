@@ -1,0 +1,237 @@
+{
+  "title": "XYZ-forge — The Releases Ledger, its Derived Views, and the Push Guard",
+  "generated": "2026-09-07",
+  "layout": "layered",
+  "sources": [
+    "ARCHITECTURE.md — 'The Ledger and its Derived Views' (landed in PR #483)",
+    "ARCHITECTURE.md — 'The Roadmap View Pipeline and its Push Guard' (landed in PR #485)",
+    "githooks/dashboard-staleness-guard.sh",
+    "utils/roadmap-dashboard.sh",
+    "utils/releases-merge-resolve.sh",
+    "utils/py/wave_reconcile.py"
+  ],
+  "legend_note": "Solid = synchronous call or unconditional write. Dotted = data read/dump. Dashed = an out-of-band signal (stderr). The one edge worth tracing is 'dropped-row warning' into the push guard: a dropped row renders to nothing, so byte-comparison drift detection cannot see it, and the guard reads the renderer's own stderr report instead.",
+  "groups": [
+    { "id": "truth", "label": "Source of truth (GH-32)" },
+    { "id": "cli", "label": "Write entry points — CLI verbs only" },
+    { "id": "generators", "label": "Generators — always present, never deleted" },
+    { "id": "views", "label": "Derived views at the repo root" },
+    { "id": "consumers", "label": "Write paths that refresh a view" },
+    { "id": "guard", "label": "Push guard and its gates" }
+  ],
+  "nodes": [
+    {
+      "id": "releases-db",
+      "label": "releases.db",
+      "type": "database",
+      "group": "truth",
+      "tech": "SQLite · runtime",
+      "trust": "shared-state",
+      "description": "The source of truth for this repo's roadmap and release ledger. Never hand-edited: every mutation goes through a releases_app.py CLI verb."
+    },
+    {
+      "id": "releases-sql",
+      "label": "releases.sql",
+      "type": "storage",
+      "group": "truth",
+      "tech": "GID-keyed text dump",
+      "trust": "shared-state",
+      "description": "The dump of releases.db, and the surface git actually merges. GID keying makes INSERT-only tables union cleanly; roadmap_items is edited in place, so a same-GID collision there is a real content conflict, not a dedupe."
+    },
+    {
+      "id": "releases-app",
+      "label": "releases_app.py",
+      "type": "api",
+      "group": "cli",
+      "tech": "Python · roadmap add/update/repoint, gen, check",
+      "trust": "trusted-primitive",
+      "description": "The single sanctioned write path into the ledger. Also calls refresh_preview() after a DB write, which is one of the four consumers subject to the adoption gate."
+    },
+    {
+      "id": "export-timeline",
+      "label": "export_timeline.py",
+      "type": "job",
+      "group": "generators",
+      "tech": "Python · --preview / --leaderboard",
+      "trust": "trusted-primitive",
+      "description": "Renders the two HTML views. Both are adopted-by-presence, so this runs only when its target file already exists at the repo root."
+    },
+    {
+      "id": "roadmap-dashboard-sh",
+      "label": "utils/roadmap-dashboard.sh",
+      "type": "job",
+      "group": "generators",
+      "tech": "bash + node · default writes, --check compares",
+      "trust": "trusted-primitive",
+      "description": "Reads roadmap_items via a flat JSON SELECT and parses each row's raw_text. Runs the full render before its mode branch, so it emits the dropped-row warning in BOTH modes — which is what makes --check usable as a signal source and not just a comparator."
+    },
+    {
+      "id": "leaderboard-sh",
+      "label": "utils/leaderboard.sh",
+      "type": "job",
+      "group": "generators",
+      "tech": "bash",
+      "trust": "trusted-primitive",
+      "description": "Renders LEADERBOARD.md. Adopted-by-presence."
+    },
+    {
+      "id": "adoption-gate",
+      "label": "adopted by presence?",
+      "type": "service",
+      "group": "generators",
+      "tech": "does the file already exist at the repo root?",
+      "trust": "trusted-containment-core",
+      "description": "The rule that makes a view addable and removable without editing a single consumer. A repo that never baked a view — a fixture, a fresh clone, a vendored .xyz/ install — is a silent no-op, not an error. An adoption rule enforced by four consumers out of six is not an adoption rule; GH-474 closed the two that leaked."
+    },
+    {
+      "id": "roadmap-dashboard-md",
+      "label": "ROADMAP-DASHBOARD.md",
+      "type": "storage",
+      "group": "views",
+      "tech": "REQUIRED — not adopted-by-presence",
+      "trust": "shared-state",
+      "description": "The asymmetric one. Two gates require it, so regenerating it unconditionally is correct and un-adopting it is not available at all without first rewriting a gate."
+    },
+    {
+      "id": "leaderboard-md",
+      "label": "LEADERBOARD.md",
+      "type": "storage",
+      "group": "views",
+      "tech": "adopted",
+      "trust": "shared-state",
+      "description": "Opt-in. Delete it and every consumer stops refreshing it; run its generator and commit the result and every consumer resumes."
+    },
+    {
+      "id": "releases-preview-html",
+      "label": "RELEASES-PREVIEW.html",
+      "type": "storage",
+      "group": "views",
+      "tech": "adopted",
+      "trust": "shared-state",
+      "description": "Opt-in. The view wave_reconcile.py used to resurrect within a day of any un-adoption, before GH-474 presence-gated that call."
+    },
+    {
+      "id": "leaderboard-html",
+      "label": "LEADERBOARD.html",
+      "type": "storage",
+      "group": "views",
+      "tech": "adopted",
+      "trust": "shared-state",
+      "description": "Opt-in."
+    },
+    {
+      "id": "wave-reconcile",
+      "label": "wave_reconcile.py",
+      "type": "job",
+      "group": "consumers",
+      "tech": "Python · runs after every merged PR",
+      "trust": "trusted-primitive",
+      "description": "GH-474 leak #1: refreshed RELEASES-PREVIEW.html unconditionally. Now presence-gated. Pinned by test/gh202-wave-reconcile-issue-state.sh, whose stub exporter WRITES the artifact when invoked — so 'absent afterwards' proves the step did not run."
+    },
+    {
+      "id": "merge-resolve",
+      "label": "releases-merge-resolve.sh",
+      "type": "job",
+      "group": "consumers",
+      "tech": "bash · the sanctioned ledger merge path",
+      "trust": "trusted-primitive",
+      "description": "GH-474 leak #2: treated every unmerged view as 'take either side and regenerate', which restores a file deleted on one side. Working-tree presence cannot detect this — during a delete/modify the surviving copy is sitting right there, so a -f test reports 'adopted'. Now reads both commits and honours the deletion."
+    },
+    {
+      "id": "express-jog",
+      "label": "express.py / jog_run.py",
+      "type": "job",
+      "group": "consumers",
+      "tech": "Python · stages views into a lane commit",
+      "trust": "trusted-primitive",
+      "description": "Presence-gated like the rest."
+    },
+    {
+      "id": "dropped-row-warning",
+      "label": "dropped-row warning",
+      "type": "queue",
+      "group": "guard",
+      "tech": "stderr: 'dropped N row(s): ids'",
+      "trust": "shared-state",
+      "description": "The signal that carries what drift detection structurally cannot see. It travels on stderr rather than as a new exit code because --check's exit contract is load-bearing for four other test suites. Two shapes share the matched prefix: unparseable rows, and rows under an unrecognised section heading."
+    },
+    {
+      "id": "pre-push",
+      "label": "githooks/pre-push",
+      "type": "service",
+      "group": "guard",
+      "tech": "bash",
+      "trust": "trusted-containment-core",
+      "description": "Entry point for the push gate. Classifies the push range and dispatches the staleness guard."
+    },
+    {
+      "id": "staleness-guard",
+      "label": "dashboard-staleness-guard.sh",
+      "type": "service",
+      "group": "guard",
+      "tech": "bash · refuses on drift OR on a dropped row",
+      "trust": "trusted-containment-core",
+      "description": "Fires when a push range writes the ledger but not the view. Keeps the renderer's stderr with '2>&1 >/dev/null' — order matters — and refuses on either signal. Before GH-474 it discarded that stderr and inferred the same fact from TABLE NAMES in the releases.sql diff: a hand-maintained allowlist that went short twice and left eight dump tables unclassified. Reading the renderer's own report cannot go short, because an unknown table is no longer a question the guard asks."
+    },
+    {
+      "id": "projection",
+      "label": "git archive projection",
+      "type": "storage",
+      "group": "guard",
+      "tech": "private tmp root, pinned to local_sha",
+      "trust": "shared-state",
+      "description": "The guard renders from a commit-pinned projection, never the working tree, so uncommitted edits cannot change the verdict. Fails CLOSED: a projection that cannot run the renderer is treated as drift."
+    },
+    {
+      "id": "router-audit",
+      "label": "utils/py/router_audit.py",
+      "type": "service",
+      "group": "guard",
+      "tech": "Python · gated by test/gh353-vendored-router-audit.sh",
+      "trust": "off-live-path-governance",
+      "description": "The second gate that makes ROADMAP-DASHBOARD.md required: ROUTER.md must declare it as the generated roadmap view and route startup to it."
+    },
+    {
+      "id": "exit-contract-suites",
+      "label": "4 suites on --check's exit",
+      "type": "external",
+      "group": "guard",
+      "tech": "3 downstream: gh269-roadmap-retired · gh280-jog-marathon-adapter (2 sites) · gh57-live-merge-resolve — plus the renderer's own suite: roadmap-dashboard",
+      "trust": "off-live-path-governance",
+      "description": "Four suites treat a non-zero --check as failure. Three are downstream consumers that merely borrow the exit contract; the fourth, test/roadmap-dashboard.sh, is the renderer's own suite and tests that contract head-on — its case 4 mutates the artifact to prove --check ACTUALLY fails on drift, which is what makes the other three's reliance on it meaningful. Together they are why the dropped-row signal travels on stderr rather than as a new exit code: a new code would have broken all four."
+    }
+  ],
+  "edges": [
+    { "source": "releases-db", "target": "releases-sql", "label": "dump / rebuild at merge boundaries", "kind": "data" },
+    { "source": "releases-app", "target": "releases-db", "label": "writes — CLI verbs only", "kind": "sync" },
+
+    { "source": "releases-db", "target": "roadmap-dashboard-sh", "label": "roadmap list --json", "kind": "data" },
+    { "source": "releases-db", "target": "leaderboard-sh", "label": "reads", "kind": "data" },
+    { "source": "releases-db", "target": "export-timeline", "label": "reads", "kind": "data" },
+
+    { "source": "releases-app", "target": "adoption-gate", "label": "refresh_preview() after a DB write", "kind": "sync" },
+    { "source": "wave-reconcile", "target": "adoption-gate", "label": "after a merged PR (GH-474)", "kind": "sync" },
+    { "source": "merge-resolve", "target": "adoption-gate", "label": "after a ledger merge (GH-474)", "kind": "sync" },
+    { "source": "express-jog", "target": "adoption-gate", "label": "stage into a lane commit", "kind": "sync" },
+
+    { "source": "adoption-gate", "target": "export-timeline", "label": "adopted: render", "kind": "sync" },
+    { "source": "adoption-gate", "target": "leaderboard-sh", "label": "adopted: render", "kind": "sync" },
+
+    { "source": "roadmap-dashboard-sh", "target": "roadmap-dashboard-md", "label": "renders unconditionally — required", "kind": "sync" },
+    { "source": "leaderboard-sh", "target": "leaderboard-md", "label": "renders", "kind": "sync" },
+    { "source": "export-timeline", "target": "releases-preview-html", "label": "--preview", "kind": "sync" },
+    { "source": "export-timeline", "target": "leaderboard-html", "label": "--leaderboard", "kind": "sync" },
+
+    { "source": "merge-resolve", "target": "releases-sql", "label": "honours a deletion in delete/modify", "kind": "data" },
+
+    { "source": "roadmap-dashboard-sh", "target": "dropped-row-warning", "label": "emits in BOTH modes", "kind": "async" },
+    { "source": "roadmap-dashboard-sh", "target": "exit-contract-suites", "label": "--check exit status", "kind": "data" },
+
+    { "source": "pre-push", "target": "staleness-guard", "label": "range writes the ledger but not the view", "kind": "sync" },
+    { "source": "staleness-guard", "target": "projection", "label": "git archive local_sha", "kind": "sync" },
+    { "source": "projection", "target": "roadmap-dashboard-sh", "label": "--check in a private tmp root", "kind": "sync" },
+    { "source": "dropped-row-warning", "target": "staleness-guard", "label": "the signal drift cannot see", "kind": "async" },
+    { "source": "staleness-guard", "target": "roadmap-dashboard-md", "label": "refuses the push without it", "kind": "sync" },
+    { "source": "router-audit", "target": "roadmap-dashboard-md", "label": "requires ROUTER.md to declare it", "kind": "sync" }
+  ]
+}
