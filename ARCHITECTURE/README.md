@@ -19,6 +19,7 @@ anyone rebuilds.
 | `system-diagram-trust-clustered` | `trust-clustered` | Bands by **trust tier** rather than call direction, so the containment core reads as the hub it is |
 | `git-history-diagram` | `git-lanes` | Commits, branch cuts and merges as stacked branch lanes, generated from local refs |
 | `ledger-diagram` | `layered` | `releases.db`, the four views derived from it, the adoption gate, and the push guard that reads the renderer's stderr |
+| `skills-git-pulse-projection-diagram` | `layered` | Device-local Skills Army HQ authority, the proposed portable Git projection, and the scheduled pulse checkout that remains isolated |
 
 The four `system-diagram*` files are deliberately **the same graph under different layouts** — pick
 the one that makes the point you are making. `git-history-diagram` and `ledger-diagram` are

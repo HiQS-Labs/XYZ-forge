@@ -116,8 +116,9 @@ while the four axes keep their honest values underneath.
 | 104 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
 | 105 | **9** | [GH-399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) — Let the profile carry the route | — | Queue / parked intake | 2 | 3 | 2 | 2 | 9 | — |
 | 106 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Cargo | queue | 3 | 2 | 2 | 1 | 8 | — |
-| 107 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Cargo | queue | 1 | 1 | 1 | 1 | 4 | — |
-| 108 | **4** | [GH-406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) — External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | Queue / parked intake | 3 | 3 | 4 | 3 | 13 | 4 |
+| 107 | **8** | [GH-508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) — Git Sync Pulse as a portable Skills Army HQ projection | — | Queue / parked intake | 2 | 3 | 2 | 1 | 8 | — |
+| 108 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Cargo | queue | 1 | 1 | 1 | 1 | 4 | — |
+| 109 | **4** | [GH-406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) — External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | Queue / parked intake | 3 | 3 | 4 | 3 | 13 | 4 |
 
 **Top of the line:** GH-413 — launch-artifact marker authorises destructive rebuild (score 365).
 

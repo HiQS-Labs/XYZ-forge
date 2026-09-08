@@ -1,0 +1,211 @@
+{
+  "title": "Skills Army HQ — Git Sync Pulse Projection Context",
+  "generated": "2026-09-08",
+  "sources": [
+    "PROJECT/1-INBOX/RECON-GH-508-GIT-PULSE-SKILLS.md (completed deep recon and authority classification)",
+    "PROJECT/1-INBOX/GH-508-GIT-PULSE-SKILLS.md (Ponytail spike boundary and acceptance criteria)",
+    "skills/skills-army-hq/scripts/intake.py:180-195,232-280,469-527 (source intake, local state, inventory, transactions)",
+    "skills/skills-army-hq/scripts/sync.py:23-65 (local collection to app-root symlink reconciliation)",
+    "rebalanceOS experimental/git-pulse/collect.sh:475-601 and pulse.py:797-915 (scheduled checkout reconciliation and publication, recorded by recon)"
+  ],
+  "layout": "layered",
+  "legend_note": "Solid arrows are current flows. Dashed arrows are the proposed explicit, single-publisher projection. Dotted arrows are local metadata or symlink state. The scheduled live pulse checkout remains a separate producer and is never the Skills Army HQ collection.",
+  "groups": [
+    {
+      "id": "publisher-device",
+      "label": "Publisher Mac — local authority"
+    },
+    {
+      "id": "transport",
+      "label": "Existing private Git transport"
+    },
+    {
+      "id": "consumer-device",
+      "label": "Consumer Mac — local authority"
+    },
+    {
+      "id": "scheduled-pulse",
+      "label": "Existing scheduled pulse writers — separate path"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "publisher-sources",
+      "label": "Local skill source repos",
+      "type": "storage",
+      "group": "publisher-device",
+      "tech": "Git worktrees/checkouts",
+      "description": "Existing local Git folders accepted one at a time by Skills Army HQ intake."
+    },
+    {
+      "id": "publisher-hq",
+      "label": "Skills Army HQ collection A",
+      "type": "storage",
+      "group": "publisher-device",
+      "tech": "~/Documents/Deployed Skills",
+      "description": "Authoritative local payload copies. The completed deployment contained 15 skills and remained independent of Git Sync Pulse."
+    },
+    {
+      "id": "publisher-state",
+      "label": "Device A state",
+      "type": "database",
+      "group": "publisher-device",
+      "tech": "targets + receipts + locks",
+      "description": "Absolute root, target paths, ownership receipts, transaction state, backups and history stay device-local and are excluded from projection."
+    },
+    {
+      "id": "publisher-apps",
+      "label": "Device A app roots",
+      "type": "external",
+      "group": "publisher-device",
+      "tech": "managed directory symlinks",
+      "description": "Claude, Codex and Gemini-compatible discovery roots read through local managed links."
+    },
+    {
+      "id": "publisher-projection",
+      "label": "Isolated projection checkout",
+      "type": "storage",
+      "group": "transport",
+      "tech": "skills/<name> + manifest",
+      "description": "Proposed explicit single-publisher checkout containing portable payloads only; not used by scheduled pulse jobs."
+    },
+    {
+      "id": "pulse-remote",
+      "label": "Private Git Sync Pulse remote",
+      "type": "external",
+      "group": "transport",
+      "tech": "existing main branch",
+      "description": "Optional transport location. It does not become deployment authority and gains no new background writer during the spike."
+    },
+    {
+      "id": "consumer-projection",
+      "label": "Explicit consumer checkout",
+      "type": "storage",
+      "group": "transport",
+      "tech": "clean pull on demand",
+      "description": "A separate checkout pulled explicitly before importing; never the scheduled live pulse checkout."
+    },
+    {
+      "id": "consumer-hq",
+      "label": "Skills Army HQ collection B",
+      "type": "storage",
+      "group": "consumer-device",
+      "tech": "local copied collection",
+      "description": "Independent authoritative collection populated through existing add/update operations."
+    },
+    {
+      "id": "consumer-state",
+      "label": "Device B state",
+      "type": "database",
+      "group": "consumer-device",
+      "tech": "distinct local metadata",
+      "description": "Device B retains its own absolute targets, ownership receipts, lock and recovery state."
+    },
+    {
+      "id": "consumer-apps",
+      "label": "Device B app roots",
+      "type": "external",
+      "group": "consumer-device",
+      "tech": "managed directory symlinks",
+      "description": "Existing sync machinery deploys imported skills to enabled app roots on Device B."
+    },
+    {
+      "id": "pulse-collector",
+      "label": "Git Pulse collector",
+      "type": "job",
+      "group": "scheduled-pulse",
+      "tech": "hourly launchd job",
+      "description": "Existing bounded writer that pulls, stages generated pulse/device paths, commits and pushes."
+    },
+    {
+      "id": "rebalance-publisher",
+      "label": "Rebalance pulse publisher",
+      "type": "job",
+      "group": "scheduled-pulse",
+      "tech": "hourly daytime job",
+      "description": "Independent existing writer that reconciles and publishes live-pulse.md."
+    },
+    {
+      "id": "live-pulse-checkout",
+      "label": "Scheduled live pulse checkout",
+      "type": "storage",
+      "group": "scheduled-pulse",
+      "tech": "~/.config/git-pulse/repo",
+      "description": "Generated-data checkout with multiple writers and a documented dirty-tree failure history. It must not host the HQ collection or projection worktree."
+    }
+  ],
+  "edges": [
+    {
+      "source": "publisher-sources",
+      "target": "publisher-hq",
+      "label": "existing add/update copies",
+      "kind": "sync"
+    },
+    {
+      "source": "publisher-hq",
+      "target": "publisher-state",
+      "label": "records local authority",
+      "kind": "data"
+    },
+    {
+      "source": "publisher-hq",
+      "target": "publisher-apps",
+      "label": "existing sync",
+      "kind": "data"
+    },
+    {
+      "source": "publisher-hq",
+      "target": "publisher-projection",
+      "label": "proposed portable payload projection",
+      "kind": "async"
+    },
+    {
+      "source": "publisher-projection",
+      "target": "pulse-remote",
+      "label": "explicit commit/push",
+      "kind": "async"
+    },
+    {
+      "source": "pulse-remote",
+      "target": "consumer-projection",
+      "label": "explicit pull",
+      "kind": "async"
+    },
+    {
+      "source": "consumer-projection",
+      "target": "consumer-hq",
+      "label": "existing add/update imports",
+      "kind": "async"
+    },
+    {
+      "source": "consumer-hq",
+      "target": "consumer-state",
+      "label": "records distinct local authority",
+      "kind": "data"
+    },
+    {
+      "source": "consumer-hq",
+      "target": "consumer-apps",
+      "label": "existing sync",
+      "kind": "data"
+    },
+    {
+      "source": "pulse-collector",
+      "target": "live-pulse-checkout",
+      "label": "scheduled generated writes",
+      "kind": "sync"
+    },
+    {
+      "source": "rebalance-publisher",
+      "target": "live-pulse-checkout",
+      "label": "scheduled live-pulse write",
+      "kind": "sync"
+    },
+    {
+      "source": "live-pulse-checkout",
+      "target": "pulse-remote",
+      "label": "existing pull/rebase + push",
+      "kind": "sync"
+    }
+  ]
+}
