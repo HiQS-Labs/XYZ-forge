@@ -2,7 +2,7 @@
 gh_issue: 494
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/494
 title: Flightdeck — HTML consumer app and future Swift plan
-status: Plan reviewed — implementation not started
+status: HTML v1 implemented — partial-data pilot awaiting operator acceptance
 created: 2026-09-08
 updated: 2026-09-08
 owner: Codex
@@ -22,7 +22,7 @@ reversibility: Costly — shared read API and optional source-owned schema/expor
 
 | What was just completed | What's next |
 |---|---|
-| Layouts A/B/C and Escape navigation saved; existing Rebalance, Git Pulse, CLIO and Swift consumer paths traced. | Plan review passed; next is implementation in fresh owner-repo clones when requested. No collectors or production app code are built by this planning task. |
+| HTML v1 now serves tokenized Layouts A/B/C from one source-neutral snapshot; Rebalance, CLIO and Git Pulse read live while topology and continuity report unavailable. Focused contract, server, token and interaction checks pass. | Run the disposable-clone repository gate, complete independent code review, then begin an operator pilot. Exact checkout counts and attested milestone coverage remain blocked on existing producer outputs. |
 
 ## Table of contents
 
@@ -225,8 +225,8 @@ an unbounded multi-page cycle or mixed-page revisions; broader history is deferr
 ### Phase 1 — delivery and QA
 
 - [ ] Commit the contract, synthetic fixtures and source mapping; every requested field is populated, nullable with a reason, or listed in the gap register below.
-- [ ] Add the Flightdeck host, static connector registry, aggregation and explicit routes; zero enabled connectors and any one connector missing return honest capability states without preventing the app shell from loading.
-- [ ] Implement and contract-test `rebalance`, `clio`, `git_pulse`, `topology` and `continuity`; disable each independently and prove remaining connector fixtures still render without conditional core code.
+- [x] Add the Flightdeck host, static connector registry, aggregation and explicit routes; zero enabled connectors and any one connector missing return honest capability states without preventing the app shell from loading.
+- [x] Implement and contract-test `rebalance`, `clio`, `git_pulse`, `topology` and `continuity`; disable each independently and prove remaining connector fixtures still render without conditional core code.
 - [ ] Prove passive reads: source/DB/sync files unchanged; spy collectors, Git subprocesses, network clients and ingestion functions and assert zero calls during repeated GETs. Negative control deliberately calls a forbidden path and fails the guard.
 - [ ] Test basename collisions, mirror aliases, duplicate SHAs, multiple agents per issue, unlinked PRs, stale checks on another head, and more than 10 PRs. Assert nonempty inputs before checking totals.
 - [ ] Verify aggregate row/byte/time exhaustion, a source changing mid-read, late/out-of-order responses and server restart. Unexpected/repeated cursor fields cause zero additional requests; truncation refuses exact totals. Disable the budget guard as a failing control and retain the red receipt.
@@ -300,8 +300,8 @@ cards and overflow handling rather than force all content into a fixed height.
 
 ### Phase 2 — delivery and QA
 
-- [ ] Production A/B/C use the same semantic tokens; inline literal colors/fonts/spacing and token fallbacks cannot bypass them. Keep saved mockups/reference checksums unchanged.
-- [ ] Generate CSS and token reference documentation; validate types/aliases and output freshness. Add one intentional hardcoded card color/font size and observe the token audit fail.
+- [x] Production A/B/C use the same semantic tokens; inline literal colors/fonts/spacing and token fallbacks cannot bypass them. Keep saved mockups/reference checksums unchanged.
+- [x] Generate CSS and token reference documentation; validate types/aliases and output freshness. Add one intentional hardcoded card color/font size and observe the token audit fail.
 - [ ] Switch palette, UI font, mono font, spacing scale and radius using token edits alone; all three layouts visibly change without component edits.
 - [ ] Verify module ownership: views cannot fetch, the client cannot classify QA/progress, and no layout creates a second state store. A deliberate forbidden import must fail the smallest architecture check.
 - [ ] Review the token inventory for one-use indirection: every component token either coordinates multiple uses, enables theme/Swift parity, or is removed in favor of a semantic token/readable CSS.
@@ -423,7 +423,7 @@ tokens or full email/calendar content. Stale cache cannot satisfy current readin
 
 ### Phase 3 — delivery and QA
 
-- [ ] Wire production A/B/C to the shared contract; demo mode remains clearly labeled and never silently substitutes for unavailable live data.
+- [x] Wire production A/B/C to the shared contract; demo mode remains clearly labeled and never silently substitutes for unavailable live data.
 - [ ] Verify full navigation, keyboard/gesture paths, source refresh, theme change and parent scroll restoration; hold Escape and prove it does not skip levels.
 - [ ] Verify 59/60 and 119/120 minute boundaries, unrelated prompt arrival, a source heartbeat, partial coverage, clock change, and zoom after aging. Mutate the progress clock to consumer time and observe the test fail.
 - [ ] Verify complete-but-stale snapshots, W before the evaluated wall time, no progress anchor and expiry without GETs. Ignoring W must fail a fixture; retain the red receipt.
@@ -526,10 +526,9 @@ mode: the web client owns polling; native rendering later uses the native client
 
 ## Completion and deferred work
 
-This planning deliverable is complete when the grounded plan and Recon Map are
-reviewed, committed and pushed. **That does not mark phases 1–5 implemented.**
-The earlier hold on writing the final plan is superseded by the operator's explicit
-request for this HTML-first plan; runtime implementation still awaits its own start.
+The grounded plan and Recon Map are complete. HTML v1 is now implemented as the
+partial-data pilot described above; unchecked acceptance items remain open and
+phase 5 has not started.
 
 HTML release completion requires all mandatory data/UI requirements and phases 1–4
 QA, including fresh complete topology if exact counts are claimed. A partial-data
