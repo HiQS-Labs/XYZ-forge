@@ -1,6 +1,6 @@
 ---
 title: "GH-505 / GH-509: Approved means a reviewer approved — driver-attested terminal status"
-status: Blocked
+status: In progress
 created: 2026-09-08
 updated: 2026-09-08
 owner: agent-b
@@ -38,7 +38,7 @@ reversibility: Costly
 
 | What was just completed | What's next |
 |---|---|
-| QA round 3 (Codex, final at the 3-round cap): Block — one blocker (B1: isolation predicate must be the shims' exact `== "1"`; seeded artifact must be verified at seed time and is merge-ineligible) and three fixes (F1: one candidate snapshot carried into the receipt; F2: literal top-anchored pathspec; F3: fixture must run the real shim lifecycle, A3 injection, ignored/archive branch rules). All accepted and folded in below — [Round 3 dispositions](#round-3-dispositions). **Cap reached; no implementation approval; no source changed.** | Operator decision: (a) authorize a round 4 on this revision, (b) authorize implementation on the producer-adjudicated revision with final Codex QA as the check, or (c) narrow. |
+| **Implemented** on `fix/gh505-relay-reviewer-integrity` (operator chose option (b) after the 3-round plan-QA cap: implement on the adjudicated revision, final Codex QA as the check). Driver, containment, marathon, jog, shared record module, 50-case fixture with base-driver red controls, and 30 shipped suites re-pointed at the attestation. Deviations from the reviewed plan are listed in [Implementation dispositions](#implementation-dispositions) and in `test/baselines/GH-505-negative-control.md` | Full gate in the disposable clone → provenance under `TESTS-RESULTS/2026-09-08+GH-505/` → final Codex QA on the committed implementation → PR |
 
 ## Issue map
 
@@ -180,6 +180,21 @@ Recipes gain the reviewer explicitly, per their own variables: `skills/relay-xyz
 | F1 | Accept | One candidate `C` captured after post-approve, validated, carried into the receipt as `reviewed_candidate`; success emits moved after the check; jog's marathon branch requires PR head == `C`. H4 inspects the emits. |
 | F2 | Accept | `:(top,exclude)` / `:(top,literal,exclude)` from the target root. N3 added. |
 | F3 | Accept | Fixtures run the real `codex-turn.py` with a stub binary; A3 uses `index.lock`; N1/N2 state the ignored and archive branches. |
+
+## Implementation dispositions
+
+Where the code departs from the adjudicated plan, and why. Each is a judgement final QA should
+re-examine with the code in hand.
+
+| Plan said | Code does | Why |
+|---|---|---|
+| `--reviewer` missing → exit 2 before dispatch | loud stderr warning; the run can never accept a terminal status (E2 pins that an approval without a named reviewer is reverted as `forged-terminal`) | 30+ shipped suites and every vendored `.xyz/` copy drive non-terminal relays without the flag; refusing strands them for no safety gain. Round-1 QA said "preferably", not "must". |
+| canonical = header keys normalised | also applies the harness's own uncited-claim downgrade (GH-173 B3) | the shim rewrites pre-existing lines in place after a reviewer turn; without this port every real reviewer turn read as `review-body-rewritten` (`gh280` chain) |
+| transcript paths = `relay-system/` + the relay file | + the relay file's own directory | marathon keeps `ESCALATION.md` and receipts beside `RELAY.md`; a retry after a gate flake was refused as code drift (`marathon-drive.sh` GH-274 case) |
+| candidate bound once, after post-approve | bound **twice** — before the approved event/green emit, and again after the post-approve command | the GH-273 post-approve contract requires the approved event to exist when the hook runs; the first check keeps a drifted candidate from ever being published, the second catches drift the hook caused |
+| `--review-once` redefines nothing | actor≠`--reviewer` refusal applies only when `--reviewer` is given | a review-once run with no reviewer named must still be able to stall/hand back (exit 3/5) for the cost-summary suites |
+| jog relay executor requires a reviewer | required for real dispatch; `--simulate` dispatches nothing and lands as a simulated completion | `jog-queue.sh` simulate contract |
+| `test/gh505-relay-attest.sh` cases A–L, H, I, J | A, A2, B, B4, B5, C, D1, D3, E2, E3, S1, K1, K2, L, F, F2, G, I1–I5, J in the new suite; H1/H2/H4 via the shipped marathon suites (every stub relay-drive now has to attest for marathon to succeed — 19 failures in `marathon-drive.sh` alone on the first gate run); M1/M2 via `gh280` N-series; H3/I4-by-mutation folded into B4 (real peer commit) and I4/I5 (real drift) | a real drift is a stronger control than a transposed guard |
 
 ## Dependencies and ordering
 
