@@ -204,3 +204,14 @@ joins, quiet/unknown states, desktop/narrow views and X destination passed brows
 checks. See layout-b-verification.json and the appended provenance record.
 
 Layout B final review: `relay-system/2026-09-08/gh494-layout-b-final.md`, round 2 Approved, driver exit 0. Amber lane health and unknown agent context were reproduced and corrected. The frozen Layout A hash remains unchanged.
+
+## Deferred requirement — light and dark mode
+
+Carry light and dark appearance support into the final Swift app project plan after
+the HTML design approval checkpoint. Both layout modes, repo cards, detail panels
+and handoff controls must be covered. Plan appearance preferences and shared color
+definitions, preserving readable text, status distinctions and carousel edge fades
+in either appearance; include visual QA for both modes.
+
+This is future app work only. Do not implement theme switching or light-mode styles
+in the HTML designs; preserve Layout A and the current Layout B unchanged.
