@@ -524,6 +524,7 @@ TESTS=(
   "gh423-roadmap-render.sh"           # GH-423 (releases roadmap render emits roadmap_items as ledger markdown marathon_plan.py parses unchanged)
   "gh454-reconciler-defects.sh"       # GH-454 (wave_reconcile: unnamed release no longer aborts; PDDA full-gate overreach scoped to its documented surface)
   "gh424-roadmap-status-marker.sh"    # GH-424 (roadmap_items.status_marker gets a CLI writer; releases-mode rows can leave 🆕)
+  "gh418-planner-ledger-source.sh"    # GH-418 (marathon planner reads releases.db via GH-423's renderer in releases mode; fails closed on a missing/corrupt DB)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
