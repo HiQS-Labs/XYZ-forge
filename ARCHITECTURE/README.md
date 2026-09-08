@@ -59,8 +59,9 @@ relationship. Run the validator before you commit:
 node utils/swe-diagram/scripts/validate-spec.js ARCHITECTURE/*.json
 ```
 
-It reports **errors** (dangling edge endpoints, duplicate node ids, nodes in an undeclared group,
-unknown layout, an unresolvable `hub` or `lane`) and exits non-zero on any of them. **Warnings** —
+It reports **errors** (a JSON root that is not an object, dangling edge endpoints, duplicate node,
+group or lane ids, nodes in an undeclared group, unknown layout, an unresolvable `hub` or `lane`)
+and exits non-zero on any of them — one bad file does not abort the rest. **Warnings** —
 an unknown node `type` or edge `kind` that will fall back to a default, an empty group, a node with
 no edges, and the node-count band below — never fail the run.
 

@@ -23,6 +23,16 @@ var BAND_MIN = 8, BAND_MAX = 25;
 
 function validate(spec) {
   var errors = [], warnings = [];
+
+  // JSON.parse happily returns null, a string, a number or an array — all of which are valid JSON
+  // and none of which is a spec. Dereferencing one throws, and a throw here aborts the whole batch,
+  // so every file after it in argv goes unvalidated. Reject the root shape before touching it.
+  if (spec === null || typeof spec !== 'object' || Array.isArray(spec)) {
+    return { errors: ['spec root is not a JSON object (got ' +
+                      (spec === null ? 'null' : Array.isArray(spec) ? 'array' : typeof spec) + ')'],
+             warnings: [], nodes: 0, edges: 0 };
+  }
+
   var nodes = Array.isArray(spec.nodes) ? spec.nodes : [];
   var edges = Array.isArray(spec.edges) ? spec.edges : [];
   var groups = Array.isArray(spec.groups) ? spec.groups : [];
@@ -52,9 +62,12 @@ function validate(spec) {
     }
   });
 
+  // Duplicate ids collapse in the lookup map, so a group or lane declared twice validates as one
+  // and the second declaration's label silently wins — same failure mode as a duplicate node id.
   var gids = Object.create(null);
   groups.forEach(function (g, i) {
     if (!g || typeof g.id !== 'string' || !g.id) { errors.push('group[' + i + '] has no id'); return; }
+    if (gids[g.id]) errors.push('duplicate group id: ' + g.id);
     gids[g.id] = true;
   });
   nodes.forEach(function (n) {
@@ -71,7 +84,11 @@ function validate(spec) {
   }
   if (spec.layout === 'git-lanes') {
     var lanes = Object.create(null);
-    (Array.isArray(spec.lanes) ? spec.lanes : []).forEach(function (l) { if (l && l.id) lanes[l.id] = true; });
+    (Array.isArray(spec.lanes) ? spec.lanes : []).forEach(function (l) {
+      if (!l || !l.id) return;
+      if (lanes[l.id]) errors.push('duplicate lane id: ' + l.id);
+      lanes[l.id] = true;
+    });
     nodes.forEach(function (n) {
       if (n && n.lane && !lanes[n.lane]) errors.push('node ' + n.id + ' references unknown lane "' + n.lane + '"');
     });
