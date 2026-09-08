@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -59,5 +59,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — round 1
+
+swept file: yes
+VERDICT: FAIL
+Verdict: Changes requested
+Basis: Read all 411 lines of the artifact, the full Recon Map, planning-evidence.json and latest provenance record. Consumer-first ownership is sound, but three decision contracts need explicit rules to make the requested acceptance falsifiable. This is plan review, not runtime proof; no artifact/source jobs, tests or Git commands were run. Read-only hashing matched the evidence receipt and all 20 source hashes. No additional pre-existing plan defects found beyond the findings below; this is not an exhaustive upstream source audit.
+
+- [Should] **F1 — Define temporal coverage before assigning inactivity colors.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:119,248–251,275–285` names availability separately from completeness, but only partial/missing coverage explicitly suppresses inactivity. A complete historical snapshot can therefore age into red while its producer is stale, and an hourly observation cannot prove no progress since that observation. Specify the source/lane observation watermark, freshness cutoff (including unknown schedule), null-progress behavior, and whether color is an explicitly as-of verdict or withheld until the required interval is covered. Apply the same rule when a retained snapshot ages without another GET. Add fixtures for complete-but-stale data, an observation watermark before the evaluated interval ends, and no known progress anchor; deliberately ignoring the watermark must fail, with the red receipt retained in the implementation PR.
+- [Should] **F2 — Make QA queue classification deterministic.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:125,254–257,259–263` requires four queue categories and exact-head evidence but never states their predicates or precedence. Passing observed checks alone does not establish that required checks/reviews are present; draft, missing requirements and conflicting review evidence need defined outcomes. Add a small decision table using only available cached fields: eligibility, head match, required-evidence completeness, freshness and category precedence. If required policy/evidence is not in the existing corpus, show unknown/needs verification rather than a ready candidate; no new fetcher is needed. Cover each category, empty checks, draft, missing requirements, changes-requested and wrong-head cases with planned failing controls.
+- [Should] **F3 — Bound and version the complete pagination cycle.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:118,141–145,280–285` caps each response and says to fetch all necessary pages, but defines neither a total page/byte/time cap nor how pages share a snapshot. Per-request timeout and single-flight do not stop an endless/repeated cursor; concurrent corpus updates can produce mixed pages and false exact totals. Specify stable cursor ordering and revision semantics (including server restart), a bounded aggregate cycle, and repeated-cursor/mixed-revision behavior. Either consume one consistent bounded snapshot or retain partial/unknown totals. Add fixtures for repeated cursor, changing revision between pages and aggregate-budget exhaustion; each must terminate and refuse an exact total.
+- [Pass] **Reuse and honest source authority:** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:43–53,94–109,302–317` assigns existing writers, prohibits hidden GET collection/bootstrap, and scopes topology/CLIO extensions to their owners. Lines 275–278 explicitly reject a 150-second upstream freshness SLA. Preserve these constraints while resolving F1–F3.
+- [Pass] **Design and future conversion are bounded:** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:168–211` defines one typed token source, generated breakpoint rules, light/dark/system and immutable references; lines 227–238 and 259–263 provide actionable navigation and wrap-up behavior; lines 358–384 distinguish the Swift shell from separately approved native views. Proposed QA remains a promise until implementation receipts exist.
+- [Pass] **Recon limitations remain explicit:** `docs/mockups/flight-dashboard/provenance.jsonl:8` records “bounded_recon_complete” and names DB lag, topology and milestone/cross-device unknowns; `PROJECT/2-WORKING/recon-flightdeck-consumer.md:176–185` supplies bounded follow-ups. The referenced evidence SHA-256 matched on this review; that does not independently remeasure installed schedules or live coverage.
+
+Handing off to designer (Producer) — resolve F1–F3 in the plan and log each disposition, then return for round 2 review. The harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
