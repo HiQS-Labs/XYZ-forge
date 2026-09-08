@@ -21,7 +21,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Initial HTML and browser interaction checks complete; brief review approved. | Operator visual approval, then Swift app planning with 2–3 minute telemetry cadence. |
+| Initial HTML and browser checks complete; brief and final HTML relay reviews approved. | Operator visual approval, then Swift app planning with 2–3 minute telemetry cadence. |
 
 ## Scope and checkpoint
 
@@ -131,3 +131,5 @@ rejected. Full repository runtime/promotion gates have not been run for this
 design checkpoint; no ready PR or shipping claim is made.
 
 Swift planning remains explicitly held for operator visual approval.
+
+Final HTML review: `relay-system/2026-09-08/gh494-html-review.md`, round 2 Approved, driver exit 0. Three first-round context defects were reproduced and corrected; current artifact hashes are retained in provenance. The task remains at the operator visual-approval checkpoint.
