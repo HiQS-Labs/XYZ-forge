@@ -279,3 +279,78 @@ SWE summary: **Recon Block; Minimal Fix; Diagnosable Fix; Blast Block; Proof Blo
 **Handoff:** Producer is `claude-a`, as named by the prior reviewer handoff in this thread. Only this relay file was edited; no implementation or test execution occurred.
 
 NEXT: Producer (claude-a)
+
+## Round 3 — Producer (claude-a) — 2026-09-08
+
+**All 6 findings accepted, none rejected.** Verified against source before accepting, as with round 1.
+
+### B1 — you were right twice, and the pattern was mine
+
+Both anchors I proposed failed for the identical reason: I placed trust in something the reviewed
+party can write. Verified your three citations:
+
+- `utils/py/codex-turn.py:65-70` grants `--add-dir <tick_repo_root>/.tick` **unconditionally** (GH-263/296).
+- `relay-turn-lib.sh:1309-1313` deliberately does not clean `.tick` — the comment says it is
+  "the coordination state the turn legitimately writes."
+- `bin/tick:190-193` passes `agent: flags.agent` — a caller-supplied string — into `claim`.
+
+So a builder can write the log and claim under the reviewer's name. "Append-only" was my description
+of normal use, not an enforced property. The unforgeability claim is withdrawn.
+
+**Third anchor, per your correction: the supervisor's own memory.** `relay_drive.py` is the parent
+and already holds what is needed in local variables the child cannot reach — the dispatched `actor`
+(`:619`), and STATUS/signature/pointer before (`:611-613`) and after (`:820-823`) the turn returns
+through containment. "Did STATUS transition to terminal during the turn I dispatched to X" needs no
+new subsystem. The claim is now explicitly bounded to the supported dispatch/containment contract,
+not to arbitrary same-user host execution, and tick is retained as coordination evidence only.
+
+### B2 — `terminal_actor()` dropped entirely
+
+You are right that ownership operations do not record STATUS writes (`src/scope.js:90-91`) and that a
+raw last-event scan would create a second, weaker token interpretation alongside the canonical
+projection (`src/project.js:116-175`). Replaced by one predicate requiring all four of: dispatched
+reviewer, accepted turn, observed terminal transition, and valid token state via the **canonical**
+interpretation. `Closed` is covered alongside `Approved`. Startup/resume/recovery without a trusted
+observation returns `terminal-unobserved` — the distinction you flagged is now explicit, and no
+historical reviewer can surface there.
+
+### B3 — launchers wired in this change
+
+Conceded: promising an inventory "before landing" was work-then-reject, not migration. Marathon
+already requires `args.reviewer` (`:1024-1026`) and builds the relay command at `:3144-3149`; that
+value is passed through in this change. Legacy jog and direct invocation refuse **pre-dispatch**, so
+no builder/reviewer turn is spent on a misconfiguration. Same-agent self-review is classified
+unprovable; I had dropped that case and the compatibility fall-through at `relay-turn-lib.sh:88-101`
+is deliberately not preserved for terminal authorization.
+
+### F1, F2, F3
+
+- **F1** — verified `close-mismatch` at `:572-575` already rejects Approved with a live actor, so my
+  builder case would have passed without reaching the new guard. Controls now require the fake builder
+  to complete the token, assert exit **4** with the exact reason, prove the terminal branch was
+  reached, and use a transposed guard mutation for the baseline since `0b37c36f` does not accept
+  `--reviewer`. Phase 3 now exercises each real caller with a fake merge marker — removing any
+  caller's check must fail that caller's test. `provenance.jsonl` added alongside transcripts.
+- **F2** — verified: the override spans `:1375-1389`; `except OSError:`/`pass` sit at `:1388-1389`.
+  My range would have produced invalid Python. Corrected to the complete outer `if` block.
+- **F3** — full contract specified: per-caller repo/PR resolution (the four differ:
+  `-R args.repo`, `cwd=root`, `cwd=repo_path`, PR URL), current-approval definition including
+  dismissed/superseded/changed-head, fail-closed on malformed or unavailable output, and a distinct
+  awaiting-review refusal that blocks reconciliation and teardown. Phase 3 is described as
+  enforcement at owned merge paths only; the server boundary is not claimed complete from code.
+
+### Documentation
+
+Count dispute dropped — your `202/66/136` shows scope alone does not explain it, and active-launcher
+evidence is the relevant measure regardless. Added the explicit **Costly** reversibility read and a
+concrete tripwire: any `terminal-role-unprovable` on a marathon lane in the first week means the
+wiring missed a caller — stop and re-inventory rather than widen acceptance. No new plan document.
+
+### Note on the cap
+
+This is round 3 of 3. If blockers remain, I stop and record the plan blocked with the exact
+outstanding findings rather than proceeding on an unapproved design — which is the same discipline
+this issue exists to enforce. No implementation has started; nothing outside this plan and thread has
+been modified.
+
+NEXT: Reviewer

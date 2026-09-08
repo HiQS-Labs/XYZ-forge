@@ -4,7 +4,7 @@ status: In progress
 created: 2026-09-08
 updated: 2026-09-08
 owner: agent-b
-goal: make "STATUS: Approved" mean a reviewer approved — attribute the terminal status to a trusted actor, stop jog overriding the driver's escalation, and enforce a review requirement at a boundary that actually intercepts every merge
+goal: make "STATUS: Approved" mean a reviewer approved — bind the terminal status to the supervisor's own observation of the turn it dispatched, stop jog discarding that verdict, and enforce a review requirement at the owned merge paths
 gh_issue: 505
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/505
 branch: fix/gh505-relay-reviewer-integrity
@@ -15,11 +15,12 @@ related:
   - https://github.com/BinoidCBD/LTVera-Pandas/issues/440
 context_tags: [relay, review-integrity, governance, merge-gate]
 non_goals:
-  - Adding a new review subsystem, receipt store, or reviewer-quality metric
+  - Authenticating tick events, or any new receipt/event-signing subsystem
+  - Defending against arbitrary same-user host code execution outside the dispatch/containment contract
   - Changing the relay turn protocol, token model, or round-cap semantics
-  - Retroactively auditing or reverting already-merged PRs
   - Migrating the `marathon-drive:` directive to a neutral marker name
-  - Bridging relay-reviewer identity to GitHub-reviewer identity (named as an open gap, not solved here)
+  - Bridging relay-reviewer identity to GitHub-reviewer identity (named as an open gap, deferred to a follow-up issue)
+  - Retroactively auditing or reverting already-merged PRs
 effort: 40
 complexity: 4
 risk: 4
@@ -32,177 +33,170 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA round 1 returned **CHANGES REQUESTED** with 5 blockers and 2 fixes; all independently verified as valid and the plan rewritten around them — the trust anchor moved from the in-file directive to the tick event log | Round 2 Codex QA on this revision; no implementation until Approved |
+| Codex round 2 blocked the tick-event anchor with source proof that the turn can write `.tick` and spoof `--agent`; verified and accepted. Anchor moved a third time — to the supervisor's own in-process observation, which the child cannot reach | Round 3 Codex QA (cap). Approved → implement Phase 0→3; not approved → stop and record blocked |
 
 ## Table of contents
 
-- [What round 1 changed](#what-round-1-changed)
+- [Trust anchor: third and final](#trust-anchor-third-and-final)
+- [Round 2 dispositions](#round-2-dispositions)
 - [Phase 0 — delete the jog override](#phase-0--delete-the-jog-override)
-- [Phase 1 — attribute the terminal status to a trusted actor](#phase-1--attribute-the-terminal-status-to-a-trusted-actor)
+- [Phase 1 — supervisor-observed approval](#phase-1--supervisor-observed-approval)
 - [Phase 2 — take the Approved clause out of the shared prompt](#phase-2--take-the-approved-clause-out-of-the-shared-prompt)
-- [Phase 3 — enforce a review requirement at a real merge boundary](#phase-3--enforce-a-review-requirement-at-a-real-merge-boundary)
+- [Phase 3 — enforce a review requirement at the owned merge paths](#phase-3--enforce-a-review-requirement-at-the-owned-merge-paths)
 
-## What round 1 changed
+## Trust anchor: third and final
 
-Codex blocked the first plan. Every finding was verified against source before acceptance; all
-seven were valid and three of them invalidated the plan's core premise. Dispositions:
+Two anchors have now failed review, both for the same reason — I placed trust in something the
+reviewed party can write.
 
-| Finding | Verified | Disposition |
+| Attempt | Why it failed | Verified |
 |---|---|---|
-| **B1** — the role directive is editable by the party it authorizes | The directive is a bare line at `RELAY.md:5`, outside the `▽ DO NOT MODIFY ▽` block, in a file every turn may write | **Accepted — premise invalidated.** Trust anchor moved to the tick event log (below) |
-| **B2** — three driver success sites, not two; `token_state()` returns `""` for done; NEXT is not the dispatch input | Third site confirmed at `relay_drive.py:868-873`; empty actor at `:374-377`; dispatch reads token state at `:570` | **Accepted.** All three sites gated; no auto-repair, integrity escalation only |
-| **B3** — Phase 3 conflated two jog executors; the deletion orphaned `proc`; the seed used `task_name` before assignment | `run_single_phase_drive(root, gh_num, builder="agy", simulate=False)` has no reviewer param (`:1279`); `proc` is assigned at `:1374`; `task_name` at `:1336` | **Accepted.** Directive-seeding dropped entirely; only the override block is deleted |
-| **B4** — a PreToolUse hook is not a merge choke point | A tool call launching `express.py` need not contain `gh pr merge`; its subprocesses are not separate tool calls | **Accepted.** Hook demoted to a supplement; enforcement moved to server policy + a shared check at owned callers |
-| **B5** — marathon has its own terminal consumers | `satisfied_lane_terminal()` (`marathon_drive.py:2677-2698`) and recovery at `:3218-3222` accept terminal STATUS with `_actor` discarded | **Accepted.** Phase 1 extends to these consumers |
-| **F1** — the four red controls lack exact oracles | Reasoning accepted as written | **Accepted.** Each control now names entrypoint, exit code, reason string, and evidence destination |
-| **F2** — inventory wrong; frozen-twin edit unnecessary | `marathon_drive.py:2801` also emits the directive, so "only marathon-drive.sh" was false; `test/gh308-frozen-twin-guard.sh:49-64` selects changed paths even for comments | **Accepted.** Claim corrected; `relay-drive.sh:32` edit dropped |
+| In-file `marathon-drive:` directive | A bare line at `RELAY.md:5`, outside the `▽ DO NOT MODIFY ▽` block, in a file every turn may write | Round 1 B1 |
+| `.tick/events/` log | The Codex shim unconditionally grants `--add-dir <tick_repo_root>/.tick` (`utils/py/codex-turn.py:65-70`); containment deliberately spares `.tick` because it is "coordination state the turn legitimately writes" (`relay-turn-lib.sh:1309-1313`); and `bin/tick:190-193` passes a **caller-supplied** `--agent` straight through, so a builder can claim under the reviewer's name | Round 2 B1 |
 
-**Rejected: none.** Two corrections to Codex's own text, neither changing a verdict: the fail-closed
-*principle* was affirmed, not blocked (B1 blocks the mechanism, not the goal); and the relay-file
-count discrepancy is a scope artifact — my 201 counted `relay-system/<date>/*.md`, its 261 counted
-recursively. Both are stored-document counts and neither measures active traffic, which is Codex's
-actual point and is conceded.
+**The anchor is the supervising process's own memory.** `relay_drive.py` is the parent; the turn runs
+as a child under containment. The parent already holds, in local variables the child cannot reach:
 
-### The corrected trust anchor
+- `actor` — the identity it *chose* to dispatch, exported as `RELAY_AGENT` at `:619`
+- `s`, `rfsig`, `nextp` — relay STATUS, content signature and pointer **before** the turn (`:611-613`)
+- `ns`, `nrfsig`, `nnextp` — the same **after** the turn returns through containment (`:820-823`)
 
-The first plan called the in-file directive "authoritative, computed, unguessable." It is none of
-those against a builder that edits it. The trust anchor must live outside anything a turn can write.
+So "did the STATUS transition to terminal during the turn I dispatched to X" is answerable with no
+new subsystem, no event authentication, and nothing the child can forge.
 
-`.tick/events/` is that anchor: one append-only JSONL file per event, named
-`<ts>-<agent>-<verb>-<task>.jsonl`, written by `tick` itself and **not** on any turn's allowlist:
+**The claim is explicitly bounded.** This defends the supported dispatch/containment contract. It is
+not authentication against arbitrary same-user host code execution — a process running outside the
+driver can still write anything. Tick remains coordination evidence, never sole approval authority.
+That boundary is stated in the PR, not implied.
 
-```
-{"schema_version":"0.2.0","ts":"...","type":"task.created","task":"RELAY-gh505-plan-qa","agent":"claude-a"}
-```
+## Round 2 dispositions
 
-So "who held the token when the terminal STATUS appeared" is answerable from evidence the reviewed
-party cannot forge. Combined with an explicit reviewer identity passed to the driver at invocation —
-`relay_drive.py` currently has **no** `--builder`/`--reviewer` argument, confirmed — the terminal
-decision becomes attributable without inventing a receipt subsystem.
+All six accepted; none rejected. Each verified against source first.
+
+| Finding | Verified at | Disposition |
+|---|---|---|
+| **B1** — `.tick` is reachable and `--agent` is spoofable | `codex-turn.py:65-70`, `relay-turn-lib.sh:1309-1313`, `bin/tick:190-193` | Anchor replaced (above); unforgeability claim withdrawn |
+| **B2** — last claim/release cannot bind a STATUS transition | `src/scope.js:90-91`, `src/project.js:116-175` | `terminal_actor()` dropped entirely. One predicate, below. No subset port of token projection |
+| **B3** — fail-closed with no launcher migration rejects every working relay | `marathon_drive.py:1024-1026`, `:3144-3149` | Marathon's existing `args.reviewer` wired in **this** change; launchers enumerated; same-agent self-review classified unprovable |
+| **F1** — controls can pass for unrelated reasons | `relay_drive.py:572-575` (`close-mismatch` already rejects a live actor) | Controls rewritten: token completed, exact exit 4 + reason, baseline-compatible invocation, per-caller merge tests |
+| **F2** — deletion range still orphans the handler | Override spans `:1375-1389`; `except OSError: pass` at `:1388-1389` | Corrected to the complete outer `if` block |
+| **F3** — merge check contract unspecified | Four callers resolve differently: `-R args.repo`, `cwd=root`, `cwd=repo_path`, PR URL | Full contract specified below |
+
+Documentation corrections accepted: the count dispute is dropped (your `202/66/136` shows scope alone
+does not explain it, and active-launcher evidence is the relevant measure anyway); the **Costly**
+reversibility read and a rollout tripwire are added to Risks.
 
 ## Implementation
 
-Phase order changed: the override deletion moves **first**, per B3/Codex answer 3. Phase 1's
-protection is meaningless while jog discards its exit code.
-
 ### Phase 0 — delete the jog override
 
-Delete `jog_run.py:1375-1387` — **the override block only**. Line `:1374`
-(`proc = subprocess.run(cmd, cwd=root, env=env)`) stays; the function ends `return proc.returncode`.
-Deleting through `:1374` as the first plan said would have removed the assignment and orphaned the
-`except`.
-
-Nothing is seeded into the relay file here. `run_single_phase_drive` has no reviewer parameter and
-no reviewer dispatch; adding a comment cannot create one, and building a second two-agent path in a
-builder-only function is exactly the duplicate subsystem this repo forbids. Whether legacy jog should
-gain a reviewer at all is **out of scope** and named as an open question below.
+Remove the complete outer `if proc.returncode != 0:` block at `jog_run.py:1375-1389`, **including its
+nested `except OSError: pass`**. Preserve `proc = subprocess.run(...)` at `:1374` and the final
+`return proc.returncode`. Nothing is seeded into the relay file; `run_single_phase_drive` has no
+reviewer parameter and gaining one is out of scope.
 
 **Acceptance** — `test/gh505-jog-no-override.sh`: stub the driver to exit 4 while leaving
-`STATUS: Approved`; assert `run_single_phase_drive` returns exactly 4. Red control: returns 0 at
-`0b37c36f`. Stubbing the driver (not the relay file) is what makes the control fail for the right
-reason.
+`STATUS: Approved`; assert the function returns exactly 4. Red control: returns 0 at `0b37c36f`.
 
-### Phase 1 — attribute the terminal status to a trusted actor
+### Phase 1 — supervisor-observed approval
 
-1. Add `--reviewer <agent>` to `relay_drive.py`, supplied by the invoker, not read from the relay file.
-2. Add `terminal_actor(task)` reading `.tick/events/` for the last `claimed`/`released` event on the
-   task, returning the agent that held the token when the terminal STATUS appeared.
-3. Gate **all three** success sites — `:571-579`, `:830-833`, `:868-873` — on that actor equalling
-   `--reviewer`.
-4. On mismatch or unprovable attribution: **no auto-repair.** Exit non-zero with reason
-   `terminal-by-non-reviewer` or `terminal-role-unprovable`. The first plan's "restore STATUS, point
-   NEXT at the reviewer, continue" does not hand off the token — dispatch reads token state, not
-   `NEXT:` — so it would either re-dispatch the builder or hit a token-state escalation.
-5. Apply the same rule to marathon's consumers: `satisfied_lane_terminal()` (`:2677-2698`), and the
-   recovery sites at `:3218-3222` and `:3294-3298`.
-6. Where `--reviewer` is absent (every existing caller), attribution is unprovable → escalate. This
-   is the fail-closed choice, and it now rests on unforgeable evidence rather than an editable comment.
+**One approval predicate**, applied identically wherever a terminal status is honored. A terminal
+STATUS (`Approved` **or** `Closed`) is accepted only when all four hold:
 
-**Runtime boundary, stated honestly:** this is a Python-side fix. The frozen shell twin
-`relay-automation/relay-drive.sh` is unchanged and retains the old behavior. Lanes running the shell
-driver are **not** protected by this PR. Named as a limitation in the PR, not papered over.
+1. the turn was dispatched by this driver to the configured reviewer (captured `actor`, not read back from any file);
+2. the turn completed successfully through containment;
+3. the STATUS transitioned to terminal **during that turn** (`s` non-terminal → `ns` terminal);
+4. the token is in a valid terminal state per the **canonical** projection — call the existing interpretation, do not port a subset.
 
-**Acceptance** — `test/gh505-relay-terminal-role.sh`, driving the real `relay_drive.py` entrypoint
-with a fake turn, asserting the exact exit code and reason string, and proving the terminal branch
-was reached (not a setup/lock/shim error):
-- builder holds token, writes `Approved` → `terminal-by-non-reviewer`, non-zero. **Red at `0b37c36f`.**
-- reviewer holds token, writes `Approved` → exit 0, at an ordinary turn **and** at final-cap.
+Anything else — including a terminal status already present at startup, resume, or recovery — is
+**unprovable** and escalates with exit 4 and an explicit reason (`terminal-by-non-reviewer`,
+`terminal-role-unprovable`, `terminal-unobserved`). No auto-repair: restoring STATUS and repointing
+`NEXT:` does not hand off the token, because dispatch reads token state at `:570`, not `NEXT:`.
+
+Applied at all three driver success sites (`:571-579`, `:830-833`, `:868-873`) and all three marathon
+consumers (`satisfied_lane_terminal()` `:2677-2698`; recovery `:3218-3222` and `:3294-3298`). A
+post-timeout or failed turn must never become success.
+
+**Launcher wiring, in this change:**
+
+| Launcher | Action |
+|---|---|
+| `marathon_drive.py` | Already requires `args.reviewer` (`:1024-1026`); pass it into the relay command at `:3144-3149` |
+| `jog_run.py` legacy `run_single_phase_drive` | Builder-only, no reviewer; refuses **before dispatch** with a migration message rather than spending a turn |
+| Direct `relay-drive.sh` invocation | New `--reviewer` required; pre-dispatch refusal when absent |
+
+**Self-review:** builder identity equal to reviewer identity is classified unprovable, not accepted.
+The compatibility parser's same-agent fall-through (`relay-turn-lib.sh:88-101`) is deliberately not
+preserved for terminal authorization.
+
+**Runtime boundary:** Python-side only. The frozen twin `relay-automation/relay-drive.sh` is
+unchanged and its lanes are not protected. Stated in the PR.
+
+**Acceptance** — `test/gh505-relay-terminal-role.sh`, driving the real entrypoint:
+- builder dispatched, writes terminal STATUS **and completes the token** → exit 4, reason `terminal-by-non-reviewer`. Red control uses a narrowly transposed guard mutation, since `0b37c36f` does not accept `--reviewer` and would otherwise fail for the wrong reason. Must also prove the terminal branch was reached, not `close-mismatch` at `:572-575`.
+- reviewer dispatched, same actions → exit 0, at an ordinary turn and at final cap.
 - review-once mode, both roles.
-- terminal at startup/resume before any turn → unprovable.
-- directive tampered to name the builder as reviewer → still refused (proves the anchor is the event
-  log, not the file).
-- no `--reviewer` supplied → unprovable, not silent success.
+- terminal present at startup/resume → `terminal-unobserved`, never a historical actor.
+- `Closed` covered alongside `Approved`.
+- builder == reviewer → unprovable.
+- all three marathon consumers, including post-timeout evidence.
 
-Evidence: red/green transcripts committed to `TESTS-RESULTS/2026-09-08+GH-505/`.
+Evidence: red/green transcripts **and** `provenance.jsonl` committed to `TESTS-RESULTS/2026-09-08+GH-505/`.
 
 ### Phase 2 — take the Approved clause out of the shared prompt
 
-`relay-turn-lib.sh:1011`: remove `(or done + set STATUS: Approved when approving)` from the shared
-`printf`; add it to the reviewer `role_note` at `:994-1000`.
+`relay-turn-lib.sh:1011`: move `(or done + set STATUS: Approved when approving)` out of the shared
+`printf` into the reviewer `role_note` at `:994-1000`. The `relay-drive.sh:32` comment edit stays
+dropped — frozen twin, and `test/gh308-frozen-twin-guard.sh:49-64` selects changed paths even for comments.
 
-**Dropped from the first plan:** the `relay-drive.sh:32` comment edit. It touches a frozen twin, and
-`test/gh308-frozen-twin-guard.sh:49-64` selects changed paths even for a comment-only change.
+**Acceptance** — assert both prompts non-empty and carrying role-specific text, then only the
+reviewer's contains `STATUS: Approved`. Red control: both contain it at `0b37c36f`.
 
-**Acceptance** — `test/gh505-prompt-role-split.sh`: assert both rendered prompts are non-empty and
-carry their role-specific text, then assert only the reviewer's contains `STATUS: Approved`. Red
-control: both contain it at `0b37c36f`.
+### Phase 3 — enforce a review requirement at the owned merge paths
 
-### Phase 3 — enforce a review requirement at a real merge boundary
+One shared `require_approving_review()` — canonical Python implementation plus a thin shell entry for
+the one shell caller.
 
-The hook-only design is withdrawn. A PreToolUse hook matches model tool calls; `express.py` invoking
-`gh pr merge` in a subprocess is not one, so the hook fails open even when installed.
+**Contract:**
 
-1. **Server policy is the universal boundary.** Branch protection on `development` requiring one
-   approving review. Not a code change, not revertable by `git revert` — landed as an explicit
-   operator action, separately, after the code.
-2. **Shared check at owned callers** as the local enforcement that ships in this PR: one
-   `require_approving_review(pr)` helper called by `express.py:599`, `marathon-closeout.sh:292`,
-   `jog_run.py:1432`, `skills/merge-cleanup/scripts/merge_cleanup.py:55-56`. Several callers of one
-   function is still DRY; four copies of the logic would not be.
-3. The helper fails closed on unavailable or malformed `gh` output, and needs author and approver
-   identities — `--json reviewDecision` alone does not supply them.
-4. A PreToolUse hook may supplement this later. It is not the boundary.
+| Concern | Rule |
+|---|---|
+| Target resolution | Explicit repo + PR inputs per caller. `express.py:599` uses `-R args.repo`; `jog_run.py:1432` uses `cwd=root`; `merge_cleanup.py:55-56` uses `cwd=repo_path`; `marathon-closeout.sh:292` uses a PR URL. A bare `pr` argument must never query a same-numbered PR in the harness repo |
+| Current approval | An approving review by an actor other than the PR author, not dismissed, not superseded, and against the current head SHA |
+| Unavailable/malformed `gh` output | Fail closed |
+| Refusal result | Caller returns a distinct awaiting-review outcome; reconciliation and teardown must not proceed past it |
 
-**Open gap, stated not solved:** a relay approval by `codex` is not a GitHub review by a distinct
-GitHub actor. This PR does not bridge those identities, so the merge check enforces "a GitHub review
-by someone other than the author" — which automation cannot currently satisfy on its own. That is the
-honest consequence and it belongs in the PR body, not in a claim that automation still flows.
+**Scope claim:** this PR delivers enforcement at the **owned merge paths**. Server branch protection
+is the universal boundary and is a separate operator action — named repo/branch, intended settings,
+bypass behavior, and read-back proof recorded there. Phase 3 is not "complete" from code alone.
 
-**Acceptance** — `test/gh505-merge-review-gate.sh`: call `require_approving_review` directly with
-representative inputs and assert whether the merge side effect is reached; include malformed and
-unavailable `gh` output as fail-closed cases. Red control: the merge proceeds at `0b37c36f`.
+**Open gap, disclosed not solved:** a relay approval by `codex` is not a GitHub review by a distinct
+GitHub actor. Consequence: unattended landing pauses for an eligible external review. No identity
+bridge in this PR; deferred to a follow-up issue.
+
+**Acceptance** — exercise **each real caller** with upstream work stubbed and a fake merge marker:
+baseline reaches merge without approval; candidate refuses without reaching merge; a valid approval
+reaches merge. Removing any caller's check must make that caller's test fail. Dismissed, superseded,
+changed-head, malformed and unavailable cases included. Helper unit tests are additional, not a
+substitute.
 
 ## Dependencies and ordering
 
-Phase 0 → 1 (hard: the override discards Phase 1's exit code). Phase 2 independent. Phase 3
-independent of 0–2 and the only defence for a merge that never went through a relay.
+Phase 0 → 1 (hard). Phase 2 independent. Phase 3 independent of 0–2.
 
 ## Risks and rollback
 
+**Reversibility: Costly.** This changes relay completion, marathon recovery, and queue landing.
+
 | Risk | Mitigation |
 |---|---|
-| Fail-closed escalation on every caller that passes no `--reviewer` | Real and intended. Scope is *active launchers*, not the 201-file document count — that count is being replaced with a measured inventory of live callers before Phase 1 lands. |
-| Rollback reopens the integrity hole | Stated explicitly. Revert is not a neutral action here. |
-| Shell twin lanes stay unprotected | Named as a limitation in the PR. |
-| Branch protection blocks an automated lane that cannot produce a GitHub reviewer | Landed separately, operator-approved, after the identity gap above is understood. |
-
-## Open questions carried to round 2
-
-1. Should legacy `run_single_phase_drive` gain a reviewer, or should reviewed work route through the
-   marathon executor that already has one?
-2. What is the measured count of *active* callers that would begin escalating?
-3. Is the relay-approval → GitHub-review identity bridge in scope for a follow-up issue?
-
-## Re-rating
-
-Effort revised **55 → 40** (lower = more expensive). The corrected write-set adds the tick-event
-attribution reader, three marathon consumers, a shared merge helper at four callers, and six Phase 1
-fixtures. Severity 85 and appeal 50 unchanged and affirmed by review. Priority 85 held as a
-severity-led judgment, with the companion report's defect counts explicitly uncounted and claiming no
-trend. New rating: **85/85/50/40**.
+| A launcher not enumerated begins refusing pre-dispatch | Refusal is before a turn is spent, with a migration message. **Tripwire:** any `terminal-role-unprovable` on a marathon lane in the first week means the wiring missed a caller — stop and re-inventory rather than widening acceptance |
+| Rollback reopens the integrity hole | Explicit: revert is not neutral here |
+| Frozen-twin lanes unprotected | Named as a PR limitation |
+| Branch protection blocks a lane that cannot produce a GitHub reviewer | Separate operator action, after the identity gap is understood |
 
 ## Verification
 
 Full `./validate.sh` in a **separate disposable clone**, never this task clone. Every red control
-demonstrated red at `0b37c36f` before its fix, with transcripts committed to
-`TESTS-RESULTS/2026-09-08+GH-505/`. Implementation-time failures route through `/debug-mantra`.
+demonstrated red at `0b37c36f` before its fix. Implementation-time failures route through
+`/debug-mantra`.
