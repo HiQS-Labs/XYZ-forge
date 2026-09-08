@@ -388,7 +388,8 @@ JSEOF
 
   # The batch must survive a bad file and still validate the ones after it.
   printf 'null\n' > "$WORK/spec-root.json"
-  if node "$VALIDATOR" "$WORK/spec-root.json" "$WORK/spec-clean.json" 2>&1 | grep -q 'spec-clean.json: ok'; then
+  # capture-then-match, not a pipe into grep -q (GH-139: a pipe hides the producer's exit status).
+  if grep -q 'spec-clean.json: ok' <<<"$(node "$VALIDATOR" "$WORK/spec-root.json" "$WORK/spec-clean.json" 2>&1)"; then
     pass "a rejected spec does not abort the batch — later files are still validated"
   else
     fail "a rejected spec does not abort the batch — later files are still validated"
