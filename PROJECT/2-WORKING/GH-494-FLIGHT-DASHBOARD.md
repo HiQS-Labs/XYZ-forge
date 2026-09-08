@@ -52,7 +52,14 @@ not hide another lane's overdue handoff. Fixture data is visibly labeled.
 
 Meaningful progress is a commit, a substantive PR state change, or completed
 agent milestone. Red at >=120 minutes, amber at >=60 minutes, green below 60.
-Unknown/stale data is gray; activity is not evidence of current process liveness.
+Each lane has a progress age and explicit fixture observation state. A failed poll
+or observation older than 6 minutes is unknown/gray and retains last-known age.
+For the simulation, successful fixture observations repeat at the simulated time;
+progress timestamps stay fixed. Unknown progress never becomes green.
+Repo summary uses the worst fresh known lane (red before amber), then unknown
+before green. Mixed red/gray shows red with an additional missing-data label.
+Attention filtering includes red, amber and unknown repos. Activity is not evidence
+of current process liveness.
 Manual check-in or snooze does not reset the progress timestamp.
 
 The 6 PM local-time countdown means wrap up: QA ready work, merge reviewed work,
@@ -72,6 +79,25 @@ Distinct sample QA/merge/carry-forward items are associated with repo lanes.
    records and ensure an empty search has an explicit empty state.
 4. Present HTML for operator design approval. Only after that approval write the
    Swift app plan; no claim that mock observations reflect current real work.
+
+## Design checks (planned, not yet evidence)
+
+| Case | Expected result |
+|---|---|
+| 1920 × 1080 | All seven repo cards and the 6 PM queue visible without page scrolling. |
+| 390 × 844 | One card column, readable controls, no horizontal overflow; vertical scrolling allowed. |
+| 59 / 60 / 119 / 120 minutes | Green / amber / amber / red respectively. |
+| Fresh 5-minute + fresh 130-minute + unknown lane | Red repo; overdue lane and unknown label both remain visible. |
+| Missing or >6-minute-old observation | Gray lane; last-known age labeled, never inferred fresh/green. |
+| Fixed mock day, 17:59 / 18:00 / 18:01 | 1 minute remaining / wrap-up due / wrap-up due; no tomorrow reset. |
+| Copy permission denied | Handoff text stays visible and selectable, with a manual-copy instruction. |
+| Nonempty named checkout fixtures | Counts equal list lengths; deliberately adding one to expected total fails the check. |
+| Search with no matches | Explicit empty state; clearing search restores all seven cards. |
+
+Retain screenshots and interaction/check output under local `temp/` for visual
+review. Committed verification summaries may reference artifact hashes; no private
+telemetry is used. Relay approval here authorizes HTML construction only, not
+operator visual approval, production readiness, or starting the Swift plan.
 
 ## Review questions
 
