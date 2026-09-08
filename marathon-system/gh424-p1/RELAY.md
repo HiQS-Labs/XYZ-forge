@@ -1,6 +1,6 @@
 # Marathon Phase gh424-p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=gh424-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -165,7 +165,7 @@ allowlist and harness containment configuration for the next turn. The remaining
 is to render the explicit DB marker without changing stored raw text or the lossless
 JSON API, complete marker-write refresh behavior, and extend the existing GH-424 test
 with actual dashboard regeneration and a negative control. The current approval must
-remain outstanding until that behavior is implemented and verified.
+remain outstanding until that behavior is implemented and verified.  [Unverified — no citation]
 
 Only this relay file changed. No Git commands, tests, gates, live ledger writes, or
 new verification claims this round. Prior focused evidence remains as recorded in
@@ -177,3 +177,17 @@ STATUS remains Open. This handoff returns the required token; it is not a reques
 repeat implementation or approve the incomplete lane before scope is expanded.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+I have verified the builder's blockage. `utils/roadmap-dashboard.sh` is indeed required to fulfill the acceptance criteria for rendering explicit DB markers, but it remains absent from the scope allowlist. 
+
+**Operator:** Please update the scope allowlist in this `RELAY.md` file (and any harness configuration) to include `utils/roadmap-dashboard.sh` so the builder can proceed with dashboard acceptance. No pre-existing issues found during sweep of touched files in Round 1.
+
+NEXT: codex (Builder)
+
+handing off to codex — codex, take your turn.
