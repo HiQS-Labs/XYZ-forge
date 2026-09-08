@@ -14,14 +14,16 @@
 #      Phase 3). This is how a Python caller reuses THIS normalizer instead of growing a
 #      second one: `model_alias.py` pipes in the profile names from device_config.json and
 #      gets back the profile whose name matches. Only the readability guard below had to
-#      change (-f -> -r) to allow it -- the four matching tiers are untouched and remain the
-#      single implementation of colloquial-name matching in the repo.
+#      change (-f -> -r) to allow it -- the matching tiers remain the single implementation
+#      of colloquial-name matching in the repo.
 #
 # Matching is tiered, most-exact first, first match in file order wins each tier:
 #   1. normalized exact match      (case/punctuation/hyphen/whitespace-insensitive)
 #   2. squashed exact match        (also whitespace-insensitive: "GLM5.2" == "glm-5.2")
 #   3. sorted-token exact match    (order-insensitive: "Nemotron 3 Ultra" == "nemotron ultra 3")
-#   4. squashed substring fallback (last resort, either direction contains the other)
+#
+# Note: Tier 4 squashed substring fallback was retired (Model-catalog #3, XYZ-forge #457 D2)
+# to enforce consumer contract rule 1 ("never substring substitution") and prevent prefix capture.
 #
 # bash 3.2-portable (stock macOS): no `declare -A` (parallel indexed arrays instead), no
 # `readlink -f`.
@@ -108,17 +110,6 @@ done
 i=0
 while [[ $i -lt $n ]]; do
   if [[ "$(sorted_tokens "${aliases[$i]}")" == "$q_tokens" ]]; then
-    printf '%s\n' "${canonicals[$i]}"
-    exit 0
-  fi
-  i=$((i + 1))
-done
-
-# Tier 4: last-resort squashed substring fallback (either direction contains the other).
-i=0
-while [[ $i -lt $n ]]; do
-  k_squash="$(squash "${aliases[$i]}")"
-  if [[ "$k_squash" == *"$q_squash"* || "$q_squash" == *"$k_squash"* ]]; then
     printf '%s\n' "${canonicals[$i]}"
     exit 0
   fi
