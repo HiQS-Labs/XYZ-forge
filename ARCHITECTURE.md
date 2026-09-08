@@ -373,6 +373,13 @@ fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error.
 
 That single rule is what makes a view addable and removable without editing a single consumer.
 
+> The two mermaid blocks in this section and the next split the subsystem in half for readability.
+> For the whole of it on one canvas — truth, generators, the adoption gate, all four views, every
+> write path, and the push guard together — open the generated pan-and-zoom map at
+> [`ARCHITECTURE/ledger-diagram.html`](ARCHITECTURE/ledger-diagram.html) (spec:
+> [`ledger-diagram.json`](ARCHITECTURE/ledger-diagram.json); rebuild per
+> [`ARCHITECTURE/README.md`](ARCHITECTURE/README.md)).
+
 ```mermaid
 flowchart TD
     subgraph truth["Source of truth — GH-32"]

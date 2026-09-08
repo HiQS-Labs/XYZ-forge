@@ -18,9 +18,11 @@ anyone rebuilds.
 | `system-diagram-hub` | `hub-ring` | `relay-lib` at the centre, everything else on a ring — reads as event-driven rather than as a pipeline |
 | `system-diagram-trust-clustered` | `trust-clustered` | Bands by **trust tier** rather than call direction, so the containment core reads as the hub it is |
 | `git-history-diagram` | `git-lanes` | Commits, branch cuts and merges as stacked branch lanes, generated from local refs |
+| `ledger-diagram` | `layered` | `releases.db`, the four views derived from it, the adoption gate, and the push guard that reads the renderer's stderr |
 
 The four `system-diagram*` files are deliberately **the same graph under different layouts** — pick
-the one that makes the point you are making. `git-history-diagram` is a different graph entirely.
+the one that makes the point you are making. `git-history-diagram` and `ledger-diagram` are
+different graphs entirely: the first is Git ancestry, the second is the releases ledger subsystem.
 
 ## Rebuilding one
 
