@@ -91,6 +91,32 @@ Proposed owner-repo files are **new paths**, not claims they already exist:
 Use the installed Python/HTTP stack and browser JavaScript; no UI framework,
 standalone Node server, message bus, plugin framework or second SQLite store.
 
+### Minimal module boundary
+
+Keep the production app modular at the seams that are likely to change, without
+turning every card or helper into an abstraction. V1 has four responsibilities:
+
+| Responsibility | Smallest durable boundary | Must not own |
+|---|---|---|
+| Projection | One Rebalance projection module returning the versioned snapshot | HTML, theme values, polling or source collection |
+| Data client | One browser module for bounded GET, validation, last-good cache and freshness | Repo correlation, readiness policy or DOM rendering |
+| App state | One browser module for route/selection/scroll/spotlight and refresh state | CSS values, source reads or per-layout duplicate state |
+| Views | One browser module with small render functions for A/B/C/detail | Data fetching, independent stores or a component framework |
+
+Use plain ES modules and functions. Split a file only when it has a second owner,
+must be tested independently at a trust boundary, or becomes materially harder to
+read; file size alone is not a reason. A one-use card class, interface/factory,
+dependency-injection container, event bus, plugin API and generic design-system
+package are out of scope. The JSON snapshot is the only Rebalance-to-client
+contract. App state is the only cross-view runtime contract. Semantic tokens are
+the only styling contract. These three seams make later replacement possible
+without creating extension points before a second implementation exists.
+
+Shared policy stays server-side when it affects truth: identity, joins, coverage,
+progress and QA classification. The browser owns presentation and navigation.
+Swift consumes the same snapshot rather than importing browser modules; native
+views may reimplement presentation only after the HTML behavior is accepted.
+
 Reuse `db_connection_readonly` (`mode=ro`) at the boundary. Extend existing query
 helpers with optional supplied read-only connections/additive fields where needed;
 preserve their canonical mirror/dedup behavior. One projection entry point composes
@@ -204,6 +230,23 @@ visual design values are token references. Enumerate those narrow exceptions in 
 validator instead of allowing arbitrary inline styles. Repo data supplies an accent
 key, never a raw color or arbitrary CSS. Status data supplies meaning, not color.
 
+“Fully tokenized” applies to changeable **visual decisions**, not every CSS token or
+runtime value. Tokenize palette roles, typography, density, card geometry, effects,
+motion and named responsive thresholds. Keep layout mechanics such as grid/flex
+keywords, percentages, content-driven sizes, stacking structure and accessibility
+state in CSS; keep repo/status/content values in data. Do not create a token for a
+value used once unless it expresses a product-wide choice or is required for
+light/dark or Swift parity. Promote a repeated literal into the token source when a
+second real use needs coordinated change. This keeps theme changes centralized
+without replacing readable CSS with hundreds of one-off indirections.
+
+The token pipeline is deliberately one-way and narrow:
+`design-tokens.json` → one stdlib validation/generation command → committed CSS
+variables and, in Phase 5 only, Swift values. The app never edits tokens at runtime.
+Generated files carry a source hash and are never hand-edited. Avoid a general token
+schema language: support only the concrete scalar types and light/dark mappings used
+by Flightdeck, then extend the validator when a real token requires another type.
+
 CSS variables cannot be used directly in media-query conditions. Generate literal
 breakpoint rules from the same token source, with responsive variable assignments;
 no second hand-maintained breakpoint table. Reject unknown types, invalid units,
@@ -223,6 +266,8 @@ cards and overflow handling rather than force all content into a fixed height.
 - [ ] Production A/B/C use the same semantic tokens; inline literal colors/fonts/spacing and token fallbacks cannot bypass them. Keep saved mockups/reference checksums unchanged.
 - [ ] Generate CSS and token reference documentation; validate types/aliases and output freshness. Add one intentional hardcoded card color/font size and observe the token audit fail.
 - [ ] Switch palette, UI font, mono font, spacing scale and radius using token edits alone; all three layouts visibly change without component edits.
+- [ ] Verify module ownership: views cannot fetch, the client cannot classify QA/progress, and no layout creates a second state store. A deliberate forbidden import must fail the smallest architecture check.
+- [ ] Review the token inventory for one-use indirection: every component token either coordinates multiple uses, enables theme/Swift parity, or is removed in favor of a semantic token/readable CSS.
 - [ ] Render light and dark at 1920×1080, a typical laptop width and 390×844; verify text contrast (4.5:1 normal, 3:1 large) and visible focus/control boundaries. A deliberately low-contrast pair must fail the contrast check.
 - [ ] Check system-theme transitions, manual override persistence, unavailable-font fallback, larger text, reduced motion and both carousel fades. Center cards stay unfaded; selected card remains legible.
 - [ ] Commit generated output, token fixtures and actual screenshots/receipts; independent visual approval is required before calling the tokenized design complete.
