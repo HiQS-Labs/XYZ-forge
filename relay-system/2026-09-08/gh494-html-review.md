@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,19 @@ Basis: Round 1 findings reproduced on 77bb501 and corrected; requesting fresh re
 Browser before/after: all three checks fail on 77bb501 and pass now. PR493 retains Codex/issue494; PR195 retains Agy/issue194. Focus and text selection survive age update. Desktop still fits; narrow view and copy-denial checked again. Updated verification and provenance hashes refer to current HTML.
 
 Please adjudicate all findings and sweep the final artifact. Keep output concise and retain the standalone VERDICT/Basis/swept-file lines. This remains an initial visual mockup checkpoint, not Swift or production readiness.
+
+### Reviewer · codex · Round 2
+
+- [Pass] Round 1 handoff finding resolved: card actions select lane zero, attention actions carry their lane, and queue/detail PR controls preserve PR identity through lane selection and prompt generation. (`.relay-artifacts/index.html:53`, `:64`, `:79`, `:81`, `:82`, `:86`, `:89`, `:92`.)
+- [Pass] Round 1 timeline finding resolved: explicit event/lane records supply the agent, issue and fixed event time; Aegis ledger now resolves to Codex at 15:24 and LTVera preview to Codex at 15:38. (`.relay-artifacts/index.html:58`, `:59`, `:65`, `:90`.)
+- [Pass] Round 1 drawer finding resolved: targeted status, age and observation updates run on minute ticks and sample/time refreshes without replacing the handoff textarea. (`.relay-artifacts/index.html:87`, `:88`, `:94`, `:95`, `:97`.)
+- [Pass] Full-file sweep retains threshold ordering, unknown/mixed-lane handling, attention/search filters, fixed-day wrap-up, named checkout and PR context, native dialog controls and selectable copy fallback. Inline assets and explicit sample/action boundaries preserve the standalone mockup scope. (`.relay-artifacts/index.html:7`–`:24`, `:40`–`:65`, `:71`–`:83`, `:89`–`:97`.) No additional material pre-existing defect found in this sweep; preserve these behaviors.
+
+Verdict: Approved
+VERDICT: PASS
+Basis: Complete static HTML review against the committed design brief and verification/provenance summaries. Read-only SHA-256 results match both hashes recorded in `docs/mockups/flight-dashboard/provenance.jsonl:1`. Recorded browser checks include failing pre-fix controls and passing revised checks; they were read, not rerun. No artifact execution or tests performed. This worktree is not indexed; nearest-project coverage reports these paths missing/excluded, so all evidence files were read directly in full. Approval covers this initial HTML review only; operator visual approval, Swift planning and runtime/merge readiness remain separate checkpoints.
+swept file: yes
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
