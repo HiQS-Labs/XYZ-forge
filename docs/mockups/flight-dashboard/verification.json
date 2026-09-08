@@ -1,0 +1,40 @@
+{
+  "artifact": "index.html",
+  "sha256": "c89b24b502b079ee2700593755d76271260bd67f63705712f2db686b2d0af8d2",
+  "date": "2026-09-08",
+  "type": "local browser design checks",
+  "viewport": {
+    "desktop": [
+      1920,
+      1080
+    ],
+    "narrow": [
+      390,
+      844
+    ]
+  },
+  "passed": [
+    "seven cards",
+    "desktop all cards and queue fit without scrolling",
+    "unknown PR inventory",
+    "59/60/119/120 minute light boundaries",
+    "mixed lane red plus unknown display",
+    "stale observation gray",
+    "23 named checkouts (16 full clones, 7 worktrees)",
+    "deliberately wrong checkout count rejected",
+    "attention filter includes unknown (4 repos)",
+    "merge-ready filter (4 repos)",
+    "empty search and reset",
+    "details contain agent and checkout names",
+    "copy denied leaves selected text",
+    "copy success branch copies full prompt",
+    "Escape closes dialog",
+    "17:59 countdown",
+    "18:00 wrap-up due",
+    "18:01 stays due",
+    "narrow no horizontal overflow",
+    "activity timeline"
+  ],
+  "scope": "Simulated HTML only; no live telemetry, production validation, or Swift plan.",
+  "screenshots": "Local temp/flightdeck-{desktop,detail,mobile-top}.png; not live data"
+}

@@ -21,7 +21,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Fresh clone, related-work recon and user design preferences recorded. | Build and visually review initial HTML, then request operator design approval. |
+| Initial HTML and browser interaction checks complete; brief review approved. | Operator visual approval, then Swift app planning with 2–3 minute telemetry cadence. |
 
 ## Scope and checkpoint
 
@@ -114,3 +114,20 @@ continuity across 6–7 repos, no reported data loss; neutral appeal; inexpensiv
 standalone design. Related closeout #124 and rebalanceOS#196 reflect similar pain,
 not independently counted incidents. Last-14-day versus preceding-14-day incident
 trend is unknown; no recurrence multiplier. No operator rank override.
+
+## Initial HTML review artifact
+
+Open `docs/mockups/flight-dashboard/index.html` directly in a browser. It has no
+external assets or network requests. Seven example repositories represent twelve
+agent lanes, sixteen full clones, seven linked worktrees and ten known open PRs;
+one repo has unknown PR inventory. These are synthetic states, not live inventory.
+
+`docs/mockups/flight-dashboard/verification.json` records the artifact hash and
+local browser design checks. Desktop 1920 × 1080 fits all cards; mobile 390 × 844
+uses vertical scrolling. Copy denial preserves selectable text. Countdown boundary
+and progress/freshness cases were exercised. The first desktop render overflowed
+and was tightened before the passing check. A deliberately wrong folder count was
+rejected. Full repository runtime/promotion gates have not been run for this
+design checkpoint; no ready PR or shipping claim is made.
+
+Swift planning remains explicitly held for operator visual approval.
