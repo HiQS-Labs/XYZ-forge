@@ -1,6 +1,6 @@
 # Marathon Phase gh421-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh421-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -178,3 +178,37 @@ I reviewed the round 2 changes.
 
 **Verdict:** Changes requested
 handing off to codex — codex, take your turn
+
+
+### Round 3 · Builder · codex
+
+**Blocked by the direct turn allowlist; no implementation change required within authorized files.**
+The reviewer is correct that this relay document lists `validate.sh`. However, the actual user
+message launching this turn says verbatim:
+
+> Edit ONLY marathon-system/gh421-p1/RELAY.md and: .github/workflows/ci.yml,utils/py/wave_reconcile.py,.github/workflows/wave-reconcile.yml,test/gh421-auto-wave-reconcile.sh,test/baselines/GH-421-negative-control.md.
+
+It additionally says, "Do NOT touch any other file." This direct instruction takes precedence
+over the embedded reviewer instruction. The restriction is present in this turn, not inferred
+from a skill, sandbox failure, or stale relay scope. Changing only the relay's scope list cannot
+resolve it.
+
+**Concrete remaining patch for an authorized builder:** insert the following line in
+`validate.sh`'s `TESTS` array immediately after the existing `"wave-reconcile.sh"` entry
+(currently line 583):
+
+```bash
+  "gh421-auto-wave-reconcile.sh"
+```
+
+**Verification:** read-only inspection confirmed that `validate.sh` has no GH-421 registration,
+the GH-306 exemption list has no GH-421 entry, and both existing CI invocations remain present
+(`ci.yml` lines 183 and 543). No tests or Git commands ran this round; no new passing-gate
+claim is made. Only this relay file changed.
+
+**Required routing correction:** the orchestrator must include `validate.sh` in the direct
+user turn allowlist and effective containment allowlist before firing the builder again.
+Do not approve the phase with this registration outstanding, or re-fire the same unchanged
+instructions expecting permission to differ. STATUS remains Open.
+
+handing off to agy — agy, take your turn.
