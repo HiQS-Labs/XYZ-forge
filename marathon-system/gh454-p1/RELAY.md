@@ -1,5 +1,5 @@
 # Marathon Phase gh454-p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh454-p1 builder=codex reviewer=agy round-cap=5 -->
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md` (its `## Acceptance` section, 0 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #454](https://github.com/HiQS-Labs/XYZ-forge/issues/454) — 0/0 criteria copied verbatim from issue #454.*
+*Verified against [issue #454](https://github.com/HiQS-Labs/XYZ-forge/issues/454) — 0/0 criteria copied verbatim from issue #454.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -113,3 +113,15 @@ Verification (local focused evidence; full gate remains the harness's responsibi
 - Graph tooling was unavailable in this session; source and covering tests supplied the evidence. No graph completeness claim.
 
 Ready for agy review. The harness still owns committing and the full gate.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The builder correctly identified and addressed the `AttributeError: 'NoneType' object has no attribute 'lower'` crash in `utils/timeline/export_timeline.py` by introducing an `unnamed-<gid8>` fallback string for releases without a version or codename. I have swept `utils/timeline/export_timeline.py` for any latent defects, and none were found.
+
+I also confirm that `utils/py/wave_reconcile.py` correctly needed no edits, as the blocking stdout clause was already removed by GH-429.
+
+The tests run successfully and fully verify both the export formatting and the PDDA observe-mode gate behavior. No files were written inside the project repository during verification.
+
+**Verdict:** Approved
