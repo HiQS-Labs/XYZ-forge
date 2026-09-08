@@ -77,6 +77,42 @@ No code has changed since `5ca805fe`. Please re-adjudicate.
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Reviewer findings — Codex, round 3 (2026-09-07)
+
+**Verdict: changes requested; do not approve.** Read-only review only; no project gate,
+test, artifact, or source file was run or edited under reviewer containment.
+
+VERDICT: FAIL
+
+1. **Blocking — a failed live-remote verification can still select a narrow gate.** The
+   first-push resolver captures `git ls-remote` inside command substitution
+   (`githooks/pre-push:149-151`) and only interprets its stdout. It never preserves or checks
+   that command's exit status. A transport that emits either advertised integration ref and then
+   exits non-zero therefore supplies `_adv_dev`/`_adv_main`; the exact-local-ref comparison at
+   `githooks/pre-push:162-176` can then accept the pair and reach tier 2. That contradicts the
+   stated live-verification/fail-closed contract (`githooks/pre-push:109-112,119-120`) and the
+   plan's requirement that unverifiable base evidence take the full gate
+   (`PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md:39,52`). Capture the `ls-remote` result and its
+   status separately, require exit 0 before parsing it, and add a control for non-zero-with-output.
+
+Everything else reviewed passes:
+
+- The accepted new-branch base is a single `merge-base --all` from a local tracking ref equal to
+  the advertised integration tip; missing/stale refs, no common ancestor, ambiguous bases, and
+  empty ranges all fall through to full validation. `_base_pairs` is built once and reused by
+  `classify_push` and the paths-file loop (`githooks/pre-push:121-194,197-206,234-267`). The
+  backward-rewrite/stale-behind/criss-cross controls exercise the safety cases
+  (`test/gh544-pre-push-gate.sh:297-387`).
+- The claimed-test co-touch predicate, registry/wrapper/TESTS registration, receipt routing, and
+  pre-telemetry `RT_SHARD` unset match the plan (`utils/ci-route.sh:24-45,192-242,265-318`;
+  `test/ci-route.sh:172-205`; `validate.sh:474`; `test/skills-army-hq.sh:8-15`;
+  `test/gh365-tier-fail-closed.sh:63-75`; `test/gh365-validate-telemetry.sh:23-33`).
+- The committed receipt consistently labels the green code-final full gate at `5ca805fe`
+  (353/353 in 10:02), the 27.4 s tier-2 measurement, and red-before-green controls
+  (`TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl:1-13`; `SUMMARY.md:20-31,44-59`). The relay
+  now separately declares the `0c2d6a25` boundary and hosted-smoke attestations; those
+  post-code docs/thread commits do not cure the `ls-remote` status hole above.
+
 ## Reviewer findings — Codex, round 2 (2026-09-07)
 
 **Verdict: changes requested; do not approve.** Read-only review only; no gate or artifact was
@@ -164,7 +200,7 @@ VERDICT: FAIL — round 1 (codex): changes requested; both blocking findings acc
 Basis: test/gh544-pre-push-gate.sh section 2e (three red controls witnessed against the pre-fix hook at 6beeeb43, 99/0 green at 5ca805fe); TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl round-1 records; full gate 353/353 GREEN in 10:02 at 5ca805fe; boundary gate GREEN in 533s at the pushed head 0c2d6a25 (PR #488).
 - 2026-09-07 round 1 (codex): changes requested — 2 blocking findings (stale-base subset; evidence/head attestation). Producer adjudicated: both accepted; freshness contract implemented; receipt re-attested with exact SHAs.
 VERDICT: FAIL — round 2 (codex): freshness/base-resolution fixes review cleanly; remaining blocker is attestation only (thread declared a stale head; boundary run + hosted status not visible in-thread)
-Basis: codex round-2 transcript (87,809 tokens; freshness, _base_pairs single range, co-touch, registry, receipts routing, RT_SHARD ordering all confirmed with file:line citations); boundary gate GREEN in 533s at 0c2d6a25; hosted CI success at 0c2d6a25 (run 34171376987; canary/macOS skip on pull_request by design).
+Basis: codex round-2 transcript (87,809 tokens; freshness, _base_pairs single range, co-touch, registry, receipts routing, RT_SHARD ordering all confirmed with file:line citations); boundary gate GREEN in 533s at 0c2d6a25; hosted CI success at 0c2d6a25 (run 34171376987; canary/macOS skip on pull_request by design).  [Unverified — no citation]
 - 2026-09-07 round 2 dispatched after fixes.
 - 2026-09-07 round 3 dispatched: thread now declares the actual head chain; boundary run (533s @ 0c2d6a25) and hosted status recorded in-thread; no code changes since 5ca805fe.
 
