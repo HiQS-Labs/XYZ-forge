@@ -112,3 +112,7 @@ single write module. Mitigations are the reason it is wave 1 and alone in that w
 nothing else in flight, its own gate run, and its own PR. The pre-existing implementation and tests
 are what make the risk carryable at all; a fresh build of the same change would not belong in a
 three-lane marathon.
+
+## Merge evidence
+
+- PR #498 merged 2026-09-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

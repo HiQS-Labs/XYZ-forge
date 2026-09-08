@@ -106,3 +106,7 @@ const ledgerSections = [
 The `grep_present` probe is bug-evidence, and it is directional: `Deferred / cancelled` is in
 `releases_app.py` today, so the probe reads `unfixed` now and flips to `landed` the moment the
 string is corrected. Verified against the live tree before this doc was committed.
+
+## Merge evidence
+
+- PR #498 merged 2026-09-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

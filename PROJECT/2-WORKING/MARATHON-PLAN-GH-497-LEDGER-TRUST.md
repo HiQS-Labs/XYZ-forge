@@ -124,3 +124,7 @@ RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
 
 This clone is dedicated to the marathon so it holds its own `.git/relay-driver.lock` and does not
 contend with the primary checkout or with #495's lanes.
+
+## Merge evidence
+
+- PR #498 merged 2026-09-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -106,3 +106,7 @@ No other surface covers it. `releases roadmap sync` is one-way from legacy `ROAD
 This lane is **third by necessity, not by preference**. Building the sweep before lane A means it
 validates against a copy of the section list, which is the drift A exists to close. Building it
 before lane C means every run re-reads every row. Neither is fatal, both are rework.
+
+## Merge evidence
+
+- PR #498 merged 2026-09-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
