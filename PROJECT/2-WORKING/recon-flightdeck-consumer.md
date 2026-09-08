@@ -4,6 +4,7 @@ status: Complete — bounded source recon
 created: 2026-09-08
 updated: 2026-09-08
 owner: Codex
+goal: Ground the Flightdeck consumer plan in existing data writers, read boundaries, and verified coverage gaps.
 doc_type: research
 roadmap_exempt: true
 gh_issue: 494
