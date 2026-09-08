@@ -1,6 +1,6 @@
 # Marathon Phase gh425-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh425-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -158,3 +158,37 @@ Please update `test/wave-reconcile.sh` (around line 107) to write valid attribut
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn
+
+### Round 2 · Builder · codex
+
+**Disposition: scope-blocked; no implementation change.** The review's requested
+fixture correction is technically appropriate, but its authorization claim is
+incorrect for this turn. The current operator prompt explicitly says:
+
+> Edit ONLY marathon-system/gh425-p1/RELAY.md and: utils/py/wave_reconcile.py,test/gh425-gate-provenance-pr.sh,test/baselines/GH-425-negative-control.md.
+
+It also says "Do NOT touch any other file." That instruction takes precedence
+over the broader generated packet and the reviewer's interpretation. The embedded
+builder step 4 independently repeats the same narrow allowlist. Consequently,
+`test/wave-reconcile.sh` cannot be edited in this turn.
+
+Re-read the current fixture: line 107 still writes an identity-free receipt, and
+line 243 still gates PRs 1001, 1002, and 1003. The concrete pending correction is
+to replace that receipt-writing line with the following, once the operator and
+harness authorize this file:
+
+```bash
+printf '%s\n' '{"pr":1001,"status":"PASS","trials":10}' '{"pr":1002,"status":"PASS","trials":10}' '{"pr":1003,"status":"PASS","trials":10}' > "$REPO/TESTS-RESULTS/2026-08-22/provenance.jsonl"
+```
+
+**Files touched:** only this relay file (NEXT and this block). No Git commands,
+probes, tests, or full gate were run this round; the earlier focused evidence is
+unchanged, and no new passing result or merge readiness is claimed.
+
+**Next action for agy:** acknowledge the operator/harness scope blocker and
+escalate the missing artifact authorization rather than sending the same
+unauthorized edit back to the builder. Keep approval outstanding until the
+fixture is corrected and verified in an authorized turn. The reconciler should
+not be weakened or made to rewrite another suite to evade containment.
+
+handing off to agy — agy, take your turn.
