@@ -6,10 +6,18 @@ updated: 2026-09-07
 owner: noel
 umbrella: 497
 marathon_gid: mar-01M1ZPJKHC6N2SMP8KYBZYF8JB
-clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-marathon-ledger-trust
+clone: XYZ-forge-marathon-ledger-trust (dedicated full clone, sibling of the primary checkout)
 lanes: 3
 waves: 3
+roadmap_exempt: true
+goal: run marathon #497 (GH-491, GH-492, GH-355) to completion in strict wave order, landing each lane's PR before the next lane starts
 ---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Lane C (#355) built by codex, reviewed by agy, approved; migration verified in place (`doc_lines.updated_at` present); gate held on two of this plan doc's own defects (missing frontmatter, no Status table) — fixed in place, not attributed to the lane | Confirm the gate is green with these fixes, close out phase gh355-p1, land lane C's PR, then run lane A (#491) |
 
 ## Why these three
 
@@ -107,7 +115,7 @@ entries are pre-existing migration debt, untouched here.
 ## Running a lane
 
 ```bash
-cd "/Users/noelsaw/Documents/GH Repos/XYZ-forge-marathon-ledger-trust"
+cd XYZ-forge-marathon-ledger-trust    # the dedicated full clone for this marathon
 bash utils/swarm-preflight.sh --gh-issue 355        # writes the packet
 XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-355-updated-at-migration \
 RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
