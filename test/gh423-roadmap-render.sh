@@ -89,6 +89,7 @@ class RoadmapRender(unittest.TestCase):
         path.write_text(rendered)
         engine = planner.Engine.__new__(planner.Engine)
         engine.ROOT, engine.ROADMAP = str(self.root), str(path)
+        engine.QUEUE_DIR = str(self.root)  # GH-418: SOURCE_LINK is now computed pre-read
         # Stop at scheduling, after the production reader selects and parses its whole input.
         # No network, git, preflight, or marathon side effects are needed to prove this boundary.
         class ReaderComplete(Exception):
