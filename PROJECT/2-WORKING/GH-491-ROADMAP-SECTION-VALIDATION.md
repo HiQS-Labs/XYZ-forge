@@ -78,13 +78,15 @@ const ledgerSections = [
 
 ## Acceptance
 
-- `roadmap move --section 'Deferred / cancelled'` is refused, and the message names
-  `Deferred · vision` specifically.
-- `roadmap move --section 'Completed'` still succeeds unchanged.
-- A test asserts the CLI's accepted set equals `ledgerSections` in `utils/roadmap-dashboard.sh`, so
-  editing either side without the other fails loudly.
-- Red control: the pre-fix behaviour — a verbatim write of an unrecognised section — is pinned as
-  failing, so the guard cannot decay into an unconditional pass.
+- [ ] `roadmap move --section 'Deferred / cancelled'` is refused, and the message names `Deferred · vision` specifically.
+- [ ] `roadmap move --section 'Completed'` still succeeds unchanged.
+- [ ] A test asserts the CLI's accepted set matches `ledgerSections` in `utils/roadmap-dashboard.sh`, so a future edit to either side fails loudly.
+- [ ] Red control: the pre-fix behaviour (verbatim write of an unknown section) is pinned as failing.
+
+## Acceptance — deviations from the issue
+
+- [changed] `roadmap move --section 'Deferred / cancelled'` is refused, naming the valid sections. -> `roadmap move --section 'Deferred / cancelled'` is refused, and the message names `Deferred · vision` specifically. — reason: the follow-up comment on #491 established that a bare "unknown section" message leaves the user guessing between two plausible names; the refusal must name the database equivalent, not just reject.
+- [added] `roadmap move --section 'Completed'` still succeeds unchanged. — reason: a validator that only proves the bad case is refused, without a regression check that the good case still works, can pass while silently breaking normal use.
 
 ## Swarm Preflight Contract
 

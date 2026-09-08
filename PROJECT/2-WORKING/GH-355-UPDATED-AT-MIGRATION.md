@@ -71,12 +71,12 @@ handling. Nine tables: `settings`, `repos`, `issue_refs`, `marathons`, `releases
 
 Verbatim from the issue:
 
-- All nine tables carry non-NULL `updated_at` after `releases migrate`
-- Every insert/update path maintains it; a mutation that skips it is caught by a test, not by review
-- A pre-migration dump loads and backfills rather than producing NULLs
-- Dump → rebuild → dump is a byte no-op for an untouched ledger
-- `releases check` clean
-- Full pre-push gate green
+- [ ] All nine tables carry non-NULL `updated_at` after `releases migrate`
+- [ ] Every insert/update path maintains it; a mutation that skips it is caught by a test, not by review
+- [ ] A pre-migration dump loads and backfills rather than producing NULLs
+- [ ] Dump → rebuild → dump is a byte no-op for an untouched ledger
+- [ ] `releases check` clean
+- [ ] Full pre-push gate green
 
 ## Swarm Preflight Contract
 

@@ -77,12 +77,15 @@ No other surface covers it. `releases roadmap sync` is one-way from legacy `ROAD
 
 ## Acceptance
 
-- A fixture with a closed issue and an `In progress` row is corrected; the same fixture with an
-  open issue is left alone.
-- A `NOT_PLANNED` closure lands in `Deferred · vision`, not `Completed`.
-- Red control: `gh` unavailable makes the sweep refuse rather than write a guessed state.
-- The sweep is idempotent — a second run is a no-op.
-- `--dry-run` writes nothing, proven by an unchanged `releases.db` mtime and digest.
+- [ ] A fixture with a closed issue and an `In progress` row is corrected by the sweep, and the same fixture with an open issue is left alone.
+- [ ] A `NOT_PLANNED` closure lands in `Deferred · vision`, not `Completed` — worth pinning, since the section names differ between the markdown and database surfaces (see #491).
+- [ ] Red control: `gh` unavailable must refuse rather than write a guessed state.
+- [ ] The sweep is idempotent — a second run is a no-op.
+- [ ] `--dry-run` writes nothing, proven by an unchanged `releases.db` mtime and digest.
+
+## Acceptance — deviations from the issue
+
+- [added] `--dry-run` writes nothing, proven by an unchanged `releases.db` mtime and digest. — reason: `--dry-run` is the reviewable default named in this doc's own Plan section; without a case proving it writes nothing, a regression that makes it write silently would ship undetected.
 
 ## Swarm Preflight Contract
 
