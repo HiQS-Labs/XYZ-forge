@@ -217,8 +217,8 @@ esac
 # emitted — and because it was never emitted, a fresh render still matches the committed file
 # byte-for-byte. Drift detection cannot see it and, before this case, neither could stderr.
 #
-# It is reachable from the public CLI: `roadmap update --section` / `roadmap move --section`
-# write the section verbatim with no validation, so one typo hides a row indefinitely.
+# Before GH-491 the public CLI wrote sections verbatim. Legacy or bypass writers can still
+# supply unknown headings, so the renderer must keep diagnosing these historical rows.
 UNSEC_SRC="$WORK/mock_unknown_section.md"
 cat > "$UNSEC_SRC" <<'EOFUNSEC'
 # ROADMAP
@@ -487,12 +487,25 @@ CLEAN_BASE="$(git rev-parse HEAD)"
 # already-rendered row out of a known section does change the dashboard, so ordinary drift
 # detection catches that one — measured while writing this case, and the reason it is worded
 # this way.) Both steps run before a single regeneration, so the row never appears in the view.
-# Note --section is a PUBLIC CLI path that accepts any string: one typo is the whole bug.
+# GH-491 now refuses this through the CLI. Inject historical corruption directly, as in case 11.
 app --root "$R" roadmap add --issue-num 4741 \
   --issue-url "https://github.com/org/repo/issues/4741" --title "hidden row" \
   --created "2026-09-07" --doc-path "PROJECT/1-INBOX/GH-255-test.md" \
   --raw-text "- **GH-4741 · well-formed row nobody will ever see** 🆕" >/dev/null
-app --root "$R" roadmap update --issue-num 4741 --section "Backlog" >/dev/null
+require_fixture "$R" "historical-section ledger"
+python3 - "$root/utils/py/releases_app.py" "$R" <<'PYHIDDEN'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("releases_app", sys.argv[1])
+rel = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rel)
+paths = rel.artifact_paths(sys.argv[2])
+conn = rel.connect(paths["db"])
+conn.execute("UPDATE roadmap_items SET section = 'Backlog' WHERE gh_number = 4741")
+conn.commit()
+with open(paths["dump"], "w") as fh:
+    fh.write(rel.dump_text(conn, rel.get_generation(conn)))
+conn.close()
+PYHIDDEN
 bash "$R/utils/roadmap-dashboard.sh" >/dev/null 2>&1 || true
 
 # THE PREMISE: the dashboard is byte-identical, which is exactly what makes this invisible to

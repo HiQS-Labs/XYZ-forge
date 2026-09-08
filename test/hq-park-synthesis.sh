@@ -27,6 +27,8 @@ mkdir -p "$BETA/PROJECT/1-INBOX" "$BETA/utils/pdda" "$BETA/utils"
 printf '# Roadmap\n\n## Ledger\n\n### Queue / parked intake\n\n### In progress\n\n### Completed\n\n### Deferred · vision\n' > "$BETA/ROADMAP.md"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$BETA/utils/pdda/pdda.sh"; chmod +x "$BETA/utils/pdda/pdda.sh"
 cp "$HERE/../utils/roadmap-dashboard.sh" "$BETA/utils/roadmap-dashboard.sh"; chmod +x "$BETA/utils/roadmap-dashboard.sh"
+mkdir -p "$BETA/utils/py"
+cp "$HERE/../utils/py/releases_app.py" "$BETA/utils/py/"
 
 STUB="$TMP/gh-stub"
 cat > "$STUB" <<'EOF'

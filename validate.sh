@@ -522,6 +522,8 @@ TESTS=(
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
   "gh269-roadmap-retired.sh"          # GH-269 (verify ROADMAP.md is retired, tools operate on releases.db, move/update CLI verbs)
   "gh423-roadmap-render.sh"           # GH-423 (releases roadmap render emits roadmap_items as ledger markdown marathon_plan.py parses unchanged)
+  "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
+  "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh290-ate-variation-grid.sh"       # GH-290 (ATE variation grid: contract loaders, land verification,
