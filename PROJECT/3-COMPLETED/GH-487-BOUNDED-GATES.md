@@ -1,8 +1,8 @@
 ---
 title: "GH-487 — bounded gates for new-branch skill/test pushes"
-status: In progress (2-WORKING)
+status: Complete
 created: 2026-09-07
-updated: 2026-09-07
+updated: 2026-09-08
 owner: noelsaw
 goal: First pushes of registered skill/test changes use bounded local gates instead of the full suite; draft-review bypass is documented as distinct from merge readiness; the gh365 telemetry flake is fixed and the pool-flake surface is characterised before any serialization.
 gh_issue: 487

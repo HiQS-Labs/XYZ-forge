@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 65 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 64 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -74,7 +74,6 @@ Summary: 65 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-484 · Deploy Skills | — | [plan](PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md) · [#484](https://github.com/HiQS-Labs/XYZ-forge/issues/484) |
 | GH-481 · consult.sh: agy lane answered from a months-old ~/.gemini scratch copy, not the throwaway worktree | — | — |
 | GH-482 · relay-drive.sh --artifact-file silently seeds nothing — the reviewer never sees the artifact | — | — |
-| GH-487 · ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | — | [GH-487-BOUNDED-GATES.md](PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md) · [#487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) |
 
 ## Queue
 
@@ -104,7 +103,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 62 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 60 · 🔮 0 · 🔲 0
+Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -170,6 +169,7 @@ Summary: 62 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 60 · �
 | GH-465 · Other Apps & Tools directory | ✅ | [GH-465-OTHER-APPS-TOOLS.md](PROJECT/3-COMPLETED/GH-465-OTHER-APPS-TOOLS.md) · [#465](https://github.com/HiQS-Labs/XYZ-forge/issues/465) |
 | GH-450 · Consume Model-catalog v1 (Phase 1) | ✅ | [doc](PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md) · [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/450) |
 | GH-471 · feat(skill): add a preservation gate to workhorse for irreversible operations | ✅ | [doc](PROJECT/3-COMPLETED/GH-471-WORKHORSE-PRESERVATION-GATE.md) · [#471](https://github.com/HiQS-Labs/XYZ-forge/issues/471) |
+| GH-487 · ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | ✅ | [GH-487-BOUNDED-GATES.md](PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md) · [#487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) |
 
 ## Deferred · vision
 

@@ -101,7 +101,7 @@ while the four axes keep their honest values underneath.
 | 89 | **210** | [GH-5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) — kernel robustness: node:test unit runner | — | In progress | 45 | 40 | 45 | 80 | 210 | — |
 | 90 | **205** | [GH-443](https://github.com/HiQS-Labs/XYZ-forge/issues/443) — marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the marathon before it fires | — | Queue / parked intake | 60 | 40 | 50 | 55 | 205 | — |
 | 91 | **195** | [GH-35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
-| 92 | **195** | [GH-487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) — ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | — | Queue / parked intake | 55 | 30 | 50 | 60 | 195 | — |
+| 92 | **195** | [GH-487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) — ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | — | Completed | 55 | 30 | 50 | 60 | 195 | — |
 | 93 | **190** | [GH-39](https://github.com/HiQS-Labs/XYZ-forge/issues/39) — RELEASES app: one-way GitHub Project release-card projection | — | Completed | 50 | 30 | 65 | 45 | 190 | — |
 | 94 | **190** | [GH-61](https://github.com/HiQS-Labs/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
 | 95 | **185** | [GH-17](https://github.com/HiQS-Labs/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
