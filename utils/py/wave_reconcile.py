@@ -1192,10 +1192,13 @@ def main():
             # GH-421: skip downstream regeneration only when there was genuinely nothing to
             # act on this run (catch-up mode found no new PRs, and no --pr/--marathon target
             # was given) — the scheduled cron trigger's common case. NOT when a real PR or
-            # marathon lane was processed but happened not to move a doc: run_subprocesses
-            # does independent, valuable work every time (release-timeline export, releases
-            # check, the PDDA gate) that must run on every real post-merge invocation
-            # regardless of doc lifecycle outcome, or CI silently stops checking most merges.
+            # marathon lane was processed but happened not to move a doc: run_subprocesses does
+            # independent, valuable work every time (release-timeline export incl. the GH-474
+            # preview refresh, releases check, the PDDA gate) that existing suites (gh202,
+            # gh425, gh454) already pin as running on every real post-merge invocation,
+            # regardless of doc lifecycle outcome. Byte-identical output on a genuine repeat
+            # (issue #421's actual idempotency requirement) is satisfied by these regenerators
+            # already being deterministic, not by skipping them.
             if not args.dry_run and not pr_list and not args.marathon:
                 log("Nothing to reconcile; no artifacts written")
                 journal.cleanup()

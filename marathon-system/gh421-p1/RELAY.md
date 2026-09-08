@@ -271,3 +271,6 @@ Since neither of us can edit `validate.sh` without triggering containment failur
 
 **Verdict:** Approved
 relay closed, no further turn needed
+
+### Extension · System
+relay-drive: round cap (8) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 9

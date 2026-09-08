@@ -120,7 +120,14 @@ class ReconcileTests(unittest.TestCase):
         self.calls.clear()
         self.apply()
         self.assertEqual(before, self.snapshot())
-        self.assertEqual(self.calls, [])
+        # GH-421 idempotency: a repeat apply must not repeat a ledger-mutating write (it
+        # already shipped/repointed once). Read/regen calls (releases check, dashboard,
+        # plan, PDDA) MAY run again — they're deterministic and existing suites (gh202,
+        # gh425, gh454) already pin them running on every real reconciliation.
+        mutating = [c for c in self.calls
+                    if any(pair[0] in c and pair[1] in c for pair in
+                           (('manifest', 'ship'), ('roadmap', 'repoint'), ('roadmap', 'update')))]
+        self.assertEqual(mutating, [], f"repeat apply re-wrote the ledger: {mutating}")
         self.cli('check')
 
     def test_open_issue_and_empty_closers(self):
@@ -131,13 +138,19 @@ class ReconcileTests(unittest.TestCase):
         self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'dialed_in')
         self.assertNotEqual(self.rows('SELECT status_marker FROM roadmap_items')[0]['status_marker'], '✅')
         self.offline['prs'][0]['body'] = ''
-        (self.root / 'TESTS-RESULTS/provenance.jsonl').unlink()
+        # GH-425: --gate's provenance check is unconditional (attributes evidence to the PR
+        # itself, not to whichever issue it closes) — keep the valid PR-42 receipt from setUp
+        # so this repeat apply's --gate still passes; the scenario under test is the open-issue
+        # idempotency, not provenance.
         (self.root / 'offline.json').write_text(json.dumps(self.offline))
         before = self.snapshot()
         self.calls.clear()
         self.apply()
         self.assertEqual(before, self.snapshot())
-        self.assertEqual(self.calls, [])
+        mutating = [c for c in self.calls
+                    if any(pair[0] in c and pair[1] in c for pair in
+                           (('manifest', 'ship'), ('roadmap', 'repoint'), ('roadmap', 'update')))]
+        self.assertEqual(mutating, [], f"repeat apply re-wrote the ledger: {mutating}")
 
     def test_rollback_each_boundary(self):
         for boundary in ('manifest ship', 'roadmap repoint', 'roadmap update', 'roadmap sync',
