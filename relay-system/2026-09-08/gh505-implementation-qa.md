@@ -286,3 +286,124 @@ Please review the revision against the same eight questions.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Round 2 — Reviewer (codex) — 2026-09-08
+
+VERDICT: Changes required — the two High findings are resolved in the inspected source;
+two Medium corrections and the final gate evidence remain. STATUS remains Open.
+
+Basis: direct source inspection of the revised implementation, full adjudicated plan, both issue
+captures, negative-control report, and the named fixtures. Graph tools are unavailable in this
+session. No source/artifact or test was executed, no git command was run, and only this relay file
+was edited. All counterexamples below are source-derived, not newly reproduced runtime results.
+The claimed `TESTS-RESULTS/2026-09-08+GH-505/` directory is still absent from this review checkout.
+
+### Ranked findings
+
+**R2-F1 — Medium / Fix: malformed candidate fields still escape the validating reader.**
+
+The original missing-timestamp/range/path exceptions are handled, but the validation at
+`utils/py/relay_attest.py:211-220` does not cover the fields used by `candidate_ok()`. Starting
+with a valid record and replacing `relay_file_rel` with a nonempty JSON object leaves every
+`load()` check satisfied: that field is neither checked nor included in the trailer. After the
+ordinary ancestry check, `candidate_ok()` reaches `os.path.dirname(rel)` at `:285` and raises
+`TypeError`. This is outside `load()`'s exception handler. Both marathon
+(`utils/py/marathon_drive.py:2412`) and jog (`utils/py/jog_run.py:1480`) call it without converting
+the exception to a refusal, so the consumer crashes instead of parking/escalating normally.
+
+There is also a fail-open type variant: a valid non-isolated record with `isolated` changed from
+JSON `false` to the string `"false"` is accepted by `load()` and passes the truthiness test at
+`relay_attest.py:266`. The isolation field is not in the trailer either. This is malformed-record
+handling within the stated reader contract, not a request to authenticate hostile same-user writes.
+
+Cheapest correction: validate the candidate-consumed schema fields before returning a record:
+`isolated` must be a boolean; `relay_file_rel` and `artifact_sha256` must have their declared
+nullable-string shapes. Keep candidate failures as refusal tuples. Extend L with the nonempty
+object path and string-boolean cases, then exercise the consumer boundary to assert a refusal
+without a traceback. The current L additions at `test/gh505-relay-attest.sh:290-292` cover only
+the earlier timestamp/range/absolute-path cases.
+
+**R2-F2 — Medium / Fix: H4 still does not establish that the second candidate check was reached.**
+
+The new source-committing hook is the right stimulus (`test/marathon-drive.sh:271-278`), but the
+only assertions are exit 4 and the generic `candidate-drifted-from-reviewed-head` reason at
+`:279-281`. The *first* bind, before the hook, produces exactly those same outcomes on any invalid
+attestation/candidate (`utils/py/marathon_drive.py:2612-2621`). Thus an early refusal can make H4
+pass without executing the hook or exercising the post-hook check at `:2633`. The fixture also
+never reads a result receipt or checks green telemetry, despite the producer's “no approved run”
+claim and the earlier request for a final-receipt assertion.
+
+Cheapest correction: assert that the hook actually committed the expected source change, capture
+a nonempty result receipt, and assert the final outcome is not approved and no green completion
+was emitted. Preserve the accepted GH-273 ordering: the earlier `marathon.phase.approved` event
+may exist. Run the focused control with only the second bind disabled and observe it fail, then
+restore the bind and observe it pass. This finishes the existing H4 case; it needs no new framework.
+
+### Answers to the eight questions
+
+1. **Trust boundary: acceptable on source inspection; prior B1 resolved.**
+   `judge_terminal(..., shim_ok=False)` is now explicit on the nonzero path
+   (`relay_drive.py:887-893`), and `:651-659` reverts before publication for either failed role.
+   The original shim result is preserved. All three terminal-success paths still require
+   in-process `attested` (`:727`, `:1025`, `:1066`). A3 now exercises a failed reviewer through the
+   real shim (`test/gh505-relay-attest.sh:142-148`). Exit-7 recovery has the same source-level
+   protection, although A3 itself exercises exit 5 only.
+2. **Role permissions: acceptable within the declared contained-shim contract.** The shared
+   first tier remains invocation-derived (`relay-turn-lib.sh:90-94`), and the bridge preserves
+   those exports (`rtl.py:690-696`). The new exports are SCRUB in `gate_env.py:74-76` and the
+   marathon literal at `marathon_drive.py:2212`. The documented inherited-marker limitation
+   remains a limitation, not a newly discovered authority source.
+3. **Pinning: acceptable; B4's original proof defect is corrected.** The worktree cuts at the
+   exported pin (`relay-turn-lib.sh:749-750`) and checks seeded artifact bytes (`:794-800`).
+   B4 now advances parent HEAD in dispatch before the real shim starts
+   (`test/gh505-relay-attest.sh:95-98`), checks that advancement, and checks the cut against the
+   old SHA (`:179-180`). Non-isolated/artifact records are refused for correctly typed records;
+   malformed shapes need R2-F1.
+4. **Reader obligations: runtime token omission resolved; schema handling needs R2-F1.** Jog
+   now pins `TICK_REPO_ROOT` and explicitly reads done (`jog_run.py:1435-1450`), from the common
+   merge helper used by all three branches (`:1466-1468`). I0 checks a valid record with an absent
+   token and no merge call (`test/gh505-relay-attest.sh:387-391`); gh280 N0 independently asserts
+   done (`test/gh280-jog-marathon-adapter.sh:1085`). Trusted expected-reviewer inputs and the
+   status/range/digest/offset checks remain as described in round 1.
+5. **Candidate binding: prior B2 resolved.** The exclusions now name the exact relay and two
+   explicit phase records, rather than every neighboring file (`relay_attest.py:279-287`). N3
+   checks neighboring `src/service.py` drift (`test/gh505-relay-attest.sh:296-309`). I accept the
+   two named metadata files as the documented allowance. Marathon retains two binds; jog retains
+   receipt-candidate equality and `--match-head-commit` (`jog_run.py:1477-1484`). N2b and N2c now
+   reach the newly added candidate-equality and missing-binding guards
+   (`test/gh280-jog-marathon-adapter.sh:1154-1172`).
+6. **Dispositions: mostly accepted.** Accept warn-not-refuse, the matching review-once exception,
+   simulate completion, named metadata allowances, revert-only failed turns, done-token reads,
+   and two candidate checks preserving GH-273. The default-window trailing-claim correction and
+   LF/CRLF normalization are coherent (`relay_attest.py:56-87`, `:128-131`; B6/B7 at
+   `test/gh505-relay-attest.sh:201-218`). Do not claim complete awk coercion parity: `_window()`
+   still uses Python `int()` (`relay_attest.py:47-53`), while Bash defaults an empty value to 3
+   and awk numerically coerces the supplied string (`relay-turn-lib.sh:1203-1206`). For example,
+   `3.0` becomes 0 in Python, and Python accepts `1_0` as 10. Low-priority correction: define one
+   supported integer policy consistently, or narrow the parity claim and cover the accepted
+   values. Reader robustness remains subject to R2-F1; substituted proof remains subject to
+   R2-F2. The startup-refusal sentence in the plan at `:209` still contradicts its disposition.
+7. **Falsifiability: improved, incomplete.** The A/C base-driver calls remain real fixture
+   dispatches without the new flags (`test/gh505-relay-attest.sh:416-429`); I did not rerun them.
+   B4 and gh280 N2b/N2c now target the requested guards. H4 needs R2-F2. The success stub still
+   suppresses token-operation errors (`test/lib/attest-stub.sh:35-41`) and publishes at `:73`;
+   it is suitable only as a manufactured success record, never evidence of driver publication.
+   The real consumer's done check prevents that stub behavior from excusing a missing token.
+   An explicit done assertion in the shared success fixture would make fixture failures easier
+   to diagnose. The baseline report still mixes observed A/C red runs with source comparisons
+   for I/J; label those evidence types accurately.
+8. **Scope and ratings: unchanged provisional acceptance.** The inspected production path still
+   has one publisher (`relay_drive.py:703`) and shared reader/merge helpers. No additional review
+   subsystem is needed. The stated excluded merge surfaces and ratings retain round 1's limits;
+   no external incident census or live ledger was checked in this turn.
+
+**Evidence outstanding:** the plan requires committed final-revision `provenance.jsonl`
+(`PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md:217`), but the advertised campaign directory
+is absent here. Supply the retained final-state gate receipt for the next review and distinguish
+earlier 355/356 runs from the final result. This reviewer did not run a gate, as instructed; the
+producer/harness owns that remaining evidence.
+
+Disposition: return to the producer for R2-F1, R2-F2 and final-state evidence. The prior High
+blockers are closed on source inspection; implementation approval is not yet granted.
+
+NEXT: Producer (claude-b)
