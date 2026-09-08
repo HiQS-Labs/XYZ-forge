@@ -43,3 +43,19 @@ The production app supports overview (A), repository focus (B), issue focus (C),
 spotlight dimming, Escape one-level navigation, swipe/drag, a copyable handoff,
 6 PM wrap-up countdown, and system/dark/light appearance. Reference mockups under
 `docs/mockups/flight-dashboard/` remain unchanged.
+
+## Manual experimental harness
+
+This harness is intentionally absent from `validate.sh`, CI workflows, and the
+CI route registry. Run it only when debugging Flightdeck:
+
+```bash
+python3 -m src.flightdeck.manual_harness --check
+python3 -m src.flightdeck.manual_harness
+```
+
+The second command serves the real UI at <http://127.0.0.1:8770/flightdeck/>
+using temporary fixtures for all five connectors. It exercises a long GitHub
+issue URL, multiple issue references, two agent sessions, a linked PR, duplicate
+commit evidence, two checkouts, and an attested milestone. Press Ctrl-C to stop;
+the fixtures are then removed.
