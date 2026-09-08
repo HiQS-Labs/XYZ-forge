@@ -14,7 +14,7 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](../../WORKTREE-SAFETY.md) and [`AGENT
 ## Conversational Triggers
 
 When the operator speaks naturally:
-- `"Run merge-cleanup on this repo"`: Audits checkouts, lists open PRs in dependency order, previews the cleanup plan in dry-run mode, and asks for confirmation.
+- `"Run merge-cleanup on this repo"`: Audits checkouts, reports the sequence, and proceeds within the session's authorized PR and cleanup scope. Discovery does not add unrelated PRs to that scope; an explicit audit/dry-run request remains read-only.
 - `"Scan all clones and worktrees"`: Runs Phase 1–3 discovery and outputs the status matrix of all worktrees and clones.
 - `"Sequence and merge open PRs"`: Determines topological order of open PRs, detects file collisions, and executes remote squash merges followed by wave reconciliation.
 - `"Tear down clean task clones"`: Safely removes verified clean, non-active clones and worktrees.
@@ -64,7 +64,8 @@ When the operator speaks naturally:
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
-- Presents execution plan for confirmation.
+- Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
+- Treats routine documentation and generated-artifact conflicts as work to resolve: in an isolated full clone, refresh the target branch, preserve both sides' intended changes using the repo's documented resolver/CLI, regenerate derived files, and renumber only unpublished CHANGELOG entries against the latest target. Never blindly take one side of ledger data. Run required checks on the resulting PR head (mutation-heavy suites in a separate disposable full clone), push within authorization, and resume the merge sequence, refreshing before each PR. Escalate a concrete unresolved ambiguity or repeated failed repair, not the initial `CONFLICTING` status; do not retry the same failed repair indefinitely.
 - Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`).
 - Fast-forwards primary repository `development` branch (`git merge --ff-only origin/development`).
 - Executes post-merge reconciliation:
