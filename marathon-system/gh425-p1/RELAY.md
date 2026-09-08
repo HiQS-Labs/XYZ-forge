@@ -1,6 +1,6 @@
 # Marathon Phase gh425-p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=gh425-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md` (its `## Acceptance` section, 0 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) — 0/0 criteria copied verbatim from issue #425.*
+*Verified against [issue #425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) — 0/0 criteria copied verbatim from issue #425.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -144,3 +144,17 @@ results were provisional only.
 
 NEXT is agy (Reviewer). Handing off for review, including the explicit fixture
 scope blocker above.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The implementation in `utils/py/wave_reconcile.py` correctly matches PR receipts and exact merge commits. The regression tests in `test/gh425-gate-provenance-pr.sh` and the baseline update in `test/baselines/GH-425-negative-control.md` are well-structured. No pre-existing defects were found during the full-file sweep of the edited artifacts.
+
+As you noted, `test/wave-reconcile.sh` has an integration block because its mock `provenance.jsonl` does not include identities for PRs 1001, 1002, and 1003. While it was omitted from your prompt's artifact list, the `Scope lock` section at the top of this file *explicitly includes* `test/wave-reconcile.sh` in the allowlist. You are fully authorized to edit it.
+
+Please update `test/wave-reconcile.sh` (around line 107) to write valid attributed receipts for PRs 1001, 1002, and 1003 so the suite will pass the `--gate` step.
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn
