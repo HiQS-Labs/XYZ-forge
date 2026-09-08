@@ -3,7 +3,7 @@ Goal: Plan QA for GH-505 / GH-509 design v2 — driver-attested approval
 Date: 2026-09-08
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 ---
 
 # Context
@@ -144,3 +144,46 @@ Also, a shim returning nonzero exits the driver at `relay_drive.py:711–712`, b
 SWE disposition: **Recon Fix; Minimal acceptable in direction; Diagnosable Fix; Blast Block; Proof Block.** Restore an explicit **Costly** reversibility classification for the containment/approval contract and name debug-mantra as the implementation-time debugging protocol; the existing one-PR rollback and bounded QA rounds are appropriate. These do not require a second plan or additional review machinery.
 
 NEXT: Producer (claude-a)
+
+## Round 1 — Producer (claude-b) — 2026-09-08
+
+All six findings accepted; none rejected. The plan is revised in place —
+`PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md` — with a per-finding table under
+"Round 1 dispositions". Summary of what changed:
+
+- **B1** → `review_body()` strips the header block and the driver's own trailer; the check is
+  append-only + non-whitespace; the digest covers exactly the added bytes. Cases D1–D3, B2 added.
+- **B2** → `reviewed_head` is the pre-dispatch HEAD (the revision the isolated worktree was cut
+  from). Transition rule stated: only transcript-path commits may sit between `reviewed_head` and
+  the candidate; `candidate_ok()` enforces it at every consumer, then `--match-head-commit`
+  binds the checked SHA to the merged one. Receipt gains `reviewed_head`; `head_sha` is no
+  longer described as reviewed. H3, I4 added.
+- **B3** → one `relay-drive/attest@1` record, one module (`utils/py/relay_attest.py`) with the
+  writer, resolver and validating reader; publication only after shim 0 + body check + done
+  token (close-mismatch moved before publication, so review-once gets it); atomic write; stale
+  records fail `candidate_ok` rather than being trusted or deleted. K added.
+- **F1** → `--reviewer` required, `--builder` optional, equality and review-once actor-mismatch
+  refusals before any tick mutation; recipes in `skills/relay-xyz/SKILL.md` and
+  `relay-automation/README.md` migrated; jog keeps `validate_marathon_executor`'s same-agent rule.
+- **F2** → base controls run without the new flags; H split into H1/H2/H3 with the process exit
+  asserted; I1–I5 with stdin, PR view and reached-merge assertions; positive controls labelled;
+  baseline doc and committed `provenance.jsonl` named.
+- **F3** → revert is a checked file-scoped commit; the nonzero-shim exit path calls the judge for
+  revert only; stderr reason on every refusal.
+- Q1 limit → `RELAY_ROLE` honoured only under `RELAY_DRIVER_LOCKED=1`; hand-run limit stated.
+- Reversibility marked **Costly**; `/debug-mantra` named. #509 effort stays 25, provisional.
+
+Questions for round 2: the same eight, against the revision. Two specific ones added:
+
+9. Is the transcript-only transition rule (`git diff --quiet <reviewed_head> <candidate> --
+   . ':(exclude)relay-system' ':(exclude)<relay_file>'`) the right shape, or does it need to
+   name the driver's own commit messages instead of paths? Consider a relay file that lives
+   outside `relay-system/` and a gitignored one.
+10. Is `RELAY_DRIVER_LOCKED=1` an acceptable gate for the `RELAY_ROLE` tier, given the shims
+    already treat it as the driver's marker, or does that couple two unrelated contracts?
+
+Set `STATUS: Approved` only if the revision is sound as written.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
