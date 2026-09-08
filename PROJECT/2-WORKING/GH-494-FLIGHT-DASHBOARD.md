@@ -26,31 +26,33 @@ reversibility: Costly — shared read API and optional source-owned schema/expor
 
 ## Table of contents
 
-1. [Phase 1 — Existing data contract and passive endpoint](#phase-1--existing-data-contract-and-passive-endpoint)
+1. [Phase 1 — Connector contract and passive endpoint](#phase-1--connector-contract-and-passive-endpoint)
 2. [Phase 2 — Fully tokenized production design](#phase-2--fully-tokenized-production-design)
 3. [Phase 3 — HTML app, navigation and refresh](#phase-3--html-app-navigation-and-refresh)
 4. [Phase 4 — Coverage gaps, verification and pilot](#phase-4--coverage-gaps-verification-and-pilot)
 5. [Phase 5 — Future Swift app](#phase-5--future-swift-app)
 6. [Completion and deferred work](#completion-and-deferred-work)
 
-## Phase 1 — Existing data contract and passive endpoint
+## Phase 1 — Connector contract and passive endpoint
 
-**Goal:** One read-only, source-attributed response supplies the dashboard using
-existing Rebalance, Git Pulse and CLIO outputs. A UI refresh never collects data.
+**Goal:** One source-neutral, read-only response supplies the dashboard through
+independent incoming connector plugins. A UI refresh never collects data.
 
 ### Decision and ownership
 
-The dashboard is a **consumer**. Rebalance remains the corpus/query owner, Git Pulse
-remains the Git observation/sync writer, CLIO remains the prompt writer, and
-Daily/Shutdown remain continuity producers. No new GitHub connector, Git scanner,
-prompt tailer, database, scheduler, supervisor or daemon is justified by this recon.
+Flightdeck core is a **consumer and aggregator**, independent of Rebalance, CLIO,
+Git Pulse and Daily/Shutdown. Each external system remains owner of its data, but no
+one source is required for Flightdeck to start or render. Missing, disabled or failed
+connectors yield explicit unavailable/partial capabilities; other connectors and
+saved selections continue working.
 
-Use the existing Rebalance Pulse host on loopback `:8767`. Add `/flightdeck/` and a
-shared `GET /flightdeck.json` projection there, rather than a second web server.
-The production feature belongs in **Rebalance** because its existing read layer,
-host and source contracts live there. XYZ GH-494 remains the design/plan reference;
-create linked implementation intake in Rebalance under its own governance when
-execution starts. Other agents' current checkouts and running jobs remain untouched.
+Build a small Flightdeck-owned Python loopback host in XYZ with `/flightdeck/` and
+`GET /flightdeck.json`. It loads a static registry of incoming connector modules,
+asks each enabled connector for already-produced data, normalizes their batches and
+serves one snapshot. This host is warranted because a browser cannot safely read
+SQLite and configured local files directly. It is not a collector, scheduler or
+second source of truth. Other agents' current checkouts and running jobs remain
+untouched.
 
 The existing mockups are reference artifacts. All three stay byte-identical during
 this plan and production build; import the approved design once into production
@@ -59,21 +61,21 @@ Layout A is additionally pinned by `layout-a.sha256`.
 
 Grounding: [Recon Map](recon-flightdeck-consumer.md). `RB:` citations in that map
 refer to Rebalance commit `0bffc4d`; current mockup baseline is XYZ `c7e4bce`.
-Re-anchor source paths/HEAD at execution. This is the consumer-first replacement for
-the earlier conversational suggestion to build a new local collector.
+Re-anchor source paths/HEAD at execution. The recon grounds the first-party
+connectors; it does not make those producers architectural dependencies.
 
 ### Data reuse and actual gaps
 
-| Dashboard requirement | Existing source to consume | What is actually missing / permitted work |
+| Dashboard requirement | First-party connector | What is actually missing / permitted work |
 |---|---|---|
-| Repo/project names and aliases | Rebalance `registry.get_projects(conn=...)` and existing mirror resolution | New projection composition only; never equate two repos just by basename. |
-| Issue titles/state, open PRs, checks and links | Existing `github_items`, `github_check_runs`, `github_links` and read helpers | Expose omitted fetched times/full SHAs and bounded completeness. No new GitHub fetching. |
-| Last-hour commits | Existing cached commit queries plus synced Git Pulse TSV | Adapt/promote existing parser if needed; retain source/device and avoid duplicate commit counting. |
-| Names of agents, requested task and recent attention | Existing CLIO JSONL writer and Rebalance `clio_prompts` projection | Consume cached projection. Branch/machine already captured but dropped by ingest: additive projection/backfill only if needed for joins. No new prompt writer/tailer. |
-| Next actions and handoff context | Persisted ranked next actions, CLIO intent, existing continuity notes | Passive cache access and deterministic presentation. No model call or reranking on refresh. |
-| Full clone/worktree names and counts | Existing cached RepoSignals plus existing Daily/Shutdown scanner output when persisted | **Current synced feed is insufficient.** If no configured current output is found, persist/export the existing scanner result through its owner. Do not write another scanner. |
+| Repo/project names and aliases | `rebalance` reads registry/mirror data | Normalize explicit identities; never equate two repos just by basename. |
+| Issue titles/state, open PRs, checks and links | `rebalance` reads existing GitHub corpus tables/helpers | Expose omitted fetched times/full SHAs and bounded completeness. No new GitHub fetching. |
+| Last-hour commits | `git_pulse` reads synced TSV/health files; `rebalance` may contribute cached commits | Retain source/device and deduplicate centrally by canonical repo + full SHA. |
+| Names of agents, requested task and recent attention | `clio` reads existing JSONL directly, without requiring Rebalance ingest | Normalize branch/machine/session when present. No new prompt writer/tailer. |
+| Next actions and handoff context | `rebalance` reads ranked actions; `clio` and `continuity` contribute intent/notes | Deterministic central presentation. No model call or reranking on refresh. |
+| Full clone/worktree names and counts | `topology` reads persisted Daily/Shutdown scanner output | **Current saved feed is insufficient.** First persist/export the existing scanner result through its owner. Do not write another scanner. |
 | Meaningful agent milestones | Existing structured completion evidence, if a repo/issue join can be verified | Completeness not established. Display unknown until an existing writer exposes attested completion; prompts do not substitute. |
-| Producer freshness and coverage | Git Pulse device YAML, corpus fetched times/coverage, CLIO synced time, cached scan probed time | Expose coverage counts currently omitted by health reader. A fresh heartbeat is not complete coverage. |
+| Producer freshness and coverage | Every connector reports source watermarks/coverage | Adapt existing health fields; a fresh heartbeat is not complete coverage. |
 | 6 PM wrap-up | Existing cached PR/issue/action data plus operator timezone | New display and selection logic only; no merge, QA runner, cleanup or scheduler. |
 
 CLIO's concrete path is the installed shared capture hook/tailers documented by
@@ -82,23 +84,28 @@ CLIO's concrete path is the installed shared capture hook/tailers documented by
 The Git Pulse sync folder's `CLIO/README.md` describes an optional daily synthesis;
 it does **not** demonstrate that raw prompts are synced there. V1 prompt coverage
 is device-local unless existing cross-device publication is independently verified.
+The `clio` connector depends on the documented JSONL record shape and configured
+path, not on CLIO being installed or running; fixture/file-compatible producers can
+satisfy it. Rebalance is likewise one optional corpus connector, not Flightdeck's
+database, host or mandatory source.
 
 ### New code budget and read boundary
 
-Proposed owner-repo files are **new paths**, not claims they already exist:
-`src/rebalance/lib/flightdeck.py` for the bounded projection,
-`web/flightdeck/` for production assets and tokens, and focused owner-repo tests.
-Use the installed Python/HTTP stack and browser JavaScript; no UI framework,
-standalone Node server, message bus, plugin framework or second SQLite store.
+Proposed XYZ files are **new paths**, not claims they already exist:
+`src/flightdeck/` for the host, aggregation and connector modules, and
+`web/flightdeck/` for production assets/tokens, plus focused tests. Use Python
+stdlib HTTP/SQLite/file APIs and browser JavaScript; no UI framework, Node server,
+message bus, dynamic plugin loader, package marketplace or Flightdeck database.
 
 ### Minimal module boundary
 
 Keep the production app modular at the seams that are likely to change, without
-turning every card or helper into an abstraction. V1 has four responsibilities:
+turning every card or helper into an abstraction. V1 has five responsibilities:
 
 | Responsibility | Smallest durable boundary | Must not own |
 |---|---|---|
-| Projection | One Rebalance projection module returning the versioned snapshot | HTML, theme values, polling or source collection |
+| Connector | One module per incoming source implementing the same small read protocol | UI, cross-source joins, readiness classification, scheduling or collection |
+| Aggregation | One module validates connector batches, correlates identities and returns the versioned snapshot | Source-specific parsing, HTML, theme values or polling |
 | Data client | One browser module for bounded GET, validation, last-good cache and freshness | Repo correlation, readiness policy or DOM rendering |
 | App state | One browser module for route/selection/scroll/spotlight and refresh state | CSS values, source reads or per-layout duplicate state |
 | Views | One browser module with small render functions for A/B/C/detail | Data fetching, independent stores or a component framework |
@@ -106,21 +113,50 @@ turning every card or helper into an abstraction. V1 has four responsibilities:
 Use plain ES modules and functions. Split a file only when it has a second owner,
 must be tested independently at a trust boundary, or becomes materially harder to
 read; file size alone is not a reason. A one-use card class, interface/factory,
-dependency-injection container, event bus, plugin API and generic design-system
-package are out of scope. The JSON snapshot is the only Rebalance-to-client
+dependency-injection container, event bus, generic plugin framework and generic
+design-system package are out of scope. The connector batch is the only
+source-to-aggregator contract. The JSON snapshot is the only host-to-client
 contract. App state is the only cross-view runtime contract. Semantic tokens are
-the only styling contract. These three seams make later replacement possible
-without creating extension points before a second implementation exists.
+the only styling contract. These four seams make later replacement possible
+without unrelated extension points.
 
-Shared policy stays server-side when it affects truth: identity, joins, coverage,
-progress and QA classification. The browser owns presentation and navigation.
+### Incoming connector protocol and first-party set
+
+A connector is a Python module registered by ID in one checked-in dictionary. It
+exports immutable metadata (`id`, `schema_version`, `capabilities`) and one bounded
+`read(config, deadline)` function returning a `ConnectorBatch`. The batch contains
+source status/coverage/watermarks plus normalized repos, checkouts, issues, PRs,
+lanes and events. Unsupported fields are absent with a reason; connectors never
+invent empty totals. Configuration names allowlisted paths/DBs and enablement only.
+
+Build these first-party connectors in the initial implementation:
+
+| Connector | Reads | Can be omitted independently |
+|---|---|---|
+| `rebalance` | Rebalance read-only DB/cached actions and GitHub corpus | Yes; issue/PR/action capabilities become unavailable unless another connector supplies them |
+| `clio` | CLIO-compatible prompt JSONL | Yes; prompt/intent context disappears, progress still comes from attested sources |
+| `git_pulse` | Git Pulse sync TSV and device health | Yes; commit/device coverage reflects remaining sources |
+| `topology` | Versioned persisted Daily/Shutdown scanner result | Yes; checkout counts become unknown |
+| `continuity` | Existing Daily/Shutdown handoff/milestone output when structured and attributable | Yes; unattested milestones remain unknown |
+
+This is an incoming adapter boundary, not a runtime extension ecosystem. Adding a
+connector means adding one module, one registry entry and contract fixtures, then
+restarting the local host. No directory scanning, entry-point discovery, arbitrary
+third-party code loading, hot reload, lifecycle callbacks or connector-to-connector
+calls in v1. Revisit discovery only when a real separately distributed connector
+cannot reasonably be registered in the repository.
+
+Shared policy stays in aggregation when it affects truth: identity, joins, coverage,
+progress and QA classification. Connectors parse and attribute; they do not decide
+cross-source truth. The browser owns presentation and navigation.
 Swift consumes the same snapshot rather than importing browser modules; native
 views may reimplement presentation only after the HTML behavior is accepted.
 
-Reuse `db_connection_readonly` (`mode=ro`) at the boundary. Extend existing query
-helpers with optional supplied read-only connections/additive fields where needed;
-preserve their canonical mirror/dedup behavior. One projection entry point composes
-those helpers; do not create a parallel identity or ranking implementation.
+The `rebalance` connector reuses `db_connection_readonly` (`mode=ro`) and existing
+query helpers where import boundaries permit. Otherwise it issues minimal read-only
+queries against the documented schema. Preserve canonical mirror/dedup semantics,
+and pin them with shared fixtures so another corpus connector can produce equivalent
+identity. Do not import the Rebalance web host or start its services.
 
 Do not wrap `/focus-5.json` wholesale: it probes Git and provides a top-five
 selection. Do not call source refresh, `sync_clio_prompts`, live ranking,
@@ -189,7 +225,8 @@ an unbounded multi-page cycle or mixed-page revisions; broader history is deferr
 ### Phase 1 — delivery and QA
 
 - [ ] Commit the contract, synthetic fixtures and source mapping; every requested field is populated, nullable with a reason, or listed in the gap register below.
-- [ ] Add the shared projection and explicit route on the existing host; a configured empty/missing corpus returns an honest state without source bootstrap.
+- [ ] Add the Flightdeck host, static connector registry, aggregation and explicit routes; zero enabled connectors and any one connector missing return honest capability states without preventing the app shell from loading.
+- [ ] Implement and contract-test `rebalance`, `clio`, `git_pulse`, `topology` and `continuity`; disable each independently and prove remaining connector fixtures still render without conditional core code.
 - [ ] Prove passive reads: source/DB/sync files unchanged; spy collectors, Git subprocesses, network clients and ingestion functions and assert zero calls during repeated GETs. Negative control deliberately calls a forbidden path and fails the guard.
 - [ ] Test basename collisions, mirror aliases, duplicate SHAs, multiple agents per issue, unlinked PRs, stale checks on another head, and more than 10 PRs. Assert nonempty inputs before checking totals.
 - [ ] Verify aggregate row/byte/time exhaustion, a source changing mid-read, late/out-of-order responses and server restart. Unexpected/repeated cursor fields cause zero additional requests; truncation refuses exact totals. Disable the budget guard as a failing control and retain the red receipt.
@@ -318,7 +355,7 @@ An observation ending before now does not cover the gap after W. With no known
 progress anchor, incomplete coverage, unknown watermark or a future/invalid anchor,
 show unknown; a prompt does not establish a progress anchor.
 
-The source adapter supplies `fresh_until` from its verified expected maximum active
+Each connector supplies `fresh_until` from its verified expected maximum active
 interval plus a 25% grace (hourly sources: 75 minutes after W). Inactive overnight
 hours do not extend that cutoff. If the schedule/maximum lag is unknown, freshness
 is unknown and no definitive inactivity color is assigned until an owner-backed
@@ -366,10 +403,10 @@ merge, cleanup, task closure or loss of carry-forward state at the deadline.
 
 | Layer | Initial behavior |
 |---|---|
-| HTML data reads | GET existing-output projection every **150 seconds** while visible; immediate read on launch/foreground and manual “Read latest”. |
+| HTML data reads | GET the Flightdeck snapshot every **150 seconds** while visible; immediate read on launch/foreground and manual “Read latest”. |
 | Visual clocks | Recompute from event timestamps every second while visible; no source reads and no clock reset on zoom. |
 | Background tab | Pause UI polling; refresh immediately when visible. No promise of browser timer delivery while hidden/asleep. |
-| Upstream writers | Keep installed schedules: Git Pulse hourly; GitHub/Focus5 hourly at :45; CLIO hook/60s tailers; Markdown exporter 300s. Rebalance CLIO ingest freshness is separately measured. |
+| Upstream writers | Connectors report observed schedules where known. Current first-party sources include Git Pulse hourly, GitHub/Focus5 hourly at :45 and CLIO-compatible hook/tailers; Flightdeck does not require or control those schedules. |
 | Faster source telemetry | Only a separately scoped configuration/extension to an existing producer after measured need. Never a dashboard-owned collector. |
 
 Freshness labels expose last successful source observation, last consumer read and
@@ -407,8 +444,8 @@ coverage, while source deficiencies are fixed only in their existing owner paths
 |---|---|---|---|
 | Missing complete topology | Existing scanner serializes full clones and linked worktrees; current sync feed does not | First locate/validate an existing saved output. If absent, add atomic versioned output persistence to that scanner's existing invocation, and reuse its established publication path if needed. No new discovery engine. | Exact clone/worktree requirement stays incomplete until fresh, complete evidence exists; pilot may display unknown/known-subset counts. |
 | Git Pulse Studio coverage | Writer heartbeat lists 49 configured / 3 scanned / 46 missing | Existing producer owner reviews configured paths and deployed version. Fix config/coverage in that lane; dashboard never repairs it. | No definitive inactivity/zero claims for uncovered repos. |
-| CLIO branch/device loss | Raw JSONL already records them; DB projection drops them | Additive existing CLIO migration and idempotent backfill from existing JSONL, if required for reliable joins. Use existing ingest orchestration. | Agent/task intent can ship without invented fields; unresolved repo/device joins remain labeled. |
-| CLIO ingest lag | Existing writer and ingest adapter | Measure active DB lag; adjust existing ingest recipe/schedule only as separately reviewed source work if freshness target requires it. | Clearly distinguish capture age from cached projection age. |
+| CLIO-compatible branch/device data | Raw JSONL records them, but producers may omit either field | `clio` parses fields when present and labels unresolved joins; compatible alternative JSONL can replace the installed writer. | Agent/task intent can ship without invented fields; unresolved repo/device joins remain labeled. |
+| Prompt-source lag | Existing writer timestamps plus connector read time | Report capture/read lag from records. Adjust an external producer only in its own separately reviewed work. | Clearly distinguish source event age from connector read age. |
 | Milestone completeness | Generic completion/continuity outputs exist, issue-linked evidence unproven | Reuse a verified structured existing record; otherwise unknown. Optional additive fields on existing completion writer only after a concrete example is missing. | Do not fabricate completion, liveness or comprehensive agent coverage. |
 | Faster Git/GitHub updates | Existing hourly jobs | Measure API/runtime cost and ask for the desired source freshness before proposing a shorter existing schedule. | 150s read cadence remains truthful; no source-cadence guarantee until measured. |
 
@@ -423,12 +460,12 @@ used to mark an unmet mandatory requirement complete.
 | Change | Undo class / shield | Tripwire and rollback |
 |---|---|---|
 | New HTML/static route | Easy; opt-in route, existing Pulse/Focus5 unchanged | Any existing route regression: disable Flightdeck route/assets and retain existing views. |
-| Shared read helper/projection | Costly; additive fields and supplied read-only connection | Any write, Git probe, network collection or schema assurance from GET: fail test and disable new endpoint. Revert helper extension; corpus untouched. |
-| Existing CLIO additive migration | Costly; owner-repo migration, backup and idempotent backfill | Count/provenance loss: stop ingestion extension, restore prior reader; leave harmless added columns rather than destructive rollback. |
+| Flightdeck host/aggregation | Costly; additive loopback app with no source writes | Any write, Git probe or network collection from GET: fail test and stop the host; source corpora remain untouched. |
+| Individual connector | Easy; one registry entry and isolated source adapter | Parse, latency or provenance regression: disable that connector; app and other capabilities remain available. |
 | Existing scanner output persistence | Costly; write only owner-configured output, atomic replace, last-good retained | Invalid output, overlap or changed repo state: stop that output step; preserve prior snapshot and report coverage. No app-triggered scan. |
 | Future Swift client | Easy for initial shell; HTML path retained | Contract/rendering regression: return to browser app; source data remains in place. |
 
-Right-sized diagnostics: existing server logger emits a `flightdeck` request ID,
+Right-sized diagnostics: the Flightdeck host logger emits a `flightdeck` request ID,
 source status/age, row counts, duration and error code. No prompt bodies or secrets.
 Client shows data freshness and last successful read; error details are accessible
 from A rather than permanent extra controls in B/C. Bounded browser error history
@@ -440,7 +477,8 @@ Loopback-only serving, same-origin UI/data, explicit Host/origin handling and a
 restrictive content-security policy. No wildcard CORS, LAN bind, tunnel or credential
 exposure. Read paths are configured allowlisted roots; preferences have a separate
 single writer. Existing source contracts/schemas remain owned by their repositories.
-Rebalance AGENTS already requires DRY/SOLID; follow its existing gateway/test rules.
+XYZ governance applies to the host and connectors; source-owned changes also follow
+the producer repository's own gateway/test rules.
 
 ### Phase 4 — delivery and QA
 
@@ -461,13 +499,14 @@ Start only after the HTML pilot is accepted. Two explicit milestones avoid calli
 a web wrapper a fully native UI conversion:
 
 - [ ] **5A — Swift macOS shell:** use SwiftUI/AppKit window lifecycle with a WKWebView hosting the accepted HTML app. Add app identity, remembered second-monitor window/fullscreen placement, and correct keyboard/trackpad behavior. Keep the loopback origin restriction; do not start collectors when the app launches. This is a native shell around the HTML UI, not a native rewrite of the cards.
-- [ ] **5B — Native SwiftUI views, separately approved if needed:** replace A/B/C/detail view rendering one view at a time against the same versioned JSON fixtures, token values and navigation semantics. Use URLSession/Codable and the existing Focus5 client/cache pattern as precedent. Keep canonical correlation, coverage and readiness logic in Rebalance; no direct divergent SQLite or Git access. Retain HTML fallback until parity passes.
+- [ ] **5B — Native SwiftUI views, separately approved if needed:** replace A/B/C/detail view rendering one view at a time against the same versioned JSON fixtures, token values and navigation semantics. Use URLSession/Codable and the existing Focus5 client/cache pattern as precedent. Keep canonical correlation, coverage and readiness logic in Flightdeck aggregation; no direct divergent connector, SQLite or Git access. Retain HTML fallback until parity passes.
 
 The existing Focus5 client demonstrates a JSON-only boundary, loopback validation,
 6-second requests and last-known cache behavior. Its 90-second polling is precedent,
 not an instruction to change Flightdeck's 150-second consumption cadence. Do not
 inherit the whole Focus5 refresh path, which also reads notes/reminders and whose
-server endpoint may probe Git. Point Swift to `/flightdeck.json` only.
+server endpoint may probe Git. Point Swift only to the Flightdeck-owned
+`/flightdeck.json`; Swift never loads or selects source connectors directly.
 
 Reuse `design-tokens.json` for Swift colors, typography, spacing, radii, shadows and
 motion. Preserve semantic light/dark/system behavior; map system font and layout
@@ -495,7 +534,8 @@ request for this HTML-first plan; runtime implementation still awaits its own st
 HTML release completion requires all mandatory data/UI requirements and phases 1–4
 QA, including fresh complete topology if exact counts are claimed. A partial-data
 pilot must be labeled as such. Phase 5 is future work with its own approval boundary.
-No new collector is currently justified. No automatic merge/cleanup, agent messaging,
+The initial five passive incoming connectors are part of the build; they adapt
+existing outputs and do not collect. No new collector is currently justified. No automatic merge/cleanup, agent messaging,
 cloud-hosted private feeds, new supervisor, general theme editor or fabricated
 agent-liveness detection is included.
 
