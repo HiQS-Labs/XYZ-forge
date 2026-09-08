@@ -1,6 +1,6 @@
 # Marathon Phase p1
-STATUS: Open
-NEXT: codex (Builder)
+STATUS: Closed — abandoned stub fixture, colliding with real marathon work in this clone (2026-09-08). See PARKED/.
+NEXT: none
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=2 -->
 
