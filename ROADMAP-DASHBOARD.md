@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 41 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 44 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -50,6 +50,9 @@ Summary: 41 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-484 · Deploy Skills | — | [plan](PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md) · [#484](https://github.com/HiQS-Labs/XYZ-forge/issues/484) |
 | GH-481 · consult.sh: agy lane answered from a months-old ~/.gemini scratch copy, not the throwaway worktree | — | — |
 | GH-482 · relay-drive.sh --artifact-file silently seeds nothing — the reviewer never sees the artifact | — | — |
+| GH-491 · roadmap move/update --section help advertises section names the renderer drops, and nothing validates the value | — | [GH-491-ROADMAP-SECTION-VALIDATION.md](PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md) · [#491](https://github.com/HiQS-Labs/XYZ-forge/issues/491) |
+| GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR | — | [GH-492-ROADMAP-STATE-SWEEP.md](PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md) · [#492](https://github.com/HiQS-Labs/XYZ-forge/issues/492) |
+| GH-355 · Migration 007: updated_at across all releases.db tables, so consumers can detect what changed | — | [GH-355-UPDATED-AT-MIGRATION.md](PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md) · [#355](https://github.com/HiQS-Labs/XYZ-forge/issues/355) |
 | GH-496 · ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459) and widen Tier-2 routing | — | [GH-496-SHARPEN-CICD.md](PROJECT/1-INBOX/GH-496-SHARPEN-CICD.md) · [#496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) |
 
 ## Queue
