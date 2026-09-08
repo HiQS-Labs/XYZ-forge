@@ -11,7 +11,7 @@ while the four axes keep their honest values underneath.
 | # | score | task | release | lane | pri | sev | appeal | effort | calc | ovr |
 |--:|------:|------|---------|------|----:|----:|-------:|-------:|-----:|----:|
 | 1 | **365** | [GH-413](https://github.com/HiQS-Labs/XYZ-forge/issues/413) — launch-artifact marker authorises destructive rebuild | Front-Door | queue | 90 | 95 | 85 | 95 | 365 | — |
-| 2 | **360** | [GH-474](https://github.com/HiQS-Labs/XYZ-forge/issues/474) — Remove rendered MD views (ROADMAP-DASHBOARD.md & LEADERBOARD.md) to eliminate staleness guards | — | Queue / parked intake | 90 | 90 | 90 | 90 | 360 | — |
+| 2 | **360** | [GH-474](https://github.com/HiQS-Labs/XYZ-forge/issues/474) — Remove rendered MD views (ROADMAP-DASHBOARD.md & LEADERBOARD.md) to eliminate staleness guards | — | Completed | 90 | 90 | 90 | 90 | 360 | — |
 | 3 | **340** | [GH-67](https://github.com/HiQS-Labs/XYZ-forge/issues/67) — Commandcode builder default widened to `--yolo` — closer evaluation → possible build | — | Queue / parked intake | 88 | 80 | 45 | 70 | 283 | 340 |
 | 4 | **325** | [GH-249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) — ubuntu canary: EUID=0 defeats chmod-based assertions | Linux-RC | cut | 90 | 85 | 80 | 70 | 325 | — |
 | 5 | **321** | [GH-418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) — Marathon planner still reads the frozen ROADMAP.md | Front-Door | queue | 88 | 78 | 80 | 75 | 321 | — |
@@ -37,7 +37,7 @@ while the four axes keep their honest values underneath.
 | 25 | **290** | [GH-168](https://github.com/HiQS-Labs/XYZ-forge/issues/168) — wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | Bulkhead | completed | 80 | 55 | 85 | 70 | 290 | — |
 | 26 | **290** | [GH-226](https://github.com/HiQS-Labs/XYZ-forge/issues/226) — xyz-vendor.sh transcript gate refuses repos that gitignore transcripts | Linux-RC | completed | 75 | 50 | 80 | 85 | 290 | — |
 | 27 | **285** | [GH-141](https://github.com/HiQS-Labs/XYZ-forge/issues/141) — make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | In progress | 80 | 65 | 85 | 55 | 285 | — |
-| 28 | **285** | [GH-221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) — GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI >=1.1.19 — whoami subcommand removed | — | Queue / parked intake | 70 | 65 | 70 | 80 | 285 | — |
+| 28 | **285** | [GH-221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) — GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI >=1.1.19 — whoami subcommand removed | — | Completed | 70 | 65 | 70 | 80 | 285 | — |
 | 29 | **285** | [GH-412](https://github.com/HiQS-Labs/XYZ-forge/issues/412) — transient claim collision indistinguishable from durable loss | Front-Door | queue | 80 | 75 | 75 | 55 | 285 | — |
 | 30 | **285** | [GH-419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) — make the three marathon process rules deterministic | Front-Door | queue | 72 | 60 | 75 | 78 | 285 | — |
 | 31 | **280** | [GH-114](https://github.com/HiQS-Labs/XYZ-forge/issues/114) — headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | Bulkhead | completed | 80 | 60 | 80 | 60 | 280 | — |
@@ -79,8 +79,8 @@ while the four axes keep their honest values underneath.
 | 67 | **250** | [GH-153](https://github.com/HiQS-Labs/XYZ-forge/issues/153) — RELEASES dashboard sidebar + full-cycle rollup (technical spike) | — | Completed | 70 | 55 | 80 | 45 | 250 | — |
 | 68 | **250** | [GH-197](https://github.com/HiQS-Labs/XYZ-forge/issues/197) — two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onboarding SOP (GH-105 follow-up) | — | Completed | 80 | 55 | 65 | 50 | 250 | — |
 | 69 | **250** | [GH-232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) — wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | Linux-RC | completed | 70 | 55 | 65 | 60 | 250 | — |
-| 70 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Queue | 70 | 55 | 65 | 60 | 250 | — |
-| 71 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Queue / parked intake | 60 | 35 | 70 | 85 | 250 | — |
+| 70 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Completed | 70 | 55 | 65 | 60 | 250 | — |
+| 71 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Completed | 60 | 35 | 70 | 85 | 250 | — |
 | 72 | **250** | [GH-439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) — start-task governed workflow skill | — | Completed | 80 | 35 | 50 | 85 | 250 | — |
 | 73 | **245** | [GH-108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 74 | **240** | [GH-453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) — Governance document identity audit | — | Queue / parked intake | 70 | 65 | 50 | 55 | 240 | — |
@@ -111,7 +111,7 @@ while the four axes keep their honest values underneath.
 | 99 | **170** | [GH-195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
 | 100 | **170** | [GH-28](https://github.com/HiQS-Labs/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
 | 101 | **160** | [GH-18](https://github.com/HiQS-Labs/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
-| 102 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | — | Queue / parked intake | 3 | 3 | 3 | 3 | 12 | — |
+| 102 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | — | Completed | 3 | 3 | 3 | 3 | 12 | — |
 | 103 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
 | 104 | **9** | [GH-399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) — Let the profile carry the route | — | Queue / parked intake | 2 | 3 | 2 | 2 | 9 | — |
 | 105 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Cargo | queue | 3 | 2 | 2 | 1 | 8 | — |

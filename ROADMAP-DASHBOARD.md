@@ -6,13 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 64 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 40 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-223 — pre-push gate push double-applies through ref lock | — | [#223](https://github.com/HiQS-Labs/XYZ-forge/issues/223) · [PROJECT/1-INBOX/GH-223-GATE-PUSH-DOUBLE-APPLY.md](PROJECT/1-INBOX/GH-223-GATE-PUSH-DOUBLE-APPLY.md) |
-| GH-222 — releases update cannot re-point a release's tracking issue | — | [#222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) · [PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md](PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md) |
-| GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI &gt;=1.1.19 — whoami subcommand removed | — | [#221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) · [PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md](PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md) |
 | GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth | — | [#215](https://github.com/HiQS-Labs/XYZ-forge/issues/215) · [PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md](PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md) |
 | GH-216 — marathon-plan.sh ledger parser rejects link-style ROADMAP.md bullets | — | [Title](path) · [#216](https://github.com/HiQS-Labs/XYZ-forge/issues/216) · [PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md](PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md) |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Labs/XYZ-forge/issues/75) |
@@ -22,46 +20,26 @@ Summary: 64 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-28 · RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | [GH-28-RELEASES-LEDGER-DISCIPLINE.md](PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md) · [#28](https://github.com/HiQS-Labs/XYZ-forge/issues/28) |
 | GH-17 · SOP for evaluating new agent harnesses and frontier models | — | [GH-17-SOP-HARNESS-MODEL-EVAL.md](PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md) · [#17](https://github.com/HiQS-Labs/XYZ-forge/issues/17) |
 | GH-18 · Harness evaluation: Command Code (cmd) and model matrix | — | [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Labs/XYZ-forge/issues/18) |
-| GH-246 · relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | [GH-246-RELAY-XYZ-QA-TEMPLATE.md](PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md) · [#246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) |
-| GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions | — | [GH-249-CANARY-EUID-ROOT-ASSERTIONS.md](PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md) · [#249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) |
-| GH-251 · validate.sh miscounts an absent pytest as FAILED | — | [GH-251-VALIDATE-PYTEST-SKIP.md](PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md) · [#251](https://github.com/HiQS-Labs/XYZ-forge/issues/251) |
 | GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | — | [#255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) · [PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md](PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md) |
 | GH-256 — no preflight checks the builder can reach a phase's artifact paths | — | [#256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) · [PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md](PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md) |
 | GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1) | — | [GH-259-JOG-SERIAL-QUEUE.md](PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md) · [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259) |
-| GH-271 · wave_reconcile closing-keyword extraction + rollback completeness | — | — |
 | GH-275 · medium-level write-ops logging of agent disk-write commands | — | [GH-275-WRITE-OPS-LOGGING.md](PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md) |
-| GH-267 · /express — hotfix fast lane through the whole paper trail | — | [doc](PROJECT/3-COMPLETED/GH-267-EXPRESS-HOTFIX-LANE.md) · [#267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) |
-| GH-272 · releases-merge-resolve regenerates derived views | — | — |
-| GH-273 · marathon-root-audit python spellings | — | — |
-| GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries | — | [GH-314-ARCHIVE-TEMPLATE-MANGLE.md](PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md) · [#314](https://github.com/HiQS-Labs/XYZ-forge/issues/314) |
 | GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status | — | [GH-254-PREVIEW-DRAFT-SORT.md](PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md) · [#254](https://github.com/HiQS-Labs/XYZ-forge/issues/254) |
 | GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing | — | [plan](PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md) |
 | GH-346 · Speed up harness → gateway → model resolution with a real cache | — | [GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md](PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md) · [#346](https://github.com/HiQS-Labs/XYZ-forge/issues/346) |
-| GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
-| GH-365/377 · Test-suite recalibration: envelope, telemetry, contention-skip, PDDA single-scan, ShellCheck width, campaigns, tier routing, route matrix — executing under #377 (supersedes #365) | — | [doc](PROJECT/2-WORKING/GH-377-TEST-SUITE-RECALIBRATION.md) |
 | GH-345 · Sleep-vs-readiness audit: one confirmed race in the agent-chorus doorbell assertion, and the case against the paid Test Reliability tier | — | [GH-345-SLEEP-READINESS-AUDIT.md](PROJECT/1-INBOX/GH-345-SLEEP-READINESS-AUDIT.md) · [#345](https://github.com/HiQS-Labs/XYZ-forge/issues/345) |
 | GH-341 · CI: attest Linux as an unprivileged user — the canary's 14 failures are almost all EUID=0 artifacts | — | [GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md](PROJECT/1-INBOX/GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md) · [#341](https://github.com/HiQS-Labs/XYZ-forge/issues/341) |
-| GH-353 · audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates | — | [GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md](PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md) · [#353](https://github.com/HiQS-Labs/XYZ-forge/issues/353) |
-| GH-360 · releases check receipt chain failure phrasing and scoped --rebuild | — | [GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md](PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md) · [#360](https://github.com/HiQS-Labs/XYZ-forge/issues/360) |
 | GH-384 · Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel | — | [GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md](PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md) · [#384](https://github.com/HiQS-Labs/XYZ-forge/issues/384) |
 | GH-396 · Harness root resolution: one resolver, two roots, pinned | — | — |
 | GH-399 — let the profile carry the route | — | [#399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) · [PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md](PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md) |
-| GH-405 · Local debugging mock harness for GitHub Projects V2 API | — | [GH-405-MOCK-BOARD-HARNESS.md](PROJECT/3-COMPLETED/GH-405-MOCK-BOARD-HARNESS.md) · [#405](https://github.com/HiQS-Labs/XYZ-forge/issues/405) |
 | GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work | — | [GH-402-BOARD-SYNC.md](PROJECT/2-WORKING/GH-402-BOARD-SYNC.md) · [#402](https://github.com/HiQS-Labs/XYZ-forge/issues/402) |
 | GH-406 · External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | [GH-406-RUSS-EXTERNAL-REVIEW.md](PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md) · [#406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) |
-| GH-410 · The structural relay-block validator never runs on the driven path, and rejects the bold STATUS format real threads write | — | [GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md](PROJECT/2-WORKING/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md) · [#410](https://github.com/HiQS-Labs/XYZ-forge/issues/410) |
-| GH-412 · A transient O_EXCL claim collision exits 1, identical to a durable loss — no retry channel under marathon load | — | [GH-412-TRANSIENT-CLAIM-EXIT-CODE.md](PROJECT/1-INBOX/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md) · [#412](https://github.com/HiQS-Labs/XYZ-forge/issues/412) |
-| GH-413 · The launch-artifact marker authorises a destructive rebuild of any directory — marker alone, no git history required | — | [GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md](PROJECT/1-INBOX/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md) · [#413](https://github.com/HiQS-Labs/XYZ-forge/issues/413) |
-| GH-411 · tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus the whole marathon namespace | — | [GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md](PROJECT/1-INBOX/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md) · [#411](https://github.com/HiQS-Labs/XYZ-forge/issues/411) |
 | GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer | — | [GH-416-DOC-TRUES-UP-BATCH.md](PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md) · [#416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) |
 | GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip | — | [GH-418-MARATHON-ADOPT-RELEASES-DB.md](PROJECT/1-INBOX/GH-418-MARATHON-ADOPT-RELEASES-DB.md) · [#418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) |
-| GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal | — | [GH-419-MARATHON-RULE-ENFORCEMENT.md](PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md) · [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) |
 | GH-421 · Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first | — | [GH-421-AUTO-WAVE-RECONCILE.md](PROJECT/1-INBOX/GH-421-AUTO-WAVE-RECONCILE.md) · [#421](https://github.com/HiQS-Labs/XYZ-forge/issues/421) |
 | GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on | — | [GH-423-ROADMAP-RENDER.md](PROJECT/1-INBOX/GH-423-ROADMAP-RENDER.md) · [#423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) |
 | GH-424 · roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕 | — | [GH-424-ROADMAP-STATUS-MARKER-WRITER.md](PROJECT/1-INBOX/GH-424-ROADMAP-STATUS-MARKER-WRITER.md) · [#424](https://github.com/HiQS-Labs/XYZ-forge/issues/424) |
 | GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified | — | [GH-425-GATE-PROVENANCE-CHECK.md](PROJECT/1-INBOX/GH-425-GATE-PROVENANCE-CHECK.md) · [#425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) |
-| GH-349 · releases ledger roadmap layer never generalised to a vendored install | — | [GH-349-RELEASES-ROADMAP-VENDORED.md](PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md) · [#349](https://github.com/HiQS-Labs/XYZ-forge/issues/349) |
-| GH-351 · manifest unship, the retraction verb | — | [GH-351-MANIFEST-UNSHIP.md](PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md) · [#351](https://github.com/HiQS-Labs/XYZ-forge/issues/351) |
 | GH-443 · marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the marathon before it fires | — | [capture](PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md) |
 | GH-445 · runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0 | — | [GH-445-TURN-SHIM-HELP-PARITY.md](PROJECT/1-INBOX/GH-445-TURN-SHIM-HELP-PARITY.md) · [#445](https://github.com/HiQS-Labs/XYZ-forge/issues/445) |
 | GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run | — | [GH-446-MARATHON-PLAN-WRITE-GUARD.md](PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md) · [#446](https://github.com/HiQS-Labs/XYZ-forge/issues/446) |
@@ -69,51 +47,50 @@ Summary: 64 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/1-INBOX/GH-454-RECONCILE-GATE-DEFECTS.md) |
 | GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
 | GH-453 · Governance document identity audit | — | [Plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md) · [#453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) |
-| GH-473 · feat(skill): add /unstuck goal-movement interrupt | — | [doc](PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md) · [#473](https://github.com/HiQS-Labs/XYZ-forge/issues/473) |
-| GH-474 · Staleness guard reads the renderer's dropped-row warning instead of guessing from table names | — | — |
 | GH-484 · Deploy Skills | — | [plan](PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md) · [#484](https://github.com/HiQS-Labs/XYZ-forge/issues/484) |
 | GH-481 · consult.sh: agy lane answered from a months-old ~/.gemini scratch copy, not the throwaway worktree | — | — |
 | GH-482 · relay-drive.sh --artifact-file silently seeds nothing — the reviewer never sees the artifact | — | — |
 
 ## Queue
 
-Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 0 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-243 · GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | [GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md](PROJECT/1-INBOX/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md) · [#243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) |
+| — | — | — |
 
 ## In progress
 
-Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-232 · wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | — | [GH-232-WAVE-RECONCILER-MULTIPHASE.md](PROJECT/3-COMPLETED/GH-232-WAVE-RECONCILER-MULTIPHASE.md) · [#232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) |
-| GH-233 · AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | — | [GH-233-AGENTCHORUS-GEN2-PHASE2.md](PROJECT/3-COMPLETED/GH-233-AGENTCHORUS-GEN2-PHASE2.md) · [#233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) |
-| GH-204 · BSD sed -i '' no-ops on Linux at production call sites | — | [GH-204-BSD-SED-PORTABILITY.md](PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md) · [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) |
-| GH-205 · validate.sh mutates four tracked files per run — gate not idempotent | — | [GH-205-GATE-IDEMPOTENCY.md](PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md) · [#205](https://github.com/HiQS-Labs/XYZ-forge/issues/205) |
-| GH-123 · Linux portability canary — remainder: gh358 lock contention on shared runners | — | [GH-123-LINUX-CANARY-REMAINDER.md](PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md) · [#123](https://github.com/HiQS-Labs/XYZ-forge/issues/123) |
-| GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
 | GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) | — | [GH-201-GEN35-FOLLOWUPS.md](PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md) · [#201](https://github.com/HiQS-Labs/XYZ-forge/issues/201) |
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Labs/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Labs/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Labs/XYZ-forge/issues/146) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
-| GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
 
 ## Completed
 
-Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · 🔮 0 · 🔲 0
+Summary: 94 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-228 · Org rename HiQS-Suite → HiQS-Labs: a hardcoded regex silently drops issue URLs from the roadmap shadow | ✅ | [GH-228-ROADMAP-ORG-RENAME-REGEX.md](PROJECT/3-COMPLETED/GH-228-ROADMAP-ORG-RENAME-REGEX.md) · [#228](https://github.com/HiQS-Labs/XYZ-forge/issues/228) |
+| GH-232 · wave_reconcile should honor linked issue open/closed state before promoting multi-phase docs | — | [GH-232-WAVE-RECONCILER-MULTIPHASE.md](PROJECT/3-COMPLETED/GH-232-WAVE-RECONCILER-MULTIPHASE.md) · [#232](https://github.com/HiQS-Labs/XYZ-forge/issues/232) |
+| GH-243 · GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | [GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md](PROJECT/1-INBOX/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md) · [#243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) |
+| GH-222 — releases update cannot re-point a release's tracking issue | — | [#222](https://github.com/HiQS-Labs/XYZ-forge/issues/222) · [PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md](PROJECT/1-INBOX/GH-222-RELEASES-TRACKING-REPOINT.md) |
 | GH-226 · xyz-vendor.sh transcript gate refuses repos that gitignore transcripts | ✅ | [GH-226-VENDOR-TRANSCRIPT-GATE.md](PROJECT/3-COMPLETED/GH-226-VENDOR-TRANSCRIPT-GATE.md) · [#226](https://github.com/HiQS-Labs/XYZ-forge/issues/226) |
+| GH-233 · AgentChorus Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite & Citation Linter | — | [GH-233-AGENTCHORUS-GEN2-PHASE2.md](PROJECT/3-COMPLETED/GH-233-AGENTCHORUS-GEN2-PHASE2.md) · [#233](https://github.com/HiQS-Labs/XYZ-forge/issues/233) |
 | GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7) | ✅ | [GH-114-HEADLESS-TTY-IDLE-HANG.md](PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md) · [#114](https://github.com/HiQS-Labs/XYZ-forge/issues/114) |
+| GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI &gt;=1.1.19 — whoami subcommand removed | — | [#221](https://github.com/HiQS-Labs/XYZ-forge/issues/221) · [PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md](PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md) |
+| GH-204 · BSD sed -i '' no-ops on Linux at production call sites | — | [GH-204-BSD-SED-PORTABILITY.md](PROJECT/2-WORKING/GH-204-BSD-SED-PORTABILITY.md) · [#204](https://github.com/HiQS-Labs/XYZ-forge/issues/204) |
 | GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6) | ✅ | [GH-113-HEADLESS-SCRATCH-CONTAINMENT.md](PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md) · [#113](https://github.com/HiQS-Labs/XYZ-forge/issues/113) |
+| GH-205 · validate.sh mutates four tracked files per run — gate not idempotent | — | [GH-205-GATE-IDEMPOTENCY.md](PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md) · [#205](https://github.com/HiQS-Labs/XYZ-forge/issues/205) |
 | GH-91 · a build turn has nowhere to write verification output | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Labs/XYZ-forge/issues/91) |
 | GH-105 · vendor the RELEASES DB system + HTML timeline generator into the .xyz payload (optional add-on) | — | [GH-105-VENDOR-RELEASES-ADDON.md](PROJECT/3-COMPLETED/GH-105-VENDOR-RELEASES-ADDON.md) · [#105](https://github.com/HiQS-Labs/XYZ-forge/issues/105) |
 | GH-168 · wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR | ✅ | [GH-168-WAVE-RECONCILE-SCOPE.md](PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md) · [#168](https://github.com/HiQS-Labs/XYZ-forge/issues/168) |
+| GH-182 · self_healer --mode heal is a facade (containment refuses any real target) plus unsafe gate design | — | [GH-182-HEALER-FACADE-SAFETY.md](PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md) · [#182](https://github.com/HiQS-Labs/XYZ-forge/issues/182) |
 | GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work | ✅ | [GH-50-SANDBOXED-GIT-HALF-APPLY.md](PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md) · [#50](https://github.com/HiQS-Labs/XYZ-forge/issues/50) |
 | GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/ | ✅ | [GH-2-ORPHAN-BACKUP-RELOCATION.md](PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md) · [#2](https://github.com/HiQS-Labs/XYZ-forge/issues/2) |
 | GH-202 · wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues | ✅ | [GH-202-WAVE-RECONCILER-STATE.md](PROJECT/2-WORKING/GH-202-WAVE-RECONCILER-STATE.md) · [#202](https://github.com/HiQS-Labs/XYZ-forge/issues/202) |
@@ -122,33 +99,51 @@ Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · �
 | GH-1 · suite-wide fixture containment + clone-identity invariant gate | ✅ | [GH-1-SUITE-CONTAINMENT-GATE.md](PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md) · [#1](https://github.com/HiQS-Labs/XYZ-forge/issues/1) |
 | GH-174 · Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | ✅ | [GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md](PROJECT/3-COMPLETED/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md) · [#174](https://github.com/HiQS-Labs/XYZ-forge/issues/174) |
 | GH-115 · marathon-drive prematurely escalates productive multi-round reviews at the fixed round cap (exit 4) | ✅ | [GH-115-ROUND-CAP-ESCALATION.md](PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md) · [#115](https://github.com/HiQS-Labs/XYZ-forge/issues/115) |
+| GH-246 · relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | [GH-246-RELAY-XYZ-QA-TEMPLATE.md](PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md) · [#246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) |
 | GH-8 · kernel boundary hardening — CLI numeric validation, task/agent format contract | ✅ | [GH-8-KERNEL-BOUNDARY-HARDENING.md](PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md) · [#8](https://github.com/HiQS-Labs/XYZ-forge/issues/8) |
+| GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions | — | [GH-249-CANARY-EUID-ROOT-ASSERTIONS.md](PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md) · [#249](https://github.com/HiQS-Labs/XYZ-forge/issues/249) |
 | GH-180 · repro_builder crashes on timeout telemetry records (exit_code: null → TypeError) | ✅ | [GH-180-REPRO-TIMEOUT-CRASH.md](PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md) · [#180](https://github.com/HiQS-Labs/XYZ-forge/issues/180) |
+| GH-251 · validate.sh miscounts an absent pytest as FAILED | — | [GH-251-VALIDATE-PYTEST-SKIP.md](PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md) · [#251](https://github.com/HiQS-Labs/XYZ-forge/issues/251) |
 | GH-181 · repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquoted command, rc 127 vs expected 2) | ✅ | [GH-181-REPRO-ADAPTER-FIDELITY.md](PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md) · [#181](https://github.com/HiQS-Labs/XYZ-forge/issues/181) |
 | GH-183 · active_explorer env-family fuzzing unsound (base_env={} hardcoded, one always-deferring vector, ambient-env leakage) | ✅ | [GH-183-EXPLORER-ENV-SOUNDNESS.md](PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md) · [#183](https://github.com/HiQS-Labs/XYZ-forge/issues/183) |
 | GH-184 · committed scratch artifact .relay-scratch/probe_telemetry.json makes every real turn a tracked-file mutation | ✅ | [GH-184-TRACKED-SCRATCH-ARTIFACT.md](PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md) · [#184](https://github.com/HiQS-Labs/XYZ-forge/issues/184) |
+| GH-271 · wave_reconcile closing-keyword extraction + rollback completeness | — | — |
+| GH-267 · /express — hotfix fast lane through the whole paper trail | — | [doc](PROJECT/3-COMPLETED/GH-267-EXPRESS-HOTFIX-LANE.md) · [#267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) |
 | GH-195 · marathon-root-audit's blind spot: a direct python3 marathon_drive.py call | ✅ | [GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md) · [#195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) |
+| GH-272 · releases-merge-resolve regenerates derived views | — | — |
 | GH-269 · full switchover to Releases DB — retire ROADMAP.md | ✅ | [GH-269-RELEASES-DB-SWITCHOVER.md](PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md) |
 | GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | ✅ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Labs/XYZ-forge/issues/10) |
+| GH-273 · marathon-root-audit python spellings | — | — |
+| GH-280 · Jog ↔ Marathon recalibration | — | [GH-280](https://github.com/HiQS-Labs/XYZ-forge/issues/280) · [Jog ↔ Marathon recalibration](PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md) |
 | GH-107 · Connect /10days, /radar, and PARKED to the RELEASES DB (read-only seams) | — | [GH-107-RELEASES-DB-READ-SEAMS.md](PROJECT/3-COMPLETED/GH-107-RELEASES-DB-READ-SEAMS.md) · [#107](https://github.com/HiQS-Labs/XYZ-forge/issues/107) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | ✅ | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) |
+| GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries | — | [GH-314-ARCHIVE-TEMPLATE-MANGLE.md](PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md) · [#314](https://github.com/HiQS-Labs/XYZ-forge/issues/314) |
 | GH-42 · relay automation: supported Commandcode turn-taker | ✅ | [GH-42-COMMANDCODE-TURN.md](PROJECT/2-WORKING/GH-42-COMMANDCODE-TURN.md) · [#42](https://github.com/HiQS-Labs/XYZ-forge/issues/42) |
 | GH-170 · Agent2Agent: close transcript glitches and harden publishing | ✅ | [GH-170-AGENT2AGENT-GLITCHES.md](PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md) · [#170](https://github.com/HiQS-Labs/XYZ-forge/issues/170) |
 | GH-165 · Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning) | ✅ | [GH-165-POST-MERGE-WAVE-RECONCILER.md](PROJECT/1-INBOX/GH-165-POST-MERGE-WAVE-RECONCILER.md) · [#165](https://github.com/HiQS-Labs/XYZ-forge/issues/165) |
+| GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install | — | [GH-358-WAVE-RECONCILE-VENDORED-PATHS.md](PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md) · [#358](https://github.com/HiQS-Labs/XYZ-forge/issues/358) |
 | GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | ✅ | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Labs/XYZ-forge/issues/124) |
 | GH-347 · CI: move advisory Ubuntu canary off the pull-request path | ✅ | [GH-347-CANARY-PR-RELOCATION.md](PROJECT/3-COMPLETED/GH-347-CANARY-PR-RELOCATION.md) · [#347](https://github.com/HiQS-Labs/XYZ-forge/issues/347) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | ✅ | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Labs/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
+| GH-365/377 · Test-suite recalibration: envelope, telemetry, contention-skip, PDDA single-scan, ShellCheck width, campaigns, tier routing, route matrix — executing under #377 (supersedes #365) | — | [doc](PROJECT/2-WORKING/GH-377-TEST-SUITE-RECALIBRATION.md) |
 | GH-153 · RELEASES dashboard sidebar + full-cycle rollup (technical spike) | ✅ | [GH-153-RELEASES-SIDEBAR-ROLLUP.md](PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md) · [#153](https://github.com/HiQS-Labs/XYZ-forge/issues/153) |
 | GH-148 · DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter DeepSeek V4 Pro | ✅ | [GH-148-DEEPSEEK-HARNESS.md](PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md) · [#148](https://github.com/HiQS-Labs/XYZ-forge/issues/148) |
 | GH-144 · Agent2Agent 3+ participant onboarding + read-only status quick wins | ✅ | [GH-144-AGENT2AGENT-3PLUS-UX.md](PROJECT/3-COMPLETED/GH-144-AGENT2AGENT-3PLUS-UX.md) · [#144](https://github.com/HiQS-Labs/XYZ-forge/issues/144) |
+| GH-353 · audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates | — | [GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md](PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md) · [#353](https://github.com/HiQS-Labs/XYZ-forge/issues/353) |
 | GH-132 · feat(skills): formal /review-xyz code review skill & multi-model harness | ✅ | [GH-132-REVIEW-XYZ-SKILL.md](PROJECT/3-COMPLETED/GH-132-REVIEW-XYZ-SKILL.md) · [#132](https://github.com/HiQS-Labs/XYZ-forge/issues/132) |
+| GH-360 · releases check receipt chain failure phrasing and scoped --rebuild | — | [GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md](PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md) · [#360](https://github.com/HiQS-Labs/XYZ-forge/issues/360) |
 | GH-155 · 3rd Gen ATE & Fuzzing | ✅ | [GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md](PROJECT/3-COMPLETED/GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md) · [#155](https://github.com/HiQS-Labs/XYZ-forge/issues/155) |
 | GH-135..140 · Wave-1 follow-ups: consult preflight verdict, attempts-gate root, suite registration, twin-divergence record, SIGPIPE sweep+guard, utcnow swap | ✅ | [GH-135-CONSULT-AGY-PREFLIGHT.md](PROJECT/3-COMPLETED/GH-135-CONSULT-AGY-PREFLIGHT.md) · [GH-136-ATTEMPTS-GATE-ROOT.md](PROJECT/3-COMPLETED/GH-136-ATTEMPTS-GATE-ROOT.md) · [GH-137-SUITE-REGISTRATION.md](PROJECT/3-COMPLETED/GH-137-SUITE-REGISTRATION.md) · [GH-138-TWIN-DIVERGENCE-RECORD.md](PROJECT/3-COMPLETED/GH-138-TWIN-DIVERGENCE-RECORD.md) · [GH-139-SIGPIPE-SWEEP-GUARD.md](PROJECT/3-COMPLETED/GH-139-SIGPIPE-SWEEP-GUARD.md) · [GH-140-UTCNOW-DEPRECATION.md](PROJECT/3-COMPLETED/GH-140-UTCNOW-DEPRECATION.md) |
+| GH-405 · Local debugging mock harness for GitHub Projects V2 API | — | [GH-405-MOCK-BOARD-HARNESS.md](PROJECT/3-COMPLETED/GH-405-MOCK-BOARD-HARNESS.md) · [#405](https://github.com/HiQS-Labs/XYZ-forge/issues/405) |
 | #129/#130/#131 · Wave 1 of the Harness Driver & Relay Seam Hardening marathon — three preflighted driver/relay fixes | ✅ | [#129](https://github.com/HiQS-Labs/XYZ-forge/issues/129) · [#130](https://github.com/HiQS-Labs/XYZ-forge/issues/130) · [#131](https://github.com/HiQS-Labs/XYZ-forge/issues/131) |
 | GH-111 · retire manifest FREEZE; tasks and marathons are DIALED IN to exactly one release, as a database state | ✅ | [GH-111-DIALED-IN.md](PROJECT/3-COMPLETED/GH-111-DIALED-IN.md) · [#111](https://github.com/HiQS-Labs/XYZ-forge/issues/111) |
+| GH-410 · The structural relay-block validator never runs on the driven path, and rejects the bold STATUS format real threads write | — | [GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md](PROJECT/2-WORKING/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md) · [#410](https://github.com/HiQS-Labs/XYZ-forge/issues/410) |
 | GH-108 · pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | ✅ | [GH-108-RATING-SYSTEM.md](PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md) · [#108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) |
+| GH-412 · A transient O_EXCL claim collision exits 1, identical to a durable loss — no retry channel under marathon load | — | [GH-412-TRANSIENT-CLAIM-EXIT-CODE.md](PROJECT/1-INBOX/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md) · [#412](https://github.com/HiQS-Labs/XYZ-forge/issues/412) |
 | Execution checklist for GH-111 + GH-108 | ✅ | [GH-108-GH-111-EXECUTION-TODO.md](PROJECT/3-COMPLETED/GH-108-GH-111-EXECUTION-TODO.md) · [#111](https://github.com/HiQS-Labs/XYZ-forge/issues/111) |
+| GH-413 · The launch-artifact marker authorises a destructive rebuild of any directory — marker alone, no git history required | — | [GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md](PROJECT/1-INBOX/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md) · [#413](https://github.com/HiQS-Labs/XYZ-forge/issues/413) |
 | GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | ✅ | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/3-COMPLETED/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Labs/XYZ-forge/issues/101) |
+| GH-411 · tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus the whole marathon namespace | — | [GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md](PROJECT/1-INBOX/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md) · [#411](https://github.com/HiQS-Labs/XYZ-forge/issues/411) |
 | GH-103 · technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | ✅ | [GH-103-TIMELINE-LEDGER-SPIKE.md](PROJECT/1-INBOX/GH-103-TIMELINE-LEDGER-SPIKE.md) · [#103](https://github.com/HiQS-Labs/XYZ-forge/issues/103) |
 | GH-414 · Nothing deterministic checks whether an inline code comment is still true — extend the dead-reference resolver past the doc boundary | ✅ | [GH-414-COMMENT-REFERENCE-CHECK.md](PROJECT/3-COMPLETED/GH-414-COMMENT-REFERENCE-CHECK.md) · [#414](https://github.com/HiQS-Labs/XYZ-forge/issues/414) |
 | GH-102 · Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | ✅ | [GH-102-UNIFIED-TELEMETRY-TOOLING.md](PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Labs/XYZ-forge/issues/102) |
@@ -156,12 +151,15 @@ Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · �
 | GH-94 · research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment | ✅ | [GH-94-PROGRAMMATIC-TOOL-CALLING.md](PROJECT/3-COMPLETED/GH-94-PROGRAMMATIC-TOOL-CALLING.md) · [#94](https://github.com/HiQS-Labs/XYZ-forge/issues/94) |
 | GH-57 · test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | ✅ | [GH-57-RELEASES-SQLITE-FUZZING.md](PROJECT/3-COMPLETED/GH-57-RELEASES-SQLITE-FUZZING.md) · [#57](https://github.com/HiQS-Labs/XYZ-forge/issues/57) |
 | GH-45 · validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | ✅ | [GH-45-WORKTREE-GATE-REFUSAL.md](PROJECT/3-COMPLETED/GH-45-WORKTREE-GATE-REFUSAL.md) · [#45](https://github.com/HiQS-Labs/XYZ-forge/issues/45) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) |
+| GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal | — | [GH-419-MARATHON-RULE-ENFORCEMENT.md](PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md) · [#419](https://github.com/HiQS-Labs/XYZ-forge/issues/419) |
 | GH-39 · RELEASES app: one-way GitHub Project release-card projection | ✅ | [GH-39-RELEASES-PROJECT-SYNC.md](PROJECT/3-COMPLETED/GH-39-RELEASES-PROJECT-SYNC.md) · [#39](https://github.com/HiQS-Labs/XYZ-forge/issues/39) |
 | GH-23 · Kernel invariant: enforce path-overlap rejection on direct tick claim and tick scope | ✅ | [GH-23-KERNEL-OVERLAP-ENFORCEMENT.md](PROJECT/3-COMPLETED/GH-23-KERNEL-OVERLAP-ENFORCEMENT.md) · [#23](https://github.com/HiQS-Labs/XYZ-forge/issues/23) |
 | GH-4 · the pre-push gate does not travel with clones: fresh clones push unverified | ✅ | [GH-4-GATE-TRAVELS-WITH-CLONES.md](PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md) · [#4](https://github.com/HiQS-Labs/XYZ-forge/issues/4) |
 | GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files | ✅ | [GH-14-ATOMIC-EVENT-APPEND.md](PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md) · [#14](https://github.com/HiQS-Labs/XYZ-forge/issues/14) |
 | GH-15 · parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract | ✅ | [GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#15](https://github.com/HiQS-Labs/XYZ-forge/issues/15) |
+| GH-349 · releases ledger roadmap layer never generalised to a vendored install | — | [GH-349-RELEASES-ROADMAP-VENDORED.md](PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md) · [#349](https://github.com/HiQS-Labs/XYZ-forge/issues/349) |
 | GH-3 · improve-loop.sh --state-dir durability — provenance evidence must not evaporate | ✅ | [GH-3-IMPROVE-LOOP-STATE-DIR.md](PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md) · [#3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) |
+| GH-351 · manifest unship, the retraction verb | — | [GH-351-MANIFEST-UNSHIP.md](PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md) · [#351](https://github.com/HiQS-Labs/XYZ-forge/issues/351) |
 | GH-436 · feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe teardown | ✅ | [GH-436-MERGE-CLEANUP-SKILL.md](PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md) · [#436](https://github.com/HiQS-Labs/XYZ-forge/issues/436) |
 | GH-439 · start-task governed workflow skill | ✅ | [plan](PROJECT/3-COMPLETED/GH-439-START-TASK-SKILL.md) · [#439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) · [PR #440](https://github.com/HiQS-Labs/XYZ-forge/pull/440) |
 | GH-447 · Isolate launch destination checks from dirty caller source | ✅ | [GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md](PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md) · [#447](https://github.com/HiQS-Labs/XYZ-forge/issues/447) |
@@ -169,12 +167,14 @@ Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · �
 | GH-465 · Other Apps & Tools directory | ✅ | [GH-465-OTHER-APPS-TOOLS.md](PROJECT/3-COMPLETED/GH-465-OTHER-APPS-TOOLS.md) · [#465](https://github.com/HiQS-Labs/XYZ-forge/issues/465) |
 | GH-450 · Consume Model-catalog v1 (Phase 1) | ✅ | [doc](PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md) · [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/450) |
 | GH-471 · feat(skill): add a preservation gate to workhorse for irreversible operations | ✅ | [doc](PROJECT/3-COMPLETED/GH-471-WORKHORSE-PRESERVATION-GATE.md) · [#471](https://github.com/HiQS-Labs/XYZ-forge/issues/471) |
+| GH-473 · feat(skill): add /unstuck goal-movement interrupt | — | [doc](PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md) · [#473](https://github.com/HiQS-Labs/XYZ-forge/issues/473) |
+| GH-474 · Staleness guard reads the renderer's dropped-row warning instead of guessing from table names | — | — |
 | GH-487 · ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | ✅ | [GH-487-BOUNDED-GATES.md](PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md) · [#487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) |
 
 ## Deferred · vision
 
-Summary: 0 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 1 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| — | — | — |
+| GH-123 · Linux portability canary — remainder: gh358 lock contention on shared runners | — | [GH-123-LINUX-CANARY-REMAINDER.md](PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md) · [#123](https://github.com/HiQS-Labs/XYZ-forge/issues/123) |

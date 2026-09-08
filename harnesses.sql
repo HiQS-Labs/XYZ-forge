@@ -976,6 +976,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260907231314-a288f2ad','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260907235710-481d8481','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh487-final-qa-r2',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-07 23:57:10','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908000309-04ccaea7','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh487-final-qa-r3',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 2 insertions(+)','2026-09-08 00:03:09','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908001753-f923560c','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh487-final-qa-r4',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 3 insertions(+)','2026-09-08 00:17:53','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260908031148-f9794a6a','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh196-shutdown-impl-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 03:11:48','1.0.0');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
