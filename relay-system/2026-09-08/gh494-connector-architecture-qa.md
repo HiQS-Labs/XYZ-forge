@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-08.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: designer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -76,5 +76,20 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Turn 1: agy (Reviewer)
+
+swept file: yes
+
+Basis: The complete `GH-494-FLIGHT-DASHBOARD.md` artifact was read and evaluated against the Definition of Done and the six QA criteria. The design firmly honors Ponytail constraints, separates concerns precisely, and introduces no contradictory states or unstated producer requirements. Pre-existing content was fully reviewed and no defects were found.
+
+* `[Pass]` Q1 (Start/render with missing connectors): Verified via `GH-494-FLIGHT-DASHBOARD.md:L45-47` ("Missing, disabled or failed connectors yield explicit unavailable/partial capabilities") and `GH-494-FLIGHT-DASHBOARD.md:L228`. (No fix needed).
+* `[Pass]` Q2 (Neutral connector contract): Verified via `GH-494-FLIGHT-DASHBOARD.md:L125-130` (immutable metadata, `ConnectorBatch`) and `GH-494-FLIGHT-DASHBOARD.md:L108` (aggregation handles normalization, no source-specific parsing). (No fix needed).
+* `[Pass]` Q3 (Separation of concerns): Verified via module table at `GH-494-FLIGHT-DASHBOARD.md:L105-111`, policy centralized at `GH-494-FLIGHT-DASHBOARD.md:L149-151`, and Swift ownership at `GH-494-FLIGHT-DASHBOARD.md:L152-153`. (No fix needed).
+* `[Pass]` Q4 (First-party connectors QA/Build): Verified via table at `GH-494-FLIGHT-DASHBOARD.md:L134-140` (all 5 omit independently) and delivery steps at `GH-494-FLIGHT-DASHBOARD.md:L229`. Gap dispositions rely on existing paths `GH-494-FLIGHT-DASHBOARD.md:L443-450`. (No fix needed).
+* `[Pass]` Q5 (Maintainable plugin mechanism): Verified via `GH-494-FLIGHT-DASHBOARD.md:L142-147` ("No directory scanning, entry-point discovery... or connector-to-connector calls") and `GH-494-FLIGHT-DASHBOARD.md:L116-118`. (No fix needed).
+* `[Pass]` Q6 (No contradictions/passive GET): Verified via `GH-494-FLIGHT-DASHBOARD.md:L230` ("Prove passive reads... spy collectors... assert zero calls during repeated GETs") and `GH-494-FLIGHT-DASHBOARD.md:L538` ("No new collector is currently justified"). (No fix needed).
+
+VERDICT: PASS
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
