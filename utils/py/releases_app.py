@@ -3542,6 +3542,79 @@ def cmd_roadmap_sync(args):
         conn.close()
 
 
+def roadmap_render(conn):
+    """Replay the ledger, preserving section names and each stored entry block (GH-423).
+
+    Positions are section-local. The GID breaks position ties deterministically without
+    depending on SQLite's row order. Unknown sections are retained, just as sync retains them;
+    consumers still decide which sections they accept.
+    """
+    parts = ["## Ledger\n"]
+    if not _table_exists(conn, "roadmap_items"):
+        return parts[0]
+    section = None
+    for row in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position, global_id"):
+        if row["section"] != section:
+            section = row["section"]
+            parts.append("\n### %s\n\n" % section)
+        raw = row["raw_text"]
+        if not raw or not raw.strip():
+            title = row["title"]
+            gh = row["gh_number"]
+            if gh is not None and _roadmap_gh_number(title) != gh:
+                title = "GH-%d · %s" % (gh, title)
+            raw = "- **%s**" % title
+            if row["status_marker"]:
+                raw += " " + row["status_marker"]
+            if all(_col(row, c) is not None for c in RATING_COLUMNS[:4]):
+                raw += " rated " + "/".join(str(row[c]) for c in RATING_COLUMNS[:4])
+                if _col(row, "rating_ovr") is not None:
+                    raw += " ovr %s" % row["rating_ovr"]
+            elif all(_col(row, c) is not None for c in ("complexity", "risk", "effort")):
+                raw += " cx/risk/eff %s/%s/%s" % (row["complexity"], row["risk"], row["effort"])
+            if row["doc_path"]:
+                raw += " → [doc](%s)" % row["doc_path"]
+            if row["issue_url"]:
+                raw += " · [issue](%s)" % row["issue_url"]
+        parts.append(raw)
+        parts.append("\n\n")
+    return "".join(parts)
+
+
+def cmd_roadmap_render(args):
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    out = os.path.realpath(args.out) if args.out else None
+    if out:
+        if out in {os.path.realpath(p) for p in paths.values()}:
+            refuse("roadmap-render-output", "--out must not overwrite a releases ledger artifact")
+        # Check the destination's repository, including foreign repos and symlink targets.
+        # Fail closed when git cannot establish whether ROADMAP.md is tracked.
+        for candidate in dict.fromkeys((os.path.abspath(args.out), out)):
+            if os.path.basename(candidate) != ROADMAP_NAME:
+                continue
+            try:
+                tracked = subprocess.run(
+                    ["git", "-C", os.path.dirname(candidate), "ls-files", "--error-unmatch", "--", ROADMAP_NAME],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except OSError as exc:
+                refuse("roadmap-render-output", "cannot check tracked ROADMAP.md: %s" % exc)
+            if tracked.returncode != 1:
+                refuse("roadmap-render-output", "--out refuses tracked ROADMAP.md (or unverifiable tracking)")
+    conn = connect(paths["db"])
+    try:
+        rendered = roadmap_render(conn)
+    finally:
+        conn.close()
+    if out:
+        try:
+            _atomic_write(out, rendered)
+        except OSError as exc:
+            refuse("roadmap-render-output", "cannot write --out: %s" % exc)
+    else:
+        sys.stdout.write(rendered)
+
+
 def cmd_roadmap_list(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
@@ -4939,7 +5012,7 @@ def build_parser():
 
     sp = sub.add_parser("dashboard", help="render the releases and roadmap dashboard HTML")
 
-    sp = sub.add_parser("roadmap", help="Roadmap ledger (GH-269): sync/list the ledger items")
+    sp = sub.add_parser("roadmap", help="Roadmap ledger: sync/list/render the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_rs = rsub.add_parser("sync", help="mirror legacy ROADMAP.md's ledger into roadmap_items (one-way)")
     sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
@@ -4952,6 +5025,8 @@ def build_parser():
     sp_rl.add_argument("--json", dest="as_json", action="store_true",
                        help="emit rows as a JSON array (machine-readable; the default rendering "
                             "is a display, not an API)")
+    sp_render = rsub.add_parser("render", help="replay DB rows as ledger markdown (stdout by default)")
+    sp_render.add_argument("--out", help="output file (relative to cwd); refuses tracked ROADMAP.md")
 
     sp_ra = rsub.add_parser("add", help="intake a single issue into the roadmap ledger directly")
     sp_ra.add_argument("--issue-num", required=True, type=int, help="GH issue number")
@@ -5108,6 +5183,7 @@ def main(argv=None):
         # form was already one subcommand past readable.
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
+                              "render": cmd_roadmap_render,
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
                               "move": cmd_roadmap_move}[a.roadmap_cmd](a),
         "dashboard": cmd_dashboard,

@@ -1,6 +1,6 @@
 # Marathon Phase gh423-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh423-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -94,3 +94,48 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented `releases roadmap render`, emitting ledger markdown to stdout or
+atomically to `--out`. It groups stored sections and orders rows by section,
+position, and GID; preserves nonempty raw entry blocks; and synthesizes empty
+entries with GH identity, status, scores, and document/issue links. Output guards
+refuse releases ledger artifacts and tracked/unverifiable `ROADMAP.md` paths,
+including symlink spellings and destinations in another repository.
+
+Files touched: `utils/py/releases_app.py`, `test/gh423-roadmap-render.sh`,
+`test/baselines/GH-423-negative-control.md`, and this relay only.
+`utils/py/_marathon_plan.py` and all existing suites/helpers remain unchanged.
+Reversibility: Easy — additive CLI verb, no migration or source-data rewrite.
+
+Verification: the new hermetic focused suite passed 8/8 with fixtures and logs
+under `.relay-scratch/`. It covers both parsers, the production planner's explicit
+file reader up to scheduling, byte determinism, multiline/link/TMP entries,
+fallback metadata, CLI stdout/relative output, DB byte preservation, tracked-file
+and symlink refusals, and fail-closed tracking errors. Deleting GH-423 from a
+nonempty fixture trips the exact round-trip assertion. Disabling the output
+refusal in a scratch source copy makes the same suite fail with `SystemExit not
+raised`. The committed baseline artifact records the transcripts. Git responses
+are mocked: no git command ran; real git-index integration and the full gate are
+still for the outer harness. An existing unclosed-file ResourceWarning in
+`parse_roadmap_ledger` is visible but does not fail the suite.
+
+Reviewer attention — two stale/conflicting assumptions in the source brief:
+
+- The current planner already reads the DB by default. The recorded pre-change
+  control therefore covers the missing `render` command (exit 2) and explicit
+  `QUEUE_PLAN_ROADMAP` input naming a not-yet-rendered file (exit 3), without
+  claiming that today's default DB reader loses items.
+- All 140 live DB rows render and both parsers recover 140 entries, including
+  GH-423. However, 76 stored titles differ from their raw bullet titles. Exact
+  live `title`-column equality cannot coexist with verbatim replay. This change
+  follows the brief's explicit replay contract. Unknown section names are also
+  preserved and retain the unchanged planner's documented filtering behavior.
+
+Discovery used Verify-tier graph coverage (nearest XYZ-forge generation
+2026-09-01T15:54:30Z); it was stale and belonged to another checkout, so material
+claims were checked against local source. No graph completeness is claimed.
+
+The full project gate was not run and no commit was made. Ready for agy's review.
