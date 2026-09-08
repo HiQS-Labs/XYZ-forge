@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -58,5 +58,20 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · codex · Round 1
+
+- [Should] Keep handoff task, issue and next action on the same lane. At the initial clock, XYZ's older Claude lane wins `focusLane`, so clicking “Review the conflict-recovery PR” produces “Review the merge flow” / issue #487 while retaining the conflict-recovery next step. Queue PR #493 also loses its identity when opening the repo. Bind actions and PRs to an explicit lane and carry that selection into the prompt; keep worst-lane selection for attention ranking. (`.relay-artifacts/index.html:56`, `:71`, `:79`, `:84`.)
+- [Should] Attribute timeline events to their actual lane and timestamp. Aegis currently displays “Ledger regenerated · Claude” at 14:19, using the 83-minute alias lane; the ledger lane is Codex, 18 minutes old (15:24). LTVera similarly assigns the preview milestone to Claude's review lane. Store the event with its lane, then render/sort those event records instead of combining `r.event` with `focusLane(r)`. (`.relay-artifacts/index.html:58`, `:59`, `:86`.)
+- [Should] Refresh open detail ages/statuses as simulated time advances. `openRepo` snapshots them once; normal minute ticks and sample refreshes update cards but never the drawer. An open lane can continue saying “Moving” after crossing 60 minutes while its card is amber. Update the drawer's age/status nodes on those ticks without replacing the selected handoff text or disrupting keyboard focus. (`.relay-artifacts/index.html:82`, `:85`, `:90`–`:93`.)
+- [Pass] Static logic implements 59/60/119/120 as green/amber/amber/red, unknown before green, red precedence with a missing-data label, attention including gray, and a countdown clamped at wrap-up due. Preserve these branches. (`.relay-artifacts/index.html:69`–`:70`, `:77`–`:78`, `:81`.)
+- [Pass] Named checkout lists, lane/issue basis, PR details, selectable copy fallback and explicit simulation/action boundaries are present; CSS, icons, fixtures and script are inline. Preserve this scope and the operator-approval hold on Swift planning. (`.relay-artifacts/index.html:7`–`:24`, `:42`, `:48`–`:63`, `:85`, `:87`; `PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md`, “Swift planning remains explicitly held for operator visual approval.”)
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: Full-file static review, including existing logic, against the brief and committed verification/provenance. Read-only SHA-256 checks match both the HTML and verification hashes in provenance. Existing browser results were read, not rerun; no artifact execution or tests performed. Graph coverage was unavailable for these exact files, so direct source was read in full. The three findings above remain material to truthful lane context and attention behavior; this is not a runtime-gate or operator visual verdict.
+swept file: yes
+
+Handing off to designer (Producer) — address each finding and take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
