@@ -19,6 +19,7 @@ import datetime as _dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
+import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
 # Python equivalent of marathon-drive.sh's `trap _marathon_drive_on_exit EXIT`. Same contract as
@@ -250,7 +251,13 @@ def _write_terminal_result_inner(code):
                         "origin_url": origin_url},
         "base_branch": _RESULT.get("base_branch"),
         "head_branch": head_branch,
-        "head_sha": head_sha,
+        "head_sha": head_sha,   # observational: HEAD at receipt-write time
+        # GH-505/GH-509: the candidate that was VALIDATED against the reviewer's attestation, the
+        # revision the reviewer read, and the record — None on any outcome that was not attested.
+        "reviewed_candidate": _RESULT.get("reviewed_candidate"),
+        "reviewed_head": _RESULT.get("reviewed_head"),
+        "added_sha256": _RESULT.get("added_sha256"),
+        "attest_path": _RESULT.get("attest_path"),
         "branch_redirect": bool(_RESULT.get("branch_redirect")),
         "gate": {
             "cmd": _RESULT.get("gate_cmd"),
@@ -2381,6 +2388,31 @@ relay-file: {rel_relay}
         actor = claimer if status == "claimed" else (handoff if status == "open" else "")
         return (status, actor)
 
+    def attested_terminal(task_name=None, candidate=None, where="probe"):
+        """GH-505/GH-509: is this lane's relay TERMINAL *and attested by relay-drive* for the
+        configured reviewer, with the token read as done and the candidate revision being the
+        reviewed revision plus transcript-only commits? Returns the record or None. Every refusal is
+        logged — a terminal word without an attestation used to pass silently, which is the bug."""
+        task = task_name or relay_task
+        s = file_status()
+        if not terminal_status(s):
+            return None
+        tstatus, _a = token_state(task)
+        if tstatus != "done":
+            log(f"{where}: relay is terminal (STATUS: {s}) but token '{task}' reads '{tstatus or 'unknown'}', not done — not accepting it")
+            return None
+        trepo = args.target_root or root
+        record, why = relay_attest.load(task, expected_reviewer=args.reviewer, relay_file=relay_file, target_repo=trepo)
+        if record is None:
+            log(f"{where}: relay is terminal (STATUS: {s}) but NOT attested by relay-drive — {why} — not accepting it (GH-505)")
+            return None
+        cand = candidate or _cmd_out(["git", "-C", trepo, "rev-parse", "HEAD"])
+        ok, why = relay_attest.candidate_ok(record, cand, trepo)
+        if not ok:
+            log(f"{where}: attested approval found but candidate {cand[:12] if cand else '?'} is not the reviewed revision — {why} — not accepting it (GH-505)")
+            return None
+        return record
+
     def path_has_nonempty_phase_delta(path):
         # True iff <path> changed since pre_phase_head (committed diff), was DELETED, or is newly
         # untracked/added — provided that if it still exists it is non-empty. Shared by
@@ -2570,14 +2602,37 @@ relay-file: {rel_relay}
             _RESULT["reason"] = "already-satisfied"
         else:
             success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
+        save_transcript()
+        refresh_remote_tracking_ref()
+        if args.post_approve_cmd:
+            log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
+            post_approve_exit = run_post_approve_cmd()
+            if post_approve_exit != 0:
+                log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
+                escalate("post-approve-failed", 0)
+                sys.exit(9)
+        # GH-505/GH-509: ONE candidate snapshot, taken after everything that may move HEAD, validated
+        # against relay-drive's attestation BEFORE any success is published — and carried verbatim
+        # into the receipt as `reviewed_candidate`, so no approved receipt ever names a revision the
+        # reviewer did not read (plus transcript-only commits).
+        candidate = _cmd_out(["git", "-C", args.target_root or root, "rev-parse", "HEAD"])
+        record = attested_terminal(candidate=candidate, where=f"phase {args.phase_id} success")
+        if record is None:
+            log(f"phase {args.phase_id}: relay exited 0 but its approval is not attested for candidate {candidate[:12] if candidate else '?'} — refusing to publish success")
+            escalate("candidate-drifted-from-reviewed-head", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — approval not bound to the merge candidate")
+            sys.exit(4)
+        _RESULT["reviewed_candidate"] = candidate
+        _RESULT["reviewed_head"] = record["reviewed_head"]
+        _RESULT["added_sha256"] = record["added_sha256"]
+        _RESULT["attest_path"] = relay_attest.path_for(record["task"], record["target_repo"])
         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
-        save_transcript()
         _phase_memory_sample(f"{args.phase_id}-complete", root=root, tick_bin=tick_bin, relay_task=relay_task)
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(success_text)
         xyz_marathon_emit("green", success_text)
-        head_sha = _cmd_out(["git", "-C", root, "rev-parse", "HEAD"])
+        head_sha = candidate
         if head_sha:
             try:
                 receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
@@ -2591,14 +2646,6 @@ relay-file: {rel_relay}
             except Exception:
                 pass
             marathon_emit_phase_qa_attestation(head_sha, pre_advance_cmd)
-        refresh_remote_tracking_ref()
-        if args.post_approve_cmd:
-            log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
-            post_approve_exit = run_post_approve_cmd()
-            if post_approve_exit != 0:
-                log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
-                escalate("post-approve-failed", 0)
-                sys.exit(9)
         open_lane_pr()
         sys.exit(0)
 
@@ -2691,6 +2738,15 @@ relay-file: {rel_relay}
                 f"'{tstatus or 'unknown'}', not done — rebuilding; if this phase really did complete, "
                 f"its record is on a token this run cannot see (see GH-385)")
             return False
+        # GH-505/GH-509: the word `Approved` is builder-writable; only relay-drive's attestation says
+        # a reviewer approved THIS file at a revision this HEAD still honours. Without it, a spent token
+        # cannot be reopened (GH-274), so the run refuses loudly instead of re-dispatching.
+        if attested_terminal(task, where=f"phase {args.phase_id} startup") is None:
+            log(f"phase {args.phase_id}: terminal relay is NOT attested — refusing to treat it as satisfied; "
+                f"its token '{task}' is done and cannot be reopened, so this run halts (see GH-505)")
+            escalate("unattested-terminal", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — terminal relay without a reviewer attestation")
+            sys.exit(4)
         return True
 
     if not args.dry_run and satisfied_lane_terminal():
@@ -3142,7 +3198,10 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             except OSError:
                 pass
         cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,
-                "--agent-cmd", agent_cmd]
+                "--agent-cmd", agent_cmd,
+                # GH-505/GH-509: the driver learns the roles from ITS invocation, never from the
+                # relay file or the token, and attests only the reviewer's approval.
+                "--reviewer", args.reviewer, "--builder", args.builder]
         if review_once:
             cmd2.append("--review-once")   # GH-207: one approval pass, no round-cap
         else:
@@ -3218,7 +3277,9 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         s = file_status()
         tstatus, actor = token_state()
         if terminal_status(s) and not actor:
-            log(f"already-satisfied probe: relay already reached terminal agreement (STATUS: {s}, token done)")
+            if attested_terminal(where="already-satisfied probe") is None:
+                return 3
+            log(f"already-satisfied probe: relay already reached terminal agreement (STATUS: {s}, token done, attested)")
             return 0
         if tstatus == "claimed" and actor == args.builder:
             subprocess.run([tick_bin, "release", relay_task, "--agent", args.builder, "--to", args.reviewer], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -3294,7 +3355,9 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         s = file_status()
         tstatus, actor = token_state()
         if terminal_status(s) and not actor:
-            log(f"timeout probe: relay already reached terminal agreement (STATUS: {s}, token done) — continuing")
+            if attested_terminal(where="timeout probe") is None:
+                return 7
+            log(f"timeout probe: relay already reached terminal agreement (STATUS: {s}, token done, attested) — continuing")
             return 0
         if not actor:
             timeout_reason[0] = "timeout-no-live-actor"

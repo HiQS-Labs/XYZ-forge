@@ -35,6 +35,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, is_vendored, resolve_tool  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
+import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 from releases_app import (  # noqa: E402
     _ensure_jog_schema,
     _table_exists,
@@ -427,12 +428,20 @@ def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False,
                 if failures:
                     return "parked", (f"{note} — auto-merge refused (verification failed: "
                                       f"{', '.join(failures)})")
-                merge = subprocess.run(
-                    ["gh", "pr", "merge", str(pr_number), "--merge", "--auto=false"],
-                    cwd=root, capture_output=True, text=True)
-                if merge.returncode == 0:
-                    return "completed", f"marathon approved; PR #{pr_number} merged"
-                return "parked", f"{note} — auto-merge failed: {(merge.stderr or '').strip()}"
+                # GH-505/GH-509: an approved receipt without a validated candidate came from an
+                # unattested run — park it; otherwise merge exactly that candidate.
+                if not receipt.get("reviewed_candidate") or not receipt.get("attest_path"):
+                    return "parked", f"{note} — auto-merge refused: receipt carries no reviewer attestation (GH-505)"
+                record, why = relay_attest.load(
+                    receipt.get("token"), expected_reviewer=receipt.get("reviewer"),
+                    relay_file=None, target_repo=root, path=receipt.get("attest_path"))
+                if record is None:
+                    return "parked", f"{note} — auto-merge refused: {why}"
+                merged, reason = _merge_reviewed_pr(root, pr_number, record,
+                                                    expected_candidate=receipt.get("reviewed_candidate"))
+                if merged:
+                    return "completed", f"marathon approved; PR #{pr_number} merged at {receipt['reviewed_candidate'][:12]}"
+                return "parked", f"{note} — auto-{reason}"
             return "parked", note
         head = receipt.get("head_branch")
         base = receipt.get("base_branch")
@@ -1276,8 +1285,18 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True):
     return new_doc_path, None
 
 
-def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
-    """Execute a single-phase drive for a task using relay-drive."""
+def run_single_phase_drive(root, gh_num, builder="agy", reviewer=None, simulate=False):
+    """Execute a single-phase drive for a task using relay-drive.
+
+    GH-505: the drive is a builder turn followed by a REVIEWER turn; relay-drive attests only the
+    reviewer's approval. Same reviewer policy as the marathon executor (explicit, different agent).
+    """
+    if not reviewer:
+        print("jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)", file=sys.stderr)
+        return 2
+    if reviewer == builder:
+        print(f"jog: --reviewer must differ from --builder (both are '{reviewer}')", file=sys.stderr)
+        return 2
     if simulate:
         print(f"jog: [simulate] simulated single-phase drive on GH-{gh_num} with builder={builder}")
         return 0
@@ -1293,9 +1312,11 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
             drive_script = c
             break
 
+    # GH-505: two agents take turns, so dispatch through the shared per-actor router (the same one
+    # marathon uses) instead of a single builder shim.
     shim_candidates = [
-        os.path.join(root, "relay-automation", f"{builder}-turn.sh"),
-        os.path.join(root, ".xyz", "relay-automation", f"{builder}-turn.sh"),
+        os.path.join(root, "relay-automation", "marathon-agent.sh"),
+        os.path.join(root, ".xyz", "relay-automation", "marathon-agent.sh"),
     ]
     shim_script = None
     for c in shim_candidates:
@@ -1326,6 +1347,7 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
                 f"## Setup\n"
                 f"- Issue: GH-{gh_num}\n"
                 f"- Builder: {builder}\n"
+                f"- Reviewer: {reviewer}\n"
                 f"- Started: {today_str}\n\n"
                 f"## Log\n\n"
                 f"### Round 1 — Producer (jog) — {today_str}\n"
@@ -1348,10 +1370,17 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
         shim_script,
         "--relay-task",
         task_name,
+        "--reviewer", reviewer,
+        "--builder", builder,
     ]
     env = dict(os.environ)
     env["RELAY_DRIVER_LOCKED"] = "1"
     env["XYZ_ROOT"] = root
+    env["MARATHON_BUILDER"] = builder
+    env["MARATHON_REVIEWER"] = reviewer
+    env[f"{reviewer.upper()}_AGENT"] = reviewer
+    env.setdefault(f"{reviewer.upper()}_LOG",
+                   os.path.join(tempfile.gettempdir(), f"{reviewer}-turn-jog-{os.getpid()}.log"))
     # Turn-taker shim env contract (relay-xyz Path A): <BUILDER>_AGENT selects the
     # dispatching actor (must match the tick token's handoff target above), ALLOW_PATHS
     # (comma-separated) grants the contract's artifact paths for a build turn, and
@@ -1372,21 +1401,9 @@ def run_single_phase_drive(root, gh_num, builder="agy", simulate=False):
     env["ALLOW_PATHS"] = ",".join(artifacts)
 
     proc = subprocess.run(cmd, cwd=root, env=env)
-    if proc.returncode != 0:
-        # relay-drive speaks the multi-round protocol: a builder that finishes in one
-        # turn sets STATUS: Done and releases its token to 'done', which the driver
-        # reads as a spent task and escalates (exit 4). For jog's single-phase drives a
-        # terminal STATUS on the relay file IS success; the landing boundary still
-        # verifies before anything merges.
-        try:
-            head = open(relay_file, encoding="utf-8").read(2048)
-            m = re.search(r"^STATUS:\s*(\S+)", head, re.M)
-            if m and m.group(1).lower() in ("done", "approved"):
-                print(f"jog: drive escalated (exit {proc.returncode}) but relay STATUS is "
-                      f"{m.group(1)} — treating single-phase drive as complete.")
-                return 0
-        except OSError:
-            pass
+    # GH-505: the driver's exit IS the verdict. The override that used to live here read the
+    # relay file's STATUS word and turned a non-zero driver exit into 0 when it said Approved —
+    # the exact word a builder turn can write. Deleted; relay-drive now attests approvals itself.
     return proc.returncode
 
 
@@ -1407,12 +1424,58 @@ def _verify_legacy_pr_before_merge(root, pr_num):
     ] if not ok]
 
 
-def handle_landing_boundary(root, gh_num, auto_merge=False):
+def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
+    """GH-505/GH-509/GH-510: the ONE merge step for every jog landing branch.
+
+    Merges only the revision the reviewer's attestation covers: the PR head must be the reviewed
+    revision plus transcript-only commits (`candidate_ok`), it must equal `expected_candidate` when
+    the caller has one (marathon's validated `reviewed_candidate`), and the merge is bound to that
+    exact SHA with --match-head-commit so the checked object is the merged object. A refused or
+    failed merge PARKS — never "completed" (GH-510).
+
+    Returns (merged: bool, reason: str or None).
+    """
+    if record is None:
+        return False, "merge refused: no valid reviewer attestation for this task (GH-505)"
+    view = subprocess.run(["gh", "pr", "view", str(pr_num), "--json", "headRefOid", "--jq", ".headRefOid"],
+                          cwd=root, capture_output=True, text=True)
+    candidate = (view.stdout or "").strip()
+    if view.returncode != 0 or not candidate:
+        return False, f"merge refused: could not read PR #{pr_num} head ({(view.stderr or '').strip() or 'empty'})"
+    if expected_candidate and candidate != expected_candidate:
+        return False, (f"merge refused: PR #{pr_num} head {candidate[:12]} is not the validated candidate "
+                       f"{expected_candidate[:12]} (candidate-drifted-from-reviewed-head)")
+    ok, why = relay_attest.candidate_ok(record, candidate, root)
+    if not ok:
+        return False, f"merge refused: {why} (candidate-drifted-from-reviewed-head)"
+    merge = subprocess.run(["gh", "pr", "merge", str(pr_num), "--merge", "--auto=false",
+                            "--match-head-commit", candidate],
+                           cwd=root, capture_output=True, text=True)
+    if merge.returncode != 0:
+        return False, f"merge failed: {(merge.stderr or merge.stdout or '').strip()}"
+    return True, None
+
+
+def _legacy_attestation(root, gh_num, reviewer):
+    task = f"RELAY-gh{gh_num}-jog-drive"
+    relay_file = None
+    for d in sorted(glob.glob(os.path.join(root, "relay-system", "*")), reverse=True):
+        cand = os.path.join(d, f"gh{gh_num}-jog-drive.md")
+        if os.path.isfile(cand):
+            relay_file = cand
+            break
+    if not relay_file:
+        return None, f"no relay file found for GH-{gh_num}"
+    return relay_attest.load(task, expected_reviewer=reviewer, relay_file=relay_file, target_repo=root)
+
+
+def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None):
     """Handle landing confirmation, PR merge, and development re-anchoring.
 
     Returns:
         (success: bool, status: str, failure_reason: str or None)
     """
+    record, why = _legacy_attestation(root, gh_num, reviewer)
     if auto_merge:
         print(f"jog: task GH-{gh_num} passed; auto-merging into development...")
         # Check for active PR via gh
@@ -1429,10 +1492,13 @@ def handle_landing_boundary(root, gh_num, auto_merge=False):
                 print(f"jog: auto-merge refused (verification failed: {', '.join(failures)})",
                       file=sys.stderr)
                 return False, "parked", f"auto-merge refused (verification failed: {', '.join(failures)})"
-            merge_res = subprocess.run(["gh", "pr", "merge", pr_num, "--merge", "--auto=false"], cwd=root, capture_output=True, text=True)
-            if merge_res.returncode != 0:
-                print(f"jog: auto-merge failed: {merge_res.stderr.strip()}", file=sys.stderr)
-                return False, "parked", f"auto-merge failed: {merge_res.stderr.strip()}"
+            merged, reason = _merge_reviewed_pr(root, pr_num, record)
+            if not merged:
+                print(f"jog: auto-merge refused/failed: {reason}", file=sys.stderr)
+                return False, "parked", f"auto-{reason}"
+        else:
+            # GH-510: no PR is not a landed task.
+            return False, "parked", f"awaiting-landing (no open PR found for feat/gh{gh_num})"
 
         # Re-anchor on development
         subprocess.run(["git", "checkout", "development"], cwd=root, capture_output=True)
@@ -1464,7 +1530,13 @@ def handle_landing_boundary(root, gh_num, auto_merge=False):
                   f"the discovered PR is not mergeable into development as confirmed",
                   file=sys.stderr)
             return False, "parked", f"merge refused (verification failed: {', '.join(failures)})"
-        subprocess.run(["gh", "pr", "merge", pr_num, "--merge", "--auto=false"], cwd=root)
+        merged, reason = _merge_reviewed_pr(root, pr_num, record)
+        if not merged:
+            # GH-510: this branch used to discard the merge result and report completed.
+            print(f"jog: {reason} — parking GH-{gh_num}", file=sys.stderr)
+            return False, "parked", reason
+    else:
+        return False, "parked", f"awaiting-landing (no open PR found for feat/gh{gh_num})"
 
     subprocess.run(["git", "checkout", "development"], cwd=root, capture_output=True)
     subprocess.run(["git", "pull", "--ff-only", "origin", "development"], cwd=root, capture_output=True)
@@ -1666,6 +1738,7 @@ def jog_run_main(args=None):
                 root,
                 gh_num,
                 builder=args.builder,
+                reviewer=args.reviewer,
                 simulate=getattr(args, "simulate", False),
             )
 
@@ -1676,7 +1749,7 @@ def jog_run_main(args=None):
                 break
 
             # Handle landing boundary
-            landed, status, reason = handle_landing_boundary(root, gh_num, auto_merge=args.auto_merge)
+            landed, status, reason = handle_landing_boundary(root, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer)
             jog_set_status(root, gh_num, status, failure_reason=reason)
 
             if landed:
