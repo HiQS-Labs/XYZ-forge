@@ -50,6 +50,11 @@ seed_relay() {  # <recorded-task> — an Approved relay rendered for <recorded-t
     "$1" > "$A/phases/p1/RELAY.md"
 }
 
+attest_seed() {  # <task> — GH-505: a hand-seeded Approved lane is satisfied only with the driver's record
+  grep -q '^STATUS: Approved' "$A/phases/p1/RELAY.md" 2>/dev/null || return 0
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "$A/phases/p1/RELAY.md" --relay-task "$1" --reviewer agy --target-root "$A" >/dev/null 2>&1
+}
+
 mk_token() {  # <task> <done|claimed>
   tick_a log task.created "$1" --agent marathon >/dev/null 2>&1 || true
   tick_a claim "$1" --agent claude --paths "phases/p1/RELAY.md" --force >/dev/null 2>&1 || true
@@ -71,6 +76,7 @@ reset_state
 seed_relay "${BASE}-2"
 mk_token "$BASE" claimed      # the dead attempt, exactly as a crashed run leaves it
 mk_token "${BASE}-2" done     # where the phase actually completed
+attest_seed "${BASE}-2"
 out="$(run_driver)"; rc=$?
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "a phase completed on a --retry token is recognized as satisfied" \
@@ -96,6 +102,7 @@ grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
 reset_state
 seed_relay "$BASE"
 mk_token "$BASE" done
+attest_seed "$BASE"
 out="$(run_driver)"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "the plain base-token satisfied path still works" \
@@ -107,6 +114,7 @@ reset_state
 mkdir -p "$A/phases/p1"
 printf '# Marathon Phase p1\nSTATUS: Approved\nNEXT: agy\n\nbody\n' > "$A/phases/p1/RELAY.md"
 mk_token "$BASE" done
+attest_seed "$BASE"
 out="$(run_driver)"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "a directive-less relay still resolves against the base token" \
@@ -127,6 +135,7 @@ reset_state
 seed_relay "MARATHON-P0-TURN"    # a different lane's token, or any stale/invented name
 mk_token "$BASE" claimed         # this lane never completed
 mk_token "MARATHON-P0-TURN" done # ...but the named token is legitimately done
+attest_seed "MARATHON-P0-TURN"
 out="$(run_driver)"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "a builder-written directive naming an unrelated done token satisfied the lane — a builder can now skip its own review: $out" \
@@ -156,6 +165,7 @@ reset_state
 seed_relay "${BASE}X"
 mk_token "$BASE" claimed
 mk_token "${BASE}X" done
+attest_seed "${BASE}X"
 out="$(run_driver)"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "'${BASE}X' was accepted as family — the check is a prefix match, not a suffix rule: $out" \
@@ -168,6 +178,7 @@ reset_state
 seed_relay "${BASE}-11"
 mk_token "$BASE" claimed
 mk_token "${BASE}-11" done
+attest_seed "${BASE}-11"
 out="$(run_driver)"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "a two-digit retry suffix is still recognized as this lane's token" \
@@ -180,6 +191,7 @@ grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
 reset_state
 seed_relay "${BASE}-2"
 mk_token "${BASE}-2" done        # the previous attempt genuinely completed
+attest_seed "${BASE}-2"
 out="$(run_driver --relay-task "${BASE}-3")"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "--retry was satisfied by the attempt it was retrying — the operator's fresh token was ignored: $out" \
@@ -220,6 +232,7 @@ grep -q "GH-385" <<<"$(printf '%s' "$out")" \
 reset_state
 seed_relay "$BASE"
 mk_token "$BASE" done            # terminal AND done: a plain re-fire would have been gate-only
+attest_seed "$BASE"
 out="$(run_driver --relay-task "${BASE}-2")"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && fail "advisory case regressed into an actual short-circuit — --retry must still rebuild: $out" \

@@ -25,7 +25,7 @@ non_goals:
   - Bridging relay-reviewer identity to GitHub-reviewer identity; branch protection; a second PR reviewer (operator-excluded)
   - Binding the merge in express.py, merge_cleanup.py and marathon-closeout.sh — none of them owns a relay task name to resolve an attestation by; recorded as a limitation, not silently skipped
   - Changing the relay turn protocol, token model, or round-cap semantics
-effort: 40
+effort: 4
 complexity: 4
 risk: 4
 phases: 4

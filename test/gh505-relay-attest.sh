@@ -67,6 +67,10 @@ case "\$mode" in
     printf '\n### Round 1 · Reviewer · %s\nlooks fine\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
     "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  uncited)
+    printf '\n### Round 1 · Reviewer · %s\n- [Pass] verified the thing works\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
   keepclaimed)
     printf '\n### Round 1 · Reviewer · %s\nlooks fine\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f" ;;
@@ -116,8 +120,8 @@ run_driver "$DRIVER" T-A approve --reviewer rev --builder bld; rc=$?
 [ "$rc" -eq 4 ] && pass "A: builder-written Approved → driver exits 4" || fail "A: expected exit 4, got $rc: $(tail -3 "$WORK/out-T-A")"
 [ "$(reason)" = forged-terminal ] && pass "A: escalation reason is forged-terminal" || fail "A: reason=$(reason)"
 grep -q '^STATUS: Open' "$A/relay.md" && pass "A: STATUS restored on disk" || fail "A: STATUS not restored: $(grep '^STATUS' "$A/relay.md")"
-git -C "$A" show HEAD:relay.md | grep -q '^STATUS: Open' && pass "A: STATUS restored in HEAD (revert committed)" || fail "A: HEAD still carries the forged STATUS"
-git -C "$A" log -1 --format=%s | grep -q 'revert forged terminal' && pass "A: revert commit is the driver's" || fail "A: last commit: $(git -C "$A" log -1 --format=%s)"
+grep -q '^STATUS: Open' <<<"$(git -C "$A" show HEAD:relay.md)" && pass "A: STATUS restored in HEAD (revert committed)" || fail "A: HEAD still carries the forged STATUS"
+grep -q 'revert forged terminal' <<<"$(git -C "$A" log -1 --format=%s)" && pass "A: revert commit is the driver's" || fail "A: last commit: $(git -C "$A" log -1 --format=%s)"
 ! grep -q 'Attestation · relay-drive' "$A/relay.md" && pass "A: no attestation trailer" || fail "A: trailer present after a forgery"
 [ ! -f "$(record_path T-A)" ] && pass "A: no record written" || fail "A: record written for a forgery"
 
@@ -127,7 +131,7 @@ reset_repo; seed_to T-A2 bld
 run_driver "$DRIVER" T-A2 failafter --reviewer rev --builder bld; rc=$?
 [ "$rc" -eq 5 ] && pass "A2: failed turn keeps the shim's exit 5 (not 4)" || fail "A2: expected 5, got $rc: $(tail -3 "$WORK/out-T-A2")"
 [ "$(reason)" = forged-terminal ] && pass "A2: reason still names the forgery" || fail "A2: reason=$(reason)"
-git -C "$A" show HEAD:relay.md | grep -q '^STATUS: Open' && pass "A2: forged STATUS reverted in HEAD on the failure path" || fail "A2: HEAD still forged"
+grep -q '^STATUS: Open' <<<"$(git -C "$A" show HEAD:relay.md)" && pass "A2: forged STATUS reverted in HEAD on the failure path" || fail "A2: HEAD still forged"
 [ ! -f "$(record_path T-A2)" ] && pass "A2: no record" || fail "A2: record written on a failed turn"
 
 # --- B: reviewer-role approval is attested -------------------------------------------------------
@@ -167,6 +171,17 @@ repo = os.path.dirname(sys.argv[2])
 rec, why = relay_attest.load("T-B4", expected_reviewer="rev", relay_file=sys.argv[2], target_repo=repo); assert rec, why
 ok, why = relay_attest.candidate_ok(rec, relay_attest.rev_parse(repo), repo)
 assert not ok and "non-transcript" in why, why
+PY
+
+# --- B5: the harness downgrades an uncited [Pass] claim in place after the reviewer's turn -------
+reset_repo; seed_to T-B5 rev
+run_driver "$DRIVER" T-B5 uncited --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 0 ] && pass "B5: harness's uncited-claim downgrade does not read as a body rewrite; approval attested" || fail "B5: rc=$rc reason=$(reason): $(grep -v 'GH-370' "$WORK/out-T-B5" | tail -4)"
+grep -q 'Unverified — no citation' "$A/relay.md" && pass "B5: the downgrade really happened (control)" || fail "B5: control — no downgrade marker in the file"
+python3 - "$MAIN" "$A/relay.md" <<'PY' && pass "B5: record still loads after the downgrade" || fail "B5: record does not load"
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
+rec, why = relay_attest.load("T-B5", expected_reviewer="rev", relay_file=sys.argv[2], target_repo=os.path.dirname(sys.argv[2])); assert rec, why
 PY
 
 # --- C: already terminal at startup, token done, no turn ------------------------------------------
@@ -244,6 +259,8 @@ PY
 RTL="$MAIN/relay-automation/relay-turn-lib.sh"
 mkdir -p "$WORK/fg"; RF="$WORK/fg/RELAY.md"
 printf 'STATUS: Open\nNEXT: bld (Builder)\n\n<!-- marathon-drive: task=X builder=rev reviewer=bld -->\n' >"$RF"
+printf 'art\n' >"$WORK/fg/art.md"
+git init -q "$WORK/fg"; git -C "$WORK/fg" add -A >/dev/null 2>&1; git -C "$WORK/fg" commit -qm seed >/dev/null 2>&1
 role_of(){ ( export RELAY_DRIVER_LOCKED="${1}" RELAY_ROLE="${2}"; bash -c "source '$RTL' >/dev/null 2>&1; rtl_is_reviewer_turn '$RF' rev && echo reviewer || echo builder" ); }
 [ "$(role_of 1 reviewer)" = reviewer ] && pass "F: RELAY_ROLE=reviewer outranks a directive that calls the agent builder" || fail "F: got $(role_of 1 reviewer)"
 [ "$(role_of 1 builder)" = builder ] && pass "F: RELAY_ROLE=builder outranks a directive that calls the agent reviewer" || fail "F: got $(role_of 1 builder)"
@@ -255,11 +272,12 @@ os.environ["RELAY_DRIVER_LOCKED"] = "1"
 root = os.path.dirname(sys.argv[2])
 def is_rev():
     lib = RelayTurnLib(root, sys.argv[1], sys.argv[2], "art.md")
-    return lib._run_rtl(f"rtl_is_reviewer_turn '{sys.argv[2]}' rev && echo yes || echo no").strip().endswith("yes")
+    r = lib._run_rtl(f"rtl_is_reviewer_turn '{sys.argv[2]}' rev && echo yes || echo no")
+    return (getattr(r, "stdout", r) or "").strip().endswith("yes")
 os.environ["RELAY_ROLE"] = "reviewer"; assert is_rev()
 os.environ["RELAY_ROLE"] = "builder";  assert not is_rev()
 PY
-prompt_of(){ ( export RELAY_DRIVER_LOCKED=1 RELAY_ROLE="$1"; bash -c "source '$RTL' >/dev/null 2>&1; rtl_init '$WORK/fg' '$RF' 'art.md' >/dev/null 2>&1; rtl_turn_prompt rev T-G peer" ); }
+prompt_of(){ ( export RELAY_DRIVER_LOCKED=1 RELAY_ROLE="$1"; bash -c "source '$RTL' >/dev/null 2>&1; rtl_init '$WORK/fg' '$RF' 'art.md' >/dev/null 2>&1; rtl_turn_prompt rev '$RF' T-G art.md peer" ); }
 BP="$(prompt_of builder)"; RP="$(prompt_of reviewer)"
 [ -n "$BP" ] && [ -n "$RP" ] && pass "G: both prompts render non-empty" || fail "G: empty prompt"
 ! grep -q 'STATUS: Approved' <<<"$BP" && pass "G: builder prompt does not invite STATUS: Approved" || fail "G: builder prompt still says Approved"
@@ -272,8 +290,8 @@ cat >"$GHBIN/gh" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$GH_ARGS"
 case "$*" in
-  *"pr list"*) printf '%s\n' "${GH_PR:-42}" ;;
-  *"pr view"*"headRefOid"*) printf '%s\n' "$GH_HEAD" ;;
+  *"pr list"*) printf '%s\n' "${GH_PR-42}" ;;
+  *"pr view"*"--jq .headRefOid"*) printf '%s\n' "$GH_HEAD" ;;
   *"pr view"*) printf '{"state":"OPEN","baseRefName":"development","number":42,"headRefName":"feat/gh7","headRefOid":"%s"}\n' "$GH_HEAD" ;;
   *"pr merge"*) exit "${GH_MERGE_RC:-0}" ;;
 esac
@@ -293,7 +311,7 @@ d = os.path.join(repo, "relay-system", "2026-09-08"); os.makedirs(d); rf = os.pa
 open(rf, "w").write("# RELAY · GH-7\n\nNEXT: rev\nSTATUS: Open\nROUND: 1 / 2\n\nbody\n")
 subprocess.run(["git", "-C", repo, "add", "-A"], check=True); subprocess.run(["git", "-C", repo, "commit", "-qm", "relay"], check=True)
 pre = relay_attest.canonical(rf)
-open(rf, "a").write("\n### Round 1 · Reviewer · rev\nok\n"); open(rf, "w").write(open(rf).read().replace("STATUS: Open", "STATUS: Approved", 1))
+open(rf, "a").write("\n### Round 1 · Reviewer · rev\nok\n"); txt = open(rf).read(); open(rf, "w").write(txt.replace("STATUS: Open", "STATUS: Approved", 1))
 post = relay_attest.canonical(rf); added = post[len(pre):]
 rec = {"schema": relay_attest.SCHEMA, "task": "RELAY-gh7-jog-drive", "transcript_repo": repo, "relay_file": rf,
        "relay_file_rel": "relay-system/2026-09-08/gh7-jog-drive.md", "target_repo": repo, "reviewer": "rev", "status": "Approved",
@@ -302,6 +320,7 @@ rec = {"schema": relay_attest.SCHEMA, "task": "RELAY-gh7-jog-drive", "transcript
 tr = relay_attest.trailer_text(rec); rec["trailer_sha256"] = relay_attest.sha256(tr.encode()); open(rf, "a").write(tr); relay_attest.write(rec)
 subprocess.run(["git", "-C", repo, "commit", "-qam", "attest"], check=True)   # transcript-only commit → still a valid candidate
 head = relay_attest.rev_parse(repo)
+rec_chk, why_chk = jog._legacy_attestation(repo, 7, "rev"); assert rec_chk, f"fixture attestation does not load: {why_chk}"
 class TTY(io.StringIO):
     def isatty(self): return True
 def land(auto, **env):
@@ -315,7 +334,7 @@ assert f"pr merge 42 --merge --auto=false --match-head-commit {head}" in open(os
 # I2: merge fails → parked (was: completed)
 r = land(False, GH_HEAD=head, GH_MERGE_RC="1"); assert r == (False, "parked", r[2]) and "merge failed" in r[2], r
 # I3: no PR → parked (was: completed)
-r = land(False, GH_PR=""); assert r[0] is False and r[1] == "parked" and "no open PR" in r[2], r
+r = land(False, GH_PR="", GH_MERGE_RC="0"); assert r[0] is False and r[1] == "parked" and "no open PR" in r[2], r
 os.environ.pop("GH_PR")
 # I4: candidate drifted (source commit after the reviewed head) → parked before merge
 open(os.path.join(repo, "code.txt"), "w").write("x\n"); subprocess.run(["git", "-C", repo, "add", "-A"], check=True); subprocess.run(["git", "-C", repo, "commit", "-qm", "code"], check=True)

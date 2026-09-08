@@ -250,7 +250,7 @@ If a profile exists for the model you want, the whole env block below collapses 
 eval "$(relay-automation/resolve-profile.sh 'glm 5.3 max' --env)"
 ALLOW_PATHS="" relay-automation/relay-drive.sh \
   --relay-file "$RELAY" --relay-task "$TASK" \
-  --agent-cmd "$RELAY_AGENT_CMD" --review-once
+  --agent-cmd "$RELAY_AGENT_CMD" --reviewer "$RELAY_REVIEWER" --review-once
 ```
 
 `--env` emits the lane's `*_AGENT`, `*_MODEL`, its gateway variable, `*_REASONING_EFFORT`,
@@ -325,6 +325,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/codex-turn.sh \
+  --reviewer   "$CODEX_AGENT" \
   --round-cap  4
 ```
 
@@ -346,6 +347,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/agy-turn.sh \
+  --reviewer   "$AGY_AGENT" \
   --round-cap  4
 ```
 
@@ -367,6 +369,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/commandcode-turn.sh \
+  --reviewer   "$COMMANDCODE_AGENT" \
   --round-cap  4
 ```
 

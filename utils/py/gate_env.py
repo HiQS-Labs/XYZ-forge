@@ -68,6 +68,12 @@ HARNESS_ENV = {
     "RELAY_FILE": (SCRUB, "Names the parent's relay thread; a suite building its own relay must not see it."),
     "RELAY_TASK": (SCRUB, "The parent's tick token. Inherited, a suite's token assertions describe the parent."),
     "RELAY_AGENT": (SCRUB, "The parent's actor identity; ownership assertions would resolve to it."),
+    # GH-505/GH-509: the driver's per-turn role and pinned-revision exports. Same family as
+    # RELAY_AGENT — a suite inheriting them would classify its own turns as the parent's reviewer,
+    # cut its worktrees at the parent's revision, or verify the parent's artifact digest.
+    "RELAY_ROLE": (SCRUB, "The parent's dispatched role (reviewer|builder); rtl_is_reviewer_turn trusts it under a driver."),
+    "RELAY_REVIEWED_HEAD": (SCRUB, "The parent's pinned reviewed revision; rtl_worktree_begin cuts at it."),
+    "RELAY_ARTIFACT_SHA256": (SCRUB, "The parent's seeded-artifact digest; rtl_worktree_begin verifies the seed against it."),
     "RELAY_PEER": (SCRUB, "Parent's handoff target. Scrubbed by validate.sh since before this contract."),
     "RELAY_WORKTREE_ISOLATION": (
         SCRUB,

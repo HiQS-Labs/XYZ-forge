@@ -655,6 +655,11 @@ def main():
             return ("forged", ok)
         post_canon = relay_attest.canonical(relay_file)
         if not post_canon.startswith(pre["canon"]):
+            pre_c = pre["canon"]
+            i = next((k for k in range(min(len(pre_c), len(post_canon))) if pre_c[k] != post_canon[k]), min(len(pre_c), len(post_canon)))
+            eprint(f"relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte {i}):")
+            eprint(f"  before: {pre_c[max(0, i-60):i+60]!r}")
+            eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
             return ("refused", "review-body-rewritten")
         added = post_canon[len(pre["canon"]):]
         if not added.strip():
@@ -763,7 +768,7 @@ def main():
         # The reviewed revision is pinned: the shim cuts its worktree at RELAY_REVIEWED_HEAD, so a
         # concurrent parent commit during the turn cannot change what the reviewer read.
         role = "reviewer" if actor == args.reviewer else "builder"
-        if args.review_once and role != "reviewer":
+        if args.review_once and args.reviewer and role != "reviewer":
             die(f"--review-once dispatches '{actor}' but --reviewer is '{args.reviewer}' (review-once-actor-mismatch)")
         os.environ["RELAY_ROLE"] = role
         os.environ["RELAY_REVIEWED_HEAD"] = head_before

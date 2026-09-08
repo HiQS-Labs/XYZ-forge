@@ -1291,15 +1291,15 @@ def run_single_phase_drive(root, gh_num, builder="agy", reviewer=None, simulate=
     GH-505: the drive is a builder turn followed by a REVIEWER turn; relay-drive attests only the
     reviewer's approval. Same reviewer policy as the marathon executor (explicit, different agent).
     """
+    if simulate:
+        print(f"jog: [simulate] simulated single-phase drive on GH-{gh_num} with builder={builder}")
+        return 0
     if not reviewer:
         print("jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)", file=sys.stderr)
         return 2
     if reviewer == builder:
         print(f"jog: --reviewer must differ from --builder (both are '{reviewer}')", file=sys.stderr)
         return 2
-    if simulate:
-        print(f"jog: [simulate] simulated single-phase drive on GH-{gh_num} with builder={builder}")
-        return 0
 
     # Locate relay-drive and turn runner shims
     drive_candidates = [
@@ -1452,7 +1452,7 @@ def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
                             "--match-head-commit", candidate],
                            cwd=root, capture_output=True, text=True)
     if merge.returncode != 0:
-        return False, f"merge failed: {(merge.stderr or merge.stdout or '').strip()}"
+        return False, f"merge failed (gh exit {merge.returncode}): {(merge.stderr or merge.stdout or '').strip()}"
     return True, None
 
 
@@ -1469,12 +1469,16 @@ def _legacy_attestation(root, gh_num, reviewer):
     return relay_attest.load(task, expected_reviewer=reviewer, relay_file=relay_file, target_repo=root)
 
 
-def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None):
+def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None, simulate=False):
     """Handle landing confirmation, PR merge, and development re-anchoring.
 
     Returns:
         (success: bool, status: str, failure_reason: str or None)
     """
+    if simulate:
+        # GH-505: nothing was driven and nothing is merged; say so instead of pretending a PR landed.
+        print(f"jog: [simulate] simulated landing for GH-{gh_num} (no PR, no merge)")
+        return True, "completed", None
     record, why = _legacy_attestation(root, gh_num, reviewer)
     if auto_merge:
         print(f"jog: task GH-{gh_num} passed; auto-merging into development...")
@@ -1749,7 +1753,8 @@ def jog_run_main(args=None):
                 break
 
             # Handle landing boundary
-            landed, status, reason = handle_landing_boundary(root, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer)
+            landed, status, reason = handle_landing_boundary(root, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer,
+                                                             simulate=getattr(args, "simulate", False))
             jog_set_status(root, gh_num, status, failure_reason=reason)
 
             if landed:

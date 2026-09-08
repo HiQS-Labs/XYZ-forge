@@ -8,6 +8,7 @@ printf 'STATUS: Open\nNEXT: test (Builder)\n# relay body\n' >"$A/relay.md"
 printf '.tick/\nbin/\n' >"$A/.gitignore"
 git -C "$A" add relay.md .gitignore >/dev/null 2>&1
 git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
+SEED_HEAD="$(git -C "$A" rev-parse HEAD)"   # GH-505: the driver commits attestations; reset to the SEED, not HEAD
 export RELAY_TARGET_ROOT="$A"
 
 STUB="$WORK/agent"
@@ -37,7 +38,7 @@ export TICK_REPO_ROOT="$A"
 tick_a init >/dev/null
 
 reset_relay() {
-    git -C "$A" reset --hard HEAD >/dev/null 2>&1
+    git -C "$A" reset --hard "$SEED_HEAD" >/dev/null 2>&1
     echo 1 > "$A/.stub_count"
 }
 
@@ -49,7 +50,7 @@ tick_a release TASK --agent dispatcher --to test >/dev/null
 
 export STUB_PROGRESS="no"
 export STUB_APPROVE_AT="99"
-out="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$A/relay.md" --agent-cmd "$STUB" --relay-task TASK --round-cap 2 2>&1)"
+out="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$A/relay.md" --agent-cmd "$STUB" --relay-task TASK --round-cap 2 --reviewer test --builder other 2>&1)"
 rc=$?
 
 if [ "$rc" -eq 4 ] && grep -q "cap-stalled" <<<"$out"; then
@@ -66,7 +67,7 @@ tick_a release TASK2 --agent dispatcher --to test >/dev/null
 
 export STUB_PROGRESS="yes"
 export STUB_APPROVE_AT="3" # cap is 2, extension to 3 allows approval on 3rd attempt
-out="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$A/relay.md" --agent-cmd "$STUB" --relay-task TASK2 --round-cap 2 2>&1)"
+out="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$A/relay.md" --agent-cmd "$STUB" --relay-task TASK2 --round-cap 2 --reviewer test --builder other 2>&1)"
 rc=$?
 
 if [ "$rc" -eq 0 ] && grep -q "bounded extension granted" <<<"$out"; then
@@ -87,7 +88,7 @@ tick_a release TASK3 --agent dispatcher --to test >/dev/null
 
 export STUB_PROGRESS="yes"
 export STUB_APPROVE_AT="99" # never approves
-out="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$A/relay.md" --agent-cmd "$STUB" --relay-task TASK3 --round-cap 2 2>&1)"
+out="$(python3 "$ROOT/utils/py/relay_drive.py" --relay-file "$A/relay.md" --agent-cmd "$STUB" --relay-task TASK3 --round-cap 2 --reviewer test --builder other 2>&1)"
 rc=$?
 
 if [ "$rc" -eq 4 ] && grep -q "bounded extension granted" <<<"$out" && grep -q "cap-progressing-extended" <<<"$out"; then

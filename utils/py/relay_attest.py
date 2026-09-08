@@ -32,17 +32,52 @@ TRANSCRIPT_DIR = "relay-system"
 
 _HEADER_KEYS = (b"STATUS:", b"NEXT:", b"ROUND:")
 
+# The ONE other edit the harness itself makes to pre-existing relay lines: rtl_check_uncited_findings
+# (relay-turn-lib.sh, GH-173 B3) downgrades an uncited [Pass]/"verified" claim in place after a
+# reviewer turn. It is idempotent, so applying the same transform to BOTH snapshots makes the
+# comparison see only what the reviewer added. Kept byte-for-byte in step with the awk: the claim
+# words, the citation shapes, the inclusive window, and the two rewrite forms.
+_CLAIM_RE = re.compile(rb"(^|[^A-Za-z])([Vv]erified|[Cc]onfirmed|LGTM|[Ll]ooks [Gg]ood|[Cc]hecks [Oo]ut|[Aa]ll [Gg]ood|[Ww]orks [Aa]s [Ee]xpected|[Nn]o issues( found)?)([^A-Za-z]|$)")
+_CITE_RE = re.compile(rb'"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+')
+_UNCITED = "[Unverified — no citation]".encode("utf-8")
+
+
+def _downgrade_uncited(lines):
+    try:
+        win = int(os.environ.get("RTL_CITATION_WINDOW", "3"))
+    except ValueError:
+        win = 3
+    bodies = [l.rstrip(b"\r\n") for l in lines]
+    out = []
+    for i, line in enumerate(lines):
+        body = bodies[i]
+        nl = line[len(body):]
+        if _UNCITED in body:
+            out.append(line)
+            continue
+        if not (b"[Pass]" in body or _CLAIM_RE.search(body)):
+            out.append(line)
+            continue
+        if any(_CITE_RE.search(bodies[j]) for j in range(i, min(len(lines), i + win + 1))):
+            out.append(line)
+            continue
+        body = body.replace(b"[Pass]", _UNCITED) if b"[Pass]" in body else body + b"  " + _UNCITED
+        out.append(body + nl)
+    return out
+
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
 def canonical(path):
-    """The relay file's bytes with its FIRST STATUS:/NEXT:/ROUND: lines reduced to bare keys.
+    """The relay file's bytes with (a) its FIRST STATUS:/NEXT:/ROUND: lines reduced to bare keys and
+    (b) the harness's own uncited-claim downgrade applied.
 
-    Those three header lines are the only edits a turn is permitted to make above its own appended
-    block, so normalising them makes "append-only" checkable whatever the file's leading format —
-    marathon's and jog's title-first renders, frontmatter threads, or bare KEY: lines.
+    Those header lines are the only edits a turn is permitted to make above its own appended block,
+    and the downgrade is the only edit the harness makes there — so normalising both makes
+    "append-only" checkable whatever the file's leading format (marathon's and jog's title-first
+    renders, frontmatter threads, bare KEY: lines) and whatever the harness stamped after the turn.
     """
     with open(path, "rb") as f:
         raw = f.read()
@@ -55,7 +90,7 @@ def canonical(path):
                 line = key + b"\n"
                 break
         out.append(line)
-    return b"".join(out)
+    return b"".join(_downgrade_uncited(out))
 
 
 def file_status(path):
@@ -171,7 +206,8 @@ def candidate_ok(record, candidate_sha, target_repo):
     """Is `candidate_sha` the reviewed revision plus transcript-only commits? -> (bool, reason).
 
     Contract (GH-505 plan, round 2 Q9): reviewed_head must be an ancestor of the candidate AND the
-    endpoint tree diff must be empty outside relay-system/ and the relay file's own tracked path.
+    endpoint tree diff must be empty outside relay-system/, the relay file's own tracked path, and
+    the relay file's directory when it has one (marathon's per-phase dir holds only harness records).
     Any git error refuses. Non-isolated turns and seeded-artifact reviews are never merge-eligible:
     the reviewed input was not the pinned target tree.
     """
@@ -192,6 +228,11 @@ def candidate_ok(record, candidate_sha, target_repo):
     rel = record.get("relay_file_rel")
     if rel:
         spec.append(f":(top,literal,exclude){rel}")
+        # The relay file's own directory is harness metadata too — marathon keeps RELAY.md beside
+        # ESCALATION.md and its receipts under <phases-dir>/<phase>/ — but never the target root.
+        d = os.path.dirname(rel)
+        if d:
+            spec.append(f":(top,literal,exclude){d}/")
     diff = subprocess.run(["git", "-C", target_repo, "diff", "--quiet", reviewed, candidate_sha] + spec,
                           capture_output=True, text=True)
     if diff.returncode == 1:

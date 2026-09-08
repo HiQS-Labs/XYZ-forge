@@ -14,12 +14,18 @@ related:
 context_tags: [relay, review-integrity, governance]
 non_goals:
   - see the shared plan
-effort: 40
+effort: 4
 complexity: 4
 risk: 4
 ---
 
 # GH-509 — relay terminal authorization
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Design v2 (option 2 + 1) implemented on `fix/gh505-relay-reviewer-integrity`: `relay_drive.py` pins the reviewed revision, judges the turn it watched, and publishes `relay-drive/attest@1` via `utils/py/relay_attest.py`; marathon and jog validate the record | Gate green in the disposable clone, final Codex QA, PR |
 
 Shared plan, issue map, phases and checks: [GH-505-RELAY-REVIEWER-INTEGRITY.md](GH-505-RELAY-REVIEWER-INTEGRITY.md).
 This issue owns **Phase 1** (driver-attested terminal status) and the consumer side of **Phase 3**.

@@ -71,6 +71,8 @@ cat > "$STUB_RD" << 'STUB_EOF'
 #!/usr/bin/env bash
 set -u
 printf '%s\n' "$*" > "$WORK/relay-drive-args"
+# GH-505: a success must carry the reviewer attestation the real driver publishes
+[ "${RELAY_DRIVE_EXIT:-0}" -eq 0 ] && bash "$ATTEST_STUB" "$@"
 exit "${RELAY_DRIVE_EXIT:-0}"
 STUB_EOF
 chmod +x "$STUB_RD"

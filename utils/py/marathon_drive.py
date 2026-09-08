@@ -2208,6 +2208,8 @@ relay-file: {rel_relay}
         "MARATHON_BUILDER",
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
         "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
+        # GH-505/GH-509: the driver's per-turn role / pinned-revision / artifact-digest exports.
+        "RELAY_ROLE", "RELAY_REVIEWED_HEAD", "RELAY_ARTIFACT_SHA256",
         "SMALLCODE_AGENT",
         # GH-346 Phase 2: TENTH copy. Kept in lockstep with gate_env.py's registry, which
         # test/gh441-gate-env-contract.sh compares against this literal.
@@ -2603,6 +2605,22 @@ relay-file: {rel_relay}
         else:
             success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
         save_transcript()
+        # GH-505/GH-509: no success is published — no approved event, no green, no receipt — unless
+        # relay-drive's attestation covers the candidate. The token that completed is the one the
+        # relay file was rendered for (a --retry derivative on an already-satisfied lane).
+        attested_task = completed_relay_task() if success_mode == "already-satisfied" else relay_task
+        def bind_candidate(where):
+            cand = _cmd_out(["git", "-C", args.target_root or root, "rev-parse", "HEAD"])
+            rec = attested_terminal(attested_task, candidate=cand, where=where)
+            if rec is None:
+                log(f"phase {args.phase_id}: relay exited 0 but its approval is not attested for candidate {cand[:12] if cand else '?'} — refusing to publish success")
+                escalate("candidate-drifted-from-reviewed-head", 0)
+                xyz_marathon_emit("red", f"halted at phase {args.phase_id} — approval not bound to the merge candidate")
+                sys.exit(4)
+            return cand, rec
+        candidate, record = bind_candidate(f"phase {args.phase_id} success")
+        subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         refresh_remote_tracking_ref()
         if args.post_approve_cmd:
             log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
@@ -2611,23 +2629,12 @@ relay-file: {rel_relay}
                 log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
                 escalate("post-approve-failed", 0)
                 sys.exit(9)
-        # GH-505/GH-509: ONE candidate snapshot, taken after everything that may move HEAD, validated
-        # against relay-drive's attestation BEFORE any success is published — and carried verbatim
-        # into the receipt as `reviewed_candidate`, so no approved receipt ever names a revision the
-        # reviewer did not read (plus transcript-only commits).
-        candidate = _cmd_out(["git", "-C", args.target_root or root, "rev-parse", "HEAD"])
-        record = attested_terminal(candidate=candidate, where=f"phase {args.phase_id} success")
-        if record is None:
-            log(f"phase {args.phase_id}: relay exited 0 but its approval is not attested for candidate {candidate[:12] if candidate else '?'} — refusing to publish success")
-            escalate("candidate-drifted-from-reviewed-head", 0)
-            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — approval not bound to the merge candidate")
-            sys.exit(4)
+            # the hook may move HEAD — the receipt names ONE validated candidate, taken after it
+            candidate, record = bind_candidate(f"phase {args.phase_id} post-approve")
         _RESULT["reviewed_candidate"] = candidate
         _RESULT["reviewed_head"] = record["reviewed_head"]
         _RESULT["added_sha256"] = record["added_sha256"]
         _RESULT["attest_path"] = relay_attest.path_for(record["task"], record["target_repo"])
-        subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         _phase_memory_sample(f"{args.phase_id}-complete", root=root, tick_bin=tick_bin, relay_task=relay_task)
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(success_text)

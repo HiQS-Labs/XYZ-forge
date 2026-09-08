@@ -29,8 +29,16 @@ HARNESS="${ATTEST_STUB_HARNESS:-$(cd "$HERE/../.." && pwd)}"
 target_root="${target_root:-${MARATHON_ROOT:-$(git -C "$(dirname "$relay_file")" rev-parse --show-toplevel 2>/dev/null)}}"
 tick="${TICK_BIN:-$HARNESS/bin/tick}"
 export TICK_REPO_ROOT="${TICK_REPO_ROOT:-$target_root}"
-"$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 2>&1 || true
-"$tick" done  "$task" --agent "$reviewer" >/dev/null 2>&1 || true
+# Move the token to done AS THE REVIEWER. marathon seeds it open+handed to the builder (handoff-
+# exclusive), so mirror the real sequence when a direct reviewer claim is refused: builder claims,
+# releases to the reviewer, reviewer claims, reviewer marks done.
+if ! "$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 2>&1; then
+  builder="${MARATHON_BUILDER:-claude}"
+  "$tick" claim "$task" --agent "$builder" --paths "$relay_file" >/dev/null 2>&1 || true
+  "$tick" release "$task" --agent "$builder" --to "$reviewer" >/dev/null 2>&1 || true
+  "$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 2>&1 || true
+fi
+"$tick" done "$task" --agent "$reviewer" >/dev/null 2>&1 || true
 python3 - "$HARNESS" "$relay_file" "$task" "$reviewer" "$target_root" <<'PY'
 import os, sys, time
 harness, relay_file, task, reviewer, target_root = sys.argv[1:6]

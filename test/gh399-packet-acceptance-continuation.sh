@@ -143,7 +143,8 @@ fi
 # The packet is an intermediate. What the builder reads is the relay file, so the last hop is the
 # one that matters and is the one the issue explicitly asks to pin.
 STUB="$WORK/stub-relay-drive"
-printf '#!/usr/bin/env bash\nexit 0\n' >"$STUB"; chmod +x "$STUB"
+ATTEST_STUB="${ATTEST_STUB:-$(cd "$(dirname "$0")" && pwd)/lib/attest-stub.sh}"
+printf '#!/usr/bin/env bash\nbash "%s" "$@"\nexit 0\n' "$ATTEST_STUB" >"$STUB"; chmod +x "$STUB"   # GH-505: success carries the attestation
 for b in codex agy; do printf '#!/usr/bin/env bash\nexit 0\n' >"$WORK/bin-$b"; chmod +x "$WORK/bin-$b"; done
 mkdir -p "$WORK/stubbin"; cp "$WORK/bin-codex" "$WORK/stubbin/codex"; cp "$WORK/bin-agy" "$WORK/stubbin/agy"
 

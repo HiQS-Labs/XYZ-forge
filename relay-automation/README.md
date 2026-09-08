@@ -227,9 +227,16 @@ without double-escalation:
 ### Single-process relay supervision (one window drives the whole thread)
 ```
 relay-automation/relay-drive.sh --relay-file relay-system/<date>/<slug>.md \
-  --agent-cmd "<turn-taker>" --round-cap 6
+  --agent-cmd "<turn-taker>" --reviewer <agent-id> [--builder <agent-id>] --round-cap 6
 ```
-`--agent-cmd` is the turn-taker seam. In the live-window flow it can remain a
+`--reviewer` names the ONE agent whose approval counts (GH-505/GH-509): the driver exports the
+role it dispatched per turn, pins the revision the reviewer reads, and attests a terminal
+`STATUS: Approved` only when it watched that agent's turn add review text — a terminal STATUS
+written by any other turn is reverted and escalated `forged-terminal`; a file that is already
+terminal at startup escalates `unattested-terminal`. Without `--reviewer` the driver warns and can
+never accept a terminal status. `--agent-cmd` is the turn-taker seam; a custom command must route
+`RELAY_AGENT` to a contained shim (as `marathon-agent.sh` does) — the token names *who*, the shim
+supplies *containment*, and only a turn whose shim returned 0 can be attested. In the live-window flow it can remain a
 window-driven/manual handoff; in the current headless path it can be a shipped
 shim such as `relay-automation/codex-turn.sh` or `relay-automation/agy-turn.sh`.
 Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-approved, `5`

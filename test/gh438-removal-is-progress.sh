@@ -53,10 +53,7 @@ if [ "\$review_once" -eq 0 ]; then
   $1
   exit 3
 fi
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "\$relay"; rm -f "\$relay.bak"
-printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "\$relay"
-TICK_REPO_ROOT="$A" "$TICK" claim "\$task" --agent agy --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" done "\$task" --agent agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "\$relay" --relay-task "\$task" --reviewer agy --target-root "$A"   # GH-505
 exit 0
 STUB
   chmod +x "$WORK/rd.sh"
