@@ -140,17 +140,23 @@ resolve_base_pairs() {
         ;;
     esac
     # One round trip for both candidates; bounded so a wedged connection costs seconds, not minutes.
+    # The probe's EXIT STATUS is authoritative (round 3 review): a nonzero ls-remote that emitted
+    # partial refs (one ref advertised, then the connection died) must fail closed, because
+    # partial output is indistinguishable from a complete answer unless the status says so.
+    _adv_out=""
+    if ! _adv_out="$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 git ls-remote "$_push_remote" refs/heads/development refs/heads/main 2>/dev/null)"; then
+      _base_note="pre-push: could not verify the integration tip on '$_push_remote' (git ls-remote failed) — running the full gate."
+      return 1
+    fi
     while read -r _sha _ref; do
       [ -n "${_sha:-}" ] || continue
       case "$_ref" in
         refs/heads/development) _adv_dev="$_sha" ;;
         refs/heads/main)        _adv_main="$_sha" ;;
       esac
-    done <<EOFADV
-$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 git ls-remote "$_push_remote" refs/heads/development refs/heads/main 2>/dev/null)
-EOFADV
+    done <<<"$_adv_out"
     if [ -z "$_adv_dev" ] && [ -z "$_adv_main" ]; then
-      _base_note="pre-push: could not verify the integration tip on '$_push_remote' (git ls-remote empty) — running the full gate."
+      _base_note="pre-push: no integration branch advertised on '$_push_remote' (neither development nor main) — running the full gate."
       return 1
     fi
   fi
