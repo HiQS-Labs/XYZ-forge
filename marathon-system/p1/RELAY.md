@@ -1,6 +1,8 @@
 # Marathon Phase p1
-STATUS: Open
-NEXT: codex (Builder)
+STATUS: Closed — test/marathon-drive.sh's vendored-fixture test leaks stub writes here via
+  bare $PWD when nested inside a live marathon-drive.sh process (env var inheritance,
+  likely RELAY_WORKTREE_ISOLATION); tracked as its own issue, this file is not real work.
+NEXT: none
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=2 -->
 
