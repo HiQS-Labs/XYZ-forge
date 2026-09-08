@@ -651,7 +651,7 @@ if [ $RC -ne 0 ] && has "$OUT" "UNIQUE"; then ok "a marathon cannot be named by 
 
 # ── the extended dump grammar survives a round trip ─────────────────────────────────────────────
 rout manifest dial-in --gid "$MR1" "https://github.com/A/B/issues/32" --reason "carries a marathon" --marathon "$M1"
-if grep -qE '^INSERT INTO manifest_items\(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid\)' "$R/releases.sql"; then ok "the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID" 0; else ok "manifest dump grammar" 1; fi
+if grep -qE '^INSERT INTO manifest_items\(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid(, updated_at)?\)' "$R/releases.sql"; then ok "the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID" 0; else ok "manifest dump grammar" 1; fi
 if ! grep -qE 'INSERT INTO manifest_items\([^)]*marathon_id' "$R/releases.sql"; then ok "and marathon_id (an integer FK) never appears as a dump value" 0; else ok "no integer FK in dump" 1; fi
 BD_BEFORE="$(python3 - "$R" "$APP" <<'PYEOF4'
 import importlib.util, sys, os
@@ -691,6 +691,188 @@ open(path, "w").write("\n".join(out) + "\n")
 PYEOF6
 V="$(rlog check --rebuild)"
 if has "$V" "rule=dump-duplicate-migration"; then ok "a merged dump carrying a duplicate schema_migrations version is refused BY NAME, before anything is written" 0; else ok "duplicate migration refusal" 1; fi
+
+# GH-355: timestamp migration, every writer, and witnessed omission controls.
+python3 - "$WORK" "$APP" <<'PYGH355'
+import contextlib, importlib.util, io, os, sqlite3, sys
+from pathlib import Path
+
+work, app_path = Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()
+spec = importlib.util.spec_from_file_location('releases_app', app_path)
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+tables = ('settings', 'repos', 'issue_refs', 'marathons', 'releases',
+          'manifest_items', 'doc_lines', 'legacy_lines', 'grandfather_entries')
+clock = 0
+
+def run(root, *args):
+    global clock
+    clock += 1
+    os.environ['RELEASES_APP_NOW'] = '2026-09-08T12:%02d:%02dZ' % divmod(clock, 60)
+    with contextlib.redirect_stdout(io.StringIO()):
+        ra.main(['--root', str(root), *args])
+    return os.environ['RELEASES_APP_NOW']
+
+def fixture(name):
+    root = work / name
+    root.mkdir()
+    # The app only needs its lock directory. No git commands or shared git state.
+    (root / '.git').mkdir()
+    return root
+
+def db(root):
+    return ra.connect(str(root / 'releases.db'))
+
+def snapshot(root):
+    c = db(root)
+    try:
+        return {t: {r['key'] if t == 'settings' else r['id']: dict(r)
+                    for r in c.execute('SELECT * FROM '+t)} for t in tables}
+    finally:
+        c.close()
+
+def maintained(before, after, stamp):
+    changed = set()
+    for t, rows in after.items():
+        for key, row in rows.items():
+            assert row['updated_at'], (t, key, 'missing timestamp')
+            prev = before.get(t, {}).get(key)
+            payload = {k:v for k,v in row.items() if k != 'updated_at'}
+            old = {k:v for k,v in (prev or {}).items() if k != 'updated_at'}
+            if payload != old:
+                assert row['updated_at'] == stamp, (t, key, 'stale timestamp', row['updated_at'], stamp)
+                changed.add(t)
+    return changed
+
+def mutation(root, *args):
+    before = snapshot(root)
+    stamp = run(root, *args)
+    return maintained(before, snapshot(root), stamp)
+
+def scalar(root, sql):
+    c = db(root)
+    try: return c.execute(sql).fetchone()[0]
+    finally: c.close()
+
+# Populated v6 fixture, carried from the original GH-355 implementation.
+pre = fixture('gh355-pre')
+c = ra.connect(str(pre / 'releases.db'), must_exist=False)
+for v in range(1, 7):
+    ra.MIGRATIONS[v]['apply'](c)
+    c.execute('INSERT INTO schema_migrations VALUES (?, ?)', (v, '2026-08-01T00:00:00Z'))
+c.executescript("""
+INSERT INTO settings VALUES ('enforcement','lenient'),('repo_slug','pre'),('generation','1');
+INSERT INTO repos(global_id,slug) VALUES ('repo-01ARZ3NDEKTSV4RRFFQ69G5FA0','pre');
+INSERT INTO issue_refs(global_id,url,created_at) VALUES ('ref-01ARZ3NDEKTSV4RRFFQ69G5FA1','https://github.com/A/B/issues/1','2026-08-01T00:00:00Z');
+INSERT INTO marathons(global_id,repo_id,tracking_ref_id,status,created_at) VALUES ('mar-01ARZ3NDEKTSV4RRFFQ69G5FA2',1,1,'running','2026-08-01T00:00:00Z');
+INSERT INTO releases(global_id,repo_id,version,status,description,tracking_ref_id,marathon_id) VALUES ('rel-01ARZ3NDEKTSV4RRFFQ69G5FA3',1,'1.0.0','active','pre-migration',1,1);
+INSERT INTO manifest_items(global_id,release_id,issue_ref_id,state,dialed_in_at) VALUES ('mfi-01ARZ3NDEKTSV4RRFFQ69G5FA4',1,1,'dialed_in','2026-08-01T00:00:00Z');
+INSERT INTO doc_lines(repo_id,position,content) VALUES (1,0,'# Title');
+INSERT INTO legacy_lines(release_id,position,content) VALUES (1,0,'Legacy notes');
+INSERT INTO grandfather_entries(import_run,release_gid,rule,source_value,supplied_value) VALUES ('imp-pre','rel-01ARZ3NDEKTSV4RRFFQ69G5FA3','status-enum','Draft','draft');
+""")
+old_dump = ra.dump_text(c, 1)
+assert all(not ra._has_column(c, t, 'updated_at') for t in tables)
+(pre / 'releases.sql').write_text(old_dump)
+c.close()
+# An old dump is independently loaded into the latest schema by rebuild.
+old = fixture('gh355-old-dump')
+import shutil
+shutil.copy2(pre / 'releases.db', old / 'releases.db')
+(old / 'releases.sql').write_text(old_dump)
+run(old, 'check', '--rebuild')
+run(pre, 'migrate')
+for root in (pre, old):
+    snap = snapshot(root)
+    assert set(snap) == set(tables)
+    for t, rows in snap.items():
+        assert rows, (t, 'empty migration fixture')
+        assert all(r['updated_at'] for r in rows.values()), t
+    run(root, 'check')
+    c = db(root)
+    text = ra.dump_text(c, ra.get_generation(c))
+    rebuilt = sqlite3.connect(':memory:', isolation_level=None)
+    rebuilt.row_factory = sqlite3.Row
+    ra.apply_migrations(rebuilt, stamp_ledger=False)
+    ra.load_dump(rebuilt, ra.parse_dump(text))
+    assert ra.dump_text(rebuilt, ra.get_generation(rebuilt)) == text, 'byte round trip'
+    rebuilt.close()
+    digest = ra.business_digest(c); c.close()
+    before = snapshot(root)
+    stamp = run(root, 'check', '--rebuild')
+    after = snapshot(root)
+    assert after['settings']['generation']['updated_at'] == stamp
+    del before['settings']['generation']; del after['settings']['generation']
+    assert before == after, 'rebuild changed business timestamps'
+    c = db(root); assert ra.business_digest(c) == digest; c.close()
+    run(root, 'check')
+# Re-running migration must be a byte no-op.
+unchanged = (pre / 'releases.sql').read_bytes()
+run(pre, 'migrate')
+assert unchanged == (pre / 'releases.sql').read_bytes()
+print('PASS: populated v6 migrate and old-dump rebuild; exact dump/load bytes; rebuild preservation')
+
+# All nine tables' actual app insert paths, and every mutable release/ref/item path.
+root = fixture('gh355-writers')
+stamp = run(root, 'init', '--slug', 'writers')
+seen = maintained({}, snapshot(root), stamp)
+ledger = root / 'legacy.md'
+ledger.write_text('# Releases\n\nRelease: 0.1.0\nStatus: odd-status\nDescription: Imported.\nUnusual field: preserve me\n')
+seen |= mutation(root, 'import', str(ledger))
+ref = scalar(root, 'SELECT temp_id FROM issue_refs WHERE temp_id IS NOT NULL')
+assert ref.startswith('MIG-')
+seen |= mutation(root, 'reconcile', '--map', ref+'=https://github.com/A/B/issues/50')
+seen |= mutation(root, 'marathon', 'add', '--tracking-issue', 'https://github.com/A/B/issues/60')
+mar = scalar(root, 'SELECT global_id FROM marathons ORDER BY id DESC LIMIT 1')
+seen |= mutation(root, 'add', '--version', '2.0', '--status', 'draft', '--description', 'New.',
+                 '--tracking-issue', 'https://github.com/A/B/issues/70', '--marathon', mar)
+rel = scalar(root, "SELECT global_id FROM releases WHERE version='2.0'")
+issue = 'https://github.com/A/B/issues/71'
+seen |= mutation(root, 'manifest', 'dial-in', '--gid', rel, issue, '--reason', 'scope')
+seen |= mutation(root, 'manifest', 'marathon', '--gid', rel, issue, '--marathon', mar)
+seen |= mutation(root, 'baseline', '--gid', rel)
+seen |= mutation(root, 'update', '--gid', rel, '--status', 'active', '--tracking-issue', 'https://github.com/A/B/issues/72')
+seen |= mutation(root, 'manifest', 'ship', '--gid', rel, issue, '--evidence', 'fixture evidence')
+seen |= mutation(root, 'manifest', 'unship', '--gid', rel, issue, '--reason', 'correction')
+seen |= mutation(root, 'manifest', 'cut', '--gid', rel, issue, '--reason', 'rescope')
+seen |= mutation(root, 'ship', '--gid', rel, '--date', '2026-09-08', '--evidence', 'fixture evidence')
+assert seen == set(tables), ('unexercised tables', set(tables)-seen)
+run(root, 'check')
+print('PASS: all nine insert paths and release/ref/manifest mutation paths maintain timestamps')
+
+# Negative controls: run the same assertion against an omitted insert stamp and stale UPDATE.
+before = snapshot(root)
+stamp = run(root, 'update', '--gid', rel, '--description', 'changed for control')
+after = snapshot(root)
+maintained(before, after, stamp)
+key = next(k for k,r in after['releases'].items() if r['global_id'] == rel)
+for bad in (None, before['releases'][key]['updated_at']):
+    after['releases'][key]['updated_at'] = bad
+    try: maintained(before, after, stamp)
+    except AssertionError: pass
+    else: raise AssertionError('timestamp assertion accepted omitted/stale stamp')
+# Actual production mutation: force cmd_update down its pre-migration branch, skipping the stamp.
+original_has_column = ra._has_column
+ra._has_column = lambda conn, table, column: False if table == 'releases' and column == 'updated_at' else original_has_column(conn, table, column)
+try:
+    try: mutation(root, 'update', '--gid', rel, '--description', 'timestamp omission mutant')
+    except AssertionError as exc:
+        assert 'stale timestamp' in str(exc), exc
+    else: raise AssertionError('production timestamp omission survived')
+finally:
+    ra._has_column = original_has_column
+ra._has_column = lambda conn, table, column: False if table == 'issue_refs' and column == 'updated_at' else original_has_column(conn, table, column)
+try:
+    try:
+        mutation(root, 'add', '--version', 'omission', '--status', 'draft', '--description', 'insert control',
+                 '--tracking-issue', 'https://github.com/A/B/issues/999')
+    except AssertionError as exc:
+        assert 'missing timestamp' in str(exc), exc
+    else: raise AssertionError('production insert timestamp omission survived')
+finally:
+    ra._has_column = original_has_column
+print('PASS: negative controls reject NULL, stale stamp, and actual UPDATE/INSERT omissions')
+PYGH355
+ok "GH-355 timestamp migration and writer coverage" "$?"
 
 echo
 echo "== gh32-releases-app: $pass passed, $fail failed =="

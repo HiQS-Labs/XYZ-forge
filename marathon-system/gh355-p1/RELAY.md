@@ -1,6 +1,6 @@
 # Marathon Phase gh355-p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=gh-355-updated-at-migration builder=codex reviewer=agy round-cap=5 -->
 
@@ -99,3 +99,67 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-355 by content-porting the timestamp changes from `231d751b`,
+`aeba125d`, `8897c84d`, and `e56cb7cd`, plus their prerequisite migration-007
+registry entry. Read the local object store without invoking Git. No self-commit.
+
+Files touched: `utils/py/releases_app.py`, `test/gh32-releases-app.sh`,
+`releases.db`, `releases.sql`, and this relay.
+
+- Migration 007 backfills all nine named tables. Existing creation, shipment,
+  baseline, and dial-in dates supply historical timestamps where available;
+  remaining rows receive the migration clock. Writes retain the old-schema
+  compatibility branches and maintain timestamps after migration.
+- Canonical dumps append timestamps only when present in the schema. Loading an
+  old dump backfills missing values; loading a current dump preserves them.
+  Generation timestamps advance with writes and rebuilds, while generation stays
+  excluded from business digests. Current scoped receipt-reanchor handling is
+  preserved.
+- `parse_roadmap_ledger`, `cmd_roadmap_sync`, `cmd_manifest_unship`, and
+  `_live_manifest_item` are byte-identical to the starting functions. The rejected
+  GH-349 parser/sync changes were not imported.
+- The historical timestamp cases actually lived in
+  `test/gh349-vendored-roadmap-ledger.sh` in the source commits. Their cases are
+  incorporated into the authorized `test/gh32-releases-app.sh`, with populated
+  fixtures and stronger write-maintenance assertions.
+
+Reversibility: **Costly**, because timestamps become part of the canonical dump
+and receipt business digest across the ledger. Rollback requires restoring the
+matched pre-migration DB/dump and app version together, preserving any subsequent
+writes first; do not remove only the migration row or timestamps. Original artifact
+copies for this turn are in `.relay-scratch/` until harness cleanup. No unrelated
+business content was changed.
+
+Verification performed without running Git, `validate.sh`, or any shell test
+suite: executed only the new GH-355 Python block extracted from the changed test,
+with fixtures and output under `.relay-scratch/`; `bash -n` on the changed test
+and Python AST parsing also pass. Focused results:
+
+- Populated v6 `migrate` and untouched-v6-dump `check --rebuild` both populate all
+  nine tables without NULL timestamps; assertions reject empty fixtures.
+- Dump -> load into fresh current schema -> dump is byte-identical. CLI rebuild
+  preserves business timestamps and digest, while intentionally advancing the
+  generation timestamp and appending its existing rebuild receipt. Repeated
+  `migrate` is a dump-byte no-op.
+- All nine app insert paths plus release update/baseline/ship, issue reconciliation,
+  manifest dial-in/marathon/ship/unship/cut maintain timestamps at pinned clocks.
+- Negative controls visibly reject NULL and stale stamps and actual production
+  INSERT/UPDATE omissions forced through the old-schema branches.
+- Ran the app's `check`, `migrate`, and `check` on a scratch copy of the real
+  ledger, then copied back only app-generated `releases.db` and `releases.sql`.
+  Final schema 7, generation 496: `check: clean (0 failures, 8 warning(s))`.
+  Warnings are the same pre-existing stale MIG references. Compared all prior
+  business fields and receipt rows against the original: preserved, with only
+  migration metadata, generation, the new receipt, and timestamps added/advanced.
+  All 296 rows across the nine migrated tables have timestamps.
+
+Evidence output for reviewer inspection: `.relay-scratch/gh355-final.log` and
+`.relay-scratch/actual-ledger/verification.log`. These are ephemeral focused
+checks, not committed full-gate/provenance evidence. The complete shell suite and
+full pre-push gate remain outstanding for the harness; no full-gate claim.
+
+NEXT: agy (Reviewer). Review the artifacts and run the harness-owned gate.
