@@ -22,7 +22,7 @@ reversibility: Costly — shared read API and optional source-owned schema/expor
 
 | What was just completed | What's next |
 |---|---|
-| HTML v1 now serves tokenized Layouts A/B/C from one source-neutral snapshot; Rebalance, CLIO and Git Pulse read live while topology and continuity report unavailable. Focused contract, server, token and interaction checks pass. | Run the disposable-clone repository gate, complete independent code review, then begin an operator pilot. Exact checkout counts and attested milestone coverage remain blocked on existing producer outputs. |
+| HTML v1 now serves tokenized Layouts A/B/C from one source-neutral snapshot; Rebalance, CLIO and Git Pulse read live while topology and continuity report unavailable. Focused contract, server, token and interaction checks pass. | Clear the ambient security dialog and rerun the disposable-clone repository gate, then complete independent code review and begin an operator pilot. Exact checkout counts and attested milestone coverage remain blocked on existing producer outputs. |
 
 ## Table of contents
 

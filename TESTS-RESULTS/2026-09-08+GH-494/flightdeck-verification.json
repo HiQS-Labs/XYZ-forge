@@ -24,9 +24,33 @@
       }
     },
     "security": {"content_security_policy": "present", "foreign_host_status": 403}
+    ,"repository_gate": {
+      "result": "failed",
+      "mode": "tier 3, parallel 4-wide, disposable full clone",
+      "failed_suites": [
+        "gh390-timeout-attribution.sh",
+        "gh492-idle-kill.sh",
+        "gh376-relay-drive-lock-parity.sh",
+        "gh544-parallel-default.sh",
+        "gh57-live-merge-resolve.sh"
+      ],
+      "isolated_reruns": {
+        "gh376-relay-drive-lock-parity.sh": "21 pass, 0 fail",
+        "gh544-parallel-default.sh": "29 pass, 0 fail",
+        "gh57-live-merge-resolve.sh": "67 pass, 0 fail",
+        "gh390-timeout-attribution.sh": "11 pass, 3 fail; ambient security dialog detected",
+        "gh492-idle-kill.sh": "14 pass, 2 fail; ambient security dialog detected"
+      },
+      "clone_identity_after_run": {
+        "head": "131d8a8f7019fabd80b61eae7ded7c4674719686",
+        "core_bare": false,
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+      }
+    }
   },
   "limitations": [
     "Topology and continuity have no configured persisted feed on this machine.",
-    "The full disposable-clone repository gate and operator workday pilot are separate acceptance steps."
+    "The disposable-clone repository gate is not green: two diagnostics suites classify an ambient security dialog, while three other parallel failures passed isolated reruns.",
+    "The operator workday pilot remains a separate acceptance step."
   ]
 }
