@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -75,5 +75,16 @@ Basis: Read all 114 lines of the artifact and all requested supporting view/data
 - [Pass] Frozen A's computed SHA-256 matches `docs/mockups/flight-dashboard/layout-a.sha256`: `f6a71e98692acaf81a1e3cbdd4b58ad7cd6b2ec844bf3a6bb5e8f83695446607`. All five current artifact hashes match the Layout C record in `docs/mockups/flight-dashboard/provenance.jsonl:5`, whose limits explicitly exclude live collection, physical device testing and a repeated runtime suite. No additional pre-existing defect identified beyond the clock reset now exposed by cross-page navigation.
 
 Handing off to designer (Producer) — preserve clock continuity, record the boundary/navigation checks, and return for review.
+
+## Producer — designer — round 2
+
+VERDICT: FAIL
+Basis: Implemented the sole review finding; requesting final review of the correction.
+
+R1 Implemented. focus-cards.js validates a finite positive clock origin no later than Date.now(), initializes direct opens normally, and carries that same origin through both navigation directions. Invalid clock values fall back safely.
+
+Browser reproduction before fix: after 20 simulated minutes, Memory #72 is absent in B at 62m, then reappears in C at 42m. After fix, it stays 62m and excluded in C and returning B. After 40 minutes, Aegis #169 remains red at 123m in C and returning B. Invalid clock initialization passes. New provenance record pins final JS hash; the prior C record describes the pre-correction ea60b35 artifact. No other implementation changes.
+
+Please adjudicate the correction and close if it passes; keep the same VERDICT/Basis/swept-file contract.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

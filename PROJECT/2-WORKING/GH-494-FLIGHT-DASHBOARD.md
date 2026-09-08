@@ -254,3 +254,8 @@ boundary, unknown data and invalid repo URLs. Reassigning a source lane makes th
 activity-attribution check fail; restoring it passes. Evidence hashes are in
 provenance.jsonl. Physical gestures remain emulated, and design approval remains
 the checkpoint before final Swift planning.
+
+Final review found a sample-clock reset across page navigation. A shared validated
+clock origin now travels through B/C links. Browser controls reproduced a 62m event
+reappearing as 42m before the fix; afterward it stays outside the hour in both views.
+A 123m waiting lane likewise remains red through zoom in/out.

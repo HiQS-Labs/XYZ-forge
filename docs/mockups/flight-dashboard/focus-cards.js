@@ -13,7 +13,8 @@ function issueViews(repo){
   });
 }
 const viewRepos=issueMode?issueViews(parentRepo):repos;
-const loadedAt=Date.now(),initialMinute=942;
+const clockOrigin=Number(params.get('clock'));
+const loadedAt=Number.isFinite(clockOrigin)&&clockOrigin>0&&clockOrigin<=Date.now()?clockOrigin:Date.now(),initialMinute=942;
 let demoOffset=0;
 const minuteNow=()=>initialMinute+Math.floor((Date.now()-loadedAt)/60000)+demoOffset;
 const progressAge=l=>l.age===null?null:l.age+minuteNow()-initialMinute;
@@ -55,7 +56,7 @@ function issueCard(r,index){
 }
 carousel.innerHTML=viewRepos.map(card).join('')||'<article class="card" style="--repo-color:#a4abb8"><div class="card-scroll"><h1>Repository unavailable</h1><p class="intent">Choose a repository in Layout B to explore its issues.</p></div></article>';
 if(issueMode){
-  const backParams=new URLSearchParams();
+  const backParams=new URLSearchParams({clock:String(loadedAt)});
   if(parentRepo)backParams.set('focus',parentRepo.id);
   if(params.has('position'))backParams.set('position',params.get('position'));
   const close=document.querySelector('.close');
@@ -79,7 +80,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('a'))return;
   const card=e.target.closest('.card');
   if(card&&card===focusedCard&&!issueMode){
-    const destination=new URLSearchParams({repo:card.dataset.repo,position:String(carousel.scrollLeft/step())});
+    const destination=new URLSearchParams({repo:card.dataset.repo,position:String(carousel.scrollLeft/step()),clock:String(loadedAt)});
     location.href='layout-c.html?'+destination;
     return;
   }
