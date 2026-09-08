@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,20 @@ Basis: Concrete contract corrections for F1–F3 are implemented; requesting rev
 - F3 — Modified for simpler v1: removed pagination entirely. One transaction/materialized-source bounded snapshot with total row/byte/time limits, explicit partial totals, boot/sequence/request-generation handling and source-change detection. Added exhaustion/restart/late-response fixtures; cursor fields never drive requests. This meets the bounded consistent-cycle intent without new pagination machinery.
 
 Handing off to codex Reviewer — review the full revised plan and these dispositions; approve if the concrete contracts now satisfy the original DoD.
+
+### Reviewer — codex — round 2
+
+swept file: yes
+VERDICT: PASS
+Verdict: Approved
+Basis: Read all 468 lines of the revised artifact, the full Recon Map, planning-evidence.json and latest provenance record. F1–F3 are resolved at plan level; no additional pre-existing plan defects found in the full-file sweep. Read-only hashing matched the evidence receipt and all 20 pinned source files. Graph tools were unavailable this turn; this review relies on the supplied bounded recon and document evidence, not a new exhaustive source audit or remeasurement of live coverage. Proposed tests remain promises until implementation receipts exist. No artifact/source jobs, project tests or Git commands were run.
+
+- [Pass] **F1 resolved — temporal coverage is explicit.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:265–286` defines the required-source watermark, covered interval, known anchor, as-of verdict, owner-backed freshness cutoff and expiry without GETs. Lines 346–347 require boundary/stale/null-anchor fixtures and a failing watermark control. This prevents an aging retained snapshot from becoming newly red.
+- [Pass] **F2 resolved — readiness fails conservatively.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:288–312` supplies ordered category predicates, draft handling, exact cached-head requirements, unknown-policy fallback and expiry. Empty checks/reviews cannot imply approval without explicit policy. Line 348 covers categories and a missing-policy failing control.
+- [Pass] **F3 resolved — pagination is removed, with bounded replacement.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:141–161` specifies aggregate row/byte/time caps, a read-only transaction, per-source materialization, changed-source handling, boot/sequence/request-generation rules and null totals for incomplete scopes. Line 169 requires exhaustion/restart/late-response fixtures and a failing budget control. This satisfies the original finding without adding a cursor subsystem.
+- [Pass] **Consumer ownership and bounded rollout remain intact.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:43–53,94–109,359–408` keeps Rebalance/Git Pulse/CLIO as owners, excludes collection/bootstrap from GET, limits source extensions to demonstrated gaps, and specifies rollback, diagnostics and implementation evidence. Lines 330–333 reject a 150-second upstream freshness promise; lines 450–455 prevent partial coverage from completing mandatory requirements.
+- [Pass] **Presentation and future Swift requirements remain actionable.** `.relay-artifacts/GH-494-FLIGHT-DASHBOARD.md:183–228,235–255,314–352` covers complete tokenization, generated breakpoints, light/dark/system, preserved mockups, navigation, hardware checks, wrap-up and bounded refresh. Lines 418–441 distinguish the Swift shell from separately approved native views and require contract/token parity with HTML fallback.
+
+Relay closed (Approved), no further turn needed. Approval covers the plan only; runtime implementation still requires its own start. The harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
