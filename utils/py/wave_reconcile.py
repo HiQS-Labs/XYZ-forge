@@ -1088,7 +1088,12 @@ def main():
                     )
 
                 linked_issues, mentioned_issues = extract_linked_issues(pr_meta, repo_slug=repo_slug)
-                if args.require_receipts and (linked_issues or mentioned_issues):
+                # GH-425: unconditional whenever --gate/--require-receipts is requested — this
+                # attributes evidence to the PR itself, not to whichever issue it happens to
+                # close. Narrowing this to "only if the PR closes/references a tracked issue"
+                # (introduced in GH-421's build) silently drops the guarantee for exactly the
+                # PRs least likely to be scrutinized: ones with no linked issue at all.
+                if args.require_receipts:
                     check_provenance_receipts(repo_root, pr_meta)
                 reconciled_issues.update(linked_issues)
                 log(f"  PR #{pr_id} closes {linked_issues}; references {mentioned_issues}")
@@ -1184,9 +1189,14 @@ def main():
             # Global roadmap cleanups
             fix_mangled_roadmap_entries(repo_root, dry_run=args.dry_run, journal=journal)
 
-            # No lifecycle change means no regenerators (and no timestamp/generation churn).
-            # Dry-run still runs the existing read-only previews.
-            if not args.dry_run and not journal.changed():
+            # GH-421: skip downstream regeneration only when there was genuinely nothing to
+            # act on this run (catch-up mode found no new PRs, and no --pr/--marathon target
+            # was given) — the scheduled cron trigger's common case. NOT when a real PR or
+            # marathon lane was processed but happened not to move a doc: run_subprocesses
+            # does independent, valuable work every time (release-timeline export, releases
+            # check, the PDDA gate) that must run on every real post-merge invocation
+            # regardless of doc lifecycle outcome, or CI silently stops checking most merges.
+            if not args.dry_run and not pr_list and not args.marathon:
                 log("Nothing to reconcile; no artifacts written")
                 journal.cleanup()
                 return
