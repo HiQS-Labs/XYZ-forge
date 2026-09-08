@@ -291,7 +291,6 @@ cat >"$GHBIN/gh" <<'EOF'
 printf '%s\n' "$*" >>"$GH_ARGS"
 case "$*" in
   *"pr list"*) printf '%s\n' "${GH_PR-42}" ;;
-  *"pr view"*"--jq .headRefOid"*) printf '%s\n' "$GH_HEAD" ;;
   *"pr view"*) printf '{"state":"OPEN","baseRefName":"development","number":42,"headRefName":"feat/gh7","headRefOid":"%s"}\n' "$GH_HEAD" ;;
   *"pr merge"*) exit "${GH_MERGE_RC:-0}" ;;
 esac

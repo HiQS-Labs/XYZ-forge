@@ -1437,11 +1437,14 @@ def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
     """
     if record is None:
         return False, "merge refused: no valid reviewer attestation for this task (GH-505)"
-    view = subprocess.run(["gh", "pr", "view", str(pr_num), "--json", "headRefOid", "--jq", ".headRefOid"],
+    view = subprocess.run(["gh", "pr", "view", str(pr_num), "--json", "headRefOid"],
                           cwd=root, capture_output=True, text=True)
-    candidate = (view.stdout or "").strip()
-    if view.returncode != 0 or not candidate:
-        return False, f"merge refused: could not read PR #{pr_num} head ({(view.stderr or '').strip() or 'empty'})"
+    try:
+        candidate = (json.loads(view.stdout or "{}").get("headRefOid") or "").strip() if view.returncode == 0 else ""
+    except ValueError:
+        candidate = ""
+    if not candidate:
+        return False, f"merge refused: could not read PR #{pr_num} head ({(view.stderr or view.stdout or '').strip() or 'empty'})"
     if expected_candidate and candidate != expected_candidate:
         return False, (f"merge refused: PR #{pr_num} head {candidate[:12]} is not the validated candidate "
                        f"{expected_candidate[:12]} (candidate-drifted-from-reviewed-head)")
