@@ -158,8 +158,7 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   ],
   "artifacts": [
     "utils/timeline/export_timeline.py",
-    "utils/py/wave_reconcile.py",
-    "test/gh454-reconciler-defects.sh"
+    "utils/py/wave_reconcile.py"
   ],
   "remediation": {
     "source": "issue#454",

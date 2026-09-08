@@ -103,6 +103,11 @@ Two fixes, both here because GH-421's writes are unsafe without them:
       "type": "grep_absent",
       "path": "utils/py/releases_app.py",
       "pattern": "status-marker"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh424-roadmap-status-marker.sh",
+      "note": "new lane artifact \u2014 must not exist yet (pre-work pin)"
     }
   ],
   "artifacts": [
@@ -118,7 +123,10 @@ Two fixes, both here because GH-421's writes are unsafe without them:
   "lanes": {
     "agy_safe": [],
     "orchestrator_only": []
-  }
+  },
+  "artifacts_new": [
+    "test/gh424-roadmap-status-marker.sh"
+  ]
 }
 ```
 

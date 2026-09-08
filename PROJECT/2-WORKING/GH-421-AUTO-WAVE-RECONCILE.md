@@ -276,6 +276,11 @@ is one policy change away from failing every automated run.
       "type": "grep_absent",
       "path": "utils/py/wave_reconcile.py",
       "pattern": "manifest\", \"ship"
+    },
+    {
+      "type": "path_absent",
+      "path": ".github/workflows/wave-reconcile.yml",
+      "note": "new lane artifact \u2014 must not exist yet (pre-work pin)"
     }
   ],
   "artifacts": [
@@ -292,7 +297,10 @@ is one policy change away from failing every automated run.
   "lanes": {
     "agy_safe": [],
     "orchestrator_only": []
-  }
+  },
+  "artifacts_new": [
+    ".github/workflows/wave-reconcile.yml"
+  ]
 }
 ```
 
