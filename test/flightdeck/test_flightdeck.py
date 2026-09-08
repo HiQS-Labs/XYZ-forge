@@ -149,6 +149,13 @@ class ConnectorTests(unittest.TestCase):
 
 
 class TokenTests(unittest.TestCase):
+    def test_breadcrumbs_have_clickable_ancestors_and_current_page_semantics(self) -> None:
+        html = Path("web/flightdeck/index.html").read_text(encoding="utf-8")
+        js = Path("web/flightdeck/app.js").read_text(encoding="utf-8")
+        self.assertIn('aria-label="Breadcrumb"', html)
+        self.assertIn("button.addEventListener('click', () => navigate", js)
+        self.assertIn("current.setAttribute('aria-current', 'page')", js)
+
     def test_generated_tokens_are_current_and_theme_keys_match(self) -> None:
         generated = render()
         self.assertGreater(len(generated), 500)

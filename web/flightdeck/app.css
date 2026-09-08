@@ -16,6 +16,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: var(--border) solid va
   padding: var(--space-5) var(--space-6) var(--space-4); position: relative; z-index: 4;
 }
 .topbar h1 { font-size: var(--text-xl); line-height: var(--line-tight); margin: var(--space-1) 0 0; }
+.breadcrumbs { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
+.breadcrumb-link {
+  background: transparent; border: 0; color: var(--color-accent); cursor: pointer; padding: 0;
+  text-decoration: underline; text-decoration-color: transparent; text-underline-offset: var(--space-1);
+}
+.breadcrumb-link:hover { text-decoration-color: currentColor; }
+.breadcrumb-current { color: var(--color-text-muted); }
+.breadcrumb-separator { color: var(--color-border); user-select: none; }
 .eyebrow { color: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: var(--letter-wide); margin: 0; }
 .controls { display: flex; align-items: center; gap: var(--space-2); }
 .controls button, .empty button, .details {
@@ -84,8 +92,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: var(--border) solid va
 .drawer .copy { margin-top: var(--space-2); width: 100%; }
 body.spotlight .repo-card:not(.is-focused) { filter: brightness(var(--dim-opacity)); opacity: var(--peek-opacity); }
 body.spotlight .repo-card.is-focused { transform: translateY(calc(var(--space-1) * -1)); }
-body.focus-view .topbar { position: fixed; right: 0; top: 0; }
-body.focus-view .topbar > div:first-child, body.focus-view .countdown, body.focus-view #focusMode, body.focus-view #theme, body.focus-view .source-strip { display: none; }
+body.focus-view .topbar, body.issue-view .topbar { left: 0; position: fixed; right: 0; top: 0; }
+body.focus-view .title-block > :not(.breadcrumbs), body.issue-view .title-block > :not(.breadcrumbs),
+body.focus-view .countdown, body.issue-view .countdown,
+body.focus-view #focusMode, body.issue-view #focusMode,
+body.focus-view #theme, body.issue-view #theme,
+body.focus-view .source-strip, body.issue-view .source-strip { display: none; }
 body.focus-view .repo-grid, body.issue-view .repo-grid { display: flex; gap: var(--space-4); overflow-x: auto; padding: var(--space-6) var(--carousel-gutter); scroll-snap-type: x mandatory; scrollbar-width: none; }
 body.focus-view .repo-card, body.issue-view .repo-card { flex: 0 0 var(--card-width); height: auto; min-height: var(--card-min-height); scroll-snap-align: center; }
 body.issue-view .repo-card { flex-basis: var(--focus-card-width); }

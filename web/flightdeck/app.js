@@ -5,7 +5,7 @@ const refs = {
   repos: $('repos'), sourceStrip: $('sourceStrip'), empty: $('empty'), template: $('repoTemplate'),
   detail: $('detail'), detailTitle: $('detailTitle'), detailEyebrow: $('detailEyebrow'), detailBody: $('detailBody'),
   viewTitle: $('viewTitle'), focusMode: $('focusMode'), closeView: $('closeView'), theme: $('theme'),
-  fadeLeft: $('fadeLeft'), fadeRight: $('fadeRight')
+  fadeLeft: $('fadeLeft'), fadeRight: $('fadeRight'), breadcrumbs: $('breadcrumbs')
 };
 const state = {snapshot: null, view: 'a', repoId: null, spotlightId: null, failures: 0, request: 0, theme: localStorage.getItem('flightdeck-theme') || 'system'};
 const accents = ['accent-1', 'accent-2', 'accent-3', 'accent-4', 'accent-5', 'accent-6', 'accent-7'];
@@ -173,6 +173,28 @@ function renderSources() {
     refs.sourceStrip.append(pill);
   });
 }
+function renderBreadcrumbs() {
+  refs.breadcrumbs.replaceChildren();
+  const repo = (state.snapshot?.repos || []).find(item => item.id === state.repoId);
+  const levels = state.view === 'a'
+    ? [{label: 'Home'}]
+    : state.view === 'b'
+      ? [{label: 'Home', view: 'a'}, {label: 'Repository Focus'}]
+      : [{label: 'Home', view: 'a'}, {label: 'Repository Focus', view: 'b', repoId: state.repoId}, {label: `${repo?.name || 'Repository'} Issues`}];
+  levels.forEach((level, index) => {
+    if (index) refs.breadcrumbs.append(node('span', 'breadcrumb-separator', '›'));
+    if (level.view) {
+      const button = node('button', 'breadcrumb-link', level.label);
+      button.type = 'button';
+      button.addEventListener('click', () => navigate(level.view, level.repoId || null));
+      refs.breadcrumbs.append(button);
+    } else {
+      const current = node('span', 'breadcrumb-current', level.label);
+      current.setAttribute('aria-current', 'page');
+      refs.breadcrumbs.append(current);
+    }
+  });
+}
 function render() {
   document.body.classList.toggle('focus-view', state.view === 'b');
   document.body.classList.toggle('issue-view', state.view === 'c');
@@ -180,6 +202,7 @@ function render() {
   refs.closeView.hidden = state.view === 'a';
   refs.fadeLeft.hidden = refs.fadeRight.hidden = state.view === 'a';
   refs.focusMode.hidden = state.view !== 'a';
+  renderBreadcrumbs();
   renderSources();
   refs.repos.replaceChildren();
   let cards = [];
