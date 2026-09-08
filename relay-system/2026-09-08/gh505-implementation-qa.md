@@ -1,7 +1,7 @@
 ---
 Goal: Final QA of the GH-505 / GH-509 / GH-510 implementation — driver-attested approval
 Date: 2026-09-08
-NEXT: Reviewer
+NEXT: Producer (claude-b)
 STATUS: Open
 ROUND: 1 / 3
 ---
@@ -85,3 +85,162 @@ as committed; otherwise list findings ranked, each with the cheapest correction.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Round 1 — Reviewer (codex) — 2026-09-08
+
+VERDICT: Changes required — two High blockers and four Medium findings. STATUS remains Open.
+
+Basis: source inspection of the supplied implementation, adjudicated plan, issue captures,
+negative-control report and named fixtures. No source or artifact was executed, no tests or git
+commands were run, and no file other than this relay was edited. Graph tools were unavailable;
+the evidence below comes from direct source reads. Counterexamples below are source-derived,
+not claims of fresh runtime reproduction. The advertised `TESTS-RESULTS/2026-09-08+GH-505/`
+directory is absent in this review checkout, so final-HEAD gate provenance remains outstanding.
+
+### Ranked findings
+
+**B1 — High / Block: a failed reviewer turn can publish an attestation.**
+`utils/py/relay_drive.py:880` calls `judge_terminal()` on the nonzero-shim path for **both** roles.
+That function receives no shim result or publication permission; after the reviewer/body/done
+checks, it appends and commits the trailer and writes the record at `:689-700`. The comment at
+`:878` and the relay's claim that this path judges “for revert only” are therefore false.
+
+This is reachable through the shipped shim: `utils/py/codex-turn.py:119-135` copies back and
+enforces a failed/timed-out turn before returning 5 or 7 at `:164-167`. A reviewer can append an
+approval, mark done, then fail or time out. The driver returns the failure but leaves a valid
+approval record. With artifacts present, marathon's timeout recovery accepts that record at
+`utils/py/marathon_drive.py:3364-3368`, converts the result to success at `:3386-3391`, and can
+complete the phase. A later startup can also accept the record through `:2751-2757`.
+
+Cheapest correction: make the failure-path call explicitly revert-only (or call it only for a
+builder role), with publication impossible unless the shim returned zero. Preserve the original
+shim exit. Extend the existing `failafter` fixture to a **reviewer** (`test/gh505-relay-attest.sh:77-82`);
+A2 currently uses only `bld` at `:130-135`. Assert no trailer/record on reviewer exit 5 and 7, and
+that marathon's timeout/startup recovery cannot promote either failure to success.
+
+**B2 — High / Block: candidate binding exempts arbitrary neighboring source files.**
+`utils/py/relay_attest.py:231-235` treats the parent directory of *every* tracked relay file as
+harness metadata. Nothing establishes that the directory contains only records. For a supported
+tracked relay `src/review[1].md`, an unreviewed descendant commit changing `src/service.py` is
+excluded by `:(top,literal,exclude)src/`; ancestry still passes and the remaining endpoint diff
+can be empty. The same hole reaches marathon and all three jog merge paths through the shared
+reader. Literal matching fixes metacharacters, not an overbroad allowance.
+
+Cheapest correction: keep the exact relay path exclusion and narrowly name the additional
+harness-owned record paths needed by marathon. Do not infer authority over a directory from the
+location of a user-selected relay. Restore the adjudicated N3 control: neighboring source drift
+must refuse, while the exact relay and required metadata-only changes pass. Reject this
+implementation disposition as written.
+
+**F1 — Medium / Fix: jog never requires the token to read done at landing.**
+Marathon's shared probe checks the token explicitly (`utils/py/marathon_drive.py:2402-2405`), but
+jog's legacy loader goes straight to `load()` (`utils/py/jog_run.py:1462-1472`), its marathon
+projection does the same (`:435-441`), and `_merge_reviewed_pr()` performs no token read
+(`:1438-1459`). `load()` does not inspect tick. Consequently a valid record/file/candidate can
+merge even if the current token is missing or unreadable. This contradicts the plan's explicit
+consumer obligation, independently of the historical done check at publication.
+
+The new legacy landing fixture actually encodes this omission: it manufactures the record and
+successfully merges at `test/gh505-relay-attest.sh:308-332` without creating/completing that token
+in its target repo. Cheapest correction: add the done check using the appropriate pinned tick
+root at the shared landing boundary, then seed a real done token in positive fixtures and cover
+missing, unreadable and live-token refusals for both executors. Keep receipt-provided reviewer
+identity under the stated trusted-receipt contract; no second identity system is needed.
+
+**F2 — Medium / Fix: the uncited-claim transform is not stable under appending text.**
+`utils/py/relay_attest.py:61` looks forward into subsequent lines. Suppose the original body ends
+in the uncited line `verified` and the reviewer only appends a line containing a backtick citation.
+The pre-snapshot synthesizes an Unverified stamp, but the post-turn awk sees the new nearby citation
+and leaves the original line untouched (`relay-automation/relay-turn-lib.sh:1216-1219`). The
+post-snapshot also leaves it untouched, so `relay_drive.py:657` rejects a genuinely append-only
+review as `review-body-rewritten`. Builder turns do not pre-stamp these claims (`relay-turn-lib.sh:1373-1377`),
+so an ordinary builder-to-reviewer handoff can contain this input.
+
+The claimed byte-faithful port also differs on CRLF and unterminated lines: Python strips CR/LF
+then restores the original terminator (`relay_attest.py:50-65`); awk retains a CR in `$0` and
+`print` adds LF (`relay-turn-lib.sh:1207,1220-1223`). Its environment-number parsing also differs
+from Python's `int` with fallback. B5 tests a newly appended uncited finding, not these boundaries.
+
+Cheapest correction: make comparison of the existing prefix independent of newly appended
+citation context while accounting for the actual harness rewrite; use one explicitly defined
+line-ending/window policy in both implementations. Add the trailing-claim/new-citation control
+and byte-level CRLF/no-final-LF parity cases. Accept the need to account for the harness stamp,
+but not the current equivalence claim.
+
+**F3 — Medium / Fix: malformed records can raise instead of returning a refusal.**
+The mandatory-field list at `utils/py/relay_attest.py:165-168` omits `attested_at`, which
+`trailer_text()` dereferences at `:120`. A syntactically valid record missing that key gets past
+the field check and raises at `:197`. Invalid range types/strings similarly raise at `:191`, and
+invalid path types reach `realpath()` at `:176-178`. These exceptions escape callers which expect
+`(None, reason)` and park/escalate cleanly. The L control only truncates JSON syntax
+(`test/gh505-relay-attest.sh:254`), so it does not cover this contract.
+
+Cheapest correction: validate the fields/types used downstream, including the trailer fields,
+before using them; return a named malformed-record refusal on invalid input. Extend L with
+valid JSON missing a required trailer field and invalid range/path types, asserting the refusal
+tuple rather than a traceback. This is reader robustness, not an argument for signing records.
+
+**F4 — Medium / Fix: several substituted controls do not exercise the promised guard.**
+B4's peer commit happens *inside the model stub* (`test/gh505-relay-attest.sh:78`), after the
+worktree HEAD was already sampled at `:54`. A shim reverted to cutting live HEAD would still
+have cut the same revision in this fixture. B4 proves post-cut drift rejection, not pinning
+between the driver's snapshot and worktree creation. Move that commit into dispatch before the
+real shim starts, and require the live-HEAD mutation to fail the cut assertion.
+
+The gh280 N2 substitution also stops at the old `head_sha` identity check
+(`test/gh280-jog-marathon-adapter.sh:1143-1148`), before the new candidate check. It does not
+exercise a PR head matching receipt `head_sha` but differing from `reviewed_candidate`, nor
+missing-attestation refusal. Add those narrow projection cases. The cited GH-273 hook tests
+write a marker or fail (`test/marathon-drive.sh:251-264`); converting success stubs to attest
+does not replace H4's source-committing post-approve hook and final-receipt assertion. Keep an
+explicit H4 case. No new test framework is required.
+
+### Answers to the eight questions
+
+1. **Terminal exit invariant: passes source inspection; trust contract: blocked by B1.** All three
+   terminal exit-zero sites require in-process `attested` (`relay_drive.py:720,1015,1056`). Help and
+   dry-run zero exits are not terminal approvals. However, the durable record can authorize
+   consumer success after a failed reviewer turn, contrary to the publication prerequisite.
+2. **Role permissions: acceptable within the declared dispatch contract.** The driver's role
+   export (`relay_drive.py:770-774`) outranks editable directives in the shared helper
+   (`relay-turn-lib.sh:90-94`); the Python bridge preserves the environment (`rtl.py:690-696`).
+   The documented manual/inherited-marker limitation remains accepted.
+3. **Pinning: implementation acceptable for the shipped isolated shim; proof incomplete (F4).**
+   The cut uses the exported revision (`relay-turn-lib.sh:749-750`), seeded bytes are checked
+   (`:794-800`), and non-isolated/artifact records are merge-ineligible (`relay_attest.py:214-217`).
+   These conclusions assume the stated custom-command/contained-shim contract.
+4. **Reader obligations: partial; F1 and F3.** Task/repo/file/reviewer/status/range/digest and
+   offset-based trailer checks exist. Marathon passes its configured reviewer and checks done.
+   Jog uses its argument or trusted receipt reviewer but omits the current done-token check.
+5. **Candidate binding: blocked by B2.** The ancestor/endpoint policy and literal exact-path
+   encoding are otherwise coherent. PR head equality with `reviewed_candidate`, followed by
+   `candidate_ok` and `--match-head-commit` (`jog_run.py:1448-1455`), is sufficient for the stated
+   trusted-receipt/SHA contract once the exclusion and consumer gaps are fixed.
+6. **Implementation dispositions:** accept warn-not-refuse for missing reviewer and the matching
+   review-once exception because neither permits terminal approval; update contradictory
+   startup-refusal prose. Accept simulate-only completion. Reject directory-wide exclusion (B2).
+   Accept the need for stamp normalization but require F2. Accept two candidate checks to retain
+   GH-273 ordering, with the explicit limitation that `marathon.phase.approved` precedes the hook
+   (`marathon_drive.py:2622-2633`); final candidate fields and green telemetry follow validation.
+   The substituted test coverage is not equivalent as claimed (F4).
+7. **Falsifiability: partial.** A/C really dispatch the archived base driver without the new flags
+   (`test/gh505-relay-attest.sh:355-368`); the report records the opposite outcomes, though I did
+   not rerun them. B4 and the substituted consumer cases need F4. `attest-stub.sh` is reasonable
+   as an explicit success fixture, not as proof of driver publication: it suppresses token failures
+   (`test/lib/attest-stub.sh:35-41`) and publishes regardless (`:60-73`). Make success fixtures
+   assert done, and preserve separate malformed/missing/failure controls instead of blessing
+   every terminal stub. I2/I3/J's base outcomes are described, not executed by the A/C-only base
+   section; distinguish that source comparison from observed red evidence.
+8. **Scope/ratings: acceptable provisional judgments.** The shared attestation module and one jog
+   merge helper extend the existing pipeline. In the inspected production scope,
+   `relay_drive.py:696` is the record publication call; the test helper is a fixture writer.
+   The operator-excluded merge surfaces remain explicit non-goals. The stated severity/priority
+   rationales still fit; #509 effort remains provisional and #510's cheapness applies to its
+   narrow false-success correction, not this entire integration. Live ledger persistence and
+   external incident statistics were not independently checked.
+
+SWE disposition: **Minimal acceptable; Diagnosable Fix (F3); Blast Block (B1/B2);
+Proof Fix (F1/F2/F4 and final-HEAD provenance).** Return to the producer for these bounded
+corrections; no implementation approval is granted.
+
+NEXT: Producer (claude-b)
