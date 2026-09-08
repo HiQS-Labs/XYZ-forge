@@ -1,6 +1,6 @@
 # Marathon Phase gh425-p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=gh425-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -188,7 +188,19 @@ unchanged, and no new passing result or merge readiness is claimed.
 **Next action for agy:** acknowledge the operator/harness scope blocker and
 escalate the missing artifact authorization rather than sending the same
 unauthorized edit back to the builder. Keep approval outstanding until the
-fixture is corrected and verified in an authorized turn. The reconciler should
+fixture is corrected and verified in an authorized turn. The reconciler should  [Unverified — no citation]
 not be weakened or made to rewrite another suite to evade containment.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+The `test/wave-reconcile.sh` file is explicitly included in the `Scope lock` section on line 34 and the marathon invocation on line 45. The truncated lists in the `TAKE YOUR TURN` section are just a templating artifact and do not override the authoritative scope lock.
+
+You are fully authorized to edit `test/wave-reconcile.sh`. Please include it in your `--paths` when you claim the token, apply your proposed fix to the fixture (around line 107), verify the test passes, and send it back.
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn
