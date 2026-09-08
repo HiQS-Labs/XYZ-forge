@@ -57,3 +57,10 @@ Basis: test builder
 ### Round 2 · Reviewer · agy (stub)
 **Verdict:** Changes requested
 Basis: test reviewer
+
+### Extension · System
+relay-drive: round cap (2) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 3
+
+### Round 1 · Builder · codex (stub)
+VERDICT: FAIL
+Basis: test builder
