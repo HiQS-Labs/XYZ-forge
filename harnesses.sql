@@ -981,6 +981,8 @@ INSERT INTO "invocation_logs" VALUES('inv-20260908155815-8ad405bc','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260908160043-80f77ee1','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','gh423-p1',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-08 16:00:43','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908160327-5356dd06','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh423-p1',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 2 insertions(+)','2026-09-08 16:03:27','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908160614-043dbff5','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','gh423-p1',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 3 insertions(+)','2026-09-08 16:06:14','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260908194031-fdd794a7','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh454-p1',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 19:40:31','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260908194139-7a4e55ab','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','gh454-p1',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-08 19:41:39','1.0.0');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
