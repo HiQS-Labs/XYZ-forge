@@ -1424,6 +1424,32 @@ def _verify_legacy_pr_before_merge(root, pr_num):
     ] if not ok]
 
 
+def _tick_bin(root):
+    for cand in (os.environ.get("TICK_BIN"), os.path.join(root, "bin", "tick"),
+                 os.path.join(harness_home(), "bin", "tick")):
+        if cand and os.path.isfile(cand) and os.access(cand, os.X_OK):
+            return cand
+    return None
+
+
+def _token_done(root, task):
+    """GH-505: the relay token must READ done in the pinned tick root — a record alone is not a
+    verdict. Returns (ok, reason)."""
+    tick = _tick_bin(root)
+    if not tick:
+        return False, "tick CLI not found"
+    # The token lives in the repo jog operates on — never an ambient TICK_REPO_ROOT from a parent shell.
+    env = dict(os.environ); env["TICK_REPO_ROOT"] = root
+    info = subprocess.run([tick, "info", task], cwd=root, env=env, capture_output=True, text=True)
+    if info.returncode != 0:
+        return False, f"token {task} unreadable ({(info.stderr or '').strip() or 'tick info failed'})"
+    for line in (info.stdout or "").splitlines():
+        if line.startswith("status:"):
+            st = line.split(":", 1)[1].strip()
+            return (st == "done"), (None if st == "done" else f"token {task} reads {st or 'unknown'}, not done")
+    return False, f"token {task} not found"
+
+
 def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
     """GH-505/GH-509/GH-510: the ONE merge step for every jog landing branch.
 
@@ -1437,6 +1463,9 @@ def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
     """
     if record is None:
         return False, "merge refused: no valid reviewer attestation for this task (GH-505)"
+    done, why = _token_done(root, record["task"])
+    if not done:
+        return False, f"merge refused: {why} (GH-505)"
     view = subprocess.run(["gh", "pr", "view", str(pr_num), "--json", "headRefOid"],
                           cwd=root, capture_output=True, text=True)
     try:

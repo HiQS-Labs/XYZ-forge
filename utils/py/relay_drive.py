@@ -634,26 +634,33 @@ def main():
         with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
             f.writelines(lines)
 
-    def judge_terminal(ns, role, pre):
+    def judge_terminal(ns, role, pre, shim_ok=True):
         """Judge the turn the driver just watched. Returns a verdict tuple; the CALLER picks the exit
-        so a shim failure (6/7) keeps its own code (round-3 F3).
+        so a shim failure (5/6/7) keeps its own code (round-3 F3).
 
         ("none",)                      not terminal — nothing to judge
-        ("forged", commit_ok)          builder-role turn wrote a terminal STATUS — reverted
+        ("forged", commit_ok)          a turn that may not approve wrote a terminal STATUS — reverted
         ("refused", reason)            reviewer-role turn, but no review text / rewritten / not done
         ("attested", record)           reviewer-role approval, trailer + record published
+
+        Only a reviewer-role turn whose shim returned 0 can ever be attested: a failed or timed-out
+        turn (shim_ok=False) is reverted whatever its role — nothing that turn wrote is trusted.
         """
         if not terminal_status(ns):
             return ("none",)
-        if role != "reviewer":
-            eprint(f"relay-drive: terminal STATUS {ns} written by builder-role turn ({actor}) — reverting to {pre['status'] or 'Open'} (forged-terminal)")
+        if role != "reviewer" or not shim_ok:
+            why = f"builder-role turn ({actor})" if role != "reviewer" else f"FAILED reviewer turn ({actor}; shim returned non-zero)"
+            eprint(f"relay-drive: terminal STATUS {ns} written by {why} — reverting to {pre['status'] or 'Open'}")
             restore_status_line(pre["status"] or "Open")
             with open(relay_file, "a") as f:
                 f.write(f"\n### System · relay-drive — {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}\n"
-                        f"terminal STATUS {ns} written by builder-role turn ({actor}) — reverted\n")
-            ok = commit_relay_file(f"relay-drive: revert forged terminal ({args.relay_task}, {actor})")
+                        f"terminal STATUS {ns} written by {why} — reverted\n")
+            ok = commit_relay_file(f"relay-drive: revert unattestable terminal ({args.relay_task}, {actor})")
             return ("forged", ok)
-        post_canon = relay_attest.canonical(relay_file)
+        with open(relay_file, "rb") as f:
+            post_raw = f.read()
+        post_canon = relay_attest.canonical_bytes(post_raw)
+        pre["canon"] = relay_attest.canonical_prefix(pre["raw"], post_raw)
         if not post_canon.startswith(pre["canon"]):
             pre_c = pre["canon"]
             i = next((k for k in range(min(len(pre_c), len(post_canon))) if pre_c[k] != post_canon[k]), min(len(pre_c), len(post_canon)))
@@ -772,9 +779,12 @@ def main():
             die(f"--review-once dispatches '{actor}' but --reviewer is '{args.reviewer}' (review-once-actor-mismatch)")
         os.environ["RELAY_ROLE"] = role
         os.environ["RELAY_REVIEWED_HEAD"] = head_before
+        with open(relay_file, "rb") as _f:
+            _pre_raw = _f.read()
         pre_turn = {
             "status": s,
-            "canon": relay_attest.canonical(relay_file),
+            "raw": _pre_raw,
+            "canon": None,   # computed at judgement time against the post-turn file (canonical_prefix)
             "reviewed_head": head_before,
             "isolated": get_env("RELAY_WORKTREE_ISOLATION", "1") == "1",
             "artifact_sha256": None,
@@ -875,11 +885,11 @@ def main():
             except Exception:
                 pass
         if res_code != 0:
-            # GH-505 F3: a failed turn is never attested, but a forged terminal STATUS it left behind
-            # is still reverted — and the shim's own code (6 containment / 7 timeout) is preserved.
-            verdict = judge_terminal(file_status(), role, pre_turn)
+            # GH-505 F3: a failed turn is NEVER attested — whatever its role — but a terminal STATUS it
+            # left behind is still reverted, and the shim's own code (5/6/7) is preserved.
+            verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
             if verdict[0] == "forged":
-                write_escalation_reason("forged-terminal" if verdict[1] else "revert-commit-failed")
+                write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
             sys.exit(res_code)
 
         round_idx += 1

@@ -29,6 +29,8 @@ TERMINAL = ("Approved", "Closed")
 # invalidating the review: the transcript tree, plus the relay file itself when it is tracked
 # inside the target repo.
 TRANSCRIPT_DIR = "relay-system"
+# The only files marathon-drive writes beside a phase's RELAY.md (harness records, never source).
+PHASE_RECORDS = ("ESCALATION.md", "PHASE-INTERRUPTED.md")
 
 _HEADER_KEYS = (b"STATUS:", b"NEXT:", b"ROUND:")
 
@@ -42,27 +44,47 @@ _CITE_RE = re.compile(rb'"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+')
 _UNCITED = "[Unverified — no citation]".encode("utf-8")
 
 
-def _downgrade_uncited(lines):
+def _window():
+    # awk -v win= takes the string as a number; a non-numeric value becomes 0 there, so mirror that.
+    raw = os.environ.get("RTL_CITATION_WINDOW", "3")
     try:
-        win = int(os.environ.get("RTL_CITATION_WINDOW", "3"))
+        return int(raw)
     except ValueError:
-        win = 3
-    bodies = [l.rstrip(b"\r\n") for l in lines]
+        return 0
+
+
+def _split_lines(raw):
+    """awk semantics: records are split on LF only (a CR stays in $0) and every printed record ends
+    with exactly one LF — so a missing final LF is added and CRLF is preserved inside the record."""
+    if not raw:
+        return []
+    lines = raw.split(b"\n")
+    if lines[-1] == b"":
+        lines.pop()
+    return [l + b"\n" for l in lines]
+
+
+def _downgrade_uncited(lines, context=None):
+    """rtl_check_uncited_findings, ported. `context` is the line list the citation look-ahead reads —
+    normally `lines` itself; for a PRE-turn snapshot it is the POST-turn lines, because the awk runs
+    once, after the turn, and sees the reviewer's appended lines when it judges the last lines of the
+    old body (a citation appended right after an old uncited claim keeps that claim un-stamped)."""
+    win = _window()
+    ctx = [l[:-1] for l in (context if context is not None else lines)]
     out = []
     for i, line in enumerate(lines):
-        body = bodies[i]
-        nl = line[len(body):]
+        body = line[:-1]
         if _UNCITED in body:
             out.append(line)
             continue
         if not (b"[Pass]" in body or _CLAIM_RE.search(body)):
             out.append(line)
             continue
-        if any(_CITE_RE.search(bodies[j]) for j in range(i, min(len(lines), i + win + 1))):
+        if any(_CITE_RE.search(ctx[j]) for j in range(i, min(len(ctx), i + win + 1))):
             out.append(line)
             continue
         body = body.replace(b"[Pass]", _UNCITED) if b"[Pass]" in body else body + b"  " + _UNCITED
-        out.append(body + nl)
+        out.append(body + b"\n")
     return out
 
 
@@ -70,27 +92,43 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def canonical(path):
-    """The relay file's bytes with (a) its FIRST STATUS:/NEXT:/ROUND: lines reduced to bare keys and
-    (b) the harness's own uncited-claim downgrade applied.
-
-    Those header lines are the only edits a turn is permitted to make above its own appended block,
-    and the downgrade is the only edit the harness makes there — so normalising both makes
-    "append-only" checkable whatever the file's leading format (marathon's and jog's title-first
-    renders, frontmatter threads, bare KEY: lines) and whatever the harness stamped after the turn.
-    """
-    with open(path, "rb") as f:
-        raw = f.read()
+def _normalise_headers(lines):
     seen = set()
     out = []
-    for line in raw.splitlines(keepends=True):
+    for line in lines:
         for key in _HEADER_KEYS:
             if key not in seen and line.startswith(key):
                 seen.add(key)
                 line = key + b"\n"
                 break
         out.append(line)
-    return b"".join(_downgrade_uncited(out))
+    return out
+
+
+def canonical_bytes(raw, context_raw=None):
+    """The relay bytes with (a) the FIRST STATUS:/NEXT:/ROUND: lines reduced to bare keys and (b) the
+    harness's own uncited-claim downgrade applied — with the look-ahead reading `context_raw` when
+    given (the post-turn file, for a pre-turn snapshot).
+
+    Those header lines are the only edits a turn is permitted to make above its own appended block,
+    and the downgrade is the only edit the harness makes there — so normalising both makes
+    "append-only" checkable whatever the file's leading format (marathon's and jog's title-first
+    renders, frontmatter threads, bare KEY: lines) and whatever the harness stamped after the turn.
+    """
+    lines = _normalise_headers(_split_lines(raw))
+    ctx = _normalise_headers(_split_lines(context_raw)) if context_raw is not None else None
+    return b"".join(_downgrade_uncited(lines, ctx))
+
+
+def canonical(path):
+    with open(path, "rb") as f:
+        return canonical_bytes(f.read())
+
+
+def canonical_prefix(pre_raw, post_raw):
+    """The pre-turn snapshot as the post-turn file will carry it: header keys normalised and the
+    uncited-claim downgrade judged with the post-turn lines as look-ahead context."""
+    return canonical_bytes(pre_raw, context_raw=post_raw)
 
 
 def file_status(path):
@@ -148,7 +186,15 @@ def write(record):
 
 
 def load(task, *, expected_reviewer, relay_file, target_repo, path=None):
-    """Validated read. Returns (record, None) or (None, reason). Never trusts existence."""
+    """Validated read. Returns (record, None) or (None, reason). Never trusts existence, never raises
+    on a malformed record — a consumer parks or escalates on the reason instead of crashing."""
+    try:
+        return _load(task, expected_reviewer=expected_reviewer, relay_file=relay_file, target_repo=target_repo, path=path)
+    except Exception as e:  # noqa: BLE001 — any malformed record is a refusal, not a crash
+        return None, f"attestation record malformed ({e.__class__.__name__}: {e})"
+
+
+def _load(task, *, expected_reviewer, relay_file, target_repo, path=None):
     try:
         path = path or path_for(task, target_repo)
     except RuntimeError as e:
@@ -163,9 +209,15 @@ def load(task, *, expected_reviewer, relay_file, target_repo, path=None):
     if not isinstance(rec, dict) or rec.get("schema") != SCHEMA:
         return None, "attestation record has the wrong schema"
     for k in ("task", "reviewer", "status", "reviewed_head", "added_start", "added_len",
-              "added_sha256", "trailer_sha256", "relay_file", "target_repo", "isolated"):
+              "added_sha256", "trailer_sha256", "relay_file", "target_repo", "isolated", "attested_at"):
         if k not in rec:
             return None, f"attestation record missing field {k}"
+    for k in ("task", "reviewer", "status", "reviewed_head", "added_sha256", "trailer_sha256",
+              "relay_file", "target_repo", "attested_at"):
+        if not isinstance(rec[k], str) or not rec[k]:
+            return None, f"attestation record field {k} is not a non-empty string"
+    if not isinstance(rec["added_start"], int) or not isinstance(rec["added_len"], int) or isinstance(rec["added_start"], bool):
+        return None, "attestation record added-range is not integral"
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:
@@ -207,7 +259,7 @@ def candidate_ok(record, candidate_sha, target_repo):
 
     Contract (GH-505 plan, round 2 Q9): reviewed_head must be an ancestor of the candidate AND the
     endpoint tree diff must be empty outside relay-system/, the relay file's own tracked path, and
-    the relay file's directory when it has one (marathon's per-phase dir holds only harness records).
+    marathon's two named phase records beside it (ESCALATION.md, PHASE-INTERRUPTED.md).
     Any git error refuses. Non-isolated turns and seeded-artifact reviews are never merge-eligible:
     the reviewed input was not the pinned target tree.
     """
@@ -228,11 +280,11 @@ def candidate_ok(record, candidate_sha, target_repo):
     rel = record.get("relay_file_rel")
     if rel:
         spec.append(f":(top,literal,exclude){rel}")
-        # The relay file's own directory is harness metadata too — marathon keeps RELAY.md beside
-        # ESCALATION.md and its receipts under <phases-dir>/<phase>/ — but never the target root.
+        # marathon keeps exactly two other harness-owned records beside its RELAY.md — name them,
+        # never the directory (a user-selected relay may sit beside source files).
         d = os.path.dirname(rel)
-        if d:
-            spec.append(f":(top,literal,exclude){d}/")
+        for name in PHASE_RECORDS:
+            spec.append(f":(top,literal,exclude){os.path.join(d, name) if d else name}")
     diff = subprocess.run(["git", "-C", target_repo, "diff", "--quiet", reviewed, candidate_sha] + spec,
                           capture_output=True, text=True)
     if diff.returncode == 1:

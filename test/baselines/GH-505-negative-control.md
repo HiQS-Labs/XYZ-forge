@@ -50,6 +50,10 @@ branch (19 failures in `test/marathon-drive.sh` alone, every one `exit 4` with
   PASS: A2: reason still names the forgery
   PASS: A2: forged STATUS reverted in HEAD on the failure path
   PASS: A2: no record
+  PASS: A3: failed reviewer turn keeps the shim's exit 5
+  PASS: A3: reason is failed-turn-terminal
+  PASS: A3: the failed turn's Approved reverted in HEAD
+  PASS: A3: no trailer, no record
   PASS: B: reviewer approval → driver exits 0
   PASS: B: attestation trailer appended
   PASS: B: reviewed-head = HEAD before dispatch
@@ -58,11 +62,16 @@ branch (19 failures in `test/marathon-drive.sh` alone, every one `exit 4` with
   PASS: B: record loads for reviewer rev; digest = sha256(exactly the appended bytes)
   PASS: B4: approval still attested (the reviewer read the pinned revision)
   PASS: B4: reviewed-head is the PRE-dispatch revision, not the peer commit
-  PASS: B4: worktree cut at the pin even though HEAD moved
+  PASS: B4: control — HEAD had already moved when the shim started
+  PASS: B4: worktree cut at the pin even though HEAD moved before the cut
   PASS: B4: candidate_ok REFUSES the HEAD that carries the peer's source change
   PASS: B5: harness's uncited-claim downgrade does not read as a body rewrite; approval attested
   PASS: B5: the downgrade really happened (control)
   PASS: B5: record still loads after the downgrade
+  PASS: B6: appended citation changes the harness's judgement of an OLD line without reading as a rewrite
+  PASS: B6: control — the old claim stayed un-stamped (the awk saw the new citation)
+  PASS: B7: CRLF relay file attested
+  PASS: B7: record loads on the CRLF file
   PASS: C: pre-approved file → unattested-terminal (exit 4)
   PASS: C: no turn dispatched
   PASS: D1: STATUS-only approval → empty-approval
@@ -78,6 +87,7 @@ branch (19 failures in `test/marathon-drive.sh` alone, every one `exit 4` with
   PASS: K2: no record
   PASS: L: fixture approval attested
   PASS: L: reader refuses wrong reviewer / edited STATUS / edited review text / truncated record
+  PASS: N3: neighbouring source drift refused; relay-only and ESCALATION.md-only changes pass
   PASS: F: RELAY_ROLE=reviewer outranks a directive that calls the agent builder
   PASS: F: RELAY_ROLE=builder outranks a directive that calls the agent reviewer
   PASS: F2: without RELAY_DRIVER_LOCKED the directive still decides
@@ -102,8 +112,10 @@ pre-approved file — the exact behaviours #505 reports — on the same fixture,
   reverted as forged).
 - `canonical()` also applies the harness's own uncited-claim downgrade (GH-173 B3) so the
   shim's in-place `[Unverified — no citation]` stamp is not read as a reviewer rewrite (B5).
-- `candidate_ok` also excludes the relay file's own directory — marathon keeps `ESCALATION.md`
-  and receipts beside `RELAY.md` — in addition to `relay-system/` and the relay file itself.
+- `candidate_ok` also excludes marathon's two named phase records beside the relay file
+  (`ESCALATION.md`, `PHASE-INTERRUPTED.md`) — never the directory (final-QA round 1 B2; N3).
+- A turn whose shim returned non-zero is reverted whatever its role and never attested
+  (final-QA round 1 B1; A3). Jog's landing requires the token to read `done` (F1; I0).
 - Marathon binds the candidate **twice** on the success path: before the approved event is
   published (so a drifted candidate never becomes an approved receipt) and again after the
   post-approve command (which may move HEAD); the receipt carries the second, `reviewed_candidate`.

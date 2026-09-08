@@ -74,8 +74,11 @@ case "\$mode" in
   keepclaimed)
     printf '\n### Round 1 · Reviewer · %s\nlooks fine\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f" ;;
+  citeafter)
+    printf '\n### Round 1 · Reviewer · %s\nsee \`src.txt\`\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
   parentcommit|approve|failafter)
-    if [ "\$mode" = parentcommit ]; then printf 'v2\n' >"$A/src.txt"; git -C "$A" commit -qam "peer commit during review" >/dev/null 2>&1; fi
     printf '\n### Round 1 · Reviewer · %s\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/; s/^NEXT:.*/NEXT: done/' "\$f"
     "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1
@@ -90,6 +93,8 @@ DISPATCH="$WORK/dispatch.sh"
 cat >"$DISPATCH" <<EOF
 #!/usr/bin/env bash
 export CODEX_AGENT="\$RELAY_AGENT" CODEX_BIN="$STUB" CODEX_TURN_ROOT="$A" CODEX_LOG="$WORK/codex-\$RELAY_TASK.log"
+# B4: a peer commit that lands AFTER the driver pinned the revision and BEFORE the shim cuts its worktree
+if [ "\${STUB_MODE:-}" = parentcommit ]; then printf 'v2\n' >"$A/src.txt"; git -C "$A" commit -qam "peer commit between pin and cut" >/dev/null 2>&1; fi
 exec bash "$MAIN/relay-automation/codex-turn.sh"
 EOF
 chmod +x "$DISPATCH"
@@ -121,7 +126,7 @@ run_driver "$DRIVER" T-A approve --reviewer rev --builder bld; rc=$?
 [ "$(reason)" = forged-terminal ] && pass "A: escalation reason is forged-terminal" || fail "A: reason=$(reason)"
 grep -q '^STATUS: Open' "$A/relay.md" && pass "A: STATUS restored on disk" || fail "A: STATUS not restored: $(grep '^STATUS' "$A/relay.md")"
 grep -q '^STATUS: Open' <<<"$(git -C "$A" show HEAD:relay.md)" && pass "A: STATUS restored in HEAD (revert committed)" || fail "A: HEAD still carries the forged STATUS"
-grep -q 'revert forged terminal' <<<"$(git -C "$A" log -1 --format=%s)" && pass "A: revert commit is the driver's" || fail "A: last commit: $(git -C "$A" log -1 --format=%s)"
+grep -q 'revert unattestable terminal' <<<"$(git -C "$A" log -1 --format=%s)" && pass "A: revert commit is the driver's" || fail "A: last commit: $(git -C "$A" log -1 --format=%s)"
 ! grep -q 'Attestation · relay-drive' "$A/relay.md" && pass "A: no attestation trailer" || fail "A: trailer present after a forgery"
 [ ! -f "$(record_path T-A)" ] && pass "A: no record written" || fail "A: record written for a forgery"
 
@@ -133,6 +138,14 @@ run_driver "$DRIVER" T-A2 failafter --reviewer rev --builder bld; rc=$?
 [ "$(reason)" = forged-terminal ] && pass "A2: reason still names the forgery" || fail "A2: reason=$(reason)"
 grep -q '^STATUS: Open' <<<"$(git -C "$A" show HEAD:relay.md)" && pass "A2: forged STATUS reverted in HEAD on the failure path" || fail "A2: HEAD still forged"
 [ ! -f "$(record_path T-A2)" ] && pass "A2: no record" || fail "A2: record written on a failed turn"
+
+# --- A3: a FAILED reviewer turn that approved is reverted, never attested (shim's exit preserved) --
+reset_repo; seed_to T-A3 rev
+run_driver "$DRIVER" T-A3 failafter --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 5 ] && pass "A3: failed reviewer turn keeps the shim's exit 5" || fail "A3: expected 5, got $rc: $(grep -v GH-370 "$WORK/out-T-A3" | tail -3)"
+[ "$(reason)" = failed-turn-terminal ] && pass "A3: reason is failed-turn-terminal" || fail "A3: reason=$(reason)"
+grep -q '^STATUS: Open' <<<"$(git -C "$A" show HEAD:relay.md)" && pass "A3: the failed turn's Approved reverted in HEAD" || fail "A3: HEAD still Approved"
+[ ! -f "$(record_path T-A3)" ] && ! grep -q 'Attestation · relay-drive' "$A/relay.md" && pass "A3: no trailer, no record" || fail "A3: attestation published for a failed turn"
 
 # --- B: reviewer-role approval is attested -------------------------------------------------------
 reset_repo; seed_to T-B rev
@@ -163,7 +176,8 @@ HEAD_BEFORE="$(git -C "$A" rev-parse HEAD)"
 run_driver "$DRIVER" T-B4 parentcommit --reviewer rev --builder bld; rc=$?
 [ "$rc" -eq 0 ] && pass "B4: approval still attested (the reviewer read the pinned revision)" || fail "B4: rc=$rc: $(tail -3 "$WORK/out-T-B4")"
 grep -q "^reviewed-head: $HEAD_BEFORE" "$A/relay.md" && pass "B4: reviewed-head is the PRE-dispatch revision, not the peer commit" || fail "B4: reviewed-head moved"
-[ "$(cat "$WORK/wt-cut-T-B4")" = "$HEAD_BEFORE" ] && pass "B4: worktree cut at the pin even though HEAD moved" || fail "B4: cut at $(cat "$WORK/wt-cut-T-B4")"
+[ "$(cat "$WORK/head-at-turn-T-B4")" != "$HEAD_BEFORE" ] && pass "B4: control — HEAD had already moved when the shim started" || fail "B4: control — peer commit did not land before the cut"
+[ "$(cat "$WORK/wt-cut-T-B4")" = "$HEAD_BEFORE" ] && pass "B4: worktree cut at the pin even though HEAD moved before the cut" || fail "B4: cut at $(cat "$WORK/wt-cut-T-B4")"
 python3 - "$MAIN" "$A/relay.md" <<'PY' && pass "B4: candidate_ok REFUSES the HEAD that carries the peer's source change" || fail "B4: candidate_ok accepted drifted HEAD"
 import sys, os
 sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
@@ -183,6 +197,26 @@ import sys, os
 sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
 rec, why = relay_attest.load("T-B5", expected_reviewer="rev", relay_file=sys.argv[2], target_repo=os.path.dirname(sys.argv[2])); assert rec, why
 PY
+
+# --- B6: an old uncited claim gains a citation from the reviewer's appended lines ------------------
+reset_repo
+printf '# RELAY · fixture\n\nNEXT: rev\nSTATUS: Open\nROUND: 1 / 2\n\n## Body\n\nverified the seed\n' >"$A/relay.md"; git -C "$A" commit -qam "seed with trailing uncited claim" >/dev/null
+seed_to T-B6 rev
+run_driver "$DRIVER" T-B6 citeafter --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 0 ] && pass "B6: appended citation changes the harness's judgement of an OLD line without reading as a rewrite" || fail "B6: rc=$rc reason=$(reason): $(grep -v GH-370 "$WORK/out-T-B6" | tail -4)"
+grep -q '^verified the seed$' "$A/relay.md" && pass "B6: control — the old claim stayed un-stamped (the awk saw the new citation)" || fail "B6: control — old claim line is: $(grep 'verified the seed' "$A/relay.md")"
+# --- B7: CRLF relay file ------------------------------------------------------------------------
+reset_repo
+printf '# RELAY · fixture\r\n\r\nNEXT: rev\r\nSTATUS: Open\r\nROUND: 1 / 2\r\n\r\nbody line\r\n' >"$A/relay.md"; git -C "$A" commit -qam "seed crlf" >/dev/null
+seed_to T-B7 rev
+run_driver "$DRIVER" T-B7 approve --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 0 ] && pass "B7: CRLF relay file attested" || fail "B7: rc=$rc reason=$(reason)"
+python3 - "$MAIN" "$A/relay.md" <<'PY' && pass "B7: record loads on the CRLF file" || fail "B7: record does not load"
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
+rec, why = relay_attest.load("T-B7", expected_reviewer="rev", relay_file=sys.argv[2], target_repo=os.path.dirname(sys.argv[2])); assert rec, why
+PY
+reset_repo; git -C "$A" reset -q --hard "$SEED"
 
 # --- C: already terminal at startup, token done, no turn ------------------------------------------
 reset_repo; seed_to T-C rev; tick_a claim T-C --agent rev --paths relay.md >/dev/null; tick_a done T-C --agent rev >/dev/null
@@ -252,7 +286,27 @@ open(rf, "wb").write(orig.replace(b"STATUS: Approved", b"STATUS: Closed", 1)); a
 open(rf, "wb").write(orig.replace(b"**Verdict:** Approved", b"**Verdict:** Rejected", 1)); assert not ok(), "review-text edit accepted"
 open(rf, "wb").write(orig); assert ok()
 rec = open(rp).read(); open(rp, "w").write(rec[: len(rec)//2]); assert not ok(), "truncated record accepted"
+import json as _j
+d = _j.loads(rec); d.pop("attested_at"); open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None and "attested_at" in r[1], r
+d = _j.loads(rec); d["added_start"] = "12"; open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None and "integral" in r[1], r
+d = _j.loads(rec); d["relay_file"] = 7; open(rp, "w").write(_j.dumps(d)); r = relay_attest.load("T-L", expected_reviewer="rev", relay_file=rf, target_repo=repo); assert r[0] is None, r
 open(rp, "w").write(rec); assert ok()
+PY
+
+# --- N3: candidate binding for a tracked relay beside source files -------------------------------
+python3 - "$MAIN" "$WORK" <<'PY' && pass "N3: neighbouring source drift refused; relay-only and ESCALATION.md-only changes pass" || fail "N3: candidate binding wrong for a relay beside source"
+import sys, os, subprocess
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
+r = os.path.join(sys.argv[2], "n3"); os.makedirs(os.path.join(r, "src")); subprocess.run(["git", "init", "-q", r], check=True)
+g = lambda *a: subprocess.run(["git", "-C", r] + list(a), check=True, capture_output=True)
+rf = os.path.join(r, "src", "review[1].md"); open(rf, "w").write("STATUS: Approved\nbody\n"); open(os.path.join(r, "src", "service.py"), "w").write("v1\n")
+g("add", "-A"); g("commit", "-qm", "seed"); reviewed = relay_attest.rev_parse(r)
+rec = {"isolated": True, "artifact_sha256": None, "reviewed_head": reviewed, "relay_file_rel": "src/review[1].md"}
+open(os.path.join(r, "src", "service.py"), "w").write("v2\n"); g("commit", "-qam", "drift")
+ok, why = relay_attest.candidate_ok(rec, relay_attest.rev_parse(r), r); assert not ok and "non-transcript" in why, why
+g("reset", "-q", "--hard", reviewed)
+open(rf, "a").write("more review\n"); open(os.path.join(r, "src", "ESCALATION.md"), "w").write("x\n"); g("add", "-A"); g("commit", "-qm", "relay+record")
+ok, why = relay_attest.candidate_ok(rec, relay_attest.rev_parse(r), r); assert ok, why
 PY
 
 # --- F / G: containment reads the driver; prompt ----------------------------------------------
@@ -320,6 +374,9 @@ tr = relay_attest.trailer_text(rec); rec["trailer_sha256"] = relay_attest.sha256
 subprocess.run(["git", "-C", repo, "commit", "-qam", "attest"], check=True)   # transcript-only commit → still a valid candidate
 head = relay_attest.rev_parse(repo)
 rec_chk, why_chk = jog._legacy_attestation(repo, 7, "rev"); assert rec_chk, f"fixture attestation does not load: {why_chk}"
+os.environ["TICK_REPO_ROOT"] = repo
+tick = os.environ["TICK_BIN"]
+subprocess.run([tick, "init"], cwd=repo, check=True, capture_output=True)
 class TTY(io.StringIO):
     def isatty(self): return True
 def land(auto, **env):
@@ -327,6 +384,11 @@ def land(auto, **env):
     sys.stdin = TTY("y\n")
     open(os.environ["GH_ARGS"], "w").close()
     return jog.handle_landing_boundary(repo, 7, auto_merge=auto, reviewer="rev")
+# I0: the record is valid but the token does not exist → parked (token must read done)
+r = land(False, GH_HEAD=head, GH_MERGE_RC="0"); assert r[1] == "parked" and ("not done" in r[2] or "not found" in r[2] or "unreadable" in r[2]), r
+assert "pr merge" not in open(os.environ["GH_ARGS"]).read()
+for cmd in (["log", "task.created", "RELAY-gh7-jog-drive", "--agent", "seed"], ["claim", "RELAY-gh7-jog-drive", "--agent", "rev", "--paths", "relay-system/2026-09-08/gh7-jog-drive.md"], ["done", "RELAY-gh7-jog-drive", "--agent", "rev"]):
+    subprocess.run([tick] + cmd, cwd=repo, check=True, capture_output=True)
 # I1: clean candidate merges, bound to the exact SHA
 r = land(False, GH_HEAD=head, GH_MERGE_RC="0"); assert r[0] and r[1] == "completed", r
 assert f"pr merge 42 --merge --auto=false --match-head-commit {head}" in open(os.environ["GH_ARGS"]).read()
@@ -346,7 +408,6 @@ r = land(True, GH_HEAD=head, GH_MERGE_RC="1"); assert r[1] == "parked", r
 # J: run_single_phase_drive returns the driver's exit unchanged even when the file says Approved
 stub = os.path.join(repo, "relay-automation"); os.makedirs(stub); s = os.path.join(stub, "relay-drive.sh"); open(s, "w").write("#!/usr/bin/env bash\nexit 4\n"); os.chmod(s, 0o755)
 ma = os.path.join(stub, "marathon-agent.sh"); open(ma, "w").write("#!/usr/bin/env bash\nexit 0\n"); os.chmod(ma, 0o755)
-os.environ["TICK_REPO_ROOT"] = repo
 assert jog.run_single_phase_drive(repo, 7, builder="bld", reviewer="rev") == 4
 assert jog.run_single_phase_drive(repo, 7, builder="bld", reviewer=None) == 2
 assert jog.run_single_phase_drive(repo, 7, builder="rev", reviewer="rev") == 2

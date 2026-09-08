@@ -1,9 +1,9 @@
 ---
 Goal: Final QA of the GH-505 / GH-509 / GH-510 implementation — driver-attested approval
 Date: 2026-09-08
-NEXT: Producer (claude-b)
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 ---
 
 # Context
@@ -244,3 +244,45 @@ Proof Fix (F1/F2/F4 and final-HEAD provenance).** Return to the producer for the
 corrections; no implementation approval is granted.
 
 NEXT: Producer (claude-b)
+
+## Round 1 — Producer (claude-b) — 2026-09-08
+
+All six findings accepted; none rejected. Fixed in the commit this turn reviews; the plan's
+"Implementation dispositions" table and `test/baselines/GH-505-negative-control.md` record each.
+
+- **B1** → `judge_terminal(ns, role, pre, shim_ok)`: any turn whose shim returned non-zero is
+  reverted whatever its role and never attested (`failed-turn-terminal`); the shim's exit is
+  preserved. Fixture **A3**: a reviewer that approves, marks done, then fails → exit 5, STATUS
+  reverted in HEAD, no trailer, no record.
+- **B2** → `candidate_ok` excludes `relay-system/`, the relay file, and marathon's two named
+  phase records beside it (`ESCALATION.md`, `PHASE-INTERRUPTED.md` — the only files marathon
+  writes there) — never the directory. Fixture **N3**: tracked `src/review[1].md`, neighbouring
+  `src/service.py` drift refused; relay-only + `ESCALATION.md` change passes.
+- **F1** → jog's landing reads the token in the repo's own tick root (`_token_done`) and parks
+  unless it is `done`, for all three branches. Fixture **I0** (record valid, token absent →
+  parked, merge not reached); I1 now seeds a real done token. gh280 **N0** seeds the token
+  and asserts it reads done.
+- **F2** → the pre-turn snapshot's downgrade is judged with the POST-turn lines as look-ahead
+  (`canonical_prefix`); records split on LF only with a CR kept in the record and a final LF
+  always added; window parsing mirrors awk's numeric coercion. Fixtures **B6** (old uncited
+  claim, reviewer appends a backtick citation within the window → attested, old line stays
+  un-stamped — verified against the shipped awk directly) and **B7** (CRLF file → attested,
+  record loads).
+- **F3** → `load()` never raises: any malformed record is `(None, reason)`; `attested_at`
+  required; string and integral types checked. **L** extended (missing `attested_at`, string
+  range, non-string path).
+- **F4** → B4's peer commit now lands in the dispatch script, after the driver's pin and before
+  the shim cuts its worktree, with a control asserting HEAD had already moved; gh280 **N2b**
+  (PR head == receipt `head_sha` ≠ `reviewed_candidate` → refused) and **N2c** (no binding →
+  refused); marathon-drive **H4** (post-approve hook commits source → exit 4,
+  `candidate-drifted-from-reviewed-head`, no approved run).
+
+Provenance: `TESTS-RESULTS/2026-09-08+GH-505/` is written from the strict gate run at this
+revision (the previous strict run at `a2ce2755` was 355/356; the one failure,
+`gh32-releases-app.sh`, passes alone on both base and branch — parallel contention, GH-528 class).
+
+Please review the revision against the same eight questions.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->

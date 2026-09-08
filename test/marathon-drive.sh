@@ -265,6 +265,23 @@ exit 17
 HOOK
 chmod +x "$POST_APPROVE_FAIL"
 
+# ── (6c) GH-505 H4: a post-approve hook that commits SOURCE moves the candidate off the reviewed
+#         revision → the run must NOT publish success (exit 4, candidate-drifted), even though the
+#         reviewer approved and the gate was green.
+POST_APPROVE_DRIFT="$WORK/post-approve-drift.sh"
+cat > "$POST_APPROVE_DRIFT" <<HOOK
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'drift\n' >> "$A/drifted.txt"; git -C "$A" add drifted.txt; git -C "$A" commit -qm "post-approve source drift"
+HOOK
+chmod +x "$POST_APPROVE_DRIFT"
+RELAY_DRIVE_EXIT=0 run_driver --post-approve-cmd "bash $POST_APPROVE_DRIFT" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 4 ] && pass "H4: post-approve source commit → exit 4 (approval not bound to the final candidate)" || fail "H4: exit=$rc (expected 4)"
+grep -q "candidate-drifted-from-reviewed-head" "$A/phases/p1/ESCALATION.md" 2>/dev/null \
+  && pass "H4: escalation names candidate-drifted-from-reviewed-head" || fail "H4: ESCALATION.md missing the reason"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 for runtime in 0 1; do
   HELP_OUT="$(MARATHON_ROOT="$A" XYZ_PYTHON="$runtime" bash "$DRIVER" --help 2>&1)"; rc=$?
   grep -q -- '--post-approve-cmd' <<<"$([ "$rc" -eq 0 ] && printf '%s\n' "$HELP_OUT")" \
