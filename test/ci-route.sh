@@ -169,6 +169,44 @@ expect_tier "mixed docs + subsystem is tier 2 with PDDA still on" pull_request 2
 expect_tier "mixed subsystem + kernel fails closed to tier 3" pull_request 3 utils/hq/hq.sh src/events.js
 expect_tier "scheduled runs stay tier 3" schedule 3
 
+# ── GH-487: a bounded subsystem for an isolated skill + its dedicated tests ──────────────────────
+# The dedicated-test exemption is CO-TOUCH GATED: a registry-claimed test stops forcing tier 3
+# only when the same push also touches the subsystem's own code. Why so strict: under a permissive
+# exemption, deleting assertions from the dedicated pytest and pushing would run the weakened
+# suite as its own judge — a green nothing else in the push could disagree with (review finding,
+# issue #487 comment 4). A dedicated test edited alone therefore stays tier 3, exactly like any
+# unregistered test.
+expect_tier "a registered skill + its code + its dedicated tests is tier 2 (GH-487)" pull_request 2 \
+  skills/skills-army-hq/scripts/intake.py test/test_deploy_skills.py test/skills-army-hq.sh
+expect_tier "a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)" pull_request 3 \
+  test/test_deploy_skills.py
+expect_tier "shared Python test integration still escalates beside skill code (GH-487)" pull_request 3 \
+  skills/skills-army-hq/scripts/intake.py test/test_python_layer.py
+
+# D4: evidence receipts are documentation, not code. A receipt-only push takes the docs gate;
+# a receipt beside subsystem code keeps the subsystem gate instead of failing closed as unmapped
+# (the comment-2 case on issue #487: a provenance.jsonl follow-up re-ran the full gate).
+expect_route "a TESTS-RESULTS receipt alone uses the docs gate (GH-487)" push docs true \
+  "TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl"
+expect_tier "a TESTS-RESULTS receipt alone is tier 1 (GH-487)" pull_request 1 \
+  "TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl"
+expect_tier "a receipt beside subsystem code keeps the subsystem gate (GH-487)" pull_request 2 \
+  "TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl" utils/hq/hq.sh
+
+# A DELETED dedicated suite fails closed into the full gate: move the real wrapper away so the
+# CWD-relative existence check sees the deletion — the rename fixture's mechanism, GH-487 form.
+SKILLS_SUITE="$ROOT/test/skills-army-hq.sh"
+if [ -f "$SKILLS_SUITE" ]; then
+  mv "$SKILLS_SUITE" "$WORK/skills-army-hq.sh.stash"
+  out="$(route push test/skills-army-hq.sh || true)"
+  mv "$WORK/skills-army-hq.sh.stash" "$SKILLS_SUITE"
+  grep -Fqx 'route=full' <<<"$out" \
+    && pass "a deleted dedicated suite fails closed into the full gate (GH-487)" \
+    || fail "deleted dedicated suite did not fail closed: $out"
+else
+  fail "test/skills-army-hq.sh missing — the GH-487 deletion control cannot run"
+fi
+
 # The subsystem registry listing that validate.sh --subsystem consumes: every entry must name
 # suites that exist here, or --tier 2 would silently run nothing (the drift half of the guard;
 # the TESTS-registration half lives in test/gh35-test-tiers.sh).
@@ -188,6 +226,10 @@ out="$(bash "$ROUTER" subsystems hq)"
 [[ "$(wc -w <<<"$out")" -eq 14 ]] \
   && pass "subsystems hq lists its 14 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
+out="$(bash "$ROUTER" subsystems skills-army-hq)"
+[[ "$out" == "skills-army-hq.sh" ]] \
+  && pass "subsystems skills-army-hq lists its dedicated suite (GH-487)" \
+  || fail "subsystems skills-army-hq listing: $out"
 
 echo "  ci-route: $PASS pass, $FAIL fail"
 exit "$FAIL"

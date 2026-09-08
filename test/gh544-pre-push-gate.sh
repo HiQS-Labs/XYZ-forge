@@ -197,6 +197,276 @@ ok "a RED tier 2 gate still refuses the utility push (exit 1)" "[ $rc -eq 1 ]"
 ok "  and names the tier 2 gate in the refusal" \
    "printf '%s' \"\$out\" | grep 'tier 2 subsystem gate.*RED' >/dev/null"
 
+# --- (2d) GH-487: the FIRST push of a new branch classifies against its integration base ---------
+# A first push arrives with an all-zero remote SHA — there is no update range to diff. The hook
+# resolves the push's own remote's integration branch (refs/remotes/<remote>/development, then
+# main), verifies a merge-base, and classifies that range; anything missing, ambiguous, or empty
+# falls back to the full gate. git passes the remote's NAME as $1, so these cases drive the hook
+# the way git does — with the argument, not just the stdin pairs.
+drive_as() {  # <repo> <remote-name-arg> <stdin-line> [env...] — git passes the remote as $1
+  local r="$1" rn="$2" line="$3"; shift 3
+  require_fixture "$r" "drive_as repo"
+  ( cd "$r" && printf '%s\n' "$line" | env "$@" bash githooks/pre-push "$rn" 2>&1 )
+}
+mkorigin() {  # <repo> <branch> -> bare origin carrying <branch> (the repo's current HEAD), fetched
+  local r="$1" br="$2" b
+  require_fixture "$r" "mkorigin repo"
+  b="$(mktemp -d "$WORK/bare.XXXXXX")"
+  require_fixture "$b" "mkorigin bare"
+  git init -q --bare "$b"
+  git -C "$r" remote add origin "$b"
+  git -C "$r" push -q origin "HEAD:refs/heads/$br" 2>/dev/null
+  git -C "$r" fetch -q origin 2>/dev/null
+}
+ZEROS="0000000000000000000000000000000000000000"
+
+# The positive case: a feature branch off development, first push, utility-only change.
+R_NB="$(mkrepo 0)"
+git -C "$R_NB" branch development
+mkorigin "$R_NB" development
+git -C "$R_NB" checkout -q -b feature
+mkdir -p "$R_NB/utils/hq" "$R_NB/test"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_NB/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_NB/test/hq.sh"   # on disk, outside the range (the 2c pattern)
+git -C "$R_NB" add utils/hq >/dev/null 2>&1
+git -C "$R_NB" commit -qm hq-feature >/dev/null 2>&1
+NB_HEAD="$(git -C "$R_NB" rev-parse HEAD)"
+NB_LINE="refs/heads/feature $NB_HEAD refs/heads/feature $ZEROS"
+ARGS_NB="$WORK/nb-args.txt"; : > "$ARGS_NB"
+out="$(drive_as "$R_NB" origin "$NB_LINE" STUB_ARGS="$ARGS_NB")"; rc=$?
+ok "the FIRST push of a new branch with a verifiable base runs the tier 2 gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null"
+ok "  and validate.sh received the paths file (the shared narrow invocation)" \
+   "grep -q -- '--paths-file' '$ARGS_NB'"
+ok "  and the narrow gate really ran" "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
+
+# Fail-closed fallbacks. Each must stay on the full gate — a bad base must cost time, never coverage.
+R_NOREMOTE="$(mkrepo 0)"
+git -C "$R_NOREMOTE" checkout -q -b feature
+mkdir -p "$R_NOREMOTE/utils/hq"; printf 'x\n' > "$R_NOREMOTE/utils/hq/hq.sh"
+git -C "$R_NOREMOTE" add -A >/dev/null 2>&1; git -C "$R_NOREMOTE" commit -qm work >/dev/null 2>&1
+NR_HEAD="$(git -C "$R_NOREMOTE" rev-parse HEAD)"
+out="$(drive_as "$R_NOREMOTE" origin "refs/heads/feature $NR_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a new branch with NO origin/development base evidence falls back to the full gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+R_ORPH="$(mkrepo 0)"
+ORB_B="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$ORB_B" "orphan bare"
+git init -q --bare "$ORB_B"
+git -C "$R_ORPH" remote add origin "$ORB_B"
+ORB_SEED="$(mktemp -d "$WORK/orphan.XXXXXX")"; require_fixture "$ORB_SEED" "orphan seed"
+git -C "$ORB_SEED" init -q; git -C "$ORB_SEED" config user.email t@t; git -C "$ORB_SEED" config user.name t
+printf 'orphan\n' > "$ORB_SEED/o.txt"
+git -C "$ORB_SEED" add -A >/dev/null 2>&1; git -C "$ORB_SEED" commit -qm orphan-root >/dev/null 2>&1
+git -C "$ORB_SEED" push -q "$ORB_B" HEAD:refs/heads/development 2>/dev/null
+git -C "$R_ORPH" fetch -q origin 2>/dev/null   # origin/development is a DIFFERENT root: no common ancestor
+git -C "$R_ORPH" checkout -q -b feature
+mkdir -p "$R_ORPH/utils/hq"; printf 'x\n' > "$R_ORPH/utils/hq/hq.sh"
+git -C "$R_ORPH" add -A >/dev/null 2>&1; git -C "$R_ORPH" commit -qm work >/dev/null 2>&1
+ORPH_HEAD="$(git -C "$R_ORPH" rev-parse HEAD)"
+out="$(drive_as "$R_ORPH" origin "refs/heads/feature $ORPH_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a new branch with NO common ancestor to the integration branch fails closed to full (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+SAME_TIP="$(git -C "$R_NB" merge-base origin/development HEAD)"
+out="$(drive_as "$R_NB" origin "refs/heads/same $SAME_TIP refs/heads/same $ZEROS")"; rc=$?
+ok "a base equal to the pushed SHA (empty range) fails closed to full (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+out="$(drive_as "$R_NB" "https://example.invalid/example/repo.git" "$NB_LINE")"; rc=$?
+ok "a push by URL has no configured remote name and takes the full gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+ok "  and says WHY instead of leaving the slowness unexplained" \
+   "printf '%s' \"\$out\" | grep 'URL' >/dev/null"
+
+# A mixed push (new branch + an up-to-date development ref) classifies every pair; the union of
+# ranges — not just the first — is what reaches the classifier.
+DEV_TIP="$(git -C "$R_NB" rev-parse origin/development)"
+MX_LINE="$(printf '%s\n%s' "refs/heads/feature $NB_HEAD refs/heads/feature $ZEROS" \
+                        "refs/heads/development $DEV_TIP refs/heads/development $DEV_TIP")"
+ARGS_MX="$WORK/mx-args.txt"; : > "$ARGS_MX"
+out="$(drive_as "$R_NB" origin "$MX_LINE" STUB_ARGS="$ARGS_MX")"; rc=$?
+ok "a MIXED new-branch + integration-ref push still selects the narrow gate (GH-487)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null" \
+   && ok "  and validate.sh received the paths file" "grep -q -- '--paths-file' '$ARGS_MX'"
+
+out="$( cd "$R_NB" && printf '' | bash githooks/pre-push origin 2>&1 )"; rc=$?
+ok "an EMPTY stdin still announces the full gate (nothing narrow can run on no input, GH-487)" \
+   "printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# --- (2e) GH-487 review round 1: freshness of the base evidence is verified, not assumed ---------
+# The original implementation trusted the local remote-tracking ref; a force-push that REWROTE the
+# integration branch backward leaves the tracking ref NEWER than the true tip, and the classified
+# range becomes a SUBSET of the true integration diff. The hook therefore verifies the tracking ref
+# EQUALS the tip the remote currently advertises (git ls-remote) and fails closed on any mismatch,
+# ambiguity, or verification failure — "missing, ambiguous or stale base evidence must fall back"
+# is the issue's own contract.
+bare_dev_tip() {  # <bare> -> sha the bare's development points at
+  git -C "$1" rev-parse refs/heads/development
+}
+
+# (a) integration branch rewritten BACKWARD: tracking ref newer than the advertised tip.
+R_RW="$(mkrepo 0)"
+RW_B="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$RW_B" "rewrite bare"
+git init -q --bare "$RW_B"
+git -C "$R_RW" remote add origin "$RW_B"
+git -C "$R_RW" branch development
+git -C "$R_RW" push -q origin development 2>/dev/null
+git -C "$R_RW" fetch -q origin 2>/dev/null            # tracking = advertised = seed
+git -C "$R_RW" checkout -q development
+printf 'dev work\n' > "$R_RW/dev.txt"
+git -C "$R_RW" add -A >/dev/null 2>&1; git -C "$R_RW" commit -qm dev-work >/dev/null 2>&1
+RW_TIP="$(git -C "$R_RW" rev-parse HEAD)"              # pre-rewrite tip X
+git -C "$R_RW" push -q origin development 2>/dev/null
+git -C "$R_RW" fetch -q origin 2>/dev/null
+RW_SEED="$(git -C "$RW_B" rev-parse refs/heads/development^)"   # an OLDER commit = rollback target
+git -C "$RW_B" update-ref refs/heads/development "$RW_SEED"      # THE BACKWARD REWRITE
+git -C "$R_RW" checkout -q -b feature
+mkdir -p "$R_RW/utils/hq" "$R_RW/test"
+printf 'x\n' > "$R_RW/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_RW/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
+git -C "$R_RW" add utils/hq >/dev/null 2>&1; git -C "$R_RW" commit -qm work >/dev/null 2>&1
+RW_HEAD="$(git -C "$R_RW" rev-parse HEAD)"
+[ "$(bare_dev_tip "$RW_B")" != "$(git -C "$R_RW" rev-parse refs/remotes/origin/development)" ] \
+  || { echo "  FAIL: rewrite fixture is degenerate: advertised tip equals the stale tracking ref" >&2; exit 1; }
+out="$(drive_as "$R_RW" origin "refs/heads/feature $RW_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a BACKWARD-rewritten integration branch fails closed to full (GH-487 round 1)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (b) stale-behind: the remote moved on after our last fetch — evidence is stale either way.
+R_SB="$(mkrepo 0)"
+SB_B="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$SB_B" "stale-behind bare"
+git init -q --bare "$SB_B"
+git -C "$R_SB" remote add origin "$SB_B"
+git -C "$R_SB" branch development
+git -C "$R_SB" push -q origin development 2>/dev/null
+git -C "$R_SB" fetch -q origin 2>/dev/null             # tracking = A
+SB_MOVE="$(mktemp -d "$WORK/sbmove.XXXXXX")"; require_fixture "$SB_MOVE" "stale-behind mover"
+git -C "$SB_MOVE" init -q; git -C "$SB_MOVE" config user.email t@t; git -C "$SB_MOVE" config user.name t
+git -C "$SB_MOVE" pull -q "$SB_B" development 2>/dev/null
+printf 'moved on\n' > "$SB_MOVE/moved.txt"
+git -C "$SB_MOVE" add -A >/dev/null 2>&1; git -C "$SB_MOVE" commit -qm moved-on >/dev/null 2>&1
+git -C "$SB_MOVE" push -q "$SB_B" HEAD:refs/heads/development 2>/dev/null   # advertised = T, tracking still A
+git -C "$R_SB" checkout -q -b feature
+mkdir -p "$R_SB/utils/hq" "$R_SB/test"
+printf 'x\n' > "$R_SB/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_SB/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
+git -C "$R_SB" add utils/hq >/dev/null 2>&1; git -C "$R_SB" commit -qm work >/dev/null 2>&1
+SB_HEAD="$(git -C "$R_SB" rev-parse HEAD)"
+[ "$(bare_dev_tip "$SB_B")" != "$(git -C "$R_SB" rev-parse refs/remotes/origin/development)" ] \
+  || { echo "  FAIL: stale-behind fixture is degenerate: advertised tip equals the tracking ref" >&2; exit 1; }
+out="$(drive_as "$R_SB" origin "refs/heads/feature $SB_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (b2) a FAILING ls-remote probe must fail closed EVEN IF it emitted a partial ref first: the
+# probe's exit status is authoritative, because partial output (one ref advertised, then the
+# connection died) is indistinguishable from a complete answer unless the status is checked.
+R_LSFAIL="$(mkrepo 0)"
+git -C "$R_LSFAIL" branch development
+mkorigin "$R_LSFAIL" development
+git -C "$R_LSFAIL" checkout -q -b feature
+mkdir -p "$R_LSFAIL/utils/hq" "$R_LSFAIL/test"
+printf 'x\n' > "$R_LSFAIL/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_LSFAIL/test/hq.sh"
+git -C "$R_LSFAIL" add utils/hq >/dev/null 2>&1; git -C "$R_LSFAIL" commit -qm work >/dev/null 2>&1
+LSF_HEAD="$(git -C "$R_LSFAIL" rev-parse HEAD)"
+# A git shim that answers `ls-remote` with the development ref and then FAILS, delegating
+# everything else to the real git — the partial-answer shape of a dropped connection.
+FAKEBIN="$WORK/lsfail-bin"; mkdir -p "$FAKEBIN"
+REAL_GIT="$(command -v git)"
+cat > "$FAKEBIN/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = "ls-remote" ]; then
+  printf '%s\t%s\n' "$(git -C "$R_LSFAIL" rev-parse refs/remotes/origin/development)" refs/heads/development
+  exit 1
+fi
+exec "$REAL_GIT" "\$@"
+FAKE
+chmod +x "$FAKEBIN/git"
+out="$( ( cd "$R_LSFAIL" && printf '%s\n' "refs/heads/feature $LSF_HEAD refs/heads/feature $ZEROS" | PATH="$FAKEBIN:$PATH" bash githooks/pre-push origin 2>&1 ) )"; rc=$?
+ok "a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)" \
+   "[ \$rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (b3) a separate pushurl: the freshness probe must address the PUSH destination, not the fetch
+# URL. `git ls-remote <name>` resolves the FETCH url, so a remote whose pushurl disagrees would
+# have its freshness "proven" against a server the push never touches (CodeRabbit #2 on PR #488).
+R_PU="$(mkrepo 0)"
+PU_F="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$PU_F" "pushurl fetch bare"
+git init -q --bare "$PU_F"
+git -C "$R_PU" remote add origin "$PU_F"
+git -C "$R_PU" branch development
+git -C "$R_PU" push -q origin development 2>/dev/null           # fetch bare development = seed
+git -C "$R_PU" fetch -q origin 2>/dev/null                      # tracking = seed
+PU_S="$(mktemp -d "$WORK/bare.XXXXXX")"; require_fixture "$PU_S" "pushurl push bare"
+git init -q --bare "$PU_S"
+git -C "$R_PU" push -q "$PU_S" development 2>/dev/null          # push bare seeded at the same tip
+git -C "$R_PU" checkout -q development
+printf 'ahead\n' > "$R_PU/ahead.txt"
+git -C "$R_PU" add -A >/dev/null 2>&1; git -C "$R_PU" commit -qm pushurl-ahead >/dev/null 2>&1
+git -C "$R_PU" push -q origin development 2>/dev/null           # FETCH world moves ahead: tip = X'
+git -C "$R_PU" fetch -q origin 2>/dev/null                      # tracking = X'
+git -C "$R_PU" push -q "$PU_S" "development~1:refs/heads/development" 2>/dev/null   # PUSH world stays one behind
+git -C "$R_PU" remote set-url --push origin "$PU_S"             # the disagreement under test
+git -C "$R_PU" checkout -q -b feature
+mkdir -p "$R_PU/utils/hq" "$R_PU/test"
+printf 'x\n' > "$R_PU/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_PU/test/hq.sh"
+git -C "$R_PU" add utils/hq >/dev/null 2>&1; git -C "$R_PU" commit -qm work >/dev/null 2>&1
+PU_HEAD="$(git -C "$R_PU" rev-parse HEAD)"
+[ "$(git -C "$R_PU" ls-remote origin refs/heads/development | cut -f1)" != "$(git -C "$R_PU" ls-remote --push origin refs/heads/development | cut -f1)" ] \
+  || { echo "  FAIL: pushurl fixture is degenerate: both urls advertise the same tip" >&2; exit 1; }
+out="$(drive_as "$R_PU" origin "refs/heads/feature $PU_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "a pushurl that disagrees with the fetch url fails closed to full (GH-487 CodeRabbit #2)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
+# (b4) pinned contract: in a mixed push, a NO-OP integration ref (development == local) transfers
+# nothing, contributes no paths, and does NOT force the full gate; the other ref's changes still
+# gate against their own verified base. The empty-range fail-closed rule belongs to the NEW-branch
+# arm (a range too small to classify with), not to a ref that carries no delta at all. CodeRabbit
+# round 5 asked this scenario be pinned or the contract revised — this is the pin.
+R_NOOP="$(mkrepo 0)"
+git -C "$R_NOOP" branch development
+mkorigin "$R_NOOP" development
+git -C "$R_NOOP" checkout -q -b feature
+mkdir -p "$R_NOOP/utils/hq" "$R_NOOP/test"
+printf 'x\n' > "$R_NOOP/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_NOOP/test/hq.sh"
+git -C "$R_NOOP" add utils/hq >/dev/null 2>&1; git -C "$R_NOOP" commit -qm work >/dev/null 2>&1
+NOOP_HEAD="$(git -C "$R_NOOP" rev-parse HEAD)"
+DEV_TIP="$(git -C "$R_NOOP" rev-parse development)"
+NOOP_LINE="$(printf '%s\n%s' "refs/heads/development $DEV_TIP refs/heads/development $DEV_TIP" "refs/heads/feature $NOOP_HEAD refs/heads/feature $ZEROS")"
+out="$(drive_as "$R_NOOP" origin "$NOOP_LINE")"; rc=$?
+ok "a NO-OP integration ref in a mixed push contributes no paths and keeps the narrow gate (GH-487 pin)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null"
+
+# (c) ambiguous base: criss-cross history gives merge-base --all two equally-best answers.
+R_CC="$(mkrepo 0)"
+git -C "$R_CC" checkout -q -b P
+printf 'p\n' > "$R_CC/p.txt"; git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm P1 >/dev/null 2>&1
+P1="$(git -C "$R_CC" rev-parse HEAD)"
+git -C "$R_CC" checkout -q -b Q main
+printf 'q\n' > "$R_CC/q.txt"; git -C "$R_CC" add -A >/dev/null 2>&1; git -C "$R_CC" commit -qm Q1 >/dev/null 2>&1
+Q1="$(git -C "$R_CC" rev-parse HEAD)"
+git -C "$R_CC" checkout -q P
+git -C "$R_CC" merge -q --no-edit "$Q1" >/dev/null 2>&1          # M1 on P
+M1="$(git -C "$R_CC" rev-parse HEAD)"
+git -C "$R_CC" branch -f development "$M1"
+mkorigin "$R_CC" development                                       # HEAD is P=M1: bare development=M1, fetched fresh
+git -C "$R_CC" checkout -q Q
+git -C "$R_CC" merge -q --no-edit "$P1" >/dev/null 2>&1          # M2 on Q — criss-cross complete
+git -C "$R_CC" checkout -q Q
+mkdir -p "$R_CC/utils/hq" "$R_CC/test"
+printf 'x\n' > "$R_CC/utils/hq/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_CC/test/hq.sh"   # suite on disk: without it the tier-2 refusal is trivially full
+git -C "$R_CC" add utils/hq >/dev/null 2>&1; git -C "$R_CC" commit -qm work >/dev/null 2>&1
+CC_HEAD="$(git -C "$R_CC" rev-parse HEAD)"
+[ "$(git -C "$R_CC" merge-base --all origin/development HEAD | wc -l | tr -d ' ')" -ge 2 ] \
+  || { echo "  FAIL: criss-cross fixture is degenerate: fewer than two best common ancestors" >&2; exit 1; }
+out="$(drive_as "$R_CC" origin "refs/heads/feature $CC_HEAD refs/heads/feature $ZEROS")"; rc=$?
+ok "an AMBIGUOUS base (multiple best common ancestors) fails closed to full (GH-487 round 1)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+
 # --- (3) bypasses work AND announce themselves -----------------------------------------------------
 # A silent bypass is the failure mode: a skipped gate that says nothing looks exactly like a passing one.
 out="$(drive "$R_RED" "$NORMAL" XYZ_SKIP_PREPUSH=1)"; rc=$?

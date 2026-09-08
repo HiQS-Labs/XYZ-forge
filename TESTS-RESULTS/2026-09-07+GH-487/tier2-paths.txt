@@ -1,0 +1,3 @@
+skills/skills-army-hq/scripts/intake.py
+test/test_deploy_skills.py
+test/skills-army-hq.sh

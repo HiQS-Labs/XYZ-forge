@@ -20,6 +20,14 @@ REPO="$(cd "$HERE/.." && pwd)"
 echo "== test: gh365-validate-telemetry =="
 
 # ── A. unit contract ─────────────────────────────────────────────────────────────────────────────
+# GH-487: unset RT_SHARD BEFORE the first telemetry write. The outer validate.sh pool exports
+# RT_SHARD=1 to every worker, and runner-telemetry's rt_out_file then shards this suite's writes
+# to $RT_FILE.w$BASHPID while A1–A3 read $RT_FILE — the pool failure that passed every serial
+# retry (rc=1, 345 bytes, A2, reproduced 2026-09-07). Same self-defense as the
+# unset RELAY_DRIVER_LOCKED in gh376. Placement is load-bearing: an unset after section A runs
+# too late — the section-A writes already went to shards. Do not widen: gh35-test-tiers.sh, the
+# only other runner-telemetry.sh consumer, passes under RT_SHARD=1 untouched.
+unset RT_SHARD
 . "$REPO/test/lib/runner-telemetry.sh"
 export XYZ_VALIDATE_TELEMETRY="$WORK/telemetry"
 rt_begin "$REPO" "unit" "parallel" 4 3 307
@@ -49,7 +57,7 @@ pass "A2: every line is valid JSON; suite events carry the full key set with int
 _sk="$(grep -c '"skip_lines":1' "$RT_FILE" || true)"
 [ "$_sk" = "1" ] || fail "A3: skip_lines did not count this suite's own SKIP line"
 pass "A3: skip_lines counted the SKIP line in the input log"
-unset XYZ_VALIDATE_TELEMETRY RT_FILE
+unset XYZ_VALIDATE_TELEMETRY RT_FILE RT_SHARD
 
 # ── B. end-to-end: REAL validate.sh in a fixture, real telemetry, stub suites ────────────────────
 mkfixture() {

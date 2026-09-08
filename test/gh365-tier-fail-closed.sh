@@ -68,6 +68,7 @@ family_of() {  # <suite-file> -> subsystem family name, or nothing
     pdda-*.sh|pdda-local-checks.sh)                 printf 'pdda' ;;
     *standup*.sh)                                   printf 'standup' ;;
     agent-chorus.sh)                                printf 'agent-chorus' ;;
+    skills-army-hq.sh)                              printf 'skills-army-hq' ;;
     swe-diagram.sh)                                 printf 'swe-diagram' ;;
     ate-run-variations.sh)                          printf 'ate' ;;
     *telemetry*.sh|gh358-lock-instrumentation.sh)   printf 'telemetry' ;;
