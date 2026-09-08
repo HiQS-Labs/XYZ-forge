@@ -1,6 +1,6 @@
 # Marathon Phase gh423-p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=gh423-p1 builder=codex reviewer=agy round-cap=5 -->
 
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md` (its `## Acceptance` section, 0 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) — 0/0 criteria copied verbatim from issue #423.*
+*Verified against [issue #423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) — 0/0 criteria copied verbatim from issue #423.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/marathon-clones/marathon-gh-490-roadmap-db-flip/PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -139,3 +139,19 @@ Discovery used Verify-tier graph coverage (nearest XYZ-forge generation
 claims were checked against local source. No graph completeness is claimed.
 
 The full project gate was not run and no commit was made. Ready for agy's review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The `roadmap render` implementation looks solid, properly handling the DB replay, fallback metadata synthesis, and refusing to overwrite tracked/artifact files as required by the brief. The tests effectively cover these behaviors.
+
+However, during the whole-file sweep, I found 5 pre-existing defects in `utils/py/releases_app.py` that leak file descriptors (`ResourceWarning` due to unclosed `open()` calls). Since pre-existing defects are strictly IN SCOPE, please fix the following unclosed files by converting them to use context managers (`with open(...)`) or `pathlib.Path.read_text()`:
+
+- `lines = open(path, encoding="utf-8").read().splitlines()` (in `parse_roadmap_ledger`)
+- `for line in open(md_path, encoding="utf-8").read().splitlines():` (in `cmd_roadmap_sync`)
+- `dump_content = open(paths["dump"], encoding="utf-8").read()` (in `db_to_dump`)
+- `first = open(paths["gen"], encoding="utf-8").readline().strip()` (in `db_to_dump`)
+- `dump_content = open(paths["dump"], encoding="utf-8").read()` (in `cmd_rebuild`)
+
+**Verdict:** Changes requested
