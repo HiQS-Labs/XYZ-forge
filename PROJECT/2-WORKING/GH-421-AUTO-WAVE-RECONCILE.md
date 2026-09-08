@@ -273,19 +273,30 @@ is one policy change away from failing every automated run.
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "type": "grep_absent",
-      "path": "utils/py/wave_reconcile.py",
-      "pattern": "manifest\", \"ship"
+      "type": "grep_present",
+      "path": ".github/workflows/ci.yml",
+      "pattern": "contents: read",
+      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
     },
     {
       "type": "path_absent",
       "path": ".github/workflows/wave-reconcile.yml",
-      "note": "new lane artifact \u2014 must not exist yet (pre-work pin)"
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh421-auto-wave-reconcile.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-421-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
     }
   ],
   "artifacts": [
+    ".github/workflows/ci.yml",
     "utils/py/wave_reconcile.py",
-    "utils/py/releases_app.py",
     ".github/workflows/wave-reconcile.yml",
     "test/gh421-auto-wave-reconcile.sh",
     "test/baselines/GH-421-negative-control.md"
@@ -299,7 +310,9 @@ is one policy change away from failing every automated run.
     "orchestrator_only": []
   },
   "artifacts_new": [
-    ".github/workflows/wave-reconcile.yml"
+    ".github/workflows/wave-reconcile.yml",
+    "test/baselines/GH-421-negative-control.md",
+    "test/gh421-auto-wave-reconcile.sh"
   ]
 }
 ```

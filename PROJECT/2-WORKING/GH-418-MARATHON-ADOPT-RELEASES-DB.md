@@ -84,9 +84,20 @@ on hand-curated input; the planner that should remove that curation is wired to 
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "type": "grep_absent",
-      "path": "utils/py/_marathon_plan.py",
-      "pattern": "ROADMAP_SOURCE"
+      "type": "grep_present",
+      "path": "utils/py/marathon_plan.py",
+      "pattern": "ROADMAP.md",
+      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh418-planner-ledger-source.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-418-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
     }
   ],
   "artifacts": [
@@ -102,7 +113,11 @@ on hand-curated input; the planner that should remove that curation is wired to 
   "lanes": {
     "agy_safe": [],
     "orchestrator_only": []
-  }
+  },
+  "artifacts_new": [
+    "test/baselines/GH-418-negative-control.md",
+    "test/gh418-planner-ledger-source.sh"
+  ]
 }
 ```
 
@@ -145,3 +160,11 @@ on hand-curated input; the planner that should remove that curation is wired to 
   ]
 }
 ```
+
+## Acceptance
+
+- [ ] In releases-mode, `marathon-plan.sh` sources items from `roadmap_items`; zero DB-parked items are invisible to it.
+- [ ] In legacy mode the behaviour is unchanged, asserted by a test.
+- [ ] The generated plan doc names its real source.
+- [ ] Red control witnessed and recorded in `test/baselines/`: a DB-only item is absent from a pre-fix plan and present in a post-fix one.
+- [ ] A deterministic check fails if a shipped script reads `ROADMAP.md` for current state while `ROADMAP_SOURCE=releases`.

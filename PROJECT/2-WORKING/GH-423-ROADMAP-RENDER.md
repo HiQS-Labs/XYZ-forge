@@ -95,9 +95,20 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "type": "grep_absent",
+      "type": "grep_present",
       "path": "utils/py/releases_app.py",
-      "pattern": "roadmap_render"
+      "pattern": "roadmap sync",
+      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh423-roadmap-render.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-423-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
     }
   ],
   "artifacts": [
@@ -112,7 +123,11 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
   "lanes": {
     "agy_safe": [],
     "orchestrator_only": []
-  }
+  },
+  "artifacts_new": [
+    "test/baselines/GH-423-negative-control.md",
+    "test/gh423-roadmap-render.sh"
+  ]
 }
 ```
 

@@ -92,9 +92,20 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "type": "grep_absent",
-      "path": "test",
-      "pattern": "gh425-gate-provenance"
+      "type": "grep_present",
+      "path": "utils/py/wave_reconcile.py",
+      "pattern": "os.walk\\(results_dir\\)",
+      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh425-gate-provenance-pr.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-425-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
     }
   ],
   "artifacts": [
@@ -109,7 +120,11 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
   "lanes": {
     "agy_safe": [],
     "orchestrator_only": []
-  }
+  },
+  "artifacts_new": [
+    "test/baselines/GH-425-negative-control.md",
+    "test/gh425-gate-provenance-pr.sh"
+  ]
 }
 ```
 

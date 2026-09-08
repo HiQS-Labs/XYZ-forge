@@ -145,20 +145,21 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
   "gate": "bash validate.sh",
   "fix_probes": [
     {
+      "type": "grep_present",
       "path": "utils/timeline/export_timeline.py",
-      "pattern": "(codename or version).lower()",
-      "note": "bug evidence: None.lower() crash on a release with neither codename nor version",
-      "type": "grep_present"
+      "pattern": "codename or version",
+      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
     },
     {
       "type": "path_absent",
       "path": "test/gh454-reconciler-defects.sh",
-      "note": "new lane artifact \u2014 must not exist yet (pre-work pin)"
+      "note": "new lane artifact \u2014 must not exist yet"
     }
   ],
   "artifacts": [
     "utils/timeline/export_timeline.py",
-    "utils/py/wave_reconcile.py"
+    "utils/py/wave_reconcile.py",
+    "test/gh454-reconciler-defects.sh"
   ],
   "remediation": {
     "source": "issue#454",

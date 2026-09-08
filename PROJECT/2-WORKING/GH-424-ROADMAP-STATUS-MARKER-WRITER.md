@@ -100,19 +100,25 @@ Two fixes, both here because GH-421's writes are unsafe without them:
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "type": "grep_absent",
+      "type": "grep_present",
       "path": "utils/py/releases_app.py",
-      "pattern": "status-marker"
+      "pattern": "status_marker",
+      "note": "bug evidence \u2014 must still be present (unfixed) at pre-work time"
     },
     {
       "type": "path_absent",
       "path": "test/gh424-roadmap-status-marker.sh",
-      "note": "new lane artifact \u2014 must not exist yet (pre-work pin)"
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-424-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
     }
   ],
   "artifacts": [
     "utils/py/releases_app.py",
-    "utils/py/wave_reconcile.py",
+    "ROADMAP-DASHBOARD.md",
     "test/gh424-roadmap-status-marker.sh",
     "test/baselines/GH-424-negative-control.md"
   ],
@@ -125,6 +131,7 @@ Two fixes, both here because GH-421's writes are unsafe without them:
     "orchestrator_only": []
   },
   "artifacts_new": [
+    "test/baselines/GH-424-negative-control.md",
     "test/gh424-roadmap-status-marker.sh"
   ]
 }
