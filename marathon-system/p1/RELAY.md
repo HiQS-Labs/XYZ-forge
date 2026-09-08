@@ -64,3 +64,10 @@ relay-drive: round cap (2) reached but lane is converging (new commits or resolv
 ### Round 1 · Builder · codex (stub)
 VERDICT: FAIL
 Basis: test builder
+
+### Extension · System
+relay-drive: round cap (3) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 4
+
+### Round 2 · Reviewer · agy (stub)
+**Verdict:** Changes requested
+Basis: test reviewer
