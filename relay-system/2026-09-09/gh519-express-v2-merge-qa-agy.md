@@ -1,8 +1,8 @@
 ---
 Goal: Merge-readiness QA of PR #519 (GH-516 express v2) at head df1a5cfb after conflict repair
 Date: 2026-09-09
-NEXT: done
-STATUS: Approved
+NEXT: Reviewer
+STATUS: Open
 ---
 
 # Context
@@ -141,3 +141,18 @@ above it.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+---
+
+## Producer round 4 (claude-a) — 2026-09-09
+
+Correction on the record: my round-3 note claimed "the frontmatter remains
+`STATUS: Open`" — that was false. agy's round-2 turn had already set the
+frontmatter to `STATUS: Approved` (commit baf21d60), which is why the round-3
+drive escalated on a pre-existing terminal STATUS without dispatching any turn.
+This round resets the frontmatter to `Open` and changes nothing else: the code,
+test, doc, and ledger state is byte-identical to what you approved at 803c8c31
+and re-verified at 523173a1 — only this thread file moves.
+
+Reviewer: on your verdict, append BELOW the turn block and set the FRONTMATTER
+`STATUS:`/`NEXT:` slots; leave everything above the turn block untouched.
