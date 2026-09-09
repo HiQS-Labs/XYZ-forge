@@ -1,7 +1,7 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: In progress
-NEXT: codex
+STATUS: Changes requested
+NEXT: claude
 ROUND: 2
 
 ## Body
@@ -186,3 +186,42 @@ sibling.
 
 You are the **reviewer**. Re-read the changed files at HEAD. Confirm or reject each disposition,
 cite file:line, and either approve or list what remains blocking.
+
+
+---
+
+## codex — Round 2 review
+
+**Verdict: Changes requested.** The initial local report, direct reconciliation gate, affirmative reference predicate, and primary-row promotion are present. Two blocking parts of the previous review remain unresolved: successful remote refresh is not required, and PR merge targets are not tied to the checked integration branch.
+
+**Evidence boundary:** Static review of all four requested files on disk, the GH-523 capture, and the PR-fetch/sort helper. No Git commands, artifact/source execution, tests, or mutation probes were run; the producer's 26/26 and red controls remain producer-reported. The explicit no-Git instruction overrides the embedded request to inspect a commit diff, so commit attribution is not independently attested. Verify-tier graph discovery found no index for this worktree after both project-list pages. The `XYZ-forge` index belongs to another checkout, generation `2026-09-01T15:54:30Z`; symbol search returned no matches and coverage marked the actual review paths `not_tracked`. Full local source reads supply the evidence instead. No source artifacts were changed.
+
+### Disposition check
+
+| Round-1 finding | Round-2 decision |
+|---|---|
+| 1 — affirmative readiness and fresh remote evidence | **Partially fixed; Blocking remains.** Reference/count/ancestry failures now block at `skills/merge-cleanup/scripts/scan_clones.py:491`, `:507`, and `:514`. The pre-merge refresh at `skills/merge-cleanup/scripts/merge_cleanup.py:330` is unchecked; see R2-1. |
+| 2 — direct reconciliation bypass | **Accepted.** Inspection/reporting at `skills/merge-cleanup/scripts/merge_cleanup.py:265` and `:269` precede dispatch, and `:283` refuses before the writer at `:285`. The shared helper at `:271` is an appropriate seam, including the intentional dry-run/explicit-override behavior. |
+| 3 — selected integration branch differs from execution | **Partially fixed; Blocking remains.** Local fast-forward now uses the selected branch at `skills/merge-cleanup/scripts/merge_cleanup.py:353`. Remote PR bases remain unchecked; see R2-2. The new fast-forward diagnostic at `:354` is present. |
+| 4 — discovered primary row ordering | **Accepted.** Existing rows are promoted at `skills/merge-cleanup/scripts/scan_clones.py:385`; the sibling-presence and first-row assertions at `test/gh436-merge-cleanup.py:203` and `:204` cover the reported case. |
+| 5 — failures must become diagnostic not-ready results | **Partially fixed; Should-fix remains.** Process-launch `OSError` becomes rc 127 at `skills/merge-cleanup/scripts/scan_clones.py:84`, and failed status gets a blocker at `:454`. The path boundary at `:429` still catches only `OSError`; see R2-4. |
+| 6 — unfinished operation | **Partially fixed; Should-fix remains.** `git rev-parse --git-path` and relative-path anchoring at `skills/merge-cleanup/scripts/scan_clones.py:475` and `:479` handle linked-worktree paths correctly by construction. Failed probes are skipped, however; see R2-3. |
+| 7 — dry-run wording and helper documentation | **Accepted for the reported PR-sequence path.** The non-executable warning is at `skills/merge-cleanup/scripts/merge_cleanup.py:307`; timing and standalone-helper limits are clear at `skills/merge-cleanup/SKILL.md:66` and `:79`. |
+
+### Remaining graded findings
+
+1. **R2-1 — Blocking: failed fetch still certifies stale refs.** `skills/merge-cleanup/scripts/merge_cleanup.py:330` discards the fetch result, then `:331` recomputes readiness from the same cached `origin/*`. If that cache says READY and Git transport/authentication fails, the helper can still return READY and execution reaches `execute_pr_merge` at `:342`. Git transport failure does not establish that the separate GitHub CLI merge will fail. This leaves the stale-evidence half of R1-1 open and contradicts `skills/merge-cleanup/SKILL.md:70`. Require successful refresh of the selected target before using it as current evidence, and refuse with the fetch diagnostic when refresh fails. Add a mocked Phase-5 case with initially ready cached evidence, failed fetch, and zero merge/reconciliation/teardown calls; also cover successful fetch followed by a not-ready verdict. The initial local report should remain first.
+
+2. **R2-2 — Blocking: PRs can still merge into a branch Phase 0 never checked.** `skills/merge-cleanup/scripts/toposort_prs.py:17` lists open PRs without a base filter and already requests `baseRefName` at `:20`. `skills/merge-cleanup/scripts/merge_cleanup.py:299` passes them into sorting, and `:340` merges every ordered entry without checking its base. The merge helper at `:57` merges the numbered PR into its existing GitHub base. Thus `--integration-branch main` can approve and fast-forward `main` while merging a PR into `development`; the default branch case likewise admits a PR targeting `main`. The selected branch now controls the local command but still does not describe the remote landing. Validate candidate PR bases against the selected integration target before any merge; incompatible or unknown bases must not pass on the strength of that target's Phase-0 verdict. Add a behavioral orchestration case for mismatched bases and a non-default matching target. This is the explicitly requested PR-target half of R1-3, not a request to redesign topological sorting.
+
+3. **R2-3 — Should-fix: operation-state inspection fails open.** At `skills/merge-cleanup/scripts/scan_clones.py:476`, a failed `--git-path` query simply continues. Nothing records incomplete operation evidence, and the affirmative predicate at `:514` only accounts for the ref count and ancestry result. With otherwise successful queries, failed operation probes can therefore produce READY. Preserve an explanatory blocker and make successful operation inspection a readiness condition. A focused case should inject a failed marker probe into an otherwise ready fixture and assert refusal. The worktree-aware path mechanism itself is appropriate; this review does not claim a linked-worktree runtime test was performed.
+
+4. **R2-4 — Should-fix: expected path failures still escape the advertised never-raises boundary.** `skills/merge-cleanup/scripts/scan_clones.py:430` calls `Path.expanduser()` under an `except OSError` only. An unresolved `~user` raises `RuntimeError`, so that input does not return the promised diagnostic result. This exception is explicit in the installed Python 3.13 standard-library implementation (`/opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py:808`, read only). The CLI also expands/resolves paths before Phase 0 at `skills/merge-cleanup/scripts/merge_cleanup.py:252`. Handle expected path-resolution exceptions at the relevant boundary; add the requested injected path failure and failed-status cases. The existing launch-error test at `test/gh436-merge-cleanup.py:279` proves a different path.
+
+5. **R2-5 — Should-fix: two new tests do not establish the behavior claimed.** `test/gh436-merge-cleanup.py:339` checks source strings, not a Phase-5 invocation; leaving the desired text in a comment can satisfy its positive assertion while execution uses a wrong target. Replace this with mocked orchestration that captures the actual fast-forward argument after nonempty PR execution. Separately, `TestPrimaryLandingEvidence.setUp` at `:248` creates no tracking ref. Its unfinished-merge case at `:269` is already not-ready because the target is missing, so removing only `and not res["operation_in_progress"]` from the predicate would leave its assertions passing: detection/blocker assertions still pass, and missing-ref evidence still makes readiness false. Establish a valid tracking target and READY baseline before adding the marker, then mutate the operation predicate alone. The reported combined removal of reference and operation conditions cannot independently attest the operation gate. No new test drives the nonempty Phase-5 path: the orchestration helper mocks `fetch_open_prs` to `[]` at `:315`, leaving R2-1 and R2-2 unexercised.
+
+### Scope and handoff
+
+Keep the remaining repairs in the existing inspector/orchestrator seams and focused regression file. The previously acknowledged reconciliation-before-fast-forward ordering remains outside this verdict's new repair scope. The loud fast-forward failure still falls through to teardown and completion (`skills/merge-cleanup/scripts/merge_cleanup.py:354`, `:361`, `:375`), so neither this review nor the initial readiness check attests successful final landing.
+
+Approval is withheld. **NEXT: claude** to address R2-1 and R2-2 and the listed remaining should-fix gaps, then return focused behavioral evidence. The harness owns test/gate execution and the file-scoped commit.
