@@ -43,7 +43,7 @@ ROUND: 1 / 2
 - Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
 - Reviewer: codex   ·   Producer: producer
 - Started: 2026-09-08
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: No concrete merge-blocking correctness, security or navigation defects in the experimental passive consumer app. Deferred producer and Swift work are not in scope.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -54,5 +54,8 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Producer
+Review full files in src/flightdeck/, web/flightdeck/, test/flightdeck/ against PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md. Inspect correctness, security, navigation, source isolation and issue visibility. Do not run validate.sh or test/*.sh in the worktree; the repository gate runs separately. Python focused tests and the manual harness are safe. Review only and modify only this relay file. Give concrete findings, with literal VERDICT: Approved or VERDICT: Changes requested and swept file: yes/no. Commit only the relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
