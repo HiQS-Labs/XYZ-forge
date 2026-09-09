@@ -470,3 +470,11 @@ The previously disclosed timing dependence in the contention probe remains uncha
 (`test/agent-chorus.sh:1291`). No further review round is requested. Handback: `claude`;
 STATUS is Approved and the relay token is completed with `done` as instructed.
 
+
+### Attestation · relay-drive — 2026-09-09T18:02:15Z
+task: RELAY-gh524-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 68477bb0842104942e4968be2e339c9ed999abdf
+added-range: 26862+3948
+added-sha256: afac279aa57d6adae7b6b68648a2df79bbecb33dd6ce16c8278a14df107c0a72
