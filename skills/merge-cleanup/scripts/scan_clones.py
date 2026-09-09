@@ -362,7 +362,98 @@ def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = No
         except PermissionError:
             continue
 
+    # Phase 0: the primary on-disk checkout is inspected because it IS the primary, never
+    # because a --prefix or a SAFE_ROOT happened to sweep it up. It is the checkout every PR
+    # lands into and every reconciliation runs in, so a scan that silently omits it reports a
+    # clean audit for the one tree whose state can break the landing. A primary living outside
+    # SAFE_ROOTS, or in a directory whose name does not match --prefix, used to vanish here
+    # while Phase 5 went on merging into it.
+    if primary_repo:
+        resolved_primary = primary_repo.resolve()
+        if resolved_primary not in seen:
+            info = inspect_checkout(resolved_primary, primary_repo_path=primary_repo, exclude_patterns=excludes)
+            if info.get("is_git"):
+                results.insert(0, info)
+
     return results
+
+
+def inspect_primary_landing(primary_repo: Path, integration_branch: str = "development") -> Dict[str, Any]:
+    """Phase 0: can the primary on-disk checkout actually RECEIVE the landing?
+
+    Phase 5 merges PRs remotely and then fast-forwards this tree and runs reconciliation in it.
+    Every one of those steps assumes a checkout that is on the integration branch, clean, and
+    behind-or-equal to origin. None of that was ever asserted, so the failure mode was to merge
+    every PR, then discover the local tree could not be fast-forwarded and the reconciliation
+    commands were running over someone's uncommitted work. Answer the question first instead.
+
+    Never raises: an unreadable or non-git primary is reported as not ready, with the reason.
+    """
+    res: Dict[str, Any] = {
+        "path": str(primary_repo),
+        "integration_branch": integration_branch,
+        "current_branch": "",
+        "is_clean": False,
+        "dirty_count": 0,
+        "on_integration_branch": False,
+        "unpushed_on_integration": 0,
+        "can_ff": False,
+        "landing_ready": False,
+        "blockers": [],
+    }
+    path = Path(primary_repo).resolve()
+    if not (path / ".git").exists():
+        res["blockers"].append(f"{path} is not a git checkout")
+        return res
+
+    branch = run_git(path, ["rev-parse", "--abbrev-ref", "HEAD"])
+    res["current_branch"] = branch.stdout.strip() if branch.returncode == 0 else ""
+    res["on_integration_branch"] = res["current_branch"] == integration_branch
+    if not res["on_integration_branch"]:
+        res["blockers"].append(
+            f"on '{res['current_branch'] or 'unknown'}', not the integration branch '{integration_branch}' — "
+            f"`git merge --ff-only origin/{integration_branch}` will not land here"
+        )
+
+    status = run_git(path, ["status", "--porcelain"])
+    dirty = [ln for ln in status.stdout.splitlines() if ln.strip()] if status.returncode == 0 else []
+    res["dirty_count"] = len(dirty)
+    res["is_clean"] = status.returncode == 0 and not dirty
+    if dirty:
+        res["blockers"].append(
+            f"{len(dirty)} uncommitted path(s) — commit, park, or stash them before landing; "
+            "reconciliation would otherwise run over unsaved work"
+        )
+
+    # Local commits on the integration branch that origin does not have would be silently
+    # skipped by a squash-merge landing, so they are a blocker, not a note.
+    ahead = run_git(path, ["rev-list", "--count", f"origin/{integration_branch}..{integration_branch}"])
+    if ahead.returncode == 0 and ahead.stdout.strip().isdigit():
+        res["unpushed_on_integration"] = int(ahead.stdout.strip())
+        if res["unpushed_on_integration"]:
+            res["blockers"].append(
+                f"{res['unpushed_on_integration']} local commit(s) on '{integration_branch}' are not on origin — "
+                "push or explicitly abandon them first"
+            )
+
+    ff = run_git(path, ["merge-base", "--is-ancestor", "HEAD", f"origin/{integration_branch}"])
+    res["can_ff"] = ff.returncode == 0
+    res["landing_ready"] = bool(res["on_integration_branch"] and res["is_clean"] and not res["unpushed_on_integration"])
+    return res
+
+
+def format_primary_landing(info: Dict[str, Any]) -> str:
+    """One-glance Phase 0 verdict for the primary checkout."""
+    verdict = "READY" if info["landing_ready"] else "NOT READY"
+    lines = [
+        f"Primary checkout: {info['path']}",
+        f"  branch: {info['current_branch'] or '(unknown)'}  (integration: {info['integration_branch']})",
+        "  clean: " + ("yes" if info["is_clean"] else f"no ({info['dirty_count']} path(s))"),
+        f"  landing: {verdict}",
+    ]
+    for b in info["blockers"]:
+        lines.append(f"    - {b}")
+    return "\n".join(lines)
 
 
 def format_scan_table(checkouts: List[Dict[str, Any]]) -> str:

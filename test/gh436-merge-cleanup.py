@@ -20,6 +20,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "merg
 
 from scan_clones import (
     _within,
+    scan_directories,
+    inspect_primary_landing,
     is_safe_deletable_path,
     inspect_checkout,
     inspect_driver_lock,
@@ -141,6 +143,85 @@ class TestCheckoutInspection(unittest.TestCase):
         self.assertTrue(lock_info["locked"])
         self.assertTrue(lock_info["alive"])
         self.assertEqual(lock_info["pid"], os.getpid())
+
+
+class TestPrimaryCheckoutIsInspectedFirst(unittest.TestCase):
+    """Phase 0: the primary on-disk checkout is reviewed before any PR (fixed 2026-09-09).
+
+    Two defects, both observed on a real run:
+      1. `scan_directories` only inspected the primary if a SAFE_ROOT walk happened to reach it
+         AND its directory name matched `--prefix`. A primary outside those roots, or under a
+         non-matching prefix, was absent from the audit entirely while Phase 5 went on merging
+         PRs into it and running reconciliation there.
+      2. Nothing asserted the primary could actually RECEIVE the landing. Phase 5 merged every
+         PR remotely and only then tried `git merge --ff-only`, so a dirty tree or a feature
+         branch was discovered after the merges were already irreversible.
+    """
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.origin = Path(self.temp_dir) / "origin.git"
+        self.primary = Path(self.temp_dir) / "primary"
+        self.elsewhere = Path(self.temp_dir) / "roots"
+        self.elsewhere.mkdir()
+        subprocess.run(["git", "init", "--bare", "-b", "development", str(self.origin)], capture_output=True, check=True)
+        subprocess.run(["git", "clone", str(self.origin), str(self.primary)], capture_output=True, check=True)
+        for k, v in (("user.name", "Test User"), ("user.email", "test@example.com")):
+            subprocess.run(["git", "config", k, v], cwd=self.primary, check=True)
+        (self.primary / "README.md").write_text("hello")
+        subprocess.run(["git", "add", "README.md"], cwd=self.primary, check=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=self.primary, capture_output=True, check=True)
+        subprocess.run(["git", "push", "-u", "origin", "development"], cwd=self.primary, capture_output=True, check=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_primary_is_scanned_even_when_prefix_and_roots_miss_it(self):
+        """THE PIN: the primary is inspected because it is the primary, not because a scan found it."""
+        found = scan_directories([self.elsewhere], prefix_filter="no-such-prefix", primary_repo=self.primary)
+        names = [c["name"] for c in found]
+        self.assertIn("primary", names, f"primary vanished from the audit: {names}")
+        primary_rows = [c for c in found if c["disposition"] == "PRIMARY_CHECKOUT"]
+        self.assertEqual(len(primary_rows), 1)
+        # It is reported FIRST — the operator reads their own checkout before anyone else's.
+        self.assertEqual(found[0]["disposition"], "PRIMARY_CHECKOUT")
+
+    def test_primary_is_not_duplicated_when_the_scan_also_finds_it(self):
+        found = scan_directories([Path(self.temp_dir)], prefix_filter="", primary_repo=self.primary)
+        primary_rows = [c for c in found if c["disposition"] == "PRIMARY_CHECKOUT"]
+        self.assertEqual(len(primary_rows), 1, "primary counted twice when the scan reached it too")
+
+    def test_clean_primary_on_integration_branch_is_landing_ready(self):
+        info = inspect_primary_landing(self.primary, integration_branch="development")
+        self.assertTrue(info["landing_ready"], info["blockers"])
+        self.assertEqual(info["blockers"], [])
+
+    def test_dirty_primary_is_not_landing_ready(self):
+        (self.primary / "scratch.txt").write_text("uncommitted")
+        info = inspect_primary_landing(self.primary, integration_branch="development")
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(any("uncommitted" in b for b in info["blockers"]), info["blockers"])
+
+    def test_primary_on_a_feature_branch_is_not_landing_ready(self):
+        subprocess.run(["git", "checkout", "-b", "feat/whatever"], cwd=self.primary, capture_output=True, check=True)
+        info = inspect_primary_landing(self.primary, integration_branch="development")
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(any("integration branch" in b for b in info["blockers"]), info["blockers"])
+
+    def test_unpushed_commits_on_the_integration_branch_block_the_landing(self):
+        """A squash-merge landing would silently skip these, which is how local work is lost."""
+        (self.primary / "local-only.txt").write_text("never pushed")
+        subprocess.run(["git", "add", "local-only.txt"], cwd=self.primary, check=True)
+        subprocess.run(["git", "commit", "-m", "local only"], cwd=self.primary, capture_output=True, check=True)
+        info = inspect_primary_landing(self.primary, integration_branch="development")
+        self.assertEqual(info["unpushed_on_integration"], 1)
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(any("not on origin" in b for b in info["blockers"]), info["blockers"])
+
+    def test_non_git_primary_reports_not_ready_rather_than_raising(self):
+        info = inspect_primary_landing(Path(self.temp_dir) / "nowhere", integration_branch="development")
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(info["blockers"])
 
 
 class TestDanglingSymlinkPrune(unittest.TestCase):

@@ -23,6 +23,8 @@ from scan_clones import (
     DEFAULT_NEVER_DELETE,
     is_safe_deletable_path,
     scan_directories,
+    inspect_primary_landing,
+    format_primary_landing,
     format_scan_table,
     run_git
 )
@@ -241,6 +243,8 @@ def main():
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
+    parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
+    parser.add_argument("--allow-unready-primary", action="store_true", help="Merge even though the primary checkout cannot receive the landing (records the blockers and proceeds)")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
 
     args = parser.parse_args()
@@ -257,6 +261,15 @@ def main():
     if args.reconcile_pr > 0:
         run_post_merge_reconcile(args.reconcile_pr, primary_repo, dry_run=dry_run)
         return
+
+    # Phase 0: the primary on-disk checkout, before anything remote is looked at. It receives
+    # every merge and runs every reconciliation, so its readiness is a precondition of the run,
+    # not a detail discovered at merge time.
+    primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    print("\n" + "=" * 80)
+    print("PHASE 0: PRIMARY ON-DISK CHECKOUT")
+    print("=" * 80 + "\n")
+    print(format_primary_landing(primary_landing) + "\n")
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude)
@@ -289,6 +302,16 @@ def main():
         return
 
     # Phase 5: Execute Merges & Post-Merge Reconciliation (if not teardown-only)
+    # Gate on Phase 0. Merging is remote and effectively irreversible; landing into a tree that
+    # cannot fast-forward leaves the repo half-landed with reconciliation unrun. Refuse first.
+    if (not args.teardown_only and ordered_prs and args.execute
+            and not primary_landing["landing_ready"] and not args.allow_unready_primary):
+        log_err("REFUSING to merge: the primary checkout cannot receive the landing.")
+        for b in primary_landing["blockers"]:
+            log_err(f"  - {b}")
+        log_err("Fix the primary first, or pass --allow-unready-primary to proceed anyway.")
+        return 2
+
     if not args.teardown_only and ordered_prs:
         print("=" * 80)
         print("PHASE 5: EXECUTING PR MERGES & RECONCILIATION")
@@ -323,4 +346,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)
