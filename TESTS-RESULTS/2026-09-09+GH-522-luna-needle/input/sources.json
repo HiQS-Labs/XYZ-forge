@@ -1,0 +1,8 @@
+{
+  "needle_main": "0700238abbf5efa04af02efabaa4d5f5089d5e42",
+  "needle_issue13_source": "710c32dcfcfff020d34427fdbc6ba4defdc4304e",
+  "xyz_harness": "9135d2f7a8a68c0603790090649a8cf438718d7b",
+  "graph_needle_generation": "2026-09-09T05:18:38Z",
+  "graph_xyz_generation": "2026-09-01T15:54:30Z",
+  "scope": "Source review and synthetic decision probe only; no private corpus, native Needle inference, real queue writes or deployment."
+}

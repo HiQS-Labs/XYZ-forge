@@ -1,0 +1,595 @@
+{
+  "label_set_version": "v1.0.0-draft",
+  "source_of_truth": "utils/corpus/taxonomy.py",
+  "output_contract": "The model predicts ONLY a label name. Labels take no arguments.",
+  "support_floor": {
+    "rate": 0.001,
+    "action": "supplement",
+    "meaning": "A label below this share of calls is flagged for supplementation (issue #1 \u00a73b/\u00a73c), never deleted or merged on the floor alone. Consolidation for training belongs at the dataloader as a projection, not in this contract. See the decision record in utils/corpus/taxonomy.py."
+  },
+  "groups": [
+    "code",
+    "control",
+    "git",
+    "infra",
+    "pdda",
+    "prs",
+    "xyz"
+  ],
+  "labels": {
+    "read_file": {
+      "group": "code",
+      "tier": 1,
+      "detect": "native+command"
+    },
+    "search_code": {
+      "group": "code",
+      "tier": 1,
+      "detect": "native+command"
+    },
+    "find_files": {
+      "group": "code",
+      "tier": 1,
+      "detect": "native+command"
+    },
+    "apply_patch": {
+      "group": "code",
+      "tier": 2,
+      "detect": "native+path"
+    },
+    "run_tests": {
+      "group": "code",
+      "tier": 2,
+      "detect": "command"
+    },
+    "run_build": {
+      "group": "code",
+      "tier": 2,
+      "detect": "command"
+    },
+    "run_linter": {
+      "group": "code",
+      "tier": 2,
+      "detect": "command"
+    },
+    "run_script": {
+      "group": "code",
+      "tier": 2,
+      "detect": "command"
+    },
+    "pkg_manage": {
+      "group": "code",
+      "tier": 2,
+      "detect": "command"
+    },
+    "git_inspect": {
+      "group": "git",
+      "tier": 1,
+      "detect": "command"
+    },
+    "create_branch": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "commit_changes": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "git_sync": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "open_pr": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "update_pr": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "review_pr": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "merge_pr": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "file_issue": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "read_issue": {
+      "group": "git",
+      "tier": 2,
+      "detect": "command"
+    },
+    "gh_cli": {
+      "group": "git",
+      "tier": 1,
+      "detect": "command"
+    },
+    "file_capture_doc": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "path"
+    },
+    "promote_capture": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "command"
+    },
+    "complete_doc": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "command"
+    },
+    "update_working_doc": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "path"
+    },
+    "run_pdda_check": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "command"
+    },
+    "update_changelog": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "path"
+    },
+    "update_governance_doc": {
+      "group": "pdda",
+      "tier": 3,
+      "detect": "path"
+    },
+    "park_roadmap_row": {
+      "group": "prs",
+      "tier": 3,
+      "detect": "command"
+    },
+    "update_roadmap": {
+      "group": "prs",
+      "tier": 3,
+      "detect": "path"
+    },
+    "cut_release": {
+      "group": "prs",
+      "tier": 3,
+      "detect": "path"
+    },
+    "publish_release": {
+      "group": "prs",
+      "tier": 3,
+      "detect": "command"
+    },
+    "run_validate": {
+      "group": "xyz",
+      "tier": 3,
+      "detect": "command"
+    },
+    "start_relay": {
+      "group": "xyz",
+      "tier": 3,
+      "detect": "command"
+    },
+    "sys_inspect": {
+      "group": "infra",
+      "tier": 1,
+      "detect": "command"
+    },
+    "net": {
+      "group": "infra",
+      "tier": 2,
+      "detect": "command"
+    },
+    "db_query": {
+      "group": "infra",
+      "tier": 2,
+      "detect": "command"
+    },
+    "fs_mutate": {
+      "group": "infra",
+      "tier": 1,
+      "detect": "command"
+    },
+    "cloud_cli": {
+      "group": "infra",
+      "tier": 2,
+      "detect": "command"
+    },
+    "delegate_agent": {
+      "group": "control",
+      "tier": 2,
+      "detect": "native"
+    },
+    "track_todo": {
+      "group": "control",
+      "tier": 2,
+      "detect": "native"
+    },
+    "ask_user": {
+      "group": "control",
+      "tier": 2,
+      "detect": "native"
+    },
+    "session_control": {
+      "group": "control",
+      "tier": 1,
+      "detect": "native"
+    },
+    "no_action": {
+      "group": "control",
+      "tier": 2,
+      "detect": "none"
+    },
+    "unmapped": {
+      "group": "control",
+      "tier": 1,
+      "detect": "none"
+    }
+  },
+  "schemas": [
+    {
+      "name": "apply_patch",
+      "description": "Edit or create a source file.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "find_files",
+      "description": "Locate files or list a directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "pkg_manage",
+      "description": "Install or manage dependencies.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "read_file",
+      "description": "Read a file's contents.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_build",
+      "description": "Compile or build the project.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_linter",
+      "description": "Run a linter or formatter.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_script",
+      "description": "Run an ad-hoc or inline analysis script.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_tests",
+      "description": "Run the test suite.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "search_code",
+      "description": "Search code or text by pattern.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "ask_user",
+      "description": "Ask the operator a question.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "delegate_agent",
+      "description": "Delegate to a subagent or skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "no_action",
+      "description": "Nothing to recommend; abstain.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "session_control",
+      "description": "Session plumbing: monitor, schedule, tool search.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "track_todo",
+      "description": "Update the task list.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "unmapped",
+      "description": "Fell through every rule (coverage gate).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "commit_changes",
+      "description": "Stage and commit changes.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "create_branch",
+      "description": "Create or switch to a branch.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "file_issue",
+      "description": "Create a GitHub issue.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "gh_cli",
+      "description": "Other GitHub CLI call (api, run, repo).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "git_inspect",
+      "description": "Inspect git state (status, log, diff, show).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "git_sync",
+      "description": "Push, pull, fetch, merge, rebase or stash.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "merge_pr",
+      "description": "Merge a pull request.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "open_pr",
+      "description": "Open a pull request.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "read_issue",
+      "description": "View or list GitHub issues.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "review_pr",
+      "description": "Inspect a PR's diff, checks or comments.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "update_pr",
+      "description": "Edit or comment on an existing PR.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "cloud_cli",
+      "description": "Cloud provider CLI (gcloud, oci, aws).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "db_query",
+      "description": "Query a database.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "fs_mutate",
+      "description": "Create, move, copy or delete files.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "net",
+      "description": "Network or remote transfer.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "sys_inspect",
+      "description": "Inspect the machine or environment.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "complete_doc",
+      "description": "Move a working doc -> 3-COMPLETED.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "file_capture_doc",
+      "description": "Create a capture doc in PROJECT/1-INBOX.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "promote_capture",
+      "description": "Move a capture doc 1-INBOX -> 2-WORKING.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_pdda_check",
+      "description": "Run pdda.sh checks.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "update_changelog",
+      "description": "Append to CHANGELOG.md.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "update_governance_doc",
+      "description": "Edit AGENTS/SOP/ROUTER/GUIDING-PRINCIPLES.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "update_working_doc",
+      "description": "Edit an active PROJECT/2-WORKING doc.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "cut_release",
+      "description": "Edit RELEASES.md / prepare a release.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "park_roadmap_row",
+      "description": "Park a new ROADMAP queue row.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "publish_release",
+      "description": "Publish a release or tag.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "update_roadmap",
+      "description": "Edit ROADMAP.md (park vs repoint undetermined).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_validate",
+      "description": "Run the XYZ validate/preflight harness.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "start_relay",
+      "description": "Start a relay or cross-model consult.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}

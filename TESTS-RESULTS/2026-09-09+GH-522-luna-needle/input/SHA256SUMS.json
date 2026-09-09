@@ -1,0 +1,12 @@
+{
+  "needle-12.json": "587a113cc549df299008569b762e23648bc026d7c156aa8734d8d62cf15f50e1",
+  "needle-13.json": "c7a39cb354f577cc7d2d4fce340a32dd3829389e122e94b7f4ba46c555f90ccc",
+  "needle-710c-oracle_config.py": "3bf3377cc1b7d4b15ef5baec27bb8ca7b6532ae64e708940f62fcacdbe92fd8b",
+  "needle-710c-oracle_infer.py": "26bac4d36e68db49ae3b7358e6e22a8e6f409d225a092c02e98ef730f80b1a20",
+  "needle-710c-oracle_stop_hook.py": "9b52a20ab3fb905d83d95b4e665e72397832a4dccacf4c9a400678ba779ef47c",
+  "needle-main-labels-v1.json": "c1a4bdb1972e350f05d4cf5cdab1b9d58735335f5c2676e622e7dc11e79f436d",
+  "needle-main-oracle_stop_hook.py": "5fb3e7cd7a296f80c1f1edbbeb44f25446f0d97a975b55965f8544832d17c491",
+  "needle-main-serialize.py": "ce2c88a1fd3eda63c7dbd2036030ff86ba4dec0aea24a02bccd61031158ae812",
+  "sources.json": "ca96ef98ec1df5f9812f2d1fe12eeffbf5d4cad2c101e481bac34d64c32e289a",
+  "xyz-522.json": "890c3d46442125f1db3aa00ca798ca8f4175a9b58b601cc81c5896a3bd9c3d80"
+}
