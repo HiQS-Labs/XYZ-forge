@@ -104,6 +104,7 @@ TESTS=(
   "gh450-model-catalog-pin.sh"  # GH-450 (vendored Model-catalog pin: tag+sha256 record, YAML byte-equality drift check, catalog version in invocation telemetry)
   "gh460-fuzz-resolver-smoke.sh" # GH-460 (standing fuzz smoke: resolver structural contract via Gen4 engine)
   "gh346-model-telemetry-honesty.sh" # GH-346 Phase 0 (a shim may not log a model id no dispatch path can produce)
+  "gh518-muse-model-policy.sh"  # GH-518 (muse-turn model policy fails closed: only a confirmed-public repo reaches the data-clause tier)
   "gh346-resolver-fallback.sh"  # GH-346 Phase 1 (alias resolver is an enhancement over a literal floor, never a dependency)
   "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
   "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
