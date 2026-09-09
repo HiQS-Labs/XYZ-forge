@@ -1,0 +1,3 @@
+manual UI selection: exact cards, isolated sources, stale/future exclusion, negative controls passed
+manual workday/lifecycle boundaries: 60m, midnight, closed work, carried PRs passed
+flightdeck manual harness: fixture checks passed

@@ -1,0 +1,65 @@
+{
+  "event": "flightdeck_consumer_planning_recon",
+  "observed_date_utc": "2026-09-08",
+  "rebalance_head": "0bffc4dab79da4a2a13ecd605af9798181a76bc9",
+  "xyz_mockup_baseline": "c7e4bce88ec60599b876e2b28de6c1d542482a1f",
+  "source_hashes": {
+    "scripts/pulse_server.py": "bd8f98bde028a0fec52df00228eb51c5ee407382487964a94aa3a802d14f1e2f",
+    "scripts/github_sync.sh": "e6210aadcc46f44dfa92513a76297d95ab95a138bbc12dfb4329fe35e3613b2e",
+    "scripts/pulse_sync.sh": "80d62ef606cf78653e7dae95c55b0aca066ed18779846e8f81eae0eff43ca306",
+    "src/rebalance/web.py": "f00691f60a53a896aa7f0187a0da51db671c69f350063d24ced565d6b05a9dc1",
+    "src/rebalance/ingest/db/connection.py": "10c0755c13e8076528ddf108940d12efaaadd6d2a2737cd41d917c30ed809a75",
+    "src/rebalance/ingest/db/queries.py": "441722e49015a00b025691026f4e2f6d20e65002f87e3bec5d6420dc78bbe47e",
+    "src/rebalance/ingest/db/schema.py": "2554d36d7b91bb8373e3829b6ee0ea88981bc952550049ce4a5583ca260fd371",
+    "src/rebalance/ingest/registry.py": "34e1750bef4f49f97fa1d8638efc7b2fd54cd6cf4ef11ace0bdb8e2d742d5710",
+    "src/rebalance/ingest/next_actions.py": "4ed69601c1136d77c7221923cbeb752c5f479db698b427f0fd3bb7a5e6a9b456",
+    "src/rebalance/ingest/focus5_scan.py": "20bd6f95a785ef7e3ec56a02a9bebd7f26c8952dd38f7220e91379e253e68fab",
+    "src/rebalance/ingest/pulse_health.py": "cc1202ebf24824c6b8b4319affc4f0c40e2370ec06430fa48cc3702c3c00d987",
+    "src/rebalance/ingest/clio.py": "a983c6f5491869c5cc0f802e63918d65d17f7efeb31438db2bc365b4fda01e5a",
+    "src/rebalance/ingest/index_ops.py": "d4ba2fcff6b176873488d2a65cdc8c8adeef2f3831842a590aa713e69e2afdcc",
+    "experimental/git-pulse/collect.sh": "baae73605f095f91996f4ea6bf9466b38dcca229ea8c5d0acd848839c89af3a2",
+    "experimental/git-pulse/sqlite_spike.py": "cd39f7cadd1c9bf7f412394a352abad4b5cfee0c70ffc0df8415b46e31d375e3",
+    "utils/CLIO/INSTALL.md": "88a93ddf01e6a0df24afff353edb43573630fb56b32984e2ebed56dd67b10d0c",
+    "utils/CLIO/clio-codex-tail.sh": "9ae347043f9890b0a01c7f0f6f5c4e1a9e93c72a42fb526b381faff8b9349b96",
+    "utils/CLIO/clio-agy-tail.sh": "97ebcb1c214bced5a7e9ba58daad8ccb0ef35f48ac679b8d107cb91a40724d2f",
+    ".agents/skills/daily/scripts/scan_unclosed_loops.py": "9e5a1de7f48d0f8a1b1ce8a0bc9c0f85555a5eb6b155c90cf03ffeafc04d3954",
+    "macOS/Apps/Focus5Float/Sources/Focus5Float/Focus5Client.swift": "b28f11696cfa7a7d2c5839c105e4908a6ef66e219549f4b5ea8462391ed15383"
+  },
+  "graph": {
+    "project": "rebalanceOS",
+    "generation": "2026-09-02T03:54:57Z",
+    "mode": "fast",
+    "limits": "stale/excluded candidates verified by exact source; broad symbol pagination not exhausted"
+  },
+  "inspection": "read-only source, installed plist metadata, bounded sync artifact inventory, prompt-log metadata only; no collector/refresh/sync invoked",
+  "observations": {
+    "sync_files": 57,
+    "pulse_files": 3,
+    "pulse_rows": 2698,
+    "studio_coverage": {
+      "configured": 49,
+      "scanned": 3,
+      "missing_git": 46,
+      "producer_scan_status": "ok"
+    },
+    "clio_rows": 1472,
+    "clio_malformed": 0,
+    "clio_latest_utc": "2026-09-08T06:22:53Z",
+    "installed_seconds": {
+      "git_pulse": 3600,
+      "clio_tailer": 60,
+      "clio_markdown": 300
+    },
+    "style_literal_occurrences": {
+      "working_A": {
+        "hex_colors": 71,
+        "font_size_declarations": 102
+      },
+      "shared_BC": {
+        "hex_colors": 53,
+        "font_size_declarations": 49
+      }
+    }
+  },
+  "limits": "Runtime DB CLIO lag not measured; no full topology feed verified at inspected locations; milestone joins/cross-device CLIO unknown; no app implemented or source gates run."
+}
