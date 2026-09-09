@@ -1,0 +1,153 @@
+```json
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "The issue contains only a reproducible crash description without a remediation plan in the GitHub issue body or comments; local capture docs cannot satisfy the admission gate."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "Satisfies all admission criteria including in-issue remedy, audited effective paths, red-control acceptance, matching review hash, dependency checks, and scoped authorization."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "The issue plan was edited post-review without content-hash verification or renewed reviewer attestation, violating review binding and freshness gates."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "The parallel pair shares a changing serialized format without a pinned interface agreement, violating safe runtime contract boundaries for concurrent execution."
+    },
+    {
+      "id": "A05",
+      "decision": "ACCEPT",
+      "reason": "Qualifies for future draft marathon proposal with disjoint write-sets, identical validated transform, no runtime contract collisions, and no mutation of the active wave."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "The issue is parked after reaching its attempt cap; automated rescanning via jog add would improperly reset attempt counts and status without required operator release."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "Untrusted prompt injection attempting to bypass policy; the review hash is invalidated by the modified body text."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "Incomplete scan due to HTTP 503 leaves dependencies unverified; assuming unseen dependencies are completed violates fail-closed admission."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "Meets clean-room evaluation protocol: clean turn-end Stop boundary, disjoint session families, no target leakage, valid canonical label, and target observed within horizon."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "Input includes the subsequent user request occurring after the prediction boundary, violating temporal isolation through future target leakage."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "An unobserved event at the 30-minute horizon is right-censored data and cannot be converted into a synthetic no_action ground-truth label or scored as a true positive."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "Comparison between native engine (200 rows) and MLX (60 rows) is unpaired across disjoint row sets and was retracted in Needle #12 for invalid causal attribution regarding PTQ."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Preserves a rare canonical governance target with held-out support and valid output formatting, properly included in locked scoring across comparison arms regardless of correctness."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "Regex name extraction masks structural malformations (multiple tool-call blocks, duplicate labels, and unexpected argument objects), violating the output schema contract."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "Lacks prompt_id monotonicity fencing, allowing an out-of-order stale worker (p17) to overwrite newer state (p18) under session_id and misattribute feedback."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "Offline correctness on sixteen synthetic cases cannot establish empirical next-action accuracy, live API serving latency (p95 <=2s), cost, or production readiness."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "XYZ targets issue admission and Jog/Marathon wave grouping from issue bodies, PRDs, and reviewed PRS; Needle targets next-observed developer action prediction at turn-end Stop boundaries across 44 canonical classes. Both can reuse recent user prompt text and canonical event taxonomies, but XYZ requires issue metadata, reviewed plan hashes, PRS ratings, and dependency graphs, whereas Needle requires chronological turn-end history, observation horizons, and disjoint session IDs. Observing a developer's next action measures behavioral predictability, not whether the recommendation was optimal, helpful, or accepted.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:3-10",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:7-13",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:74-89"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "On Needle main, the Stop hook runs synchronously in-process to serialize queries and append to log with recommendations set to null without calling a model; on 710c, the hook scores previous feedback, writes pending JSON, and spawns a detached oracle_infer.py subprocess. At 710c, os.replace guarantees atomic filesystem writes but does not prevent out-of-order execution races where an older prompt worker finishes after a newer prompt worker and overwrites last/<session>.json. Testing should simulate out-of-order worker completion by delaying an earlier prompt's process to verify prompt_id monotonicity fencing and feedback attribution integrity without claiming a race occurred.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:59-88",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:111-128",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:55-65"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "Declaring 44 labels or achieving 100% regex parse rates does not certify quality if runtime tool retrieval hides 39 tools or if parsers mask malformed multi-block JSON payloads. Needle #12 warns that engine tool-retrieval dropoffs, eval harness turn alternation, and unpaired evaluations invalidate earlier claims, while the contract distinguishes explicit semantic no_action from confidence abstention and censored horizons. A current inconsistency is that needle-main-labels-v1.json specifies labels take no arguments, yet local eval harnesses accepted argument objects and multi-block calls.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:3-23",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:4-8",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:104-115",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:38-42"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "Deterministic code must enforce admission gates, review/plan content hashes, PRS database consistency, attempt caps, dependency cycle checks, queue leases, and output schema validation, while Flash reasoning handles semantic text parsing, issue remedy extraction, and candidate grouping suggestions. In XYZ, releases_app.py cmd_jog_add manages DB queue insertion but currently resets attempt_count on terminal rows (lines 3912-3914), showing why state transitions must deterministically refuse parked items unless released by an operator. Flash must never self-approve reviews, overwrite running waves, or modify PRS overrides.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1-12",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:32-42",
+        "utils/py/releases_app.py:3899-3915",
+        "MACHINE-CONTRACTS.md:16-29",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:28-36"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "The smallest shared preliminary experiment is a frozen, offline benchmark of curated historical holdouts (40-60 examples) testing zero-shot structured output classification against planted negative controls and simple baselines. Both must guarantee strict temporal partition boundaries, disjoint session families, independent canonical labels, and zero false acceptance of adversarial injections. Separately, XYZ must evaluate multi-issue dependency grouping and atomic writer contention across clones, while Needle must evaluate end-of-turn 44-class top-1/top-3 accuracy, macro-recall on rare governance labels, and live worker latency/cost.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:50-75",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:24-42",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:60-75"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "Flash should be narrowed to proposal/extraction if it fails authoritative gating, escalated to stronger models for complex multi-file contract reasoning, and stopped entirely if it fails adversarial false-acceptance gates or misses the +5pp accuracy gain over simple baselines. This tools-prohibited trial cannot establish production accuracy, latency, dollar cost, privacy, or race guarantees because it evaluated 16 static text fixtures without live API calls, background worker concurrency, network measurements, or database transactions.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:71-78",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:78-95",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:7"
+      ]
+    }
+  ],
+  "limitations": [
+    "Analysis is based exclusively on static source code and 16 fixture cases provided inline without executing tools, commands, or network requests.",
+    "No live latency, token billing, rate limiting, or API cost measurements were performed for gpt-5.6-luna or any remote provider.",
+    "No empirical race conditions, file system locks, or concurrent worker executions were run to stress-test os.replace or database contention.",
+    "Evaluation of model accuracy is advisory and limited to the provided fixture text; it does not measure true generalization on full held-out transcript corpora.",
+    "Live graph database queries were not executed; source snapshot text was analyzed directly."
+  ]
+}
+```
+
