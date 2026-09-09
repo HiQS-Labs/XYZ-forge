@@ -1,0 +1,52 @@
+{
+  "schema": "needle13/flashlite31-openrouter-spike@1",
+  "run": "r1",
+  "status": "complete",
+  "started_at": "2026-09-09T16:14:21.662213+00:00",
+  "requested_model": "google/gemini-3.1-flash-lite",
+  "request_sha256": "d2e94fe56c04a8a97b2c025541aa2b3648781c5b3c430c38d24d728483b63ac8",
+  "source_packet_sha256": "dee4d8c16f2352bf4ff448aecac65d1de803d064df68c73d46e3c30c3dc41f2e",
+  "transport": "consult CODEX_BIN override -> OpenRouter SSE API",
+  "wall_cap_seconds": 900,
+  "http_status": 200,
+  "first_content_seconds": 1.37052520799989,
+  "models": [
+    "google/gemini-3.1-flash-lite"
+  ],
+  "providers": [
+    "Google"
+  ],
+  "usage": [
+    {
+      "prompt_tokens": 34194,
+      "completion_tokens": 1696,
+      "total_tokens": 35890,
+      "cost": 0.0110925,
+      "is_byok": false,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0,
+        "video_tokens": 0
+      },
+      "cost_details": {
+        "upstream_inference_cost": 0.0110925,
+        "upstream_inference_prompt_cost": 0.0085485,
+        "upstream_inference_completions_cost": 0.002544
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "image_tokens": 0,
+        "audio_tokens": 0
+      }
+    }
+  ],
+  "finish_reasons": [
+    "stop",
+    "stop"
+  ],
+  "done_marker": true,
+  "errors": [],
+  "model_identity_matches": true,
+  "full_request_wall_seconds": 7.6206334170001355
+}
