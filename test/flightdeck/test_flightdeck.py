@@ -148,6 +148,19 @@ class ConnectorTests(unittest.TestCase):
                     source = next(s for s in snapshot["sources"] if s["id"] == "topology")
                     self.assertEqual(source["availability"], "unavailable")
 
+    def test_checkout_count_survives_display_cap_but_not_input_cap(self) -> None:
+        from datetime import datetime, timezone
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for count, exact in ((101, 101), (5001, None)):
+                payload = {"schema_version": 1, "coverage": "complete", "generated_at": datetime.now(timezone.utc).isoformat(),
+                           "checkouts": [{"repo_id": "local/demo", "path": f"/fixture/{i}"} for i in range(count)]}
+                (root / "topology.json").write_text(json.dumps(payload))
+                repo = FlightdeckAggregator(config(root, frozenset({"topology"}))).snapshot()["repos"][0]
+                self.assertEqual(len(repo["checkouts"]), 100)
+                self.assertEqual(repo["checkout_count"], exact)
+                self.assertGreater(repo["known_checkout_count"], 100)
+
     def test_cached_pr_without_policy_attestation_never_claims_ready(self) -> None:
         for fetched in ("2000-01-01T00:00:00Z", "2026-09-08T15:00:00Z"):
             for check in ("success", "failure"):

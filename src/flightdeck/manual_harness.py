@@ -92,7 +92,7 @@ def verify(snapshot: dict) -> None:
     assert {421, 390, 332}.issubset({number for item in repo["lanes"] for number in item.get("issues", [])})
     review = next(item for item in repo["lanes"] if item["session_id"] == "lane-review")
     assert review["prs"] == [442], review
-    assert repo["checkout_count"] == 2
+    assert repo["known_checkout_count"] == 2
     assert len(repo["prs"]) == 1 and repo["prs"][0]["issue"] == 83
     assert len(repo["events"]) == 2, "repo/SHA deduplication failed"
     assert all(source["availability"] == "ok" for source in snapshot["sources"])

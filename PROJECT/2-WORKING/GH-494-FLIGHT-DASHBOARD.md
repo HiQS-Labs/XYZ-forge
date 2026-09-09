@@ -556,3 +556,7 @@ this document is the single current implementation plan.
 ## Session visibility mitigation
 
 The verified session context/status gaps and this phase's mitigation are tracked in [GH-494 session context plan](GH-494-SESSION-CONTEXT-PLAN.md), grounded in [the session Recon Map](recon-flightdeck-session-context.md). Implementation is pending plan QA; the existing Rebalance reader already exposes all three reported Claude sessions.
+
+## PR #504 pilot boundary
+
+The pilot displays observed facts, not an attested overall health or merge-readiness verdict. Health remains neutral and PRs verification-needed until existing producers expose complete applicable coverage and current-head policy evidence. All observed repositories are scrollable. Explicit pin/unpin controls and browser Back stepping through overlays are deferred; Escape/X are the supported one-level overlay navigation. The independent review findings and final producer dispositions are in `relay-system/2026-09-08/flightdeck-504-code-qa.md`; no successful relay attestation is claimed.

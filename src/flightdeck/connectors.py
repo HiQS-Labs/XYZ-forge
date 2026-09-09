@@ -268,10 +268,12 @@ def _read_json_source(connector_id: str, path: Path | None, capabilities: tuple[
     payload = json.loads(bounded_text(resolved))
     if not isinstance(payload, dict) or int(payload.get("schema_version", 0)) != 1:
         raise ValueError("unsupported or missing schema_version")
+    truncated = False
     for field in ("repos", "checkouts", "issues", "prs", "lanes", "events"):
         value = payload.get(field, [])
         if not isinstance(value, list):
             raise ValueError(f"{field} must be a list")
+        truncated = truncated or len(value) > MAX_RECORDS
         for item in value[:MAX_RECORDS]:
             if not isinstance(item, dict):
                 raise ValueError(f"{field} record must be an object")
@@ -291,7 +293,7 @@ def _read_json_source(connector_id: str, path: Path | None, capabilities: tuple[
                     raise ValueError(f"invalid {field}.{key}")
         batch[field] = value[:MAX_RECORDS]
     observed = parse_time(payload.get("observed_through") or payload.get("generated_at"))
-    return _available(batch, observed, str(payload.get("coverage") or "partial"))
+    return _available(batch, observed, "partial" if truncated else str(payload.get("coverage") or "partial"))
 
 
 def read_topology(config: ConnectorConfig, deadline: float) -> dict[str, Any]:

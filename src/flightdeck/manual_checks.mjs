@@ -36,7 +36,7 @@ const {snapshotFresh, progressTone} = await import('../../web/flightdeck/present
 const observed = when(1);
 const healthSnapshot = {generated_at: observed, sources:[{id:'continuity', availability:'ok', coverage:'partial', observed_through:observed}]};
 const progressRepo = {last_progress_at:when(10), events:[{source_ref:'continuity', occurred_at:when(10)}]};
-assert.equal(progressTone(progressRepo, healthSnapshot, false, now), 'green');
+assert.equal(progressTone(progressRepo, healthSnapshot, false, now), 'unknown');
 assert.equal(progressTone({last_intent_at:observed}, healthSnapshot, false, now), 'unknown');
 assert.equal(progressTone(progressRepo, healthSnapshot, true, now), 'unknown');
 assert.equal(progressTone(progressRepo, healthSnapshot, false, now+360000), 'unknown');

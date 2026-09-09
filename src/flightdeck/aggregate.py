@@ -143,6 +143,7 @@ class FlightdeckAggregator:
         detail_truncated = False
         for key, repo in repos.items():
             groups = by_repo[key]
+            checkout_count = len(groups["checkouts"])
             for name in detail_caps:
                 group = groups[name]
                 group.sort(key=lambda item: _timestamp(item.get("occurred_at") or item.get("last_prompt_at") or item.get("updated_at")), reverse=True)
@@ -153,8 +154,8 @@ class FlightdeckAggregator:
             repo.update({name: groups[name] for name in detail_caps})
             repo["last_progress_at"] = progress[0].get("occurred_at") if progress else None
             repo["last_intent_at"] = groups["lanes"][0].get("last_prompt_at") if groups["lanes"] else None
-            repo["known_checkout_count"] = len(groups["checkouts"])
-            repo["checkout_count"] = len(groups["checkouts"]) if any(b["connector"] == "topology" and b["source"]["coverage"] == "complete" for b in batches) else None
+            repo["known_checkout_count"] = checkout_count
+            repo["checkout_count"] = checkout_count if any(b["connector"] == "topology" and b["source"]["coverage"] == "complete" and 0 <= time.time() - _timestamp(b["source"].get("observed_through")) <= 300 for b in batches) else None
             output_repos.append(repo)
 
         output_repos.sort(key=lambda repo: max(_timestamp(repo.get("last_progress_at")), _timestamp(repo.get("last_intent_at"))), reverse=True)

@@ -263,12 +263,13 @@ function openDetail(repo, issue = null) {
   refs.detailTitle.textContent = lane?.agent ? `Continue with ${lane.agent}` : 'Re-establish this lane';
   refs.detailBody.replaceChildren();
   const summary = node('section', 'drawer-section');
-  const action = lane?.task || repo.next_actions?.[0]?.title || issue?.title || repo.summary || 'No agent context is available.';
+  const action = lane?.task || (issue ? issue.title || `Issue #${issue.number}` : repo.next_actions?.[0]?.title || repo.summary) || 'No agent context is available.';
+  const progress = issue ? (repo.events || []).find(e => laneIssues(e, repo).includes(issue.number))?.occurred_at : repo.last_progress_at;
   summary.append(node('h3', '', 'Current context'), node('p', '', action));
   const handoff = node('section', 'drawer-section');
   handoff.append(node('h3', '', 'Copyable handoff'));
   const text = node('textarea'); text.readOnly = true;
-  text.value = `Resume ${repo.name}${issue ? ` issue #${issue.number}` : ''}.\n\nLast known context: ${action}\nLast meaningful progress: ${repo.last_progress_at || 'unknown'}.\n\nConfirm the current branch, issue and PR head before continuing. Report the next concrete milestone.`;
+  text.value = `Resume ${repo.name}${issue ? ` issue #${issue.number}` : ''}.\n\nLast known context: ${action}\nLast meaningful progress: ${progress || 'unknown'}.\n\nConfirm the current branch, issue and PR head before continuing. Report the next concrete milestone.`;
   const copy = node('button', 'details copy', 'Copy handoff'); copy.type = 'button';
   copy.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(text.value); copy.textContent = 'Copied'; }
