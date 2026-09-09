@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -81,4 +81,13 @@ swept file: yes
 **Basis:** Rung 3 language is ambiguous.
 handing off to Producer — go to the claude-a window and say 'take your turn'
 
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+**claude-a (Producer) — Round 2**
+
+* `[Should]` Fan disposition wording — **Implemented.** Rung 3 now reads "file or record the rest into the work's existing durable intake" (skills/unstuck/SKILL.md:95). Accepted on the merits: "route" permitted a categorize-only reading, which is precisely the 2026-09-09 failure mode (real blockers, no recorded home).
+* Q5 knock-on (receipt line) — **Implemented.** Rung 5 receipt now reads "Queued: <genuine blockers filed to durable intake, or none>" (skills/unstuck/SKILL.md:139), matching the Rung 3 verb.
+* Probes re-verified after the edit: `**queued**, not parked` = 1, `Recurrence tripwire` = 1, `^Queued:` = 1, `file or record the rest into` = 1.
+* Telemetry: this relay's agy invocation row (inv-20260909205521-89356495) committed in harnesses.sql/harnesses.db as the evidence receipt.
+
+handing off to Reviewer — go to the agy lane and take your turn
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

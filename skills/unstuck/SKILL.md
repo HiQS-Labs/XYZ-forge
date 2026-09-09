@@ -92,9 +92,9 @@ failure as polish merely to create motion.
 
 A fan of simultaneous genuine blockers is itself a stall signal — working them in parallel is
 activity without movement. Rank them by critical path to the re-anchored milestone, act only on
-the first, and route the rest to the work's existing durable intake (issue tracker, queue, or
-ledger — never a new artifact). They are **queued**, not parked: queued items are real outstanding
-work with a recorded home; parked items are cogs or polish that may never be done.
+the first, and file or record the rest into the work's existing durable intake (issue tracker,
+queue, or ledger — never a new artifact). They are **queued**, not parked: queued items are real
+outstanding work with a recorded home; parked items are cogs or polish that may never be done.
 
 ### Rung 4 — Choose one goal-moving action
 
@@ -136,7 +136,7 @@ Goal: <original outcome>
 Stall: <what was consuming motion>
 Move: <single action taken or exact decision requested>
 Evidence: <observable milestone change or named blocker>
-Queued: <genuine blockers routed to durable intake, or none>
+Queued: <genuine blockers filed to durable intake, or none>
 Parked: <non-blocking cogs/polish, or none>
 Next: <one next task state>
 ```
