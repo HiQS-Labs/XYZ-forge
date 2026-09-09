@@ -35,14 +35,20 @@ import argparse
 import itertools
 import json
 import os
-import signal
 import subprocess
+import sys
 import time
 import sys
 from pathlib import Path
 
 import requests
 import yaml
+
+# GH-478: the bounded process-group runner is shared — utils/py/proc_group.py owns
+# start_new_session + group TERM/grace/KILL on expiry (also used by fuzz_engine.execute
+# and by the test/lib runaway guard's bash seam).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "py"))
+from proc_group import run_bounded  # noqa: E402
 
 # #141 Phase 5 / #146: the no-edit rule is NOT universal — it assumes the target is an EDIT
 # pipeline (the stock Aider grid). On a diagnostic probe (exit-0, no tree change is the expected
@@ -317,35 +323,18 @@ def run_harness(cmd: list[str], repo: str, timeout: int) -> dict:
     default) or build_templated_cmd (a pluggable harness) — this is just the
     process/timeout/output-capture plumbing that used to live in run_aider()."""
     start = time.time()
-    # Run in its own process group so a timeout can kill any children the
-    # harness spawns, not just the direct process.
-    proc = subprocess.Popen(
-        cmd, cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, errors="replace", start_new_session=True,
-    )
-    try:
-        stdout, stderr = proc.communicate(timeout=timeout)
-        return {
-            "command": " ".join(cmd),
-            "cmd": cmd,
-            "exit_code": proc.returncode,
-            "stdout": stdout[-4000:],
-            "stderr": stderr[-4000:],
-            "wall_seconds": round(time.time() - start, 1),
-            "timed_out": False,
-        }
-    except subprocess.TimeoutExpired:
-        os.killpg(proc.pid, signal.SIGKILL)
-        stdout, stderr = proc.communicate()
-        return {
-            "command": " ".join(cmd),
-            "cmd": cmd,
-            "exit_code": None,
-            "stdout": (stdout or "")[-4000:],
-            "stderr": (stderr or "")[-4000:],
-            "wall_seconds": round(time.time() - start, 1),
-            "timed_out": True,
-        }
+    # GH-478: the process-group plumbing (start_new_session, group kill on expiry) is
+    # shared — utils/py/proc_group.py, factored from this function and fuzz_engine.execute.
+    res = run_bounded(cmd, cwd=repo, timeout=timeout)
+    return {
+        "command": " ".join(cmd),
+        "cmd": cmd,
+        "exit_code": None if res.timed_out else res.rc,
+        "stdout": res.stdout[-4000:],
+        "stderr": res.stderr[-4000:],
+        "wall_seconds": round(time.time() - start, 1),
+        "timed_out": res.timed_out,
+    }
 
 
 def check_control(control_path: Path) -> dict | None:

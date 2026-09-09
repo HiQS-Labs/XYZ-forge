@@ -99,6 +99,7 @@ TESTS=(
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
+  "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
   "gh450-model-catalog-pin.sh"  # GH-450 (vendored Model-catalog pin: tag+sha256 record, YAML byte-equality drift check, catalog version in invocation telemetry)
   "gh460-fuzz-resolver-smoke.sh" # GH-460 (standing fuzz smoke: resolver structural contract via Gen4 engine)
