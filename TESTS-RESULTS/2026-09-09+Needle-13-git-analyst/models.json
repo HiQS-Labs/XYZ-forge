@@ -1,0 +1,161 @@
+{
+  "prepared_at": "2026-09-09T20:59:21.068429+00:00",
+  "input_contract": {
+    "ANALYST_PROMPT_FILE": "absolute frozen shared questions path",
+    "ANALYST_SOURCE_REFERENCE": "absolute frozen JSON reference with path/sha256 fields",
+    "LOCAL_SPIKE_ROOT": "existing output directory for this configuration",
+    "LOCAL_SPIKE_RUN": "r1 or r2"
+  },
+  "models": [
+    {
+      "id": "luna-medium",
+      "model": "gpt-5.6-luna",
+      "effort": "medium",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/luna-medium.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-terra/codex_adapter.py",
+      "original_adapter_sha256": "9f7f4bfc11b1c04b91eb42dce761134e6deafcc59259461abd96d3a646fc7ae3",
+      "adapter_sha256": "b6b3aca35382ee609c5ffc90b127821a1d08a4009455bc7e608ca2a473699d5a",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "terra-medium",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/terra-medium.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-terra/codex_adapter.py",
+      "original_adapter_sha256": "9f7f4bfc11b1c04b91eb42dce761134e6deafcc59259461abd96d3a646fc7ae3",
+      "adapter_sha256": "de6dc4d859a3f61aa43354f739932dfec57189c00b407c8a415c8a81705837f8",
+      "phase1_grade": "B",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "terra-low",
+      "model": "gpt-5.6-terra",
+      "effort": "low",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/terra-low.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-terra/codex_adapter.py",
+      "original_adapter_sha256": "9f7f4bfc11b1c04b91eb42dce761134e6deafcc59259461abd96d3a646fc7ae3",
+      "adapter_sha256": "09730149dcdd7bd5ace508f964f7b745ead97ea453078bca81769dbcf8b14329",
+      "phase1_grade": "B",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "spark-high",
+      "model": "gpt-5.3-codex-spark",
+      "effort": "high",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/spark-high.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-terra/codex_adapter.py",
+      "original_adapter_sha256": "9f7f4bfc11b1c04b91eb42dce761134e6deafcc59259461abd96d3a646fc7ae3",
+      "adapter_sha256": "e162917eae5f1e061ef92008b624f540a187e45640510a5e36f5777669d1009b",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "spark-xhigh",
+      "model": "gpt-5.3-codex-spark",
+      "effort": "xhigh",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/spark-xhigh.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-terra/codex_adapter.py",
+      "original_adapter_sha256": "9f7f4bfc11b1c04b91eb42dce761134e6deafcc59259461abd96d3a646fc7ae3",
+      "adapter_sha256": "f7cff6791574a7edf1552650aadfadc410a546aa71f254e43476751f010808cb",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "gemma31-off",
+      "model": "google/gemma-4-31b-qat",
+      "effort": "off",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/gemma31-off.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-gemma31/lmstudio_stream_adapter.py",
+      "original_adapter_sha256": "35d93a1256def4db9054470b97782591a74b425d8c6fe5db17d5418467006b12",
+      "adapter_sha256": "3d6c507b049e845eeca905ccbd91488d0b350483e943b6a81c71bb931cf151e1",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "local endpoint unreachable; not loaded"
+    },
+    {
+      "id": "agy37-high",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/agy37-high.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-agy37/agy_adapter.py",
+      "original_adapter_sha256": "9d33c9e359bb9bb222a33a83bc6b1432f1d7dc38a3092abaff9e614cc89b776e",
+      "adapter_sha256": "31ae44fb759494a8b1c3bd96000243861016b077aaa208861f37ed4183caa738",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "agy31pro-high",
+      "model": "gemini-3.1-pro-high",
+      "effort": "high",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/agy31pro-high.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-agy31pro/agy_adapter.py",
+      "original_adapter_sha256": "c3ff8ef3be021f845a40c6bf3f3912b3577574de1f177c380bef56166e144ff4",
+      "adapter_sha256": "d700bb121f0ef4ba2f7360b50564d159edb836d4e6473b1dbd3b36e5f4df5946",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "flashlite31",
+      "model": "google/gemini-3.1-flash-lite",
+      "effort": null,
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/flashlite31.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-flashlite31/openrouter_adapter.py",
+      "original_adapter_sha256": "a020919a57bd00591134cfeddafebefc8a2b4929a8a78d679a5295761d8802d8",
+      "adapter_sha256": "eecd0a4b5bedc492fe577ecc1c29fa5ed95741af310c6cf55e53625571209cda",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    },
+    {
+      "id": "muse13-high",
+      "model": "muse-spark-1.3-contributor",
+      "effort": "high",
+      "adapter": "TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/adapters/muse13-high.py",
+      "reused_from": "TESTS-RESULTS/2026-09-09+Needle-13-muse/muse_adapter.py",
+      "original_adapter_sha256": "943debbd6829121a31d0b4371576f111fa3ad55a22516efbde0524ce303477c2",
+      "adapter_sha256": "bc03f93dcb7bc119f9492d20552f1f1d2b122ec41d7109c73fa887e1542562c9",
+      "phase1_grade": "C",
+      "runs": [
+        "r1",
+        "r2"
+      ],
+      "availability": "previous successful exact-model trial; revalidate before execution"
+    }
+  ]
+}

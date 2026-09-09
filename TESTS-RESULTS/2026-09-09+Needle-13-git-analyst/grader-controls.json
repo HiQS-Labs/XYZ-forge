@@ -1,0 +1,11 @@
+{
+  "positive": true,
+  "negative_controls": {
+    "empty": true,
+    "duplicate": true,
+    "missing": true,
+    "flipped": true,
+    "invented_citation": true,
+    "critical_false_support": true
+  }
+}

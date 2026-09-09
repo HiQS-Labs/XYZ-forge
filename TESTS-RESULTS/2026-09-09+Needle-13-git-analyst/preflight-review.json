@@ -1,0 +1,20 @@
+{
+  "reviewer": "flash_lite independent helper",
+  "reviewed_before_inference": true,
+  "findings_resolved": [
+    "G10 claim limited to unknown blockers rather than known missing file count",
+    "G12 deployment record scope limited to GitHub; external deployment unobserved"
+  ],
+  "other_keys": "accepted",
+  "negative_controls": {
+    "positive": true,
+    "negative_controls": {
+      "empty": true,
+      "duplicate": true,
+      "missing": true,
+      "flipped": true,
+      "invented_citation": true,
+      "critical_false_support": true
+    }
+  }
+}
