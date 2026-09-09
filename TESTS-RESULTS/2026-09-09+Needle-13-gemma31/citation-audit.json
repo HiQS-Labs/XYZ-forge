@@ -1,0 +1,322 @@
+[
+  {
+    "run": 1,
+    "scope": "answers[].evidence only; basename/stem aliases resolved; range existence and packet availability, not semantic support",
+    "references": [
+      {
+        "question": "Q1",
+        "citation": "xyz-522:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-main-oracle_stop_hook.py:76",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-710c-oracle_stop_hook.py:122",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py",
+        "source_line_count": 132,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-710c-oracle_infer.py:58",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12:3",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:4",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-710c-oracle_infer.py:44",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q4",
+        "citation": "releases_app.py:313",
+        "resolved_path": "utils/py/releases_app.py",
+        "source_line_count": 5503,
+        "range_exists": true,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522:24",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q4",
+        "citation": "MACHINE-CONTRACTS.md:16",
+        "resolved_path": "MACHINE-CONTRACTS.md",
+        "source_line_count": 157,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q5",
+        "citation": "xyz-522:24",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q5",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q6",
+        "citation": "xyz-522:24",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q6",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      }
+    ],
+    "out_of_range_or_missing": 12,
+    "outside_supplied_packet": 13
+  },
+  {
+    "run": 2,
+    "scope": "answers[].evidence only; basename/stem aliases resolved; range existence and packet availability, not semantic support",
+    "references": [
+      {
+        "question": "Q1",
+        "citation": "xyz-522:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-main-oracle_stop_hook.py:76",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-710c-oracle_stop_hook.py:122",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py",
+        "source_line_count": 132,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-710c-oracle_infer.py:58",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12:3",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:4",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-710c-oracle_infer.py:44",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q4",
+        "citation": "releases_app.py:313",
+        "resolved_path": "utils/py/releases_app.py",
+        "source_line_count": 5503,
+        "range_exists": true,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522:11",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522:24",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q4",
+        "citation": "MACHINE-CONTRACTS.md:16",
+        "resolved_path": "MACHINE-CONTRACTS.md",
+        "source_line_count": 157,
+        "range_exists": true,
+        "range_in_supplied_packet": true
+      },
+      {
+        "question": "Q5",
+        "citation": "xyz-522:24",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q5",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q6",
+        "citation": "xyz-522:24",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      },
+      {
+        "question": "Q6",
+        "citation": "needle-13:13",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "range_exists": false,
+        "range_in_supplied_packet": false
+      }
+    ],
+    "out_of_range_or_missing": 12,
+    "outside_supplied_packet": 13
+  }
+]

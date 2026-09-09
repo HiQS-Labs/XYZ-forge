@@ -1,0 +1,9 @@
+{
+  "request": {
+    "instance_id": "google/gemma-4-31b-qat"
+  },
+  "response": {
+    "instance_id": "google/gemma-4-31b-qat"
+  },
+  "client_seconds": 0.722112458999618
+}

@@ -1,0 +1,9 @@
+{
+  "request_parity_with_bonsai_except_candidate_names": true,
+  "two_requests_and_answers_byte_identical": true,
+  "complete_streams_match_answers": true,
+  "empty_missing_end_missing_delta_controls_rejected": true,
+  "model_identity_and_zero_reasoning_tokens_verified": true,
+  "request_response_hashes_verified": true,
+  "single_instance_original_visible_load_settings_restored": true
+}
