@@ -1,7 +1,7 @@
 ---
 title: "GH-516: /express v2 — true direct-push mode, commit-driven reconciliation, recovery subcommand, and central telemetry"
-status: Active (2-WORKING — execution started 2026-09-08)
-updated: 2026-09-08
+status: Complete
+updated: 2026-09-09
 created: 2026-09-08
 owner: noelsaw1
 gh_issue: 516
