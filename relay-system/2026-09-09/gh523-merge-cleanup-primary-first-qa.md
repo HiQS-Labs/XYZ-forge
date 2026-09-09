@@ -1,7 +1,7 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: Escalated
-NEXT: Operator
+STATUS: Closed — operator accepted
+NEXT: none
 ROUND: 3
 
 ## Body
@@ -327,3 +327,22 @@ this patch attests successful *final* landing, and nothing in the code, doc or c
 
 **STATUS: Escalated / NEXT: Operator.** The operator decides: authorize a fourth round, accept the
 producer-adjudicated revision, or hold.
+
+---
+
+## Operator decision — 2026-09-09
+
+The operator was given the choice between a fourth review round and accepting the
+producer-adjudicated revision, with a recommendation for the fourth round, and chose to
+**accept the producer-adjudicated revision** and proceed to the PR.
+
+Recorded state at acceptance:
+
+- Three review rounds, thirteen findings, all thirteen fixed.
+- The final revision (`b404e19d` and later) is **producer-adjudicated only** — Codex reviewed the
+  revision before it. R3-1 and R3-2 carry no reviewer sign-off.
+- Standing and unrepaired by design, agreed across rounds 2 and 3: reconciliation runs before the
+  fast-forward, and a failed fast-forward is reported but does not halt teardown. Neither Phase 0
+  nor this patch attests successful *final* landing, and nothing claims it does.
+
+STATUS: Closed — operator accepted. NEXT: none.
