@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-09-09T18:12:19.375833+00:00",
+  "repositories": [
+    {
+      "nameWithOwner": "HiQS-Labs/XYZ-forge",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge",
+      "visibility": "PUBLIC"
+    },
+    {
+      "nameWithOwner": "HiQS-Labs/Needle-fork",
+      "url": "https://github.com/HiQS-Labs/Needle-fork",
+      "visibility": "PUBLIC"
+    }
+  ],
+  "input_scope": "frozen public issue/code snapshots plus synthetic cases only"
+}

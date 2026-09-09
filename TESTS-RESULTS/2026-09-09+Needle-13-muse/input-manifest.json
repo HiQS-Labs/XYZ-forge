@@ -1,0 +1,13 @@
+{
+  "prepared_at": "2026-09-09T18:12:19.552836+00:00",
+  "sha256": {
+    "muse_adapter.py": "943debbd6829121a31d0b4371576f111fa3ad55a22516efbde0524ce303477c2",
+    "visibility-receipt.json": "4cf55a71a8e4fb367f579301d44a4882b977c3e4814320976899a6c40c9f3652",
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "model-catalog.json": "87de9f7bef0f556aa39406bf96bd3608a84344b0d4cdbc142d3cc72d44e85cd2",
+    "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733",
+    "cli-help.txt": "e86ff560edcb894306dd9b17e73b96e3fa6eaaf870c4f03121b108fb511f2688",
+    "QUESTIONS.md": "140eccc9e7223ce85a9113e48e5be06f7d992f98fcf79c80e1439f0f9e325f5c",
+    "PROTOCOL.md": "7540b4f126b45d95090f583a95386a0d82f11eec49d9c69996b8177e3570e36d"
+  }
+}
