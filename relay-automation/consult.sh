@@ -284,32 +284,8 @@ run_aider() {
 # resolve-model-alias.sh for the same convention). Adding a 5th advisor is a DATA addition here — one
 # entry in each array plus its own run_<vendor>() — not a new case arm in the fan-out loop below. See
 # "Adding a new consult advisor" in relay-automation/README.md for the full recipe.
-run_muse() {
-  local out="$1" model
-  # DEFAULTS TO THE CLAUSE-FREE TIER, deliberately. muse-spark-1.3-contributor is ~12x cheaper
-  # because Meta states submitted content, including inter-session messages, may be used for
-  # product improvement, and a consult ships whatever the question quotes. muse-turn.py can decide
-  # per-repo because it knows the turn's roots; consult has no such context and may be pointed at
-  # any repo via CONSULT_ROOT, so the safe tier is the only defensible default here. MUSE_MODEL is
-  # the informed-operator override, matching the shim.
-  model="${MUSE_MODEL:-muse-spark-1.3}"
-  # ADVISORY only: no --workspace, so muse's policy-gated write tools are never rooted anywhere and
-  # it answers to stdout — which is exactly what a consult captures. (The relay shim needs the
-  # opposite; a review turn there must be able to write its block. GH-518.)
-  _guarded "$out" "${MUSE_BIN:-$HOME/.local/bin/muse}" exec \
-    --model "$model" --reasoning-effort "${MUSE_REASONING_EFFORT:-high}" "$FULL_PROMPT" || return 5
-  # muse always prints a `muse: workspace root: ...` banner, so a size check would call a no-output
-  # run a success. Require something that is not its own chatter (same trap as the shim's guard).
-  if ! grep -v '^muse: ' "$out" 2>/dev/null | grep -q '[^[:space:]]'; then
-    printf '\nconsult: muse produced no output beyond its own banner — advisor counted FAIL.\n' >> "$out"
-    return 5
-  fi
-  local tmp="${out}.tmp"
-  { printf '> **ATTESTATION**\n> Model: %s\n> Provider: meta (first-party CLI, no gateway)\n> Mode: advisory, no workspace tools\n\n' "$model"; cat "$out"; } > "$tmp" && mv "$tmp" "$out"
-}
-
-ADV_NAMES=(codex agy gemini aider muse)
-ADV_RUNFNS=(run_codex run_agy run_gemini run_aider run_muse)
+ADV_NAMES=(codex agy gemini aider)
+ADV_RUNFNS=(run_codex run_agy run_gemini run_aider)
 
 # --- fan out in parallel (indexed arrays — macOS bash 3.2 has no `declare -A`) --------------------
 PIDS=(); PMODELS=(); POUTS=()
