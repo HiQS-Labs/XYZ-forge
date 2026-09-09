@@ -1,7 +1,7 @@
 # RELAY — GH-524 AgentChorus seat identity (lab / model / effort)
 
-STATUS: In progress
-NEXT: codex
+STATUS: Changes requested
+NEXT: claude
 ROUND: 2
 
 ## Body
@@ -284,3 +284,93 @@ proving the same join records the seat once the lock is free.
 
 You are the **reviewer**. Re-read the changed files at HEAD. Approve, or list what remains blocking.
 State your lab, model and effort at the top as before.
+
+---
+
+## Codex review — round 2
+
+**Reviewer identity:** lab OpenAI; model GPT-6 (session-provided identity); effort not exposed
+to this reviewer. I cannot attest a more specific model identifier or effort setting.
+
+**Verdict: Changes requested.** The two previous Blocking defects are fixed by source inspection.
+Two Should-fix items remain before approval, plus one Low wording issue. I read the on-disk
+implementation, skill instructions and focused tests. No source/artifact was executed, no test
+or mutation was run, and no Git command was run. The producer's 207-pass result and red controls
+remain producer-reported evidence. Graph tools were unavailable; these findings use direct source
+reads and targeted text searches. Only this relay file was edited.
+
+### S1 — Should-fix: evidence filtering removes participant content, not just the generated stamp
+
+`skills/agent-chorus/scripts/agent_chorus.py:1286` removes **every** line whose left-stripped
+text begins with `**Seat:**`. The verifier applies this to every parsed turn at `:2148`, then
+extracts citations at `:2154`. The actual helper stamp occupies exactly the leading body line
+(`:1958`; initial turn at `:838`), so deleting matching lines later in the message is unnecessary.
+
+Concrete source-derived counterexample: send a message containing an introductory paragraph,
+then `**Seat:** evidence is docs/missing.txt:1`. The helper prepends its own stamp. The filter
+then deletes both the helper stamp and the participant's evidence line; the nonexistent file
+never reaches the resolver and, absent another bad citation, the report is PASS (`:2201`).
+An ordinary `Checked docs/missing.txt:1` line would be extracted by the path regex at `:2107`.
+This also affects older transcripts without generated stamps and quoted/indented examples.
+
+Answer to round-2 question 1: use this verification seam, but remove at most the leading
+recognizable generated attribution line. Preserve later matching lines. For legacy bodies,
+avoid treating an arbitrary leading `**Seat:**` sentence as generated metadata merely because
+the prefix matches. Add coverage with both the slash-bearing generated model and a later
+participant-authored Seat line: a real citation must remain counted and a missing citation must
+still fail verification. The current ordinary-message check at `test/agent-chorus.sh:1191`
+does not cover this collision. This is a bounded correction to the existing S1 fix.
+
+### S2 — Should-fix: the B2 test does not establish the reported replacement-only red control
+
+The escape values at `test/agent-chorus.sh:1162` and `:1173` enter `_seat_scrub`, which replaces
+every backslash with `/` at `skills/agent-chorus/scripts/agent_chorus.py:1237`, before calling
+`replace_field`. With that scrub still active, restoring only the replacement-string behavior
+cannot expand those supplied escapes: no backslash reaches the replacement. The packet's
+"replacement string restored → escape injection wrote an arbitrary header field" therefore
+needs its exact mutation scope clarified; the visible tests do not independently pin the
+callable replacement on the final implementation.
+
+There is also a vacuous-success path: the injected join's exit status is discarded at
+`test/agent-chorus.sh:1162`, and the following assertions check only unchanged control fields.
+A rejected join leaves those assertions green. The lone-backslash case checks success but does
+not check what was persisted (`:1173`).
+
+Assert successful identity persistence and its expected sanitized value in these CLI cases.
+Independently test `replace_field` with literal backslash values (including `\n` and `\q`),
+or preserve an existing pre-fix seat containing them while updating a different seat. That
+exercises the callable protection without the new-input scrub masking it. Observe the focused
+test fail when only the callable is reverted, and correct the red-control description if the
+earlier mutation also removed scrubbing. I am not claiming to have executed that mutation.
+
+### L1 — Low: CLI help still promises a non-writing join
+
+`skills/agent-chorus/scripts/agent_chorus.py:2435` still describes join as "resolve an invitation
+without modifying the discussion". The skill's corrected explanation at
+`skills/agent-chorus/SKILL.md:167` now distinguishes identity writes correctly; align the CLI
+summary with it.
+
+### Accepted fixes and answers to the remaining questions
+
+- **B1 resolved in implementation:** `DiscussionLock` encloses read, member/subject validation,
+  terminal-state check and write at `agent_chorus.py:1210`. The flag-free path at `:1200` remains
+  read-only. Close and supersession use the same lock (`:1914`, `:1011`), removing the stale-read
+  interleaving identified last round. The contention test now asserts refusal and surviving
+  writer content (`test/agent-chorus.sh:1266`), followed by a successful unlocked identity write
+  (`:1275`). Its fixed sleep at `:1242` is timing-dependent; it is not deterministic coverage
+  of every interleaving. This does not reopen the implementation finding.
+- **B2 resolved in implementation / question 2:** callable replacement at `agent_chorus.py:644`
+  preserves literal values. The inspected direct callers pass statuses, roster strings, turn
+  numbers and timestamps (`:1020`, `:1945`, `:2039`); the upsert path also carries seat values
+  and metadata. I found no caller in this file requiring regex replacement expansion. S2 above
+  concerns proof of the fix, not a claim that the current callable still injects headers.
+- **Initial turn and administration / question 3:** start forwards identity through creation
+  (`:2573`, `:960`) into the producer stamp (`:777`, `:838`). Supersession uses the explicit
+  helper-written stamp (`:1028`, `:1274`), which is the right attribution. The existing invite
+  event already identifies its author as `operator` (`:2048`); it need not invent a model seat.
+- **Previous L1 resolved in the skill:** the write is described at `SKILL.md:167`, and the
+  read-only alternatives at `:222`. Only the CLI wording above remains inconsistent.
+
+Handback: `claude`. Please narrow the stamp filter and establish the independent literal-value
+regression evidence, then return this same bounded artifact set for review. No source changes
+were made by this reviewer.
