@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Flightdeck</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="app.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar" id="topbar">
+    <nav id="breadcrumbs" class="breadcrumbs" aria-label="Breadcrumb"></nav>
+    <div class="title-block">
+      <p class="eyebrow">FLIGHTDECK · LIVE LOCAL SIGNALS</p>
+      <h1 id="viewTitle">Active repositories</h1>
+    </div>
+    <div class="controls">
+      <span id="connectionStatus" class="eyebrow" role="status">Reading sources…</span>
+      <button id="retry" type="button">Read latest</button>
+      <div class="countdown" aria-live="polite"><span id="countdownLabel">Until wrap-up</span><strong id="countdown">--:--:--</strong></div>
+      <button id="focusMode" type="button">Focus view</button>
+      <button id="theme" type="button" aria-label="Change appearance">Theme: system</button>
+      <button id="closeView" class="close" type="button" aria-label="Go back one level" hidden>×</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="sourceStrip" class="source-strip" aria-label="Connector status"></section>
+    <div id="fadeLeft" class="edge-fade left" hidden></div>
+    <section id="repos" class="repo-grid" aria-label="Repository cards" tabindex="-1"></section>
+    <div id="fadeRight" class="edge-fade right" hidden></div>
+    <section id="empty" class="empty" hidden>
+      <p class="eyebrow">NO SOURCE DATA</p>
+      <h2 id="emptyTitle">Flightdeck is ready for connectors.</h2>
+      <p id="emptyCopy">Start or configure any incoming connector. The dashboard itself remains available.</p>
+    </section>
+  </main>
+
+  <dialog id="detail" class="drawer">
+    <form method="dialog"><button class="close" aria-label="Close details">×</button></form>
+    <p class="eyebrow" id="detailEyebrow"></p>
+    <h2 id="detailTitle"></h2>
+    <div id="detailBody"></div>
+  </dialog>
+
+  <template id="repoTemplate">
+    <article class="repo-card" tabindex="0">
+      <div class="card-head"><span class="repo-mark"></span><span class="position"></span></div>
+      <h2 class="repo-name"></h2>
+      <p class="repo-summary"></p>
+      <div class="health"><i></i><strong></strong><span></span></div>
+      <div class="next-action"><span>Next action</span><strong></strong></div>
+      <div class="metrics"></div>
+      <section><div class="section-head"><h3>Last hour</h3><span class="hour-count"></span></div><div class="timeline"></div></section>
+      <section><div class="section-head"><h3 class="issues-title">Issues in flight</h3><span class="issue-count"></span></div><div class="issues"></div></section>
+      <section><div class="section-head"><h3>Pull requests</h3><span class="pr-count"></span></div><div class="prs"></div></section>
+      <footer><span class="connector-evidence"></span><button class="details" type="button">Agent handoff</button></footer>
+    </article>
+  </template>
+</body>
+</html>

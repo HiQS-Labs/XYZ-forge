@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "fonts": {
+    "ui": "Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "mono": "'SFMono-Regular', Consolas, 'Liberation Mono', monospace"
+  },
+  "scale": {
+    "space-1": "4px", "space-2": "8px", "space-3": "12px", "space-4": "16px",
+    "space-5": "24px", "space-6": "32px", "space-7": "48px",
+    "text-xs": "11px", "text-sm": "13px", "text-md": "15px", "text-lg": "20px",
+    "text-xl": "30px", "text-hero": "clamp(38px, 4vw, 68px)",
+    "line-tight": "1.1", "line-normal": "1.5", "letter-wide": ".12em",
+    "radius-sm": "8px", "radius-md": "14px", "radius-lg": "22px",
+    "border": "1px", "overview-card-height": "max(360px, calc((100vh - 190px) / 2))", "grid-card-min": "360px", "card-width": "min(31vw, 560px)", "card-min-height": "calc(100vh - 72px)", "compact-card-width": "86vw", "compact-card-min-height": "calc(100vh - 40px)", "wide-card-width": "min(30vw, 600px)",
+    "focus-card-width": "min(72vw, 1080px)", "drawer-width": "min(520px, 92vw)",
+    "motion-fast": "140ms", "motion-normal": "260ms", "ease": "cubic-bezier(.2,.8,.2,1)",
+    "shadow": "0 24px 80px rgba(0,0,0,.28)", "dim-opacity": ".16", "peek-opacity": ".38", "accent-wash": "20%", "carousel-gutter": "9vw", "fade-width": "9vw"
+  },
+  "breakpoints": {"compact": "720px", "wide": "1500px"},
+  "dark": {
+    "canvas": "#090b10", "surface": "#11151d", "surface-raised": "#171c26",
+    "text": "#f3f5f8", "text-muted": "#919aa8", "border": "#2a3240",
+    "focus": "#cbd9ff", "green": "#79d69c", "amber": "#e9bc75", "red": "#ef817c",
+    "unknown": "#8e98a8", "accent": "#9eb7f4", "overlay": "rgba(3,5,8,.82)",
+    "fade": "#090b10", "repo-1": "#eab38a", "repo-2": "#9eb7f4", "repo-3": "#b9a3e0",
+    "repo-4": "#91cba5", "repo-5": "#d2c278", "repo-6": "#80c4cf", "repo-7": "#aab2c0"
+  },
+  "light": {
+    "canvas": "#e9edf3", "surface": "#f8fafc", "surface-raised": "#ffffff",
+    "text": "#171b22", "text-muted": "#5e6877", "border": "#c9d1dc",
+    "focus": "#244f9d", "green": "#177c42", "amber": "#9a5c04", "red": "#b4232c",
+    "unknown": "#657080", "accent": "#365fba", "overlay": "rgba(25,31,42,.7)",
+    "fade": "#e9edf3", "repo-1": "#9b4d18", "repo-2": "#365fba", "repo-3": "#6844a2",
+    "repo-4": "#247846", "repo-5": "#7d6508", "repo-6": "#187080", "repo-7": "#596576"
+  }
+}

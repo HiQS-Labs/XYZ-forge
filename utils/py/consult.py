@@ -405,6 +405,9 @@ def main():
     agy_bin = os.environ.get("AGY_BIN", os.environ.get("GEMINI_BIN", "agy"))
     gemini_bin = os.environ.get("GEMINI_BIN", agy_bin)
     aider_bin = os.environ.get("AIDER_BIN", "aider")
+    # GH-518: absolute default. muse was installed with MUSE_NO_MODIFY_PATH=1, so ~/.local/bin is
+    # deliberately NOT on PATH and a bare "muse" would not resolve here any more than in the shim.
+    muse_bin = os.environ.get("MUSE_BIN", os.path.expanduser("~/.local/bin/muse"))
     
     prompt_file = ""
     prompt_text = ""
@@ -586,6 +589,26 @@ def main():
                 cmd = [aider_bin, "--model", aider_model] + auth_args + ["--message", full_prompt, "--yes-always", "--no-auto-commits", "--no-gitignore", "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0"]
                 proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
                 procs.append((proc, "aider", f_out, time.time(), cmd))
+            elif m == "muse":
+                f_out = os.path.join(run_dir, f"{label}.muse.md")
+                # DEFAULTS TO THE CLAUSE-FREE TIER, deliberately. muse-spark-1.3-contributor is
+                # ~12x cheaper because Meta states submitted content, including inter-session
+                # messages, may be used for product improvement, and a consult ships whatever the
+                # question quotes. muse-turn.py can decide per-repo because it knows the turn's
+                # roots; consult has no such context and CONSULT_ROOT may point it at any repo, so
+                # the safe tier is the only defensible default. MUSE_MODEL is the informed-operator
+                # override, matching the shim. (GH-518)
+                muse_model = os.environ.get("MUSE_MODEL", "muse-spark-1.3")
+                # ADVISORY only: no --workspace, so muse's policy-gated write tools are never
+                # rooted anywhere and it answers to stdout, which is what a consult captures. The
+                # relay shim needs the exact opposite — a review turn must be able to write its
+                # block — which is why that flag lives there and not here.
+                cmd = [muse_bin, "exec",
+                       "--model", muse_model,
+                       "--reasoning-effort", os.environ.get("MUSE_REASONING_EFFORT", "high"),
+                       full_prompt]
+                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
+                procs.append((proc, "muse", f_out, time.time(), cmd))
             else:
                 warn(f"unknown model '{m}' — skipping")
                 

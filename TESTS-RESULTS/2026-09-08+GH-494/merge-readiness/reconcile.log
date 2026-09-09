@@ -1,0 +1,24 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/publish)
+wave-reconcile: Processing PR #504...
+wave-reconcile:   PR #504 closes [494]; references [202, 424]
+wave-reconcile:   Issue #494 is OPEN — keeping GH-494-SESSION-CONTEXT-PLAN.md active; recording merge evidence
+wave-reconcile:   Issue #494 is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)
+wave-reconcile:   Issue #424 referenced without a closing keyword and OPEN — recording merge evidence only
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> roadmap-dashboard.sh
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-141 (PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md)
+wave-reconcile:     - GH-275 (PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md)
+wave-reconcile:     - GH-416 (PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md)
+wave-reconcile:     - GH-418 (PROJECT/1-INBOX/GH-418-MARATHON-ADOPT-RELEASES-DB.md)
+wave-reconcile:     - GH-492 (PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md)
+wave-reconcile:     - GH-505 (PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md)
+wave-reconcile:     - GH-509 (PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md)
+wave-reconcile:     - GH-510 (PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md)
+wave-reconcile:     - GH-515 (PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md)
+wave-reconcile: Running PDDA doc-hygiene gate...
+wave-reconcile: Wave reconciliation completed successfully! ✅

@@ -1,0 +1,21 @@
+test_aggregator_keeps_remaining_connector_when_peer_fails (test_flightdeck.ConnectorTests.test_aggregator_keeps_remaining_connector_when_peer_fails) ... ok
+test_clio_drops_stale_issue_context_from_long_session (test_flightdeck.ConnectorTests.test_clio_drops_stale_issue_context_from_long_session) ... ok
+test_clio_extracts_issue_beyond_display_summary_limit (test_flightdeck.ConnectorTests.test_clio_extracts_issue_beyond_display_summary_limit) ... ok
+test_clio_reads_intent_without_counting_progress (test_flightdeck.ConnectorTests.test_clio_reads_intent_without_counting_progress) ... ok
+test_clio_retains_issue_context_within_session (test_flightdeck.ConnectorTests.test_clio_retains_issue_context_within_session) ... ok
+test_each_connector_can_be_disabled_without_core_branching (test_flightdeck.ConnectorTests.test_each_connector_can_be_disabled_without_core_branching) ... ok
+test_explicit_stale_slug_alias_merges_after_repo_rename (test_flightdeck.ConnectorTests.test_explicit_stale_slug_alias_merges_after_repo_rename) ... ok
+test_git_pulse_deduplicates_with_other_connector_in_aggregation (test_flightdeck.ConnectorTests.test_git_pulse_deduplicates_with_other_connector_in_aggregation) ... ok
+test_issue_parser_accepts_urls_and_multiple_explicit_references (test_flightdeck.ConnectorTests.test_issue_parser_accepts_urls_and_multiple_explicit_references) ... ok
+test_item_url_repairs_a_stale_pre_rename_repo_slug (test_flightdeck.ConnectorTests.test_item_url_repairs_a_stale_pre_rename_repo_slug) ... ok
+test_registry_is_the_expected_static_first_party_set (test_flightdeck.ConnectorTests.test_registry_is_the_expected_static_first_party_set) ... ok
+test_unique_local_basename_merges_into_github_identity (test_flightdeck.ConnectorTests.test_unique_local_basename_merges_into_github_identity) ... ok
+test_loopback_server_serves_app_and_passive_snapshot (test_flightdeck.ServerTests.test_loopback_server_serves_app_and_passive_snapshot) ... ok
+test_breadcrumbs_have_clickable_ancestors_and_current_page_semantics (test_flightdeck.TokenTests.test_breadcrumbs_have_clickable_ancestors_and_current_page_semantics) ... ok
+test_generated_tokens_are_current_and_theme_keys_match (test_flightdeck.TokenTests.test_generated_tokens_are_current_and_theme_keys_match) ... ok
+test_token_audit_rejects_raw_component_styling (test_flightdeck.TokenTests.test_token_audit_rejects_raw_component_styling) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.530s
+
+OK

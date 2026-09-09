@@ -203,6 +203,7 @@ def seed_canonical_registry(conn: sqlite3.Connection):
             ('claude', 'Claude Code', 'native_cli', 0, 1, 'claude -p "{task}"', 'Orchestrator and final reviewer', 'Do not use as default headless builder.'),
             ('aider', 'Aider', 'python_litellm', 0, 0, 'aider --message "{task}"', 'Builder only', 'Force AIDER_FLAGS=--edit-format diff; reviewer seam Intermittent.'),
             ('pi', 'Pi Agent', 'node_multi', 0, 0, 'pi -p --mode json "{task}"', 'Builder only', 'Explicit PI_MODEL required.'),
+            ('muse', 'Muse Code', 'native_cli', 1, 1, 'muse exec --model {model} --reasoning-effort {effort} --workspace {workspace} --trust-workspace --prompt-file {task}', 'Evaluation only (GH-518)', 'Absolute MUSE_BIN (PATH not modified). Needs --workspace + --trust-workspace or the turn is read-only and silently writes nothing. Contributor tier carries a data-use clause: public repos only.'),
         ]
         for h in harnesses_data:
             conn.execute("""
@@ -219,6 +220,13 @@ def seed_canonical_registry(conn: sqlite3.Connection):
             ('openrouter/stealth/ox-alpha', 'Stealth', 'Stealth Ox-Alpha', 'openrouter', 1000000, 1.50, 4.50, 0.20, '["high", "max"]'),
             ('zai-org/GLM-5.3', 'Z.ai', 'GLM 5.3 High', 'openrouter', 1000000, 1.40, 4.40, 0.26, '["low", "high", "max"]'),
             ('google/gemma-4-31b-qat', 'Google', 'Gemma 4 31B QAT', 'lmstudio', 32768, 0.0, 0.0, 0.0, '["none"]'),
+            # GH-518. Prices and reasoning tiers are Meta's own provider-catalog values as served to
+            # Muse Code 1.0.3, not documentation. The two rows are the SAME model on different terms:
+            # the -contributor tier is ~12x cheaper because submitted content, including
+            # inter-session messages, may be used for product improvement. Note it also drops the
+            # `max` reasoning tier the full-price row carries.
+            ('muse-spark-1.3', 'Meta', 'Muse Spark 1.3', 'meta', 1007997, 1.25, 4.25, 0.15, '["minimal", "low", "medium", "high", "xhigh", "max"]'),
+            ('muse-spark-1.3-contributor', 'Meta', 'Muse Spark 1.3 Contributor', 'meta', 1007997, 0.10, 0.20, 0.002, '["minimal", "low", "medium", "high", "xhigh"]'),
         ]
         for m in models_data:
             conn.execute("""

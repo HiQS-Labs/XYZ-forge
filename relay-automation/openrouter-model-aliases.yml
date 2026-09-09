@@ -1,4 +1,4 @@
-# GENERATED from HiQS-Labs/Model-catalog v1.0.0 — edit the catalog, not this file.
+# GENERATED from HiQS-Labs/Model-catalog v1.3.0 — edit the catalog, not this file.
 # Legacy format (GH-120): `alias: canonical-slug`, consumed by resolve-model-alias.sh.
 # Regenerate with Model-catalog's scripts/render_openrouter.py --catalog <vendored catalog.json>
 #   (run from anywhere; see Model-catalog PROJECT.md Phase 1 for the drift-check recipe).
@@ -6,6 +6,8 @@ nemotron ultra 3 free: nvidia/nemotron-3-ultra-550b-a55b:free
 nemotron ultra 3: nvidia/nemotron-3-ultra-550b-a55b
 stealth ox-alpha: stealth/ox-alpha
 deepseek v4 pro: deepseek/deepseek-v4-pro
+hy4 preview: tencent/hy4-preview
 qwen3 coder: qwen/qwen3-coder
 grok 4.6: x-ai/grok-4.6
 glm-5.2: z-ai/glm-5.2
+hy4: tencent/hy4-preview

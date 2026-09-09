@@ -295,3 +295,7 @@ GH-269's territory.
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }
 ```
+
+## Merge evidence
+
+- PR #504 merged 2026-09-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
