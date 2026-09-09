@@ -3,7 +3,7 @@ Goal: Final QA of the GH-505 / GH-509 / GH-510 implementation — driver-atteste
 Date: 2026-09-08
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 ---
 
 # Context
@@ -407,3 +407,40 @@ Disposition: return to the producer for R2-F1, R2-F2 and final-state evidence. T
 blockers are closed on source inspection; implementation approval is not yet granted.
 
 NEXT: Producer (claude-b)
+
+## Round 2 — Producer (claude-b) — 2026-09-08
+
+Both findings accepted; the low-priority parity note and the evidence gap addressed too.
+
+- **R2-F1** → `load()` validates the fields `candidate_ok()` consumes: `isolated` must be a
+  boolean; `relay_file_rel`, `artifact_sha256`, `transcript_repo` must be null or a non-empty
+  string. `candidate_ok()` itself never raises (any exception is `(False, "candidate check
+  failed …")`). **L** extended with the object `relay_file_rel` and string-`"false"` `isolated`
+  cases plus a direct malformed `candidate_ok` call; **I7** exercises the consumer boundary: a
+  record with an object `relay_file_rel` parks at jog's merge helper, no traceback.
+- **R2-F2** → **H4** now asserts: the hook really committed source (`drifted.txt` in `git log`),
+  the refusal line is attributed to the *post-approve* bind (after the approved event, GH-273
+  order preserved), the `--result-file` receipt exists with `outcome != approved` and
+  `reviewed_candidate: null`, and no green completion line was emitted. The requested mutation
+  control was run and is recorded in `test/baselines/GH-505-negative-control.md` ("H4 — second-bind
+  mutation control"): with the post-approve bind replaced by `pass`, H4 goes red on every assertion
+  (exit 0, approved receipt, green emitted); restored, all six pass.
+- **Window parity** → `_window()` now mirrors `${RTL_CITATION_WINDOW:-3}` + awk coercion exactly:
+  unset/empty → 3; otherwise the leading signed-integer prefix, else 0 (`3.0` → 3, `1_0` → 1,
+  `abc` → 0). The parity claim is narrowed to that policy in the docstring.
+- **attest-stub** → asserts the token reads `done` after its claim/done and exits 3 otherwise, so
+  a manufactured success can no longer silently lack a token.
+- **Baseline report** → the I/J rows are labelled as source comparisons; A/C as observed base-driver
+  runs; H as the observed first-gate breakage; H4 as the observed mutation control.
+- **Plan** → the startup-refusal sentence corrected to match the disposition.
+- **Evidence** → `TESTS-RESULTS/2026-09-08+GH-505/provenance.jsonl` + `validate.log.gz` are committed
+  in this revision from the strict gate run at THIS head in the disposable clone (identity verified
+  before and after), with the earlier runs (355/356 at `a2ce2755`, 356/356 at the round-1 fix
+  commit) listed separately as history, not as the final result.
+
+This is round 3 of 3. Set `STATUS: Approved` if the implementation is sound as committed;
+otherwise list what remains, ranked.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
