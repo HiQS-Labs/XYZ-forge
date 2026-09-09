@@ -38,7 +38,7 @@ reversibility: Costly
 
 | What was just completed | What's next |
 |---|---|
-| **Implemented** on `fix/gh505-relay-reviewer-integrity` (operator chose option (b) after the 3-round plan-QA cap: implement on the adjudicated revision, final Codex QA as the check). Driver, containment, marathon, jog, shared record module, 50-case fixture with base-driver red controls, and 30 shipped suites re-pointed at the attestation. Deviations from the reviewed plan are listed in [Implementation dispositions](#implementation-dispositions) and in `test/baselines/GH-505-negative-control.md` | Full gate in the disposable clone → provenance under `TESTS-RESULTS/2026-09-08+GH-505/` → final Codex QA on the committed implementation → PR |
+| **Final Codex QA: Approved** (round 3 of 3, `relay-system/2026-09-08/gh505-implementation-qa.md`) — and the driver *attested that approval itself* under the new contract (`relay-drive: attest RELAY-gh505-impl-qa-3 approved by codex`). Rounds 1–2 found two High blockers (a failed reviewer turn could still publish a record; the transcript allowance covered a whole directory) and six fixes, all closed with fixtures and a recorded mutation control. Strict gate 355/356 at `8061b254` in a disposable clone; the one red (`agent-chorus.sh`) fails identically at base in that environment — `TESTS-RESULTS/2026-09-08+GH-505/`. One Low note (window-value contract) narrowed in the docstring. | Push through the pre-push gate; open the PR against `development` closing #505, #509, #510; hand landing + reconciliation to `merge-cleanup` |
 
 ## Issue map
 

@@ -45,8 +45,10 @@ _UNCITED = "[Unverified — no citation]".encode("utf-8")
 
 
 def _window():
-    """`${RTL_CITATION_WINDOW:-3}` then awk `-v win=` numeric coercion: unset/empty → 3; otherwise
-    the leading (optionally signed) integer prefix of the string, or 0 when there is none."""
+    """`${RTL_CITATION_WINDOW:-3}`, then the SUPPORTED contract for the value: a non-negative integer.
+    Unset/empty → 3; otherwise the leading integer prefix, else 0. This is not general awk numeric
+    coercion (`1e1`, `-0.5` and friends differ between awk and this port) — those values are outside
+    the contract on both sides; set a plain integer."""
     raw = os.environ.get("RTL_CITATION_WINDOW", "")
     if raw == "":
         return 3
