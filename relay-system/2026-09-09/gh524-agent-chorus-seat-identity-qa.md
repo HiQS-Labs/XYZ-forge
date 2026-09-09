@@ -1,7 +1,7 @@
 # RELAY — GH-524 AgentChorus seat identity (lab / model / effort)
 
-STATUS: In progress
-NEXT: codex
+STATUS: Approved
+NEXT: claude
 ROUND: 3
 
 ## Body
@@ -411,3 +411,62 @@ findings remain, I will record them and escalate to the operator rather than con
 
 You are the **reviewer**. Re-read the changed files at HEAD. Approve, or list what remains
 blocking. State your lab, model and effort at the top as before.
+
+---
+
+## Codex review — round 3
+
+**Reviewer identity:** lab OpenAI; model GPT-6 (session-provided identity); effort not exposed
+to this reviewer. I cannot attest a more specific model identifier or effort setting.
+
+**Verdict: Approved.** No remaining Blocking or Should-fix findings in the reviewed changes.
+Two Low limitations below do not require another round. This is approval by source inspection,
+not an independently executed test receipt. I re-read the affected implementation, skill text
+and GH-524 test blocks on disk. No source/artifact or test was executed, no Git command was run,
+and only this relay file was edited. Graph tools were unavailable; evidence comes from direct
+source reads and targeted searches. The 210-pass result and isolated red controls remain
+producer-reported; the harness owns subsequent gate execution.
+
+### Round-2 dispositions
+
+- **R2-S1 resolved:** `skills/agent-chorus/scripts/agent_chorus.py:1277` recognizes a seat-shaped
+  prefix, and `:1295` considers only the first non-empty line, removing at most that line.
+  The verifier applies it at `:2163`. The helper still prepends attribution before participant
+  content (`:1973`), so later participant-authored Seat lines survive. The end-to-end case at
+  `test/agent-chorus.sh:1242` requires both the missing citation's presence and a failing status
+  (`:1247`); the slash-model and real-citation checks remain at `:1225` and `:1232`.
+- **R2-S2 resolved for the underlying protection:** callable replacement remains at
+  `agent_chorus.py:644`. The new direct test at `test/agent-chorus.sh:1187` bypasses the scrub,
+  exercises literal backslash-n and backslash-q, and compares against a non-empty exact result
+  at `:1207`. Restoring replacement-string semantics would add a STATUS line and raise on
+  backslash-q, consistent with the corrected producer account. Successful CLI persistence of
+  the sanitized backslash-q value is now checked at `:1174` and `:1179`.
+- **R2-L1 resolved:** the CLI join summary at `agent_chorus.py:2450` now agrees with
+  `skills/agent-chorus/SKILL.md:167` about identity-bearing writes.
+- **Earlier fixes remain intact:** the identity join transaction holds `DiscussionLock`
+  (`agent_chorus.py:1210`), matching the turn writer (`:1929`) and supersession (`:1011`).
+  Initial attribution is emitted at `:838`, and supersession explicitly labels helper authorship
+  at `:1028`. Telemetry still consumes the participant message (`:1984`, `:1988`, `:1995`).
+
+### L1 — Low: the backslash-n CLI case still discards its exit status
+
+`test/agent-chorus.sh:1162` still checks only unchanged control fields after that particular
+join. The new persistence assertion at `:1179` covers the subsequent backslash-q join, not
+the earlier input. Thus the producer's statement that the vacuous-success path is closed is
+slightly broader than the test. Optionally assert that first join's success and sanitized value
+as well. This is no longer approval-blocking: the direct replacement regression now independently
+pins the actual escape-expansion defect.
+
+### L2 — Low: legacy attribution detection remains a shape heuristic
+
+`agent_chorus.py:1277` cannot distinguish generated metadata from a legacy participant's
+leading line such as `**Seat:** agent2 · checked docs/missing.txt:1`; `:1299` would strip that
+line. Ordinary leading Seat prose and all later matching lines are preserved. This narrow
+legacy collision is a limitation of shape-based detection, not evidence that current helper
+turns lose participant content. The new test at `test/agent-chorus.sh:1242` covers the later-line
+case, not a legacy body. Retain that qualification when describing legacy compatibility.
+
+The previously disclosed timing dependence in the contention probe remains unchanged
+(`test/agent-chorus.sh:1291`). No further review round is requested. Handback: `claude`;
+STATUS is Approved and the relay token is completed with `done` as instructed.
+
