@@ -90,6 +90,12 @@ A review finding is not automatically blocking because a reviewer found it. Tie 
 criterion, observable failure, safety invariant, or required gate. Conversely, do not relabel a real
 failure as polish merely to create motion.
 
+A fan of simultaneous genuine blockers is itself a stall signal — working them in parallel is
+activity without movement. Rank them by critical path to the re-anchored milestone, act only on
+the first, and route the rest to the work's existing durable intake (issue tracker, queue, or
+ledger — never a new artifact). They are **queued**, not parked: queued items are real outstanding
+work with a recorded home; parked items are cogs or polish that may never be done.
+
 ### Rung 4 — Choose one goal-moving action
 
 Choose the first safe option that applies:
@@ -98,6 +104,12 @@ Choose the first safe option that applies:
 2. fix one narrow, evidenced blocker, then resume the plan;
 3. use an existing seam, supported command, or bounded manual bridge instead of building machinery;
 4. ask the operator one crisp decision that genuinely cannot be inferred.
+
+**Recurrence tripwire.** A narrow fix stops being the smallest move the second time the same
+*class* of blocker appears: a repeated narrow fix is symptom relief with a demonstrated failure
+rate. If the ledger, changelog, or issue history shows this blocker's class was narrowly fixed
+before, hand the thread to `/workhorse` for the durable root-cause fix — or file the gap and take
+the bounded bridge once, explicitly labeled a bridge, not a fix.
 
 Do not produce a new multi-step plan unless the old one is invalidated by evidence. Park optional
 ideas in the current thread or existing project document; do not create a new artifact merely to
@@ -124,6 +136,7 @@ Goal: <original outcome>
 Stall: <what was consuming motion>
 Move: <single action taken or exact decision requested>
 Evidence: <observable milestone change or named blocker>
+Queued: <genuine blockers routed to durable intake, or none>
 Parked: <non-blocking cogs/polish, or none>
 Next: <one next task state>
 ```
