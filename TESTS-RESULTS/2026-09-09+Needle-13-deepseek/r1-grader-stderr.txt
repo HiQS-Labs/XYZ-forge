@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+GH-522-luna-needle/grade.py", line 47, in <module>
+    assert len(unique)==1, f'Expected one distinct final JSON answer; got {len(unique)} from {raw_count} blocks'
+           ^^^^^^^^^^^^^^
+AssertionError: Expected one distinct final JSON answer; got 0 from 0 blocks

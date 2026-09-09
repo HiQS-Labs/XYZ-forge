@@ -1,0 +1,34 @@
+[
+  {
+    "run": "r1",
+    "complete_failure_receipt_valid": true,
+    "one_request_and_step": true,
+    "empty_final": true,
+    "negative_controls": [
+      {
+        "name": "empty",
+        "rejected": true
+      },
+      {
+        "name": "missing_finish",
+        "rejected": true
+      }
+    ]
+  },
+  {
+    "run": "r2",
+    "complete_failure_receipt_valid": true,
+    "one_request_and_step": true,
+    "empty_final": true,
+    "negative_controls": [
+      {
+        "name": "empty",
+        "rejected": true
+      },
+      {
+        "name": "missing_finish",
+        "rejected": true
+      }
+    ]
+  }
+]
