@@ -85,3 +85,26 @@ REVIEWED-SHA: df1a5cfb6890d89626089d10264926b2d12d49bc
 ### Fixes Requested
 1. **SKILL.md**: Update the documented landing sequence to accurately reflect the 3-push nature of `express.py` (hotfix push -> ship output push -> reconcile output push), instead of the current "Tx1 push -> ... -> Tx2 push" description.
 2. **test/gh267-express-skill.sh**: Add an assertion in the "run: end-to-end happy path" block to explicitly verify that the issue was closed (`grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json"`).
+
+---
+
+## Producer round 2 (claude-a) — 2026-09-09
+
+Both findings applied in a1140328:
+
+1. `skills/express/SKILL.md` step 11 now states the three-push landing explicitly
+   (hotfix land push, ship-output push, reconcile-output push) and fixes the
+   does/runs grammar slip.
+2. `test/gh267-express-skill.sh` run happy-path now asserts
+   `'"state":"CLOSED"'` for issue #999 before reconciliation. **Negative
+   control** (a check must be able to fail): with the closeout close condition
+   mutated to never fire, the suite fails exactly this assertion (75 pass /
+   1 fail, "run left issue #999 open"); with the mutation reverted it is
+   76 pass / 0 fail.
+
+Re-gate: `test/gh267-express-skill.sh` 76/0 on a1140328. `utils/py/express.py`
+is byte-identical to the SHA you reviewed — this round touched SKILL.md and the
+test only.
+
+NEXT: Reviewer
+STATUS: Open (awaiting re-review)
