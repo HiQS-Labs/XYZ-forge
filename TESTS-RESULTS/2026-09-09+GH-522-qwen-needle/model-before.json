@@ -1,0 +1,34 @@
+{
+  "type": "llm",
+  "publisher": "qwen",
+  "key": "qwen/qwen2.5-coder-32b",
+  "display_name": "Qwen2.5 Coder 32B",
+  "architecture": "qwen2",
+  "quantization": {
+    "name": "4bit",
+    "bits_per_weight": 4
+  },
+  "size_bytes": 18447679117,
+  "params_string": "32B",
+  "loaded_instances": [
+    {
+      "id": "qwen/qwen2.5-coder-32b",
+      "config": {
+        "context_length": 8192,
+        "parallel": 4,
+        "reasoning_budget_message": ""
+      }
+    }
+  ],
+  "max_context_length": 32768,
+  "format": "mlx",
+  "capabilities": {
+    "vision": false,
+    "trained_for_tool_use": false
+  },
+  "description": null,
+  "variants": [
+    "qwen/qwen2.5-coder-32b@4bit"
+  ],
+  "selected_variant": "qwen/qwen2.5-coder-32b@4bit"
+}

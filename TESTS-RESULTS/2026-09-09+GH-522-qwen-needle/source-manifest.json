@@ -1,0 +1,67 @@
+[
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json",
+    "sha256": "b855525d474e1f89cbc1643836194747c4cdf30335deff9fac74d98a4c6fe19a",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+    "sha256": "587a113cc549df299008569b762e23648bc026d7c156aa8734d8d62cf15f50e1",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+    "sha256": "c7a39cb354f577cc7d2d4fce340a32dd3829389e122e94b7f4ba46c555f90ccc",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_config.py",
+    "sha256": "3bf3377cc1b7d4b15ef5baec27bb8ca7b6532ae64e708940f62fcacdbe92fd8b",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+    "sha256": "26bac4d36e68db49ae3b7358e6e22a8e6f409d225a092c02e98ef730f80b1a20",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py",
+    "sha256": "9b52a20ab3fb905d83d95b4e665e72397832a4dccacf4c9a400678ba779ef47c",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+    "sha256": "c1a4bdb1972e350f05d4cf5cdab1b9d58735335f5c2676e622e7dc11e79f436d",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+    "sha256": "5fb3e7cd7a296f80c1f1edbbeb44f25446f0d97a975b55965f8544832d17c491",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+    "sha256": "ce2c88a1fd3eda63c7dbd2036030ff86ba4dec0aea24a02bccd61031158ae812",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json",
+    "sha256": "ca96ef98ec1df5f9812f2d1fe12eeffbf5d4cad2c101e481bac34d64c32e289a",
+    "selection": "complete file"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+    "sha256": "890c3d46442125f1db3aa00ca798ca8f4175a9b58b601cc81c5896a3bd9c3d80",
+    "selection": "complete file"
+  },
+  {
+    "path": "MACHINE-CONTRACTS.md",
+    "sha256": "78d686f2f85d57585af39777be90bf0c6a547d66724310113844a1196efdf01d",
+    "selection": "lines 1-157"
+  },
+  {
+    "path": "utils/py/releases_app.py",
+    "sha256": "db2fdf8d26230d1d6770d531321d38e4780279d5340f03649fad3da18d12b666",
+    "selection": "lines 3876-3936"
+  }
+]
