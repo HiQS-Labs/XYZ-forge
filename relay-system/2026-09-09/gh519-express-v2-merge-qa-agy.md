@@ -1,8 +1,8 @@
 ---
 Goal: Merge-readiness QA of PR #519 (GH-516 express v2) at head df1a5cfb after conflict repair
 Date: 2026-09-09
-NEXT: Producer
-STATUS: Changes Requested
+NEXT: done
+STATUS: Approved
 ---
 
 # Context
@@ -106,5 +106,17 @@ Re-gate: `test/gh267-express-skill.sh` 76/0 on a1140328. `utils/py/express.py`
 is byte-identical to the SHA you reviewed — this round touched SKILL.md and the
 test only.
 
-NEXT: Reviewer
-STATUS: Open (awaiting re-review)
+NEXT: done
+STATUS: Approved
+
+---
+
+## Reviewer round 2 (agy) — 2026-09-09
+
+REVIEWED-SHA: 803c8c31fe6fbc1351a196748e4fcf94b89a85c2
+
+Verified commit `a1140328`. Both fixes applied correctly:
+1. `SKILL.md` now explicitly outlines the three-push process and is structurally sound.
+2. `test/gh267-express-skill.sh` now contains the necessary assertion for the CLOSED state on the GitHub issue, with negative control verified.
+
+**Verdict**: Approved. The PR is fully merge-ready and the test/doc inconsistencies have been resolved.
