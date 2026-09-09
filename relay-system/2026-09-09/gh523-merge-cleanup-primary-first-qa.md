@@ -1,7 +1,7 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: In progress
-NEXT: codex
+STATUS: Changes requested
+NEXT: claude
 ROUND: 1
 
 ## Body
@@ -105,3 +105,33 @@ You are the **reviewer**. Read the four changed files under
 `skills/merge-cleanup/` and `test/gh436-merge-cleanup.py` at HEAD, plus `git show 5710f6f4` for
 the diff. Cite file:line for every finding. Rank each finding Blocking / Should-fix / Low.
 Append your review block below, then set STATUS and hand the token back.
+
+---
+
+## codex — Round 1 review
+
+**Verdict: Changes requested.** The by-identity inclusion fixes the original omission, but the new readiness gate still admits unknown landing state and does not cover every execution path.
+
+**Evidence boundary:** Read all four requested files in this worktree, plus the GH-523 capture. This is static source review: no source/artifact execution, tests, mutations, or Git commands were run. The operator's explicit no-Git instruction takes precedence over the embedded request for `git show 5710f6f4`; commit identity and diff attribution were therefore not independently verified. The producer's 18/18 and red-control results above remain producer-reported evidence. Graph discovery/coverage was attempted at Verify tier: no project matched this worktree; the nearest XYZ-forge index (generation `2026-09-09T17:04:48Z`) covers another checkout and lacks `inspect_primary_landing`. Its clean per-file metadata does not attest this candidate. Findings below rely on complete local source reads instead.
+
+### Graded findings
+
+1. **Blocking — Failed reference inspection can report READY.** `skills/merge-cleanup/scripts/scan_clones.py:430` only handles successful numeric `rev-list` output; failure leaves `unpushed_on_integration=0`. At `:439` the ancestor check fails too, but `:441` ignores `can_ff`. A clean, committed `development` checkout without `origin/development` therefore gets `landing_ready=True` and no blockers, permitting Phase 5 even though its required landing target cannot be resolved. Treat failed/malformed ref queries as unknown/not-ready, require successful ancestry proof, and report the reason. Add a missing-tracking-ref regression. With valid, stable refs and HEAD on the named integration branch, zero commits in `origin/<branch>..<branch>` already establishes ancestry; the gap is failed evidence, not ordinary divergence. Also distinguish cached `origin/*` evidence from current remote readiness: the only fetch is after remote merges (`merge_cleanup.py:328`), so a remote rewind can invalidate an apparently ready local snapshot. Refresh and revalidate before the first irreversible merge while retaining the initial local report first.
+
+2. **Blocking — Direct reconciliation bypasses Phase 0.** `skills/merge-cleanup/scripts/merge_cleanup.py:260` dispatches `--reconcile-pr` and returns at `:263`; inspection starts at `:268`. With `--execute`, `run_post_merge_reconcile` launches writers at `:79`, `:88`, and `:98` without computing or displaying a primary verdict. Move Phase 0 before this dispatch and apply an explicit safe execution condition to reconciliation, so dirty or wrong-branch primaries cannot silently receive writes. Add a mocked CLI case asserting inspection/report ordering and zero writer calls for an unsafe primary. The other named modes do compute Phase 0: `--scan-only` returns at `:281`, `--prs-only` at `:301`, and `--teardown-only` skips merges at `:315`.
+
+3. **Blocking — The selected integration branch is not the executed target.** `skills/merge-cleanup/scripts/merge_cleanup.py:246` accepts `--integration-branch`, and `:268` checks it, but `:329` still merges `origin/development`. For example, `--integration-branch main` can approve a clean `main` checkout and subsequently advance it toward development, or fail after remote PRs were merged. Thread the same selected branch through the landing operation (and ensure PR targets agree), or remove unsupported configurability. A focused orchestration test should prove that the checked and executed targets are identical for a non-default branch.
+
+4. **Should-fix — A discovered primary is not moved to the first audit row.** `skills/merge-cleanup/scripts/scan_clones.py:344` appends discovered checkouts in root/name order. The new prepend at `:373` only runs when the primary was not seen. With sibling repositories `aaa-other` and `primary`, both matching the scan, the other checkout remains first. This contradicts the function's stated primary-first contract and the skill at `skills/merge-cleanup/SKILL.md:71`. Inspect/insert the primary before the walk and deduplicate discovery against it, or explicitly promote its existing row. `test/gh436-merge-cleanup.py:189` checks duplication but never checks ordering on the discovered-primary path; add that assertion with an earlier-sorting Git sibling.
+
+5. **Should-fix — “Never raises” is not implemented.** `skills/merge-cleanup/scripts/scan_clones.py:404` resolves the path outside any exception handler, and `:409` onward calls `run_git`, whose `subprocess.run` at `:72` also has no exception handling. Path-resolution failures or inability to launch Git escape instead of producing the promised not-ready result. Separately, failed status at `:418` yields `is_clean=False` but no explanatory blocker and displays zero dirty paths. Catch the expected filesystem/process failures at the inspection boundary and preserve diagnostic blockers. Add injected path/process/status failure cases. The missing-directory case at `test/gh436-merge-cleanup.py:221` exercises only the early `.git` absence return, not this contract.
+
+6. **Should-fix — Operation state can invalidate an otherwise clean landing.** `skills/merge-cleanup/scripts/scan_clones.py:418` checks porcelain cleanliness, and `:441` has no operation-state condition. An unfinished merge whose resolved index/worktree matches HEAD can have empty porcelain output while `MERGE_HEAD` remains; the pending operation prevents the subsequent merge even with valid ancestry. Detect relevant in-progress operation state through worktree-aware Git paths and fail closed without aborting it. Add a clean-status unfinished-operation fixture. Detached HEAD is already rejected by the branch comparison at `:409`; ordinary saved stashes alone need not block a fast-forward and should retain the separate teardown preservation rule at `:308`.
+
+7. **Low — Dry-run language promises actions that execution would refuse.** `skills/merge-cleanup/scripts/merge_cleanup.py:307` gates only `--execute`, so an unready dry run still logs “Would merge” (`:53`) and “Would run” reconciliation (`:70`). The early `NOT READY` report is useful, but `skills/merge-cleanup/SKILL.md:60` promises refusal before the matrix, whereas the actual refusal is after it. Preserve read-only sequencing, explicitly label it non-executable while blockers exist, and align the timing claim with the intended behavior. The skill's Phase 0 instructions at `:17`, `:19`, and `:44` are otherwise early and clear enough to change agent behavior. Its standalone sequencing example at `:125` should explain that the helper does not perform Phase 0, or use the orchestrator's `--prs-only` path.
+
+### Scope and handoff
+
+This is an extension of the existing scanner and orchestrator, not a second system. Keep the repairs inside those seams and the focused regression file. One existing sequencing limitation remains relevant to the claimed readiness guarantee: `merge_cleanup.py:323` runs reconciliation before the fetch/fast-forward at `:328`, and `:328`–`:329` ignore failures before teardown. Initial readiness alone cannot establish successful final landing. This was not independently attributed to the reviewed commit; do not claim this patch proves post-merge landing/reconciliation success.
+
+The new tests at `test/gh436-merge-cleanup.py:148` cover helper behavior but never call `merge_cleanup.main`, which leaves the bypass, target mismatch, and refusal ordering unguarded. Producer should address the blocking findings and add focused cases for the listed paths; the harness owns gate execution. No artifact changes were made by this reviewer. Handing back to **claude** for revision; approval is withheld.
