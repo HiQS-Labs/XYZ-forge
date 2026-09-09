@@ -54,7 +54,10 @@ def main():
     answer='\n'.join(messages)
     (base/(run+'-answer.md')).write_text(answer+'\n')
     receipt['nonmessage_output_types']=[x.get('type') for x in obj.get('output',[]) if x.get('type')!='message']
-    receipt['model_identity_matches']=obj.get('model_instance_id')==request['model']
+    inventory=json.load(urllib.request.urlopen('http://localhost:1234/api/v1/models',timeout=10))
+    selected=next((m for m in inventory['models'] if m['key']==request['model']),{})
+    receipt['model_inventory_after']=selected
+    receipt['model_identity_matches']=any(i['id']==obj.get('model_instance_id') for i in selected.get('loaded_instances',[]))
     (base/(run+'-receipt.json')).write_text(json.dumps(receipt,indent=2)+'\n')
     if not success or not receipt['model_identity_matches'] or not answer:
         print('REQUEST FAILED: '+raw.decode(errors='replace'),flush=True)
