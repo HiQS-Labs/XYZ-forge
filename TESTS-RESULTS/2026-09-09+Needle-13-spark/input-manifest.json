@@ -1,0 +1,10 @@
+{
+  "prepared_at": "2026-09-09T20:41:44.153370+00:00",
+  "sha256": {
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "codex_adapter.py": "4711fb325c12ffbafc026a0012f200dcdfc7f03d64b62db6e15e58649a61e1a7",
+    "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733",
+    "QUESTIONS.md": "f8752eae5a74b92c37e411e3a707653a1858115a41b82a386e662987e691e625",
+    "PROTOCOL.md": "f96255bc393b1bfe15b3cda9daf1fab8ef03006f328a329f04a7f411ec2ead72"
+  }
+}
