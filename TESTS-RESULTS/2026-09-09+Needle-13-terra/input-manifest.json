@@ -1,0 +1,12 @@
+{
+  "prepared_at": "2026-09-09T17:30:31.826037+00:00",
+  "sha256": {
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "model-catalog.json": "529d221c1b7a3ad5894e518e2b76950c5aa279e673c9af6de8749666978a92fb",
+    "codex_adapter.py": "9f7f4bfc11b1c04b91eb42dce761134e6deafcc59259461abd96d3a646fc7ae3",
+    "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733",
+    "cli-help.txt": "e504bac5a6364566fbe408132dec7993639def9258ece34e8352f51f8d43687c",
+    "QUESTIONS.md": "a98f57f0d9ab595493818c1b72c3698795d532decdc4c1e25914d33899d4de07",
+    "PROTOCOL.md": "bc1113f0afc9ab7fba0e4d92a1eafb7493ba92fcdf2c80958abef59c3587ee2a"
+  }
+}
