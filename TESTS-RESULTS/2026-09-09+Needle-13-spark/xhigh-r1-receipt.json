@@ -1,0 +1,57 @@
+{
+  "schema": "needle13/spark-cli-spike@1",
+  "run": "xhigh-r1",
+  "status": "complete",
+  "started_at": "2026-09-09T20:45:11.274939+00:00",
+  "requested_model": "gpt-5.3-codex-spark",
+  "requested_effort": "xhigh",
+  "prompt_sha256": "37940bd8d7e12b4371f36193e518eb300a1c890412e4ef863ec68916d110d676",
+  "source_packet_sha256": "dee4d8c16f2352bf4ff448aecac65d1de803d064df68c73d46e3c30c3dc41f2e",
+  "flags": [
+    "exec",
+    "-m",
+    "gpt-5.3-codex-spark",
+    "-c",
+    "model_reasoning_effort=\"xhigh\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "-s",
+    "read-only",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--json",
+    "--color",
+    "never",
+    "-o",
+    "/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+Needle-13-spark/xhigh-r1-answer.md",
+    "-"
+  ],
+  "cwd": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-90587-32cn06ea",
+  "wall_cap_seconds": 900,
+  "subprocess_timeout_seconds": 870,
+  "system_prompt_is_user_prefix": true,
+  "temperature": null,
+  "max_output_tokens": null,
+  "backend_model_attestation": null,
+  "exit_code": 0,
+  "event_types": [
+    "item.completed",
+    "thread.started",
+    "turn.completed",
+    "turn.started"
+  ],
+  "usage": [
+    {
+      "input_tokens": 50223,
+      "cached_input_tokens": 3584,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 20129,
+      "reasoning_output_tokens": 16985
+    }
+  ],
+  "thread_ids": [
+    "01a087ea-de18-7910-9810-6f803739a5c6"
+  ],
+  "errors": [],
+  "full_request_wall_seconds": 35.9859682919996
+}

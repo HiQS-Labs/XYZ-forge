@@ -1,0 +1,184 @@
+> **ATTESTATION**
+> Model: unknown
+> Provider: unknown
+> Sandbox: unknown
+
+[adapter] awaiting Codex completion
+[adapter] awaiting Codex completion
+```json
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "Reject: the issue body lacks the remediation plan required by admission policy; local draft-only plan is not admissible evidence for auto-inclusion."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "Accept: plan/review/probe/PRS/freshness evidence is complete in-place and no explicit invalidating gate is present."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "Reject: post-review plan edit invalidates prior attestation because no renewed plan hash or signed comparison is present."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "Reject: schema producer/decoder shared-format change has no pinned interface contract, so parallel membership safety is unproven."
+    },
+    {
+      "id": "A05",
+      "decision": "ACCEPT",
+      "reason": "Accept: independently validated, disjoint write-set example with matched contracts and dependencies supports a separate safe admission candidate."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "Reject: parked/attempt-capped state and rescans that can reset counters violates no-park-resumption safety."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "Reject: embedded system override conflicts with trusted-review authority and cannot satisfy admission provenance."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "Reject: missing dependency inventory from partial API failure and treating unseen dependencies as complete is non-completeness-by-default."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "Accept: valid locked-example shape for inclusion (disjoint families, explicit boundary, timestamped next event)."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "Reject: the input contains the next user request after prediction boundary, so this leaks target information."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "Reject: no-next-event-to-horizon cases need explicit abstention policy; treating empty output as correct no_action is not equivalent without provenance-aligned mapping."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "Reject: unpaired native-engine vs MLX row sets invalidate the comparison and cannot establish the PTQ-cause claim."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Accept: held-out row with rare canonical target and full metadata is suitable for locked scoring regardless of per-label prediction."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "Reject: malformed/multiblock output with unexpected args is not sufficient evidence of parser validity."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "Reject: stale completion attribution example demonstrates prompt/session-level ordering failure risk in detached worker publishing."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "Reject: synthetic-only policy run does not establish production readiness on accuracy, latency, reliability, or operating cost."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "[Should] The projects’ targets differ: Oracle predicts the next tool-action at the SDLC stop-turn boundary from reconstructed session context, while XYZ admission decides whether an issue should be auto-enrolled in queue/workflow after issue-plan-review-PRS checks. Shared reusable context is low-level deterministic context building (`serialize_query`-style rendering and labelized prior actions), while admission-specific facts (review hash freshness, queue state, and PRS intent) stay project-specific. The same workflow example cannot prove both utility and accuracy; O01 is a valid prediction example, but O02 shows boundary leakage and O08 shows product-level readiness cannot be inferred from synthetic recommendation claims.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:16",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:13",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:74",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:52",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:45",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:48"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "[Blocker] On main, `oracle_stop_hook` currently only logs query metadata and does not call inference, so there is no detached recommendation race there. On 710c, `oracle_stop_hook` launches `oracle_infer.py` detached and inference writes `last/<session>.json` via `os.replace`, which is atomic for a single write but does not prevent stale overwrite ordering (no explicit prompt/session freshness guard in the worker path). `O07` already demonstrates wrong last-writer attribution, so required tests are prompt-order, stale-inflight, and crash/retry isolation tests that compare `prompt_id`/session lineage before accepting a result, not race execution claims.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:16",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:20",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:122",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:55",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:75"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "[Blocker] No: 44 declared labels or a “100% well-formed” parser count do not certify quality. The issue correction explicitly retracts earlier interpretation errors, and the key failure is systemic (declared label set reachability and stale harness behavior), not just model quality. The label contract states label-only outputs and `no_action` is explicit, but malformed/multiple-block outputs can still be misread as valid and collapse abstention with parsing artifacts, so quality must be judged on deterministic schema adherence first.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:2",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:13",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:4",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:101",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:109",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:70",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:55"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "[Should] Deterministic code should own session/session-id/version integrity, serialization, label mapping, and writer contracts; Spark should only contribute ranked recommendations from frozen snapshots. For XYZ, deterministic gates should enforce plan presence/review/PRS freshness, dependency safety, group coherency, and queue-append semantics while Spark/LLM can only suggest grouping/admission rationale. `cmd_jog_add` is especially relevant: it rejects pending/running duplicates but can reactivate/rewire other states with `attempt_count=0`, so parked/paused semantics must be handled by explicit deterministic admission logic, not inferred from model output; machine contracts require atomic artifacts and strict schema ownership across phases.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:52",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:74",
+        "utils/py/releases_app.py:3900",
+        "utils/py/releases_app.py:3912",
+        "MACHINE-CONTRACTS.md:16",
+        "MACHINE-CONTRACTS.md:31",
+        "MACHINE-CONTRACTS.md:119",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:74",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:96"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "[Should] Shared minimal falsification should be one frozen fixture covering both projects with immutable IDs (session_id/prompt_id + issue/plan/review revision), identical boundary rules, and explicit no-input-change/no-output-change negative controls. Include leakage checks (do not include post-boundary request text), frozen row/session identity, independent labels per project, full coverage reporting (including mapping misses), and false-accept metrics; do this before any model-choice claims. After that shared step, Oracle still needs stale-worker/ordering and no_action-vs-empty-output checks, while XYZ still needs parked-attempt/queue-duplication and cross-clone admission-race checks; local baselines and stronger-model baselines should be fixed per-project, not merged."
+,
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:45",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:48",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:55",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:68",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:70",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:111",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:74",
+        "MACHINE-CONTRACTS.md:14",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:7"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "[Blocker] Narrow Spark when it passes through policy-violating inputs, stale-state conditions, malformed outputs, or leakage patterns without failure (examples: `O02`, `O06`, `O07`, `O04`), and prefer HOLD over rollout when these remain open. Use stronger-model comparison only after deterministic gates are green and only as a controlled A/B arm; stop if admission safety invariants (parked work semantics, review freshness, duplicate suppression, cross-clone idempotency) cannot be proven with fixtures. The present evidence set is not a production trial: no private corpus or real API traffic is executed here, so it cannot establish true live accuracy, latency, cost, privacy retention, or concurrent race guarantees."
+,
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:48",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:68",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:75",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:60",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:79",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:7",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:129",
+        "utils/py/releases_app.py:3900"
+      ]
+    }
+  ],
+  "limitations": [
+    "Recommendation: block production rollout until a locked phase-0 fixture proves deterministic gates, stale-result safeguards, and park/replay safety across a fresh full-clone write path.",
+    "This is an evidence-only review of provided snapshots; no runtime commands were executed, so behavior is inferential and not empirically confirmed.",
+    "Scope-bound: sources include synthetic/non-private framing and stale graph generations for some parts, so freshness and cross-project convergence must be re-verified against the pinned commits before implementation.",
+    "Coverage caveat: `O02`, `O03`, `O04`, `O06`, `O07`, and `O08` are control-sensitive cases; they should drive strict rejection thresholds, not be discounted as outliers."
+  ]
+}
+```
+Request receipt: {"schema": "needle13/spark-cli-spike@1", "run": "xhigh-r1", "status": "complete", "started_at": "2026-09-09T20:45:11.274939+00:00", "requested_model": "gpt-5.3-codex-spark", "requested_effort": "xhigh", "prompt_sha256": "37940bd8d7e12b4371f36193e518eb300a1c890412e4ef863ec68916d110d676", "source_packet_sha256": "dee4d8c16f2352bf4ff448aecac65d1de803d064df68c73d46e3c30c3dc41f2e", "flags": ["exec", "-m", "gpt-5.3-codex-spark", "-c", "model_reasoning_effort=\"xhigh\"", "-c", "approval_policy=\"never\"", "-s", "read-only", "--ephemeral", "--ignore-user-config", "--json", "--color", "never", "-o", "/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+Needle-13-spark/xhigh-r1-answer.md", "-"], "cwd": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-90587-32cn06ea", "wall_cap_seconds": 900, "subprocess_timeout_seconds": 870, "system_prompt_is_user_prefix": true, "temperature": null, "max_output_tokens": null, "backend_model_attestation": null, "exit_code": 0, "event_types": ["item.completed", "thread.started", "turn.completed", "turn.started"], "usage": [{"input_tokens": 50223, "cached_input_tokens": 3584, "cache_write_input_tokens": 0, "output_tokens": 20129, "reasoning_output_tokens": 16985}], "thread_ids": ["01a087ea-de18-7910-9810-6f803739a5c6"], "errors": [], "full_request_wall_seconds": 35.9859682919996}

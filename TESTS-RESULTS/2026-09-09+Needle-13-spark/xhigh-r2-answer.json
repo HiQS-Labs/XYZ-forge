@@ -1,0 +1,172 @@
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "Missing in-issue plan body means it fails the documented admission contract requiring remediation content in the issue itself; this is a hard admission gate miss."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "Fits the admission gate model: concrete issue body remedy, fresh independent review/PRS alignment, and valid readiness context with explicit hashes and hashes-aware targets."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "Plan revision drift after review leaves no recomputed hash attestation, which violates review-bound admission prerequisites."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "Parallel pair writes across producer/consumer serialized format boundaries without pinned interface is explicitly ambiguous and unsafe for automated grouping/admission."
+    },
+    {
+      "id": "A05",
+      "decision": "HOLD",
+      "reason": "Although the transformed issue is valid, it is explicitly future-draft-only with no active wave context, so it should not be treated as ready for automatic admission."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "Parked attempt-capped state combined with a scanner/writer path that can reactivate and reset rows is unsafe until deterministic write ownership and idempotence are proven."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "Embedded override instructions conflict with existing review hash/authority checks; independent review remains bound to earlier body revision only."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "Assuming unseen dependencies as completed after partial API failure is a direct admission invalidation."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "Prediction target and boundary are valid for locked prediction evaluation: disjoint source families, boundary-respecting input, and no target leakage."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "Includes the next request in input after the target boundary, so it is not a valid prediction-time-only sample."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "Scorer\u2019s semantic no_action proxy for 30-minute silence risks conflating abstention with a modeled negative; this can over-credit empty outputs."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "Intervention claim uses incomparable row sets (`200` vs `60`) and therefore cannot establish causal claims for deployment behavior."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Disjoint canonical-governance holdout with exact row ID matching is useful for inclusion in scoring regardless of per-row correctness."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "Malformed parser surface (duplicate calls/argument payload) and duplicate labels break strict contract semantics; 100% extraction is not 100% valid output compliance."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "The stale older-worker overwrite pattern is a direct safety issue and cannot be treated as a valid current-display policy."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "Synthetic policy-only evidence cannot, by itself, establish live accuracy, latency, or readiness boundaries; it is not a production proof."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "ANSWER: The admission target (XYZ) is whether an issue should progress into Jog/Marathon proposals under plan/review/PRS/readiness gates, while Oracle\u2019s target is next-observed-action prediction at the stop boundary from the current turn context. Shared reusable context is minimal boundary metadata, canonical label-versioned inputs, and deterministic feature serialization/versioning; project-specific facts (fresh issue evidence, review/PRS provenance vs no-action/next-tool target semantics, and windowing) must stay separate. A single workflow example cannot establish both recommendation usefulness and predictive accuracy because the admission problem is production governance decision quality, while Oracle cases test pointwise prediction at a strict boundary.",
+      "evidence": [
+        "xyz-522.json:1",
+        "xyz-522.json:25",
+        "needle-13.json:1",
+        "cases.json:44",
+        "cases.json:48",
+        "cases.json:53"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "ANSWER: Needle main stop-hook is logging-only and explicitly does not call a model; 710c adds detached inference by writing `pending/<session>.json`, spawning `oracle_infer.py`, then consuming that artifact to emit recommendations. In 710c, `os.replace` gives atomic writes but does not prevent stale publication: `last/<session>.json` is overwritten by completion order only, not by revision causality, so an older request can still win if it writes later. FINDINGS: [Blocker] atomic replace is necessary for torn-file safety but insufficient for freshness; [Should] add prompt/session generation guards and explicit stale-write rejection tests.",
+      "evidence": [
+        "needle-main-oracle_stop_hook.py:16",
+        "needle-main-oracle_stop_hook.py:70",
+        "needle-710c-oracle_stop_hook.py:20",
+        "needle-710c-oracle_stop_hook.py:122",
+        "needle-710c-oracle_infer.py:55",
+        "needle-710c-oracle_infer.py:58",
+        "cases.json:75",
+        "cases.json:77"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "ANSWER: No. A 44-label taxonomy is only the candidate space and does not certify correctness; it sets support constraints only. Also, a high parser/shape pass is not equivalent to quality: #12\u2019s correction explicitly retracts the prior metric interpretation (`well-formed` was name-extraction rate, metric-mixing and unpaired row issues exist), and engine reachability itself can cap effective action space. The contract expects label-only outputs and treats `no_action` as a first-class abstention, while `output_contract` and training row schema enforce that discipline.",
+      "evidence": [
+        "needle-main-labels-v1.json:4",
+        "needle-main-labels-v1.json:231",
+        "needle-main-serialize.py:101",
+        "needle-main-serialize.py:109",
+        "needle-12.json:1",
+        "needle-12.json:20",
+        "cases.json:68",
+        "cases.json:70"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "ANSWER: Deterministic code should own policy and state transitions; Spark should only provide ranked hypotheses or recommendations. For XYZ: deterministic admission filters, trusted review/PRS hashing, scheduling/dependency checks, and queue-state writes belong to code (with clear pause/park semantics and no resurrection of terminal rows); for Oracle: context reconstruction, serialization/versioning, hook scoring, artifact writes, and contract validation belong to code with model output treated as input to a fixed formatter. In 710c, Spark-like inference belongs in `oracle_infer.py`, while scoring, pending/last persistence, and feedback logging are deterministic. FINDINGS: [Blocker] `cmd_jog_add` currently has unsafe reactivation/attempt-reset behavior for certain existing rows; this must be tightened before autonomy. [Pass] contract-bound machine receipts/explicit-null/atomic write rules are the right home for output validation.",
+      "evidence": [
+        "MACHINE-CONTRACTS.md:14",
+        "MACHINE-CONTRACTS.md:21",
+        "MACHINE-CONTRACTS.md:31",
+        "MACHINE-CONTRACTS.md:73",
+        "MACHINE-CONTRACTS.md:96",
+        "utils/py/releases_app.py:3899",
+        "utils/py/releases_app.py:3912",
+        "xyz-522.json:58",
+        "needle-710c-oracle_stop_hook.py:67",
+        "needle-710c-oracle_infer.py:61",
+        "cases.json:30"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "ANSWER: Smallest shared falsification is one frozen replay harness with fixed input protocol across both projects: disjoint frozen session/issue families, fixed protocol versions, no leakage, and a single evaluation script for false-positive/false-negative accounting. Shared checks: identity freeze (session_id+prompt_id/issue revision), independent label spaces, coverage reporting for low-support classes, and explicit empty/no-call controls; then compare against local baselines before touching model thresholds. Project-specific follow-up: Oracle must separately test stale worker causality, session ordering, and `no_action` versus abstention handling; XYZ must separately test stale review/version races, parked-row behavior, dependency/write-set validation, and duplicate-admission protection. FINDINGS: [Should] this can quickly invalidate the approach; [Pass] with proper family-based splits and fixed gates it is the minimum cross-domain falsification scaffold.",
+      "evidence": [
+        "needle-13.json:1",
+        "needle-13.json:71",
+        "needle-13.json:119",
+        "sources.json:7",
+        "cases.json:46",
+        "cases.json:75",
+        "cases.json:29"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "ANSWER: Narrow Spark to advisory-only when it can pass only weak controls or creates repeatable false accepts; move to stronger model only if deterministic seam is stable and performance remains near-goal under the same frozen protocol; stop when critical invariants (freshness, admission replay safety, queue non-resurrection, privacy/cost/race evidence) are not established. This source-only trial cannot establish production outcomes because no synthetic or private-invocation calls were executed here, costs are only illustrative, no endpoint-latency measurements were recorded, and race guarantees are not observed behavior in a live concurrent run.",
+      "evidence": [
+        "sources.json:7",
+        "needle-13.json:103",
+        "needle-13.json:133",
+        "cases.json:76",
+        "cases.json:80",
+        "cases.json:29"
+      ]
+    }
+  ],
+  "limitations": [
+    "RECOMMENDATION: Run the phase-0 replay gates first, keep Spark outputs as suggestions only, and only consider deployment if stale-admission and stale-worker safety tests pass with family-split coverage and measured cost/latency budgets.",
+    "No empirical benchmark was run in this review; conclusions are evidence-trace based and exclude live API/model timing, token-cost accounting, privacy retention outcomes, and race/retry behavior under concurrent production load."
+  ]
+}

@@ -1,0 +1,11 @@
+2026-09-09T20:43:25.026571Z  WARN codex_core::agents_md: project doc exceeds remaining budget; truncating path=file:///private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-90487-8g27bkxl/AGENTS.md remaining_bytes=32768
+2026-09-09T20:43:25.062785Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.089161Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.112147Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.128185Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.142311Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.160870Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.177079Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.196983Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.216876Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-09T20:43:25.236740Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back

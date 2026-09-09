@@ -1,0 +1,15 @@
+{
+  "n": 16,
+  "correct": 15,
+  "false_accept": 0,
+  "false_hold": 1,
+  "mismatches": [
+    {
+      "id": "A05",
+      "expected": "ACCEPT",
+      "actual": "HOLD"
+    }
+  ],
+  "pass": false,
+  "transport_json_copies": 1
+}

@@ -1,0 +1,198 @@
+```json
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "Missing remediation plan in issue body violates the explicit admission contract requiring issue-bound plan artifacts, so it cannot pass automatic intake."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "Issue body includes reproducible scope, reviewed plan, hashes, dependencies, and explicit authorization prerequisites; it fits the deterministic admission path."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "Plan changed after review without renewed content-hash attestation; admission would depend on stale reviewer binding."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "Parallel pair modifies coupled producer/consumer formats without a pinned, shared contract; unsafe for automatic grouping or inclusion."
+    },
+    {
+      "id": "A05",
+      "decision": "ACCEPT",
+      "reason": "Validation is complete and effective write-sets are disjoint; this is a clean parallel candidate in a future draft context."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "Parked item can be reactivated and attempt state reset by `jog add`; this violates the explicit hold/attempt semantics until fixed."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "Conflicting in-body override instruction bypasses policy and invalidates prior review scope."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "Incomplete dependency/membership inventory (HTTP 503 and unseen dependencies treated as done) fails fail-closed admission."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "Disjoint families, valid boundary, and explicit horizon metadata make this a valid locked-evaluation inclusion."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "Contains next request post-boundary, so it is a target-leak case, not valid next-action prediction evaluation."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "Scorer-inserted no_action from no-call window is not equivalent to model behavior and can inflate precision without real predictive validity."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "Comparison is across mismatched row sets and does not establish causal claims; metrics are not directly comparable."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Canonical held-out support and row alignment are sufficiently controlled for scoring inclusion regardless of predicted label correctness."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "Duplicate blocks and unexpected arguments invalidate the parser claim of full output validity despite partial name extraction."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "Last-writer-wins across prompt generations can attribute feedback to the wrong prompt, violating temporal correctness."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "Single synthetic policy result does not establish required accuracy/latency/cost production guarantees."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "[Should] XYZ-admission target is deterministic queue membership eligibility (`bug report + in-issue remediation plan + trusted review + PRS + fresh plan/rating/hash/state checks`) while Oracle target is next-observed-action prediction at the stop boundary (`Serialize(request+history)` and first subsequent action). ([xyz-522.json:1], [xyz-522.json:32], [needle-13.json:1], [cases.json:4], [cases.json:44]) [Should] Shared reusable context is limited to schema/protocol artifacts and provenance (`QUERY_FORMAT_VERSION`, `label_set_version`, session lineage, query format, target boundary), but target semantics remain project-specific. ([needle-main-serialize.py:45], [oracle_config.py:50], [needle-main-oracle_stop_hook.py:43], [needle-710c-oracle_stop_hook.py:51]) [Blocker] The same workflow example does not by itself establish both recommendation usefulness and predictive accuracy: it can prove evaluation cleanliness of the boundary, not downstream utility.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:32",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/tests/2026-09-09+GH-522-luna-needle/cases.json:4",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:45",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:85",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:13",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:51"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "[Blocker] On main, the stop hook is logging-only and does not run a model or spawn an infer worker; its role is just context reconstruction and write-ahead logging. ([needle-main-oracle_stop_hook.py:12], [needle-main-oracle_stop_hook.py:13], [needle-main-oracle_stop_hook.py:75]) [Pass] On 710c, stop hook writes a pending request and spawns `oracle_infer.py`, and the worker writes recommendation output via a temp file then `os.replace` into `last/<session>.json`. ([needle-710c-oracle_stop_hook.py:20], [needle-710c-oracle_stop_hook.py:112], [needle-710c-oracle_infer.py:55]) [Blocker] `os.replace` protects atomicity of each file write, not temporal correctness across workers; stale publication is still possible if prompt ordering is wrong (as shown by last-finished overwriting newer context in O07). ([needle-710c-oracle_infer.py:58-60], [cases.json:75], [cases.json:76]) [Should] Test plan: (1) two consecutive stop events same session with controlled delays, (2) crash/restart before pending cleanup, (3) duplicate/late worker completion with different `prompt_id`, and (4) confirm that older prompt output cannot overwrite newer boundary state.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:12",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:16",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:75",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:20",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:113",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:55",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:75"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "[Blocker] “44 labels” does not certify quality: the correction explicitly states only 5 declared tools can be reached in practice, so undeclared labels are structurally impossible. ([needle-12.json:1], [needle-12.json:17]) [Blocker] “100% parsed/100% well-formed” is not a correctness claim; the corrected issue calls it name-extraction, with malformed/argument-rich tool-call outputs still present. ([needle-12.json:1], [needle-12.json:56], [cases.json:70], [cases.json:71]) [Pass] The canonical contract says labels are single IDs with no args and `no_action` is a distinct abstention label (serialized as `answers: []`), so abstention and unsupported/no-label outcomes must remain explicitly separate in scoring. ([needle-main-labels-v1.json:4], [needle-main-labels-v1.json:230], [needle-main-serialize.py:101]) [Nit] Current docs/code mismatch: the historical serializer contract says a single predicted label, while 710c tooling still consumes function-call-shaped outputs and trims to top-3 call names; this leaves parsing behavior wider than the stated contract. ([needle-main-serialize.py:51], [needle-main-serialize.py:101], [needle-710c-oracle_infer.py:44], [needle-710c-oracle_infer.py:48])",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:17",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:56",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:70",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:71",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:4",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:230",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:101",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:44"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "[Should] XYZ: deterministic code should own all admission authority—issue-plan parsing, review hash binding, PRS validity, dependency checks, scheduler state, and queue writes—while Spark/Luna only proposes grouping/eligibility in a bounded way. ([xyz-522.json:32], [xyz-522.json:90], [xyz-522.json:115], [machine-contracts:31], [machine-contracts:60]) [Blocker] `cmd_jog_add` currently permits resurrecting non-pending entries (including parked ones) and resets `attempt_count`, which directly conflicts with strict parked/held semantics and must be treated as a writer-safety bug before automation. ([utils/py/releases_app.py:3895], [utils/py/releases_app.py:3912], [utils/py/releases_app.py:3926], [cases.json:30], [cases.json:29]) [Should] Oracle: deterministic boundary must use shared serializer+hook contract, explicit provenance fields, and deterministic scoring/output schema; Spark-only reasoning is for policy/benchmarks and should never redefine hook-time semantics. ([needle-main-serialize.py:1], [needle-main-oracle_stop_hook.py:13], [needle-main-oracle_stop_hook.py:66], [oracle_config.py:50], [needle-710c-oracle_infer.py:27], [MACHINE-CONTRACTS.md:16], [MACHINE-CONTRACTS.md:31]) [Pass] Both projects should rely on machine contracts/result artifacts for verifiable outputs instead of prose parsing; malformed tool JSON or prose claims should fail closed. ([MACHINE-CONTRACTS.md:16], [MACHINE-CONTRACTS.md:23], [MACHINE-CONTRACTS.md:69])",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:32",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:90",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:115",
+        "utils/py/releases_app.py:3895",
+        "utils/py/releases_app.py:3912",
+        "utils/py/releases_app.py:3926",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:30",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:13",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:66",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/oracle_config.py:50",
+        "MACHINE-CONTRACTS.md:16",
+        "MACHINE-CONTRACTS.md:31",
+        "MACHINE-CONTRACTS.md:69"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "[Should] Smallest shared falsification experiment is one frozen, small paired fixture that reuses a single frozen session/issue identity map: a change-set of eligible/ineligible admission rows and a separate oracle action-prediction row-set with no overlap across train/dev/test families. ([sources.json:1], [sources.json:2], [sources.json:7], [xyz-522.json:132], [needle-13.json:90]) [Blocker] Test for leakage by freezing family/session IDs, provenance keys, and prompt/label hashes up front; reject any duplicate/reused context or mixed family bleed as a hard fail before scoring. ([needle-13.json:88], [needle-main-serialize.py:74], [needle-main-serialize.py:74], [needle-main-serialize.py:75]) [Should] Evaluate separately after shared setup: admission must test stale issue edits, parked/resume behavior, plan/review hash churn, grouped write-set collisions, and false accepts under adversarial inputs; oracle must test boundary reconstruction, parser/output-shape failures, no_action/abstention semantics, and stale worker races. ([xyz-522.json:128], [xyz-522.json:140], [cases.json:75], [cases.json:56], [cases.json:70], [cases.json:71]) [Should] Include local baselines and a fixed-cost remote-baseline lane only for apples-to-apples comparison; report misses and false rejections explicitly. ([needle-13.json:121], [needle-13.json:132], [needle-13.json:156], [needle-13.json:176])",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:2",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:7",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:132",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:90",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:121",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:132",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:156",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:176",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:75",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:56",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:70",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:71"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "[Blocker] Narrow Spark immediately on observed hard-fails: missing plan/review/rating provenance (A01/A03/A07/A08), stale/duplicate queue semantics (`jog add` reactivating non-pending states), and stale-worker attribution or malformed-output acceptance patterns (O06/O07/O03). ([cases.json:4], [cases.json:15], [cases.json:35], [cases.json:38], [cases.json:70], [cases.json:75], [cases.json:55], [utils/py/releases_app.py:3895], [utils/py/releases_app.py:3912]) [Should] Use a stronger model/manual adjudicator only in dedicated comparison lanes when Spark fails specific sub-questions (e.g., adversarial edge-case classification) but preserve deterministic gates unchanged. ([xyz-522.json:145], [xyz-522.json:170], [needle-13.json:132], [needle-13.json:176]) [Should] Stop (or keep in proposal-only mode) if deterministic boundary safety or queue-atomicity cannot be proven; do not extrapolate from tool-only trials. ([xyz-522.json:128], [xyz-522.json:164], [MACHINE-CONTRACTS.md:14], [MACHINE-CONTRACTS.md:31]) [Pass] This no-tools, snapshot-only trial cannot prove production accuracy, latency, spend, privacy posture, or race guarantees because it performs no live inference/API calls and includes no private corpus execution. ([sources.json:7], [needle-13.json:84], [needle-13.json:120], [needle-13.json:157]) RECOMMENDATION: keep Spark gated and evidence-only until writer atomics, stale-run suppression, and admission hard gates pass on a fixed frozen fixture, then retest with both local and remote baseline lanes before any live enablement.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:4",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:15",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:35",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:38",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:55",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:70",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:75",
+        "utils/py/releases_app.py:3895",
+        "utils/py/releases_app.py:3912",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:128",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:164",
+        "MACHINE-CONTRACTS.md:14",
+        "MACHINE-CONTRACTS.md:31",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:7",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:84",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:120",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:157"
+      ]
+    }
+  ],
+  "limitations": [
+    "No tool execution, no filesystem writes/reads beyond provided evidence, and no API/Inference calls were performed; this is a static review only.",
+    "`graph_needle_generation` and `graph_xyz_generation` are provided as stale for parts of the codebase and were intentionally not used to avoid false inference.",
+    "`[Decision]` entries are based on the supplied fixtures and may be superseded by future evidence or branch updates; e.g., O2/O3 classes can shift if protocol revisions land.",
+    "RECOMMENDATION: run the minimal frozen replay and writer-race fixtures before any production-claims or model routing changes."
+  ]
+}
+```
