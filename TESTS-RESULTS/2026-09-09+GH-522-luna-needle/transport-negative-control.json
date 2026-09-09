@@ -1,0 +1,5 @@
+{
+  "distinct_conflicting_answers_rejected": true,
+  "returncode": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+GH-522-luna-needle/grade.py\", line 47, in <module>\n    assert len(unique)==1, f'Expected one distinct final JSON answer; got {len(unique)} from {raw_count} blocks'\n           ^^^^^^^^^^^^^^\nAssertionError: Expected one distinct final JSON answer; got 2 from 2 blocks\n"
+}

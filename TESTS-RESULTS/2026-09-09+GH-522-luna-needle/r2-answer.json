@@ -1,0 +1,147 @@
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "Reproducibility and PRS do not substitute for an issue-hosted, reviewed admission plan."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "All stated admission prerequisites, hashes, authorization, dependency checks, and review bindings match."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "Post-review edits invalidate the attestation until content identity is rechecked or review is renewed."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "Disjoint files still share a changed serialized contract; parallel admission requires a pinned interface/integration agreement."
+    },
+    {
+      "id": "A05",
+      "decision": "ACCEPT",
+      "reason": "The future draft membership is disjoint, independently validated, and has no shared-contract collision; it changes no active wave."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "Parked work requires explicit operator release; jog add can reset terminal rows and attempt_count, so rescanning is not authorization."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "The appended instruction is untrusted issue data and changes the reviewed body hash; high PRS does not repair that."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "An incomplete dependency/membership inventory cannot justify treating unseen dependencies as complete."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "The example uses only pre-boundary context, disjoint source families, valid labels, and an observed next event within the horizon."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "The next user request is post-boundary leakage and cannot be included in final evaluation inputs."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "No observed action is censored evidence, not semantic no_action; an empty response cannot validate that scoring rule."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "The native and MLX results use different rows and sample sizes, so they do not establish a PTQ causal conclusion."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Valid held-out inclusion is independent of prediction correctness; canonical coverage, distinct labels, and row identity are preserved."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "Name extraction is not full output validity; duplicate blocks and invalid arguments defeat the parser-quality claim."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "Last-writer-wins under session_id alone permits an old prompt to overwrite current state and misattribute feedback."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "Sixteen synthetic cases cannot establish production accuracy, latency, cost, or serving readiness."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "XYZ predicts an admission decision: whether a proposed issue/lane is authorized and safe to admit, queue, or group. Needle predicts the next observed software-development action at the end-of-turn boundary, not what the developer should do. Both can reuse the current request/recent action context and canonical label vocabulary, but admission additionally needs issue-plan hashes, trusted review/PRS, dependencies, queue state, write sets, and shared-contract relationships; Oracle evaluation needs frozen session identity, prior labels, boundary timing, and future observed outcome. One workflow example cannot establish both recommendation usefulness and predictive accuracy: accuracy is observational, while usefulness requires a later user-facing study.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "Needle main only reconstructs and logs serialized context; it explicitly does not call a model. The 710c revision scores prior feedback, writes pending state, and launches a detached inference worker, which atomically replaces the last-result file. os.replace prevents torn reads but not stale publication: test simulated p17/p18 completion reordering, prompt/session generation checks, stale feedback attribution, and display freshness without claiming a race was run.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:12",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:16",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:31",
+        "MACHINE-CONTRACTS.md:22"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "Neither 44 labels nor 100% parsed outputs certifies quality: labels require independent support and correct mapping, while parsing must reject duplicates, multiple blocks, invalid arguments, missing predictions, and refusals. The serializer contract maps semantic no_action to answers [], but model abstention is distinct and must not be scored as no_action; censored no-event cases are not automatically no_action. A current inconsistency is that the plan says local scoring still accepts multiple tool-call blocks and invalid argument shapes even though the serializer contract says labels take no arguments and requires a single canonical answer.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:96",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "Deterministic code should enforce admission gates, trusted-plan hash binding, PRS/schema checks, paused/parked status, dependency and dependent/shared-contract grouping, queue authorization, and strict output validation. Luna may reason about ambiguous plan quality or likely next action, but must not execute, override review, unpark work, merge, or invent authorization; its output must be validated and mapped by code. Current cmd_jog_add refuses pending/running duplicates but reactivates terminal rows as pending and resets attempt_count to zero, so it cannot be treated as an implicit release of parked work.",
+      "evidence": [
+        "MACHINE-CONTRACTS.md:14",
+        "MACHINE-CONTRACTS.md:115",
+        "utils/py/releases_app.py:3896",
+        "utils/py/releases_app.py:3912",
+        "utils/py/releases_app.py:3926"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "The smallest shared experiment is a frozen, synthetic paired manifest: identical admission and next-action fixtures presented once to Luna and deterministic/local baselines, with immutable row/session identities, independent labels, strict schema validation, and no execution authority. It should deliberately test leakage rejection, empty/overlapping/swapped manifests, false acceptance, missing outputs, duplicate/invalid outputs, coverage, and stronger-model/local-baseline comparisons. Each project must still evaluate its own target separately: XYZ on real admission evidence and contract decisions, Needle on disjoint session families and true end-of-turn next events with independent held-out support.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "MACHINE-CONTRACTS.md:14",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:1"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "Narrow Luna when errors are concentrated in a bounded label or advisory scope but deterministic gates remain reliable; try a stronger model only when the task/data contract is valid and Luna loses meaningfully to a local baseline, with the same frozen evaluation. Stop when it falsely accepts unsafe work, leaks or mishandles private data, emits invalid/stale outputs, misses hard latency/cost/reliability gates, or cannot beat the baseline with adequate coverage. This CLI trial cannot establish production accuracy, latency, dollars, privacy, or race guarantees because it is synthetic/advisory, lacks a measured production workload, and does not run the real deployment or concurrency conditions.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:1"
+      ]
+    }
+  ],
+  "limitations": [
+    "This was a read-only review of the supplied snapshot; no tests, issue commands, private corpus, live graph queries, API calls, or races were run.",
+    "Several packet files are one-line JSON fixtures, so citations identify the fixture line rather than an internal body line.",
+    "No empirical benchmark, production cost, latency, privacy, or concurrency claim is made."
+  ]
+}

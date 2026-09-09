@@ -1,0 +1,224 @@
+[
+  {
+    "run": 1,
+    "question": "Q1",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q1",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q2",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:12-18",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q2",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:16-22",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q2",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:31-59",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:96-116",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:1-8",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:330-336",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q4",
+    "citation": "utils/py/releases_app.py:3895-3915",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q4",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/MACHINE-CONTRACTS.md:1",
+    "status": "missing-path"
+  },
+  {
+    "run": 1,
+    "question": "Q4",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q5",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q5",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:9",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q6",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q6",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:67-90",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 1,
+    "question": "Q6",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:16",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q1",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q1",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q2",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:12",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q2",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:16",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q2",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:31",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q2",
+    "citation": "MACHINE-CONTRACTS.md:22",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:96",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q3",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q4",
+    "citation": "MACHINE-CONTRACTS.md:14",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q4",
+    "citation": "MACHINE-CONTRACTS.md:115",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q4",
+    "citation": "utils/py/releases_app.py:3896",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q4",
+    "citation": "utils/py/releases_app.py:3912",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q4",
+    "citation": "utils/py/releases_app.py:3926",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q5",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q5",
+    "citation": "MACHINE-CONTRACTS.md:14",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q5",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q6",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q6",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/cases.json:1",
+    "status": "resolves-not-semantic-proof"
+  },
+  {
+    "run": 2,
+    "question": "Q6",
+    "citation": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:1",
+    "status": "resolves-not-semantic-proof"
+  }
+]

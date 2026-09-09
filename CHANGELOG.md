@@ -2,6 +2,20 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-09
+
+### GH-522 — preliminary shared Luna/Needle decision spike
+
+Ran two read-only Luna advisory turns through relay-xyz's consult machinery against
+six shared questions and sixteen frozen synthetic cases. Both matched16/16 decisions;
+source review found authority wording/citation problems, and sample2 attempted a temp
+write despite the prompt. Retained model attestations, raw transcripts, independently
+graded answers and failing grader controls in
+[the evidence report](TESTS-RESULTS/2026-09-09+GH-522-luna-needle/SUMMARY.md), with
+provenance.jsonl. This is preliminary case evidence, not full Phase0 qualification,
+real next-action accuracy, API cost/latency, or a live deployment. Runtime suites were
+not run; no production code, queue or hook changed.
+
 ## 2026-09-08
 
 - **GH-267 Phase 2: `/express` now lands its qualified commit directly on `development`.** The fast lane replaces its immediately merged ghost PR with `git push origin HEAD:development`, retains the canonical pre-push gate, refuses concurrent non-fast-forward updates without force or bypass, verifies the landed SHA is reachable from `origin/development`, and closes the linked issue explicitly if GitHub has not processed the commit's `Closes #N`. `wave_reconcile.py` gains a commit input that preserves commit identity while leaving its existing PR path intact, so lifecycle closeout no longer needs a synthetic PR. Reversibility: **Easy** — revert the implementation commit to restore the prior landing path; no schema or durable-format migration is involved. Verification: `test/gh267-express-skill.sh` 39/39 and `test/wave-reconcile.sh` 16/16 in a separate disposable full clone; the direct landing itself is the production dogfood.

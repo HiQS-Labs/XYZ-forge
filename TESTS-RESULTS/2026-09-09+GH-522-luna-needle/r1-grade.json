@@ -1,0 +1,9 @@
+{
+  "n": 16,
+  "correct": 16,
+  "false_accept": 0,
+  "false_hold": 0,
+  "mismatches": [],
+  "pass": true,
+  "transport_json_copies": 2
+}
