@@ -50,6 +50,10 @@ TEST_NAME="${1:-unnamed}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TICK="$(cd "$HERE/.." && pwd)/bin/tick"
 export TICK
+# GH-505: a stub relay-drive that wants marathon-drive to SUCCEED must publish the reviewer
+# attestation the real driver publishes — this helper does it from the stub's own argv.
+ATTEST_STUB="$HERE/lib/attest-stub.sh"
+export ATTEST_STUB
 
 WORK="$(mktemp -d -t "tick-${TEST_NAME}.XXXXXX")"
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment

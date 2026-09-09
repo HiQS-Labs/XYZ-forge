@@ -80,6 +80,19 @@ rtl_is_reviewer_turn() {  # <relay_file> [agent] — true if THIS turn is the Re
   # before the directive existed — falls through to the historical NEXT:-header test below, unchanged.
   local f="$1" agent="${2:-${RELAY_AGENT:-}}" line directive builder reviewer
   [[ -f "$f" ]] || return 1
+  # GH-505/GH-509: under a driver, the role is what the DRIVER dispatched — relay-drive decides it
+  # from its own --reviewer flag and exports RELAY_ROLE per turn. That is the one input a builder
+  # turn cannot rewrite, so it outranks the in-file directive (which every turn may edit). Gated on
+  # RELAY_DRIVER_LOCKED=1, the driver's own marker: a hand-run turn without it keeps the tiers
+  # below. Limit, stated: the marker is inherited, not proof of a live driver — a hand-run turn that
+  # inherits BOTH variables from a driver shell is classified by them, and a stale
+  # RELAY_ROLE=builder on a hand-run reviewer widens its allowlist to the artifact.
+  if [[ "${RELAY_DRIVER_LOCKED:-}" == 1 ]]; then
+    case "${RELAY_ROLE:-}" in
+      reviewer) return 0 ;;
+      builder)  return 1 ;;
+    esac
+  fi
   if [[ -n "$agent" ]]; then
     directive="$(grep -E '^[[:space:]]*<!--[[:space:]]*marathon-drive:' "$f" 2>/dev/null | head -1)"
     if [[ -n "$directive" ]]; then
@@ -730,9 +743,14 @@ rtl_worktree_begin() {
   fi
   wt="$(mktemp -d "${wt_root}/rtl-wt.XXXXXX")" || return 1
   rm -rf "$wt"                         # git worktree add wants a non-existent path
-  if ! git -C "$RTL_ROOT" worktree add --detach "$wt" HEAD >/dev/null 2>&1; then
+  # GH-505/GH-509: cut at the revision the driver PINNED before dispatch, not at live HEAD — a
+  # concurrent parent commit between the driver's snapshot and this line must not change what the
+  # reviewer reads. Hand-run turns (no driver) still cut at HEAD.
+  local _cut="${RELAY_REVIEWED_HEAD:-HEAD}"
+  if ! git -C "$RTL_ROOT" worktree add --detach "$wt" "$_cut" >/dev/null 2>&1; then
     rm -rf "$wt" 2>/dev/null; return 1
   fi
+  rtl_trace "rtl_worktree_begin: cut at $_cut"
   # GH-124 QW3: Register created worktree in .xyz/workspaces.json manifest
   if [ -n "${RTL_ROOT:-}" ] && [ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]; then
     python3 "$RTL_ROOT/utils/py/workspace_manager.py" register --repo "$RTL_ROOT" --path "$wt" --type worktree >/dev/null 2>&1 || true
@@ -771,6 +789,17 @@ rtl_worktree_begin() {
   if [[ -n "${RTL_ARTIFACT:-}" && -f "$RTL_ARTIFACT" ]]; then
     mkdir -p "$wt/.relay-artifacts"
     cp "$RTL_ARTIFACT" "$wt/$RTL_ARTIFACT_REL"
+    # GH-505: the driver digested the artifact BEFORE dispatch; the bytes seeded here must be those
+    # bytes, or the record would describe an input the reviewer never saw. Refuse disagreement.
+    if [[ -n "${RELAY_ARTIFACT_SHA256:-}" ]]; then
+      local _seeded_sha
+      _seeded_sha="$(shasum -a 256 "$wt/$RTL_ARTIFACT_REL" 2>/dev/null | cut -d' ' -f1)"
+      if [[ "$_seeded_sha" != "$RELAY_ARTIFACT_SHA256" ]]; then
+        printf 'rtl_worktree_begin: seeded artifact digest %s != driver digest %s — source changed between dispatch and seed; refusing the turn\n' "${_seeded_sha:0:12}" "${RELAY_ARTIFACT_SHA256:0:12}" >&2
+        git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
+        return 1
+      fi
+    fi
     _rtl_sig "$wt/.relay-artifacts" >"${wt}.artifactsig"
   fi
   # GH-91: the sanctioned scratch dir. The harness REQUIRES the builder to verify its work by
@@ -995,7 +1024,7 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # never has to fall back to the RELAY_AGENT env or to agent-maintained NEXT: prose.
   if rtl_is_reviewer_turn "$f" "$agent"; then
     csv_rel=""
-    role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
+    role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn. When approving, hand the token off with done and set STATUS: Approved.'
   fi
   # GH-31 / #15: point the reviewer at the seeded read-only artifact (worktree-relative; it is NOT a
   # writable edit target — an edit fails the turn).
@@ -1008,7 +1037,7 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   if [[ "${XYZ_TOOL_MODE:-${RELAY_TOOL_MODE:-}}" == "programmatic" ]]; then
     prog_note=" Programmatic tool mode is enabled: diagnostic Python scripts may be executed via script_runner.py with output directed to .relay-scratch/."
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.%s%s' \
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.%s%s' \
     "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$scratch_note" "$prog_note"
 }
 

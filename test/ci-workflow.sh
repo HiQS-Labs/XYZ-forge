@@ -278,6 +278,13 @@ else
   fail "GH-509: the canary verdict lacks if: always() — it is skipped in the only case it matters"
 fi
 
+# GH-459: the Frozen Bash twin guard must sit in a job that triggers on pull_request (vendored-smoke)
+if awk '/^  vendored-smoke:/{job=1} job && /name: Frozen Bash twin guard/{found=1; exit} END{exit !found}' "$WORKFLOW"; then
+  pass "GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job"
+else
+  fail "GH-459: the frozen twin guard must sit inside vendored-smoke so it runs on pull requests"
+fi
+
 # The verdict must not call drift a failure. On a platform we do not ship to, "failed"/"broken" is
 # the wrong word, and the wording is the entire mechanism by which this stops reading as breakage.
 if grep -q "PORTABILITY-CANARY: drift" "$WORKFLOW" && grep -q "NOT breakage" "$WORKFLOW"; then

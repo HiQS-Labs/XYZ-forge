@@ -51,6 +51,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 from adaptive_ate import classify_stderr, load_thresholds, tier1_classify  # noqa: E402
+from proc_group import run_bounded  # noqa: E402  (GH-478: the shared group-kill runner)
 from telemetry_schema import (  # noqa: E402
     TelemetryEvent,
     append_jsonl,
@@ -237,21 +238,17 @@ def execute(argv: List[str], cwd: str, timeout: float, env: Optional[Dict[str, s
     full_env = dict(os.environ)
     full_env.update(env or {})
     t0 = time.monotonic()
-    proc = None
     try:
-        proc = subprocess.Popen(argv, cwd=cwd, env=full_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                stdin=subprocess.DEVNULL, start_new_session=True)
-        _, err_b = proc.communicate(timeout=timeout)
-        rc = proc.returncode
-        err = err_b.decode("utf-8", "replace")
-    except subprocess.TimeoutExpired:
-        _kill_group(proc)
-        try:
-            _, err_b = proc.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            err_b = b""
-        rc = 124
-        err = err_b.decode("utf-8", "replace") + f"\n[timeout after {timeout}s; process group killed]"
+        # GH-478: the bounded process-group plumbing (start_new_session, group kill on
+        # expiry) is shared — utils/py/proc_group.py, factored from here and
+        # run_variations.run_harness.
+        res = run_bounded(argv, cwd=cwd, env=full_env, timeout=timeout)
+        if res.timed_out:
+            rc = 124
+            err = res.stderr + f"\n[timeout after {timeout}s; process group killed]"
+        else:
+            rc = 124 if res.rc is None else res.rc
+            err = res.stderr
     except (FileNotFoundError, OSError, ValueError) as exc:  # ValueError: embedded NUL in argv
         rc, err = 127, f"spawn failed: {exc}"
     ms = (time.monotonic() - t0) * 1000.0
@@ -262,17 +259,6 @@ def execute(argv: List[str], cwd: str, timeout: float, env: Optional[Dict[str, s
             "vector": [rc, signal_no, stderr_digest(err), duration_bucket(ms)]}
 
 
-def _kill_group(proc: Optional["subprocess.Popen"]) -> None:
-    if proc is None:
-        return
-    import signal as _signal
-    try:
-        os.killpg(proc.pid, _signal.SIGKILL)
-    except (ProcessLookupError, PermissionError, OSError):
-        try:
-            proc.kill()
-        except OSError:
-            pass
 
 
 def fuzz(

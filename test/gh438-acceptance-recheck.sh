@@ -74,10 +74,7 @@ while ((\$#)); do
   esac
 done
 $1
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "\$relay"; rm -f "\$relay.bak"
-printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "\$relay"
-TICK_REPO_ROOT="$A" "$TICK" claim "\$task" --agent agy --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" done "\$task" --agent agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "\$relay" --relay-task "\$task" --reviewer agy --target-root "$A"   # GH-505
 exit 0
 STUB
   chmod +x "$WORK/rd.sh"
@@ -116,7 +113,7 @@ git -C "$A" ls-files --error-unmatch .mcp.json >/dev/null 2>&1 \
 # --- (2) THE FIX ACTUALLY LANDS: the same lane must complete -------------------------------------
 # Without this the check would be satisfied by failing everything, which is a worse bug.
 git -C "$A" reset -q --hard HEAD >/dev/null 2>&1
-mk_stub 'git -C "'"$A"'" rm --cached -q .mcp.json'
+mk_stub 'git -C "'"$A"'" rm --cached -q .mcp.json && git -C "'"$A"'" commit -qm "untrack .mcp.json"'   # GH-505: builder work is committed before the reviewer reads it
 out="$(run_driver "$BRIEF")"; rc=$?
 [ "$rc" -eq 0 ] \
   && pass "the same lane completes once the fix really lands (rc=0)" \

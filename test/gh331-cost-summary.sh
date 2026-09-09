@@ -93,8 +93,9 @@ approve_stub() {  # <task> <relayfile> → path
   cat >"$p" <<EOF
 #!/usr/bin/env bash
 export TICK_REPO_ROOT="$A"
-"$TICK_PATH" claim $task --agent reviewer >/dev/null 2>&1
+"$TICK_PATH" claim $task --agent reviewer --paths $rf >/dev/null 2>&1
 tmp="\$(mktemp)"; sed 's/^STATUS:.*/STATUS: Approved/' "$rf" > "\$tmp" && mv "\$tmp" "$rf"
+printf '\n### Reviewer · Round 1\nVERDICT: PASS\nApproved.\n' >> "$rf"   # GH-505: an approval must add review text
 "$TICK_PATH" done $task --agent reviewer >/dev/null 2>&1
 exit 0
 EOF
@@ -104,7 +105,7 @@ EOF
 # (1) default lane, cost summary ON → the block appears, run still exits 0.
 seed RELAY-A relayA.md
 STUB_A="$(approve_stub RELAY-A "$A/relayA.md")"
-outA="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$STUB_A" --review-once 2>&1)"; rcA=$?
+outA="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$STUB_A" --review-once --reviewer reviewer 2>&1)"; rcA=$?
 grep -qF "$COST_LINE" <<<"$([ "$rcA" -eq 0 ] && printf '%s' "$outA")" \
   && pass "relay-drive default lane: driven turn prints the cost summary (exit 0)" \
   || fail "relay-drive default lane: expected exit 0 + cost summary; got rc=$rcA (out: $outA)"
@@ -115,7 +116,7 @@ grep -qF -- '--- cost ---' <<<"$(printf '%s' "$outA")" \
 # (2) RELAY_COST_SUMMARY=0 silences it (still exit 0).
 seed RELAY-B relayB.md
 STUB_B="$(approve_stub RELAY-B "$A/relayB.md")"
-outB="$(RELAY_COST_SUMMARY=0 bash "$DRIVE" --relay-file "$A/relayB.md" --relay-task RELAY-B --agent-cmd "$STUB_B" --review-once 2>&1)"; rcB=$?
+outB="$(RELAY_COST_SUMMARY=0 bash "$DRIVE" --relay-file "$A/relayB.md" --relay-task RELAY-B --agent-cmd "$STUB_B" --review-once --reviewer reviewer 2>&1)"; rcB=$?
 [ "$rcB" -eq 0 ] && ! grep -qF "$COST_LINE" <<<"$(printf '%s' "$outB")" \
   && pass "relay-drive: RELAY_COST_SUMMARY=0 opts out of the summary" \
   || fail "relay-drive: RELAY_COST_SUMMARY=0 did not silence the summary (rc=$rcB): $outB"
@@ -134,7 +135,7 @@ STUB_D="$(approve_stub RELAY-D "$A/relayD.md")"
 BROKEN_TICK="$WORK/broken-tick.sh"
 printf '#!/usr/bin/env bash\ncase "$1" in analyze) exit 9 ;; esac\nexec "%s" "$@"\n' "$TICK" >"$BROKEN_TICK"
 chmod +x "$BROKEN_TICK"
-outD="$(TICK_BIN="$BROKEN_TICK" bash "$DRIVE" --relay-file "$A/relayD.md" --relay-task RELAY-D --agent-cmd "$STUB_D" --review-once 2>&1)"; rcD=$?
+outD="$(TICK_BIN="$BROKEN_TICK" bash "$DRIVE" --relay-file "$A/relayD.md" --relay-task RELAY-D --agent-cmd "$STUB_D" --review-once --reviewer reviewer 2>&1)"; rcD=$?
 [ "$rcD" -eq 0 ] \
   && pass "relay-drive: a failed tick analyze does not change the exit code (still 0)" \
   || fail "relay-drive: failed tick analyze changed exit code — expected 0, got $rcD (out: $outD)"

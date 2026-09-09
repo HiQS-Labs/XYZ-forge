@@ -57,9 +57,7 @@ RD_OK="$WORK/relay-drive-ok.sh"
 cat > "$RD_OK" << 'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-rf=""
-while (($#)); do case "$1" in --relay-file) rf="${2:-}"; shift 2 ;; *) shift ;; esac; done
-[ -n "$rf" ] && printf 'STATUS: Approved\n' >> "$rf"
+bash "$ATTEST_STUB" "$@"   # GH-505: approve the way relay-drive does (STATUS + token + attestation)
 exit 0
 STUB_EOF
 chmod +x "$RD_OK"

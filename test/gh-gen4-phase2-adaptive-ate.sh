@@ -11,11 +11,17 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh299-p2-ate.XXXXXX")"
-cleanup() { [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
-trap cleanup EXIT
 
 . "$HERE/lib/fixture-guard.sh"
 fixture_guard_init "$WORK"
+# GH-478: every adaptive_ate.py engine invocation below runs under a wall-clock cap and
+# no engine child's process group outlives the suite — the incident this guard exists
+# for ran 2d21h at ~98% duty because nothing capped it. The EXIT trap is the guard's
+# composed trap (status-preserving: green-but-reaped exits 1, our own failures stand).
+. "$HERE/lib/runaway-guard.sh"
+GUARD_CAP="${ATE_WATCHDOG_TIMEOUT:-300}"
+cleanup() { [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
+runaway_guard_init cleanup
 
 PASS=0; FAIL=0
 pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
@@ -33,7 +39,7 @@ echo "== test: gh-gen4-phase2-adaptive-ate =="
 [ -f "$GRID" ] && pass "reference grid utils/ate/grids/gen4-pairwise-example.yaml shipped" || fail "reference grid missing"
 [ -f "$CALFILE" ] && pass "utils/ate/tier1-calibration.json shipped" || fail "calibration file missing"
 
-if grep -q 'SUITE_RESULT=PASS' <<<"$(python3 "$ATE" --mode suite 2>&1)"; then
+if grep -q 'SUITE_RESULT=PASS' <<<"$(run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode suite 2>&1)"; then
   pass "adaptive_ate.py --mode suite passes"
 else
   fail "adaptive_ate.py --mode suite failed"
@@ -41,7 +47,7 @@ fi
 
 # 1. Generate from the 12-flag reference grid; verify the bound and coverage INDEPENDENTLY.
 GEN="$WORK/cases.json"
-python3 "$ATE" --mode generate --grid "$GRID" --seed 3 --json > "$GEN"
+run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode generate --grid "$GRID" --seed 3 --json > "$GEN"
 require_fixture_file "$GEN" "generated cases"
 n="$(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))['cases']))" "$GEN")"
 if [ "$n" -le 200 ] && [ "$n" -ge 6 ]; then
@@ -84,7 +90,7 @@ if [ "$indep" = "$(printf 'invalid=0 required=%s missing=0' "$(sed -E 's/.*requi
 else
   fail "independent brute-force check disagrees: $indep"
 fi
-if python3 "$ATE" --mode coverage --grid "$GRID" --seed 3 >/dev/null; then
+if run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode coverage --grid "$GRID" --seed 3 >/dev/null; then
   pass "--mode coverage reports complete"
 else
   fail "--mode coverage reports incomplete"
@@ -95,7 +101,7 @@ fi
 cat > "$WORK/bad.json" <<'J'
 {"flags": {"--a": [true,false]}, "conflicts": [{"--a": true, "--zzz": true}]}
 J
-if python3 "$ATE" --mode coverage --grid "$WORK/bad.json" >/dev/null 2>&1; then
+if run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode coverage --grid "$WORK/bad.json" >/dev/null 2>&1; then
   fail "grid referencing an unknown flag was accepted"
 else
   pass "grid referencing an unknown flag is refused"
@@ -139,7 +145,7 @@ if "--burst" in a and "json" in a:
 sys.exit(0)
 PY
 TEL="$WORK/run.jsonl"
-rc=0; out="$(python3 "$ATE" --mode run --grid "$GRID" --seed 3 --cwd "$WORK" --command "python3 $WORK/target.py {flags}" --telemetry-out "$TEL" --anomalies-out "$WORK/anom.json" --json 2>&1)" || rc=$?
+rc=0; out="$(run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode run --grid "$GRID" --seed 3 --cwd "$WORK" --command "python3 $WORK/target.py {flags}" --telemetry-out "$TEL" --anomalies-out "$WORK/anom.json" --json 2>&1)" || rc=$?
 require_fixture_file "$TEL" "run telemetry"
 fails="$(python3 -c "import json,sys; print(json.loads(sys.argv[1])['counts']['fail'])" "$out")"
 anoms="$(python3 -c "import json,sys; print(json.loads(sys.argv[1])['counts']['anomaly'])" "$out")"
@@ -172,9 +178,9 @@ cat > "$WORK/tier2.sh" <<'SH'
 cat > "$1"; exit 0
 SH
 chmod +x "$WORK/tier2.sh"
-python3 "$ATE" --mode run --grid "$GRID" --seed 3 --cwd "$WORK" --command "python3 -c 'import sys; sys.exit(0)' {flags}" --telemetry-out "$WORK/clean.jsonl" --tier2-cmd "$WORK/tier2.sh $WORK/tier2.in" >/dev/null
+run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode run --grid "$GRID" --seed 3 --cwd "$WORK" --command "python3 -c 'import sys; sys.exit(0)' {flags}" --telemetry-out "$WORK/clean.jsonl" --tier2-cmd "$WORK/tier2.sh $WORK/tier2.in" >/dev/null
 [ ! -e "$WORK/tier2.in" ] && pass "tier-2 command not invoked on a clean run (\$0 floor)" || fail "tier-2 invoked with no anomalies"
-python3 "$ATE" --mode run --grid "$GRID" --seed 3 --cwd "$WORK" --command "python3 -c 'import sys; sys.exit(7)' {flags}" --telemetry-out "$WORK/anom.jsonl" --tier2-cmd "$WORK/tier2.sh $WORK/tier2.in" >/dev/null 2>&1 || true
+run_with_timeout "$GUARD_CAP" python3 "$ATE" --mode run --grid "$GRID" --seed 3 --cwd "$WORK" --command "python3 -c 'import sys; sys.exit(7)' {flags}" --telemetry-out "$WORK/anom.jsonl" --tier2-cmd "$WORK/tier2.sh $WORK/tier2.in" >/dev/null 2>&1 || true
 if [ -s "$WORK/tier2.in" ] && grep -q 'outside calibrated sets' "$WORK/tier2.in"; then
   pass "tier-2 command receives the anomaly list when rc=7 is unclassified"
 else

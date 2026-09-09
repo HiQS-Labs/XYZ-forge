@@ -23,11 +23,11 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # a registry naming a suite that never runs is a green lie (the releases-skill lesson).
 SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup skills-army-hq"
 SUBSYSTEM_TESTS_hq="hq.sh hq-park.sh hq-park-synthesis.sh hq-dispatch.sh hq-next.sh hq-locator.sh hq-hardening.sh hq-promote.sh hq-marathon-scan.sh hq-rollup.sh hq-marathon-live.sh roadmap-dashboard.sh gh238-hq-releases-mode.sh gh239-hq-status-releases-mode.sh"
-SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh"
+SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh roadmap-dashboard.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh"
 SUBSYSTEM_TESTS_telemetry="xyz-completion.sh gh358-lock-instrumentation.sh archive-telemetry.sh"
-SUBSYSTEM_TESTS_ate="ate-run-variations.sh gh298-ate-gen4-ci-smoke.sh gh-gen4-phase1-domain-oracles.sh gh-gen4-phase2-adaptive-ate.sh gh-gen4-phase3-fuzz-engine.sh gh-gen4-phase4-repro-synth.sh gh-gen4-phase5-campaign.sh"
+SUBSYSTEM_TESTS_ate="ate-run-variations.sh gh298-ate-gen4-ci-smoke.sh gh-gen4-phase1-domain-oracles.sh gh-gen4-phase2-adaptive-ate.sh gh-gen4-phase3-fuzz-engine.sh gh-gen4-phase4-repro-synth.sh gh-gen4-phase5-campaign.sh gh478-runaway-guard.sh"
 SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
-SUBSYSTEM_TESTS_pdda="pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh"
+SUBSYSTEM_TESTS_pdda="pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh wave-reconcile.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh gh358-wave-reconcile-vendored-paths.sh"
 SUBSYSTEM_TESTS_agent_chorus="agent-chorus.sh"
 SUBSYSTEM_TESTS_standup="gh77-standup-triage.sh"
 SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh"
@@ -35,11 +35,11 @@ SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh"
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
     utils/hq/*|skills/hq/*)                                                                printf '%s\n' hq ;;
-    utils/py/releases_app.py|skills/releases/*|utils/release-lanes.sh)                     printf '%s\n' releases ;;
+    utils/py/releases_app.py|skills/releases/*|utils/release-lanes.sh|releases.sql|releases.db|utils/releases-merge-resolve.sh|utils/leaderboard.sh|utils/roadmap-dashboard.sh) printf '%s\n' releases ;;
     utils/telemetry/*)                                                                     printf '%s\n' telemetry ;;
-    utils/ate/*|utils/fuzzing/*|utils/py/telemetry_schema.py|utils/py/domain_oracles.py|utils/py/adaptive_ate.py|utils/py/calibrate_tier1.py|utils/py/fuzz_engine.py|utils/py/repro_synth.py|utils/py/gen4_campaign.py) printf '%s\n' ate ;;
+    utils/ate/*|utils/fuzzing/*|utils/py/telemetry_schema.py|utils/py/domain_oracles.py|utils/py/adaptive_ate.py|utils/py/calibrate_tier1.py|utils/py/fuzz_engine.py|utils/py/repro_synth.py|utils/py/gen4_campaign.py|utils/py/proc_group.py|utils/py/ate_runaway_sweep.py) printf '%s\n' ate ;;
     utils/swe-diagram/*)                                                                   printf '%s\n' swe-diagram ;;
-    utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh) printf '%s\n' pdda ;;
+    utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh|utils/py/wave_reconcile.py) printf '%s\n' pdda ;;
     skills/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
     skills/standup/*)                                                                      printf '%s\n' standup ;;
     skills/skills-army-hq/*|test/test_deploy_skills.py|test/skills-army-hq.sh)             printf '%s\n' skills-army-hq ;;
@@ -177,9 +177,9 @@ while IFS= read -r path || [[ -n "$path" ]]; do
       full_required=true
       ;;
     utils/py/*)
-      # releases_app.py is subsystem code with a focused suite (GH-35), not an
-      # authoritative twin; every other file under utils/py/ is kernel surface.
-      [[ "$path" == "utils/py/releases_app.py" ]] || full_required=true
+      # Subsystem code with focused suites (releases_app.py, wave_reconcile.py, ATE tools)
+      # is not an authoritative twin; unmapped files under utils/py/ are kernel/twin surface.
+      [ -n "$(subsystem_of "$path" || true)" ] || full_required=true
       ;;
     test/*worktree*|test/*containment*|test/tick-*|test/relay-*|test/agent-chorus.sh|test/marathon*.sh)
       full_required=true
@@ -235,7 +235,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
       fi
       # PDDA-adjacent implementation still gets the PDDA gate even on tier 2.
       case "$path" in
-        utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh)
+        utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh|utils/py/wave_reconcile.py)
           pdda_needed=true
           ;;
       esac
