@@ -1,0 +1,13 @@
+{
+  "authorization": "User explicitly extended this model trial to 20 minutes as a per-case exception",
+  "run": "r1",
+  "original_harness_cap_seconds": 900,
+  "authorized_cap_seconds": 1200,
+  "supervisor_pid": 77234,
+  "adapter_pid": 77257,
+  "started_at": "2026-09-09T15:40:48.381899+00:00",
+  "exception_applied_at": "2026-09-09T15:54:04.528038+00:00",
+  "method": "Pause only supervisor; retain active adapter/socket; enforce original-start+1200 deadline independently; resume supervisor when child exits or cap is reached.",
+  "outcome": "adapter_exited_before_extended_cap",
+  "finished_at": "2026-09-09T15:57:49.590752+00:00"
+}

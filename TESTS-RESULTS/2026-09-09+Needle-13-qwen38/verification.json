@@ -1,0 +1,14 @@
+{
+  "stream_integrity": "pass",
+  "negative_controls": [
+    "r1:empty:rejected",
+    "r1:missing_end:rejected",
+    "r1:missing_reasoning_delta:rejected",
+    "r2:empty:rejected",
+    "r2:missing_end:rejected",
+    "r2:missing_reasoning_delta:rejected"
+  ],
+  "identical_requests": true,
+  "source_hash_matches": true,
+  "task_success": false
+}

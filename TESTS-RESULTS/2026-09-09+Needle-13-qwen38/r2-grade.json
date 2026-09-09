@@ -1,0 +1,11 @@
+{
+  "evaluation_status": "no_final_answer",
+  "grader_exit_code": 1,
+  "expected_cases": 16,
+  "returned_decisions": 0,
+  "correct": null,
+  "false_accept": null,
+  "false_hold": null,
+  "pass": false,
+  "note": "Original unchanged grader rejected empty final answer. Accuracy is unavailable, not 0/16. API response completed but only reasoning output was present."
+}

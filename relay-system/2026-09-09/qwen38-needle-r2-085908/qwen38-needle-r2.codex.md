@@ -1,0 +1,60 @@
+> **ATTESTATION**
+> Model: qwen3.8-27b-mlx
+> Provider: LM Studio localhost / MLX
+> Sandbox: no model tools; not a Codex sandbox
+
+transport: LM Studio HTTP-only experiment adapter, not Codex inference
+provider: LM Studio localhost / MLX
+sandbox: no model tools; not a Codex sandbox
+[event] chat.start at 0.04s
+[event] prompt_processing.start at 2.355s
+[event] prompt_processing.end at 2.483s
+[event] reasoning.start at 3.422s
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[adapter] awaiting streaming completion
+[event] reasoning.end at 626.547s
+[event] chat.end at 626.548s
+model: qwen3.8-27b-mlx
+
+Request receipt: {"schema": "needle13/qwen38-local-spike@1", "run": "r2", "status": "complete", "started_at": "2026-09-09T15:59:08.949959+00:00", "requested_model": "qwen3.8-27b-mlx", "request_sha256": "bff213091f773dd74a9578a75f0911488a94bc5bf139707bc24bb0f22a58d191", "source_packet_sha256": "dee4d8c16f2352bf4ff448aecac65d1de803d064df68c73d46e3c30c3dc41f2e", "transport": "consult CODEX_BIN override -> LM Studio native SSE API", "full_request_wall_seconds": 626.5487909160001, "stats": {"input_tokens": 32796, "total_output_tokens": 5999, "reasoning_output_tokens": 5999, "tokens_per_second": 9.54266443769192, "time_to_first_token_seconds": 3.092}, "http_status": 200, "event_counts": {"chat.end": 1, "chat.start": 1, "prompt_processing.end": 1, "prompt_processing.progress": 2, "prompt_processing.start": 1, "reasoning.delta": 5948, "reasoning.end": 1, "reasoning.start": 1}, "errors": [], "attested_model_instance_id": "qwen3.8-27b-mlx", "model_inventory_after": {"type": "llm", "publisher": "lmstudio-community", "key": "qwen3.8-27b-mlx", "display_name": "Qwen3.8 27B", "architecture": "qwen3_5", "quantization": {"name": "8bit", "bits_per_weight": 8}, "size_bytes": 29528174882, "params_string": "27B", "loaded_instances": [{"id": "qwen3.8-27b-mlx", "config": {"context_length": 107264, "parallel": 4, "reasoning_budget_message": ""}}], "max_context_length": 262144, "format": "mlx", "capabilities": {"vision": true, "trained_for_tool_use": true}, "description": null}, "model_identity_matches": true, "nonmessage_output_types": ["reasoning"], "response_sha256": "12f7d77320464053a5032236129b32be5cbb49bd6ef11535252f74d08066cda7"}
+
+consult: advisor failed with exit 1
