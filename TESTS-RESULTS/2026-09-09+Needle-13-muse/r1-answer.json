@@ -1,0 +1,146 @@
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "Bug report only with no remediation plan in the GitHub issue fails the hard plan-in-issue gate; PRS/label/local plan cannot override."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "All admission gates observed current and bound: plan, independent review hash, PRS, target SHA, dependencies, queue revision and scoped authorization with no hold/membership conflict."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "Post-review plan edit without hash comparison or renewed attestation breaks review binding and freshness; must revalidate before any write."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "Shared changed serialized format is a shared-contract seam despite disjoint files; parallel membership unsafe without pinned interface/integration agreement."
+    },
+    {
+      "id": "A05",
+      "decision": "ACCEPT",
+      "reason": "Second item is independently validated, disjoint write-sets, same approved arc, no runtime collision, deps current; future draft membership only with no running-wave mutation."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "Parked after attempt cap with no operator release; automatic jog add would reset status/attempt_count and resurrect parked work."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "Embedded SYSTEM OVERRIDE instruction is untrusted prompt injection and outside the reviewed body hash; review covers only earlier hash so admission is invalid."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "Incomplete pagination (HTTP503 page2) leaves dependency/membership inventory unknown; treating unseen as completed violates fail-closed freshness/authority."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "Stop-boundary input with only prior request/history, disjoint session families, no targets in inputs, valid canonical map, and unique in-horizon observed next event meets locked evaluation inclusion."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "Including the next user request from after the prediction boundary is future leakage; exclude from retrospective scoring."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "No observed event by the horizon is censored, not a supervised no_action negative; crediting empty output confuses abstention with semantic no_action."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "Native 200-row and MLX 60-row sets are disjoint/unpaired, so the comparison cannot isolate PTQ as cause; withdrawn by Needle#12 correction."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Valid held-out example with rare governance support, full canonical label preservation, matching row IDs across arms; correctness of prediction is not an inclusion condition."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "Two blocks, duplicates and unexpected args violate labels-take-no-arguments contract; regex name-extraction rate is not 100% well-formed validity."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "Session_id-only last-writer-wins publishes stale p17 as current and misattributes feedback to p18; atomic replace prevents torn files, not ordering/identity."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "Sixteen synthetic policy cases in Codex CLI do not measure frozen next-action top-1/top-3, Responses p95 latency, cost, or reliability; cannot enable live advice."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "XYZ predicts admission: whether an issue may enter Jog/Marathon proposals under plan-in-issue, review, PRS, readiness, scheduling and freshness gates. Needle predicts the first subsequent observed tool action at the Stop boundary from prior request/history. Both can reuse only prediction-time request plus recent action labels; admission-specific facts (plan/review/PRS/write-sets/deps/holds) and prediction-specific facts (session-family identity, horizon, no future request, censored handling) must stay separate. One workflow example cannot prove both usefulness and accuracy because observational next-action accuracy does not establish recommendation benefit, which needs a later user-facing study.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:74"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "Main hook only rebuilds context and logs query with recommendations None and calls no model. 710c hook scores the previous recommendation, writes pending/<session>.json and spawns detached oracle_infer.py, which writes last/<session>.json via temp plus atomic os.replace. Atomic replace alone does not prevent stale publication under session_id-only last-writer-wins; test prompt_id/history_len/ts ordering, stale-drop, concurrent old/new worker finish, feedback attribution, and shutdown/rollback without claiming a live race was run.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py:12",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:111",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py:55"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "Neither 44-label coverage nor 100% parse certifies quality: #12 withdraws the unpaired MLX-vs-engine comparison, the 100% well-formed name-extraction rate, and PTQ-never-cause overcorrection. Serializer/label contract says labels take no arguments and no_action maps to answers [], while no_action (semantic event) stays distinct from confidence abstention and from censored no-observation. One live inconsistency is local scoring still accepting two tool-call blocks and invalid argument shapes despite the no-arguments contract.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py:101",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json:4"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "Deterministic code must own XYZ admission, parked/terminal protection, trusted review-hash checks, PRS agreement, write-set/dependency/shared-contract validation, preflight fail-closed, pagination completeness, writer revision binding, and output/receipt validation; Muse proposes eligibility/grouping/explanations only and never creates plans, self-approves, edits PRS overrides, dispatches or merges. Needle deterministic code must own serialization, provenance/split manifest, scorer, canonical top-3 validation, and latency/cost measurement; Muse predicts only ordered label IDs or explicit abstention. Current cmd_jog_add reactivates terminal rows and resets attempt_count/lease, so automatic rescans must never call it on parked/terminal items.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1",
+        "utils/py/releases_app.py:3912",
+        "MACHINE-CONTRACTS.md:21"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "Smallest shared falsifier is a frozen paired manifest with disjoint families/rows, independent labels, no targets in inputs, canonical IDs preserved, deterministic scorer plus deliberately bad controls (future-request injection, overlap/empty/swap, multi-block/invalid-args, stale/revoked review, injection text), scored separately from gated decisions with false-accept/false-hold, coverage, and local plus stronger-model baselines. XYZ must still separately test 60-snapshot eligibility with zero false accepts, 10-bundle grouping seams, real-writer stale/race/crash in disposable clones, and preflight/pagination fail-closed with cost. Needle must still separately verify Stop-boundary replay, 30-minute censored policy, 100-event mapping audit, cheap local baselines then frozen Luna comparison, and locked session-family-resampled final test with serving benchmark.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_stop_hook.py:67"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "Narrow Muse to extraction/group suggestions if eligibility misses but grouping is sound; try a stronger model if escalation exceeds budget or seams fail; stop/replan if plan/review provenance, containment, writer atomicity, or data support cannot be established within caps, or all measured options lack useful gain. This CLI trial is tools-prohibited with only inline snapshots, stale graphs, no private corpus, no live API/writer/clone execution, so it cannot measure production accuracy, p95 latency, billed dollars, retention/privacy, or race atomicity.",
+      "evidence": [
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json:1",
+        "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/sources.json:1"
+      ]
+    }
+  ],
+  "limitations": [
+    "No filesystem, shell, browser, test, or network execution in this trial; all reads are from supplied inline evidence only.",
+    "No empirical accuracy, latency, cost, privacy, or race measurements were or could be made here; do not treat arithmetic illustrations as observed benchmarks.",
+    "Needle graph generation 2026-09-09 covers main serializer/hook/labels but oracle_infer.py is missing at main; XYZ graph generation 2026-09-01 is stale for releases/jog so direct source supersedes graph lines.",
+    "Case verdicts are fixture-data advice on the requested decision only, not authorization to execute writes, merges, deployments, or paid API calls."
+  ]
+}

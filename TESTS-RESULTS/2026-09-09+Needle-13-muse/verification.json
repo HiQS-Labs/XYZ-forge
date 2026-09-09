@@ -1,0 +1,58 @@
+{
+  "distinct_runs": true,
+  "identical_prompt": true,
+  "checks": [
+    {
+      "run": "r1",
+      "exact_terminal_delta_answer_match": true,
+      "configured_model_matches": true,
+      "task_kinds": [
+        "model.meta.response"
+      ],
+      "negative_controls": [
+        {
+          "name": "empty",
+          "rejected": true
+        },
+        {
+          "name": "changed_answer",
+          "rejected": true
+        },
+        {
+          "name": "missing_terminal",
+          "rejected": true
+        },
+        {
+          "name": "missing_delta",
+          "rejected": true
+        }
+      ]
+    },
+    {
+      "run": "r2",
+      "exact_terminal_delta_answer_match": true,
+      "configured_model_matches": true,
+      "task_kinds": [
+        "model.meta.response"
+      ],
+      "negative_controls": [
+        {
+          "name": "empty",
+          "rejected": true
+        },
+        {
+          "name": "changed_answer",
+          "rejected": true
+        },
+        {
+          "name": "missing_terminal",
+          "rejected": true
+        },
+        {
+          "name": "missing_delta",
+          "rejected": true
+        }
+      ]
+    }
+  ]
+}
