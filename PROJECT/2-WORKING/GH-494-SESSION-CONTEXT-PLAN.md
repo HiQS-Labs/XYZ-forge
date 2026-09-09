@@ -1,6 +1,6 @@
 ---
 title: Flightdeck — session context and status mitigation
-status: Planned — awaiting independent plan QA
+status: Planned — DeepSeek V4 Pro textual QA approved; relay format validation failed
 created: 2026-09-08
 updated: 2026-09-08
 owner: Codex
@@ -18,7 +18,7 @@ reversibility: Costly — cross-repository read contract; optional additive roll
 
 | What was just completed | What's next |
 |---|---|
-| Existing reader verified against all three screenshot sessions; consumer context loss reproduced. | DeepSeek V4 Pro plan QA, then implement this Phase 4 mitigation through the existing owners. Runtime implementation has not started. |
+| DeepSeek V4 Pro approved the revised plan in round 2 (textual only); relay structural validator rejected verdict formatting, exit 8. | Implement Phase 1 through existing owners, including bounded scheduler/metadata recon gates. Runtime implementation has not started. |
 
 ## Table of contents
 
@@ -72,3 +72,7 @@ The bet: the existing authenticated Claude session reader remains usable for the
 Cross-repo export/identity semantics are Costly: consumers of RB daily grading/ranking must remain compatible; Flightdeck lane counts, cards and handoffs can change. Shield: producer export opt-in and adapter independently disableable; no source ownership migration. Tripwire: any false join, credential/payload leak, stale live claim, existing grading regression or refresh target failure disables the plugin before broader rollout. Rollback: disable export invocation and adapter, retain original CLIO fields and immutable source logs; remove optional cache only after confirming it is regenerable. Context display changes are Easy to revert independently. No destructive migrations or remote deployments are required.
 
 Use debug-mantra during execution: reproduce, trace the failing path, falsify the hypothesis, cross-reference evidence. Each fetch cycle has three requests maximum, no nested retry loop. Pilot ends after three cycles; failures are reported, not retried indefinitely. Plan review is capped at three reviewer rounds with a documented disposition per finding. New producer work outside the grounded seams requires bounded recon before implementation, not speculative scaffolding.
+
+## Plan review receipt
+
+DeepSeek V4 Pro (`deepseek/deepseek-v4-pro`, OpenRouter) reviewed the full plan through relay-xyz twice. Round 1 requested changes; all seven findings were dispositioned, including correction of its transcript/CLIO source confusion. Round 2 explicitly approved with no new findings, basis textual only. Both invocations exited 8 because the reviewer formatted the verdict inside bold Markdown instead of the parser-required literal line. This is not a clean automated gate pass and does not attest runtime behavior. Original reviewer text is preserved in [the relay transcript](../../relay-system/2026-09-08/flightdeck-session-plan.md); no reviewer verdict was rewritten.
