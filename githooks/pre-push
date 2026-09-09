@@ -160,7 +160,8 @@ resolve_base_pairs() {
       _probe_cmd=(git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
     fi
     if ! _adv_out="$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 "${_probe_cmd[@]}" 2>/dev/null)"; then
-      _base_note="pre-push: could not verify the integration tip on '$_push_remote' via its push URL (git ls-remote failed or timed out) — running the full gate."
+      _base_note="pre-push: could not verify the integration tip on '$_push_remote' via its push URL (git ls-remote failed or timed out) — running the full gate.
+pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push --no-verify')"
       return 1
     fi
     while read -r _sha _ref; do
