@@ -60,8 +60,8 @@ Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
 | GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
+| GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
 | GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
-| GH-518 · Wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ harness route | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
 
 ## Queue
 
@@ -87,7 +87,7 @@ Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 94 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · 🔮 0 · 🔲 0
+Summary: 95 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 62 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -185,6 +185,7 @@ Summary: 94 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · �
 | GH-473 · feat(skill): add /unstuck goal-movement interrupt | — | [doc](PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md) · [#473](https://github.com/HiQS-Labs/XYZ-forge/issues/473) |
 | GH-474 · Staleness guard reads the renderer's dropped-row warning instead of guessing from table names | — | — |
 | GH-487 · ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | ✅ | [GH-487-BOUNDED-GATES.md](PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md) · [#487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) |
+| GH-516 · skills: express hotfix lane v2 — true direct-push mode, commit-driven reconciliation, recovery subcommand, and central telemetry | ✅ | [doc](PROJECT/3-COMPLETED/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md) · [#516](https://github.com/HiQS-Labs/XYZ-forge/issues/516) |
 
 ## Deferred · vision
 

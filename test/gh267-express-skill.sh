@@ -32,8 +32,8 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DRIVER="$HERE/../utils/py/express.py"
 WORK="$(mktemp -d /tmp/gh267-express.XXXXXX)" || { echo "FAIL: mktemp"; exit 1; }
-BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"
-mkdir -p "$BIN" "$GH_STATE"
+BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"; export HOME="$WORK/home"
+mkdir -p "$BIN" "$GH_STATE" "$HOME"
 
 # GH-1 adoption: the central fixture guard (GH-564 kill conditions + GH-567
 # use-boundary resolution), armed at source time — no private copies.
@@ -67,7 +67,13 @@ if [ "$1 $2" = "issue view" ]; then
   cat "$GH_STATE/issue-$n.json" && exit 0
 fi
 if [ "$1 $2" = "issue close" ]; then
-  printf '{"state":"CLOSED","title":"Demo hotfix","url":"https://github.com/H/H/issues/999","createdAt":"2026-08-27T00:00:00Z"}\n' > "$GH_STATE/issue-999.json"
+  n=""; prev=""
+  for a in "$@"; do
+    [ "$prev" = "close" ] && n="$a"
+    prev="$a"
+  done
+  [ -z "$n" ] && n=999
+  printf '{"state":"CLOSED","title":"Demo hotfix","url":"https://github.com/H/H/issues/%s","createdAt":"2026-08-27T00:00:00Z"}\n' "$n" > "$GH_STATE/issue-$n.json"
   exit 0
 fi
 echo "gh-stub: unsupported invocation: $*" >&2; exit 1
@@ -117,6 +123,8 @@ if a[:2] in (["roadmap", "add"], ["manifest", "dial-in"], ["manifest", "ship"]):
     c = sqlite3.connect("releases.db")
     c.execute("CREATE TABLE IF NOT EXISTS fixture_writes (id INTEGER PRIMARY KEY, verb TEXT)")
     c.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
+    if a[:2] == ["manifest", "ship"]:
+        c.execute("UPDATE manifest_items SET state='shipped'")
     c.commit(); c.close()
     for name in ("releases.sql", "RELEASES.generated.md", "RELEASES-PREVIEW.html",
                  "LEADERBOARD.html", "LEADERBOARD.md"):
@@ -133,18 +141,29 @@ if subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=Tr
     print("reconcile requires a clean tree", file=sys.stderr); sys.exit(8)
 if subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip() != "development":
     print("reconcile requires development", file=sys.stderr); sys.exit(7)
-src = "PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
-dst = "PROJECT/3-COMPLETED/GH-999-DEMO-HOTFIX.md"
-if os.path.exists(src):
-    os.makedirs(os.path.dirname(dst), exist_ok=True)
-    os.replace(src, dst)
+if os.path.isdir("PROJECT/2-WORKING"):
+    for root_dir, dirs, files in os.walk("PROJECT/2-WORKING"):
+        for f in files:
+            if f.endswith(".md"):
+                src = os.path.join(root_dir, f)
+                dst = os.path.join("PROJECT/3-COMPLETED", f)
+                os.makedirs("PROJECT/3-COMPLETED", exist_ok=True)
+                os.replace(src, dst)
 WR
 cat > "$FX/utils/roadmap-dashboard.sh" <<'RD'
 #!/usr/bin/env bash
 printf 'stub-dashboard-refresh\n' >> ROADMAP-DASHBOARD.md
 RD
 chmod +x "$FX/utils/roadmap-dashboard.sh"
-python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)'); c.commit(); c.close()"
+python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db');
+c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)');
+c.execute('CREATE TABLE IF NOT EXISTS releases (id INTEGER PRIMARY KEY, global_id TEXT)');
+c.execute('INSERT INTO releases (id, global_id) VALUES (1, \"rel-STUB000000000000000000000008\")');
+c.execute('CREATE TABLE IF NOT EXISTS issue_refs (id INTEGER PRIMARY KEY, url TEXT)');
+c.execute('INSERT INTO issue_refs (id, url) VALUES (1, \"https://github.com/H/H/issues/999\"), (2, \"https://github.com/H/H/issues/998\"), (3, \"https://github.com/H/H/issues/997\")');
+c.execute('CREATE TABLE IF NOT EXISTS manifest_items (id INTEGER PRIMARY KEY, release_id INTEGER, issue_ref_id INTEGER, state TEXT)');
+c.execute('INSERT INTO manifest_items (id, release_id, issue_ref_id, state) VALUES (1, 1, 1, \"dialed_in\"), (2, 1, 2, \"dialed_in\"), (3, 1, 3, \"dialed_in\")');
+c.commit(); c.close()"
 printf 'base dump\n' > "$FX/releases.sql"
 for projection in RELEASES.generated.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md ROADMAP-DASHBOARD.md; do
   printf 'base projection\n' > "$FX/$projection"
@@ -185,8 +204,16 @@ run_check > /dev/null 2> "$ERR" && bad "on-development must refuse" || { check_r
 EV="$(ls "$FX/.tick/events/"*express-refused*.jsonl 2>/dev/null | head -1)"
 [ -n "$EV" ] && grep -q '"verb": "express-refused"' "$EV" && ok "express-refused tick event written" || bad "tick telemetry missing"
 
-new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; git -C "$FX" add -A; git -C "$FX" commit -qm extra
-run_check > /dev/null 2> "$ERR" && bad "HEAD-ahead must refuse" || { check_rule task-clone "$ERR" && ok "task-clone refusal (GH-527)" || bad "task-clone rule"; }
+new_task_branch
+for i in 1 2 3; do
+  printf "c$i\n" >> "$FX/utils/py/foo.py"
+  git -C "$FX" add -A && git -C "$FX" commit -qm "commit $i"
+done
+run_check > /dev/null 2> "$ERR" && bad "3 commits ahead must refuse" || { check_rule too-many-commits "$ERR" && ok "too-many-commits refusal (> 2 commits, GH-516)" || bad "too-many-commits rule"; }
+
+new_task_branch; git -C "$FX" checkout -q development; printf "upstream change\n" >> "$FX/README.md"; git -C "$FX" add -A && git -C "$FX" commit -qm "upstream change"; git -C "$FX" push -q origin development; git -C "$FX" checkout -q task/gh-999
+run_check > /dev/null 2> "$ERR" && bad "diverged branch must refuse" || { check_rule task-clone "$ERR" && ok "task-clone refusal on diverged branch (GH-516)" || bad "task-clone diverged rule"; }
+git -C "$FX" checkout -q development; git -C "$FX" reset -q --hard HEAD~1; git -C "$FX" push -q --force origin development; git -C "$FX" checkout -q task/gh-999
 
 new_task_branch; printf 'x\n' >> "$FX/relay-automation/consult.sh"
 run_check > /dev/null 2> "$ERR" && bad "twin edit must refuse" || { check_rule frozen-twin "$ERR" && ok "frozen-twin refusal (GH-308)" || bad "frozen-twin rule"; }
@@ -232,6 +259,35 @@ new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite 
 OUT="$(run_check 999)"
 grep -q "express-check: PASS" <<<"$OUT" && ok "legal fix passes" || bad "legal fix refused: $OUT"
 
+# 1 and 2 local commits pass check (GH-516)
+new_task_branch
+printf 'precommitted 1\n' > "$FX/utils/py/foo.py"
+git -C "$FX" add -A && git -C "$FX" commit -qm "local commit 1"
+OUT="$(run_check 999)"
+grep -q "express-check: PASS" <<<"$OUT" && ok "1 local commit passes check (GH-516)" || bad "1 local commit refused: $OUT"
+
+printf 'precommitted 2\n' >> "$FX/utils/py/foo.py"
+git -C "$FX" add -A && git -C "$FX" commit -qm "local commit 2"
+OUT="$(run_check 999)"
+grep -q "express-check: PASS" <<<"$OUT" && ok "2 local commits pass check (GH-516)" || bad "2 local commits refused: $OUT"
+
+# multi-subsystem with <= 30 insertions across <= 2 files passes (auto-allow, GH-516)
+new_task_branch
+mkdir -p "$FX/config"
+printf '{"key": "val"}\n' > "$FX/config/test.json"
+printf 'fixed\n' > "$FX/utils/py/foo.py"
+OUT="$(run_check 999)"
+grep -q "express-check: PASS" <<<"$OUT" && ok "micro-diff multi-subsystem auto-allowed (GH-516)" || bad "micro-diff multi-subsystem refused: $OUT"
+
+# multi-subsystem with > 30 insertions refuses without flag, passes with --allow-multi-subsystem (GH-516)
+new_task_branch
+mkdir -p "$FX/config"
+python3 -c "print('\n'.join('line %d' % i for i in range(35)))" > "$FX/config/test.json"
+printf 'fixed\n' > "$FX/utils/py/foo.py"
+run_check > /dev/null 2> "$ERR" && bad "large multi-subsystem without flag must refuse" || { check_rule multi-subsystem "$ERR" && ok "multi-subsystem refusal without flag (GH-516)" || bad "multi-subsystem rule"; }
+python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh --allow-multi-subsystem >/dev/null 2>"$ERR" \
+  && ok "--allow-multi-subsystem permits multi-subsystem changes (GH-516)" || bad "--allow-multi-subsystem refused: $(cat "$ERR")"
+
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
 
@@ -270,6 +326,7 @@ fi
 RECENT_LOG="$(git -C "$FX" log --format=%s -3)"
 grep -q "express ship GH-999" <<<"$RECENT_LOG" && ok "ship transaction persisted before reconciliation" || bad "ship commit missing"
 grep -q "express reconcile GH-999" <<<"$RECENT_LOG" && ok "reconcile persisted as a separate clean-tree transaction" || bad "reconcile commit missing"
+grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "run closed GitHub issue #999 before reconciling" || bad "run left issue #999 open"
 [ -z "$(git -C "$FX" status --porcelain)" ] && ok "successful closeout leaves development clean" || bad "successful closeout left drift: $(git -C "$FX" status --short | tr '\n' ';')"
 FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
@@ -321,10 +378,126 @@ WR_FAIL=1 python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo
 FAILED_TICK="$(ls -t "$FX/.tick/events/"*express-reconcile-failed*.jsonl 2>/dev/null | head -1)"
 [ -n "$FAILED_TICK" ] && grep -q '"verb": "express-reconcile-failed"' "$FAILED_TICK" && ok "every closeout failure writes its receipt" || bad "closeout failure tick missing"
 
+echo "== dry-run mode (GH-516) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-dry\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+DRYOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary "dry run demo" --dry-run 2>"$ERR")"
+grep -q "express-check \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports check pass" || bad "run --dry-run check missing: $DRYOUT"
+grep -q "express-land \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports land pass" || bad "run --dry-run land missing: $DRYOUT"
+[ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && ok "dry-run created no capture doc" || bad "dry-run created capture doc"
+[ "$(git -C "$FX" branch --show-current)" = task/gh-999 ] && ok "dry-run left task branch intact" || bad "dry-run switched branch"
+[ -z "$(git -C "$FX" status --porcelain=v1)" ] && bad "working tree changes were wiped by dry-run" || ok "dry-run preserved uncommitted working tree"
+
+echo "== resume subcommand & central telemetry (GH-516) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-resume\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+
+# --- Rejection 1: Unrelated dirty files on task branch ---
+touch "$FX/unrelated-task-dirty.txt"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 2>"$ERR" && ok "resume rejects dirty working tree on task branch" || bad "resume accepted dirty tree on task branch"
+grep -q "working tree is not clean" "$ERR" && ok "dirty task tree error reported" || bad "dirty task tree error missing: $(cat "$ERR")"
+rm -f "$FX/unrelated-task-dirty.txt"
+
+# --- Rejection 2: Unrelated dirty files on development ---
+git -C "$FX" checkout -q development
+touch "$FX/unrelated-dev-dirty.txt"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 2>"$ERR" && ok "resume rejects dirty working tree on development" || bad "resume accepted dirty tree on development"
+grep -q "working tree is not clean" "$ERR" && ok "dirty development tree error reported" || bad "dirty dev tree error missing: $(cat "$ERR")"
+rm -f "$FX/unrelated-dev-dirty.txt"
+git -C "$FX" checkout -q task/gh-999
+
+# --- Setup for Happy Path 1: Interruption immediately after landing push ---
+# Generate doc and dial into manifest before committing
+python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "resume demo" >/dev/null 2>"$ERR" || bad "docs failed: $(cat "$ERR")"
+python3 "$DRIVER" --root "$FX" ledger --issue 999 >/dev/null 2>"$ERR" || bad "ledger failed: $(cat "$ERR")"
+git -C "$FX" add -A && git -C "$FX" commit -qm "fix(GH-999): simulated landing for resume [express]
+
+Closes #999"
+LAND_SHA="$(git -C "$FX" rev-parse HEAD)"
+git -C "$FX" push -q origin HEAD:development
+
+# --- Rejection 3: Unpushed / unreachable SHA passed to --sha ---
+git -C "$FX" commit --allow-empty -qm "local only unpushed commit"
+LOCAL_SHA="$(git -C "$FX" rev-parse HEAD)"
+git -C "$FX" reset -q --hard HEAD~1
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --sha "$LOCAL_SHA" 2>"$ERR" && ok "resume rejects unpushed/unreachable SHA" || bad "resume accepted unpushed SHA"
+grep -q "not reachable from origin/development" "$ERR" && ok "unreachable SHA error reported" || bad "unreachable SHA error missing: $(cat "$ERR")"
+
+# --- Rejection 4: Unrelated commit SHA passed to --sha (no closing reference for issue) ---
+git -C "$FX" commit --allow-empty -qm "fix(GH-888): unrelated issue landing [express]
+
+Closes #888"
+git -C "$FX" push -q origin HEAD:development
+UNRELATED_SHA="$(git -C "$FX" rev-parse HEAD)"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --sha "$UNRELATED_SHA" 2>"$ERR" && ok "resume rejects unrelated commit SHA" || bad "resume accepted unrelated SHA"
+grep -q "does not close issue #999" "$ERR" && ok "unrelated SHA error reported" || bad "unrelated SHA error missing: $(cat "$ERR")"
+
+# --- Rejection 5: Neighboring issue collision in auto-resolution (GH-99 vs GH-999) ---
+# origin/development contains commit for GH-999; auto-resolution for GH-99 must NOT match GH-999
+! python3 "$DRIVER" --root "$FX" resume --issue 99 2>"$ERR" && ok "auto-resolution for GH-99 does not match GH-999" || bad "auto-resolution matched GH-999 for GH-99"
+grep -q "Could not automatically resolve landing commit for GH-99" "$ERR" && ok "neighboring issue 99 reported unresolved" || bad "unresolved error missing: $(cat "$ERR")"
+
+# --- Happy Path 1: Resume from task branch without --sha (auto-resolves LAND_SHA) ---
+python3 "$DRIVER" --root "$FX" resume --issue 999 >"$WORK/resume.log" 2>"$ERR" && ok "express resume exits 0 on valid landing" || bad "express resume failed (rc!=0): $(cat "$ERR")"
+[ "$(git -C "$FX" branch --show-current)" = development ] && ok "resume switched to development" || bad "resume branch wrong"
+[ -z "$(git -C "$FX" status --porcelain=v1)" ] && ok "development working tree is clean after resume" || bad "development dirty after resume: $(git -C "$FX" status --porcelain=v1)"
+grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "resume closed GitHub issue #999" || bad "issue #999 remained open"
+M_STATE="$(python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); print(c.execute('SELECT state FROM manifest_items WHERE issue_ref_id=1').fetchone()[0])")"
+[ "$M_STATE" = "shipped" ] && ok "resume shipped manifest item in releases.db" || bad "manifest item state: $M_STATE"
+[ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && [ -f "$FX/PROJECT/3-COMPLETED/GH-999-DEMO-HOTFIX.md" ] && ok "resume reconciled active doc to 3-COMPLETED" || bad "active doc not reconciled"
+REMOTE_DEV_SHA="$(git -C "$REMOTE" rev-parse development)"
+LOCAL_DEV_SHA="$(git -C "$FX" rev-parse HEAD)"
+[ "$REMOTE_DEV_SHA" = "$LOCAL_DEV_SHA" ] && ok "resume persisted and pushed closeout to origin/development" || bad "remote development out of sync"
+RESUMED_TICK="$(ls -t "$FX/.tick/events/"*express-resumed*.jsonl 2>/dev/null | head -1)"
+[ -n "$RESUMED_TICK" ] && ok "express-resumed event receipt written" || bad "express-resumed tick missing"
+
+# --- Happy Path 2: Idempotent second resume ---
+python3 "$DRIVER" --root "$FX" resume --issue 999 >"$WORK/resume2.log" 2>"$ERR" && ok "second resume invocation succeeds idempotently" || bad "second resume failed: $(cat "$ERR")"
+[ "$(git -C "$FX" rev-parse HEAD)" = "$LOCAL_DEV_SHA" ] && ok "idempotent resume created no spurious commits" || bad "second resume created extra commits"
+
+# --- Happy Path 3: Interruption immediately after ship commit (post-ship recovery without --sha) ---
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-998-DEMO-HOTFIX.md"; printf 'fixed-998\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo 998" 998
+mkdir -p "$FX/PROJECT/2-WORKING"
+printf '# Doc 998\n' > "$FX/PROJECT/2-WORKING/GH-998-DEMO-HOTFIX.md"
+git -C "$FX" add -A && git -C "$FX" commit -qm "fix(GH-998): demo 998 landing [express]
+
+Closes #998"
+LAND_998_SHA="$(git -C "$FX" rev-parse HEAD)"
+git -C "$FX" push -q origin HEAD:development
+git -C "$FX" checkout -q development
+git -C "$FX" pull -q --ff-only origin development
+# Simulate that ship was already committed and pushed, but wave_reconcile was interrupted
+python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); c.execute('UPDATE manifest_items SET state=\"shipped\" WHERE issue_ref_id=2'); c.commit(); c.close()"
+git -C "$FX" commit -am "chore(releases): express ship GH-998 (commit $LAND_998_SHA)"
+git -C "$FX" push -q origin development
+# Resume issue 998 WITHOUT --sha — must parse landing SHA from ship commit and complete reconciliation
+python3 "$DRIVER" --root "$FX" resume --issue 998 >"$WORK/resume998.log" 2>"$ERR" && ok "resume after ship commit succeeds without --sha" || bad "post-ship resume failed: $(cat "$ERR")"
+[ ! -f "$FX/PROJECT/2-WORKING/GH-998-DEMO-HOTFIX.md" ] && [ -f "$FX/PROJECT/3-COMPLETED/GH-998-DEMO-HOTFIX.md" ] && ok "post-ship resume reconciled doc to 3-COMPLETED" || bad "post-ship doc not reconciled"
+
+# --- Falsification check: Deliberate failure during reconciliation under WR_FAIL=1 ---
+new_task_branch; printf 'fixed-fail\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Fail hotfix" 997
+mkdir -p "$FX/PROJECT/2-WORKING"
+printf '# Doc 997\n' > "$FX/PROJECT/2-WORKING/GH-997-FAIL.md"
+git -C "$FX" add -A && git -C "$FX" commit -qm "fix(GH-997): fail landing [express]
+
+Closes #997"
+FAIL_SHA="$(git -C "$FX" rev-parse HEAD)"
+git -C "$FX" push -q origin HEAD:development
+git -C "$FX" checkout -q development
+git -C "$FX" pull -q --ff-only origin development
+! WR_FAIL=1 python3 "$DRIVER" --root "$FX" resume --issue 997 --sha "$FAIL_SHA" 2>"$ERR" && ok "resume fails when reconciliation fails (falsifiable)" || bad "resume succeeded despite reconcile failure"
+
+# Verify central telemetry mirroring
+CENTRAL_TICK="$(ls -t "$HOME/.config/xyz/events/"*express*.jsonl 2>/dev/null | head -1)"
+[ -n "$CENTRAL_TICK" ] && ok "central telemetry mirrored to ~/.config/xyz/events" || bad "central telemetry missing from $HOME/.config/xyz/events"
+
 echo "== source audit (direct landing) =="
 LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
 grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
 [ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
+grep -q "def cmd_resume" "$DRIVER" && ok "cmd_resume implemented" || bad "cmd_resume missing"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"
