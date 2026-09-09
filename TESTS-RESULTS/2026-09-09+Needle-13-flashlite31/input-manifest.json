@@ -1,0 +1,10 @@
+{
+  "prepared_at": "2026-09-09T16:13:26.965510+00:00",
+  "sha256": {
+    "openrouter_adapter.py": "a020919a57bd00591134cfeddafebefc8a2b4929a8a78d679a5295761d8802d8",
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "model-catalog.json": "785579bd61ece632d7f559a15ecf755efdf6fd44b68b3eec9e6278dfe3de1404",
+    "QUESTIONS.md": "4cff30978d72eb3b3ff954c712e80e27fe339590d83e3110a9e4d11cedf71740",
+    "PROTOCOL.md": "1fe700443a62a47ad42acaa5570a3bf5dc81b73cefa58574601647e91fd46371"
+  }
+}

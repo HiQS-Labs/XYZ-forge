@@ -1,0 +1,80 @@
+{
+  "id": "google/gemini-3.1-flash-lite",
+  "canonical_slug": "google/gemini-3.1-flash-lite-20260507",
+  "hugging_face_id": null,
+  "name": "Google: Gemini 3.1 Flash Lite",
+  "created": 1778168828,
+  "description": "Gemini 3.1 Flash Lite is Google\u2019s GA high-efficiency multimodal model optimized for low-latency, high-volume workloads. It supports text, image, video, audio, and PDF inputs, and is designed for lightweight agentic...",
+  "context_length": 1048576,
+  "architecture": {
+    "modality": "text+image+file+audio+video->text",
+    "input_modalities": [
+      "text",
+      "image",
+      "video",
+      "file",
+      "audio"
+    ],
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Gemini",
+    "instruct_type": null
+  },
+  "pricing": {
+    "prompt": "0.00000025",
+    "completion": "0.0000015",
+    "image": "0.00000025",
+    "audio": "0.0000005",
+    "input_audio_cache": "0.00000005",
+    "web_search": "0.014",
+    "internal_reasoning": "0.0000015",
+    "input_cache_read": "0.000000025",
+    "input_cache_write": "0.0000000833333333333333"
+  },
+  "top_provider": {
+    "context_length": 1048576,
+    "max_completion_tokens": 65536,
+    "is_moderated": false
+  },
+  "per_request_limits": null,
+  "supported_parameters": [
+    "include_reasoning",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "seed",
+    "stop",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_p"
+  ],
+  "default_parameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null,
+    "frequency_penalty": null,
+    "presence_penalty": null,
+    "repetition_penalty": null
+  },
+  "supported_voices": null,
+  "knowledge_cutoff": null,
+  "expiration_date": null,
+  "links": {
+    "details": "/api/v1/models/google/gemini-3.1-flash-lite-20260507/endpoints"
+  },
+  "reasoning": {
+    "mandatory": false,
+    "default_enabled": true,
+    "supported_efforts": [
+      "high",
+      "medium",
+      "low",
+      "minimal"
+    ],
+    "default_effort": "minimal"
+  }
+}
