@@ -1,0 +1,14 @@
+{
+  "prepared_at": "2026-09-09T18:42:17.050127+00:00",
+  "sha256": {
+    "settings.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "overlay.json": "4cdad1a8283a835433e08b1058b42dcf0d7a2069d0bbe80f8888d199e741da39",
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "dsh_adapter.py": "657c9cdf401e20f1045097451c414f8f636147643c910c8aa8648a017b185ed1",
+    "model-catalog.json": "ebd7aa71f034ceff5a4a11438bac04de132e68453b75bbf3ced5498d4dcb41dd",
+    "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733",
+    "composed-config.yaml": "1cbd1c11b2224f5fffa8eb032a48df80c7ce096f98d7b63dde90f22f99b567ae",
+    "QUESTIONS.md": "22ee170830693043eaf3c128473792fa277e026553dbcb3d06593bb0df99a189",
+    "PROTOCOL.md": "9f06e78a1b486278425ad1b093348e8adf7bcb918437230a587e57a3adc25427"
+  }
+}
