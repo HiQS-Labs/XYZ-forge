@@ -12,11 +12,11 @@ body {
 button { color: inherit; font: inherit; }
 button:focus-visible, [tabindex]:focus-visible { outline: var(--border) solid var(--color-focus); outline-offset: var(--space-1); }
 .topbar {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-5);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-3) var(--space-5);
   padding: var(--space-5) var(--space-6) var(--space-4); position: relative; z-index: 4;
 }
 .topbar h1 { font-size: var(--text-xl); line-height: var(--line-tight); margin: var(--space-1) 0 0; }
-.breadcrumbs { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
+.breadcrumbs { grid-column: 1 / -1; align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
 .breadcrumb-link {
   background: transparent; border: 0; color: var(--color-accent); cursor: pointer; padding: 0;
   text-decoration: underline; text-decoration-color: transparent; text-underline-offset: var(--space-1);
@@ -25,7 +25,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: var(--border) solid va
 .breadcrumb-current { color: var(--color-text-muted); }
 .breadcrumb-separator { color: var(--color-border); user-select: none; }
 .eyebrow { color: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: var(--letter-wide); margin: 0; }
-.controls { display: flex; align-items: center; gap: var(--space-2); }
+.controls { grid-column: 2; display: flex; align-items: center; gap: var(--space-2); }
 .controls button, .empty button, .details {
   background: var(--color-surface-raised); border: var(--border) solid var(--color-border);
   border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); cursor: pointer;
@@ -92,8 +92,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: var(--border) solid va
 .drawer .copy { margin-top: var(--space-2); width: 100%; }
 body.spotlight .repo-card:not(.is-focused) { filter: brightness(var(--dim-opacity)); opacity: var(--peek-opacity); }
 body.spotlight .repo-card.is-focused { transform: translateY(calc(var(--space-1) * -1)); }
-body.focus-view .topbar, body.issue-view .topbar { left: 0; position: fixed; right: 0; top: 0; }
-body.focus-view .title-block > :not(.breadcrumbs), body.issue-view .title-block > :not(.breadcrumbs),
+body.focus-view .title-block, body.issue-view .title-block,
 body.focus-view .countdown, body.issue-view .countdown,
 body.focus-view #focusMode, body.issue-view #focusMode,
 body.focus-view #theme, body.issue-view #theme,

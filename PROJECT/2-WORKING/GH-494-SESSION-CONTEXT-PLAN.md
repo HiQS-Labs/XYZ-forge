@@ -76,3 +76,7 @@ Use debug-mantra during execution: reproduce, trace the failing path, falsify th
 ## Plan review receipt
 
 DeepSeek V4 Pro (`deepseek/deepseek-v4-pro`, OpenRouter) reviewed the full plan through relay-xyz twice. Round 1 requested changes; all seven findings were dispositioned, including correction of its transcript/CLIO source confusion. Round 2 explicitly approved with no new findings, basis textual only. Both invocations exited 8 because the reviewer formatted the verdict inside bold Markdown instead of the parser-required literal line. This is not a clean automated gate pass and does not attest runtime behavior. Original reviewer text is preserved in [the relay transcript](../../relay-system/2026-09-08/flightdeck-session-plan.md); no reviewer verdict was rewritten.
+
+## Producer ownership handoff
+
+[RebalanceOS #202](https://github.com/HiQS-Labs/rebalanceOS/issues/202) now owns the canonical producer implementation plan (snapshot, failure/coverage semantics, optional exact identity projection and scheduling). Producer steps above are historical coordination context and defer to that plan; this document continues to own Flightdeck context retention, incoming adapter, aggregation, UI and manual consumer acceptance. Neither requires GH-201 GitHub optimization to finish first.
