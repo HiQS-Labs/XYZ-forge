@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -112,3 +112,14 @@ Structural repair: removed the duplicate markers stranded between turns; removed
 trailing marker so the next turn's block lands at the very end of the file and the
 attestation prefix check can pass; header reset to NEXT: Reviewer / STATUS: Open /
 ROUND: 3 for exactly one re-attestation turn of the already-delivered Round-3 verdict.
+
+**agy (Reviewer) — Round 3 (re-attestation)**
+
+swept file: yes
+
+* `[Pass]` Fan disposition wording (Q1): Verified change to "file or record the rest into" at `skills/unstuck/SKILL.md:95`.
+* `[Pass]` Q5 knock-on (receipt line): Verified change to "Queued: <genuine blockers filed to durable intake, or none>" at `skills/unstuck/SKILL.md:139`.
+
+**VERDICT:** Approved
+**Basis:** All findings implemented and verified.  [Unverified — no citation]
+relay closed (Approved), no further turn needed
