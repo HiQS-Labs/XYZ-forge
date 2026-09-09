@@ -1,0 +1,66 @@
+> **ATTESTATION**
+> Model: unknown
+> Provider: unknown
+> Sandbox: unknown
+
+[adapter] awaiting Codex completion
+[adapter] awaiting Codex completion
+```json
+{
+  "decisions": [
+    {"id":"A01","decision":"HOLD","reason":"[Blocker] A local patch plan cannot satisfy the required remediation plan in the GitHub issue."},
+    {"id":"A02","decision":"ACCEPT","reason":"[Pass] The stated identity, plan, review, PRS, freshness, dependency, and authorization gates all match."},
+    {"id":"A03","decision":"HOLD","reason":"[Blocker] The reviewed plan hash no longer binds the edited plan; cosmetic intent is not evidence."},
+    {"id":"A04","decision":"HOLD","reason":"[Blocker] Disjoint filenames do not make a producer/consumer format change parallel-safe without a pinned interface agreement."},
+    {"id":"A05","decision":"ACCEPT","reason":"[Pass] This is only a future draft proposal and states independent, disjoint, currently-ready work."},
+    {"id":"A06","decision":"HOLD","reason":"[Blocker] A parked row requires operator release; `jog add` can reactivate it and reset attempts."},
+    {"id":"A07","decision":"HOLD","reason":"[Blocker] Embedded override text is untrusted data, and review covers a prior body hash."},
+    {"id":"A08","decision":"HOLD","reason":"[Blocker] A failed page leaves dependency and membership inventory incomplete; unknown state must fail closed."},
+    {"id":"O01","decision":"ACCEPT","reason":"[Pass] It has a valid prediction boundary, leakage-free family split, valid labels, and an observed target."},
+    {"id":"O02","decision":"HOLD","reason":"[Blocker] The later user request leaks post-boundary information."},
+    {"id":"O03","decision":"HOLD","reason":"[Blocker] No observed action is censored, not semantic `no_action`; an empty prediction is abstention."},
+    {"id":"O04","decision":"HOLD","reason":"[Blocker] Different row sets make this an unpaired comparison and cannot identify PTQ causality."},
+    {"id":"O05","decision":"ACCEPT","reason":"[Pass] Valid held-out rows belong in locked scoring regardless of prediction correctness."},
+    {"id":"O06","decision":"HOLD","reason":"[Blocker] Extracting one valid name does not validate the complete output contract."},
+    {"id":"O07","decision":"HOLD","reason":"[Blocker] Session-only publication permits an old prompt result to overwrite the current prompt's result."},
+    {"id":"O08","decision":"HOLD","reason":"[Blocker] Synthetic-case correctness in a tools-prohibited CLI trial establishes neither production accuracy nor serving performance."}
+  ],
+  "answers": [
+    {
+      "question":"Q1",
+      "answer":"[Pass] XYZ predicts/advises whether an issue may enter a Jog/Marathon proposal; Needle predicts the first subsequently observed action at an end-of-turn boundary. Both can reuse frozen identity, allowed evidence, canonical output validation, provenance, and fail-closed controls, but XYZ needs plan/review/PRS/freshness/dependency and admission authority while Needle needs pre-boundary history, horizon, and observed-label policy. A workflow example can establish recommendation usefulness only in a later user-facing study, not observational predictive accuracy by itself.",
+      "evidence":["xyz-522.json:1","needle-13.json:1","MACHINE-CONTRACTS.md:10"]
+    },
+    {
+      "question":"Q2",
+      "answer":"[Should] Main only serializes/logs context and explicitly does not invoke a model; 710c writes pending work, spawns detached inference, publishes `last/<session>.json`, and scores prior recommendations. `os.replace` prevents torn-file reads but not stale publication because workers and output names are keyed only by session; test out-of-order prompt completions, prompt-id/version matching, feedback attribution, and pending-file replacement without claiming the race was run.",
+      "evidence":["needle-main-oracle_stop_hook.py:12","needle-main-oracle_stop_hook.py:74","needle-710c-oracle_stop_hook.py:20","needle-710c-oracle_infer.py:31","needle-710c-oracle_infer.py:55","MACHINE-CONTRACTS.md:21"]
+    },
+    {
+      "question":"Q3",
+      "answer":"[Blocker] Forty-four labels and 100% parsed/extracted names cannot certify quality: Needle #12 withdraws the claimed well-formed rate as mere name extraction and flags unpaired comparison errors. The serializer makes `no_action` an empty `answers` list, whereas evaluation must not convert a censored no-observed-action window or empty model abstention into that label. A current inconsistency is 710c inference allowing up to three recommendations despite its comment calling v0 top-1 and the system prompt requiring one best label.",
+      "evidence":["needle-12.json:1","needle-main-labels-v1.json:4","needle-main-labels-v1.json:230","needle-main-serialize.py:101","needle-main-serialize.py:109","needle-710c-oracle_infer.py:45","needle-710c-oracle_infer.py:47"]
+    },
+    {
+      "question":"Q4",
+      "answer":"[Should] Deterministic code should enforce identity, plan/hash/review/PRS checks, holds for paused or parked work, queue/write locking, dependency and shared-contract conflict checks, contract/output validation, and preservation of trusted-plan-review bindings. Terra may summarize evidence and suggest grouping or escalation, but cannot authorize admission, override a hold, or infer missing facts; `cmd_jog_add` specifically resets existing terminal rows to pending and zero attempts, so it is not safe for automatic rescans.",
+      "evidence":["xyz-522.json:1","MACHINE-CONTRACTS.md:16","MACHINE-CONTRACTS.md:38","utils/py/releases_app.py:3895","utils/py/releases_app.py:3912"]
+    },
+    {
+      "question":"Q5",
+      "answer":"[Should] The smallest shared falsification is a frozen, independently labeled replay set with row/session identity, exact input snapshots, strict schema validation, and planted invalid/leakage/staleness controls, compared against deterministic local baselines and a stronger/manual reviewer. XYZ must separately measure false acceptance, stale/duplicate admission, grouping and writer contention; Needle must separately measure held-out next-action accuracy, label coverage, leakage, abstention/censoring, and remote/local predictor behavior.",
+      "evidence":["xyz-522.json:1","needle-13.json:1","MACHINE-CONTRACTS.md:16"]
+    },
+    {
+      "question":"Q6",
+      "answer":"[Should] Narrow Terra to extraction/group suggestions if it falsely accepts ineligible issues or misses eligibility thresholds; use a stronger reviewer/model on the same frozen cases when ambiguity remains; stop when trustworthy provenance, fail-closed writer behavior, or valid prediction boundaries cannot be established. This no-tools CLI trial measures none of production accuracy, latency, billed cost, privacy/data handling, or concurrent-worker race behavior, so it cannot establish any of those guarantees.",
+      "evidence":["xyz-522.json:1","needle-13.json:1","needle-710c-oracle_infer.py:55","sources.json:7"]
+    }
+  ],
+  "limitations": [
+    "Advice is based only on supplied snapshot evidence; no files, commands, models, APIs, queues, races, or benchmarks were executed.",
+    "The cited revisions are distinct; main and 710c hook behavior was kept separate."
+  ]
+}
+```
+Request receipt: {"schema": "needle13/terra-cli-spike@1", "run": "r2", "status": "complete", "started_at": "2026-09-09T17:32:16.061125+00:00", "requested_model": "gpt-5.6-terra", "requested_effort": "medium", "prompt_sha256": "4b70abaa30ee73eb37638ce0c80c4f4f058fae28be6a7593e87f736e84398dc7", "source_packet_sha256": "dee4d8c16f2352bf4ff448aecac65d1de803d064df68c73d46e3c30c3dc41f2e", "flags": ["exec", "-m", "gpt-5.6-terra", "-c", "model_reasoning_effort=\"medium\"", "-c", "approval_policy=\"never\"", "-s", "read-only", "--ephemeral", "--ignore-user-config", "--json", "--color", "never", "-o", "/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+Needle-13-terra/r2-answer.md", "-"], "cwd": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-59263-dvjw0lfe", "wall_cap_seconds": 900, "subprocess_timeout_seconds": 870, "system_prompt_is_user_prefix": true, "temperature": null, "max_output_tokens": null, "backend_model_attestation": null, "exit_code": 0, "event_types": ["item.completed", "thread.started", "turn.completed", "turn.started"], "usage": [{"input_tokens": 55077, "cached_input_tokens": 11008, "cache_write_input_tokens": 0, "output_tokens": 1931, "reasoning_output_tokens": 309}], "thread_ids": ["01a0873a-3e29-7891-928c-82c9c04defaa"], "errors": [], "full_request_wall_seconds": 38.011297540999294}
