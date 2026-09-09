@@ -89,3 +89,11 @@ One file: `skills/unstuck/SKILL.md`. Three edits, +13 lines total:
   repo stay reconciled after merge.
 - Reversibility: **Easy** — text revert of one file, plus `backups/unstuck-2026-09-09.zip`
   retained by the Skills Army manager.
+
+## QA evidence (2026-09-09)
+
+- agy relay review (operator-named reviewer): thread `relay-system/2026-09-09/gh528-unstuck-qa.md`.
+  Round 1 returned one `[Should]` (fan-disposition verb "route" → "file or record"; receipt knock-on) — implemented in 4e47f1bc, probes re-verified 1/1/1/1.
+  Round 3 re-attestation: **Approved, driver-attested** (task `RELAY-gh528-unstuck-qa-r2`, reviewed head `dd5fffb9`, added-range 9527+496, record `.git/relay-attest/RELAY-gh528-unstuck-qa-r2.json`).
+- Harness defect surfaced and filed: **#529** (GH-505 canonical-prefix attestation refuses reviewer turns appended above the trailing marker) — the first Approved was refused on structure, repaired transparently via the coordinator note in the thread, then re-attested clean.
+- agy invocation telemetry rows committed in `harnesses.sql`/`harnesses.db`.

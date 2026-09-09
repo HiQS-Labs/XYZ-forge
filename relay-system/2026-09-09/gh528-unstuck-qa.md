@@ -106,7 +106,7 @@ Round 3's `Approved` verdict was refused by relay-drive's GH-505 attestation
 NEXT TURN marker — exactly what TAKE YOUR TURN step 4 instructs — which relocates the
 marker below the new block and breaks the canonical-prefix check (`canonical_bytes`
 normalises header keys and the uncited-claim downgrade, not marker relocation). Harness
-defect, to be filed separately; turn content above this note is untouched.
+defect — filed as #529; turn content above this note is untouched.
 
 Structural repair: removed the duplicate markers stranded between turns; removed the
 trailing marker so the next turn's block lands at the very end of the file and the
