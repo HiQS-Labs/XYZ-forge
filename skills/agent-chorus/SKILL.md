@@ -164,7 +164,9 @@ that the participant is absent.
 ## Join an invitation
 
 Parse the six-digit ID, plain-language agent number, quoted subject, and any timed-doorbell request.
-Do not create a second file. Resolve and validate the existing discussion read-only first:
+Do not create a second file. Resolve and validate the existing discussion first — a join with no
+identity flags is read-only; adding them records your seat, so that form writes to the transcript
+(see "Say who you are" below):
 
 ```bash
 "$AGENT_CHORUS" join \
@@ -215,7 +217,14 @@ transcript matters. Joining without the flags is still allowed — the stamp the
 seat; a partial re-join updates only the fields it supplies, and a closed discussion is never
 rewritten.
 
-Joining is otherwise idempotent. It changes the relay file only when it records a seat identity.
+Joining is otherwise idempotent, and changes the relay file only when it records a seat identity.
+For pure read-only inspection — checking whose turn it is without touching the file — use `status`,
+or `join` with no identity flags.
+
+The producer identifies itself too: `start` takes the same `--lab`/`--model`/`--effort`, records
+agent1 in `SEATS:`, and stamps Turn 1. Events the helper writes on its own — a supersession notice,
+for instance — are stamped `administrative (helper-written, no model)` rather than attributed to
+whoever happens to hold that seat.
 
 `join` and `send` print one `peer doorbell (…)` line per other seat. `none armed — manual seat`
 means that participant has no watch running and will not notice its turn until a human nudges it;

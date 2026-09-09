@@ -639,7 +639,11 @@ def field(content: str, key: str) -> str:
 
 def replace_field(content: str, key: str, value: str) -> str:
     pattern = FIELD_RE_TEMPLATE.format(key=re.escape(key))
-    replaced, count = re.subn(pattern, f"{key}: {value}", content, count=1, flags=re.MULTILINE)
+    # A callable replacement is passed through literally; a replacement STRING would expand
+    # backslash escapes in `value`, letting a literal \n forge extra header lines (R1-B2).
+    replaced, count = re.subn(
+        pattern, lambda _match: f"{key}: {value}", content, count=1, flags=re.MULTILINE
+    )
     if count != 1:
         raise Agent2AgentError(f"discussion is missing required field {key}:")
     return replaced
@@ -760,8 +764,17 @@ def allocation_lock(store: Path) -> object:
 def render_initial(
     discussion_id: str, subject: str, agents: int, timestamp: str, timed_watch: bool,
     context_packet: str, supersedes: Optional[str] = None,
+    lab: Optional[str] = None, model: Optional[str] = None, effort: Optional[str] = None,
 ) -> str:
     roster = " ".join(agent_id(number) for number in range(1, agents + 1))
+    seats_hdr = ""
+    turn1_stamp = (f"{SEAT_STAMP_PREFIX} agent1 · identity unrecorded — re-start or re-join with "
+                   "`--lab`, `--model` and `--effort` so this transcript can be attributed")
+    if any((lab, model, effort)):
+        seat = {"lab": _seat_scrub(lab), "model": _seat_scrub(model), "effort": _seat_scrub(effort)}
+        seats_hdr = f"SEATS: agent1={seat['lab']}{SEAT_PART_SEP}{seat['model']}{SEAT_PART_SEP}{seat['effort']}\n"
+        eff = "" if seat["effort"] == SEAT_UNKNOWN else f" · effort {seat['effort']}"
+        turn1_stamp = f"{SEAT_STAMP_PREFIX} agent1 · {seat['lab']} · {seat['model']}{eff}"
     if timed_watch:
         attention = (
             "- When waiting, if the host supports background-task wake, launch a watch every 120 seconds for up\n"
@@ -784,7 +797,7 @@ def render_initial(
 AGENT2AGENT-ID: {discussion_id}
 SUBJECT: {subject}
 AGENTS: {roster}
-NEXT: agent2
+{seats_hdr}NEXT: agent2
 STATUS: Open
 {supersedes_hdr}TURN: 1
 TIMED-WATCH: {"enabled" if timed_watch else "disabled"}
@@ -821,6 +834,8 @@ UPDATED: {timestamp}
 ## Discussion
 
 ### Turn 1 — agent1 — {timestamp}
+
+{turn1_stamp}
 
 {context_packet}
 """
@@ -888,6 +903,7 @@ def sync_metadata(path: Path, content: str) -> None:
 def create_discussion(
     root: Path, subject: str, agents: int, explicit_id: Optional[str], timed_watch: bool,
     context_packet: str, store: Path, supersedes: Optional[str] = None,
+    lab: Optional[str] = None, model: Optional[str] = None, effort: Optional[str] = None,
 ) -> Tuple[str, Path]:
     if agents < 2:
         raise Agent2AgentError("--agents must be at least 2")
@@ -941,7 +957,7 @@ def create_discussion(
             with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
                 handle.write(render_initial(
                     discussion_id, normalized, agents, timestamp, timed_watch, context_packet,
-                    supersedes=supersedes,
+                    supersedes=supersedes, lab=lab, model=model, effort=effort,
                 ))
                 handle.flush()
                 os.fsync(handle.fileno())
@@ -1006,7 +1022,12 @@ def create_discussion(
                 old_updated = replace_field(old_updated, "TURN", str(old_turn))
                 old_updated = replace_field(old_updated, "UPDATED", timestamp)
                 old_updated = upsert_field(old_updated, "SUPERSEDED-BY", discussion_id, "STATUS")
-                old_updated = old_updated.rstrip() + f"\n\n### Turn {old_turn} — agent1 — {timestamp}\n\nDiscussion superseded by #{discussion_id}.\n"
+                # Written by the helper, not by a model. Say so rather than leaving a turn that
+                # looks unattributed, and never attribute it to whoever holds agent1 (R1-S2).
+                old_updated = old_updated.rstrip() + (
+                    f"\n\n### Turn {old_turn} — agent1 — {timestamp}\n\n{SEAT_ADMIN_STAMP}\n\n"
+                    f"Discussion superseded by #{discussion_id}.\n"
+                )
                 atomic_write(old_path, old_updated)
                 sync_metadata(old_path, old_updated)
                 # Invalidate doorbells on old discussion
@@ -1157,30 +1178,45 @@ def join_discussion(
     lab: Optional[str] = None, model: Optional[str] = None, effort: Optional[str] = None
 ) -> Tuple[Path, str, str, str]:
     path = resolve_discussion(root, discussion_id)
-    content = read_discussion(path)
-    member = validate_member(content, number)
-    subject = field(content, "SUBJECT")
-    if expected_subject is not None and normalize_subject(expected_subject) != subject:
-        raise Agent2AgentError(
-            f"invitation subject does not match #{discussion_id}: expected {subject!r}, got {normalize_subject(expected_subject)!r}"
-        )
-    status = field(content, "STATUS")
-    next_member = field(content, "NEXT")
-    if status.lower() == "closed":
-        decision = "closed"
-    elif next_member == member:
-        decision = "take-turn"
-    else:
-        decision = "wait"
 
-    # Record who is actually behind this seat, in the TRANSCRIPT — telemetry is metadata-only,
-    # lives outside the repository, and `telemetry purge` removes it. A closed discussion is
-    # terminal and is never rewritten.
-    if status.lower() != "closed":
-        updated, changed = record_seat(content, member, lab, model, effort)
-        if changed:
-            atomic_write(path, updated)
-            sync_metadata(path, updated)
+    def _read_and_decide(content: str) -> Tuple[str, str, str, str]:
+        member_ = validate_member(content, number)
+        subject_ = field(content, "SUBJECT")
+        if expected_subject is not None and normalize_subject(expected_subject) != subject_:
+            raise Agent2AgentError(
+                f"invitation subject does not match #{discussion_id}: expected {subject_!r}, got {normalize_subject(expected_subject)!r}"
+            )
+        status_ = field(content, "STATUS")
+        next_member_ = field(content, "NEXT")
+        if status_.lower() == "closed":
+            decision_ = "closed"
+        elif next_member_ == member_:
+            decision_ = "take-turn"
+        else:
+            decision_ = "wait"
+        return member_, subject_, next_member_, decision_
+
+    writing = any((lab, model, effort))
+    if not writing:
+        # No identity to record: this stays the read-only join it always was.
+        content = read_discussion(path)
+        _, subject, next_member, decision = _read_and_decide(content)
+        return path, subject, next_member, decision
+
+    # Recording an identity makes this a WRITER, so it takes the same lock every other writer
+    # takes. Atomic replacement prevents a torn file; it does not prevent a stale snapshot from
+    # overwriting a newer one, which would silently erase a turn written between our read and our
+    # write, or another seat's identity (R1-B1). Read, decide and write inside one transaction.
+    with DiscussionLock(path):
+        content = read_discussion(path)
+        member, subject, next_member, decision = _read_and_decide(content)
+        # Telemetry is metadata-only, lives outside the repository, and `telemetry purge` removes
+        # it, so the identity belongs in the transcript. Closed is terminal and never rewritten.
+        if decision != "closed":
+            updated, changed = record_seat(content, member, lab, model, effort)
+            if changed:
+                atomic_write(path, updated)
+                sync_metadata(path, updated)
     return path, subject, next_member, decision
 
 
@@ -1192,12 +1228,17 @@ SEAT_UNKNOWN = "-"
 def _seat_scrub(value: Optional[str]) -> str:
     """Keep one seat identity on one header line. Model ids legitimately contain `/` and `:`
     (`zai-org/glm-5.3`, `us.anthropic.claude...`), so only the field's own separators (`|`, `;`,
-    `=`) and newlines are stripped — enough that no value can forge a second seat or run into its
+    `=`), backslashes and newlines are stripped — enough that no value can forge a second seat or run into its
     neighbour's."""
     if not value:
         return SEAT_UNKNOWN
     cleaned = " ".join(
-        str(value).replace(SEAT_PART_SEP, "/").replace(";", ",").replace("=", "-").split()
+        str(value)
+        .replace("\\", "/")
+        .replace(SEAT_PART_SEP, "/")
+        .replace(";", ",")
+        .replace("=", "-")
+        .split()
     ).strip()
     return cleaned or SEAT_UNKNOWN
 
@@ -1229,6 +1270,23 @@ def render_seats(seats: Dict[str, Dict[str, str]]) -> str:
     )
 
 
+SEAT_STAMP_PREFIX = "**Seat:**"
+SEAT_ADMIN_STAMP = f"{SEAT_STAMP_PREFIX} agent1 · administrative (helper-written, no model)"
+
+
+def strip_seat_stamp(body: str) -> str:
+    """Drop the helper-written attribution line before a turn body is read as EVIDENCE.
+
+    The stamp is metadata about who spoke, not something the participant claimed. It also
+    contains a model id, and a legitimate one such as `zai-org/glm-5.3` matches the citation
+    path pattern — so leaving it in made every stamped turn cite a file that does not exist
+    (R1-S1). It stays in the transcript; it just is not evidence.
+    """
+    lines = body.split("\n")
+    kept = [ln for ln in lines if not ln.lstrip().startswith(SEAT_STAMP_PREFIX)]
+    return "\n".join(kept).strip("\n")
+
+
 def seat_stamp(content: str, member: str) -> str:
     """The attribution line prepended to every turn.
 
@@ -1240,10 +1298,10 @@ def seat_stamp(content: str, member: str) -> str:
     """
     seat = parse_seats(content).get(member)
     if not seat or all(v == SEAT_UNKNOWN for v in seat.values()):
-        return (f"**Seat:** {member} · identity unrecorded — re-join with "
+        return (f"{SEAT_STAMP_PREFIX} {member} · identity unrecorded — re-join with "
                 "`--lab`, `--model` and `--effort` so this transcript can be attributed")
     effort = "" if seat["effort"] == SEAT_UNKNOWN else f" · effort {seat['effort']}"
-    return f"**Seat:** {member} · {seat['lab']} · {seat['model']}{effort}"
+    return f"{SEAT_STAMP_PREFIX} {member} · {seat['lab']} · {seat['model']}{effort}"
 
 
 def record_seat(content: str, member: str, lab: Optional[str], model: Optional[str],
@@ -2087,6 +2145,7 @@ def verify_citations_for_discussion(root: Path, discussion_id: str) -> Dict[str,
     commits_count = 0
 
     for turn_num, member, ts, body in turns:
+        body = strip_seat_stamp(body)
         if member not in agent_reports:
             agent_reports[member] = {
                 "verified": [],
@@ -2350,6 +2409,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="prepared UTF-8 context packet, or - for stdin",
     )
     start.add_argument("--agents", type=int, default=2, help="participant count (default: 2)")
+    start.add_argument("--lab", help="the lab or vendor behind the producer seat (agent1), recorded in the transcript")
+    start.add_argument("--model", help="model identity for the producer seat (agent1), e.g. claude-opus-5")
+    start.add_argument("--effort", help="reasoning-effort level for the producer seat when the harness exposes one")
     start.add_argument(
         "--timed-watch", action="store_true",
         help="include a 2-minute / 30-minute background-watch request in every invitation",
@@ -2508,6 +2570,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             discussion_id, path = create_discussion(
                 root, args.subject, args.agents, args.explicit_id, args.timed_watch, context_packet,
                 ACTIVE_STORE, supersedes=args.supersedes,
+                lab=args.lab, model=args.model, effort=args.effort,
             )
             subject = normalize_subject(args.subject)
             print(f"Created XYZ AgentChorus #{discussion_id}")
