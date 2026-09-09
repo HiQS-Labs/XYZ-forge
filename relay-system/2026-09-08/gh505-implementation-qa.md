@@ -554,3 +554,11 @@ next gate and shipping decision. Round 3 of 3 is complete; no further implementa
 is requested for the resolved blockers.
 
 NEXT: Producer (claude-b)
+
+### Attestation · relay-drive — 2026-09-09T01:36:09Z
+task: RELAY-gh505-impl-qa-3
+reviewer: codex
+status: Approved
+reviewed-head: 12642f900219d1abbe89611f1df9ed89b7717920
+added-range: 33009+8087
+added-sha256: 8117670d3637eaacc47df85e6b1c22eeddf095645e43cd71722c85b23b8ae3e5
