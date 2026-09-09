@@ -239,9 +239,10 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             if row["item_type"] == "pull_request":
                 normalized.update({k: row[k] for k in ("is_draft", "is_merged", "head_sha", "mergeable_state", "review_decision", "check_status")})
                 title_issues = issue_numbers(row["title"] or "", key)
-                normalized["issues"] = title_issues or pr_issues.get((repo_key(row["repo_full_name"]), int(row["number"])), [])
+                closing_issues = pr_issues.get((repo_key(row["repo_full_name"]), int(row["number"])), [])
+                normalized["issues"] = closing_issues or title_issues
                 normalized["issue"] = next(iter(normalized["issues"]), None)
-                normalized["issue_basis"] = "PR title (inferred)" if title_issues else "Cached closing link"
+                normalized["issue_basis"] = "Cached closing link" if closing_issues else "PR title (inferred)"
             target.append(normalized)
         for row in _sqlite_rows(conn, "SELECT repo_full_name,sha,message,committed_at,html_url FROM github_direct_commits ORDER BY committed_at DESC LIMIT 2000"):
             key = canonical_github_key(row["repo_full_name"], row["html_url"])
@@ -269,8 +270,26 @@ def _read_json_source(connector_id: str, path: Path | None, capabilities: tuple[
         raise ValueError("unsupported or missing schema_version")
     for field in ("repos", "checkouts", "issues", "prs", "lanes", "events"):
         value = payload.get(field, [])
-        if isinstance(value, list):
-            batch[field] = value[:MAX_RECORDS]
+        if not isinstance(value, list):
+            raise ValueError(f"{field} must be a list")
+        for item in value[:MAX_RECORDS]:
+            if not isinstance(item, dict):
+                raise ValueError(f"{field} record must be an object")
+            identity = "id" if field == "repos" else "repo_id"
+            if not isinstance(item.get(identity), str) or not item[identity]:
+                raise ValueError(f"{field} record needs {identity}")
+            for key, part in item.items():
+                if key in {"aliases", "source_refs"}:
+                    valid = isinstance(part, list) and all(isinstance(v, str) for v in part)
+                elif key in {"issues", "prs"}:
+                    valid = isinstance(part, list) and all(type(v) is int for v in part)
+                elif key == "next_actions":
+                    valid = isinstance(part, list) and all(isinstance(v, dict) and all(not isinstance(x, (dict, list)) for x in v.values()) for v in part)
+                else:
+                    valid = not isinstance(part, (dict, list))
+                if not valid:
+                    raise ValueError(f"invalid {field}.{key}")
+        batch[field] = value[:MAX_RECORDS]
     observed = parse_time(payload.get("observed_through") or payload.get("generated_at"))
     return _available(batch, observed, str(payload.get("coverage") or "partial"))
 
@@ -300,6 +319,6 @@ def read_connectors(config: ConnectorConfig, deadline: float) -> list[dict[str, 
             continue
         try:
             batches.append(reader(config, deadline))
-        except (OSError, ValueError, sqlite3.Error, json.JSONDecodeError, TimeoutError) as exc:
+        except (OSError, ValueError, TypeError, AttributeError, sqlite3.Error, json.JSONDecodeError, TimeoutError) as exc:
             batches.append(empty_batch(connector_id, (), "unavailable", type(exc).__name__))
     return batches

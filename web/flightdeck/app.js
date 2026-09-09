@@ -1,3 +1,4 @@
+import {snapshotFresh, progressTone} from './presentation.mjs';
 import {numbers, laneIssues, issueCards} from './issue-context.mjs';
 'use strict';
 
@@ -8,7 +9,7 @@ const refs = {
   viewTitle: $('viewTitle'), focusMode: $('focusMode'), closeView: $('closeView'), theme: $('theme'),
   fadeLeft: $('fadeLeft'), fadeRight: $('fadeRight'), breadcrumbs: $('breadcrumbs')
 };
-const state = {snapshot: null, view: 'a', repoId: null, spotlightId: null, failures: 0, request: 0, theme: localStorage.getItem('flightdeck-theme') || 'system'};
+const state = {snapshot: null, view: 'a', repoId: null, spotlightId: null, failures: 0, request: 0, inFlight: false, theme: localStorage.getItem('flightdeck-theme') || 'system'};
 const accents = ['accent-1', 'accent-2', 'accent-3', 'accent-4', 'accent-5', 'accent-6', 'accent-7'];
 
 function node(tag, className, text) {
@@ -35,16 +36,11 @@ function sourcesFor(repo) {
   return [...new Set([...(repo.source_refs || []), ...(repo.events || []).map(event => event.source_ref), ...(repo.lanes || []).map(lane => lane.source_ref)].filter(Boolean))];
 }
 function health(repo) {
-  const age = ageMinutes(repo.last_progress_at);
+  const tone = progressTone(repo, state.snapshot, state.failures > 0);
   const intentAge = ageMinutes(repo.last_intent_at);
-  if (age !== null && age < 60) return {tone: 'green', label: 'Progress this hour', detail: `${ageLabel(repo.last_progress_at)} ago`};
-  if (intentAge !== null && intentAge < 60) return {tone: 'green', label: 'Recent intent · progress pending', detail: `Prompt ${ageLabel(repo.last_intent_at)} ago`};
-  const relevant = (state.snapshot?.sources || []).filter(source => sourcesFor(repo).includes(source.id));
-  const complete = relevant.length > 0 && relevant.every(source => source.availability === 'ok' && source.coverage === 'complete');
-  if (age !== null && age < 120) return {tone: 'amber', label: 'Quiet · check in', detail: `${ageLabel(repo.last_progress_at)} since progress`};
-  if (!complete || age === null) return {tone: 'unknown', label: 'No recent progress observed', detail: age === null ? 'Attested progress feed has no anchor' : `Last seen ${ageLabel(repo.last_progress_at)} ago · partial sources`};
-  if (age < 120) return {tone: 'amber', label: 'Check in with this lane', detail: `${ageLabel(repo.last_progress_at)} ago`};
-  return {tone: 'red', label: 'No covered progress for 2h', detail: `${ageLabel(repo.last_progress_at)} ago`};
+  const labels = {green: 'Progress this hour', amber: 'Quiet · check in', red: 'No covered progress for 2h', unknown: 'Progress coverage unknown'};
+  const detail = repo.last_progress_at ? `Last seen ${ageLabel(repo.last_progress_at)} ago` : 'No attested progress anchor';
+  return {tone, label: labels[tone], detail: tone === 'unknown' && intentAge !== null && intentAge < 60 ? `Recent intent ${ageLabel(repo.last_intent_at)} ago · progress unverified` : detail};
 }
 function recent(items, field, minutes = 60) {
   return (items || []).filter(item => {
@@ -152,16 +148,20 @@ function activateCard(cardId, repo) {
 }
 function selectedRepos() {
   const repos = state.snapshot?.repos || [];
-  const saved = JSON.parse(localStorage.getItem('flightdeck-repos') || '[]');
-  const selected = Array.isArray(saved) ? saved.map(id => repos.find(repo => repo.id === id)).filter(Boolean) : [];
-  return [...selected, ...repos.filter(repo => !selected.includes(repo))].slice(0, 7);
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem('flightdeck-repos') || '[]'); } catch { /* Ignore invalid saved selection. */ }
+  const selected = Array.isArray(saved) ? saved.map(id => repos.find(repo => repo.id === id) || {id, name: id.split('/').pop(), summary: 'Selected repository unavailable in this snapshot'}) : [];
+  return [...selected, ...repos.filter(repo => !selected.includes(repo))];
 }
 function renderSources() {
   refs.sourceStrip.replaceChildren();
+  const fresh = snapshotFresh(state.snapshot) && state.failures === 0;
+  $('connectionStatus').textContent = state.failures ? `Read failed · ${state.failures >= 3 ? 'polling paused · ' : ''}last snapshot ${ageLabel(state.snapshot?.generated_at)} ago` : `Last snapshot ${ageLabel(state.snapshot?.generated_at)} ago${fresh ? '' : ' · stale'}`;
   (state.snapshot?.sources || []).forEach(source => {
-    const pill = node('span', `source-pill ${source.availability}`);
+    const availability = fresh ? source.availability : 'stale';
+    const pill = node('span', `source-pill ${availability}`);
     pill.title = source.error || `Coverage: ${source.coverage}; observed ${source.observed_through || 'unknown'}`;
-    pill.append(node('i'), node('span', '', `${source.id} · ${source.availability}`));
+    pill.append(node('i'), node('span', '', `${source.id} · ${availability}`));
     refs.sourceStrip.append(pill);
   });
 }
@@ -187,7 +187,19 @@ function renderBreadcrumbs() {
     }
   });
 }
-function render() {
+const viewPositions = new Map();
+function positionKey() { return `${state.view}:${state.repoId || ''}`; }
+function savePosition() {
+  const active = document.activeElement;
+  viewPositions.set(positionKey(), {
+    left: refs.repos.scrollLeft, top: window.scrollY,
+    cards: [...refs.repos.children].map(card => [card.dataset.cardId, card.scrollTop]),
+    focus: active?.closest('[data-card-id]')?.dataset.cardId,
+    handoff: active?.classList.contains('details')
+  });
+}
+function render(preserve = true) {
+  if (preserve) savePosition();
   document.body.classList.toggle('focus-view', state.view === 'b');
   document.body.classList.toggle('issue-view', state.view === 'c');
   document.body.classList.toggle('spotlight', Boolean(state.spotlightId));
@@ -218,12 +230,25 @@ function render() {
   }
   refs.empty.hidden = cards.length > 0;
   refs.repos.hidden = cards.length === 0;
+  const saved = viewPositions.get(positionKey());
+  if (saved) {
+    refs.repos.scrollLeft = saved.left;
+    for (const [id, top] of saved.cards) {
+      const card = cards.find(c => c.dataset.cardId === id);
+      if (card) card.scrollTop = top;
+    }
+    const focused = cards.find(c => c.dataset.cardId === saved.focus);
+    if (!refs.detail.open) (saved.handoff ? focused?.querySelector('.details') : focused)?.focus({preventScroll: true});
+    window.scrollTo({top: saved.top, behavior: 'instant'});
+  }
 }
 function navigate(view, repoId = null, replace = false) {
+  savePosition();
+  if (refs.detail.open) refs.detail.close();
   state.view = view; state.repoId = repoId; state.spotlightId = view === 'b' ? repoId : null;
   const url = new URL(location.href); url.search = ''; url.searchParams.set('view', view); if (repoId) url.searchParams.set('repo', repoId);
   history[replace ? 'replaceState' : 'pushState']({view, repoId}, '', url);
-  render();
+  render(false);
 }
 function backOneLevel() {
   if (refs.detail.open) return refs.detail.close();
@@ -252,7 +277,8 @@ function openDetail(repo, issue = null) {
   handoff.append(text, copy); refs.detailBody.append(summary, handoff); refs.detail.showModal();
 }
 async function refresh(manual = false) {
-  if (document.hidden && !manual) return;
+  if (state.inFlight || (document.hidden && !manual)) return;
+  state.inFlight = true;
   const request = ++state.request;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 6000);
@@ -260,16 +286,18 @@ async function refresh(manual = false) {
     const response = await fetch('/flightdeck.json', {cache: 'no-store', signal: controller.signal});
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const snapshot = await response.json();
-    if (request !== state.request || snapshot.schema_version !== 1 || !Array.isArray(snapshot.repos)) return;
+    if (request !== state.request) return;
+    if (snapshot.schema_version !== 1 || !Array.isArray(snapshot.repos) || !Array.isArray(snapshot.sources)) throw new Error('Invalid snapshot');
     state.snapshot = snapshot; state.failures = 0;
-    sessionStorage.setItem('flightdeck-last-good', JSON.stringify(snapshot)); render();
+    try { sessionStorage.setItem('flightdeck-last-good', JSON.stringify(snapshot)); } catch { /* Storage is optional. */ }
+    render();
   } catch (error) {
     state.failures += 1;
     if (!state.snapshot) {
       try { state.snapshot = JSON.parse(sessionStorage.getItem('flightdeck-last-good')); } catch { state.snapshot = null; }
     }
     render();
-  } finally { clearTimeout(timer); }
+  } finally { clearTimeout(timer); state.inFlight = false; }
 }
 function applyTheme() {
   document.documentElement.dataset.theme = state.theme === 'system' ? '' : state.theme;
@@ -306,10 +334,11 @@ refs.closeView.addEventListener('click', backOneLevel);
 refs.theme.addEventListener('click', cycleTheme);
 $('retry').addEventListener('click', () => refresh(true));
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !event.repeat) { event.preventDefault(); backOneLevel(); } });
-window.addEventListener('popstate', () => { const url = new URL(location.href); state.view = url.searchParams.get('view') || 'a'; state.repoId = url.searchParams.get('repo'); state.spotlightId = null; render(); });
+window.addEventListener('popstate', () => { savePosition(); if (refs.detail.open) refs.detail.close(); const url = new URL(location.href); state.view = url.searchParams.get('view') || 'a'; state.repoId = url.searchParams.get('repo'); state.spotlightId = null; render(false); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(true); });
 
 const initial = new URL(location.href); state.view = ['a', 'b', 'c'].includes(initial.searchParams.get('view')) ? initial.searchParams.get('view') : 'a'; state.repoId = initial.searchParams.get('repo');
 applyTheme(); installDrag(); updateCountdown(); refresh(true);
 setInterval(updateCountdown, 1000);
+setInterval(() => { if (!document.hidden) render(); }, 60000);
 setInterval(() => { if (state.failures < 3) refresh(); }, 150000);

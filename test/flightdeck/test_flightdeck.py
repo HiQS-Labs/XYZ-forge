@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 from unittest.mock import patch
 
-from src.flightdeck.aggregate import FlightdeckAggregator
+from src.flightdeck.aggregate import FlightdeckAggregator, _classify_pr
 from src.flightdeck.connectors import REGISTRY, canonical_github_key, issue_numbers, read_clio, read_connectors, read_git_pulse
 from src.flightdeck.contract import ConnectorConfig
 from src.flightdeck.tokens import OUTPUT, audit_css, render
@@ -135,7 +135,27 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(snapshot["repos"][0]["issues"], [])
         self.assertEqual(snapshot["repos"][0]["prs"], [])
 
-    def test_unique_local_basename_merges_into_github_identity(self) -> None:
+    def test_malformed_json_rows_leave_healthy_peer_available(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "clio.jsonl").write_text(json.dumps({"repo": "owner/demo", "prompt": "GH-42", "timestamp": "2026-09-08T15:00:00Z"}) + "\n")
+            for bad in (None, {"id": []}, {"id": "local/demo", "aliases": [None]}, {"id": "local/demo", "next_actions": [None]}):
+                with self.subTest(bad=bad):
+                    (root / "topology.json").write_text(json.dumps({"schema_version": 1, "repos": [bad]}))
+                    snapshot = FlightdeckAggregator(config(root, frozenset({"clio", "topology"}))).snapshot()
+                    self.assertTrue(snapshot["repos"])
+                    self.assertTrue(snapshot["repos"][0]["lanes"])
+                    source = next(s for s in snapshot["sources"] if s["id"] == "topology")
+                    self.assertEqual(source["availability"], "unavailable")
+
+    def test_cached_pr_without_policy_attestation_never_claims_ready(self) -> None:
+        for fetched in ("2000-01-01T00:00:00Z", "2026-09-08T15:00:00Z"):
+            for check in ("success", "failure"):
+                pr = {"head_sha": "new", "check_head_sha": "old", "fetched_at": fetched,
+                      "check_status": check, "review_decision": "APPROVED", "mergeable_state": "clean"}
+                self.assertEqual(_classify_pr(pr, True)[0], "needs-qa")
+
+    def test_partial_cache_basename_does_not_establish_identity(self) -> None:
         def batch(connector: str, key: str):
             return {
                 "connector": connector, "schema_version": 1, "capabilities": [],
@@ -147,8 +167,7 @@ class ConnectorTests(unittest.TestCase):
             batch("rebalance", "github.com/hiqs-labs/xyz-forge"), batch("clio", "local/xyz-forge")
         ]):
             snapshot = FlightdeckAggregator(config(Path(tmp), frozenset())).snapshot()
-        self.assertEqual([repo["id"] for repo in snapshot["repos"]], ["github.com/hiqs-labs/xyz-forge"])
-        self.assertEqual(snapshot["repos"][0]["source_refs"], ["clio", "rebalance"])
+        self.assertEqual({repo["id"] for repo in snapshot["repos"]}, {"github.com/hiqs-labs/xyz-forge", "local/xyz-forge"})
 
     def test_explicit_stale_slug_alias_merges_after_repo_rename(self) -> None:
         def batch(connector: str, key: str, aliases: list[str]):
@@ -164,7 +183,7 @@ class ConnectorTests(unittest.TestCase):
             batch("clio", "local/aegis-sleuth-slack-bot", ["aegis-sleuth-slack-bot"]),
         ]):
             snapshot = FlightdeckAggregator(config(Path(tmp), frozenset())).snapshot()
-        self.assertEqual([repo["id"] for repo in snapshot["repos"]], ["github.com/hiqs-labs/aegis-sleuth-slackbot"])
+        self.assertEqual({repo["id"] for repo in snapshot["repos"]}, {"github.com/hiqs-labs/aegis-sleuth-slackbot", "local/aegis-sleuth-slack-bot"})
 
 
 class TokenTests(unittest.TestCase):

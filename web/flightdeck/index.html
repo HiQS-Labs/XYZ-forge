@@ -17,6 +17,8 @@
       <h1 id="viewTitle">Active repositories</h1>
     </div>
     <div class="controls">
+      <span id="connectionStatus" class="eyebrow" role="status">Reading sources…</span>
+      <button id="retry" type="button">Read latest</button>
       <div class="countdown" aria-live="polite"><span id="countdownLabel">Until wrap-up</span><strong id="countdown">--:--:--</strong></div>
       <button id="focusMode" type="button">Focus view</button>
       <button id="theme" type="button" aria-label="Change appearance">Theme: system</button>
@@ -33,7 +35,6 @@
       <p class="eyebrow">NO SOURCE DATA</p>
       <h2 id="emptyTitle">Flightdeck is ready for connectors.</h2>
       <p id="emptyCopy">Start or configure any incoming connector. The dashboard itself remains available.</p>
-      <button id="retry" type="button">Read latest</button>
     </section>
   </main>
 

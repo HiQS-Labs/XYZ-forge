@@ -34,22 +34,22 @@ def write_fixtures(root: Path) -> ConnectorConfig:
     clio = root / "clio.jsonl"
     prompts = [
         {
-            "timestamp": instant(182), "repo": "LTVera-Pandas", "agent": "codex", "session_id": "lane-440",
+            "timestamp": instant(182), "repo": REPO, "agent": "codex", "session_id": "lane-440",
             "branch": "fix/gh-440", "machine": "fixture-studio",
             "prompt": "x" * 260 + f" https://github.com/{REPO}/issues/440 and make a PR",
         },
         {
-            "timestamp": instant(18), "repo": "LTVera-Pandas", "agent": "codex", "session_id": "lane-440",
+            "timestamp": instant(18), "repo": REPO, "agent": "codex", "session_id": "lane-440",
             "prompt": "Continue smoke testing the current branch",
         },
         {
-            "timestamp": instant(12), "repo": "LTVera-Pandas", "agent": "agy", "session_id": "lane-many",
+            "timestamp": instant(12), "repo": REPO, "agent": "agy", "session_id": "lane-many",
             "prompt": "Review GH-421, #390, and https://github.com/BinoidCBD/LTVera-Pandas/issues/332",
         },
     ]
     for minutes in (130, 80):
-        prompts.append({"timestamp": instant(minutes), "repo": "LTVera-Pandas", "session_id": "lane-440", "prompt": "Continue validation"})
-    prompts.append({"timestamp": instant(10), "repo": "LTVera-Pandas", "session_id": "lane-review", "agent": "claude-code", "prompt": f"QA https://github.com/{REPO}/pull/442"})
+        prompts.append({"timestamp": instant(minutes), "repo": REPO, "session_id": "lane-440", "prompt": "Continue validation"})
+    prompts.append({"timestamp": instant(10), "repo": REPO, "session_id": "lane-review", "agent": "claude-code", "prompt": f"QA https://github.com/{REPO}/pull/442"})
     # Interleaved exports deliberately append earlier prompts after the latest one.
     clio.write_text("".join(json.dumps(row) + "\n" for row in prompts), encoding="utf-8")
 
@@ -93,7 +93,7 @@ def verify(snapshot: dict) -> None:
     review = next(item for item in repo["lanes"] if item["session_id"] == "lane-review")
     assert review["prs"] == [442], review
     assert repo["checkout_count"] == 2
-    assert len(repo["prs"]) == 1 and repo["prs"][0]["issue"] == 440
+    assert len(repo["prs"]) == 1 and repo["prs"][0]["issue"] == 83
     assert len(repo["events"]) == 2, "repo/SHA deduplication failed"
     assert all(source["availability"] == "ok" for source in snapshot["sources"])
     assert any(item["kind"] == "milestone" and item.get("issue") == 440 for item in repo["events"])

@@ -38,19 +38,10 @@ def _merge_repo(current: dict[str, Any], incoming: dict[str, Any]) -> None:
 
 
 def _classify_pr(pr: dict[str, Any], source_ok: bool) -> tuple[str, str]:
-    if not source_ok or not pr.get("head_sha") or not pr.get("fetched_at"):
-        return "needs-qa", "Verification data incomplete"
-    if pr.get("mergeable_state") in {"conflicting", "dirty"} or pr.get("check_status") in {"failure", "failed", "error"} or pr.get("review_decision") == "CHANGES_REQUESTED":
-        return "blocked", "Cached head has a blocker"
-    if pr.get("is_draft"):
-        return "needs-qa", "Draft"
-    if pr.get("check_status") in {"pending", "queued", None, ""}:
-        return "needs-qa", "Checks or requirements need verification"
-    if pr.get("review_decision") in {"REVIEW_REQUIRED", "review_required"}:
-        return "review", "Review requested"
-    if pr.get("mergeable_state") in {"clean", "mergeable", "has_hooks"} and pr.get("check_status") in {"success", "passed"} and pr.get("review_decision") in {"APPROVED", "approved"}:
-        return "ready", "Cached candidate; verify before merge"
-    return "needs-qa", "Readiness unknown"
+    # Existing producers do not expose required-policy completeness or bind each
+    # check/review to the current head. A successful DB read cannot attest readiness.
+    return "needs-qa", "Draft" if pr.get("is_draft") else "Verify current head, checks and review requirements"
+
 
 
 class FlightdeckAggregator:
@@ -69,13 +60,11 @@ class FlightdeckAggregator:
         prs: dict[tuple[str, int], dict[str, Any]] = {}
         checkouts: dict[tuple[str, str, str], dict[str, Any]] = {}
         source_ok = {b["connector"]: b["source"]["availability"] == "ok" for b in batches}
-        github_by_slug: dict[str, set[str]] = defaultdict(set)
         alias_targets: dict[str, set[str]] = defaultdict(set)
         for batch in batches:
             for incoming in batch["repos"]:
                 key = incoming.get("id")
                 if isinstance(key, str) and key.startswith("github.com/"):
-                    github_by_slug[key.rsplit("/", 1)[-1]].add(key)
                     for alias in incoming.get("aliases", []):
                         normalized = repo_key(alias)
                         if normalized and normalized != key:
@@ -87,13 +76,6 @@ class FlightdeckAggregator:
             explicit = alias_targets.get(raw, set())
             if len(explicit) == 1:
                 return next(iter(explicit))
-            if not raw.startswith("local/"):
-                return raw
-            candidates = github_by_slug.get(raw.rsplit("/", 1)[-1], set())
-            if len(candidates) == 1:
-                candidate = next(iter(candidates))
-                redirected = alias_targets.get(candidate, set())
-                return next(iter(redirected)) if len(redirected) == 1 else candidate
             return raw
 
         for batch in batches:

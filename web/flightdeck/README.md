@@ -78,3 +78,5 @@ Known upstream gap: CLIO's installed Codex tailer can miss the first prompt when
 it first discovers a rollout at EOF. Flightdeck does not read raw private rollouts
 or backfill missing prompts. See the [visibility Recon Map](../../PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md)
 for the evidence and the bounded producer repair still needed.
+
+PR rows remain verification-needed until a producer supplies current-head and required-policy attestation. Successful reads do not establish merge readiness. Prompt-only intent stays neutral; old or failed snapshots visibly expire, and Read latest remains available after polling pauses. All observed repositories remain scrollable. Basename-only records remain separate until an explicit identity/alias is available. Cached explicit closing links take precedence over title inference.
