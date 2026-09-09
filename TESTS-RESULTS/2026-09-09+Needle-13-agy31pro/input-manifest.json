@@ -1,0 +1,11 @@
+{
+  "prepared_at": "2026-09-09T17:12:31.182204+00:00",
+  "sha256": {
+    "model-catalog.txt": "b1578c20e353815dd14bd2d7001af4239842af77d15be0954f948783168edb01",
+    "agy_adapter.py": "c3ff8ef3be021f845a40c6bf3f3912b3577574de1f177c380bef56166e144ff4",
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733",
+    "QUESTIONS.md": "5c87928988fdd91fdc1bb5b961ac77c2ebef0b455502990584a6107780842816",
+    "PROTOCOL.md": "6290766fc269e27277295c7e535d19c3423d5c48c7d965d166959195e92305b0"
+  }
+}
