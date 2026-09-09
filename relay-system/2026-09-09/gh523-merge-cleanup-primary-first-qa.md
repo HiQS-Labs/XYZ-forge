@@ -1,7 +1,7 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: In progress
-NEXT: codex
+STATUS: Changes requested
+NEXT: claude
 ROUND: 3
 
 ## Body
@@ -266,3 +266,33 @@ ordering; not claimed otherwise anywhere in the code, doc, or capture.
 ## ▶ TAKE YOUR TURN
 
 You are the **reviewer**. Re-read the changed files at HEAD. Approve, or list what remains blocking.
+
+---
+
+## codex — Round 3 review
+
+**Verdict: Changes requested.** The five Round-2 repairs are present, but the new behavioral tests introduce a blocking escape into the operator's real home directory. Contain those tests before the next run.
+
+**Evidence boundary:** Static review of the four requested files, `toposort_prs.py`, and the GH-523 capture on disk. No Git commands, source/artifact execution, tests, or mutation probes were run. The producer's 33/33 and red controls remain producer-reported; commit attribution was not independently verified because the operator prohibits Git commands. Verify-tier graph discovery returned all 56 projects with no matching worktree. The nearest `XYZ-forge` index belongs to another checkout, generation `2026-09-01T15:54:30Z`; symbol search found no `inspect_primary_landing`, and coverage marked all five review source paths `not_tracked`. Findings therefore rely on local source reads, not that index. Only this relay file was edited.
+
+### Round-2 disposition check
+
+| Finding | Decision and source evidence |
+|---|---|
+| R2-1 — failed refresh | **Accepted for the reported failure path.** `skills/merge-cleanup/scripts/merge_cleanup.py:334` captures the fetch result; `:335`–`:344` refuses a failed fetch without the explicit override, before remote merges. Reinspection and the gate remain at `:345` and `:347`. `test/gh436-merge-cleanup.py:416` tests ready cached evidence plus fetch failure. The missing changed-verdict test is R3-2 below. |
+| R2-2 — PR base mismatch | **Accepted.** `skills/merge-cleanup/scripts/merge_cleanup.py:352` checks every ordered PR's base, treating missing/empty bases as mismatches, and returns at `:360` before the merge loop at `:366`. Behavioral mismatched and non-default matching cases are at `test/gh436-merge-cleanup.py:426` and `:435`. |
+| R2-3 — failed operation probe | **Accepted.** `skills/merge-cleanup/scripts/scan_clones.py:477` records failed operation evidence and a diagnostic; `:521` includes that evidence in readiness. The test at `test/gh436-merge-cleanup.py:298` injects failed probes while retaining real successful reference queries. |
+| R2-4 — unresolved home path | **Accepted for the reported exception.** Both `skills/merge-cleanup/scripts/scan_clones.py:432` and `skills/merge-cleanup/scripts/merge_cleanup.py:254` catch `RuntimeError` alongside `OSError`. The helper regression is at `test/gh436-merge-cleanup.py:313`. This does not attest every possible filesystem failure implied by the broad “never raises” wording. |
+| R2-5 — ineffective assertions | **Original assertion defects fixed; new containment blocker below.** The operation fixture now has a real tracking target (`test/gh436-merge-cleanup.py:261`) and asserts READY before adding `MERGE_HEAD` (`:289`). The branch test captures actual fast-forward argv at `:413`–`:414`, replacing source-string matching. Its successful orchestration path is not fully isolated. |
+
+### Remaining graded findings
+
+1. **R3-1 — Blocking: the new success-path tests perform real home-directory cleanup.** The patch stack in `test/gh436-merge-cleanup.py:395`–`:402` mocks Git, PR merging, reconciliation, checkout teardown, and discovery, but neither `prune_dangling_skill_symlinks` nor `Path.home`. The successful tests at `:406` and `:435` pass `--execute` and reach `skills/merge-cleanup/scripts/merge_cleanup.py:399`, calling the real pruner with `dry_run=False`. That function discovers directories under the actual `Path.home()` at `:182`, unlinks dangling skill links at `:212`, and removes empty directories at `:227`. The separate `TestDanglingSymlinkPrune` class's home patch (`test/gh436-merge-cleanup.py:467`) applies only during that class's own tests; it cannot contain these orchestration cases. Thus running the focused suite can remove real links beneath `~/.claude`, `~/.codex`, and `~/.gemini`, even from a disposable full clone. This is a static, direct call-path finding; I did not run it or inspect the operator's home to see whether eligible links exist. Mock the pruner in the orchestration helper and assert the intended call/non-call behavior; retain real pruning exclusively in the existing temporary-home tests. Verify containment using a sentinel dangling link under a temporary mocked home, so the regression can fail without touching the real home. Repair this before rerunning the suite.
+
+2. **R3-2 — Should-fix: successful fetch followed by changed readiness is still untested.** `test/gh436-merge-cleanup.py:396` supplies the same verdict on every inspection. The unready case at `:443` starts unready and remains so. Removing the second inspection at `skills/merge-cleanup/scripts/merge_cleanup.py:345` would therefore leave these cases passing, although a newly discovered divergence would no longer block remote merges. This is the explicit remaining test requested in R2-1. Add one case whose inspection side effects are READY initially, then NOT READY after a successful fetch; assert the second inspection occurs and that merge, reconciliation, teardown, and pruning are not called. Observe its red control by removing only the reinspection.
+
+### Scope and handoff
+
+The initial Phase 0 ordering and direct reconciliation gate remain intact at `skills/merge-cleanup/scripts/merge_cleanup.py:269` and `:287`; the updated skill clearly states the refresh and PR-base rules at `skills/merge-cleanup/SKILL.md:70` and `:74`. No redesign of ordering or teardown policy is requested. The previously acknowledged reconciliation-before-fast-forward and continuation after fast-forward failure remain outside this repair scope; this review does not attest successful final landing.
+
+Approval is withheld for **R3-1**. **NEXT: claude** to contain the new tests and add the changed-verdict case, then return focused evidence. The harness owns gate execution and the file-scoped commit.
