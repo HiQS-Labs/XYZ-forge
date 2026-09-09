@@ -1,0 +1,164 @@
+> **ATTESTATION**
+> Model: unknown
+> Provider: unknown
+> Sandbox: unknown
+
+[adapter] awaiting Antigravity CLI completion
+[adapter] awaiting Antigravity CLI completion
+[adapter] awaiting Antigravity CLI completion
+[adapter] awaiting Antigravity CLI completion
+[adapter] awaiting Antigravity CLI completion
+```json
+{
+  "decisions": [
+    {
+      "id": "A01",
+      "decision": "HOLD",
+      "reason": "The GitHub issue body lacks a remediation plan; a local capture plan alone does not satisfy the 'plan in the issue' gate."
+    },
+    {
+      "id": "A02",
+      "decision": "ACCEPT",
+      "reason": "The issue contains a concrete remedy, matches the review hash, and passes all policy, PRS, and dependency gates."
+    },
+    {
+      "id": "A03",
+      "decision": "HOLD",
+      "reason": "The plan was edited after review, and no renewed attestation or exact content-hash comparison is available to validate it."
+    },
+    {
+      "id": "A04",
+      "decision": "HOLD",
+      "reason": "Unknown coupling and unsafe parallel writes to shared interfaces must be held or escalated, not admitted blindly."
+    },
+    {
+      "id": "A05",
+      "decision": "ACCEPT",
+      "reason": "The write-sets are disjoint, dependencies are satisfied, and future draft grouping does not mutate active running waves."
+    },
+    {
+      "id": "A06",
+      "decision": "HOLD",
+      "reason": "A rescan must never reset the attempt cap or reactivate a parked item, which cmd_jog_add would normally do."
+    },
+    {
+      "id": "A07",
+      "decision": "HOLD",
+      "reason": "System overrides in issue text are untrusted input, and the independent review only covers an earlier hash."
+    },
+    {
+      "id": "A08",
+      "decision": "HOLD",
+      "reason": "Incomplete API pagination must halt the scan; it cannot advance to admit unseen or partially retrieved dependencies."
+    },
+    {
+      "id": "O01",
+      "decision": "ACCEPT",
+      "reason": "The example uses a valid end-of-turn boundary, disjoint families, and a next event within the 30-minute horizon."
+    },
+    {
+      "id": "O02",
+      "decision": "HOLD",
+      "reason": "The prediction input must never include the next user request if it arrived after the boundary."
+    },
+    {
+      "id": "O03",
+      "decision": "HOLD",
+      "reason": "An unobserved event by the horizon is censored, not a supervised negative 'no_action' label."
+    },
+    {
+      "id": "O04",
+      "decision": "HOLD",
+      "reason": "The experiment is unpaired (disjoint row sets with zero overlap), so it does not definitively isolate PTQ as the cause."
+    },
+    {
+      "id": "O05",
+      "decision": "ACCEPT",
+      "reason": "Canonical governance targets must be scored even if rare, and unsupported classes should not be hidden."
+    },
+    {
+      "id": "O06",
+      "decision": "HOLD",
+      "reason": "The regex '100% well-formed' is a misleading name-extraction rate that ignores invalid schemas and duplicate tool blocks."
+    },
+    {
+      "id": "O07",
+      "decision": "HOLD",
+      "reason": "Atomic replace keyed only by session ID allows a delayed stale worker to overwrite a newer prompt's result."
+    },
+    {
+      "id": "O08",
+      "decision": "HOLD",
+      "reason": "A CLI trial on synthetic cases cannot establish live API p95 latency, actual serving readiness, or offline accuracy."
+    }
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "Needle's target is predicting the next observed action at the turn boundary; XYZ's target is determining issue eligibility for autonomous admission. They cannot reuse context because Needle requires exact transcript metadata (requests and labels), while XYZ requires GitHub issue bodies, reviews, and hashes. Furthermore, an example proving predictive/observational accuracy for Needle does not establish recommendation usefulness, which requires a separate user-facing study.",
+      "evidence": [
+        "needle-13.json:4-6",
+        "xyz-522.json:5-6",
+        "needle-13.json:161"
+      ]
+    },
+    {
+      "question": "Q2",
+      "answer": "On Needle main, the stop hook only logs the query and does not call a model. On 710c, it spawns `oracle_infer.py` detached to generate a recommendation. Atomic `os.replace` alone fails to prevent stale worker publication because an older, delayed worker can still overwrite a newer prompt's result since the file is keyed only by session ID. We must test stale-response handling in a simulated worker.",
+      "evidence": [
+        "needle-main-oracle_stop_hook.py:16-17",
+        "needle-710c-oracle_stop_hook.py:20-22",
+        "needle-710c-oracle_infer.py:55-58",
+        "needle-13.json:141",
+        "needle-13.json:169"
+      ]
+    },
+    {
+      "question": "Q3",
+      "answer": "No, 44 declared labels or 100% parsed outputs do not certify quality. Needle #12 warns that '100% well-formed' was merely a name-extraction rate and the engine only retrieves 5 tools anyway. Needle #13 warns that confidence abstention and the semantic `no_action` label must remain distinct. A clear inconsistency exists: `labels-v1.json` states 'Labels take no arguments', yet local scoring accepts outputs with invalid argument objects.",
+      "evidence": [
+        "needle-12.json:5-6",
+        "needle-12.json:16-17",
+        "needle-main-labels-v1.json:4",
+        "needle-13.json:66",
+        "needle-13.json:88"
+      ]
+    },
+    {
+      "question": "Q4",
+      "answer": "For XYZ, deterministic code must validate plan/review hashes, check PRS criteria, ensure output schema validity, and skip parked work without resetting the attempt cap (unlike `cmd_jog_add` which explicitly sets `attempt_count = 0` at line 3913). Pro reasoning is restricted to extracting context, suggesting groupings for dependent/shared-contracts, and explaining semantic similarities, but cannot override failed deterministic gates.",
+      "evidence": [
+        "xyz-522.json:35-40",
+        "xyz-522.json:45-47",
+        "xyz-522.json:73-74",
+        "utils/py/releases_app.py:3899-3914"
+      ]
+    },
+    {
+      "question": "Q5",
+      "answer": "The smallest shared experiment uses isolated, frozen session families to prevent leakage and applies a strict budget cap. Needle evaluates offline prediction accuracy, coverage, and latency against simple local baselines, respecting strict boundaries. XYZ evaluates false acceptance using fake/ineligible issue holdouts, and mechanically validates LLM grouping to ensure independent labels and dependencies aren't hidden. Both require comparing against a stronger baseline (local or independent manual review).",
+      "evidence": [
+        "needle-13.json:115-116",
+        "needle-13.json:137-142",
+        "xyz-522.json:92-101",
+        "xyz-522.json:110-112"
+      ]
+    },
+    {
+      "question": "Q6",
+      "answer": "We should narrow Pro to extraction/grouping if eligibility accuracy misses the bar, use a stronger model baseline to resolve ambiguous escalations or evaluate Pro's performance, and stop if prerequisites like trusted provenance, atomic writes, or operating gates fail. This tools-prohibited CLI trial cannot execute API calls, network requests, or real repo queries, so it cannot empirically measure live latency, actual token cost, race immunity, privacy retention guarantees, or generalization accuracy.",
+      "evidence": [
+        "xyz-522.json:114-117",
+        "needle-13.json:144-152"
+      ]
+    }
+  ],
+  "limitations": [
+    "This is an isolated sandbox evaluation without tool execution, meaning no real GitHub API requests, model inference, or disk writes were performed.",
+    "Predictions about latency, token usage, and race condition immunity cannot be verified empirically without live runtime telemetry.",
+    "The analysis relies solely on provided static fixtures and cannot definitively certify the security or atomicity of the actual deployed canonical writers."
+  ]
+}
+```
+
+Request receipt: {"schema": "needle13/agy31pro-cli-spike@1", "run": "r2", "status": "complete", "started_at": "2026-09-09T17:14:45.693715+00:00", "requested_model": "gemini-3.1-pro-high", "requested_effort": "high", "prompt_sha256": "71b95b9c27682064b7376e122628216162b7fd7f06202d43f3c94c7f59d9555d", "source_packet_sha256": "dee4d8c16f2352bf4ff448aecac65d1de803d064df68c73d46e3c30c3dc41f2e", "flags": ["--model", "gemini-3.1-pro-high", "--effort", "high", "--sandbox", "--mode", "plan", "--disable-slash-commands", "--output-format", "json", "--print-timeout", "14m", "--log-file", "/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+Needle-13-agy31pro/r2-runtime.log"], "cwd": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-66884-9hyj0hvt", "wall_cap_seconds": 900, "cli_print_timeout_seconds": 840, "system_prompt_is_user_prompt_prefix": true, "temperature": null, "max_output_tokens": null, "backend_model_attestation": null, "exit_code": 0, "cli_result_status": "SUCCESS", "usage": {"input_tokens": 47063, "output_tokens": 9638, "thinking_tokens": 7567, "cache_read_tokens": 8164, "total_tokens": 56701}, "num_turns": 1, "cli_duration_seconds": 74.067824, "conversation_id": "d1a0a34f-2142-4a2c-88d5-d5a518810f5f", "full_request_wall_seconds": 78.0241815419995}

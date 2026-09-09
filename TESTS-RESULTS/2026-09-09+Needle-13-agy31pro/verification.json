@@ -1,0 +1,46 @@
+{
+  "distinct_conversations": true,
+  "identical_prompt_bytes": true,
+  "checks": [
+    {
+      "run": "r1",
+      "nonempty_response_extraction_and_selected_label_valid": true,
+      "backend_attestation": false,
+      "tool_call_observability": "unknown: JSON and runtime log are not an exhaustive tool event stream",
+      "negative_controls": [
+        {
+          "name": "empty",
+          "rejected": true
+        },
+        {
+          "name": "changed_answer",
+          "rejected": true
+        },
+        {
+          "name": "wrong_selected_label",
+          "rejected": true
+        }
+      ]
+    },
+    {
+      "run": "r2",
+      "nonempty_response_extraction_and_selected_label_valid": true,
+      "backend_attestation": false,
+      "tool_call_observability": "unknown: JSON and runtime log are not an exhaustive tool event stream",
+      "negative_controls": [
+        {
+          "name": "empty",
+          "rejected": true
+        },
+        {
+          "name": "changed_answer",
+          "rejected": true
+        },
+        {
+          "name": "wrong_selected_label",
+          "rejected": true
+        }
+      ]
+    }
+  ]
+}
