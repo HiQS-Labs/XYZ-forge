@@ -3285,11 +3285,39 @@ def validate_raw_text(raw_text, issue_num=None):
 
 
 
+def validate_issue_identity(issue_url, gh_number, require_github=False):
+    """GH-527: a GitHub issue_url must name the same issue as the row's gh_number.
+
+    `reconcile-state` reads issue identity from this pair, so a row where they disagree can never
+    be reconciled — it cannot ask GitHub about the right issue. GH-61 was imported that way: the
+    legacy ROADMAP.md importer took the FIRST issue link in a line that named four child issues
+    before its own `→ [#61]` pointer. That importer is retired, but intake accepted the same
+    mismatch with no complaint, so the defect stayed creatable. Checked at BOTH writers now.
+
+    The shape check is deliberately NOT enforced at intake. Rows legitimately carry URLs this
+    regex does not match — imported cross-repo references, and fixtures that use short stand-in
+    hosts — and refusing those would reject shapes intake has always accepted. Identity is what
+    matters: if the URL IS a GitHub issue URL, its number must agree. `require_github` is for the
+    repair verb, whose entire purpose is to make a row resolvable, so a malformed URL there is a
+    failed repair rather than a pre-existing shape to tolerate.
+    """
+    url = issue_url or ""
+    if not GH_ISSUE_URL_RE.fullmatch(url):
+        if require_github:
+            refuse("roadmap-issue-url", "%s is not a GitHub issue URL" % issue_url)
+        return
+    if gh_number is not None and url.rsplit("/", 1)[-1] != str(gh_number):
+        refuse("roadmap-issue-url", "%s does not name issue #%s; a row's issue_url and gh_number "
+               "must agree, or reconcile-state can never resolve the row"
+               % (issue_url, gh_number))
+
+
 def cmd_roadmap_add(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
+        validate_issue_identity(args.issue_url, args.issue_num)
         basename = os.path.basename(args.doc_path)
         # hq park passes the hq_roadmap_line rendering via --raw-text so preview and stored row
         # share ONE template; the inline fallback exists only for direct CLI use.
@@ -3499,6 +3527,9 @@ def cmd_roadmap_update(args):
     """
     if args.section is not None:
         validate_roadmap_section(args.section)
+    # `roadmap move` delegates here with its OWN namespace, which has no --issue-url. Read it
+    # defensively rather than adding the flag to a verb that has no business setting it.
+    issue_url = getattr(args, "issue_url", None)
     root = resolve_root(args.root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
@@ -3513,21 +3544,22 @@ def cmd_roadmap_update(args):
             where, param, label = "global_id = ?", args.gid, args.gid
 
         has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
-        select_cols = ["global_id", "gh_number", "title", "raw_text"]
+        select_cols = ["global_id", "gh_number", "title", "raw_text", "issue_url"]
         row = conn.execute(
             "SELECT %s FROM roadmap_items WHERE %s" % (", ".join(select_cols), where), (param,)).fetchone()
         if not row:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
 
-        if args.raw_text is None and args.section is None:
-            refuse("no-update", "pass at least one of --raw-text or --section")
+        if args.raw_text is None and args.section is None and issue_url is None:
+            refuse("no-update", "pass at least one of --raw-text, --section or --issue-url")
 
         new_raw_text = None
         rating = None
         if args.raw_text is not None:
             new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
             old_raw_text = row["raw_text"] or ""
-            if new_raw_text == old_raw_text.strip() and args.section is None:
+            if (new_raw_text == old_raw_text.strip()
+                    and args.section is None and issue_url is None):
                 print("roadmap update: %s raw_text unchanged; nothing written" % label)
                 return
             rating = parse_rating(new_raw_text, row["title"])
@@ -3535,6 +3567,10 @@ def cmd_roadmap_update(args):
                 refuse("schema-behind",
                        "this ledger has no rating columns. Run `releases migrate` first — rating "
                        "stores scores, it never installs schema.")
+
+        if issue_url is not None:
+            # The repair must not be able to re-create the defect it exists to fix.
+            validate_issue_identity(issue_url, row["gh_number"], require_github=True)
 
         if args.dry_run:
             if args.raw_text is not None:
@@ -3545,6 +3581,8 @@ def cmd_roadmap_update(args):
                         print("ovr: %d" % rating["rating_ovr"])
             if args.section:
                 print("section: -> %s" % args.section)
+            if issue_url:
+                print("issue_url: %s -> %s" % (row["issue_url"], issue_url))
             return
 
         def mutate(conn):
@@ -3561,7 +3599,10 @@ def cmd_roadmap_update(args):
             if args.section is not None:
                 updates.append("section = ?")
                 params.append(args.section)
-            
+            if issue_url is not None:
+                updates.append("issue_url = ?")
+                params.append(issue_url)
+
             params.append(param)
             conn.execute("UPDATE roadmap_items SET %s WHERE %s" % (", ".join(updates), where), params)
 
@@ -3593,13 +3634,17 @@ def cmd_roadmap_reconcile_state(args):
             "SELECT * FROM roadmap_items WHERE section NOT IN (?, ?) AND gh_number IS NOT NULL "
             "ORDER BY gh_number, global_id", terminal).fetchall()
         changes = []
+        unresolvable = []
         for row in rows:
             # Full URLs preserve repository identity, including imported cross-repo references.
             url = row["issue_url"] or ""
             if (not GH_ISSUE_URL_RE.fullmatch(url)
                     or url.rsplit("/", 1)[-1] != str(row["gh_number"])):
-                refuse("roadmap-issue-identity", "GH-%s has no matching issue URL; refusing to guess "
-                       "issue state" % row["gh_number"])
+                # Per-row, not per-command: one row whose issue_url disagrees with its gh_number
+                # is a local data defect, and refusing the whole sweep over it strands every other
+                # row (#527). Still never guess this row's state — skip it and name it.
+                unresolvable.append(row["gh_number"])
+                continue
             try:
                 result = subprocess.run(
                     [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
@@ -3626,6 +3671,10 @@ def cmd_roadmap_reconcile_state(args):
             target = terminal[0] if reason == "COMPLETED" else terminal[1]
             changes.append((row, target))
 
+        for gh in unresolvable:
+            print("warn: rule=roadmap-issue-identity: GH-%s has no matching issue URL; skipped "
+                  "(fix with `releases roadmap update --issue-num %s --issue-url <url>`)"
+                  % (gh, gh))
         if not changes:
             print("roadmap reconcile-state: no changes; nothing written")
             return
@@ -5365,6 +5414,9 @@ def build_parser():
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
     sp_ru.add_argument("--raw-text", help="new raw_text for the row")
     sp_ru.add_argument("--section", help="new section; accepted names: " + ", ".join(ROADMAP_SECTIONS))
+    sp_ru.add_argument("--issue-url", help="corrected GitHub issue URL for the row (GH-527). Must "
+                       "name the same issue as the row's gh_number — this is the only verb that "
+                       "can repair an issue_url written wrong at intake")
     sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rm = rsub.add_parser("move", help="move an existing roadmap row to a new section (GH-269)")
