@@ -1,0 +1,212 @@
+[
+  {
+    "run": 1,
+    "scope": "answers[].evidence only; resolves basename aliases; checks range existence, not semantic support",
+    "references": [
+      {
+        "question": "Q1",
+        "citation": "needle-710c-oracle_config.py:38",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_config.py",
+        "source_line_count": 74,
+        "range_exists": true
+      },
+      {
+        "question": "Q1",
+        "citation": "xyz-522.json:143\u2013160",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-main-oracle_stop_hook.py:17",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "range_exists": true
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-710c-oracle_infer.py:58\u201360",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "range_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12.json:1\u20135",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-serialize.py:109",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "range_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:2\u20133",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "range_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "releases_app.py:3876\u20133932",
+        "resolved_path": "utils/py/releases_app.py",
+        "source_line_count": 5503,
+        "range_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522.json:167\u2013203",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q4",
+        "citation": "needle-main-serialize.py:74\u201389",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "range_exists": true
+      },
+      {
+        "question": "Q5",
+        "citation": "needle-710c-oracle_config.py:38",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_config.py",
+        "source_line_count": 74,
+        "range_exists": true
+      },
+      {
+        "question": "Q5",
+        "citation": "xyz-522.json:198\u2013203",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "xyz-522.json:198\u2013203",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "needle-main-oracle_stop_hook.py:17",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "range_exists": true
+      }
+    ],
+    "out_of_range_or_missing": 5
+  },
+  {
+    "run": 2,
+    "scope": "answers[].evidence only; resolves basename aliases; checks range existence, not semantic support",
+    "references": [
+      {
+        "question": "Q1",
+        "citation": "needle-710c-oracle_config.py:38",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_config.py",
+        "source_line_count": 74,
+        "range_exists": true
+      },
+      {
+        "question": "Q1",
+        "citation": "xyz-522.json:143\u2013160",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-main-oracle_stop_hook.py:17",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "range_exists": true
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-710c-oracle_infer.py:58\u201360",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "range_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12.json:1\u20135",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-serialize.py:109",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "range_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:2\u20133",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "range_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "releases_app.py:3876\u20133932",
+        "resolved_path": "utils/py/releases_app.py",
+        "source_line_count": 5503,
+        "range_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522.json:167\u2013203",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q4",
+        "citation": "needle-main-serialize.py:74\u201389",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "range_exists": true
+      },
+      {
+        "question": "Q5",
+        "citation": "needle-710c-oracle_config.py:38",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_config.py",
+        "source_line_count": 74,
+        "range_exists": true
+      },
+      {
+        "question": "Q5",
+        "citation": "xyz-522.json:198\u2013203",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "xyz-522.json:198\u2013203",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "range_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "needle-main-oracle_stop_hook.py:17",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "range_exists": true
+      }
+    ],
+    "out_of_range_or_missing": 5
+  }
+]

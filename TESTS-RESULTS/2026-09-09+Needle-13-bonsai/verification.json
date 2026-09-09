@@ -1,0 +1,10 @@
+{
+  "source_and_request_parity_with_gemma_except_declared_model_names_and_reasoning": true,
+  "bonsai_requests_byte_identical": true,
+  "bonsai_answers_byte_identical": true,
+  "complete_streams_match_final_answers": true,
+  "empty_missing_end_missing_delta_controls_rejected": true,
+  "both_model_identities_verified": true,
+  "both_zero_reasoning_tokens": true,
+  "request_response_hashes_verified": true
+}
