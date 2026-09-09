@@ -1274,17 +1274,32 @@ SEAT_STAMP_PREFIX = "**Seat:**"
 SEAT_ADMIN_STAMP = f"{SEAT_STAMP_PREFIX} agent1 · administrative (helper-written, no model)"
 
 
+_GENERATED_STAMP_RE = re.compile(
+    r"^\*\*Seat:\*\*\s+(?:agent\d+|operator)\s+·\s+\S"
+)
+
+
 def strip_seat_stamp(body: str) -> str:
     """Drop the helper-written attribution line before a turn body is read as EVIDENCE.
 
-    The stamp is metadata about who spoke, not something the participant claimed. It also
-    contains a model id, and a legitimate one such as `zai-org/glm-5.3` matches the citation
-    path pattern — so leaving it in made every stamped turn cite a file that does not exist
-    (R1-S1). It stays in the transcript; it just is not evidence.
+    The stamp is metadata about who spoke, not something the participant claimed. It also carries
+    a model id, and a legitimate one such as `zai-org/glm-5.3` matches the citation path pattern —
+    so leaving it in made every stamped turn cite a file that does not exist (R1-S1).
+
+    Only the LEADING line is considered, and only when it matches the shape this helper generates.
+    Dropping every line that happens to start with `**Seat:**` would silently delete a
+    participant's own text — including a citation they meant to be verified — and would misread
+    legacy transcripts that predate stamping (R2-S1). The line stays in the transcript either way;
+    this governs evidence extraction alone.
     """
     lines = body.split("\n")
-    kept = [ln for ln in lines if not ln.lstrip().startswith(SEAT_STAMP_PREFIX)]
-    return "\n".join(kept).strip("\n")
+    for index, line in enumerate(lines):
+        if not line.strip():
+            continue
+        if _GENERATED_STAMP_RE.match(line.strip()):
+            return "\n".join(lines[:index] + lines[index + 1:]).strip("\n")
+        break
+    return body
 
 
 def seat_stamp(content: str, member: str) -> str:
@@ -2432,7 +2447,7 @@ def build_parser() -> argparse.ArgumentParser:
     status = commands.add_parser("status", help="inspect a discussion without taking a participant seat")
     status.add_argument("--id", required=True)
 
-    join = commands.add_parser("join", help="resolve an invitation without modifying the discussion")
+    join = commands.add_parser("join", help="resolve an invitation; read-only unless identity flags are given, which record your seat")
     join.add_argument("--id", required=True)
     join.add_argument("--agent", type=int, required=True, help="plain agent number, such as 2")
     join.add_argument("--expect-subject", help="reject a stale or altered invitation subject")

@@ -1169,13 +1169,44 @@ else
   else
     pass "escape injection wrote no arbitrary header field"
   fi
-  # A lone backslash used to raise `bad escape` out of re.subn rather than being stored.
+  # The join must SUCCEED and persist a sanitised value; asserting only that control fields are
+  # unchanged would stay green if the join were simply rejected (R2-S2).
   if q1_cli join --id 925101 --agent 2 --lab 'Weird\q' --model m3 >/dev/null 2>&1; then
     pass "a lone backslash in an identity is stored, not raised"
   else
     fail "a lone backslash in an identity still errors out"
   fi
+  expect_file_contains "the sanitised identity is actually persisted (not a silently rejected join)" \
+    "$Q1_FILE" "agent2=Weird/q|m3|"
 fi
+
+# THE PIN for the callable itself. The CLI cases above cannot prove it: `_seat_scrub` strips
+# backslashes before `replace_field` ever sees them, so reverting only the callable changes
+# nothing there. A literal backslash reaching the field writer is the case that matters, and it
+# covers every OTHER header field too, which is where this defect actually lived (R2-S2).
+q1_field="$(python3 - <<'FIELDPY'
+import sys
+sys.path.insert(0, "skills/agent-chorus/scripts")
+import agent_chorus as ac
+header = "AGENT2AGENT-ID: 111111\nSUBJECT: s\nAGENTS: agent1 agent2\nSTATUS: Open\nTURN: 1\n"
+try:
+    newline = ac.replace_field(header, "SUBJECT", "OpenAI\\nSTATUS: Closed")
+except Exception as exc:
+    print("RAISED-n:%s" % type(exc).__name__, end=" ")
+else:
+    forged = sum(1 for ln in newline.splitlines() if ln.startswith("STATUS:"))
+    print("lines=%d status=%d" % (len(newline.splitlines()), forged), end=" ")
+try:
+    lone = ac.replace_field(header, "SUBJECT", "Weird\\q")
+except Exception as exc:
+    print("RAISED-q:%s" % type(exc).__name__)
+else:
+    print("lone=%s" % ("kept" if "Weird\\q" in lone else "MANGLED"))
+FIELDPY
+)"
+[ "$q1_field" = "lines=5 status=1 lone=kept" ] \
+  && pass "replace_field stores a literal backslash value verbatim -- no escape expansion, no raise" \
+  || fail "replace_field still expands replacement escapes: $q1_field"
 
 # S1: the stamp carries a model id, and a legitimate one (zai-org/glm-5.3) matches the citation
 # path pattern. Left in the extracted body it made every stamped turn cite a nonexistent file.
@@ -1201,6 +1232,24 @@ esac
 case "$q2_out" in
   *docs/real.txt*) pass "a real citation in the message is still recognised" ;;
   *) fail "the participant's own citation was lost: $q2_out" ;;
+esac
+
+# R2-S1: only the LEADING generated stamp is metadata. A participant's own line that happens to
+# start with the same prefix is their content -- dropping it would hide a bad citation and turn a
+# failing audit green.
+python3 "$CLI" --root "$Q2W" --store "$Q2S" join --id 925102 --agent 1 \
+  --lab Anthropic --model claude-opus-5 >/dev/null 2>&1
+python3 "$CLI" --root "$Q2W" --store "$Q2S" send --id 925102 --agent 1 --next-agent 2 \
+  --message "Intro paragraph.
+**Seat:** evidence is docs/missing.txt:1" >/dev/null 2>&1
+q2b_out="$(python3 "$CLI" --root "$Q2W" --store "$Q2S" verify-citations --id 925102 2>&1)"
+q2b_rc=$?
+case "$q2b_out" in
+  *docs/missing.txt*)
+    [ "$q2b_rc" -ne 0 ] \
+      && pass "a participant's own Seat-prefixed line is still evidence, and its bad citation still fails" \
+      || fail "the bad citation was reported but verification still passed (rc=$q2b_rc)" ;;
+  *) fail "a participant's Seat-prefixed evidence line was swallowed by the stamp filter: $q2b_out" ;;
 esac
 
 # S2: a supersession notice is written by the HELPER. Attributing it to whoever holds agent1
