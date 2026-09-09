@@ -142,6 +142,24 @@ CROCKFORD_GLOB_CLASS = "[0-9A-HJKMNP-TV-Z]"
 
 GENERATION_KEY = "generation"
 
+# GH-525: some repos write a literal placeholder in RELEASES.md for a release that has not shipped
+# a version yet — AEGIS-Sleuth's convention is "versions are RECORDED, never RESERVED", so every
+# unshipped block reads `Release: TBD`. The schema already models "no version yet" as SQL NULL
+# (releases.version is nullable and UNIQUE(repo_id, version) permits any number of NULLs); the
+# importer just never mapped a placeholder onto it, so every unshipped block collided on the same
+# "version" string. Downstream's only recourse was to FORK this file for two lines, which is how it
+# drifted ~1700 lines behind and re-derived an INSERT_RE fix that already existed here.
+#
+# Comma-separated so a repo can carry more than one placeholder (TBD, N/A, -). Unset by default:
+# behaviour is byte-identical to before for every existing install.
+UNSHIPPED_VERSION_TOKENS_KEY = "unshipped_version_tokens"
+
+# The settings keys an operator may write with `releases settings set`. Deliberately a
+# deny-by-default allowlist: `generation` belongs to the writer protocol and `repo_slug` is the
+# ledger's identity, so exposing either here would be handing out a supported way to corrupt the
+# ledger. A new configurable key is a deliberate addition to this tuple, never an accident.
+CONFIGURABLE_SETTINGS = (UNSHIPPED_VERSION_TOKENS_KEY,)
+
 CRASH_BOUNDARIES = ("pre-commit", "post-commit", "post-stage", "mid-rename", "post-rename")
 
 
@@ -432,6 +450,21 @@ def connect(db_path, must_exist=True):
 def get_setting(conn, key, default=None):
     row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
     return row["value"] if row else default
+
+
+def unshipped_version_tokens(conn):
+    """The configured placeholders that mean "no version yet" (GH-525).
+
+    Returns a set, empty when the setting is absent — and an empty set is what keeps this
+    inert for every install that never opts in. Entries are trimmed and compared
+    case-sensitively: `TBD` is a literal token in a hand-maintained ledger, not a word to be
+    normalised, and accepting `tbd` would quietly widen what counts as "unshipped". Blank
+    entries are dropped so a trailing comma cannot turn the empty string into a placeholder —
+    an empty `Release:` value stays a malformed ledger, refused as it always was."""
+    raw = get_setting(conn, UNSHIPPED_VERSION_TOKENS_KEY)
+    if not raw:
+        return set()
+    return {token.strip() for token in raw.split(",") if token.strip()}
 
 
 def get_generation(conn):
@@ -1974,6 +2007,7 @@ def cmd_import(args):
                 else:
                     conn.execute("INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)",
                                  (repo["id"], pos, content))
+            placeholder_versions = unshipped_version_tokens(conn)
             for block in blocks:
                 f = block["fields"]
 
@@ -1984,6 +2018,10 @@ def cmd_import(args):
                 version = (fv("Release") or "").strip()
                 if not version:
                     refuse("release-value", "a block's Release: value is empty (malformed ledger)")
+                # GH-525: a configured placeholder means "not shipped yet" -> SQL NULL, so any
+                # number of unshipped blocks coexist. Read once per import, above the loop.
+                if version in placeholder_versions:
+                    version = None
                 gid = new_gid("rel-")
 
                 status_raw = fv("Status")
@@ -3471,6 +3509,59 @@ def cmd_roadmap_repoint(args):
 
         perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
         print("repointed GH-%d -> %s" % (args.issue_num, new))
+    finally:
+        conn.close()
+
+
+def cmd_settings_set(args):
+    """`releases settings set <key> <value>` — write a settings row THROUGH the writer protocol.
+
+    GH-525: without this there is no supported way to configure the ledger at all. A settings row
+    is part of the business-state digest, so a direct `sqlite3 INSERT` — the only alternative —
+    leaves the latest receipt's after-digest disagreeing with the state and `check` fails with
+    `receipt-chain: ... a receipt-less mutation`. Measured, not assumed: setting
+    `unshipped_version_tokens` by hand took a clean ledger to `check: 2 failure(s)`.
+
+    So a configurable ledger needs a configuring verb. Only keys in CONFIGURABLE_SETTINGS are
+    writable: `generation` is owned by the writer protocol and `repo_slug` is identity, and letting
+    either be set here would hand an operator a supported way to corrupt the ledger."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        if args.key not in CONFIGURABLE_SETTINGS:
+            refuse("setting-not-configurable",
+                   "%s is not an operator-configurable setting; configurable keys are: %s"
+                   % (args.key, ", ".join(sorted(CONFIGURABLE_SETTINGS))))
+        old = get_setting(conn, args.key)
+        if args.dry_run:
+            print("%s: %s -> %s" % (args.key, old if old is not None else "(unset)", args.value))
+            return
+
+        def mutate(conn):
+            if _has_column(conn, "settings", "updated_at"):
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?) "
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
+                             "updated_at = excluded.updated_at",
+                             (args.key, args.value, now_iso()))
+            else:
+                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?) "
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                             (args.key, args.value))
+
+        perform_write(root, conn, "settings-set", None, mutate)
+        print("%s = %s" % (args.key, args.value))
+    finally:
+        conn.close()
+
+
+def cmd_settings_list(args):
+    """Print every settings row, so "what is this ledger configured to do" is one command."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        for row in conn.execute("SELECT key, value FROM settings ORDER BY key"):
+            mark = " (configurable)" if row["key"] in CONFIGURABLE_SETTINGS else ""
+            print("%-28s %s%s" % (row["key"], row["value"], mark))
     finally:
         conn.close()
 
@@ -5306,6 +5397,17 @@ def build_parser():
 
     sp = sub.add_parser("dashboard", help="render the releases and roadmap dashboard HTML")
 
+    # GH-525: a ledger with configurable behaviour needs a configuring verb. A settings row is part
+    # of the business-state digest, so writing one by hand breaks the receipt chain and `check`
+    # fails — this is the only supported way to set one.
+    sp_set = sub.add_parser("settings", help="read/write operator-configurable ledger settings")
+    ssub = sp_set.add_subparsers(dest="settings_cmd", required=True)
+    sp_sl = ssub.add_parser("list", help="print every settings row")
+    sp_ss = ssub.add_parser("set", help="write one operator-configurable setting (receipted)")
+    sp_ss.add_argument("key", help="setting key; only configurable keys are accepted")
+    sp_ss.add_argument("value", help="new value")
+    sp_ss.add_argument("--dry-run", action="store_true", help="print the change, write nothing")
+
     sp = sub.add_parser("roadmap", help="Roadmap ledger (GH-269): sync/list the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_sections = rsub.add_parser("sections", help="list accepted roadmap section names (no DB required)")
@@ -5486,6 +5588,8 @@ def main(argv=None):
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
                               "move": cmd_roadmap_move, "sections": cmd_roadmap_sections,
                               "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
+        "settings": lambda a: {"set": cmd_settings_set,
+                               "list": cmd_settings_list}[a.settings_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,
