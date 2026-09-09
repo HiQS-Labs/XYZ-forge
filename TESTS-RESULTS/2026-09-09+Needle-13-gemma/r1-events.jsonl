@@ -1,0 +1,2026 @@
+{"elapsed_seconds": 0.06361579099984738, "event": {"type": "chat.start", "model_instance_id": "gemma-4-12b-it-mlx"}}
+{"elapsed_seconds": 0.28078541600007156, "event": {"type": "prompt_processing.start"}}
+{"elapsed_seconds": 0.28086050000001705, "event": {"type": "prompt_processing.progress", "progress": 0}}
+{"elapsed_seconds": 11.041411707999941, "event": {"type": "prompt_processing.progress", "progress": 0.059874287384885254}}
+{"elapsed_seconds": 22.17562041600013, "event": {"type": "prompt_processing.progress", "progress": 0.11974857476977051}}
+{"elapsed_seconds": 33.301370125000176, "event": {"type": "prompt_processing.progress", "progress": 0.17962286215465575}}
+{"elapsed_seconds": 44.56526912499976, "event": {"type": "prompt_processing.progress", "progress": 0.23949714953954102}}
+{"elapsed_seconds": 55.961070958000164, "event": {"type": "prompt_processing.progress", "progress": 0.29937143692442625}}
+{"elapsed_seconds": 67.48957604099996, "event": {"type": "prompt_processing.progress", "progress": 0.3592457243093115}}
+{"elapsed_seconds": 79.20440770799996, "event": {"type": "prompt_processing.progress", "progress": 0.41912001169419677}}
+{"elapsed_seconds": 91.04645912500018, "event": {"type": "prompt_processing.progress", "progress": 0.47899429907908203}}
+{"elapsed_seconds": 102.98640533299977, "event": {"type": "prompt_processing.progress", "progress": 0.5388685864639673}}
+{"elapsed_seconds": 115.05573404100005, "event": {"type": "prompt_processing.progress", "progress": 0.5987428738488525}}
+{"elapsed_seconds": 127.25684445800016, "event": {"type": "prompt_processing.progress", "progress": 0.6586171612337377}}
+{"elapsed_seconds": 139.60651766599995, "event": {"type": "prompt_processing.progress", "progress": 0.718491448618623}}
+{"elapsed_seconds": 152.09299604099988, "event": {"type": "prompt_processing.progress", "progress": 0.7783657360035082}}
+{"elapsed_seconds": 164.72682374999977, "event": {"type": "prompt_processing.progress", "progress": 0.8382400233883935}}
+{"elapsed_seconds": 177.4923937499998, "event": {"type": "prompt_processing.progress", "progress": 0.8981143107732787}}
+{"elapsed_seconds": 190.3941104579999, "event": {"type": "prompt_processing.progress", "progress": 0.9579885981581641}}
+{"elapsed_seconds": 199.61229941600004, "event": {"type": "prompt_processing.progress", "progress": 1}}
+{"elapsed_seconds": 199.6130767909999, "event": {"type": "prompt_processing.end"}}
+{"elapsed_seconds": 201.13590999999997, "event": {"type": "message.start"}}
+{"elapsed_seconds": 201.13667358300017, "event": {"type": "message.delta", "content": "```"}}
+{"elapsed_seconds": 201.18076762500004, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 201.18083487500007, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 201.18087366600002, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 201.18091049999975, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 201.22613737499978, "event": {"type": "message.delta", "content": "  "}}
+{"elapsed_seconds": 201.27368937499978, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 201.36414287499974, "event": {"type": "message.delta", "content": "dec"}}
+{"elapsed_seconds": 201.455439458, "event": {"type": "message.delta", "content": "isions"}}
+{"elapsed_seconds": 201.501217, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 201.54667579099987, "event": {"type": "message.delta", "content": " ["}}
+{"elapsed_seconds": 201.54673999999977, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 201.72979299999997, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 201.77558041600014, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 201.82198974999983, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 201.82220800000005, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 201.82228329100008, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 201.82234008299974, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 201.82239945799984, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 201.82243225000002, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 201.866955083, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 201.91384362500003, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 202.05006379099996, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 202.09737029100006, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 202.0975229159999, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 202.14134183299984, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 202.1873680409999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 202.2327987499998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 202.27907162500014, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 202.27913741600014, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 202.27917341600005, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 202.27920345799976, "event": {"type": "message.delta", "content": "Missing"}}
+{"elapsed_seconds": 202.4890982500001, "event": {"type": "message.delta", "content": " remediation"}}
+{"elapsed_seconds": 202.53512999999975, "event": {"type": "message.delta", "content": " plan"}}
+{"elapsed_seconds": 202.58087183299995, "event": {"type": "message.delta", "content": " in"}}
+{"elapsed_seconds": 202.62655866600016, "event": {"type": "message.delta", "content": " issue"}}
+{"elapsed_seconds": 202.71893529099998, "event": {"type": "message.delta", "content": " body"}}
+{"elapsed_seconds": 202.76505912499988, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 202.80949091599996, "event": {"type": "message.delta", "content": " fails"}}
+{"elapsed_seconds": 202.857209625, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 202.857369458, "event": {"type": "message.delta", "content": "Rem"}}
+{"elapsed_seconds": 202.90451541599987, "event": {"type": "message.delta", "content": "ed"}}
+{"elapsed_seconds": 202.94672791599987, "event": {"type": "message.delta", "content": "iation"}}
+{"elapsed_seconds": 202.99236291599982, "event": {"type": "message.delta", "content": " plan"}}
+{"elapsed_seconds": 203.08467741599998, "event": {"type": "message.delta", "content": " in"}}
+{"elapsed_seconds": 203.08474625000008, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 203.22258779100002, "event": {"type": "message.delta", "content": " issue"}}
+{"elapsed_seconds": 203.26952687499988, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 203.45217208299982, "event": {"type": "message.delta", "content": " gate"}}
+{"elapsed_seconds": 203.45241358300018, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 203.59041508300015, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 203.63444954099987, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 203.67979504100003, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 203.67992587499975, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 203.72593174999975, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 203.72608737500013, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 203.81974062500012, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 203.81991737499993, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 203.82001624999975, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 203.86371095799996, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 203.86386533299992, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 203.90920779099997, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 204.00073229100008, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 204.00080204100004, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 204.18500600000016, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 204.23068004100014, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 204.27768741599994, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 204.2778262910001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 204.27794779099986, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 204.27803541599997, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 204.27811812499976, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 204.2787555, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 204.3227193749999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 204.37179070799993, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 204.46019420799985, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 204.50820754100005, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 204.55866083299998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 204.5975861249999, "event": {"type": "message.delta", "content": "ACCEPT"}}
+{"elapsed_seconds": 204.64377416600018, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 204.69131579099985, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 204.7984124999998, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 204.84032912500015, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 204.84038174999978, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 204.84041045799995, "event": {"type": "message.delta", "content": "Me"}}
+{"elapsed_seconds": 204.93256870799996, "event": {"type": "message.delta", "content": "ets"}}
+{"elapsed_seconds": 204.93262266600004, "event": {"type": "message.delta", "content": " all"}}
+{"elapsed_seconds": 205.02554258300006, "event": {"type": "message.delta", "content": " gates"}}
+{"elapsed_seconds": 205.02567395799997, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 205.11817683299978, "event": {"type": "message.delta", "content": " plan"}}
+{"elapsed_seconds": 205.11825937499998, "event": {"type": "message.delta", "content": " in"}}
+{"elapsed_seconds": 205.11829933299987, "event": {"type": "message.delta", "content": " issue"}}
+{"elapsed_seconds": 205.11833524999975, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 205.25440350000008, "event": {"type": "message.delta", "content": " independent"}}
+{"elapsed_seconds": 205.42609541599995, "event": {"type": "message.delta", "content": " review"}}
+{"elapsed_seconds": 205.4262228749999, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 205.42626929100015, "event": {"type": "message.delta", "content": " PRS"}}
+{"elapsed_seconds": 205.42629666599987, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 205.47166112500008, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 205.79113874999985, "event": {"type": "message.delta", "content": " readiness"}}
+{"elapsed_seconds": 205.79120879099992, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 205.9275860409998, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 205.9735774159999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 206.01948595800013, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 206.06465187499998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 206.1105659159998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 206.15703325000004, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 206.24812929100017, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 206.24819258299976, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 206.29332266599977, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 206.3400253750001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 206.34019383299983, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 206.34028204100014, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 206.34036929100012, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 206.38438162500006, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 206.38454008300005, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 206.4298127500001, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 206.52659754099977, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 206.52796762499975, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 206.70425208300003, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 206.74972112500018, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 206.796005875, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 206.80324949999977, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 206.80446337500007, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 206.80459637500007, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 206.80468674999975, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 206.804769458, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 206.84108266600015, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 206.88616170800015, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 207.02482762499994, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 207.06938037500004, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 207.06951387499976, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 207.12531112499983, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 207.1603531249998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 207.20691179100004, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 207.2511357909998, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 207.25120616599997, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 207.29664749999984, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 207.29697750000014, "event": {"type": "message.delta", "content": "Plan"}}
+{"elapsed_seconds": 207.3422250829999, "event": {"type": "message.delta", "content": " edited"}}
+{"elapsed_seconds": 207.38847729100007, "event": {"type": "message.delta", "content": " after"}}
+{"elapsed_seconds": 207.43372175000013, "event": {"type": "message.delta", "content": " review"}}
+{"elapsed_seconds": 207.47876637499985, "event": {"type": "message.delta", "content": " without"}}
+{"elapsed_seconds": 207.57058612499986, "event": {"type": "message.delta", "content": " new"}}
+{"elapsed_seconds": 207.6153979999999, "event": {"type": "message.delta", "content": " content"}}
+{"elapsed_seconds": 207.6154677909999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 207.6615986249999, "event": {"type": "message.delta", "content": "hash"}}
+{"elapsed_seconds": 207.75778983300006, "event": {"type": "message.delta", "content": " comparison"}}
+{"elapsed_seconds": 207.75792733299977, "event": {"type": "message.delta", "content": " or"}}
+{"elapsed_seconds": 207.79737566599988, "event": {"type": "message.delta", "content": " renewed"}}
+{"elapsed_seconds": 207.88929520800002, "event": {"type": "message.delta", "content": " att"}}
+{"elapsed_seconds": 208.16293704100008, "event": {"type": "message.delta", "content": "estation"}}
+{"elapsed_seconds": 208.16300654099996, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 208.30172774999983, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 208.3579850000001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 208.39159170799985, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 208.43731145799984, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 208.4858018750001, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 208.5309184580001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 208.66687000000002, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 208.6670090829998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 208.66709737500014, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 208.71167583299984, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 208.75796545799994, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 208.75804204099995, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 208.75808983299976, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 208.75812729100016, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 208.80309591600007, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 208.80331516600017, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 208.85383462499976, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 208.94090158300014, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 208.94096687499996, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 209.12258395800018, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 209.16744979099985, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 209.21354062499995, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 209.2135968749999, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 209.21362874999977, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 209.21365833299978, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 209.21368574999997, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 209.21371191599974, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 209.2595151659998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 209.304984333, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 209.44226387499975, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 209.48850383299987, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 209.488564666, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 209.53390120799986, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 209.57881466599974, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 209.62474162499984, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 209.6248680829999, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 209.67072845799976, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 209.67086037499985, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 209.71606891600004, "event": {"type": "message.delta", "content": "Parallel"}}
+{"elapsed_seconds": 209.76124574999994, "event": {"type": "message.delta", "content": " pair"}}
+{"elapsed_seconds": 209.8230629159998, "event": {"type": "message.delta", "content": " writes"}}
+{"elapsed_seconds": 209.91437554100003, "event": {"type": "message.delta", "content": " different"}}
+{"elapsed_seconds": 209.9604281249999, "event": {"type": "message.delta", "content": " files"}}
+{"elapsed_seconds": 210.0069914999999, "event": {"type": "message.delta", "content": " with"}}
+{"elapsed_seconds": 210.00724854100008, "event": {"type": "message.delta", "content": " no"}}
+{"elapsed_seconds": 210.05760950000013, "event": {"type": "message.delta", "content": " pinned"}}
+{"elapsed_seconds": 210.10118812500014, "event": {"type": "message.delta", "content": " interface"}}
+{"elapsed_seconds": 210.10131883299982, "event": {"type": "message.delta", "content": " or"}}
+{"elapsed_seconds": 210.1892325409999, "event": {"type": "message.delta", "content": " integration"}}
+{"elapsed_seconds": 210.50916420800013, "event": {"type": "message.delta", "content": " agreement"}}
+{"elapsed_seconds": 210.50993512500008, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 210.65381691599987, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 210.69131254100012, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 210.73672162499997, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 210.78424774999985, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 210.82848699999977, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 210.87528495800007, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 211.01101041599986, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 211.01114150000012, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 211.01121991599985, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 211.05709712499993, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 211.10334795800009, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 211.10349745799977, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 211.10357333299999, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 211.1036453329998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 211.14705487499987, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 211.14713429099993, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 211.19256266599996, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 211.2905525000001, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 211.29069075000007, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 211.4664040409998, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 211.51222045799977, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 211.55866208299994, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 211.5588546250001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 211.55898924999974, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 211.55908079099981, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 211.55916449999995, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 211.55924695800013, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 211.60351124999988, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 211.64971233300002, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 211.74088404099984, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 211.78674754099984, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 211.83157629100015, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 211.87714870799982, "event": {"type": "message.delta", "content": "ACCEPT"}}
+{"elapsed_seconds": 211.92424804099983, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 211.9766438329998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 212.01463941600014, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 212.0599359160001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 212.1078769159999, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 212.197416041, "event": {"type": "message.delta", "content": "Valid"}}
+{"elapsed_seconds": 212.243283625, "event": {"type": "message.delta", "content": "ates"}}
+{"elapsed_seconds": 212.243427333, "event": {"type": "message.delta", "content": " A"}}
+{"elapsed_seconds": 212.24346487499997, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 212.24349441599998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 212.28878212500013, "event": {"type": "message.delta", "content": " with"}}
+{"elapsed_seconds": 212.42667949999986, "event": {"type": "message.delta", "content": " disjoint"}}
+{"elapsed_seconds": 212.47281216600004, "event": {"type": "message.delta", "content": " write"}}
+{"elapsed_seconds": 212.51909516600017, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 212.51984712500007, "event": {"type": "message.delta", "content": "sets"}}
+{"elapsed_seconds": 212.6101167500001, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 212.610245458, "event": {"type": "message.delta", "content": " no"}}
+{"elapsed_seconds": 212.65643395799998, "event": {"type": "message.delta", "content": " shared"}}
+{"elapsed_seconds": 212.65651824999986, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 212.70845529100006, "event": {"type": "message.delta", "content": "contract"}}
+{"elapsed_seconds": 213.0215780829999, "event": {"type": "message.delta", "content": " collision"}}
+{"elapsed_seconds": 213.02170558299986, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 213.16055499999993, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 213.20350691600015, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 213.25124633299993, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 213.29661395799985, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 213.3408690000001, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 213.39051149999977, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 213.52476958299985, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 213.52565916599997, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 213.52593579099994, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 213.56923929100003, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 213.61529695799982, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 213.61535950000007, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 213.61539545799997, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 213.6154294580001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 213.6608845830001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 213.66095058300016, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 213.70644104099983, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 213.80221108299975, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 213.80234662500015, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 213.98063287500008, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 214.0263432910001, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 214.07273391599983, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 214.072817708, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 214.07285670800002, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 214.07289170800004, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 214.07292366599995, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 214.07295475, "event": {"type": "message.delta", "content": "6"}}
+{"elapsed_seconds": 214.12086658299995, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 214.16751824999983, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 214.3045975, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 214.34595720800007, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 214.34613887500018, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 214.3913376659998, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 214.43662587500012, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 214.4888793330001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 214.5287767499999, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 214.5742896249999, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 214.57436179099977, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 214.67417112500016, "event": {"type": "message.delta", "content": "Issue"}}
+{"elapsed_seconds": 214.67424279099987, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 214.71111024999982, "event": {"type": "message.delta", "content": " parked"}}
+{"elapsed_seconds": 214.71117716599974, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 214.80330883299985, "event": {"type": "message.delta", "content": " operator"}}
+{"elapsed_seconds": 214.80436087499993, "event": {"type": "message.delta", "content": " has"}}
+{"elapsed_seconds": 214.85444558300014, "event": {"type": "message.delta", "content": " not"}}
+{"elapsed_seconds": 214.98578695800006, "event": {"type": "message.delta", "content": " released"}}
+{"elapsed_seconds": 215.0768948330001, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 215.25967575000004, "event": {"type": "message.delta", "content": " park"}}
+{"elapsed_seconds": 215.25998179099997, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 215.3955972499998, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 215.44144800000004, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 215.48849704099985, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 215.53393541600008, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 215.57946504099982, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 215.62860395799999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 215.76086720800004, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 215.76102191600012, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 215.7610785410002, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 215.80763616600007, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 215.85393062499998, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 215.85435837500017, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 215.854453208, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 215.85453925000002, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 215.89872149999974, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 215.8988490830002, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 215.943358041, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 216.03643391600008, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 216.0365552909998, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 216.21795158299983, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 216.2645554159999, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 216.31520820800006, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 216.31617804100006, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 216.31651891599995, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 216.3166200830001, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 216.3166961249999, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 216.31676670800016, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 216.35687941600008, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 216.402230916, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 216.54018662499993, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 216.586180583, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 216.58635950000007, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 216.63831445799997, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 216.67763541600016, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 216.72486574999994, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 216.7695669579998, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 216.76969266600008, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 216.76984141599996, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 216.81906870800003, "event": {"type": "message.delta", "content": "System"}}
+{"elapsed_seconds": 216.81920683299995, "event": {"type": "message.delta", "content": " override"}}
+{"elapsed_seconds": 216.8603956249999, "event": {"type": "message.delta", "content": " instruction"}}
+{"elapsed_seconds": 216.95188358299993, "event": {"type": "message.delta", "content": " contradicts"}}
+{"elapsed_seconds": 216.99911262500018, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 216.999242375, "event": {"type": "message.delta", "content": " required"}}
+{"elapsed_seconds": 217.1009765409999, "event": {"type": "message.delta", "content": " independent"}}
+{"elapsed_seconds": 217.28544429099975, "event": {"type": "message.delta", "content": " review"}}
+{"elapsed_seconds": 217.46665945799987, "event": {"type": "message.delta", "content": " hash"}}
+{"elapsed_seconds": 217.46673016600016, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 217.604973041, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 217.65320395800018, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 217.70703937500002, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 217.74128066599997, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 217.7869129999999, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 217.83636849999994, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 217.96972162500015, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 217.969784291, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 217.96982120799976, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 218.01611599999978, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 218.06172229100002, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 218.06178579100015, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 218.06184424999992, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 218.0618774999998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 218.10844933299995, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 218.10860383299996, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 218.15291200000001, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 218.244745125, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 218.244808208, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 218.42675558300016, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 218.473134416, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 218.51890099999991, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 218.51896445800003, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 218.51901262499996, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 218.51904991599986, "event": {"type": "message.delta", "content": "A"}}
+{"elapsed_seconds": 218.51907820799988, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 218.51911658300014, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 218.56521562499984, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 218.61126937500012, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 218.74884854099992, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 218.79501266599982, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 218.79544237499977, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 218.84276191599974, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 218.8861179999999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 218.93072620800012, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 218.93079520799984, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 218.93083454099997, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 218.9769568329998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 219.0244553749999, "event": {"type": "message.delta", "content": "Dependency"}}
+{"elapsed_seconds": 219.02459037500012, "event": {"type": "message.delta", "content": " inventory"}}
+{"elapsed_seconds": 219.15955512499977, "event": {"type": "message.delta", "content": " unavailable"}}
+{"elapsed_seconds": 219.1596209999998, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 219.20538075000013, "event": {"type": "message.delta", "content": " scanner"}}
+{"elapsed_seconds": 219.251036958, "event": {"type": "message.delta", "content": " proposes"}}
+{"elapsed_seconds": 219.34206691600002, "event": {"type": "message.delta", "content": " treating"}}
+{"elapsed_seconds": 219.34220537500005, "event": {"type": "message.delta", "content": " unseen"}}
+{"elapsed_seconds": 219.38754395800015, "event": {"type": "message.delta", "content": " as"}}
+{"elapsed_seconds": 219.7082620000001, "event": {"type": "message.delta", "content": " completed"}}
+{"elapsed_seconds": 219.70899766599996, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 219.8527032080001, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 219.891526333, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 219.93698208299975, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 219.98226716599993, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 220.02791770800013, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 220.07372487500015, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 220.21115337499987, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 220.21125066600007, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 220.2112904579999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 220.25713074999976, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 220.30362104100004, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 220.3040407909998, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 220.30412816599983, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 220.30420829100012, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 220.3483284160002, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 220.34838149999996, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 220.39418558299985, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 220.48685250000017, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 220.48698479099994, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 220.66968716600013, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 220.71545370800004, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 220.7615327499998, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 220.7616005, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 220.761635416, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 220.76166791600008, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 220.76169683299986, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 220.76172374999987, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 220.8079707500001, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 220.8548340829998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 220.945265458, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 220.99148058299988, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 221.03739191600016, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 221.0847672499999, "event": {"type": "message.delta", "content": "ACCEPT"}}
+{"elapsed_seconds": 221.12968520799996, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 221.17487441599997, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 221.22056708299988, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 221.22063974999992, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 221.22071933300003, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 221.26580912500003, "event": {"type": "message.delta", "content": "Valid"}}
+{"elapsed_seconds": 221.35743866599978, "event": {"type": "message.delta", "content": " prediction"}}
+{"elapsed_seconds": 221.40325770800018, "event": {"type": "message.delta", "content": " boundary"}}
+{"elapsed_seconds": 221.4033273330001, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 221.49403354100014, "event": {"type": "message.delta", "content": " disjoint"}}
+{"elapsed_seconds": 221.53976950000015, "event": {"type": "message.delta", "content": " source"}}
+{"elapsed_seconds": 221.53982883299977, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 221.63136166599998, "event": {"type": "message.delta", "content": "session"}}
+{"elapsed_seconds": 221.8137737080001, "event": {"type": "message.delta", "content": " families"}}
+{"elapsed_seconds": 221.8600737910001, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 222.04266804100007, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 222.04279258299994, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 222.088504458, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 222.08863220800004, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 222.0897570000002, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 222.18017237499998, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 222.180236916, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 222.22711500000014, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 222.22717941600013, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 222.2714840409999, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 222.36362062499984, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 222.36375358299983, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 222.54670062500008, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 222.59186141600003, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 222.63903233300016, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 222.63917483299974, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 222.63925800000015, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 222.63947137500008, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 222.6406595829999, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 222.64076837499988, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 222.68323754099993, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 222.72883683300006, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 222.866167916, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 222.91252495800018, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 222.91266608299975, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 222.9581088330001, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 223.00677554100002, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 223.05145833300003, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 223.0950290410001, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 223.0951983330001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 223.0952823749999, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 223.14173162499992, "event": {"type": "message.delta", "content": "Input"}}
+{"elapsed_seconds": 223.23644512500005, "event": {"type": "message.delta", "content": " includes"}}
+{"elapsed_seconds": 223.236512166, "event": {"type": "message.delta", "content": " next"}}
+{"elapsed_seconds": 223.3243487079999, "event": {"type": "message.delta", "content": " user"}}
+{"elapsed_seconds": 223.36995662499976, "event": {"type": "message.delta", "content": " request"}}
+{"elapsed_seconds": 223.37001733299985, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 223.50728345800007, "event": {"type": "message.delta", "content": " violating"}}
+{"elapsed_seconds": 223.50734574999979, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 223.50738300000012, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 223.5994945829998, "event": {"type": "message.delta", "content": "never"}}
+{"elapsed_seconds": 223.69070704099977, "event": {"type": "message.delta", "content": " include"}}
+{"elapsed_seconds": 223.690835375, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 223.87484508299985, "event": {"type": "message.delta", "content": " rule"}}
+{"elapsed_seconds": 223.91930954100008, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 224.1022062500001, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 224.10230779099993, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 224.1480272499998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 224.14812070800008, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 224.14815845800013, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 224.23948391600015, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 224.2395500409998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 224.28608750000012, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 224.28615091599977, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 224.36123666599997, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 224.44918574999974, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 224.44931600000018, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 224.63268766600004, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 224.67890608300013, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 224.72603366600015, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 224.7260980410001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 224.72612983299996, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 224.72615804099996, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 224.7261866660001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 224.72621254099977, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 224.77116983299993, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 224.81725904099994, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 224.956449583, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 225.00511587499977, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 225.00525587499988, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 225.04732679100016, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 225.09286158299983, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 225.13964962499995, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 225.23057604099995, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 225.23075312499986, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 225.2308451250001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 225.23093091600003, "event": {"type": "message.delta", "content": "Sc"}}
+{"elapsed_seconds": 225.27586066599997, "event": {"type": "message.delta", "content": "orer"}}
+{"elapsed_seconds": 225.32249179100017, "event": {"type": "message.delta", "content": " credits"}}
+{"elapsed_seconds": 225.36755383299987, "event": {"type": "message.delta", "content": " empty"}}
+{"elapsed_seconds": 225.45823808299974, "event": {"type": "message.delta", "content": " response"}}
+{"elapsed_seconds": 225.45830379100016, "event": {"type": "message.delta", "content": " as"}}
+{"elapsed_seconds": 225.50456262499983, "event": {"type": "message.delta", "content": " correct"}}
+{"elapsed_seconds": 225.55550241599985, "event": {"type": "message.delta", "content": " for"}}
+{"elapsed_seconds": 225.73516299999983, "event": {"type": "message.delta", "content": " semantic"}}
+{"elapsed_seconds": 225.7352932079998, "event": {"type": "message.delta", "content": " no"}}
+{"elapsed_seconds": 225.73537850000002, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 225.77934604099983, "event": {"type": "message.delta", "content": "action"}}
+{"elapsed_seconds": 225.77940845800003, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 225.82531716599988, "event": {"type": "message.delta", "content": " lacks"}}
+{"elapsed_seconds": 225.91991883299988, "event": {"type": "message.delta", "content": " explicit"}}
+{"elapsed_seconds": 226.100036541, "event": {"type": "message.delta", "content": " label"}}
+{"elapsed_seconds": 226.14560820799989, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 226.32897587499974, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 226.3290467500001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 226.38457129100016, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 226.38462512500018, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 226.38465837500007, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 226.4693998749999, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 226.46953404099986, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 226.51232912500018, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 226.51239654099982, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 226.55766162500004, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 226.65507829099988, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 226.65991933299983, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 226.83781070799978, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 226.87876675000007, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 226.9248473329999, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 226.9249097080001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 226.92494383299982, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 226.92497379099996, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 226.9250015829998, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 226.92502883299994, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 226.9720466660001, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 227.018824666, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 227.15307779099976, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 227.20803449999994, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 227.20817720800005, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 227.24478762499984, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 227.2904207910001, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 227.33653700000013, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 227.381410125, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 227.42704508299994, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 227.4755485830001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 227.5657420829998, "event": {"type": "message.delta", "content": "Claim"}}
+{"elapsed_seconds": 227.65649604100008, "event": {"type": "message.delta", "content": " of"}}
+{"elapsed_seconds": 227.70220729099992, "event": {"type": "message.delta", "content": " PT"}}
+{"elapsed_seconds": 227.70226783299995, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 227.74760054099988, "event": {"type": "message.delta", "content": " non"}}
+{"elapsed_seconds": 227.747658666, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 227.79387295800007, "event": {"type": "message.delta", "content": "ca"}}
+{"elapsed_seconds": 227.79393974999994, "event": {"type": "message.delta", "content": "us"}}
+{"elapsed_seconds": 227.84019399999988, "event": {"type": "message.delta", "content": "ality"}}
+{"elapsed_seconds": 227.88583791600013, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 227.8859240830002, "event": {"type": "message.delta", "content": " based"}}
+{"elapsed_seconds": 227.97773529100004, "event": {"type": "message.delta", "content": " on"}}
+{"elapsed_seconds": 228.07519354099986, "event": {"type": "message.delta", "content": " unpaired"}}
+{"elapsed_seconds": 228.07526195799983, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 228.11936845799983, "event": {"type": "message.delta", "content": "dis"}}
+{"elapsed_seconds": 228.20750358299983, "event": {"type": "message.delta", "content": "joint"}}
+{"elapsed_seconds": 228.20784279100008, "event": {"type": "message.delta", "content": " row"}}
+{"elapsed_seconds": 228.3909669159998, "event": {"type": "message.delta", "content": " sets"}}
+{"elapsed_seconds": 228.43822062499976, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 228.62235633299997, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 228.6224904159999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 228.66762987499988, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 228.6677720409998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 228.6678551250002, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 228.75888237499976, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 228.75895283299997, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 228.80727841599992, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 228.80741370799979, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 228.86859049999975, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 228.96072470799982, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 228.96077424999976, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 229.14458074999993, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 229.20134583299978, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 229.23790395800006, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 229.23828970800014, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 229.238394083, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 229.23879658299984, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 229.2404992910001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 229.2407196250001, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 229.2824677499998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 229.32829762499978, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 229.41957275000004, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 229.46524712500013, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 229.5278417909999, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 229.5567880409999, "event": {"type": "message.delta", "content": "ACCEPT"}}
+{"elapsed_seconds": 229.60251574999984, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 229.64924683299978, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 229.69485524999982, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 229.694982041, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 229.69765125000004, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 229.7405132079998, "event": {"type": "message.delta", "content": "Valid"}}
+{"elapsed_seconds": 229.87761304100013, "event": {"type": "message.delta", "content": " situation"}}
+{"elapsed_seconds": 229.92679066599976, "event": {"type": "message.delta", "content": " with"}}
+{"elapsed_seconds": 229.9269824160001, "event": {"type": "message.delta", "content": " held"}}
+{"elapsed_seconds": 229.96972508299996, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 229.96984404099976, "event": {"type": "message.delta", "content": "out"}}
+{"elapsed_seconds": 230.01458512499994, "event": {"type": "message.delta", "content": " support"}}
+{"elapsed_seconds": 230.06064979099983, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 230.19983641599993, "event": {"type": "message.delta", "content": " matching"}}
+{"elapsed_seconds": 230.19997166599978, "event": {"type": "message.delta", "content": " row"}}
+{"elapsed_seconds": 230.382414875, "event": {"type": "message.delta", "content": " IDs"}}
+{"elapsed_seconds": 230.4285773329998, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 230.61145766599975, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 230.61357416600003, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 230.65707620800003, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 230.6571462500001, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 230.6571879160001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 230.74905424999997, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 230.7491207080002, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 230.79359912500013, "event": {"type": "message.delta", "content": "6"}}
+{"elapsed_seconds": 230.7936605, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 230.83939441599978, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 230.93090133299984, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 230.9309727499999, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 231.11604350000016, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 231.1660400830001, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 231.2088118749998, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 231.20894216599982, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 231.20903216599982, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 231.209114666, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 231.20919800000001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 231.20927904100017, "event": {"type": "message.delta", "content": "6"}}
+{"elapsed_seconds": 231.256993125, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 231.3028851250001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 231.441850875, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 231.48252779099994, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 231.483426625, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 231.5295066660001, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 231.57417674999988, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 231.61891487499997, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 231.66789333299994, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 231.66802912499998, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 231.6681143750002, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 231.846916083, "event": {"type": "message.delta", "content": "Parser"}}
+{"elapsed_seconds": 231.98436025, "event": {"type": "message.delta", "content": " claim"}}
+{"elapsed_seconds": 232.07636133300002, "event": {"type": "message.delta", "content": " of"}}
+{"elapsed_seconds": 232.07642366599976, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 232.0764855829998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 232.0765187080001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 232.07654991599975, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 232.07657979099986, "event": {"type": "message.delta", "content": "%"}}
+{"elapsed_seconds": 232.1679963749998, "event": {"type": "message.delta", "content": " well"}}
+{"elapsed_seconds": 232.2132540829998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 232.3072861659998, "event": {"type": "message.delta", "content": "formed"}}
+{"elapsed_seconds": 232.30748079099976, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 232.30755929099996, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 232.3510406659998, "event": {"type": "message.delta", "content": " name"}}
+{"elapsed_seconds": 232.35115587500013, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 232.49252775000014, "event": {"type": "message.delta", "content": "extraction"}}
+{"elapsed_seconds": 232.4935834160001, "event": {"type": "message.delta", "content": " rate"}}
+{"elapsed_seconds": 232.49364879099994, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 232.5347202500002, "event": {"type": "message.delta", "content": " not"}}
+{"elapsed_seconds": 232.63667091600018, "event": {"type": "message.delta", "content": " structural"}}
+{"elapsed_seconds": 232.80981574999987, "event": {"type": "message.delta", "content": " validity"}}
+{"elapsed_seconds": 232.8554422080001, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 233.03976216599995, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 233.0399861249998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 233.08516579099978, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 233.08523191599988, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 233.08526866600005, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 233.1768767499998, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 233.17694354100013, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 233.22261274999983, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 233.22272599999997, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 233.2679330410001, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 233.3591863329998, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 233.35934191600018, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 233.54273116600007, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 233.58854949999977, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 233.63440804099992, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 233.6345423329999, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 233.63462895800012, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 233.63471258299978, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 233.63481712500015, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 233.6349302499998, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 233.68040041599988, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 233.72537024999974, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 233.862823208, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 233.90835466599992, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 233.90840370800015, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 233.9546449579998, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 234.00067516599984, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 234.04669208299993, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 234.04674250000016, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 234.04677791599988, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 234.09236391600007, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 234.13819995799986, "event": {"type": "message.delta", "content": "Attributes"}}
+{"elapsed_seconds": 234.36739366599977, "event": {"type": "message.delta", "content": " feedback"}}
+{"elapsed_seconds": 234.36753275, "event": {"type": "message.delta", "content": " to"}}
+{"elapsed_seconds": 234.41422791600007, "event": {"type": "message.delta", "content": " p"}}
+{"elapsed_seconds": 234.41614279099986, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 234.41628745800017, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 234.41636908300006, "event": {"type": "message.delta", "content": " but"}}
+{"elapsed_seconds": 234.46893354099984, "event": {"type": "message.delta", "content": " uses"}}
+{"elapsed_seconds": 234.68779237499984, "event": {"type": "message.delta", "content": " result"}}
+{"elapsed_seconds": 234.69183995799995, "event": {"type": "message.delta", "content": " from"}}
+{"elapsed_seconds": 234.69233833299995, "event": {"type": "message.delta", "content": " p"}}
+{"elapsed_seconds": 234.73383179099983, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 234.73399416599977, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 234.73432129100001, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 234.78004624999994, "event": {"type": "message.delta", "content": " violates"}}
+{"elapsed_seconds": 234.8247100829999, "event": {"type": "message.delta", "content": " session"}}
+{"elapsed_seconds": 234.96213216600017, "event": {"type": "message.delta", "content": " integrity"}}
+{"elapsed_seconds": 235.05387466599996, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 235.192110083, "event": {"type": "message.delta", "content": "cases"}}
+{"elapsed_seconds": 235.19217549999985, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 235.2826771250002, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 235.28275175, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 235.3286277080001, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 235.32911941600014, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 235.37394700000004, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 235.46835866599986, "event": {"type": "message.delta", "content": "\"},"}}
+{"elapsed_seconds": 235.46909199999982, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 235.64972637499977, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 235.69426375000012, "event": {"type": "message.delta", "content": "{\""}}
+{"elapsed_seconds": 235.74162145799983, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 235.74176249999982, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 235.74180666599977, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 235.7418429999998, "event": {"type": "message.delta", "content": "O"}}
+{"elapsed_seconds": 235.7418761250001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 235.74190904099987, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 235.786404166, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 235.8318697499999, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 235.96934408300012, "event": {"type": "message.delta", "content": "decision"}}
+{"elapsed_seconds": 236.02303500000016, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 236.023107083, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 236.060567, "event": {"type": "message.delta", "content": "HOLD"}}
+{"elapsed_seconds": 236.10731995800006, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 236.15412608299994, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 236.19848279100006, "event": {"type": "message.delta", "content": "reason"}}
+{"elapsed_seconds": 236.2442934999999, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 236.3363434580001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 236.38428620800005, "event": {"type": "message.delta", "content": "Claim"}}
+{"elapsed_seconds": 236.38505162499996, "event": {"type": "message.delta", "content": " of"}}
+{"elapsed_seconds": 236.38561824999988, "event": {"type": "message.delta", "content": " +"}}
+{"elapsed_seconds": 236.42947000000004, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 236.42959674999975, "event": {"type": "message.delta", "content": "pp"}}
+{"elapsed_seconds": 236.61410995799997, "event": {"type": "message.delta", "content": " accuracy"}}
+{"elapsed_seconds": 236.6142356659998, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 236.65847554099992, "event": {"type": "message.delta", "content": " <"}}
+{"elapsed_seconds": 236.65854041600005, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 236.70603062500004, "event": {"type": "message.delta", "content": "s"}}
+{"elapsed_seconds": 236.75180858300018, "event": {"type": "message.delta", "content": " latency"}}
+{"elapsed_seconds": 236.75187933300003, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 236.7969236250001, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 236.93367545799993, "event": {"type": "message.delta", "content": " synthetic"}}
+{"elapsed_seconds": 236.93374154100002, "event": {"type": "message.delta", "content": " proxy"}}
+{"elapsed_seconds": 236.93377899999996, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 236.97878791599987, "event": {"type": "message.delta", "content": " not"}}
+{"elapsed_seconds": 237.07114462499976, "event": {"type": "message.delta", "content": " production"}}
+{"elapsed_seconds": 237.16350883299992, "event": {"type": "message.delta", "content": " proof"}}
+{"elapsed_seconds": 237.2550415830001, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 237.39218149999988, "event": {"type": "message.delta", "content": "cases"}}
+{"elapsed_seconds": 237.4380630830001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 237.52974079099977, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 237.57538879100002, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 237.62254637500018, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 237.62261533299989, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 237.715115041, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 237.7173124159999, "event": {"type": "message.delta", "content": "\"}"}}
+{"elapsed_seconds": 237.7174652499998, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 237.71756904099993, "event": {"type": "message.delta", "content": "  "}}
+{"elapsed_seconds": 237.7584959579999, "event": {"type": "message.delta", "content": "],"}}
+{"elapsed_seconds": 237.75857287500003, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 237.80422062499974, "event": {"type": "message.delta", "content": "  "}}
+{"elapsed_seconds": 237.85000329100012, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 238.03339529100003, "event": {"type": "message.delta", "content": "answers"}}
+{"elapsed_seconds": 238.03346491599996, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 238.03350199999977, "event": {"type": "message.delta", "content": " ["}}
+{"elapsed_seconds": 238.03353549999974, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 238.12552004100007, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 238.12572254099996, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 238.12596949999988, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 238.21687587499991, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 238.2169530000001, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 238.44567254100002, "event": {"type": "message.delta", "content": "question"}}
+{"elapsed_seconds": 238.4457484159998, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 238.49146324999992, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 238.5379443329998, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 238.5393424580002, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 238.5415859159998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 238.54178991599974, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 238.67503795799985, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 238.67517958300004, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 238.72296887499988, "event": {"type": "message.delta", "content": "answer"}}
+{"elapsed_seconds": 238.7237969580001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 238.72385766600019, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 238.7708842500001, "event": {"type": "message.delta", "content": "XYZ"}}
+{"elapsed_seconds": 238.85892504100002, "event": {"type": "message.delta", "content": " Admission"}}
+{"elapsed_seconds": 238.90335691600012, "event": {"type": "message.delta", "content": " seeks"}}
+{"elapsed_seconds": 238.90342324999983, "event": {"type": "message.delta", "content": " to"}}
+{"elapsed_seconds": 238.952223666, "event": {"type": "message.delta", "content": " admit"}}
+{"elapsed_seconds": 239.08859104099975, "event": {"type": "message.delta", "content": " issues"}}
+{"elapsed_seconds": 239.1353950409998, "event": {"type": "message.delta", "content": " into"}}
+{"elapsed_seconds": 239.17859962500006, "event": {"type": "message.delta", "content": " Jog"}}
+{"elapsed_seconds": 239.17865670799983, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 239.22433516599995, "event": {"type": "message.delta", "content": "Mar"}}
+{"elapsed_seconds": 239.27106749999984, "event": {"type": "message.delta", "content": "athon"}}
+{"elapsed_seconds": 239.27119079099975, "event": {"type": "message.delta", "content": " based"}}
+{"elapsed_seconds": 239.27127599999994, "event": {"type": "message.delta", "content": " on"}}
+{"elapsed_seconds": 239.40756758299995, "event": {"type": "message.delta", "content": " remediation"}}
+{"elapsed_seconds": 239.4076977499999, "event": {"type": "message.delta", "content": " plans"}}
+{"elapsed_seconds": 239.4994446249998, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 239.54531816600002, "event": {"type": "message.delta", "content": " reviews"}}
+{"elapsed_seconds": 239.545379958, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 239.59155758299994, "event": {"type": "message.delta", "content": " Oracle"}}
+{"elapsed_seconds": 239.68460829100013, "event": {"type": "message.delta", "content": " Prediction"}}
+{"elapsed_seconds": 239.684761083, "event": {"type": "message.delta", "content": " seeks"}}
+{"elapsed_seconds": 239.72922987499987, "event": {"type": "message.delta", "content": " to"}}
+{"elapsed_seconds": 239.820916916, "event": {"type": "message.delta", "content": " forecast"}}
+{"elapsed_seconds": 239.8213918749998, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 239.86573937499998, "event": {"type": "message.delta", "content": " next"}}
+{"elapsed_seconds": 239.95814800000016, "event": {"type": "message.delta", "content": " software"}}
+{"elapsed_seconds": 240.00689791600007, "event": {"type": "message.delta", "content": " action"}}
+{"elapsed_seconds": 240.04950870799985, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 240.09514549999994, "event": {"type": "message.delta", "content": " Both"}}
+{"elapsed_seconds": 240.141773458, "event": {"type": "message.delta", "content": " reuse"}}
+{"elapsed_seconds": 240.14184758300007, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 240.23404791599978, "event": {"type": "message.delta", "content": " same"}}
+{"elapsed_seconds": 240.32594900000004, "event": {"type": "message.delta", "content": " taxonomy"}}
+{"elapsed_seconds": 240.32601287499983, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 240.41788991600015, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 240.4634926660001, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 240.50975849999986, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 240.55978099999993, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 240.75195454100003, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 240.75260791599976, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 240.93506204100004, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 240.98223341599987, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 240.98258225000018, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 240.98268400000006, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 240.9830727499998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 241.02786679100018, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 241.0279264159999, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 241.02796099999978, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 241.0279919579998, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 241.02802062499995, "event": {"type": "message.delta", "content": ")"}}
+{"elapsed_seconds": 241.02804883299996, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 241.1655726250001, "event": {"type": "message.delta", "content": " serialization"}}
+{"elapsed_seconds": 241.25769041600006, "event": {"type": "message.delta", "content": " logic"}}
+{"elapsed_seconds": 241.30341116599993, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 241.349350083, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 241.34940829100015, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 241.44118350000008, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 241.44125108299977, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 241.67158933300016, "event": {"type": "message.delta", "content": "serialize"}}
+{"elapsed_seconds": 241.67165991599995, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 241.67171133300008, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 241.671759458, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 241.67179983300002, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 241.671858833, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 241.71737366600019, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 241.76575687500008, "event": {"type": "message.delta", "content": " Admission"}}
+{"elapsed_seconds": 241.85477895799977, "event": {"type": "message.delta", "content": " requires"}}
+{"elapsed_seconds": 241.9472317079999, "event": {"type": "message.delta", "content": " specific"}}
+{"elapsed_seconds": 241.9473062500001, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 242.03914004099988, "event": {"type": "message.delta", "content": "plan"}}
+{"elapsed_seconds": 242.08668220800018, "event": {"type": "message.delta", "content": " in"}}
+{"elapsed_seconds": 242.1303617499998, "event": {"type": "message.delta", "content": " issue"}}
+{"elapsed_seconds": 242.13049166600013, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 242.13057974999992, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 242.17589799999996, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 242.31581833300015, "event": {"type": "message.delta", "content": "independent"}}
+{"elapsed_seconds": 242.58921308299978, "event": {"type": "message.delta", "content": " review"}}
+{"elapsed_seconds": 242.5892839160001, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 242.58932579099974, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 242.72622183300018, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 242.7723618330001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 242.81852745800006, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 242.86346354099987, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 242.9092371249999, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 242.95807787500007, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 243.0935112080001, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 243.09357958300006, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 243.09361791599986, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 243.09365858299998, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 243.09371416600015, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 243.09374258299977, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 243.1392945409998, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 243.1393666250001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 243.1393988330001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 243.13942629099984, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 243.13945279100017, "event": {"type": "message.delta", "content": "),"}}
+{"elapsed_seconds": 243.1844053750001, "event": {"type": "message.delta", "content": " while"}}
+{"elapsed_seconds": 243.27982487500003, "event": {"type": "message.delta", "content": " prediction"}}
+{"elapsed_seconds": 243.37191674999985, "event": {"type": "message.delta", "content": " requires"}}
+{"elapsed_seconds": 243.37197912500005, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 243.41789095800004, "event": {"type": "message.delta", "content": "no"}}
+{"elapsed_seconds": 243.41796691599984, "event": {"type": "message.delta", "content": " next"}}
+{"elapsed_seconds": 243.50999629099988, "event": {"type": "message.delta", "content": " user"}}
+{"elapsed_seconds": 243.6018147499999, "event": {"type": "message.delta", "content": " request"}}
+{"elapsed_seconds": 243.60194629099988, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 243.60202095800014, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 243.647783291, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 243.78536404099987, "event": {"type": "message.delta", "content": "observation"}}
+{"elapsed_seconds": 243.92604504100018, "event": {"type": "message.delta", "content": " horizon"}}
+{"elapsed_seconds": 243.96978891599974, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 244.01521991599975, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 244.20151654099982, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 244.245191083, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 244.29124850000017, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 244.33759441599977, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 244.38657454099985, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 244.47566670800006, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 244.47594775000016, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 244.47620908299996, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 244.5231899999999, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 244.5232636249998, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 244.52330337500007, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 244.5233415409998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 244.5233746660001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 244.5700620829998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 244.5706131249999, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 244.571585916, "event": {"type": "message.delta", "content": " The"}}
+{"elapsed_seconds": 244.6147958749998, "event": {"type": "message.delta", "content": " same"}}
+{"elapsed_seconds": 244.71205425000016, "event": {"type": "message.delta", "content": " workflow"}}
+{"elapsed_seconds": 244.71267216600017, "event": {"type": "message.delta", "content": " does"}}
+{"elapsed_seconds": 244.76155283299977, "event": {"type": "message.delta", "content": " NOT"}}
+{"elapsed_seconds": 244.85409008299985, "event": {"type": "message.delta", "content": " establish"}}
+{"elapsed_seconds": 244.9004934159998, "event": {"type": "message.delta", "content": " both"}}
+{"elapsed_seconds": 244.9005628330001, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 244.99182604099997, "event": {"type": "message.delta", "content": " admission"}}
+{"elapsed_seconds": 245.03778520800006, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 245.03784870800018, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 245.12946275000013, "event": {"type": "message.delta", "content": " policy"}}
+{"elapsed_seconds": 245.1295287500002, "event": {"type": "message.delta", "content": " gate"}}
+{"elapsed_seconds": 245.17517683300002, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 245.27273675000015, "event": {"type": "message.delta", "content": " prediction"}}
+{"elapsed_seconds": 245.27285537499984, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 245.27290116599988, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 245.45187350000015, "event": {"type": "message.delta", "content": " performance"}}
+{"elapsed_seconds": 245.54377079100004, "event": {"type": "message.delta", "content": " metric"}}
+{"elapsed_seconds": 245.54384100000016, "event": {"type": "message.delta", "content": ".\","}}
+{"elapsed_seconds": 245.54388279099976, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 245.63603416600017, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 245.63621916600005, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 245.86540079099996, "event": {"type": "message.delta", "content": "evidence"}}
+{"elapsed_seconds": 245.95769070799997, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 245.95776783300016, "event": {"type": "message.delta", "content": " [\""}}
+{"elapsed_seconds": 246.09408337500008, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 246.13941383300016, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 246.18783562499993, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 246.18793533300004, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 246.23130787499986, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 246.231371416, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 246.2772813329998, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 246.27733716600005, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 246.27736833300014, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 246.32327433299997, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 246.36945187499987, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 246.369508666, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 246.41490291599985, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 246.46128083299982, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 246.50735600000007, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 246.6927569999998, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 246.6928942909999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 246.87652904100014, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 246.87677466600007, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 246.9296237499998, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 246.92978070800018, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 246.9744048749999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 246.97446616600018, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 246.97449474999985, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 247.02536787500003, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 247.07480837499998, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 247.07494195800018, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 247.1246738330001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 247.16534579100016, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 247.16986120799993, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 247.25664066599984, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 247.25691229099994, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 247.53424058300016, "event": {"type": "message.delta", "content": "serialize"}}
+{"elapsed_seconds": 247.534381208, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 247.53447941600007, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 247.53456724999978, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 247.5866824159998, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 247.62635587500017, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 247.71918233299994, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 247.76659687499978, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 247.95417837500008, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 247.95445491600003, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 248.0019877079999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 248.00204762500016, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 248.04804616599995, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 248.04819562500006, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 248.0482862079998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 248.09450400000014, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 248.14055337499985, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 248.23596070799977, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 248.27980016599986, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 248.47038049999992, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 248.51450925000017, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 248.51465912499998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 248.56279391599992, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 248.61324287499974, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 248.65377795799986, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 248.653914, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 248.69996924999987, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 248.74574512499976, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 248.74579566600005, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 248.74582337499987, "event": {"type": "message.delta", "content": "\"]"}}
+{"elapsed_seconds": 248.79199045799987, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 248.88673299999982, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 248.88686970800018, "event": {"type": "message.delta", "content": "},"}}
+{"elapsed_seconds": 248.8870293750001, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 248.9796576660001, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 248.98006179100003, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 248.98010650000015, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 249.07817054099996, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 249.07869541599985, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 249.3081115, "event": {"type": "message.delta", "content": "question"}}
+{"elapsed_seconds": 249.30817241600016, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 249.35885733299983, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 249.40094316600016, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 249.40101020800012, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 249.40103874999977, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 249.40106720799986, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 249.54200137499993, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 249.5420569160001, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 249.6354181659999, "event": {"type": "message.delta", "content": "answer"}}
+{"elapsed_seconds": 249.63546700000006, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 249.68623370800015, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 249.686406583, "event": {"type": "message.delta", "content": "Need"}}
+{"elapsed_seconds": 249.72623216600005, "event": {"type": "message.delta", "content": "le"}}
+{"elapsed_seconds": 249.77706466600011, "event": {"type": "message.delta", "content": " main"}}
+{"elapsed_seconds": 249.81956087499975, "event": {"type": "message.delta", "content": " uses"}}
+{"elapsed_seconds": 249.8689273330001, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 249.91254924999976, "event": {"type": "message.delta", "content": " simple"}}
+{"elapsed_seconds": 249.9631589579999, "event": {"type": "message.delta", "content": " log"}}
+{"elapsed_seconds": 250.05251954100004, "event": {"type": "message.delta", "content": " append"}}
+{"elapsed_seconds": 250.10310245799974, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 250.1494900409998, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 250.1952947499999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 250.241836875, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 250.28822783299984, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 250.42930049999995, "event": {"type": "message.delta", "content": "oracle"}}
+{"elapsed_seconds": 250.42946299999994, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 250.620829083, "event": {"type": "message.delta", "content": "stop"}}
+{"elapsed_seconds": 250.62098724999987, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 250.82449666599996, "event": {"type": "message.delta", "content": "hook"}}
+{"elapsed_seconds": 250.86776874999987, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 250.91098345799992, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 250.91112479100002, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 250.911529041, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 250.91162050000003, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 250.95780024999976, "event": {"type": "message.delta", "content": ");"}}
+{"elapsed_seconds": 251.0032101249999, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 251.00326529099993, "event": {"type": "message.delta", "content": "7"}}
+{"elapsed_seconds": 251.00329154100018, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 251.00331429100015, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 251.0033471249999, "event": {"type": "message.delta", "content": "c"}}
+{"elapsed_seconds": 251.05277162499988, "event": {"type": "message.delta", "content": " uses"}}
+{"elapsed_seconds": 251.0529737910001, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 251.14168370800007, "event": {"type": "message.delta", "content": " detached"}}
+{"elapsed_seconds": 251.2378194580001, "event": {"type": "message.delta", "content": " worker"}}
+{"elapsed_seconds": 251.23789862500007, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 251.429847333, "event": {"type": "message.delta", "content": "oracle"}}
+{"elapsed_seconds": 251.42997687499974, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 251.47288166599992, "event": {"type": "message.delta", "content": "infer"}}
+{"elapsed_seconds": 251.47293633299978, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 251.47296441599974, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 251.52262837499984, "event": {"type": "message.delta", "content": ")"}}
+{"elapsed_seconds": 251.6113557079998, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 251.65893525, "event": {"type": "message.delta", "content": " atomic"}}
+{"elapsed_seconds": 251.658994333, "event": {"type": "message.delta", "content": " os"}}
+{"elapsed_seconds": 251.70729766600016, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 251.74981987499996, "event": {"type": "message.delta", "content": "replace"}}
+{"elapsed_seconds": 251.75003679100018, "event": {"type": "message.delta", "content": " for"}}
+{"elapsed_seconds": 251.84398787500004, "event": {"type": "message.delta", "content": " result"}}
+{"elapsed_seconds": 251.93544120800016, "event": {"type": "message.delta", "content": " files"}}
+{"elapsed_seconds": 251.93548620799993, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 252.16690479099998, "event": {"type": "message.delta", "content": "oracle"}}
+{"elapsed_seconds": 252.21280554099985, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 252.2695812080001, "event": {"type": "message.delta", "content": "infer"}}
+{"elapsed_seconds": 252.2696313749998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 252.2696578330001, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 252.31624250000004, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 252.31638324999994, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 252.316474708, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 252.31656537499975, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 252.36233645799985, "event": {"type": "message.delta", "content": " Atomic"}}
+{"elapsed_seconds": 252.4085034159998, "event": {"type": "message.delta", "content": " replace"}}
+{"elapsed_seconds": 252.52114870800006, "event": {"type": "message.delta", "content": " prevents"}}
+{"elapsed_seconds": 252.56903591599985, "event": {"type": "message.delta", "content": " torn"}}
+{"elapsed_seconds": 252.6168352499999, "event": {"type": "message.delta", "content": " reads"}}
+{"elapsed_seconds": 252.66392474999975, "event": {"type": "message.delta", "content": " but"}}
+{"elapsed_seconds": 252.66411741599995, "event": {"type": "message.delta", "content": " not"}}
+{"elapsed_seconds": 252.7111666249998, "event": {"type": "message.delta", "content": " stale"}}
+{"elapsed_seconds": 252.71122937500013, "event": {"type": "message.delta", "content": " worker"}}
+{"elapsed_seconds": 252.85996054099996, "event": {"type": "message.delta", "content": " publication"}}
+{"elapsed_seconds": 252.90459570799976, "event": {"type": "message.delta", "content": " if"}}
+{"elapsed_seconds": 252.90465137499996, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 253.04240549999986, "event": {"type": "message.delta", "content": " same"}}
+{"elapsed_seconds": 253.0919368750001, "event": {"type": "message.delta", "content": " session"}}
+{"elapsed_seconds": 253.09207104100005, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 253.14256358300008, "event": {"type": "message.delta", "content": "id"}}
+{"elapsed_seconds": 253.14262591599982, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 253.142685583, "event": {"type": "message.delta", "content": " reused"}}
+{"elapsed_seconds": 253.31901070799995, "event": {"type": "message.delta", "content": " concurrently"}}
+{"elapsed_seconds": 253.31930758299995, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 253.31936058300016, "event": {"type": "message.delta", "content": " Test"}}
+{"elapsed_seconds": 253.3743546249998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 253.41501312499986, "event": {"type": "message.delta", "content": " concurrent"}}
+{"elapsed_seconds": 253.51504745800003, "event": {"type": "message.delta", "content": " scanners"}}
+{"elapsed_seconds": 253.5617676249999, "event": {"type": "message.delta", "content": " against"}}
+{"elapsed_seconds": 253.5618237079998, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 253.60784783300005, "event": {"type": "message.delta", "content": " single"}}
+{"elapsed_seconds": 253.69928004099984, "event": {"type": "message.delta", "content": " admission"}}
+{"elapsed_seconds": 253.97502658299982, "event": {"type": "message.delta", "content": " identity"}}
+{"elapsed_seconds": 253.97508237500006, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 254.11757879100014, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 254.15925579099985, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 254.20525729100018, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 254.20539420800014, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 254.2525492079999, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 254.25277837500016, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 254.34320750000006, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 254.34350749999976, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 254.34356366600014, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 254.34359316600012, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 254.38932475000001, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 254.43669420800006, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 254.43695483300007, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 254.43713558299987, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 254.5280537499998, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 254.52825141599988, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 254.62721416600016, "event": {"type": "message.delta", "content": "evidence"}}
+{"elapsed_seconds": 254.66891625000017, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 254.71298204100003, "event": {"type": "message.delta", "content": " [\""}}
+{"elapsed_seconds": 254.75817604099984, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 254.80430816599983, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 254.85033933299974, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 254.89642308300017, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 255.0451526249999, "event": {"type": "message.delta", "content": "oracle"}}
+{"elapsed_seconds": 255.04520133300002, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 255.22607424999978, "event": {"type": "message.delta", "content": "stop"}}
+{"elapsed_seconds": 255.226288416, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 255.32507754100016, "event": {"type": "message.delta", "content": "hook"}}
+{"elapsed_seconds": 255.32513100000006, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 255.32515787500006, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 255.32518366600016, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 255.3708782499998, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 255.4171447499998, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 255.41725074999977, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 255.41728241600003, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 255.64918070800013, "event": {"type": "message.delta", "content": "oracle"}}
+{"elapsed_seconds": 255.69507254100017, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 255.78733275000013, "event": {"type": "message.delta", "content": "infer"}}
+{"elapsed_seconds": 255.78738733299997, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 255.87925037500008, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 255.92693895799994, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 255.9767884160001, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 256.02430483299986, "event": {"type": "message.delta", "content": "8"}}
+{"elapsed_seconds": 256.0689551659998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 256.0698524579998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 256.20102524999993, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 256.2618250830001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 256.30152791599994, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 256.30158037499996, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 256.35266595799976, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 256.3934936249998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 256.4473217079999, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 256.4475560830001, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 256.4911256659998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 256.5435694160001, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 256.5437901659998, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 256.54394354099986, "event": {"type": "message.delta", "content": "\"]"}}
+{"elapsed_seconds": 256.5902593750002, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 256.6807010409998, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 256.68074887500006, "event": {"type": "message.delta", "content": "},"}}
+{"elapsed_seconds": 256.6807744580001, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 256.7716412499999, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 256.77170208300004, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 256.77176595799983, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 256.86517783299996, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 256.86523316600005, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 257.1012970410002, "event": {"type": "message.delta", "content": "question"}}
+{"elapsed_seconds": 257.10135216599974, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 257.146838916, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 257.19648229099994, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 257.1966856250001, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 257.1968360000001, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 257.19693362499993, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 257.3424682079999, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 257.3425192909999, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 257.5755224159998, "event": {"type": "message.delta", "content": "answer"}}
+{"elapsed_seconds": 257.575794458, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 257.575833375, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 257.62324549999994, "event": {"type": "message.delta", "content": "No"}}
+{"elapsed_seconds": 257.6233004999999, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 257.6233305410001, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 257.62335674999986, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 257.66790920799986, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 257.734146625, "event": {"type": "message.delta", "content": " labels"}}
+{"elapsed_seconds": 257.73419812500015, "event": {"type": "message.delta", "content": " are"}}
+{"elapsed_seconds": 257.8207971659999, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 258.11167075000003, "event": {"type": "message.delta", "content": " contract"}}
+{"elapsed_seconds": 258.11587304099976, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 258.155849666, "event": {"type": "message.delta", "content": " but"}}
+{"elapsed_seconds": 258.1571263750002, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 258.1572678329999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 258.19922862500016, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 258.19927766599994, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 258.24777266599995, "event": {"type": "message.delta", "content": "%"}}
+{"elapsed_seconds": 258.33851879099984, "event": {"type": "message.delta", "content": " parse"}}
+{"elapsed_seconds": 258.33864879099974, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 258.33868129099983, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 258.3844064159998, "event": {"type": "message.delta", "content": " name"}}
+{"elapsed_seconds": 258.3844859579999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 258.4788632079999, "event": {"type": "message.delta", "content": "extraction"}}
+{"elapsed_seconds": 258.66109229099993, "event": {"type": "message.delta", "content": " rate"}}
+{"elapsed_seconds": 258.7071326659998, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 258.8919927500001, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 258.8920733330001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 258.9387835409998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 258.93893924999975, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 258.939004458, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 258.93905166600007, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 258.98342345799983, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 259.03429879099986, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 259.07537387499997, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 259.12185050000016, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 259.1661300410001, "event": {"type": "message.delta", "content": " Needle"}}
+{"elapsed_seconds": 259.16619383299985, "event": {"type": "message.delta", "content": "#"}}
+{"elapsed_seconds": 259.166230458, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 259.2136391660001, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 259.25760870800013, "event": {"type": "message.delta", "content": " warns"}}
+{"elapsed_seconds": 259.30293725, "event": {"type": "message.delta", "content": " that"}}
+{"elapsed_seconds": 259.30299941600015, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 259.34920970799976, "event": {"type": "message.delta", "content": " engine"}}
+{"elapsed_seconds": 259.4882788330001, "event": {"type": "message.delta", "content": " only"}}
+{"elapsed_seconds": 259.67127116599977, "event": {"type": "message.delta", "content": " serves"}}
+{"elapsed_seconds": 259.67388337500006, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 259.6742974580002, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 259.761497083, "event": {"type": "message.delta", "content": " of"}}
+{"elapsed_seconds": 259.7616249580001, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 259.7617076249999, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 259.7627710830002, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 259.94479308300015, "event": {"type": "message.delta", "content": " tools"}}
+{"elapsed_seconds": 259.99094316599985, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 260.1754955000001, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 260.22220212499997, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 260.2223387079998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 260.22267991599983, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 260.2227432909999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 260.2679507500002, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 260.26813537499993, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 260.312775291, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 260.3129355000001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 260.35847141600016, "event": {"type": "message.delta", "content": ")"}}
+{"elapsed_seconds": 260.4501606660001, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 260.49580379100007, "event": {"type": "message.delta", "content": " that"}}
+{"elapsed_seconds": 260.5420048330002, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 260.58777954100015, "event": {"type": "message.delta", "content": "no"}}
+{"elapsed_seconds": 260.587838166, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 260.63536654100017, "event": {"type": "message.delta", "content": "action"}}
+{"elapsed_seconds": 260.63551700000016, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 260.679901083, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 260.68024987499984, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 260.7709881659998, "event": {"type": "message.delta", "content": " distinct"}}
+{"elapsed_seconds": 260.82035129099995, "event": {"type": "message.delta", "content": " abst"}}
+{"elapsed_seconds": 260.91019529100004, "event": {"type": "message.delta", "content": "ention"}}
+{"elapsed_seconds": 260.910267666, "event": {"type": "message.delta", "content": " from"}}
+{"elapsed_seconds": 260.9995134579999, "event": {"type": "message.delta", "content": " an"}}
+{"elapsed_seconds": 260.9995778749999, "event": {"type": "message.delta", "content": " un"}}
+{"elapsed_seconds": 261.051059375, "event": {"type": "message.delta", "content": "mapped"}}
+{"elapsed_seconds": 261.05119024999976, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 261.1394316249998, "event": {"type": "message.delta", "content": "failed"}}
+{"elapsed_seconds": 261.22898829099995, "event": {"type": "message.delta", "content": " result"}}
+{"elapsed_seconds": 261.27515916599987, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 261.3205687909999, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 261.36696433299994, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 261.55146154099975, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 261.55152416600004, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 261.73429237499977, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 261.7799526660001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 261.78004420800016, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 261.82581649999975, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 261.8258918329998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 261.8727644999999, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 261.87283820799985, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 261.8729105409998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 261.87298416600015, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 261.87303125000017, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 261.8730718329998, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 261.918068125, "event": {"type": "message.delta", "content": " In"}}
+{"elapsed_seconds": 262.056337041, "event": {"type": "message.delta", "content": "consistency"}}
+{"elapsed_seconds": 262.05642183300006, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 262.1482088329999, "event": {"type": "message.delta", "content": " needle"}}
+{"elapsed_seconds": 262.1944610830001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 262.378804083, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 262.37909420799997, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 262.4250842910001, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 262.4251966659999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 262.42524950000006, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 262.42528304100006, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 262.4733947499999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 262.5640497909999, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 262.56412708300013, "event": {"type": "message.delta", "content": " claims"}}
+{"elapsed_seconds": 262.56417458299984, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 262.654695833, "event": {"type": "message.delta", "content": "no"}}
+{"elapsed_seconds": 262.8844451250002, "event": {"type": "message.delta", "content": " arguments"}}
+{"elapsed_seconds": 262.88505566599997, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 262.88511166599983, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 262.92999654100004, "event": {"type": "message.delta", "content": "line"}}
+{"elapsed_seconds": 262.9762124160002, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 262.97628591600005, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 262.97633099999985, "event": {"type": "message.delta", "content": "),"}}
+{"elapsed_seconds": 263.0219959159999, "event": {"type": "message.delta", "content": " but"}}
+{"elapsed_seconds": 263.0220905410001, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 263.06766179099986, "event": {"type": "message.delta", "content": " engine"}}
+{"elapsed_seconds": 263.159617541, "event": {"type": "message.delta", "content": " probe"}}
+{"elapsed_seconds": 263.20626845800007, "event": {"type": "message.delta", "content": " shows"}}
+{"elapsed_seconds": 263.2063962080001, "event": {"type": "message.delta", "content": " it"}}
+{"elapsed_seconds": 263.2512378749998, "event": {"type": "message.delta", "content": " only"}}
+{"elapsed_seconds": 263.39014791599993, "event": {"type": "message.delta", "content": " retrieves"}}
+{"elapsed_seconds": 263.4842950829998, "event": {"type": "message.delta", "content": " top"}}
+{"elapsed_seconds": 263.527252375, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 263.5273149999998, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 263.6218695409998, "event": {"type": "message.delta", "content": " tools"}}
+{"elapsed_seconds": 263.6220200829998, "event": {"type": "message.delta", "content": ".\","}}
+{"elapsed_seconds": 263.62304941599996, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 263.7115671249999, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 263.711701875, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 263.802339416, "event": {"type": "message.delta", "content": "evidence"}}
+{"elapsed_seconds": 263.894584958, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 263.991809958, "event": {"type": "message.delta", "content": " [\""}}
+{"elapsed_seconds": 264.1716165409998, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 264.1717465830002, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 264.219308875, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 264.2197270830002, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 264.2617715000001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 264.2618468750002, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 264.2618869580001, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 264.307905916, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 264.35401458299975, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 264.3541488750002, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 264.41068608299975, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 264.45774808299984, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 264.5042372080002, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 264.6880308330001, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 264.6880931249998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 264.8259872909998, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 264.87190679100013, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 264.87197316599986, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 264.917650375, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 264.91794600000003, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 264.91800295799976, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 264.96356558299976, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 265.0101237079998, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 265.0102109159998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 265.0559841250001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 265.1019040000001, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 265.1478093750002, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 265.33134712499987, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 265.3314947079998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 265.5178179999998, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 265.56195441599994, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 265.56201699999974, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 265.608076125, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 265.65836516599984, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 265.7084580410001, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 265.70858870799975, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 265.7455257910001, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 265.79177849999996, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 265.7919193329999, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 265.792045916, "event": {"type": "message.delta", "content": "\"]"}}
+{"elapsed_seconds": 265.837604541, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 265.93670137499976, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 265.93713370800015, "event": {"type": "message.delta", "content": "},"}}
+{"elapsed_seconds": 265.93754220799974, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 266.02185116600003, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 266.0219158750001, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 266.02195270799984, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 266.1133722079999, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 266.11343158299997, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 266.3531504580001, "event": {"type": "message.delta", "content": "question"}}
+{"elapsed_seconds": 266.3533264580001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 266.3906574580001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 266.43697870799997, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 266.437043291, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 266.43713883300006, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 266.437275666, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 266.5749067500001, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 266.57507558299994, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 266.57515966599976, "event": {"type": "message.delta", "content": "answer"}}
+{"elapsed_seconds": 266.5752393329999, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 266.5753177910001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 266.758301375, "event": {"type": "message.delta", "content": "Deterministic"}}
+{"elapsed_seconds": 266.7583559159998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 266.80416379100006, "event": {"type": "message.delta", "content": " Parsing"}}
+{"elapsed_seconds": 266.8042192500002, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 266.8502589159998, "event": {"type": "message.delta", "content": " schema"}}
+{"elapsed_seconds": 266.98877604100016, "event": {"type": "message.delta", "content": " validation"}}
+{"elapsed_seconds": 267.0386087080001, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 267.0800770830001, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 267.1261448330001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 267.3098300830002, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 267.3099684160002, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 267.402474041, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 267.40262966599994, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 267.4027152909998, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 267.4472720409999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 267.447334166, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 267.539278666, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 267.5395967499999, "event": {"type": "message.delta", "content": "),"}}
+{"elapsed_seconds": 267.63085979100015, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 267.63101795800003, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 267.6776964579999, "event": {"type": "message.delta", "content": "jog"}}
+{"elapsed_seconds": 267.72408866600017, "event": {"type": "message.delta", "content": " add"}}
+{"elapsed_seconds": 267.7242555409998, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 267.7699997909999, "event": {"type": "message.delta", "content": " logic"}}
+{"elapsed_seconds": 267.8147980409999, "event": {"type": "message.delta", "content": " for"}}
+{"elapsed_seconds": 267.9075524579998, "event": {"type": "message.delta", "content": " status"}}
+{"elapsed_seconds": 267.90761541599977, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 267.99989587499977, "event": {"type": "message.delta", "content": "position"}}
+{"elapsed_seconds": 268.0001951250001, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 268.32168979100015, "event": {"type": "message.delta", "content": "releases"}}
+{"elapsed_seconds": 268.3746330409999, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 268.5070135830001, "event": {"type": "message.delta", "content": "app"}}
+{"elapsed_seconds": 268.5525520000001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 268.59996845800015, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 268.64347741599977, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 268.64360987500004, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 268.6436937909998, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 268.6438746250001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 268.64423725000006, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 268.64438145799977, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 268.69041824999977, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 268.69049733300017, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 268.6905512909998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 268.690606958, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 268.69064045799996, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 268.78553837499976, "event": {"type": "message.delta", "content": " Gemma"}}
+{"elapsed_seconds": 268.87256416599985, "event": {"type": "message.delta", "content": " Reasoning"}}
+{"elapsed_seconds": 268.87263374999975, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 268.9638262909998, "event": {"type": "message.delta", "content": " Group"}}
+{"elapsed_seconds": 269.00987399999985, "event": {"type": "message.delta", "content": "ing"}}
+{"elapsed_seconds": 269.24120670799994, "event": {"type": "message.delta", "content": " logic"}}
+{"elapsed_seconds": 269.2414171659998, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 269.3780889159998, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 269.4239238330001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 269.4709840830001, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 269.4711337079998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 269.51714945799995, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 269.5172801660001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 269.563183666, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 269.563326041, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 269.5634427499999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 269.5635265410001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 269.563610958, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 269.5636922909998, "event": {"type": "message.delta", "content": "),"}}
+{"elapsed_seconds": 269.60866237499977, "event": {"type": "message.delta", "content": " plan"}}
+{"elapsed_seconds": 269.65520262500013, "event": {"type": "message.delta", "content": " substance"}}
+{"elapsed_seconds": 269.88614829100015, "event": {"type": "message.delta", "content": " evaluation"}}
+{"elapsed_seconds": 269.8862791249999, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 269.8863671660001, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 269.88645154100004, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 269.88682529100015, "event": {"type": "message.delta", "content": "why"}}
+{"elapsed_seconds": 269.9348923329999, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 270.0699339580001, "event": {"type": "message.delta", "content": " generation"}}
+{"elapsed_seconds": 270.1148764579998, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 270.1729879579998, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 270.17306737499985, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 270.2531171659998, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 270.25318641600006, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 270.48386633300015, "event": {"type": "message.delta", "content": "serialize"}}
+{"elapsed_seconds": 270.48465791599983, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 270.4847437499998, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 270.5342949579999, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 270.53442995800015, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 270.53451866600017, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 270.53460195800017, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 270.57530608299976, "event": {"type": "message.delta", "content": " Shared"}}
+{"elapsed_seconds": 270.6703419579999, "event": {"type": "message.delta", "content": " contracts"}}
+{"elapsed_seconds": 270.7128604579998, "event": {"type": "message.delta", "content": " are"}}
+{"elapsed_seconds": 270.758200625, "event": {"type": "message.delta", "content": " in"}}
+{"elapsed_seconds": 270.8960187910002, "event": {"type": "message.delta", "content": " MACHINE"}}
+{"elapsed_seconds": 270.8960725000002, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 270.98908604100006, "event": {"type": "message.delta", "content": "CONTRACT"}}
+{"elapsed_seconds": 271.0353964579999, "event": {"type": "message.delta", "content": "S"}}
+{"elapsed_seconds": 271.035458458, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 271.0354936250001, "event": {"type": "message.delta", "content": "md"}}
+{"elapsed_seconds": 271.0355246250001, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 271.080404541, "event": {"type": "message.delta", "content": " output"}}
+{"elapsed_seconds": 271.17342558300015, "event": {"type": "message.delta", "content": " validation"}}
+{"elapsed_seconds": 271.17355254099994, "event": {"type": "message.delta", "content": " is"}}
+{"elapsed_seconds": 271.17361308299996, "event": {"type": "message.delta", "content": " a"}}
+{"elapsed_seconds": 271.40264350000007, "event": {"type": "message.delta", "content": " deterministic"}}
+{"elapsed_seconds": 271.5912100830001, "event": {"type": "message.delta", "content": " gate"}}
+{"elapsed_seconds": 271.59128329099985, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 271.7311110410001, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 271.7768389160001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 271.8242220000002, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 271.82540095800005, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 271.86972375000005, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 271.86986012499983, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 271.96104412500017, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 271.9610994999998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 271.9611325410001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 271.9611620410001, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 272.0076330410002, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 272.053427458, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 272.0535575409999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 272.0536427080001, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 272.14541416600014, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 272.14614100000017, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 272.23756970800014, "event": {"type": "message.delta", "content": "evidence"}}
+{"elapsed_seconds": 272.2854320000001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 272.33690079100006, "event": {"type": "message.delta", "content": " [\""}}
+{"elapsed_seconds": 272.3752892910002, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 272.42158741599997, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 272.6056750409998, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 272.60575149999977, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 272.74346849999984, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 272.790491666, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 272.790623291, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 272.834770125, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 272.8348232909998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 272.83485274999975, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 272.8348781660002, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 272.83490166599995, "event": {"type": "message.delta", "content": "4"}}
+{"elapsed_seconds": 272.9291310829999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 272.9293295829998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 273.24905362499976, "event": {"type": "message.delta", "content": "releases"}}
+{"elapsed_seconds": 273.29478170799985, "event": {"type": "message.delta", "content": "_"}}
+{"elapsed_seconds": 273.3407454160001, "event": {"type": "message.delta", "content": "app"}}
+{"elapsed_seconds": 273.38756624999996, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 273.39001687500013, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 273.4352260410001, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 273.47977279099996, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 273.52554020800017, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 273.57229983299976, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 273.6180828749998, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 273.66892091599993, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 273.66904799999975, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 273.80215662499995, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 273.8487732079998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 273.89495529099986, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 273.8950836660001, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 273.9411785409998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 273.94124437499977, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 273.98646929100005, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 273.9865266249999, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 273.9865977499999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 274.03305675, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 274.079695208, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 274.07976129100007, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 274.12571120799976, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 274.1723727909998, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 274.17244441599996, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 274.2643252080002, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 274.2647042909998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 274.54180633299984, "event": {"type": "message.delta", "content": "serialize"}}
+{"elapsed_seconds": 274.5418773329998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 274.5419165829999, "event": {"type": "message.delta", "content": "py"}}
+{"elapsed_seconds": 274.54195204100006, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 274.541984166, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 274.58774191600014, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 274.6357607499999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 274.635891208, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 274.77143158299987, "event": {"type": "message.delta", "content": "MACHINE"}}
+{"elapsed_seconds": 274.7716915410001, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 275.0643193330002, "event": {"type": "message.delta", "content": "CONTRACT"}}
+{"elapsed_seconds": 275.0644789160001, "event": {"type": "message.delta", "content": "S"}}
+{"elapsed_seconds": 275.06465983299995, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 275.1096801660001, "event": {"type": "message.delta", "content": "md"}}
+{"elapsed_seconds": 275.15598145800004, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 275.202070583, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 275.2021950829999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 275.202401, "event": {"type": "message.delta", "content": "\"]"}}
+{"elapsed_seconds": 275.25001829099983, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 275.33997520799994, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 275.3402566660002, "event": {"type": "message.delta", "content": "},"}}
+{"elapsed_seconds": 275.34031374999995, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 275.432136333, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 275.4331972499999, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 275.43330074999994, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 275.5242727079999, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 275.52440212500005, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 275.75585170800014, "event": {"type": "message.delta", "content": "question"}}
+{"elapsed_seconds": 275.75620075000006, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 275.80331612500004, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 275.846773666, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 275.8473524159999, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 275.8474582079998, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 275.84754433299986, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 275.98326633299985, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 275.983323208, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 276.030380875, "event": {"type": "message.delta", "content": "answer"}}
+{"elapsed_seconds": 276.07669883300014, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 276.07692937499996, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 276.07701583300013, "event": {"type": "message.delta", "content": "Small"}}
+{"elapsed_seconds": 276.12380674999986, "event": {"type": "message.delta", "content": "est"}}
+{"elapsed_seconds": 276.4646639580001, "event": {"type": "message.delta", "content": " experiment"}}
+{"elapsed_seconds": 276.46494812499986, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 276.4649858749999, "event": {"type": "message.delta", "content": " A"}}
+{"elapsed_seconds": 276.4650175830002, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 276.5081432080001, "event": {"type": "message.delta", "content": "6"}}
+{"elapsed_seconds": 276.50820829099985, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 276.50825641599977, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 276.64458024999976, "event": {"type": "message.delta", "content": "case"}}
+{"elapsed_seconds": 276.6908705000001, "event": {"type": "message.delta", "content": " hold"}}
+{"elapsed_seconds": 276.69099979099974, "event": {"type": "message.delta", "content": "out"}}
+{"elapsed_seconds": 276.7369734160002, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 276.78668845799984, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 276.83166737500005, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 276.87374045800016, "event": {"type": "message.delta", "content": " eligible"}}
+{"elapsed_seconds": 276.87380674999986, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 276.8738439580002, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 276.92240825, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 277.10201870799983, "event": {"type": "message.delta", "content": " ineligible"}}
+{"elapsed_seconds": 277.148686, "event": {"type": "message.delta", "content": ")"}}
+{"elapsed_seconds": 277.240947625, "event": {"type": "message.delta", "content": " with"}}
+{"elapsed_seconds": 277.24102108299985, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 277.2867366249998, "event": {"type": "message.delta", "content": "bug"}}
+{"elapsed_seconds": 277.33783108299986, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 277.33795733299985, "event": {"type": "message.delta", "content": "only"}}
+{"elapsed_seconds": 277.33807658299975, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 277.3381717080001, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 277.39492491600004, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 277.470343041, "event": {"type": "message.delta", "content": "placeholder"}}
+{"elapsed_seconds": 277.51602920799996, "event": {"type": "message.delta", "content": " plan"}}
+{"elapsed_seconds": 277.5635910000001, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 277.836357875, "event": {"type": "message.delta", "content": " controls"}}
+{"elapsed_seconds": 277.8364823329998, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 277.97461354100005, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 278.021391666, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 278.071663833, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 278.07193037499974, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 278.11205362500004, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 278.1121176659999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 278.1582817079998, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 278.15834745799975, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 278.15838462500005, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 278.15841783299993, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 278.15844941600017, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 278.20441570799994, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 278.204547458, "event": {"type": "message.delta", "content": " Each"}}
+{"elapsed_seconds": 278.25120445799985, "event": {"type": "message.delta", "content": " must"}}
+{"elapsed_seconds": 278.3425054579998, "event": {"type": "message.delta", "content": " separately"}}
+{"elapsed_seconds": 278.4793100410002, "event": {"type": "message.delta", "content": " evaluate"}}
+{"elapsed_seconds": 278.4796192499998, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 278.52514004099976, "event": {"type": "message.delta", "content": " Gemma"}}
+{"elapsed_seconds": 278.525209291, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 278.5252636659998, "event": {"type": "message.delta", "content": "s"}}
+{"elapsed_seconds": 278.6648807910001, "event": {"type": "message.delta", "content": " grouping"}}
+{"elapsed_seconds": 278.7082089579999, "event": {"type": "message.delta", "content": " logic"}}
+{"elapsed_seconds": 278.75342658299996, "event": {"type": "message.delta", "content": " vs"}}
+{"elapsed_seconds": 278.7997042080001, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 278.8913967909998, "event": {"type": "message.delta", "content": " human"}}
+{"elapsed_seconds": 278.89152483299995, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 278.94179891600015, "event": {"type": "message.delta", "content": "XYZ"}}
+{"elapsed_seconds": 279.02860229099997, "event": {"type": "message.delta", "content": "),"}}
+{"elapsed_seconds": 279.166364916, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 279.1664325830002, "event": {"type": "message.delta", "content": " Luna"}}
+{"elapsed_seconds": 279.166473625, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 279.16652670799976, "event": {"type": "message.delta", "content": "s"}}
+{"elapsed_seconds": 279.2578840410001, "event": {"type": "message.delta", "content": " p"}}
+{"elapsed_seconds": 279.2580377909999, "event": {"type": "message.delta", "content": "9"}}
+{"elapsed_seconds": 279.2581811250002, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 279.3960299999999, "event": {"type": "message.delta", "content": " latency"}}
+{"elapsed_seconds": 279.3962825829999, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 279.4403823329999, "event": {"type": "message.delta", "content": "cost"}}
+{"elapsed_seconds": 279.4404465829998, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 279.4865988749998, "event": {"type": "message.delta", "content": "ref"}}
+{"elapsed_seconds": 279.53612220800005, "event": {"type": "message.delta", "content": "usal"}}
+{"elapsed_seconds": 279.71536625, "event": {"type": "message.delta", "content": " rates"}}
+{"elapsed_seconds": 279.76205500000015, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 279.9445075409999, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 279.99096099999997, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 279.991033625, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 280.0387455, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 280.0390232499999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 280.082191083, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 280.08225062500014, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 280.0822886249998, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 280.0823216660001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 280.082353666, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 280.1278702909999, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 280.17344324999976, "event": {"type": "message.delta", "content": " Must"}}
+{"elapsed_seconds": 280.17349404100014, "event": {"type": "message.delta", "content": " check"}}
+{"elapsed_seconds": 280.2195525000002, "event": {"type": "message.delta", "content": " for"}}
+{"elapsed_seconds": 280.2655232500001, "event": {"type": "message.delta", "content": " leakage"}}
+{"elapsed_seconds": 280.31176983299974, "event": {"type": "message.delta", "content": " via"}}
+{"elapsed_seconds": 280.3579468749999, "event": {"type": "message.delta", "content": " session"}}
+{"elapsed_seconds": 280.450086416, "event": {"type": "message.delta", "content": " identity"}}
+{"elapsed_seconds": 280.45030720800014, "event": {"type": "message.delta", "content": " and"}}
+{"elapsed_seconds": 280.4503943750001, "event": {"type": "message.delta", "content": " ensure"}}
+{"elapsed_seconds": 280.6325825409999, "event": {"type": "message.delta", "content": " independent"}}
+{"elapsed_seconds": 280.726019833, "event": {"type": "message.delta", "content": " labels"}}
+{"elapsed_seconds": 280.7261606249999, "event": {"type": "message.delta", "content": ".\","}}
+{"elapsed_seconds": 280.7262667499999, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 280.8182621249998, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 280.81839891599975, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 281.0447671249999, "event": {"type": "message.delta", "content": "evidence"}}
+{"elapsed_seconds": 281.1368729579999, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 281.13803495799993, "event": {"type": "message.delta", "content": " [\""}}
+{"elapsed_seconds": 281.2754357079998, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 281.3262464579998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 281.366064541, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 281.366419125, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 281.4112634160001, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 281.41132683299975, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 281.4577568750001, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 281.4578256660002, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 281.4578683750001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 281.507952166, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 281.5491038750001, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 281.6412828329999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 281.6871375410001, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 281.8731306660002, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 281.92131533300017, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 281.921392666, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 281.96501987500005, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 282.01199825000003, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 282.056734708, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 282.05680645799976, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 282.103195916, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 282.158400625, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 282.1584741659999, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 282.15859899999987, "event": {"type": "message.delta", "content": "\"]"}}
+{"elapsed_seconds": 282.1945139159998, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 282.287020708, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 282.28718775000016, "event": {"type": "message.delta", "content": "},"}}
+{"elapsed_seconds": 282.28727516599974, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 282.3807576250001, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 282.380890291, "event": {"type": "message.delta", "content": "{"}}
+{"elapsed_seconds": 282.38099920800005, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 282.4702618749998, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 282.47036254099976, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 282.70284116599987, "event": {"type": "message.delta", "content": "question"}}
+{"elapsed_seconds": 282.703268666, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 282.74502566599995, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 282.7915859999998, "event": {"type": "message.delta", "content": "Q"}}
+{"elapsed_seconds": 282.79173170800004, "event": {"type": "message.delta", "content": "6"}}
+{"elapsed_seconds": 282.7918199999999, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 282.79190549999976, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 282.9296144159998, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 282.929742583, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 283.0210136659998, "event": {"type": "message.delta", "content": "answer"}}
+{"elapsed_seconds": 283.0210842910001, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 283.06619708300013, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 283.2492444999998, "event": {"type": "message.delta", "content": "Narrow"}}
+{"elapsed_seconds": 283.2951415409998, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 283.2951902909999, "event": {"type": "message.delta", "content": "Stop"}}
+{"elapsed_seconds": 283.3412237910002, "event": {"type": "message.delta", "content": " if"}}
+{"elapsed_seconds": 283.34127316600006, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 283.34130025000013, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 283.3413250829999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 283.38740391600004, "event": {"type": "message.delta", "content": ")"}}
+{"elapsed_seconds": 283.433335875, "event": {"type": "message.delta", "content": " Luna"}}
+{"elapsed_seconds": 283.57320549999986, "event": {"type": "message.delta", "content": " fails"}}
+{"elapsed_seconds": 283.61917862500013, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 283.66372450000017, "event": {"type": "message.delta", "content": " +"}}
+{"elapsed_seconds": 283.6638415829998, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 283.7577528749998, "event": {"type": "message.delta", "content": "pp"}}
+{"elapsed_seconds": 283.80418020800016, "event": {"type": "message.delta", "content": " gain"}}
+{"elapsed_seconds": 283.80491733300005, "event": {"type": "message.delta", "content": " or"}}
+{"elapsed_seconds": 283.84676612500016, "event": {"type": "message.delta", "content": " <"}}
+{"elapsed_seconds": 283.846832875, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 283.84687237499975, "event": {"type": "message.delta", "content": "s"}}
+{"elapsed_seconds": 283.9378770829999, "event": {"type": "message.delta", "content": " latency"}}
+{"elapsed_seconds": 284.12304162500004, "event": {"type": "message.delta", "content": " gate"}}
+{"elapsed_seconds": 284.16752666599996, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 284.35136083299994, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 284.40840179099996, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 284.40855624999995, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 284.4423056249998, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 284.49024729099983, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 284.58023270800004, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 284.58036537499993, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 284.5804512909999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 284.58057766599995, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 284.62607041599995, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 284.62622016600017, "event": {"type": "message.delta", "content": ");"}}
+{"elapsed_seconds": 284.62631495799997, "event": {"type": "message.delta", "content": " "}}
+{"elapsed_seconds": 284.62644916599993, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 284.626548875, "event": {"type": "message.delta", "content": ")"}}
+{"elapsed_seconds": 284.71813475, "event": {"type": "message.delta", "content": " Gemma"}}
+{"elapsed_seconds": 284.80952637500013, "event": {"type": "message.delta", "content": " fails"}}
+{"elapsed_seconds": 284.85611074999997, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 284.8561843329999, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 284.8562239580001, "event": {"type": "message.delta", "content": "no"}}
+{"elapsed_seconds": 284.94722520799996, "event": {"type": "message.delta", "content": " false"}}
+{"elapsed_seconds": 285.0849549579998, "event": {"type": "message.delta", "content": " accepts"}}
+{"elapsed_seconds": 285.13103275000003, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 285.3142277500001, "event": {"type": "message.delta", "content": " gate"}}
+{"elapsed_seconds": 285.31430141600003, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 285.45439208300013, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 285.4984720409998, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 285.54549770799986, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 285.54556387499997, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 285.5906104159999, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 285.5907594999999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 285.6369718330002, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 285.6370349580002, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 285.637074708, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 285.6371144579998, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 285.63718637500006, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 285.68456962499977, "event": {"type": "message.delta", "content": ")."}}
+{"elapsed_seconds": 285.68481091600006, "event": {"type": "message.delta", "content": " This"}}
+{"elapsed_seconds": 285.72939991600015, "event": {"type": "message.delta", "content": " trial"}}
+{"elapsed_seconds": 285.7747407910001, "event": {"type": "message.delta", "content": " cannot"}}
+{"elapsed_seconds": 285.8216286249999, "event": {"type": "message.delta", "content": " establish"}}
+{"elapsed_seconds": 285.867539375, "event": {"type": "message.delta", "content": " production"}}
+{"elapsed_seconds": 285.9586912079999, "event": {"type": "message.delta", "content": " metrics"}}
+{"elapsed_seconds": 286.00504579100016, "event": {"type": "message.delta", "content": " because"}}
+{"elapsed_seconds": 286.0509735410001, "event": {"type": "message.delta", "content": " it"}}
+{"elapsed_seconds": 286.14288666599987, "event": {"type": "message.delta", "content": " lacks"}}
+{"elapsed_seconds": 286.1429585410001, "event": {"type": "message.delta", "content": " real"}}
+{"elapsed_seconds": 286.14300525, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 286.14304087499977, "event": {"type": "message.delta", "content": "world"}}
+{"elapsed_seconds": 286.2807120409998, "event": {"type": "message.delta", "content": " concurrency"}}
+{"elapsed_seconds": 286.2807796249999, "event": {"type": "message.delta", "content": " ("}}
+{"elapsed_seconds": 286.326392208, "event": {"type": "message.delta", "content": "race"}}
+{"elapsed_seconds": 286.41918054100006, "event": {"type": "message.delta", "content": " guarantees"}}
+{"elapsed_seconds": 286.41923874999975, "event": {"type": "message.delta", "content": "),"}}
+{"elapsed_seconds": 286.46538354099994, "event": {"type": "message.delta", "content": " actual"}}
+{"elapsed_seconds": 286.55791283300005, "event": {"type": "message.delta", "content": " dollar"}}
+{"elapsed_seconds": 286.603960166, "event": {"type": "message.delta", "content": " spend"}}
+{"elapsed_seconds": 286.6051286249999, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 286.651258291, "event": {"type": "message.delta", "content": " private"}}
+{"elapsed_seconds": 286.69476729100006, "event": {"type": "message.delta", "content": " data"}}
+{"elapsed_seconds": 286.8349107079998, "event": {"type": "message.delta", "content": " privacy"}}
+{"elapsed_seconds": 286.8352169579998, "event": {"type": "message.delta", "content": " audits"}}
+{"elapsed_seconds": 286.83526974999995, "event": {"type": "message.delta", "content": ","}}
+{"elapsed_seconds": 286.87843758300005, "event": {"type": "message.delta", "content": " or"}}
+{"elapsed_seconds": 286.9761185409998, "event": {"type": "message.delta", "content": " production"}}
+{"elapsed_seconds": 287.01622454100016, "event": {"type": "message.delta", "content": " latency"}}
+{"elapsed_seconds": 287.01628604100006, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 287.1097473750001, "event": {"type": "message.delta", "content": "throughput"}}
+{"elapsed_seconds": 287.20148125000014, "event": {"type": "message.delta", "content": " under"}}
+{"elapsed_seconds": 287.2918050829999, "event": {"type": "message.delta", "content": " load"}}
+{"elapsed_seconds": 287.2919494580001, "event": {"type": "message.delta", "content": ".\","}}
+{"elapsed_seconds": 287.2919910410001, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 287.3872339999998, "event": {"type": "message.delta", "content": "      "}}
+{"elapsed_seconds": 287.3872933749999, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 287.4754316660001, "event": {"type": "message.delta", "content": "evidence"}}
+{"elapsed_seconds": 287.56997150000007, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 287.65967708300013, "event": {"type": "message.delta", "content": " [\""}}
+{"elapsed_seconds": 287.8427525000002, "event": {"type": "message.delta", "content": "needle"}}
+{"elapsed_seconds": 287.89005095799985, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 287.8901634160002, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 287.94461175000015, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 287.9446779159998, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 288.03986637499975, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 288.08486062500015, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 288.1309657080001, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 288.1770260829999, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 288.22522149999986, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 288.274148083, "event": {"type": "message.delta", "content": "\","}}
+{"elapsed_seconds": 288.2742106659998, "event": {"type": "message.delta", "content": " \""}}
+{"elapsed_seconds": 288.40666662500007, "event": {"type": "message.delta", "content": "xyz"}}
+{"elapsed_seconds": 288.45245912500013, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 288.49911729099995, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 288.500114166, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 288.5448137499998, "event": {"type": "message.delta", "content": "2"}}
+{"elapsed_seconds": 288.59072212499996, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 288.6372825409999, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 288.68572812499997, "event": {"type": "message.delta", "content": ":"}}
+{"elapsed_seconds": 288.7297619579999, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 288.72990649999974, "event": {"type": "message.delta", "content": "3"}}
+{"elapsed_seconds": 288.7746904579999, "event": {"type": "message.delta", "content": "0"}}
+{"elapsed_seconds": 288.82030758300016, "event": {"type": "message.delta", "content": "\"]"}}
+{"elapsed_seconds": 288.86624200000006, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 288.958248208, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 288.95849866599974, "event": {"type": "message.delta", "content": "}"}}
+{"elapsed_seconds": 288.95868195799994, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 289.00551395799994, "event": {"type": "message.delta", "content": "  "}}
+{"elapsed_seconds": 289.00567249999995, "event": {"type": "message.delta", "content": "],"}}
+{"elapsed_seconds": 289.00576687500006, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 289.00599158299974, "event": {"type": "message.delta", "content": "  "}}
+{"elapsed_seconds": 289.05682849999994, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 289.1921574160001, "event": {"type": "message.delta", "content": "limit"}}
+{"elapsed_seconds": 289.27937091600006, "event": {"type": "message.delta", "content": "ations"}}
+{"elapsed_seconds": 289.32526341599987, "event": {"type": "message.delta", "content": "\":"}}
+{"elapsed_seconds": 289.32539154100004, "event": {"type": "message.delta", "content": " ["}}
+{"elapsed_seconds": 289.32547891600007, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 289.3714863330001, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 289.41651241599993, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 289.416566375, "event": {"type": "message.delta", "content": "No"}}
+{"elapsed_seconds": 289.46298549999983, "event": {"type": "message.delta", "content": " live"}}
+{"elapsed_seconds": 289.5096114160001, "event": {"type": "message.delta", "content": " API"}}
+{"elapsed_seconds": 289.78616816600015, "event": {"type": "message.delta", "content": " access"}}
+{"elapsed_seconds": 289.8793934999999, "event": {"type": "message.delta", "content": " to"}}
+{"elapsed_seconds": 289.9240467079999, "event": {"type": "message.delta", "content": " g"}}
+{"elapsed_seconds": 289.924122208, "event": {"type": "message.delta", "content": "pt"}}
+{"elapsed_seconds": 289.92416266600003, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 289.9706335000001, "event": {"type": "message.delta", "content": "5"}}
+{"elapsed_seconds": 289.97077612500016, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 289.97086575000003, "event": {"type": "message.delta", "content": "6"}}
+{"elapsed_seconds": 289.97095116599985, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 289.9734896250002, "event": {"type": "message.delta", "content": "l"}}
+{"elapsed_seconds": 290.01615433300003, "event": {"type": "message.delta", "content": "una"}}
+{"elapsed_seconds": 290.01655645799974, "event": {"type": "message.delta", "content": " for"}}
+{"elapsed_seconds": 290.10937812500015, "event": {"type": "message.delta", "content": " actual"}}
+{"elapsed_seconds": 290.16016949999994, "event": {"type": "message.delta", "content": " cost"}}
+{"elapsed_seconds": 290.16023766599983, "event": {"type": "message.delta", "content": "/"}}
+{"elapsed_seconds": 290.160275708, "event": {"type": "message.delta", "content": "latency"}}
+{"elapsed_seconds": 290.4326782909998, "event": {"type": "message.delta", "content": " measurement"}}
+{"elapsed_seconds": 290.4328802499999, "event": {"type": "message.delta", "content": ".\","}}
+{"elapsed_seconds": 290.432994625, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 290.47691424999994, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 290.47716924999986, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 290.5242464580001, "event": {"type": "message.delta", "content": "No"}}
+{"elapsed_seconds": 290.574250916, "event": {"type": "message.delta", "content": " ability"}}
+{"elapsed_seconds": 290.5743092910002, "event": {"type": "message.delta", "content": " to"}}
+{"elapsed_seconds": 290.7130125409999, "event": {"type": "message.delta", "content": " execute"}}
+{"elapsed_seconds": 290.80522791600015, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 290.8499697500001, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 290.89524712499997, "event": {"type": "message.delta", "content": "jog"}}
+{"elapsed_seconds": 290.942761583, "event": {"type": "message.delta", "content": " add"}}
+{"elapsed_seconds": 290.942816666, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 290.98762883300014, "event": {"type": "message.delta", "content": " or"}}
+{"elapsed_seconds": 291.05149649999976, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 291.05156362499974, "event": {"type": "message.delta", "content": "pre"}}
+{"elapsed_seconds": 291.07896137499984, "event": {"type": "message.delta", "content": "flight"}}
+{"elapsed_seconds": 291.1250392910001, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 291.17194075, "event": {"type": "message.delta", "content": " scripts"}}
+{"elapsed_seconds": 291.17206612500013, "event": {"type": "message.delta", "content": " to"}}
+{"elapsed_seconds": 291.3091318329998, "event": {"type": "message.delta", "content": " verify"}}
+{"elapsed_seconds": 291.35722937499986, "event": {"type": "message.delta", "content": " real"}}
+{"elapsed_seconds": 291.35736466599974, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 291.35744991599995, "event": {"type": "message.delta", "content": "world"}}
+{"elapsed_seconds": 291.40075375000015, "event": {"type": "message.delta", "content": " race"}}
+{"elapsed_seconds": 291.58376899999985, "event": {"type": "message.delta", "content": " conditions"}}
+{"elapsed_seconds": 291.58381599999984, "event": {"type": "message.delta", "content": ".\","}}
+{"elapsed_seconds": 291.6309225, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 291.6310530410001, "event": {"type": "message.delta", "content": "    "}}
+{"elapsed_seconds": 291.631140166, "event": {"type": "message.delta", "content": "\""}}
+{"elapsed_seconds": 291.72458879099986, "event": {"type": "message.delta", "content": "Source"}}
+{"elapsed_seconds": 291.7718369999998, "event": {"type": "message.delta", "content": " files"}}
+{"elapsed_seconds": 291.81426220799995, "event": {"type": "message.delta", "content": " are"}}
+{"elapsed_seconds": 291.8595949159999, "event": {"type": "message.delta", "content": " static"}}
+{"elapsed_seconds": 291.8596551249998, "event": {"type": "message.delta", "content": ";"}}
+{"elapsed_seconds": 291.95213833299977, "event": {"type": "message.delta", "content": " cannot"}}
+{"elapsed_seconds": 291.998362541, "event": {"type": "message.delta", "content": " verify"}}
+{"elapsed_seconds": 292.08953833299984, "event": {"type": "message.delta", "content": " if"}}
+{"elapsed_seconds": 292.08959649999997, "event": {"type": "message.delta", "content": " '"}}
+{"elapsed_seconds": 292.182364583, "event": {"type": "message.delta", "content": "current"}}
+{"elapsed_seconds": 292.182566125, "event": {"type": "message.delta", "content": "'"}}
+{"elapsed_seconds": 292.2877833749999, "event": {"type": "message.delta", "content": " labels"}}
+{"elapsed_seconds": 292.28784612499976, "event": {"type": "message.delta", "content": " in"}}
+{"elapsed_seconds": 292.3661434999999, "event": {"type": "message.delta", "content": " needle"}}
+{"elapsed_seconds": 292.41172716599976, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 292.59473237500015, "event": {"type": "message.delta", "content": "main"}}
+{"elapsed_seconds": 292.5948028749999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 292.6415243329998, "event": {"type": "message.delta", "content": "labels"}}
+{"elapsed_seconds": 292.6415971659999, "event": {"type": "message.delta", "content": "-"}}
+{"elapsed_seconds": 292.641643125, "event": {"type": "message.delta", "content": "v"}}
+{"elapsed_seconds": 292.68705462499975, "event": {"type": "message.delta", "content": "1"}}
+{"elapsed_seconds": 292.6871732909999, "event": {"type": "message.delta", "content": "."}}
+{"elapsed_seconds": 292.7333076250002, "event": {"type": "message.delta", "content": "json"}}
+{"elapsed_seconds": 292.77916587499976, "event": {"type": "message.delta", "content": " match"}}
+{"elapsed_seconds": 292.8252312079999, "event": {"type": "message.delta", "content": " the"}}
+{"elapsed_seconds": 293.009431166, "event": {"type": "message.delta", "content": " live"}}
+{"elapsed_seconds": 293.1467527499999, "event": {"type": "message.delta", "content": " repo"}}
+{"elapsed_seconds": 293.200138916, "event": {"type": "message.delta", "content": ".\""}}
+{"elapsed_seconds": 293.200212708, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 293.20025366599975, "event": {"type": "message.delta", "content": "  "}}
+{"elapsed_seconds": 293.2002897080001, "event": {"type": "message.delta", "content": "]"}}
+{"elapsed_seconds": 293.20032383299986, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 293.2003574999999, "event": {"type": "message.delta", "content": "}"}}
+{"elapsed_seconds": 293.2003894579998, "event": {"type": "message.delta", "content": "\n"}}
+{"elapsed_seconds": 293.2004220829999, "event": {"type": "message.delta", "content": "```"}}
+{"elapsed_seconds": 293.20045466600004, "event": {"type": "message.end"}}
+{"elapsed_seconds": 293.20054920799976, "event": {"type": "chat.end", "result": {"model_instance_id": "gemma-4-12b-it-mlx", "output": [{"type": "message", "content": "```json\n{\n  \"decisions\": [\n    {\"id\": \"A01\", \"decision\": \"HOLD\", \"reason\": \"Missing remediation plan in issue body; fails 'Remediation plan in the issue' gate (xyz-522.json:103).\"},\n    {\"id\": \"A02\", \"decision\": \"ACCEPT\", \"reason\": \"Meets all gates: plan in issue, independent review, PRS, and readiness (xyz-522.json:103-114).\"},\n    {\"id\": \"A03\", \"decision\": \"HOLD\", \"reason\": \"Plan edited after review without new content-hash comparison or renewed attestation (xyz-522.json:103, 114).\"},\n    {\"id\": \"A04\", \"decision\": \"HOLD\", \"reason\": \"Parallel pair writes different files with no pinned interface or integration agreement (xyz-522.json:103, 114).\"},\n    {\"id\": \"A05\", \"decision\": \"ACCEPT\", \"reason\": \"Validates A02 with disjoint write-sets and no shared-contract collision (xyz-522.json:103, 114).\"},\n    {\"id\": \"A06\", \"decision\": \"HOLD\", \"reason\": \"Issue is parked; operator has not released the park (xyz-522.json:103, 114).\"},\n    {\"id\": \"A07\", \"decision\": \"HOLD\", \"reason\": \"System override instruction contradicts the required independent review hash (xyz-522.json:103, 114).\"},\n    {\"id\": \"A08\", \"decision\": \"HOLD\", \"reason\": \"Dependency inventory unavailable; scanner proposes treating unseen as completed (xyz-522.json:103, 114).\"},\n    {\"id\": \"O01\", \"decision\": \"ACCEPT\", \"reason\": \"Valid prediction boundary; disjoint source-session families (needle-13.json:45).\"},\n    {\"id\": \"O02\", \"decision\": \"HOLD\", \"reason\": \"Input includes next user request, violating the 'never include' rule (needle-13.json:50).\"},\n    {\"id\": \"O03\", \"decision\": \"HOLD\", \"reason\": \"Scorer credits empty response as correct for semantic no_action; lacks explicit label (needle-13.json:55).\"},\n    {\"id\": \"O04\", \"decision\": \"HOLD\", \"reason\": \"Claim of PTQ non-causality is based on unpaired/disjoint row sets (needle-12.json:30).\"},\n    {\"id\": \"O05\", \"decision\": \"ACCEPT\", \"reason\": \"Valid situation with held-out support and matching row IDs (needle-13.json:65).\"},\n    {\"id\": \"O06\", \"decision\": \"HOLD\", \"reason\": \"Parser claim of 100% well-formed is a name-extraction rate, not structural validity (needle-12.json:30).\"},\n    {\"id\": \"O07\", \"decision\": \"HOLD\", \"reason\": \"Attributes feedback to p18 but uses result from p17; violates session integrity (cases.json:75).\"},\n    {\"id\": \"O08\", \"decision\": \"HOLD\", \"reason\": \"Claim of +5pp accuracy and <2s latency is a synthetic proxy, not production proof (cases.json:80).\"}\n  ],\n  \"answers\": [\n    {\n      \"question\": \"Q1\",\n      \"answer\": \"XYZ Admission seeks to admit issues into Jog/Marathon based on remediation plans and reviews; Oracle Prediction seeks to forecast the next software action. Both reuse the same taxonomy/labels (needle-main-labels-v1.json:19) and serialization logic (needle-main-serialize.py:74). Admission requires specific 'plan in issue' and 'independent review' (xyz-522.json:103, 114), while prediction requires 'no next user request' and 'observation horizon' (needle-13.json:45, 102). The same workflow does NOT establish both; admission is a policy gate, prediction is a performance metric.\",\n      \"evidence\": [\"xyz-522.json:103\", \"needle-main-labels-v1.json:19\", \"needle-main-serialize.py:74\", \"needle-13.json:45\", \"needle-13.json:102\"]\n    },\n    {\n      \"question\": \"Q2\",\n      \"answer\": \"Needle main uses a simple log append (needle-main-oracle_stop_hook.py:83); 710c uses a detached worker (oracle_infer.py) and atomic os.replace for result files (oracle_infer.py:58). Atomic replace prevents torn reads but not stale worker publication if the same session_id is reused concurrently. Test: concurrent scanners against a single admission identity (xyz-522.json:134).\",\n      \"evidence\": [\"needle-main-oracle_stop_hook.py:83\", \"oracle_infer.py:58\", \"xyz-522.json:134\"]\n    },\n    {\n      \"question\": \"Q3\",\n      \"answer\": \"No; 44 labels are the contract, but 100% parse is a name-extraction rate (needle-12.json:30). Needle#12 warns that the engine only serves 5 of 44 tools (needle-12.json:30) and that 'no_action' is a distinct abstention from an unmapped/failed result (needle-main-labels-v1.json:230). Inconsistency: needle-main-labels-v1.json claims 'no arguments' (line 4), but the engine probe shows it only retrieves top-5 tools.\",\n      \"evidence\": [\"needle-12.json:30\", \"needle-main-labels-v1.json:4\", \"needle-main-labels-v1.json:230\"]\n    },\n    {\n      \"question\": \"Q4\",\n      \"answer\": \"Deterministic: Parsing, schema validation (needle-main-labels-v1.json), and 'jog add' logic for status/position (releases_app.py:3900-3914). Gemma Reasoning: Grouping logic (xyz-522.json:103), plan substance evaluation, and 'why' generation (needle-main-serialize.py:91). Shared contracts are in MACHINE-CONTRACTS.md; output validation is a deterministic gate (xyz-522.json:130).\",\n      \"evidence\": [\"needle-main-labels-v1.json:4\", \"releases_app.py:3900\", \"xyz-522.json:103\", \"needle-main-serialize.py:91\", \"MACHINE-CONTRACTS.md:31\"]\n    },\n    {\n      \"question\": \"Q5\",\n      \"answer\": \"Smallest experiment: A 60-case holdout (20 eligible/20 ineligible) with 'bug-only' and 'placeholder plan' controls (xyz-522.json:130). Each must separately evaluate: Gemma's grouping logic vs. human (XYZ), and Luna's p95 latency/cost/refusal rates (needle-13.json:102). Must check for leakage via session identity and ensure independent labels.\",\n      \"evidence\": [\"xyz-522.json:130\", \"needle-13.json:102\"]\n    },\n    {\n      \"question\": \"Q6\",\n      \"answer\": \"Narrow/Stop if: 1) Luna fails the +5pp gain or <2s latency gate (needle-13.json:102); 2) Gemma fails the 'no false accepts' gate (xyz-522.json:130). This trial cannot establish production metrics because it lacks real-world concurrency (race guarantees), actual dollar spend, private data privacy audits, or production latency/throughput under load.\",\n      \"evidence\": [\"needle-13.json:102\", \"xyz-522.json:130\"]\n    }\n  ],\n  \"limitations\": [\n    \"No live API access to gpt-5.6-luna for actual cost/latency measurement.\",\n    \"No ability to execute the 'jog add' or 'preflight' scripts to verify real-world race conditions.\",\n    \"Source files are static; cannot verify if 'current' labels in needle-main-labels-v1.json match the live repo.\"\n  ]\n}\n```"}], "stats": {"input_tokens": 34206, "total_output_tokens": 2003, "reasoning_output_tokens": 0, "tokens_per_second": 21.67944224324697, "time_to_first_token_seconds": 200.643}}}}

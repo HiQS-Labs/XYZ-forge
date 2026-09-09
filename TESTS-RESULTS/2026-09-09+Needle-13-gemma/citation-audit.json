@@ -1,0 +1,275 @@
+[
+  {
+    "run": 1,
+    "scope": "answers[].evidence only; basename aliases resolved; checks line existence, not semantic support",
+    "references": [
+      {
+        "question": "Q1",
+        "citation": "xyz-522.json:103",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-main-labels-v1.json:19",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "line_exists": true
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-main-serialize.py:74",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "line_exists": true
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13.json:45",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13.json:102",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-main-oracle_stop_hook.py:83",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "line_exists": true
+      },
+      {
+        "question": "Q2",
+        "citation": "oracle_infer.py:58",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "line_exists": true
+      },
+      {
+        "question": "Q2",
+        "citation": "xyz-522.json:134",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12.json:30",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:4",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "line_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:230",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "needle-main-labels-v1.json:4",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "releases_app.py:3900",
+        "resolved_path": "utils/py/releases_app.py",
+        "source_line_count": 5503,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522.json:103",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q4",
+        "citation": "needle-main-serialize.py:91",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "MACHINE-CONTRACTS.md:31",
+        "resolved_path": "MACHINE-CONTRACTS.md",
+        "source_line_count": 157,
+        "line_exists": true
+      },
+      {
+        "question": "Q5",
+        "citation": "xyz-522.json:130",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q5",
+        "citation": "needle-13.json:102",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "needle-13.json:102",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "xyz-522.json:130",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      }
+    ],
+    "out_of_range_or_missing": 10
+  },
+  {
+    "run": 2,
+    "scope": "answers[].evidence only; basename aliases resolved; checks line existence, not semantic support",
+    "references": [
+      {
+        "question": "Q1",
+        "citation": "xyz-522.json:103",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-main-serialize.py:1",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "line_exists": true
+      },
+      {
+        "question": "Q1",
+        "citation": "needle-13.json:45",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q2",
+        "citation": "needle-main-oracle_stop_hook.py:83",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-oracle_stop_hook.py",
+        "source_line_count": 92,
+        "line_exists": true
+      },
+      {
+        "question": "Q2",
+        "citation": "oracle_infer.py:58",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-710c-oracle_infer.py",
+        "source_line_count": 69,
+        "line_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "xyz-522.json:103",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-12.json:34",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-12.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-serialize.py:102",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "line_exists": true
+      },
+      {
+        "question": "Q3",
+        "citation": "needle-main-labels-v1.json:230",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-labels-v1.json",
+        "source_line_count": 595,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "needle-main-serialize.py:1",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-main-serialize.py",
+        "source_line_count": 116,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "xyz-522.json:103",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q4",
+        "citation": "MACHINE-CONTRACTS.md:14",
+        "resolved_path": "MACHINE-CONTRACTS.md",
+        "source_line_count": 157,
+        "line_exists": true
+      },
+      {
+        "question": "Q4",
+        "citation": "releases_app.py:3900",
+        "resolved_path": "utils/py/releases_app.py",
+        "source_line_count": 5503,
+        "line_exists": true
+      },
+      {
+        "question": "Q5",
+        "citation": "xyz-522.json:143",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q5",
+        "citation": "needle-13.json:49",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "xyz-522.json:143",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/xyz-522.json",
+        "source_line_count": 1,
+        "line_exists": false
+      },
+      {
+        "question": "Q6",
+        "citation": "needle-13.json:49",
+        "resolved_path": "TESTS-RESULTS/2026-09-09+GH-522-luna-needle/input/needle-13.json",
+        "source_line_count": 1,
+        "line_exists": false
+      }
+    ],
+    "out_of_range_or_missing": 9
+  }
+]

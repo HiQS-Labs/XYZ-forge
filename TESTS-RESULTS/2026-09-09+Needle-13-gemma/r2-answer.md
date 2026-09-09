@@ -1,0 +1,59 @@
+```json
+{
+  "decisions": [
+    {"id": "A01", "decision": "HOLD", "reason": "Missing remediation plan in issue body; fails 'Remediation plan in the issue' gate (xyz-522.json:103)."},
+    {"id": "A02", "decision": "ACCEPT", "reason": "Meets all gates: plan in issue, independent review, PRS, and readiness (xyz-522.json:103-114)."},
+    {"id": "A03", "decision": "HOLD", "reason": "Plan edited after review without new content-hash comparison or renewed attestation (xyz-522.json:103, 114)."},
+    {"id": "A04", "decision": "HOLD", "reason": "Parallel pair writes different files with no pinned interface or integration agreement (xyz-522.json:103, 114)."},
+    {"id": "A05", "decision": "ACCEPT", "reason": "Validates A02 with disjoint write-sets and no shared-contract collision (xyz-522.json:103, 114)."},
+    {"id": "A06", "decision": "HOLD", "reason": "Issue is parked; operator has not released the park (xyz-522.json:103, 114)."},
+    {"id": "A07", "decision": "HOLD", "reason": "System override instruction contradicts the required independent review hash (xyz-522.json:103, 114)."},
+    {"id": "A08", "decision": "HOLD", "reason": "Dependency inventory unavailable; scanner proposes treating unseen as completed (xyz-522.json:103, 114)."},
+    {"id": "O01", "decision": "ACCEPT", "reason": "Valid prediction boundary; disjoint source-session families (needle-13.json:45)."},
+    {"id": "O02", "decision": "HOLD", "reason": "Input includes next user request, violating the 'never include' rule (needle-13.json:49)."},
+    {"id": "O03", "decision": "HOLD", "reason": "Scorer inserts semantic no_action as ground truth for empty response (cases.json:55)."},
+    {"id": "O04", "decision": "HOLD", "reason": "Claim of PTQ non-causality is based on unpaired/disjoint row sets (needle-12.json:34)."},
+    {"id": "O05", "decision": "ACCEPT", "reason": "Valid situation with held-out support and matching row IDs (cases.json:65)."},
+    {"id": "O06", "decision": "HOLD", "reason": "Parser claim is invalid as it ignores duplicate labels and unexpected objects (cases.json:70)."},
+    {"id": "O07", "decision": "HOLD", "reason": "Attributes feedback to p18 while using result from p17 (cases.json:75)."},
+    {"id": "O08", "decision": "HOLD", "reason": "Claim of +5pp accuracy and <2s latency is a synthetic claim, not an empirical result (cases.json:80)."}
+  ],
+  "answers": [
+    {
+      "question": "Q1",
+      "answer": "XYZ admission targets eligibility/grouping of issues into Jog/Marathon; Oracle targets predicting the next software action. Both reuse the 44-label taxonomy and 'q1' serialization format (needle-main-serialize.py:1, needle-13.json:45). Admission requires specific 'plan-in-issue' and 'independent review' (xyz-522.json:103), while Oracle requires predicting the 'next observed action' at a specific turn boundary (needle-13.json:45). The same workflow does NOT establish both; admission is a policy/gate check, while Oracle is a predictive accuracy metric.",
+      "evidence": ["xyz-522.json:103", "needle-main-serialize.py:1", "needle-13.json:45"]
+    },
+    {
+      "question": "Q2",
+      "answer": "Needle main uses a simple log append (needle-main-oracle_stop_hook.py:83); 710c uses a detached worker (oracle_infer.py) and an atomic os.replace for the result file (oracle_infer.py:58). At 710c, os.replace prevents torn reads but not stale worker publication if the same session_id is reused concurrently; one must test concurrent writes to the same session ID from two different workers.",
+      "evidence": ["needle-main-oracle_stop_hook.py:83", "oracle_infer.py:58"]
+    },
+    {
+      "question": "Q3",
+      "answer": "No, 44 labels are the taxonomy; quality requires 'independent review' and 'plan substance' (xyz-522.json:103). Needle#12 warns that 'no_action' is a distinct abstention, not just an empty list (needle-12.json:34). A code inconsistency is that needle-main-serialize.py claims 'no_action' becomes an empty list (line 102), but needle-main-labels-v1.json lists it as a specific label (line 230).",
+      "evidence": ["xyz-522.json:103", "needle-12.json:34", "needle-main-serialize.py:102", "needle-main-labels-v1.json:230"]
+    },
+    {
+      "question": "Q4",
+      "answer": "Deterministic code: label taxonomy, serialization (needle-main-serialize.py), and admission gates (xyz-522.json:103). Gemma reasoning: grouping logic and plan substance evaluation (xyz-522.json:103). Paused work/PRS are admission inputs; shared-contracts (MACHINE-CONTRACTS.md) define the data schema. cmd_jog_add handles 'pending'/'running' status and position resets (releases_app.py:3900-3914).",
+      "evidence": ["needle-main-serialize.py:1", "xyz-522.json:103", "MACHINE-CONTRACTS.md:14", "releases_app.py:3900"]
+    },
+    {
+      "question": "Q5",
+      "answer": "The smallest shared experiment is a 'zero-shot' evaluation on the 60 holdout cases (xyz-522.json:143) to check if Luna can distinguish 'plan substance' from 'convincing prose'. Each must still evaluate separately: XYZ needs to test the 'writer/race' boundary (xyz-522.json:143) and Luna needs to measure 'p95 latency/cost' (needle-13.json:49).",
+      "evidence": ["xyz-522.json:143", "needle-13.json:49"]
+    },
+    {
+      "question": "Q6",
+      "answer": "Narrow Gemma if it fails the 'plan substance' gate (xyz-522.json:143) or if it cannot distinguish 'no_action' from a valid label. Use a stronger model if the +5pp accuracy gate is missed (needle-13.json:49). This trial cannot establish production metrics because it lacks real-world latency (network/provider), actual dollar costs, private data privacy guarantees, or concurrent worker race conditions.",
+      "evidence": ["xyz-522.json:143", "needle-13.json:49"]
+    }
+  ],
+  "limitations": [
+    "No access to live GitHub API or real-time pricing.",
+    "Cannot execute the 'writer' logic to verify race conditions (xyz-522.json:143).",
+    "No actual inference performed on the 60 holdout cases."
+  ]
+}
+```
