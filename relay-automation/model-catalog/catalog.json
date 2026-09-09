@@ -1,7 +1,7 @@
 {
   "schema": "hiqs.model-catalog/1",
-  "version": "1.0.0",
-  "updated": "2026-09-05",
+  "version": "1.3.0",
+  "updated": "2026-09-09",
   "sources": [
     "https://github.com/HiQS-Labs/XYZ-forge (relay-automation/openrouter-model-aliases.yml, GH-120)",
     "https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot (data/static/ai/command-normalization.json, GH-168)"
@@ -12,6 +12,7 @@
       "replace": "claude-haiku-4-5-20251001",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -21,6 +22,7 @@
       "replace": "claude-fable-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "deprecated",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -30,6 +32,7 @@
       "replace": "claude-fable-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "deprecated",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -39,6 +42,7 @@
       "replace": "claude-haiku-4-5-20251001",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -48,6 +52,7 @@
       "replace": "claude-fable-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "deprecated",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -57,6 +62,7 @@
       "replace": "claude-haiku-4-5-20251001",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -66,6 +72,7 @@
       "replace": "claude-haiku-4-5-20251001",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -75,6 +82,7 @@
       "replace": "claude-opus-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -84,6 +92,7 @@
       "replace": "claude-opus-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -93,6 +102,7 @@
       "replace": "claude-sonnet-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -102,6 +112,7 @@
       "replace": "claude-sonnet-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -111,6 +122,7 @@
       "replace": "claude-fable-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "deprecated",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -120,6 +132,7 @@
       "replace": "claude-fable-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "deprecated",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -129,6 +142,7 @@
       "replace": "claude-haiku-4-5-20251001",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -138,6 +152,7 @@
       "replace": "claude-haiku-4-5-20251001",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/haiku-4-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -147,6 +162,7 @@
       "replace": "claude-opus-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -156,6 +172,7 @@
       "replace": "claude-opus-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/opus-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -165,6 +182,7 @@
       "replace": "claude-sonnet-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -174,6 +192,7 @@
       "replace": "claude-sonnet-5",
       "target": "native",
       "provider": "anthropic",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.claude.com/docs/en/models/sonnet-5/overview",
       "verified_on": "2026-09-04",
       "flags": []
@@ -183,6 +202,7 @@
       "replace": "gemini-3.8-flash",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": "2026-09-04",
       "flags": []
@@ -192,6 +212,7 @@
       "replace": "gemini-3.8-flash",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": "2026-09-04",
       "flags": []
@@ -201,6 +222,7 @@
       "replace": "gemini-2.5-pro",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": null,
       "flags": [
@@ -212,6 +234,7 @@
       "replace": "gemini-3.8-flash",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": "2026-09-04",
       "flags": []
@@ -221,6 +244,7 @@
       "replace": "gemini-3.8-flash",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": "2026-09-04",
       "flags": []
@@ -230,6 +254,7 @@
       "replace": "gemini-2.5-pro",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": null,
       "flags": [
@@ -241,6 +266,7 @@
       "replace": "gemini-3.8-flash",
       "target": "native",
       "provider": "gemini",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://ai.google.dev/gemini-api/docs/models",
       "verified_on": "2026-09-04",
       "flags": []
@@ -250,6 +276,7 @@
       "replace": "gpt-6-astra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -259,6 +286,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -268,6 +296,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -277,6 +306,7 @@
       "replace": "gpt-4o",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -286,6 +316,7 @@
       "replace": "gpt-4o-mini",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -295,6 +326,7 @@
       "replace": "gpt-5",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -304,6 +336,7 @@
       "replace": "gpt-5-mini",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -313,6 +346,7 @@
       "replace": "gpt-5.5",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -322,6 +356,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -331,6 +366,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -340,6 +376,7 @@
       "replace": "gpt-4o",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -349,6 +386,7 @@
       "replace": "gpt-4o-mini",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -358,6 +396,7 @@
       "replace": "gpt-5",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -367,6 +406,7 @@
       "replace": "gpt-5-mini",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -376,6 +416,7 @@
       "replace": "gpt-5.5",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -385,6 +426,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -394,6 +436,7 @@
       "replace": "gpt-6-astra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -403,6 +446,7 @@
       "replace": "gpt-6-astra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -412,6 +456,7 @@
       "replace": "gpt-4o",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -421,6 +466,7 @@
       "replace": "gpt-4o-mini",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -430,6 +476,7 @@
       "replace": "gpt-5",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -439,6 +486,7 @@
       "replace": "gpt-5-mini",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -448,6 +496,7 @@
       "replace": "gpt-5.5",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth data/static/ai/command-normalization.json (pre-GH-168 alias rows)",
       "verified_on": null,
       "flags": []
@@ -457,6 +506,7 @@
       "replace": "gpt-6-astra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-6-astra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -466,6 +516,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -475,6 +526,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -484,6 +536,7 @@
       "replace": "gpt-5.6-terra",
       "target": "native",
       "provider": "openai",
+      "status": "ga",
       "source": "AEGIS-Sleuth GH-168 rev4 operator pins, verified https://platform.openai.com/docs/models/gpt-5.6-terra",
       "verified_on": "2026-09-04",
       "flags": []
@@ -493,6 +546,7 @@
       "replace": "deepseek/deepseek-v4-pro",
       "target": "openrouter",
       "provider": "deepseek",
+      "status": "ga",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
       "flags": []
@@ -502,6 +556,7 @@
       "replace": "nvidia/nemotron-3-ultra-550b-a55b",
       "target": "openrouter",
       "provider": "nvidia",
+      "status": "ga",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
       "flags": []
@@ -511,6 +566,7 @@
       "replace": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "target": "openrouter",
       "provider": "nvidia",
+      "status": "ga",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
       "flags": []
@@ -520,6 +576,7 @@
       "replace": "qwen/qwen3-coder",
       "target": "openrouter",
       "provider": "qwen",
+      "status": "ga",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
       "flags": []
@@ -529,6 +586,7 @@
       "replace": "stealth/ox-alpha",
       "target": "openrouter",
       "provider": "stealth",
+      "status": "preview",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
       "flags": []
@@ -538,6 +596,7 @@
       "replace": "x-ai/grok-4.6",
       "target": "openrouter",
       "provider": "x-ai",
+      "status": "ga",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
       "flags": []
@@ -547,8 +606,169 @@
       "replace": "z-ai/glm-5.2",
       "target": "openrouter",
       "provider": "z-ai",
+      "status": "ga",
       "source": "XYZ-forge relay-automation/openrouter-model-aliases.yml (GH-120)",
       "verified_on": null,
+      "flags": []
+    },
+    {
+      "match": "hy4",
+      "replace": "hy4-preview",
+      "target": "native",
+      "provider": "tencent",
+      "status": "preview",
+      "source": "Tencent Cloud TokenHub model list https://www.tencentcloud.com/document/product/1300/80632 (model parameter 'hy4-preview')",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "hy4",
+      "replace": "tencent/hy4-preview",
+      "target": "openrouter",
+      "provider": "tencent",
+      "status": "preview",
+      "source": "OpenRouter live /api/v1/models check (tencent/hy4-preview, 1048576 ctx); release https://github.com/Tencent-Hunyuan/Hy4-preview",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "hy 4",
+      "replace": "hy4-preview",
+      "target": "native",
+      "provider": "tencent",
+      "status": "preview",
+      "source": "Tencent Cloud TokenHub model list https://www.tencentcloud.com/document/product/1300/80632 (model parameter 'hy4-preview')",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "hy4 preview",
+      "replace": "hy4-preview",
+      "target": "native",
+      "provider": "tencent",
+      "status": "preview",
+      "source": "Tencent Cloud TokenHub model list https://www.tencentcloud.com/document/product/1300/80632 (model parameter 'hy4-preview')",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "hy4 preview",
+      "replace": "tencent/hy4-preview",
+      "target": "openrouter",
+      "provider": "tencent",
+      "status": "preview",
+      "source": "OpenRouter live /api/v1/models check (tencent/hy4-preview, 1048576 ctx); release https://github.com/Tencent-Hunyuan/Hy4-preview",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "tencent hy4",
+      "replace": "hy4-preview",
+      "target": "native",
+      "provider": "tencent",
+      "status": "preview",
+      "source": "Tencent Cloud TokenHub model list https://www.tencentcloud.com/document/product/1300/80632 (model parameter 'hy4-preview')",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "meta",
+      "replace": "muse-spark-1.3",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3` run. Clause-free tier: $1.25/$4.25/$0.15 per M in/out/cached.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "muse",
+      "replace": "muse-spark-1.3",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3` run. Clause-free tier: $1.25/$4.25/$0.15 per M in/out/cached.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "spark",
+      "replace": "muse-spark-1.3",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3` run. Clause-free tier: $1.25/$4.25/$0.15 per M in/out/cached.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "muse spark",
+      "replace": "muse-spark-1.3",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3` run. Clause-free tier: $1.25/$4.25/$0.15 per M in/out/cached.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "meta muse",
+      "replace": "muse-spark-1.3",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3` run. Clause-free tier: $1.25/$4.25/$0.15 per M in/out/cached.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "muse spark 1.3",
+      "replace": "muse-spark-1.3",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3` run. Clause-free tier: $1.25/$4.25/$0.15 per M in/out/cached.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "muse contributor",
+      "replace": "muse-spark-1.3-contributor",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (is_current true, is_default true, visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3-contributor` run. Discounted tier at $0.10/$0.20/$0.002 per M; Meta states content including inter-session messages may be used for product improvement.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "spark contributor",
+      "replace": "muse-spark-1.3-contributor",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (is_current true, is_default true, visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3-contributor` run. Discounted tier at $0.10/$0.20/$0.002 per M; Meta states content including inter-session messages may be used for product improvement.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "muse spark contributor",
+      "replace": "muse-spark-1.3-contributor",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (is_current true, is_default true, visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3-contributor` run. Discounted tier at $0.10/$0.20/$0.002 per M; Meta states content including inter-session messages may be used for product improvement.",
+      "verified_on": "2026-09-08",
+      "flags": []
+    },
+    {
+      "match": "muse spark 1.3 contributor",
+      "replace": "muse-spark-1.3-contributor",
+      "target": "native",
+      "provider": "meta",
+      "status": "ga",
+      "source": "Meta provider catalog as served to Muse Code 1.0.3 (is_current true, is_default true, visibility 'visible', released 2026-09-02); id confirmed by a live `muse exec --model muse-spark-1.3-contributor` run. Discounted tier at $0.10/$0.20/$0.002 per M; Meta states content including inter-session messages may be used for product improvement.",
+      "verified_on": "2026-09-08",
       "flags": []
     }
   ]

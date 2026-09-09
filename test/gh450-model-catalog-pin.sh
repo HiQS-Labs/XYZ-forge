@@ -30,7 +30,19 @@ run_check() { python3 "$MC" check --root "$1" 2>&1; }
 # Commit placeholders for the scratch pins. Full 40-hex on purpose: check_pin asserts the format,
 # because a truncated or typo'd provenance reference is the part of a pin record that IS checkable
 # offline (the sha256s bind the bytes; these name where the bytes came from).
-REAL_TAG_COMMIT="75e191391fbc001ac9755c7a7d87e388ce6e375b"
+# GH-518: read the tree's CURRENT pin instead of naming a literal tag.
+#
+# Several cases below exercise refusals that only fire on a SAME-TAG re-pin -- the changed-renderer
+# and first-pin provenance guards. Hardcoding "v1.0.0" made them correct only for as long as the
+# repo happened to be pinned there. The moment the pin moved (v1.0.0 -> v1.3.0 for Muse Spark),
+# those calls silently became tag MOVES, and a move's `--expect-sha256` refusal preempted the
+# reason actually under test -- so the suite failed while reporting "refused for the wrong reason",
+# which is a fixture bug wearing the costume of a product bug.
+#
+# Deriving both values from catalog.pin.json keeps the cases pinned to their intent (same tag) and
+# makes them survive every future repin.
+REAL_TAG="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tag"])' "$ROOT/$CAT_DIR/catalog.pin.json")"
+REAL_TAG_COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tag_commit"])' "$ROOT/$CAT_DIR/catalog.pin.json")"
 FAKE_TAG_COMMIT="0000000000000000000000000000000000000000"
 FAKE_RENDERER_COMMIT="1111111111111111111111111111111111111111"
 
@@ -144,13 +156,13 @@ out="$(run_check "$T")"; rc=$?
 # --- 2a'. Provenance guard (PR #456 review): a changed renderer needs --renderer-commit. ---
 T="$WORK/renderer"; fresh_copy "$T"
 printf '\n# vendored-renderer change for the guard control\n' >> "$T/$CAT_DIR/render_openrouter.py"
-if python3 "$MC" pin --root "$T" --tag "v1.0.0" --tag-commit "$REAL_TAG_COMMIT" >/dev/null 2>"$T/pin.err"; then
+if python3 "$MC" pin --root "$T" --tag "$REAL_TAG" --tag-commit "$REAL_TAG_COMMIT" >/dev/null 2>"$T/pin.err"; then
   fail "pin accepted a changed renderer without --renderer-commit (provenance would carry the old commit beside the new sha)"
 else
   case "$(cat "$T/pin.err")" in *"no --renderer-commit"*) pass "negative control: pin refuses a changed renderer without --renderer-commit, by name" ;;
     *) fail "pin refused for the wrong reason: $(cat "$T/pin.err")" ;; esac
 fi
-python3 "$MC" pin --root "$T" --tag "v1.0.0" --tag-commit "$REAL_TAG_COMMIT" --renderer-commit "$FAKE_RENDERER_COMMIT" >/dev/null 2>&1 \
+python3 "$MC" pin --root "$T" --tag "$REAL_TAG" --tag-commit "$REAL_TAG_COMMIT" --renderer-commit "$FAKE_RENDERER_COMMIT" >/dev/null 2>&1 \
   && pass "pin accepts the changed renderer once --renderer-commit names its origin" \
   || fail "pin refused even with --renderer-commit"
 
@@ -187,7 +199,7 @@ out="$(run_check "$T")"; rc=$?
   && pass "negative control: a pin record without renderer_commit is refused by name" \
   || fail "pin without renderer_commit: rc=$rc $out"
 rm -f "$T/$CAT_DIR/catalog.pin.json"
-if python3 "$MC" pin --root "$T" --tag "v1.0.0" --tag-commit "$REAL_TAG_COMMIT" --expect-sha256 "$(python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$T/$CAT_DIR/catalog.json")" >/dev/null 2>"$T/first.err"; then
+if python3 "$MC" pin --root "$T" --tag "$REAL_TAG" --tag-commit "$REAL_TAG_COMMIT" --expect-sha256 "$(python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$T/$CAT_DIR/catalog.json")" >/dev/null 2>"$T/first.err"; then
   fail "a FIRST pin with no --renderer-commit was written (would carry a /None/ renderer_source)"
 else
   case "$(cat "$T/first.err")" in *"no renderer provenance"*) pass "negative control: a first pin without --renderer-commit is refused by name" ;;

@@ -108,6 +108,18 @@ def resolve_model(*repo_roots):
     """
     explicit = os.environ.get("MUSE_MODEL", "").strip()
     if explicit:
+        # Accept colloquial names, so MUSE_MODEL=muse and MUSE_MODEL="Muse Spark 1.3 Contributor"
+        # both work. This goes through the catalog's NATIVE aliases, not resolve-model-alias.sh,
+        # which is OpenRouter-scoped and structurally cannot see a native model -- see
+        # model_alias.resolve_native_alias. A miss returns the literal unchanged, so an exact id
+        # or an unknown string is passed to the CLI as typed and rejected there rather than here.
+        try:
+            from model_alias import resolve_native_alias
+            resolved = resolve_native_alias(explicit, os.environ.get("XYZ_ROOT", ""))
+        except Exception:
+            resolved = explicit
+        if resolved != explicit:
+            return resolved, "explicit MUSE_MODEL %r resolved via catalog aliases" % explicit
         return explicit, "explicit MUSE_MODEL"
 
     if os.environ.get("MUSE_ALLOW_CONTRIBUTOR", "1") == "0":

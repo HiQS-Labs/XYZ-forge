@@ -113,6 +113,23 @@ expect "MUSE_ALLOW_CONTRIBUTOR=0 pins safe tier even on a public repo" \
 expect "explicit MUSE_MODEL wins (informed operator choice)" \
        "$CONTRIB" private with-gh MUSE_MODEL=muse-spark-1.3-contributor
 
+echo "--- colloquial MUSE_MODEL resolves through the catalog's NATIVE aliases ---"
+# resolve-model-alias.sh cannot serve these: render_openrouter.py filters the alias table to
+# target == "openrouter", and this suite's sibling gh450 asserts that scoping as a contract. So a
+# native model resolves against the vendored catalog.json instead (model_alias.resolve_native_alias).
+# XYZ_ROOT is what that lookup reads, so it must be set for these cases.
+expect "MUSE_MODEL=muse resolves to the clause-free tier" \
+       "$SAFE" private with-gh MUSE_MODEL=muse XYZ_ROOT="$REPO_ROOT"
+expect "MUSE_MODEL=meta resolves to the clause-free tier" \
+       "$SAFE" private with-gh MUSE_MODEL=meta XYZ_ROOT="$REPO_ROOT"
+# The operator's original phrasing, verbatim, must reach the tier they named.
+expect "MUSE_MODEL='Muse Spark 1.3 Contributor' resolves to the contributor tier" \
+       "$CONTRIB" private with-gh MUSE_MODEL="Muse Spark 1.3 Contributor" XYZ_ROOT="$REPO_ROOT"
+# An unknown string is passed through untouched, to be rejected by the CLI rather than silently
+# rewritten into some nearby model here.
+expect "an unknown MUSE_MODEL passes through unchanged" \
+       "definitely-not-a-model" private with-gh MUSE_MODEL=definitely-not-a-model XYZ_ROOT="$REPO_ROOT"
+
 echo "--- NEGATIVE CONTROL: a fallback that upgrades on uncertainty must be caught ---"
 mutant="$WORK/muse-turn-mutant.py"
 sed 's|return SAFE_MODEL, "not established as public|return CONTRIBUTOR_MODEL, "not established as public|' \
