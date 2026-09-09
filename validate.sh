@@ -324,6 +324,14 @@ TESTS=(
                                  #   rating metrics + effectiveScore precedence, and the leaderboard's
                                  #   one-scorer property (script ranking == --json ordering).
   "gh75-dashboard.sh"            # GH-75 (releases dashboard verb renders one self-contained read-only HTML page)
+  "gh525-unshipped-version-tokens.sh"  # GH-525 (the unshipped_version_tokens setting + the
+                                 #   `settings set` verb it needs). 14/0. The controls are the
+                                 #   point: WITHOUT the setting two placeholder blocks still
+                                 #   collide (the safety claim for every existing install), a real
+                                 #   version is never nulled while a list is configured, an empty
+                                 #   Release: value is still refused, and a HAND-written settings
+                                 #   row is still caught as a receipt-less mutation — which is why
+                                 #   the verb exists at all.
   "gh32-releases-app.sh"         # GH-32 Phase 0+1 (SQLite RELEASES ledger CLI: schema/GID shape,
                                  #   writer-lock + journal protocol, canonical dump, receipt chain,
                                  #   import grandfathering, side-by-side gen) — 81/0; registered in the

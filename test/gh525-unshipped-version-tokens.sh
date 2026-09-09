@@ -18,24 +18,19 @@
 #   - a genuinely EMPTY Release: value is still refused, and a trailing comma in the setting
 #     cannot turn the empty string into a placeholder
 
-set -u
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Sources _setup.sh so the GH-10 fixture-guard adoption happens centrally (gh1-adoption-guard
+# requires it) and $WORK is a guarded sandbox root rather than a hand-rolled mktemp.
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_setup.sh" gh525-unshipped-version-tokens
 APP="$HERE/../utils/py/releases_app.py"
 
 pass=0; fail=0
 ok(){ if [ "$2" = "0" ]; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 is(){ [ "$1" = "$2" ]; }
-has(){ printf '%s' "$1" | grep -q "$2"; }
-
-echo "== test: gh525-unshipped-version-tokens =="
+# capture-then-match, never a pipe into grep -q (gh139-pipe-grep-guard).
+has(){ grep -q "$2" <<<"$1"; }
 
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
 command -v sqlite3 >/dev/null 2>&1 || { echo "sqlite3 required" >&2; exit 1; }
-
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh525.XXXXXX")"
-[ -n "$WORK" ] && [ -d "$WORK" ] || { echo "mktemp failed" >&2; exit 1; }
-cleanup(){ [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
-trap cleanup EXIT
 
 mkrepo(){ # <name> -> echoes the fixture repo path
   local r="$WORK/$1"
@@ -77,8 +72,10 @@ Target Date: 2026-01-01
 LEDGER
 }
 
-set_tokens(){ sqlite3 "$R/releases.db" \
-  "INSERT OR REPLACE INTO settings(key, value) VALUES('unshipped_version_tokens', '$1')"; }
+# Through the CLI, never sqlite3 directly: a settings row is part of the business-state digest, so
+# a hand write leaves the latest receipt disagreeing with the state and `check` fails with
+# receipt-chain. Section F pins exactly that.
+set_tokens(){ rout settings set unshipped_version_tokens "$1"; }
 
 # ── A. the default path is unchanged (the safety claim for every existing install) ──────────────
 echo "-- A: setting absent -> today's behaviour, byte for byte"
@@ -191,6 +188,46 @@ LEDGER
 rout import
 N="$(sql "SELECT COUNT(*) FROM releases WHERE version='tbd'")"
 ok "a case variant is NOT treated as the configured token (literal match, by design)" "$(is "$N" "1"; echo $?)"
+
+
+# ââ F. the setting must be writable WITHOUT breaking the ledger âââââââââââââââââââââ
+echo "-- F: a configurable ledger needs a configuring verb"
+
+# This is the control that makes the whole feature usable rather than theoretical. Without
+# `settings set`, the only way to configure this is a direct sqlite3 INSERT, and a settings row is
+# part of the business-state digest -- so the hand write is caught as a receipt-less mutation and
+# the ledger stops checking clean. Both halves are asserted: the CLI path stays clean, the hand
+# path does not.
+R="$(mkrepo receipted)"
+rout init --slug alpha
+rout settings set unshipped_version_tokens "TBD"
+V="$(rlog check)"
+if has "$V" "check: clean"; then ok "a setting written through the CLI leaves check CLEAN (receipted)" 0; else ok "CLI-written setting checks clean" 1; fi
+
+R="$(mkrepo handwritten)"
+rout init --slug alpha
+# One receipted write FIRST: the digest comparison is `latest receipt's after != current state`,
+# so a ledger with no receipts at all has nothing to compare against and the hand write would slip
+# by unflagged. Measured, not assumed — this assertion failed until the seed write was added.
+rout add --version 0.1.0 --status draft --description "seed." --tracking-issue "https://github.com/A/B/issues/1"
+sqlite3 "$R/releases.db" "INSERT OR REPLACE INTO settings(key, value) VALUES('unshipped_version_tokens', 'TBD')"
+V="$(rlog check)"
+if has "$V" "receipt-chain"; then
+  ok "a HAND-written setting is caught as a receipt-less mutation (why the verb exists)" 0
+else
+  ok "hand-written setting caught by the digest chain" 1
+fi
+
+R="$(mkrepo guarded)"
+rout init --slug alpha
+V="$(rlog settings set generation 99)"
+if has "$V" "setting-not-configurable"; then
+  ok "a non-configurable key is refused (generation belongs to the writer protocol)" 0
+else
+  ok "non-configurable key refused" 1
+fi
+V="$(sql "SELECT value FROM settings WHERE key='generation'")"
+ok "and the refusal changed nothing" "$(is "$V" "1"; echo $?)"
 
 echo "  ${pass} passed, ${fail} failed"
 [ "$fail" = "0" ] || exit 1

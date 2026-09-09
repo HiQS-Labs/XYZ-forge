@@ -154,6 +154,12 @@ GENERATION_KEY = "generation"
 # behaviour is byte-identical to before for every existing install.
 UNSHIPPED_VERSION_TOKENS_KEY = "unshipped_version_tokens"
 
+# The settings keys an operator may write with `releases settings set`. Deliberately a
+# deny-by-default allowlist: `generation` belongs to the writer protocol and `repo_slug` is the
+# ledger's identity, so exposing either here would be handing out a supported way to corrupt the
+# ledger. A new configurable key is a deliberate addition to this tuple, never an accident.
+CONFIGURABLE_SETTINGS = (UNSHIPPED_VERSION_TOKENS_KEY,)
+
 CRASH_BOUNDARIES = ("pre-commit", "post-commit", "post-stage", "mid-rename", "post-rename")
 
 
@@ -3507,6 +3513,59 @@ def cmd_roadmap_repoint(args):
         conn.close()
 
 
+def cmd_settings_set(args):
+    """`releases settings set <key> <value>` — write a settings row THROUGH the writer protocol.
+
+    GH-525: without this there is no supported way to configure the ledger at all. A settings row
+    is part of the business-state digest, so a direct `sqlite3 INSERT` — the only alternative —
+    leaves the latest receipt's after-digest disagreeing with the state and `check` fails with
+    `receipt-chain: ... a receipt-less mutation`. Measured, not assumed: setting
+    `unshipped_version_tokens` by hand took a clean ledger to `check: 2 failure(s)`.
+
+    So a configurable ledger needs a configuring verb. Only keys in CONFIGURABLE_SETTINGS are
+    writable: `generation` is owned by the writer protocol and `repo_slug` is identity, and letting
+    either be set here would hand an operator a supported way to corrupt the ledger."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        if args.key not in CONFIGURABLE_SETTINGS:
+            refuse("setting-not-configurable",
+                   "%s is not an operator-configurable setting; configurable keys are: %s"
+                   % (args.key, ", ".join(sorted(CONFIGURABLE_SETTINGS))))
+        old = get_setting(conn, args.key)
+        if args.dry_run:
+            print("%s: %s -> %s" % (args.key, old if old is not None else "(unset)", args.value))
+            return
+
+        def mutate(conn):
+            if _has_column(conn, "settings", "updated_at"):
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?) "
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
+                             "updated_at = excluded.updated_at",
+                             (args.key, args.value, now_iso()))
+            else:
+                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?) "
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                             (args.key, args.value))
+
+        perform_write(root, conn, "settings-set", None, mutate)
+        print("%s = %s" % (args.key, args.value))
+    finally:
+        conn.close()
+
+
+def cmd_settings_list(args):
+    """Print every settings row, so "what is this ledger configured to do" is one command."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        for row in conn.execute("SELECT key, value FROM settings ORDER BY key"):
+            mark = " (configurable)" if row["key"] in CONFIGURABLE_SETTINGS else ""
+            print("%-28s %s%s" % (row["key"], row["value"], mark))
+    finally:
+        conn.close()
+
+
 def validate_roadmap_section(section):
     """Refuse headings the dashboard cannot render; never silently rename input."""
     if section not in ROADMAP_SECTIONS:
@@ -5338,6 +5397,17 @@ def build_parser():
 
     sp = sub.add_parser("dashboard", help="render the releases and roadmap dashboard HTML")
 
+    # GH-525: a ledger with configurable behaviour needs a configuring verb. A settings row is part
+    # of the business-state digest, so writing one by hand breaks the receipt chain and `check`
+    # fails — this is the only supported way to set one.
+    sp_set = sub.add_parser("settings", help="read/write operator-configurable ledger settings")
+    ssub = sp_set.add_subparsers(dest="settings_cmd", required=True)
+    sp_sl = ssub.add_parser("list", help="print every settings row")
+    sp_ss = ssub.add_parser("set", help="write one operator-configurable setting (receipted)")
+    sp_ss.add_argument("key", help="setting key; only configurable keys are accepted")
+    sp_ss.add_argument("value", help="new value")
+    sp_ss.add_argument("--dry-run", action="store_true", help="print the change, write nothing")
+
     sp = sub.add_parser("roadmap", help="Roadmap ledger (GH-269): sync/list the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_sections = rsub.add_parser("sections", help="list accepted roadmap section names (no DB required)")
@@ -5518,6 +5588,8 @@ def main(argv=None):
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
                               "move": cmd_roadmap_move, "sections": cmd_roadmap_sections,
                               "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
+        "settings": lambda a: {"set": cmd_settings_set,
+                               "list": cmd_settings_list}[a.settings_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,
