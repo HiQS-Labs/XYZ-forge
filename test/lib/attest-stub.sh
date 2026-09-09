@@ -39,7 +39,7 @@ if ! "$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 
   "$tick" claim "$task" --agent "$reviewer" --paths "$relay_file" >/dev/null 2>&1 || true
 fi
 "$tick" done "$task" --agent "$reviewer" >/dev/null 2>&1 || true
-if ! "$tick" info "$task" 2>/dev/null | grep -qE '^status:[[:space:]]+done$'; then
+if ! grep -qE '^status:[[:space:]]+done$' <<<"$("$tick" info "$task" 2>/dev/null)"; then
   echo "attest-stub: token $task does not read done after claim/done as $reviewer (TICK_REPO_ROOT=$TICK_REPO_ROOT) — the stub manufactured no valid success" >&2
   exit 3
 fi
