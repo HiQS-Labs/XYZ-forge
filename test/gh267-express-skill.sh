@@ -32,8 +32,8 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DRIVER="$HERE/../utils/py/express.py"
 WORK="$(mktemp -d /tmp/gh267-express.XXXXXX)" || { echo "FAIL: mktemp"; exit 1; }
-BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"
-mkdir -p "$BIN" "$GH_STATE"
+BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"; export HOME="$WORK/home"
+mkdir -p "$BIN" "$GH_STATE" "$HOME"
 
 # GH-1 adoption: the central fixture guard (GH-564 kill conditions + GH-567
 # use-boundary resolution), armed at source time — no private copies.
@@ -185,8 +185,16 @@ run_check > /dev/null 2> "$ERR" && bad "on-development must refuse" || { check_r
 EV="$(ls "$FX/.tick/events/"*express-refused*.jsonl 2>/dev/null | head -1)"
 [ -n "$EV" ] && grep -q '"verb": "express-refused"' "$EV" && ok "express-refused tick event written" || bad "tick telemetry missing"
 
-new_task_branch; printf 'x\n' >> "$FX/utils/py/foo.py"; git -C "$FX" add -A; git -C "$FX" commit -qm extra
-run_check > /dev/null 2> "$ERR" && bad "HEAD-ahead must refuse" || { check_rule task-clone "$ERR" && ok "task-clone refusal (GH-527)" || bad "task-clone rule"; }
+new_task_branch
+for i in 1 2 3; do
+  printf "c$i\n" >> "$FX/utils/py/foo.py"
+  git -C "$FX" add -A && git -C "$FX" commit -qm "commit $i"
+done
+run_check > /dev/null 2> "$ERR" && bad "3 commits ahead must refuse" || { check_rule too-many-commits "$ERR" && ok "too-many-commits refusal (> 2 commits, GH-516)" || bad "too-many-commits rule"; }
+
+new_task_branch; git -C "$FX" checkout -q development; printf "upstream change\n" >> "$FX/README.md"; git -C "$FX" add -A && git -C "$FX" commit -qm "upstream change"; git -C "$FX" push -q origin development; git -C "$FX" checkout -q task/gh-999
+run_check > /dev/null 2> "$ERR" && bad "diverged branch must refuse" || { check_rule task-clone "$ERR" && ok "task-clone refusal on diverged branch (GH-516)" || bad "task-clone diverged rule"; }
+git -C "$FX" checkout -q development; git -C "$FX" reset -q --hard HEAD~1; git -C "$FX" push -q --force origin development; git -C "$FX" checkout -q task/gh-999
 
 new_task_branch; printf 'x\n' >> "$FX/relay-automation/consult.sh"
 run_check > /dev/null 2> "$ERR" && bad "twin edit must refuse" || { check_rule frozen-twin "$ERR" && ok "frozen-twin refusal (GH-308)" || bad "frozen-twin rule"; }
@@ -231,6 +239,35 @@ echo "== happy path =="
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2\n' > "$FX/test/gh999-demo.sh"
 OUT="$(run_check 999)"
 grep -q "express-check: PASS" <<<"$OUT" && ok "legal fix passes" || bad "legal fix refused: $OUT"
+
+# 1 and 2 local commits pass check (GH-516)
+new_task_branch
+printf 'precommitted 1\n' > "$FX/utils/py/foo.py"
+git -C "$FX" add -A && git -C "$FX" commit -qm "local commit 1"
+OUT="$(run_check 999)"
+grep -q "express-check: PASS" <<<"$OUT" && ok "1 local commit passes check (GH-516)" || bad "1 local commit refused: $OUT"
+
+printf 'precommitted 2\n' >> "$FX/utils/py/foo.py"
+git -C "$FX" add -A && git -C "$FX" commit -qm "local commit 2"
+OUT="$(run_check 999)"
+grep -q "express-check: PASS" <<<"$OUT" && ok "2 local commits pass check (GH-516)" || bad "2 local commits refused: $OUT"
+
+# multi-subsystem with <= 30 insertions across <= 2 files passes (auto-allow, GH-516)
+new_task_branch
+mkdir -p "$FX/config"
+printf '{"key": "val"}\n' > "$FX/config/test.json"
+printf 'fixed\n' > "$FX/utils/py/foo.py"
+OUT="$(run_check 999)"
+grep -q "express-check: PASS" <<<"$OUT" && ok "micro-diff multi-subsystem auto-allowed (GH-516)" || bad "micro-diff multi-subsystem refused: $OUT"
+
+# multi-subsystem with > 30 insertions refuses without flag, passes with --allow-multi-subsystem (GH-516)
+new_task_branch
+mkdir -p "$FX/config"
+python3 -c "print('\n'.join('line %d' % i for i in range(35)))" > "$FX/config/test.json"
+printf 'fixed\n' > "$FX/utils/py/foo.py"
+run_check > /dev/null 2> "$ERR" && bad "large multi-subsystem without flag must refuse" || { check_rule multi-subsystem "$ERR" && ok "multi-subsystem refusal without flag (GH-516)" || bad "multi-subsystem rule"; }
+python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh --allow-multi-subsystem >/dev/null 2>"$ERR" \
+  && ok "--allow-multi-subsystem permits multi-subsystem changes (GH-516)" || bad "--allow-multi-subsystem refused: $(cat "$ERR")"
 
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
@@ -321,10 +358,41 @@ WR_FAIL=1 python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo
 FAILED_TICK="$(ls -t "$FX/.tick/events/"*express-reconcile-failed*.jsonl 2>/dev/null | head -1)"
 [ -n "$FAILED_TICK" ] && grep -q '"verb": "express-reconcile-failed"' "$FAILED_TICK" && ok "every closeout failure writes its receipt" || bad "closeout failure tick missing"
 
+echo "== dry-run mode (GH-516) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-dry\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+DRYOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary "dry run demo" --dry-run 2>"$ERR")"
+grep -q "express-check \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports check pass" || bad "run --dry-run check missing: $DRYOUT"
+grep -q "express-land \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports land pass" || bad "run --dry-run land missing: $DRYOUT"
+[ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && ok "dry-run created no capture doc" || bad "dry-run created capture doc"
+[ "$(git -C "$FX" branch --show-current)" = task/gh-999 ] && ok "dry-run left task branch intact" || bad "dry-run switched branch"
+[ -z "$(git -C "$FX" status --porcelain=v1)" ] && bad "working tree changes were wiped by dry-run" || ok "dry-run preserved uncommitted working tree"
+
+echo "== resume subcommand & central telemetry (GH-516) =="
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-resume\n' > "$FX/utils/py/foo.py"
+issue_json OPEN "Demo hotfix" 999
+# Generate doc and dial into manifest before committing
+python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "resume demo" >/dev/null 2>"$ERR" || bad "docs failed: $(cat "$ERR")"
+python3 "$DRIVER" --root "$FX" ledger --issue 999 >/dev/null 2>"$ERR" || bad "ledger failed: $(cat "$ERR")"
+# Simulate interrupted state: commit already pushed to development, but closeout incomplete
+git -C "$FX" add -A && git -C "$FX" commit -qm "fix(GH-999): simulated landing for resume [express]
+
+Closes #999"
+LAND_SHA="$(git -C "$FX" rev-parse HEAD)"
+git -C "$FX" push -q origin HEAD:development
+# Run resume
+RES_OUT="$(python3 "$DRIVER" --root "$FX" resume --issue 999 --sha "$LAND_SHA" 2>"$ERR")"
+grep -q "express-resume" <<<"$RES_OUT" && ok "express resume executes successfully" || bad "express resume failed: $(cat "$ERR")"
+[ "$(git -C "$FX" branch --show-current)" = development ] && ok "resume left checkout on development" || bad "resume branch wrong"
+# Verify central telemetry mirroring
+CENTRAL_TICK="$(ls -t "$HOME/.config/xyz/events/"*express*.jsonl 2>/dev/null | head -1)"
+[ -n "$CENTRAL_TICK" ] && ok "central telemetry mirrored to ~/.config/xyz/events" || bad "central telemetry missing from $HOME/.config/xyz/events"
+
 echo "== source audit (direct landing) =="
 LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
 grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
 [ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
+grep -q "def cmd_resume" "$DRIVER" && ok "cmd_resume implemented" || bad "cmd_resume missing"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"
