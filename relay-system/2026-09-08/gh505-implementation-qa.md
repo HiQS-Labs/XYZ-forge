@@ -1,8 +1,8 @@
 ---
 Goal: Final QA of the GH-505 / GH-509 / GH-510 implementation — driver-attested approval
 Date: 2026-09-08
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer (claude-b)
+STATUS: Approved
 ROUND: 3 / 3
 ---
 
@@ -444,3 +444,113 @@ otherwise list what remains, ranked.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Round 3 — Reviewer (codex) — 2026-09-08
+
+VERDICT: Approved for implementation QA. The remaining Medium findings R2-F1 and R2-F2
+are resolved; no High or Medium implementation finding remains in the inspected scope.
+The retained gate is **355/356, exit 1**, not a green gate. This verdict does not grant
+merge readiness or promotion and does not waive the harness's subsequent gate.
+
+Basis: direct reads of the adjudicated plan, both issue captures, the negative-control report,
+the revised attestation module, driver/containment and consumer boundaries, relevant fixtures,
+and the retained provenance and compressed final gate log. Graph tools were unavailable.
+No source, artifact, test, or git command was executed; only this relay file was edited.
+Runtime results below are producer-retained evidence, not fresh reviewer reproductions.
+Without git inspection, I do not independently certify commit membership or the equivalence
+of the reviewed checkout to the recorded gate SHA.
+
+### Closure of the remaining findings
+
+**R2-F1 — Resolved.** `utils/py/relay_attest.py:224-229` rejects the string-boolean and
+object-path counterexamples before a record reaches a consumer. Nullable candidate fields have
+explicit string checks. The separate `candidate_ok()` exception boundary at `:266-273`
+converts downstream failures into refusal tuples. L now includes both requested malformed
+shapes and the direct candidate boundary (`test/gh505-relay-attest.sh:293-296`); I7 invokes
+the real jog landing function and asserts a park for the malformed record (`:409-412`).
+These close the prior crash and truthiness findings within the stated validating-reader contract.
+
+**R2-F2 — Resolved.** H4 now checks the hook's committed source change, the post-approve
+diagnostic, a nonempty result receipt with a non-approved outcome and no validated candidate,
+and absence of the success line (`test/marathon-drive.sh:278-290`). The diagnostic is produced
+by the shared probe (`utils/py/marathon_drive.py:2414`) with the second bind's distinct context
+at `:2633`. Thus the first bind's refusal cannot satisfy the full case. The retained mutation
+report shows five assertions fail with the second bind removed, while the hook-execution
+control stays positive; all six pass after restoration
+(`test/baselines/GH-505-negative-control.md`, “H4 — second-bind mutation control”;
+`TESTS-RESULTS/2026-09-08+GH-505/provenance.jsonl:7`). This is the requested discriminating
+control. The test checks the completion log line rather than decoding the telemetry event;
+source also places the green emit after the second bind (`marathon_drive.py:2633-2641`).
+
+### Remaining Low note
+
+**R3-L1 — Low / non-blocking: the window policy still is not general awk numeric coercion.**
+`utils/py/relay_attest.py:47-54` consumes a leading integer prefix, whereas
+`relay-automation/relay-turn-lib.sh:1206-1216` adds awk's numeric value. For example, `1e1`
+denotes ten to awk but becomes one in Python; `-0.5` produces no citation iterations in awk
+but becomes zero in Python. These are source-derived edge cases, not fresh probes. The empty
+value and previously cited `3.0`/`1_0` examples are corrected. Cheapest follow-up: explicitly
+support a nonnegative integer window in both paths and describe that contract, or implement
+and test the broader coercion. Do not describe the current port as exact for arbitrary strings.
+This retains the prior Low classification; it does not reopen the role or candidate boundary.
+
+### Answers to the eight questions
+
+1. **Trust boundary: accept.** Terminal success still requires this process's `attested`
+   state (`relay_drive.py:727`, `:1025`, `:1066`), populated only after checked publication
+   (`:700-707`). Failed turns enter the explicit revert-only path (`:890`, `:651-659`).
+   The durable record cannot make a fresh driver's terminal exit succeed.
+2. **Role permissions: accept within the declared contained-shim contract.** Invocation-derived
+   `RELAY_ROLE` (`relay_drive.py:777-781`) takes precedence in the shared helper
+   (`relay-turn-lib.sh:90-94`); the Python bridge preserves that environment (`rtl.py:690-696`).
+   The inherited-marker/manual-turn limitation remains explicit.
+3. **Revision pinning: accept.** The cut uses the exported SHA (`relay-turn-lib.sh:749-750`),
+   seeded bytes are checked (`:794-800`), and correctly typed non-isolated/artifact records
+   cannot authorize a candidate (`relay_attest.py:285-288`). B4 advances HEAD before shim
+   creation and checks both the advancement and old cut (`test/gh505-relay-attest.sh:95-98`,
+   `:179-180`), resolving the original control defect.
+4. **Reader obligations: accept.** Expected identities, status, range/digest and trailer offset
+   are checked (`relay_attest.py:230-262`). Marathon requires done before load
+   (`marathon_drive.py:2402-2407`); jog's common merge helper requires the pinned-root token
+   read (`jog_run.py:1435-1450`, `:1466-1468`). Receipt-provided expectations remain subject
+   to the accepted trusted-receipt contract.
+5. **Candidate binding: accept.** Exact relay and named phase records replace directory-wide
+   permission (`relay_attest.py:298-306`). The ancestor plus endpoint-content contract remains
+   intentional. Marathon binds before the approved event and after the hook
+   (`marathon_drive.py:2621-2634`); jog requires the receipt candidate when supplied, checks
+   content, and passes the exact PR SHA to merge (`jog_run.py:1477-1484`).
+6. **Dispositions: accept with R3-L1's narrow qualification.** Warn-not-refuse and its review-once
+   exception cannot authorize a terminal approval; simulate remains a non-dispatch path.
+   Named metadata allowances, failed-turn reversion, current done reads, prefix-context
+   normalization, malformed-record refusal, and two binds preserve the agreed contract.
+   The GH-273 approved event still precedes the hook; final receipt fields and green completion
+   follow validation. The substituted H4 proof now distinguishes those stages.
+7. **Falsifiability: sufficient for this implementation review.** A/C still invoke the archived
+   base driver without the new flags (`test/gh505-relay-attest.sh:424-437`); the retained report
+   identifies their observed opposite outcomes. I/J are now accurately labelled source
+   comparisons, not executed base controls. The shared success stub now asserts done before
+   manufacturing its record (`test/lib/attest-stub.sh:42-45`), so it cannot silently bless a
+   missing token. It remains a success fixture, not evidence of actual reviewer dispatch.
+8. **Scope/ratings: accept with the prior limits.** The production publisher remains the driver
+   (`relay_drive.py:703`); consumers share the reader and jog's merge helper. No second review
+   subsystem is needed. Excluded merge surfaces and the provisional #509 effort remain
+   explicit. External incident counts and ledger persistence were not independently checked.
+
+### Gate evidence and final disposition
+
+The previously missing evidence directory is now present. Its final record identifies
+`8061b254c4646e0576fc78bae1eb0834dd69731b`, reports unchanged identity and a clean tree, and
+records 355/356 with `agent-chorus.sh` failing
+(`TESTS-RESULTS/2026-09-08+GH-505/provenance.jsonl:4`). The compressed log agrees: the failure
+survives the serial retry, with 174 passes and eight failures; GH-505, marathon-drive and
+gh280 are listed as passing. The following provenance entry records the same eight failures
+at base `a6441b9b` (`:5`). That is retained evidence of a pre-existing failure in that
+environment; it is not proof of the environmental root cause or permission to call the gate green.
+The focused GH-505 result is recorded as 60 pass, zero fail (`:6`).
+
+I accept the implementation based on the inspected corrections and retained focused evidence,
+with the gate limitation stated above. The producer/harness retains responsibility for the
+next gate and shipping decision. Round 3 of 3 is complete; no further implementation QA round
+is requested for the resolved blockers.
+
+NEXT: Producer (claude-b)
