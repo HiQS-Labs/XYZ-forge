@@ -422,13 +422,14 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
         "unpushed_on_integration": 0,
         "can_ff": False,
         "operation_in_progress": "",
+        "operation_evidence_ok": True,
         "evidence_complete": False,
         "landing_ready": False,
         "blockers": [],
     }
     try:
         path = Path(primary_repo).expanduser().resolve()
-    except OSError as exc:
+    except (OSError, RuntimeError) as exc:  # ~unknown-user raises RuntimeError, not OSError (R2-4)
         res["blockers"].append(f"cannot resolve primary path {primary_repo}: {exc}")
         return res
 
@@ -474,6 +475,12 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
     ):
         probe = run_git(path, ["rev-parse", "--git-path", marker])
         if probe.returncode != 0:
+            # Failing open here would let an unfinished operation ride through as READY (R2-3).
+            res["operation_evidence_ok"] = False
+            res["blockers"].append(
+                f"cannot check for an in-progress {label} ({marker}): "
+                f"{probe.stderr.strip() or 'git failed'} — readiness is unknown"
+            )
             continue
         marker_path = Path(probe.stdout.strip())
         if not marker_path.is_absolute():
@@ -511,7 +518,7 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
             f"HEAD is not an ancestor of {remote_ref} — `git merge --ff-only` would refuse"
         )
 
-    res["evidence_complete"] = bool(ref_evidence and res["can_ff"])
+    res["evidence_complete"] = bool(ref_evidence and res["can_ff"] and res["operation_evidence_ok"])
     res["landing_ready"] = bool(
         res["on_integration_branch"]
         and res["is_clean"]

@@ -30,6 +30,7 @@ from scan_clones import (
     DEFAULT_NEVER_DELETE
 )
 import merge_cleanup
+import scan_clones
 from merge_cleanup import prune_dangling_skill_symlinks
 from toposort_prs import (
     parse_pr_dependencies,
@@ -238,36 +239,54 @@ class TestPrimaryCheckoutIsInspectedFirst(unittest.TestCase):
 
 
 class TestPrimaryLandingEvidence(unittest.TestCase):
-    """Round-1 QA (Codex): readiness must be AFFIRMATIVE, never the absence of a failure.
+    """Round-1/2 QA (Codex): readiness must be AFFIRMATIVE, never the absence of a failure.
 
-    A git query that fails is unknown state. Before this, a clean checkout on `development` with
-    no `origin/development` at all satisfied every condition and was declared landing-ready, so
-    Phase 5 would merge toward a target that could not even be resolved.
+    Each case below mutates ONE condition away from a genuinely landing-ready baseline (a clone
+    with a real `origin/development`), so it pins the condition it names. An earlier version
+    built its fixture without a tracking ref, which made every case not-ready for the same
+    reason and could not attest the operation gate independently (R2-5).
     """
 
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
-        self.repo = Path(self.temp_dir) / "solo"
-        self.repo.mkdir()
-        subprocess.run(["git", "init", "-b", "development", str(self.repo)], capture_output=True, check=True)
+        self.origin = Path(self.temp_dir) / "origin.git"
+        self.repo = Path(self.temp_dir) / "primary"
+        subprocess.run(["git", "init", "--bare", "-b", "development", str(self.origin)], capture_output=True, check=True)
+        subprocess.run(["git", "clone", str(self.origin), str(self.repo)], capture_output=True, check=True)
         for k, v in (("user.name", "Test User"), ("user.email", "test@example.com")):
             subprocess.run(["git", "config", k, v], cwd=self.repo, check=True)
         (self.repo / "README.md").write_text("hello")
         subprocess.run(["git", "add", "README.md"], cwd=self.repo, check=True)
         subprocess.run(["git", "commit", "-m", "initial"], cwd=self.repo, capture_output=True, check=True)
+        subprocess.run(["git", "push", "-u", "origin", "development"], cwd=self.repo, capture_output=True, check=True)
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
+    def test_baseline_is_genuinely_ready(self):
+        """Control: every other case in this class mutates one condition away from THIS."""
+        info = inspect_primary_landing(self.repo, integration_branch="development")
+        self.assertTrue(info["landing_ready"], info["blockers"])
+        self.assertTrue(info["evidence_complete"])
+
     def test_missing_tracking_ref_is_not_ready(self):
         """THE PIN: no origin/<branch> means unknown, not ready."""
-        info = inspect_primary_landing(self.repo, integration_branch="development")
+        solo = Path(self.temp_dir) / "solo"
+        solo.mkdir()
+        subprocess.run(["git", "init", "-b", "development", str(solo)], capture_output=True, check=True)
+        for k, v in (("user.name", "T"), ("user.email", "t@e.com")):
+            subprocess.run(["git", "config", k, v], cwd=solo, check=True)
+        (solo / "f.txt").write_text("x")
+        subprocess.run(["git", "add", "f.txt"], cwd=solo, check=True)
+        subprocess.run(["git", "commit", "-m", "c"], cwd=solo, capture_output=True, check=True)
+        info = inspect_primary_landing(solo, integration_branch="development")
         self.assertFalse(info["landing_ready"], "a checkout with no landing target was declared ready")
         self.assertFalse(info["evidence_complete"])
         self.assertTrue(any("could not be resolved" in b for b in info["blockers"]), info["blockers"])
 
-    def test_unfinished_merge_blocks_even_with_a_clean_status(self):
-        """A resolved-but-unfinished merge leaves porcelain empty; the landing merge still refuses."""
+    def test_unfinished_merge_blocks_an_otherwise_ready_checkout(self):
+        """THE PIN: mutates ONLY the operation condition away from the ready baseline."""
+        self.assertTrue(inspect_primary_landing(self.repo, integration_branch="development")["landing_ready"])
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.repo,
                               capture_output=True, text=True, check=True).stdout.strip()
         (self.repo / ".git" / "MERGE_HEAD").write_text(head + "\n")
@@ -275,6 +294,27 @@ class TestPrimaryLandingEvidence(unittest.TestCase):
         self.assertEqual(info["operation_in_progress"], "merge")
         self.assertFalse(info["landing_ready"])
         self.assertTrue(any("unfinished merge" in b for b in info["blockers"]), info["blockers"])
+
+    def test_failed_operation_probe_is_not_ready(self):
+        """THE PIN (R2-3): a probe that cannot answer must not read as 'no operation in progress'."""
+        real = scan_clones.run_git
+
+        def flaky(cwd, args):
+            if args[:2] == ["rev-parse", "--git-path"]:
+                return subprocess.CompletedProcess(args=args, returncode=1, stdout="", stderr="probe refused")
+            return real(cwd, args)
+
+        with mock.patch.object(scan_clones, "run_git", side_effect=flaky):
+            info = inspect_primary_landing(self.repo, integration_branch="development")
+        self.assertFalse(info["operation_evidence_ok"])
+        self.assertFalse(info["landing_ready"], "a checkout with unknown operation state was declared ready")
+        self.assertTrue(any("readiness is unknown" in b for b in info["blockers"]), info["blockers"])
+
+    def test_unresolvable_home_path_reports_not_ready_instead_of_raising(self):
+        """R2-4: ~unknown-user raises RuntimeError, not OSError."""
+        info = inspect_primary_landing(Path("~no-such-user-xyz/repo"), integration_branch="development")
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(info["blockers"])
 
     def test_unreadable_git_reports_not_ready_instead_of_raising(self):
         with mock.patch("scan_clones.subprocess.run", side_effect=OSError("git not found")):
@@ -336,11 +376,78 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             ["--primary", str(self.primary), "--integration-branch", "main", "--scan-only"], landing_ready=True)
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
-    def test_checked_branch_and_landed_branch_are_the_same_string(self):
-        """THE PIN: the fast-forward target is read from --integration-branch, never hardcoded."""
-        src = Path(merge_cleanup.__file__).read_text()
-        self.assertIn('f"origin/{args.integration_branch}"', src)
-        self.assertNotIn('["merge", "--ff-only", "origin/development"]', src)
+    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0):
+        """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues."""
+        verdict = {
+            "path": str(self.primary), "integration_branch": "development", "current_branch": "development",
+            "is_clean": landing_ready, "dirty_count": 0, "on_integration_branch": True,
+            "unpushed_on_integration": 0, "can_ff": landing_ready, "operation_in_progress": "",
+            "operation_evidence_ok": True, "evidence_complete": landing_ready,
+            "landing_ready": landing_ready, "blockers": [] if landing_ready else ["synthetic blocker"],
+        }
+        git_calls = []
+
+        def fake_git(cwd, args):
+            git_calls.append(list(args))
+            rc = fetch_rc if args and args[0] == "fetch" else 0
+            return subprocess.CompletedProcess(args=args, returncode=rc, stdout="", stderr="boom" if rc else "")
+
+        with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
+             mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict), \
+             mock.patch.object(merge_cleanup, "run_git", side_effect=fake_git), \
+             mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
+             mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
+             mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
+             mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
+             mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=prs or []):
+            rc = merge_cleanup.main()
+        return rc, git_calls, merged, reconcile, teardown
+
+    def test_fast_forward_targets_the_branch_that_was_checked(self):
+        """THE PIN (R2-5): the ACTUAL git argument, not a string in the source."""
+        prs = [{"number": 7, "baseRefName": "main", "title": "t", "files": [], "body": ""}]
+        rc, git_calls, merged, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "main", "--execute"], prs=prs)
+        self.assertEqual(rc, 0)
+        merged.assert_called_once()
+        ff = [c for c in git_calls if c[:2] == ["merge", "--ff-only"]]
+        self.assertEqual(ff, [["merge", "--ff-only", "origin/main"]], git_calls)
+
+    def test_failed_fetch_refuses_rather_than_certifying_cached_refs(self):
+        """THE PIN (R2-1): READY cached evidence + a failed refresh must not merge."""
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"], prs=prs, fetch_rc=1)
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
+
+    def test_pr_targeting_another_base_is_refused(self):
+        """THE PIN (R2-2): Phase 0 only vouches for the branch it checked."""
+        prs = [{"number": 7, "baseRefName": "main", "title": "t", "files": [], "body": ""}]
+        rc, _, merged, reconcile, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"], prs=prs)
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+
+    def test_matching_base_on_a_non_default_target_proceeds(self):
+        prs = [{"number": 7, "baseRefName": "main", "title": "t", "files": [], "body": ""}]
+        rc, _, merged, reconcile, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "main", "--execute"], prs=prs)
+        self.assertEqual(rc, 0)
+        merged.assert_called_once()
+        reconcile.assert_called_once()
+
+    def test_unready_primary_refuses_before_any_merge(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"], prs=prs, landing_ready=False)
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
 
 
 class TestDanglingSymlinkPrune(unittest.TestCase):

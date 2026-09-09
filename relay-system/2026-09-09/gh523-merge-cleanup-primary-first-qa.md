@@ -1,8 +1,8 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: Changes requested
-NEXT: claude
-ROUND: 2
+STATUS: In progress
+NEXT: codex
+ROUND: 3
 
 ## Body
 
@@ -225,3 +225,44 @@ cite file:line, and either approve or list what remains blocking.
 Keep the remaining repairs in the existing inspector/orchestrator seams and focused regression file. The previously acknowledged reconciliation-before-fast-forward ordering remains outside this verdict's new repair scope. The loud fast-forward failure still falls through to teardown and completion (`skills/merge-cleanup/scripts/merge_cleanup.py:354`, `:361`, `:375`), so neither this review nor the initial readiness check attests successful final landing.
 
 Approval is withheld. **NEXT: claude** to address R2-1 and R2-2 and the listed remaining should-fix gaps, then return focused behavioral evidence. The harness owns test/gate execution and the file-scoped commit.
+
+---
+
+## claude — Round 3 (producer): dispositions
+
+All five remaining findings **accepted and fixed**. Suite 33/33 (was 26/26).
+
+| # | Grade | Disposition |
+|---|---|---|
+| R2-1 | Blocking | **Fixed.** The pre-merge refresh is now `git fetch origin <integration-branch>` and its return code is checked. A failed refresh refuses with the fetch diagnostic rather than recomputing readiness from the cache it could not update. `--allow-unready-primary` remains the deliberate override. The initial local report still prints first. |
+| R2-2 | Blocking | **Fixed.** Before the first merge, every ordered PR's `baseRefName` is compared against `--integration-branch`; any mismatch refuses and names each offending PR and its base. `baseRefName` was already requested by `toposort_prs.py:20`, so no new query. Topological sorting is untouched. |
+| R2-3 | Should-fix | **Fixed.** A failed `--git-path` probe now sets `operation_evidence_ok=False`, adds a "readiness is unknown" blocker, and is a term of `evidence_complete`. It no longer fails open. |
+| R2-4 | Should-fix | **Fixed.** Both path boundaries — `inspect_primary_landing` and the CLI's own `--primary` resolution — catch `RuntimeError` alongside `OSError`. You were right about `~unknown-user`. |
+| R2-5 | Should-fix | **Fixed.** The source-string assertion is gone. `_drive_phase5()` drives `main()` through a NONEMPTY Phase 5 with `run_git` mocked, and asserts on the actual argv: `["merge", "--ff-only", "origin/main"]` for `--integration-branch main`. `TestPrimaryLandingEvidence` now builds a real clone with `origin/development`, and `test_baseline_is_genuinely_ready` is the control every other case mutates one step away from. |
+
+`main()` now returns 0 explicitly on the success path rather than falling off the end.
+
+### Red controls (each mutates ONE condition, observed this round)
+
+| Mutation | Failing test |
+|---|---|
+| fetch return code ignored | `test_failed_fetch_refuses_rather_than_certifying_cached_refs` |
+| PR base check removed | `test_pr_targeting_another_base_is_refused` |
+| `operation_evidence_ok` dropped from the predicate alone | `test_failed_operation_probe_is_not_ready` |
+| `operation_in_progress` dropped from the predicate alone | `test_unfinished_merge_blocks_an_otherwise_ready_checkout` |
+| `RuntimeError` no longer caught | `test_unresolvable_home_path_reports_not_ready_instead_of_raising` (ERROR) |
+
+The last two are the independence you asked for: each now fails on its own condition against a
+baseline that is genuinely ready.
+
+### Standing, not fixed (out of scope for #523, agreed with your note)
+
+Reconciliation still runs before the fast-forward, and a failed fast-forward is reported but does
+not halt teardown. Neither this patch nor Phase 0 attests successful *final* landing. Pre-existing
+ordering; not claimed otherwise anywhere in the code, doc, or capture.
+
+---
+
+## ▶ TAKE YOUR TURN
+
+You are the **reviewer**. Re-read the changed files at HEAD. Approve, or list what remains blocking.

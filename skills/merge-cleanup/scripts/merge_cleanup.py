@@ -249,7 +249,11 @@ def main():
 
     args = parser.parse_args()
 
-    primary_repo = Path(args.primary).expanduser().resolve() if args.primary else Path.cwd().resolve()
+    try:
+        primary_repo = Path(args.primary).expanduser().resolve() if args.primary else Path.cwd().resolve()
+    except (OSError, RuntimeError) as exc:
+        log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
+        return 2
     search_roots = [Path(r).expanduser().resolve() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
     dry_run = not args.execute
 
@@ -327,10 +331,32 @@ def main():
         # The Phase 0 verdict above was computed against whatever origin/* this clone had cached.
         # Re-establish it against the live remote before the first irreversible merge (R1-F1).
         log("Refreshing remote refs before the first merge, then re-checking the primary...")
-        run_git(primary_repo, ["fetch", "origin"])
+        fetched = run_git(primary_repo, ["fetch", "origin", args.integration_branch])
+        if fetched.returncode != 0 and not args.allow_unready_primary:
+            # Re-checking against the SAME cached origin/* the fetch failed to refresh would
+            # certify stale evidence as current. Refuse instead (R2-1).
+            log_err(
+                f"REFUSING to merge: could not refresh origin/{args.integration_branch} — "
+                f"{fetched.stderr.strip() or 'git fetch failed'}"
+            )
+            log_err("Phase 0's verdict is based on cached refs that may no longer match the remote.")
+            log_err("Fix the remote access, or pass --allow-unready-primary to proceed on stale evidence.")
+            return 2
         primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
         print(format_primary_landing(primary_landing) + "\n")
         if _primary_blocks("merge"):
+            return 2
+
+        # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
+        # based elsewhere would merge into a tree whose readiness was never established.
+        mismatched = [pr for pr in ordered_prs
+                      if (pr.get("baseRefName") or "") != args.integration_branch]
+        if mismatched:
+            log_err(f"REFUSING to merge: {len(mismatched)} PR(s) do not target '{args.integration_branch}':")
+            for pr in mismatched:
+                log_err(f"  - #{pr['number']} targets '{pr.get('baseRefName') or 'unknown'}'")
+            log_err("Phase 0 only vouches for the selected integration branch.")
+            log_err(f"Re-run with --integration-branch <their base>, or exclude them.")
             return 2
 
     if not args.teardown_only and ordered_prs:
@@ -373,7 +399,8 @@ def main():
     prune_dangling_skill_symlinks(dry_run=dry_run)
     print("\n" + "=" * 80)
     log("Merge cleanup run complete.")
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main() or 0)
+    sys.exit(main())

@@ -68,7 +68,12 @@ about everyone else's work and nothing about their own.
   A dry run still prints the sequence, labelled explicitly as not executable while blockers stand.
   `--allow-unready-primary` overrides the refusal deliberately and records the blockers.
 - The verdict is **re-established against the live remote** immediately before the first merge, so
-  a stale cached `origin/*` cannot certify a tree that has since diverged.
+  a stale cached `origin/*` cannot certify a tree that has since diverged. A refresh that *fails*
+  is itself a refusal — re-checking against the cache the fetch could not update would certify
+  stale evidence as current.
+- **Every PR's base must be the checked integration branch.** Phase 0 vouches for one branch only;
+  a PR based elsewhere would land in a tree whose readiness was never established, so the run
+  refuses rather than merging it.
 - Uncommitted intake docs or captures in the primary are their own commit or a park — they do not
   ride along in whatever PR happens to be open.
 
