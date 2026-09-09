@@ -69,7 +69,7 @@ Summary: 0 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -80,6 +80,7 @@ Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 | GH-496 · ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459) and widen Tier-2 routing | — | [GH-496-SHARPEN-CICD.md](PROJECT/2-WORKING/GH-496-SHARPEN-CICD.md) · [#496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) |
 | GH-505 · Builder can approve and close its own relay; no merge path checks for a reviewer | — | [GH-505-RELAY-REVIEWER-INTEGRITY.md](PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md) · [#505](https://github.com/HiQS-Labs/XYZ-forge/issues/505) |
 | GH-509 · Relay terminal authorization: prove a review happened without trusting builder-writable state | — | [GH-509-RELAY-TERMINAL-AUTHORIZATION.md](PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md) · [#509](https://github.com/HiQS-Labs/XYZ-forge/issues/509) |
+| GH-516 · skills: express hotfix lane v2 — true direct-push mode, commit-driven reconciliation, recovery subcommand, and central telemetry | — | [doc](PROJECT/2-WORKING/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md) · [#516](https://github.com/HiQS-Labs/XYZ-forge/issues/516) |
 
 ## Completed
 
