@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 46 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 47 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -56,6 +56,7 @@ Summary: 46 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-496 · ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459) and widen Tier-2 routing | — | [GH-496-SHARPEN-CICD.md](PROJECT/1-INBOX/GH-496-SHARPEN-CICD.md) · [#496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) |
 | GH-508 · Git Sync Pulse as a portable Skills Army HQ projection | — | [GH-508-GIT-PULSE-SKILLS.md](PROJECT/1-INBOX/GH-508-GIT-PULSE-SKILLS.md) · [#508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) |
 | GH-510 · jog: operator-confirmed merge path ignores gh pr merge failure and records the task as completed | — | [GH-510-JOG-MERGE-FALSE-SUCCESS.md](PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md) · [#510](https://github.com/HiQS-Labs/XYZ-forge/issues/510) |
+| GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 
 ## Queue
 
