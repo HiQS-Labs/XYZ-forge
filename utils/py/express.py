@@ -7,13 +7,10 @@ land on development -> reconcile. This driver is the mechanized form of SOP.md
 direct development landing without a human review loop, because every oracle
 that a PR would have satisfied is asserted up front instead.
 
-Landing shape (deliberate deviation, documented on #267): the commit rides a
-task branch and lands via a PR that /express itself opens and immediately
-merges. That keeps wave_reconcile --pr working, auto-closes the linked issue
-(a direct push would not), and preserves base-branch/diff-size predicates.
-"Direct" here means "no human gate between fix and development", not "no PR
-object". A true push-to-development mode is Phase 2, pending wave_reconcile
---commit. The operator's /express invocation IS the merge authorization.
+Landing shape: the qualified commit is pushed directly to development. The
+operator's /express invocation IS the landing authorization; the pre-push gate,
+fast-forward update, commit reachability check, and commit-based reconciliation
+replace the former immediately-merged ghost PR.
 
 Exit codes: 0 ok; 3 express-refused (guardrail); 4 environment/dependency.
 Every refusal and every fired run appends a .tick event under .tick/events/
@@ -511,29 +508,6 @@ def cmd_ledger(args):
 
 # ── steps 7–11: land + reconcile ─────────────────────────────────────────────
 
-def build_offline_manifest(root, repo, pr_number):
-    """Fallback reconcile path: PR bodies citing foreign-tracker numbers
-    (GH-368/375/492/551-class) make live wave_reconcile die on unresolvable
-    linked issues. Build the sanctioned offline manifest: resolvable in-repo
-    numbers carry live state; unresolvable ones are omitted (unknown =>
-    promote-as-before per wave_reconcile's GH-202 contract)."""
-    pv = gh(["pr", "view", str(pr_number), "-R", repo, "--json",
-             "number,title,state,mergedAt,baseRefName,headRefName,body,url"], check=False)
-    if pv.returncode != 0:
-        return None
-    pr = json.loads(pv.stdout)
-    manifest = {"prs": [pr], "issues": []}
-    seen = set()
-    for num in set(int(n) for n in re.findall(r"(?:GH-|#)(\d{1,5})", pr.get("body") or "")):
-        if num in seen or num == pr_number:
-            continue
-        seen.add(num)
-        iv = gh(["issue", "view", str(num), "-R", repo, "--json", "state"], check=False)
-        if iv.returncode == 0:
-            manifest["issues"].append({"number": num, "state": json.loads(iv.stdout)["state"]})
-    return manifest
-
-
 def args_repo():
     return os.environ.get("EXPRESS_REPO", "HiQS-Labs/XYZ-forge")
 
@@ -583,22 +557,9 @@ def cmd_land(args):
            "CHANGELOG in one motion.\n\nCloses #%d\n" % (args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
     sha = git(root, "rev-parse", "HEAD").stdout.strip()
-    branch = state["branch"]
-    git(root, "push", "-u", "origin", branch)  # pre-push hook runs the full gate here
+    git(root, "push", "origin", "HEAD:development")  # normal hook; NFF refuses safely
 
-    # Ghost PR: opened and merged by the driver. The operator's /express
-    # invocation is the authorization — this is the documented deviation from
-    # jog's pause-at-landing default (#267), not an oversight.
-    pr_url = gh(["pr", "create", "-R", args.repo, "--base", "development", "--head", branch,
-                 "--title", "fix(GH-%d): %s [express]" % (args.issue, state["title"]),
-                 "--body", "Closes #%d.\n\nExpress hotfix (GH-267): suite `%s` green; merge "
-                           "authorization is the operator's /express invocation." % (args.issue, suite)]
-                ).stdout.strip()
-    m = re.search(r"/pull/(\d+)", pr_url)
-    pr_number = int(m.group(1)) if m else -1
-    gh(["pr", "merge", str(pr_number), "-R", args.repo, "--merge"])
-
-    # ── post-merge closeout — from clean, current development (finding 2) ──
+    # ── post-push closeout — from clean, current development (finding 2) ──
     try:
         # The task branch is done; ship/reconcile state must never ride it, and
         # wave_reconcile requires a clean development tree.
@@ -608,13 +569,16 @@ def cmd_land(args):
         if dirty:
             die("development is not clean after pull — refusing closeout over: %s" %
                 dirty.replace("\n", "; "))
-        closeout(root, args, sha, pr_number, suite, state)
-    except BaseException as exc:  # every post-merge failure leaves a receipt
+        reached = git(root, "merge-base", "--is-ancestor", sha, "origin/development", check=False)
+        if reached.returncode != 0:
+            die("direct-pushed commit %s is not reachable from origin/development" % sha)
+        closeout(root, args, sha, suite, state)
+    except BaseException as exc:  # every post-push failure leaves a receipt
         if isinstance(exc, SystemExit):
             reason = "SystemExit(%s)" % exc.code
         else:
             reason = "%s: %s" % (type(exc).__name__, exc)
-        write_tick(root, "express-reconcile-failed", issue=args.issue, pr=pr_number,
+        write_tick(root, "express-reconcile-failed", issue=args.issue, commit=sha,
                    sha=sha, reason=reason[:300])
         sys.stderr.write("express-reconcile-failed: %s\n" % reason)
         if isinstance(exc, (SystemExit, KeyboardInterrupt)):
@@ -628,67 +592,55 @@ def active_release(root):
     return mrel.group(1) if mrel else None
 
 
-def closeout(root, args, sha, pr_number, suite, state):
+def closeout(root, args, sha, suite, state):
     """Steps 9–11 from development: ship, close, reconcile, PERSIST — fail closed.
 
     A downgraded failure here would leave a closed issue with an active doc and
     a remote manifest still dialed_in — the GH-205 trap with extra steps — so
     every fault exits non-zero with an express-reconcile-failed tick instead."""
-    # Step 9 — ship with evidence (post-merge, so sha + receipts exist).
+    # Step 9 — ship with evidence (post-push, so sha + receipts exist).
     rel = args.release or active_release(root)
     if rel:
         iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "url"])
         url = json.loads(iv.stdout)["url"]
         run_releases(root, "manifest", "ship", url, "--gid", rel,
-                     "--evidence", "%s; %s green in gate; PR #%d merged (express)" % (sha, suite, pr_number))
+                     "--evidence", "%s; %s green in gate; direct development push (express)" % (sha, suite))
 
-    # Step 10 — the merge said "Closes #N" so the issue auto-closed; verify,
-    # and close explicitly if GitHub did not.
+    # Step 10 — the default-branch commit says "Closes #N"; verify closure and
+    # close explicitly if GitHub has not processed it.
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout)["state"] != "CLOSED":
         gh(["issue", "close", str(args.issue), "-R", args.repo,
-            "--comment", "Express hotfix landed: %s (PR #%d, suite %s green)" % (sha, pr_number, suite)])
+            "--comment", "Express hotfix landed directly on development: %s (suite %s green)" % (sha, suite)])
 
     # wave_reconcile refuses a dirty tree. Persist the ship transaction first,
     # then reconcile from the clean committed development state.
     persist_closeout(root,
-                     "chore(releases): express ship GH-%d (PR #%d)" %
-                     (args.issue, pr_number))
+                     "chore(releases): express ship GH-%d (commit %s)" %
+                     (args.issue, sha[:12]))
 
-    # Step 11 — reconcile. Live first; foreign-tracker mentions fall back to
-    # the offline manifest. BOTH failing is fatal — never a stderr footnote.
+    # Step 11 — reconcile the direct landing by commit identity. Failure is
+    # fatal — never a stderr footnote.
     wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
     if not os.path.isfile(wr):
-        die("wave_reconcile.py missing under %s — cannot reconcile PR #%d" % (root, pr_number))
-    base = [sys.executable, wr, "--pr", str(pr_number), "--root", root]
+        die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
+    base = [sys.executable, wr, "--commit", sha, "--root", root]
     r = subprocess.run(base, cwd=root, capture_output=True, text=True)
     if r.returncode != 0:
-        ok = False
-        manifest = build_offline_manifest(root, args.repo, pr_number)
-        if manifest:
-            mpath = os.path.join(root, ".tick", "express-reconcile-manifest.json")
-            os.makedirs(os.path.dirname(mpath), exist_ok=True)
-            with open(mpath, "w", encoding="utf-8") as f:
-                json.dump(manifest, f)
-            r2 = subprocess.run(base + ["--offline", mpath], cwd=root, capture_output=True, text=True)
-            ok = r2.returncode == 0
-            err = r2.stderr or r2.stdout
-        else:
-            err = r.stderr or r.stdout
-        if not ok:
-            die("reconcile FAILED for PR #%d after the ship transaction was persisted. "
-                "Fix and run `wave_reconcile.py --pr %d` on development:\n%s" %
-                (pr_number, pr_number, err[-500:]))
+        err = r.stderr or r.stdout
+        die("reconcile FAILED for commit %s after the ship transaction was persisted. "
+            "Fix and run `wave_reconcile.py --commit %s` on development:\n%s" %
+            (sha, sha, err[-500:]))
 
     persist_closeout(root,
-                     "chore(pdda): express reconcile GH-%d (PR #%d)" %
-                     (args.issue, pr_number))
+                     "chore(pdda): express reconcile GH-%d (commit %s)" %
+                     (args.issue, sha[:12]))
 
-    write_tick(root, "express-fired", issue=args.issue, sha=sha, pr=pr_number,
+    write_tick(root, "express-fired", issue=args.issue, sha=sha,
                suite=suite, release=rel, files=len(state["paths"]), insertions=state["insertions"])
-    print("express-land: PR #%d merged, issue #%d closed, mfi shipped against %s, reconcile persisted"
-          % (pr_number, args.issue, rel or "(none)"))
-    return dict(pr=pr_number, sha=sha, release=rel)
+    print("express-land: commit %s pushed to development, issue #%d closed, mfi shipped against %s, reconcile persisted"
+          % (sha[:12], args.issue, rel or "(none)"))
+    return dict(sha=sha, release=rel)
 
 
 def persist_closeout(root, message):
@@ -768,7 +720,7 @@ def main():
     p.add_argument("--doc-path")
     p.set_defaults(fn=cmd_ledger)
 
-    p = sub.add_parser("land", help="steps 7-11: suite, commit, ghost PR, merge, ship, close, reconcile")
+    p = sub.add_parser("land", help="steps 7-11: suite, direct development push, ship, close, reconcile")
     common(p)
     p.add_argument("--release")
     p.set_defaults(fn=cmd_land)
