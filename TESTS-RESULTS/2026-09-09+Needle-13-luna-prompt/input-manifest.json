@@ -1,0 +1,9 @@
+{
+  "CONTROL.md": "3cc1d1b169e2be1a841107c2405619290a97e20f5fab8ac5ce2bdb3312fc6596",
+  "NEW.md": "0b57cc915fef5c21fdf862e353855f36c276938468573e7bb8446a94e6e83af6",
+  "OPTIMIZATION.md": "526c26a2440ae16db30a68fd00cf5cfa613771601aa36bddf40905174bdacdfa",
+  "COMPARISON-PLAN.md": "32c9dfc6cee4960675793bbfb727e19a69b53ba5daf9f91b25681b37b2ad1ad0",
+  "codex_adapter.py": "4977ae36ccfd61107724689736697986ec7597fb5d206bd86972906a7817dcd9",
+  "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+  "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733"
+}
