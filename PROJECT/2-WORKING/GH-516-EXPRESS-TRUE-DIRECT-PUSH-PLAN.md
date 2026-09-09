@@ -163,3 +163,19 @@ Add `express.py resume --issue <N> [--sha <SHA>] [--pr <PR>]`:
 1. **Automated Suite**: Run `test/gh267-express-skill.sh` (all assertions green).
 2. **Full Repository Gate**: Run `validate.sh` and `githooks/install.sh --check`.
 3. **Simulation**: Execute `express.py run --dry-run` and wet runs in sandbox clones.
+
+## Lessons Learned (For Future Agents)
+
+- Release-ledger conflicts are data, not text: take the trunk dump as base, rebuild through
+  `utils/releases-merge-resolve.sh`, and re-apply your branch's rows through the CLI. The
+  resolver's generation-rewind guard is load-bearing — this merge cycle it refused a base whose
+  `-- generation:` header (512) was below the incoming branch's (515), which would have rewound
+  the counter with every check still green.
+- A capture doc landed without its roadmap row fails the whole PDDA gate, not just a lint (#520
+  landed GH-518's doc unparked; `pdda-check-roadmap-coverage` went red repo-wide). Park at intake
+  — `hq park` does it automatically; bare CLI landing paths must too.
+- Relay attestation mechanics (GH-505): keep `STATUS:`/`NEXT:` exclusively in the thread's
+  frontmatter. Bare status lines in the body invite the reviewer's turn to rewrite the body above
+  its block, and the driver refuses the approval as unattested — two rounds were spent learning
+  this. And a new test assertion isn't evidence until its failure is demonstrated: the issue-closed
+  assertion was proven by mutating the close to skip (75/1) and restoring (76/0).
