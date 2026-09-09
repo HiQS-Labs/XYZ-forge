@@ -726,12 +726,12 @@ esac
 
 # ── Gen 2 Phase 1: telemetry sidecar + index + outcome + audit (#193) ──────────────
 TS_STORE="$WORK/telemetry-store"; mkdir -p "$TS_STORE"
-ts_cli() { python3 "$CLI" --store "$TS_STORE" "$@"; }
+ts_cli() { AGENT2AGENT_TELEMETRY=1 python3 "$CLI" --store "$TS_STORE" "$@"; }
 printf '## Goal\nT\n## Scope\nT\n## Context and current state\nT\n## Evidence and artifacts\nT\n## Constraints and safety boundaries\nT\n## Questions for participants\nT\n## Requested outcome / done condition\nT\n' > "$WORK/pkt.md"
 ts_cli start --subject "telemetry suite probe" --packet-file "$WORK/pkt.md" --id 777001 >/dev/null 2>&1
 TS_SIDECAR="$(find "$TS_STORE" -path "*777001*" -name telemetry.jsonl | head -1)"
 [ -n "$TS_SIDECAR" ] && [ -s "$TS_SIDECAR" ] \
-  && pass "telemetry sidecar written on start (pilot window default-ON)" || fail "no telemetry sidecar after start"
+  && pass "telemetry sidecar written on start (forced on — pilot window 2026-08-24..2026-09-08 has ended; EXPERIMENTS.md: reverts to opt-in after)" || fail "no telemetry sidecar after start"
 grep -q '"event": "discussion_started"' "$TS_SIDECAR" 2>/dev/null \
   && pass "discussion_started event present with schema version" || fail "discussion_started event missing"
 # hard override: a fresh discussion with AGENT2AGENT_TELEMETRY=0 writes nothing
@@ -941,7 +941,7 @@ fi
 G327="$WORK/gh327-legacy/repo"
 G327_STORE="$WORK/gh327-store"
 mkdir -p "$G327/relay-system/2026-08-30"
-AGENT2AGENT_ID_SEQUENCE=771201 python3 "$CLI" --root "$G327" --store "$G327_STORE" \
+AGENT2AGENT_TELEMETRY=1 AGENT2AGENT_ID_SEQUENCE=771201 python3 "$CLI" --root "$G327" --store "$G327_STORE" \
   start --subject "gh327 legacy" --agents 2 --packet-file "$PACKET" >/dev/null 2>&1
 g327_seed="$(find "$G327_STORE" -path "*771201*" -name conversation.md 2>/dev/null | head -1)"
 if [ -n "$g327_seed" ] && [ -f "$g327_seed" ]; then
