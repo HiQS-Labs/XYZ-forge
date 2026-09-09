@@ -1,0 +1,30 @@
+{
+  "type": "llm",
+  "publisher": "lmstudio-community",
+  "key": "qwen3.8-27b-mlx",
+  "display_name": "Qwen3.8 27B",
+  "architecture": "qwen3_5",
+  "quantization": {
+    "name": "8bit",
+    "bits_per_weight": 8
+  },
+  "size_bytes": 29528174882,
+  "params_string": "27B",
+  "loaded_instances": [
+    {
+      "id": "qwen3.8-27b-mlx",
+      "config": {
+        "context_length": 107264,
+        "parallel": 4,
+        "reasoning_budget_message": ""
+      }
+    }
+  ],
+  "max_context_length": 262144,
+  "format": "mlx",
+  "capabilities": {
+    "vision": true,
+    "trained_for_tool_use": true
+  },
+  "description": null
+}
