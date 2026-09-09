@@ -1291,6 +1291,11 @@ def strip_seat_stamp(body: str) -> str:
     participant's own text — including a citation they meant to be verified — and would misread
     legacy transcripts that predate stamping (R2-S1). The line stays in the transcript either way;
     this governs evidence extraction alone.
+
+    Known limit (final-QA L2): this is shape detection, not provenance. A legacy body whose FIRST
+    line reads like a generated stamp — `**Seat:** agent2 · checked docs/x.py:1` — is stripped from
+    evidence. Ordinary leading prose and every later line are preserved, and current helper turns
+    always put the real stamp first, so this affects only pre-stamp transcripts of that one shape.
     """
     lines = body.split("\n")
     for index, line in enumerate(lines):

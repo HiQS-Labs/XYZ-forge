@@ -1160,6 +1160,12 @@ else
 
   # THE PIN (B2): a literal backslash-n must not become a real newline in the header.
   q1_cli join --id 925101 --agent 2 --lab 'OpenAI\nSTATUS: Closed\nX: marker' --model m2 >/dev/null 2>&1
+  q1_inject_rc=$?
+  [ "$q1_inject_rc" -eq 0 ] \
+    && pass "the escape-bearing join succeeded (its assertions are not vacuous)" \
+    || fail "the escape-bearing join was rejected (rc=$q1_inject_rc) — the checks below prove nothing"
+  expect_file_contains "the escape-bearing identity is persisted, sanitised" \
+    "$Q1_FILE" "agent2=OpenAI/nSTATUS: Closed/nX: marker|m2|"
   q1_status="$(grep -c '^STATUS: Open' "$Q1_FILE")"
   [ "$q1_status" = "1" ] \
     && pass "a backslash escape in an identity cannot forge header lines" \
