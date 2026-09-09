@@ -687,11 +687,41 @@ def closeout(root, args, sha, suite, state):
     return dict(sha=sha, release=rel)
 
 
+CLOSEOUT_ALLOWLIST_PREFIXES = (
+    "PROJECT/2-WORKING/",
+    "PROJECT/3-COMPLETED/",
+    "PROJECT/4-MISC/",
+    ".tick/",
+)
+CLOSEOUT_ALLOWLIST_FILES = {
+    "releases.db",
+    "releases.sql",
+    "ROADMAP-DASHBOARD.md",
+    "RELEASES.generated.md",
+    "RELEASES-PREVIEW.html",
+    "LEADERBOARD.html",
+    "LEADERBOARD.md",
+    "CHANGELOG.md",
+}
+
+
+def is_allowed_closeout_path(p):
+    if p in CLOSEOUT_ALLOWLIST_FILES:
+        return True
+    for prefix in CLOSEOUT_ALLOWLIST_PREFIXES:
+        if p.startswith(prefix):
+            return True
+    return False
+
+
 def persist_closeout(root, message):
     """Persist one cleanly delimited closeout transaction."""
     paths = change_paths(root)
     if not paths:
         return False
+    disallowed = [p for p in paths if not is_allowed_closeout_path(p)]
+    if disallowed:
+        die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
     git(root, "add", "--", *paths)
     git(root, "commit", "-m", message)
     git(root, "push", "origin", "development")
@@ -722,81 +752,157 @@ def expect_driver_paths(root, issue):
     return paths
 
 
+def commit_closes_issue(body, issue):
+    """Check if commit message contains a closing reference for the exact issue number."""
+    # Pattern 1: closing keyword followed by #issue or GH-issue with word boundaries
+    p1 = rf"\b(?:closes?|closed|fix(?:es|ed)?|resolves?|resolved)[ \t]*:?[ \t]+(?:#|GH-){issue}\b"
+    if re.search(p1, body, re.IGNORECASE):
+        return True
+    # Pattern 2: title trailer (#issue) or (GH-issue) with word boundaries
+    p2 = rf"\([ \t]*(?:#|GH-){issue}\b[ \t]*\)"
+    if re.search(p2, body, re.IGNORECASE):
+        return True
+    return False
+
+
+def resolve_landing_commit(root, issue, explicit_sha=None):
+    """Resolve and validate the exact landing commit for an issue on origin/development."""
+    if explicit_sha:
+        res = git(root, "rev-parse", "--verify", "%s^{commit}" % explicit_sha, check=False)
+        if res.returncode != 0:
+            die("Commit %s cannot be resolved locally" % explicit_sha)
+        sha = res.stdout.strip()
+        reached = git(root, "merge-base", "--is-ancestor", sha, "origin/development", check=False)
+        if reached.returncode != 0:
+            die("Commit %s is not reachable from origin/development (unpushed or local-only commit)" % sha[:12])
+        body = git(root, "log", "-1", "--format=%B", sha, check=False).stdout
+        if not commit_closes_issue(body, issue):
+            die("Commit %s does not close issue #%d (missing closing reference in commit message)" % (sha[:12], issue))
+        return sha
+
+    # Auto-resolution from origin/development
+    log_res = git(root, "log", "origin/development", "-n", "50", "--format=%H%x00%B%x00", check=False)
+    if log_res.returncode != 0 or not log_res.stdout.strip():
+        die("Could not read commit log from origin/development")
+
+    entries = log_res.stdout.split("\x00\n")
+    candidates = []
+    ship_commit_sha_for_issue = None
+
+    for entry in entries:
+        if not entry.strip():
+            continue
+        parts = entry.split("\x00", 1)
+        if len(parts) != 2:
+            continue
+        c_sha, c_body = parts[0].strip(), parts[1].strip()
+
+        if commit_closes_issue(c_body, issue):
+            candidates.append(c_sha)
+
+        # Check for post-landing ship commit for this issue:
+        # chore(releases): express ship GH-999 (commit 1234567890ab)
+        m_ship = re.search(rf"^chore\(releases\):\s*express\s+ship\s+GH-{issue}\b.*\(commit\s+([0-9a-fA-F]+)\)",
+                           c_body, re.MULTILINE)
+        if m_ship and not ship_commit_sha_for_issue:
+            ship_commit_sha_for_issue = m_ship.group(1)
+
+    if candidates:
+        landing_sha = candidates[0]
+        print("express-resume: resolved landing commit %s for GH-%d" % (landing_sha[:12], issue))
+        return landing_sha
+
+    if ship_commit_sha_for_issue:
+        res = git(root, "rev-parse", "--verify", "%s^{commit}" % ship_commit_sha_for_issue, check=False)
+        if res.returncode == 0:
+            s_sha = res.stdout.strip()
+            reached = git(root, "merge-base", "--is-ancestor", s_sha, "origin/development", check=False)
+            if reached.returncode == 0:
+                s_body = git(root, "log", "-1", "--format=%B", s_sha, check=False).stdout
+                if commit_closes_issue(s_body, issue):
+                    print("express-resume: resolved landing commit %s cited in ship commit for GH-%d" %
+                          (s_sha[:12], issue))
+                    return s_sha
+
+    die("Could not automatically resolve landing commit for GH-%d. Pass --sha <SHA> explicitly." % issue)
+
+
+def check_manifest_state(root, issue, rel):
+    """Safely query manifest state for an issue in a release without assuming schema existence."""
+    db = os.path.join(root, "releases.db")
+    if not os.path.isfile(db):
+        return None
+    try:
+        conn = sqlite3.connect(db)
+        try:
+            cur = conn.cursor()
+            tables = {row[0] for row in cur.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            if not {"manifest_items", "issue_refs", "releases"}.issubset(tables):
+                return None
+            row = cur.execute("""SELECT mi.state FROM manifest_items mi
+                                 JOIN issue_refs ir ON ir.id = mi.issue_ref_id
+                                 JOIN releases r ON r.id = mi.release_id
+                                 WHERE r.global_id = ? AND (ir.url LIKE ? OR ir.url LIKE ?)
+                                 ORDER BY mi.id DESC LIMIT 1""",
+                              (rel, "%issues/" + str(issue), "%issues/" + str(issue) + "#%")).fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+
 def cmd_resume(args):
     """Recover/resume an interrupted express run: ensure issue is closed, complete reconciliation,
     and persist/push remaining artifacts."""
     root = args.root
     issue = args.issue
-    sha = args.sha
 
-    if not sha:
-        log_res = git(root, "log", "origin/development", "-n", "30",
-                      "--grep", "GH-%d" % issue,
-                      "--grep", "Closes #%d" % issue,
-                      "--format=%H", check=False)
-        shas = [s.strip() for s in log_res.stdout.splitlines() if s.strip()]
-        if not shas:
-            cur_branch = git(root, "branch", "--show-current", check=False).stdout.strip()
-            if cur_branch == "development":
-                log_res = git(root, "log", "HEAD", "-n", "30",
-                              "--grep", "GH-%d" % issue,
-                              "--grep", "Closes #%d" % issue,
-                              "--format=%H", check=False)
-                shas = [s.strip() for s in log_res.stdout.splitlines() if s.strip()]
-        if not shas:
-            die("Could not automatically resolve landing commit for GH-%d. Pass --sha <SHA> explicitly." % issue)
-        sha = shas[0]
-        print("express-resume: resolved landing commit %s for GH-%d" % (sha[:12], issue))
+    # 1. Check working tree cleanliness before doing ANY operations (regardless of branch)
+    cur_branch = git(root, "branch", "--show-current", check=False).stdout.strip()
+    dirty = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
+    if dirty:
+        die("working tree is not clean on %s — stash or discard before resuming: %s" %
+            (cur_branch, dirty.replace("\n", "; ")))
 
-    res = git(root, "rev-parse", "--verify", "%s^{commit}" % sha, check=False)
-    if res.returncode != 0:
-        die("Commit %s cannot be resolved locally" % sha)
-    sha = res.stdout.strip()
+    # 2. Resolve and validate the landing commit identity and reachability
+    sha = resolve_landing_commit(root, issue, args.sha)
 
     if getattr(args, "dry_run", False):
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
         return dict(issue=issue, sha=sha)
 
-    # 1. Switch to clean development checkout if on another branch
-    cur_branch = git(root, "branch", "--show-current", check=False).stdout.strip()
+    # 3. Switch to clean development checkout if on another branch
     if cur_branch != "development":
-        dirty = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
-        if dirty:
-            die("working tree is not clean on %s — stash or discard before resuming: %s" %
-                (cur_branch, dirty.replace("\n", "; ")))
         git(root, "checkout", "-q", "development")
         git(root, "pull", "--ff-only", "origin", "development")
+        dirty_after = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
+        if dirty_after:
+            die("development is not clean after pull — refusing resume over: %s" %
+                dirty_after.replace("\n", "; "))
 
-    # 2. Check and close issue if still open
+    # 4. Check and close issue if still open
     iv = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout).get("state") != "CLOSED":
         gh(["issue", "close", str(issue), "-R", args.repo,
             "--comment", "Express hotfix landed directly on development: %s (resumed closeout)" % sha])
         print("express-resume: closed issue #%d" % issue)
 
-    # 3. Ship manifest item if still dialed_in
+    # 5. Ship manifest item if still dialed_in
     rel = args.release or active_release(root)
     if rel:
-        db = os.path.join(root, "releases.db")
-        if os.path.isfile(db):
-            conn = sqlite3.connect(db)
-            try:
-                row = conn.execute("""SELECT mi.state FROM manifest_items mi
-                                      JOIN issue_refs ir ON ir.id = mi.issue_ref_id
-                                      JOIN releases r ON r.id = mi.release_id
-                                      WHERE r.global_id = ? AND ir.url LIKE ?
-                                      ORDER BY mi.id DESC LIMIT 1""",
-                                   (rel, "%/" + str(issue))).fetchone()
-                if row and row[0] == "dialed_in":
-                    iv_url = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "url"])
-                    url = json.loads(iv_url.stdout)["url"]
-                    run_releases(root, "manifest", "ship", url, "--gid", rel,
-                                 "--evidence", "%s; direct development push (express resume)" % sha)
-                    persist_closeout(root, "chore(releases): express ship GH-%d (commit %s)" % (issue, sha[:12]))
-            finally:
-                conn.close()
+        mstate = check_manifest_state(root, issue, rel)
+        if mstate == "dialed_in":
+            iv_url = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "url"])
+            url = json.loads(iv_url.stdout)["url"]
+            run_releases(root, "manifest", "ship", url, "--gid", rel,
+                         "--evidence", "%s; direct development push (express resume)" % sha)
+            persist_closeout(root, "chore(releases): express ship GH-%d (commit %s)" % (issue, sha[:12]))
+            print("express-resume: shipped manifest item for issue #%d against %s" % (issue, rel))
+        elif mstate == "shipped":
+            print("express-resume: manifest item already shipped for issue #%d against %s" % (issue, rel))
 
-    # 4. Reconcile
+    # 6. Reconcile
     wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
     if not os.path.isfile(wr):
         die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
