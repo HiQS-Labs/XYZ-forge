@@ -1,0 +1,4 @@
+muse: local session messaging disabled: session logging is required
+muse: workspace root: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-15799-l108raj7 (cwd default)
+muse: warning: rules file at /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-15799-l108raj7/AGENTS.md exists, but the workspace is untrusted, so it is skipped for this session; restart with --trust-workspace to load project rules
+muse: Agent delegation: auto unavailable: workspace is untrusted.

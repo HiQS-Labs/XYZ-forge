@@ -1,0 +1,8 @@
+{
+  "completed_calls": 18,
+  "unavailable_calls": 2,
+  "all_answers_match_provider_output_after_newline_normalization": true,
+  "input_commit": "5aeb527",
+  "no_inference_retry": true,
+  "limits": "Families concurrent; wall times subject to contention. CLI/API system roles and output ceilings differ."
+}

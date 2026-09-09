@@ -1,0 +1,1169 @@
+[
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "```json",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\n{\n  \"assessments\": [\n    {\n      \"id\": \"",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "G01\",\n      \"verdict\": \"SUPPORTED\",\n      \"analysis\": \"The PR modifies only",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " documentation files (ROADMAP.md and PHASE-2-LABEL-TAXONOMY.md) to correct planning pointers",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": ". No runtime code files were included in the diff.\",\n      \"next_step\": \"Verify that the referenced issues #",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "2 and #13 are correctly linked in the repository issue tracker.\",\n      \"evidence\": [\"G01-",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "E1\", \"G01-E2\", \"G01-E3\"]\n    },\n    {\n      \"id",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\": \"G02\",\n      \"verdict\": \"SUPPORTED\",\n      \"analysis\": \"The PR",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " modifies the regex-based command classification logic in utils/corpus/taxonomy.py, specifically changing how command positions and wrappers",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " are identified. This is a functional change to the classification engine, not a file rename.\",\n      \"next_step\": \"Review",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " the new test cases in tests/test_taxonomy.py to ensure the positional classification logic handles edge cases correctly.\",\n      \"evidence\":",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " [\"G02-E1\", \"G02-E2\", \"G02-E3\"]",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\n    },\n    {\n      \"id\": \"G03\",\n      \"verdict\": \"CON",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "TRADICTED\",\n      \"analysis\": \"The PR state is 'open' and 'merged' is false, indicating it has",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " not been merged into the development branch.\",\n      \"next_step\": \"Check the development branch history to confirm the",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " absence of the PR's head commit.\",\n      \"evidence\": [\"G03-E1\"]\n    },\n    ",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "{\n      \"id\": \"G04\",\n      \"verdict\": \"UNKNOWN\",\n      \"analysis",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\": \"The PR modifies documentation (AGENTS.md, ROUTER.md, SOP.md) and CHANGELOG.md",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": ". There is no evidence of new code implementing a prediction engine.\",\n      \"next_step\": \"Inspect the repository",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " for any new source files or modules that might contain the engine logic.\",\n      \"evidence\": [\"G04-",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "E1\", \"G04-E2\"]\n    },\n    {\n      \"id\": \"G",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "05\",\n      \"verdict\": \"CONTRADICTED\",\n      \"analysis\": \"The required '",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "unit' check was completed for SHA 1111111, but the current head is 222222",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "2. The new commit has not been validated by the required check.\",\n      \"next_step\": \"Trigger a",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " new CI run for the current head SHA 2222222.\",\n      \"evidence\": [\"G0",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "5-E1\"]\n    },\n    {\n      \"id\": \"G06\",\n      \"",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "verdict\": \"CONTRADICTED\",\n      \"analysis\": \"The approval is bound to commit aaaaaaa",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": ", but the current head is bbbbbbb. The approval does not satisfy the requirement for the current head.\",\n      \"next_step",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\": \"Request a new review for the current head commit bbbbbbb.\",\n      \"evidence\": [\"G06-E1\"]",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\n    },\n    {\n      \"id\": \"G07\",\n      \"verdict\": \"CON",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "TRADICTED\",\n      \"analysis\": \"The commit history shows an 'Enable cache' commit followed by a '",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "Revert' commit. The final state of the file is CACHE_ENABLED = False.\",\n      \"next_step\": \"",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "Verify the intended state of the cache in the project requirements.\",\n      \"evidence\": [\"G07-E1\"]\n    },",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\n    {\n      \"id\": \"G08\",\n      \"verdict\": \"CONTRADICTED",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\",\n      \"analysis\": \"The comparison shows both left-only (local) and right-only (remote) commits,",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " meaning the branches have diverged and a fast-forward is not possible without potential loss of local work.\",\n      \"next_",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "step\": \"Perform a git fetch and git log --graph to visualize the divergence before merging.\",\n      \"evidence\": [\"G08-",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "E1\"]\n    },\n    {\n      \"id\": \"G09\",\n      \"verdict",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\": \"CONTRADICTED\",\n      \"analysis\": \"The diff changes the logic to `attempt <= max_retries`, which actually",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " increases the number of retries allowed compared to the original `attempt < max_retries`. Setting max_retries to",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " 0 would still allow one attempt (0 <= 0), failing the requirement.\",\n      \"next_step\": \"Update",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " the logic to `attempt < max_retries` and add a unit test verifying that max_retries=0",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " results in zero retries.\",\n      \"evidence\": [\"G09-E1\"]\n    },\n    ",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "{\n      \"id\": \"G10\",\n      \"verdict\": \"UNKNOWN\",\n      \"analysis",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\": \"The file list is truncated due to pagination failure (503 error) and review inventory was not fetched. It",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " is impossible to determine if blockers exist.\",\n      \"next_step\": \"Retry the API request for the remaining file",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " pages and fetch the review inventory.\",\n      \"evidence\": [\"G10-E1\"]\n    },\n    {\n      ",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\"id\": \"G11\",\n      \"verdict\": \"CONTRADICTED\",\n      \"analysis",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\": \"While file paths do not overlap, the PRs are logically incompatible: PR_A changes the message format (",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "version 1 to 2), while PR_B enforces a check for version 1, which will cause the consumer to fail after PR",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "_A is deployed.\",\n      \"next_step\": \"Coordinate a unified update to both producer and consumer to support",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " version 2.\",\n      \"evidence\": [\"G11-E1\"]\n    },\n    {\n",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "      \"id\": \"G12\",\n      \"verdict\": \"CONTRADICTED\",\n      \"",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "analysis\": \"GitHub deployment records are empty and the release tag is null. The untrusted PR description claiming deployment is ignored per",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " instructions.\",\n      \"next_step\": \"Check external deployment logs or CI/CD pipeline history for evidence of a",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": " successful deployment.\",\n      \"evidence\": [\"G12-E1\", \"G12-E2\"]\n",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "    }\n  ],\n  \"limitations\": [\n    \"Assessments are based strictly on provided snapshots and fixtures",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": ".\",\n    \"No external systems, live APIs, or repository state beyond the provided evidence were accessed.\",\n    \"",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "Claims regarding deployment or test execution are evaluated against provided evidence only, ignoring contradictory text within the evidence itself.\"\n  ]\n}",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "\n```",
+          "role": "assistant"
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "",
+          "role": "assistant",
+          "reasoning_details": [
+            {
+              "type": "reasoning.text",
+              "signature": "AY89a19mba3ohgOrtO3189QT/FyRZqCkB9wREWhEEm4BUzQA/wjbv9VZXEVgK9/GkVonCZfZkd+idwwHYTxc1LLXqLyhsdvnlOnns3h1mR31JUY=",
+              "format": "google-gemini-v1",
+              "index": 0
+            }
+          ]
+        },
+        "finish_reason": null,
+        "native_finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "",
+          "role": "assistant",
+          "reasoning": null
+        },
+        "finish_reason": "stop",
+        "native_finish_reason": "STOP"
+      }
+    ]
+  },
+  {
+    "id": "gen-1788987870-wAziBjJg18xmmVmJqlZO",
+    "object": "chat.completion.chunk",
+    "created": 1788987870,
+    "model": "google/gemini-3.1-flash-lite",
+    "provider": "Google",
+    "service_tier": "default",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "content": "",
+          "role": "assistant"
+        },
+        "finish_reason": "stop",
+        "native_finish_reason": "STOP"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 9694,
+      "completion_tokens": 1465,
+      "total_tokens": 11159,
+      "cost": 0.004621,
+      "is_byok": false,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0,
+        "video_tokens": 0
+      },
+      "cost_details": {
+        "upstream_inference_cost": 0.004621,
+        "upstream_inference_prompt_cost": 0.0024235,
+        "upstream_inference_completions_cost": 0.0021975
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "image_tokens": 0,
+        "audio_tokens": 0
+      }
+    }
+  }
+]

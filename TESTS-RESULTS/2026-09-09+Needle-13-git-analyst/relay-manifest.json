@@ -1,0 +1,92 @@
+{
+  "relay-system/2026-09-09/git-analyst-agy31pro-high-r1-140550": {
+    "git-analyst-agy31pro-high-r1.codex.md": "7e291894521d467a6eb88d1da0e876824d94ef19693f1527803b2357372e3349",
+    "git-analyst-agy31pro-high-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-agy31pro-high-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b"
+  },
+  "relay-system/2026-09-09/git-analyst-agy31pro-high-r2-140652": {
+    "git-analyst-agy31pro-high-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-agy31pro-high-r2.codex.md": "a856775be1da4150c07786c666304f932c419aa3a71281023ead59e3cfb29cac",
+    "git-analyst-agy31pro-high-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-agy37-high-r1-140427": {
+    "git-analyst-agy37-high-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-agy37-high-r1.codex.md": "65031a7faa6b46b5d9e48dad67a4f1cc036badc0dcee9ff557fddcb1e2c04b7b",
+    "git-analyst-agy37-high-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-agy37-high-r2-140510": {
+    "git-analyst-agy37-high-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-agy37-high-r2.codex.md": "0825eb0f22fc9015af09a016818611604d3ba8865ffcaef060d77afc14f75807",
+    "git-analyst-agy37-high-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b"
+  },
+  "relay-system/2026-09-09/git-analyst-flashlite31-r1-140427": {
+    "git-analyst-flashlite31-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-flashlite31-r1.codex.md": "074274a2aa0994136d0cc682683a8ea38e3b6fb7689eeb88d83c57f885c00375",
+    "git-analyst-flashlite31-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b"
+  },
+  "relay-system/2026-09-09/git-analyst-flashlite31-r2-140438": {
+    "git-analyst-flashlite31-r2.codex.md": "65a6a8188754643f0b24c03571f1565413704eb5497cf1b362623ed9bafe4889",
+    "git-analyst-flashlite31-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-flashlite31-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-luna-medium-r1-140427": {
+    "git-analyst-luna-medium-r1.codex.PROVENANCE.txt": "a6e7aee903567d37a9104192c0eef73b3887cc928bb7aa6c4b9b5fb27567d401",
+    "git-analyst-luna-medium-r1.codex.md": "25caa37a511354cabe44d1dbc2ed36da5b93c69e2e5edfa0d0934ce28ef456d7",
+    "git-analyst-luna-medium-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b"
+  },
+  "relay-system/2026-09-09/git-analyst-luna-medium-r2-140502": {
+    "git-analyst-luna-medium-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-luna-medium-r2.codex.PROVENANCE.txt": "a6e7aee903567d37a9104192c0eef73b3887cc928bb7aa6c4b9b5fb27567d401",
+    "git-analyst-luna-medium-r2.codex.md": "6124ab0506917ff88db5b6e56aea8fa2733c535c8fc8bf7519d3dbc1fe11d429"
+  },
+  "relay-system/2026-09-09/git-analyst-muse13-high-r1-140427": {
+    "git-analyst-muse13-high-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-muse13-high-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-muse13-high-r1.codex.md": "d3b8beea850848b50cea31205b8a5b47fa6f17ddd93ad8161e291ef646893084"
+  },
+  "relay-system/2026-09-09/git-analyst-muse13-high-r2-140516": {
+    "git-analyst-muse13-high-r2.codex.md": "c09aff1515cbe78a6c53414d1e6ed3f07f76c580aeac92215a55d84c14f44fa6",
+    "git-analyst-muse13-high-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-muse13-high-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-spark-high-r1-140731": {
+    "git-analyst-spark-high-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-spark-high-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-spark-high-r1.codex.md": "1e4a9bdffa919433173fb5fb62a5aa5c0d80e01acb43e8112e72d257d4fd0f55"
+  },
+  "relay-system/2026-09-09/git-analyst-spark-high-r2-140743": {
+    "git-analyst-spark-high-r2.codex.md": "f772c5906b218bed23c58cdaf752160975e9b4c565aa233d68c1b07e9e1a6697",
+    "git-analyst-spark-high-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-spark-high-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-spark-xhigh-r1-140759": {
+    "git-analyst-spark-xhigh-r1.codex.md": "34884bf1bbc7dcdcaac7124fc0e6c56120d12f22a6342ac85b76a076ca776354",
+    "git-analyst-spark-xhigh-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-spark-xhigh-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-spark-xhigh-r2-140813": {
+    "git-analyst-spark-xhigh-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-spark-xhigh-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-spark-xhigh-r2.codex.md": "a34701fae00efb6614abeca2dae31ba209708c95827bff3bf85c1ca52f52c9ba"
+  },
+  "relay-system/2026-09-09/git-analyst-terra-low-r1-140636": {
+    "git-analyst-terra-low-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-terra-low-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-terra-low-r1.codex.md": "3e6ed51bb1cd0dc1a1bb909cbd097ef76123c1c2bc2187779375c90eebd4bb0d"
+  },
+  "relay-system/2026-09-09/git-analyst-terra-low-r2-140704": {
+    "git-analyst-terra-low-r2.codex.md": "459fcca0f1a00965bf92b5c87407337d48b161c3b1145ed435fc92a17ccb60bc",
+    "git-analyst-terra-low-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-terra-low-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  },
+  "relay-system/2026-09-09/git-analyst-terra-medium-r1-140538": {
+    "git-analyst-terra-medium-r1.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80",
+    "git-analyst-terra-medium-r1.codex.md": "96b128d785be920548d39d96c60f0141ebc47c63ae72109b8aa493e39d502825",
+    "git-analyst-terra-medium-r1.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b"
+  },
+  "relay-system/2026-09-09/git-analyst-terra-medium-r2-140606": {
+    "git-analyst-terra-medium-r2.PROMPT.txt": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "git-analyst-terra-medium-r2.codex.md": "48e1d74030366c977225d27f91f2fa2794e46f4bf3d46d8d488802232ee9271a",
+    "git-analyst-terra-medium-r2.codex.PROVENANCE.txt": "db10487057b01dac53750c39ee59175b6442c9723c53e1a5030b1739dbdf3c80"
+  }
+}

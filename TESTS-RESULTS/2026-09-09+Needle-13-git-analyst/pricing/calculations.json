@@ -1,0 +1,422 @@
+{
+  "computed_at": "2026-09-09T21:09:51.630383+00:00",
+  "source_rates": [
+    "https://developers.openai.com/api/docs/pricing",
+    "https://openrouter.ai/api/v1/models"
+  ],
+  "method": "Standard short-context API-equivalent only: (uncached input*rate + cached input*rate + output*rate)/1M. CLI counters assumed compatible, cache writes observed zero; do not add reasoning again. Not CLI billed charge. API reported cost is provider telemetry, not independently audited invoice. Local/hardware and exact Spark/Agy/Muse route pricing not established.",
+  "rows": [
+    {
+      "id": "luna-medium",
+      "model": "gpt-5.6-luna",
+      "effort": "medium",
+      "api_reference_usd_per_million": {
+        "input": 0.2,
+        "cached_input": 0.02,
+        "cache_write": 0.25,
+        "output": 1.2
+      },
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 29.95388841699969,
+          "raw_usage": [
+            {
+              "input_tokens": 32735,
+              "cached_input_tokens": 8960,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1446,
+              "reasoning_output_tokens": 493
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": 0.0066694,
+          "all_input_uncached_estimate_usd": 0.0082822
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 33.03923175000091,
+          "raw_usage": [
+            {
+              "input_tokens": 32551,
+              "cached_input_tokens": 8960,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1447,
+              "reasoning_output_tokens": 470
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": 0.0066338,
+          "all_input_uncached_estimate_usd": 0.0082466
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": 0.0133032
+    },
+    {
+      "id": "terra-medium",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "api_reference_usd_per_million": {
+        "input": 2,
+        "cached_input": 0.2,
+        "cache_write": 2.5,
+        "output": 12
+      },
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 24.55526608299988,
+          "raw_usage": [
+            {
+              "input_tokens": 34631,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1143,
+              "reasoning_output_tokens": 0
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": 0.0723796,
+          "all_input_uncached_estimate_usd": 0.082978
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 27.4668533749973,
+          "raw_usage": [
+            {
+              "input_tokens": 34628,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1314,
+              "reasoning_output_tokens": 253
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": 0.07442560000000001,
+          "all_input_uncached_estimate_usd": 0.085024
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": 0.14680520000000002
+    },
+    {
+      "id": "terra-low",
+      "model": "gpt-5.6-terra",
+      "effort": "low",
+      "api_reference_usd_per_million": {
+        "input": 2,
+        "cached_input": 0.2,
+        "cache_write": 2.5,
+        "output": 12
+      },
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 24.851358125000843,
+          "raw_usage": [
+            {
+              "input_tokens": 34628,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1087,
+              "reasoning_output_tokens": 0
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": 0.0717016,
+          "all_input_uncached_estimate_usd": 0.0823
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 25.4691095829985,
+          "raw_usage": [
+            {
+              "input_tokens": 34631,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1101,
+              "reasoning_output_tokens": 0
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": 0.082474,
+          "all_input_uncached_estimate_usd": 0.082474
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": 0.15417560000000002
+    },
+    {
+      "id": "spark-high",
+      "model": "gpt-5.3-codex-spark",
+      "effort": "high",
+      "api_reference_usd_per_million": null,
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 8.037155042002269,
+          "raw_usage": [
+            {
+              "input_tokens": 29775,
+              "cached_input_tokens": 7808,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 4034,
+              "reasoning_output_tokens": 2373
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 12.050972334000107,
+          "raw_usage": [
+            {
+              "input_tokens": 29778,
+              "cached_input_tokens": 7808,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 4170,
+              "reasoning_output_tokens": 2558
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": null
+    },
+    {
+      "id": "spark-xhigh",
+      "model": "gpt-5.3-codex-spark",
+      "effort": "xhigh",
+      "api_reference_usd_per_million": null,
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 10.290035458998318,
+          "raw_usage": [
+            {
+              "input_tokens": 29778,
+              "cached_input_tokens": 3968,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6956,
+              "reasoning_output_tokens": 5337
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 8.35469487500086,
+          "raw_usage": [
+            {
+              "input_tokens": 29777,
+              "cached_input_tokens": 3840,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 5133,
+              "reasoning_output_tokens": 3596
+            }
+          ],
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": null
+    },
+    {
+      "id": "gemma31-off",
+      "model": "google/gemma-4-31b-qat",
+      "effort": "off",
+      "api_reference_usd_per_million": null,
+      "runs": [],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": null
+    },
+    {
+      "id": "agy37-high",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "api_reference_usd_per_million": null,
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 38.45688429100119,
+          "raw_usage": {
+            "input_tokens": 22293,
+            "output_tokens": 12371,
+            "thinking_tokens": 10663,
+            "cache_read_tokens": 8160,
+            "total_tokens": 34664
+          },
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 36.014345916999446,
+          "raw_usage": {
+            "input_tokens": 30455,
+            "output_tokens": 11347,
+            "thinking_tokens": 9686,
+            "cache_read_tokens": 0,
+            "total_tokens": 41802
+          },
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": null
+    },
+    {
+      "id": "agy31pro-high",
+      "model": "gemini-3.1-pro-high",
+      "effort": "high",
+      "api_reference_usd_per_million": null,
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 57.9745075000028,
+          "raw_usage": {
+            "input_tokens": 22578,
+            "output_tokens": 6247,
+            "thinking_tokens": 4741,
+            "cache_read_tokens": 8143,
+            "total_tokens": 28825
+          },
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 48.79924008400121,
+          "raw_usage": {
+            "input_tokens": 22574,
+            "output_tokens": 5216,
+            "thinking_tokens": 3675,
+            "cache_read_tokens": 8143,
+            "total_tokens": 27790
+          },
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": null
+    },
+    {
+      "id": "flashlite31",
+      "model": "google/gemini-3.1-flash-lite",
+      "effort": null,
+      "api_reference_usd_per_million": {
+        "input": 0.25,
+        "cached_input": 0.025,
+        "output": 1.5
+      },
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 6.47517974999937,
+          "raw_usage": [
+            {
+              "prompt_tokens": 9694,
+              "completion_tokens": 1465,
+              "total_tokens": 11159,
+              "cost": 0.004621,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004621,
+                "upstream_inference_prompt_cost": 0.0024235,
+                "upstream_inference_completions_cost": 0.0021975
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          ],
+          "reported_cost_usd": 0.004621,
+          "api_equivalent_estimate_usd": null
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 6.141969874999631,
+          "raw_usage": [
+            {
+              "prompt_tokens": 9694,
+              "completion_tokens": 1418,
+              "total_tokens": 11112,
+              "cost": 0.002714275,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 8161,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.002714275,
+                "upstream_inference_prompt_cost": 0.000587275,
+                "upstream_inference_completions_cost": 0.002127
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          ],
+          "reported_cost_usd": 0.002714275,
+          "api_equivalent_estimate_usd": null
+        }
+      ],
+      "actual_cost_measured": true,
+      "sum_reported_cost_usd": 0.0073352750000000005,
+      "sum_api_equivalent_estimate_usd": null
+    },
+    {
+      "id": "muse13-high",
+      "model": "muse-spark-1.3-contributor",
+      "effort": "high",
+      "api_reference_usd_per_million": null,
+      "runs": [
+        {
+          "run": "r1",
+          "wall_seconds": 44.009644458001276,
+          "raw_usage": null,
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        },
+        {
+          "run": "r2",
+          "wall_seconds": 41.31062554199889,
+          "raw_usage": null,
+          "reported_cost_usd": null,
+          "api_equivalent_estimate_usd": null
+        }
+      ],
+      "actual_cost_measured": false,
+      "sum_reported_cost_usd": null,
+      "sum_api_equivalent_estimate_usd": null
+    }
+  ]
+}

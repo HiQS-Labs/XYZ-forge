@@ -1,0 +1,105 @@
+{
+  "n": 12,
+  "correct": 11,
+  "valid_evidence_id_cases": 12,
+  "critical_false_support": 0,
+  "rows": [
+    {
+      "id": "G01",
+      "correct": true,
+      "expected": "SUPPORTED",
+      "actual": "SUPPORTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G02",
+      "correct": true,
+      "expected": "SUPPORTED",
+      "actual": "SUPPORTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G03",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G04",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G05",
+      "correct": false,
+      "expected": "UNKNOWN",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G06",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G07",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G08",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G09",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G10",
+      "correct": true,
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G11",
+      "correct": true,
+      "expected": "CONTRADICTED",
+      "actual": "CONTRADICTED",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    },
+    {
+      "id": "G12",
+      "correct": true,
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "valid_evidence_ids": true,
+      "critical_false_support": false
+    }
+  ],
+  "semantic_review_required": true
+}

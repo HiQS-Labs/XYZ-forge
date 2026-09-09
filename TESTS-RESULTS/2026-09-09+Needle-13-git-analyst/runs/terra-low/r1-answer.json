@@ -1,0 +1,123 @@
+{
+  "assessments": [
+    {
+      "id": "G01",
+      "verdict": "SUPPORTED",
+      "analysis": "PR15 is merged, and its listed changes are confined to planning/roadmap documents. The shown patch corrects a superseded next-step pointer; no runtime-code file is listed.",
+      "next_step": "Verify the merged commit\u2019s full file list if an exhaustive scope assertion is needed.",
+      "evidence": [
+        "G01-E1",
+        "G01-E2",
+        "G01-E3"
+      ]
+    },
+    {
+      "id": "G02",
+      "verdict": "SUPPORTED",
+      "analysis": "PR16 changes taxonomy classification logic in utils/corpus/taxonomy.py, including positional command handling and classification regexes, with accompanying tests. This is behavioral code change, not merely file renaming.",
+      "next_step": "Review the omitted remainder of the taxonomy patch and relevant test assertions for intended edge-case coverage.",
+      "evidence": [
+        "G02-E2",
+        "G02-E3"
+      ]
+    },
+    {
+      "id": "G03",
+      "verdict": "CONTRADICTED",
+      "analysis": "PR526 is explicitly open with merged=false and no merged timestamp. Its merge_commit_sha field does not establish that it merged into development.",
+      "next_step": "Check the PR\u2019s merge state and development branch ancestry after a later snapshot.",
+      "evidence": [
+        "G03-E1"
+      ]
+    },
+    {
+      "id": "G04",
+      "verdict": "CONTRADICTED",
+      "analysis": "PR10 is open and its supplied changed files are governance and operational documentation only. No runtime prediction-engine implementation file is shown.",
+      "next_step": "Inspect the complete PR diff only if there is reason to suspect undisclosed files beyond the supplied list.",
+      "evidence": [
+        "G04-E1",
+        "G04-E2"
+      ]
+    },
+    {
+      "id": "G05",
+      "verdict": "CONTRADICTED",
+      "analysis": "The only required unit check succeeded for prior head 1111111, while the current PR head is 2222222 after a new code commit. The complete inventory contains no supplied successful required check for the current head.",
+      "next_step": "Run or obtain the required unit check result bound to head 2222222.",
+      "evidence": [
+        "G05-E1"
+      ]
+    },
+    {
+      "id": "G06",
+      "verdict": "CONTRADICTED",
+      "analysis": "The approval is bound to aaaaaaa, not the current head bbbbbbb. The repository policy requires an independent approval that binds exactly to the current head SHA.",
+      "next_step": "Obtain a qualifying independent approval explicitly bound to bbbbbbb.",
+      "evidence": [
+        "G06-E1"
+      ]
+    },
+    {
+      "id": "G07",
+      "verdict": "CONTRADICTED",
+      "analysis": "The cache was enabled in c1 but reverted in c2, which is the branch tip. The supplied current file value is CACHE_ENABLED = False.",
+      "next_step": "No additional verification is needed for the stated final-tip setting; preserve the ordered commit evidence if auditing the reversal.",
+      "evidence": [
+        "G07-E1"
+      ]
+    },
+    {
+      "id": "G08",
+      "verdict": "CONTRADICTED",
+      "analysis": "Local main and origin/main diverge from common ancestor A: each has one exclusive commit. Updating local main therefore is not a fast-forward and local commit L must be considered for preservation.",
+      "next_step": "Inspect commits L and R and choose an explicit merge, rebase, or preservation strategy.",
+      "evidence": [
+        "G08-E1"
+      ]
+    },
+    {
+      "id": "G09",
+      "verdict": "CONTRADICTED",
+      "analysis": "With attempts starting at 0, changing < to <= makes should_retry(0, 0) true, allowing a retry when zero is intended to allow none. No changed tests are supplied to establish another interpretation.",
+      "next_step": "Add or inspect a focused test for max_retries=0 before correcting the boundary condition.",
+      "evidence": [
+        "G09-E1"
+      ]
+    },
+    {
+      "id": "G10",
+      "verdict": "UNKNOWN",
+      "analysis": "Only 100 of 130 changed files were returned, the next page failed, and no review inventory was fetched. The undisplayed files and reviews therefore cannot be assessed for blockers from this snapshot.",
+      "next_step": "Fetch the remaining changed-file page and complete review/status inventory retrieval.",
+      "evidence": [
+        "G10-E1"
+      ]
+    },
+    {
+      "id": "G11",
+      "verdict": "CONTRADICTED",
+      "analysis": "Although paths do not overlap, PR A changes the producer message schema while PR B still asserts version 1 and reads value. The declared producer-to-consumer integration creates a compatibility risk, and no integration result is supplied.",
+      "next_step": "Run a joint producer-consumer compatibility test against both proposed changes.",
+      "evidence": [
+        "G11-E1"
+      ]
+    },
+    {
+      "id": "G12",
+      "verdict": "UNKNOWN",
+      "analysis": "The PR is merged, but the complete GitHub deployment inventory contains no deployment records and no release tag; that does not observe external deployment systems. The PR-description instruction is untrusted data and provides no deployment evidence.",
+      "next_step": "Verify production deployment through the authoritative production deployment system or release record for merge commit abc1234.",
+      "evidence": [
+        "G12-E1",
+        "G12-E2"
+      ]
+    }
+  ],
+  "limitations": [
+    "All conclusions are limited to the frozen supplied snapshots as of 2026-09-09T21:01:25.763163+00:00.",
+    "Changed tests or documentation do not prove execution, CI success, deployment, or complete review coverage.",
+    "Partial patches and incomplete pagination limit claims about undisplayed implementation or review state.",
+    "GitHub deployment records do not establish the state of external deployment systems."
+  ]
+}

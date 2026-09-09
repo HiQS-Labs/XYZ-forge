@@ -1,0 +1,3041 @@
+{
+  "reviewer": "helper; unblinded independent read, followed by parent adjudication of named ambiguities",
+  "method": "Frozen two semantic requirements per case; generic technical correctness does not replace requested specific change analysis. Equivalent next steps accepted; no executed-action claims or critical false SUPPORT observed.",
+  "models": [
+    {
+      "model_id": "luna-medium",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 43,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Reset offered without explicit preservation; not an executed destructive action"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 90.625,
+      "minimum_run_percent": 89.58333333333334,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "terra-medium",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 43,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposes enabling without investigating revert reason"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 90.625,
+      "minimum_run_percent": 89.58333333333334,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "terra-low",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposes enabling without investigating revert reason"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 91.66666666666666,
+      "minimum_run_percent": 91.66666666666666,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "agy37-high",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "No substantive blocker/retired CPU direction described"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 45,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 92.70833333333334,
+      "minimum_run_percent": 91.66666666666666,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "agy31pro-high",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 43,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "No substantive blocker/retired CPU direction described"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "No focused zero-boundary regression verification named"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 40,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "No substantive blocker/retired CPU direction described"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "No focused zero-boundary regression verification named"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 1,
+              "notes": [
+                "Empty scoped deployment records treated as disproof or external uncertainty omitted",
+                "Recommends deployment instead of verifying authoritative deployment evidence"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 86.45833333333334,
+      "minimum_run_percent": 83.33333333333334,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "flashlite31",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 40,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 2,
+              "notes": [
+                "Empty scoped deployment records treated as disproof or external uncertainty omitted"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 41,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "No substantive blocker/retired CPU direction described"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 2,
+              "notes": [
+                "Empty scoped deployment records treated as disproof or external uncertainty omitted"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 84.375,
+      "minimum_run_percent": 83.33333333333334,
+      "proposed_grade": "C"
+    },
+    {
+      "model_id": "muse13-high",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 42,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 0,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Analysis cites G01-E2 for taxonomy counts from G02-E2; array-only validation misses wrong prose citation"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 41,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "No substantive blocker/retired CPU direction described"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Open/unmerged status omitted"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 1,
+              "notes": [
+                "Empty scoped deployment records treated as disproof or external uncertainty omitted",
+                "Requests already empty GitHub inventory rather than unobserved authoritative deployment system"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 86.45833333333334,
+      "minimum_run_percent": 85.41666666666666,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "spark-high",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 42,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 2,
+              "notes": [
+                "Empty scoped deployment records treated as disproof or external uncertainty omitted"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "No substantive blocker/retired CPU direction described"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 89.58333333333334,
+      "minimum_run_percent": 87.5,
+      "proposed_grade": "B"
+    },
+    {
+      "model_id": "spark-xhigh",
+      "runs": [
+        {
+          "run": "r1",
+          "score": 44,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        },
+        {
+          "run": "r2",
+          "score": 40,
+          "out_of": 48,
+          "critical_false_support": 0,
+          "rows": [
+            {
+              "id": "G01",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                0
+              ],
+              "score": 2,
+              "notes": [
+                "No substantive blocker/retired CPU direction described",
+                "File-inventory check does not verify corrected planning/blocker pointers"
+              ]
+            },
+            {
+              "id": "G02",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G03",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Proposed primary-checkout/AgentChorus change scope omitted"
+              ]
+            },
+            {
+              "id": "G04",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G05",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G06",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Approval query targets bbbbbb instead of supplied bbbbbbb"
+              ]
+            },
+            {
+              "id": "G07",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G08",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                0
+              ],
+              "score": 3,
+              "notes": [
+                "Offers intentionally dropping unique local commit without preservation"
+              ]
+            },
+            {
+              "id": "G09",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G10",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 4,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            },
+            {
+              "id": "G11",
+              "verdict": 1,
+              "evidence": 1,
+              "semantic_requirements": [
+                0,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Omits concrete version/payload mismatch despite supplied patches"
+              ]
+            },
+            {
+              "id": "G12",
+              "verdict": 0,
+              "evidence": 1,
+              "semantic_requirements": [
+                1,
+                1
+              ],
+              "score": 3,
+              "notes": [
+                "Meets both semantic requirements under equivalent-recommendation rule"
+              ]
+            }
+          ]
+        }
+      ],
+      "mean_percent": 87.5,
+      "minimum_run_percent": 83.33333333333334,
+      "proposed_grade": "B"
+    }
+  ]
+}

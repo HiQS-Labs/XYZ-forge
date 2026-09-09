@@ -1,0 +1,57 @@
+{
+  "schema": "needle13/git-analyst-terra-cli-spike@1",
+  "run": "r1",
+  "status": "complete",
+  "started_at": "2026-09-09T21:04:30.109516+00:00",
+  "requested_model": "gpt-5.6-luna",
+  "requested_effort": "medium",
+  "prompt_sha256": "1863e246efa8215d944cf4c8a49753a3b0b8710ad6a5ee1b3c1bbfe51f472003",
+  "source_packet_sha256": "dc19001fd5d1b4ad68f96516edb4c9b4538364689410450c5d33513e8ee5431b",
+  "flags": [
+    "exec",
+    "-m",
+    "gpt-5.6-luna",
+    "-c",
+    "model_reasoning_effort=\"medium\"",
+    "-c",
+    "approval_policy=\"never\"",
+    "-s",
+    "read-only",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--json",
+    "--color",
+    "never",
+    "-o",
+    "/Users/noelsaw/Documents/GH Repos/XYZ-forge-luna-needle-spike-20260909/TESTS-RESULTS/2026-09-09+Needle-13-git-analyst/runs/luna-medium/r1-answer.md",
+    "-"
+  ],
+  "cwd": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/consult-wt-46641-8ff17t6m",
+  "wall_cap_seconds": 900,
+  "subprocess_timeout_seconds": 870,
+  "system_prompt_is_user_prefix": true,
+  "temperature": null,
+  "max_output_tokens": null,
+  "backend_model_attestation": null,
+  "exit_code": 0,
+  "event_types": [
+    "item.completed",
+    "thread.started",
+    "turn.completed",
+    "turn.started"
+  ],
+  "usage": [
+    {
+      "input_tokens": 32735,
+      "cached_input_tokens": 8960,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1446,
+      "reasoning_output_tokens": 493
+    }
+  ],
+  "thread_ids": [
+    "01a087fc-8d3d-7ad3-90a8-c4b1ef2163bc"
+  ],
+  "errors": [],
+  "full_request_wall_seconds": 29.95388841699969
+}

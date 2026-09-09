@@ -1,0 +1,113 @@
+{
+  "reviewer": "parent Codex",
+  "reviewed_at": "2026-09-09T21:12:13.817333+00:00",
+  "raw_answers_read": 18,
+  "helper_review_sha256": "593f64ddf8684c3e4299de68ca7e122a0b2aa2b0abec4a13497dcc69df0032d0",
+  "adjudication": "All helper final scores accepted after parent read all eighteen answers. SparkX r2 G12 semantic credit retained for external authoritative verification despite wrong verdict. Exact-head typo loses next-step point; valid cited source still supports stale-review finding. No executed mutation observed.",
+  "key_limitations": [
+    "G05 is interpretable as an unmet CI merge gate; all 18 chose CONTRADICTED with mostly correct old-SHA reasoning. Frozen UNKNOWN key unchanged. Counterfactual dropping just this verdict point is sensitivity analysis, not new grade.",
+    "G01/G03 rubric requires substantive change explanation, not only claim validation; several otherwise correct terse answers lose those points.",
+    "Unblinded judgment-based semantic scoring and only two repeats; small point changes can cross letter thresholds."
+  ],
+  "final_results": [
+    {
+      "id": "luna-medium",
+      "scores": [
+        44,
+        43
+      ],
+      "mean_percent": 90.625,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 92.5531914893617
+    },
+    {
+      "id": "terra-medium",
+      "scores": [
+        43,
+        44
+      ],
+      "mean_percent": 90.625,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 92.5531914893617
+    },
+    {
+      "id": "terra-low",
+      "scores": [
+        44,
+        44
+      ],
+      "mean_percent": 91.66666666666666,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 93.61702127659575
+    },
+    {
+      "id": "agy37-high",
+      "scores": [
+        44,
+        45
+      ],
+      "mean_percent": 92.70833333333334,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 94.68085106382979
+    },
+    {
+      "id": "agy31pro-high",
+      "scores": [
+        43,
+        40
+      ],
+      "mean_percent": 86.45833333333334,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 88.29787234042553
+    },
+    {
+      "id": "flashlite31",
+      "scores": [
+        40,
+        41
+      ],
+      "mean_percent": 84.375,
+      "grade": "C",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 86.17021276595744
+    },
+    {
+      "id": "muse13-high",
+      "scores": [
+        42,
+        41
+      ],
+      "mean_percent": 86.45833333333334,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 88.29787234042553
+    },
+    {
+      "id": "spark-high",
+      "scores": [
+        42,
+        44
+      ],
+      "mean_percent": 89.58333333333334,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 91.48936170212765
+    },
+    {
+      "id": "spark-xhigh",
+      "scores": [
+        44,
+        40
+      ],
+      "mean_percent": 87.5,
+      "grade": "B",
+      "critical_false_support": 0,
+      "g05_verdict_excluded_sensitivity_percent": 89.36170212765957
+    }
+  ]
+}

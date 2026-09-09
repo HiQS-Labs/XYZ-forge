@@ -1,0 +1,26 @@
+{
+  "names": {
+    "luna-medium": "Luna Medium",
+    "terra-medium": "Terra Medium",
+    "terra-low": "Terra Low",
+    "spark-high": "Codex Spark High",
+    "spark-xhigh": "Codex Spark XHigh",
+    "gemma31-off": "Gemma4 31B QAT off",
+    "agy37-high": "Agy Gemini3.7 Flash High",
+    "agy31pro-high": "Agy Gemini3.1 Pro High",
+    "flashlite31": "Gemini3.1 Flash-Lite (OpenRouter)",
+    "muse13-high": "Muse Spark1.3 Contributor High"
+  },
+  "notes": {
+    "luna-medium": "Sound diff/state reasoning; generic planning summaries; run2 offers reset as a possible choice without preservation.",
+    "terra-medium": "Sound diff/history; generic scope; run1 deployment verdict contradicts its own accurate uncertainty prose.",
+    "terra-low": "Consistent core reasoning; thin change summaries and one premature conditional cache re-enable suggestion.",
+    "spark-high": "Fast observed calls; both deployment verdicts wrong, though run2 recommends checking external records.",
+    "spark-xhigh": "No clear advantage over High; run2 shortens exact review SHA and omits concrete wire-format conflict.",
+    "gemma31-off": "LM Studio endpoint unavailable; neither scheduled inference call started.",
+    "agy37-high": "Strongest observed mean, but thin proposed-change summaries and CI verdict ambiguity remain.",
+    "agy31pro-high": "Run2 overstates deployment inventory authority and recommends deployment before checking external records; no execution occurred.",
+    "flashlite31": "Confuses UNKNOWN/CONTRADICTED in CI and deployment; terse change analysis. C is threshold-sensitive.",
+    "muse13-high": "One cross-case source ID in prose; run2 ignores external deployment scope; useful diff/history reasoning."
+  }
+}
