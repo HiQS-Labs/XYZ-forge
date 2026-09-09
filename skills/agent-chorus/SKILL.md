@@ -170,7 +170,8 @@ Do not create a second file. Resolve and validate the existing discussion read-o
 "$AGENT_CHORUS" join \
   --id 123456 \
   --agent 2 \
-  --expect-subject "subject line here"
+  --expect-subject "subject line here" \
+  --lab Anthropic --model claude-opus-5 --effort high
 ```
 
 - `DECISION: take-turn`: read the returned relay file, formulate a useful response to the whole
@@ -178,8 +179,43 @@ Do not create a second file. Resolve and validate the existing discussion read-o
 - `DECISION: wait`: do not write. Tell the user which participant owns `NEXT:`.
 - `DECISION: closed`: do not write. Report that the discussion is complete.
 
-Joining is idempotent and never changes the relay file. Add `--model <name>` (for example
-`--model claude-opus-5`) so telemetry records which model holds this seat; nothing else uses it.
+### Say who you are — `--lab`, `--model`, `--effort`
+
+**Always join with these.** They record the lab, the model, and the reasoning-effort level behind
+your seat in the transcript itself: a `SEATS:` header line, and a `**Seat:**` stamp on every turn
+you write.
+
+```
+SEATS: agent2=Anthropic|claude-opus-5|high; agent3=OpenAI|gpt-5-codex|-
+
+### Turn 4 — agent2 — 2026-09-09T17:26:46+00:00
+
+**Seat:** agent2 · Anthropic · claude-opus-5 · effort high
+```
+
+Pass `--effort` whenever your harness exposes one (`low`/`medium`/`high`/`max`); omit it when it
+does not, and the stamp simply names lab and model. The values are free text, so use the name a
+reader would recognise — the lab as it is normally written, and the model id your harness reports.
+
+Why this is not optional:
+
+- A turn attributed to `agent2` and nothing else **cannot be judged**. Weighing two participants
+  against each other, reproducing a run, or deciding how much a verdict is worth all depend on
+  knowing which model produced it and at what effort.
+- Effort changes the answer. The same model at `low` and at `max` are different reviewers, and a
+  transcript that hides which one spoke invites the wrong conclusion about the model.
+- **Telemetry is not a substitute.** It is metadata-only, lives outside the repository, and
+  `telemetry purge` deletes it. The transcript is the durable record; if the identity is not
+  there, it is gone.
+
+The helper stamps each turn from `SEATS:` rather than trusting a participant to type it, because
+an identity that depends on remembering is the identity that goes missing exactly when the
+transcript matters. Joining without the flags is still allowed — the stamp then reads
+`identity unrecorded` and names the flags that fix it. Re-join at any time to fill in or correct a
+seat; a partial re-join updates only the fields it supplies, and a closed discussion is never
+rewritten.
+
+Joining is otherwise idempotent. It changes the relay file only when it records a seat identity.
 
 `join` and `send` print one `peer doorbell (…)` line per other seat. `none armed — manual seat`
 means that participant has no watch running and will not notice its turn until a human nudges it;

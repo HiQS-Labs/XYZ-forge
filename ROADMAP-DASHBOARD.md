@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 50 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -60,6 +60,7 @@ Summary: 50 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
 | GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
+| GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
 
 ## Queue
 

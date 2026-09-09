@@ -1029,5 +1029,111 @@ else
   fail "gh327 inverted-geometry fixture could not be seeded"
 fi
 
+# --- GH-524: every turn names the lab, model and effort behind its seat -----------
+# A transcript that attributes a turn to "agent2" and nothing else cannot be judged, reproduced,
+# or weighed against a different model later. The only place that knew the model was telemetry --
+# metadata-only, outside the repository, and removed by `telemetry purge` -- so the durable record
+# lost the one fact a reader needs. The stamp is written by the helper, not asked of the model:
+# an identity that depends on a participant remembering to type it goes missing exactly when the
+# transcript matters.
+SEATW="$WORK/gh524-repo"; SEATS_STORE="$WORK/gh524-store"
+mkdir -p "$SEATW" "$SEATS_STORE"
+seat_cli() { python3 "$CLI" --root "$SEATW" --store "$SEATS_STORE" "$@"; }
+
+seat_cli start --subject "gh524 identity" --agents 3 --packet-file "$PACKET" --id 924001 >/dev/null 2>&1
+SEAT_FILE="$(find "$SEATS_STORE" -path "*924001*" -name conversation.md 2>/dev/null | head -1)"
+if [ -z "$SEAT_FILE" ]; then
+  fail "gh524 fixture could not be seeded"
+else
+  seat_join_out="$(seat_cli join --id 924001 --agent 2 --lab Anthropic --model claude-opus-5 --effort high 2>&1)"
+  expect_contains "join echoes the seat identity back to the participant" \
+    "$seat_join_out" "**Seat:** agent2 · Anthropic · claude-opus-5 · effort high"
+  expect_file_contains "the identity is recorded in the TRANSCRIPT, not only telemetry" \
+    "$SEAT_FILE" "SEATS: agent2=Anthropic|claude-opus-5|high"
+  expect_file_contains "the protocol tells participants to identify themselves" \
+    "$SEAT_FILE" "join with \`--lab\`, \`--model\` and \`--effort\`"
+
+  seat_cli send --id 924001 --agent 2 --next-agent 3 --message "Considered the packet." >/dev/null 2>&1
+  seat_turn="$(awk '/^### Turn 2 /{f=1} f' "$SEAT_FILE" | head -4)"
+  case "$seat_turn" in
+    *"**Seat:** agent2 · Anthropic · claude-opus-5 · effort high"*)
+      pass "the turn itself carries lab, model and effort" ;;
+    *) fail "turn 2 is not attributed: $seat_turn" ;;
+  esac
+
+  # Effort is optional -- many harnesses expose none. Lab and model still land.
+  seat_cli join --id 924001 --agent 3 --lab OpenAI --model gpt-5-codex >/dev/null 2>&1
+  seat_cli send --id 924001 --agent 3 --next-agent 2 --message "Agreed." >/dev/null 2>&1
+  seat3="$(awk '/^### Turn 3 /{f=1} f' "$SEAT_FILE" | head -4)"
+  case "$seat3" in
+    *"**Seat:** agent3 · OpenAI · gpt-5-codex"*)
+      case "$seat3" in
+        *effort*) fail "an absent effort was invented: $seat3" ;;
+        *) pass "a seat with no effort level is still attributed by lab and model" ;;
+      esac ;;
+    *) fail "turn 3 is not attributed: $seat3" ;;
+  esac
+
+  # NEGATIVE CONTROL: without the flags the transcript says so, and says how to fix it.
+  SEAT2_STORE="$WORK/gh524-store-bare"; mkdir -p "$SEAT2_STORE"
+  python3 "$CLI" --root "$SEATW" --store "$SEAT2_STORE" \
+    start --subject "gh524 anonymous" --agents 2 --packet-file "$PACKET" --id 924002 >/dev/null 2>&1
+  python3 "$CLI" --root "$SEATW" --store "$SEAT2_STORE" join --id 924002 --agent 2 >/dev/null 2>&1
+  python3 "$CLI" --root "$SEATW" --store "$SEAT2_STORE" \
+    send --id 924002 --agent 2 --next-agent 1 --message "Anonymous turn." >/dev/null 2>&1
+  BARE_FILE="$(find "$SEAT2_STORE" -path "*924002*" -name conversation.md 2>/dev/null | head -1)"
+  expect_file_contains "an unidentified seat is named as unrecorded, not left blank" \
+    "$BARE_FILE" "identity unrecorded"
+  expect_file_contains "the unrecorded stamp says how to fix it" \
+    "$BARE_FILE" "re-join with"
+  if grep -q '^SEATS:' "$BARE_FILE"; then
+    fail "a join with no identity flags still wrote a SEATS header"
+  else
+    pass "a join with no identity flags writes no SEATS header"
+  fi
+
+  # A model id legitimately contains '/' and ':'; only the field's own separators are scrubbed.
+  seat_cli join --id 924001 --agent 2 --lab "Z.ai" --model "zai-org/glm-5.3" --effort max >/dev/null 2>&1
+  expect_file_contains "a slash-bearing model id survives the header round-trip" \
+    "$SEAT_FILE" "agent2=Z.ai|zai-org/glm-5.3|max"
+
+  # Separator injection must not forge a second seat or corrupt a neighbour.
+  seat_cli join --id 924001 --agent 2 --lab "Evil|agent9=Fake" --model "m;x" --effort low >/dev/null 2>&1
+  seat_line="$(grep '^SEATS:' "$SEAT_FILE")"
+  # Assert the PARSED seat set, not a substring: the property is "no seat was forged", and the
+  # helper's own parser is what any consumer will use to read this header back.
+  seat_parsed="$(python3 -c '
+import sys
+sys.path.insert(0, "skills/agent-chorus/scripts")
+import agent_chorus as ac
+seats = ac.parse_seats(open(sys.argv[1]).read())
+a2 = seats.get("agent2", {})
+print("|".join([",".join(sorted(seats)), a2.get("lab", "?"), a2.get("model", "?"), a2.get("effort", "?")]))' "$SEAT_FILE")"
+  # The roster must not gain a seat AND agent2's own fields must round-trip intact. Unscrubbed
+  # separators do not forge a seat -- they truncate and cross-contaminate the values, which is
+  # the failure this pins.
+  [ "$seat_parsed" = "agent2,agent3|Evil/agent9-Fake|m,x|low" ] \
+    && pass "separator injection is neutralised: roster unchanged and agent2's fields round-trip" \
+    || fail "separator injection corrupted the header, parsed as '$seat_parsed': $seat_line"
+  case "$seat_line" in
+    *"agent3=OpenAI|gpt-5-codex"*) pass "an injected identity leaves its neighbour's seat intact" ;;
+    *) fail "agent3's seat was corrupted: $seat_line" ;;
+  esac
+
+  # A partial re-join updates only what it supplies.
+  seat_cli join --id 924001 --agent 3 --effort medium >/dev/null 2>&1
+  expect_file_contains "a partial re-join keeps the fields it did not supply" \
+    "$SEAT_FILE" "agent3=OpenAI|gpt-5-codex|medium"
+
+  # Closed is terminal: joining a closed discussion must not rewrite it.
+  seat_cli close --id 924001 --agent 2 --trivial --message "Administrative close for gh524." >/dev/null 2>&1
+  closed_before="$(shasum "$SEAT_FILE" | cut -d' ' -f1)"
+  seat_cli join --id 924001 --agent 3 --lab Google --model gemini-3 >/dev/null 2>&1
+  closed_after="$(shasum "$SEAT_FILE" | cut -d' ' -f1)"
+  [ "$closed_before" = "$closed_after" ] \
+    && pass "joining a CLOSED discussion does not rewrite the transcript" \
+    || fail "a join mutated a closed discussion"
+fi
+
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
