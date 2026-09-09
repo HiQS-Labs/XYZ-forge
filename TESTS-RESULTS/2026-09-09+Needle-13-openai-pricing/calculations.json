@@ -1,0 +1,74 @@
+[
+  {
+    "model": "gpt-5.6-terra",
+    "effort": "medium",
+    "run": "r1",
+    "usage": {
+      "input_tokens": 55076,
+      "cached_input_tokens": 11008,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1794,
+      "reasoning_output_tokens": 191
+    },
+    "wall_seconds": 37.34810283299885,
+    "api_equivalent_usd": 0.1118656,
+    "all_input_uncached_scenario_usd": 0.13168,
+    "actual_cli_charge_usd": null,
+    "receipt_path": "TESTS-RESULTS/2026-09-09+Needle-13-terra/r1-receipt.json",
+    "receipt_sha256": "5c5262c9404c58989733efe0d32966fd15000efd25cde26bb014f2735e6b47e1"
+  },
+  {
+    "model": "gpt-5.6-terra",
+    "effort": "medium",
+    "run": "r2",
+    "usage": {
+      "input_tokens": 55077,
+      "cached_input_tokens": 11008,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1931,
+      "reasoning_output_tokens": 309
+    },
+    "wall_seconds": 38.011297540999294,
+    "api_equivalent_usd": 0.1135116,
+    "all_input_uncached_scenario_usd": 0.133326,
+    "actual_cli_charge_usd": null,
+    "receipt_path": "TESTS-RESULTS/2026-09-09+Needle-13-terra/r2-receipt.json",
+    "receipt_sha256": "77497c606b474f85397ffa7f33e64dc02afb6da4d81e46b4c7909ced229cb6f2"
+  },
+  {
+    "model": "gpt-5.6-terra",
+    "effort": "low",
+    "run": "r1",
+    "usage": {
+      "input_tokens": 55077,
+      "cached_input_tokens": 2816,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1843,
+      "reasoning_output_tokens": 145
+    },
+    "wall_seconds": 37.7866134169999,
+    "api_equivalent_usd": 0.1272012,
+    "all_input_uncached_scenario_usd": 0.13227,
+    "actual_cli_charge_usd": null,
+    "receipt_path": "TESTS-RESULTS/2026-09-09+Needle-13-terralow/r1-receipt.json",
+    "receipt_sha256": "6d7ef147b2d7c56581f5a06153c87104e19c6db6fba4221010b8858817ea32df"
+  },
+  {
+    "model": "gpt-5.6-terra",
+    "effort": "low",
+    "run": "r2",
+    "usage": {
+      "input_tokens": 55071,
+      "cached_input_tokens": 5888,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 1796,
+      "reasoning_output_tokens": 179
+    },
+    "wall_seconds": 36.089730457999394,
+    "api_equivalent_usd": 0.1210956,
+    "all_input_uncached_scenario_usd": 0.131694,
+    "actual_cli_charge_usd": null,
+    "receipt_path": "TESTS-RESULTS/2026-09-09+Needle-13-terralow/r2-receipt.json",
+    "receipt_sha256": "f19a8a1a81cb1941515f313d91bf28771e021e2e91a10d7986f7ff78e672ec7b"
+  }
+]

@@ -1,0 +1,7 @@
+# OpenAI price comparison — method
+
+Scope: OpenAI candidates actually evaluated in Needle13: GPT-5.6 Luna Medium and GPT-5.6 Terra Medium/Low. Orchestration/review models were not separately metered and are not additional evaluated candidates. API Standard short-context list rates checked2026-09-09, not Codex subscription charges. All measured prompts below272K. No Batch/Flex/Fast/regional uplift applied.
+
+Illustrative API-equivalent calculation assumes CLI input_tokens includes cached_input_tokens and output_tokens includes reasoning (as APIusage does): ((input-cached)*input_rate + cached*cached_rate + output*output_rate)/1e6. Cachewrites0. Do not add reasoning tokens again. These are counter-based estimates, not invoice measurements or proof of identical API payload. Modelrate unchanged between Low/Medium; output and cacheusage can vary. Luna only aggregate tokens_used was retained, so no comparable actual-run estimate is defensible.
+
+Official sources: [Standard prices](https://developers.openai.com/api/docs/pricing), [Reasoning token billing](https://developers.openai.com/api/docs/guides/reasoning). Standard Luna rates0.20/0.02/1.20 per1M input/cache/output; Terra2.00/0.20/12.00. Luna is10x cheaper at equal token mix. Normalized scenario:10,000uncachedinput+1,000output percall costs Luna$0.0032, Terra$0.032. This is an illustration, not measured workload, excludes tools/subscriptions/taxes.

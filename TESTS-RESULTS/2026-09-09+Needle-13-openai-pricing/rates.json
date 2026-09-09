@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-09",
+  "source": "https://developers.openai.com/api/docs/pricing",
+  "tier": "standard",
+  "currency": "USD",
+  "unit_tokens": 1000000,
+  "context": "<=272000 input tokens",
+  "rates": {
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "cached_input": 0.02,
+      "cache_write": 0.25,
+      "output": 1.2
+    },
+    "gpt-5.6-terra": {
+      "input": 2,
+      "cached_input": 0.2,
+      "cache_write": 2.5,
+      "output": 12
+    }
+  },
+  "note": "API list-rate scenarios, not measured Codex subscription charges; low and medium share model rate."
+}
