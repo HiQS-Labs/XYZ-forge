@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 50 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -59,6 +59,7 @@ Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-510 · jog: operator-confirmed merge path ignores gh pr merge failure and records the task as completed | — | [GH-510-JOG-MERGE-FALSE-SUCCESS.md](PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md) · [#510](https://github.com/HiQS-Labs/XYZ-forge/issues/510) |
 | GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
+| GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
 
 ## Queue
 
