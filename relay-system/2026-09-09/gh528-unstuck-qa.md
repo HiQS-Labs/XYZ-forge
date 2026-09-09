@@ -123,3 +123,11 @@ swept file: yes
 **VERDICT:** Approved
 **Basis:** All findings implemented and verified.  [Unverified — no citation]
 relay closed (Approved), no further turn needed
+
+### Attestation · relay-drive — 2026-09-09T21:02:19Z
+task: RELAY-gh528-unstuck-qa-r2
+reviewer: agy
+status: Approved
+reviewed-head: dd5fffb91c69422b8da78f003178989249cba982
+added-range: 9527+496
+added-sha256: e9482d5f0977b035e3e24a0931fc77e7880fe63e1a2125ab949c70edc3562feb
