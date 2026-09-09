@@ -1,8 +1,8 @@
 ---
 Goal: Merge-readiness QA of PR #519 (GH-516 express v2) at head df1a5cfb after conflict repair
 Date: 2026-09-09
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Changes Requested
 ---
 
 # Context
@@ -71,3 +71,17 @@ fixes and set STATUS: Changes Requested.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (agy)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+REVIEWED-SHA: df1a5cfb6890d89626089d10264926b2d12d49bc
+
+1. **Ledger integrity**: No dropped rows. `releases.sql` at `df1a5cfb` retains GH-516 (gid `rmi-01M23M318P1G66JT5ECC014WYZ`, rated 75/40/70/70, section "In progress"), GH-518 (trunk's rated row `rmi-01M23J0C1AS9R1PS0BQW33TKXQ`), GH-494, and GH-424. The newer updated timestamp for GH-424 was kept.
+2. **`utils/py/express.py`**: Implementation matches the plan's §2.1-2.6. No fail-open behavior identified; all boundaries (`git push`, `gh issue close`, gate checks) fail-closed via `check=True` subprocess wrappers or `sys.exit` traps. The `try/except OSError: pass` around central telemetry is by design to prevent telemetry failures from blocking the lane.
+3. **`skills/express/SKILL.md`**: Mismatch identified. The documented sequence (Tx1 push -> close issue -> reconcile -> Tx2 push) outlines 2 pushes. `express.py` executes 3 pushes: Tx1 push (hotfix), Tx2 push (ship outputs via `persist_closeout`), and Tx3 push (reconcile outputs via `persist_closeout`).
+4. **`test/gh267-express-skill.sh`**: The `run` happy-path test does NOT assert that the issue was actually closed. If I mentally mutated `cmd_land` to skip `gh issue close`, the `run` test would merely pass. Catch: add `grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json"` in the `run: end-to-end happy path` block.
+5. **Merge safety**: No reason it must not squash-merge. The diff (`origin/development...df1a5cfb`) exactly captures the GH-516 features, and the conflict resolution aligns correctly with trunk, making the squash-merge completely safe.
+
+**Verdict**: The PR logic is structurally solid, but the test suite and documentation need tightening before merging. Please address the findings below.
+
+### Fixes Requested
+1. **SKILL.md**: Update the documented landing sequence to accurately reflect the 3-push nature of `express.py` (hotfix push -> ship output push -> reconcile output push), instead of the current "Tx1 push -> ... -> Tx2 push" description.
+2. **test/gh267-express-skill.sh**: Add an assertion in the "run: end-to-end happy path" block to explicitly verify that the issue was closed (`grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json"`).
