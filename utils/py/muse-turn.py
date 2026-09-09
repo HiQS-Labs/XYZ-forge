@@ -241,10 +241,26 @@ def main():
         with os.fdopen(prompt_fd, "w") as pf:
             pf.write(prompt)
 
+        # --workspace and --trust-workspace are BOTH load-bearing, and their absence fails silently.
+        #
+        # Found by the first real relay turn (GH-518 four-surface evidence): without them muse ran
+        # for 11 minutes, exited 0, wrote a 516-byte log containing only its own banner and
+        # `warning: rules file at .../AGENTS.md exists, but the workspace is untrusted, so it is
+        # skipped`, and appended NOTHING to the relay thread. rtl_enforce then dutifully recorded
+        # "COMMIT none (no tracked changes)" and handed the token on. A turn that cannot write is
+        # not a reviewer; it is an expensive no-op that looks like a completed turn.
+        #
+        # --workspace roots muse's policy-gated tools at the directory the turn actually runs in
+        # (the isolation worktree when enabled), so writes land inside the containment boundary
+        # RelayTurnLib already enforces. --trust-workspace loads the repo's own AGENTS.md rules for
+        # the run. Containment does not depend on muse's trust model -- the path allowlist,
+        # commit-bypass guard and worktree isolation are what bound the turn.
         cmd = [
             muse_bin, "exec",
             "--model", muse_model,
             "--reasoning-effort", reasoning_effort,
+            "--workspace", run_cwd,
+            "--trust-workspace",
             "--prompt-file", prompt_path,
         ]
 
@@ -297,9 +313,27 @@ def main():
         print(f"muse-turn: muse exec failed (exit {bounded_rc})", file=sys.stderr)
 
     # GH-178's empty-exit-0 failure mode is not agy-specific; treat it as a failed turn here too.
-    if bounded_rc == 0 and (not os.path.exists(muse_log) or os.path.getsize(muse_log) == 0):
-        print("muse-turn: muse exited 0 but produced NO output — failing the turn.", file=sys.stderr)
-        bounded_rc = 5
+    #
+    # Measuring the log's SIZE is not enough, and the first real relay turn proved it: muse always
+    # writes a `muse: workspace root: ...` banner and may add a `muse: warning: ...` line, so a turn
+    # that produced no model output at all still left a 516-byte log and sailed past a
+    # `getsize() == 0` check. The guard has to ask whether anything survives once the CLI's own
+    # chatter is removed -- otherwise "it wrote something" is satisfied by the CLI introducing
+    # itself.
+    if bounded_rc == 0:
+        substantive = ""
+        try:
+            with open(muse_log) as log_f:
+                substantive = "".join(
+                    line for line in log_f
+                    if line.strip() and not line.startswith("muse: ")
+                ).strip()
+        except OSError:
+            substantive = ""
+        if not substantive:
+            print("muse-turn: muse exited 0 but produced NO output beyond its own banner — "
+                  "failing the turn.", file=sys.stderr)
+            bounded_rc = 5
 
     rc = rtl.enforce(t, me, muse_log, "muse")
 

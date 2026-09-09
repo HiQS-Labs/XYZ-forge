@@ -12,6 +12,7 @@
 | **Codex CLI** (`codex`) | `native_cli` | Cost-blind default builder and reviewer | Subscription authenticated. |
 | **Command Code** (`commandcode`) | `node_langbase` | Builder & Systems Reviewer | Requires worktree isolation and timeout bounding. |
 | **DeepSeek Harness** (`dsh`) | `node_cordis` | Autonomous Headless Builder | Evaluated across 4 repository bugs with zero intervention. |
+| **Muse Code** (`muse`) | `native_cli` | Evaluation only (GH-518) | Absolute MUSE_BIN (PATH not modified). Needs --workspace + --trust-workspace or the turn is read-only and silently writes nothing. Contributor tier carries a data-use clause: public repos only. |
 | **Pi Agent** (`pi`) | `node_multi` | Builder only | Explicit PI_MODEL required. |
 
 ## 2. Frontier Models & Reasoning Catalog
@@ -28,6 +29,8 @@
 | **DeepSeek** | `DeepSeek V3` | 1,000,000 | `none` | $0.27 / $1.10 / $0.0028 |
 | **DeepSeek** | `DeepSeek V4 Pro` | 1,000,000 | `low, medium, high, max` | $0.43 / $0.87 / $0.0036 |
 | **Google** | `Gemma 4 31B QAT` | 32,768 | `none` | $0.00 / $0.00 / $0.0000 |
+| **Meta** | `Muse Spark 1.3` | 1,007,997 | `minimal, low, medium, high, xhigh, max` | $1.25 / $4.25 / $0.1500 |
+| **Meta** | `Muse Spark 1.3 Contributor` | 1,007,997 | `minimal, low, medium, high, xhigh` | $0.10 / $0.20 / $0.0020 |
 | **Openai** | `openai/gpt-mini-latest` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Qwen** | `openrouter/qwen/qwen3.8-max` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
 | **Qwen** | `qwen/qwen3.8-max` | 1,000,000 | `none` | $0.00 / $0.00 / $0.0000 |
