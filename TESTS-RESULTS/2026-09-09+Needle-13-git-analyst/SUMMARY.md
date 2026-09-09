@@ -73,4 +73,4 @@ Original input hashes,18answer/provenance hashes and18relay manifests were check
 - [x] Fresh corpus/key independently reviewed and frozen before inference.
 - [x] All18 available calls completed;2 unavailable calls explicitly recorded.
 - [x] Independent scoring, negative controls, provenance and price calculations retained.
-- [ ] Final evidence commit and GitHub raw snapshots/tables publication verified by parent.
+- [x] Evidence committed as `9f66323`; [GitHub raw snapshots and final tables](https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608848865) posted and verified.

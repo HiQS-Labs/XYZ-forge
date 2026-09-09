@@ -1,0 +1,74 @@
+{
+  "verified_at": "2026-09-09T21:15:31.109246+00:00",
+  "input_commit": "5aeb527",
+  "evidence_commit": "9f66323",
+  "comments": [
+    {
+      "label": "inputs",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608845040",
+      "body_sha256": "2d530e9050a02a51bb08344f13c89df7b05e1c99fb10336cf98ea0d0bc8b7f5f",
+      "verified": true
+    },
+    {
+      "label": "luna-medium",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608845399",
+      "body_sha256": "ee70c9bf86421b027a4faaa7dceff9ac5ed59f52887778930cafd83c57a88d6e",
+      "verified": true
+    },
+    {
+      "label": "terra-medium",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608845760",
+      "body_sha256": "e97fb3bd1a8bb455418edd185499b6870c15d5a9c0d6157b9ac8b9aa12555878",
+      "verified": true
+    },
+    {
+      "label": "terra-low",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608846156",
+      "body_sha256": "1ebd1121ac1a8540e075b8b30757483be37a345d3eb2e0ca0126655286c3467e",
+      "verified": true
+    },
+    {
+      "label": "agy37-high",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608846505",
+      "body_sha256": "b4582b0447a505e503b89ea67ed580c801c9c3ce8f6b3be4e09e553b7e56220e",
+      "verified": true
+    },
+    {
+      "label": "agy31pro-high",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608846898",
+      "body_sha256": "53918f19370add8a51d9328e5df6a15ce5fcb2c66b91ed9e27b87ef1d3c0c62d",
+      "verified": true
+    },
+    {
+      "label": "flashlite31",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608847293",
+      "body_sha256": "cc0d4e97a21725120b487b0dbbf85ef5a7fcd1da61aa9fbefee194fbf3983b09",
+      "verified": true
+    },
+    {
+      "label": "muse13-high",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608847758",
+      "body_sha256": "8106979679a8e5e6258b6910b00c456f86ea0f0996c981ae44b72fc55b8c9230",
+      "verified": true
+    },
+    {
+      "label": "spark-high",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608848141",
+      "body_sha256": "9dbccd80caaad4448afece2ac224e05647e5cc19dfeb1b27cd76495c1fb77437",
+      "verified": true
+    },
+    {
+      "label": "spark-xhigh",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608848479",
+      "body_sha256": "0d38d1c100fa9369cffa9e1043b9a6fb6b0ed20bd56de58cac03784405b45ecc",
+      "verified": true
+    },
+    {
+      "label": "results",
+      "url": "https://github.com/HiQS-Labs/Needle-fork/issues/13#issuecomment-5608848865",
+      "body_sha256": "36d4472ef14810c9420f0fa1a4dba65d5da10e92167e7a38c4c52bdbba633142",
+      "verified": true
+    }
+  ],
+  "historical_grade_comment_preserved_with_phase2_pointer": true
+}
