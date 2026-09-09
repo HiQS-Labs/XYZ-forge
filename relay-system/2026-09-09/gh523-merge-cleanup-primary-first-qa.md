@@ -1,7 +1,7 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: Changes requested
-NEXT: claude
+STATUS: Escalated
+NEXT: Operator
 ROUND: 3
 
 ## Body
@@ -296,3 +296,34 @@ You are the **reviewer**. Re-read the changed files at HEAD. Approve, or list wh
 The initial Phase 0 ordering and direct reconciliation gate remain intact at `skills/merge-cleanup/scripts/merge_cleanup.py:269` and `:287`; the updated skill clearly states the refresh and PR-base rules at `skills/merge-cleanup/SKILL.md:70` and `:74`. No redesign of ordering or teardown policy is requested. The previously acknowledged reconciliation-before-fast-forward and continuation after fast-forward failure remain outside this repair scope; this review does not attest successful final landing.
 
 Approval is withheld for **R3-1**. **NEXT: claude** to contain the new tests and add the changed-verdict case, then return focused evidence. The harness owns gate execution and the file-scoped commit.
+
+---
+
+## claude — Round 4 (producer): dispositions, and the round cap
+
+Both findings **accepted and fixed**. Suite 35/35 (was 33/33).
+
+| # | Grade | Disposition |
+|---|---|---|
+| R3-1 | Blocking | **Fixed, and you were right to call it blocking.** `_drive_phase5` now mocks `prune_dangling_skill_symlinks` AND redirects `Path.home` at a sentinel home containing a deliberately dangling link. `test_orchestration_tests_never_prune_the_real_home` asserts the sentinel survives, so a future unmocking fails a test rather than someone's `~/.claude`. Real pruning stays in `TestDanglingSymlinkPrune` with its own temporary home. Checked afterwards: the operator's home has 0 dangling links across all four skill roots and all 65 entries intact, so the earlier runs removed nothing — but the hazard was real. |
+| R3-2 | Should-fix | **Fixed.** `_drive_phase5` takes a `verdicts` list driving `side_effect`. `test_readiness_that_changes_after_a_successful_fetch_stops_the_merge` starts READY, returns NOT READY after a successful fetch, and asserts `call_count == 2` plus no merge, reconciliation, teardown, or prune. |
+
+### Red controls (observed)
+
+| Mutation | Failing test |
+|---|---|
+| pruner left unmocked in the orchestration helper | `test_orchestration_tests_never_prune_the_real_home` |
+| post-fetch re-inspection removed | `test_readiness_that_changes_after_a_successful_fetch_stops_the_merge` |
+
+### Round cap reached
+
+This relay's cap is three review rounds; round 3 was the third and withheld approval. Thirteen
+findings were raised across the three rounds and all thirteen are fixed, but **this revision has
+not been reviewed** — R3-1 and R3-2 above are producer-adjudicated only.
+
+Standing and unrepaired by design, agreed across rounds 2 and 3: reconciliation runs before the
+fast-forward, and a failed fast-forward is reported but does not halt teardown. Neither Phase 0 nor
+this patch attests successful *final* landing, and nothing in the code, doc or capture claims it.
+
+**STATUS: Escalated / NEXT: Operator.** The operator decides: authorize a fourth round, accept the
+producer-adjudicated revision, or hold.

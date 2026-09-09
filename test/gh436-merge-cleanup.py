@@ -376,15 +376,31 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             ["--primary", str(self.primary), "--integration-branch", "main", "--scan-only"], landing_ready=True)
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
-    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0):
-        """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues."""
-        verdict = {
-            "path": str(self.primary), "integration_branch": "development", "current_branch": "development",
-            "is_clean": landing_ready, "dirty_count": 0, "on_integration_branch": True,
-            "unpushed_on_integration": 0, "can_ff": landing_ready, "operation_in_progress": "",
-            "operation_evidence_ok": True, "evidence_complete": landing_ready,
-            "landing_ready": landing_ready, "blockers": [] if landing_ready else ["synthetic blocker"],
-        }
+    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None):
+        """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
+
+        Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
+        `Path.home()` and unlinks dangling skill symlinks under `~/.claude`, `~/.codex` and
+        `~/.gemini`. An orchestration test that leaves it live would delete the operator's own
+        links from a disposable clone (R3-1). It is mocked here, and `Path.home` is redirected at
+        a sentinel home besides, so a future unmocking fails a test instead of the operator's
+        machine. Real pruning behaviour stays in TestDanglingSymlinkPrune, which owns its own
+        temporary home.
+        """
+        def _verdict(ready):
+            return {
+                "path": str(self.primary), "integration_branch": "development", "current_branch": "development",
+                "is_clean": ready, "dirty_count": 0, "on_integration_branch": True,
+                "unpushed_on_integration": 0, "can_ff": ready, "operation_in_progress": "",
+                "operation_evidence_ok": True, "evidence_complete": ready,
+                "landing_ready": ready, "blockers": [] if ready else ["synthetic blocker"],
+            }
+
+        fake_home = Path(self.temp_dir) / "sentinel-home"
+        (fake_home / ".claude" / "skills" / "ghost").mkdir(parents=True)
+        self.sentinel = fake_home / ".claude" / "skills" / "ghost" / "SKILL.md"
+        self.sentinel.symlink_to(fake_home / "deleted-source" / "SKILL.md")  # deliberately dangling
+
         git_calls = []
 
         def fake_git(cwd, args):
@@ -392,8 +408,13 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             rc = fetch_rc if args and args[0] == "fetch" else 0
             return subprocess.CompletedProcess(args=args, returncode=rc, stdout="", stderr="boom" if rc else "")
 
+        insp_kwargs = ({"side_effect": [_verdict(v) for v in verdicts]} if verdicts
+                       else {"return_value": _verdict(landing_ready)})
+
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
-             mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict), \
+             mock.patch.object(Path, "home", return_value=fake_home), \
+             mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
+             mock.patch.object(merge_cleanup, "inspect_primary_landing", **insp_kwargs) as insp, \
              mock.patch.object(merge_cleanup, "run_git", side_effect=fake_git), \
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
@@ -401,7 +422,30 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
              mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=prs or []):
             rc = merge_cleanup.main()
+        self.pruner = pruner
+        self.inspections = insp
         return rc, git_calls, merged, reconcile, teardown
+
+    def test_orchestration_tests_never_prune_the_real_home(self):
+        """THE PIN (R3-1): containment. Unmocking the pruner must fail HERE, not on a real machine."""
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        rc, _, _, _, _ = self._drive_phase5(["--primary", str(self.primary), "--execute"], prs=prs)
+        self.assertEqual(rc, 0)
+        self.pruner.assert_called_once()
+        self.assertTrue(self.sentinel.is_symlink(),
+                        "a dangling sentinel link was pruned — the real home was reachable from this test")
+
+    def test_readiness_that_changes_after_a_successful_fetch_stops_the_merge(self):
+        """THE PIN (R3-2): the SECOND inspection is what catches divergence found by the fetch."""
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"], prs=prs, verdicts=[True, False])
+        self.assertEqual(self.inspections.call_count, 2, "the post-fetch re-inspection did not happen")
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
 
     def test_fast_forward_targets_the_branch_that_was_checked(self):
         """THE PIN (R2-5): the ACTUAL git argument, not a string in the source."""
