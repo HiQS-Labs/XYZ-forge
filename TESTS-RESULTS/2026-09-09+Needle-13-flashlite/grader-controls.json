@@ -1,0 +1,21 @@
+{
+  "positive_control": true,
+  "negative_controls": [
+    {
+      "control": "empty",
+      "rejected": true
+    },
+    {
+      "control": "duplicate",
+      "rejected": true
+    },
+    {
+      "control": "missing",
+      "rejected": true
+    },
+    {
+      "control": "flipped",
+      "rejected": true
+    }
+  ]
+}

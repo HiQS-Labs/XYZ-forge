@@ -1,0 +1,35 @@
+{
+  "n": 16,
+  "correct": 11,
+  "false_accept": 4,
+  "false_hold": 1,
+  "mismatches": [
+    {
+      "id": "A05",
+      "expected": "ACCEPT",
+      "actual": "HOLD"
+    },
+    {
+      "id": "O02",
+      "expected": "HOLD",
+      "actual": "ACCEPT"
+    },
+    {
+      "id": "O03",
+      "expected": "HOLD",
+      "actual": "ACCEPT"
+    },
+    {
+      "id": "O04",
+      "expected": "HOLD",
+      "actual": "ACCEPT"
+    },
+    {
+      "id": "O08",
+      "expected": "HOLD",
+      "actual": "ACCEPT"
+    }
+  ],
+  "pass": false,
+  "transport_json_copies": 1
+}

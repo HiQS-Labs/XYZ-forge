@@ -1,0 +1,38 @@
+[
+  {
+    "run": "r1",
+    "raw_events_model_and_answer_match": true,
+    "negative_controls": [
+      {
+        "name": "empty",
+        "rejected": true
+      },
+      {
+        "name": "missing_done",
+        "rejected": true
+      },
+      {
+        "name": "changed_answer",
+        "rejected": true
+      }
+    ]
+  },
+  {
+    "run": "r2",
+    "raw_events_model_and_answer_match": true,
+    "negative_controls": [
+      {
+        "name": "empty",
+        "rejected": true
+      },
+      {
+        "name": "missing_done",
+        "rejected": true
+      },
+      {
+        "name": "changed_answer",
+        "rejected": true
+      }
+    ]
+  }
+]
