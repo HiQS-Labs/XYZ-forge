@@ -1,0 +1,30 @@
+{
+  "type": "llm",
+  "publisher": "lmstudio-community",
+  "key": "gemma-4-12b-it-mlx",
+  "display_name": "Gemma 4 12B Instruct",
+  "architecture": "gemma4_unified",
+  "quantization": {
+    "name": "6bit",
+    "bits_per_weight": 6
+  },
+  "size_bytes": 9760971326,
+  "params_string": "12B",
+  "loaded_instances": [
+    {
+      "id": "gemma-4-12b-it-mlx",
+      "config": {
+        "context_length": 262144,
+        "parallel": 4,
+        "reasoning_budget_message": ""
+      }
+    }
+  ],
+  "max_context_length": 262144,
+  "format": "mlx",
+  "capabilities": {
+    "vision": true,
+    "trained_for_tool_use": true
+  },
+  "description": null
+}
