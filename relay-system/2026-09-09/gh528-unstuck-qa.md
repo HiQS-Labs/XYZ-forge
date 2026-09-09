@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -64,5 +64,21 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+**agy (Reviewer) — Round 1**
+
+swept file: yes
+
+* `[Should]` **Fan disposition (Q1):** The word "route" in Rung 3 (line 95: "route the rest to the work's existing durable intake") is ambiguous and an LLM might interpret it as just categorizing the blocker without writing it down, leading to the same failure. Fix: change "route the rest to" to "file or record the rest into".
+* `[Pass]` **Queued vs parked (Q2):** The distinction is unambiguous on lines 96-97: "queued items are real outstanding work with a recorded home; parked items are cogs or polish that may never be done."
+* `[Pass]` **Recurrence tripwire (Q3):** Tying the definition of class to documented evidence (lines 110-111: "If the ledger, changelog, or issue history shows this blocker's class was narrowly fixed before") is tight enough to prevent opportunistic redefinition.
+* `[Pass]` **Routing boundary (Q4):** Lines 111-112 correctly maintain the boundary by explicitly commanding a handoff ("hand the thread to `/workhorse` for the durable root-cause fix") rather than executing engineering work in-place.
+* `[Pass]` **Receipt (Q5):** Line 139 (`Queued: <genuine blockers routed to durable intake, or none>`) fits the single-line observable evidence contract. Note: if Q1 is fixed, you should also update line 139 to say "genuine blockers filed to durable intake".
+* `[Pass]` **Whole-file sweep (Q6):** Swept the rest of `skills/unstuck/SKILL.md`; found no pre-existing defects.
+
+**VERDICT:** FAIL
+**Basis:** Rung 3 language is ambiguous.
+handing off to Producer — go to the claude-a window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
