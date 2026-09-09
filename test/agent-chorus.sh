@@ -14,6 +14,12 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-test.XXXXXX")" || {
   echo "FAIL: mktemp -d returned an invalid directory" >&2
   exit 1
 }
+# GH-1 / GH-564: this suite now drives git through its mktemp fixtures (the GH-524 citation
+# fixture is a real repository), which puts it in the class gh1-adoption-guard audits. Adopt the
+# shared guard rather than avoiding the construct: `git -C ""` and `cd ""` are silent no-ops that
+# target the CALLER'S clone, and this suite must never be able to reach a real repo.
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
 case "$WORK" in
   "${TMPDIR:-/tmp}"/agent-chorus-test.*) ;;
   *) echo "FAIL: refusing unsafe cleanup target: $WORK" >&2; exit 1 ;;
@@ -1218,8 +1224,17 @@ FIELDPY
 # path pattern. Left in the extracted body it made every stamped turn cite a nonexistent file.
 Q2W="$WORK/gh524r1-cite"; Q2S="$WORK/gh524r1-cite-store"
 mkdir -p "$Q2W" "$Q2S"
-( cd "$Q2W" && git init -q . && git config user.email t@e.com && git config user.name T \
-  && mkdir -p docs && echo hello > docs/real.txt && git add docs/real.txt && git commit -qm seed ) >/dev/null 2>&1
+# Deliberately NO `cd`: a directory change here would put this suite in gh1-adoption-guard's
+# "creates fixtures and drives them" class, which is a real signal that must not be silenced with
+# an exemption marker for the sake of a shorter git invocation. `git -C` does the same work.
+mkdir -p "$Q2W/docs"
+require_fixture "$Q2W" "gh524 citation fixture repo"
+printf 'hello\n' > "$Q2W/docs/real.txt"
+git -C "$Q2W" init -q . >/dev/null 2>&1
+git -C "$Q2W" config user.email t@e.com >/dev/null 2>&1
+git -C "$Q2W" config user.name T >/dev/null 2>&1
+git -C "$Q2W" add docs/real.txt >/dev/null 2>&1
+git -C "$Q2W" commit -qm seed >/dev/null 2>&1
 python3 "$CLI" --root "$Q2W" --store "$Q2S" start --subject "gh524 citations" --agents 2 \
   --packet-file "$PACKET" --id 925102 >/dev/null 2>&1
 python3 "$CLI" --root "$Q2W" --store "$Q2S" join --id 925102 --agent 2 \
