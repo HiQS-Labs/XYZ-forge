@@ -21,7 +21,8 @@ dispatched, and content sent under that clause cannot be recalled. So the rule c
 comment that a future caller is trusted to remember; it has to be the default behavior.
 
 Hence resolve_model() FAILS CLOSED. It returns the clause-free model unless it can positively
-establish that the target repository is public. Every uncertainty -- gh missing, gh unauthenticated,
+establish that EVERY repository in play -- the execution root and the coordination root, which are
+not required to be the same repo -- is public. Every uncertainty -- gh missing, gh unauthenticated,
 network down, not a GitHub remote, lookup timed out, unparseable answer -- lands on the safe tier.
 The expensive model is the safe one here, which is exactly why the failure direction has to be
 chosen deliberately: the cheap path is the one that leaks.
@@ -34,7 +35,8 @@ import subprocess
 import sys
 import tempfile
 
-from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
+from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
+                 rtl_run_bounded)
 from turn_diagnostics import TurnDiagnostics
 
 # The tier carrying no data-use clause. Every ambiguous path resolves here.
@@ -86,8 +88,24 @@ def repo_visibility(repo_root):
     return "", "gh returned unrecognized visibility %r" % (answer,)
 
 
-def resolve_model(repo_root):
-    """Pick the model for this turn. Returns (model_id, reason) -- the reason is logged, always."""
+def resolve_model(*repo_roots):
+    """Pick the model for this turn. Returns (model_id, reason) -- the reason is logged, always.
+
+    EVERY repository in play must be independently confirmed public before the discounted tier is
+    used. One private or unknown root anywhere vetoes it.
+
+    This is deliberately stricter than "classify the repo we write to", and the reason is a wiring
+    trap found in review. `claim_task_or_exit()` returns `resolve_tick_repo_root(root)`, which
+    honors TICK_REPO_ROOT whenever that path merely EXISTS -- it never requires it to equal the
+    turn root. Meanwhile the CLI is launched with cwd=root (or a worktree derived from root). So a
+    private MUSE_TURN_ROOT paired with a public TICK_REPO_ROOT would classify the public
+    coordination repo and then execute against the private checkout: the discounted tier selected
+    by a repo whose content is not the content being sent.
+
+    Classifying only the execution root would fix that specific inversion, but leaves the mirror
+    case -- a public execution root beside a private coordination root -- resting on the claim that
+    no private content crosses over. Requiring unanimity removes the need to make that claim at all.
+    """
     explicit = os.environ.get("MUSE_MODEL", "").strip()
     if explicit:
         return explicit, "explicit MUSE_MODEL"
@@ -95,10 +113,30 @@ def resolve_model(repo_root):
     if os.environ.get("MUSE_ALLOW_CONTRIBUTOR", "1") == "0":
         return SAFE_MODEL, "contributor tier disabled by MUSE_ALLOW_CONTRIBUTOR=0"
 
-    visibility, why = repo_visibility(repo_root)
-    if visibility == "PUBLIC":
-        return CONTRIBUTOR_MODEL, "repository is public (%s)" % why
-    return SAFE_MODEL, "not established as public — %s" % why
+    # Deduplicate by real path: the common case is one repo passed twice, and that should cost one
+    # network round trip, not two.
+    seen = []
+    for candidate in repo_roots:
+        if not candidate:
+            continue
+        try:
+            real = os.path.realpath(candidate)
+        except OSError:
+            real = candidate
+        if real not in seen:
+            seen.append(real)
+
+    if not seen:
+        return SAFE_MODEL, "no repository root to classify"
+
+    for real in seen:
+        visibility, why = repo_visibility(real)
+        if visibility != "PUBLIC":
+            return SAFE_MODEL, "not established as public — %s (%s)" % (why, real)
+
+    if len(seen) == 1:
+        return CONTRIBUTOR_MODEL, "repository is public"
+    return CONTRIBUTOR_MODEL, "all %d repository roots in play are public" % len(seen)
 
 
 def main():
@@ -153,9 +191,12 @@ def main():
     tick_repo_root, _tick_bin = claim_task_or_exit(
         root, xyz_root, f, allow_paths, t, me, "muse-turn")
 
-    # Decide the model against the repository the turn actually writes to, not the harness root:
-    # a cross-repo relay can be driven from XYZ-forge (public) into a private target.
-    muse_model, model_reason = resolve_model(tick_repo_root)
+    # Both roots, because they can differ and only one of them is where the CLI actually runs.
+    # `root` is the execution repository (cwd below, and the parent of any isolation worktree);
+    # `tick_repo_root` is the coordination repository claim_task_or_exit resolved, which honors
+    # TICK_REPO_ROOT without requiring it to equal `root`. resolve_model requires BOTH to be
+    # public — see its docstring for the inversion this prevents.
+    muse_model, model_reason = resolve_model(root, tick_repo_root)
     print(f"muse-turn: model {muse_model} — {model_reason}", file=sys.stderr)
 
     reasoning_effort = os.environ.get("MUSE_REASONING_EFFORT", "high")
@@ -200,18 +241,23 @@ def main():
             diag.start()
             try:
                 with open(muse_log, "a") as log_f:
-                    subprocess.run(cmd, env=muse_env, cwd=run_cwd, timeout=turn_timeout,
-                                   stdout=log_f, stderr=subprocess.STDOUT,
-                                   stdin=subprocess.DEVNULL, check=True)
+                    # rtl_run_bounded, not subprocess.run(timeout=...): the latter kills and waits
+                    # for the DIRECT child only. Muse spawns shells, editors and test children, so
+                    # on timeout that tree survives while this adapter walks on to worktree_end()
+                    # and rtl.enforce() -- grandchildren still writing into a worktree that is
+                    # being torn down, after the turn has been declared killed. rtl_run_bounded
+                    # starts a new session, captures the PGID while the launcher is alive, and
+                    # SIGKILLs the whole group. It returns the child's status, or 7 on timeout.
+                    bounded_rc = rtl_run_bounded(
+                        turn_timeout, cmd,
+                        cwd=run_cwd, env=muse_env,
+                        stdout=log_f, stderr=subprocess.STDOUT,
+                    )
             except FileNotFoundError:
                 print(f"muse-turn: muse binary not found at {muse_bin} "
                       f"(set MUSE_BIN, or reinstall via https://dev.meta.ai/install.sh)",
                       file=sys.stderr)
                 bounded_rc = 5
-            except subprocess.TimeoutExpired:
-                bounded_rc = 7
-            except subprocess.CalledProcessError as exc:
-                bounded_rc = exc.returncode
             except Exception as exc:
                 print(f"muse-turn: muse launch failed: {exc}", file=sys.stderr)
                 bounded_rc = 5
