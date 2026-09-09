@@ -1,8 +1,8 @@
 # RELAY — GH-524 AgentChorus seat identity (lab / model / effort)
 
-STATUS: Changes requested
-NEXT: claude
-ROUND: 1
+STATUS: In progress
+NEXT: codex
+ROUND: 2
 
 ## Body
 
@@ -229,3 +229,58 @@ write; retain a flag-free join/status example where read-only inspection is inte
 Handback: `claude`, established from this token's preceding creation/claim/release events.
 Please address B1/B2 and the Should-fix items, then return the same bounded artifact set for
 review with focused evidence. No implementation changes were made in this turn.
+
+---
+
+## claude — Round 2 (producer): dispositions
+
+All five findings **accepted and fixed**. Suite 196 → 207, 0 fail.
+
+| # | Grade | Disposition |
+|---|---|---|
+| B1 | Blocking | **Fixed.** The identity-bearing join now does read/validate/write inside `DiscussionLock`, the same lock `append_turn` and supersession take. A flag-free join keeps the old read-only path exactly. You were right that atomic replacement says nothing about a stale snapshot. |
+| B2 | Blocking | **Fixed, and it was worse than the seat field.** `replace_field` passed its value to `re.subn` as a replacement string for *every* header field, so this was never seat-specific. Both paths now use a callable, and backslashes are additionally scrubbed from seat values. Your reproduction is a test: `OpenAI\nSTATUS: Closed\nX: marker` leaves `STATUS: Open` and writes no `X:` field, and a lone `\q` is stored rather than raising. |
+| S1 | Should-fix | **Fixed.** `strip_seat_stamp` drops the helper-written line before a turn body is read as evidence. The stamp stays in the transcript. Covered end-to-end with `zai-org/glm-5.3`: the model id is not cited, verification still exits 0, and the participant's own `docs/real.txt:1` is still recognised. |
+| S2 | Should-fix | **Fixed both halves.** `start` takes `--lab`/`--model`/`--effort`, records agent1 in `SEATS:`, and stamps Turn 1. Helper-written administrative turns (supersession) are stamped `administrative (helper-written, no model)` — I took your second option there, because attributing helper-authored text to whoever holds agent1 would be a false attribution, which is the defect this issue is about. |
+| L1 | Low | **Fixed.** The join section no longer calls an identity-bearing join read-only, and points at `status` or a flag-free join for read-only inspection. |
+
+### Red controls (all five observed)
+
+| Mutation | Failing test |
+|---|---|
+| lock removed from the identity join | `rc=zero` — the join wrote through another writer's lock |
+| replacement string restored | escape injection wrote an arbitrary header field |
+| stamp left in the evidence body | model id read as a file citation; verification rc=1 |
+| Turn 1 stamp removed | Turn 1 is unattributed |
+| administrative stamp removed | administrative turn not labelled |
+
+**Two of my own controls were decorative and had to be rebuilt before they would fire** — worth
+recording, since you flagged exactly this class last time:
+
+- The lock probe's holder re-read the file *after* sleeping, so both writes survived and removing
+  the lock changed nothing. It now snapshots before the window, which is the shape that loses data.
+- That probe also checked for the string `SEATS:` anywhere in the file — which the new Protocol
+  prose contains — so it was always true. It now matches the header line.
+
+Behaviour note from building it: the lock is non-blocking, so a contended identity join **refuses**
+(exit 2, "discussion is locked by another writer") rather than waiting. That matches every other
+writer here, so I asserted the refusal rather than changing the lock, and added a second case
+proving the same join records the seat once the lock is free.
+
+### Questions for round 2
+
+1. Is `strip_seat_stamp` applied at the right seam? It is line-prefix based; a participant who
+   literally writes `**Seat:** ...` in their own message would have that line dropped from
+   *evidence extraction* only. Acceptable, or should it be anchored to the first line of the body?
+2. `replace_field` now uses a callable for every header field, not just SEATS. Any caller relying
+   on the old escape-expanding behaviour?
+3. Is the administrative label the right call for supersession turns, or should they carry the
+   recorded seat instead?
+4. Anything else in the new tests that passes without pinning the behaviour it names?
+
+---
+
+## ▶ TAKE YOUR TURN
+
+You are the **reviewer**. Re-read the changed files at HEAD. Approve, or list what remains blocking.
+State your lab, model and effort at the top as before.
