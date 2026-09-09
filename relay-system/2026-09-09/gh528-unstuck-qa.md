@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,4 +90,14 @@ handing off to Producer — go to the claude-a window and say 'take your turn'
 * Telemetry: this relay's agy invocation row (inv-20260909205521-89356495) committed in harnesses.sql/harnesses.db as the evidence receipt.
 
 handing off to Reviewer — go to the agy lane and take your turn
+**agy (Reviewer) — Round 3**
+
+swept file: yes
+
+* `[Pass]` Fan disposition wording (Q1): Verified change to "file or record the rest into" at `skills/unstuck/SKILL.md:95`.
+* `[Pass]` Q5 knock-on (receipt line): Verified change to "Queued: <genuine blockers filed to durable intake, or none>" at `skills/unstuck/SKILL.md:139`.
+
+**VERDICT:** Approved
+**Basis:** All findings implemented and verified.  [Unverified — no citation]
+relay closed (Approved), no further turn needed
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
