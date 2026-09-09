@@ -1,8 +1,8 @@
 # RELAY — GH-523 merge-cleanup Phase 0 (primary checkout first)
 
-STATUS: Changes requested
-NEXT: claude
-ROUND: 1
+STATUS: In progress
+NEXT: codex
+ROUND: 2
 
 ## Body
 
@@ -135,3 +135,54 @@ Append your review block below, then set STATUS and hand the token back.
 This is an extension of the existing scanner and orchestrator, not a second system. Keep the repairs inside those seams and the focused regression file. One existing sequencing limitation remains relevant to the claimed readiness guarantee: `merge_cleanup.py:323` runs reconciliation before the fetch/fast-forward at `:328`, and `:328`–`:329` ignore failures before teardown. Initial readiness alone cannot establish successful final landing. This was not independently attributed to the reviewed commit; do not claim this patch proves post-merge landing/reconciliation success.
 
 The new tests at `test/gh436-merge-cleanup.py:148` cover helper behavior but never call `merge_cleanup.main`, which leaves the bypass, target mismatch, and refusal ordering unguarded. Producer should address the blocking findings and add focused cases for the listed paths; the harness owns gate execution. No artifact changes were made by this reviewer. Handing back to **claude** for revision; approval is withheld.
+
+---
+
+## claude — Round 2 (producer): dispositions
+
+All seven findings **accepted and fixed**. Suite 26/26 (was 18/18).
+
+| # | Grade | Disposition |
+|---|---|---|
+| 1 | Blocking | **Fixed.** Readiness is now affirmative: `evidence_complete` requires a successful `rev-list` count AND positive `merge-base --is-ancestor` proof, and both are terms of `landing_ready` (`scan_clones.py`). A failed ref query adds a "landing target could not be resolved" blocker instead of leaving `unpushed=0`. Stale-evidence half: `merge_cleanup.py` now runs `git fetch origin` and RE-computes the verdict immediately before the first merge, printing it, while keeping the original local report first. |
+| 2 | Blocking | **Fixed.** Phase 0 moved above the `--reconcile-pr` dispatch, and reconciliation gated by the shared `_primary_blocks()` helper — it returns 2 without calling `run_post_merge_reconcile`. |
+| 3 | Blocking | **Fixed.** The fast-forward now targets `f"origin/{args.integration_branch}"`, and a failed fast-forward after remote merges is reported loudly rather than ignored. |
+| 4 | Should-fix | **Fixed.** A primary the walk also finds is now *promoted* to row 0 rather than only prepended when unseen. |
+| 5 | Should-fix | **Fixed.** `run_git` catches `OSError` and returns rc=127; `inspect_primary_landing` catches path-resolution failure and gives every failed query its own blocker, including a failed `status`. |
+| 6 | Should-fix | **Fixed.** `MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `REVERT_HEAD` / `BISECT_LOG` are probed via `git rev-parse --git-path` (worktree-aware) and fail closed. Never aborted for the operator. Stashes deliberately still not a blocker, per your own reasoning. |
+| 7 | Low | **Fixed.** A dry run whose primary is unready now prints an explicit "NOT executable as things stand" warning under the PR table. SKILL.md's timing claim corrected to "reported before the PR matrix and enforced before the first merge", and the standalone-helper example now states it does not perform Phase 0. |
+
+**Accepted without change:** your closing note that initial readiness cannot establish successful
+*final* landing. Agreed — this patch does not claim that. The fast-forward failure is now surfaced
+rather than swallowed, but reconciliation still runs before it; that ordering is pre-existing and
+outside #523.
+
+### New tests (8 added, 26 total)
+
+`TestPrimaryLandingEvidence`: missing tracking ref, unfinished merge with clean status, git that
+will not launch. `TestMergeCleanupOrchestration`: `--reconcile-pr` refuses / proceeds, branch
+threading, checked-equals-landed. Plus discovered-primary ordering against an earlier-sorting
+sibling.
+
+### Red controls (observed this round)
+
+| Mutation | Result |
+|---|---|
+| `evidence_complete` + operation state dropped from the predicate | FAIL: missing tracking ref; FAIL: unfinished merge |
+| reconcile gate removed | FAIL: `--reconcile-pr` refuses on an unready primary |
+| `origin/development` hardcoded again | FAIL: checked branch and landed branch are the same string |
+
+### Questions for round 2
+
+1. Does the affirmative predicate now close finding 1 completely, including the fetch-and-revalidate?
+2. Is the `_primary_blocks()` helper the right seam, or does any remaining path still write to the
+   primary without passing through it?
+3. Is the operation-state probe correct for a linked worktree, where `.git` is a file?
+4. Anything in the new tests that passes without pinning the behaviour it names?
+
+---
+
+## ▶ TAKE YOUR TURN
+
+You are the **reviewer**. Re-read the changed files at HEAD. Confirm or reject each disposition,
+cite file:line, and either approve or list what remains blocking.

@@ -68,13 +68,21 @@ def is_safe_deletable_path(path: Path, safe_roots: Optional[List[Path]] = None, 
 
 
 def run_git(cwd: Path, args: List[str]) -> subprocess.CompletedProcess:
-    """Runs a git command in the target directory."""
-    return subprocess.run(
-        ["git", "-C", str(cwd)] + args,
-        capture_output=True,
-        text=True,
-        check=False
-    )
+    """Runs a git command in the target directory.
+
+    Callers treat a non-zero return code as "git said no". A git that cannot be LAUNCHED at all
+    (missing binary, unreadable cwd, OS refusal) is the same answer as far as they are concerned,
+    so it is reported the same way rather than escaping as an exception (R1-F5).
+    """
+    try:
+        return subprocess.run(
+            ["git", "-C", str(cwd)] + args,
+            capture_output=True,
+            text=True,
+            check=False
+        )
+    except OSError as exc:
+        return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=f"{exc}")
 
 
 def is_pid_alive(pid: int) -> bool:
@@ -369,11 +377,21 @@ def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = No
     # SAFE_ROOTS, or in a directory whose name does not match --prefix, used to vanish here
     # while Phase 5 went on merging into it.
     if primary_repo:
-        resolved_primary = primary_repo.resolve()
-        if resolved_primary not in seen:
-            info = inspect_checkout(resolved_primary, primary_repo_path=primary_repo, exclude_patterns=excludes)
-            if info.get("is_git"):
-                results.insert(0, info)
+        try:
+            resolved_primary = primary_repo.resolve()
+        except OSError:
+            resolved_primary = None
+        if resolved_primary is not None:
+            existing = [c for c in results if Path(c["path"]) == resolved_primary]
+            if existing:
+                # Discovered by the walk too — promote it, do not duplicate it. Appending in
+                # root/name order left a sibling repo above the operator's own tree (R1-F4).
+                results.remove(existing[0])
+                results.insert(0, existing[0])
+            else:
+                info = inspect_checkout(resolved_primary, primary_repo_path=primary_repo, exclude_patterns=excludes)
+                if info.get("is_git"):
+                    results.insert(0, info)
 
     return results
 
@@ -382,12 +400,17 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
     """Phase 0: can the primary on-disk checkout actually RECEIVE the landing?
 
     Phase 5 merges PRs remotely and then fast-forwards this tree and runs reconciliation in it.
-    Every one of those steps assumes a checkout that is on the integration branch, clean, and
-    behind-or-equal to origin. None of that was ever asserted, so the failure mode was to merge
-    every PR, then discover the local tree could not be fast-forwarded and the reconciliation
-    commands were running over someone's uncommitted work. Answer the question first instead.
+    Every one of those steps assumes a checkout that is on the integration branch, clean, free of
+    a half-finished git operation, and provably an ancestor of the remote tip. None of that was
+    ever asserted, so the failure mode was to merge every PR, then discover the local tree could
+    not be fast-forwarded and the reconciliation commands were running over uncommitted work.
 
-    Never raises: an unreadable or non-git primary is reported as not ready, with the reason.
+    Readiness is affirmative: every fact must be positively established. A git query that FAILS
+    is unknown state, never a pass — a checkout with no `origin/<branch>` at all used to satisfy
+    every condition and be declared ready (R1-F1).
+
+    Never raises. A bad path, an unreadable directory, or a git that will not launch is reported
+    as not-ready with the reason (R1-F5).
     """
     res: Dict[str, Any] = {
         "path": str(primary_repo),
@@ -398,47 +421,104 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
         "on_integration_branch": False,
         "unpushed_on_integration": 0,
         "can_ff": False,
+        "operation_in_progress": "",
+        "evidence_complete": False,
         "landing_ready": False,
         "blockers": [],
     }
-    path = Path(primary_repo).resolve()
+    try:
+        path = Path(primary_repo).expanduser().resolve()
+    except OSError as exc:
+        res["blockers"].append(f"cannot resolve primary path {primary_repo}: {exc}")
+        return res
+
     if not (path / ".git").exists():
         res["blockers"].append(f"{path} is not a git checkout")
         return res
 
+    remote_ref = f"origin/{integration_branch}"
+
     branch = run_git(path, ["rev-parse", "--abbrev-ref", "HEAD"])
-    res["current_branch"] = branch.stdout.strip() if branch.returncode == 0 else ""
+    if branch.returncode != 0:
+        res["blockers"].append(f"cannot read the current branch: {branch.stderr.strip() or 'git failed'}")
+        return res
+    res["current_branch"] = branch.stdout.strip()
     res["on_integration_branch"] = res["current_branch"] == integration_branch
     if not res["on_integration_branch"]:
         res["blockers"].append(
             f"on '{res['current_branch'] or 'unknown'}', not the integration branch '{integration_branch}' — "
-            f"`git merge --ff-only origin/{integration_branch}` will not land here"
+            f"`git merge --ff-only {remote_ref}` will not land here"
         )
 
     status = run_git(path, ["status", "--porcelain"])
-    dirty = [ln for ln in status.stdout.splitlines() if ln.strip()] if status.returncode == 0 else []
-    res["dirty_count"] = len(dirty)
-    res["is_clean"] = status.returncode == 0 and not dirty
-    if dirty:
-        res["blockers"].append(
-            f"{len(dirty)} uncommitted path(s) — commit, park, or stash them before landing; "
-            "reconciliation would otherwise run over unsaved work"
-        )
+    if status.returncode != 0:
+        res["blockers"].append(f"cannot read working-tree status: {status.stderr.strip() or 'git failed'}")
+    else:
+        dirty = [ln for ln in status.stdout.splitlines() if ln.strip()]
+        res["dirty_count"] = len(dirty)
+        res["is_clean"] = not dirty
+        if dirty:
+            res["blockers"].append(
+                f"{len(dirty)} uncommitted path(s) — commit, park, or stash them before landing; "
+                "reconciliation would otherwise run over unsaved work"
+            )
 
-    # Local commits on the integration branch that origin does not have would be silently
-    # skipped by a squash-merge landing, so they are a blocker, not a note.
-    ahead = run_git(path, ["rev-list", "--count", f"origin/{integration_branch}..{integration_branch}"])
-    if ahead.returncode == 0 and ahead.stdout.strip().isdigit():
+    # A half-finished merge/rebase/cherry-pick can leave porcelain empty while the operation is
+    # still open, and the next merge will refuse. Fail closed; never abort it for the operator.
+    for marker, label in (
+        ("MERGE_HEAD", "merge"),
+        ("REBASE_HEAD", "rebase"),
+        ("CHERRY_PICK_HEAD", "cherry-pick"),
+        ("REVERT_HEAD", "revert"),
+        ("BISECT_LOG", "bisect"),
+    ):
+        probe = run_git(path, ["rev-parse", "--git-path", marker])
+        if probe.returncode != 0:
+            continue
+        marker_path = Path(probe.stdout.strip())
+        if not marker_path.is_absolute():
+            marker_path = path / marker_path
+        if marker_path.exists():
+            res["operation_in_progress"] = label
+            res["blockers"].append(
+                f"an unfinished {label} is in progress ({marker} present) — finish or abort it yourself; "
+                "the landing merge will refuse while it is open"
+            )
+            break
+
+    # Local commits the remote does not have would be silently skipped by a squash-merge landing.
+    # A FAILED count is unknown state, not zero.
+    ahead = run_git(path, ["rev-list", "--count", f"{remote_ref}..{integration_branch}"])
+    ref_evidence = ahead.returncode == 0 and ahead.stdout.strip().isdigit()
+    if ref_evidence:
         res["unpushed_on_integration"] = int(ahead.stdout.strip())
         if res["unpushed_on_integration"]:
             res["blockers"].append(
                 f"{res['unpushed_on_integration']} local commit(s) on '{integration_branch}' are not on origin — "
                 "push or explicitly abandon them first"
             )
+    else:
+        res["blockers"].append(
+            f"cannot compare '{integration_branch}' against '{remote_ref}' — the landing target could not be "
+            "resolved, so readiness is unknown (fetch the remote, or check that the branch and remote exist)"
+        )
 
-    ff = run_git(path, ["merge-base", "--is-ancestor", "HEAD", f"origin/{integration_branch}"])
+    # Positive ancestry proof against the tip we would fast-forward to.
+    ff = run_git(path, ["merge-base", "--is-ancestor", "HEAD", remote_ref])
     res["can_ff"] = ff.returncode == 0
-    res["landing_ready"] = bool(res["on_integration_branch"] and res["is_clean"] and not res["unpushed_on_integration"])
+    if not res["can_ff"] and ref_evidence and not res["unpushed_on_integration"]:
+        res["blockers"].append(
+            f"HEAD is not an ancestor of {remote_ref} — `git merge --ff-only` would refuse"
+        )
+
+    res["evidence_complete"] = bool(ref_evidence and res["can_ff"])
+    res["landing_ready"] = bool(
+        res["on_integration_branch"]
+        and res["is_clean"]
+        and not res["unpushed_on_integration"]
+        and not res["operation_in_progress"]
+        and res["evidence_complete"]
+    )
     return res
 
 

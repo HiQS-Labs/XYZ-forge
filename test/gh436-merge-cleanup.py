@@ -13,6 +13,7 @@ import tempfile
 import subprocess
 import shutil
 import unittest
+import unittest.mock as mock
 from pathlib import Path
 
 # Add skill scripts to sys.path
@@ -28,6 +29,7 @@ from scan_clones import (
     DEFAULT_SAFE_ROOTS,
     DEFAULT_NEVER_DELETE
 )
+import merge_cleanup
 from merge_cleanup import prune_dangling_skill_symlinks
 from toposort_prs import (
     parse_pr_dependencies,
@@ -191,6 +193,17 @@ class TestPrimaryCheckoutIsInspectedFirst(unittest.TestCase):
         primary_rows = [c for c in found if c["disposition"] == "PRIMARY_CHECKOUT"]
         self.assertEqual(len(primary_rows), 1, "primary counted twice when the scan reached it too")
 
+    def test_discovered_primary_is_promoted_above_an_earlier_sorting_sibling(self):
+        """Round-1 QA (Codex): prepending only when unseen left a sibling repo above the operator's tree."""
+        sibling = Path(self.temp_dir) / "aaa-sorts-first"
+        sibling.mkdir()
+        subprocess.run(["git", "init", str(sibling)], capture_output=True, check=True)
+        found = scan_directories([Path(self.temp_dir)], prefix_filter="", primary_repo=self.primary)
+        names = [c["name"] for c in found]
+        self.assertIn("aaa-sorts-first", names, f"sibling missing from the scan: {names}")
+        self.assertEqual(found[0]["disposition"], "PRIMARY_CHECKOUT",
+                         f"primary was not first: {names}")
+
     def test_clean_primary_on_integration_branch_is_landing_ready(self):
         info = inspect_primary_landing(self.primary, integration_branch="development")
         self.assertTrue(info["landing_ready"], info["blockers"])
@@ -222,6 +235,112 @@ class TestPrimaryCheckoutIsInspectedFirst(unittest.TestCase):
         info = inspect_primary_landing(Path(self.temp_dir) / "nowhere", integration_branch="development")
         self.assertFalse(info["landing_ready"])
         self.assertTrue(info["blockers"])
+
+
+class TestPrimaryLandingEvidence(unittest.TestCase):
+    """Round-1 QA (Codex): readiness must be AFFIRMATIVE, never the absence of a failure.
+
+    A git query that fails is unknown state. Before this, a clean checkout on `development` with
+    no `origin/development` at all satisfied every condition and was declared landing-ready, so
+    Phase 5 would merge toward a target that could not even be resolved.
+    """
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.repo = Path(self.temp_dir) / "solo"
+        self.repo.mkdir()
+        subprocess.run(["git", "init", "-b", "development", str(self.repo)], capture_output=True, check=True)
+        for k, v in (("user.name", "Test User"), ("user.email", "test@example.com")):
+            subprocess.run(["git", "config", k, v], cwd=self.repo, check=True)
+        (self.repo / "README.md").write_text("hello")
+        subprocess.run(["git", "add", "README.md"], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=self.repo, capture_output=True, check=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_missing_tracking_ref_is_not_ready(self):
+        """THE PIN: no origin/<branch> means unknown, not ready."""
+        info = inspect_primary_landing(self.repo, integration_branch="development")
+        self.assertFalse(info["landing_ready"], "a checkout with no landing target was declared ready")
+        self.assertFalse(info["evidence_complete"])
+        self.assertTrue(any("could not be resolved" in b for b in info["blockers"]), info["blockers"])
+
+    def test_unfinished_merge_blocks_even_with_a_clean_status(self):
+        """A resolved-but-unfinished merge leaves porcelain empty; the landing merge still refuses."""
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.repo,
+                              capture_output=True, text=True, check=True).stdout.strip()
+        (self.repo / ".git" / "MERGE_HEAD").write_text(head + "\n")
+        info = inspect_primary_landing(self.repo, integration_branch="development")
+        self.assertEqual(info["operation_in_progress"], "merge")
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(any("unfinished merge" in b for b in info["blockers"]), info["blockers"])
+
+    def test_unreadable_git_reports_not_ready_instead_of_raising(self):
+        with mock.patch("scan_clones.subprocess.run", side_effect=OSError("git not found")):
+            info = inspect_primary_landing(self.repo, integration_branch="development")
+        self.assertFalse(info["landing_ready"])
+        self.assertTrue(info["blockers"])
+
+
+class TestMergeCleanupOrchestration(unittest.TestCase):
+    """Round-1 QA (Codex): the orchestrator's own paths, not just the helpers.
+
+    Three defects lived above the helper layer: `--reconcile-pr` returned before Phase 0 was
+    computed at all, `--integration-branch` was checked but `origin/development` was landed, and
+    a primary the scan also found was left below its siblings in the audit.
+    """
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.primary = Path(self.temp_dir) / "primary"
+        self.primary.mkdir()
+        subprocess.run(["git", "init", "-b", "development", str(self.primary)], capture_output=True, check=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _run_main(self, argv, landing_ready):
+        verdict = {
+            "path": str(self.primary), "integration_branch": "development", "current_branch": "development",
+            "is_clean": landing_ready, "dirty_count": 0, "on_integration_branch": True,
+            "unpushed_on_integration": 0, "can_ff": landing_ready, "operation_in_progress": "",
+            "evidence_complete": landing_ready, "landing_ready": landing_ready,
+            "blockers": [] if landing_ready else ["synthetic blocker"],
+        }
+        with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
+             mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict) as insp, \
+             mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
+             mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
+             mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=[]):
+            rc = merge_cleanup.main()
+        return rc, insp, reconcile
+
+    def test_reconcile_pr_refuses_on_an_unready_primary(self):
+        """THE PIN: --reconcile-pr must not launch governance writers into an unready tree."""
+        rc, insp, reconcile = self._run_main(
+            ["--primary", str(self.primary), "--reconcile-pr", "42", "--execute"], landing_ready=False)
+        self.assertEqual(rc, 2)
+        self.assertTrue(insp.called, "Phase 0 was never computed before --reconcile-pr")
+        reconcile.assert_not_called()
+
+    def test_reconcile_pr_proceeds_on_a_ready_primary(self):
+        rc, insp, reconcile = self._run_main(
+            ["--primary", str(self.primary), "--reconcile-pr", "42", "--execute"], landing_ready=True)
+        self.assertEqual(rc, 0)
+        self.assertTrue(insp.called)
+        reconcile.assert_called_once()
+
+    def test_integration_branch_is_threaded_into_the_readiness_check(self):
+        _, insp, _ = self._run_main(
+            ["--primary", str(self.primary), "--integration-branch", "main", "--scan-only"], landing_ready=True)
+        self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
+
+    def test_checked_branch_and_landed_branch_are_the_same_string(self):
+        """THE PIN: the fast-forward target is read from --integration-branch, never hardcoded."""
+        src = Path(merge_cleanup.__file__).read_text()
+        self.assertIn('f"origin/{args.integration_branch}"', src)
+        self.assertNotIn('["merge", "--ff-only", "origin/development"]', src)
 
 
 class TestDanglingSymlinkPrune(unittest.TestCase):

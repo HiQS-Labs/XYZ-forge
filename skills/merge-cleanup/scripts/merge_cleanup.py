@@ -257,19 +257,33 @@ def main():
     if dry_run:
         log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
 
-    # Reconcile specific PR directly if requested
-    if args.reconcile_pr > 0:
-        run_post_merge_reconcile(args.reconcile_pr, primary_repo, dry_run=dry_run)
-        return
-
-    # Phase 0: the primary on-disk checkout, before anything remote is looked at. It receives
-    # every merge and runs every reconciliation, so its readiness is a precondition of the run,
-    # not a detail discovered at merge time.
+    # Phase 0: the primary on-disk checkout, before ANY other mode dispatches. It receives every
+    # merge and runs every reconciliation, so its readiness is a precondition of the run, not a
+    # detail discovered at merge time. This must stay above --reconcile-pr: that mode launches
+    # governance writers straight into this tree, and used to do so with no verdict computed at
+    # all (R1-F2).
     primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
     print("\n" + "=" * 80)
     print("PHASE 0: PRIMARY ON-DISK CHECKOUT")
     print("=" * 80 + "\n")
     print(format_primary_landing(primary_landing) + "\n")
+
+    def _primary_blocks(action: str) -> bool:
+        """True when `action` must be refused because the primary cannot receive it."""
+        if primary_landing["landing_ready"] or args.allow_unready_primary or dry_run:
+            return False
+        log_err(f"REFUSING to {action}: the primary checkout cannot receive the landing.")
+        for b in primary_landing["blockers"]:
+            log_err(f"  - {b}")
+        log_err("Fix the primary first, or pass --allow-unready-primary to proceed anyway.")
+        return True
+
+    # Reconcile specific PR directly if requested
+    if args.reconcile_pr > 0:
+        if _primary_blocks("reconcile"):
+            return 2
+        run_post_merge_reconcile(args.reconcile_pr, primary_repo, dry_run=dry_run)
+        return 0
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude)
@@ -279,7 +293,7 @@ def main():
     print(format_scan_table(checkouts) + "\n")
 
     if args.scan_only:
-        return
+        return 0
 
     # Phase 4: Open PR Sequencing
     prs = fetch_open_prs(str(primary_repo))
@@ -290,6 +304,11 @@ def main():
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
         print("=" * 80 + "\n")
         print(format_pr_table(ordered_prs) + "\n")
+        if not primary_landing["landing_ready"]:
+            log_warn(
+                "This sequence is NOT executable as things stand: the primary checkout cannot "
+                "receive the landing (see PHASE 0). --execute would refuse."
+            )
         if warnings:
             print("Ordering Notes:")
             for w in warnings:
@@ -299,18 +318,20 @@ def main():
         log("No open PRs found for this repository.")
 
     if args.prs_only:
-        return
+        return 0
 
     # Phase 5: Execute Merges & Post-Merge Reconciliation (if not teardown-only)
     # Gate on Phase 0. Merging is remote and effectively irreversible; landing into a tree that
     # cannot fast-forward leaves the repo half-landed with reconciliation unrun. Refuse first.
-    if (not args.teardown_only and ordered_prs and args.execute
-            and not primary_landing["landing_ready"] and not args.allow_unready_primary):
-        log_err("REFUSING to merge: the primary checkout cannot receive the landing.")
-        for b in primary_landing["blockers"]:
-            log_err(f"  - {b}")
-        log_err("Fix the primary first, or pass --allow-unready-primary to proceed anyway.")
-        return 2
+    if not args.teardown_only and ordered_prs and args.execute:
+        # The Phase 0 verdict above was computed against whatever origin/* this clone had cached.
+        # Re-establish it against the live remote before the first irreversible merge (R1-F1).
+        log("Refreshing remote refs before the first merge, then re-checking the primary...")
+        run_git(primary_repo, ["fetch", "origin"])
+        primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+        print(format_primary_landing(primary_landing) + "\n")
+        if _primary_blocks("merge"):
+            return 2
 
     if not args.teardown_only and ordered_prs:
         print("=" * 80)
@@ -326,7 +347,16 @@ def main():
         if not dry_run:
             log("Updating primary repo development branch...")
             run_git(primary_repo, ["fetch", "origin"])
-            run_git(primary_repo, ["merge", "--ff-only", "origin/development"])
+            # The branch that was CHECKED in Phase 0 is the branch that gets landed. Hardcoding
+            # origin/development here let --integration-branch approve one tree and advance a
+            # different one (R1-F3).
+            ff = run_git(primary_repo, ["merge", "--ff-only", f"origin/{args.integration_branch}"])
+            if ff.returncode != 0:
+                log_err(
+                    f"fast-forward to origin/{args.integration_branch} FAILED: "
+                    f"{ff.stderr.strip() or 'git refused'}"
+                )
+                log_err("PRs are merged remotely but the primary did not advance — reconcile by hand.")
 
     # Phase 6: Safe Teardown
     print("=" * 80)

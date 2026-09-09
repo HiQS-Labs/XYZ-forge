@@ -52,20 +52,33 @@ about everyone else's work and nothing about their own.
   never because a `SAFE_ROOTS` walk reached it or its directory name matched `--prefix`. A primary
   outside those roots, or under a non-matching prefix, used to vanish from the audit entirely
   while Phase 5 went on merging into it.
-- Report and gate on four facts: current branch vs the integration branch (`development`),
-  working-tree cleanliness, local commits on the integration branch that `origin` does not have,
-  and whether HEAD can fast-forward to `origin/<integration>`.
+- Report and gate on five facts: current branch vs the integration branch (`--integration-branch`,
+  default `development`), working-tree cleanliness, an unfinished merge/rebase/cherry-pick, local
+  commits on the integration branch that `origin` does not have, and positive ancestry proof that
+  HEAD can fast-forward to `origin/<integration>`.
+- **Readiness is affirmative.** Every fact must be positively established; a git query that *fails*
+  is unknown state, never a pass. A checkout with no `origin/<integration>` at all is not ready,
+  because the landing target cannot be resolved.
+- The branch that is checked is the branch that is landed. `--integration-branch` threads through
+  Phase 0 and the fast-forward alike.
 - **Unpushed commits on the integration branch are a blocker, not a note.** A squash-merge landing
   skips them silently, which is how local work is lost.
-- Not ready is a **refusal to merge**, reported before the PR matrix, not a warning discovered
-  after the merges are already irreversible. `--allow-unready-primary` overrides it deliberately
-  and records the blockers.
+- Not ready is a **refusal**, reported before the PR matrix and enforced before the first merge.
+  It covers `--reconcile-pr` too: that mode launches governance writers straight into this tree.
+  A dry run still prints the sequence, labelled explicitly as not executable while blockers stand.
+  `--allow-unready-primary` overrides the refusal deliberately and records the blockers.
+- The verdict is **re-established against the live remote** immediately before the first merge, so
+  a stale cached `origin/*` cannot certify a tree that has since diverged.
 - Uncommitted intake docs or captures in the primary are their own commit or a park — they do not
   ride along in whatever PR happens to be open.
 
 ```bash
 python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary . --scan-only   # Phase 0 + audit
 ```
+
+Phase 0 runs in every mode of the orchestrator. The standalone helpers below
+(`scan_clones.py`, `toposort_prs.py`) do **not** perform it — reach for `merge_cleanup.py` when
+the answer will inform a landing.
 
 ### Phase 1: Discover & Inventory
 - Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` (`~/Documents/GH Repos`, `~/agent-workspaces`, etc.).
@@ -97,7 +110,9 @@ python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary . --scan-only   
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
 - Treats routine documentation and generated-artifact conflicts as work to resolve: in an isolated full clone, refresh the target branch, preserve both sides' intended changes using the repo's documented resolver/CLI, regenerate derived files, and renumber only unpublished CHANGELOG entries against the latest target. Never blindly take one side of ledger data. Run required checks on the resulting PR head (mutation-heavy suites in a separate disposable full clone), push within authorization, and resume the merge sequence, refreshing before each PR. Escalate a concrete unresolved ambiguity or repeated failed repair, not the initial `CONFLICTING` status; do not retry the same failed repair indefinitely.
 - Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`).
-- Fast-forwards primary repository `development` branch (`git merge --ff-only origin/development`).
+- Fast-forwards the primary repository onto the **checked** integration branch
+  (`git merge --ff-only origin/<integration-branch>`), and reports loudly if that fast-forward
+  fails after the PRs have already merged remotely.
 - Executes post-merge reconciliation:
   - `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`
   - `python3 utils/py/releases_app.py gen && python3 utils/py/releases_app.py check`
