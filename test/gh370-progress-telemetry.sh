@@ -24,6 +24,7 @@ sleep 2
 "$TICK_BIN" claim "$RELAY_TASK" --agent codex --paths relay.md >/dev/null
 sed -i.bak 's/^STATUS:.*/STATUS: Approved/' "$RELAY_FILE"
 rm -f "${RELAY_FILE}.bak"
+printf '\n### Reviewer · codex\nVERDICT: PASS\n' >> "$RELAY_FILE"   # GH-505: an approval must add review text
 "$TICK_BIN" done "$RELAY_TASK" --agent codex >/dev/null
 AGENT_EOF
 chmod +x "$AGENT"
@@ -32,7 +33,7 @@ out="$(
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" PROGRESS_FIXTURE="$A" \
   RELAY_WORKTREE_ISOLATION=0 RELAY_PROGRESS_INTERVAL_S=1 RELAY_COST_SUMMARY=0 \
   RELAY_DRIVER_LOCKED=1 python3 "$DRIVER" \
-    --relay-file "$RELAY" --relay-task "$TASK" --agent-cmd "$AGENT" 2>&1
+    --relay-file "$RELAY" --relay-task "$TASK" --agent-cmd "$AGENT" --reviewer codex 2>&1
 )"
 rc=$?
 

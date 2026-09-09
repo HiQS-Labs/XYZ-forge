@@ -58,7 +58,7 @@ AC(){ printf "PA=pa RA=ra MODE=%s bash '%s'" "$1" "$TAKER"; }
 
 # --- (1) happy path: 3-turn re-handoff, closes Approved -------------------
 R1="$A/relay1.md"; seed RELAY-TURN-1 "$R1"
-bash "$DRIVE" --relay-file "$R1" --relay-task RELAY-TURN-1 --agent-cmd "$(AC normal)" --round-cap 8 >/dev/null 2>&1
+bash "$DRIVE" --relay-file "$R1" --relay-task RELAY-TURN-1 --agent-cmd "$(AC normal)" --round-cap 8 --reviewer ra --builder pa >/dev/null 2>&1
 rc=$?
 [ "$rc" -eq 0 ] && pass "drive returns 0 when relay closes Approved" || fail "expected 0, got $rc"
 [ "$(status_of "$R1")" = "Approved" ] && pass "thread closed STATUS: Approved" || fail "STATUS not Approved"
@@ -67,19 +67,19 @@ rc=$?
 
 # --- (2) no-progress escalation ------------------------------------------
 R2="$A/relay2.md"; seed RELAY-TURN-2 "$R2"
-bash "$DRIVE" --relay-file "$R2" --relay-task RELAY-TURN-2 --agent-cmd "$(AC noprogress)" --round-cap 8 >/dev/null 2>&1
+bash "$DRIVE" --relay-file "$R2" --relay-task RELAY-TURN-2 --agent-cmd "$(AC noprogress)" --round-cap 8 --reviewer ra --builder pa >/dev/null 2>&1
 [ "$?" -eq 3 ] && pass "no-progress turn escalates (exit 3)" || fail "expected exit 3"
 
 # --- (3) round-cap escalation (never approves) ---------------------------
 R3="$A/relay3.md"; seed RELAY-TURN-3 "$R3"
-bash "$DRIVE" --relay-file "$R3" --relay-task RELAY-TURN-3 --agent-cmd "$(AC loop)" --round-cap 3 >/dev/null 2>&1
+bash "$DRIVE" --relay-file "$R3" --relay-task RELAY-TURN-3 --agent-cmd "$(AC loop)" --round-cap 3 --reviewer ra --builder pa >/dev/null 2>&1
 rc=$?
 [ "$rc" -eq 4 ] && pass "round cap without Approved escalates (exit 4)" || fail "expected exit 4, got $rc"
 [ "$(status_of "$R3")" != "Approved" ] && pass "never-approve relay did not close Approved" || fail "should not be Approved"
 
 # --- (3b) close mismatch: STATUS Approved but token never `done` (Codex r1) ---
 R5="$A/relay5.md"; seed RELAY-TURN-5 "$R5"
-bash "$DRIVE" --relay-file "$R5" --relay-task RELAY-TURN-5 --agent-cmd "$(AC approvenodone)" --round-cap 8 >/dev/null 2>&1
+bash "$DRIVE" --relay-file "$R5" --relay-task RELAY-TURN-5 --agent-cmd "$(AC approvenodone)" --round-cap 8 --reviewer ra --builder pa >/dev/null 2>&1
 rc=$?
 [ "$rc" -eq 4 ] && pass "close mismatch (STATUS Approved, token not done) escalates (exit 4)" || fail "expected exit 4, got $rc"
 [ "$(task_status RELAY-TURN-5)" = "claimed" ] && pass "leaked live token is NOT reported as a clean close" || fail "token should still be live, got: $(task_status RELAY-TURN-5)"

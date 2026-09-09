@@ -71,6 +71,8 @@ cat > "$STUB_RD" << 'STUB_EOF'
 #!/usr/bin/env bash
 set -u
 printf '%s\n' "$*" > "$WORK/relay-drive-args"
+# GH-505: a success must carry the reviewer attestation the real driver publishes
+[ "${RELAY_DRIVE_EXIT:-0}" -eq 0 ] && bash "$ATTEST_STUB" "$@"
 exit "${RELAY_DRIVE_EXIT:-0}"
 STUB_EOF
 chmod +x "$STUB_RD"
@@ -1072,12 +1074,24 @@ N_RECEIPT="$NEXEC/marathon-result.json"
 N_HEAD="$(git -C "$FR" rev-parse HEAD)"
 N_OTHER_HEAD="$(git -C "$FR" rev-parse HEAD^{tree})"
 N_VIEW="$WORK/n-pr-view.json"
+# GH-505: an approved receipt is merge-eligible only with relay-drive's attestation behind it. Give the
+# N-series a real one (reviewer agy, token T, reviewed at N_HEAD) so the positive case is still
+# positive; the fail-closed cases below are refused by the identity checks that run before it.
+mkdir -p "$FR/relay-system/n"
+printf '# RELAY · N\nSTATUS: Open\nNEXT: agy\n\nbody\n' > "$FR/relay-system/n/RELAY.md"
+TICK_REPO_ROOT="$FR" "$TICK" init >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$FR" "$TICK" log task.created T --agent marathon >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$FR" TICK_BIN="$TICK" MARATHON_BUILDER=codex bash "$ATTEST_STUB" --relay-file "$FR/relay-system/n/RELAY.md" --relay-task T --reviewer agy --target-root "$FR" >/dev/null 2>&1
+grep -qE '^status:[[:space:]]+done$' <<<"$(TICK_REPO_ROOT="$FR" "$TICK" info T 2>/dev/null)" && pass "N0 token T reads done in the fixture root" || fail "N0 token T not done: $(TICK_REPO_ROOT="$FR" "$TICK" info T 2>&1 | head -3)"
+N_ATTEST="$(git -C "$FR" rev-parse --absolute-git-dir)/relay-attest/T.json"
+[ -f "$N_ATTEST" ] && pass "N0 attestation fixture published for token T" || fail "N0 attestation fixture missing: $N_ATTEST"
 
 write_n_receipt() {  # <head-sha> <gate-result> <repo-path>
-  python3 - "$N_RECEIPT" "$1" "$2" "$3" <<'PY'
+  python3 - "$N_RECEIPT" "$1" "$2" "$3" "$N_ATTEST" "$N_HEAD" <<'PY'
 import json, sys
-path, head_sha, gate, repo = sys.argv[1:5]
+path, head_sha, gate, repo, attest_path, reviewed = sys.argv[1:7]
 json.dump({
+  "reviewed_candidate": head_sha, "reviewed_head": reviewed, "added_sha256": "fixture", "attest_path": attest_path,
   "schema": "marathon-drive/result@1", "execution_id": "gh901-exec1",
   "generated_at": "2026-08-28T02:00:00Z", "outcome": "approved",
   "reason": "approved, gate passed", "exit_code": 0, "approval_preserved": False,
@@ -1136,6 +1150,27 @@ has "$N2_OUT" "auto-merge refused (verification failed: head SHA" \
   && pass "N2 head-SHA mismatch refuses the auto-merge" || fail "N2 rc=$rc: $N2_OUT"
 [ "$(merge_calls)" -eq $((MERGES_BEFORE_N + 1)) ] \
   && pass "N2 no merge call issued on refusal" || fail "N2 a merge leaked through: $(merge_calls)"
+
+# N2b (GH-505): PR head matches the receipt-time head_sha but NOT the validated candidate → refuse
+python3 - "$N_RECEIPT" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1])); d["reviewed_candidate"] = "0" * 40; json.dump(d, open(sys.argv[1], "w"), indent=1)
+PY
+write_n_view OPEN development marathon/gh280-n-lane "$N_HEAD"
+N2B_OUT="$(n_project)"
+has "$N2B_OUT" "candidate-drifted-from-reviewed-head" \
+  && pass "N2b PR head ≠ validated candidate refuses the auto-merge even though head_sha matches" || fail "N2b: $N2B_OUT"
+[ "$(merge_calls)" -eq $((MERGES_BEFORE_N + 1)) ] && pass "N2b no merge call issued" || fail "N2b a merge leaked through: $(merge_calls)"
+# N2c (GH-505): an approved receipt with no attestation binding → refuse
+python3 - "$N_RECEIPT" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1])); d["reviewed_candidate"] = None; d["attest_path"] = None; json.dump(d, open(sys.argv[1], "w"), indent=1)
+PY
+N2C_OUT="$(n_project)"
+has "$N2C_OUT" "receipt carries no reviewer attestation" \
+  && pass "N2c unattested approved receipt refuses the auto-merge" || fail "N2c: $N2C_OUT"
+[ "$(merge_calls)" -eq $((MERGES_BEFORE_N + 1)) ] && pass "N2c no merge call issued" || fail "N2c a merge leaked through: $(merge_calls)"
+write_n_receipt "$N_HEAD" green "$FR"
 
 # N3 (B1 refuse): PR already merged elsewhere → refuse (jog land owns the merged case)
 write_n_view MERGED development marathon/gh280-n-lane "$N_HEAD"

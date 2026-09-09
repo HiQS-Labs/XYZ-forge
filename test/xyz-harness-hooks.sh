@@ -83,11 +83,24 @@ NOOP="$WORK/noop.sh"; printf '#!/usr/bin/env bash\nexit 0\n' > "$NOOP"; chmod +x
 
 # ── (R1) Approved + token done → relay/green, exactly one record ─────────────
 XJ="$WORK/relay-green.json"
-printf 'STATUS: Approved\n# GH-XX my relay thread\n' > "$A/rg.md"
+# GH-505: a pre-approved file is no longer green — the driver must WATCH the reviewer approve.
+printf 'STATUS: In progress\n# GH-XX my relay thread\n' > "$A/rg.md"
 tick_a log task.created RELAY-G --agent a1 --paths rg.md >/dev/null 2>&1
 tick_a claim RELAY-G --agent a1 --paths rg.md >/dev/null 2>&1
-tick_a done  RELAY-G --agent a1 >/dev/null 2>&1
-XYZ_JSON_PATH="$XJ" bash "$RELAY_DRIVE" --relay-file "$A/rg.md" --relay-task RELAY-G --agent-cmd "$NOOP" >/dev/null 2>&1; rc=$?
+tick_a release RELAY-G --agent a1 --to a2 >/dev/null 2>&1
+G_APPROVE="$WORK/g-approve.sh"
+cat > "$G_APPROVE" <<EOF
+#!/usr/bin/env bash
+set -u
+export TICK_REPO_ROOT="$A"
+"$TICK" claim "\$RELAY_TASK" --agent "\$RELAY_AGENT" --paths rg.md >/dev/null 2>&1 || true
+tmp="\$(mktemp)"; sed 's/^STATUS:.*/STATUS: Approved/' "\$RELAY_FILE" > "\$tmp" && mv "\$tmp" "\$RELAY_FILE"
+printf '\n### Reviewer · a2\nVERDICT: PASS\n' >> "\$RELAY_FILE"
+"$TICK" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 || true
+exit 0
+EOF
+chmod +x "$G_APPROVE"
+XYZ_JSON_PATH="$XJ" bash "$RELAY_DRIVE" --relay-file "$A/rg.md" --relay-task RELAY-G --agent-cmd "$G_APPROVE" --reviewer a2 >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "relay Approved exits 0" || fail "relay green exit=$rc"
 [ "$(count "$XJ")" = "1" ] && pass "relay green writes exactly one record" || fail "relay green count=$(count "$XJ")"
 [ "$(field "$XJ" 0 harness)" = "relay" ] && pass "relay green harness=relay" || fail "harness=$(field "$XJ" 0 harness)"
@@ -96,13 +109,14 @@ XYZ_JSON_PATH="$XJ" bash "$RELAY_DRIVE" --relay-file "$A/rg.md" --relay-task REL
 [ "$(field "$XJ" 0 sessionId)" = "rg" ] && pass "relay sessionId = thread slug" || fail "sessionId=$(field "$XJ" 0 sessionId)"
 
 # re-run once more → prepends a second record (append, not clobber)
-XYZ_JSON_PATH="$XJ" bash "$RELAY_DRIVE" --relay-file "$A/rg.md" --relay-task RELAY-G --agent-cmd "$NOOP" >/dev/null 2>&1
+XYZ_JSON_PATH="$XJ" bash "$RELAY_DRIVE" --relay-file "$A/rg.md" --relay-task RELAY-G --agent-cmd "$NOOP" --reviewer a2 >/dev/null 2>&1
 [ "$(count "$XJ")" = "2" ] && pass "re-run prepends (2 records), no clobber" || fail "re-run count=$(count "$XJ")"
+[ "$(field "$XJ" 0 health)" = "red" ] && pass "GH-505: re-driving an already-approved file is red (unattested-terminal), not green" || fail "re-run health=$(field "$XJ" 0 health)"
 
 # ── (R2) nested (XYZ_HARNESS_CONTEXT=marathon-phase) emits NOTHING ──────────
 XJN="$WORK/relay-nested.json"
 XYZ_JSON_PATH="$XJN" XYZ_HARNESS_CONTEXT=marathon-phase bash "$RELAY_DRIVE" \
-  --relay-file "$A/rg.md" --relay-task RELAY-G --agent-cmd "$NOOP" >/dev/null 2>&1
+  --relay-file "$A/rg.md" --relay-task RELAY-G --agent-cmd "$NOOP" --reviewer a2 >/dev/null 2>&1
 [ ! -e "$XJN" ] && pass "nested relay (marathon-phase) writes NO record" || fail "nested relay emitted: $(cat "$XJN" 2>/dev/null)"
 
 # ── (R3) Escalated at loop top → relay/orange ──────────────────────────────
@@ -150,6 +164,7 @@ STUB_RD="$WORK/stub-relay-drive.sh"
 cat > "$STUB_RD" <<'STUB'
 #!/usr/bin/env bash
 set -u
+[ "${STUB_RD_EXIT:-0}" -eq 0 ] && bash "$ATTEST_STUB" "$@"   # GH-505: success carries the attestation
 exit "${STUB_RD_EXIT:-0}"
 STUB
 chmod +x "$STUB_RD"
@@ -287,12 +302,13 @@ set -u
 export TICK_REPO_ROOT="$A"
 "$TICK" take "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 || true
 tmp="\$(mktemp)"; sed 's/^STATUS:.*/STATUS: Approved/' "\$RELAY_FILE" > "\$tmp" && mv "\$tmp" "\$RELAY_FILE"
+printf '\n### Reviewer · Round 1\nVERDICT: PASS\n' >> "\$RELAY_FILE"   # GH-505: approval must add review text
 "$TICK" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 || true
 exit 0
 EOF
 chmod +x "$APPROVE"
 XRO1="$WORK/ro-green.json"; seed_ro RELAY-RO1 ro1.md "In progress"
-XYZ_JSON_PATH="$XRO1" bash "$RELAY_DRIVE" --relay-file "$A/ro1.md" --relay-task RELAY-RO1 --agent-cmd "$APPROVE" --review-once >/dev/null 2>&1; rc=$?
+XYZ_JSON_PATH="$XRO1" bash "$RELAY_DRIVE" --relay-file "$A/ro1.md" --relay-task RELAY-RO1 --agent-cmd "$APPROVE" --review-once --reviewer reviewer >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "review-once approval exits 0" || fail "review-once approve exit=$rc"
 [ "$(count "$XRO1")" = "1" ] && [ "$(field "$XRO1" 0 health)" = "green" ] && pass "review-once approval → relay/green record" || fail "ro1 count=$(count "$XRO1") health=$(field "$XRO1" 0 health)"
 
@@ -311,13 +327,13 @@ exit 0
 EOF
 chmod +x "$HANDBACK"
 XRO2="$WORK/ro-orange.json"; seed_ro RELAY-RO2 ro2.md "In progress"
-XYZ_JSON_PATH="$XRO2" bash "$RELAY_DRIVE" --relay-file "$A/ro2.md" --relay-task RELAY-RO2 --agent-cmd "$HANDBACK" --review-once >/dev/null 2>&1; rc=$?
+XYZ_JSON_PATH="$XRO2" bash "$RELAY_DRIVE" --relay-file "$A/ro2.md" --relay-task RELAY-RO2 --agent-cmd "$HANDBACK" --review-once --reviewer reviewer >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 5 ] && pass "review-once handback exits 5" || fail "review-once handback exit=$rc"
 [ "$(count "$XRO2")" = "1" ] && [ "$(field "$XRO2" 0 health)" = "orange" ] && pass "review-once handback → relay/orange record" || fail "ro2 count=$(count "$XRO2") health=$(field "$XRO2" 0 health)"
 
 # (RO3) reviewer does nothing → exit 3, relay/red
 XRO3="$WORK/ro-red.json"; seed_ro RELAY-RO3 ro3.md "In progress"
-XYZ_JSON_PATH="$XRO3" bash "$RELAY_DRIVE" --relay-file "$A/ro3.md" --relay-task RELAY-RO3 --agent-cmd "$NOOP" --review-once >/dev/null 2>&1; rc=$?
+XYZ_JSON_PATH="$XRO3" bash "$RELAY_DRIVE" --relay-file "$A/ro3.md" --relay-task RELAY-RO3 --agent-cmd "$NOOP" --review-once --reviewer reviewer >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 3 ] && pass "review-once stall exits 3" || fail "review-once stall exit=$rc"
 [ "$(count "$XRO3")" = "1" ] && [ "$(field "$XRO3" 0 health)" = "red" ] && pass "review-once stall → relay/red record" || fail "ro3 count=$(count "$XRO3") health=$(field "$XRO3" 0 health)"
 

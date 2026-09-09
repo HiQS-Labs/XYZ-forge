@@ -33,6 +33,7 @@ if [ -n "$rf" ]; then
     "$TICK_BIN" release "$task" --agent codex --to agy >/dev/null 2>&1 || true
   else
     python3 -c "import re; p = '$rf'; c = open(p).read(); open(p, 'w').write(re.sub(r'(?m)^STATUS:.*', 'STATUS: Approved', c))"
+    printf '\n### Round 1 · Reviewer · agy\nVERDICT: PASS\n' >> "$rf"   # GH-505: an approval must add review text
     "$TICK_BIN" claim "$task" --agent agy --paths "$rf" >/dev/null 2>&1 || true
     "$TICK_BIN" done "$task" --agent agy >/dev/null 2>&1 || true
   fi

@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 46 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 48 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -56,6 +56,8 @@ Summary: 46 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-496 · ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459) and widen Tier-2 routing | — | [GH-496-SHARPEN-CICD.md](PROJECT/1-INBOX/GH-496-SHARPEN-CICD.md) · [#496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) |
 | GH-508 · Git Sync Pulse as a portable Skills Army HQ projection | — | [GH-508-GIT-PULSE-SKILLS.md](PROJECT/1-INBOX/GH-508-GIT-PULSE-SKILLS.md) · [#508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) |
 | GH-514 · skills: new co-author skill "keel" — balance modularity, flexibility, maintainability, and ponytail for spec writing and total refactors | — | [GH-514-KEEL-SKILL.md](PROJECT/1-INBOX/GH-514-KEEL-SKILL.md) · [#514](https://github.com/HiQS-Labs/XYZ-forge/issues/514) |
+| GH-510 · jog: operator-confirmed merge path ignores gh pr merge failure and records the task as completed | — | [GH-510-JOG-MERGE-FALSE-SUCCESS.md](PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md) · [#510](https://github.com/HiQS-Labs/XYZ-forge/issues/510) |
+| GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 
 ## Queue
 
@@ -67,7 +69,7 @@ Summary: 0 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 6 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -75,6 +77,8 @@ Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 | GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison | — | [GH-141-FUZZ-ATE-UTILITY.md](PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md) · [#141](https://github.com/HiQS-Labs/XYZ-forge/issues/141) · [#142](https://github.com/HiQS-Labs/XYZ-forge/issues/142) · [#146](https://github.com/HiQS-Labs/XYZ-forge/issues/146) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Labs/XYZ-forge/issues/5) |
 | GH-325 · Vendor legacy SWE skills and make skills/ canonical | — | [#325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) · [doc](PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md) |
+| GH-505 · Builder can approve and close its own relay; no merge path checks for a reviewer | — | [GH-505-RELAY-REVIEWER-INTEGRITY.md](PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md) · [#505](https://github.com/HiQS-Labs/XYZ-forge/issues/505) |
+| GH-509 · Relay terminal authorization: prove a review happened without trusting builder-writable state | — | [GH-509-RELAY-TERMINAL-AUTHORIZATION.md](PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md) · [#509](https://github.com/HiQS-Labs/XYZ-forge/issues/509) |
 
 ## Completed
 
