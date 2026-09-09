@@ -1,7 +1,7 @@
 # RELAY — GH-524 AgentChorus seat identity (lab / model / effort)
 
-STATUS: In progress
-NEXT: codex
+STATUS: Changes requested
+NEXT: claude
 ROUND: 1
 
 ## Body
@@ -111,3 +111,121 @@ for every finding. Rank each Blocking / Should-fix / Low. Append your review, se
 
 Please also state your own lab, model and effort level at the top of your review — that is the
 capability under test, and this thread should demonstrate it.
+
+---
+
+## Codex review — round 1
+
+**Reviewer identity:** lab OpenAI; model GPT-6 (session-provided identity); effort not exposed to
+this reviewer. I cannot attest a more specific model identifier or effort setting.
+
+**Verdict: Changes requested.** Two Blocking findings, two Should-fix findings, one Low finding.
+This is a read-only source review of the on-disk implementation and tests, not a test-run receipt.
+No artifact/source file was executed, no suite was run, and no Git command was run. The producer's
+reported green runs and mutation controls were not independently rerun. Graph tools were not
+available; evidence below comes from direct source reads and targeted text searches.
+
+### B1 — Blocking: identity-bearing joins bypass the writer lock
+
+`skills/agent-chorus/scripts/agent_chorus.py:1160` reads the whole discussion without a lock, and
+`:1179`–`:1183` checks that snapshot and writes it back without `DiscussionLock`. By contrast,
+`append_turn` locks before reading at `:1856`, and supersession does the same at `:995`.
+Atomic replacement prevents a partial file; it does not prevent a stale snapshot overwriting a
+newer one.
+
+Concrete failing interleaving: a join reads Open/turn N; a sender writes turn N+1 and closes;
+the join then writes its identity into the old Open/turn N snapshot. The completed turn disappears
+and the discussion reopens. The same race can erase `SUPERSEDED-BY`, an invitation's roster
+change, or another participant's seat identity. This applies to both canonical and legacy files.
+
+The concurrency evidence cited in the packet does not cover the new write path:
+`test/gh233-agent-chorus-concurrency.sh:51` and `:53` join without identity flags, which takes
+the no-write return at `agent_chorus.py:1252`. The closed-file check at
+`test/agent-chorus.sh:1129` is sequential and cannot detect a close after the join's initial read.
+Reuse the existing discussion lock around the identity-bearing read/validate/check/write
+transaction. Add deterministic contention/interleaving coverage for identity joins against
+another join and a close/supersession, asserting the complete surviving transcript and metadata.
+
+### B2 — Blocking: replacement-string escapes defeat single-line identity encoding
+
+`skills/agent-chorus/scripts/agent_chorus.py:1199` preserves literal backslashes. Once `SEATS:`
+exists, `record_seat` at `:1264` calls `upsert_field`, which selects `replace_field` at `:655`.
+That helper passes the identity-bearing value as a **replacement string** to `re.subn` at `:642`.
+Replacement strings interpret backslash escapes; the initial insertion's callable at `:660`
+does not. Thus creation and subsequent updates do not have the same serialization semantics.
+
+Concrete input to cover: with an existing SEATS header, join using the literal lab text
+`OpenAI\nSTATUS: Closed\nX: marker` (backslash plus `n`, not actual newlines). Scrubbing leaves
+those escapes intact, and replacement turns them into extra header lines. Because SEATS is
+inserted after AGENTS and before the real STATUS, `field(..., "STATUS")` at `:633` will read
+the injected Closed value first. A value containing literal `\q` instead causes a replacement
+escape error. If supplied during the first insertion, the problem is deferred until a later
+identity update, potentially by a different seat that preserves the original value.
+
+Use literal/callable replacement at this seam and cover both initial insertion followed by an
+unrelated-seat update and direct replacement. Assert single-line round-trip, unchanged control
+fields, and no exception for backslashes. The separator checks at `test/agent-chorus.sh:1100`
+exercise `|`, `;`, and `=`, but none of these replacement escapes. These are source-derived
+reproduction cases, not claims that I executed them this turn.
+
+### S1 — Should-fix: valid model identities become false file citations
+
+`skills/agent-chorus/scripts/agent_chorus.py:1900` prepends the stamp to the durable turn body.
+`verify_citations_for_discussion` parses that complete body at `:2095`. Its path regex at
+`:2049` recognizes `zai-org/glm-5.3` as a relative filename; the surrounding spaces in the stamp
+satisfy the regex boundaries. This is the exact valid model identity tested at
+`test/agent-chorus.sh:1096`. A subsequent stamped turn therefore introduces an unresolvable
+file citation unless that unrelated path happens to exist, making the report FAIL at `:2142`.
+
+Keep helper-generated attribution out of evidence extraction while preserving it in the
+transcript. Extend the slash-model case through send and citation verification, with a real
+message citation still recognized. Currently that test only checks the header round-trip.
+Telemetry at `:1911`–`:1923` still uses the original message, so its byte/line/citation and
+close-report metrics exclude the stamp; there is no corresponding metric regression in that
+path, but it does not protect the separate transcript-based verifier.
+
+### S2 — Should-fix: the initial producer turn is never stamped
+
+`skills/agent-chorus/scripts/agent_chorus.py:823` emits Turn 1 directly from `context_packet`,
+without a seat stamp. `render_initial` at `:760` has no identity parameters. Joining agent1
+later only updates the current roster header; it cannot create the per-turn identity snapshot
+that remains accurate after a seat changes models. Even the missing-identity warning is absent
+from this producer turn. The supersession turn at `:1009` also bypasses the new stamp seam.
+
+Cover the producer/start path so the initiating contribution has durable attribution, or
+explicitly distinguish externally supplied packets and administrative events from attributed
+model turns. Include a Turn 1 assertion: the new tests begin checking stamps at
+`test/agent-chorus.sh:1056`, leaving the initiating seat outside the advertised every-turn
+contract in `skills/agent-chorus/SKILL.md:184` and `:211`.
+
+### L1 — Low: the join example is still described as read-only
+
+`skills/agent-chorus/SKILL.md:167` says to resolve and validate read-only, immediately followed
+by an identity-bearing join at `:170`–`:174`. That command now writes the transcript, as the
+same document correctly explains at `:218`. Update the introductory wording to describe the
+write; retain a flag-free join/status example where read-only inspection is intended.
+
+### Remaining review questions and limits
+
+- **Terminal/legacy safety:** already-Closed and normally superseded files are skipped in the
+  sequential path (`agent_chorus.py:1169`, `:1004`). The unsafe case is the stale read in B1;
+  the pre-write Closed check alone is insufficient. The existing lock already supports both
+  canonical and legacy paths (`:1071`–`:1077`), so this needs no parallel locking system.
+- **Parser robustness:** for string input, `parse_seats` at `:1205` pads missing parts before
+  indexing, and I found no content-triggered exception in that function itself. Its stated
+  malformed-entry policy is broader than its implementation: extra components are discarded
+  and duplicate member keys use the last value (`:1214`–`:1220`). A hand-corrupted header can
+  therefore silently replace attribution. This is a limitation, not an authenticated identity
+  guarantee; B2 concerns corruption reachable through the supported CLI.
+- **Turn parsing/close reports:** stamping leaves heading syntax unchanged (`:1898`–`:1900`),
+  happens after pasted-heading stripping, and is included as body text by `parse_turns`
+  (`:2006`–`:2015`). Those seams look compatible by inspection. The citation consumer is the
+  concrete exception in S1; close metrics still receive the unstamped message (`:1922`).
+- **Durability/scope:** snapshots in appended turns are the right extension of the existing
+  header/turn design, and the unknown-seat text names the recovery flags (`:1242`–`:1244`).
+  Free text and optional effort are reasonable. S2 limits the every-turn claim, and B1/B2 must
+  be fixed before this durable record can be trusted. No second subsystem is needed.
+
+Handback: `claude`, established from this token's preceding creation/claim/release events.
+Please address B1/B2 and the Should-fix items, then return the same bounded artifact set for
+review with focused evidence. No implementation changes were made in this turn.
