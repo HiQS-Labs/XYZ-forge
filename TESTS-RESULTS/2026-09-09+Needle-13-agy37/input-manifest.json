@@ -1,0 +1,12 @@
+{
+  "prepared_at": "2026-09-09T17:03:25.689133+00:00",
+  "sha256": {
+    "model-catalog.txt": "b1578c20e353815dd14bd2d7001af4239842af77d15be0954f948783168edb01",
+    "agy_adapter.py": "9d33c9e359bb9bb222a33a83bc6b1432f1d7dc38a3092abaff9e614cc89b776e",
+    "source-reference.json": "6e4d9d7fe99fa3b70e43162d0d9dd1056765f7d7b028afbf1b70a4fe38dc2656",
+    "grader-controls.json": "a73d7df972510cbaad0109cf2825cb4ffac82729d9470b0743ec989ec434e733",
+    "cli-help.txt": "715b420be9c35c8b5cb2a90eb58c10fa0f33d150a45c075f9b043473e9a64bfd",
+    "QUESTIONS.md": "9f561e499dc4a1b3b5438e90639a753114fc66f1499340a740af3077ce220955",
+    "PROTOCOL.md": "e8e205066452ea5a5917b585240db0b0f38ed8bd94c227563c08b561487477a2"
+  }
+}
