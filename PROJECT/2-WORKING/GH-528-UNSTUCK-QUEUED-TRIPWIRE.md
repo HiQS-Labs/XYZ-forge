@@ -21,6 +21,12 @@ goal: >
 
 # GH-528 — /unstuck: queued blockers + recurrence tripwire
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Edits landed (7fe9b1f0 + reviewer-verb fix 4e47f1bc); agy relay review **driver-attested Approved** (record `.git/relay-attest/RELAY-gh528-unstuck-qa-r2.json`); harness defect filed as #529; dashboard view regenerated after the first gate run caught the missed regen | Push through the pre-push gate and open the PR against `development`; after merge, `wave_reconcile --pr` promotes this doc and ships the roadmap row |
+
 ## Observed problem (recon, 2026-09-09)
 
 Session evidence from a merge-cleanup run (PR #495 + `releases roadmap reconcile-state`
