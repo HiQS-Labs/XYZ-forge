@@ -1,0 +1,41 @@
+{
+  "type": "llm",
+  "publisher": "prism-ml",
+  "key": "prism-ml/bonsai-27b",
+  "display_name": "Bonsai 27B",
+  "architecture": "qwen3_5",
+  "quantization": {
+    "name": "2bit",
+    "bits_per_weight": 2
+  },
+  "size_bytes": 8521076756,
+  "params_string": "27B",
+  "loaded_instances": [
+    {
+      "id": "prism-ml/bonsai-27b",
+      "config": {
+        "context_length": 228096,
+        "parallel": 4,
+        "reasoning_budget_message": ""
+      }
+    }
+  ],
+  "max_context_length": 262144,
+  "format": "mlx",
+  "capabilities": {
+    "vision": true,
+    "trained_for_tool_use": true,
+    "reasoning": {
+      "allowed_options": [
+        "off",
+        "on"
+      ],
+      "default": "on"
+    }
+  },
+  "description": null,
+  "variants": [
+    "prism-ml/bonsai-27b@2bit"
+  ],
+  "selected_variant": "prism-ml/bonsai-27b@2bit"
+}
