@@ -80,3 +80,7 @@ DeepSeek V4 Pro (`deepseek/deepseek-v4-pro`, OpenRouter) reviewed the full plan 
 ## Producer ownership handoff
 
 [RebalanceOS #202](https://github.com/HiQS-Labs/rebalanceOS/issues/202) now owns the canonical producer implementation plan (snapshot, failure/coverage semantics, optional exact identity projection and scheduling). Producer steps above are historical coordination context and defer to that plan; this document continues to own Flightdeck context retention, incoming adapter, aggregation, UI and manual consumer acceptance. Neither requires GH-201 GitHub optimization to finish first.
+
+## Merge evidence
+
+- PR #504 merged 2026-09-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
