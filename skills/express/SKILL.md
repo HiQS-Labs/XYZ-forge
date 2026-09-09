@@ -98,11 +98,13 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
    impossible in this order.
 10. **Close the issue** — the commit message says `Closes #<N>` and lands on the
     default branch; the driver verifies and closes explicitly if GitHub has not.
-11. **Persist, reconcile cleanly, persist — fail closed.** From `development`,
-    ship outputs are committed and pushed first. Only then does
-    `wave_reconcile.py --commit <sha>` runs from the clean tree; its outputs
-    form a second commit and push. Every post-push fault exits non-zero with an
-    `express-reconcile-failed` receipt; success prints only after both boundaries.
+11. **Persist, reconcile cleanly, persist — fail closed.** The landing is
+    three pushes total: (1) the hotfix land push (step 8), then from
+    `development`, (2) the ship outputs are committed and pushed, and only
+    then (3) `wave_reconcile.py --commit <sha>` runs from the clean tree; its
+    outputs form the third commit and push. Every post-push fault exits
+    non-zero with an `express-reconcile-failed` receipt; success prints only
+    after every boundary.
 
 ## After the run
 

@@ -326,6 +326,7 @@ fi
 RECENT_LOG="$(git -C "$FX" log --format=%s -3)"
 grep -q "express ship GH-999" <<<"$RECENT_LOG" && ok "ship transaction persisted before reconciliation" || bad "ship commit missing"
 grep -q "express reconcile GH-999" <<<"$RECENT_LOG" && ok "reconcile persisted as a separate clean-tree transaction" || bad "reconcile commit missing"
+grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "run closed GitHub issue #999 before reconciling" || bad "run left issue #999 open"
 [ -z "$(git -C "$FX" status --porcelain)" ] && ok "successful closeout leaves development clean" || bad "successful closeout left drift: $(git -C "$FX" status --short | tr '\n' ';')"
 FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
