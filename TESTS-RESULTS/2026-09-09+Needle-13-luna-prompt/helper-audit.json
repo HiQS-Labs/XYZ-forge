@@ -1,0 +1,75 @@
+{
+  "reviewer": "independent helper (not blinded)",
+  "control": {
+    "technical": 22,
+    "authority": 2,
+    "per_question": {
+      "Q1": [
+        1,
+        1
+      ],
+      "Q2": [
+        2,
+        2
+      ],
+      "Q3": [
+        2,
+        2
+      ],
+      "Q4": [
+        2,
+        2
+      ],
+      "Q5": [
+        2,
+        2
+      ],
+      "Q6": [
+        2,
+        2
+      ]
+    },
+    "notes": {
+      "Q1": "Shared canonical labels/deterministic serialization suggests unsupported shared taxonomy/implementation; source serializer is Needle-specific.",
+      "Q3": "Function-start citation96 supports no_action doc102/109; top1-vs3 is valid alternate discrepancy.",
+      "Q4": "Unique releases_app.py basename plus correct3895/3912 source is traceable, not invented."
+    }
+  },
+  "new": {
+    "technical": 20,
+    "authority": 2,
+    "per_question": {
+      "Q1": [
+        1,
+        1
+      ],
+      "Q2": [
+        2,
+        2
+      ],
+      "Q3": [
+        1,
+        1
+      ],
+      "Q4": [
+        2,
+        2
+      ],
+      "Q5": [
+        2,
+        2
+      ],
+      "Q6": [
+        2,
+        2
+      ]
+    },
+    "notes": {
+      "Q1": "Retains unsupported sharedlabels implication; categorical admissionfacts exclusion from prediction is broader than temporalboundary rule.",
+      "Q3": "Empty semantic-target representation and a requirement to distinguish abstention do not alone establish conflicting implementation; lacks actual conflicting scorer/runtime evidence."
+    }
+  },
+  "criterion": "new-control>=3, no decision/schema/authority/tool regression",
+  "helper_delta": -2,
+  "helper_criterion_met": false
+}

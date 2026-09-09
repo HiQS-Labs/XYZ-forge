@@ -1,0 +1,51 @@
+{
+  "distinct_threads": true,
+  "same_model_effort_flags_except_outputpaths": true,
+  "same_source_packet": true,
+  "checks": [
+    {
+      "arm": "control",
+      "exact_answer_event_match": true,
+      "item_types": [
+        "agent_message"
+      ],
+      "tool_events_observed": false,
+      "negative_controls": [
+        {
+          "name": "empty",
+          "rejected": true
+        },
+        {
+          "name": "changed_answer",
+          "rejected": true
+        },
+        {
+          "name": "missing_completion",
+          "rejected": true
+        }
+      ]
+    },
+    {
+      "arm": "new",
+      "exact_answer_event_match": true,
+      "item_types": [
+        "agent_message"
+      ],
+      "tool_events_observed": false,
+      "negative_controls": [
+        {
+          "name": "empty",
+          "rejected": true
+        },
+        {
+          "name": "changed_answer",
+          "rejected": true
+        },
+        {
+          "name": "missing_completion",
+          "rejected": true
+        }
+      ]
+    }
+  ]
+}
