@@ -552,3 +552,7 @@ Plan review: [consumer contract approved in round 2](../../relay-system/2026-09-
 
 Historical design decisions remain in Git history and the existing review threads;
 this document is the single current implementation plan.
+
+## Session visibility mitigation
+
+The verified session context/status gaps and this phase's mitigation are tracked in [GH-494 session context plan](GH-494-SESSION-CONTEXT-PLAN.md), grounded in [the session Recon Map](recon-flightdeck-session-context.md). Implementation is pending plan QA; the existing Rebalance reader already exposes all three reported Claude sessions.

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-09-08T23:38:24.431345+00:00",
+  "source": "existing rebalance.ingest.claude_cloud._fetch_raw / normalize",
+  "read_only": true,
+  "fetched_count": 100,
+  "cap": 100,
+  "matched": [
+    {
+      "title": "Model-catalog v1.0.0 integration into XYZ-forge and AEGIS-Sleuth",
+      "status": "active",
+      "status_bucket": "working",
+      "worker_status": "running",
+      "created_at": "2026-09-06T03:27:56.678702Z",
+      "last_event_at": "2026-09-08T23:38:14.943356Z",
+      "origin": "claude_code_vscode",
+      "repo": "HiQS-Labs/XYZ-forge",
+      "connection_status": "connected"
+    },
+    {
+      "title": "Unstuck command review",
+      "status": "active",
+      "status_bucket": "working",
+      "worker_status": "running",
+      "created_at": "2026-09-08T05:51:35.844526Z",
+      "last_event_at": "2026-09-08T23:38:12.227942Z",
+      "origin": "claude_code_vscode",
+      "repo": "HiQS-Labs/XYZ-forge",
+      "connection_status": "connected"
+    },
+    {
+      "title": "Needle oracle training for XYZ Forge",
+      "status": "active",
+      "status_bucket": "review_ready",
+      "worker_status": "idle",
+      "created_at": "2026-09-07T16:02:34.589305Z",
+      "last_event_at": "2026-09-08T23:30:46.635215Z",
+      "origin": "claude_code_vscode",
+      "repo": "HiQS-Labs/Needle-fork",
+      "connection_status": "connected"
+    }
+  ],
+  "scope": "first page; exact screenshot titles only; no credentials or transcripts retained"
+}
