@@ -142,6 +142,18 @@ CROCKFORD_GLOB_CLASS = "[0-9A-HJKMNP-TV-Z]"
 
 GENERATION_KEY = "generation"
 
+# GH-525: some repos write a literal placeholder in RELEASES.md for a release that has not shipped
+# a version yet — AEGIS-Sleuth's convention is "versions are RECORDED, never RESERVED", so every
+# unshipped block reads `Release: TBD`. The schema already models "no version yet" as SQL NULL
+# (releases.version is nullable and UNIQUE(repo_id, version) permits any number of NULLs); the
+# importer just never mapped a placeholder onto it, so every unshipped block collided on the same
+# "version" string. Downstream's only recourse was to FORK this file for two lines, which is how it
+# drifted ~1700 lines behind and re-derived an INSERT_RE fix that already existed here.
+#
+# Comma-separated so a repo can carry more than one placeholder (TBD, N/A, -). Unset by default:
+# behaviour is byte-identical to before for every existing install.
+UNSHIPPED_VERSION_TOKENS_KEY = "unshipped_version_tokens"
+
 CRASH_BOUNDARIES = ("pre-commit", "post-commit", "post-stage", "mid-rename", "post-rename")
 
 
@@ -432,6 +444,21 @@ def connect(db_path, must_exist=True):
 def get_setting(conn, key, default=None):
     row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
     return row["value"] if row else default
+
+
+def unshipped_version_tokens(conn):
+    """The configured placeholders that mean "no version yet" (GH-525).
+
+    Returns a set, empty when the setting is absent — and an empty set is what keeps this
+    inert for every install that never opts in. Entries are trimmed and compared
+    case-sensitively: `TBD` is a literal token in a hand-maintained ledger, not a word to be
+    normalised, and accepting `tbd` would quietly widen what counts as "unshipped". Blank
+    entries are dropped so a trailing comma cannot turn the empty string into a placeholder —
+    an empty `Release:` value stays a malformed ledger, refused as it always was."""
+    raw = get_setting(conn, UNSHIPPED_VERSION_TOKENS_KEY)
+    if not raw:
+        return set()
+    return {token.strip() for token in raw.split(",") if token.strip()}
 
 
 def get_generation(conn):
@@ -1974,6 +2001,7 @@ def cmd_import(args):
                 else:
                     conn.execute("INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)",
                                  (repo["id"], pos, content))
+            placeholder_versions = unshipped_version_tokens(conn)
             for block in blocks:
                 f = block["fields"]
 
@@ -1984,6 +2012,10 @@ def cmd_import(args):
                 version = (fv("Release") or "").strip()
                 if not version:
                     refuse("release-value", "a block's Release: value is empty (malformed ledger)")
+                # GH-525: a configured placeholder means "not shipped yet" -> SQL NULL, so any
+                # number of unshipped blocks coexist. Read once per import, above the loop.
+                if version in placeholder_versions:
+                    version = None
                 gid = new_gid("rel-")
 
                 status_raw = fv("Status")
