@@ -892,6 +892,61 @@ def _migration_005(conn):
                      % (name, column, column, column, column, column))
 
 
+MIGRATION_008_DDL = """
+CREATE TABLE IF NOT EXISTS work_events (
+  id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE {wev_gid},
+  repo_id INTEGER NOT NULL REFERENCES repos(id),
+  gh_number INTEGER,
+  txn_id TEXT NOT NULL,
+  event TEXT NOT NULL,
+  payload TEXT,
+  at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_work_events_gh ON work_events(gh_number);
+CREATE TABLE IF NOT EXISTS connector_cursors (
+  connector TEXT PRIMARY KEY,
+  last_event_id INTEGER NOT NULL DEFAULT 0,
+  last_attempt_at TEXT,
+  last_error TEXT,
+  updated_at TEXT NOT NULL
+);
+"""
+
+
+def _migration_008(conn):
+    """GH-549: work_events (append-only projection provenance) + connector_cursors (device-local).
+
+    The two tables are deliberately asymmetric, and the asymmetry is the whole design:
+
+    * `work_events` is written INSIDE perform_write's transaction, so it is emitted in the
+      canonical dump under the include_receipts guard and is therefore visible to `check`'s
+      byte comparison at cmd_check (dump-divergence) but NOT to business_digest.
+    * `connector_cursors` is written AFTER the transaction commits, by the dispatcher, once
+      connectors finish. It is therefore excluded from dump_text entirely. Putting it in the
+      dump would make releases.sql disagree with the DB the moment any connector ran, and the
+      next `releases check` would fail dump-divergence on a healthy repo.
+
+    TRANSACTION-SAFE: the table/index DDL goes through _ddl_statements(), and the two
+    append-only triggers are issued as individual execute() calls because _ddl_statements
+    refuses trigger bodies (their BEGIN...END contains its own semicolons). Same shape as
+    migration 004/005.
+
+    Idempotent by IF NOT EXISTS on the tables and by _has_trigger on the triggers.
+    """
+    ddl = MIGRATION_008_DDL.format(wev_gid=_gid_check("global_id", "wev-"))
+    for statement in _ddl_statements(ddl):
+        conn.execute(statement)
+    # Append-only, mirroring op_receipts' pair. These govern ROW MUTATION only: DROP TABLE
+    # drops a table's triggers with it (see the manifest migration's own note).
+    if not _has_trigger(conn, "work_events_no_update"):
+        conn.execute("""CREATE TRIGGER work_events_no_update BEFORE UPDATE ON work_events
+                          BEGIN SELECT RAISE(ABORT, 'work_events is append-only'); END""")
+    if not _has_trigger(conn, "work_events_no_delete"):
+        conn.execute("""CREATE TRIGGER work_events_no_delete BEFORE DELETE ON work_events
+                          BEGIN SELECT RAISE(ABORT, 'work_events is append-only'); END""")
+
+
 MIGRATION_006_DDL = """
 CREATE TABLE IF NOT EXISTS jog_queue (
   id INTEGER PRIMARY KEY,
@@ -971,6 +1026,7 @@ MIGRATIONS = {
     5: {"apply": _migration_005, "txn_safe": True},
     6: {"apply": _migration_006, "txn_safe": True},
     7: {"apply": _migration_007, "txn_safe": True},
+    8: {"apply": _migration_008, "txn_safe": True},
 }
 
 
@@ -1218,6 +1274,22 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                "state_digest_before", "state_digest_after"],
               _rows(conn, "SELECT op, target_gid, at, txn_id, session_id, state_digest_before, "
                           "state_digest_after FROM op_receipts ORDER BY id"))
+        # GH-549: work_events rides with op_receipts, INSIDE this guard, and for the same reason.
+        # It is written in perform_write's transaction (so the dump and the DB always agree, and
+        # cmd_check's byte comparison stays clean) but it is provenance, not business state, so
+        # business_digest — which calls this with include_receipts=False — must not see it.
+        #
+        # connector_cursors is deliberately absent from this function entirely. It is written
+        # AFTER the transaction commits, once connectors finish, so a row here would put
+        # releases.sql out of sync with the DB the moment any connector ran and fail
+        # dump-divergence on a healthy repo.
+        if _table_exists(conn, "work_events"):
+            _emit(w, "work_events",
+                  ["global_id", "repo_gid", "gh_number", "txn_id", "event", "payload", "at"],
+                  _rows(conn, """SELECT we.global_id, r.global_id AS repo_gid, we.gh_number,
+                                 we.txn_id, we.event, we.payload, we.at
+                                 FROM work_events we JOIN repos r ON r.id = we.repo_id
+                                 ORDER BY we.id"""))
     return "\n".join(out) + "\n"
 
 
@@ -1314,6 +1386,155 @@ def refresh_preview(root):
                   % exc, file=sys.stderr)
 
 
+# ── GH-549: work-state events ───────────────────────────────────────────────────────────────────
+#
+# perform_write() is handed only (op, target_gid, mutate). It does NOT receive the issue number,
+# and it cannot see the marker a roadmap-update just wrote — so a plain op->event table is not
+# implementable. Each mapped op instead names an EXTRACTOR: run after mutate(), inside the same
+# transaction, given (conn, op, target_gid), returning (event, gh_number, payload_dict) or None.
+#
+# Returning None means "no row from me". For `work-emit` that is deliberate and load-bearing: its
+# own mutate already inserted the row, and the seam inserts only for a tuple, so None there means
+# "already written", never "no event". One `work emit` therefore yields exactly one row.
+#
+# The registry is TOTAL. Every op reachable from a perform_write caller is either mapped here or
+# named in NON_EVENT_OPS with a reason. test/gh549-work-events.sh derives the op inventory from
+# this source file and fails when one is neither — so a new verb cannot silently drop a state.
+
+NON_EVENT_OPS = {
+    "import":                  "legacy RELEASES.md import; historical rows, not live work",
+    "add":                     "release object, not an issue's work state",
+    "update":                  "release field edit",
+    "baseline":                "release provenance capture",
+    "ship":                    "release shipped; issue-level state comes from its manifest items",
+    "manifest-add":            "manifest bookkeeping, not an issue state change",
+    "manifest-ship":           "covered by the issue's own roadmap transition",
+    "manifest-marathon":       "attaches a marathon; no work-state change",
+    "manifest-cut":            "manifest bookkeeping",
+    "manifest-unship":         "manifest bookkeeping",
+    "marathon-add":            "creates a marathon container, not issue work",
+    "settings-set":            "ledger configuration",
+    "roadmap-repoint":         "moves a doc path; the work state is unchanged",
+    "roadmap-sync":            "no-op in releases-mode repos",
+    "roadmap-reconcile-state": "sweeps markers; the per-row updates emit on their own",
+    "reconcile":               "wave bookkeeping; a merge is proven by the merge emitter, not here",
+    "jog-add":                 "queued, not yet started",
+    "jog-bump":                "reprioritisation within the queue",
+    "jog-drop":                "removed from the queue",
+    "jog-retry":               "re-queued; the lease emits when it actually starts",
+    "jog-skip":                "parked in the queue",
+    "jog-clear":               "queue archived wholesale",
+    "jog-reconcile":           "orphan-lease recovery, not a user-visible transition",
+    "migrate":                 "schema change",
+    "merge-rebuild":           "rebuild receipt",
+    "work-emit":               "self-inserting; its mutate writes the row (see _extract_none)",
+}
+
+
+def _repo_id_for_event(conn):
+    row = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+    return row["id"] if row else None
+
+
+def _roadmap_row(conn, gid):
+    return conn.execute("SELECT gh_number, status_marker, section, rating_pri, rating_sev, "
+                        "rating_appeal, rating_effort FROM roadmap_items WHERE global_id = ?",
+                        (gid,)).fetchone()
+
+
+def _extract_roadmap_add(conn, op, gid):
+    row = _roadmap_row(conn, gid)
+    if row is None:
+        return None
+    return ("parked", row["gh_number"], {"section": row["section"]})
+
+
+def _extract_roadmap_rate(conn, op, gid):
+    row = _roadmap_row(conn, gid)
+    if row is None:
+        return None
+    return ("rated", row["gh_number"],
+            {"rated": "%s/%s/%s/%s" % (row["rating_pri"], row["rating_sev"],
+                                       row["rating_appeal"], row["rating_effort"])})
+
+
+def _extract_roadmap_update(conn, op, gid):
+    """Re-read the row AFTER mutate so the new marker is visible. `merged` is deliberately NOT
+    derived from a completed marker: only the merge emitter, which witnesses `gh pr merge`
+    exiting 0, may claim a PR merged."""
+    row = _roadmap_row(conn, gid)
+    if row is None:
+        return None
+    marker = row["status_marker"] or ""
+    event = "in_flight" if marker == "\U0001F6A7" else "updated"
+    return (event, row["gh_number"], {"marker": marker, "section": row["section"]})
+
+
+def _extract_jog(conn, op, gid):
+    row = conn.execute("SELECT gh_number, status FROM jog_queue WHERE global_id = ?",
+                       (gid,)).fetchone()
+    if row is None:
+        return None
+    event = "in_flight" if op == "jog-lease" else "jog_%s" % row["status"]
+    return (event, row["gh_number"], {"status": row["status"]})
+
+
+def _extract_none(conn, op, gid):
+    """`work emit`'s mutate already inserted its row; the seam must not insert a second."""
+    return None
+
+
+WORK_EVENT_EXTRACTORS = {
+    "roadmap-add":    _extract_roadmap_add,
+    "roadmap-rate":   _extract_roadmap_rate,
+    "roadmap-update": _extract_roadmap_update,
+    "jog-lease":      _extract_jog,
+    "work-emit":      _extract_none,
+}
+
+JOG_STATUS_PREFIX = "jog-"
+
+
+def extractor_for(op):
+    """Resolve an op to its extractor, or None when the op is allowlisted as non-eventful.
+
+    Raises KeyError for an op that is neither — the coverage test relies on that being loud."""
+    if op in WORK_EVENT_EXTRACTORS:
+        return WORK_EVENT_EXTRACTORS[op]
+    if op in NON_EVENT_OPS:
+        return None
+    if op.startswith(JOG_STATUS_PREFIX):
+        # jog_set_status computes f"jog-{status}"; the family is mapped as a whole.
+        return _extract_jog
+    raise KeyError("op %r is neither mapped to a work-event extractor nor in NON_EVENT_OPS" % op)
+
+
+def _record_work_event(conn, op, target_gid, txn_id, at):
+    """Insert at most one work_events row, inside perform_write's open transaction."""
+    if not _table_exists(conn, "work_events"):
+        return None
+    try:
+        extractor = extractor_for(op)
+    except KeyError:
+        # An unclassified op must not break a ledger write in production; the coverage test is
+        # where this is meant to fail, loudly, before it ships.
+        return None
+    if extractor is None:
+        return None
+    result = extractor(conn, op, target_gid)
+    if result is None:
+        return None
+    event, gh_number, payload = result
+    repo_id = _repo_id_for_event(conn)
+    if repo_id is None:
+        return None
+    conn.execute("""INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event,
+                    payload, at) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                 (new_gid("wev-"), repo_id, gh_number, txn_id, event,
+                  json.dumps(payload, sort_keys=True) if payload is not None else None, at))
+    return event
+
+
 def perform_write(root, conn, op, target_gid, mutate):
     """Run one CLI transaction under the full multi-artifact protocol:
 
@@ -1384,6 +1605,11 @@ def perform_write(root, conn, op, target_gid, mutate):
                          VALUES (?, ?, ?, ?, ?, ?, ?)""",
                      (op, target_gid, now, txn_id, session_id(),
                       digest_before, digest_after))
+        # GH-549: one work event, in this same transaction, AFTER digest_after. Order matters —
+        # work_events is outside business_digest by design, so emitting it here cannot perturb
+        # the receipt chain, and it is committed atomically with the domain row so the two can
+        # never disagree.
+        _record_work_event(conn, op, target_gid, txn_id, now)
         _crash("pre-commit")
         conn.commit()
         _crash("post-commit")
@@ -5136,6 +5362,16 @@ def load_dump(conn, tables, skip_schema_migrations=False):
                         state_digest_before, state_digest_after) VALUES (?, ?, ?, ?, ?, ?, ?)""",
                      (row["op"], row.get("target_gid"), row["at"], row["txn_id"],
                       row["session_id"], row["state_digest_before"], row["state_digest_after"]))
+    # GH-549: work_events restores with the receipts. connector_cursors deliberately has no
+    # loader — it is device-local, was never in the dump, and a rebuild resets it. `work
+    # reconcile` replays from zero, which is idempotent because every connector write is
+    # set-to-value rather than an increment.
+    for row in tables.get("work_events", []):
+        conn.execute("""INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event,
+                        payload, at) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                     (row["global_id"], repo_ids[row["repo_gid"]],
+                      _int_or_none(row.get("gh_number")), row["txn_id"], row["event"],
+                      row.get("payload"), row["at"]))
 
 
 def _rebuild(root, conn):
