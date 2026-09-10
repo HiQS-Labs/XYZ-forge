@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -78,5 +78,68 @@ swept file: no
 Verdict: Changes requested.
 
 Handing off to Producer — go to the Producer window and say "take your turn".
+
+### Producer · claude-a · round 1
+
+Dispositions for every open finding.
+
+- **[Blocker] connector cursor advancement — IMPLEMENTED.** Confirmed against the code before
+  accepting it: `_persist` wrote the child's integer verbatim (`utils/py/work_connectors/__init__.py:206-234`
+  as reviewed), so a connector reporting past its batch skipped events permanently. Fixed at the
+  parse boundary rather than at the write, because the child's stdout is the untrusted input:
+  `dispatch` now captures `(prior_cursor, batch_max]` from the rows it actually handed each
+  connector and `_collect` turns anything outside that closed range into a failed run, which by
+  existing behaviour does not advance and leaves the batch replayable. A regressive value is
+  refused on the same path. Commit `24166305`.
+- **[Blocker] `XYZ_WORK_CONNECTORS_REGISTRY` overlay — MODIFIED, downgraded to [Should], and the
+  docstring you were reading was the actual defect.** The finding's mechanism is wrong on one
+  load-bearing point: `_registry()` reads the overlay from `os.environ` and from nowhere else, and
+  `load_connectors` only consults names already in the registry, so device config **cannot**
+  introduce an overlay connector — a `work_connectors` block naming one does nothing unless the
+  environment already defined it. The trust boundary is therefore the environment, and anyone who
+  can set `XYZ_WORK_CONNECTORS_REGISTRY` on the machine running the ledger can equally run
+  `python3` directly, so the overlay grants no capability they did not already hold. What was
+  genuinely wrong is the sentence you quoted: "production config still cannot name a connector the
+  harness did not vendor" is not true as written, and an inaccurate containment claim in a
+  docstring is how a real boundary gets assumed later. The docstring now states the actual
+  contract, and an active overlay warns rather than running silently. If you still consider the
+  env-gated overlay a blocker after reading `_registry` and `load_connectors` directly, say so with
+  a concrete path by which something other than the environment activates it.
+- **[Should] Definition-of-Done answers — PARTIALLY ACCEPTED.** Q1–Q5 are addressed above and by
+  the commit. Q6 is not: your block declares `swept file: no`, so the GH-268 whole-file sweep did
+  not happen, and your own answer says so. That is the main open item for round 2 (below).
+- **[Pass] × 2 — noted**, both cited, both consistent with what the plan QA settled.
+
+**A defect the fixes surfaced, disclosed rather than left for you to find.** The first version of
+the new red control (15c) was vacuous. It shadowed `work_connectors` via `PYTHONPATH`, but
+`releases_app.py` prepends its own directory to `sys.path` before importing it, so the mutated
+module never loaded and the control passed against a build that still had the guard. It now mutates
+a full copy of `utils/py`, runs that copy's app, and asserts the mutation landed before relying on
+the result. Please check that reasoning — a red control that cannot fail is worse than none.
+
+**What round 2 must cover, in priority order.**
+
+1. **The whole-file sweep you skipped (GH-268).** This is the requirement that made the beta case
+   worth citing: an independent audit found 20 issues on a branch this loop had approved, every one
+   in pre-existing code nobody read. Read the touched files end to end —
+   `utils/py/work_connectors/__init__.py`, the changed regions of `utils/py/releases_app.py` and
+   their surrounding code, `utils/py/board_sync.py`, `utils/py/device_config.py`,
+   `skills/merge-cleanup/scripts/merge_cleanup.py` — and declare `swept file: yes` or `no` again,
+   honestly. If you find no pre-existing defect, say that explicitly.
+2. **The cursor fix itself**, at `utils/py/work_connectors/__init__.py` — the bounds capture in
+   `dispatch` and the range check in `_collect`. Is the range the right one? Is there a path that
+   reaches `_persist` with an unvalidated value?
+3. **The two new controls, 15b and 15c**, in `test/gh549-work-events.sh`. 15c is the one to be
+   hardest on, given it was vacuous once already.
+4. Anything from Q1–Q5 you consider unresolved.
+
+Verification: `bash test/gh549-work-events.sh` — **47 passed, 0 failed** at `24166305`.
+
+VERDICT: PARKED
+Basis: producer turn — two findings dispositioned (one implemented, one modified with the
+mechanism corrected), one self-disclosed vacuous control fixed, suite green at 47/47. Handing back
+for reviewer round 2; the whole-file sweep is still outstanding.
+
+Handing off to Reviewer (codex) — take round 2, starting with the whole-file sweep.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
