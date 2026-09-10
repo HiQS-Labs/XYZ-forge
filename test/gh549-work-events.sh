@@ -703,6 +703,104 @@ KS2="$(GH549_SENTINEL="$SENT" XYZ_DEVICE_CONFIG_PATH="$WORK/board_cfg.json" \
   && ok "red control: without the switch the SAME command does run the child — the switch is what stopped it" \
   || bad "red control: the child did not run even with the switch off ($KS2)"
 
+echo "19. two overlapping dispatches are serialized, and a cursor never goes backwards (impl QA r3)"
+# perform_write releases the WriterLock BEFORE dispatching, deliberately -- a governance writer
+# must not hold it across network time. The consequence round 3 found is that two ledger writes
+# can dispatch overlapping batches: A reads cursor 0 and takes event 1, B reads cursor 0 and takes
+# events 1 and 2, and whichever finishes LAST decides the board. If A finishes last the card is
+# set back to event 1's column and the cursor regresses -- a projection stuck at a stale state.
+FXC="$WORK/fx_conc"; rm -rf "$FXC"; mkdir -p "$FXC"
+( cd "$FXC" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXC/"
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+for N in 601 602; do
+  XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXC" work emit \
+    --event pr_merged --gh-number "$N" --payload-json '{"pr":559}' >/dev/null 2>&1
+done
+NCONC="$(sqlite3 "$FXC/releases.db" "SELECT count(*) FROM work_events;")"
+[ "$NCONC" -ge 2 ] || bad "fixture guard: need >=2 events to overlap two dispatches, have $NCONC"
+cat > "$WORK/stub_slow.py" <<'PYSTUB'
+import json, os, sys, time
+b = json.load(sys.stdin)
+with open(os.environ["GH549_RUNLOG"], "a") as fh:
+    fh.write("start %d\n" % os.getpid())
+time.sleep(1.5)
+with open(os.environ["GH549_RUNLOG"], "a") as fh:
+    fh.write("end %d\n" % os.getpid())
+print("advanced_to: %d" % max(e["id"] for e in b["events"]))
+PYSTUB
+REG_SLOW="{\"github_board\":\"$WORK/stub_slow.py\"}"
+RUNLOG="$WORK/conc_runs.log"
+
+# Two `work reconcile` processes fired together. Under the lock the second WAITS, then reads the
+# cursor the first advanced and finds nothing left -- so exactly ONE child ever runs.
+: > "$RUNLOG"
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+for i in 1 2; do
+  GH549_RUNLOG="$RUNLOG" XYZ_CONNECTOR_LOCK_WAIT_S=15 XYZ_CONNECTOR_WINDOW_S=30 \
+    XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_SLOW" \
+    python3 "$APP" --root "$FXC" work reconcile >/dev/null 2>&1 &
+done
+wait
+STARTS="$(grep -c '^start ' "$RUNLOG" 2>/dev/null || echo 0)"
+[ "$STARTS" = "1" ] \
+  && ok "two concurrent dispatches ran exactly ONE child — the second saw the advanced cursor" \
+  || bad "the connector lock did not serialize: $STARTS children ran"
+MAXID2="$(sqlite3 "$FXC/releases.db" "SELECT max(id) FROM work_events;")"
+CURC="$(sqlite3 "$FXC/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ "$CURC" = "$MAXID2" ] \
+  && ok "and the cursor finished at the NEWEST event ($CURC), not an older batch's" \
+  || bad "the cursor finished at $CURC, expected $MAXID2"
+
+# Red control: without the lock the SAME two commands both dispatch the same batch.
+GUARD2="$WORK/wc_nolock"; rm -rf "$GUARD2"; mkdir -p "$GUARD2"
+cp -R "$ROOT/utils/py/." "$GUARD2/"
+python3 - "$GUARD2/work_connectors/__init__.py" <<'PYMUT2'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+anchor = "                fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)"
+assert anchor in s, "red control found no flock call to remove — the lock moved; fix this control"
+s = s.replace(anchor, "                pass  # lock removed by the red control", 1)
+io.open(p, "w", encoding="utf-8").write(s)
+PYMUT2
+[ $? -eq 0 ] || bad "red control mutation failed"
+grep -q "lock removed by the red control" "$GUARD2/work_connectors/__init__.py" \
+  || bad "red control: the mutation did not land in the copy the app will import"
+: > "$RUNLOG"
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+for i in 1 2; do
+  GH549_RUNLOG="$RUNLOG" XYZ_CONNECTOR_LOCK_WAIT_S=15 XYZ_CONNECTOR_WINDOW_S=30 \
+    XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_SLOW" \
+    python3 "$GUARD2/releases_app.py" --root "$FXC" work reconcile >/dev/null 2>&1 &
+done
+wait
+STARTS2="$(grep -c '^start ' "$RUNLOG" 2>/dev/null || echo 0)"
+[ "$STARTS2" -ge 2 ] \
+  && ok "red control: without the lock BOTH dispatches ran the same batch ($STARTS2 children) — the lock is what stops it" \
+  || bad "red control did not reproduce the overlap ($STARTS2 children)"
+
+# The cursor is monotonic in the store itself, independent of the lock — the second line of
+# defence, so an out-of-order persist can never re-deliver acknowledged events.
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+python3 - "$ROOT" "$FXC/releases.db" <<'PYMONO'
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import work_connectors as W
+db = sys.argv[2]
+W._persist(db, {"github_board": (9, None)}, "t1")
+W._persist(db, {"github_board": (4, None)}, "t2")   # an older batch persisting late
+import sqlite3
+c = sqlite3.connect(db)
+got = c.execute("SELECT last_event_id FROM connector_cursors WHERE connector='github_board'").fetchone()[0]
+assert got == 9, "cursor regressed to %s" % got
+print("monotonic-ok")
+PYMONO
+[ $? -eq 0 ] \
+  && ok "a late older persist cannot lower the cursor (9 stays 9)" \
+  || bad "the cursor is not monotonic — an older batch lowered it"
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

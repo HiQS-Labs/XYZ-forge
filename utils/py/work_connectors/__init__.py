@@ -20,6 +20,8 @@ Two boundaries this module must never cross:
    taken after the join.
 """
 
+import errno
+import fcntl
 import json
 import os
 import sqlite3
@@ -38,6 +40,11 @@ except ImportError:  # pragma: no cover - path fallback for odd invocations
 
 # One total window for ALL connectors, not per connector (Codex plan-QA r2).
 CONNECTOR_WINDOW_S = float(os.environ.get("XYZ_CONNECTOR_WINDOW_S", "5"))
+
+# How long a dispatch waits for the connector lock before giving up (impl QA r3). Bounded on
+# purpose: a ledger verb must never wait on another process's network time. Giving up is safe —
+# the batch simply stays unacknowledged and the next write or `work reconcile` replays it.
+CONNECTOR_LOCK_WAIT_S = float(os.environ.get("XYZ_CONNECTOR_LOCK_WAIT_S", "2"))
 
 CONNECTOR_DEFAULTS = {
     "enabled": False,
@@ -265,7 +272,12 @@ def _persist(db_path, results, at):
                                 last_attempt_at, last_error, updated_at)
                                 VALUES (?, ?, ?, NULL, ?)
                                 ON CONFLICT(connector) DO UPDATE SET
-                                  last_event_id = excluded.last_event_id,
+                                  -- Monotonic on purpose (impl QA r3). The connector lock makes
+                                  -- an out-of-order write unreachable in normal operation; this
+                                  -- is the second line of defence, so a cursor can never go
+                                  -- backwards and re-deliver events already acknowledged.
+                                  last_event_id = MAX(connector_cursors.last_event_id,
+                                                      excluded.last_event_id),
                                   last_attempt_at = excluded.last_attempt_at,
                                   last_error = NULL,
                                   updated_at = excluded.updated_at""",
@@ -286,6 +298,65 @@ def _persist(db_path, results, at):
         conn.close()
 
 
+class _ConnectorLock:
+    """Cross-process mutual exclusion for the read-cursor / project / write-cursor section.
+
+    perform_write releases the ledger's WriterLock BEFORE dispatching, deliberately — a
+    governance writer must not hold it across network time. The consequence impl QA r3 found is
+    that two ledger writes can dispatch overlapping batches concurrently: dispatch A reads
+    cursor 0 and takes event 1, dispatch B reads cursor 0 and takes events 1 and 2, and whichever
+    finishes last decides the board. If A finishes last, the card is set back to event 1's column
+    and the cursor regresses to 1 — a projection stuck at a stale state, with nothing to repair it
+    until the next event happens to arrive.
+
+    A connector-only lock fixes the ordering without ever re-entangling the ledger lock. It is
+    held across a whole dispatch, so B reads the cursor A already advanced and applies only what
+    is genuinely new.
+
+    Waiting is bounded (CONNECTOR_LOCK_WAIT_S) and failing to acquire is not an error: the batch
+    stays unacknowledged, and the next write or `work reconcile` replays it. A ledger verb must
+    never block on another process's connectors.
+    """
+
+    def __init__(self, db_path):
+        self.path = db_path + "-connectors.lock"
+        self.fh = None
+
+    def acquire(self, wait_s=None):
+        wait = CONNECTOR_LOCK_WAIT_S if wait_s is None else wait_s
+        deadline = time.monotonic() + wait
+        try:
+            self.fh = open(self.path, "a+")
+        except Exception as exc:
+            _warn("cannot open the connector lock (%r) — dispatching without it" % (exc,))
+            return True                 # a lock we cannot create must not disable connectors
+        while True:
+            try:
+                fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return True
+            except OSError as exc:
+                if exc.errno not in (errno.EAGAIN, errno.EACCES, errno.EWOULDBLOCK):
+                    _warn("connector lock failed (%r) — dispatching without it" % (exc,))
+                    return True
+                if time.monotonic() >= deadline:
+                    self.release()
+                    return False
+                time.sleep(0.05)
+
+    def release(self):
+        if self.fh is None:
+            return
+        try:
+            fcntl.flock(self.fh.fileno(), fcntl.LOCK_UN)
+        except Exception:
+            pass
+        try:
+            self.fh.close()
+        except Exception:
+            pass
+        self.fh = None
+
+
 def dispatch(db_path, at, connectors=None, window_s=None):
     """Launch every enabled connector concurrently, join under one window, persist cursors.
 
@@ -297,6 +368,18 @@ def dispatch(db_path, at, connectors=None, window_s=None):
         return {}                       # zero connectors == zero added latency
     if not os.path.exists(db_path):
         return {}
+    lock = _ConnectorLock(db_path)
+    if not lock.acquire():
+        _warn("another dispatch holds the connector lock — leaving this batch for the next run")
+        return {}
+    try:
+        return _dispatch_locked(db_path, at, conns, window_s)
+    finally:
+        lock.release()
+
+
+def _dispatch_locked(db_path, at, conns, window_s):
+    """The read-cursor / project / write-cursor section, run under _ConnectorLock."""
     read = sqlite3.connect(db_path, timeout=30)
     try:
         batches, bounds = {}, {}
