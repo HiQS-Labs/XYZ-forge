@@ -1,0 +1,803 @@
+{
+  "nlbse": {
+    "archive_bytes": 56958883,
+    "columns": [
+      "id",
+      "labels",
+      "title",
+      "body",
+      "author_association"
+    ],
+    "label_counts": {
+      "bug": 74781,
+      "documentation": 6252,
+      "feature": 52797,
+      "question": 8490
+    },
+    "linked_dataset_license_separately_declared": false,
+    "member_bytes": 183467774,
+    "member_name_sha256": "5789b9f5a9f988e94e4092c370a8a57f6b4fbdf9bf3541c636b243cb65e23629",
+    "rows": 142320,
+    "sample_shapes": [
+      {
+        "author_association": {
+          "length": 9,
+          "present": true,
+          "sha256": "5cd11532d871725411cb69c5ac790613488683fafd8bc2e3b6603a217b44c2b1"
+        },
+        "body": {
+          "length": 1329,
+          "present": true,
+          "sha256": "db5421161778e21bc50d11a1d31fec93b84ff5aced65b6edc91ddee76760b1bc"
+        },
+        "id": {
+          "length": 10,
+          "present": true,
+          "sha256": "4d564453ca78050099f8352a45cccda83a4917bf0396327e314064be0910b563"
+        },
+        "labels": {
+          "length": 13,
+          "present": true,
+          "sha256": "caf9f906b16a91cb0160c50abdac8bd6db9a283fa9751f9801ef991554b46a8a"
+        },
+        "title": {
+          "length": 68,
+          "present": true,
+          "sha256": "1d0a61525aafc17c8b155cfebac442460e13356cf9c20909f3f19536f33e442a"
+        }
+      },
+      {
+        "author_association": {
+          "length": 4,
+          "present": true,
+          "sha256": "c627c09c14e58e44bc51622dac392958ec88244e414b508020634f53cfcd1e69"
+        },
+        "body": {
+          "length": 397,
+          "present": true,
+          "sha256": "edbc3667160953677ab6f60991ab1b2e1bdc4fc19a3fd8249637e9b5d4996521"
+        },
+        "id": {
+          "length": 10,
+          "present": true,
+          "sha256": "93f0aa578252947a91c75f6acbed6a99750225f6cc507fc6aeed6412ed065eda"
+        },
+        "labels": {
+          "length": 3,
+          "present": true,
+          "sha256": "ecb53f367b3541da3a14236d9a091f9bcc7a9903953f36577c2664fdd2a68a55"
+        },
+        "title": {
+          "length": 86,
+          "present": true,
+          "sha256": "80405c0d72a9a271ead1df726e7665bcbae3f1f4fcd74e9d0b4487844574a145"
+        }
+      },
+      {
+        "author_association": {
+          "length": 4,
+          "present": true,
+          "sha256": "c627c09c14e58e44bc51622dac392958ec88244e414b508020634f53cfcd1e69"
+        },
+        "body": {
+          "length": 349,
+          "present": true,
+          "sha256": "179cd516094b6a161a03e74f176de537f2395f60589351b706c5666964b41ec3"
+        },
+        "id": {
+          "length": 10,
+          "present": true,
+          "sha256": "8e0ecd20eb9700ed675c942dd98e0dd30a7c5646103a1185e106c44c9985e223"
+        },
+        "labels": {
+          "length": 7,
+          "present": true,
+          "sha256": "2ad562319767157087dda0dec6391f4479f8a04869ab0cc8d3a9c3637dae73b5"
+        },
+        "title": {
+          "length": 46,
+          "present": true,
+          "sha256": "d5c67d46f38e7095bfb7e4be0d47570bdc04c8b5e69744b0fa55105da52775b3"
+        }
+      },
+      {
+        "author_association": {
+          "length": 4,
+          "present": true,
+          "sha256": "c627c09c14e58e44bc51622dac392958ec88244e414b508020634f53cfcd1e69"
+        },
+        "body": {
+          "length": 235,
+          "present": true,
+          "sha256": "12a752def8af0ba575f4b20fea9c7b3c7e81f4570bfa4312d96039f0d02ede1e"
+        },
+        "id": {
+          "length": 10,
+          "present": true,
+          "sha256": "fdbcc63897896520269bbb696bb940d9d8317d2b6bfce3d8aea03de410f5b5b1"
+        },
+        "labels": {
+          "length": 7,
+          "present": true,
+          "sha256": "2ad562319767157087dda0dec6391f4479f8a04869ab0cc8d3a9c3637dae73b5"
+        },
+        "title": {
+          "length": 36,
+          "present": true,
+          "sha256": "f00b06cb7174d7cf5b8ba2ccb77553f3152b31d8cf3217a95081fa710a201996"
+        }
+      },
+      {
+        "author_association": {
+          "length": 4,
+          "present": true,
+          "sha256": "c627c09c14e58e44bc51622dac392958ec88244e414b508020634f53cfcd1e69"
+        },
+        "body": {
+          "length": 3127,
+          "present": true,
+          "sha256": "28be5ad23826114c57f182f12724becb07907ace1709cdd9b66e4bf0867f980c"
+        },
+        "id": {
+          "length": 10,
+          "present": true,
+          "sha256": "ecc84ee5fb4606f95db2a9a48954d06ab5433365a11bd1e706767631b3e48c3e"
+        },
+        "labels": {
+          "length": 3,
+          "present": true,
+          "sha256": "ecb53f367b3541da3a14236d9a091f9bcc7a9903953f36577c2664fdd2a68a55"
+        },
+        "title": {
+          "length": 61,
+          "present": true,
+          "sha256": "02401708b1bd1f528738e6f7fc185031a0eb54156d82adb71b14af2ac101a5ac"
+        }
+      }
+    ],
+    "source_repository_license": "AGPL-3.0",
+    "source_repository_revision": "2023-01-25T08:52:52Z"
+  },
+  "retrieved_at_utc": "2026-09-10T16:45:13.132996+00:00",
+  "schema_version": "gh547-dataset-schema-probe@1",
+  "swe_gym": {
+    "bounded_sample_fail_counts": {
+      "False": 5
+    },
+    "bounded_sample_rows": 5,
+    "code_repository_license": "Apache-2.0",
+    "dataset": "SWE-Gym/MoatlessTools-Agent-Verifier-Train-Data",
+    "dataset_metadata_license": null,
+    "dataset_server": {
+      "builder_name": "json",
+      "citation": "",
+      "config_name": "default",
+      "dataset_name": "moatless_tools-agent-verifier-train-data",
+      "dataset_size": 31487122,
+      "description": "",
+      "download_checksums": {
+        "hf://datasets/SWE-Gym/MoatlessTools-Agent-Verifier-Train-Data@57a05d234f92268307d6db677094e0b33d62c15e/agent-32b-final.openai.jsonl": {
+          "checksum": null,
+          "num_bytes": 18024365
+        },
+        "hf://datasets/SWE-Gym/MoatlessTools-Agent-Verifier-Train-Data@57a05d234f92268307d6db677094e0b33d62c15e/agent-7b-final.openai.jsonl": {
+          "checksum": null,
+          "num_bytes": 9901217
+        },
+        "hf://datasets/SWE-Gym/MoatlessTools-Agent-Verifier-Train-Data@57a05d234f92268307d6db677094e0b33d62c15e/verifier-32b-on-policy.openai.jsonl": {
+          "checksum": null,
+          "num_bytes": 3378146
+        },
+        "hf://datasets/SWE-Gym/MoatlessTools-Agent-Verifier-Train-Data@57a05d234f92268307d6db677094e0b33d62c15e/verifier-7b-on-policy.openai.jsonl": {
+          "checksum": null,
+          "num_bytes": 1905246
+        }
+      },
+      "download_size": 33208974,
+      "features": {
+        "exp_name": {
+          "_type": "Value",
+          "dtype": "string"
+        },
+        "fail": {
+          "_type": "Value",
+          "dtype": "bool"
+        },
+        "instance_id": {
+          "_type": "Value",
+          "dtype": "string"
+        },
+        "messages": [
+          {
+            "content": {
+              "_type": "Value",
+              "dtype": "string"
+            },
+            "role": {
+              "_type": "Value",
+              "dtype": "string"
+            }
+          }
+        ]
+      },
+      "homepage": "",
+      "license": "",
+      "size_in_bytes": 64696096,
+      "splits": {
+        "train": {
+          "dataset_name": "moatless_tools-agent-verifier-train-data",
+          "name": "train",
+          "num_bytes": 31487122,
+          "num_examples": 2163
+        }
+      },
+      "version": {
+        "major": 0,
+        "minor": 0,
+        "patch": 0,
+        "version_str": "0.0.0"
+      }
+    },
+    "revision": "57a05d234f92268307d6db677094e0b33d62c15e",
+    "revision_matches_pin": true,
+    "sample_shapes": [
+      {
+        "content_lengths": [
+          2105,
+          11309,
+          434
+        ],
+        "content_sha256": [
+          "ccd9ae79fa717abcd794e56457825a501d8d05461454909df7428fa240a519b8",
+          "ce51a498a70df12b0f2cc8efff0da07e6b7b56dfdca84c038e44c0e664970cec",
+          "f0484ad54e31cdec32d7ed306c095440286bd9954c3eb12c72142b1d6ca5204d"
+        ],
+        "fail": false,
+        "has_exp_name": true,
+        "has_instance_id": true,
+        "message_count": 3,
+        "roles": [
+          "system",
+          "user",
+          "assistant"
+        ]
+      },
+      {
+        "content_lengths": [
+          2105,
+          7054,
+          2404
+        ],
+        "content_sha256": [
+          "ccd9ae79fa717abcd794e56457825a501d8d05461454909df7428fa240a519b8",
+          "3d1e5ac81128e0560d47a32f8333e323a53a42b075ea04afb5d4ffc74aa5e5ca",
+          "37a086862c5575902eef46bf810bf41f87e77e1e8750885f64a8d7fdf5abbdad"
+        ],
+        "fail": false,
+        "has_exp_name": true,
+        "has_instance_id": true,
+        "message_count": 3,
+        "roles": [
+          "system",
+          "user",
+          "assistant"
+        ]
+      },
+      {
+        "content_lengths": [
+          2948,
+          3898,
+          728
+        ],
+        "content_sha256": [
+          "48c6f0296ec24084b923ba8e93a8b9ecb07cc90199082843711414b60636d052",
+          "b99c33e086c1357fd719f93b02132494112024a4002a67d8cf060c29a42fd2ea",
+          "c469419d5f0a57aad78f67e5a60e7c76c01a32f93e693bc7b4e06f3cc582642d"
+        ],
+        "fail": false,
+        "has_exp_name": true,
+        "has_instance_id": true,
+        "message_count": 3,
+        "roles": [
+          "system",
+          "user",
+          "assistant"
+        ]
+      },
+      {
+        "content_lengths": [
+          6913,
+          3407,
+          1091
+        ],
+        "content_sha256": [
+          "f043cf431bdb52f6ed66177ad2a7625b1f0282e90c2f12e8cc028533f6c86537",
+          "7de340e6eb538c455dca4b61e8d4d82aa1c2025ad942c27946f1e3792e0e290b",
+          "9ff448a3689e7a204d295c889a61320d0da0e35c3cc62d44f46e6e1b35576194"
+        ],
+        "fail": false,
+        "has_exp_name": true,
+        "has_instance_id": true,
+        "message_count": 3,
+        "roles": [
+          "system",
+          "user",
+          "assistant"
+        ]
+      },
+      {
+        "content_lengths": [
+          1459,
+          4250,
+          385
+        ],
+        "content_sha256": [
+          "2753d765c4c94438a11fe7b3780eee9c24791713223611b86796f3e488454a34",
+          "fa5d28fb6f0a1a182d66e32f526a8034723bf54d72c3d14cbcaf55ce98ae11c1",
+          "f00abf19f0fed2487ce656e708dbc366d9076789154df5fd12eb24af534e63de"
+        ],
+        "fail": false,
+        "has_exp_name": true,
+        "has_instance_id": true,
+        "message_count": 3,
+        "roles": [
+          "system",
+          "user",
+          "assistant"
+        ]
+      }
+    ],
+    "task_b_assessment": "verifier patch conversations; not chronological action trajectories"
+  },
+  "swe_gym_trajectory": {
+    "dataset": "SWE-Gym/OpenHands-Sampled-Trajectories",
+    "dataset_metadata_license": null,
+    "features": {
+      "instance_id": {
+        "_type": "Value",
+        "dtype": "string"
+      },
+      "messages": [
+        {
+          "content": {
+            "_type": "Value",
+            "dtype": "string"
+          },
+          "function_call": {
+            "_type": "Value",
+            "dtype": "null"
+          },
+          "name": {
+            "_type": "Value",
+            "dtype": "string"
+          },
+          "role": {
+            "_type": "Value",
+            "dtype": "string"
+          },
+          "tool_call_id": {
+            "_type": "Value",
+            "dtype": "string"
+          },
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": {
+                  "_type": "Value",
+                  "dtype": "string"
+                },
+                "name": {
+                  "_type": "Value",
+                  "dtype": "string"
+                }
+              },
+              "id": {
+                "_type": "Value",
+                "dtype": "string"
+              },
+              "index": {
+                "_type": "Value",
+                "dtype": "int64"
+              },
+              "type": {
+                "_type": "Value",
+                "dtype": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "resolved": {
+        "_type": "Value",
+        "dtype": "bool"
+      },
+      "run_id": {
+        "_type": "Value",
+        "dtype": "string"
+      },
+      "test_result": {
+        "apply_patch_output": {
+          "_type": "Value",
+          "dtype": "string"
+        },
+        "git_patch": {
+          "_type": "Value",
+          "dtype": "string"
+        },
+        "report": {
+          "empty_generation": {
+            "_type": "Value",
+            "dtype": "bool"
+          },
+          "error_eval": {
+            "_type": "Value",
+            "dtype": "bool"
+          },
+          "failed_apply_patch": {
+            "_type": "Value",
+            "dtype": "bool"
+          },
+          "resolved": {
+            "_type": "Value",
+            "dtype": "bool"
+          },
+          "test_timeout": {
+            "_type": "Value",
+            "dtype": "bool"
+          }
+        },
+        "test_output": {
+          "_type": "Value",
+          "dtype": "string"
+        }
+      },
+      "tools": [
+        {
+          "function": {
+            "description": {
+              "_type": "Value",
+              "dtype": "string"
+            },
+            "name": {
+              "_type": "Value",
+              "dtype": "string"
+            },
+            "parameters": {
+              "properties": {
+                "command": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "enum": {
+                    "_type": "Sequence",
+                    "feature": {
+                      "_type": "Value",
+                      "dtype": "string"
+                    }
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                },
+                "file_text": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                },
+                "insert_line": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                },
+                "new_str": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                },
+                "old_str": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                },
+                "path": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                },
+                "view_range": {
+                  "description": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  },
+                  "items": {
+                    "type": {
+                      "_type": "Value",
+                      "dtype": "string"
+                    }
+                  },
+                  "type": {
+                    "_type": "Value",
+                    "dtype": "string"
+                  }
+                }
+              },
+              "required": {
+                "_type": "Sequence",
+                "feature": {
+                  "_type": "Value",
+                  "dtype": "string"
+                }
+              },
+              "type": {
+                "_type": "Value",
+                "dtype": "string"
+              }
+            }
+          },
+          "type": {
+            "_type": "Value",
+            "dtype": "string"
+          }
+        }
+      ]
+    },
+    "revision": "baf3a4e4bff514d48ddc08a93a2ade5c126212c7",
+    "revision_matches_pin": true,
+    "sample_shapes": [
+      {
+        "has_test_result": true,
+        "message_content_sha256": [
+          "d47743b805c46c32e50b5f56e6ef014212faa03d5b714a9d47fe6016392f3622",
+          "c7b500b9744e7667a174f8bcd380003bf8d7fe22c09ec78d3199877745305f04",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "f29285264e3cbbf307001bae541b18a86ca9ee0faca925ec900b732ab62ade98",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "f29285264e3cbbf307001bae541b18a86ca9ee0faca925ec900b732ab62ade98",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "f29285264e3cbbf307001bae541b18a86ca9ee0faca925ec900b732ab62ade98",
+          "7b4451f25a962e5175e6f9ebcf5dd5afadb69966fd3d869fa3befa5b4ddb1f18",
+          "f29285264e3cbbf307001bae541b18a86ca9ee0faca925ec900b732ab62ade98",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "f29285264e3cbbf307001bae541b18a86ca9ee0faca925ec900b732ab62ade98",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        "message_count": 13,
+        "resolved": false,
+        "roles": [
+          "system",
+          "user",
+          "assistant",
+          "tool",
+          "assistant",
+          "tool",
+          "assistant",
+          "tool",
+          "assistant",
+          "tool",
+          "assistant",
+          "tool",
+          "assistant"
+        ],
+        "tool_call_names": [
+          "str_replace_editor",
+          "str_replace_editor",
+          "str_replace_editor",
+          "str_replace_editor",
+          "str_replace_editor",
+          "str_replace_editor"
+        ]
+      },
+      {
+        "has_test_result": true,
+        "message_content_sha256": [
+          "d47743b805c46c32e50b5f56e6ef014212faa03d5b714a9d47fe6016392f3622",
+          "f084a44700df875f24c30266ab1576d4e54a9329ec1f80f7afb5897c2205c26e",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "2b68835ba51709e9f054c7b4046537ad38d9009d5f3094c864454694405410e2",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "2b68835ba51709e9f054c7b4046537ad38d9009d5f3094c864454694405410e2",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "2b68835ba51709e9f054c7b4046537ad38d9009d5f3094c864454694405410e2",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        "message_count": 9,
+        "resolved": false,
+        "roles": [
+          "system",
+          "user",
+          "assistant",
+          "tool",
+          "assistant",
+          "tool",
+          "assistant",
+          "tool",
+          "assistant"
+        ],
+        "tool_call_names": [
+          "str_replace_editor",
+          "str_replace_editor",
+          "str_replace_editor",
+          "str_replace_editor"
+        ]
+      }
+    ],
+    "split": {
+      "dataset_name": null,
+      "name": "train.raw",
+      "num_bytes": 678348564,
+      "num_examples": 6055
+    }
+  },
+  "tawos": {
+    "article_id": 21308124,
+    "files": [
+      {
+        "md5": "8f9caefa5bf9872a8f90b177c1b14bcb",
+        "name": "README.md",
+        "size": 711
+      },
+      {
+        "md5": "e9c5ecc7649d55f0cf2fb4efb5664494",
+        "name": "TAWOS.sql.zip",
+        "size": 637550449
+      }
+    ],
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+      "value": 7
+    },
+    "representative_rows": "not sampled; full 637.55 MB archive required",
+    "tables": {
+      "Affected_Version": [
+        "Issue_ID",
+        "Affected_Version_ID"
+      ],
+      "Change_Log": [
+        "ID",
+        "Field",
+        "From_Value",
+        "To_Value",
+        "From_String",
+        "To_String",
+        "Change_Type",
+        "Creation_Date",
+        "Author_ID",
+        "Issue_ID"
+      ],
+      "Comment": [
+        "ID",
+        "Comment",
+        "Comment_Text",
+        "Comment_Code",
+        "Creation_Date",
+        "Author_ID",
+        "Issue_ID"
+      ],
+      "Component": [
+        "ID",
+        "Jira_ID",
+        "Name",
+        "Description",
+        "Project_ID"
+      ],
+      "Fix_Version": [
+        "Issue_ID",
+        "Fix_Version_ID"
+      ],
+      "Issue": [
+        "ID",
+        "Jira_ID",
+        "Issue_Key",
+        "URL",
+        "Title",
+        "Description",
+        "Description_Text",
+        "Description_Code",
+        "Type",
+        "Priority",
+        "Status",
+        "Resolution",
+        "Creation_Date",
+        "Estimation_Date",
+        "Resolution_Date",
+        "Last_Updated",
+        "Story_Point",
+        "Timespent",
+        "In_Progress_Minutes",
+        "Total_Effort_Minutes",
+        "Resolution_Time_Minutes",
+        "Title_Changed_After_Estimation",
+        "Description_Changed_After_Estimation",
+        "Story_Point_Changed_After_Estimation",
+        "Pull_Request_URL",
+        "Creator_ID",
+        "Reporter_ID",
+        "Assignee_ID",
+        "Project_ID",
+        "Sprint_ID"
+      ],
+      "Issue_Component": [
+        "Issue_ID",
+        "Component_ID"
+      ],
+      "Issue_Link": [
+        "ID",
+        "Issue_ID",
+        "Name",
+        "Description",
+        "Direction",
+        "Target_Issue_ID"
+      ],
+      "Project": [
+        "ID",
+        "Project_Key",
+        "Name",
+        "URL",
+        "Description",
+        "Start_Date",
+        "Last_Update_Date",
+        "Repository_ID"
+      ],
+      "Repository": [
+        "ID",
+        "Name",
+        "Description",
+        "URL"
+      ],
+      "Sprint": [
+        "ID",
+        "JiraID",
+        "Name",
+        "State",
+        "Start_Date",
+        "End_Date",
+        "Activated_Date",
+        "Complete_Date",
+        "Project_ID"
+      ],
+      "User": [
+        "ID",
+        "Project_ID"
+      ],
+      "Version": [
+        "ID",
+        "Jira_ID",
+        "Name",
+        "Description",
+        "Archived",
+        "Released",
+        "Release_Date",
+        "Project_ID"
+      ]
+    },
+    "version": 1
+  }
+}
