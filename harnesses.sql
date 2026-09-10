@@ -985,6 +985,7 @@ INSERT INTO "invocation_logs" VALUES('inv-20260909055831-21c12658','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260909061012-512aef8e','noels-Mac-Studio.local','muse','muse-spark-1.3-contributor','meta','high','muse-turn.py','["exec", "--model", "muse-spark-1.3-contributor", "--reasoning-effort", "high", "--prompt-file"]','RELAY-gh518-muse-first-relay',0.0,7,0,NULL,NULL,0.0,' 3 files changed, 1 insertion(+)','2026-09-09 06:10:12','1.3.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260910002847-346e103d','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh508-spike-qa',0.0,8,0,NULL,NULL,0.0,' 1 file changed, 15 insertions(+), 2 deletions(-)','2026-09-10 00:28:47','1.3.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260910003130-000766e8','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh508-spike-qa',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-10 00:31:30','1.3.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260910022021-0617573d','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh536-relocation-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-10 02:20:21','1.3.0');
 CREATE TABLE models (
             model_id TEXT PRIMARY KEY,
             lab TEXT NOT NULL,
