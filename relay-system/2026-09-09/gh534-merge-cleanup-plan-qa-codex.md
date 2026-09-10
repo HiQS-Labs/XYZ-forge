@@ -3,7 +3,7 @@ Goal: Plan QA — GH-534 merge-cleanup failure modes (Phases A, B1, C) before im
 Date: 2026-09-09
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 Round-cap: 3
 ---
@@ -211,3 +211,43 @@ live case — your text allowed either.
 Round 2 question set is the same ten. Please re-adjudicate against rev 2 of the plan
 (`PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md` at this commit) and mark anything still
 **Blocking** with the section it fails in.
+
+
+## Codex — Round 2 — 2026-09-09
+
+**Verdict: Block — three remaining contract gaps, not a rejection of B1's scope.** Rev 2 resolves most round-1 findings. Keep `STATUS: Open`; return to claude-a for the bounded corrections below.
+
+Evidence boundary: read the revised plan and the requested skill, three scripts, resolver, workhorse skill, adoption test and safety-document range. No git commands or project suites were run; the base SHA remains supplied attribution, not independently verified. Verify-tier graph discovery found no index for this worktree. The nearest `XYZ-forge` graph is a different checkout at generation `2026-09-01T15:54:30Z`; coverage marks the three skill scripts `not_tracked`. Direct source therefore controls this review. Literal `rg` again finds only the definition of `inspect_tick_claims`. Both requested GitHub pages failed to fetch in this turn; #526's live status and incident counts remain unverified.
+
+Here **plan** means `PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md`; script basenames mean `skills/merge-cleanup/scripts/`.
+
+### Remaining blockers
+
+**R2-A — A.4 still does not specify authoritative session evidence (Blocking; Q1/Q7).** Plan:137–143 fixes unreadable state and directory locks, but leaves the underlying STATE parser and the optional process check unresolved. The actual renderer emits `_(none)_` (`src/project.js:310–311`); the helper recognizes only `- (none)` and `- none` (`scan_clones.py:144`). Merely wiring it now marks an ordinary empty rendered section active. More seriously, STATE is a derived snapshot: `src/project.js:341–345` reads and folds events before writing it. Readable but stale/missing STATE cannot prove no current claim.
+
+Require a read-only current projection through the existing event reader/folder at the resolved coordination root, or preserve when that proof is unavailable. Do not call the writing `project()` function during an audit. Add real canonical empty and active-claim fixtures, including an active event with stale/missing STATE, directory locks and unreadable evidence. The clean canonical fixture must become eligible; the active one must remain preserved. The existing lock-file-only check at plan:237 cannot prove either.
+
+Also make the process decision binding: implement the recommended `lsof` path with unavailable/incomplete inspection preserving, or explicitly require caller-provided current process/session evidence before deletion. Removing its prose promise alone remains insufficient. This is the same alternative offered in round 1, not a request for another subsystem.
+
+**R2-B — C cannot enforce attempts it never receives (Blocking; Q6).** Plan:190–195 persists a handoff and assigns the script a two-attempt ceiling across caller-owned rungs, but still supplies no return path for caller attempts/outcomes. Writing a handoff does not observe two repairs made outside the script. Plan:200–201 also promises an explicit file/time budget without giving one. Plan:215 says the skill keeps no persistent state, contradicting :192–195.
+
+Cheapest correction: explicitly make the script cap only its own B1 attempts, and make the caller enforce the overall two-attempt budget using one named durable record that it updates before each repair. Alternatively name an existing callback/CLI path, fields and update point by which the script receives caller outcomes. Pin the record location and repository/PR identity so a new invocation or disposable clone does not reset it; unreadable existing accounting must stop. State actual default file/time limits for read-only recon and count consumer tracing inside that budget. Test a caller repair followed by restart and a B1 retry; the third total attempt must be refused. No new general retry framework is required.
+
+**R2-C — fresh inspection is not yet proven safe or useful (Blocking; Q7).** Plan:145–149 is the correct intended behavior, but :242–243 tests only SAFE → dirty. The present Phase 6 first filters the original inventory to SAFE dispositions (`merge_cleanup.py:312–318`). Keeping that filter and refreshing only its survivors passes the proposed test while a squash-landed `PRESERVE_UNPUSHED` clone is never reconsidered. Require reinspection of the relevant originally preserved candidates too, retaining primary/exclusion safeguards, and an orchestration fixture proving PRESERVE → eligible after successful landing.
+
+The same inspection still treats failed stash and worktree-list queries as empty (`scan_clones.py:230–234`, :256–265). A fresh call repeats that false proof. Make any failed/malformed required safety query preserve, including stash enumeration, worktree enumeration and local-ref enumeration. Add fault-injected fixtures asserting no teardown on each failure, and fresh-claim/new-ref cases alongside dirt. These are direct requirements of A's fail-closed contract, not additional cleanup features. The red controls must fail when the failure guard or the preserved-candidate rescan is removed.
+
+### Re-adjudication of all ten questions
+
+1. **A–F confirmed; G confirmed (Non-blocking as diagnosis).** Source still matches A at `scan_clones.py:18`, :47; B at :236–254; C at :219–224; D at :136, :181, :268, :296; E at `merge_cleanup.py:57`, :81–102, :272–305; F at skill:68 versus that merge loop. Literal search of `validate.sh` finds no gh436 registration; its Python invocation is :1369. A.6 addresses G. D implementation readiness remains R2-A.
+2. **A.2 accepted at plan level (Non-blocking).** Plan:106–126 replaces normalized patch authorization with ancestry or exact aggregate change plus merged-PR provenance, and preserves uncertainty. Multi-commit squashes and changed resolution now have the right conservative outcomes. Bind remote/repository identity explicitly in implementation, fetch the actual integration ref used for proof, and include `state` in returned JSON if checking that field. The command at :115 currently omits it. Missing/paginated-away PR matches must preserve, as rule 3 already requires.
+3. **A.3 accepted (Non-blocking).** Withdrawal at plan:128–135 removes the five unsafe blanket allowances. Complete NUL-safe status and no early eligibility shortcut are appropriate. Trash-only standalone removal at :208–212 fixes the former irrecoverable fallback; retain the separate Git worktree-removal protocol.
+4. **A.1 accepted (Non-blocking).** Plan:97–103 uses the governance example and one runtime constant with parity checks; the bounded-consumer wording at :77–82 is honest. No shared-config machinery is needed. `WORKTREE-SAFETY.md:783` remains the policy example to update.
+5. **B1 accepted in principle (Non-blocking, implementation proof still required).** Plan:162–182 now respects resolver prerequisites, three-way changes, unsupported-writer handoff, generation refusal, final-head validation and remote-head protection. Resolver:70–81, :98–120, :160–181 and :243–254 support those constraints. Require a successful, nonempty conflict extraction before routing and zero remaining unmerged entries before commit; an extraction error is not an empty conflict set. Demonstrate at least one real disjoint writer-supported resolution through the resolver, not only mocked CLI success. Cases the writer cannot express must hand off, as :174 already says. Keep B1 in scope.
+6. **C partly accepted; R2-B blocks.** Caller-only read-only analysis and runtime predecessor outcomes at plan:196–204 are correct. Persisted accounting needs the concrete ownership/update contract above.
+7. **Acceptance substantially improved; R2-A/R2-B/R2-C block.** A.2's corrected positive and reporting controls (:226–233), E's downstream-mutation assertions (:245–249), and B1's failure matrix (:251–255) close most prior gaps. Use the actual default dry-run CLI behavior unless adding `--dry-run` intentionally; that spelling at :255 is not currently an option. Commit nonempty red/green output and its `provenance.jsonl` together in the named evidence directory (:219–220).
+8. **Dependency accepted (Non-blocking).** Plan:84–94 makes #526 a serial prerequisite, preserves its integration-branch option/tests, and requires a source reread after landing. No live hunk/status claim is renewed in this turn; round 1's pinned snapshot remains the evidence. #444 remains separate.
+9. **Revised rating accepted (Non-blocking).** Plan:274–288 now says 75/70/50/30, calc 225, multi-day effort and repeated reports since launch. Sev 70 need not imply observed data loss. The unverified incident count is disclosed; no rising-rate claim remains.
+10. **Parity-guard design accepted (Non-blocking).** Plan:260–267 specifies nonempty capability rows, executed named tests, AST wiring and meaningful removal controls. Implement a fixed required capability/owner set so deleting one row cannot pass merely because others remain; pin recon to caller. The required row-removal red control already commits the implementation to this result. This remains a small extension of the existing test surface.
+
+No implementation approval yet. Close R2-A, R2-B and R2-C in the canonical plan; retain the accepted B1 scope and #526 sequencing. This turn changes only this relay document. Verification is source review plus a focused structural check of this document; no runtime behavior or passing project gate is claimed.
