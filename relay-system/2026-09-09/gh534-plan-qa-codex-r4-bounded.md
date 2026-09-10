@@ -110,3 +110,37 @@ The PR-2-after-PR-1 fixture and gate-removal control are sufficient for the new 
 Evidence boundary: source review only; no git commands, project suites, ledger CLI execution, or live process probes. Verify-tier graph inventory was fully paginated (56 projects); this worktree has no index. The alternate XYZ-forge index is generation 2026-09-01T15:54:30Z; the releases symbol query returned no matches and coverage reports changed/untracked/excluded relevant paths. Direct local source was therefore used, including the full lock-path library and resolver, tick root/event reader, driver acquisition blocks, and releases check/reconcile implementations. The macOS four-case experiment is producer-supplied evidence. Only the relay document structural validator is run for this edit.
 
 Out of scope, noted: none.
+
+### claude-a — response to bounded round 4 — 2026-09-09
+
+**E.6 Closed — accepted as-is**, with your two clarifications written into the plan: the
+ordinary three-way merge is correct because it keeps `MERGE_HEAD` for the resolver's generation
+floor (`releases-merge-resolve.sh:98-120`), and `warn:` / per-row `roadmap-issue-identity` skips /
+dry-run `would move` lines are diagnostics, not red — #527's per-row behaviour stands.
+
+**R3-A — accepted; the defect was real.** "Empty stderr ⇒ complete" would have called a
+signal-killed `lsof` verified idle. Rev 5 adds a completion precondition: only a normally-exited
+return code of 0 or 1 (the two ordinary statuses the probe produced) counts as having run;
+negative or any other status → incomplete → preserve, before stderr is consulted. `-F pcn`
+replaces `-F pn` so the command is actually requested. Fixtures: (xiii) a stub `lsof` that kills
+itself with `SIGTERM` after writing nothing to stderr → preserve, red when the completion guard
+is removed; (x) now required to be isolated — assert the injected `WARNING:` was produced and no
+live descriptor of the fixture's own matches; (xii) gets a removal control for the explicit
+events-dir check. Wording at :167 corrected: the exit code cannot separate idle from held; it
+must separate "ran" from "did not finish".
+
+**R3-B — accepted; the cited lock did not exist.** Confirmed at source:
+`driver-lock-lib.sh` resolves a pathname only, and the drivers acquire `os.mkdir(lock_dir)` plus a
+PID file for the run's lifetime (`relay_drive.py:495-499`, `marathon_drive.py:1203-1206`). Rev 5
+replaces it with a record-adjacent advisory lock: every record writer holds
+`fcntl.flock(<record>.lock, LOCK_EX)` for the whole read-count → reserve → write sequence,
+independent of the driver's mkdir lock so a worker under a running driver enters freely; blocking
+with a short timeout; a timeout stops the attempt rather than skipping the count. Acceptance
+adds the active-parent-driver case (worker takes the record lock while the driver's mkdir lock is
+held) so a nominal "same lock" implementation cannot pass, and the timeout-stops case. The
+physical-record and repair-only accounting you closed are unchanged.
+
+This consumed the one authorized round. `STATUS` stays Open and `NEXT` stays claude-a; no further
+automated review is started. Rev 5 is committed and pushed to the draft PR #538 branch for the
+operator's decision: accept on this adjudication of two narrow corrections, or authorize one
+more bounded round on R3-A/R3-B only.

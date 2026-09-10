@@ -33,7 +33,7 @@ risk: 4
 
 | What was just completed | What's next |
 |---|---|
-| Rev 4 after Codex round 3 (Block, converged to two defects: R3-A the `lsof` exit code is not a signal — probed on macOS, exit 1 in all four cases — so process evidence is decided by stderr + filtered content; R3-B the attempt record must live at one pinned coordinator with locked admission and repair-only counting). Both accepted. Operator scope addition **E.6** (pre-merge ledger gate) folded in. **Codex's three-round cap is exhausted**; dispositions in `relay-system/2026-09-09/gh534-merge-cleanup-plan-qa-codex.md` | Operator decides: authorize one bounded round 4 on R3-A / R3-B / E.6 only, or accept rev 4 on the producer's adjudication. Then draft PR. **Implementation is blocked until PR #526 lands** through the other maintainer's sequence; no stacking |
+| Rev 5 after the operator-authorized bounded Codex round 4 (`relay-system/2026-09-09/gh534-plan-qa-codex-r4-bounded.md`): **E.6 Closed**; R3-A and R3-B each left one narrow defect, both accepted — A.4 now requires *completion* (return code 0 or 1, not signal-killed) before stderr is trusted, requests `-F pcn`, and adds a signal-killed fixture; C's admission lock is a record-adjacent `fcntl.flock`, since the drivers lock by `os.mkdir` and `driver-lock-lib.sh` only resolves a path. Draft PR #538 open, blocked. All authorized review rounds spent | Operator: accept rev 5 on the producer's adjudication of two narrow corrections, or authorize one more bounded round on R3-A/R3-B only. **Implementation is blocked until PR #526 lands** through the other maintainer's sequence; nothing merges into `development` without explicit say-so |
 
 Operator decisions recorded: **B1** (implement the ledger-conflict half) and **Phase C** (a
 decision ladder for what B1 cannot resolve). Both retained; both narrowed below.
@@ -171,16 +171,25 @@ therefore preserve every idle checkout forever (rev 3's defect) or, if exit 1 we
 treat a permission failure as "verified idle". Neither. The contract has **three outcomes**,
 decided by stderr and content:
 
-1. Run `lsof -F pn +D <checkout>` with a timeout, from a CWD **outside** the checkout, capturing
-   stdout and stderr separately. Absent binary, timeout, or a Python-level failure → **incomplete**.
-2. **Any line on stderr** (`lsof: WARNING: can't opendir(...)`, `can't stat(...)`, etc.) →
+1. Run `lsof -F pcn +D <checkout>` with a timeout, from a CWD **outside** the checkout,
+   capturing stdout and stderr separately (`-F pcn` requests the `p`/`c`/`n` fields; `-F pn`
+   alone would not carry the command). Absent binary, timeout, or a Python-level failure →
+   **incomplete**.
+2. **Completion is a precondition, and the exit code is part of it.** Only a normally-exited
+   process with return code **0 or 1** — the two statuses the probe showed ordinary runs
+   produce — counts as having completed. A negative return code (killed by a signal, which
+   `subprocess` reports without raising), or any other status, → **incomplete**, regardless of
+   stdout or stderr. The exit code cannot distinguish idle from held; it can and must
+   distinguish "ran" from "did not finish".
+3. **Any line on stderr** (`lsof: WARNING: can't opendir(...)`, `can't stat(...)`, etc.) →
    **incomplete**: the enumeration did not cover the tree. Observed: the unreadable-subdir case
    emits exactly this warning with exit 1, indistinguishable from idle by exit code alone.
-3. Empty stderr → the enumeration is **complete**. Parse `p<pid>` / `n<path>` records; keep an
-   `n` record only if its path is component-wise within the checkout (the same `_within()` used
-   for roots); drop records whose `p` is the scanner's own PID or an ancestor of it (the probing
-   shell was itself listed in the idle run). Remaining matches → `ACTIVE_PROCESS`, naming every
-   PID and its command (`c` field). No matches → **verified idle**.
+4. Completed (per 2) **and** empty stderr → the enumeration is **complete**. Parse the
+   `p<pid>` / `c<command>` / `n<path>` records; keep an `n` record only if its path is
+   component-wise within the checkout (the same `_within()` used for roots); drop records whose
+   `p` is the scanner's own PID or an ancestor of it (the probing shell was itself listed in the
+   idle run). Remaining matches → `ACTIVE_PROCESS`, naming every PID and its command. No matches
+   → **verified idle**.
 
 Incomplete → `PRESERVE_UNVERIFIED_SESSION`, naming the warning. The known live case is the
 primary's Antigravity language-server handle leak. Removing the SKILL.md `:51` promise instead is
@@ -220,7 +229,14 @@ can also be clean on its own and break only in combination with what landed befo
 2. Clean merge → run `python3 utils/py/releases_app.py check` and
    `roadmap reconcile-state --dry-run` in that clone. Any non-zero exit, or any `FAIL:` line →
    **red**: park with the diagnostic naming the rule; never merge. A failed *command* (clone,
-   merge, check) is red, not "no finding".
+   merge, check) is red, not "no finding". **Not red:** `check`'s `warn:` lines,
+   `reconcile-state`'s per-row `warn: rule=roadmap-issue-identity` skips (that is #527's
+   deliberate per-row behaviour — do not turn it back into a command-wide blocker here), and
+   dry-run `would move` lines. All of these are retained in the gate output as diagnostics.
+   The ordinary three-way merge is the right simulation: it keeps `MERGE_HEAD`, which the
+   resolver's generation floor reads (`utils/releases-merge-resolve.sh:98-120`); a
+   `git merge --squash` would drop it and silently bypass that check. The gate always runs
+   against the current integration head fetched for *this* landing, never a cached snapshot.
 3. Green → `gh pr merge`, then the post-merge `check` (already in E) — which is now gating, not a
    warning.
 
@@ -278,9 +294,18 @@ different physical files. Rev 4 pins the physical root:
   as `MERGE_CLEANUP_RECORD=<abs path>`. A repair invocation that lacks that variable, or whose
   path is unreadable or malformed, **stops**; it never infers a replacement root from its own
   CWD and never creates a new history elsewhere.
-- **Admission is serialized.** "Read the count, then reserve a slot" happens under the existing
-  `flock` from `relay-automation/driver-lock-lib.sh` (the same lock the drivers use, resolved for
-  the primary), so two invocations cannot both take the last slot.
+- **Admission is serialized by a record-adjacent advisory lock, not the driver lock.** Rev 4
+  named "the existing `flock` in `driver-lock-lib.sh`"; that library only *resolves a path*, and
+  the drivers themselves lock by `os.mkdir(lock_dir)` plus a PID file
+  (`utils/py/relay_drive.py:495-499`, `utils/py/marathon_drive.py:1203-1206`) for the lifetime of
+  a run — a worker started *under* a running driver could never take that lock without
+  deadlocking, and an `flock` would not serialize with a mkdir protocol anyway. So: every record
+  writer — the orchestrator before a B1 run, a caller before a repair rung, a worker updating an
+  outcome — opens `<record>.lock` beside the record at the coordinator and holds
+  `fcntl.flock(fd, LOCK_EX)` (stdlib, the same pattern AgentChorus uses) for the whole
+  read-count → reserve → write sequence, releasing on close. It is independent of the driver's
+  mkdir lock, so a worker under an active driver enters it freely; it is blocking with a short
+  timeout, and a timeout is a stop, not a skip. Two invocations cannot both take the last slot.
 - **Only repair attempts count.** Diagnosis (`/debug-mantra`) and read-only recon do not consume
   budget; they update the *current* attempt's `diagnosis`/`recon` sub-fields or, before any
   repair exists, a `pre_repair` block. An attempt entry is created at the moment a repair is
@@ -357,10 +382,16 @@ descriptor inside the checkout → `ACTIVE_PROCESS` naming that PID; (x) injecte
 failure (an unreadable subdirectory, which emits `lsof: WARNING: can't opendir`) →
 `PRESERVE_UNVERIFIED_SESSION` naming the warning; (xi) `lsof` absent → preserve; (xii) `.tick/`
 present but events directory missing → preserve (`events-dir-missing`), proving the verb does not
-trust `readAllEvents()`'s empty default. **Red controls:** AST assertion that `inspect_checkout`
-calls `inspect_tick_claims` (a string or comment does not satisfy it); (iii) fails when the
-implementation reads `STATE.md`; (viii) fails when blanket non-zero rejection is reinstated;
-(x) fails when the stderr guard is removed; (ix) fails when the `lsof` path is removed.
+trust `readAllEvents()`'s empty default; (xiii) `lsof` **terminated by a signal** (a stub that
+kills itself with `SIGTERM` after writing nothing to stderr) → `PRESERVE_UNVERIFIED_SESSION`,
+proving completion is checked before stderr is trusted. Fixture (x) must be **isolated**: assert
+the injected `WARNING:` line was actually produced, and that no live descriptor of the fixture's
+own matches, so the preserve comes from the stderr guard and nothing else. **Red controls:** AST
+assertion that `inspect_checkout` calls `inspect_tick_claims` (a string or comment does not
+satisfy it); (iii) fails when the implementation reads `STATE.md`; (viii) fails when blanket
+non-zero rejection is reinstated; (x) fails when the stderr guard is removed; (xii) fails when
+the explicit events-dir check is removed; (xiii) fails when the completion (return-code) guard
+is removed; (ix) fails when the `lsof` path is removed.
 `tick claims` gets a unit test proving it writes **neither** `.tick/STATE.md` nor
 `.tick/rejected.jsonl` (`src/project.js:345`, `:352`).
 
@@ -398,9 +429,12 @@ from clone 2, both via `MERGE_CLEANUP_RECORD` → the **third** repair attempt f
 refused (**red control: fails when the record root is derived from CWD instead of the pinned
 coordinator**); a diagnosis/recon-only step does not consume budget; a repair that produces a
 new head does not reset the budget; two invocations racing for the last slot → exactly one wins
-(under the driver `flock`); a worker started without `MERGE_CLEANUP_RECORD`, or with an
-unreadable record, stops; a dependent of a parked PR is not attempted; the next *independent*
-PR still proceeds.
+(under the record-adjacent `fcntl.flock`); a worker started **while the parent driver's mkdir
+lock is held** still takes the record lock and completes its reservation (proves the two locks
+are independent — a nominal "same lock" implementation fails this); a lock-acquire timeout
+stops the attempt rather than skipping the count; a worker started without
+`MERGE_CLEANUP_RECORD`, or with an unreadable record, stops; a dependent of a parked PR is not
+attempted; the next *independent* PR still proceeds.
 
 **Parity guard** — SKILL.md gains a capability table (Phase 2 session evidence, Phase 3
 preservation, Phase 5 ledger resolution / handoff / reconciliation, Phase 6 fresh inspection),
