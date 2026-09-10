@@ -1,0 +1,15 @@
+{
+  "preserved_all_business_fields": true,
+  "rows": 154,
+  "gid_mapping": {
+    "528": {
+      "old": "rmi-01M23Z061BYA0ABSXPG8SBDDBR",
+      "new": "rmi-01M24GDN32CRTZSPXFM9MDNAED"
+    },
+    "536": {
+      "old": "rmi-01M24GB512THSDK90R4T0CYY3K",
+      "new": "rmi-01M24FBY9Z40HJ08WY1E568WAP"
+    }
+  },
+  "reason": "Use current development as canonical base to retain shared GH536 identity across PRs. Replay only branch-owned intake via supported CLI."
+}
