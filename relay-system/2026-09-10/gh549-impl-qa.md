@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Operator
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -315,5 +315,29 @@ unreviewed. Escalated to the operator for a decision on a fourth round; no termi
 claimed.
 
 Relay closed at the cap — no further reviewer turn without an operator decision.
+
+### Operator decision — round 4 authorized
+
+The operator has extended the cap by one round and set the ship bar explicitly:
+
+> "do a fourth round and unless is high or critical, we are shipping it"
+
+So round 4 is a **review of the round-3 concurrency fix**, and its findings are graded against
+that bar. `[Blocker]` findings that are genuinely high or critical stop the ship; anything below
+that is recorded, filed as an issue, and does not.
+
+Reviewer: read `utils/py/work_connectors/__init__.py` — `_ConnectorLock`, the `dispatch` /
+`_dispatch_locked` split, and the monotonic `MAX()` upsert in `_persist` — plus leg 19 and its red
+control in `test/gh549-work-events.sh`. The specific questions:
+
+1. Does the lock actually close the race you described in round 3, or only narrow it?
+2. Is the bounded wait safe? Failing to acquire returns `{}` and leaves the batch unacknowledged.
+   Is there a state where that loses an event rather than deferring it?
+3. `_ConnectorLock.acquire` returns **True** when it cannot open or flock the file, so a
+   filesystem that cannot lock does not disable connectors. Is that the right trade?
+4. Is the monotonic upsert correct against `work reconcile --reset`, which deletes the cursor row
+   first?
+5. Is leg 19 deterministic, or can it pass by timing luck? Its red control asserts two children
+   run without the flock — could that be flaky under load?
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
