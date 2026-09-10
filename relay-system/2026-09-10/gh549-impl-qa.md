@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -64,5 +64,19 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · codex · round 1
+
+swept file: no
+
+- [Blocker] A successful connector may persist an arbitrary `advanced_to` value. `_collect` accepts any parseable integer (`utils/py/work_connectors/__init__.py:192-202`) and `_persist` stores it without checking it lies in that connector's dispatched batch (`utils/py/work_connectors/__init__.py:206-234`). Thus a buggy or compromised connector can report a value beyond the batch's maximum event id, advance its cursor past real events, and silently lose those events. The suite demonstrates that overshoot causes exactly this skip but treats it as an expected red-control outcome (`test/gh549-work-events.sh:484-491`), rather than proving it is rejected. Fix: retain each batch's permitted maximum (and prior cursor), reject/outcome-error any reported value outside that closed range, and add a red control proving an overshoot cannot advance the cursor.
+- [Blocker] `XYZ_WORK_CONNECTORS_REGISTRY` is an unrestricted production code-execution overlay, contrary to its stated contract. `_registry` merges any JSON string path into the registry (`utils/py/work_connectors/__init__.py:117-136`); `load_connectors` then accepts that overlay name from normal device config (`utils/py/work_connectors/__init__.py:85-101`); `_child_argv` executes paths containing a separator (`utils/py/work_connectors/__init__.py:139-143`). This makes the claimed boundary that production config "cannot name a connector the harness did not vendor" false (`utils/py/work_connectors/__init__.py:120-125`). Fix: remove the runtime overlay or gate it behind an unforgeable test-only dependency/seam, and test that normal configuration cannot activate an overlay-only connector.
+- [Pass] The implemented write placement is the planned single seam: `perform_write` emits exactly once after the receipt and before commit (`utils/py/releases_app.py:1642-1653`), while `work emit` passes its event through that same function (`utils/py/releases_app.py:4875-4882`). The merge observer only invokes `work emit` after `execute_pr_merge` succeeds (`skills/merge-cleanup/scripts/merge_cleanup.py:429-434`). No second ledger write protocol was found in the reviewed paths.
+- [Pass] Migration/dump/rebuild intent matches the approved design: migration 008 creates the two tables and append-only triggers (`utils/py/releases_app.py:895-947`); canonical dumping includes `work_events` under `include_receipts` and excludes cursors (`utils/py/releases_app.py:1277-1301`); restore loads only work events (`utils/py/releases_app.py:5500-5509`). Red controls A and B have non-empty/anchor guards and materially mutate the condition they claim (`test/gh549-work-events.sh:160-229`).
+- [Should] Definition-of-Done question 1 is only partially satisfied pending the two blockers above; question 2 matches the plan except for the undocumented executable overlay; question 3 has no second write path in the reviewed paths; question 4 has no vacuous red control found, but lacks the necessary overshoot rejection control; question 5 fails cursor-safety and overlay containment as described; question 6 is not complete because this was not a whole-file sweep of every touched file. No additional pre-existing defect was identified in the portions reviewed.
+
+Verdict: Changes requested.
+
+Handing off to Producer — go to the Producer window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
