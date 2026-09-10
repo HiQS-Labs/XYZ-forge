@@ -424,6 +424,96 @@ ROW="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM roadmap_items WHERE gh_n
 python3 "$APP" --root "$FXD" check >/dev/null 2>&1 \
   && ok "and check is clean after a dispatching write" || bad "check dirty after a dispatching write"
 
+echo "14. work emit — one row, real txn_id, its own receipt"
+FXE="$WORK/ledgerE"; mkdir -p "$FXE"; require_fixture "$FXE" "gh549 work-emit fixture"
+( cd "$FXE" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXE/"
+EB="$(sqlite3 "$FXE/releases.db" "SELECT count(*) FROM work_events;")"
+XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$APP" --root "$FXE" work emit \
+  --event pr_merged --gh-number 549 --payload-json '{"pr":548}' >/dev/null 2>&1
+EA="$(sqlite3 "$FXE/releases.db" "SELECT count(*) FROM work_events;")"
+[ "$((EA - EB))" = "1" ] \
+  && ok "one work emit creates EXACTLY one row (not zero, not two)" \
+  || bad "work emit wrote $((EA - EB)) rows, expected 1"
+ROW="$(sqlite3 "$FXE/releases.db" "SELECT event||'|'||gh_number||'|'||(length(txn_id)>8) FROM work_events ORDER BY id DESC LIMIT 1;")"
+case "$ROW" in
+  "pr_merged|549|1") ok "the row carries the real transaction id minted inside perform_write" ;;
+  *) bad "work emit row wrong: $ROW" ;;
+esac
+RCPT="$(sqlite3 "$FXE/releases.db" "SELECT op FROM op_receipts ORDER BY id DESC LIMIT 1;")"
+[ "$RCPT" = "work-emit" ] \
+  && ok "and it went through perform_write — its own receipt is on the chain" \
+  || bad "no work-emit receipt (last op was '$RCPT') — it bypassed the single write path"
+XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$APP" --root "$FXE" check >/dev/null 2>&1 \
+  && ok "check is clean after work emit" || bad "check dirty after work emit"
+
+echo "15. work reconcile — replay, idempotence, reset"
+cat > "$WORK/stub_ok2.py" <<'PYSTUB'
+import json, sys
+b = json.load(sys.stdin)
+print("advanced_to: %d" % max(e["id"] for e in b["events"]))
+PYSTUB
+cat > "$WORK/recon_cfg.json" <<'PYCFG'
+{"work_connectors": {"github_board": {"enabled": true, "project_owner": "someone", "project_number": 1}}}
+PYCFG
+REG="{\"github_board\":\"$WORK/stub_ok2.py\"}"
+NOCFG="$(XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$APP" --root "$FXE" work reconcile 2>&1)"
+case "$NOCFG" in
+  *"no connectors enabled"*) ok "unconfigured reconcile is a no-op that says so" ;;
+  *) bad "unconfigured reconcile did something: $NOCFG" ;;
+esac
+R1="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+      python3 "$APP" --root "$FXE" work reconcile 2>&1)"
+case "$R1" in
+  *"replayed through event"*) ok "reconcile replays the events after the cursor" ;;
+  *) bad "reconcile did not replay: $R1" ;;
+esac
+R2="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+      python3 "$APP" --root "$FXE" work reconcile 2>&1)"
+case "$R2" in
+  *"nothing to replay"*) ok "a second run is idempotent — the cursor is current" ;;
+  *) bad "reconcile was not idempotent: $R2" ;;
+esac
+R3="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+      python3 "$APP" --root "$FXE" work reconcile --reset 2>&1)"
+case "$R3" in
+  *"replayed through event"*) ok "--reset replays from the beginning (the rebuild recovery path)" ;;
+  *) bad "--reset did not replay: $R3" ;;
+esac
+# Red control: overshoot the cursor and a real event is silently skipped.
+LAST="$(sqlite3 "$FXE/releases.db" "SELECT max(id) FROM work_events;")"
+sqlite3 "$FXE/releases.db" "UPDATE connector_cursors SET last_event_id = $((LAST + 5)) WHERE connector='github_board';"
+R4="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+      python3 "$APP" --root "$FXE" work reconcile 2>&1)"
+case "$R4" in
+  *"nothing to replay"*) ok "red control: an overshot cursor skips real events — which is why replay is cursor-driven, not scan-driven" ;;
+  *) bad "an overshot cursor still replayed: $R4" ;;
+esac
+
+echo "16. the merge emitter keys on the issue, never the PR"
+MC="$ROOT/skills/merge-cleanup/scripts/merge_cleanup.py"
+cat > "$WORK/mcprobe.py" <<'PYPROBE'
+import sys, os
+sys.path.insert(0, os.path.join(os.environ["GH549_ROOT"], "skills", "merge-cleanup", "scripts"))
+import merge_cleanup as M
+print("linked=%s" % M.linked_issues({"title": "feat: x", "body": "Closes #549 and fixes #402"}))
+print("none=%s" % M.linked_issues({"title": "chore", "body": "no refs at all"}))
+print("dry=%s" % M.emit_pr_merged(".", {"number": 1, "title": "t", "body": "Closes #1"}, dry_run=True))
+PYPROBE
+MCOUT="$(GH549_ROOT="$ROOT" python3 "$WORK/mcprobe.py" 2>&1)"
+case "$MCOUT" in
+  *"linked=[549, 402]"*) ok "a merged PR's closed issues are what get the event" ;;
+  *) bad "linked-issue extraction wrong: $MCOUT" ;;
+esac
+case "$MCOUT" in
+  *"none=[]"*) ok "a PR that closes nothing emits nothing — no card for a non-work-item" ;;
+  *) bad "a PR with no linked issue still produced one: $MCOUT" ;;
+esac
+case "$MCOUT" in
+  *"dry=0"*) ok "a dry run emits nothing" ;;
+  *) bad "dry run emitted an event: $MCOUT" ;;
+esac
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

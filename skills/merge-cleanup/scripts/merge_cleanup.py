@@ -10,6 +10,8 @@ Implements the 6-phase ladder:
 6. Safe Teardown conforming strictly to WORKTREE-SAFETY.md.
 """
 
+import json
+import re
 import os
 import sys
 import argparse
@@ -62,6 +64,65 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry
     else:
         log_err(f"Failed to merge PR #{pr_num}: {res.stderr.strip()}")
         return False
+
+
+CLOSES_RE = re.compile(r"\b(?:closes|fixes|resolves)\s+#(\d+)", re.I)
+
+
+def linked_issues(pr):
+    """Issue numbers a PR closes, from its own body and title.
+
+    Local on purpose: merge_cleanup does not import wave_reconcile, and a merge report must not
+    acquire a new cross-module dependency to name its issue.
+    """
+    text = "%s\n%s" % (pr.get("title") or "", pr.get("body") or "")
+    seen, out = set(), []
+    for m in CLOSES_RE.finditer(text):
+        n = int(m.group(1))
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
+
+
+def emit_pr_merged(repo_path, pr, dry_run=False):
+    """GH-549: report a merge this process actually WITNESSED.
+
+    Placed here, and only here, for a reason the plan review made explicit: a completed roadmap
+    marker does not prove a PR merged, and neither does a generic reconcile. The only honest
+    source for `merged` is a `gh pr merge` that returned 0, which is the caller's `if merged:`.
+
+    Deliberately NOT emitted from --reconcile-pr, which never verifies merge state at all; that
+    path is covered by `releases work reconcile`.
+
+    Keyed on the issues the PR closes, not the PR number — the board tracks issues, so emitting
+    a PR number would create a card for something that is not on the board. A PR that closes
+    nothing emits nothing, which is correct: there is no work item whose state changed.
+
+    Never blocks and never fails the merge: the merge has already happened by the time this
+    runs, so a reporting failure must not be mistaken for a merge failure.
+    """
+    if dry_run or not pr:
+        return 0
+    app = os.path.join(repo_path, "utils", "py", "releases_app.py")
+    if not os.path.isfile(app):
+        return 0
+    emitted = 0
+    for issue in linked_issues(pr):
+        try:
+            r = subprocess.run(
+                [sys.executable, app, "--root", repo_path, "work", "emit",
+                 "--event", "pr_merged", "--gh-number", str(issue),
+                 "--payload-json", json.dumps({"pr": pr.get("number"),
+                                               "base": pr.get("baseRefName")})],
+                capture_output=True, text=True, timeout=60, check=False)
+            if r.returncode == 0:
+                emitted += 1
+            else:
+                print(f"  (work event not recorded for #{issue}: {r.stderr.strip()[:120]})")
+        except Exception as exc:
+            print(f"  (work event not recorded for #{issue}: {exc})")
+    return emitted
 
 
 def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True) -> bool:
@@ -367,6 +428,9 @@ def main():
             p_num = pr["number"]
             merged = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=dry_run)
             if merged:
+                # GH-549: the one place that can honestly claim a merge — gh pr merge returned 0
+                # and this is not a dry run. Reporting only; it cannot fail the merge.
+                emit_pr_merged(primary_repo, pr, dry_run=dry_run)
                 run_post_merge_reconcile(p_num, primary_repo, dry_run=dry_run)
 
         # Pull latest development into primary repo

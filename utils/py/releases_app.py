@@ -1427,7 +1427,7 @@ NON_EVENT_OPS = {
     "jog-reconcile":           "orphan-lease recovery, not a user-visible transition",
     "migrate":                 "schema change",
     "merge-rebuild":           "rebuild receipt",
-    "work-emit":               "self-inserting; its mutate writes the row (see _extract_none)",
+    "work-emit":               "carries its own event explicitly (perform_write's work_event arg)",
 }
 
 
@@ -1479,17 +1479,11 @@ def _extract_jog(conn, op, gid):
     return (event, row["gh_number"], {"status": row["status"]})
 
 
-def _extract_none(conn, op, gid):
-    """`work emit`'s mutate already inserted its row; the seam must not insert a second."""
-    return None
-
-
 WORK_EVENT_EXTRACTORS = {
     "roadmap-add":    _extract_roadmap_add,
     "roadmap-rate":   _extract_roadmap_rate,
     "roadmap-update": _extract_roadmap_update,
     "jog-lease":      _extract_jog,
-    "work-emit":      _extract_none,
 }
 
 JOG_STATUS_PREFIX = "jog-"
@@ -1509,10 +1503,28 @@ def extractor_for(op):
     raise KeyError("op %r is neither mapped to a work-event extractor nor in NON_EVENT_OPS" % op)
 
 
-def _record_work_event(conn, op, target_gid, txn_id, at):
-    """Insert at most one work_events row, inside perform_write's open transaction."""
+def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None):
+    """Insert at most one work_events row, inside perform_write's open transaction.
+
+    `explicit` is an (event, gh_number, payload) tuple supplied by a caller that already knows
+    its event — `work emit`, which reports something no extractor could derive, such as a merge
+    it witnessed. It takes precedence over the registry and is why `work-emit` needs no
+    extractor of its own. Writing the row HERE rather than in the caller's mutate is what gets
+    it the real txn_id: the id is minted inside this transaction, and work_events is append-only,
+    so a caller cannot stamp it afterwards.
+    """
     if not _table_exists(conn, "work_events"):
         return None
+    if explicit is not None:
+        event, gh_number, payload = explicit
+        repo_id = _repo_id_for_event(conn)
+        if repo_id is None:
+            return None
+        conn.execute("""INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event,
+                        payload, at) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                     (new_gid("wev-"), repo_id, gh_number, txn_id, event,
+                      json.dumps(payload, sort_keys=True) if payload is not None else None, at))
+        return event
     try:
         extractor = extractor_for(op)
     except KeyError:
@@ -1556,7 +1568,7 @@ def _dispatch_work_connectors(db_path, at):
         return {}
 
 
-def perform_write(root, conn, op, target_gid, mutate):
+def perform_write(root, conn, op, target_gid, mutate, work_event=None):
     """Run one CLI transaction under the full multi-artifact protocol:
 
       write intent journal (txn_id, NEXT generation, planned outputs)   [BEFORE the DB commit]
@@ -1630,7 +1642,7 @@ def perform_write(root, conn, op, target_gid, mutate):
         # work_events is outside business_digest by design, so emitting it here cannot perturb
         # the receipt chain, and it is committed atomically with the domain row so the two can
         # never disagree.
-        _record_work_event(conn, op, target_gid, txn_id, now)
+        _record_work_event(conn, op, target_gid, txn_id, now, explicit=work_event)
         _crash("pre-commit")
         conn.commit()
         _crash("post-commit")
@@ -4823,6 +4835,89 @@ def _parse_reanchor_breaks(target_gid):
     return -1
 
 
+def cmd_work_emit(args):
+    """`work emit` — record one work event from OUTSIDE a domain verb (GH-549).
+
+    This is how merge-cleanup reports a merge it actually witnessed. It is an ORDINARY
+    perform_write caller — the 29th — not a second write protocol. Codex's plan review was
+    right that a standalone verb re-implementing the lock, journal, receipt, generation stamp,
+    staged dump and atomic rename would be a fork of the one path everything else uses; here
+    perform_write does all of that and this only supplies the `mutate`.
+
+    Its extractor is registered as _extract_none and returns None, so the generic seam does not
+    insert a second row: `None` from a registered extractor means "my mutate already wrote it",
+    never "no event". One `work emit` therefore produces exactly one work_events row.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "work_events"):
+            refuse("schema-old", "this ledger predates work_events — run `releases migrate` first")
+        repo_id = _repo_id_for_event(conn)
+        if repo_id is None:
+            refuse("no-repo", "the ledger has no repo row to attribute this event to")
+        payload = None
+        if args.payload_json:
+            try:
+                payload = json.loads(args.payload_json)
+            except ValueError as exc:
+                refuse("bad-payload", "--payload-json is not valid JSON (%s)" % exc)
+        at = now_iso()
+
+        def mutate(c):
+            """Nothing to mutate: this verb records an observation, it changes no domain row.
+            The event itself is passed to perform_write, which writes it with the real txn_id
+            inside the same transaction as the receipt."""
+
+        txn_id = perform_write(root, conn, "work-emit", None, mutate,
+                               work_event=(args.event, args.gh_number, payload))
+        print("emitted %s for GH-%s (txn %s)" % (args.event, args.gh_number, txn_id))
+    finally:
+        conn.close()
+
+
+def cmd_work_reconcile(args):
+    """`work reconcile` — replay every event after a connector's cursor (GH-549).
+
+    This is the repair path for everything the event stream cannot witness: a merge performed
+    in the GitHub UI, a push made with --no-verify, a connector that was down, a board someone
+    edited by hand, and the review-ready transition, which is derived here rather than guessed
+    at push time. Idempotent because every connector write is set-to-value, never an increment.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import work_connectors
+    conns = work_connectors.load_connectors()
+    if args.connector:
+        conns = {k: v for k, v in conns.items() if k == args.connector}
+        if not conns:
+            refuse("no-such-connector",
+                   "connector %r is not enabled in work_connectors" % args.connector)
+    if not conns:
+        print("no connectors enabled — nothing to reconcile")
+        return
+    if args.reset:
+        rc = connect(paths["db"])
+        try:
+            with rc:
+                for name in conns:
+                    rc.execute("DELETE FROM connector_cursors WHERE connector = ?", (name,))
+        finally:
+            rc.close()
+    results = work_connectors.dispatch(paths["db"], now_iso(), connectors=conns)
+    if not results:
+        print("nothing to replay (every cursor is current)")
+        return
+    for name in sorted(results):
+        advanced, error = results[name]
+        if error:
+            print("%s: FAILED — %s (cursor unchanged)" % (name, error))
+        else:
+            print("%s: replayed through event %s" % (name, advanced))
+
+
 def cmd_check(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -5814,6 +5909,17 @@ def build_parser():
     sp_ss.add_argument("value", help="new value")
     sp_ss.add_argument("--dry-run", action="store_true", help="print the change, write nothing")
 
+    sp_work = sub.add_parser("work", help="GH-549 work-state event stream and its connectors")
+    wsub = sp_work.add_subparsers(dest="work_cmd", required=True)
+    sp_we = wsub.add_parser("emit", help="record one work event (used by merge-cleanup)")
+    sp_we.add_argument("--event", required=True, help="domain event name, e.g. pr_merged")
+    sp_we.add_argument("--gh-number", type=int, required=True, help="the issue this is about")
+    sp_we.add_argument("--payload-json", help="optional JSON object of extra detail")
+    sp_wr = wsub.add_parser("reconcile", help="replay events a connector has not seen")
+    sp_wr.add_argument("--connector", help="only this connector (default: every enabled one)")
+    sp_wr.add_argument("--reset", action="store_true",
+                       help="replay from the beginning, not from the cursor")
+
     sp = sub.add_parser("roadmap", help="Roadmap ledger: sync/list/render the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_sections = rsub.add_parser("sections", help="list accepted roadmap section names (no DB required)")
@@ -6004,6 +6110,8 @@ def main(argv=None):
                               "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
         "settings": lambda a: {"set": cmd_settings_set,
                                "list": cmd_settings_list}[a.settings_cmd](a),
+        "work": lambda a: {"emit": cmd_work_emit,
+                           "reconcile": cmd_work_reconcile}[a.work_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,
