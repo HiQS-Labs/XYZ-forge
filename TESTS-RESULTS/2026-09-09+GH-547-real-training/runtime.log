@@ -1,0 +1,15 @@
+Loading weights:   0%|          | 0/134 [00:00<?, ?it/s]Loading weights: 100%|██████████| 134/134 [00:00<00:00, 26086.64it/s]
+[transformers] [1mModernBertModel LOAD REPORT[0m from: /Users/noelsaw/.cache/huggingface/hub/models--answerdotai--ModernBERT-base/snapshots/8949b909ec900327062f0ebf497f51aef5e6f0c8
+Key               | Status     |  | 
+------------------+------------+--+-
+decoder.bias      | UNEXPECTED |  | 
+head.norm.weight  | UNEXPECTED |  | 
+head.dense.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+majority {'validation': (7, 18, 0.093), 'holdout': (9, 25, 0.088)}
+tfidf {'validation': (7, 18, 0.093), 'holdout': (9, 25, 0.088), 'high_confidence_holdout': (9, 16, 0.12)}
+modernbert {'validation': (8, 18, 0.167), 'holdout': (10, 25, 0.183), 'high_confidence_holdout': (9, 16, 0.188)}
+shuffled_labels {'holdout': (6, 25, 0.074)}
+timings {'tfidf_fit_and_both_splits_s': 0.04034929199406179, 'train_encode_and_fit_s': 4.066355624992866, 'holdout_pass_1_s': 0.8143612909989315, 'holdout_pass_2_s': 0.8268117500047083}
