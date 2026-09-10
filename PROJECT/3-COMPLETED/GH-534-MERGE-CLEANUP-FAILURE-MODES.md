@@ -1,8 +1,8 @@
 ---
 title: "GH-534: merge-cleanup promises merge + conflict-resolution + teardown, implements one and a half"
-status: Parked
+status: Complete
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 owner: unassigned
 goal: make /merge-cleanup's scripts do what SKILL.md says, or make SKILL.md say what the scripts do — and give PRESERVE_* dispositions a proven, fail-closed way to become eligible
 gh_issue: 534
