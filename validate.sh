@@ -324,6 +324,14 @@ TESTS=(
                                  #   rating metrics + effectiveScore precedence, and the leaderboard's
                                  #   one-scorer property (script ranking == --json ordering).
   "gh75-dashboard.sh"            # GH-75 (releases dashboard verb renders one self-contained read-only HTML page)
+  "gh525-unshipped-version-tokens.sh"  # GH-525 (the unshipped_version_tokens setting + the
+                                 #   `settings set` verb it needs). 14/0. The controls are the
+                                 #   point: WITHOUT the setting two placeholder blocks still
+                                 #   collide (the safety claim for every existing install), a real
+                                 #   version is never nulled while a list is configured, an empty
+                                 #   Release: value is still refused, and a HAND-written settings
+                                 #   row is still caught as a receipt-less mutation — which is why
+                                 #   the verb exists at all.
   "gh32-releases-app.sh"         # GH-32 Phase 0+1 (SQLite RELEASES ledger CLI: schema/GID shape,
                                  #   writer-lock + journal protocol, canonical dump, receipt chain,
                                  #   import grandfathering, side-by-side gen) — 81/0; registered in the
@@ -527,6 +535,7 @@ TESTS=(
   "gh269-roadmap-retired.sh"          # GH-269 (verify ROADMAP.md is retired, tools operate on releases.db, move/update CLI verbs)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
+  "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh290-ate-variation-grid.sh"       # GH-290 (ATE variation grid: contract loaders, land verification,
