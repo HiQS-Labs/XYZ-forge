@@ -2,7 +2,7 @@
 gh_issue: 536
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/536
 title: "relocate: Deployed Skills collection moves INTO the live Git Pulse Sync checkout"
-status: Active (2-WORKING — executed 2026-09-10; PR held for operator approval)
+status: Complete
 created: 2026-09-10
 updated: 2026-09-10
 owner: noelsaw1
