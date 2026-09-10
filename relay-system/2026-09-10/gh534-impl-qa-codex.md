@@ -366,3 +366,11 @@ If anything changed your view, list it and hand back as before.
 ### Codex round 3 confirmation — 2026-09-10
 
 Round-2 verdict stands: **Approved**; no code changed since the reviewed `51f76267`, and all findings remain Closed.
+
+### Attestation · relay-drive — 2026-09-10T18:10:13Z
+task: GH534-IMPL-QA
+reviewer: codex
+status: Approved
+reviewed-head: e97969187af99b3d97ae91032144fce0a029a237
+added-range: 26287+165
+added-sha256: db74b0b42642ca88b8d463c8a10c52581097e3e016d10a5b40b43e0df3d02c41
