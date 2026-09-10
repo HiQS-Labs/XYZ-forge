@@ -7,6 +7,7 @@ reasoning effort levels, deterministic post-turn AI evaluations, and grounded bl
 
 import argparse
 import datetime
+import functools
 import hashlib
 import json
 import os
@@ -66,6 +67,7 @@ def normalize_remote_url(remote: str) -> str:
     return norm
 
 
+@functools.lru_cache(maxsize=8)
 def get_canonical_repo_identity(repo_root: Optional[str] = None) -> Tuple[str, str]:
     """Derive stable repository slug and canonical remote/path identity (GH-496)."""
     root = Path(repo_root or get_repo_root()).resolve()
@@ -450,9 +452,6 @@ def check_integrity(repo_root: Optional[str] = None) -> int:
         in_repo = os.path.join(root, "harnesses.db")
         if os.path.exists(in_repo):
             db_p = in_repo
-
-    sql_p = get_sql_path(root)
-    gen_md = get_generated_md_path(root)
 
     if not os.path.exists(db_p):
         print(f"harness check: FAIL — database missing at {db_p}", file=sys.stderr)

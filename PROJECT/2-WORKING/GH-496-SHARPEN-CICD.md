@@ -23,7 +23,24 @@ Steering / Execution alignment: XYZ AgentChorus #358084 (stored in AgentChorus s
 
 | What was just completed | What's next |
 |---|---|
-| Codex review addressed: concurrency test, integrity override hardening, atomic replacement, worktree/remote normalization | Re-run gate qualification in disposable clone; push & open PR 1 |
+| PR 1 open as [#548](https://github.com/HiQS-Labs/XYZ-forge/pull/548). Operator review resolved: dead variables dropped from `check_integrity`, repo-identity resolution memoized, gate re-qualified at the final head after the branch was rewritten | PR 2 — history continuity for the relocated store ([#551](https://github.com/HiQS-Labs/XYZ-forge/issues/551)), then CI selection by impact |
+
+### Known limitation carried out of PR 1
+
+Routine turns now write to `~/.xyz/projects/<key>/telemetry/harnesses.db`, but two
+in-repo consumers still read the committed `harnesses.db`:
+
+- `utils/py/site_build.py` bakes the public grades table from `evaluations JOIN
+  invocation_logs` and refuses to bake an empty table, so the models page freezes at
+  the merge-time row counts (801 invocations, 25 evaluations) while real evaluations
+  accrue out-of-tree.
+- `harness_app model add` writes out-of-tree unless `--local`, so the curated in-repo
+  registry no longer evolves through the normal command.
+
+Neither breaks a gate — the committed rows stay valid — but the evidence chain GH-346
+established does stop growing in git. PR 2 owns the fix and is tracked as
+[#551](https://github.com/HiQS-Labs/XYZ-forge/issues/551). Until it lands, edit the
+curated registry with `harness_app.py --local`.
 
 ## Problem statement
 
