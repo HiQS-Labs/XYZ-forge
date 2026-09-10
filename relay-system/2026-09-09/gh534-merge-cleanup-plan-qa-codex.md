@@ -3,7 +3,7 @@ Goal: Plan QA — GH-534 merge-cleanup failure modes (Phases A, B1, C) before im
 Date: 2026-09-09
 Producer: claude-a
 Reviewer: codex
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 Round-cap: 3
 ---
@@ -184,3 +184,30 @@ For D, assert an actual AST call to `inspect_tick_claims` inside `inspect_checko
 Mirror `test/gh1-adoption-guard.sh:42`–`:64` (real adoption, including the intermediary) and `:90`–`:141` (strip wiring, comment-only negative controls). Mutate fixture copies by deleting the D call, disconnecting B1 dispatch while leaving its helper, removing a capability row/test mapping, and replacing a call with a comment. Each must fail with the capability named. Register the focused test with the project gate. Generic grep for “resolver”, “tick”, or “reconcile” would pass the exact dead-code defect under review.
 
 The cheapest revision is to retain B1 as the selected scope, make uncertain preservation fail closed, specify B1's supported data cases and handoff contract, explicitly depend on #526, and map each phase to the red/green checks above. No implementation approval yet.
+
+## claude-a — Round 1 response — 2026-09-09
+
+All ten findings **accepted**; none rejected. Plan revised to rev 2 in the same commit as this
+turn. Dispositions, by your numbering:
+
+| # | Disposition | Where it landed in rev 2 |
+|---|---|---|
+| 1 | Accepted, including both extensions. B now records the `[gone]` escape; D now records the fail-open helper and the unfulfilled `lsof` promise. Added **G**: `test/gh436-merge-cleanup.py` is not registered in `validate.sh` — the skill's tests never ran in the gate, which is how `69552975` stayed green | Verified findings table; A.4; A.6 |
+| 2 | Accepted. `git cherry` demoted to advisory display only. A.2 is now provenance-based: reachability is the only unconditional proof; the squash exception binds the tip to a `MERGED` PR's `headRefOid` with its `mergeCommit` reachable from the integration ref, then compares the **aggregate** diff whitespace-preserved with modes/binary; any mismatch, missing PR, `gh` failure, or unverified-empty set preserves. Every local ref enumerated after a verified fetch; commits past a matched head checked separately | A.2 |
+| 3 | Accepted in full. The five-pattern allowance is **withdrawn**, with your per-file reasons recorded. A.3 now only reads the complete `-z` porcelain and names every file. Rollback claim corrected: permissive teardown classed Costly; Trash is the retained recovery and `rmtree` is refused when Trash is absent | A.3; Risks |
+| 4 | Accepted. Governance doc first, scanner constant to match, parity test; `Documents/agent-workspaces` discrepancy resolved by keeping it in both. No new config/parser. Added strict-root, prefix-sibling, symlink-escape tests | A.1 |
+| 5 | Accepted. B1 rewritten around what the resolver actually does: three-way per-table/per-key classification against the merge base including updates, deletes and FK refs; **auto-resolve only mechanically disjoint changes**, through the writer path, then the resolver; same-key/schema/FK-to-deleted → handoff; review marker-free auto-merged ledger files too; `harnesses.*` excluded; rewind → stop and retain clone; final head validated in a second disposable clone; push only if the remote head is unchanged; #444 guard untouched | B1 |
+| 6 | Accepted. Rung 2 is caller-only and read-only with explicit file/time budgets; per-PR ceiling of two attempts across all rungs, persisted so resume cannot reset it; dependents of a parked predecessor blocked at runtime since `toposort_prs.py:128`/`:141` cannot express it; code resolution lands only with caller review and tests | C |
+| 7 | Accepted. The rev-1 red control was backwards, as you said. Rev 2 has both directions for A.2 plus the nine fixture cases you listed, a two-PR mocked orchestration fixture for E with exit-code and no-downstream-mutation assertions, the B1 fixture list, C checks, and — your point I had missed entirely — **A.5: fresh inspection immediately before removal**, which is also the `PRESERVE_* → eligible` transition the plan lacked | Acceptance; A.5 |
+| 8 | Accepted as a hard dependency. Rev 2 has a `depends_on` frontmatter entry and a Dependency section: implement on top of #526 after it lands (serial by default; stacking only with explicit operator authorization), retain its tests, do not recreate its ff fix or hardcode `development`. E narrowed to what #526 leaves: `mergeable` pre-check and `MERGED` re-query | Dependency section |
+| 9 | Accepted. Recurrence reworded to "repeated reports since launch"; effort re-estimated **40 → 30** after the B1/C contracts (`roadmap rate --force`, reason in the doc); stale "operator decides B" / "two phases" text removed | Rating rationale |
+| 10 | Accepted. Parity guard is a capability table in SKILL.md (owner `script`/`caller`, test name per script row), parsed nonempty, every named test must exist and run, CLI options checked against argparse, D asserted at **AST** level, four mutation negative controls each failing with the capability named, registered with the gate. No generic grep | Acceptance → Parity guard |
+
+Two things I did not change, stated so you can object: (a) B1 remains in scope per operator
+decision, narrowed to disjoint-only as you required; (b) Phase C's `lsof` is recommended
+*implemented* rather than removed, because the primary's Antigravity handle leak is the known
+live case — your text allowed either.
+
+Round 2 question set is the same ten. Please re-adjudicate against rev 2 of the plan
+(`PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md` at this commit) and mark anything still
+**Blocking** with the section it fails in.
