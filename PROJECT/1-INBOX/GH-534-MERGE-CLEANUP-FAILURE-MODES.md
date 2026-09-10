@@ -33,7 +33,7 @@ risk: 4
 
 | What was just completed | What's next |
 |---|---|
-| Rev 3 after Codex round 2 (Block, narrowed to three contract gaps: A.4 session evidence must come from the event fold not `STATE.md` and `lsof` is binding; C's attempt budget needs one durable record both sides update; Phase 6 must rescan *preserved* candidates and every safety query must fail closed). All accepted; dispositions in `relay-system/2026-09-09/gh534-merge-cleanup-plan-qa-codex.md` | Codex round 3 (final under the cap). **Implementation is blocked until PR #526 lands** through the other maintainer's sequence; no stacking |
+| Rev 4 after Codex round 3 (Block, converged to two defects: R3-A the `lsof` exit code is not a signal — probed on macOS, exit 1 in all four cases — so process evidence is decided by stderr + filtered content; R3-B the attempt record must live at one pinned coordinator with locked admission and repair-only counting). Both accepted. Operator scope addition **E.6** (pre-merge ledger gate) folded in. **Codex's three-round cap is exhausted**; dispositions in `relay-system/2026-09-09/gh534-merge-cleanup-plan-qa-codex.md` | Operator decides: authorize one bounded round 4 on R3-A / R3-B / E.6 only, or accept rev 4 on the producer's adjudication. Then draft PR. **Implementation is blocked until PR #526 lands** through the other maintainer's sequence; no stacking |
 
 Operator decisions recorded: **B1** (implement the ledger-conflict half) and **Phase C** (a
 decision ladder for what B1 cannot resolve). Both retained; both narrowed below.
@@ -148,7 +148,13 @@ Authoritative evidence is the fold of the event log itself: `readAllEvents(repoR
 `fold(events)` (`src/project.js:260`) — the same functions `project()` uses, minus the write.
 `tick` exposes no read-only "all claims" verb today (`next` is per-agent, `info` is per-task),
 so add one: **`tick claims [--json]`**, read-only, built on those two existing exports, printing
-every task in `claimed` state with its agent and paths. `inspect_checkout()` shells out to it at
+every task in `claimed` state with its agent and paths. Two details Codex flagged that folding
+alone does not give: `readAllEvents()` returns `[]` when the events directory is missing
+(`src/events.js:206`), so the verb must itself refuse (non-zero, `events-dir-missing`) when
+`.tick/` exists but its events directory does not or cannot be read; and the audited root is
+pinned by passing `TICK_REPO_ROOT` explicitly (`bin/tick:19`), never inherited from the caller's
+environment or CWD. The verb is a kernel-surface addition and gets a short decision record under
+the existing governance, not a Python-only footnote. `inspect_checkout()` shells out to it at
 the coordination root resolved through the git common dir (a linked worktree's `.tick/` is the
 parent's), and:
 
@@ -158,12 +164,27 @@ parent's), and:
 - a directory-shaped `.tick/locks/<x>` counts as a lock;
 - the STATE-file parser is deleted, not repaired.
 
-**Process evidence is binding, not optional.** Implement the `lsof` path SKILL.md `:51` already
-promises: `lsof +D <checkout>` (falling back to `lsof -F pn` over the path); any open handle →
-`ACTIVE_PROCESS`, naming the PID and command. `lsof` absent, non-zero, or timing out → preserve
-(`PRESERVE_UNVERIFIED_SESSION`). The known live case is the primary's Antigravity language-server
-handle leak. Removing the promise instead is rejected: it would not make deleting an active clone
-safe.
+**Process evidence is binding, not optional — and the exit code is not the signal.** Probed on
+this macOS (2026-09-09): `lsof +D <dir>` exits **1 in every case** — idle directory, held file
+descriptor inside it, nonexistent path, and unreadable subdirectory. Exit-code gating would
+therefore preserve every idle checkout forever (rev 3's defect) or, if exit 1 were accepted,
+treat a permission failure as "verified idle". Neither. The contract has **three outcomes**,
+decided by stderr and content:
+
+1. Run `lsof -F pn +D <checkout>` with a timeout, from a CWD **outside** the checkout, capturing
+   stdout and stderr separately. Absent binary, timeout, or a Python-level failure → **incomplete**.
+2. **Any line on stderr** (`lsof: WARNING: can't opendir(...)`, `can't stat(...)`, etc.) →
+   **incomplete**: the enumeration did not cover the tree. Observed: the unreadable-subdir case
+   emits exactly this warning with exit 1, indistinguishable from idle by exit code alone.
+3. Empty stderr → the enumeration is **complete**. Parse `p<pid>` / `n<path>` records; keep an
+   `n` record only if its path is component-wise within the checkout (the same `_within()` used
+   for roots); drop records whose `p` is the scanner's own PID or an ancestor of it (the probing
+   shell was itself listed in the idle run). Remaining matches → `ACTIVE_PROCESS`, naming every
+   PID and its command (`c` field). No matches → **verified idle**.
+
+Incomplete → `PRESERVE_UNVERIFIED_SESSION`, naming the warning. The known live case is the
+primary's Antigravity language-server handle leak. Removing the SKILL.md `:51` promise instead is
+rejected: it would not make deleting an active clone safe.
 
 **A.5 Fresh inspection before removal — of every candidate, not just the survivors.** Phase 6
 currently filters the *original* inventory to `SAFE_REMOVE_*` (`merge_cleanup.py:312-318`) and
@@ -185,6 +206,26 @@ is ever defaulted to "none".
 
 **A.6 Register the tests.** `test/gh436-merge-cleanup.py` joins the gate under the existing
 `python:` mechanism (or an equivalent explicit entry), so every check in this plan actually runs.
+
+### E.6 — the ledger CLI runs *before* every merge, as a gate (operator scope addition, 2026-09-09)
+
+Today `gen` + `check` run only after `gh pr merge` (`merge_cleanup.py:83-91`), warnings
+swallowed — a PR that breaks the ledger is discovered after it has landed (#519, #495). A PR head
+can also be clean on its own and break only in combination with what landed before it. So, for
+**every** PR in the sequence, not just `CONFLICTING` ones:
+
+1. In a disposable full clone of the PR head (the same clone B1 uses), `git merge
+   origin/<integration-branch>` to simulate the landing. Non-zero merge → this PR is either a B1
+   candidate (ledger-only set) or a Phase C handoff; it is never `gh pr merge`d.
+2. Clean merge → run `python3 utils/py/releases_app.py check` and
+   `roadmap reconcile-state --dry-run` in that clone. Any non-zero exit, or any `FAIL:` line →
+   **red**: park with the diagnostic naming the rule; never merge. A failed *command* (clone,
+   merge, check) is red, not "no finding".
+3. Green → `gh pr merge`, then the post-merge `check` (already in E) — which is now gating, not a
+   warning.
+
+Marginal cost is one clone-merge-check per PR, and the clone is already required by B1 and by
+A.2's provenance step.
 
 ### Phase B1 — ledger-only conflict resolution, disjoint changes only
 
@@ -225,24 +266,38 @@ which rows survive. So B1's job is the part before the resolver:
 The script owns evidence and the cap; the caller owns analysis. A standalone script run never
 claims to have run `/recon` or `/ponytail`.
 
-**One durable attempt record, owned by whoever repairs.** The script cannot observe repairs made
-outside it, so the accounting lives in a file both sides update, not in the script's memory:
-`.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json` at the coordination root, keyed by repository
-identity (origin URL) and PR number so a new invocation or a fresh disposable clone reads the
-same record. Fields: `pr`, `repo`, `head_sha`, `base_sha`, `merge_base`, `attempts[]`
-(each: `by` = `script`|`caller`, `rung`, `started`, `outcome`, `clone_path`), `conflict_files[]`
-with conflict type and hunk counts, `last_side_touched{}`. Whoever is about to attempt a repair
-— the script before a B1 run, the caller before any rung — **appends its attempt first**, then
-works. An unreadable or malformed existing record stops that PR: no attempt, no reset.
+**One durable attempt record, at one pinned coordinator.** The script cannot observe repairs
+made outside it, so the accounting lives in a file both sides update — and, since every full
+clone has its own `.tick/`, "same origin + PR number" would only give the same *suffix* in
+different physical files. Rev 4 pins the physical root:
 
-- **Script caps only its own B1 attempts** (one per invocation, two lifetime per PR head) and
-  reads the record before each: if `len(attempts) >= 2` for this `head_sha`, it refuses and
-  parks the PR with the record path. It never assumes anything about caller rungs beyond what
-  the record says.
-- **Caller enforces the overall budget**: two attempts per PR head across all rungs, read from
-  the same record before each rung. The third total attempt is refused. Bouncing between rungs,
-  restarting the session, or re-cloning does not reset it, because the record does not live in
-  the clone.
+- The **coordinator** is the explicit primary checkout — the `--primary` path the run was
+  started with (`merge_cleanup.py:247`), never a disposable clone's CWD. The absolute record path
+  `<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json` is resolved **once** at run start,
+  written into every handoff record and every B1 log line, and passed to each disposable worker
+  as `MERGE_CLEANUP_RECORD=<abs path>`. A repair invocation that lacks that variable, or whose
+  path is unreadable or malformed, **stops**; it never infers a replacement root from its own
+  CWD and never creates a new history elsewhere.
+- **Admission is serialized.** "Read the count, then reserve a slot" happens under the existing
+  `flock` from `relay-automation/driver-lock-lib.sh` (the same lock the drivers use, resolved for
+  the primary), so two invocations cannot both take the last slot.
+- **Only repair attempts count.** Diagnosis (`/debug-mantra`) and read-only recon do not consume
+  budget; they update the *current* attempt's `diagnosis`/`recon` sub-fields or, before any
+  repair exists, a `pre_repair` block. An attempt entry is created at the moment a repair is
+  about to start — a B1 run, or a caller rung that will change files.
+- **Budget is per PR, bound to the head that was attempted.** Each attempt entry carries the
+  `head_sha` it worked on. Two repair attempts per PR are the ceiling, **whatever the head**: a
+  head produced by a failed repair does not mint a fresh budget. Fields: `pr`, `repo`,
+  `base_sha`, `merge_base`, `attempts[]` (each: `by` = `script`|`caller`, `head_sha`, `rung`,
+  `started`, `outcome`, `clone_path`, optional `diagnosis`/`recon`), `conflict_files[]` with
+  conflict type and hunk counts, `last_side_touched{}`.
+
+- **Script caps only its own B1 attempts** (one per invocation, two lifetime per PR) and reads
+  the record under the lock before each: at two repair attempts, it refuses and parks the PR
+  with the record path. It never assumes anything about caller rungs beyond what the record says.
+- **Caller enforces the overall budget** from the same record, under the same lock, before any
+  rung that will change files. The third repair attempt is refused. Bouncing between rungs,
+  restarting, or re-cloning does not reset it, because the record lives at the coordinator.
 - **Script blocks dependents:** a PR that depends on a failed/parked predecessor is not attempted.
   `toposort_prs.py:128` removes edges while ordering and `:141` appends cyclic nodes, so ordering
   alone cannot express this; Phase 5 keeps a runtime map of predecessor outcomes and consults it
@@ -296,11 +351,18 @@ preserve; (ix) extra commit beyond the matched PR head → preserve naming it.
 **stale or deleted** → still `ACTIVE_TICK_CLAIM` (proves the fold, not the snapshot, is read);
 (iv) `.tick/` present but event log unreadable → `PRESERVE_UNVERIFIED_SESSION`; (v) directory-
 shaped lock → claim; (vi) linked-worktree tick root resolves to the common dir; (vii) `tick` binary
-absent / non-zero → preserve; (viii) an open handle under the checkout (a held file descriptor in
-the fixture) → `ACTIVE_PROCESS` naming the PID; (ix) `lsof` absent → preserve. **Red controls:**
-AST assertion that `inspect_checkout` calls `inspect_tick_claims` (a string or comment does not
-satisfy it); (iii) fails when the implementation reads `STATE.md`; (viii) fails when the `lsof`
-path is removed. `tick claims` itself gets a unit test proving it never writes `STATE.md`.
+absent / non-zero → preserve; (viii) **real idle directory**, no held handle, scanner CWD outside
+it → verified idle and eligible (this is the case exit-code gating breaks); (ix) a held file
+descriptor inside the checkout → `ACTIVE_PROCESS` naming that PID; (x) injected traversal
+failure (an unreadable subdirectory, which emits `lsof: WARNING: can't opendir`) →
+`PRESERVE_UNVERIFIED_SESSION` naming the warning; (xi) `lsof` absent → preserve; (xii) `.tick/`
+present but events directory missing → preserve (`events-dir-missing`), proving the verb does not
+trust `readAllEvents()`'s empty default. **Red controls:** AST assertion that `inspect_checkout`
+calls `inspect_tick_claims` (a string or comment does not satisfy it); (iii) fails when the
+implementation reads `STATE.md`; (viii) fails when blanket non-zero rejection is reinstated;
+(x) fails when the stderr guard is removed; (ix) fails when the `lsof` path is removed.
+`tick claims` gets a unit test proving it writes **neither** `.tick/STATE.md` nor
+`.tick/rejected.jsonl` (`src/project.js:345`, `:352`).
 
 **A.5** — a two-checkout orchestration fixture: after a mocked successful Phase 5 landing, a
 checkout that was `PRESERVE_UNPUSHED` at scan time becomes eligible at teardown (**red control:
@@ -316,6 +378,11 @@ never to `gh pr merge`; a zero-exit merge whose re-query is not `MERGED` fails; 
 fetch/ff/gen/check/reconcile stops all downstream mutation; assert the exit code and that later
 merges, teardown, and symlink pruning did not run; `--reconcile-pr` failure propagates.
 
+**E.6** — a two-PR fixture where PR 2 passes `releases check` on its own head but fails it once
+PR 1 has landed → PR 2 is not merged, exit non-zero, diagnostic names the failing rule; a
+`check` command that itself errors (non-zero, no `FAIL:` line) is treated as red; **red control:
+fails when the pre-merge gate is removed** (PR 2 would merge).
+
 **B1** — fixtures for: disjoint additions on both sides preserved; same-key update vs update →
 handoff; update vs delete → handoff; FK reference to a deleted row → handoff; clean textual
 auto-merge that is a semantic conflict → handoff; generation rewind → stop with diagnostic;
@@ -325,10 +392,15 @@ conflict"; the default (no `--execute`) run → zero mutation. Plus **one real, 
 a fixture repo with a genuinely disjoint ledger conflict resolved end-to-end through the writer
 path and `utils/releases-merge-resolve.sh`, with `releases check` clean afterwards.
 
-**C** — attempt-record schema and location; a caller attempt (record appended by hand) followed
-by a process restart and a script B1 attempt → the **third** total attempt is refused; an
-unreadable record stops the PR; a dependent of a parked PR is not attempted; the next
-*independent* PR still proceeds.
+**C** — attempt-record schema and pinned location; **two distinct full clones** of one fixture
+origin, one coordinator: a caller repair attempt recorded from clone 1, then a script B1 attempt
+from clone 2, both via `MERGE_CLEANUP_RECORD` → the **third** repair attempt from either clone is
+refused (**red control: fails when the record root is derived from CWD instead of the pinned
+coordinator**); a diagnosis/recon-only step does not consume budget; a repair that produces a
+new head does not reset the budget; two invocations racing for the last slot → exactly one wins
+(under the driver `flock`); a worker started without `MERGE_CLEANUP_RECORD`, or with an
+unreadable record, stops; a dependent of a parked PR is not attempted; the next *independent*
+PR still proceeds.
 
 **Parity guard** — SKILL.md gains a capability table (Phase 2 session evidence, Phase 3
 preservation, Phase 5 ledger resolution / handoff / reconciliation, Phase 6 fresh inspection),
@@ -344,8 +416,8 @@ remove a table row; replace a call with a comment. Registered with the gate. Mod
 **Gate** — `validate.sh` green in a disposable full clone (identity verified before/after), with
 `test/gh436-merge-cleanup.py` now inside it.
 
-## Rating rationale — 2026-09-09 (rev 2; unchanged in rev 3 — the three corrections are
-contracts on work already scoped, not new scope)
+## Rating rationale — 2026-09-09 (rev 2; unchanged through rev 4 — R3-A/B are contracts on
+work already scoped, and E.6 reuses B1's clone-and-merge step, adding one `check` per PR)
 
 `rated 75/70/50/30` → calc 225. Rev 1 was 75/70/50/40; effort re-estimated after the B1 and C
 contracts were specified — `--force` on re-score, reason recorded here.

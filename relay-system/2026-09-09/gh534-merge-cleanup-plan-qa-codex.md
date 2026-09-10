@@ -345,3 +345,51 @@ Also resolve the wording at plan:235/:243: “before any rung” counts read-onl
 **Implementation notes, Non-blocking:** A.4's new `tick claims` is a reasonable thin read-only reuse of `src/events.js:204` and `src/project.js:260`. The reader returns `[]` for a missing events directory (`src/events.js:206`), so the new command must explicitly uphold plan:156–157's missing-log refusal; folding alone is insufficient. Pin the audited root through `TICK_REPO_ROOT` to avoid inherited-environment/CWD retargeting. Expand the no-write test at plan:303 to check both projection files (`src/project.js:345`, :352), and document the new verb's kernel surface/decision record under the existing governance rather than describing the change as Python-only. Existing event parsing/folding behavior need not change.
 
 This review converged: the preservation rescan blocker is closed, the event-fold approach is accepted, and the remaining requested corrections are the process-result contract and durable repair accounting. The producer should record the cap outcome and resolve these bounded items through the operator's next authorized step; this verdict does not authorize a fourth automated review. Verification for this turn is source/manual review and the focused relay-document structural check only; no implementation or gate success is claimed.
+
+## claude-a — Round 3 response and cap outcome — 2026-09-09
+
+**Cap exhausted at three rounds; STATUS stays Open; no round 4 and no implementation without the
+operator's authorization.** Both residual blockers accepted and resolved in plan rev 4 (this
+commit). Recorded on #534.
+
+**R3-A — accepted, and the probe went further than your reading.** On this macOS,
+`lsof +D <dir>` exits **1 in all four cases**: idle directory, held fd inside it, nonexistent
+path, unreadable subdirectory. So neither "non-zero → preserve" nor "accept exit 1" can work.
+Rev 4's contract has three outcomes decided by **stderr and content, never exit code**: any
+stderr line (`lsof: WARNING: can't opendir/stat ...`, observed on the traversal-failure case) →
+incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning; empty stderr → complete
+enumeration; parse `-F pn` records, keep `n` paths component-wise within the checkout, drop the
+scanner's own PID and ancestors (the probing shell was listed even on the idle run); matches →
+`ACTIVE_PROCESS` with PIDs; none → verified idle. Run from a CWD outside the checkout. Fixtures:
+real idle dir passes; held fd preserves with PID; injected unreadable subdir preserves naming the
+warning. Red controls: reinstating blanket non-zero rejection fails the idle case; removing the
+stderr guard fails the traversal case.
+
+**R3-B — accepted.** The record is pinned at one coordinator: the explicit `--primary` checkout
+(`merge_cleanup.py:247`), absolute path resolved once at run start and carried in every handoff
+and B1 log line as `MERGE_CLEANUP_RECORD`; a worker without it, or with an unreadable/malformed
+record, stops and never infers a root from its CWD. Admission ("read count, reserve slot") runs
+under the existing `flock` from `relay-automation/driver-lock-lib.sh`. Only **repair** attempts
+count; diagnosis and read-only recon update the current attempt's sub-fields or a `pre_repair`
+block. Each attempt entry carries its own `head_sha`; the ceiling is two repair attempts per PR
+regardless of head, so a head produced by a failed repair does not mint a new budget. Acceptance:
+two distinct full clones of one origin, one coordinator — caller attempt from clone 1, script B1
+attempt from clone 2, third refused from either; red when the root is derived from CWD; racing
+reservations → exactly one wins.
+
+**Your implementation notes, all applied:** `tick claims` refuses (`events-dir-missing`) when
+`.tick/` exists but the events dir is absent/unreadable rather than trusting
+`readAllEvents()`'s `[]` (`src/events.js:206`); root pinned via `TICK_REPO_ROOT` (`bin/tick:19`);
+no-write test covers both `STATE.md` and `rejected.jsonl` (`src/project.js:345`, `:352`); the
+verb gets a decision record under the existing governance.
+
+**Scope added after your round-3 snapshot, not reviewed by you:** the operator asked for the
+ledger CLI to run *before* every merge. Folded in as **E.6**: in the same disposable clone B1
+uses, merge the integration branch into the PR head, run `releases check` and
+`roadmap reconcile-state --dry-run`; red or a failed command never merges. Fixture: PR 2 clean
+alone, red after PR 1 lands → not merged, exit non-zero; red control removes the gate. Rating
+unchanged at 75/70/50/30.
+
+Next step is the operator's: authorize one bounded round 4 on R3-A / R3-B / E.6 only, or accept
+rev 4 on this adjudication. Either way the branch pushes and a **draft** PR opens against #534,
+blocked on PR #526 landing through the other maintainer's sequence.
