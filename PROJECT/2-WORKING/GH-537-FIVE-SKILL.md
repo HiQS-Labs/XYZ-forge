@@ -20,7 +20,7 @@ risk: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed; parked + rated 70/25/50/70; promoted to 2-WORKING; plan QA round 1 (Codex, 3 Should + 1 Nit) dispositioned and folded in 2026-09-09 | Round-2 plan approval; author `skills/five/SKILL.md` + Skills Index row + CHANGELOG; behavioral QA; final relay QA; PR |
+| Issue filed; parked + rated 70/25/50/70; promoted to 2-WORKING; plan QA round 1 (Codex, 3 Should + 1 Nit) dispositioned and folded in 2026-09-09 | Implemented 2026-09-09: SKILL.md + index row + CHANGELOG; behavioral QA 3/3 + red control | Final relay QA on committed state; push; PR (merge held by operator) |
 
 ## Problem statement
 
@@ -76,15 +76,15 @@ Hard rules the skill body must encode:
 
 ## Acceptance criteria
 
-- [ ] `skills/five/SKILL.md` exists, skill-creator frontmatter conventions (folded
+- [x] `skills/five/SKILL.md` exists, skill-creator frontmatter conventions (folded
       block-scalar description with colons, per c4088fae).
-- [ ] Fires on `/five`, "five", "give me the five", "key highlights", "what does this NOT do".
-- [ ] 5+5 contract, grounding rule with the silence-is-not-a-non-goal clause, empty-input
+- [x] Fires on `/five`, "five", "give me the five", "key highlights", "what does this NOT do".
+- [x] 5+5 contract, grounding rule with the silence-is-not-a-non-goal clause, empty-input
       guard with precedence over the count, no-filler rule, and checksum-not-substitute
       boundary stated as hard rules.
-- [ ] One-line row in `ARCHITECTURE.md` → Skills Index; one CHANGELOG.md entry.
-- [ ] Zero new scripts of any kind (GH-551).
-- [ ] `utils/pdda/pdda.sh run` zero errors after promotion.
+- [x] One-line row in `ARCHITECTURE.md` → Skills Index; one CHANGELOG.md entry.
+- [x] Zero new scripts of any kind (GH-551).
+- [ ] `utils/pdda/pdda.sh run` zero errors after promotion. (run pending at commit; ticked in the impl-QA commit if green)
 - [ ] **Behavioral QA (manual, no scripts; run during final relay QA and recorded in the
       relay thread)** — the criteria above check instructions; this one checks output.
       Exercise the drafted skill's procedure on three inputs:
@@ -98,7 +98,8 @@ Hard rules the skill body must encode:
       (c) empty input — expect refusal, no invention.
       Red control: one deliberately bad output (a marketing-style highlight or an
       unsupported exclusion) must FAIL this check. Record inputs, outputs, and the
-      verdict in the implementation relay thread.
+      verdict in the implementation relay thread. (executed 2026-09-09: dense PASS, sparse PASS,
+      empty PASS, red control rejects; transcript embedded in relay-system/2026-09-09/gh537-five-impl-qa.md)
 
 ## Rating rationale (2026-09-09; sev reworded per plan-QA round 1, F3)
 
