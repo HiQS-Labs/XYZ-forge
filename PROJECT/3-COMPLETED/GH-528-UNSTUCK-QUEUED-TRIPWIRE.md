@@ -2,9 +2,9 @@
 gh_issue: 528
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/528
 title: "/unstuck — queue simultaneous blockers, tripwire recurring blocker classes"
-status: Active (2-WORKING — captured + promoted 2026-09-09, execution same session)
+status: Complete
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 owner: noelsaw1
 doc_type: plan
 rating: "pri/sev/appeal/effort 60/20/50/100 · calc 230"

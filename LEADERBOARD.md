@@ -100,7 +100,7 @@ while the four axes keep their honest values underneath.
 | 88 | **235** | [GH-509](https://github.com/HiQS-Labs/XYZ-forge/issues/509) — Relay terminal authorization: prove a review happened without trusting builder-writable state | — | In progress | 75 | 85 | 50 | 25 | 235 | — |
 | 89 | **230** | [GH-105](https://github.com/HiQS-Labs/XYZ-forge/issues/105) — vendor the RELEASES DB system + HTML timeline generator into the `.xyz` payload (optional add-on) | Cargo | completed | 75 | 50 | 60 | 45 | 230 | — |
 | 90 | **230** | [GH-445](https://github.com/HiQS-Labs/XYZ-forge/issues/445) — runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0 | — | Queue / parked intake | 50 | 40 | 60 | 80 | 230 | — |
-| 91 | **230** | [GH-528](https://github.com/HiQS-Labs/XYZ-forge/issues/528) — /unstuck — queue simultaneous blockers, tripwire recurring blocker classes | — | Queue / parked intake | 60 | 20 | 50 | 100 | 230 | — |
+| 91 | **230** | [GH-528](https://github.com/HiQS-Labs/XYZ-forge/issues/528) — /unstuck — queue simultaneous blockers, tripwire recurring blocker classes | — | Completed | 60 | 20 | 50 | 100 | 230 | — |
 | 92 | **228** | [GH-102](https://github.com/HiQS-Labs/XYZ-forge/issues/102) — Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | — | Completed | 68 | 45 | 70 | 45 | 228 | — |
 | 93 | **222** | [GH-103](https://github.com/HiQS-Labs/XYZ-forge/issues/103) — technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | — | Completed | 62 | 35 | 75 | 50 | 222 | — |
 | 94 | **220** | [GH-3](https://github.com/HiQS-Labs/XYZ-forge/issues/3) — improve-loop.sh --state-dir durability — provenance evidence must not evaporate | — | Completed | 55 | 45 | 55 | 65 | 220 | — |

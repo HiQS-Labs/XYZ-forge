@@ -1,0 +1,28 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/private/tmp/xyz-land-495-526-531)
+wave-reconcile: Processing PR #531...
+wave-reconcile:   PR #531 closes [528]; references [473, 505, 509, 529]
+wave-reconcile:   Found active doc: GH-528-UNSTUCK-QUEUED-TRIPWIRE.md
+TRANSITION ["doc", "move", "GH-528-UNSTUCK-QUEUED-TRIPWIRE.md", "3-COMPLETED", "2026-09-10"]
+wave-reconcile:   Moved -> GH-528-UNSTUCK-QUEUED-TRIPWIRE.md (destination: 3-COMPLETED)
+TRANSITION ["roadmap", "repoint", "--issue-num", "528", "--doc-path", "PROJECT/3-COMPLETED/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md"]
+TRANSITION ["roadmap", "update", "--issue-num", "528", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-528 · /unstuck — queue simultaneous blockers, tripwire recurring blocker classes** ✅ **SHIPPED 2026-09-10 (PR #531)** — queue simultaneous blockers, tripwire recurring blocker classes** 🆕 **captured 2026-09-09 via HQ** — [GH-528-UNSTUCK-QUEUED-TRIPWIRE.md](PROJECT/3-COMPLETED/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md) · [#528](https://github.com/HiQS-Labs/XYZ-forge/issues/528) (rated 60/20/50/100)"]
+wave-reconcile:   ROADMAP.md entry updated for GH-528
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> roadmap-dashboard.sh
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-141 (PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md)
+wave-reconcile:     - GH-505 (PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md)
+wave-reconcile:     - GH-509 (PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md)
+wave-reconcile:     - GH-275 (PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md)
+wave-reconcile:     - GH-416 (PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md)
+wave-reconcile:     - GH-423 (PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md)
+wave-reconcile:     - GH-424 (PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md)
+wave-reconcile:     - GH-492 (PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md)
+wave-reconcile:     - GH-510 (PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md)
+wave-reconcile:     - GH-515 (PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md)
+wave-reconcile: Running PDDA doc-hygiene gate...
+wave-reconcile: Wave reconciliation completed successfully! ✅
