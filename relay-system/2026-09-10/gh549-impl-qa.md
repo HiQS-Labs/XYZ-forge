@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Closed (producer-adjudicated, operator ship bar)
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -362,5 +362,60 @@ Definition of Done:
 Verdict: Changes requested — the lock-error fallback is a high-severity blocker under the operator's stated ship bar.
 
 Handing off to Producer — go to the Producer window and say "take your turn".
+
+### Producer · claude-a · round 4 — all three findings fixed, relay closed
+
+The High blocker is upheld and fixed. Both `[Should]`s are fixed too, rather than filed under the
+operator's ship bar, because both are small and one of them would have shipped a flaky gate.
+
+- **[Blocker — High] the lock failed open — IMPLEMENTED.** The finding is correct and the
+  fallback was mine: `acquire()` returned success when the lock file could not be opened or
+  flocked, on the reasoning that a lock we cannot create should not disable connectors. You are
+  right that this is not a harmless availability trade — it silently re-enables the round-3
+  stale-projection race on exactly the paths nobody exercises, and announces it only on stderr.
+  The two costs are not comparable: failing closed defers a board update that the next write or
+  `work reconcile` repairs; failing open publishes an older board state over a newer one and
+  leaves it there. Every failure to hold the lock is now treated as contention. `EINTR` is
+  retried inside the window rather than counted as a failure, since a signal is not a lock
+  failure, and a platform whose `flock` raises something other than `OSError` defers as well.
+- **[Should] `--reset` outside the lock — IMPLEMENTED.** You are right that the monotonic upsert
+  is correct for a sequential reset and does nothing for a concurrent one. The delete moved
+  inside `_dispatch_locked`, so the reset and the replay share one critical section and "replay
+  from zero" means it. `cmd_work_reconcile` now passes `reset=` rather than deleting for itself.
+- **[Should] leg 19's red control could pass on scheduling luck — IMPLEMENTED.** Also right, and
+  this one matters beyond correctness: a red control that fails spuriously trains people to
+  re-run the gate until it is green, which this repo already has one open issue about (#558). The
+  stub now has a two-party readiness barrier, so the overlap the control claims to observe is
+  forced rather than hoped for. The serialized positive path is unaffected — a child that waits
+  alone times out and proceeds, which is the single-child case that assertion wants.
+- **[Pass] × 2 — noted.** Your reading that the lock spans cursor read, projection and persist,
+  and that a bounded contention timeout defers rather than loses, is what the fix depends on.
+
+**Leg 20** pins the fail-closed behaviour directly: the lock is pointed at a path that cannot be
+opened, and the leg asserts the batch defers, no child runs, and no cursor moves.
+
+**One more self-disclosed defect.** Leg 20's first draft raised `RecursionError`: the probe's
+subclass called the class attribute it had just rebound, so it recursed into itself ~1000 times.
+It captures the real class before patching now. That is the fourth vacuous-or-broken probe this
+review has surfaced in my own test code, three of which I found only because an assertion failed
+rather than passed.
+
+**Verification:** `test/gh549-work-events.sh` **63 passed, 0 failed** at `2a05c71a`, stable across
+four consecutive runs — the flakiness check the barrier change specifically called for. The full
+repo gate is running in a disposable clone at this head; its result goes on the PR.
+
+**Relay closed at the operator's bar.** Four rounds, four real defects: r1 the unbounded cursor,
+r2 the connector that was never built, r3 the dispatch race, r4 the lock that failed open. Every
+one is fixed with a red control. Nothing outstanding is graded high or critical, so this ships
+under the operator's stated condition. No approval verdict is claimed and none is being
+manufactured — the honest state is "all findings dispositioned, reviewer never issued Approved."
+
+VERDICT: PASS
+Basis: producer turn — the round-4 High blocker and both Should findings are implemented and
+covered by new controls (leg 20 for fail-closed, a barrier for leg 19's red path), suite green at
+63/0 across four runs. Closing under the operator's explicit ship bar of high-or-critical-only;
+no reviewer approval is claimed.
+
+Relay closed — no further reviewer turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
