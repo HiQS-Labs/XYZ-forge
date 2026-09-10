@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -666,5 +666,42 @@ rollback section, not a design defect. Nothing has been declined in any round, a
 claim in this plan now carries a [Pass] derived from source.
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer · round 5
+
+**Verdict: Changes requested.** The round-4 structural fixes remain coherent, but the newly specified
+downgrade command can self-deadlock before conversion and does not yet define a safe atomic failure
+path. At round 5 / 5 the relay is escalated rather than approved.
+
+swept file: yes
+
+- [Blocker] **The downgrade's clean precheck recursively acquires `WriterLock`.** Step 2 says to take
+  `WriterLock` and then require `releases check` to be clean
+  (`.relay-artifacts/GH-549-WORK-STATE-EVENT-STREAM.md:538-541`), but `cmd_check` constructs and
+  acquires its own `WriterLock` before checking anything (`utils/py/releases_app.py:4567-4572`) and
+  releases it only at `:4800-4801`. Invoking that command/helper while the downgrade already owns the
+  lock can block on itself, so the supposedly runnable rollback never reaches the DDL. **Fix:** run
+  the public clean check before acquiring the downgrade lock, then acquire the lock and revalidate
+  the same invariants through a lock-aware internal checker (or add an explicit already-locked mode
+  that cannot reacquire). Put trigger/table drops plus the migration-row delete in one SQLite
+  transaction; close/rollback the connection before restoring backup files, and state how staged
+  dump/generated writes are discarded or atomically restored. Add a bounded red control that fails
+  if downgrade hangs at the precheck, plus the existing injected step-5 failure proving v008 remains
+  clean.
+- [Should] **The reason for dropping triggers first is factually overstated.** The plan says the
+  append-only row triggers “block the table's own removal” (`artifact:542-544`), although these
+  `BEFORE UPDATE`/`BEFORE DELETE` triggers govern row mutations, not `DROP TABLE`. **Fix:** keep the
+  explicit trigger drops for deterministic schema cleanup, but remove the claim that they are needed
+  to permit the table drop.
+- [Pass] **The prior single-seam correction remains internally consistent.** Dispatch is still one
+  common post-lock section inside `perform_write`, and the risk row now mutates placement to before
+  release rather than incorrectly moving it into the function
+  (`artifact:513`; `artifact:571-573`).
+- [Pass] **The caller inventory no longer relies on a stale constant.** Phase 2 requires the coverage
+  test to derive every `perform_write` caller/op from source and explicitly includes `work emit` and
+  any future caller (`artifact:291-295`). No additional contradiction was found outside the downgrade
+  procedure in the swept artifact.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
