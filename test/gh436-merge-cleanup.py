@@ -376,7 +376,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             ["--primary", str(self.primary), "--integration-branch", "main", "--scan-only"], landing_ready=True)
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
-    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None):
+    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None, ff_rc=0, final_fetch_rc=0):
         """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
 
         Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
@@ -405,7 +405,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
 
         def fake_git(cwd, args):
             git_calls.append(list(args))
-            rc = fetch_rc if args and args[0] == "fetch" else 0
+            rc = (final_fetch_rc if args == ["fetch", "origin"] else fetch_rc) if args and args[0] == "fetch" else (ff_rc if args[:2] == ["merge", "--ff-only"] else 0)
             return subprocess.CompletedProcess(args=args, returncode=rc, stdout="", stderr="boom" if rc else "")
 
         insp_kwargs = ({"side_effect": [_verdict(v) for v in verdicts]} if verdicts
@@ -444,6 +444,25 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(rc, 2)
         merged.assert_not_called()
         reconcile.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_failed_fast_forward_stops_before_teardown(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        rc, _, merged, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"], prs=prs, ff_rc=1)
+        merged.assert_called_once()
+        self.assertNotEqual(rc, 0)
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_failed_final_fetch_stops_before_fast_forward_and_teardown(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        rc, calls, merged, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"], prs=prs, final_fetch_rc=1)
+        merged.assert_called_once()
+        self.assertNotEqual(rc, 0)
+        self.assertFalse(any(c[:2] == ["merge", "--ff-only"] for c in calls))
         teardown.assert_not_called()
         self.pruner.assert_not_called()
 

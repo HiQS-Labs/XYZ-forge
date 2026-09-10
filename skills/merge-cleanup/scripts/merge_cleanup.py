@@ -372,7 +372,10 @@ def main():
         # Pull latest development into primary repo
         if not dry_run:
             log("Updating primary repo development branch...")
-            run_git(primary_repo, ["fetch", "origin"])
+            fetched = run_git(primary_repo, ["fetch", "origin"])
+            if fetched.returncode != 0:
+                log_err(f"Post-merge fetch failed: {fetched.stderr.strip()}; preserving checkouts.")
+                return 2
             # The branch that was CHECKED in Phase 0 is the branch that gets landed. Hardcoding
             # origin/development here let --integration-branch approve one tree and advance a
             # different one (R1-F3).
@@ -383,6 +386,7 @@ def main():
                     f"{ff.stderr.strip() or 'git refused'}"
                 )
                 log_err("PRs are merged remotely but the primary did not advance — reconcile by hand.")
+                return 2
 
     # Phase 6: Safe Teardown
     print("=" * 80)
