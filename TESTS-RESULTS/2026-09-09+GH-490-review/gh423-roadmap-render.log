@@ -1,0 +1,14 @@
+test_cli_stdout_out_and_read_only (__main__.RoadmapRender.test_cli_stdout_out_and_read_only) ... ok
+test_empty_schema_and_custom_section_preserved (__main__.RoadmapRender.test_empty_schema_and_custom_section_preserved) ... ok
+test_fallback_synthesizes_missing_gh_prefix (__main__.RoadmapRender.test_fallback_synthesizes_missing_gh_prefix) ... ok
+test_negative_control_missing_row_is_detected (__main__.RoadmapRender.test_negative_control_missing_row_is_detected) ... ok
+test_output_refusals_and_untracked_roadmap (__main__.RoadmapRender.test_output_refusals_and_untracked_roadmap) ... ok
+test_planner_reader_uses_explicit_render (__main__.RoadmapRender.test_planner_reader_uses_explicit_render) ... ok
+test_roundtrip_and_verbatim_order (__main__.RoadmapRender.test_roundtrip_and_verbatim_order) ... ok
+test_tracked_roadmap_symlink_and_git_unavailable (__main__.RoadmapRender.test_tracked_roadmap_symlink_and_git_unavailable) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.335s
+
+OK
+NEGATIVE CONTROL: DB-only GH-423 omission trips the round-trip assertion

@@ -1,33 +1,31 @@
 ---
-title: Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-03
-owner: noelsaw1
 gh_issue: 418
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/418
-doc_type: bug
+title: "GH-418: the marathon planner reads the frozen ROADMAP.md — adopt the releases DB"
+status: 2-WORKING
+created: 2026-09-03
+updated: 2026-09-08
+owner: unassigned
+goal: "marathon-plan ranks lanes from releases.db (via the rendered ledger), with zero DB-parked items invisible"
+doc_type: bugfix
 complexity: 2
 risk: 3
 effort: 2
 phases: 2
-ratings_provisional: true
-non_goals:
-  - Un-freezing or regenerating ROADMAP.md. It stays frozen; the planner moves to the DB.
-  - Changing the executor. marathon.sh / marathon_drive.py consume a MARATHON.yaml and read neither source.
-  - Retiring ROADMAP.md entirely — that is GH-269. This is the testable slice.
+marathon: gh-490
 related:
-  - GH-269 (full switchover to releases.db — this is its concrete first slice)
-  - GH-169 / GH-238 / GH-239 (the flip itself, commit c97f6176, 2026-08-25)
-  - GH-406 (umbrella — same class: a stated guarantee whose mechanism covers a narrower path)
-goal: >
-  Make the marathon planner read the ledger the repo actually designates as truth, so items parked
-  through the documented `releases roadmap add` rail are plannable, and add the red control plus
-  parity check that would have caught the divergence on day one.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-418: the planner reads a file the repo froze
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## The finding, and the correction that produced it
 
@@ -77,16 +75,62 @@ on hand-curated input; the planner that should remove that curation is wired to 
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/py/_marathon_plan.py", "pattern": "ROADMAP_SOURCE" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_present",
+      "path": "utils/py/marathon_plan.py",
+      "pattern": "ROADMAP.md",
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh418-planner-ledger-source.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-418-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
+    }
+  ],
+  "artifacts": [
     "utils/py/marathon_plan.py",
     "utils/py/_marathon_plan.py",
     "test/gh418-planner-ledger-source.sh",
     "test/baselines/GH-418-negative-control.md"
   ],
-  "remediation": { "source": "issue#418", "criteria": "in releases-mode the planner sources items from roadmap_items, legacy mode is unchanged, and the generated plan names its real source" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#418",
+    "criteria": "marathon-plan ranks the DB-parked queue (rendered ledger markdown) without reading ROADMAP.md; repo-wide grep pins no live ROADMAP.md read in the planner"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/baselines/GH-418-negative-control.md",
+    "test/gh418-planner-ledger-source.sh"
+  ]
 }
 ```
+
+## Acceptance
+
+- [ ] In releases-mode, `marathon-plan.sh` sources items from `roadmap_items`; zero DB-parked items are invisible to it.
+- [ ] In legacy mode the behaviour is unchanged, asserted by a test.
+- [ ] The generated plan doc names its real source.
+- [ ] Red control witnessed and recorded in `test/baselines/`: a DB-only item is absent from a pre-fix plan and present in a post-fix one.
+- [ ] A deterministic check fails if a shipped script reads `ROADMAP.md` for current state while `ROADMAP_SOURCE=releases`.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
