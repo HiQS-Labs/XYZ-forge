@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_lock_timeout_stops_the_attempt_and_counts_nothing (gh534_phase_c_tests.TestCRecord.test_lock_timeout_stops_the_attempt_and_counts_nothing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 154, in test_lock_timeout_stops_the_attempt_and_counts_nothing
+    with self.assertRaises(RecordError) as cm:
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+AssertionError: RecordError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.245s
+
+FAILED (failures=1)

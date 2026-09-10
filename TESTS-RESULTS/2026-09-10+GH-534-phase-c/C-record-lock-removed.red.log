@@ -1,0 +1,29 @@
+F/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py:1139: ResourceWarning: subprocess 34346 is still running
+  _warn("subprocess %s is still running" % self.pid,
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/case.py:668: ResourceWarning: unclosed file <_io.TextIOWrapper name=8 encoding='UTF-8'>
+  with outcome.testPartExecutor(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/case.py:668: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  with outcome.testPartExecutor(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/case.py:668: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  with outcome.testPartExecutor(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/case.py:668: ResourceWarning: unclosed file <_io.TextIOWrapper name=4 encoding='UTF-8'>
+  with outcome.testPartExecutor(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+======================================================================
+FAIL: test_two_racers_for_the_last_slot_exactly_one_wins (gh534_phase_c_tests.TestCRecord.test_two_racers_for_the_last_slot_exactly_one_wins)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 131, in test_two_racers_for_the_last_slot_exactly_one_wins
+    self.assertTrue(all(p.poll() is None for p in procs), "a racer finished while the lock was held")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : a racer finished while the lock was held
+
+----------------------------------------------------------------------
+Ran 1 test in 0.532s
+
+FAILED (failures=1)

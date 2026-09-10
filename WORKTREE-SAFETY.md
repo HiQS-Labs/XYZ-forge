@@ -780,7 +780,12 @@ Keep agent-writable work under one root, and require an explicit override to lea
 ```python
 from pathlib import Path
 
-SAFE_ROOTS = [Path.home() / "agent-workspaces", Path.home() / "Documents" / "GH Repos"]
+SAFE_ROOTS = [
+    Path.home() / "Documents" / "GH Repos",
+    Path.home() / "agent-workspaces",
+    Path.home() / "Documents" / "agent-workspaces",
+    Path.home() / "marathon-clones",   # where /start-task, /jog and marathon flows put task clones
+]  # this list IS skills/merge-cleanup/scripts/scan_clones.py DEFAULT_SAFE_ROOTS (test-pinned, GH-534)
 NEVER_DELETE = {Path.home(), Path.home() / "Documents", Path.home() / "Desktop", Path("/")}
 
 def _within(child: Path, parent: Path) -> bool:

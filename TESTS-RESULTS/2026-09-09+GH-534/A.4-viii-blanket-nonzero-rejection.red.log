@@ -1,0 +1,15 @@
+F
+======================================================================
+FAIL: test_viii_real_idle_directory_is_verified_idle (gh534_phase_a_tests.TestA4OpenHandles.test_viii_real_idle_directory_is_verified_idle)
+THE PIN: lsof exits 1 on an idle dir; exit-code gating would preserve forever.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 422, in test_viii_real_idle_directory_is_verified_idle
+    self.assertTrue(h["verified"], h)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : {'verified': False, 'active': False, 'details': 'lsof did not complete (exit 1)', 'holders': []}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.391s
+
+FAILED (failures=1)

@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const { appendEvent, ensureEventsDir, EVENT_TYPES } = require('../src/events');
+const { appendEvent, ensureEventsDir, EVENT_TYPES, readAllEvents, eventsDir } = require('../src/events');
 const { project, fold } = require('../src/project');
 const { claim } = require('../src/claim');
 const { scope, release, circuitBreak, done, reap, heartbeat } = require('../src/scope');
@@ -119,6 +119,7 @@ Usage:
   tick ping <task> --agent <id> [--note "..."]      (liveness heartbeat)
   tick reap <agent> [--by <id>] [--task <task>]
   tick info <task>
+  tick claims [--json]                            (read-only: every claimed task, agent, paths; no STATE.md write)
   tick cost <task> --agent <id> --human-minutes <n>          (log operator attention)
   tick cost <task> --agent <id> --tokens-in <n> --tokens-out <n> [--tokens-total <n>] [--tool <name>]
   tick cost <task> --agent <id> --from-gemini-json <file> [--tool gemini]   (parse gemini -o json)
@@ -348,6 +349,46 @@ function main(argv) {
         process.stdout.write(`(no active claims held by ${agent})\n`);
       } else {
         process.stdout.write(`reaped ${result.reaped.length} claim(s) from ${agent}: ${result.reaped.join(', ')}\n`);
+      }
+      return 0;
+    }
+
+    case 'claims': {
+      // GH-534: read-only enumeration of every task currently in `claimed` state, for an
+      // external auditor (merge-cleanup) deciding whether a checkout is in use. Built on the
+      // same readAllEvents + fold that `project()` uses, MINUS the write: an audit must never
+      // rewrite STATE.md / rejected.jsonl in the tree it is auditing. STATE.md itself is a
+      // derived snapshot and is deliberately not consulted here — a stale or missing snapshot
+      // proves nothing about current claims. See decisions/2026-09-09-tick-claims-verb.md.
+      const tickDir = path.join(root, '.tick');
+      if (!fs.existsSync(tickDir)) {
+        process.stderr.write(`tick claims: tick-dir-missing: ${tickDir}\n`);
+        return 3;
+      }
+      const evDir = eventsDir(root);
+      // readAllEvents() returns [] when the events directory is absent (src/events.js). For an
+      // auditor "[]" would read as "no claims" — the opposite of the truth when the log cannot
+      // be read. Refuse instead, and distinguish the two failure shapes for the caller.
+      if (!fs.existsSync(evDir)) {
+        process.stderr.write(`tick claims: events-dir-missing: ${evDir}\n`);
+        return 3;
+      }
+      let claimed;
+      try {
+        fs.readdirSync(evDir);
+        claimed = Array.from(fold(readAllEvents(root)).values())
+          .filter(t => t.status === 'claimed')
+          .sort((a, b) => a.id.localeCompare(b.id))
+          .map(t => ({ task: t.id, agent: t.claim.agent, paths: t.claim.paths, epoch: t.claim.epoch }));
+      } catch (err) {
+        process.stderr.write(`tick claims: events-unreadable: ${err.message}\n`);
+        return 3;
+      }
+      if (flags.json) {
+        process.stdout.write(JSON.stringify({ root, claimed }) + '\n');
+      } else {
+        if (!claimed.length) process.stdout.write('(no claimed tasks)\n');
+        for (const c of claimed) process.stdout.write(`${c.task} by ${c.agent} paths: ${JSON.stringify(c.paths)}\n`);
       }
       return 0;
     }

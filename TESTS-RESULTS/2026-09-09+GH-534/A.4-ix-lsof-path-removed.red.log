@@ -1,0 +1,20 @@
+F/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py:1139: ResourceWarning: subprocess 11730 is still running
+  _warn("subprocess %s is still running" % self.pid,
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/case.py:704: ResourceWarning: unclosed file <_io.TextIOWrapper name=3 encoding='UTF-8'>
+  function, args, kwargs = self._cleanups.pop()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+======================================================================
+FAIL: test_ix_held_descriptor_is_active_process_naming_the_pid (gh534_phase_a_tests.TestA4OpenHandles.test_ix_held_descriptor_is_active_process_naming_the_pid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 434, in test_ix_held_descriptor_is_active_process_naming_the_pid
+    self.assertTrue(h["active"], h)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: False is not true : {'verified': True, 'active': False, 'details': 'stub', 'holders': []}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.239s
+
+FAILED (failures=1)

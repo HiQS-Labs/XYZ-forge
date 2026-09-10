@@ -1,0 +1,17 @@
+F
+======================================================================
+FAIL: test_each_failed_git_query_preserves_naming_it (gh534_phase_a_tests.TestA5FailClosed.test_each_failed_git_query_preserves_naming_it)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 504, in test_each_failed_git_query_preserves_naming_it
+    self.assertEqual(info["disposition"], "PRESERVE_UNVERIFIED_QUERY", label)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'SAFE_REMOVE_CLONE' != 'PRESERVE_UNVERIFIED_QUERY'
+- SAFE_REMOVE_CLONE
++ PRESERVE_UNVERIFIED_QUERY
+ : git stash list
+
+----------------------------------------------------------------------
+Ran 1 test in 0.535s
+
+FAILED (failures=1)

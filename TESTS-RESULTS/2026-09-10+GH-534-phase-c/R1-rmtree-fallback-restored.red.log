@@ -1,0 +1,16 @@
+merge-cleanup: Removing verified clean standalone clone: /private/tmp/claude-501/gh534b.sb1wkfif/victim...
+F
+======================================================================
+FAIL: test_teardown_refuses_without_trash (gh534_phase_c_tests.TestCScript.test_teardown_refuses_without_trash)
+R1-4: Trash is the only removal path; with no ~/.Trash the clone is refused, not rmtree'd.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 301, in test_teardown_refuses_without_trash
+    self.assertFalse(ok)
+    ~~~~~~~~~~~~~~~~^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 1.391s
+
+FAILED (failures=1)

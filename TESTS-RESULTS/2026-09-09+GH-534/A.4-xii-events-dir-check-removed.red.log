@@ -1,0 +1,15 @@
+F
+======================================================================
+FAIL: test_xii_events_dir_missing_is_refused_not_empty (gh534_phase_a_tests.TestA4TickClaims.test_xii_events_dir_missing_is_refused_not_empty)
+THE PIN: readAllEvents() returns [] for a missing dir; the verb must not trust that.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 385, in test_xii_events_dir_missing_is_refused_not_empty
+    self.assertIn("events-dir-missing", r.stderr)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'events-dir-missing' not found in "tick claims: events-unreadable: ENOENT: no such file or directory, scandir '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534.71zvz3wi/clone/.tick/events'\n"
+
+----------------------------------------------------------------------
+Ran 1 test in 0.361s
+
+FAILED (failures=1)
