@@ -88,7 +88,7 @@ while the four axes keep their honest values underneath.
 | 76 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Completed | 70 | 55 | 65 | 60 | 250 | — |
 | 77 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Completed | 60 | 35 | 70 | 85 | 250 | — |
 | 78 | **250** | [GH-439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) — start-task governed workflow skill | — | Completed | 80 | 35 | 50 | 85 | 250 | — |
-| 79 | **250** | [GH-524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) — agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | Queue / parked intake | 60 | 55 | 50 | 85 | 250 | — |
+| 79 | **250** | [GH-524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) — agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | Completed | 60 | 55 | 50 | 85 | 250 | — |
 | 80 | **245** | [GH-108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 81 | **245** | [GH-496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) — ci: hermetic local gate runner (retire GH-564 clone requirement) and offline pre-push fallback | — | In progress | 75 | 65 | 50 | 55 | 245 | — |
 | 82 | **240** | [GH-453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) — Governance document identity audit | — | Queue / parked intake | 70 | 65 | 50 | 55 | 240 | — |
