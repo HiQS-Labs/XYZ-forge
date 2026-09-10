@@ -32,6 +32,35 @@ users. Existing whole-folder intake copies it on initialization and update into
 Applied transactions also copy it to `Deployed Skills/README.md`, the collection's
 installer-managed landing document. Keep personal notes in a separate file.
 
+## Adopting the collection on another machine (GH-536)
+
+The collection's canonical home lives inside a checkout of the private Git Sync Pulse
+remote, carried by that machine's hourly pulse writer. A second machine does NOT
+bootstrap state inside its pulse checkout (it is a shared writer's tree — dirtying it
+wedges the writer, and machine state must never be pushed). Each machine keeps its own
+collection and imports from its pulse checkout as the source:
+
+1. Ensure a current pulse checkout (`~/git-pulse-sync` via the git-pulse installer, or
+   any clone of the private remote). `git -C ~/git-pulse-sync pull` to refresh.
+2. `mkdir -p "<local collection root>"` and initialize it with the checkout's manager:
+   `python3 ~/git-pulse-sync/"Deployed Skills"/skills-army-hq/scripts/intake.py --apply
+   --root "<local collection root>" init`
+3. Import each skill with the checkout as source (receipts record the pulse commit —
+   provenance travels): `--apply add ~/git-pulse-sync/"Deployed Skills"/<name>` for
+   every folder, then `--apply update skills-army-hq --source ~/git-pulse-sync/
+   "Deployed Skills"/skills-army-hq` (the manager cannot add itself; init's copy needs
+   the update to re-anchor). If a first `--apply` reports no change, re-run it.
+4. Configure that machine's targets and `sync.py --apply`; verify links resolve.
+5. **Single-publisher discipline:** the pulse-side collection has exactly one
+   designated publisher (the machine that owns skill edits). Every other machine
+   treats its pulse checkout as read-only transport; conflicting writers are resolved
+   by the designated publisher's next change winning — never by merge machinery.
+
+Digest note: verify imports against the **pulse checkout's** copies. Git normalizes
+some file-mode bits on checkout (only the executable bit is tracked), so a re-cloned
+copy may digest differently than the publisher's live folder while payload bytes are
+identical.
+
 ## Conversational workflow
 
 Translate requests such as “deploy recon from this repo”, “what is deployed?”,
