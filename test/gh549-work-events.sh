@@ -292,6 +292,138 @@ case "$BS" in
   *) bad "board_sync config broke after the migration: $BS" ;;
 esac
 
+echo "12. connector dispatch: concurrent, bounded, isolated"
+# Three stub connectors. Each reads its batch as JSON on stdin and reports on stdout, exactly
+# as a real connector does; none of them touches the database.
+cat > "$WORK/stub_ok.py" <<'PYSTUB'
+import json, sys
+b = json.load(sys.stdin)
+print("advanced_to: %d" % max(e["id"] for e in b["events"]))
+PYSTUB
+cat > "$WORK/stub_fail.py" <<'PYSTUB'
+import json, sys
+json.load(sys.stdin)
+sys.stderr.write("deliberate connector failure\n")
+sys.exit(3)
+PYSTUB
+cat > "$WORK/stub_slow.py" <<'PYSTUB'
+import json, sys, time
+b = json.load(sys.stdin)
+time.sleep(5)
+print("advanced_to: %d" % max(e["id"] for e in b["events"]))
+PYSTUB
+
+cat > "$WORK/dispatch_probe.py" <<'PYPROBE'
+import json, os, sqlite3, sys, time
+root = os.environ["GH549_ROOT"]
+sys.path.insert(0, os.path.join(root, "utils", "py"))
+import work_connectors as WC
+
+db  = sys.argv[1]
+work = sys.argv[2]
+mode = sys.argv[3]
+os.environ["XYZ_WORK_CONNECTORS_REGISTRY"] = json.dumps({
+    "s_ok":   os.path.join(work, "stub_ok.py"),
+    "s_fail": os.path.join(work, "stub_fail.py"),
+    "s_slow": os.path.join(work, "stub_slow.py"),
+    "s_slow2": os.path.join(work, "stub_slow.py"),
+})
+cfg = {"enabled": True}
+
+if mode == "isolation":
+    # one failing, one succeeding: the good one must still advance, the bad one must not
+    res = WC.dispatch(db, "2026-09-10T00:00:00Z",
+                      connectors={"s_ok": cfg, "s_fail": cfg}, window_s=30)
+    c = sqlite3.connect(db)
+    rows = dict(c.execute("SELECT connector, last_event_id FROM connector_cursors").fetchall())
+    errs = dict(c.execute("SELECT connector, last_error IS NOT NULL FROM connector_cursors").fetchall())
+    print("ok_advanced=%s fail_stuck=%s fail_recorded=%s" % (
+        rows.get("s_ok", 0) > 0, rows.get("s_fail", 0) == 0, bool(errs.get("s_fail"))))
+
+elif mode == "concurrency":
+    # two 5s sleepers under one 30s window: concurrent launch finishes in ~5s, serial in ~10s
+    t0 = time.monotonic()
+    WC.dispatch(db, "2026-09-10T00:00:00Z",
+                connectors={"s_slow": cfg, "s_slow2": cfg}, window_s=30)
+    print("elapsed=%.2f" % (time.monotonic() - t0))
+
+elif mode == "window":
+    # the same two sleepers under a 2s TOTAL window: both are killed, neither advances,
+    # and the whole call still returns in about one window rather than two.
+    #
+    # Reset the cursors first. The concurrency run above advanced them to the last event, so
+    # without this there would be nothing pending, dispatch would return {} in 0.00s, and both
+    # assertions would pass for the wrong reason.
+    c = sqlite3.connect(db)
+    c.execute("DELETE FROM connector_cursors WHERE connector IN ('s_slow','s_slow2')")
+    c.commit()
+    pending = c.execute("SELECT count(*) FROM work_events").fetchone()[0]
+    c.close()
+    if not pending:
+        print("elapsed=0 advanced=NO-EVENTS")
+        raise SystemExit(0)
+    t0 = time.monotonic()
+    res = WC.dispatch(db, "2026-09-10T00:00:00Z",
+                      connectors={"s_slow": cfg, "s_slow2": cfg}, window_s=2)
+    print("elapsed=%.2f dispatched=%d advanced=%s" % (time.monotonic() - t0, len(res),
+                                                      [v[0] for v in res.values()]))
+PYPROBE
+
+FXC="$WORK/ledgerC"; mkdir -p "$FXC"; require_fixture "$FXC" "gh549 dispatch fixture"
+( cd "$FXC" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXC/"
+EVN="$(sqlite3 "$FXC/releases.db" "SELECT count(*) FROM work_events;")"
+[ "${EVN:-0}" -gt 0 ] || bad "  dispatch fixture has no events — every dispatch assertion would be vacuous"
+
+ISO="$(GH549_ROOT="$ROOT" python3 "$WORK/dispatch_probe.py" "$FXC/releases.db" "$WORK" isolation 2>&1)"
+case "$ISO" in
+  *"ok_advanced=True fail_stuck=True fail_recorded=True"*)
+    ok "two connectors, one failing: the good one advanced, the bad one did not, its error was recorded" ;;
+  *) bad "connector isolation wrong: $ISO" ;;
+esac
+
+CONC="$(GH549_ROOT="$ROOT" python3 "$WORK/dispatch_probe.py" "$FXC/releases.db" "$WORK" concurrency 2>&1)"
+CSEC="$(printf '%s' "$CONC" | sed -n 's/.*elapsed=\([0-9.]*\).*/\1/p')"
+if [ -n "$CSEC" ] && python3 -c "import sys; sys.exit(0 if float('$CSEC') < 8.0 else 1)"; then
+  ok "two 5s connectors finished in ${CSEC}s — launched concurrently, not serially"
+else
+  bad "dispatch is serial: two 5s connectors took ${CSEC:-?}s (serial would be ~10s)"
+fi
+
+WIN="$(GH549_ROOT="$ROOT" python3 "$WORK/dispatch_probe.py" "$FXC/releases.db" "$WORK" window 2>&1)"
+case "$WIN" in
+  *"dispatched=2"*) : ;;
+  *) bad "  the window probe dispatched nothing — both window assertions would be vacuous ($WIN)" ;;
+esac
+WSEC="$(printf '%s' "$WIN" | sed -n 's/.*elapsed=\([0-9.]*\).*/\1/p')"
+if [ -n "$WSEC" ] && python3 -c "import sys; sys.exit(0 if 1.5 < float('$WSEC') < 6.0 else 1)"; then
+  ok "two hung connectors cost ONE ${WSEC}s window, not one timeout each"
+else
+  bad "the window is not one total deadline: ${WSEC:-?}s (expected ~2s, serial would be ~4s)"
+fi
+case "$WIN" in
+  *"advanced=[None, None]"*) ok "a connector killed at the deadline does not advance its cursor" ;;
+  *) bad "a timed-out connector advanced anyway: $WIN" ;;
+esac
+
+echo "13. dispatch never changes a host verb's exit code"
+FXD="$WORK/ledgerD"; mkdir -p "$FXD"; require_fixture "$FXD" "gh549 host-rc fixture"
+( cd "$FXD" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXD/"
+cat > "$WORK/devcfg.json" <<'PYCFG'
+{"work_connectors": {"github_board": {"enabled": true, "project_owner": "nobody", "project_number": 1}}}
+PYCFG
+XYZ_DEVICE_CONFIG_PATH="$WORK/devcfg.json" XYZ_CONNECTOR_WINDOW_S=2 \
+  python3 "$APP" --root "$FXD" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" \
+  --title "host rc" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/rc.md" >/dev/null 2>&1
+RC=$?
+[ "$RC" -eq 0 ] && ok "a ledger verb exits 0 even with a connector configured that cannot succeed" \
+                || bad "connector failure changed the host exit code (rc=$RC)"
+ROW="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM roadmap_items WHERE gh_number=9920;")"
+[ "$ROW" = "1" ] && ok "and the ledger row is committed regardless" || bad "ledger row missing after dispatch"
+python3 "$APP" --root "$FXD" check >/dev/null 2>&1 \
+  && ok "and check is clean after a dispatching write" || bad "check dirty after a dispatching write"
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

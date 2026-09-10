@@ -1535,6 +1535,27 @@ def _record_work_event(conn, op, target_gid, txn_id, at):
     return event
 
 
+def _dispatch_work_connectors(db_path, at):
+    """Post-lock, post-commit connector dispatch. Swallows everything by design (GH-549).
+
+    The ledger row is already durable before this runs. A connector that raises, hangs, or
+    cannot even be imported must not change the host verb's exit code — so the import itself
+    is inside the try, and BaseException is caught rather than Exception.
+    """
+    if os.environ.get("XYZ_WORK_CONNECTORS") == "0":
+        return {}
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import work_connectors
+        return work_connectors.dispatch(db_path, at)
+    except BaseException as exc:        # noqa: BLE001 - deliberate; see the docstring
+        try:
+            print("releases: work connectors skipped (%r)" % (exc,), file=sys.stderr)
+        except Exception:
+            pass
+        return {}
+
+
 def perform_write(root, conn, op, target_gid, mutate):
     """Run one CLI transaction under the full multi-artifact protocol:
 
@@ -1629,6 +1650,18 @@ def perform_write(root, conn, op, target_gid, mutate):
 
         os.unlink(lock.journal_path)
         refresh_preview(root)  # GH-106: adoption-gated, best-effort — after full durability
+
+        # ── GH-549: the one dispatch seam ───────────────────────────────────────────────────
+        # Release the writer lock EXPLICITLY here, before dispatching. A governance writer must
+        # never hold the lock across connector network time. WriterLock.release() is idempotent
+        # (it acts only while self.fh is not None), so the `finally` below stays correct as the
+        # failure path and becomes a no-op on this success path.
+        #
+        # Dispatch lives HERE, inside perform_write, rather than in each cmd_* caller. Moving it
+        # to the callers would trade one audited seam for 29 independently correct call sites,
+        # and nothing would catch a caller that simply never dispatched.
+        lock.release()
+        _dispatch_work_connectors(paths["db"], now)
         return txn_id
     finally:
         lock.release()
