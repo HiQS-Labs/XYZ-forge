@@ -32,6 +32,7 @@ def digest(value):
 
 def main():
     started = datetime.now(timezone.utc)
+    csv.field_size_limit(16 * 1024 * 1024)
     swe_info = json.loads(get("https://datasets-server.huggingface.co/info?dataset=" + urllib.parse.quote(SWE, safe="")))
     swe_rows = json.loads(get("https://datasets-server.huggingface.co/first-rows?dataset=" + urllib.parse.quote(SWE, safe="") + "&config=default&split=train"))
     hf_meta = json.loads(get("https://huggingface.co/api/datasets/" + SWE))
