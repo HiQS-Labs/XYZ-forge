@@ -232,8 +232,8 @@ out="$(bash "$ROUTER" subsystems hq)"
   && pass "subsystems hq lists its 14 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems releases)"
-[[ "$(wc -w <<<"$out")" -eq 21 ]] \
-  && pass "subsystems releases lists its 21 suites (GH-496)" \
+[[ "$(wc -w <<<"$out")" -eq 22 ]] \
+  && pass "subsystems releases lists its 22 suites (GH-496; +gh549-work-events)" \
   || fail "subsystems releases listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems pdda)"
 [[ "$(wc -w <<<"$out")" -eq 11 ]] \

@@ -55,8 +55,9 @@ case "$OBJ" in
   *) bad "expected objects missing (got '$OBJ')" ;;
 esac
 for t in work_events_no_update work_events_no_delete; do
-  sqlite3 "$FX/releases.db" "SELECT 1 FROM sqlite_master WHERE type='trigger' AND name='$t';" \
-    | grep -q 1 && ok "trigger $t present" || bad "trigger $t missing"
+  # capture-then-match: a pipe into grep -q loses the producer's exit status (gh139)
+  TRG="$(sqlite3 "$FX/releases.db" "SELECT 1 FROM sqlite_master WHERE type='trigger' AND name='$t';")"
+  [ "$TRG" = "1" ] && ok "trigger $t present" || bad "trigger $t missing"
 done
 
 echo "2. work_events is append-only (witnessed refusals)"
