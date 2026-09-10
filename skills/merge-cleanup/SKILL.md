@@ -86,22 +86,23 @@ Phase 0 runs in every mode of the orchestrator. The standalone helpers below
 the answer will inform a landing.
 
 ### Phase 1: Discover & Inventory
-- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` (`~/Documents/GH Repos`, `~/agent-workspaces`, etc.).
+- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/start-task`, `/jog` and marathon flows create task clones). The list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
 - Evaluates component-aware containment (`_within(child, parent)`) and refuses `NEVER_DELETE` protected roots (`$HOME`, `~/Documents`, `~/Desktop`, `/`).
 - Distinguishes **Linked Worktrees** (`.git` is a file with pointer `gitdir: ...`) from **Standalone Clones** (`.git` is a directory).
 - Uses `git worktree list --porcelain` to determine parent-child relationships.
 
 ### Phase 2: Active Process & Session Inspection
 - Checks driver locks: `.git/relay-driver.lock` (or vendored `.relay-driver.lock`) and validates holder PID liveness via `kill -0 <pid>`.
-- Checks `.tick/` active claims and coordination events.
-- Checks running process file handles via `lsof`.
+- Checks `.tick/` active claims through the **event log fold**, never `STATE.md` (a derived snapshot): `tick claims --json` with `TICK_REPO_ROOT` pinned to the coordination root (a linked worktree's is its parent clone's). Any claimed task → `ACTIVE_TICK_CLAIM` naming task and agent; a `.tick/locks/` entry of any shape counts; `tick` missing, failing, or an events directory that is missing/unreadable → `PRESERVE_UNVERIFIED_SESSION` naming why (GH-534 A.4, `decisions/2026-09-09-tick-claims-verb.md`).
+- Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 **and** empty stderr is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or **any** stderr line (`WARNING: can't opendir`), is incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning.
 - Honors explicit user exclusion patterns (e.g. `--exclude gh427`).
 
 ### Phase 3: Git Safety & Worktree Verification
-- **Dirty status:** Asserts `git status --porcelain` is empty (0 modified or untracked files).
+- **Dirty status:** reads the complete NUL-safe `git status --porcelain -z --untracked-files=all` and names **every** file in the disposition. There is no regenerable-artifact allowance: `harnesses.db` carries invocation data, `*.db.bak` may be the last pre-rebuild copy (GH-534 A.3).
 - **Stashes:** Asserts `git stash list` is empty (0 unpopped stashes).
-- **Unpushed refs:** Asserts all local branches are pushed to `origin` (`git for-each-ref` has 0 `[ahead N]` and 0 local-only branches).
+- **Landed vs unlanded refs, by provenance (A.2):** after a verified `git fetch origin <integration-branch>`, every local ref tip — all `refs/heads/*`, detached `HEAD`, any local-only ref — must be either (1) reachable from `origin/<integration-branch>`, or (2) the exact `headRefOid` of a **MERGED** PR (base = integration branch, `gh pr list --state merged`, remote identity bound to the clone's `origin`) whose merge commit is reachable **and** whose landed content equals the branch's — per-path blob ids and modes from `git diff --raw --full-index`, so whitespace and binaries count. Anything else is `PRESERVE_UNPUSHED` naming the ref, the commit and the reason (no merged PR; content differs from PR #N; lookup unavailable). Squash merges no longer read as "unpushed forever"; a changed conflict resolution or a commit after the PR head still preserves. `git cherry` is never an authorization input.
 - **Worktree dependencies:** Verifies no other linked worktrees point to a clone before marking it disposable.
+- **Every safety query fails closed (A.5):** a non-zero or unparseable `git status`, `stash list`, `worktree list`, `for-each-ref`, `fetch`, `tick claims` or `lsof` → `PRESERVE_UNVERIFIED_QUERY` / `PRESERVE_UNVERIFIED_SESSION` naming the query. No result is ever defaulted to "none".
 
 ### Phase 4: PR Matrix & Topological Sorting
 - Runs only after Phase 0 has reported. The PR sequence is advice until the primary can receive it.
@@ -125,6 +126,7 @@ the answer will inform a landing.
 
 ### Phase 6: Safe Teardown
 - **Linked Worktrees:** Always removed via `git worktree remove <path>` from parent clone, followed by `git worktree prune` and `git worktree repair`. **Zero `rm -rf` on linked worktrees!**
+- **Fresh inspection first (A.5):** the Phase 1–3 table is display. Before any removal, **every** non-exempt checkout (all `PRESERVE_*` and `SAFE_REMOVE_*` alike; only `PRIMARY_CHECKOUT`, `PRESERVED_USER_EXCLUDE`, `PRESERVE_WIKI` are exempt) is re-inspected after a fresh fetch, and only that verdict is acted on. A `PRESERVE_UNPUSHED` clone whose PR landed in Phase 5 becomes eligible here; anything that became dirty, claimed, or grew a local ref since the scan is preserved. `teardown_checkout()` refuses a record that is not a fresh Phase 6 inspection.
 - **Standalone Clones:** Only deleted if verified 100% clean across Phase 2 & 3. Moved to Trash (`~/.Trash`) when available.
 - **Symlink Cleanup:** Prunes dangling skill symlinks in `~/.claude/skills/` and `~/.gemini/**/skills/`.
 
@@ -158,8 +160,8 @@ python3 skills/merge-cleanup/scripts/merge_cleanup.py --prefix XYZ-forge --exclu
 
 ## Safety Guarantees
 
-1. **Zero Data Loss:** Any dirty working tree, unpopped stash, or unpushed commit automatically stops deletion and marks the checkout `PRESERVE_*`. The primary checkout is inspected first and by identity, so it can never be skipped by a scan filter.
+1. **Zero Data Loss:** Any dirty working tree, unpopped stash, or unlanded commit automatically stops deletion and marks the checkout `PRESERVE_*`, naming the files or refs. The primary checkout is inspected first and by identity, so it can never be skipped by a scan filter. Anything the scanner cannot prove is preserved, naming the failed query.
 2. **No Blind Landing:** PR merges refuse to run while the primary checkout cannot fast-forward the integration branch.
-3. **Zero Process Interference:** Clones with active driver locks or running subagents are detected and preserved.
+3. **Zero Process Interference:** Clones with active driver locks, active tick claims (from the event fold), or open file handles are detected and preserved; an unverifiable session is preserved too.
 4. **Canonical Worktree Protocol:** Linked worktrees are always cleanly deregistered from git metadata.
 5. **Governed Landing:** Every PR merge triggers deterministic wave reconciliation and doc sync.

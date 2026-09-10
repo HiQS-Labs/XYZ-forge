@@ -1,0 +1,22 @@
+F
+======================================================================
+FAIL: test_i_squash_merged_twin_is_landed (gh534_phase_a_tests.TestA2Provenance.test_i_squash_merged_twin_is_landed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 174, in test_i_squash_merged_twin_is_landed
+    self.assertEqual(prov["unlanded"], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['refs/heads/feat/x @ 2abd5aa5e5: not reac[54 chars]ead'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'refs/heads/feat/x @ 2abd5aa5e5: not reachable from origin/development; no merged PR has this head'
+
++ []
+- ['refs/heads/feat/x @ 2abd5aa5e5: not reachable from origin/development; no '
+-  'merged PR has this head']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.796s
+
+FAILED (failures=1)

@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_ii_unlanded_branch_is_preserved_naming_ref_and_commit (gh534_phase_a_tests.TestA2Provenance.test_ii_unlanded_branch_is_preserved_naming_ref_and_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 182, in test_ii_unlanded_branch_is_preserved_naming_ref_and_commit
+    self.assertIn("refs/heads/feat/unlanded", info["disposition_reason"])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'refs/heads/feat/unlanded' not found in 'Unlanded local refs: unlanded'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.911s
+
+FAILED (failures=1)

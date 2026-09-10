@@ -18,6 +18,7 @@ from pathlib import Path
 
 # Add skill scripts to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "merge-cleanup" / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from scan_clones import (
     _within,
@@ -580,6 +581,12 @@ class TestDanglingSymlinkPrune(unittest.TestCase):
             (source / "dead").is_symlink(),
             "prune walked through a symlinked skills root into the source repo",
         )
+
+
+# GH-534 Phase A suites live in their own module and are collected here so this file stays the
+# one registered entry point (A.6). `from ... import *` is deliberate: unittest discovers classes
+# by module attribute, and a named list would silently drop a new class.
+from gh534_phase_a_tests import *  # noqa: E402,F401,F403
 
 
 if __name__ == "__main__":

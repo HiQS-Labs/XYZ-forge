@@ -1,0 +1,54 @@
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534-a5.k8r5ld6b/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534-a5.k8r5ld6b/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (2 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `development` | ✅ | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `task-clone` | standalone_clone | `feat/land` | ✅ | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/land @ 4a46615fd9: not reachable from origin/development; no merged PR has this head |
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534-a5.k8r5ld6b/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: task-clone: PRESERVE_UNPUSHED at scan time -> SAFE_REMOVE_CLONE now (100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees))
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+.
+----------------------------------------------------------------------
+Ran 1 test in 2.274s
+
+OK

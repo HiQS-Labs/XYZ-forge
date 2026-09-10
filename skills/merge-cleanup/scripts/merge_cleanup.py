@@ -23,6 +23,7 @@ from scan_clones import (
     DEFAULT_NEVER_DELETE,
     is_safe_deletable_path,
     scan_directories,
+    inspect_checkout,
     inspect_primary_landing,
     format_primary_landing,
     format_scan_table,
@@ -104,11 +105,44 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True)
     return True
 
 
+# Dispositions that are never re-inspected for teardown: the operator's own tree, an explicit
+# exclusion, and wiki clones. Everything else — including a scan-time PRESERVE_* — is
+# re-inspected fresh in Phase 6, because a PR landing in Phase 5 can turn PRESERVE_UNPUSHED into
+# eligible, and anything that changed since the scan can turn eligible into preserved (A.5).
+TEARDOWN_EXEMPT = ("PRIMARY_CHECKOUT", "PRESERVED_USER_EXCLUDE", "PRESERVE_WIKI")
+
+
+def refresh_for_teardown(checkouts: List[Dict[str, Any]], primary_repo: Path,
+                         excludes: Optional[List[str]] = None,
+                         integration_branch: str = "development") -> List[Dict[str, Any]]:
+    """Re-run inspect_checkout on EVERY non-exempt checkout; the fresh verdict is the only one
+    teardown may act on. The scan-time disposition is kept under `scan_disposition` for display."""
+    fresh: List[Dict[str, Any]] = []
+    for c in checkouts:
+        if c["disposition"] in TEARDOWN_EXEMPT:
+            continue
+        info = inspect_checkout(Path(c["path"]), primary_repo_path=primary_repo, exclude_patterns=excludes,
+                                integration_branch=integration_branch)
+        info["scan_disposition"] = c["disposition"]
+        if info["disposition"] != c["disposition"]:
+            log(f"{info['name']}: {c['disposition']} at scan time -> {info['disposition']} now ({info['disposition_reason']})")
+        fresh.append(info)
+    return fresh
+
+
 def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
-    """Safely tears down a worktree or standalone clone in strict compliance with WORKTREE-SAFETY.md."""
+    """Safely tears down a worktree or standalone clone in strict compliance with WORKTREE-SAFETY.md.
+
+    `checkout` must be a FRESH inspection from refresh_for_teardown(); a scan-time record is
+    refused so a stale SAFE_REMOVE_* can never be acted on (A.5).
+    """
     path = Path(checkout["path"]).resolve()
     c_type = checkout["checkout_type"]
     disp = checkout["disposition"]
+
+    if "scan_disposition" not in checkout:
+        log_err(f"Refusing to tear down {path.name}: not a fresh Phase 6 inspection")
+        return False
 
     if disp not in ("SAFE_REMOVE_WORKTREE", "SAFE_REMOVE_CLONE"):
         log(f"Skipping {path.name}: disposition is {disp} ({checkout['disposition_reason']})")
@@ -290,7 +324,7 @@ def main():
         return 0
 
     # Phase 1..3: Scan & Audit checkouts
-    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude)
+    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
     print("\n" + "=" * 80)
     print(f"PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS ({len(checkouts)} found)")
     print("=" * 80 + "\n")
@@ -392,7 +426,11 @@ def main():
     print("=" * 80)
     print("PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING")
     print("=" * 80 + "\n")
-    removable = [c for c in checkouts if c["disposition"] in ("SAFE_REMOVE_WORKTREE", "SAFE_REMOVE_CLONE")]
+    # A.5: the scan above is display. Every non-exempt checkout is inspected AGAIN, after a
+    # fresh fetch, and only that verdict is acted on.
+    log("Re-inspecting every non-exempt checkout before teardown...")
+    fresh = refresh_for_teardown(checkouts, primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
+    removable = [c for c in fresh if c["disposition"] in ("SAFE_REMOVE_WORKTREE", "SAFE_REMOVE_CLONE")]
     if not removable:
         log("No candidate checkouts qualify for safe removal (all are preserved or active).")
     else:

@@ -1,0 +1,18 @@
+F
+======================================================================
+FAIL: test_iii_claim_is_read_from_the_fold_not_state_md (gh534_phase_a_tests.TestA4TickClaims.test_iii_claim_is_read_from_the_fold_not_state_md)
+THE PIN: STATE.md stale ("_(none)_") or deleted, the event log still says claimed.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 342, in test_iii_claim_is_read_from_the_fold_not_state_md
+    self.assertEqual(self.inspect()["disposition"], "ACTIVE_TICK_CLAIM")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'SAFE_REMOVE_CLONE' != 'ACTIVE_TICK_CLAIM'
+- SAFE_REMOVE_CLONE
++ ACTIVE_TICK_CLAIM
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.781s
+
+FAILED (failures=1)
