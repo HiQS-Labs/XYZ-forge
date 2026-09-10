@@ -20,7 +20,7 @@ risk: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed; parked + rated 70/25/50/70; promoted to 2-WORKING 2026-09-09 | Author `skills/five/SKILL.md` + Skills Index row; relay plan QA; implement; PR |
+| Issue filed; parked + rated 70/25/50/70; promoted to 2-WORKING; plan QA round 1 (Codex, 3 Should + 1 Nit) dispositioned and folded in 2026-09-09 | Round-2 plan approval; author `skills/five/SKILL.md` + Skills Index row + CHANGELOG; behavioral QA; final relay QA; PR |
 
 ## Problem statement
 
@@ -51,9 +51,14 @@ before the final report.
 Hard rules the skill body must encode:
 
 - **Grounded.** Every item cites where the artifact says it (plan section, `file:line`,
-  commit). Five summarizes an artifact; it does not generate from vibes.
-- **Empty-input guard.** No artifact (or an empty one) → say so, invent nothing. An empty
-  input passes every check.
+  commit). Five summarizes an artifact; it does not generate from vibes. Exemptions and
+  precedence: "nothing else load-bearing" padding markers carry no citation; a substantive
+  non-goal requires supporting text in the artifact (where the plan's scope ends). **Silence
+  is not a non-goal** — an adjacent capability the artifact never mentions is reported as
+  "not specified", never dressed up as an explicit "does NOT do".
+- **Empty-input guard outranks the count.** No artifact (or an empty one) → say so, invent
+  nothing; this guard takes precedence over the 5+5 contract. An empty input passes every
+  check.
 - **Exactly five and five.** Fewer real items → the remaining slots say so explicitly
   ("nothing else load-bearing found"), never filler. Padding is worse than a short list.
 - **Checksum, not substitute.** Five tells the operator when to go read the plan; it never
@@ -61,7 +66,8 @@ Hard rules the skill body must encode:
 
 ## Non-goals (of this task)
 
-- No scripts, no tests-as-code, no runtime — one `SKILL.md` and two doc rows.
+- No scripts, no tests-as-code, no runtime — one `SKILL.md`, one ARCHITECTURE.md Skills
+  Index row, and one CHANGELOG.md entry (all three named; no fourth surface).
 - No global symlink deployment (operator-requested only, per GH-514 precedent).
 - No changes to existing skills (`start-task`, `phase-qa`, `swe`) — five is additive and
   composes with them; wiring it into their bodies is out of scope.
@@ -73,16 +79,33 @@ Hard rules the skill body must encode:
 - [ ] `skills/five/SKILL.md` exists, skill-creator frontmatter conventions (folded
       block-scalar description with colons, per c4088fae).
 - [ ] Fires on `/five`, "five", "give me the five", "key highlights", "what does this NOT do".
-- [ ] 5+5 contract, grounding rule, empty-input guard, no-filler rule, and
-      checksum-not-substitute boundary stated as hard rules.
-- [ ] One-line row in `ARCHITECTURE.md` → Skills Index.
+- [ ] 5+5 contract, grounding rule with the silence-is-not-a-non-goal clause, empty-input
+      guard with precedence over the count, no-filler rule, and checksum-not-substitute
+      boundary stated as hard rules.
+- [ ] One-line row in `ARCHITECTURE.md` → Skills Index; one CHANGELOG.md entry.
 - [ ] Zero new scripts of any kind (GH-551).
 - [ ] `utils/pdda/pdda.sh run` zero errors after promotion.
+- [ ] **Behavioral QA (manual, no scripts; run during final relay QA and recorded in the
+      relay thread)** — the criteria above check instructions; this one checks output.
+      Exercise the drafted skill's procedure on three inputs:
+      (a) nonempty source text with more than five decisions, including at least one
+      unrequested consequential choice, explicit exclusions, and one adjacent capability
+      left unstated — expect two full five-slot cited lists, the unrequested choice
+      surfaced, the unstated capability reported as "not specified" and NOT claimed as an
+      explicit non-goal;
+      (b) sparse input (fewer than five load-bearing items) — expect honest sparse
+      markers, no filler;
+      (c) empty input — expect refusal, no invention.
+      Red control: one deliberately bad output (a marketing-style highlight or an
+      unsupported exclusion) must FAIL this check. Record inputs, outputs, and the
+      verdict in the implementation relay thread.
 
-## Rating rationale (2026-09-09)
+## Rating rationale (2026-09-09; sev reworded per plan-QA round 1, F3)
 
 rated 70/25/50/70 — pri 70: explicit operator request, currently the active ask; sev 25:
-docs/skill artifact, no runtime or data risk (worst case: a misleading summary steers an
-approval — mitigated by the grounding rule); appeal 50: neutral, none supplied; effort 70:
-well-scoped single-file authoring with an existing QA loop (calibrated against GH-514 keel
-at 70/25/50/65; five has no precedence stack or modes, slightly cheaper).
+judged as pain-if-left-undone (GH-108 vocabulary), not implementation risk — the recurring
+operator cost of reading full plans to catch buried decisions, plus the
+approval-misunderstanding class that cost creates, is real but bounded process pain with no
+runtime or data consequence; appeal 50: neutral, none supplied; effort 70: well-scoped
+single-file authoring with an existing QA loop (calibrated against GH-514 keel at
+70/25/50/65; five has no precedence stack or modes, slightly cheaper).
