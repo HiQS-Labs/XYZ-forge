@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -64,5 +64,46 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1 — 2026-09-09
+
+**Verdict: Changes requested.** The scope is right; clarify the output edge cases and specify a small behavioral acceptance check before implementation.
+
+swept file: yes
+
+Reviewed the entire 88-line `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md`, including its pre-existing content. Findings below cover that whole artifact; no additional defects found beyond those listed. Read-only document review, no artifact execution or project gates. SWE recon is N/A for this new markdown-only skill; graph project listing (both pages) has no matching checkout, so citations use direct local document reads, not a foreign graph generation.
+
+- [Should] **F1 — Q2: resolve grounding/count edge cases.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:53` requires “Every item cites where the artifact says it,” while :55 permits empty-input refusal and :57 requires padding markers. Neither markers nor an absent non-goal necessarily have such a citation. Cheapest fix: state that the empty/unavailable-input guard takes precedence over 5+5; padding markers are exempt from per-item citations; substantive non-goals require explicit supporting text, and silence means “not specified,” never “does NOT do.” Preserve the existing four rules by adding these clauses, not a new mechanism. This prevents inferred omissions from being presented as explicit scope decisions.
+- [Should] **F2 — Q5: acceptance currently checks instructions, not their output.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:73`–:80 can pass with the rules merely present, while :75 claims the skill “Fires” and the actual response still contains marketing, fabricated exclusions, or filler. Cheapest fix: add a short manual QA criterion with nonempty source text containing more than five decisions (including an unrequested consequential choice), explicit exclusions plus an unstated adjacent capability; also exercise sparse and empty input. Require two five-slot lists for usable input, supported substantive items, honest sparse markers, no inference from silence, and the boundary sentence. Have the reviewer reject one deliberately bad marketing/unsupported-exclusion output as a red control and record input, output, and verdict in the implementation relay. No test scripts needed; retain the PDDA gate as document-hygiene evidence, not behavioral proof.
+- [Should] **F3 — Q6: correct the severity rationale, not necessarily the score.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:84`–:86 explains sev 25 as implementation/data risk, but `PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md:58` defines severity as “pain if left undone.” Cheapest fix: justify 25 by the current burden of reading full plans and the approval-misunderstanding problem, or revise it if that pain merits a different score. GH-514 repeats the risk framing (`PROJECT/1-INBOX/GH-514-KEEL-SKILL.md:88`–:91), so copying the analog does not establish vocabulary correctness.
+- [Pass] **Q1: request captured.** Stage coverage appears at `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:37`–:39; :41–:49 specifies five decision/behavior highlights and five plausible explicit non-goals, with priority for unasked-for choices and a concrete anti-marketing example. Retain this wording.
+- [Pass] **Q2: the four-rule set is proportionate, subject to F1.** Grounding, empty-input refusal, honest padding, and a visible reading boundary are all explicit at `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:51`–:60. The “moves the runtime folder to X and leaves a symlink behind” example at :45 is the right level of consequence. Retain the four-rule structure; no modes, scoring, or extra pipeline required.
+- [Pass] **Q3: house style is correctly read.** `skills/ponytail/SKILL.md:1`–:17 uses folded `description: >` and trigger phrases, with a behavioral ladder at :35–:55. `skills/timbre/SKILL.md:1`–:15 uses `>-`, and :21 explicitly says nothing needs installation or runtime. Use that frontmatter and zero-install property; five does not need timbre's three-role workflow.
+- [Pass] **Q4/Q5: narrow scope and index row are appropriate.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:64`–:69 excludes scripts, deployment, edits to neighboring skills, and index cleanup. `ARCHITECTURE.md:39`–:44 defines a one-line routing index; its full table at :45–:88 lacks the four named drift entries. Add only five's row as :78 requires. No other feature scope is needed; F2 is manual verification within the existing review flow.
+- [Pass] **Q6: the remaining rating calibration is directionally defensible.** Five's pri/appeal match the stated keel analog (`PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:84`–:88; `PROJECT/1-INBOX/GH-514-KEEL-SKILL.md:88`–:91). Effort 70 versus 65 correctly means cheaper under `PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md:60`; keel's precedence stack and mode/delegation at :41–:67 of its capture explain the relative difference. Treat these as judgment-based ratings, not measurements; retain them subject to F3.
+- [Nit] **F4 — name the second doc row.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:64` says “one SKILL.md and two doc rows,” but :78 names only the Skills Index row. Replace the count with named surfaces (including any required governance update), so the author does not invent an extra deliverable.
+
+Handing off to Producer (claude-a) — disposition F1–F4, revise the plan, and return for round 2. Go to the Producer window and say 'take your turn'.
+
+
+## Producer — claude-a — Round 2 — 2026-09-09
+
+Dispositions for round 1 (all four findings Implemented):
+
+- **F1 Implemented.** Hard-rules list now states precedence and exemptions explicitly: the empty-input guard outranks the 5+5 count; padding markers carry no citation; a substantive non-goal requires supporting text in the artifact; and silence is not a non-goal — an unstated adjacent capability is reported as "not specified", never as an explicit "does NOT do".
+- **F2 Implemented.** Acceptance criteria gained a manual behavioral-QA item (no scripts): exercise the drafted procedure on (a) a >5-decision source with an unrequested consequential choice, explicit exclusions, and one unstated adjacent capability; (b) sparse input; (c) empty input — with expected outputs for each and a red control that a deliberately bad marketing/unsupported-exclusion output must FAIL. Recorded in the implementation relay thread.
+- **F3 Implemented.** Severity rationale rewritten in GH-108's pain-if-left-undone vocabulary (recurring cost of reading full plans to catch buried decisions + the approval-misunderstanding class), score unchanged at 25.
+- **F4 Implemented.** The non-goal now names all three surfaces: `skills/five/SKILL.md`, one ARCHITECTURE.md Skills Index row, one CHANGELOG.md entry — no fourth surface.
+
+Harness note (exit 8, GH-533): your round-1 block failed `bin/validate-relay-block` because it expects a literal `VERDICT: PASS|FAIL|PARKED` line plus a `Basis:` line, while this thread's scaffolded instructions say "Verdict: Approved | Changes requested" — the known scaffold/validator vocabulary mismatch already filed as GH-533. For round 2 please end your review block with BOTH: the prose verdict you already use, and the machine lines the validator demands on their own lines:
+
+```
+VERDICT: PASS            (or FAIL)
+Basis: <one line>
+```
+
+Review the revised plan (same path) and adjudicate whether the four dispositions resolve your findings.
+
+Handing off to Reviewer (codex) — take your turn: review the revised PROJECT/2-WORKING/GH-537-FIVE-SKILL.md and append your block with the VERDICT/Basis lines.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
