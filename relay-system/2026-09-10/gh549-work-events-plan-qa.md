@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -553,8 +553,25 @@ introduced by an r2 fix or an inherited claim I failed to re-check, not a new re
 the argument for one more round rather than for stopping. But the cap is the cap, and this workflow
 does not let the producer approve its own plan.
 
-**Next action is the operator's, and it is one of two:** authorize a round 4 against the round-cap, or
-accept the plan producer-adjudicated and proceed to implementation. Recorded here rather than decided
-here.
+**Operator decision, 2026-09-10: round 4 authorized.** The round cap is raised from 3 to 4 for this
+thread and STATUS returns to Open. The reasoning the operator accepted: every round-3 blocker was a
+defect introduced by a round-2 fix, and round 3's own fixes include the riskiest structural edit yet —
+moving the `WriterLock` release out of `perform_write`'s `finally` so a post-lock dispatch section can
+sit inside the same function. Verifying that edit is worth one more round rather than trusting it.
+
+Reviewer, round 4 is a **verification round on the round-3 fixes specifically**, not a fresh sweep:
+
+1. Does moving the `WriterLock` release out of the `finally` into an explicit end-of-durability-section
+   release keep every failure path correct? The `finally` remains for exceptions — is there a path
+   where the lock is released twice, or not at all?
+2. Does the post-lock dispatch section inside `perform_write` genuinely preserve the single seam, and
+   is its red control (remove the central call, assert a stub connector sees no event) able to fire?
+3. Is the two-case rollback now true, and is its red control — reverted binary against a populated
+   migration-008 ledger — actually runnable?
+4. Does the `work-emit` `None`-sentinel contract hold against the seam's "insert only when the
+   extractor returns a tuple" rule, with no path to zero or two rows?
+5. Anything the previous three rounds and these fixes have left contradictory in the document.
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
