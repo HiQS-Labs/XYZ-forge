@@ -1,7 +1,7 @@
 # GH-496 PR 1 — Gate Provenance & Test Results Summary
 
 Branch: `feat/gh496-selective-ci`
-Target Commit: `02f3190e`
+Target Commit: `8968bb2e` (re-qualified — see "Receipt attribution" below)
 Qualification Environment: Disposable full clone `~/marathon-clones/xyz-gh496-gate-pr1` (un-sandboxed, independent `.git`)
 Gate: `./validate.sh` (368 parallel test suites + pytest layer + clone invariants)
 
@@ -18,6 +18,20 @@ Gate: `./validate.sh` (368 parallel test suites + pytest layer + clone invariant
 | Full `./validate.sh` | **368 / 368 PASS** | All suites passed; 0 failed |
 | `Codex Consult Review` | PASSED | Independent review completed; all blocker and should recommendations resolved |
 | `clone-identity-invariant` | PASS | `core.bare=false`, `origin` intact, `HEAD` unchanged |
+| Full `./validate.sh` at `8968bb2e` | **368 / 368 PASS** | Re-qualification run, `~/marathon-clones/xyz-gh496-merge`, log `full-gate-8968bb2e.log.gz` |
+
+## Receipt attribution
+
+The first receipts in `provenance.jsonl` name `7e2084d2` and `02f3190e`. The branch was
+rewritten after those runs and neither object exists on it — the branch is
+`ee4038f0 → fa98ab0f → 141f2ced → 8968bb2e`. Under the GH-425 rule those receipts do not
+attribute to this head, so they are kept as history only and the qualifying receipt for
+this PR is the `full-gate-requalification` row at `8968bb2e`.
+
+One suite, `gh35-test-tiers.sh`, failed in the parallel lane and passed when re-run alone.
+`validate.sh` classifies that as GH-528 driver-lock contention rather than a product
+failure and counts it passed; the run's own warning names it and recommends adding it to
+`DRIVER_LOCK_LANE`.
 
 ## Telemetry Relocation Invariant Attestation
 
