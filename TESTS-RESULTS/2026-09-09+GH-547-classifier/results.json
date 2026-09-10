@@ -1,0 +1,789 @@
+{
+  "utc": "2026-09-10T04:30:17.536861+00:00",
+  "versions": {
+    "python": "3.12.13",
+    "torch": "2.14.0",
+    "transformers": "5.17.0",
+    "sklearn": "1.9.0"
+  },
+  "counts": {
+    "train": 48,
+    "test": 24
+  },
+  "labels": [
+    "bug_report",
+    "implementation",
+    "merged",
+    "review_requested",
+    "validation_failed",
+    "validation_passed"
+  ],
+  "controls": {
+    "empty_test": {
+      "rejected": true,
+      "reason": "empty split"
+    },
+    "missing_class": {
+      "rejected": true,
+      "reason": "missing training class"
+    },
+    "duplicate": {
+      "rejected": true,
+      "reason": "cross-split duplicate"
+    }
+  },
+  "models": {
+    "majority": {
+      "accuracy": 0.16666666666666666,
+      "macro_f1": 0.047619047619047616,
+      "recall": {
+        "bug_report": 1.0,
+        "implementation": 0.0,
+        "merged": 0.0,
+        "review_requested": 0.0,
+        "validation_failed": 0.0,
+        "validation_passed": 0.0
+      },
+      "confusion_matrix": [
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "predictions": [
+        {
+          "id": "bug_report-test-1",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-2",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-3",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-4",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-1",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-2",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-3",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-4",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-1",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-2",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-3",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-4",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_passed-test-1",
+          "expected": "validation_passed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_passed-test-2",
+          "expected": "validation_passed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_passed-test-3",
+          "expected": "validation_passed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_passed-test-4",
+          "expected": "validation_passed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "review_requested-test-1",
+          "expected": "review_requested",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "review_requested-test-2",
+          "expected": "review_requested",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "review_requested-test-3",
+          "expected": "review_requested",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "review_requested-test-4",
+          "expected": "review_requested",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "merged-test-1",
+          "expected": "merged",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "merged-test-2",
+          "expected": "merged",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "merged-test-3",
+          "expected": "merged",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "merged-test-4",
+          "expected": "merged",
+          "predicted": "bug_report"
+        }
+      ]
+    },
+    "tfidf": {
+      "accuracy": 0.6666666666666666,
+      "macro_f1": 0.6074555074555075,
+      "recall": {
+        "bug_report": 0.75,
+        "implementation": 0.0,
+        "merged": 1.0,
+        "review_requested": 1.0,
+        "validation_failed": 0.5,
+        "validation_passed": 0.75
+      },
+      "confusion_matrix": [
+        [
+          3,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          4,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          2,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          3
+        ]
+      ],
+      "predictions": [
+        {
+          "id": "bug_report-test-1",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-2",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-3",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-4",
+          "expected": "bug_report",
+          "predicted": "merged"
+        },
+        {
+          "id": "implementation-test-1",
+          "expected": "implementation",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "implementation-test-2",
+          "expected": "implementation",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "implementation-test-3",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-4",
+          "expected": "implementation",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "validation_failed-test-1",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-2",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-3",
+          "expected": "validation_failed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "validation_failed-test-4",
+          "expected": "validation_failed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "validation_passed-test-1",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-2",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-3",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-4",
+          "expected": "validation_passed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "review_requested-test-1",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "review_requested-test-2",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "review_requested-test-3",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "review_requested-test-4",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "merged-test-1",
+          "expected": "merged",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-2",
+          "expected": "merged",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-3",
+          "expected": "merged",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-4",
+          "expected": "merged",
+          "predicted": "merged"
+        }
+      ]
+    },
+    "modernbert_frozen": {
+      "accuracy": 0.8333333333333334,
+      "macro_f1": 0.8328523328523327,
+      "recall": {
+        "bug_report": 1.0,
+        "implementation": 0.5,
+        "merged": 1.0,
+        "review_requested": 0.75,
+        "validation_failed": 1.0,
+        "validation_passed": 0.75
+      },
+      "confusion_matrix": [
+        [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          4,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          3
+        ]
+      ],
+      "predictions": [
+        {
+          "id": "bug_report-test-1",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-2",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-3",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "bug_report-test-4",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-1",
+          "expected": "implementation",
+          "predicted": "implementation"
+        },
+        {
+          "id": "implementation-test-2",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-3",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-4",
+          "expected": "implementation",
+          "predicted": "implementation"
+        },
+        {
+          "id": "validation_failed-test-1",
+          "expected": "validation_failed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "validation_failed-test-2",
+          "expected": "validation_failed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "validation_failed-test-3",
+          "expected": "validation_failed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "validation_failed-test-4",
+          "expected": "validation_failed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "validation_passed-test-1",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-2",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-3",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-4",
+          "expected": "validation_passed",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "review_requested-test-1",
+          "expected": "review_requested",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "review_requested-test-2",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "review_requested-test-3",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "review_requested-test-4",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "merged-test-1",
+          "expected": "merged",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-2",
+          "expected": "merged",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-3",
+          "expected": "merged",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-4",
+          "expected": "merged",
+          "predicted": "merged"
+        }
+      ]
+    },
+    "shuffled_label_control": {
+      "accuracy": 0.25,
+      "macro_f1": 0.22011784511784507,
+      "recall": {
+        "bug_report": 0.25,
+        "implementation": 0.0,
+        "merged": 0.25,
+        "review_requested": 0.25,
+        "validation_failed": 0.0,
+        "validation_passed": 0.75
+      },
+      "confusion_matrix": [
+        [
+          1,
+          0,
+          2,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          1,
+          2,
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          3
+        ]
+      ],
+      "predictions": [
+        {
+          "id": "bug_report-test-1",
+          "expected": "bug_report",
+          "predicted": "merged"
+        },
+        {
+          "id": "bug_report-test-2",
+          "expected": "bug_report",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "bug_report-test-3",
+          "expected": "bug_report",
+          "predicted": "merged"
+        },
+        {
+          "id": "bug_report-test-4",
+          "expected": "bug_report",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-1",
+          "expected": "implementation",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "implementation-test-2",
+          "expected": "implementation",
+          "predicted": "validation_failed"
+        },
+        {
+          "id": "implementation-test-3",
+          "expected": "implementation",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "implementation-test-4",
+          "expected": "implementation",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "validation_failed-test-1",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_failed-test-2",
+          "expected": "validation_failed",
+          "predicted": "merged"
+        },
+        {
+          "id": "validation_failed-test-3",
+          "expected": "validation_failed",
+          "predicted": "merged"
+        },
+        {
+          "id": "validation_failed-test-4",
+          "expected": "validation_failed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_passed-test-1",
+          "expected": "validation_passed",
+          "predicted": "bug_report"
+        },
+        {
+          "id": "validation_passed-test-2",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-3",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "validation_passed-test-4",
+          "expected": "validation_passed",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "review_requested-test-1",
+          "expected": "review_requested",
+          "predicted": "review_requested"
+        },
+        {
+          "id": "review_requested-test-2",
+          "expected": "review_requested",
+          "predicted": "implementation"
+        },
+        {
+          "id": "review_requested-test-3",
+          "expected": "review_requested",
+          "predicted": "merged"
+        },
+        {
+          "id": "review_requested-test-4",
+          "expected": "review_requested",
+          "predicted": "merged"
+        },
+        {
+          "id": "merged-test-1",
+          "expected": "merged",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "merged-test-2",
+          "expected": "merged",
+          "predicted": "implementation"
+        },
+        {
+          "id": "merged-test-3",
+          "expected": "merged",
+          "predicted": "validation_passed"
+        },
+        {
+          "id": "merged-test-4",
+          "expected": "merged",
+          "predicted": "merged"
+        }
+      ]
+    }
+  },
+  "timings": {
+    "tfidf_fit_and_predict_s": 0.013525292000849731,
+    "load_s": 0.45020916700013913,
+    "train_encoding_s": 1.1662520419995417,
+    "linear_fit_s": 0.07764162499370286,
+    "test_pass_1_24_messages_s": 0.28716191700368654,
+    "test_pass_2_24_messages_s": 0.2886295419957605
+  },
+  "device": "cpu",
+  "repeat_predictions_identical": true,
+  "screen_pass": true,
+  "input_hashes": {
+    "corpus.json": "53d5c9fda6dacac41d47e2cc98523e961e3a017a62332012736ed0c6605ce704",
+    "PROTOCOL.md": "bf3fba609ac9f50c99434fcf5520bc01e25e36283742a406cb4757ec8d75dcb9",
+    "run.py": "de7bcebe1da1f4f4f58304342751d679f9fb6860cc684313367ed2836b0b3f97"
+  }
+}
