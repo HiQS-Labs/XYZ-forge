@@ -1,0 +1,658 @@
+[main (root-commit) b63f79b] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+.[main (root-commit) 17a4fc7] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+.[main (root-commit) 17a4fc7] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+....merge-cleanup: ERROR — fast-forward to origin/development FAILED: boom
+merge-cleanup: ERROR — PRs are merged remotely but the primary did not advance — reconcile by hand.
+.merge-cleanup: ERROR — REFUSING to merge: could not refresh origin/development — boom
+merge-cleanup: ERROR — Phase 0's verdict is based on cached refs that may no longer match the remote.
+merge-cleanup: ERROR — Fix the remote access, or pass --allow-unready-primary to proceed on stale evidence.
+.merge-cleanup: ERROR — Post-merge fetch failed: boom; preserving checkouts.
+.....merge-cleanup: ERROR — REFUSING to merge: 1 PR(s) do not target 'development':
+merge-cleanup: ERROR —   - #7 targets 'main'
+merge-cleanup: ERROR — Phase 0 only vouches for the selected integration branch.
+merge-cleanup: ERROR — Re-run with --integration-branch <their base>, or exclude them.
+.merge-cleanup: ERROR — REFUSING to merge: the primary checkout cannot receive the landing.
+merge-cleanup: ERROR —   - synthetic blocker
+merge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.
+..merge-cleanup: ERROR — REFUSING to reconcile: the primary checkout cannot receive the landing.
+merge-cleanup: ERROR —   - synthetic blocker
+merge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.
+.merge-cleanup: WARNING — This sequence is NOT executable as things stand: the primary checkout cannot receive the landing (see PHASE 0). --execute would refuse.
+merge-cleanup: ERROR — REFUSING to merge: the primary checkout cannot receive the landing.
+merge-cleanup: ERROR —   - synthetic blocker
+merge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.
+....................
+----------------------------------------------------------------------
+Ran 37 tests in 5.231s
+
+OK
+merge-cleanup: [DRY RUN] Would remove dangling skill symlink: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpmq414j6k/.claude/skills/front-door/SKILL.md -> /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpmq414j6k/deleted-source-repo/SKILL.md
+merge-cleanup: ✅ Removed dangling skill symlink: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpl__btmyo/.claude/skills/front-door/SKILL.md
+merge-cleanup: ✅ Removed empty skill directory: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpl__btmyo/.claude/skills/front-door
+merge-cleanup: ✅ Removed dangling skill symlink: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpl__btmyo/.gemini/antigravity-cli/skills/recon
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpfz6_xnpq/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpfz6_xnpq/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpfz6_xnpq/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp98b77ech/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp98b77ech/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmps_sxvylo/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmps_sxvylo/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmps_sxvylo/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpx925esuj/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpx925esuj/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `main` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpx925esuj/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp6a_7p9p7/primary
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp6a_7p9p7/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpyyycakgk/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpyyycakgk/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `main` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpyyycakgk/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmptwodcdr6/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmptwodcdr6/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmptwodcdr6/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpx2fk8sf8/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpx2fk8sf8/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `main` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpx2fk8sf8/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpe2ht9p5l/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpe2ht9p5l/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpe2ht9p5l/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpr8lu8kb1/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpr8lu8kb1/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp5yocwo5w/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp5yocwo5w/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp0jvz6d4g/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp0jvz6d4g/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp0jvz6d4g/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+agent-chorus (GH-497/GH-510/GH-144):
+  PASS: helper parses with the repository's Python 3.8 floor
+  PASS: skill contains no shell-significant path placeholder
+  PASS: all skill commands use the quoted skill-relative helper variable
+  PASS: skill still documents the in-repo helper path for XYZ-forge clones
+  PASS: documented root-resolved helper path executes
+  PASS: skill documents stdin message streaming
+  PASS: skill documents safe lock-contention recovery
+  PASS: starts a four-agent discussion
+  PASS: preserves the exact agent2 compact invitation
+  PASS: prints an upfront agent3 invitation
+  PASS: prints an upfront agent4 invitation
+  PASS: four-agent start prints exactly three non-initiator invitations
+  PASS: creates an external canonical conversation for a spaced root
+  PASS: uses the external session store
+  PASS: records stable 4-agent roster
+  PASS: routes the opening turn to agent2
+  PASS: defaults timed watch to disabled
+  PASS: agent3 can join upfront and wait
+  PASS: agent4 can join upfront and wait
+  PASS: upfront off-turn joins leave the discussion byte-identical
+  PASS: status inspects a discussion without a participant seat
+  PASS: status reports the subject
+  PASS: status reports open state
+  PASS: status reports the current turn
+  PASS: status reports the single next writer
+  PASS: status reports the full roster
+  PASS: status reports the timed-watch setting
+  PASS: status distinguishes an unobserved/manual seat
+  PASS: status leaves the discussion byte-identical
+  PASS: status creates no doorbell sidecar
+  PASS: starts a timed-watch discussion
+  PASS: timed invitation tells the target to start its watch
+  PASS: timed join reports the persisted watch request
+  PASS: seeds turn 1 as agent1
+  PASS: seeds the requested subject
+  PASS: existing file-driven poller accepts agent IDs
+  PASS: joins an existing discussion by ID
+  PASS: join reports turn ownership
+  PASS: join leaves the discussion byte-identical
+  PASS: watch returns when the participant owns NEXT
+  PASS: watch reports turn ownership
+  PASS: take-turn watch prints a REARM line
+  PASS: REARM argv is self-contained
+  PASS: REARM command runs verbatim
+  PASS: watch leaves the discussion byte-identical
+cksum: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-test.CCYAqs/Agent2Agent-Transcripts/repositories/root-with-spaces--e8ccf86a7261/2026-09-10/123456--subject-line-here/runtime/agent2.watch: No such file or directory
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns)
+                          ~~~~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-test.CCYAqs/Agent2Agent-Transcripts/repositories/root-with-spaces--e8ccf86a7261/2026-09-10/123456--subject-line-here/runtime/agent2.watch'
+  PASS: status reports the active owner's observed heartbeat
+cksum: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-test.CCYAqs/Agent2Agent-Transcripts/repositories/root-with-spaces--e8ccf86a7261/2026-09-10/123456--subject-line-here/runtime/agent2.watch: No such file or directory
+  PASS: status leaves an observed sidecar byte-identical
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, sys; print(os.stat(sys.argv[1]).st_mtime_ns)
+                          ~~~~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-test.CCYAqs/Agent2Agent-Transcripts/repositories/root-with-spaces--e8ccf86a7261/2026-09-10/123456--subject-line-here/runtime/agent2.watch'
+  PASS: status does not refresh an observed sidecar's liveness timestamp
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, sys; os.utime(sys.argv[1], (0, 0))
+                    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-test.CCYAqs/Agent2Agent-Transcripts/repositories/root-with-spaces--e8ccf86a7261/2026-09-10/123456--subject-line-here/runtime/agent2.watch'
+  PASS: status still reports an aged active heartbeat
+  PASS: active owner is not falsely stale
+  PASS: rejects an agent outside the roster
+  PASS: rejects a mismatched invitation subject
+  PASS: rejects an out-of-turn writer
+  PASS: out-of-turn refusal is byte-preserving
+  PASS: rejects routing outside the roster
+  PASS: invalid route refusal is byte-preserving
+HELD
+  PASS: rejects a write while the discussion lock is held
+  PASS: lock refusal is explicit
+  PASS: lock refusal is byte-preserving
+  PASS: agent2 routes turn 2 to agent3
+  PASS: watch detects a delayed turn arrival
+  PASS: prints an agent3 handoff invitation
+  PASS: agent3 can take its routed turn
+  PASS: agent3 routes stdin content to agent4
+  PASS: prints an agent4 handoff invitation
+  PASS: preserves multiline turn content
+  PASS: current participant closes the discussion
+  PASS: marks terminal status
+  PASS: clears the next writer
+  PASS: join reports terminal state
+  PASS: watch exits cleanly on a closed discussion
+  PASS: closed watch reports terminal state
+  PASS: closed watch prints no REARM line
+  PASS: closed watch remains byte-preserving
+  PASS: rejects post-close writes
+  PASS: post-close refusal is byte-preserving
+  PASS: retries after a six-digit ID collision
+  PASS: selects the next unused deterministic ID
+  PASS: explicit duplicate ID fails loudly
+  PASS: missing discussion ID fails
+  PASS: ambiguous discussion ID fails
+  PASS: ambiguous failure is explicit
+  PASS: drive times out without dispatching out of turn
+  PASS: out-of-turn drive is byte-preserving
+  PASS: drive reports a failing turn command
+  PASS: drive failure names the command exit
+  PASS: failed turn command leaves the discussion byte-identical
+  PASS: drive bounds a turn command by its total deadline
+  PASS: command timeout is explicit
+  PASS: timed-out command leaves the discussion byte-identical
+  PASS: second drive for the same participant is refused
+  PASS: drive contention is explicit
+  PASS: drive dispatches the owned turn command
+  PASS: drive stops at its explicit turn bound
+  PASS: drive supplies the compact invitation prompt
+  PASS: drive command advances through guarded send
+  PASS: drive preserves 3+ participant routing
+  PASS: drive rejects a command that does not hand off
+  PASS: non-advance failure is explicit
+  PASS: drive itself never bypasses send enforcement
+  PASS: drive exits cleanly when the discussion is closed
+  PASS: closed drive does not dispatch its failing command
+  PASS: interrupt exits with the conventional 130 status
+  PASS: interrupt is reported visibly
+  -- GH-38 doorbell hardening
+  PASS: GH-38 fixture discussion created
+  PASS: a send after a crashed sender SUCCEEDS (the OS released the flock)
+  PASS: no lock is stolen or guessed at (flock made liveness the kernel's problem)
+  PASS: a genuinely held flock refuses the writer
+  PASS: the refusal names the holding pid
+  PASS: the next writer proceeds with no cleanup once the holder exits
+  PASS: 6 concurrent writers over a crashed sender's lock leave the file structurally intact (TURN=4 matches 4 recorded turns)
+  PASS: exactly ONE of 6 concurrent racers committed (flock serialized them; the rest were refused out-of-turn)
+  PASS: the winning racer's turn was actually committed
+  PASS: REARM names the interpreter explicitly (not a bare script path)
+  PASS: REARM renders the real script path, not the invoking argv[0]
+  PASS: a mode-stripped copy still re-arms verbatim
+  PASS: REARM round-trips the interval value
+  PASS: REARM round-trips the timeout value
+  PASS: REARM carries THIS watch's values, not a default or a stale one
+  PASS: a timed-out watch still exits 3 (the documented status is unchanged)
+  PASS: a timed-out watch names the wait explicitly
+  PASS: timeout does NOT print REARM (the non-reflex contract holds)
+  PASS: the offered still-waiting command is executable verbatim
+  PASS: watch records its liveness in a per-agent sidecar while running
+  PASS: watch removes its liveness sidecar on exit
+  PASS: the sidecar leaves the relay file byte-identical (the watch contract is intact)
+  PASS: the other seat sees the active peer's heartbeat
+  PASS: the doorbell marker refreshes on every poll (a long wait is not reported STALE)
+  PASS: atomic_write fsyncs both the file and its parent directory (the rename survives power loss)
+  PASS: installer completes for Claude and Codex
+  PASS: installer exposes the same skill to both agents
+  PASS: installer repoints the legacy agent2agent symlink at the renamed skill
+  PASS: installer leaves a real agent2agent directory untouched
+  PASS: deprecated agent2agent.py shim warns and delegates
+  PASS: telemetry sidecar written on start (explicit opt-in)
+  PASS: discussion_started event present with schema version
+  PASS: AGENT2AGENT_TELEMETRY=0 hard override suppresses all telemetry
+  PASS: close_written event carries counts (falsifier_count=1), never prose
+  PASS: close_report.json emitted on substantive close
+  PASS: outcome_recorded event + per-seat model attribution in index
+  PASS: telemetry aggregate queries the index across discussions
+  PASS: comparator audit: zero transcript content in telemetry (negative control)
+  PASS: telemetry status reports mode/window/override
+  PASS: pilot window is default-ON inside the range, OFF after it, inclusive on the edge
+  PASS: telemetry purge revokes all artifacts
+  PASS: start --supersedes 888001 creates new discussion
+  PASS: old discussion status is Closed
+  PASS: old discussion points to new discussion
+  PASS: join on superseded discussion reports pointer
+  PASS: join on superseded discussion decides closed
+  PASS: send on superseded discussion is refused
+  PASS: re-superseding already superseded discussion is refused
+  PASS: invite adds agent3 to 2-agent discussion
+  PASS: invite outputs formatted invitation
+  PASS: status reflects widened roster
+  PASS: inviting existing seat is refused
+  PASS: inviting non-sequential seat is refused
+  PASS: inviting on closed discussion is refused
+  PASS: verify-citations passes on valid file and commit references
+  PASS: verify-citations reports PASS status
+  PASS: verify-citations fails on unresolvable file citation
+  PASS: verify-citations text output lists unresolvable count
+  PASS: gh329 fixture: legacy discussion resolves with no store on disk
+  PASS: close SUCCEEDS when the telemetry store does not exist
+  PASS: close reports no traceback under a missing store
+  PASS: the telemetry degrade is announced, not silent
+  PASS: the turn is written despite the unavailable index
+  PASS: the discussion actually reaches Closed
+  PASS: gh328 fault injection anchors on the new-discussion write
+  PASS: the injected fault does abort the supersede
+  PASS: a crash mid-supersede leaves the ORIGINAL discussion open
+  PASS: a crash mid-supersede writes no dangling SUPERSEDED-BY pointer
+  PASS: the supersede can be retried after a crash
+  PASS: the retry closes the original for real
+  PASS: the original now points at the discussion that replaced it
+  PASS: a store-resident discussion still gets its telemetry sidecar
+  PASS: a legacy discussion still closes normally
+  PASS: no telemetry file is written inside the repository for a legacy discussion
+  PASS: the exclusion is announced when telemetry was explicitly enabled
+  PASS: telemetry audit does not crash on a non-eligible discussion
+  PASS: telemetry audit names the exclusion rather than 'off or no events'
+  PASS: a repo inside its own store is accepted (the geometry that defeats a containment guard)
+  PASS: no telemetry lands in the repo even when the repo sits inside the store
+  PASS: join echoes the seat identity back to the participant
+  PASS: the identity is recorded in the TRANSCRIPT, not only telemetry
+  PASS: the protocol tells participants to identify themselves
+  PASS: the turn itself carries lab, model and effort
+  PASS: a seat with no effort level is still attributed by lab and model
+  PASS: an unidentified seat is named as unrecorded, not left blank
+  PASS: the unrecorded stamp says how to fix it
+  PASS: a join with no identity flags writes no SEATS header
+  PASS: a slash-bearing model id survives the header round-trip
+  PASS: separator injection is neutralised: roster unchanged and agent2's fields round-trip
+  PASS: an injected identity leaves its neighbour's seat intact
+  PASS: a partial re-join keeps the fields it did not supply
+  PASS: joining a CLOSED discussion does not rewrite the transcript
+  PASS: start records the producer seat (agent1) in the transcript
+  PASS: Turn 1 -- the producer's own contribution -- is attributed too
+  PASS: the escape-bearing join succeeded (its assertions are not vacuous)
+  PASS: the escape-bearing identity is persisted, sanitised
+  PASS: a backslash escape in an identity cannot forge header lines
+  PASS: escape injection wrote no arbitrary header field
+  PASS: a lone backslash in an identity is stored, not raised
+  PASS: the sanitised identity is actually persisted (not a silently rejected join)
+  PASS: replace_field stores a literal backslash value verbatim -- no escape expansion, no raise
+  PASS: the seat stamp is attribution, not evidence -- its model id is not cited
+  PASS: citation verification still passes on a stamped transcript
+  PASS: a real citation in the message is still recognised
+  PASS: a participant's own Seat-prefixed line is still evidence, and its bad citation still fails
+  PASS: an administrative turn says the helper wrote it, not a model
+  PASS: an identity join refuses cleanly under contention: the concurrent turn survives, nothing half-written
+  PASS: the same join records the seat once the lock is free
+  agent-chorus: 212 pass, 0 fail

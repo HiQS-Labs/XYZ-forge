@@ -23,6 +23,8 @@ from scan_clones import (
     DEFAULT_NEVER_DELETE,
     is_safe_deletable_path,
     scan_directories,
+    inspect_primary_landing,
+    format_primary_landing,
     format_scan_table,
     run_git
 )
@@ -241,11 +243,17 @@ def main():
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
+    parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
+    parser.add_argument("--allow-unready-primary", action="store_true", help="Merge even though the primary checkout cannot receive the landing (records the blockers and proceeds)")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
 
     args = parser.parse_args()
 
-    primary_repo = Path(args.primary).expanduser().resolve() if args.primary else Path.cwd().resolve()
+    try:
+        primary_repo = Path(args.primary).expanduser().resolve() if args.primary else Path.cwd().resolve()
+    except (OSError, RuntimeError) as exc:
+        log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
+        return 2
     search_roots = [Path(r).expanduser().resolve() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
     dry_run = not args.execute
 
@@ -253,10 +261,33 @@ def main():
     if dry_run:
         log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
 
+    # Phase 0: the primary on-disk checkout, before ANY other mode dispatches. It receives every
+    # merge and runs every reconciliation, so its readiness is a precondition of the run, not a
+    # detail discovered at merge time. This must stay above --reconcile-pr: that mode launches
+    # governance writers straight into this tree, and used to do so with no verdict computed at
+    # all (R1-F2).
+    primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    print("\n" + "=" * 80)
+    print("PHASE 0: PRIMARY ON-DISK CHECKOUT")
+    print("=" * 80 + "\n")
+    print(format_primary_landing(primary_landing) + "\n")
+
+    def _primary_blocks(action: str) -> bool:
+        """True when `action` must be refused because the primary cannot receive it."""
+        if primary_landing["landing_ready"] or args.allow_unready_primary or dry_run:
+            return False
+        log_err(f"REFUSING to {action}: the primary checkout cannot receive the landing.")
+        for b in primary_landing["blockers"]:
+            log_err(f"  - {b}")
+        log_err("Fix the primary first, or pass --allow-unready-primary to proceed anyway.")
+        return True
+
     # Reconcile specific PR directly if requested
     if args.reconcile_pr > 0:
+        if _primary_blocks("reconcile"):
+            return 2
         run_post_merge_reconcile(args.reconcile_pr, primary_repo, dry_run=dry_run)
-        return
+        return 0
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude)
@@ -266,7 +297,7 @@ def main():
     print(format_scan_table(checkouts) + "\n")
 
     if args.scan_only:
-        return
+        return 0
 
     # Phase 4: Open PR Sequencing
     prs = fetch_open_prs(str(primary_repo))
@@ -277,6 +308,11 @@ def main():
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
         print("=" * 80 + "\n")
         print(format_pr_table(ordered_prs) + "\n")
+        if not primary_landing["landing_ready"]:
+            log_warn(
+                "This sequence is NOT executable as things stand: the primary checkout cannot "
+                "receive the landing (see PHASE 0). --execute would refuse."
+            )
         if warnings:
             print("Ordering Notes:")
             for w in warnings:
@@ -286,9 +322,43 @@ def main():
         log("No open PRs found for this repository.")
 
     if args.prs_only:
-        return
+        return 0
 
     # Phase 5: Execute Merges & Post-Merge Reconciliation (if not teardown-only)
+    # Gate on Phase 0. Merging is remote and effectively irreversible; landing into a tree that
+    # cannot fast-forward leaves the repo half-landed with reconciliation unrun. Refuse first.
+    if not args.teardown_only and ordered_prs and args.execute:
+        # The Phase 0 verdict above was computed against whatever origin/* this clone had cached.
+        # Re-establish it against the live remote before the first irreversible merge (R1-F1).
+        log("Refreshing remote refs before the first merge, then re-checking the primary...")
+        fetched = run_git(primary_repo, ["fetch", "origin", args.integration_branch])
+        if fetched.returncode != 0 and not args.allow_unready_primary:
+            # Re-checking against the SAME cached origin/* the fetch failed to refresh would
+            # certify stale evidence as current. Refuse instead (R2-1).
+            log_err(
+                f"REFUSING to merge: could not refresh origin/{args.integration_branch} — "
+                f"{fetched.stderr.strip() or 'git fetch failed'}"
+            )
+            log_err("Phase 0's verdict is based on cached refs that may no longer match the remote.")
+            log_err("Fix the remote access, or pass --allow-unready-primary to proceed on stale evidence.")
+            return 2
+        primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+        print(format_primary_landing(primary_landing) + "\n")
+        if _primary_blocks("merge"):
+            return 2
+
+        # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
+        # based elsewhere would merge into a tree whose readiness was never established.
+        mismatched = [pr for pr in ordered_prs
+                      if (pr.get("baseRefName") or "") != args.integration_branch]
+        if mismatched:
+            log_err(f"REFUSING to merge: {len(mismatched)} PR(s) do not target '{args.integration_branch}':")
+            for pr in mismatched:
+                log_err(f"  - #{pr['number']} targets '{pr.get('baseRefName') or 'unknown'}'")
+            log_err("Phase 0 only vouches for the selected integration branch.")
+            log_err(f"Re-run with --integration-branch <their base>, or exclude them.")
+            return 2
+
     if not args.teardown_only and ordered_prs:
         print("=" * 80)
         print("PHASE 5: EXECUTING PR MERGES & RECONCILIATION")
@@ -302,8 +372,21 @@ def main():
         # Pull latest development into primary repo
         if not dry_run:
             log("Updating primary repo development branch...")
-            run_git(primary_repo, ["fetch", "origin"])
-            run_git(primary_repo, ["merge", "--ff-only", "origin/development"])
+            fetched = run_git(primary_repo, ["fetch", "origin"])
+            if fetched.returncode != 0:
+                log_err(f"Post-merge fetch failed: {fetched.stderr.strip()}; preserving checkouts.")
+                return 2
+            # The branch that was CHECKED in Phase 0 is the branch that gets landed. Hardcoding
+            # origin/development here let --integration-branch approve one tree and advance a
+            # different one (R1-F3).
+            ff = run_git(primary_repo, ["merge", "--ff-only", f"origin/{args.integration_branch}"])
+            if ff.returncode != 0:
+                log_err(
+                    f"fast-forward to origin/{args.integration_branch} FAILED: "
+                    f"{ff.stderr.strip() or 'git refused'}"
+                )
+                log_err("PRs are merged remotely but the primary did not advance — reconcile by hand.")
+                return 2
 
     # Phase 6: Safe Teardown
     print("=" * 80)
@@ -320,7 +403,8 @@ def main():
     prune_dangling_skill_symlinks(dry_run=dry_run)
     print("\n" + "=" * 80)
     log("Merge cleanup run complete.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
