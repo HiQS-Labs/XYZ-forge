@@ -1,0 +1,458 @@
+[main (root-commit) 776832b] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+.[main (root-commit) 776832b] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+.[main (root-commit) 776832b] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+....merge-cleanup: ERROR — fast-forward to origin/development FAILED: boom
+merge-cleanup: ERROR — PRs are merged remotely but the primary did not advance — reconcile by hand.
+Fmerge-cleanup: ERROR — REFUSING to merge: could not refresh origin/development — boom
+merge-cleanup: ERROR — Phase 0's verdict is based on cached refs that may no longer match the remote.
+merge-cleanup: ERROR — Fix the remote access, or pass --allow-unready-primary to proceed on stale evidence.
+.F....merge-cleanup: ERROR — REFUSING to merge: 1 PR(s) do not target 'development':
+merge-cleanup: ERROR —   - #7 targets 'main'
+merge-cleanup: ERROR — Phase 0 only vouches for the selected integration branch.
+merge-cleanup: ERROR — Re-run with --integration-branch <their base>, or exclude them.
+.merge-cleanup: ERROR — REFUSING to merge: the primary checkout cannot receive the landing.
+merge-cleanup: ERROR —   - synthetic blocker
+merge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.
+..merge-cleanup: ERROR — REFUSING to reconcile: the primary checkout cannot receive the landing.
+merge-cleanup: ERROR —   - synthetic blocker
+merge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.
+.merge-cleanup: WARNING — This sequence is NOT executable as things stand: the primary checkout cannot receive the landing (see PHASE 0). --execute would refuse.
+merge-cleanup: ERROR — REFUSING to merge: the primary checkout cannot receive the landing.
+merge-cleanup: ERROR —   - synthetic blocker
+merge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.
+....................
+======================================================================
+FAIL: test_failed_fast_forward_stops_before_teardown (__main__.TestMergeCleanupOrchestration.test_failed_fast_forward_stops_before_teardown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/xyz-pr526-test-20260909/test/gh436-merge-cleanup.py", line 455, in test_failed_fast_forward_stops_before_teardown
+    self.assertNotEqual(rc, 0)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 0 == 0
+
+======================================================================
+FAIL: test_failed_final_fetch_stops_before_fast_forward_and_teardown (__main__.TestMergeCleanupOrchestration.test_failed_final_fetch_stops_before_fast_forward_and_teardown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/xyz-pr526-test-20260909/test/gh436-merge-cleanup.py", line 464, in test_failed_final_fetch_stops_before_fast_forward_and_teardown
+    self.assertNotEqual(rc, 0)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 0 == 0
+
+----------------------------------------------------------------------
+Ran 37 tests in 5.494s
+
+FAILED (failures=2)
+merge-cleanup: [DRY RUN] Would remove dangling skill symlink: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp4g2nei5o/.claude/skills/front-door/SKILL.md -> /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp4g2nei5o/deleted-source-repo/SKILL.md
+merge-cleanup: ✅ Removed dangling skill symlink: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8dps92tu/.claude/skills/front-door/SKILL.md
+merge-cleanup: ✅ Removed empty skill directory: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8dps92tu/.claude/skills/front-door
+merge-cleanup: ✅ Removed dangling skill symlink: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8dps92tu/.gemini/antigravity-cli/skills/recon
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp54evtijx/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp54evtijx/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp54evtijx/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp5vgk6r7t/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp5vgk6r7t/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpd156trd4/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpd156trd4/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpd156trd4/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpl_32ery7/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpl_32ery7/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `main` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpl_32ery7/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpm9tr6urh/primary
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpm9tr6urh/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpv4tt_tcw/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpv4tt_tcw/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `main` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpv4tt_tcw/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpuvw9eo3u/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpuvw9eo3u/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpuvw9eo3u/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Updating primary repo development branch...
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmppjh6hb1u/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmppjh6hb1u/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `main` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmppjh6hb1u/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmptpjoai9j/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmptpjoai9j/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmptpjoai9j/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp3yn57tfc/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp3yn57tfc/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp71ok_7_u/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp71ok_7_u/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8p6sxa94/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8p6sxa94/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#7]() | t | `` | `development` | PASS | UNKNOWN | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8p6sxa94/primary
+  branch: development  (integration: development)
+  clean: no (0 path(s))
+  landing: NOT READY
+    - synthetic blocker
+

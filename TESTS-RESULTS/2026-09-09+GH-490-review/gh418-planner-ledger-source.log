@@ -1,0 +1,11 @@
+fixture: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh418.ajughixm
+engine sha256: 38b3a3009eeecab4fc33f54cc224a264e1f80afe97953f0caed7e18ddb2be26d
+PASS: DB-only CLI-parked item appears; stale markdown excluded; real source named
+PASS: negative control detects an injected releases-mode ROADMAP.md read
+PASS: releases-mode never reads ROADMAP.md (present or absent)
+PASS: empty DB stays empty, without stale-file fallback
+PASS: missing/corrupt/unmigrated DB fails closed without creating a DB
+PASS: legacy mode still uses markdown, including with a shadow DB
+PASS: explicit test-only override retained and accurately labelled
+PASS: planner leaves DB and dump byte-identical
+PASS: GH-418 planner ledger source

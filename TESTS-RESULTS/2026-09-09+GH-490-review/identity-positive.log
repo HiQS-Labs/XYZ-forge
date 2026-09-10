@@ -1,0 +1,22 @@
+test_catch_up_applies_missed_event (__main__.ReconcileTests.test_catch_up_applies_missed_event) ... ok
+test_catch_up_finds_roadmap_only_drift (__main__.ReconcileTests.test_catch_up_finds_roadmap_only_drift) ... ok
+test_corrupt_ledger_fails_closed (__main__.ReconcileTests.test_corrupt_ledger_fails_closed) ... ok
+test_doc_write_failure_and_legacy (__main__.ReconcileTests.test_doc_write_failure_and_legacy) ... ok
+test_dry_run_transitions (__main__.ReconcileTests.test_dry_run_transitions) ... ok
+test_lifecycle_and_second_apply (__main__.ReconcileTests.test_lifecycle_and_second_apply) ... ok
+test_live_catch_up_pagination_and_foreign_reference (__main__.ReconcileTests.test_live_catch_up_pagination_and_foreign_reference) ... wave-reconcile: ERROR — Closed GH-421 has reconciliation drift but no attributable merged development PR
+ok
+test_missing_merge_sha_rolls_back (__main__.ReconcileTests.test_missing_merge_sha_rolls_back) ... ok
+test_no_manifest_and_missing_evidence (__main__.ReconcileTests.test_no_manifest_and_missing_evidence) ... ok
+test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers) ... ok
+test_roadmap_catch_up_preserves_repository_identity (__main__.ReconcileTests.test_roadmap_catch_up_preserves_repository_identity) ... ok
+test_rollback_each_boundary (__main__.ReconcileTests.test_rollback_each_boundary) ... ok
+test_three_close_events_and_catch_up (__main__.ReconcileTests.test_three_close_events_and_catch_up) ... ok
+test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allowlist_and_plan_lands) ... ok
+test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 2.580s
+
+OK
+Nothing to commit

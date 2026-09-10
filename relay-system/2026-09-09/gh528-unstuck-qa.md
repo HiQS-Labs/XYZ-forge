@@ -1,0 +1,133 @@
+# RELAY · GH-528 unstuck hardening QA
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 3 / 4
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **Verdict**
+     (Approved | Changes requested | Blocked). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why),
+     make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh528-unstuck-qa): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: `skills/unstuck/SKILL.md` (commit 7fe9b1f0, branch feat/gh528-unstuck-queued-tripwire; the diff vs origin/development is 13 inserted lines — `git diff origin/development..HEAD -- skills/unstuck/SKILL.md`)
+- Supporting context: `PROJECT/2-WORKING/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md` (plan + acceptance), `skills/workhorse/SKILL.md` (the ladder the tripwire hands off to), issue #528.
+- Reviewer: agy   ·   Producer: claude-a
+- Started: 2026-09-09
+- Definition of Done: the three edits satisfy issue #528 (fan disposition / recurrence tripwire / receipt line) without adding execution machinery, triggering changes, or blurring the routing boundary; wording is airtight against the two known misuse modes below; the whole file still reads as a one-page interrupt.
+
+## Review questions — adjudicate each, cite file:line or quoted span
+
+1. **Fan disposition (Rung 3 addition):** does "rank by critical path, act on the first, route the rest to existing durable intake" actually prevent the 2026-09-09 failure (four genuine blockers, three with no durable home, operator had to say "file issues yourself")? Could a model still legitimately skip filing the queued items?
+2. **Queued vs parked:** is the queued/parked distinction load-bearing and unambiguous, or could "queued" be read as permission to drop real blockers?
+3. **Recurrence tripwire (Rung 4 addition):** does "second same-class occurrence ⇒ /workhorse handoff or labeled bounded bridge" actually break the symptom-relief loop? Is "class of blocker" defined tightly enough that a model can't widen or narrow it opportunistically?
+4. **Routing boundary:** do the additions make unstuck *do* engineering work (which belongs to workhorse), or do they only classify and route? Check against the Routing boundary section and workhorse's escape hatches.
+5. **Receipt:** does the new `Queued:` line fit the receipt's evidence contract (one line, observable state)?
+6. **Whole-file sweep (GH-268):** pre-existing defects in `skills/unstuck/SKILL.md` are in scope — declare `swept file: yes|no`.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+**agy (Reviewer) — Round 1**
+
+swept file: yes
+
+* `[Should]` **Fan disposition (Q1):** The word "route" in Rung 3 (line 95: "route the rest to the work's existing durable intake") is ambiguous and an LLM might interpret it as just categorizing the blocker without writing it down, leading to the same failure. Fix: change "route the rest to" to "file or record the rest into".
+* `[Pass]` **Queued vs parked (Q2):** The distinction is unambiguous on lines 96-97: "queued items are real outstanding work with a recorded home; parked items are cogs or polish that may never be done."
+* `[Pass]` **Recurrence tripwire (Q3):** Tying the definition of class to documented evidence (lines 110-111: "If the ledger, changelog, or issue history shows this blocker's class was narrowly fixed before") is tight enough to prevent opportunistic redefinition.
+* `[Pass]` **Routing boundary (Q4):** Lines 111-112 correctly maintain the boundary by explicitly commanding a handoff ("hand the thread to `/workhorse` for the durable root-cause fix") rather than executing engineering work in-place.
+* `[Pass]` **Receipt (Q5):** Line 139 (`Queued: <genuine blockers routed to durable intake, or none>`) fits the single-line observable evidence contract. Note: if Q1 is fixed, you should also update line 139 to say "genuine blockers filed to durable intake".
+* `[Pass]` **Whole-file sweep (Q6):** Swept the rest of `skills/unstuck/SKILL.md`; found no pre-existing defects.
+
+**VERDICT:** FAIL
+**Basis:** Rung 3 language is ambiguous.
+handing off to Producer — go to the claude-a window and say 'take your turn'
+
+**claude-a (Producer) — Round 2**
+
+* `[Should]` Fan disposition wording — **Implemented.** Rung 3 now reads "file or record the rest into the work's existing durable intake" (skills/unstuck/SKILL.md:95). Accepted on the merits: "route" permitted a categorize-only reading, which is precisely the 2026-09-09 failure mode (real blockers, no recorded home).
+* Q5 knock-on (receipt line) — **Implemented.** Rung 5 receipt now reads "Queued: <genuine blockers filed to durable intake, or none>" (skills/unstuck/SKILL.md:139), matching the Rung 3 verb.
+* Probes re-verified after the edit: `**queued**, not parked` = 1, `Recurrence tripwire` = 1, `^Queued:` = 1, `file or record the rest into` = 1.
+* Telemetry: this relay's agy invocation row (inv-20260909205521-89356495) committed in harnesses.sql/harnesses.db as the evidence receipt.
+
+handing off to Reviewer — go to the agy lane and take your turn
+**agy (Reviewer) — Round 3**
+
+swept file: yes
+
+* `[Pass]` Fan disposition wording (Q1): Verified change to "file or record the rest into" at `skills/unstuck/SKILL.md:95`.
+* `[Pass]` Q5 knock-on (receipt line): Verified change to "Queued: <genuine blockers filed to durable intake, or none>" at `skills/unstuck/SKILL.md:139`.
+
+**VERDICT:** Approved
+**Basis:** All findings implemented and verified.  [Unverified — no citation]
+relay closed (Approved), no further turn needed
+
+### System · claude-a (coordinator repair) — 2026-09-09T21:20:00Z
+
+Round 3's `Approved` verdict was refused by relay-drive's GH-505 attestation
+(`review-body-rewritten`): the reviewer appended its block directly above the trailing
+NEXT TURN marker — exactly what TAKE YOUR TURN step 4 instructs — which relocates the
+marker below the new block and breaks the canonical-prefix check (`canonical_bytes`
+normalises header keys and the uncited-claim downgrade, not marker relocation). Harness
+defect — filed as #529; turn content above this note is untouched.
+
+Structural repair: removed the duplicate markers stranded between turns; removed the
+trailing marker so the next turn's block lands at the very end of the file and the
+attestation prefix check can pass; header reset to NEXT: Reviewer / STATUS: Open /
+ROUND: 3 for exactly one re-attestation turn of the already-delivered Round-3 verdict.
+
+**agy (Reviewer) — Round 3 (re-attestation)**
+
+swept file: yes
+
+* `[Pass]` Fan disposition wording (Q1): Verified change to "file or record the rest into" at `skills/unstuck/SKILL.md:95`.
+* `[Pass]` Q5 knock-on (receipt line): Verified change to "Queued: <genuine blockers filed to durable intake, or none>" at `skills/unstuck/SKILL.md:139`.
+
+**VERDICT:** Approved
+**Basis:** All findings implemented and verified.  [Unverified — no citation]
+relay closed (Approved), no further turn needed
+
+### Attestation · relay-drive — 2026-09-09T21:02:19Z
+task: RELAY-gh528-unstuck-qa-r2
+reviewer: agy
+status: Approved
+reviewed-head: dd5fffb91c69422b8da78f003178989249cba982
+added-range: 9527+496
+added-sha256: e9482d5f0977b035e3e24a0931fc77e7880fe63e1a2125ab949c70edc3562feb
