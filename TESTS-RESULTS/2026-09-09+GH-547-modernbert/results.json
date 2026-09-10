@@ -1,0 +1,80 @@
+{
+  "utc": "2026-09-10T04:11:19.956332+00:00",
+  "python": "3.12.13",
+  "torch": "2.14.0",
+  "transformers": "5.17.0",
+  "device": "cpu",
+  "mps_available": true,
+  "model_revision": "8949b909ec900327062f0ebf497f51aef5e6f0c8",
+  "input_hashes": {
+    "QUESTIONS.md": "ea2818c77d9cffa40f0afc34076c8d594a5c8ee2bf0a058781291034e66b862b",
+    "packet.json": "dc19001fd5d1b4ad68f96516edb4c9b4538364689410450c5d33513e8ee5431b"
+  },
+  "runs": [
+    {
+      "run": 1,
+      "task": "masked-token smoke, not shared analyst benchmark",
+      "input": "The capital of France is [MASK].",
+      "seconds": 1.0749758750025649,
+      "top5": [
+        {
+          "token": " Paris",
+          "probability": 0.9233463406562805
+        },
+        {
+          "token": " Lyon",
+          "probability": 0.035947564989328384
+        },
+        {
+          "token": " Nancy",
+          "probability": 0.023050669580698013
+        },
+        {
+          "token": " Nice",
+          "probability": 0.006168758496642113
+        },
+        {
+          "token": " Orleans",
+          "probability": 0.0025843544863164425
+        }
+      ]
+    },
+    {
+      "run": 2,
+      "task": "masked-token smoke, not shared analyst benchmark",
+      "input": "The capital of France is [MASK].",
+      "seconds": 0.1018797500000801,
+      "top5": [
+        {
+          "token": " Paris",
+          "probability": 0.9233463406562805
+        },
+        {
+          "token": " Lyon",
+          "probability": 0.035947564989328384
+        },
+        {
+          "token": " Nancy",
+          "probability": 0.023050669580698013
+        },
+        {
+          "token": " Nice",
+          "probability": 0.006168758496642113
+        },
+        {
+          "token": " Orleans",
+          "probability": 0.0025843544863164425
+        }
+      ]
+    }
+  ],
+  "load_seconds": 0.6013344579987461,
+  "architecture": "ModernBertForMaskedLM",
+  "can_generate": false,
+  "max_positions": 8192,
+  "shared_input_tokens": 9512,
+  "comparison": {
+    "grade": "N/A",
+    "reason": "Masked-language checkpoint has no trained analyst verdict/evidence/analysis output head. No generative benchmark responses attempted; smoke outputs are not analyst answers."
+  }
+}
