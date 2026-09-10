@@ -20,7 +20,7 @@ risk: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented 2026-09-09: SKILL.md + index row + CHANGELOG; impl-QA round 1 (FAIL, 4 Should + 1 Nit) fixed — empty-artifact guard, corrected sparse example, full-input evidence embedded | Round-2 impl QA; then push; PR (merge held by operator) |
+| Implemented + impl QA APPROVED round 3 2026-09-09 (round-1 FAIL: 4 Should + 1 Nit; round-2 FAIL: 2 Should + 1 Nit — all fixed) | Push through gate; open PR into development (merge held by operator) |
 
 ## Problem statement
 
