@@ -1,0 +1,50 @@
+test_catch_up_applies_missed_event (__main__.ReconcileTests.test_catch_up_applies_missed_event) ... ok
+test_catch_up_finds_roadmap_only_drift (__main__.ReconcileTests.test_catch_up_finds_roadmap_only_drift) ... ok
+test_corrupt_ledger_fails_closed (__main__.ReconcileTests.test_corrupt_ledger_fails_closed) ... ok
+test_declined_marker_uses_existing_enum (__main__.ReconcileTests.test_declined_marker_uses_existing_enum) ... ok
+test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up) ... ERROR
+test_doc_write_failure_and_legacy (__main__.ReconcileTests.test_doc_write_failure_and_legacy) ... ok
+test_dry_run_transitions (__main__.ReconcileTests.test_dry_run_transitions) ... ok
+test_lifecycle_and_second_apply (__main__.ReconcileTests.test_lifecycle_and_second_apply) ... ok
+test_live_catch_up_pagination_and_foreign_reference (__main__.ReconcileTests.test_live_catch_up_pagination_and_foreign_reference) ... wave-reconcile: ERROR — Closed GH-421 has reconciliation drift but no attributable merged development PR
+ok
+test_missing_merge_sha_rolls_back (__main__.ReconcileTests.test_missing_merge_sha_rolls_back) ... ok
+test_no_manifest_and_missing_evidence (__main__.ReconcileTests.test_no_manifest_and_missing_evidence) ... ok
+test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers) ... ok
+test_roadmap_catch_up_preserves_repository_identity (__main__.ReconcileTests.test_roadmap_catch_up_preserves_repository_identity) ... ok
+test_rollback_each_boundary (__main__.ReconcileTests.test_rollback_each_boundary) ... ok
+test_three_close_events_and_catch_up (__main__.ReconcileTests.test_three_close_events_and_catch_up) ... ok
+test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allowlist_and_plan_lands) ... ok
+test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
+
+======================================================================
+ERROR: test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/xyz-integration-controls-495/utils/py/wave_reconcile.py", line 1170, in main
+    check_provenance_receipts(repo_root, pr_meta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/xyz-integration-controls-495/utils/py/wave_reconcile.py", line 398, in check_provenance_receipts
+    die(f"--gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #{pr_num} "
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "by pr/pr_number or exact merge commit in TESTS-RESULTS/", code=6)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/xyz-integration-controls-495/utils/py/wave_reconcile.py", line 45, in die
+    raise ReconcileError(msg, code=code)
+gh421_wave.ReconcileError: --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #bbbbbbbbbbbb by pr/pr_number or exact merge commit in TESTS-RESULTS/
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 108, in test_direct_commit_with_catch_up
+  File "<stdin>", line 100, in apply
+  File "/private/tmp/xyz-integration-controls-495/utils/py/wave_reconcile.py", line 1298, in main
+    sys.exit(re_err.code)
+    ~~~~~~~~^^^^^^^^^^^^^
+SystemExit: 6
+
+----------------------------------------------------------------------
+Ran 17 tests in 3.409s
+
+FAILED (errors=1)
+Nothing to commit

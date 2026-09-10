@@ -1,0 +1,42 @@
+{
+  "releases": {
+    "base_rows": 13,
+    "integrated_rows": 13,
+    "preserved": true
+  },
+  "issue_refs": {
+    "base_rows": 66,
+    "integrated_rows": 67,
+    "preserved": true
+  },
+  "marathons": {
+    "base_rows": 4,
+    "integrated_rows": 5,
+    "preserved": true
+  },
+  "manifest_items": {
+    "base_rows": 66,
+    "integrated_rows": 66,
+    "preserved": true
+  },
+  "roadmap_items": {
+    "base_rows": 153,
+    "integrated_rows": 153,
+    "preserved": true
+  },
+  "remapped_marathon": {
+    "old": "mar-01M1ZKP1M98FMZ3BBGK32RQHZ6",
+    "new": "mar-01M24ESN5WTDSHR7WBZ2AH9CQG",
+    "reason": "Recreated through supported marathon add CLI; same tracking issue and planned status. Integer reference collision resolved by CLI."
+  },
+  "registry_union": {
+    "blog_stories": 0,
+    "devices": 0,
+    "evaluations": 0,
+    "harnesses": 0,
+    "invocation_logs": 28,
+    "models": 0,
+    "user_configs": 0
+  },
+  "base_sha": "6e30482023f9d64b09582ca320280c40942cc4b9"
+}
