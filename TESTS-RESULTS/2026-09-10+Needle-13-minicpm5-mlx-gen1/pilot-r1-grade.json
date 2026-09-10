@@ -1,0 +1,29 @@
+{
+  "answer_sha256": "a463f9d440ef822f3d398d493635dfc2bc04170fe2f7cf557b04bd04380ec69a",
+  "json_blocks": 1,
+  "json_parse": true,
+  "top_level_keys": [
+    "answers",
+    "decisions",
+    "limitations"
+  ],
+  "decision_count": 6,
+  "decision_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "Q5",
+    "Q6"
+  ],
+  "answer_count": 4,
+  "answer_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+  ],
+  "original_grader_returncode": 1,
+  "original_grader_stdout": "",
+  "original_grader_stderr": "AssertionError: decision count"
+}

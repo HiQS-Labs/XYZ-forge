@@ -1,0 +1,22 @@
+{
+  "schema": "needle13/minicpm5-mlx-gen1@1",
+  "run": "r1",
+  "status": "complete",
+  "started_at": "2026-09-10T21:17:59.205111+00:00",
+  "model_id": "openbmb/MiniCPM5-2B-MLX",
+  "model_revision": "3d00c3da500debfe345e60e25a87ed2669f5b1ee",
+  "model_path": "/Users/noelsaw/minicpm5-2b-mlx",
+  "quantization_bits": 4,
+  "mlx_lm_version": "0.31.3",
+  "temperature": 0,
+  "seed": 0,
+  "max_output_tokens": 6000,
+  "fresh_process": true,
+  "wall_seconds": 148.33686687499994,
+  "returncode": 0,
+  "prompt_sha256": "d3d4b5f54f9535772ce5b16e33cb3f6b99811d6a6eb9a5e42ff4949da0f2312f",
+  "answer_sha256": "a463f9d440ef822f3d398d493635dfc2bc04170fe2f7cf557b04bd04380ec69a",
+  "stderr_sha256": "f50c09cda67f6bd305cc5f5c015b9dae29394e3e3c3000a7615200fbb07e251d",
+  "answer_bytes": 23085,
+  "stderr_bytes": 197
+}
