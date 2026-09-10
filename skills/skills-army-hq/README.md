@@ -19,7 +19,7 @@ Skills Army HQ gives your skill army one headquarters. Talk to one system to
 import and update your skills, then deploy them to your configured apps. It knows
 your target folders and updates their links on your command.
 
-The actual skill folders stay in a separate `Documents/Deployed Skills` collection.
+The actual skill folders stay in one collection — since GH-536, `~/git-pulse-sync/Deployed Skills`, carried by the hourly Git Pulse writer (see SKILL.md → "Adopting the collection on another machine").
 Each app points to those same copies through directory symlinks, so you can see
 exactly what's deployed without maintaining separate versions for every agent.
 Run a health check to spot missing links or conflicts; app discovery and runtime
