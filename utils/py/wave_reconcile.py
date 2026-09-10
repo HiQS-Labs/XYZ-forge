@@ -239,7 +239,7 @@ def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
         content = f.read()
     if ("\n- " + label + " " + verb + " ") in content or content.startswith("- " + label + " " + verb + " "):
         return  # idempotent
-    print("TRANSITION " + json.dumps(["doc", "merge-evidence", str(pr_id), os.path.basename(doc_path)]), flush=True)
+    print("TRANSITION " + json.dumps(["doc", "merge-evidence", label, os.path.basename(doc_path)]), flush=True)
     if not dry_run:
         if journal is not None:
             journal.snapshot(doc_path)

@@ -92,7 +92,8 @@ class ReconcileTests(unittest.TestCase):
         return SimpleNamespace(returncode=rc, stdout='', stderr='injected' if rc else '')
 
     def apply(self, *flags):
-        argv = ['wave', '--root', str(self.root), '--pr', '42', '--offline', str(self.root / 'offline.json'),
+        targets = [] if '--commit' in flags else ['--pr', '42']
+        argv = ['wave', '--root', str(self.root), *targets, '--offline', str(self.root / 'offline.json'),
                 '--skip-pull', '--skip-branch-check', '--gate', *flags]
         output = io.StringIO()
         with patch.object(sys, 'argv', argv), \
@@ -110,7 +111,7 @@ class ReconcileTests(unittest.TestCase):
         self.offline['commits'] = [dict(sha=sha, message='Closes #421', committedAt='2026-09-09T00:00:00Z')]
         (self.root / 'offline.json').write_text(json.dumps(self.offline))
         (self.root / 'TESTS-RESULTS/provenance.jsonl').write_text(json.dumps({'commit': sha}) + '\n{"pr":42}\n')
-        out = self.apply('--pr', '--commit', sha, '--catch-up')
+        out = self.apply('--commit', sha, '--catch-up')
         self.assertIn('commit ' + sha[:12], out)
         self.assertEqual(self.rows('SELECT status_marker FROM roadmap_items')[0]['status_marker'], '✅')
         self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'shipped')
