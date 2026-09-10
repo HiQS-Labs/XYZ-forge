@@ -1,0 +1,6 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/private/tmp/xyz-land-495-526-531)
+wave-reconcile: Processing PR #531...
+wave-reconcile:   PR #531 closes [528]; references [473, 505, 509, 529]
+wave-reconcile:   Found active doc: GH-528-UNSTUCK-QUEUED-TRIPWIRE.md
+wave-reconcile: ERROR — Doc GH-528-UNSTUCK-QUEUED-TRIPWIRE.md is missing mandatory '## Lessons Learned (For Future Agents)' section.
+wave-reconcile: Rolling back all uncommitted mutations...

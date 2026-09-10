@@ -1,0 +1,105 @@
+test_catch_up_applies_missed_event (__main__.ReconcileTests.test_catch_up_applies_missed_event) ... ok
+test_catch_up_finds_roadmap_only_drift (__main__.ReconcileTests.test_catch_up_finds_roadmap_only_drift) ... ok
+test_corrupt_ledger_fails_closed (__main__.ReconcileTests.test_corrupt_ledger_fails_closed) ... ok
+test_declined_marker_uses_existing_enum (__main__.ReconcileTests.test_declined_marker_uses_existing_enum) ... ok
+test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up) ... ERROR
+test_doc_write_failure_and_legacy (__main__.ReconcileTests.test_doc_write_failure_and_legacy) ... ok
+test_dry_run_transitions (__main__.ReconcileTests.test_dry_run_transitions) ... ok
+test_lifecycle_and_second_apply (__main__.ReconcileTests.test_lifecycle_and_second_apply) ... ok
+test_live_catch_up_pagination_and_foreign_reference (__main__.ReconcileTests.test_live_catch_up_pagination_and_foreign_reference) ... wave-reconcile: ERROR — Closed GH-421 has reconciliation drift but no attributable merged development PR
+ok
+test_missing_merge_sha_rolls_back (__main__.ReconcileTests.test_missing_merge_sha_rolls_back) ... ok
+test_no_manifest_and_missing_evidence (__main__.ReconcileTests.test_no_manifest_and_missing_evidence) ... ok
+test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers) ... ERROR
+test_roadmap_catch_up_preserves_repository_identity (__main__.ReconcileTests.test_roadmap_catch_up_preserves_repository_identity) ... ok
+test_rollback_each_boundary (__main__.ReconcileTests.test_rollback_each_boundary) ... ok
+test_three_close_events_and_catch_up (__main__.ReconcileTests.test_three_close_events_and_catch_up) ... ok
+test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allowlist_and_plan_lands) ... ok
+test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
+
+======================================================================
+ERROR: test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2047, in _parse_known_args2
+    namespace, args = self._parse_known_args(args, namespace, intermixed)
+                      ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2298, in _parse_known_args
+    start_index = consume_optional(start_index)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2208, in consume_optional
+    arg_count = match_argument(action, selected_patterns)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2412, in _match_argument
+    raise ArgumentError(action, msg)
+argparse.ArgumentError: argument --pr: expected at least one argument
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 107, in test_direct_commit_with_catch_up
+  File "<stdin>", line 99, in apply
+  File "/private/tmp/xyz-integration-gate-495/utils/py/wave_reconcile.py", line 1100, in main
+    args = parser.parse_args()
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2008, in parse_args
+    args, argv = self.parse_known_args(args, namespace)
+                 ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2018, in parse_known_args
+    return self._parse_known_args2(args, namespace, intermixed=False)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2049, in _parse_known_args2
+    self.error(str(err))
+    ~~~~~~~~~~^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2785, in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/argparse.py", line 2772, in exit
+    _sys.exit(status)
+    ~~~~~~~~~^^^^^^^^
+SystemExit: 2
+
+======================================================================
+ERROR: test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 146, in test_open_issue_and_empty_closers
+  File "<stdin>", line 99, in apply
+  File "/private/tmp/xyz-integration-gate-495/utils/py/wave_reconcile.py", line 1302, in main
+    raise exc
+  File "/private/tmp/xyz-integration-gate-495/utils/py/wave_reconcile.py", line 1197, in main
+    record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/xyz-integration-gate-495/utils/py/wave_reconcile.py", line 242, in record_merge_evidence
+    print("TRANSITION " + json.dumps(["doc", "merge-evidence", str(pr_id), os.path.basename(doc_path)]), flush=True)
+                                                                   ^^^^^
+NameError: name 'pr_id' is not defined
+
+----------------------------------------------------------------------
+Ran 17 tests in 2.459s
+
+FAILED (errors=2)
+Nothing to commit
+test_legacy_verbs_do_not_infer_marker (__main__.MarkerTests.test_legacy_verbs_do_not_infer_marker) ... ok
+test_marker_and_issue_url_update_together (__main__.MarkerTests.test_marker_and_issue_url_update_together) ... ok
+test_marker_writes_preserve_fields_and_receipt_bulk (__main__.MarkerTests.test_marker_writes_preserve_fields_and_receipt_bulk) ... ok
+test_refusals_and_dry_run_do_not_write (__main__.MarkerTests.test_refusals_and_dry_run_do_not_write) ... ok
+test_rollback_removes_originally_absent_artifacts (__main__.MarkerTests.test_rollback_removes_originally_absent_artifacts) ... TRANSITION ["roadmap", "update", "--issue-num", "424", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-424 · fixture 424** ✅ **SHIPPED 2026-09-08 (42)** — [GH-424-test.md](PROJECT/1-INBOX/GH-424-test.md) · [#424](https://example.test/issues/424)"]
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 1:
+GH424 injected after second write
+
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+test_rollback_restores_all_artifacts_before_first_write (__main__.MarkerTests.test_rollback_restores_all_artifacts_before_first_write) ... TRANSITION ["roadmap", "update", "--issue-num", "424", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-424 · fixture 424** ✅ **SHIPPED 2026-09-08 (42)** — [GH-424-test.md](PROJECT/1-INBOX/GH-424-test.md) · [#424](https://example.test/issues/424)"]
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 1:
+GH424 injected after second write
+
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.737s
+
+OK

@@ -7,8 +7,7 @@ production Python marathon-plan run needs neither Node nor that JS file. The for
 PR-review-overlay parity shims are folded into the native engine (no ROADMAP input mutation, no
 post-render patching).
 
-`utils/marathon-plan.sh` (Bash) remains the authoritative, dual-maintained twin per GH-308; this
-change does not alter the `XYZ_PYTHON=0` fallback.
+Python is authoritative (GH-362); this does not alter the frozen `XYZ_PYTHON=0` fallback.
 
 CLI contract (unchanged): [--dry-run | --check] [--policy quick-wins|derisk-first] [--deep]
 [--require-gh] [--format text|json]. `--zones-config` is translated to QUEUE_PLAN_ZONES_FILE by
@@ -128,15 +127,6 @@ def main():
 
     now = os.environ.get("QUEUE_PLAN_NOW", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     today = os.environ.get("QUEUE_PLAN_TODAY", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"))
-
-    db_path = os.path.join(root, "releases.db")
-    if "QUEUE_PLAN_ROADMAP" in os.environ:
-        if not os.path.isfile(roadmap):
-            emit(f"ROADMAP not found: {roadmap}")
-            sys.exit(3)
-    elif not os.path.isfile(roadmap) and not os.path.isfile(db_path):
-        emit(f"ROADMAP not found: {roadmap}")
-        sys.exit(3)
 
     tmp_dir = tempfile.mkdtemp(prefix="marathon-plan.")
     render_out = os.path.join(tmp_dir, f"MARATHON-PLAN-{today}.md")

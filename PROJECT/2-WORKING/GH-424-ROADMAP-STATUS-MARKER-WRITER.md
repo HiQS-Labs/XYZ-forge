@@ -1,8 +1,9 @@
 ---
 title: roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕
-status: Active (2-WORKING) — DeepSeek v4 Pro QA returned Conditionally Approved; blockers folded in, awaiting re-review before implementation
+status: 2-WORKING
+marathon: gh-490
 created: 2026-09-04
-updated: 2026-09-04
+updated: 2026-09-09
 owner: noelsaw1
 gh_issue: 424
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/424
@@ -299,3 +300,25 @@ GH-269's territory.
 ## Merge evidence
 
 - PR #504 merged 2026-09-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Integration status — PR #495
+
+The design and review history above are retained from development. The gh-490 lane has implemented the writer and reconciliation changes; the historical pre-implementation instructions above describe that earlier review checkpoint. Integration validation is pending. The implementation reuses the existing twelve-marker enum; declined PRs write `⛔` while retaining the legacy `🛑` prose badge.
+
+## Acceptance
+
+- A CLI verb transitions `status_marker` on a named row and refuses without one.
+- The dashboard regenerates to reflect the marker change.
+- Bulk transition of stale 🆕 rows works without hand-editing SQL; pinned by a new suite.
+
+## Acceptance — reviewer-tightened criteria (CodeRabbit round 1)
+
+- [ ] The verb rejects marker values outside the known enum.
+- [ ] Marker writes are receipted (updated_at + issuing verb recorded).
+- [ ] Unrelated fields on the row are preserved byte-for-byte.
+- [ ] A failed write rolls back the generated dashboard artifacts.
+- [ ] `releases check` is clean after the write.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
