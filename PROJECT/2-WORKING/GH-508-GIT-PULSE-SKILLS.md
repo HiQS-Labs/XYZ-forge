@@ -2,7 +2,7 @@
 gh_issue: 508
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/508
 title: "Git Sync Pulse as a portable Skills Army HQ projection"
-status: Active (2-WORKING — promoted 2026-09-09, spike in flight)
+status: Active (2-WORKING — spike complete 2026-09-09, all acceptance PASS; PR pending)
 created: 2026-09-08
 doc_type: plan
 effort: 2
@@ -62,7 +62,7 @@ Related: GH-506 (replication/import UX) and GH-484 (original local deployment sy
 
 | What was just completed | What's next |
 |---|---|
-| Intake promoted (this doc); row re-pointed; rating read-back preserved at the DB's 2/3/2/1 (calc 8) — the operator's same-session request is scheduling, not a re-score | Run the three-skill projection spike in disposable fixtures; record acceptance evidence and findings |
+| Spike complete: all 6 acceptance criteria PASS in disposable fixtures (evidence table below); findings recorded; row text updated | Final relay QA, PR, and the #506 verb recommendation handoff |
 
 ## Recon addendum (2026-09-09, spike session)
 
@@ -90,3 +90,32 @@ Related: GH-506 (replication/import UX) and GH-484 (original local deployment sy
 The DB rating (2/3/2/1, parked 2026-09-08) stands. This session's operator request is an ordering
 signal, not a re-score; per the rating policy the stored axes stay honest and a rank override
 would be the operator's explicit choice.
+
+## Spike results (2026-09-09, fixtures under /tmp/gh508-spike.*)
+
+| # | Acceptance criterion | Result | Evidence |
+|---|---|---|---|
+| 1 | One publisher, three skills; two homes, different absolute roots, identical payload digests, distinct targets/ownership | **PASS** | Projection commit `2a200a72`; `unstuck` 0ea0342209bb / `ponytail` bb7d6011af07 / `debug-mantra` 0e6830b300b6 identical across home-a, home-b, and manifest. Targets `sim-home-a`/`sim-home-b` at different paths; each home's deployed links resolve into its own root. Source provenance (same projection commit in both receipts) is shared by design — that is the transport contract, not drift. |
+| 2 | Conflicting update has a deterministic single-writer policy; no auto multi-writer merge | **PASS** | Rival edit pushed (`d1ed5fe0`, ponytail digest 015601761a61); designated publisher's next projection (`0db1e88d`) overwrote the whole tree; home-a explicit `update ponytail --source` returned **Unchanged** (canonical digest restored). Import side only ever pulls; nothing merges. |
+| 3 | Scheduled live Git Pulse checkout clean and unchanged | **PASS** | `/Users/noelsaw/git-pulse-sync` before and after: tracked tree clean, same untracked writer exhaust (`pdda/registry-*.tsv`, `xyz/`), HEAD `277a339f`. The writer stages only pulse/devices/metadata/snapshots via pathspec-bounded `git add` — `skills-projection/` is invisible to it. The remote already carries other foreign non-pulse commits (`chore(sleuth)` publishes), so coexistence is established behavior, not a novelty. |
+| 4 | Removing the projection checkout leaves local collections and links functional | **PASS** | Projection + rival checkouts removed (renamed `*.removed`); both homes re-verified: all digests intact, links resolve, `sync` reports zero errors. |
+| 5 | Record bytes-vs-refs cost and offline answer | **PASS** | Findings below. |
+| 6 | Operator-managed content acceptable in the generated-data remote? | **YES, with a namespaced path** | Precedent: the remote already hosts operator-tooling publishes. The projection is one removable path; the pulse writer's contract is untouched (pathspec staging verified). Stays the operator's standing policy call. |
+
+### Findings
+
+- **Payload bytes beat source-repo+commit refs** at skill scale: bytes import offline after one
+  clone/pull, need no per-source-repo access or network, and digest equality is direct. Refs would
+  shrink transport but require every private source repo reachable at import time and add one
+  `add --source` per repo — strictly more operator steps for KB-scale payloads.
+- **Offline import matters and works**: after `git clone` / `git pull` of the projection, all
+  adds and sync run with zero network.
+- **Operator cost at 3 skills**: clone, pull, 3× `add --source`, 1× `targets`, 1× `sync` ≈ 7
+  commands. At the real 15-skill inventory this is ~19 — cumbersome enough that #506's smallest
+  stdlib verb (`import-projection <path>` looping the existing add) is justified; per this issue's
+  scope, no verb was added to skills-army-hq here.
+- **Remote end-state**: `main` carries the demo history (`2a200a72` publish → `d1ed5fe0` rival →
+  `0db1e88d` designated re-publish); tree state is the designated publisher's. History rewrite was
+  deliberately NOT performed — the hourly writer rebases onto this branch and a force-push would
+  wedge it (the 229-run incident class from the issue). Full removal of `skills-projection/` is one
+  ordinary commit if the operator wants the remote pristine.
