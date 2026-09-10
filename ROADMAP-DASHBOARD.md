@@ -54,12 +54,12 @@ Summary: 50 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR | — | [GH-492-ROADMAP-STATE-SWEEP.md](PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md) · [#492](https://github.com/HiQS-Labs/XYZ-forge/issues/492) |
 | GH-478 · ATE exit-cleanup / runaway-process guard — gen4 adaptive-ate test hung ~3 days at ~100% CPU | — | [GH-478-ATE-RUNAWAY-GUARD.md](PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md) |
 | GH-355 · Migration 007: updated_at across all releases.db tables, so consumers can detect what changed | — | [GH-355-UPDATED-AT-MIGRATION.md](PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md) · [#355](https://github.com/HiQS-Labs/XYZ-forge/issues/355) |
-| GH-508 · Git Sync Pulse as a portable Skills Army HQ projection | — | [GH-508-GIT-PULSE-SKILLS.md](PROJECT/2-WORKING/GH-508-GIT-PULSE-SKILLS.md) · [#508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) |
 | GH-514 · skills: new co-author skill "keel" — balance modularity, flexibility, maintainability, and ponytail for spec writing and total refactors | — | [GH-514-KEEL-SKILL.md](PROJECT/1-INBOX/GH-514-KEEL-SKILL.md) · [#514](https://github.com/HiQS-Labs/XYZ-forge/issues/514) |
 | GH-510 · jog: operator-confirmed merge path ignores gh pr merge failure and records the task as completed | — | [GH-510-JOG-MERGE-FALSE-SUCCESS.md](PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md) · [#510](https://github.com/HiQS-Labs/XYZ-forge/issues/510) |
 | GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
 | GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
+| GH-536 · relocate: Deployed Skills moves INTO the live Git Pulse Sync checkout (supersedes #508 verdict) | — | [#536](https://github.com/HiQS-Labs/XYZ-forge/issues/536) |
 
 ## Queue
 
@@ -85,7 +85,7 @@ Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 95 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 62 · 🔮 0 · 🔲 0
+Summary: 96 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 63 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -183,6 +183,7 @@ Summary: 95 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 62 · �
 | GH-473 · feat(skill): add /unstuck goal-movement interrupt | — | [doc](PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md) · [#473](https://github.com/HiQS-Labs/XYZ-forge/issues/473) |
 | GH-474 · Staleness guard reads the renderer's dropped-row warning instead of guessing from table names | — | — |
 | GH-487 · ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | ✅ | [GH-487-BOUNDED-GATES.md](PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md) · [#487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) |
+| GH-508 · Git Sync Pulse as a portable Skills Army HQ projection | ✅ | [GH-508-GIT-PULSE-SKILLS.md](PROJECT/3-COMPLETED/GH-508-GIT-PULSE-SKILLS.md) · [#508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) |
 | GH-516 · skills: express hotfix lane v2 — true direct-push mode, commit-driven reconciliation, recovery subcommand, and central telemetry | ✅ | [doc](PROJECT/3-COMPLETED/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md) · [#516](https://github.com/HiQS-Labs/XYZ-forge/issues/516) |
 
 ## Deferred · vision
