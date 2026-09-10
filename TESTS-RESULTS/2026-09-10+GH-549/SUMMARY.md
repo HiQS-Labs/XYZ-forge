@@ -39,4 +39,31 @@ non-eventful, so the common path paid a schema query for an event it was never g
 lengthening exactly the critical section those concurrent-writer suites race against.
 
 After the fix, run 5 is `369/369`, and the run's own GH-528 contention count fell from 11-13
-suites to 2 — corroboration from a number nobody was optimising for.
+suites to 2.
+
+## Correction — the attribution above is partly wrong, and this is the honest version
+
+The pre-push gate then refused a push on `gh32-releases-app`, which reproduced **standalone**.
+Widening the control from 12 runs to 25 changed the conclusion:
+
+| Build | `gh32-releases-app` section J failures |
+|---|---|
+| `development` @ `52938679` (no GH-549 code) | **6 / 25 (24%)** |
+| this branch | 2 / 19 (~11%) |
+
+Every failure is the same `generation-mismatch: settings.generation=1 but releases.sql says 2`
+in the merge-rebuild procedure, and the merged dump in the captured failure contained **zero**
+`work_events` rows — this work is not in that path at all. **The flake predates #549**, the
+branch is if anything marginally less flaky, and the difference is not significant at these
+sample sizes. Filed as #558.
+
+So the rotating single-suite failures in runs 3 and 4 were most likely this same pre-existing
+flake class rather than something this change introduced. The first 12-run baseline passing
+12/12 is what misled the original diagnosis — a sample too small to separate a 24% flake from a
+clean build.
+
+**What that does and does not change about `f68c4621`.** The change itself stands on its own: a
+`sqlite_master` query per ledger write, inside the transaction, for the 22 of 27 ops that never
+emit, is waste worth removing regardless. What is withdrawn is the causal claim that it *fixed*
+the rotating failures. It did not demonstrably do that, and the contention count dropping from
+11-13 to 2 is one observation, not a controlled result.
