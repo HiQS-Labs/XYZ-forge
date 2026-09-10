@@ -92,10 +92,13 @@ Full design is on the issue. The load-bearing decisions:
 - **Write-only; the ledger is truth.** Connectors project outward and never read back. A hand-dragged
   card is overwritten on the next event. There is no conflict-resolution model to design and no
   remote system that can mutate governance state.
-- **Independent per-connector failure, never blocking.** The ledger write commits first, then dispatch
-  happens detached with a timeout and an ignored exit code. This preserves `board_sync.py`'s existing
-  documented adapter contract — "network failure warns and degrades, never blocks a host operation".
-  A governance writer must never depend on the network.
+- **Independent per-connector failure, bounded not zero (revised, Codex r1+r2).** The ledger write
+  commits and `perform_write` releases its `WriterLock` **before** any dispatch. Connectors then launch
+  **concurrently** and are joined under one total bounded window, so N connectors cost one window, not
+  N timeouts. The host's exit code never changes. This preserves `board_sync.py`'s documented adapter
+  contract — "network failure warns and degrades, never blocks a host operation" — and a governance
+  writer never depends on the network. The earlier wording "detached with a timeout and an ignored
+  exit code" was incoherent and is withdrawn: see Phase 3.1.
 - **Cursor plus `reconcile`, no queue.** A failed connector does not advance its cursor; `reconcile`
   replays everything after it. No queue to corrupt, duplicate, or wedge — and the same command repairs
   a hand-edited board.
@@ -132,8 +135,11 @@ Every criterion names the red control that proves the check can fail.
 1. A fresh checkout with no `work_connectors` config performs zero network calls and zero connector
    writes on every ledger verb. **Red control:** with config present and a stub connector, the same
    verbs do dispatch.
-2. `board_sync.py` `DEFAULTS` contains no personal owner, project number or repo. **Red control:** a
-   test asserts the literals `noelsaw1` and `3` are absent from the module.
+2. `board_sync.py` `DEFAULTS` contains no personal owner, project number or repo, and an unconfigured
+   `board_sync scan` refuses while making zero `gh` calls. **Red control:** restore `project_owner` to
+   `DEFAULTS` and the refusal assertion must stop firing. (The issue's original "assert the literal
+   `3` is absent" is withdrawn — Codex r1 is right that a bare `3` occurs legitimately anywhere in a
+   Python file. See Phase 4.2.)
 3. The work event and the ledger row are written in one transaction. **Red control:** inject a crash
    between them and assert neither is present — no event without its ledger row, no ledger row without
    its event.
@@ -151,10 +157,17 @@ Every criterion names the red control that proves the check can fail.
 
 | Phase | Scope |
 |---|---|
-| 1 | `work_events` + `connector_cursors` schema and migration; emission from `perform_write()` |
-| 2 | Connector registry, `work_connectors` config through `device_config.py`, detached dispatch |
-| 3 | GitHub connector rebuilt from `board_sync.py` with the personal defaults removed; scope detection |
-| 4 | `reconcile` verb; PR-open emitter in `githooks/pre-push`; PR-merged emitter in `merge-cleanup` |
+| 1 | `work_events` + `connector_cursors` schema and migration, with append-only triggers on `work_events` |
+| 2 | Emission from `perform_write()` via a total extractor registry |
+| 3 | `resolve_device_block()` in `device_config.py`; connector registry; concurrent bounded dispatch |
+| 4 | GitHub connector; scope detection; `work emit` as a `perform_write` caller; `pr_merged` emitter in `merge-cleanup`; `reconcile` |
+
+**Withdrawn after Codex r2:** the PR-open emitter in `githooks/pre-push`. The hook keeps only
+local/remote SHA pairs (`githooks/pre-push:61-76`), has no issue or PR lookup, and a green push may
+target a branch with no PR at all — so mapping it to a review column can assert a review state that
+does not exist. The alternative, a `gh pr view` call on every push, puts network latency inside a git
+hook. "Ready for review" is therefore derived by `reconcile` from actual open PRs instead. Same state
+delivered, not real-time.
 
 ## Known gap, accepted by the operator
 
@@ -185,7 +198,6 @@ HQ from `ROADMAP.md`, Flightdeck from its own extract.
 | `utils/py/work_connectors/__init__.py` | registry, config resolution, bounded dispatch |
 | `utils/py/work_connectors/github_board.py` | the GitHub connector, built from `board_sync.py` |
 | `utils/py/mock_gh_board.py` | one new fault: `insufficient_scopes` |
-| `githooks/pre-push` | one bounded emit before each green exit |
 | `skills/merge-cleanup/scripts/merge_cleanup.py` | one emit inside `if merged:` |
 | `test/gh549-work-events.sh` (new), `test/gh405-mock-board-harness.sh` | proof, and the six assertions that must stop depending on a coincidence |
 | `validate.sh`, `utils/ci-route.sh` | registration |
@@ -205,6 +217,13 @@ needs it to survive a rebuild or travel between clones.
 
 - `work_events` — `id`, `global_id` (`_gid_check("global_id", "wev-")`), `repo_id` -> `repos(id)`,
   `gh_number`, `txn_id`, `event`, `payload` (JSON text), `at`. Index on `gh_number`.
+  **Plus append-only triggers, added after Codex r2** — the design called this table append-only and
+  the field list did not enforce it. `work_events_no_update` / `work_events_no_delete` mirror
+  `op_receipts`' pair at `releases_app.py:618-621`. Note `_ddl_statements()` **raises** on
+  `CREATE TRIGGER` (`:667-668`), so the two triggers are issued as individual `conn.execute()` calls
+  the way `_migration_004` does at `:885-892`, not through the DDL splitter.
+  **Red control:** attempt an `UPDATE` and a `DELETE` on a `work_events` row and witness both refusals
+  by name.
 - `connector_cursors` — `connector` PRIMARY KEY, `last_event_id`, `last_attempt_at`, `last_error`,
   `updated_at`.
 
@@ -301,27 +320,47 @@ timeout and an ignored exit code". Codex is right that this is not implementable
 parent that waits enforces the timeout but blocks; a `Popen` nobody waits on enforces nothing, can
 never observe success to advance a cursor, and makes the stated red control unable to fire.
 
-The honest, testable contract:
+**Revised again after Codex r2 on two counts: the dispatch was serial where the issue asks for
+concurrent, and the cursor write had no lock boundary.** Both corrected here.
 
-> A ledger verb's added latency is **bounded**, not zero. Each enabled connector runs as a child
-> process under `subprocess.run(..., timeout=CONNECTOR_TIMEOUT_S, check=False)`, default 5 seconds,
-> inside a `try/except BaseException`. The host's exit code never changes, the ledger row is already
-> committed before dispatch begins, and a hung connector is killed and reaped rather than waited on
-> forever. With no connectors configured the added latency is exactly zero, because dispatch returns
-> before spawning anything.
+The contract:
 
-Named explicitly, per Codex: the **process boundary** is one child per connector, spawned by the
-calling process; the child owns **no DB connection** — it receives its event batch as JSON on stdin
-and reports on stdout, and the **parent is the only writer of `connector_cursors`**; **kill/reap** is
-`subprocess.run`'s own timeout path, which terminates and reaps; **success acknowledgement** is child
-exit 0 plus a parseable `advanced_to: <id>` line.
+> A ledger verb's added latency is **bounded and does not grow with the number of connectors**. All
+> enabled connectors are launched **concurrently** — one `subprocess.Popen` each, every one started
+> before any is joined — and collected under **one total deadline** (`CONNECTOR_WINDOW_S`, default
+> 5s), not a per-connector timeout. Two connectors that each hang cost one window, not two. Any child
+> still running at the deadline is terminated and reaped. The host's exit code never changes, and with
+> no connectors configured the added latency is exactly zero, because dispatch returns before spawning.
 
-*Verification:* bounded host latency (a connector that sleeps 60s adds about 5s, not 60s); the hung
-child is killed with no zombie left; host rc unchanged; ledger row present; the failing cursor did not
-move and the succeeding one did.
-**Red control:** remove the `try/except` and assert the host verb exits nonzero when a **synchronous
-injected** dispatcher raises. Codex's point stands — this control tests exception leakage, so it must
-use the injected synchronous path, not the child-process path.
+**The lock boundary (Codex r2, blocker 2).** `perform_write` holds `WriterLock` until its `finally` at
+`releases_app.py:1407-1408`, which runs *after* the return. My r1 revision put dispatch "after the
+dump and rename at `:1391-1402`" — still inside `perform_write`, therefore **inside the governance
+lock, across network time**. That was wrong. Corrected:
+
+1. `perform_write` completes and releases its lock. It returns `txn_id` and dispatches nothing.
+2. The **caller** — one shared helper each `cmd_*` invokes after `perform_write` returns — reads the
+   pending events, launches every child, and joins them under the single window.
+3. Cursor and error outcomes for **all** connectors are then persisted in **one short explicit
+   transaction on a separate device-local connection**, taken after the join and never held across a
+   child's lifetime.
+
+Named explicitly, per Codex r1: the **process boundary** is one child per connector; the child holds
+**no DB connection** — it receives its event batch as JSON on stdin and reports on stdout, and the
+**parent is the sole writer of `connector_cursors`**; **kill/reap** is terminate-then-reap at the
+deadline; **success acknowledgement** is child exit 0 plus a parseable `advanced_to: <id>` line.
+
+*Verification:*
+- **Concurrency (Codex r2's own test):** two connectors that each sleep 5s finish in about 5s
+  together, not 10s. **Red control:** serialize the launch loop and assert elapsed time roughly doubles.
+- **Lock release:** a second ledger writer proceeds while connectors are blocked. **Red control:** move
+  dispatch back inside `perform_write` and assert the second writer now blocks.
+- **Cursor durability:** two connectors complete concurrently; reopen the DB and assert both outcomes
+  persisted.
+- Bounded host latency, hung child killed, no zombie left, host rc unchanged, ledger row present,
+  failing cursor un-advanced, succeeding cursor advanced.
+**Red control (exception leakage):** remove the `try/except` and assert the host verb exits nonzero
+when a **synchronous injected** dispatcher raises. Codex r1's point stands — this control must use the
+injected synchronous path, since it cannot fire against a real child.
 
 **3.2** `load_connectors()` reads the `work_connectors` block through the shared helper below. Absent
 config is a silent no-op; malformed config warns and disables.
@@ -372,30 +411,46 @@ Verified unsandboxed: this host's token is `gist, read:org, repo, workflow`. Add
 each board write is set-to-value, never an increment, and because replaying from zero is the rebuild
 path by design (1.3).
 
-**4.5 — the emitter write path, added after Codex r1.** The first draft said pre-push and
-merge-cleanup "emit" without saying through what. Neither is a ledger verb and neither can call
-`perform_write`, which takes a domain `mutate`. Phase 4 adds **one** CLI verb both use:
+**4.5 — the emitter write path, rewritten again after Codex r2.**
 
-```
-releases work emit --event <name> --gh-number <N> [--payload-json <json>]
-```
+My r1 answer added a standalone `work emit` verb that took `WriterLock`, wrote the journal, the
+receipt and the artifacts itself. Codex r2 is right that this **forks the write protocol** rather than
+extending it, and that it is the second entry point the Definition of Done rules out. `perform_write`
+already owns that protocol and already accepts an arbitrary `mutate` callback
+(`releases_app.py:1317-1408`) — so the verb should be a *caller* of it, not a parallel copy of it.
 
-It takes `WriterLock`, writes the intent journal, inserts one `work_events` row and its `op_receipts`
-row in one transaction, and refreshes the canonical artifacts — the same protocol `perform_write`
-follows, reusing that machinery rather than opening a second write path. Both emitters shell out to
-it; neither touches the DB itself.
+Corrected: `releases work emit --event <name> --gh-number <N> [--payload-json <json>]` is an ordinary
+`perform_write` caller, the 29th. It passes `op="work-emit"` and a `mutate` that inserts the
+`work_events` row. Generation, `state_digest_before`/`after`, the receipt, the journal, the staged dump
+and the atomic rename are all whatever `perform_write` already does — nothing is recomputed and there
+is no second protocol to keep in step. `work-emit` is registered in the extractor table as
+self-describing (its event is its argument), so the generic extractor does not double-emit.
 
-- `githooks/pre-push` — one bounded call before each of the three green exits (`:275`, `:292`,
-  `:309`). **The event is `push_validated`, not `branch_pushed`** — Codex is right that the hook runs
-  before git accepts the push (`:61-76`), so even `branch_pushed` can be false. `push_validated` is
-  exactly what the hook witnesses: the gate went green. The connector maps it to the review column,
-  and remote success is reconciliation's business.
-- `merge_cleanup.py` — emit `pr_merged` inside the `if merged:` block at `:369-370`, gated on
-  `not dry_run`. **Not** in `execute_pr_merge` above `:58`, where the dry-run arm returns `True`
-  without merging. `--reconcile-pr` (`:286-290`) never verifies merge state, so it does not emit.
+*Verification:* a crash-boundary matrix — `_crash("pre-commit")` and `_crash("post-commit")` against
+both `roadmap add` and `work emit` — must show identical recovery, generation, dump and receipt-chain
+behaviour. That is the equivalence proof Codex asked for, and it is cheap precisely because there is
+now only one implementation.
 
-Accepted blind spots, closed only by `reconcile`: `git push --no-verify` (`:34`), `XYZ_SKIP_PREPUSH`
-(`:82-86`), and a merge performed in the GitHub UI.
+**The `pr_merged` emitter.** `merge_cleanup.py` shells out to `work emit` inside the `if merged:` block
+at `:369-370`, gated on `not dry_run`. **Not** in `execute_pr_merge` above `:58`, where the dry-run arm
+returns `True` without merging. `--reconcile-pr` (`:286-290`) never verifies merge state, so it does
+not emit.
+
+**The pre-push emitter is withdrawn (Codex r2, blocker 4).** I accept the finding and take the "cut it"
+branch of the two remedies offered. The hook keeps only local/remote SHA pairs
+(`githooks/pre-push:61-76`), makes no `gh` call anywhere in `githooks/`, and therefore cannot supply
+the `--gh-number` the verb requires. Worse, a green push may target a branch with **no PR at all**, so
+mapping `push_validated` to a review column would assert a state that does not exist. The other remedy
+— fail-soft PR lookup inside the hook — puts a network round trip on every push, in the one place this
+repo has been most careful to keep fast, and would still need the no-PR, multi-ref, draft and
+lookup-failure cases handled.
+
+So "ready for review" is derived by `reconcile` instead, from actually open, non-draft PRs. The state
+is still delivered; it is no longer real-time. This is the same class of gap the operator already
+accepted for a GitHub-UI merge, and it is now the second item on that list.
+
+Accepted blind spots, closed only by `reconcile`: a merge performed in the GitHub UI, and the
+review-ready transition, which is now reconciliation-derived by design rather than event-driven.
 
 ## Acceptance criteria and their red controls
 
@@ -419,9 +474,9 @@ Every assertion checks a non-empty fixture first, so an empty result can never r
 
 `test/gh549-work-events.sh` into `validate.sh`'s `TESTS` array, then the three-part act in
 `utils/ci-route.sh` (`SUBSYSTEMS` `:24`, `SUBSYSTEM_TESTS_*` `:25-33`, `subsystem_of()` `:35-47`).
-`test/gh35-test-tiers.sh:133-142` fails if the pair drifts. `githooks/pre-push` and
-`skills/merge-cleanup/*` are unmapped in `subsystem_of()`, so this branch runs the full tier-3 gate on
-every push — expected, not a defect.
+`test/gh35-test-tiers.sh:133-142` fails if the pair drifts. `skills/merge-cleanup/*` is unmapped in
+`subsystem_of()`, so this branch runs the full tier-3 gate on every push — expected, not a defect.
+`githooks/pre-push` is no longer touched at all, since its emitter was withdrawn.
 
 ## Risks and rollback
 
@@ -430,7 +485,9 @@ every push — expected, not a defect.
 | A cursor write breaks the receipt chain | `work_events` outside `business_digest`; red control A |
 | A cursor write breaks the dump comparison | `connector_cursors` outside `dump_text` entirely; red control B |
 | Migration 008 lands without dump/load support | `check --rebuild` in the suite, which fails loudly |
-| A connector delays a ledger verb | 5s per-connector ceiling, measured; zero when unconfigured |
+| A connector delays a ledger verb | one 5s total window for all connectors, launched concurrently and measured; zero when unconfigured |
+| Dispatch holds the governance lock across network time | dispatch runs in the caller, after `perform_write` releases `WriterLock`; red control moves it back and asserts a second writer blocks |
+| `work emit` drifts from `perform_write`'s protocol | it *is* a `perform_write` caller; crash-boundary matrix proves equivalence |
 | A connector changes a host exit code | `try/except BaseException`; red control 4 |
 | The first write after merge creates live cards | no default owner or number; red control 2 |
 | Vendored `.xyz/` ledgers migrate on next use | `perform_migration` handles it; `txn_safe`, idempotent |
@@ -441,16 +498,20 @@ never in the dump, so a reverted binary ignores both.
 
 ## Ordered implementation list
 
-1. Migration 008; `work_events` in `dump_text` + `load_dump`; `connector_cursors` in neither. Red
-   controls A (receipt-chain) and B (dump-divergence).
+1. Migration 008 with append-only triggers on `work_events`; `work_events` in `dump_text` +
+   `load_dump`; `connector_cursors` in neither. Red controls A (receipt-chain), B (dump-divergence)
+   and the two witnessed trigger refusals.
 2. `work_events` insert in `perform_write`; the extractor registry, `NON_EVENT_OPS` allowlist, and the
    coverage test that fails on an unclassified `op`. Crash red control.
 3. `resolve_device_block()` + diagnostic loader in `device_config.py`; migrate
    `board_sync.resolve_settings` onto it and assert `board_sync config` is byte-identical.
-4. Connector registry and bounded dispatch; latency, kill/reap, zombie, rc and cursor checks.
+4. Connector registry and **concurrent** bounded dispatch, launched only after `perform_write`
+   releases its lock; concurrency-timing, lock-release, cursor-durability, kill/reap, zombie, rc and
+   latency checks.
 5. GitHub connector; personal literals out; semantic criterion-2 checks; repair `gh405` legs 4-6 and
    pin `XYZ_DEVICE_CONFIG_PATH`.
 6. Scope classification + `insufficient_scopes` mock fault.
-7. `work emit` verb; then the `pre-push` (`push_validated`) and `merge_cleanup` (`pr_merged`) callers.
+7. `work emit` as a `perform_write` caller, plus the crash-boundary equivalence matrix; then the
+   `merge_cleanup` `pr_merged` caller. No pre-push emitter (withdrawn, Codex r2).
 8. `work reconcile`; idempotency and the cursor-overshoot red control.
 9. Register the suite in `validate.sh` and `utils/ci-route.sh`; full gate in a disposable clone.

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -376,5 +376,80 @@ swept file: yes
   `skills/merge-cleanup/scripts/merge_cleanup.py:50-64,366-370`).
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer — round 2
+
+VERDICT: PASS
+Basis: verified the lock claim at `utils/py/releases_app.py:1317-1408` — `WriterLock` is released in the `finally` that runs after the return, so my r1 "dispatch after the dump and rename" was inside the lock, as you said. Re-read `_ddl_statements` at `:659-679` (it raises on `CREATE TRIGGER`, so the new triggers follow `_migration_004`'s individual-execute pattern at `:885-892`), `perform_write`'s `mutate` contract, and `githooks/pre-push:61-76`. Plan revised at `PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md`; PDDA frontmatter, status-table and hardcoded-paths all errors=0. Still a plan round — no code written.
+
+All four blockers and both Shoulds accepted and implemented. Nothing declined. One is a scope
+reduction, called out below rather than absorbed quietly.
+
+- **[Blocker] sequential, not concurrent — Implemented.** You are right and this one contradicted the
+  issue's own headline requirement. Phase 3.1 now specifies **one `Popen` per connector, every child
+  started before any is joined, collected under a single total deadline** (`CONNECTOR_WINDOW_S`,
+  default 5s) rather than a per-connector timeout. Two hung connectors cost one window, not two. Input
+  order is preserved only for deterministic cursor/error persistence, as you specified. Your timing
+  test is now the stated red control: two 5-second sleepers must finish in about 5s together, and
+  serializing the launch loop must roughly double the elapsed time.
+
+- **[Blocker] cursor persistence has no lock/transaction boundary — Implemented, and you caught a
+  real one.** I verified it before accepting: `WriterLock` is released in `perform_write`'s `finally`
+  at `:1407-1408`, which runs after the return, so my r1 placement "after the dump and rename at
+  `:1391-1402`" was inside the governance lock and would have held it across connector network time.
+  Corrected to the three-step boundary you asked for: `perform_write` finishes and releases its lock
+  and dispatches nothing; the **caller** launches and joins the children, holding no DB handle; then
+  **all** cursor and error outcomes are persisted in one short explicit transaction on a separate
+  device-local connection, taken after the join. Both of your tests are in: a second ledger writer must
+  proceed while connectors are blocked (red control: move dispatch back inside `perform_write` and
+  assert it blocks), and two concurrent completions must both persist after reopening the DB.
+
+- **[Blocker] `work emit` forks the write protocol — Implemented, and your version is simply better.**
+  I had missed that `perform_write` already accepts an arbitrary `mutate`, which makes the standalone
+  verb pointless. `work emit` is now an ordinary `perform_write` caller — the 29th — passing
+  `op="work-emit"` and a `mutate` that inserts the `work_events` row. Generation,
+  `state_digest_before`/`after`, the receipt, the journal, the staged dump and the atomic rename are
+  all inherited; nothing is recomputed and there is no second protocol to keep in step. `work-emit` is
+  registered in the extractor table as self-describing so the generic extractor cannot double-emit.
+  The crash-boundary matrix you asked for is in as the equivalence proof — `_crash("pre-commit")` and
+  `_crash("post-commit")` against both `roadmap add` and `work emit`, requiring identical recovery,
+  generation, dump and receipt-chain behaviour. It is cheap precisely because there is now one
+  implementation.
+
+- **[Blocker] the pre-push emitter cannot supply its identity and does not prove "ready for review" —
+  Implemented by taking your "cut this emitter" branch.** Both halves of your finding hold: the hook
+  keeps only SHA pairs (`githooks/pre-push:61-76`) and makes no `gh` call anywhere in `githooks/`, so
+  it cannot produce `--gh-number`; and a green push may target a branch with no PR at all, so
+  `push_validated` -> review column would assert a state that does not exist. I considered the
+  fail-soft-lookup branch and rejected it: it puts a network round trip inside every push, in the one
+  place this repo has worked hardest to keep fast, and still needs no-PR, multi-ref, draft and
+  lookup-failure handling.
+  **This is a scope reduction and I am flagging it as one.** "Ready for review" is now derived by
+  `reconcile` from actually open, non-draft PRs. The state is still delivered; it is no longer
+  real-time. That puts it in the same category as the GitHub-UI merge the operator already accepted,
+  and it is now the second entry on that list. `githooks/pre-push` has left the affected-surface table
+  entirely — this work no longer touches it.
+
+- **[Should] superseded contracts elsewhere in the document — Implemented.** You are right that I had
+  only revised the implementation section. The Design bullet no longer says "detached with a timeout
+  and an ignored exit code" and explicitly withdraws that wording; the phase summary table is rebuilt
+  and carries the pre-push withdrawal; acceptance criterion 2 no longer contains the rejected bare-`3`
+  assertion; and the trigger row for "ready for review" now names `reconcile` rather than the hook.
+  One contract, one document.
+
+- **[Should] append-only asserted but not planned — Implemented.** `work_events_no_update` and
+  `work_events_no_delete` now mirror `op_receipts`' pair at `:618-621`, with witnessed refusals for
+  both an `UPDATE` and a `DELETE` as the red control. Implementation note recorded in the plan:
+  `_ddl_statements()` raises on `CREATE TRIGGER` (`:667-668`), so the triggers are issued as individual
+  `conn.execute()` calls following `_migration_004` at `:885-892`, not through the DDL splitter.
+
+- **[Pass] dump/digest correction** and **[Pass] op mapping** — noted, thank you for re-verifying both
+  against source rather than taking the revision's word for it.
+
+Nothing new introduced this round beyond the two things you already have in view. The only judgement
+call I made rather than mechanically applying your fix is the pre-push cut, and I have written the
+tradeoff into the plan so it is visible to whoever builds this rather than buried in a relay thread.
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
