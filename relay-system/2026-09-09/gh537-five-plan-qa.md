@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Open
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -105,5 +105,27 @@ Basis: <one line>
 Review the revised plan (same path) and adjudicate whether the four dispositions resolve your findings.
 
 Handing off to Reviewer (codex) — take your turn: review the revised PROJECT/2-WORKING/GH-537-FIVE-SKILL.md and append your block with the VERDICT/Basis lines.
+
+## Reviewer — codex — Round 2 — 2026-09-09
+
+**Verdict: Approved.** F1–F4 are resolved; the plan is ready for implementation.
+
+swept file: yes
+
+Read the entire 111-line `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md`, including unchanged content, and re-read the cited reference spans. No additional pre-existing defects requiring changes found. SWE recon is N/A for this additive, markdown-only skill; reversibility is Easy because the three deliverables introduce no runtime or deployment. Graph project inventory returned all 56 projects (`has_more: false`), none matching this checkout; evidence below comes from direct local document reads, with no foreign-generation coverage claim. No artifact execution, git commands, behavioral runs, or project gates performed; this approves the plan, not implementation readiness.
+
+The stale `NEXT: Producer` header conflicted with the latest Producer block's explicit handoff to Reviewer. The operator explicitly assigned Codex this review, so that assignment and latest handoff governed this turn. NEXT remains Producer for the closed handoff.
+
+- [Pass] **Q1 — operator request preserved.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:37`–:49 retains all-stage invocation, exactly five highlights plus five non-goals, priority for unrequested decisions, and the concrete symlink-versus-marketing distinction. Retain as written.
+- [Pass] **Q2 / F1 — edge cases resolved without new machinery.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:53`–:65 explicitly exempts markers from citations, requires text supporting substantive exclusions, labels silence “not specified,” gives empty input precedence over count, and keeps the reading boundary visible. These four rules are sufficient and proportionate for the named summarization failure. Retain them; “not specified” must remain an uncertainty disclosure, not an asserted exclusion.
+- [Pass] **Q3 — house style remains correct.** `skills/ponytail/SKILL.md:3`–:17 and `skills/timbre/SKILL.md:3`–:15 demonstrate folded descriptions and trigger-rich metadata; timbre :21 explicitly requires no installed runtime. The proposed shape at `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:37`–:39 and :79–:81 matches. Retain the markdown-only approach.
+- [Pass] **Q4 / F4 — deliverables are named and bounded.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:69`–:75 names SKILL.md, its index row, and CHANGELOG, while excluding scripts, symlink deployment, neighboring-skill wiring, and unrelated index repair. Retain this feature scope; the already-required implementation relay evidence at :100–:101 remains governance evidence, not another feature deliverable.
+- [Pass] **Q5 / F2 — acceptance is now falsifiable at the right scale.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:88`–:101 requires dense, sparse, and empty inputs, checks the unrequested choice and unsupported-exclusion failure, names a deliberately bad red control, and records inputs/output/verdict in the implementation relay. The hard-rule acceptance at :82–:84 also covers the boundary sentence. These are specified checks, not yet observed passes; execute them during implementation QA. The single row required at :85 belongs in the routing table defined by `ARCHITECTURE.md:39`–:44; the table at :45–:88 still lacks the four drift entries, so keeping their repair outside this task is appropriate.
+- [Pass] **Q6 / F3 — rating rationale uses the correct axes.** `PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:105`–:111 now evaluates severity as bounded pain if left undone, matching `PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md:57`–:60. Its 70 effort score denotes cheaper work than keel's 65 (`PROJECT/1-INBOX/GH-514-KEEL-SKILL.md:88`–:91), reasonably supported by keel's additional precedence stack and modes at :41–:67. Retain 70/25/50/70 as a judgment-based calibration.
+
+VERDICT: PASS
+Basis: Whole-plan review resolves F1–F4 with cited evidence; behavioral QA and PDDA execution remain explicitly required during implementation.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to implementation and its separate final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
