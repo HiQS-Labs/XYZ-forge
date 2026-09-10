@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Operator
 STATUS: Escalated
 ROUND: 3 / 3
 
@@ -264,5 +264,56 @@ Definition of Done:
 Verdict: Changes requested — round cap reached; escalated for the concurrency correction.
 
 Handing off to Producer — go to the Producer window and say "take your turn".
+
+### Producer · claude-a · round 3 — cap reached
+
+- **[Blocker] concurrent dispatch can apply a newer board state then overwrite it with an older
+  one — IMPLEMENTED.** Verified before accepting: `perform_write` does release the WriterLock
+  before dispatching (`utils/py/releases_app.py:1673-1675`), and that is deliberate — a
+  governance writer must not hold the ledger lock across connector network time. Your race
+  follows directly and I had not seen it. Dispatch A reads cursor 0 and takes event 1, dispatch B
+  reads cursor 0 and takes 1 and 2, and whichever finishes last decides the card. A board is a
+  projection of work state, so a projection stuck at a stale column is the exact failure this
+  feature exists to prevent, and nothing repairs it until the next event happens to arrive.
+  - Fixed with a **connector-only lock**, which is the shape you offered first and the one that
+    does not re-entangle the ledger lock: `_ConnectorLock` is an flock beside the database, held
+    across a whole dispatch, so the second dispatch reads the cursor the first advanced.
+  - Waiting is bounded (`XYZ_CONNECTOR_LOCK_WAIT_S`, default 2s) and **failing to acquire is not
+    an error** — the batch stays unacknowledged and the next write or `work reconcile` replays
+    it. This preserves the constraint that put dispatch outside the writer lock to begin with: a
+    ledger verb must never block on another process's connectors.
+  - Your second remedy is implemented too, as defence rather than instead: cursor persistence is
+    now `MAX(existing, incoming)`, so a late older batch cannot lower a cursor even on a path
+    where the lock was unavailable.
+  - The lock file is gitignored beside `releases.db.bak`, on the same reasoning as the
+    agent2agent flock files.
+- **[Pass] × 3 — noted**, and thank you for the completed sweep. `swept file: yes` in round 3 is
+  what closes the one Definition-of-Done item that no code fix could.
+
+**The deterministic control you specified.** Leg 19: two `work reconcile` processes fired together
+against a stub that holds for 1.5s. Under the lock exactly **one** child runs, because the second
+waits and then finds the cursor already at the newest event; the assertion then pins that the
+cursor finished at the newest event id. Its red control removes the `flock` call from an imported
+copy and observes **two** children run the same batch. A separate assertion drives `_persist`
+directly with a late older value and proves 9 stays 9.
+
+**Verification:** `test/gh549-work-events.sh` **59 passed, 0 failed** at `76ab9026`.
+
+**Status: the round cap is reached and this thread is closed unapproved.** That is the honest
+state and I am not extending the cap on my own authority. Three rounds each found a real defect —
+r1 the unbounded cursor, r2 the connector that was never built, r3 this race — so the loop was
+doing its job rather than churning, but the fix for r3 has had **no review**, and a fix to a
+concurrency defect is precisely the kind that should not ship on the author's own say-so.
+
+Handing to the operator: a fourth round would review `_ConnectorLock`, the monotonic upsert and
+leg 19. That is their call, not mine.
+
+VERDICT: PARKED
+Basis: producer turn — the round-3 blocker is implemented and covered by the deterministic control
+the reviewer specified, suite green at 59/0, but the round cap is exhausted and the fix is
+unreviewed. Escalated to the operator for a decision on a fourth round; no terminal approval is
+claimed.
+
+Relay closed at the cap — no further reviewer turn without an operator decision.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
