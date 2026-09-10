@@ -2,7 +2,7 @@
 gh_issue: 508
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/508
 title: "Git Sync Pulse as a portable Skills Army HQ projection"
-status: Active (2-WORKING — spike complete 2026-09-09, all acceptance PASS; PR pending)
+status: Complete
 created: 2026-09-08
 doc_type: plan
 effort: 2
@@ -10,7 +10,7 @@ complexity: 3
 risk: 2
 phases: 1
 ratings_provisional: true
-updated: 2026-09-09
+updated: 2026-09-10
 owner: noelsaw1
 goal: >
   Resolve #508's acceptance checklist with a disposable three-skill spike: the private
@@ -127,3 +127,25 @@ would be the operator's explicit choice.
   deliberately NOT performed — the hourly writer rebases onto this branch and a force-push would
   wedge it (the 229-run incident class from the issue). Full removal of `skills-projection/` is one
   ordinary commit if the operator wants the remote pristine.
+
+## Lessons Learned (For Future Agents)
+
+1. **The filed verdict became the authority and hid the operator's actual intent.** This issue's
+   body said "do NOT relocate" while the operator's intent was relocation; the spike executed
+   the body faithfully and answered the wrong question. When a task's framing is itself the
+   deliverable's contract, re-confirm intent on consequential forks before building — the
+   operator corrected it only on review of the finished result (2026-09-09). The standing
+   decision now lives in the superseding relocation issue; this doc is evidence, not policy.
+2. **Check for existing intake before creating any.** This issue was already parked with a
+   capture doc; a duplicate was created and had to be merged away. `roadmap list` + a
+   1-INBOX filename search is one command.
+3. **Promotion is a frontmatter contract upgrade, not a file move.** A 1-INBOX-grade frontmatter
+   (no `updated`/`owner`/`goal`) fails the 2-WORKING gate checks only at push time — the gate,
+   not the move, caught it, costing a full validation cycle.
+4. **Relay template vocabulary can contradict the validator** (#533) and **the attestation
+   prefix check contradicts append-above-marker** (#529) — two independent template-vs-machinery
+   mismatches found in two relays on consecutive days. Drive one review round early on any
+   new relay setup rather than discovering the mismatch at approval time.
+5. **The hourly pulse writer coexists with foreign paths by construction** (pathspec-bounded
+   staging) — directly observed when its next cycle rebased over and preserved the spike's
+   commits. This fact is the load-bearing evidence for the relocation design.
