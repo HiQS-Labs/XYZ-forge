@@ -1,0 +1,7 @@
+{
+  "train-labeled.json": "985e48fee0fb0bb27544c7df1fe39f58cc2be79e4e3c14872365ebb28a40d565",
+  "validation-labeled.json": "f43c3aa64ced8f067baba55e1009123181da7534fc548fc50d24e7d0b72b0afc",
+  "holdout-unlabeled.json": "8d0c46a2deaa0569a6c33a4725c8df7e99247d0e01b0d05899b4940b05d51ea2",
+  "holdout-labels.json": "023615a425ceda78cfebaf2c94ddc1d777d0dc845f43c3bd08eefb7eb9362b09",
+  "taxonomy.md": "bf53d5ab22298e1a7bd93dd94e3fb3cca5868755703f4bb85477888f7b7dfba0"
+}
