@@ -16,6 +16,8 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent
 SWE = "SWE-Gym/MoatlessTools-Agent-Verifier-Train-Data"
 SWE_REV = "57a05d234f92268307d6db677094e0b33d62c15e"
+TRAJ = "SWE-Gym/OpenHands-Sampled-Trajectories"
+TRAJ_REV = "baf3a4e4bff514d48ddc08a93a2ade5c126212c7"
 NL_TEST = "https://tickettagger.blob.core.windows.net/datasets/nlbse23-issue-classification-test.csv.tar.gz"
 
 
@@ -36,6 +38,9 @@ def main():
     swe_info = json.loads(get("https://datasets-server.huggingface.co/info?dataset=" + urllib.parse.quote(SWE, safe="")))
     swe_rows = json.loads(get("https://datasets-server.huggingface.co/first-rows?dataset=" + urllib.parse.quote(SWE, safe="") + "&config=default&split=train"))
     hf_meta = json.loads(get("https://huggingface.co/api/datasets/" + SWE))
+    traj_meta = json.loads(get("https://huggingface.co/api/datasets/" + TRAJ))
+    traj_info = json.loads(get("https://datasets-server.huggingface.co/info?dataset=" + urllib.parse.quote(TRAJ, safe="")))
+    traj_rows = json.loads(get("https://datasets-server.huggingface.co/rows?dataset=" + urllib.parse.quote(TRAJ, safe="") + "&config=default&split=train.raw&offset=0&length=2"))
     swe_repo = json.loads(get("https://api.github.com/repos/SWE-Gym/SWE-Gym"))
     nlbse_repo = json.loads(get("https://api.github.com/repos/nlbse2023/issue-report-classification"))
 
@@ -108,6 +113,23 @@ def main():
             "bounded_sample_rows": len(row_shapes),
             "bounded_sample_fail_counts": dict(fail_counts),
             "sample_shapes": row_shapes,
+            "task_b_assessment": "verifier patch conversations; not chronological action trajectories",
+        },
+        "swe_gym_trajectory": {
+            "dataset": TRAJ,
+            "revision": traj_meta.get("sha"),
+            "revision_matches_pin": traj_meta.get("sha") == TRAJ_REV,
+            "dataset_metadata_license": traj_info["dataset_info"]["default"].get("license") or None,
+            "split": traj_info["dataset_info"]["default"]["splits"]["train.raw"],
+            "features": traj_info["dataset_info"]["default"]["features"],
+            "sample_shapes": [{
+                "message_count": len(x["row"].get("messages", [])),
+                "roles": [m.get("role") for m in x["row"].get("messages", [])],
+                "tool_call_names": [c.get("function", {}).get("name") for m in x["row"].get("messages", []) for c in (m.get("tool_calls") or [])],
+                "resolved": x["row"].get("resolved"),
+                "has_test_result": x["row"].get("test_result") is not None,
+                "message_content_sha256": [digest(m.get("content") or "") for m in x["row"].get("messages", [])],
+            } for x in traj_rows["rows"]],
         },
         "tawos": {
             "article_id": tawos_meta["id"],
@@ -119,10 +141,12 @@ def main():
         },
     }
     payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
-    if not nlbse["rows"] or not row_shapes or not tables:
+    if not nlbse["rows"] or not row_shapes or not traj_rows["rows"] or not tables:
         raise RuntimeError("empty source evidence cannot pass the schema probe")
     if hf_meta.get("sha") != SWE_REV:
         raise RuntimeError("SWE-Gym revision moved from the frozen pin")
+    if traj_meta.get("sha") != TRAJ_REV:
+        raise RuntimeError("SWE-Gym trajectory revision moved from the frozen pin")
     (OUT / "results.json").write_text(payload)
     elapsed = (datetime.now(timezone.utc) - started).total_seconds()
     (OUT / "runtime.log").write_text(f"status=completed\nelapsed_seconds={elapsed:.3f}\nstdout_bytes={len(payload.encode())}\n")
