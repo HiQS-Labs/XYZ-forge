@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -141,5 +141,28 @@ mechanism corrected), one self-disclosed vacuous control fixed, suite green at 4
 for reviewer round 2; the whole-file sweep is still outstanding.
 
 Handing off to Reviewer (codex) — take round 2, starting with the whole-file sweep.
+
+### Reviewer · codex · round 2
+
+swept file: no
+
+- [Blocker] The shipped registry names the required GitHub connector but the module does not exist. `REGISTRY` maps `github_board` to `work_connectors.github_board` (`utils/py/work_connectors/__init__.py:53-55`), and `_child_argv` invokes that target with `python -m` (`utils/py/work_connectors/__init__.py:150-154`); the package contains only `__init__.py`, not `github_board.py`. Consequently every ordinary configured `github_board` run fails to import instead of projecting an event. The suite only proves that stub paths injected by `XYZ_WORK_CONNECTORS_REGISTRY` run (`test/gh549-work-events.sh:326-331, 460-467`), while its normal-config path expressly accepts a connector that cannot succeed (`test/gh549-work-events.sh:414-426`). Fix: add the vendored thin `work_connectors/github_board.py` adapter that consumes stdin and calls the existing board-sync functions, then cover the non-overlay configured path offline.
+- [Blocker] `XYZ_WORK_CONNECTORS=0` is not a global kill switch, despite being an explicit review requirement. `load_connectors` calls `resolve_device_block(..., "XYZ_WORK_CONNECTORS")` (`utils/py/work_connectors/__init__.py:69-70`), whose resolver only inspects suffixed per-key names such as `XYZ_WORK_CONNECTORS_ENABLED` (`utils/py/device_config.py:95-109`); it never reads the unsuffixed variable. The later per-connector resolution likewise only uses `XYZ_WORK_CONNECTORS_<NAME>_<KEY>` (`utils/py/work_connectors/__init__.py:94-96`). Thus an enabled file configuration still dispatches when the operator supplies `XYZ_WORK_CONNECTORS=0`. Fix: check that exact variable first and return `{}` with an explicit no-op diagnostic; add a configured-stub control proving no child runs and no cursor changes under the switch.
+- [Pass] The round-1 cursor fix rejects a child result outside the dispatched `(prior_cursor, batch_max]` range before persistence (`utils/py/work_connectors/__init__.py:176-233`), and the new control both observes rejection and removes that guard in the imported copy to reproduce the overshoot (`test/gh549-work-events.sh:497-571`).
+- [Pass] The event/receipt/write ordering remains a single transactional seam: `perform_write` adds the receipt then records the event before commit (`utils/py/releases_app.py:1642-1654`), and releases the writer lock before best-effort dispatch (`utils/py/releases_app.py:1673-1675`). `work emit` is a caller of that seam (`utils/py/releases_app.py:4875-4882`), not a parallel writer.
+- [Should] Whole-file sweep status is honestly **not complete**: I read the entire new connector module and the relevant changed/adjacent regions of the other review-priority files, but have not completed end-to-end reads of every very large touched file. No additional pre-existing defect was identified in the portions read. A final approval requires the complete GH-268 sweep after the two blockers are fixed.
+
+Definition of Done:
+
+1. **Not satisfied.** The normalized event schema/atomic write is at `utils/py/releases_app.py:895-947, 1642-1654`; unconfigured board identity refuses before a network call at `utils/py/board_sync.py:297-311`; and scope remediation is classified on both GraphQL error paths at `utils/py/board_sync.py:250-279`. The absent production GitHub connector and ignored global kill switch leave the connector acceptance criteria unmet.
+2. **Partly matches the plan.** The transactional event/cursor split and bounded cursor validation match it, but the plan requires vendored modules enabled by name (`PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md:91-94`); naming an absent module is a regression, not an implemented connector.
+3. **No second domain-write path found in the reviewed paths.** `work emit` delegates to `perform_write` (`utils/py/releases_app.py:4880-4881`), and merge cleanup invokes it only after a successful non-dry merge (`skills/merge-cleanup/scripts/merge_cleanup.py:105-125, 427-434`).
+4. **The reviewed red controls are substantive.** In particular 15b/15c guard non-empty input and demonstrate the guard's removal changes persistence (`test/gh549-work-events.sh:508-571`). The suite lacks a kill-switch control and cannot substantiate a missing real connector.
+5. **Partly safe.** Parent-only cursor persistence, timeout/reap and append-only event triggers are implemented at `utils/py/work_connectors/__init__.py:176-302` and `utils/py/releases_app.py:895-947`; the two blockers above leave runtime connector safety/operability incomplete. The environment registry overlay remains an explicit, announced test seam (`utils/py/work_connectors/__init__.py:117-147`), rather than device-config activation.
+6. **Not complete.** No further pre-existing defect was found in the reviewed portions, but the required whole-file sweep remains outstanding as stated above.
+
+Verdict: Changes requested.
+
+Handing off to Producer — go to the Producer window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
