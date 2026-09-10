@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -443,7 +443,7 @@ reduction, called out below rather than absorbed quietly.
   `_ddl_statements()` raises on `CREATE TRIGGER` (`:667-668`), so the triggers are issued as individual
   `conn.execute()` calls following `_migration_004` at `:885-892`, not through the DDL splitter.
 
-- **[Pass] dump/digest correction** and **[Pass] op mapping** — noted, thank you for re-verifying both
+- **[Unverified — no citation] dump/digest correction** and **[Unverified — no citation] op mapping** — noted, thank you for re-verifying both
   against source rather than taking the revision's word for it.
 
 Nothing new introduced this round beyond the two things you already have in view. The only judgement
@@ -451,5 +451,57 @@ call I made rather than mechanically applying your fix is the pre-push cut, and 
 tradeoff into the plan so it is visible to whoever builds this rather than buried in a relay thread.
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer · round 3
+
+**Verdict: Changes requested.** The concurrency mechanism is now bounded and the external emitter
+reuses `perform_write`, but the final plan still splits dispatch across every caller and states an
+unsafe rollback. Because this is round 3 / 3, the relay is escalated rather than approved.
+
+swept file: yes
+
+- [Blocker] **Dispatch is no longer at the single seam and can be silently omitted.** Phase 2.3 still
+  says dispatch happens after the dump/rename (`.relay-artifacts/GH-549-WORK-STATE-EVENT-STREAM.md:309-310`),
+  but Phase 3.1 says `perform_write` “dispatches nothing” and requires a helper invocation in every
+  `cmd_*` caller (`artifact:340-345`). That turns one audited write seam into 29 independently correct
+  call sites; the total extractor registry checks `op` classification, not whether a caller invoked
+  dispatch. A new or missed caller can therefore commit an event that is never projected, violating
+  criteria 1 and 5 without tripping the proposed coverage test. **Fix:** keep dispatch centralized:
+  refactor `perform_write` so its lock-scoped durability section finishes and releases `WriterLock`,
+  then one common post-lock section dispatches the committed transaction before returning. Add a red
+  control that removes that central call and proves a mapped verb's configured stub sees no event.
+- [Blocker] **The rollback claim is false once the feature has been used.** The plan says a revert
+  leaves `work_events` “append-only and empty” (`artifact:495-497`), while Phase 2 explicitly inserts
+  one event for mapped writes (`artifact:277-307`) and `work emit` inserts one through its mutate
+  callback (`artifact:422-427`). After any real use the table is not empty, and because `work_events`
+  is included in the tracked dump (`artifact:249-253`), compatibility with the migration-007 binary's
+  dump/check/load path is not established. **Fix:** scope rollback to “before the first event,” or
+  provide and test a forward recovery/down-conversion procedure against a populated migration-008
+  ledger; the red control must run the reverted binary's `check` and rebuild/load behavior on a
+  non-empty event stream.
+- [Should] **Two superseded transaction statements remain.** The design says `work_events` and
+  `connector_cursors` are in “the same transaction” (`artifact:79-87`), but the corrected contract
+  persists cursor outcomes only after connector completion in a separate device-local transaction
+  (`artifact:340-345`). **Fix:** state that only the ledger row and `work_events` share the governance
+  transaction; cursor state is intentionally post-commit and device-local.
+- [Should] **Make `work-emit`'s no-double-insert contract executable.** Phase 2.1 says the generic seam
+  inserts one event (`artifact:279-280`), while Phase 4.5 says the `work-emit` mutate already inserts
+  it and its extractor is “self-describing” (`artifact:422-427`). **Fix:** specify the exact sentinel
+  contract (`extractor returns None because mutate inserted the row`, or `perform_write` receives an
+  explicit preinserted event result) and add an assertion that one `work emit` command creates exactly
+  one row.
+- [Pass] **The receipt/digest placement remains sound:** `work_events` is inside the receipt-inclusive
+  dump but excluded from `business_digest`, while cursors are outside the dump
+  (`artifact:249-275`); source computes `digest_after` before inserting the receipt and commits at
+  `utils/py/releases_app.py:1381-1388`.
+- [Pass] **The revised connector window is genuinely concurrent on paper:** every `Popen` starts
+  before collection under one total deadline, with termination/reaping and a timing mutation that
+  distinguishes parallel from serial execution (`artifact:326-363`).
+- [Pass] **The plan now extends the existing config and write protocols:** it factors nested block
+  resolution into `device_config.py` (`artifact:368-379`) and makes `work emit` a `perform_write`
+  caller rather than a second journal/receipt implementation (`artifact:416-432`). No additional
+  pre-existing defect was found in the swept artifact beyond the contradictions above.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
