@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -44,7 +44,7 @@ ROUND: 1 / 4
 - Supporting context: issue #508 (acceptance checklist), `skills/skills-army-hq/scripts/intake.py` (digest contract, source validation), `skills/skills-army-hq/SKILL.md`.
 - Reviewer: agy   ·   Producer: claude-a
 - Started: 2026-09-09
-- Definition of Done: the spike report's six PASS claims are each backed by concrete recorded evidence (digests, commits, paths) with no overclaim; the findings section distinguishes demonstrated properties from structural arguments; no machinery was added to skills-army-hq; the doc honestly states what was NOT verified (no full hourly-writer cycle observed).
+- Definition of Done: the spike report's six PASS claims are each backed by concrete recorded evidence (digests, commits, paths) with no overclaim; the findings section distinguishes demonstrated properties from structural arguments; no machinery was added to skills-army-hq; the doc honestly states what was NOT verified (no full hourly-writer cycle observed).  [Unverified — no citation]
 
 ## Review questions — adjudicate each, cite file:line or quoted span
 
@@ -66,3 +66,32 @@ ROUND: 1 / 4
 ## Log
 
 <!-- GH-529 mitigation: no trailing marker — append the next block at the very end of the file -->
+
+### Turn 1: agy (Reviewer)
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+- `[Pass]` **Evidence grounding (Q1):** The Spike results table cites reproducible evidence (commits like `2a200a72`, `d1ed5fe0`, HEAD `277a339f` and digests like `0ea0342209bb`). No overclaims found. (Lines 98-103)
+- `[Blocker]` **Honesty of limits (Q2):** The doc structurally justifies writer coexistence via pathspecs and precedent (Line 100: "The writer stages only..."), but fails to explicitly disclose that no full hourly-writer cycle was observed. The DoD explicitly requires this. **Fix:** Add a sentence to Row 3 of the Spike results or the Recon addendum clearly stating this limitation.
+- `[Pass]` **Bytes-vs-refs finding (Q3):** The conclusion is firmly supported by the step count comparison (7 vs ~19 commands) and the demonstrated offline capability. (Lines 107-116)
+- `[Pass]` **Scope discipline (Q4):** Verified via `git diff` that the repo diff contains no new verb, daemon, or DB for `skills-army-hq` (docs and ledger only).
+- `[Pass]` **#506 handoff (Q5):** The recommendation for `import-projection` is clearly stated and backed by the explicit cost basis of 7 commands at 3 skills vs ~19 at 15. (Lines 113-116)
+- `[Nit]` **Whole-file sweep (Q6):** The six checkboxes under "Acceptance criteria" (Lines 45-52) are still unchecked (`- [ ]`), despite the Status and Spike results declaring them all PASS. **Fix:** Check them (`- [x]`).
+
+### System · claude-a (coordinator) — 2026-09-09
+
+Round 1's turn content stands as review record, but the turn failed structural validation
+(exit 8): the verdict line was written as `**Verdict:** Changes requested` (markdown bold)
+where the validator requires the literal `VERDICT:` prefix. No content was altered; the
+block is preserved verbatim above.
+
+### Turn 2: claude-a (Producer)
+
+- `[Blocker]` Honesty of limits (Q2) — **Implemented.** Row 3 of the results table now carries an explicit **Limit:** sentence: no full hourly-writer cycle was observed; coexistence is argued structurally (pathspec staging) plus precedent, not by watching a run land.
+- `[Nit]` Acceptance checkboxes (Q6) — **Implemented.** All six `- [ ]` boxes in the doc are now `- [x]` (they paraphrase the issue's checklist; the GH issue body's own boxes stay for the maintainer to tick at merge).
+- Format note for the reviewer's next block (template/validator mismatch, being filed): end the block with BOTH the validator's vocabulary — `VERDICT: PASS` (or FAIL/PARKED) and a non-empty `Basis:` line — AND set the header `STATUS: Approved` if approving. The scaffold's 'Approved | Changes requested | Blocked' wording alone is rejected by bin/validate-relay-block.
+
+handing off to Reviewer — go to the agy lane and take your turn
+
