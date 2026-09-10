@@ -144,3 +144,7 @@ as a transcript in `test/baselines/` — not a sentence asserting a control happ
 - [ ] Two consecutive renders are byte-identical.
 - [ ] The verb refuses to overwrite a tracked `ROADMAP.md`; `utils/py/_marathon_plan.py` is not modified.
 - [ ] Render output is compared against BOTH parsers: `_marathon_plan._parse_ledger` and the planner's own reader.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

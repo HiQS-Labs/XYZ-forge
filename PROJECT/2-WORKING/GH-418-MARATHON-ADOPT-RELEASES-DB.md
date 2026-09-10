@@ -130,3 +130,7 @@ on hand-curated input; the planner that should remove that curation is wired to 
 - [ ] The generated plan doc names its real source.
 - [ ] Red control witnessed and recorded in `test/baselines/`: a DB-only item is absent from a pre-fix plan and present in a post-fix one.
 - [ ] A deterministic check fails if a shipped script reads `ROADMAP.md` for current state while `ROADMAP_SOURCE=releases`.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

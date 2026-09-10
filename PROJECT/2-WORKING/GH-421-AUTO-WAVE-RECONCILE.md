@@ -330,3 +330,7 @@ is one policy change away from failing every automated run.
 - [ ] Every ledger transition records manifest evidence (`manifest ship --evidence <merge commit / PR>`); the CLI refuses empty evidence.
 - [ ] Lifecycle completion, three-event handling (merged PR with: dialed-in item, open issue, no linked issue), and open-issue protection are each asserted.
 - [ ] Regenerated dashboards land with the artifacts, and a rollback (induced failure) leaves releases.db/.sql and docs untouched.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

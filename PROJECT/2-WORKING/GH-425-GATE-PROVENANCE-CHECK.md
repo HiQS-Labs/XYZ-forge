@@ -135,3 +135,7 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
 - `--gate` fails when a merged PR's receipts carry a different PR number than the one being closed out.
 - `--gate` passes when receipts match the PR number.
 - Pinned red-first in a new suite.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

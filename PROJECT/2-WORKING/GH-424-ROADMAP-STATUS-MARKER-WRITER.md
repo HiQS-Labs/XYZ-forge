@@ -318,3 +318,7 @@ The design and review history above are retained from development. The gh-490 la
 - [ ] Unrelated fields on the row are preserved byte-for-byte.
 - [ ] A failed write rolls back the generated dashboard artifacts.
 - [ ] `releases check` is clean after the write.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
