@@ -8,6 +8,7 @@ detects file collisions, and produces a safe merge order.
 import sys
 import re
 import json
+import os
 import subprocess
 from typing import List, Dict, Any, Set, Tuple, Optional
 
@@ -15,7 +16,7 @@ from typing import List, Dict, Any, Set, Tuple, Optional
 def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Fetches open PRs via GitHub CLI."""
     cmd = [
-        "gh", "pr", "list",
+        os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
         "--state", "open",
         "--json", "number,title,headRefName,baseRefName,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
     ]

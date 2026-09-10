@@ -559,6 +559,9 @@ class TestA5FreshInspection(unittest.TestCase):
         with mock.patch.object(sys, "argv", argv), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks"), \
              mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict), \
+             mock.patch.object(merge_cleanup, "refresh_pr", return_value={"number": 1, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "b" * 40, "headRefName": "feat/land", "baseRefName": "development", "labels": [], "mergeCommit": None}), \
+             mock.patch.object(merge_cleanup, "prepare_landing_clone", side_effect=lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}), \
+             mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", return_value={"green": True, "failures": [], "diagnostics": []}), \
              mock.patch.object(merge_cleanup, "execute_pr_merge", side_effect=fake_merge), \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile", return_value=True), \
              mock.patch.object(merge_cleanup, "teardown_checkout", side_effect=fake_teardown), \

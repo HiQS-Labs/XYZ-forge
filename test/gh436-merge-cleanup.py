@@ -403,10 +403,17 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.sentinel.symlink_to(fake_home / "deleted-source" / "SKILL.md")  # deliberately dangling
 
         git_calls = []
+        fetches = [0]
 
         def fake_git(cwd, args):
             git_calls.append(list(args))
-            rc = (final_fetch_rc if args == ["fetch", "origin"] else fetch_rc) if args and args[0] == "fetch" else (ff_rc if args[:2] == ["merge", "--ff-only"] else 0)
+            if args and args[0] == "fetch":
+                # The first fetch is the pre-merge refresh (fetch_rc); later ones are the
+                # post-merge landing fetches (final_fetch_rc).
+                fetches[0] += 1
+                rc = fetch_rc if fetches[0] == 1 else final_fetch_rc
+            else:
+                rc = ff_rc if args[:2] == ["merge", "--ff-only"] else 0
             return subprocess.CompletedProcess(args=args, returncode=rc, stdout="", stderr="boom" if rc else "")
 
         insp_kwargs = ({"side_effect": [_verdict(v) for v in verdicts]} if verdicts
@@ -417,6 +424,9 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
              mock.patch.object(merge_cleanup, "inspect_primary_landing", **insp_kwargs) as insp, \
              mock.patch.object(merge_cleanup, "run_git", side_effect=fake_git), \
+             mock.patch.object(merge_cleanup, "refresh_pr", side_effect=lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": next(p.get("baseRefName") for p in (prs or []) if p["number"] == n), "labels": [], "mergeCommit": None}), \
+             mock.patch.object(merge_cleanup, "prepare_landing_clone", side_effect=lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}), \
+             mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", return_value={"green": True, "failures": [], "diagnostics": []}), \
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
              mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
@@ -587,6 +597,7 @@ class TestDanglingSymlinkPrune(unittest.TestCase):
 # one registered entry point (A.6). `from ... import *` is deliberate: unittest discovers classes
 # by module attribute, and a named list would silently drop a new class.
 from gh534_phase_a_tests import *  # noqa: E402,F401,F403
+from gh534_phase_b_tests import *  # noqa: E402,F401,F403
 
 
 if __name__ == "__main__":

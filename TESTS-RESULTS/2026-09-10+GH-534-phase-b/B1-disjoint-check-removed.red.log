@@ -1,0 +1,78 @@
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7d13m0f/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7d13m0f/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | PASS | MERGEABLE | 0 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7d13m0f/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: PR #1: pre-merge ledger gate green on 951cea4a57 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as 2aed372007
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7d13m0f/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
+merge-cleanup:   B1: check --rebuild on the kept side: rc=0
+merge-cleanup:   B1: roadmap update GH-100 (section): rc=0 
+merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
+merge-cleanup: PR #2: pushed 25731fc269 to feat/b; re-fetching and re-gating the new head
+merge-cleanup: PR #2: pre-merge ledger gate green on 25731fc269 + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as 715d973603
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7d13m0f/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+F
+======================================================================
+FAIL: test_same_key_update_on_both_sides_is_handoff_and_nothing_is_overwritten (gh534_phase_b_tests.TestPhase5EndToEnd.test_same_key_update_on_both_sides_is_handoff_and_nothing_is_overwritten)
+THE PIN (B1): without the disjoint check the PR's update would be replayed over the
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_b_tests.py", line 377, in test_same_key_update_on_both_sides_is_handoff_and_nothing_is_overwritten
+    self.assertEqual(rc, 3)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 0 != 3
+
+----------------------------------------------------------------------
+Ran 1 test in 7.164s
+
+FAILED (failures=1)
