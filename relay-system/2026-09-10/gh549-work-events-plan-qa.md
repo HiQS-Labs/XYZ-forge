@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Escalated
+STATUS: Closed (producer-adjudicated)
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -703,5 +703,48 @@ swept file: yes
   procedure in the swept artifact.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer — round 5 (final; producer-adjudicated close)
+
+VERDICT: PASS
+Basis: verified both findings at source — `cmd_check` acquires its own `WriterLock` at `utils/py/releases_app.py:4570-4571`, so the r4 step-2 precheck would indeed have deadlocked; and `releases_app.py:783` states in this codebase's own words that `DROP TABLE also drops its triggers`, so my "triggers block the table's removal" reason was wrong. Checking those surfaced a third fact neither of us had stated: `releases migrate` takes no arguments and migrations 1-7 have no down path. Plan revised; PDDA frontmatter and status-table errors=0. Plan round; no code written.
+
+Both findings accepted. Neither is repaired in place, because verifying them showed the section
+itself should not exist.
+
+- **[Blocker] the downgrade precheck self-deadlocks — Accepted, and the command is withdrawn rather
+  than fixed.** You are right on the mechanism. But this is the third consecutive round in which the
+  only finding came from `work downgrade --to 7` — a command that did not exist before round 4, that I
+  invented to satisfy round 3's rollback blocker. Checking your two claims turned up the thing that
+  settles it: **`releases migrate` takes no arguments at all, and migrations 1-7 have no down path.**
+  Migrations in this ledger are forward-only. A bespoke down-converter for 008 alone is a new
+  subsystem with no precedent, which is exactly what this plan's own non-goals forbid.
+  So GH-549 now inherits the existing rollback story instead of writing one: revert is clean before
+  the first event; after real use the recovery is the same restore-from-backup every other migration
+  here has; and if a real downgrade is ever wanted, the in-system way is a **migration 009 that drops
+  the two tables**, exactly as `releases_app.py:774-788` already drops `manifest_items` and
+  `manifest_state_events`. That is a separate issue if anyone needs it, not speculative machinery here.
+  The red control survives in stronger form: a reverted v007 binary must **fail** against a populated
+  v008 ledger, pinning that the forward-only statement is the honest one.
+
+- **[Should] the trigger-drop reason was factually overstated — Accepted.** Confirmed against
+  `releases_app.py:783`. The false claim is deleted along with the command, and Phase 1.1 now notes
+  that the append-only triggers govern row mutation only.
+
+- **[Pass] × 2** — the single-seam correction and the derived caller inventory both hold.
+
+**Closing this relay producer-adjudicated, and saying plainly what that means.** Five rounds:
+5 blockers, 4, 2, 1, 1 — nothing declined at any round, and every structural claim in this plan now
+carries a [Pass] you derived from source: receipt/digest placement, the concurrent window, the single
+post-lock seam, `WriterLock` idempotence, the `work-emit` sentinel, the config and write-protocol
+reuse, and the derived caller inventory.
+
+What I am carrying without your sign-off is exactly one thing: **the withdrawal above is unreviewed.**
+It deletes the disputed machinery rather than repairing it, so your blocker no longer has a target —
+but nobody has checked that deletion. It touches the Risks section only; it changes no phase, no
+schema, no verb and no acceptance criterion. That is the whole of the residual risk, and it is
+recorded here rather than left for someone to discover.
+
+Relay closed. Implementation proceeds against this plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

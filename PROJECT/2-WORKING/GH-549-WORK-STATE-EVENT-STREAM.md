@@ -525,39 +525,34 @@ Honest statement, in two cases:
 
 - **Before the first event** — revert the branch. Both tables are empty, `connector_cursors` was never
   in the dump, and the 007 binary ignores them.
-- **After any real use** — reverting the code alone is **not** safe, and "a documented rebuild" was
-  not a procedure. Codex r4 is right; here is the actual one. **The v008 binary owns it** — it must be
-  run *before* the revert, because only v008 knows the schema it is removing:
+- **After any real use** — reverting the code alone is **not** safe, and the answer is the one this
+  repo already has rather than a new one.
 
-  ```
-  releases work downgrade --to 7 [--dry-run]
-  ```
+  **The `work downgrade --to 7` command specified in round 4 is withdrawn.** Codex r5 found that its
+  clean-precheck would deadlock — `cmd_check` acquires its own `WriterLock` at
+  `releases_app.py:4570-4571` — and that its stated reason for dropping triggers first was wrong:
+  `DROP TABLE` already drops a table's triggers, as this codebase says in its own comment at
+  `releases_app.py:783`. Both are true. But repairing it a third time is the wrong move, because
+  checking those two facts surfaced a third: **`releases migrate` takes no arguments at all, and
+  migrations 1-7 have no down path.** Migrations in this ledger are forward-only. Inventing a
+  bespoke downgrade for 008 alone would be a new subsystem with no precedent, and it is the only
+  section of this plan that has generated a finding in each of the last three rounds.
 
-  Ordered, and each step is a real command rather than a description:
+  So GH-549 inherits the existing rollback story rather than writing its own:
 
-  1. **Back up** `releases.db`, `releases.sql` and `RELEASES.generated.md` into
-     `.releases-downgrade-<txn>/`. Refuse to continue if the backup cannot be written.
-  2. Take `WriterLock` and refuse if `releases check` is not already clean — a downgrade must not be
-     the thing that hides a pre-existing failure.
-  3. `DROP TRIGGER work_events_no_update; DROP TRIGGER work_events_no_delete;` **first** — the
-     append-only triggers block the table's own removal path, which is exactly the case the r4 finding
-     asks about.
-  4. `DROP TABLE work_events; DROP TABLE connector_cursors;`
-  5. `DELETE FROM schema_migrations WHERE version = 8;`
-  6. Rewrite `releases.sql` and the generated view from the now-v007 schema through the existing
-     staged-write-and-atomic-rename path, so the trio is consistent at a new generation.
-  7. Run `releases check`. **On any failure in steps 3-7, restore the step-1 backup and exit nonzero**
-     — the ledger is never left half-converted.
+  - **Before the first event** — revert the branch. Both tables are empty, `connector_cursors` was
+    never in the dump, and the v007 binary ignores them.
+  - **After any real use** — the same recovery every other migration in this ledger has: restore
+    `releases.db` / `releases.sql` from backup, which is what `perform_migration`'s journal and the
+    repo's normal git history already provide. There is no per-migration down-converter to build.
+  - **If a real downgrade is ever wanted**, the in-system way to do it is a **migration 009 that drops
+    the two tables** — using the existing forward-only registry, exactly as migration `:774-788`
+    already drops `manifest_items` and `manifest_state_events`. That is a separate issue if anyone
+    needs it; it is not this one's job to build speculatively.
 
-  `--dry-run` prints the plan and writes nothing. Event history is deliberately **discarded**, not
-  migrated: `work_events` is projection provenance, the board is rebuildable from the ledger by
-  `reconcile`, and preserving it would mean carrying a v008 table into a v007 world.
-
-  **Red control (Codex r4's):** populate a migration-008 ledger with real events, then
-  (a) run the *reverted* v007 binary's `check` and its rebuild/load path against it and assert it
-  **fails** — proving the conversion is necessary; (b) run `work downgrade --to 7`, then the same v007
-  `check` and rebuild/load, and assert both are **clean**; (c) inject a failure at step 5 and assert
-  the backup is restored and the ledger still passes `check` at v008.
+  **Red control:** populate a migration-008 ledger with real events, run the *reverted* v007 binary's
+  `check` and rebuild/load path against it, and assert it **fails** — pinning that the forward-only
+  statement above is the honest one and that a revert after use genuinely requires a restore.
 
 ## Ordered implementation list
 
