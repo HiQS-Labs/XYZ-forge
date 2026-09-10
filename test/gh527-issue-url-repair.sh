@@ -162,8 +162,11 @@ case "$out" in *"roadmap update --issue-num 901"*) ok "the warning names the rep
 # The skip must never be mistaken for a verdict: 901 stays put.
 set +e
 RELEASES_GH_BIN="$WORK/fake-gh" python3 "$APP" --root "$WORK" \
-  roadmap reconcile-state --apply >/dev/null 2>&1
+  roadmap reconcile-state --apply >"$WORK/apply.out" 2>&1
+rc=$?
 set -e
+check "$rc" "0" "mixed-row apply succeeds"
+[ "$rc" -eq 0 ] || cat "$WORK/apply.out"
 sec="$(python3 - "$WORK" <<'PY'
 import sqlite3, sys
 c = sqlite3.connect(sys.argv[1] + "/releases.db")
@@ -171,6 +174,16 @@ print(c.execute("select section from roadmap_items where gh_number=901").fetchon
 PY
 )"
 check "$sec" "Queue / parked intake" "the skipped row's state was never guessed"
+python3 - "$WORK" <<'PYVERIFY'
+import sqlite3, sys
+with sqlite3.connect(sys.argv[1] + "/releases.db") as c:
+    assert c.execute("select section from roadmap_items where gh_number=900").fetchone()[0] == "Completed"
+    assert c.execute("select count(*) from op_receipts where op='roadmap-reconcile-state'").fetchone()[0] == 1
+PYVERIFY
+ok "mixed-row apply moves the healthy row and records one receipt"
+python3 "$APP" --root "$WORK" check >/dev/null
+ok "ledger remains consistent after mixed-row apply"
+
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
