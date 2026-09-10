@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -242,5 +242,27 @@ vacuous probe self-disclosed and fixed, suites green at 55/0, 34/0, 19/0. Handin
 final round; the whole-file sweep is the outstanding item.
 
 Handing off to Reviewer (codex) — take round 3, the final round, starting with the sweep.
+
+### Reviewer · codex · round 3
+
+swept file: yes
+
+- [Blocker] Concurrent post-commit dispatches can apply a newer board state and then overwrite it with an older state. `perform_write` releases `WriterLock` before calling the bounded dispatcher (`utils/py/releases_app.py:1673-1675`), so two CLI writes can dispatch overlapping batches concurrently. Each connector snapshots events after its independently read cursor (`utils/py/work_connectors/__init__.py:282-295`), while `github_board` applies every event by a set-to-column mutation (`utils/py/work_connectors/github_board.py:111-126`; `utils/py/board_sync.py:524-554`). If dispatch A holds event 1 (`parked`) and dispatch B applies event 2 (`in_flight`) first, A can subsequently set the same card back to Todo. `_persist` also unconditionally upserts A's lower `last_event_id` after B's higher one (`utils/py/work_connectors/__init__.py:251-276`), guaranteeing replay but not repairing that stale board projection. The suite has no overlapping-dispatch/order control; its concurrency probe only combines independent stubs and checks timeout/isolated cursor outcomes (`test/gh549-work-events.sh:317-410`). Fix: serialize each connector's projection/cursor critical section across processes (or make cursor persistence monotonic and enforce per-connector ordered delivery), then add a deterministic two-dispatch control which delays the older batch and proves the final column/cursor remain at the newest event.
+- [Pass] The two round-2 blockers are fixed: the vendored adapter now processes an ordered batch and reports its final applied id (`utils/py/work_connectors/github_board.py:104-142`), and the shared loader implements the exact global off switch before either write-path can select a connector (`utils/py/work_connectors/__init__.py:63-70`). The normal-config/offline leg and its kill-switch red control substantiate both claims (`test/gh549-work-events.sh:598-704`).
+- [Pass] The round-1 bounds control remains non-vacuous: it asserts a nonempty event batch, demonstrates an overshoot is refused without persistence, then mutates the imported copy's bound check and observes the overshoot stored (`test/gh549-work-events.sh:497-571`).
+- [Pass] Whole-file sweep completed for every implementation file named in the artifact, including the full new connector, changed test suites, CI registration files, board/mock/config code, merge observer, and `releases_app.py`. No additional pre-existing defect was identified beyond the concurrent-dispatch ordering fault above.
+
+Definition of Done:
+
+1. **Partly satisfied.** The event schema/atomic write is at `utils/py/releases_app.py:895-947, 1578-1675`; the adapter/configurable mapping is at `utils/py/work_connectors/github_board.py:53-142`; unconfigured identity refuses before a board call at `utils/py/board_sync.py:286-301`; and both GraphQL failure paths classify scope remediation at `utils/py/board_sync.py:244-279`. The projection can still land at an older state under concurrent writes, so the connector acceptance criterion is not safe yet.
+2. **Partly matches the plan.** The single event seam, vendored adapter, bounded child protocol, and explicit test overlay match it. The missing per-connector ordering/serialization is an undocumented regression from the plan's correct projection semantics.
+3. **No second domain-write path found.** All reviewed `perform_write` callers use the common event insertion/dispatch seam (`utils/py/releases_app.py:1578-1675`); `work emit` supplies its event to that seam (`utils/py/releases_app.py:4845-4884`), and merge cleanup invokes it only after the witnessed merge succeeds (`skills/merge-cleanup/scripts/merge_cleanup.py:88-130, 430-434`).
+4. **Partly substantiated.** The placement, dump, bounds, connector, and switch red controls are materially mutating and anchored (`test/gh549-work-events.sh:160-229, 497-571, 598-704`); no control exercises overlapping real connector delivery, so it cannot substantiate concurrency safety.
+5. **Partly safe.** Writer-lock release, parent-only cursor writes, bounded reaping, append-only triggers, migration/rebuild, kill switch, and announced environment overlay are implemented (`utils/py/releases_app.py:895-947, 1578-1675, 5497-5509`; `utils/py/work_connectors/__init__.py:63-70, 176-302`). The parent is sole writer but not a cross-process serialization point, leaving a stale board-write/cursor-regression race.
+6. **Sweep complete.** No additional pre-existing defect was found in the reviewed touched files.
+
+Verdict: Changes requested — round cap reached; escalated for the concurrency correction.
+
+Handing off to Producer — go to the Producer window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
