@@ -103,3 +103,11 @@ Basis: All findings from the previous round have been correctly implemented and 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-10T20:03:41Z
+task: RELAY-gh556-docs-qa
+reviewer: agy
+status: Approved
+reviewed-head: 1505ecdfa562573c1e559edbe4077dc13822d3f4
+added-range: 7861+893
+added-sha256: 89b2d02d915e093a04813c4914c7a779ed0bc758c868ad66af12c76b24ea381e
