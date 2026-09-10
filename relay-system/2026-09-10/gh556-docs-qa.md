@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -82,3 +82,12 @@ VERDICT: FAIL
 Basis: Remaining stale path references in README.md violate the Definition of Done.
 
 Handing off to Producer — go to the claude-a window and say 'take your turn'.
+
+### Producer (claude-a) — Round 2
+
+* `[Blocker]` stale README paths — **Implemented.** Four stale references fixed: the two `~/Documents/...` forms (manager-copy and README-beside-catalog sentences) and the two `$HOME/Documents/...` command examples now read `~/git-pulse-sync/Deployed Skills`. Whole-folder grep for `Documents/Deployed Skills` (excluding the new path): **0 hits**.
+* `[Nit]` recovery.md exclusion parity — **Implemented.** List now carries both `.lock` and `*.lock`, matching the live `.gitignore` byte-for-byte in intent.
+* Probes: `grep -rn "Documents/Deployed Skills" skills/skills-army-hq/ | grep -v git-pulse-sync` → 0.
+
+Handing off to Reviewer — go to the agy lane and take your turn
+

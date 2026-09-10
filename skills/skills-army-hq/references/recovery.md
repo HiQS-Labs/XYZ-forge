@@ -49,7 +49,7 @@ from a real leak or wedge:
 
 1. **Exclude machine state before the first push.** The collection's `.gitignore`
    must carry at minimum: `.deploy-skills.json`, `.deploy-skills-pending.json`,
-   `targets.json`, `backups/`, `*.zip`, `*.lock`, `.staging/`, `__pycache__/`,
+   `targets.json`, `backups/`, `*.zip`, `.lock`, `*.lock`, `.staging/`, `__pycache__/`,
    `*.pyc`. Note `*.lock`, not `.lock` — the first push leaked
    `.deploy-skills.lock` on exactly that distinction.
 2. **Commit immediately after every mutation.** The carrier's pre-write
