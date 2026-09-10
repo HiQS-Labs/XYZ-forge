@@ -106,3 +106,11 @@ VERDICT: PASS
 Basis: all previous findings have been correctly implemented and the acceptance criteria are met
 
 relay closed (Approved), no further turn needed
+
+### Attestation · relay-drive — 2026-09-10T00:31:30Z
+task: RELAY-gh508-spike-qa
+reviewer: agy
+status: Approved
+reviewed-head: 4654a0c27b5dec5ade0a78d055470336d688b2aa
+added-range: 8340+591
+added-sha256: 700a4a89f6a53aa3d26a1da950a545f9f88b248c4cc5b7ed4a13ce9cb14fe82f
