@@ -144,6 +144,13 @@ cat << 'EOF' > "$REPO/manifest.json"
       "headRefName": "feat/gh777",
       "body": "Closes #777"
     }
+  ],
+  "commits": [
+    {
+      "sha": "c0ffee1234567890",
+      "committedAt": "2026-08-22T20:00:00Z",
+      "message": "fix(GH-999): direct express landing\n\nCloses #999"
+    }
   ]
 }
 EOF
@@ -210,6 +217,16 @@ rc=$?
 hash_after="$(git -C "$REPO" status --porcelain; git -C "$REPO" rev-parse HEAD)"
 assert_eq "Dry-run exits 0" "$rc" "0"
 assert_eq "Dry-run preserves exact byte-state of repo" "$hash_after" "$hash_before"
+
+# Test 3b: Direct-commit reconciliation uses commit identity without inventing a PR
+out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --commit c0ffee --offline "$REPO/manifest.json" --skip-pull --dry-run 2>&1)"
+rc=$?
+assert_eq "Direct-commit dry-run exits 0" "$rc" "0"
+if grep -q "Processing commit c0ffee123456" <<<"$out" && ! grep -q "Processing PR" <<<"$out"; then
+  pass "Direct-commit reconciliation preserves commit identity"
+else
+  fail "Direct-commit reconciliation preserves commit identity" "$out" "Processing commit c0ffee123456"
+fi
 
 # Test 4: Missing ## Lessons Learned rejection
 cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-999-TEST.md"

@@ -99,10 +99,13 @@ TESTS=(
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
+  "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
   "gh450-model-catalog-pin.sh"  # GH-450 (vendored Model-catalog pin: tag+sha256 record, YAML byte-equality drift check, catalog version in invocation telemetry)
   "gh460-fuzz-resolver-smoke.sh" # GH-460 (standing fuzz smoke: resolver structural contract via Gen4 engine)
   "gh346-model-telemetry-honesty.sh" # GH-346 Phase 0 (a shim may not log a model id no dispatch path can produce)
+  "gh518-muse-model-policy.sh"  # GH-518 (muse-turn model policy fails closed: only a confirmed-public repo reaches the data-clause tier)
+  "gh518-muse-adapter-containment.sh" # GH-518 (adapter-level: execution-vs-coordination root classification, process-group reap on timeout)
   "gh346-resolver-fallback.sh"  # GH-346 Phase 1 (alias resolver is an enhancement over a literal floor, never a dependency)
   "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
   "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
@@ -180,7 +183,8 @@ TESTS=(
   "gh218-synthetic-nested-driver-lock.sh" # GH-218 (synthetic suites must not contend for the harness clone's driver lock: static sweep rejects RELAY_DRIVER_LOCKED=0 on/above any relay_drive/marathon_drive invocation in test/synthetic; dynamic repro holds the real lock dir+live pid and runs gh101 green — the live marathon pre-advance incident shape) — 2/0; negative control: detector flags the pre-fix gh101 line 101
   "gh217-gate-env-plan-outside.sh"    # GH-217 (MARATHON_ALLOW_PLAN_OUTSIDE_WORKING classified SCRUB in the gate_env registry + mirrored in the driver literal; test/marathon.sh unsets it defensively; the issue's literal repro — full marathon suite under the ambient leak — is green, GH-212 refusal specifically not vacuous) — 4/0
   "gh448-driver-lock-resolver.sh" # GH-448 (shared driver-lock resolver: bash/python parity + linked-worktree LIVE, real worktree fixture; negative control: pre-fix 2-branch logic misses the lock)
-  "gh376-relay-drive-lock-parity.sh" # GH-376 (the DRIVER-side half of #448: relay-drive's own two twins
+  "gh376-relay-drive-lock-parity.sh"
+  "gh505-relay-attest.sh"          # GH-505/GH-509/GH-510: driver-attested approval — forged terminal reverted, reviewer approval attested + bound to the merge candidate # GH-376 (the DRIVER-side half of #448: relay-drive's own two twins
                                  #   now resolve the lock through that shared resolver, so a relay driver
                                  #   and a marathon driver actually exclude from a linked worktree — the
                                  #   thing marathon-drive.sh:195-196 already claimed in prose) — 18/0.
@@ -320,6 +324,14 @@ TESTS=(
                                  #   rating metrics + effectiveScore precedence, and the leaderboard's
                                  #   one-scorer property (script ranking == --json ordering).
   "gh75-dashboard.sh"            # GH-75 (releases dashboard verb renders one self-contained read-only HTML page)
+  "gh525-unshipped-version-tokens.sh"  # GH-525 (the unshipped_version_tokens setting + the
+                                 #   `settings set` verb it needs). 14/0. The controls are the
+                                 #   point: WITHOUT the setting two placeholder blocks still
+                                 #   collide (the safety claim for every existing install), a real
+                                 #   version is never nulled while a list is configured, an empty
+                                 #   Release: value is still refused, and a HAND-written settings
+                                 #   row is still caught as a receipt-less mutation — which is why
+                                 #   the verb exists at all.
   "gh32-releases-app.sh"         # GH-32 Phase 0+1 (SQLite RELEASES ledger CLI: schema/GID shape,
                                  #   writer-lock + journal protocol, canonical dump, receipt chain,
                                  #   import grandfathering, side-by-side gen) — 81/0; registered in the
@@ -529,6 +541,7 @@ TESTS=(
   "gh421-auto-wave-reconcile.sh"      # GH-421 (post-merge CI auto-trigger for wave_reconcile.py; idempotent repeat, no re-shipped ledger writes)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
+  "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
   "gh290-ate-variation-grid.sh"       # GH-290 (ATE variation grid: contract loaders, land verification,

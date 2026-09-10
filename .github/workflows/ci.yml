@@ -365,20 +365,6 @@ jobs:
       # left a silently-fake pre-advance gate in marathon-drive.sh under XYZ_PYTHON=0). Such a commit
       # must carry a trailer naming the twin it covers, which makes the exception auditable in
       # `git log` instead of invisible:
-      #
-      #   Frozen-twin-exception: relay-automation/marathon-drive.sh — <reason>
-      #
-      # GH-321: the rule used to live here, inline, and was RANGE-scoped — one trailer anywhere in
-      # BASE..HEAD excused every frozen twin touched in the PR, including files nobody declared. It
-      # now lives in the guard script as `--allow-exceptions`, per-file, so it can be tested; inline
-      # YAML shell is unreachable from the suite, which is part of why the looseness shipped at all.
-      - name: Frozen Bash twin guard (GH-308)
-        if: github.event_name == 'pull_request'
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          set -euo pipefail
-          bash test/gh308-frozen-twin-guard.sh --check --base "$BASE_SHA" --allow-exceptions
 
       # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
       # clone, so a missing-install-step regression fails here instead of on a
@@ -541,6 +527,15 @@ jobs:
 
       - name: Verify automatic wave reconciliation (GH-421)
         run: bash test/gh421-auto-wave-reconcile.sh
+      # GH-308 / GH-459: Frozen Bash twin guard runs on PRs against the PR base SHA.
+      # Sited in vendored-smoke because this job triggers on pull_request with fetch-depth: 0.
+      - name: Frozen Bash twin guard (GH-308)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          bash test/gh308-frozen-twin-guard.sh --check --base "$BASE_SHA" --allow-exceptions
 
       - name: Vendor harness into scratch repo and run vendored suites
         run: |

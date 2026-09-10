@@ -83,7 +83,6 @@ ROADMAP_SECTIONS = (
     "Deferred · vision",
 )
 
-ROADMAP_STATUS_MARKERS = ("🆕", "🚧", "✅")
 
 EXIT_OK = 0
 EXIT_CHECK_FAILED = 1
@@ -143,6 +142,24 @@ ROADMAP_URL_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/(?:issues|pull
 CROCKFORD_GLOB_CLASS = "[0-9A-HJKMNP-TV-Z]"
 
 GENERATION_KEY = "generation"
+
+# GH-525: some repos write a literal placeholder in RELEASES.md for a release that has not shipped
+# a version yet — AEGIS-Sleuth's convention is "versions are RECORDED, never RESERVED", so every
+# unshipped block reads `Release: TBD`. The schema already models "no version yet" as SQL NULL
+# (releases.version is nullable and UNIQUE(repo_id, version) permits any number of NULLs); the
+# importer just never mapped a placeholder onto it, so every unshipped block collided on the same
+# "version" string. Downstream's only recourse was to FORK this file for two lines, which is how it
+# drifted ~1700 lines behind and re-derived an INSERT_RE fix that already existed here.
+#
+# Comma-separated so a repo can carry more than one placeholder (TBD, N/A, -). Unset by default:
+# behaviour is byte-identical to before for every existing install.
+UNSHIPPED_VERSION_TOKENS_KEY = "unshipped_version_tokens"
+
+# The settings keys an operator may write with `releases settings set`. Deliberately a
+# deny-by-default allowlist: `generation` belongs to the writer protocol and `repo_slug` is the
+# ledger's identity, so exposing either here would be handing out a supported way to corrupt the
+# ledger. A new configurable key is a deliberate addition to this tuple, never an accident.
+CONFIGURABLE_SETTINGS = (UNSHIPPED_VERSION_TOKENS_KEY,)
 
 CRASH_BOUNDARIES = ("pre-commit", "post-commit", "post-stage", "mid-rename", "post-rename")
 
@@ -434,6 +451,21 @@ def connect(db_path, must_exist=True):
 def get_setting(conn, key, default=None):
     row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
     return row["value"] if row else default
+
+
+def unshipped_version_tokens(conn):
+    """The configured placeholders that mean "no version yet" (GH-525).
+
+    Returns a set, empty when the setting is absent — and an empty set is what keeps this
+    inert for every install that never opts in. Entries are trimmed and compared
+    case-sensitively: `TBD` is a literal token in a hand-maintained ledger, not a word to be
+    normalised, and accepting `tbd` would quietly widen what counts as "unshipped". Blank
+    entries are dropped so a trailing comma cannot turn the empty string into a placeholder —
+    an empty `Release:` value stays a malformed ledger, refused as it always was."""
+    raw = get_setting(conn, UNSHIPPED_VERSION_TOKENS_KEY)
+    if not raw:
+        return set()
+    return {token.strip() for token in raw.split(",") if token.strip()}
 
 
 def get_generation(conn):
@@ -1976,6 +2008,7 @@ def cmd_import(args):
                 else:
                     conn.execute("INSERT INTO doc_lines(repo_id, position, content) VALUES (?, ?, ?)",
                                  (repo["id"], pos, content))
+            placeholder_versions = unshipped_version_tokens(conn)
             for block in blocks:
                 f = block["fields"]
 
@@ -1986,6 +2019,10 @@ def cmd_import(args):
                 version = (fv("Release") or "").strip()
                 if not version:
                     refuse("release-value", "a block's Release: value is empty (malformed ledger)")
+                # GH-525: a configured placeholder means "not shipped yet" -> SQL NULL, so any
+                # number of unshipped blocks coexist. Read once per import, above the loop.
+                if version in placeholder_versions:
+                    version = None
                 gid = new_gid("rel-")
 
                 status_raw = fv("Status")
@@ -3288,11 +3325,39 @@ def validate_raw_text(raw_text, issue_num=None):
 
 
 
+def validate_issue_identity(issue_url, gh_number, require_github=False):
+    """GH-527: a GitHub issue_url must name the same issue as the row's gh_number.
+
+    `reconcile-state` reads issue identity from this pair, so a row where they disagree can never
+    be reconciled — it cannot ask GitHub about the right issue. GH-61 was imported that way: the
+    legacy ROADMAP.md importer took the FIRST issue link in a line that named four child issues
+    before its own `→ [#61]` pointer. That importer is retired, but intake accepted the same
+    mismatch with no complaint, so the defect stayed creatable. Checked at BOTH writers now.
+
+    The shape check is deliberately NOT enforced at intake. Rows legitimately carry URLs this
+    regex does not match — imported cross-repo references, and fixtures that use short stand-in
+    hosts — and refusing those would reject shapes intake has always accepted. Identity is what
+    matters: if the URL IS a GitHub issue URL, its number must agree. `require_github` is for the
+    repair verb, whose entire purpose is to make a row resolvable, so a malformed URL there is a
+    failed repair rather than a pre-existing shape to tolerate.
+    """
+    url = issue_url or ""
+    if not GH_ISSUE_URL_RE.fullmatch(url):
+        if require_github:
+            refuse("roadmap-issue-url", "%s is not a GitHub issue URL" % issue_url)
+        return
+    if gh_number is not None and url.rsplit("/", 1)[-1] != str(gh_number):
+        refuse("roadmap-issue-url", "%s does not name issue #%s; a row's issue_url and gh_number "
+               "must agree, or reconcile-state can never resolve the row"
+               % (issue_url, gh_number))
+
+
 def cmd_roadmap_add(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
+        validate_issue_identity(args.issue_url, args.issue_num)
         basename = os.path.basename(args.doc_path)
         # hq park passes the hq_roadmap_line rendering via --raw-text so preview and stored row
         # share ONE template; the inline fallback exists only for direct CLI use.
@@ -3478,6 +3543,59 @@ def cmd_roadmap_repoint(args):
         conn.close()
 
 
+def cmd_settings_set(args):
+    """`releases settings set <key> <value>` — write a settings row THROUGH the writer protocol.
+
+    GH-525: without this there is no supported way to configure the ledger at all. A settings row
+    is part of the business-state digest, so a direct `sqlite3 INSERT` — the only alternative —
+    leaves the latest receipt's after-digest disagreeing with the state and `check` fails with
+    `receipt-chain: ... a receipt-less mutation`. Measured, not assumed: setting
+    `unshipped_version_tokens` by hand took a clean ledger to `check: 2 failure(s)`.
+
+    So a configurable ledger needs a configuring verb. Only keys in CONFIGURABLE_SETTINGS are
+    writable: `generation` is owned by the writer protocol and `repo_slug` is identity, and letting
+    either be set here would hand an operator a supported way to corrupt the ledger."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        if args.key not in CONFIGURABLE_SETTINGS:
+            refuse("setting-not-configurable",
+                   "%s is not an operator-configurable setting; configurable keys are: %s"
+                   % (args.key, ", ".join(sorted(CONFIGURABLE_SETTINGS))))
+        old = get_setting(conn, args.key)
+        if args.dry_run:
+            print("%s: %s -> %s" % (args.key, old if old is not None else "(unset)", args.value))
+            return
+
+        def mutate(conn):
+            if _has_column(conn, "settings", "updated_at"):
+                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?) "
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
+                             "updated_at = excluded.updated_at",
+                             (args.key, args.value, now_iso()))
+            else:
+                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?) "
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                             (args.key, args.value))
+
+        perform_write(root, conn, "settings-set", None, mutate)
+        print("%s = %s" % (args.key, args.value))
+    finally:
+        conn.close()
+
+
+def cmd_settings_list(args):
+    """Print every settings row, so "what is this ledger configured to do" is one command."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        for row in conn.execute("SELECT key, value FROM settings ORDER BY key"):
+            mark = " (configurable)" if row["key"] in CONFIGURABLE_SETTINGS else ""
+            print("%-28s %s%s" % (row["key"], row["value"], mark))
+    finally:
+        conn.close()
+
+
 def validate_roadmap_section(section):
     """Refuse headings the dashboard cannot render; never silently rename input."""
     if section not in ROADMAP_SECTIONS:
@@ -3500,11 +3618,14 @@ def cmd_roadmap_update(args):
     Marker-only updates preserve raw_text, ratings, section and doc_path.
     """
     marker = getattr(args, "status_marker", None)  # `move` shares this handler.
-    if marker is not None and marker not in ROADMAP_STATUS_MARKERS:
+    if marker is not None and marker not in _ROADMAP_STATUS_MARKERS:
         refuse("invalid-status-marker", "--status-marker must be one of %s"
-               % ", ".join(ROADMAP_STATUS_MARKERS))
+               % ", ".join(_ROADMAP_STATUS_MARKERS))
     if args.section is not None:
         validate_roadmap_section(args.section)
+    # `roadmap move` delegates here with its OWN namespace, which has no --issue-url. Read it
+    # defensively rather than adding the flag to a verb that has no business setting it.
+    issue_url = getattr(args, "issue_url", None)
     root = resolve_root(args.root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
@@ -3519,21 +3640,22 @@ def cmd_roadmap_update(args):
             where, param, label = "global_id = ?", args.gid, args.gid
 
         has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
-        select_cols = ["global_id", "gh_number", "title", "raw_text"]
+        select_cols = ["global_id", "gh_number", "title", "raw_text", "issue_url"]
         row = conn.execute(
             "SELECT %s FROM roadmap_items WHERE %s" % (", ".join(select_cols), where), (param,)).fetchone()
         if not row:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
 
-        if args.raw_text is None and args.section is None and marker is None:
-            refuse("no-update", "pass at least one of --raw-text, --section or --status-marker")
+        if args.raw_text is None and args.section is None and marker is None and issue_url is None:
+            refuse("no-update", "pass at least one of --raw-text, --section, --status-marker or --issue-url")
 
         new_raw_text = None
         rating = None
         if args.raw_text is not None:
             new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
             old_raw_text = row["raw_text"] or ""
-            if new_raw_text == old_raw_text.strip() and args.section is None and marker is None:
+            if (new_raw_text == old_raw_text.strip()
+                    and args.section is None and marker is None and issue_url is None):
                 print("roadmap update: %s raw_text unchanged; nothing written" % label)
                 return
             rating = parse_rating(new_raw_text, row["title"])
@@ -3541,6 +3663,10 @@ def cmd_roadmap_update(args):
                 refuse("schema-behind",
                        "this ledger has no rating columns. Run `releases migrate` first — rating "
                        "stores scores, it never installs schema.")
+
+        if issue_url is not None:
+            # The repair must not be able to re-create the defect it exists to fix.
+            validate_issue_identity(issue_url, row["gh_number"], require_github=True)
 
         if args.dry_run:
             if args.raw_text is not None:
@@ -3553,6 +3679,8 @@ def cmd_roadmap_update(args):
                 print("section: -> %s" % args.section)
             if marker is not None:
                 print("status_marker: -> %s" % marker)
+            if issue_url:
+                print("issue_url: %s -> %s" % (row["issue_url"], issue_url))
             return
 
         def mutate(conn):
@@ -3572,6 +3700,9 @@ def cmd_roadmap_update(args):
             if marker is not None:
                 updates.append("status_marker = ?")
                 params.append(marker)
+            if issue_url is not None:
+                updates.append("issue_url = ?")
+                params.append(issue_url)
 
             params.append(param)
             conn.execute("UPDATE roadmap_items SET %s WHERE %s" % (", ".join(updates), where), params)
@@ -3604,13 +3735,17 @@ def cmd_roadmap_reconcile_state(args):
             "SELECT * FROM roadmap_items WHERE section NOT IN (?, ?) AND gh_number IS NOT NULL "
             "ORDER BY gh_number, global_id", terminal).fetchall()
         changes = []
+        unresolvable = []
         for row in rows:
             # Full URLs preserve repository identity, including imported cross-repo references.
             url = row["issue_url"] or ""
             if (not GH_ISSUE_URL_RE.fullmatch(url)
                     or url.rsplit("/", 1)[-1] != str(row["gh_number"])):
-                refuse("roadmap-issue-identity", "GH-%s has no matching issue URL; refusing to guess "
-                       "issue state" % row["gh_number"])
+                # Per-row, not per-command: one row whose issue_url disagrees with its gh_number
+                # is a local data defect, and refusing the whole sweep over it strands every other
+                # row (#527). Still never guess this row's state — skip it and name it.
+                unresolvable.append(row["gh_number"])
+                continue
             try:
                 result = subprocess.run(
                     [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
@@ -3637,6 +3772,10 @@ def cmd_roadmap_reconcile_state(args):
             target = terminal[0] if reason == "COMPLETED" else terminal[1]
             changes.append((row, target))
 
+        for gh in unresolvable:
+            print("warn: rule=roadmap-issue-identity: GH-%s has no matching issue URL; skipped "
+                  "(fix with `releases roadmap update --issue-num %s --issue-url <url>`)"
+                  % (gh, gh))
         if not changes:
             print("roadmap reconcile-state: no changes; nothing written")
             return
@@ -5395,6 +5534,17 @@ def build_parser():
 
     sp = sub.add_parser("dashboard", help="render the releases and roadmap dashboard HTML")
 
+    # GH-525: a ledger with configurable behaviour needs a configuring verb. A settings row is part
+    # of the business-state digest, so writing one by hand breaks the receipt chain and `check`
+    # fails — this is the only supported way to set one.
+    sp_set = sub.add_parser("settings", help="read/write operator-configurable ledger settings")
+    ssub = sp_set.add_subparsers(dest="settings_cmd", required=True)
+    sp_sl = ssub.add_parser("list", help="print every settings row")
+    sp_ss = ssub.add_parser("set", help="write one operator-configurable setting (receipted)")
+    sp_ss.add_argument("key", help="setting key; only configurable keys are accepted")
+    sp_ss.add_argument("value", help="new value")
+    sp_ss.add_argument("--dry-run", action="store_true", help="print the change, write nothing")
+
     sp = sub.add_parser("roadmap", help="Roadmap ledger: sync/list/render the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_sections = rsub.add_parser("sections", help="list accepted roadmap section names (no DB required)")
@@ -5455,9 +5605,12 @@ def build_parser():
     sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
     sp_ru.add_argument("--raw-text", help="new raw_text for the row")
-    sp_ru.add_argument("--status-marker", choices=ROADMAP_STATUS_MARKERS,
+    sp_ru.add_argument("--status-marker", choices=_ROADMAP_STATUS_MARKERS,
                        help="explicit lifecycle marker; never inferred from raw_text")
     sp_ru.add_argument("--section", help="new section; accepted names: " + ", ".join(ROADMAP_SECTIONS))
+    sp_ru.add_argument("--issue-url", help="corrected GitHub issue URL for the row (GH-527). Must "
+                       "name the same issue as the row's gh_number — this is the only verb that "
+                       "can repair an issue_url written wrong at intake")
     sp_ru.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rm = rsub.add_parser("move", help="move an existing roadmap row to a new section (GH-269)")
@@ -5580,6 +5733,8 @@ def main(argv=None):
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
                               "move": cmd_roadmap_move, "sections": cmd_roadmap_sections,
                               "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
+        "settings": lambda a: {"set": cmd_settings_set,
+                               "list": cmd_settings_list}[a.settings_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,

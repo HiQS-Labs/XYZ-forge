@@ -99,8 +99,15 @@ Notes pinned by review (#291 correction, accepted):
 `target_repo {path, origin_url}`, `base_branch`, `head_branch`, `head_sha`,
 `branch_redirect`, `gate {cmd, result: green|red|not-run, exit, receipt_path}`,
 `acceptance {checked, unmet_count}`, `pr {number, url, state}` (all-null when no PR —
-`pr_note` carries the failed-publication reason), `relay_status`, and
-`timestamps {started_at, finished_at}`.
+`pr_note` carries the failed-publication reason), `relay_status`,
+`timestamps {started_at, finished_at}`, and — GH-505/GH-509, additive within `@1`, all
+`null` on any outcome that was not attested — the review binding: `reviewed_candidate` (the
+ONE revision the driver validated against the reviewer's attestation and the only revision a
+consumer may merge — `head_sha` stays the observational receipt-time HEAD), `reviewed_head`
+(the revision the reviewer read), `added_sha256` (digest of the review text the reviewer
+added), and `attest_path` (the `relay-drive/attest@1` record; `utils/py/relay_attest.py` is
+its one writer and validating reader). Jog's landing refuses an `approved` receipt whose
+binding is null.
 
 Ownership split (GH-280 authority model): Marathon exclusively owns everything in this
 receipt — execution attempts, Tick history, builder/reviewer turns, acceptance, gates,

@@ -15,6 +15,7 @@ from contextlib import contextmanager
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rtl import driver_lock_path, resolve_turn_root, rtl_default_log  # noqa: E402
+import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -39,6 +40,10 @@ def main():
     parser.add_argument("--force", dest="force", action="store_true")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--tool-mode", dest="tool_mode", default=get_env("RELAY_TOOL_MODE", "standard"), choices=["standard", "programmatic"])
+    # GH-505/GH-509: roles come from the INVOCATION, never from the relay file or the token. A
+    # terminal STATUS counts only when this driver watched the --reviewer's turn write it.
+    parser.add_argument("--reviewer", dest="reviewer")
+    parser.add_argument("--builder", dest="builder")
     parser.add_argument("--help", action="store_true")
     
     args, unknown = parser.parse_known_args()
@@ -59,6 +64,20 @@ def main():
         die("--relay-file is required")
     if not args.agent_cmd and not args.dry_run:
         die("--agent-cmd is required")
+    # GH-505/GH-509: refuse before any tick mutation. Without a named reviewer no terminal status
+    # can ever be accepted, so a run without one would only spend builder turns that cannot succeed.
+    if not args.reviewer and not args.dry_run:
+        # Not a refusal: plenty of callers drive non-terminal relays (locks, telemetry, round-cap
+        # escalation) and vendored .xyz/ copies pick this flag up on their next sync. But say it
+        # once, loudly — without a named reviewer NO terminal STATUS can ever be accepted by this run;
+        # an approval from any turn is reverted as forged, and a pre-approved file escalates.
+        eprint("relay-drive: WARNING — no --reviewer given; this run can never accept a terminal STATUS (every Approved/Closed is refused as unattested — GH-505)")
+    if args.builder and args.builder == args.reviewer:
+        die(f"--builder and --reviewer must be different agent ids (got '{args.reviewer}' for both)")
+    # The shims create the pinned worktree ONLY for the exact string "1" (codex-turn.py, agy-turn.py);
+    # any other supplied value would run in-root while the record claimed isolation. Refuse it.
+    if get_env("RELAY_WORKTREE_ISOLATION") not in (None, "0", "1"):
+        die(f"RELAY_WORKTREE_ISOLATION must be 0 or 1 (got {get_env('RELAY_WORKTREE_ISOLATION')!r})")
 
     if args.tool_mode == "programmatic":
         has_sandbox = bool(shutil.which("sandbox-exec") or shutil.which("bwrap"))
@@ -555,12 +574,144 @@ def main():
         except Exception:
             return 0
 
-    def exit_escalate(reason_str):
+    def write_escalation_reason(reason_str):
         reason_file = os.path.join(root_dir, ".relay-scratch", "escalation-reason")
         os.makedirs(os.path.dirname(reason_file), exist_ok=True)
         with open(reason_file, "w") as f:
             f.write(reason_str)
+
+    def exit_escalate(reason_str):
+        write_escalation_reason(reason_str)
         sys.exit(4)
+
+    # ---- GH-505 / GH-509: driver-attested terminal status -------------------------------------
+    # The driver is the only process in a relay the party under review does not run. It pins the
+    # revision the reviewer reads, watches the turn it dispatched, and attests an approval only when
+    # a reviewer-role turn appended review text. `attested` is in-process memory: the driver's own
+    # exit never depends on the on-disk record, which consumers validate separately.
+    attested = {}
+
+    def target_repo():
+        repo = get_env("RELAY_TARGET_ROOT")
+        if not repo:
+            try:
+                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+            except Exception:
+                repo = root_dir
+        return repo or root_dir
+
+    def transcript_repo():
+        try:
+            return subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+        except Exception:
+            return ""
+
+    def commit_relay_file(msg):
+        """File-scoped commit of the relay file in ITS repo. Returns True on success or when the
+        file is untracked/ignored (nothing to commit, logged); False on a real commit failure."""
+        trepo = transcript_repo()
+        if not trepo:
+            eprint("relay-drive: relay file is not in a git repo — attestation trailer kept on disk only")
+            return True
+        ls = subprocess.run(["git", "-C", trepo, "ls-files", "--error-unmatch", "--", os.path.abspath(relay_file)], capture_output=True)
+        if ls.returncode != 0:
+            eprint("relay-drive: relay file is untracked/gitignored — attestation trailer kept on disk only, commit skipped")
+            return True
+        add = subprocess.run(["git", "-C", trepo, "add", "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+        cm = subprocess.run(["git", "-C", trepo, "commit", "-q", "-m", msg, "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+        if add.returncode != 0 or cm.returncode != 0:
+            eprint(f"relay-drive: commit of relay file FAILED: {(add.stderr or cm.stderr).strip()}")
+            return False
+        return True
+
+    def restore_status_line(prev_status):
+        with open(relay_file, "r", encoding="utf-8", errors="surrogateescape") as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith("STATUS:"):
+                lines[i] = f"STATUS: {prev_status}\n"
+                break
+        with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
+            f.writelines(lines)
+
+    def judge_terminal(ns, role, pre, shim_ok=True):
+        """Judge the turn the driver just watched. Returns a verdict tuple; the CALLER picks the exit
+        so a shim failure (5/6/7) keeps its own code (round-3 F3).
+
+        ("none",)                      not terminal — nothing to judge
+        ("forged", commit_ok)          a turn that may not approve wrote a terminal STATUS — reverted
+        ("refused", reason)            reviewer-role turn, but no review text / rewritten / not done
+        ("attested", record)           reviewer-role approval, trailer + record published
+
+        Only a reviewer-role turn whose shim returned 0 can ever be attested: a failed or timed-out
+        turn (shim_ok=False) is reverted whatever its role — nothing that turn wrote is trusted.
+        """
+        if not terminal_status(ns):
+            return ("none",)
+        if role != "reviewer" or not shim_ok:
+            why = f"builder-role turn ({actor})" if role != "reviewer" else f"FAILED reviewer turn ({actor}; shim returned non-zero)"
+            eprint(f"relay-drive: terminal STATUS {ns} written by {why} — reverting to {pre['status'] or 'Open'}")
+            restore_status_line(pre["status"] or "Open")
+            with open(relay_file, "a") as f:
+                f.write(f"\n### System · relay-drive — {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}\n"
+                        f"terminal STATUS {ns} written by {why} — reverted\n")
+            ok = commit_relay_file(f"relay-drive: revert unattestable terminal ({args.relay_task}, {actor})")
+            return ("forged", ok)
+        with open(relay_file, "rb") as f:
+            post_raw = f.read()
+        post_canon = relay_attest.canonical_bytes(post_raw)
+        pre["canon"] = relay_attest.canonical_prefix(pre["raw"], post_raw)
+        if not post_canon.startswith(pre["canon"]):
+            pre_c = pre["canon"]
+            i = next((k for k in range(min(len(pre_c), len(post_canon))) if pre_c[k] != post_canon[k]), min(len(pre_c), len(post_canon)))
+            eprint(f"relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte {i}):")
+            eprint(f"  before: {pre_c[max(0, i-60):i+60]!r}")
+            eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
+            return ("refused", "review-body-rewritten")
+        added = post_canon[len(pre["canon"]):]
+        if not added.strip():
+            return ("refused", "empty-approval")
+        tstat, tactor = token_state()
+        if tstat != "done":
+            return ("refused", "close-mismatch" if tactor else "token-state")
+        trepo = target_repo()
+        record = {
+            "schema": relay_attest.SCHEMA,
+            "task": args.relay_task,
+            "transcript_repo": transcript_repo() or None,
+            "relay_file": os.path.abspath(relay_file),
+            "relay_file_rel": relay_attest.repo_relative(relay_file, trepo),
+            "target_repo": trepo,
+            "reviewer": actor,
+            "status": ns,
+            "isolated": pre["isolated"],
+            "reviewed_head": pre["reviewed_head"],
+            "artifact_sha256": pre["artifact_sha256"],
+            "added_start": len(pre["canon"]),
+            "added_len": len(added),
+            "added_sha256": relay_attest.sha256(added),
+            "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "driver_pid": os.getpid(),
+        }
+        trailer = relay_attest.trailer_text(record)
+        record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
+        with open(relay_file, "a", encoding="utf-8") as f:
+            f.write(trailer)
+        if not commit_relay_file(f"relay-drive: attest {args.relay_task} approved by {actor} (reviewed {pre['reviewed_head'][:12]})"):
+            return ("refused", "attest-publish-failed")
+        try:
+            path = relay_attest.write(record)
+        except Exception as e:
+            eprint(f"relay-drive: attestation record write FAILED: {e}")
+            return ("refused", "attest-publish-failed")
+        attested.update(record)
+        print(f"relay-drive: attested {ns} by {actor} — reviewed {pre['reviewed_head'][:12]}, {len(added)} bytes of review text, record {path}")
+        return ("attested", record)
+
+    def exit_unattested(s, where):
+        eprint(f"relay-drive: STATUS {s} but no attestation from this driver run ({where}) — a terminal status counts only when this driver watched the reviewer write it (GH-505)")
+        xyz_relay_emit("red")
+        exit_escalate("unattested-terminal")
 
     original_round_cap = args.round_cap
     hard_cap = args.round_cap * 2
@@ -573,7 +724,9 @@ def main():
             if actor:
                 eprint(f"relay-drive: STATUS {s} but {args.relay_task} still live ({tstatus}/{actor}) — close mismatch, escalating")
                 exit_escalate("close-mismatch")
-            print(f"relay-drive: relay terminated (STATUS: {s}, token done) after {round_idx} turn(s)")
+            if not attested:
+                exit_unattested(s, f"startup/loop after {round_idx} turn(s)")
+            print(f"relay-drive: relay terminated (STATUS: {s}, token done, attested by {attested['reviewer']}) after {round_idx} turn(s)")
             tick_repo_root = get_env("TICK_REPO_ROOT", root_dir)
             lane_attempt_reset(tick_repo_root, args.relay_task)
             xyz_relay_emit("green")
@@ -617,7 +770,30 @@ def main():
         os.environ["RELAY_FILE"] = relay_file
         os.environ["RELAY_TASK"] = args.relay_task
         os.environ["RELAY_AGENT"] = actor
-        
+        # GH-505/GH-509: the role is decided HERE, from the invocation, and exported so containment
+        # (rtl_is_reviewer_turn) uses the driver's knowledge instead of bytes a builder can rewrite.
+        # The reviewed revision is pinned: the shim cuts its worktree at RELAY_REVIEWED_HEAD, so a
+        # concurrent parent commit during the turn cannot change what the reviewer read.
+        role = "reviewer" if actor == args.reviewer else "builder"
+        if args.review_once and args.reviewer and role != "reviewer":
+            die(f"--review-once dispatches '{actor}' but --reviewer is '{args.reviewer}' (review-once-actor-mismatch)")
+        os.environ["RELAY_ROLE"] = role
+        os.environ["RELAY_REVIEWED_HEAD"] = head_before
+        with open(relay_file, "rb") as _f:
+            _pre_raw = _f.read()
+        pre_turn = {
+            "status": s,
+            "raw": _pre_raw,
+            "canon": None,   # computed at judgement time against the post-turn file (canonical_prefix)
+            "reviewed_head": head_before,
+            "isolated": get_env("RELAY_WORKTREE_ISOLATION", "1") == "1",
+            "artifact_sha256": None,
+        }
+        if args.artifact_file:
+            with open(args.artifact_file, "rb") as f:
+                pre_turn["artifact_sha256"] = relay_attest.sha256(f.read())
+            os.environ["RELAY_ARTIFACT_SHA256"] = pre_turn["artifact_sha256"]
+
         # Execute agent-cmd with RSS measurement (GH-382).
         #
         # GH-370: also emit a throttled changed-file count.  The turn-taker creates its own
@@ -709,8 +885,13 @@ def main():
             except Exception:
                 pass
         if res_code != 0:
+            # GH-505 F3: a failed turn is NEVER attested — whatever its role — but a terminal STATUS it
+            # left behind is still reverted, and the shim's own code (5/6/7) is preserved.
+            verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
+            if verdict[0] == "forged":
+                write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
             sys.exit(res_code)
-            
+
         round_idx += 1
         
         if args.consult_verify:
@@ -826,10 +1007,24 @@ def main():
             eprint(f"relay-drive: relay escalated to human by design (STATUS: {ns}, token {ntstatus}:{nactor}) after {round_idx} turn(s)")
             xyz_relay_emit("orange")
             exit_escalate("human-escalation")
-            
+
+        # GH-505/GH-509: judge the turn this driver just watched, BEFORE any terminal exit.
+        verdict = judge_terminal(ns, role, pre_turn)
+        if verdict[0] == "forged":
+            xyz_relay_emit("red")
+            exit_escalate("forged-terminal" if verdict[1] else "revert-commit-failed")
+        if verdict[0] == "refused":
+            eprint(f"relay-drive: terminal STATUS {ns} by reviewer {actor} REFUSED — {verdict[1]}")
+            xyz_relay_emit("red")
+            exit_escalate(verdict[1])
+        if verdict[0] == "attested":
+            ns = file_status()   # the trailer was appended; re-read so the signatures below see it
+
         if args.review_once:
             if terminal_status(ns):
-                print(f"relay-drive: review-once — reviewer approved/closed (STATUS: {ns}) after 1 turn")
+                if not attested:
+                    exit_unattested(ns, "review-once")
+                print(f"relay-drive: review-once — reviewer approved/closed (STATUS: {ns}, attested) after 1 turn")
                 xyz_relay_emit("green")
                 sys.exit(0)
             # GH-245 defect 2: classify on EVIDENCE OF A TURN — the relay file's content changed
@@ -868,7 +1063,9 @@ def main():
     s = file_status()
     tstatus, actor = token_state()
     if terminal_status(s) and not actor:
-        print(f"relay-drive: relay terminated (STATUS: {s})")
+        if not attested:
+            exit_unattested(s, "post-loop")
+        print(f"relay-drive: relay terminated (STATUS: {s}, attested by {attested['reviewer']})")
         xyz_relay_emit("green")
         sys.exit(0)
         

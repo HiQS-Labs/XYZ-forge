@@ -1,0 +1,113 @@
+test_aggregator_keeps_remaining_connector_when_peer_fails (test_flightdeck.ConnectorTests.test_aggregator_keeps_remaining_connector_when_peer_fails) ... ok
+test_cached_pr_without_policy_attestation_never_claims_ready (test_flightdeck.ConnectorTests.test_cached_pr_without_policy_attestation_never_claims_ready) ... FAIL
+test_clio_drops_stale_issue_context_from_long_session (test_flightdeck.ConnectorTests.test_clio_drops_stale_issue_context_from_long_session) ... ok
+test_clio_extracts_issue_beyond_display_summary_limit (test_flightdeck.ConnectorTests.test_clio_extracts_issue_beyond_display_summary_limit) ... ok
+test_clio_reads_intent_without_counting_progress (test_flightdeck.ConnectorTests.test_clio_reads_intent_without_counting_progress) ... ok
+test_clio_retains_issue_context_within_session (test_flightdeck.ConnectorTests.test_clio_retains_issue_context_within_session) ... ok
+test_each_connector_can_be_disabled_without_core_branching (test_flightdeck.ConnectorTests.test_each_connector_can_be_disabled_without_core_branching) ... ok
+test_explicit_stale_slug_alias_merges_after_repo_rename (test_flightdeck.ConnectorTests.test_explicit_stale_slug_alias_merges_after_repo_rename) ... FAIL
+test_git_pulse_deduplicates_with_other_connector_in_aggregation (test_flightdeck.ConnectorTests.test_git_pulse_deduplicates_with_other_connector_in_aggregation) ... ok
+test_issue_parser_accepts_urls_and_multiple_explicit_references (test_flightdeck.ConnectorTests.test_issue_parser_accepts_urls_and_multiple_explicit_references) ... ok
+test_item_url_repairs_a_stale_pre_rename_repo_slug (test_flightdeck.ConnectorTests.test_item_url_repairs_a_stale_pre_rename_repo_slug) ... ok
+test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) ... 
+  test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad=None) ... ERROR
+  test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad={'id': []}) ... FAIL
+  test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad={'id': 'local/demo', 'aliases': [None]}) ... ERROR
+  test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad={'id': 'local/demo', 'next_actions': [None]}) ... ERROR
+test_partial_cache_basename_does_not_establish_identity (test_flightdeck.ConnectorTests.test_partial_cache_basename_does_not_establish_identity) ... FAIL
+test_registry_is_the_expected_static_first_party_set (test_flightdeck.ConnectorTests.test_registry_is_the_expected_static_first_party_set) ... ok
+test_loopback_server_serves_app_and_passive_snapshot (test_flightdeck.ServerTests.test_loopback_server_serves_app_and_passive_snapshot) ... ok
+test_breadcrumbs_have_clickable_ancestors_and_current_page_semantics (test_flightdeck.TokenTests.test_breadcrumbs_have_clickable_ancestors_and_current_page_semantics) ... ok
+test_generated_tokens_are_current_and_theme_keys_match (test_flightdeck.TokenTests.test_generated_tokens_are_current_and_theme_keys_match) ... ok
+test_token_audit_rejects_raw_component_styling (test_flightdeck.TokenTests.test_token_audit_rejects_raw_component_styling) ... ok
+
+======================================================================
+ERROR: test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 145, in test_malformed_json_rows_leave_healthy_peer_available
+    snapshot = FlightdeckAggregator(config(root, frozenset({"clio", "topology"}))).snapshot()
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/src/flightdeck/aggregate.py", line 76, in snapshot
+    key = incoming.get("id")
+          ^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+======================================================================
+ERROR: test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad={'id': 'local/demo', 'aliases': [None]})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 145, in test_malformed_json_rows_leave_healthy_peer_available
+    snapshot = FlightdeckAggregator(config(root, frozenset({"clio", "topology"}))).snapshot()
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/src/flightdeck/aggregate.py", line 107, in snapshot
+    _merge_repo(current, incoming)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/src/flightdeck/aggregate.py", line 34, in _merge_repo
+    current[field] = sorted(set(current.get(field, [])) | set(incoming.get(field, [])))
+                     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'str' and 'NoneType'
+
+======================================================================
+ERROR: test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad={'id': 'local/demo', 'next_actions': [None]})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 145, in test_malformed_json_rows_leave_healthy_peer_available
+    snapshot = FlightdeckAggregator(config(root, frozenset({"clio", "topology"}))).snapshot()
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/src/flightdeck/aggregate.py", line 107, in snapshot
+    _merge_repo(current, incoming)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/src/flightdeck/aggregate.py", line 37, in _merge_repo
+    actions.extend(item for item in incoming.get("next_actions", []) if item.get("title") not in seen)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/src/flightdeck/aggregate.py", line 37, in <genexpr>
+    actions.extend(item for item in incoming.get("next_actions", []) if item.get("title") not in seen)
+                                                                        ^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+======================================================================
+FAIL: test_cached_pr_without_policy_attestation_never_claims_ready (test_flightdeck.ConnectorTests.test_cached_pr_without_policy_attestation_never_claims_ready)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 156, in test_cached_pr_without_policy_attestation_never_claims_ready
+    self.assertEqual(_classify_pr(pr, True)[0], "needs-qa")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'ready' != 'needs-qa'
+- ready
++ needs-qa
+
+
+======================================================================
+FAIL: test_explicit_stale_slug_alias_merges_after_repo_rename (test_flightdeck.ConnectorTests.test_explicit_stale_slug_alias_merges_after_repo_rename)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 186, in test_explicit_stale_slug_alias_merges_after_repo_rename
+    self.assertEqual({repo["id"] for repo in snapshot["repos"]}, {"github.com/hiqs-labs/aegis-sleuth-slackbot", "local/aegis-sleuth-slack-bot"})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'local/aegis-sleuth-slack-bot'
+
+======================================================================
+FAIL: test_malformed_json_rows_leave_healthy_peer_available (test_flightdeck.ConnectorTests.test_malformed_json_rows_leave_healthy_peer_available) (bad={'id': []})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 149, in test_malformed_json_rows_leave_healthy_peer_available
+    self.assertEqual(source["availability"], "unavailable")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'ok' != 'unavailable'
+- ok
++ unavailable
+
+
+======================================================================
+FAIL: test_partial_cache_basename_does_not_establish_identity (test_flightdeck.ConnectorTests.test_partial_cache_basename_does_not_establish_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/flightdeck-504-93ihzkqa/review/test/flightdeck/test_flightdeck.py", line 170, in test_partial_cache_basename_does_not_establish_identity
+    self.assertEqual({repo["id"] for repo in snapshot["repos"]}, {"github.com/hiqs-labs/xyz-forge", "local/xyz-forge"})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'local/xyz-forge'
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.543s
+
+FAILED (failures=4, errors=3)

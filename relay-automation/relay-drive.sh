@@ -29,11 +29,13 @@ fi
 # Option A). The turn-taker owns the work + thread mutation — it claims/resumes the
 # RELAY-TURN task as RELAY_AGENT, `tick ping`s it, appends its block + sets the
 # file's STATUS/verdict, then **`tick release RELAY-TURN --to <other>`** to hand off
-# (or **`tick done RELAY-TURN`** + STATUS: Approved on the final turn), and commits.
+# (or, as the --reviewer ONLY, **`tick done RELAY-TURN`** + STATUS: Approved on the final
+# turn), and commits.
 #
 # Whose-turn is the tick token (so the Phase-1 handoff-exclusive rule applies and the
 # Phase-2 watchdog can see a stalled turn). The human-readable thread's STATUS is the
-# terminal (Approved/Closed) signal. The supervisor only:
+# terminal (Approved/Closed) WORD; it COUNTS only when the supervisor attested it — i.e.
+# watched the --reviewer's turn write it (GH-505/GH-509; utils/py/relay_attest.py). The supervisor only:
 #   - reads the RELAY-TURN actor + the file STATUS to decide whether to continue,
 #   - invokes the turn-taker for the current actor,
 #   - enforces a round cap, and

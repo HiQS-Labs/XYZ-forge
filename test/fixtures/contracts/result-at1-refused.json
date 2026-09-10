@@ -1,7 +1,7 @@
 {
   "schema": "marathon-drive/result@1",
   "execution_id": "gh901-exec1",
-  "generated_at": "2026-08-29T02:02:58Z",
+  "generated_at": "2026-09-08T22:19:03Z",
   "outcome": "refused",
   "reason": "gate-missing",
   "exit_code": 2,
@@ -22,7 +22,11 @@
   },
   "base_branch": null,
   "head_branch": "development",
-  "head_sha": "5fc89608ee24ce0e1ddd3da91c7892c57e1dfedb",
+  "head_sha": "077fe57f30279b048fcdd6e921f5e638666f0211",
+  "reviewed_candidate": null,
+  "reviewed_head": null,
+  "added_sha256": null,
+  "attest_path": null,
   "branch_redirect": false,
   "gate": {
     "cmd": null,
@@ -40,6 +44,6 @@
   "relay_status": null,
   "timestamps": {
     "started_at": "2026-08-29T00:00:00Z",
-    "finished_at": "2026-08-29T02:02:58Z"
+    "finished_at": "2026-09-08T22:19:03Z"
   }
 }

@@ -34,6 +34,11 @@ seed_relay() {  # <status> <recorded-task>
     "$status" "$task" > "$A/phases/p1/RELAY.md"
 }
 
+attest_seed() {  # <task> — GH-505: a hand-seeded Approved lane is satisfied only with the driver's record
+  grep -q '^STATUS: Approved' "$A/phases/p1/RELAY.md" 2>/dev/null || return 0
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "$A/phases/p1/RELAY.md" --relay-task "$1" --reviewer agy --target-root "$A" >/dev/null 2>&1
+}
+
 mk_token() {  # <task> <done|claimed>
   tick_a log task.created "$1" --agent marathon >/dev/null 2>&1 || true
   tick_a claim "$1" --agent claude --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
@@ -60,6 +65,7 @@ grep -q "GH-491: if the phase's relay is already terminal" <<<"$(printf '%s' "$h
 reset_state
 seed_relay "Approved" "$BASE"
 mk_token "$BASE" done
+attest_seed "$BASE"
 out="$(run_driver --relay-task "${BASE}-2")"
 grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && pass "GH-491: advisory fires when --retry is passed on a terminal/Approved/done phase" \
@@ -87,6 +93,7 @@ grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" 
 reset_state
 seed_relay "Open" "$BASE"
 mk_token "$BASE" done
+attest_seed "$BASE"
 out="$(run_driver --relay-task "${BASE}-2")"
 grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" <<<"$(printf '%s' "$out")" \
   && fail "control 4b failed: advisory fired when relay was non-terminal: $out" \
@@ -96,6 +103,7 @@ grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" 
 reset_state
 seed_relay "Approved" "$BASE"
 mk_token "$BASE" done
+attest_seed "$BASE"
 out="$(run_driver)"
 grep -q "already reached a terminal relay" <<<"$(printf '%s' "$out")" \
   && pass "plain refire without --retry correctly hits the gate-only already-satisfied short-circuit" \

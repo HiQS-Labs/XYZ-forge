@@ -190,12 +190,7 @@ if [ "$count" -eq 1 ]; then
   TICK_REPO_ROOT="$A" "$TICK" release "$task" --agent codex --to agy >/dev/null 2>&1 || true
   exit 7
 fi
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
-pdir_rel="${relay#$A/}"
-pdir_rel="${pdir_rel%/*/*}"
-printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
-TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "$pdir_rel/**" >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "$relay" --relay-task "$task" --reviewer agy --target-root "$A"   # GH-505
 exit 0
 STUB
 chmod +x "$RD_RESUME"

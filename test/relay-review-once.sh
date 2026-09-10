@@ -35,7 +35,7 @@ printf '\n### Reviewer · Round 1\nVERDICT: FAIL\nBasis: two issues found.\nChan
 exit 0
 EOF
 chmod +x "$RC_STUB"
-outA="$(bash "$DRIVE" --relay-file "$A/relayRC.md" --relay-task RELAY-RC --agent-cmd "$RC_STUB" --review-once 2>&1)"; rcA=$?
+outA="$(bash "$DRIVE" --relay-file "$A/relayRC.md" --relay-task RELAY-RC --agent-cmd "$RC_STUB" --review-once --reviewer reviewer 2>&1)"; rcA=$?
 [ "$rcA" -eq 5 ] && pass "changes-requested single review exits 5 (not the stall's 3)" || fail "expected 5, got $rcA (out: $outA)"
 grep -qi "no progress" <<<"$(printf '%s' "$outA")" && fail "changes-requested read as no-progress (out: $outA)" || pass "changes-requested NOT reported as no-progress"
 
@@ -46,20 +46,20 @@ cat >"$AP_STUB" <<EOF
 #!/usr/bin/env bash
 set -u
 export TICK_REPO_ROOT="$A"
-"$TICK_PATH" claim RELAY-AP --agent reviewer >/dev/null 2>&1
+"$TICK_PATH" claim RELAY-AP --agent reviewer --paths relayAP.md >/dev/null 2>&1
 tmp="\$(mktemp)"; sed 's/^STATUS:.*/STATUS: Approved/' "$A/relayAP.md" > "\$tmp" && mv "\$tmp" "$A/relayAP.md"
 printf '\n### Reviewer · Round 1\nVERDICT: PASS\nApproved.\n' >> "$A/relayAP.md"
 "$TICK_PATH" done RELAY-AP --agent reviewer >/dev/null 2>&1
 exit 0
 EOF
 chmod +x "$AP_STUB"
-outB="$(bash "$DRIVE" --relay-file "$A/relayAP.md" --relay-task RELAY-AP --agent-cmd "$AP_STUB" --review-once 2>&1)"; rcB=$?
+outB="$(bash "$DRIVE" --relay-file "$A/relayAP.md" --relay-task RELAY-AP --agent-cmd "$AP_STUB" --review-once --reviewer reviewer 2>&1)"; rcB=$?
 [ "$rcB" -eq 0 ] && pass "approved single review exits 0" || fail "expected 0, got $rcB (out: $outB)"
 
 # --- Case C: reviewer does nothing → genuine stall → exit 3 (the guard we did not weaken). ---
 seed RELAY-ST relayST.md
 NOOP_STUB="$WORK/noop-stub.sh"; printf '#!/usr/bin/env bash\nexit 0\n' >"$NOOP_STUB"; chmod +x "$NOOP_STUB"
-outC="$(bash "$DRIVE" --relay-file "$A/relayST.md" --relay-task RELAY-ST --agent-cmd "$NOOP_STUB" --review-once 2>&1)"; rcC=$?
+outC="$(bash "$DRIVE" --relay-file "$A/relayST.md" --relay-task RELAY-ST --agent-cmd "$NOOP_STUB" --review-once --reviewer reviewer 2>&1)"; rcC=$?
 [ "$rcC" -eq 3 ] && pass "a true stall still exits 3 under --review-once" || fail "expected 3, got $rcC (out: $outC)"
 
 # --- Case D: reviewer escalates by design → exit 4 (carve-out still wins under --review-once). ---
@@ -73,7 +73,7 @@ printf '\n### Reviewer · Round 1\nHanded back to human.\n' >> "$A/relayES.md"
 exit 0
 EOF
 chmod +x "$ES_STUB"
-outD="$(bash "$DRIVE" --relay-file "$A/relayES.md" --relay-task RELAY-ES --agent-cmd "$ES_STUB" --review-once 2>&1)"; rcD=$?
+outD="$(bash "$DRIVE" --relay-file "$A/relayES.md" --relay-task RELAY-ES --agent-cmd "$ES_STUB" --review-once --reviewer reviewer 2>&1)"; rcD=$?
 [ "$rcD" -eq 4 ] && pass "by-design Escalated still exits 4 under --review-once" || fail "expected 4, got $rcD (out: $outD)"
 
 # --- Case E (GH-245 defect 2, "Run B"): reviewer APPENDS findings but LEAVES THE TOKEN CLAIMED and
@@ -91,7 +91,7 @@ printf '\n### Reviewer · Round 1\nVERDICT: FAIL\nBasis: six findings.\nChanges 
 exit 0
 EOF
 chmod +x "$KT_STUB"
-outE="$(bash "$DRIVE" --relay-file "$A/relayKT.md" --relay-task RELAY-KT --agent-cmd "$KT_STUB" --review-once 2>&1)"; rcE=$?
+outE="$(bash "$DRIVE" --relay-file "$A/relayKT.md" --relay-task RELAY-KT --agent-cmd "$KT_STUB" --review-once --reviewer reviewer 2>&1)"; rcE=$?
 [ "$rcE" -eq 5 ] && pass "GH-245: relay-file append with token left claimed exits 5, not stall 3" || fail "expected 5, got $rcE (out: $outE)"
 
 # --- Case F (GH-245 defect 2, "Run A"): reviewer moves the token only (claim+release) and writes
@@ -108,7 +108,7 @@ export TICK_REPO_ROOT="$A"
 exit 0
 EOF
 chmod +x "$TO_STUB"
-outF="$(bash "$DRIVE" --relay-file "$A/relayTO.md" --relay-task RELAY-TO --agent-cmd "$TO_STUB" --review-once 2>&1)"; rcF=$?
+outF="$(bash "$DRIVE" --relay-file "$A/relayTO.md" --relay-task RELAY-TO --agent-cmd "$TO_STUB" --review-once --reviewer reviewer 2>&1)"; rcF=$?
 [ "$rcF" -eq 3 ] && pass "GH-245: token-only move with no relay-file change exits 3, not success 5" || fail "expected 3, got $rcF (out: $outF)"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"

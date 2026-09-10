@@ -105,6 +105,17 @@ class MarkerTests(unittest.TestCase):
         self.assertEqual(self.rows()[0]['section'], 'In progress')
         self.cli('check')
 
+    def test_marker_and_issue_url_update_together(self):
+        old = self.rows()[0]
+        url = 'https://github.com/test/repo/issues/424'
+        self.cli('roadmap', 'update', '--issue-num', '424',
+                 '--raw-text', old['raw_text'], '--status-marker', '⛔', '--issue-url', url)
+        row = self.rows()[0]
+        self.assertEqual(row['status_marker'], '⛔')
+        self.assertEqual(row['issue_url'], url)
+        self.assertEqual(row['raw_text'], old['raw_text'])
+        self.cli('check')
+
     def test_refusals_and_dry_run_do_not_write(self):
         before = self.snapshot()
         self.cli('roadmap', 'update', '--issue-num', '424', '--status-marker', 'typo', expected=2)

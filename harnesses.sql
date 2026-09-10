@@ -211,6 +211,7 @@ INSERT INTO "harnesses" VALUES('agy','Antigravity CLI','native_cli',0,1,'agy -p 
 INSERT INTO "harnesses" VALUES('claude','Claude Code','native_cli',0,1,'claude -p "{task}"','Orchestrator and final reviewer','Do not use as default headless builder.');
 INSERT INTO "harnesses" VALUES('aider','Aider','python_litellm',0,0,'aider --message "{task}"','Builder only','Force AIDER_FLAGS=--edit-format diff; reviewer seam Intermittent.');
 INSERT INTO "harnesses" VALUES('pi','Pi Agent','node_multi',0,0,'pi -p --mode json "{task}"','Builder only','Explicit PI_MODEL required.');
+INSERT INTO "harnesses" VALUES('muse','Muse Code','native_cli',1,1,'muse exec --model {model} --reasoning-effort {effort} --workspace {workspace} --trust-workspace --prompt-file {task}','Evaluation only (GH-518)','Absolute MUSE_BIN (PATH not modified). Needs --workspace + --trust-workspace or the turn is read-only and silently writes nothing. Contributor tier carries a data-use clause: public repos only.');
 CREATE TABLE invocation_logs (
             invocation_id TEXT PRIMARY KEY,
             device_id TEXT NOT NULL REFERENCES devices(device_id),
@@ -977,6 +978,11 @@ INSERT INTO "invocation_logs" VALUES('inv-20260907235710-481d8481','noels-Mac-St
 INSERT INTO "invocation_logs" VALUES('inv-20260908000309-04ccaea7','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh487-final-qa-r3',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 2 insertions(+)','2026-09-08 00:03:09','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908001753-f923560c','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh487-final-qa-r4',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 3 insertions(+)','2026-09-08 00:17:53','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908031148-f9794a6a','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','RELAY-gh196-shutdown-impl-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 03:11:48','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260908191343-791c3e37','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh505-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 19:13:43','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260908192036-c54091c8','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh505-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 19:20:36','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260908192639-d136a594','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','RELAY-gh505-plan-qa',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 19:26:39','1.0.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260909055831-21c12658','noels-Mac-Studio.local','muse','muse-spark-1.3-contributor','meta','high','muse-turn.py','["exec", "--model", "muse-spark-1.3-contributor", "--reasoning-effort", "high", "--prompt-file"]','RELAY-gh518-muse-first-relay',0.0,7,0,NULL,NULL,0.0,' 1 file changed, 0 insertions(+), 0 deletions(-)','2026-09-09 05:58:31','1.3.0');
+INSERT INTO "invocation_logs" VALUES('inv-20260909061012-512aef8e','noels-Mac-Studio.local','muse','muse-spark-1.3-contributor','meta','high','muse-turn.py','["exec", "--model", "muse-spark-1.3-contributor", "--reasoning-effort", "high", "--prompt-file"]','RELAY-gh518-muse-first-relay',0.0,7,0,NULL,NULL,0.0,' 3 files changed, 1 insertion(+)','2026-09-09 06:10:12','1.3.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908155815-8ad405bc','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh423-p1',0.0,0,0,NULL,NULL,0.0,'0 files changed','2026-09-08 15:58:15','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908160043-80f77ee1','noels-Mac-Studio.local','agy','deepseek/deepseek-v4-pro','google','high','agy-turn.py','[]','gh423-p1',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 1 insertion(+)','2026-09-08 16:00:43','1.0.0');
 INSERT INTO "invocation_logs" VALUES('inv-20260908160327-5356dd06','noels-Mac-Studio.local','codex','deepseek/deepseek-v4-pro','openai','high','codex-turn.py','["-s", "workspace-write", "-c", "approval_policy=never"]','gh423-p1',0.0,0,0,NULL,NULL,0.0,' 2 files changed, 2 insertions(+)','2026-09-08 16:03:27','1.0.0');
@@ -1017,13 +1023,6 @@ CREATE TABLE models (
             supported_reasoning_levels TEXT,
             is_deprecated INTEGER DEFAULT 0
         );
-INSERT INTO "models" VALUES('openrouter/deepseek/deepseek-v4-pro','DeepSeek','DeepSeek V4 Pro','openrouter',1000000,0.435,0.87,0.0036,'["low", "medium", "high", "max"]',0);
-INSERT INTO "models" VALUES('deepseek/deepseek-chat','DeepSeek','DeepSeek V3','openrouter',1000000,0.27,1.1,0.0028,'["none"]',0);
-INSERT INTO "models" VALUES('Qwen/Qwen3.8-Max','Alibaba','Qwen 3.8-Max','openrouter',1000000,2.0,6.0,0.25,'["low", "medium", "xhigh"]',0);
-INSERT INTO "models" VALUES('Qwen/Qwen3.7-Flash','Alibaba','Qwen 3.7-Flash','openrouter',1000000,0.03,0.13,0.006,'["none"]',0);
-INSERT INTO "models" VALUES('openrouter/stealth/ox-alpha','Stealth','Stealth Ox-Alpha','openrouter',1000000,1.5,4.5,0.2,'["high", "max"]',0);
-INSERT INTO "models" VALUES('zai-org/GLM-5.3','Z.ai','GLM 5.3 High','openrouter',1000000,1.4,4.4,0.26,'["low", "high", "max"]',0);
-INSERT INTO "models" VALUES('google/gemma-4-31b-qat','Google','Gemma 4 31B QAT','lmstudio',32768,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('deepseek/deepseek-v4-pro','Auto','deepseek/deepseek-v4-pro','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('antigravity/gemini-2.5-pro','Antigravity','antigravity/gemini-2.5-pro','google',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('openai/gpt-mini-latest','Openai','openai/gpt-mini-latest','pi',1000000,0.0,0.0,0.0,'["none"]',0);
@@ -1035,6 +1034,15 @@ INSERT INTO "models" VALUES('qwen3.8-max','Auto','qwen3.8-max','alibaba',1000000
 INSERT INTO "models" VALUES('claude-sonnet-4-6','Auto','claude-sonnet-4-6','anthropic',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('openrouter/qwen/qwen3.8-max','Qwen','openrouter/qwen/qwen3.8-max','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
 INSERT INTO "models" VALUES('qwen/qwen3.8-max-0902','Qwen','qwen/qwen3.8-max-0902','openrouter',1000000,0.0,0.0,0.0,'["none"]',0);
+INSERT INTO "models" VALUES('openrouter/deepseek/deepseek-v4-pro','DeepSeek','DeepSeek V4 Pro','openrouter',1000000,0.435,0.87,0.0036,'["low", "medium", "high", "max"]',0);
+INSERT INTO "models" VALUES('deepseek/deepseek-chat','DeepSeek','DeepSeek V3','openrouter',1000000,0.27,1.1,0.0028,'["none"]',0);
+INSERT INTO "models" VALUES('Qwen/Qwen3.8-Max','Alibaba','Qwen 3.8-Max','openrouter',1000000,2.0,6.0,0.25,'["low", "medium", "xhigh"]',0);
+INSERT INTO "models" VALUES('Qwen/Qwen3.7-Flash','Alibaba','Qwen 3.7-Flash','openrouter',1000000,0.03,0.13,0.006,'["none"]',0);
+INSERT INTO "models" VALUES('openrouter/stealth/ox-alpha','Stealth','Stealth Ox-Alpha','openrouter',1000000,1.5,4.5,0.2,'["high", "max"]',0);
+INSERT INTO "models" VALUES('zai-org/GLM-5.3','Z.ai','GLM 5.3 High','openrouter',1000000,1.4,4.4,0.26,'["low", "high", "max"]',0);
+INSERT INTO "models" VALUES('google/gemma-4-31b-qat','Google','Gemma 4 31B QAT','lmstudio',32768,0.0,0.0,0.0,'["none"]',0);
+INSERT INTO "models" VALUES('muse-spark-1.3','Meta','Muse Spark 1.3','meta',1007997,1.25,4.25,0.15,'["minimal", "low", "medium", "high", "xhigh", "max"]',0);
+INSERT INTO "models" VALUES('muse-spark-1.3-contributor','Meta','Muse Spark 1.3 Contributor','meta',1007997,0.1,0.2,0.002,'["minimal", "low", "medium", "high", "xhigh"]',0);
 CREATE TABLE user_configs (
             config_id TEXT PRIMARY KEY,
             device_id TEXT NOT NULL REFERENCES devices(device_id),

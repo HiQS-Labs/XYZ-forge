@@ -20,6 +20,8 @@ cat > "$STUB_RD" << 'STUB_EOF'
 #!/usr/bin/env bash
 set -u
 printf '%s\n' "$*" > "$WORK/relay-drive-args"
+# GH-505: a success must carry the reviewer attestation the real driver publishes
+[ "${RELAY_DRIVE_EXIT:-0}" -eq 0 ] && [ -z "${ATTEST_STUB_SKIP:-}" ] && bash "$ATTEST_STUB" "$@"
 exit "${RELAY_DRIVE_EXIT:-0}"
 STUB_EOF
 chmod +x "$STUB_RD"
@@ -85,7 +87,7 @@ run_driver --dry-run >/dev/null 2>&1 || true   # run again to confirm HEAD stabi
 [ "$(git -C "$A" rev-parse HEAD)" = "$before_head" ] && pass "dry-run makes no commits" || fail "dry-run should not commit"
 
 # ── (2) relay file template: builder + reviewer sections present ──────────
-RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1 || true
+ATTEST_STUB_SKIP=1 RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1 || true   # render check only — GH-505: the stub must not approve here
 grep -q "TAKE YOUR TURN.*claude.*BUILDER" "$A/phases/p1/RELAY.md" 2>/dev/null \
   && pass "relay file has builder TAKE YOUR TURN section" \
   || fail "builder TAKE YOUR TURN section missing"
@@ -126,8 +128,11 @@ RERUN_OUT="$(RELAY_DRIVE_EXIT=0 run_driver 2>&1)"; rc=$?
 grep -q "task MARATHON-P1-TURN is open" <<<"$(printf '%s\n' "$RERUN_OUT")" \
   && fail "driver hit the old leaked-token collision: $RERUN_OUT" \
   || pass "driver avoids the old 'task ... is open' collision"
-grep -qE '^handoff-to:[[:space:]]+claude$' <<<"$(tick_a info MARATHON-P1-TURN)" \
-  && pass "driver re-seeds the token back to the builder handoff" \
+# GH-505: the stub now completes the phase, so the restored builder handoff is proven by the chain
+# that followed it — a claim BY the builder (only possible on a builder handoff), then reviewer done.
+grep -qE '^status:[[:space:]]+done$' <<<"$(tick_a info MARATHON-P1-TURN)" \
+  && grep -lq '"agent": *"claude"' "$A"/.tick/events/*MARATHON-P1-TURN* 2>/dev/null \
+  && pass "driver re-seeds the token back to the builder handoff (builder claimed it, reviewer completed it)" \
   || fail "driver did not restore the builder handoff: $(tick_a info MARATHON-P1-TURN)"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
@@ -259,6 +264,32 @@ printf 'ran-after-approval\n' >> "$POST_MARKER"
 exit 17
 HOOK
 chmod +x "$POST_APPROVE_FAIL"
+
+# ── (6c) GH-505 H4: a post-approve hook that commits SOURCE moves the candidate off the reviewed
+#         revision → the run must NOT publish success (exit 4, candidate-drifted), even though the
+#         reviewer approved and the gate was green.
+POST_APPROVE_DRIFT="$WORK/post-approve-drift.sh"
+cat > "$POST_APPROVE_DRIFT" <<HOOK
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'drift\n' >> "$A/drifted.txt"; git -C "$A" add drifted.txt; git -C "$A" commit -qm "post-approve source drift"
+HOOK
+chmod +x "$POST_APPROVE_DRIFT"
+H4_RES="$WORK/h4-receipt.json"; rm -f "$H4_RES"
+H4_OUT="$(RELAY_DRIVE_EXIT=0 run_driver --post-approve-cmd "bash $POST_APPROVE_DRIFT" --result-file "$H4_RES" 2>&1)"; rc=$?
+[ "$rc" -eq 4 ] && pass "H4: post-approve source commit → exit 4 (approval not bound to the final candidate)" || fail "H4: exit=$rc (expected 4)"
+grep -q "candidate-drifted-from-reviewed-head" "$A/phases/p1/ESCALATION.md" 2>/dev/null \
+  && pass "H4: escalation names candidate-drifted-from-reviewed-head" || fail "H4: ESCALATION.md missing the reason"
+grep -q "drifted.txt" <<<"$(git -C "$A" log -3 --stat)" \
+  && pass "H4: control — the hook really committed source (the SECOND bind is what refused)" || fail "H4: hook did not commit: $(git -C "$A" log -3 --stat | head -12)"
+grep -q "phase p1 post-approve: attested approval found but candidate" <<<"$(printf '%s\n' "$H4_OUT")" \
+  && pass "H4: the refusal came from the post-approve bind, after the approved event" || fail "H4: refusal not attributed to the post-approve bind"
+[ -s "$H4_RES" ] && python3 -c "import json,sys; d=json.load(open('$H4_RES')); sys.exit(0 if d['outcome']!='approved' and d.get('reviewed_candidate') is None else 1)" \
+  && pass "H4: receipt is not approved and carries no validated candidate" || fail "H4: receipt approved or missing: $(cat "$H4_RES" 2>/dev/null | head -c 300)"
+! grep -q "complete — STATUS: Approved, gate passed" <<<"$(printf '%s\n' "$H4_OUT")" \
+  && pass "H4: no green completion was emitted" || fail "H4: a green completion line was emitted"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
 for runtime in 0 1; do
   HELP_OUT="$(MARATHON_ROOT="$A" XYZ_PYTHON="$runtime" bash "$DRIVER" --help 2>&1)"; rc=$?
@@ -453,10 +484,18 @@ rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
 # ── (12e) GH-207: byte-identical relay re-render skips the commit and continues ─
-RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" >/dev/null 2>&1; rc=$?
-[ "$rc" -eq 0 ] && pass "GH-207: first namespaced render succeeds" || fail "GH-207: first namespaced render exit=$rc"
-RERENDER_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] && pass "GH-207: identical re-render does not HALT" || fail "GH-207: identical re-render exit=$rc (expected 0): $RERENDER_OUT"
+# GH-505: a stub that approves turns run 2 into an already-satisfied lane, which never re-renders,
+# and a stalling stub escalates through a path that edits the relay. Pin the byte-identical
+# re-render with a stub that exits 0 WITHOUT attesting: the render runs before dispatch both times,
+# and each fire then halts as unattested (exit 4) — the render/commit seam is what is under test.
+ATTEST_STUB_SKIP=1 RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 4 ] && pass "GH-207: first namespaced render fires (unattested stub, exit 4)" || fail "GH-207: first namespaced render exit=$rc"
+# the first fire's escalation edited and committed the relay; put HEAD back on the render commit so
+# the second render is byte-identical to what is committed — the exact seam GH-207 pins
+git -C "$A" reset -q --hard "$(git -C "$A" log --format=%H --grep='render phase p1 relay' -1)" >/dev/null 2>&1
+rm -rf "$A/.tick/attempts"   # a prior failed attempt would add the debug-mantra block to the render
+RERENDER_OUT="$(ATTEST_STUB_SKIP=1 RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" 2>&1)"; rc=$?
+[ "$rc" -eq 4 ] && pass "GH-207: identical re-render does not HALT on the render (unattested stub, exit 4)" || fail "GH-207: identical re-render exit=$rc (expected 4): $RERENDER_OUT"
 grep -q "relay file unchanged" <<<"$(printf '%s\n' "$RERENDER_OUT")" \
   && pass "GH-207: identical re-render is explicitly treated as unchanged" \
   || fail "GH-207: expected unchanged-relay log on identical re-render"
@@ -488,10 +527,7 @@ if [ "$review_once" -eq 0 ]; then
   printf 'artifact built during this phase\n' > "$A/src/satisfied.js"
   exit 3
 fi
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
-printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
-TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "phases/satisfied-plan--p1/RELAY.md" >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "$relay" --relay-task "$task" --reviewer agy --target-root "$A"   # GH-505
 exit 0
 STUB
 chmod +x "$RD_SAT"
@@ -608,12 +644,10 @@ while (($#)); do
     *) shift ;;
   esac
 done
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
-printf '\n### Round 1 · Builder · claude\nDone.\n\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
+printf '\n### Round 1 · Builder · claude\nDone.\n' >> "$relay"
 TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent claude --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
 TICK_REPO_ROOT="$A" "$TICK" release "$task" --agent claude --to agy >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "$relay" --relay-task "$task" --reviewer agy --target-root "$A"   # GH-505
 exit 0
 STUB
 chmod +x "$RD_GH274"

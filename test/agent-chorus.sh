@@ -726,12 +726,16 @@ esac
 
 # ── Gen 2 Phase 1: telemetry sidecar + index + outcome + audit (#193) ──────────────
 TS_STORE="$WORK/telemetry-store"; mkdir -p "$TS_STORE"
+# Opt in EXPLICITLY. This block tests the telemetry machinery, not the calendar: relying on the
+# default-ON pilot window (TELEMETRY_PILOT_WINDOW) made every assertion below a time bomb that
+# turned the whole suite red the morning after the window closed, with nothing about telemetry
+# actually broken. The window's own logic is asserted separately, clock-independently, below.
 ts_cli() { AGENT2AGENT_TELEMETRY=1 python3 "$CLI" --store "$TS_STORE" "$@"; }
 printf '## Goal\nT\n## Scope\nT\n## Context and current state\nT\n## Evidence and artifacts\nT\n## Constraints and safety boundaries\nT\n## Questions for participants\nT\n## Requested outcome / done condition\nT\n' > "$WORK/pkt.md"
 ts_cli start --subject "telemetry suite probe" --packet-file "$WORK/pkt.md" --id 777001 >/dev/null 2>&1
 TS_SIDECAR="$(find "$TS_STORE" -path "*777001*" -name telemetry.jsonl | head -1)"
 [ -n "$TS_SIDECAR" ] && [ -s "$TS_SIDECAR" ] \
-  && pass "telemetry sidecar written on start (forced on — pilot window 2026-08-24..2026-09-08 has ended; EXPERIMENTS.md: reverts to opt-in after)" || fail "no telemetry sidecar after start"
+  && pass "telemetry sidecar written on start (explicit opt-in)" || fail "no telemetry sidecar after start"
 grep -q '"event": "discussion_started"' "$TS_SIDECAR" 2>/dev/null \
   && pass "discussion_started event present with schema version" || fail "discussion_started event missing"
 # hard override: a fresh discussion with AGENT2AGENT_TELEMETRY=0 writes nothing
@@ -763,6 +767,27 @@ ts_cli telemetry audit --id 777001 >/dev/null 2>&1 \
   && pass "comparator audit: zero transcript content in telemetry (negative control)" || fail "audit failed: content leak suspected"
 ts_cli telemetry status >/dev/null 2>&1 \
   && pass "telemetry status reports mode/window/override" || fail "telemetry status failed"
+# The default-ON pilot window itself, asserted WITHOUT depending on what day it is. The window is a
+# closed date range that expires by design; a test that reads the real clock passes until it
+# doesn't, and then blames telemetry. Substitute the window instead of the date.
+win_out="$(python3 - "$(dirname "$CLI")" <<'PILOT_WINDOW'
+import datetime as dt, sys
+sys.path.insert(0, sys.argv[1])
+import agent_chorus as ac
+today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+def probe(window):
+    ac.TELEMETRY_PILOT_WINDOW = window
+    return ac.telemetry_enabled()
+open_w   = ("2000-01-01", "2999-12-31")
+closed_w = ("2000-01-01", "2000-01-02")
+print("inside=%s outside=%s edge=%s" % (probe(open_w), probe(closed_w), probe((today, today))))
+PILOT_WINDOW
+)"
+case "$win_out" in
+  "inside=True outside=False edge=True")
+    pass "pilot window is default-ON inside the range, OFF after it, inclusive on the edge" ;;
+  *) fail "pilot window logic wrong: $win_out" ;;
+esac
 PURGE_OUT="$(ts_cli telemetry purge 2>&1)"; case "$PURGE_OUT" in *"purged"*[1-9]*) pass "telemetry purge revokes all artifacts" ;; *) fail "purge removed nothing: $PURGE_OUT" ;; esac
 
 # ── Gen 2 Phase 2: Roster Widening, Supersession & Citations (#233) ──────────────

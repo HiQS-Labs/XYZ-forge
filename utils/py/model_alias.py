@@ -41,17 +41,11 @@ def resolve_model_slug(model_name, xyz_root, timeout_s=RESOLVE_TIMEOUT_S):
     if not model_name:
         return model_name
 
-    # GH-450 (Model-catalog Phase 1, relay QA r2 F2b): an exact-ID form never goes through the
-    # fuzzy table. The resolver's tier 4 is a squashed-substring fallback in BOTH directions, so
-    # after a pin correction (say `deepseek v4 pro` moves from `deepseek/deepseek-v4-pro` to
-    # `.../deepseek-v4-pro-2`) the OLD exact id still contains the row's squashed key and tier 4
-    # would silently redirect it to the new pin. The catalog's CI rule blocks that shape between
-    # rows in the data, but nothing in the data can see an id that has already left it — so the
-    # guard lives here, at the one seam every shim resolves through. An OpenRouter id is
-    # `provider/slug[:variant]`; a colloquial alias never contains a slash. `resolve-model-alias.sh`
-    # itself is untouched (test/model-alias.sh pins what its raw tier 4 does, on purpose).
-    # Known exception: the /open-router skill (skills/open-router/SKILL.md) calls the raw resolver
-    # directly with operator input; it documents "an exact id never needs resolving" instead.
+    # Fast path: an exact-ID form never needs the alias table. An OpenRouter id is
+    # `provider/slug[:variant]`; a colloquial alias never contains a slash.
+    # Note: Tier 4 squashed-substring fallback was retired in resolve-model-alias.sh
+    # (Model-catalog #3, XYZ-forge #457 D2); this check remains as an instant O(1) floor
+    # ensuring exact IDs bypass subprocess overhead completely.
     if "/" in model_name:
         return model_name
 
@@ -72,4 +66,52 @@ def resolve_model_slug(model_name, xyz_root, timeout_s=RESOLVE_TIMEOUT_S):
 
     if r.returncode == 0 and r.stdout.strip():
         return r.stdout.strip()
+    return model_name
+
+
+def resolve_native_alias(model_name, xyz_root):
+    """Resolve a colloquial name against the vendored catalog's NATIVE-target aliases.
+
+    Why this exists beside resolve_model_slug(). `resolve-model-alias.sh` reads
+    `relay-automation/openrouter-model-aliases.yml`, and that file is rendered by
+    `render_openrouter.py`, whose very first act is
+    `rows = [r for r in catalog["aliases"] if r["target"] == "openrouter"]`. So the Bash resolver
+    is, and has always been, OpenRouter-scoped: a native-target model -- an Anthropic, Gemini,
+    OpenAI or Meta id reached through a first-party CLI rather than a gateway -- can never resolve
+    through it, no matter what the catalog says. Adding `meta`/`muse` rows upstream (GH-518,
+    Model-catalog v1.3.0) does not change that; they render to nothing.
+
+    The alternatives were a second renderer plus a second generated YAML plus a second consumer,
+    or lying in the data by claiming an `openrouter` target for a model that has no OpenRouter
+    route. Both are worse than reading the catalog JSON that is already vendored in this repo.
+    `resolve-model-alias.sh` stays byte-untouched (the GH-450 non-goal), and no parallel
+    generated file appears.
+
+    Matching is intentionally the catalog's own normalization, not a second fuzzy engine: exact
+    match on the alias phrase after case-folding and whitespace collapse. The catalog already
+    enumerates its spellings.
+
+    Returns the canonical native id, or `model_name` unchanged on any miss or failure. Never
+    raises -- same contract as resolve_model_slug.
+    """
+    if not model_name:
+        return model_name
+    if "/" in model_name:
+        return model_name
+
+    try:
+        import model_catalog
+
+        catalog = model_catalog.load_catalog(xyz_root)
+        wanted = " ".join(model_name.lower().split())
+        for row in catalog.get("aliases", []):
+            if row.get("target") != "native":
+                continue
+            if " ".join(str(row.get("match", "")).lower().split()) == wanted:
+                replacement = row.get("replace") or row.get("model")
+                if replacement:
+                    return replacement
+    except Exception:
+        return model_name
+
     return model_name

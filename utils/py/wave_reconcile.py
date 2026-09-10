@@ -231,12 +231,13 @@ def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
 
 def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
     """Open-issue docs stay in 2-WORKING; record the merged-PR evidence in place (GH-202)."""
-    pr_id = pr_meta.get("number", "?")
     merged_at = (pr_meta.get("mergedAt") or "")[:10]
-    note = "\n## Merge evidence\n\n- PR #" + str(pr_id) + " merged " + (merged_at or "(date unknown)") + " — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).\n"
+    label = landing_label(pr_meta)
+    verb = "landed" if pr_meta.get("artifactKind") == "commit" else "merged"
+    note = "\n## Merge evidence\n\n- " + label + " " + verb + " " + (merged_at or "(date unknown)") + " — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).\n"
     with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
         content = f.read()
-    if ("\n- PR #" + str(pr_id) + " merged ") in content or content.startswith("- PR #" + str(pr_id) + " merged "):
+    if ("\n- " + label + " " + verb + " ") in content or content.startswith("- " + label + " " + verb + " "):
         return  # idempotent
     print("TRANSITION " + json.dumps(["doc", "merge-evidence", str(pr_id), os.path.basename(doc_path)]), flush=True)
     if not dry_run:
@@ -283,6 +284,59 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         return json.loads(r.stdout)
     except json.JSONDecodeError as e:
         die(f"Failed parsing gh pr view JSON for PR #{pr_id}: {e}", code=4)
+
+
+def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
+    """Return direct-commit landing metadata in the reconciler's internal shape."""
+    if offline_manifest:
+        for entry in offline_manifest.get("commits", []):
+            if str(entry.get("sha", "")).startswith(str(commit_id)):
+                message = entry.get("message") or ""
+                return {
+                    "number": str(entry.get("sha", commit_id))[:12],
+                    "title": message.splitlines()[0] if message else f"commit {commit_id}",
+                    "state": "MERGED", "mergedAt": entry.get("committedAt"),
+                    "baseRefName": "development", "body": message,
+                    "url": entry.get("url", ""), "artifactKind": "commit",
+                    "sha": entry.get("sha", commit_id),
+                    "mergeCommit": {"oid": entry.get("sha", commit_id)},
+                }
+        die(f"Commit {commit_id} not found in offline manifest", code=4)
+
+    resolved = subprocess.run(
+        ["git", "-C", repo_root, "rev-parse", "--verify", f"{commit_id}^{{commit}}"],
+        capture_output=True, text=True, check=False,
+    )
+    if resolved.returncode != 0:
+        die(f"Commit {commit_id} cannot be resolved locally", code=4)
+    sha = resolved.stdout.strip()
+    reachable = subprocess.run(
+        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, "development"],
+        capture_output=True, text=True, check=False,
+    )
+    if reachable.returncode != 0:
+        die(f"Commit {sha} is not reachable from local development", code=4)
+    shown = subprocess.run(
+        ["git", "-C", repo_root, "show", "-s", "--format=%cI%x00%B", sha],
+        capture_output=True, text=True, check=False,
+    )
+    if shown.returncode != 0 or "\0" not in shown.stdout:
+        die(f"Could not read commit metadata for {sha}", code=4)
+    committed_at, message = shown.stdout.split("\0", 1)
+    message = message.strip()
+    slug = github_slug_from_origin(repo_root)
+    return {
+        "number": sha[:12], "title": message.splitlines()[0], "state": "MERGED",
+        "mergedAt": committed_at, "baseRefName": "development", "body": message,
+        "url": f"https://github.com/{slug}/commit/{sha}" if slug else "",
+        "artifactKind": "commit", "sha": sha, "mergeCommit": {"oid": sha},
+    }
+
+
+def landing_label(meta):
+    if meta.get("artifactKind") == "commit":
+        return "commit " + str(meta.get("sha") or meta.get("number"))[:12]
+    return "PR #" + str(meta.get("number", "?"))
 
 
 def check_provenance_receipts(repo_root, pr_meta):
@@ -621,13 +675,13 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
     return sorted(found, key=int)
 
 
-def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None):
+def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None):
     """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
     db_path = os.path.join(repo_root, "releases.db")
     target_section_md = "### Completed" if is_merged else "### Deferred / cancelled"
     target_section_db = "Completed" if is_merged else "Deferred · vision"
-    badge_sub = f"✅ **SHIPPED {ship_date} (PR #{pr_num})**" if is_merged else f"🛑 **DECLINED {ship_date} (PR #{pr_num})**"
+    badge_sub = f"✅ **SHIPPED {ship_date} ({landing})**" if is_merged else f"🛑 **DECLINED {ship_date} ({landing})**"
 
     updated = False
 
@@ -644,7 +698,7 @@ def update_roadmap_entry(repo_root, issue_num, pr_num, ship_date, is_merged=True
             if doc_path and row["doc_path"]:
                 rest = rest.replace(row["doc_path"], doc_path)
             new_raw_text = f"- **{title_part}** {badge_sub} —{rest}".strip()
-            marker = "✅" if is_merged else "🛑"
+            marker = "✅" if is_merged else "⛔"
             if doc_path and row["doc_path"] != doc_path:
                 ledger_write(repo_root, ["roadmap", "repoint", "--issue-num", str(issue_num),
                              "--doc-path", doc_path], dry_run, journal)
@@ -992,6 +1046,11 @@ def main():
         help="One or more merged PR numbers/IDs to reconcile",
     )
     parser.add_argument(
+        "--commit",
+        nargs="+",
+        help="One or more commits landed directly on development to reconcile",
+    )
+    parser.add_argument(
         "--marathon",
         help="Marathon identifier / milestone name",
     )
@@ -1062,36 +1121,42 @@ def main():
             except Exception as e:
                 die(f"Failed loading offline manifest from {args.offline}: {e}", code=4)
 
-        pr_list = args.pr or []
+        landing_items = [("pr", value) for value in (args.pr or [])]
+        landing_items.extend(("commit", value) for value in (args.commit or []))
         if args.manifest:
             try:
                 with open(args.manifest, "r", encoding="utf-8") as f:
                     mdata = json.load(f)
-                    pr_list.extend([str(p) for p in mdata.get("prs", [])])
+                    landing_items.extend(("pr", str(p)) for p in mdata.get("prs", []))
             except Exception as e:
                 die(f"Failed loading manifest from {args.manifest}: {e}", code=4)
 
-        if not pr_list and not args.marathon and not args.catch_up:
-            die("No PRs or marathon specified. Pass --pr <N>... or --marathon <name>", code=2)
+        if not landing_items and not args.marathon and not args.catch_up:
+            die("No PRs, commits, or marathon specified. Pass --pr <N>..., --commit <SHA>..., --marathon <name>, or --catch-up", code=2)
 
         with ReconcilerLock(lock_file):
             reconciled_issues = set()
             repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
             if args.catch_up:
-                pr_list = list(dict.fromkeys([*pr_list, *catch_up_prs(repo_root, repo_slug, offline_manifest)]))
-            for pr_id in pr_list:
-                log(f"Processing PR #{pr_id}...")
-                pr_meta = fetch_pr_metadata(repo_root, pr_id, offline_manifest, dry_run=args.dry_run)
+                landing_items.extend(("pr", str(n)) for n in catch_up_prs(repo_root, repo_slug, offline_manifest))
+            landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
+            for landing_kind, landing_id in landing_items:
+                if landing_kind == "commit":
+                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
+                else:
+                    pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
+                landing = landing_label(pr_meta)
+                log(f"Processing {landing}...")
                 state = pr_meta.get("state", "").upper()
                 is_merged = (state == "MERGED")
 
                 if not is_merged:
-                    log(f"  PR #{pr_id} state is '{state}' (unmerged/declined) -> routing to 4-MISC/")
+                    log(f"  {landing} state is '{state}' (unmerged/declined) -> routing to 4-MISC/")
 
                 base_ref = pr_meta.get("baseRefName", "")
                 if base_ref and base_ref != "development":
                     die(
-                        f"PR #{pr_id} target base is '{base_ref}', not 'development'.",
+                        f"{landing} target base is '{base_ref}', not 'development'.",
                         code=4,
                     )
 
@@ -1104,7 +1169,7 @@ def main():
                 if args.require_receipts:
                     check_provenance_receipts(repo_root, pr_meta)
                 reconciled_issues.update(linked_issues)
-                log(f"  PR #{pr_id} closes {linked_issues}; references {mentioned_issues}")
+                log(f"  {landing} closes {linked_issues}; references {mentioned_issues}")
                 # GH-271: mentions never act on their own. --force-promote is the one
                 # explicit operator override that widens the action set past closers.
                 action_issues = (
@@ -1142,7 +1207,7 @@ def main():
                         updated = update_roadmap_entry(
                             repo_root,
                             issue_num,
-                            pr_id,
+                            landing,
                             ship_date,
                             is_merged=is_merged,
                             dry_run=args.dry_run,
@@ -1160,7 +1225,7 @@ def main():
                             updated = update_roadmap_entry(
                                 repo_root,
                                 issue_num,
-                                pr_id,
+                                landing,
                                 ship_date,
                                 is_merged=is_merged,
                                 dry_run=args.dry_run,
@@ -1207,7 +1272,7 @@ def main():
             # regardless of doc lifecycle outcome. Byte-identical output on a genuine repeat
             # (issue #421's actual idempotency requirement) is satisfied by these regenerators
             # already being deterministic, not by skipping them.
-            if not args.dry_run and not pr_list and not args.marathon:
+            if not args.dry_run and not landing_items and not args.marathon:
                 log("Nothing to reconcile; no artifacts written")
                 journal.cleanup()
                 return

@@ -79,6 +79,7 @@ chmod +x "$GATE"
 # the reviewer — the exact shape of a builder killed at its cap once its work had landed. Second call
 # is the reviewer approving.
 RD="$WORK/rd.sh"
+ATTEST_STUB="${ATTEST_STUB:-$(cd "$(dirname "$0")" && pwd)/lib/attest-stub.sh}"; export ATTEST_STUB   # GH-505
 cat > "$RD" <<'STUB'
 #!/usr/bin/env bash
 set -eu
@@ -101,10 +102,7 @@ if [ "$count" -eq 1 ]; then
   TICK_REPO_ROOT="$A" "$TICK" release "$task" --agent codex --to agy >/dev/null 2>&1 || true
   exit 7
 fi
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
-printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
-TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "marathon-system/**" >/dev/null 2>&1 || true
-TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" TICK_BIN="$TICK" bash "$ATTEST_STUB" --relay-file "$relay" --relay-task "$task" --reviewer agy --target-root "$A"   # GH-505
 exit 0
 STUB
 chmod +x "$RD"

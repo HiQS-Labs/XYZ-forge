@@ -105,6 +105,22 @@ class ReconcileTests(unittest.TestCase):
             wave.main()
         return output.getvalue()
 
+    def test_direct_commit_with_catch_up(self):
+        sha = 'b' * 40
+        self.offline['commits'] = [dict(sha=sha, message='Closes #421', committedAt='2026-09-09T00:00:00Z')]
+        (self.root / 'offline.json').write_text(json.dumps(self.offline))
+        (self.root / 'TESTS-RESULTS/provenance.jsonl').write_text(json.dumps({'commit': sha}) + '\n{"pr":42}\n')
+        out = self.apply('--pr', '--commit', sha, '--catch-up')
+        self.assertIn('commit ' + sha[:12], out)
+        self.assertEqual(self.rows('SELECT status_marker FROM roadmap_items')[0]['status_marker'], '✅')
+        self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'shipped')
+
+    def test_declined_marker_uses_existing_enum(self):
+        self.pr['state'] = 'CLOSED'
+        (self.root / 'offline.json').write_text(json.dumps(self.offline))
+        self.apply()
+        self.assertEqual(self.rows('SELECT status_marker FROM roadmap_items')[0]['status_marker'], '⛔')
+
     def test_lifecycle_and_second_apply(self):
         self.apply()
         row = self.rows('SELECT * FROM roadmap_items')[0]
