@@ -1,1 +1,2 @@
 {"pr": 531, "operation": "integrate development", "preserved_business_rows": 306, "preserved_row_ids": true, "replayed_development_change": "GH-61 issue_url via roadmap update CLI", "ledger_check_exit": 0, "base": "6e30482023f9d64b09582ca320280c40942cc4b9"}
+{"pr": 531, "base": "d78711cdf4982afadfb2a8eac3e17c13e654b7e0", "case": "GH508 documentation refresh ledger check", "exit_code": 0, "previous_head": "696ef0f290e8a4c18720916ad4492dba5f36b25c"}
