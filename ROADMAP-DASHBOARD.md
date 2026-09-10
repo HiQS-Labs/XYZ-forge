@@ -60,7 +60,7 @@ Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
 | GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
 | GH-537 · skills: new skill /five — the 5-and-5 decision checksum | — | [GH-537-FIVE-SKILL.md](PROJECT/2-WORKING/GH-537-FIVE-SKILL.md) · [#537](https://github.com/HiQS-Labs/XYZ-forge/issues/537) |
-| GH-549 · Work-state event stream + concurrent connectors: GitHub Kanban first, HQ and Flightdeck next | — | [GH-549-WORK-STATE-EVENT-STREAM.md](PROJECT/1-INBOX/GH-549-WORK-STATE-EVENT-STREAM.md) · [#549](https://github.com/HiQS-Labs/XYZ-forge/issues/549) |
+| GH-549 · Work-state event stream + concurrent connectors: GitHub Kanban first, HQ and Flightdeck next | — | [GH-549-WORK-STATE-EVENT-STREAM.md](PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md) · [#549](https://github.com/HiQS-Labs/XYZ-forge/issues/549) |
 
 ## Queue
 
