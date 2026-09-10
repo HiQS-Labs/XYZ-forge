@@ -2,6 +2,23 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-09
+
+- **GH-537: add `/five` — the 5-and-5 decision checksum for plans, features, and fixes.** A
+  zero-install skill (`skills/five/SKILL.md`, markdown discipline only, the `/ponytail` shape)
+  callable during planning, writing, or mid-implementation: exactly five load-bearing things the
+  artifact DOES — decisions and behaviors, prioritizing choices the agent made that nobody asked
+  for — and five things it explicitly does NOT do, each item cited to where the artifact says it.
+  Guards encoded as hard rules: the empty-input refusal outranks the 5+5 count; silence in the
+  artifact is reported as "not specified", never dressed up as an explicit non-goal; honest
+  "nothing else load-bearing found" markers instead of filler; and a mandatory bottom line routing
+  the operator back into the plan — a checksum, not a substitute for reading it. One-line row added
+  to the ARCHITECTURE.md Skills Index (its four pre-existing missing entries remain owned by #453).
+  Reversibility: **Easy** — additive skill + one index row + this entry; delete to undo. Verification:
+  frontmatter YAML-parse check; plan approved by Codex relay round 2 (3 Should + 1 Nit dispositioned
+  round 1, VERDICT: PASS); behavioral QA on dense/sparse/empty inputs with a red control recorded in
+  the implementation relay; `pdda.sh run` zero errors.
+
 ## 2026-09-08
 
 - **GH-267 Phase 2: `/express` now lands its qualified commit directly on `development`.** The fast lane replaces its immediately merged ghost PR with `git push origin HEAD:development`, retains the canonical pre-push gate, refuses concurrent non-fast-forward updates without force or bypass, verifies the landed SHA is reachable from `origin/development`, and closes the linked issue explicitly if GitHub has not processed the commit's `Closes #N`. `wave_reconcile.py` gains a commit input that preserves commit identity while leaving its existing PR path intact, so lifecycle closeout no longer needs a synthetic PR. Reversibility: **Easy** — revert the implementation commit to restore the prior landing path; no schema or durable-format migration is involved. Verification: `test/gh267-express-skill.sh` 39/39 and `test/wave-reconcile.sh` 16/16 in a separate disposable full clone; the direct landing itself is the production dogfood.
