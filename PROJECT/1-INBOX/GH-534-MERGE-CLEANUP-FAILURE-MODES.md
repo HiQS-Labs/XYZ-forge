@@ -118,6 +118,42 @@ Recommendation: **B1**, because the repo already has the resolver and the proven
 B2 leaves the skill unable to do the job it is named for. But B1 is a day of work and a design
 review; B2 is an hour. Not the implementer's call.
 
+**Operator decision 2026-09-09: B1.** "I want this skill to be the cleanup skill that takes care
+of a pile of PRs and clone folders."
+
+### Phase C — a decision ladder for the conflicts B1 cannot resolve
+
+Today the skill's only reaction to a `CONFLICTING` PR is `log_err`. It invokes no skill; its
+"6-Phase Ladder" is a script sequence, not a decision ladder. `workhorse` already has the ladder
+this needs (debug-mantra → ponytail → consult → recon → unstuck) and `start-task` chains
+relay-xyz, debug-mantra and ponytail. Phase C gives merge-cleanup the same shape at the one
+point it needs it: after B1 has resolved the ledger set and a code conflict remains.
+
+Per conflicting PR, in order, stopping at the first rung that lands it:
+
+1. **Ground truth first (`/debug-mantra`).** Reproduce the conflict in the disposable clone
+   (`git merge origin/development` → conflict list), and record the hunk count per file and
+   which side last changed each file. No resolution is attempted before this exists.
+2. **Trace the seam (`/recon`, bounded).** For each conflicting *code* file, trace the two
+   sides' changes to the callers/consumers that would observe a wrong merge. Output is a
+   per-file note: "independent hunks, safe to take both" / "semantic overlap, needs judgment".
+3. **Smallest resolution (`/ponytail`).** Take-both where recon says independent; regenerate
+   where the file is derived; escalate where recon says semantic overlap. Never auto-merge a
+   semantic overlap.
+4. **Escalate by name.** A semantic overlap produces a handoff block — PR, file, hunks, the
+   recon note, and the exact disposable-clone path — and the run continues with the next PR.
+   This is a `/start-task` handoff, not a stall.
+5. **Stall guard (`/unstuck`).** If the same PR fails the same rung twice, or a repair loop
+   exceeds two rounds, stop that PR, record why, and move on. No third identical retry.
+
+The ladder lives in SKILL.md as operator-facing protocol; `merge_cleanup.py` emits the
+structured handoff block (rung 4) and enforces the retry cap (rung 5). Skill *invocation* is the
+calling agent's act; the script cannot invoke a skill, so SKILL.md must name each rung and its
+trigger explicitly, the way `start-task` does.
+
+Non-goal restated: no automatic resolution of semantic code overlap. The ladder exists to make
+the escalation precise, not to eliminate it.
+
 ### Risks and rollback
 
 - Phase A.2 makes teardown *more* permissive. The red control below is mandatory before it ships.
