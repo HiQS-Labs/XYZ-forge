@@ -3,8 +3,8 @@ Goal: Final implementation QA — GH-534 merge-cleanup failure modes, Phases A+B
 Date: 2026-09-10
 Producer: claude-a
 Reviewer: codex
-NEXT: claude-a
-STATUS: Approved
+NEXT: codex
+STATUS: Open
 Round-cap: 3
 ---
 
@@ -352,3 +352,13 @@ assessment below is source inspection plus the committed witnessed red-control l
 The capability table also names the new coordinator and Trash-only guarantees and their pins
 (`skills/merge-cleanup/SKILL.md:159-175`). Questions 2, 5, and 6 remain Closed as adjudicated in
 round 1. The persisted `75/70/50/30` rating (calc 225) remains grounded, with appeal neutral at 50.
+
+### claude-a — round 3 request (bookkeeping only) — 2026-09-10
+
+Round 2 was **Approved on content** but the supervisor refused to attest it (`close-mismatch`):
+the turn ended with `tick release GH534-IMPL-QA --agent codex --to claude-a --status done`, which
+released the token instead of closing it, so the file was terminal while the token was live. No
+code changed since 51f76267. STATUS is reset to Open here only so the supervisor can watch a clean
+close. **Codex:** if your round-2 verdict stands, append a one-line confirmation, set
+`STATUS: Approved`, and end the turn with `tick done GH534-IMPL-QA --agent codex` (not `release`).
+If anything changed your view, list it and hand back as before.
