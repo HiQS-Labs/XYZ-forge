@@ -1,0 +1,5022 @@
+{
+  "distributions": {
+    "character_buckets": {
+      "0-4096": 453601,
+      "16385-32768": 606,
+      "32769+": 230,
+      "4097-16384": 3795
+    },
+    "component_cardinality": {
+      "multiple": 38962,
+      "none": 137241,
+      "one": 282029
+    },
+    "native_types": {
+      "Bug": 215570,
+      "Build Failure": 1715,
+      "Documentation": 699,
+      "Enhancement Request": 3239,
+      "Epic": 4157,
+      "Improvement": 42691,
+      "Incident": 18,
+      "Investigation": 22,
+      "Milestone": 44,
+      "New Feature": 14239,
+      "Problem Ticket": 113,
+      "Public Security Vulnerability": 1,
+      "Question": 1396,
+      "Release": 4,
+      "Story": 31394,
+      "Sub-task": 14396,
+      "Suggestion": 96370,
+      "Support Request": 2368,
+      "Task": 28338,
+      "Technical Debt": 30,
+      "Technical task": 987,
+      "Test": 17,
+      "Test Task": 336,
+      "Wish": 88
+    },
+    "projects": {
+      "ALOY": 1519,
+      "APIKIT": 886,
+      "APSTUD": 8135,
+      "BAM": 14252,
+      "BE": 802,
+      "CLI": 645,
+      "CLOV": 1501,
+      "COMPASS": 1791,
+      "CONFCLOUD": 23409,
+      "CONFSERVER": 42324,
+      "CWD": 4311,
+      "CXX": 2032,
+      "DAEMON": 313,
+      "DATACASS": 798,
+      "DM": 26506,
+      "DNN": 10060,
+      "DURACLOUD": 1125,
+      "EVG": 10299,
+      "FAB": 13682,
+      "FE": 5533,
+      "INDY": 2321,
+      "IS": 1531,
+      "JAVA": 3560,
+      "JRACLOUD": 25669,
+      "JRASERVER": 44165,
+      "JSWCLOUD": 11702,
+      "JSWSERVER": 12862,
+      "MDL": 66741,
+      "MESOS": 10157,
+      "MULE": 11816,
+      "MXNET": 1404,
+      "NEXUS": 9912,
+      "SERVER": 48663,
+      "STL": 1663,
+      "TIDOC": 3059,
+      "TIMOB": 22059,
+      "TISTUD": 5979,
+      "USERGRID": 1339,
+      "XD": 3707
+    },
+    "resolutions": {
+      "<NULL>": 77498,
+      "Abandoned": 27,
+      "Answered": 9292,
+      "Automatically Closed": 50,
+      "Cannot Reproduce": 10917,
+      "Community Answered": 116,
+      "Complete": 7149,
+      "Completed": 1378,
+      "Declined": 73,
+      "Deferred": 1129,
+      "Deployed": 102,
+      "Done": 43256,
+      "Duplicate": 33166,
+      "Feedback Received": 2,
+      "Fixed": 160857,
+      "Gone away": 2640,
+      "Handled by Support": 1493,
+      "Hold": 288,
+      "Implemented": 111,
+      "Inactive": 1894,
+      "Incomplete": 2372,
+      "Incorrectly Filed": 44,
+      "Information Provided": 4,
+      "Invalid": 6826,
+      "Invalid: Environment Issue": 69,
+      "Invalid: Not Supported": 14,
+      "Invalid: Test Error": 35,
+      "Invalid: Works as Expected": 212,
+      "Later": 15,
+      "Needs more info": 452,
+      "Not A Bug": 7252,
+      "Not A Problem": 180,
+      "Not Our Bug": 395,
+      "Obsolete": 7145,
+      "Out of scope": 159,
+      "Parked": 79,
+      "Pending Closed": 3,
+      "Ready for Release": 1,
+      "Ready for Test": 3,
+      "Rejected": 14,
+      "Resolved": 44,
+      "Resolved Locally": 707,
+      "Spam": 9,
+      "Support Request": 4230,
+      "Timed out": 11648,
+      "Tracked Elsewhere": 2283,
+      "Unresolved": 547,
+      "Unsolved Mysteries": 172,
+      "Won't Do": 15709,
+      "Won't Fix": 40816,
+      "Won't Fix or Usage Issue": 2151,
+      "Workaround": 8,
+      "Works as Designed": 3195,
+      "Works for Me": 1
+    },
+    "years": {
+      "2002": 856,
+      "2003": 1159,
+      "2004": 5842,
+      "2005": 8447,
+      "2006": 9993,
+      "2007": 13011,
+      "2008": 15271,
+      "2009": 17039,
+      "2010": 17340,
+      "2011": 32012,
+      "2012": 39542,
+      "2013": 42054,
+      "2014": 39554,
+      "2015": 39992,
+      "2016": 39122,
+      "2017": 39439,
+      "2018": 39121,
+      "2019": 33456,
+      "2020": 24982
+    }
+  },
+  "gates": {
+    "aggregate_coverage_pass": true,
+    "label_quality_review": "pending independent adjudication",
+    "mapped_class_floor_pass": false,
+    "structural_pass": true,
+    "token_pass": true
+  },
+  "input": {
+    "archive_bytes": 637550449,
+    "archive_md5": "e9c5ecc7649d55f0cf2fb4efb5664494",
+    "figshare_article": 21308124,
+    "license": "Apache-2.0",
+    "version": 1
+  },
+  "integrity": {
+    "counts": {
+      "change_logs": 9253419,
+      "components": 2001,
+      "issue_components": 366922,
+      "issues": 458232,
+      "projects": 39
+    },
+    "foreign_key_error_counts": [
+      0,
+      0
+    ]
+  },
+  "longest_100_stress": {
+    "n": 100,
+    "over_8192": 100,
+    "records": [
+      {
+        "characters": 1391397,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "5ec0667a26bbf154af06538de179ad8912919565f82269a9d71d77f290a79a99",
+        "text_sha256": "4259473e4e0e26696bf720a4e1e060990a56b9707432f60035929fbbb0206ea4",
+        "tokens": 492782
+      },
+      {
+        "characters": 788950,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "baa1d10a4e38a30ec0653c8e2184e7f753dbf2ddb8363b0bd45dfbcf2216cb6d",
+        "text_sha256": "e4eea3b5e0ecb4a58e3e3a05d7967025e7893e499ba9776a798a45dee734f5bd",
+        "tokens": 314976
+      },
+      {
+        "characters": 707461,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "SERVER",
+        "record_sha256": "5394d40c803d52b3e4dcd43bcf1f571246a5210d6c30d61ef98f08246672d2ae",
+        "text_sha256": "67d2355ceaabe44a6a85dab1e74d6baed71a6f3fadc41a226273e6ad41fe1f52",
+        "tokens": 238617
+      },
+      {
+        "characters": 645821,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "9625c5fbb4bdb8e106b3aaaae44fe495189ede778319087ae30e9195752a040e",
+        "text_sha256": "1c3103b21d4c2392b1dc1f6aac6eae7602ea27ea516a1ed4d49296b4a74f6947",
+        "tokens": 194017
+      },
+      {
+        "characters": 386473,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MULE",
+        "record_sha256": "67ca87a5c4c43823ee782d6caefc8f2ccc42b95646accb7a250d84999c6faf42",
+        "text_sha256": "0375ea5d493c8bff308ebc2cc673fded0e7fb4fb18633d847fc6318f0cc24f80",
+        "tokens": 115805
+      },
+      {
+        "characters": 313180,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TISTUD",
+        "record_sha256": "3684c8073d3ab837c85387680b5420d1d010bd559b4541b08c35cd0cfe329ed6",
+        "text_sha256": "6666b3495e266140be74ea2f72e069132592b6d72b223398ee4a1a5b194e6dc2",
+        "tokens": 106546
+      },
+      {
+        "characters": 238112,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "48b81d202ec3d85783bd25d1ba31aa80b3972f023a838edd271a8c8fae71ecf8",
+        "text_sha256": "85d1641a8426f7103efcab7123bc1bf3e25674bd1913c0702eb2711f41ceb07b",
+        "tokens": 67797
+      },
+      {
+        "characters": 194006,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "e96c9378f2f727bab514b7cd7334b3d2b40dcc61835e7916c1041a1ea9adabc0",
+        "text_sha256": "0a84257f28dbe5950f8126e47e25ad7b54a9bd43ed51788f4b39bc5264772fe6",
+        "tokens": 69786
+      },
+      {
+        "characters": 191030,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFCLOUD",
+        "record_sha256": "a4d48126e3ccef79997554765940efdca914949c9ae9122d9be965d5d311e371",
+        "text_sha256": "aa2679bc5d806c70e0aab1add54030f583cf741a539d419f9c4c8e926bb98d2f",
+        "tokens": 69777
+      },
+      {
+        "characters": 181195,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MULE",
+        "record_sha256": "3b1cbe9376eff8fc47969a0b949fb9f38bb951058e2b74f54d64ae48263b7ed4",
+        "text_sha256": "27638bf5b500afd5c6ea2baa79c621ca0d1f35ca7c821bedf20aba981efa88fc",
+        "tokens": 58545
+      },
+      {
+        "characters": 148778,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "SERVER",
+        "record_sha256": "4ce041409d923f551cb64112716818220ea4fecc66272b9daf3a9e220bf2e48f",
+        "text_sha256": "bdbca9ee8fbf3dc83feea0d49e482c8374873aa2ab872bcf886282b31c6f6afa",
+        "tokens": 60247
+      },
+      {
+        "characters": 147097,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "cde10b73afe1630dc46fab09e9ba44426eb91aabd2a0ae65478ed2012415afd9",
+        "text_sha256": "af92f6edacabf19049ee93a5ab2f673086944bce2a4e99dc5001ed8dcaa2be9f",
+        "tokens": 41223
+      },
+      {
+        "characters": 143438,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "514d3f0b0b27c4eb82bd8448a22db66fb65ae6ab042dc522ceaf30dde815a4ac",
+        "text_sha256": "dfaf8cad59ca3af03f471bed5194d94ff82d5623dde0674fe23817a234d5a6d4",
+        "tokens": 39967
+      },
+      {
+        "characters": 137038,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "7bda3b964fe2eee96d7419c85e99a297e12ef38ea4e6e336ce2ada8e8f3b53f3",
+        "text_sha256": "1db1dc63fa12dbadbb509a7e5a4f72ff035a4fccfc9be995f6309a68b248fa62",
+        "tokens": 44931
+      },
+      {
+        "characters": 125029,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "9fbddbc63dd526b52d062106a06c6b4fa4e335167fe3c883b550959fa868db99",
+        "text_sha256": "810fe302190d0d9df1057d3cf5074da14451468f6defe5a7126720ddae6373ed",
+        "tokens": 46857
+      },
+      {
+        "characters": 120141,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "APSTUD",
+        "record_sha256": "d9b0b602eafb81230f741973c42a91b1058789912dde159dd432aecf10ead62e",
+        "text_sha256": "9ee2decc7d7821c674f5d815c7c03218bf929f41743d72f5d49551bf4afe5fed",
+        "tokens": 51932
+      },
+      {
+        "characters": 112820,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "2a18e70acc642d1096d652a95a6b415d5d2a4513674affde5b7be125dcde695b",
+        "text_sha256": "06a220152ad24cecf04fd8a19d41a9224440fe07f776cd1acccd8426f46599c4",
+        "tokens": 38545
+      },
+      {
+        "characters": 105672,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "SERVER",
+        "record_sha256": "585ed6252d4eb11e23c9882b4d9e8a9e4a8ea803726511430b41da4c47bde507",
+        "text_sha256": "0353101e86096e4c0c83a95d4f643984a91754c7fce884f7aeb76a340cd05145",
+        "tokens": 49098
+      },
+      {
+        "characters": 98360,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MULE",
+        "record_sha256": "d84c477711eb035d2bf2f8e43f7924bf43f70a4c9ce932cb634e0df3670a9e99",
+        "text_sha256": "34e716388e35972df6db4febe41185470ad2ef45483ff505f5568f9458c37f80",
+        "tokens": 27393
+      },
+      {
+        "characters": 96860,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "439ca5f518b3f8b03a498994330a27f64ae769d85a6b0f286a9b6e6cac190e69",
+        "text_sha256": "3c845a68cad36c5a81b0fb05f6b5ce03003bceade753e9a5127703771e98b1f2",
+        "tokens": 27529
+      },
+      {
+        "characters": 93529,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BAM",
+        "record_sha256": "abe2d4c214f4355425db534ae57f797cc81c9f89b2c995b9fc68edfb56275dd9",
+        "text_sha256": "156bf23da40492f47cf7b84179bdd28d07d5848561ca2e36c0ef7cf790b8c68c",
+        "tokens": 28186
+      },
+      {
+        "characters": 93171,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "d92c71f093c5fb8432d4a624b772734587e8c68534d9d988f1eaa29f7f6754de",
+        "text_sha256": "e487e09f2f45dea8ec8d10e7ae1625ea74fb2815dc8f5aaf6c3e73f312ecbac4",
+        "tokens": 29506
+      },
+      {
+        "characters": 91341,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "BAM",
+        "record_sha256": "8d0c80f2fb46ed62a6800644c41b0a73c2fa3095cf06bc7465883cc6164004f4",
+        "text_sha256": "ac9c705b9be831dc489ce6cbad63a69d9a9d789ead2ec9cb28d091596a528d01",
+        "tokens": 41655
+      },
+      {
+        "characters": 90358,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "c6ab41a0b97a9538cc6d75c12edb69c602e827414d1baee1cfec1d9e75ff4efa",
+        "text_sha256": "f3dc3c949440817081fa474eb02cae432b93b81a97c43ae8ab9de28856a96cc5",
+        "tokens": 35507
+      },
+      {
+        "characters": 89025,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "3ae73e081e97c8d20883d0cc3def765c6904b222c51de8911c8bfdd82fba54dd",
+        "text_sha256": "333018ff6f995bc10f0be33b9e2fae5854647ec8e7365bec5db74652dda0f5aa",
+        "tokens": 32438
+      },
+      {
+        "characters": 87232,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "SERVER",
+        "record_sha256": "85e973efbf4b4bdaf531ffdd53fc732506c52bf6e427d05e00b40a40d26f6759",
+        "text_sha256": "5659ba602bfabd7e5bc76b934a370ce434576e32e582793517ba8f6e64f589d9",
+        "tokens": 37408
+      },
+      {
+        "characters": 86540,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "1b0c77d73653c3fa16533c0efbe6f53d6c36eb4c938e6ba1fe4c8f0fbff9ef56",
+        "text_sha256": "316a41e3b698fefafe973043dea441b395c862c59e122dbefa646da6c08c0475",
+        "tokens": 25169
+      },
+      {
+        "characters": 86202,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "JRASERVER",
+        "record_sha256": "405750cb20134fac6f5dd797721ae9b15c4c15021036ebc628da718a1ecb1e08",
+        "text_sha256": "9a925372bea464eb77b8d0f65b6c1563096012c16844e4f1d2845e865e4ec687",
+        "tokens": 25834
+      },
+      {
+        "characters": 83907,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "NEXUS",
+        "record_sha256": "15c28a498e592070d1c3a293a28ca310c69d1396754acc4fe1127ce1dcec19cb",
+        "text_sha256": "7f038e9aa919ad4156161eee31c9bd09bf6a3bc93c981e3bb424e9a8cf6113cb",
+        "tokens": 23048
+      },
+      {
+        "characters": 83145,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "8248629f6e1cd26896d80af53f3d573b16a99e1f7f16ccb0d7573cf13ba1047f",
+        "text_sha256": "18b827c04184b3397666c7324e65ca339724c9672480d4984de11998200ab536",
+        "tokens": 26754
+      },
+      {
+        "characters": 82908,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "56d128677d16d554c15cf0cfb25cb75626513bb0ef694b70741886201cd8d8f1",
+        "text_sha256": "2102145ae059974428dfa54443697b3f1ee4fec6adbed9b358b0164d2f407140",
+        "tokens": 22753
+      },
+      {
+        "characters": 81630,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "APSTUD",
+        "record_sha256": "c37ee1cd96e0ae62498fe86e1f24fe5ceecde2f6f24fdec67a539e4134a18dd8",
+        "text_sha256": "79e7dfbd81de78886c226cb9ace37a2ee2a48461cb03e2c0f3be2bbdd2969616",
+        "tokens": 29248
+      },
+      {
+        "characters": 79694,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "01cfd2401479858e83e801537899478b770611c9e72339847a5edb736c69ed8e",
+        "text_sha256": "9d1fddfe5e9dc6665c8527f21285e2acff02326e52ccac1752315035d62a4428",
+        "tokens": 22704
+      },
+      {
+        "characters": 79400,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "39406750b9a0db7a71620b53e64e15f903743c3ca3bcbc7622174b9459eab2ba",
+        "text_sha256": "80acdb8edd757d50a54be9abd69822a3e824f5447fca5c9ff8e2b840a6f26076",
+        "tokens": 30936
+      },
+      {
+        "characters": 79305,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BAM",
+        "record_sha256": "7c58ab42dfc325d6ec9f16100e223c6efb22d510295d50800facb81736a57ee5",
+        "text_sha256": "fced1bb512a80ffd55ead66987311eeb60c12db5305e147feadb097a75807197",
+        "tokens": 22416
+      },
+      {
+        "characters": 78921,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "4518365c885c6d5751c1f579ba43dec062d93058f67d2887039d0e118edef4bd",
+        "text_sha256": "49157dbc54d4f81553a60098747560b578fc95a84a03db52dbc13e6279c3cc01",
+        "tokens": 27656
+      },
+      {
+        "characters": 78314,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "03881d5bde595172e16bc5f30c33d23058b332dcacf54a9eaf9e63f9c23e4949",
+        "text_sha256": "0483f65e57f076fad56fe37bfef3ce84640d98601de87a97478a73734d31aa2b",
+        "tokens": 24603
+      },
+      {
+        "characters": 77670,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "d2a1c879f05ccf094ebfac7bdb2c62d2a4493aee05dcbc431ff3f44ae3fb67b5",
+        "text_sha256": "24e84f4593c288be2700700d64b8c512d05f60905ec5f7eecdf0d5ecd50b2645",
+        "tokens": 19383
+      },
+      {
+        "characters": 70384,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "4fdb0f5f6090fc2e025005817f0e213735e8ce6c080f96a0b1b1e2438d820bff",
+        "text_sha256": "0ca670ba76e27ffaa46eba0677becb7d9255e39b06160d0bfce2bf417c8b16fb",
+        "tokens": 27153
+      },
+      {
+        "characters": 67865,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "a4a0a56208d2478404697057dccd29b410a3456cbb77209e52d262835d6e12eb",
+        "text_sha256": "66ef9c2742da827ad0d4796ff171a464585087797f89932a5e6a8de8512ee71f",
+        "tokens": 20693
+      },
+      {
+        "characters": 67702,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "28a8ff31a7c8b9294b96cc5adcb0e7f1e67c4bb068d753321d460d9c33835595",
+        "text_sha256": "d200bc28590643cfa6aeff0704b6bea33107d5c17086fa953dda0c6066aef41b",
+        "tokens": 24774
+      },
+      {
+        "characters": 67265,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRACLOUD",
+        "record_sha256": "4b36d01d35bfb0f93ee24c738d3f193b209ace817291f19944b7e2f35a5d847d",
+        "text_sha256": "e6a36ac5910940cf66234326003089f657bf4543310182b4cf293793565851e4",
+        "tokens": 20601
+      },
+      {
+        "characters": 67231,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "659c23bdd451e2ae5a4991ccde938131894e481a3c690508f546e738c4922ece",
+        "text_sha256": "ec70e4b5fd8a51253b87dc88350433e1c8bb132ef64a73786a2ebb79b7fa1778",
+        "tokens": 27499
+      },
+      {
+        "characters": 66676,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "46f915322d48b60eb0c9cbb79bac270f601b78bbc2cc657b1c006134d02643b6",
+        "text_sha256": "f4edaa92d3a8a358c6bcc86337bc73e8541b471a6b92faacc4cb44fb36172b48",
+        "tokens": 24714
+      },
+      {
+        "characters": 66676,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "20604c6faa28f0beeb4f25691fc91281beb775c79725fa525d280db398150cdc",
+        "text_sha256": "f4edaa92d3a8a358c6bcc86337bc73e8541b471a6b92faacc4cb44fb36172b48",
+        "tokens": 24714
+      },
+      {
+        "characters": 65706,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "59ab22523867825824eac08af7e7a07f7db00344fdb946580d5fecea1de0afb7",
+        "text_sha256": "a8b40e120a92f2f8108b05e4a49e83396b6854bf0e2d6e8ccf3e4e0df7f972c4",
+        "tokens": 20379
+      },
+      {
+        "characters": 65194,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "d591699d17cc44eb96545fd03db3c1b98c55ef2db4f86a12c84f5bdef5dfc78f",
+        "text_sha256": "afd655130f7b75e0138f9ccd4bf6c99546c42b3cf6d933547252f23336ca567d",
+        "tokens": 16097
+      },
+      {
+        "characters": 64649,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "82b059588a91062920a2b7e68647b25ae83f4f49870febc109dd681056b27765",
+        "text_sha256": "c75ecb22a1588b1747175d5bc819908d8b95fd1d948a93e9c1ca47906046cfc8",
+        "tokens": 27030
+      },
+      {
+        "characters": 64349,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "ff76dddb37da47d0c707496f9795bd386642caef6cb3ce02e314b00182d40810",
+        "text_sha256": "f6c11df0ef357919d347e274ad6bf7aae2af9315e8e16db8615ea527908d97de",
+        "tokens": 26080
+      },
+      {
+        "characters": 63806,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "MDL",
+        "record_sha256": "103997dd4793d0754df4f2a836ad125c12ef55a3b216149ce4cbd70b95814b36",
+        "text_sha256": "28f60ffcd4f346286aa559dc6b187bbc92bddc6a39b84368c783c5c6b4cecd05",
+        "tokens": 17388
+      },
+      {
+        "characters": 63362,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "7b9116e301cc24a6e1f6fdfbf7d20dcf24ef0c9e8736f923592ece5b63d497ba",
+        "text_sha256": "361e035f1c90233a4f676c67ad4bc9999bbadd2d004e412f4e08ade30dbce5d0",
+        "tokens": 16996
+      },
+      {
+        "characters": 63264,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "659304a0fbb2ffeaa1c6b2d4a8002f0500b93d144ecca33e50d3b0d62dd53c1e",
+        "text_sha256": "13d37ab0998e9069e6a8cf8c6b11590410db3a599b06c2d6d102ff7da537d918",
+        "tokens": 23846
+      },
+      {
+        "characters": 61612,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "2e142ac0d04a92d197a01c9e5b938a731a90a39d3cccc29469406ef355d95b00",
+        "text_sha256": "25559b524076252ca79d371cde5982c2cefe3654fc60f1ea612d3af3b2043e19",
+        "tokens": 24999
+      },
+      {
+        "characters": 61452,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "7bf32e47dfe482b5ca76c936ec3eb453f6e3f581ec3abc614e05d52e9f537e2a",
+        "text_sha256": "c845968ed8b0fc75818c45cee9a4f8bd1dba30d3f408ff7d2eb2b4444e598096",
+        "tokens": 17783
+      },
+      {
+        "characters": 61129,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BAM",
+        "record_sha256": "e8b76f813c6d04b8727894d13ec2d8d6cbb79c126e8edd291870a0688145b180",
+        "text_sha256": "bb376c54347fd9f80498c20db1c47fbfe38b5640e6e0992b7620b41ebe95d142",
+        "tokens": 17975
+      },
+      {
+        "characters": 61056,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "c6139a5504719a5af83c78770a53293e7468868fa15554ffc71391eac75659e5",
+        "text_sha256": "b9cfdf1af41e13e468b2ecf9241f063ab4d6c3c5c2836ed244dced6f137801c6",
+        "tokens": 18797
+      },
+      {
+        "characters": 60573,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "9a0d7cc9fe9c91d38cc621acae12e434b5d414d019ac313aa961b5c33461ee94",
+        "text_sha256": "bb7435c925b890aec064b8c1425fb6f9f6df191d918261b87caec27b3da53df2",
+        "tokens": 22958
+      },
+      {
+        "characters": 60206,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "f09667fe285c3b1faa042362a250f98ef79d2e272dcfeb8e72b6edbe3adef80d",
+        "text_sha256": "20617237b203de582e843f26e3a3153ccd296e9a2750d4ccdc8f5fc08f04d9e3",
+        "tokens": 17798
+      },
+      {
+        "characters": 60166,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "ebd55024642f59dda992032224e38310c866e04836bf52969c291fade6e23af8",
+        "text_sha256": "e8ea2c95721c4934ea854c20473bde9d485dc7ee2f3758cac5b79334651327f2",
+        "tokens": 24447
+      },
+      {
+        "characters": 59572,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "c53a4020a320e1807f593045919241717f62c8889a80617fe48ed133b4f102b4",
+        "text_sha256": "12ac4c902863bcf84443cad4274897ae0156910d76e6be82cc317f8ada6cc1d4",
+        "tokens": 24332
+      },
+      {
+        "characters": 59283,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "b168defe6334e0824cdf803f222344201a4a1bf56b5660ebb6285ec493e1623a",
+        "text_sha256": "e848e4f891b28f2256a51108a72725e1e239b5813f120585658dea8912dad4bb",
+        "tokens": 15570
+      },
+      {
+        "characters": 59279,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "c889d3606fc6d8d4c035adadf4ec0d5270992b49f7d35cddd56f25e716486a72",
+        "text_sha256": "ae9d490dc9860d9c59b96c175ed8caeac234ff17452f97b1b3a61183cb3d9355",
+        "tokens": 15537
+      },
+      {
+        "characters": 59088,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFCLOUD",
+        "record_sha256": "47cf759d51012e0eb9ed308b5f7518ee917d4122741998a519b87038a9f33332",
+        "text_sha256": "619889ffd6ca0c6e7ef8fae66fe88225dbd0ab3c4dcd224f38c66442de976f8f",
+        "tokens": 17667
+      },
+      {
+        "characters": 57937,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "e3f27513341324347a50fde583755f1628436902f0bd984f5068bc0a68d7409e",
+        "text_sha256": "e9164bc5bfa404c05b4d7d8730c102bae92f88f74b9779158d1986be24012d4a",
+        "tokens": 22271
+      },
+      {
+        "characters": 57553,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "ae25741fc5d59fb0f45ee151502d3079a2054e736f880421217847720af10a05",
+        "text_sha256": "21b55231928b3933d04db8b895e65bbacda5e11625099e58b97d778ab5e4bc38",
+        "tokens": 23256
+      },
+      {
+        "characters": 57293,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "6810311e615f1d5bcbc51da26252f87cff8ebf37ce467f98121404a9fc1e7029",
+        "text_sha256": "2114048f46109f423d2e14ac00b632c1f68caa7702a975d93284c291cff7566d",
+        "tokens": 21776
+      },
+      {
+        "characters": 57095,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "d168cb88c31ac8bcfcf06de7904536d7b374c0b293d2d34cd01b2ff159afcc74",
+        "text_sha256": "2006628132d330e9108a3fe67c97b28386fe895749ff6699c9e5e747f860399b",
+        "tokens": 18040
+      },
+      {
+        "characters": 57072,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "1a85fff3e19d7e1ac0e9a72f7486b15739c5bed7c59004200b2f15b39c731eb4",
+        "text_sha256": "e04223a6da6a15334c3d3e8c8d8f2b0d2ffe56b661f9a54f4cb2b2074c4a240a",
+        "tokens": 15878
+      },
+      {
+        "characters": 56480,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "997d9bb290ed3ad0a2721286637c8d08ea33d27b8f1806b4c94119ca7069272c",
+        "text_sha256": "dfe7e89b4f4e019a567daa0558653423e75d77e39ed67b3d8653f40672597b6b",
+        "tokens": 17614
+      },
+      {
+        "characters": 56293,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "eec3441c2068d90cbdffd28ee2788b473aa478e8252ecb40b5571dc8e2ef5230",
+        "text_sha256": "9c27eeb49748ce25d52a58a501a6ecae716b4b642a70e421300ea426033f1c36",
+        "tokens": 21271
+      },
+      {
+        "characters": 56107,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "SERVER",
+        "record_sha256": "7b0eaefc832f89cd62c8230cf36b69debb1d4670fc2350e8671c2f503d40e260",
+        "text_sha256": "e9081d0fd3d5967e47efb22662556b51711a823651e267b0e5188dac4be291a7",
+        "tokens": 20208
+      },
+      {
+        "characters": 55790,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "4e9354606a73cb1257f534c260ae017eeb064465fa8d25a564dfc4b5af79f962",
+        "text_sha256": "2b27f463a1ffd829ee2182de22e8d6e4facef280bf6bdb0147d02a3a6854e2dc",
+        "tokens": 15702
+      },
+      {
+        "characters": 55395,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "b60af9f95c7c677b3accc08719f79330e88cc67f213471c39bfea55ecd225a9d",
+        "text_sha256": "e70ec19461fd49ee016b87dd08bf1f8dec43ec63e87a57348b92120c0bfac29b",
+        "tokens": 16429
+      },
+      {
+        "characters": 55319,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRACLOUD",
+        "record_sha256": "aa01c566641bd2668f4ac07e47143a85d06875f02974e4cf4df3c1bfaea2cb25",
+        "text_sha256": "73117a31f974962830cf30715ab5a7fb1c3ae6f123de8606a6072884cdc883b6",
+        "tokens": 15653
+      },
+      {
+        "characters": 55141,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "10e2a55098c517619b9885d5167e1751752dba27c71186f5ba0a9225416a4eca",
+        "text_sha256": "c63d422a0a670cd565fa1703e7728295c003591cd35c7a64a5618b5e174adc3b",
+        "tokens": 18408
+      },
+      {
+        "characters": 55137,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "af7b3d79019698a9efac1da1e42e226aecaefb6acdc5ce7e3777c4315cdbe628",
+        "text_sha256": "53f23f6a4ccf48fae02c8f87236b784305c1c5ccecc80db4ba7b5c63517f20f8",
+        "tokens": 21437
+      },
+      {
+        "characters": 55046,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "baf7e7a86108fbfbedfdebce1dbae1564c7349040fca14289409fad94c14f039",
+        "text_sha256": "acba70f1464f64a15a52e8546e0d03e05367e76cf3612ea541905e682d4a83b5",
+        "tokens": 18365
+      },
+      {
+        "characters": 54560,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "a8b16c7c1b9eede9365f0b0c451fcf8ee1382b2d295093ab86fcd47de6fef4ff",
+        "text_sha256": "ffae7349d75c9692e61c372f13cd8b5e5fb9b78cb954063bcbdb6301a25cc4fe",
+        "tokens": 15126
+      },
+      {
+        "characters": 54423,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFCLOUD",
+        "record_sha256": "fb9dce30bcd12aa53f60e5394f6884dbe604551191c11d7e72e64d646a7daa27",
+        "text_sha256": "9d7d768711a2cd55ed3ef448c5a8709811a2a491dcb0c425a694dd57ee096d39",
+        "tokens": 16337
+      },
+      {
+        "characters": 54224,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "2bc696575758c2004d2368b7a682f85909fd0a9a5b3249fecc9264c1797c750e",
+        "text_sha256": "bdd7b4c9243f4344766a56faddc2656f80955b65daf3ce91ce740d00082fb898",
+        "tokens": 22376
+      },
+      {
+        "characters": 52456,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "BAM",
+        "record_sha256": "3be99d6b90ead92884ed4248eda615d8eb1d46a6801e509ed58bcbde82a5ea8f",
+        "text_sha256": "631bad755109e00193fa11b09e56eb9139e9a5ad8f9eb707e5bb2fcf3ce2c493",
+        "tokens": 15437
+      },
+      {
+        "characters": 52398,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "USERGRID",
+        "record_sha256": "6a181a31886db9485971df1ad9bb24b2bb48b8368088a333580969b479c48c41",
+        "text_sha256": "1bb7e69f755daf27c018b5d8e0868af61a6cf876461a337409c79c397b1c1079",
+        "tokens": 17434
+      },
+      {
+        "characters": 51023,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MULE",
+        "record_sha256": "7aeaeb52ff6f724d918f5ea8cf1a091e3b0613bb6d113e9c9feb91ff08d2a828",
+        "text_sha256": "e28d1c7dca2e1b237571d88746db8ceb713ae5c573d81946ccb4300741fb8b27",
+        "tokens": 17362
+      },
+      {
+        "characters": 50388,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "191d2225edf22e23cbe2996d81fbb86caf76448bcb9f74a26948881885c4e672",
+        "text_sha256": "85e99dfd921a80d206800dc2dc72342eb26f69852543d587948e82ac84b955cc",
+        "tokens": 16725
+      },
+      {
+        "characters": 50157,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "1f38da162e55a8531be684e7f794a7954d4ad871ac0db4f5e4c06a9915df86cd",
+        "text_sha256": "e451b5b2add061cd038d94df726725586926e8223612f29650444e1bb32d927e",
+        "tokens": 16153
+      },
+      {
+        "characters": 49441,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "f9a43657b0c3abe986f47c64402c201183166f44246f9aa0b4b6ade17d68ddcd",
+        "text_sha256": "85ad26c6248c9ae332844f3f74be51dbb38639fa3924f68fa9c5d73c5c5cfc3f",
+        "tokens": 19982
+      },
+      {
+        "characters": 49352,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "c8ace20a55c88e4d1fc94009b763c6690efa764f5e6497cc736acf069b1fbc82",
+        "text_sha256": "817a1821375dbf47691084fe9318784901bd76a1f20be56cb9da7728dca3b8fc",
+        "tokens": 19848
+      },
+      {
+        "characters": 49128,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "031d4184b4fc42f2868dfa1b33f677ac4b5ee814679aabfeb04787c81affb18d",
+        "text_sha256": "6cf8c3d55d7b986f33a0900f172c4bbd5e0ed752502a42e0120759cb03fe7fe5",
+        "tokens": 18859
+      },
+      {
+        "characters": 48973,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "1eab1482796f4c71b8aae94d24cd2398474553d943bb459b1844a7a6e7b3ca07",
+        "text_sha256": "daae8fb40bd076ceb2b864900e9aae65e85e39fc062feed9b2e58c102da62da3",
+        "tokens": 10683
+      },
+      {
+        "characters": 48287,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "5b26dbcd7c6ef6cb05577fd50df90ee56b31839d521cf009663acb60f77a468b",
+        "text_sha256": "d061faa68956ec461374502450c4a3d02da66e5766735b34007e9b3aded153f7",
+        "tokens": 18714
+      },
+      {
+        "characters": 48192,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BAM",
+        "record_sha256": "723267d3d4a573a89b32fd65b4af94b4881ab9b6b0b89533ce3de957fd1e7bd0",
+        "text_sha256": "140c18e1198d6ca628af188249fb93e5f462f335aacf3696e585a1f95ab29ec2",
+        "tokens": 18833
+      },
+      {
+        "characters": 48039,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "0a741b8525c21f01a571df0a0ec44f76ce26cfc856cd64776b96b13e02bca22a",
+        "text_sha256": "dc6f91c50ba14c4711c850826e41131e67465271b45fe1631bcae9d1c06c14fd",
+        "tokens": 14535
+      },
+      {
+        "characters": 47248,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JSWSERVER",
+        "record_sha256": "16c1101b82989e89b2f57ae6d3f9520f9ff912a4b56650aab717e6806296c0e9",
+        "text_sha256": "70bc86fcfb64c7f87b9c9e898f45fe16ea1a53ba827ac2741309da86a9b66ffd",
+        "tokens": 14265
+      },
+      {
+        "characters": 46928,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "3a0d2b7efd9090a2ce7468e57da872f8afd37500bb67f0c3e7d4080c1d7eb2d8",
+        "text_sha256": "6f987d25c83e2f37da533778c1fe7246a48bbf556536048e911f851078a7c79c",
+        "tokens": 17888
+      },
+      {
+        "characters": 46763,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "21cf69463f7569277bb4fe89ae457a4eb0c28821f0abffb44bd33805266b5d30",
+        "text_sha256": "79c17540a3fc34258f62f459ac394b6346019b63bf15163f0e4f38cf15259a1f",
+        "tokens": 12478
+      },
+      {
+        "characters": 45544,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "66cece88eae789c2873aad2c9e7d7a62688eb33324b7ed1d6607309eb25b0d74",
+        "text_sha256": "eb3ff25646889760392428603a39182122ca24aa16e08cf5be285b37379d1b25",
+        "tokens": 14321
+      },
+      {
+        "characters": 45444,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "78480254bbfb80af0683164abe5c70dc41b413c8ecef157b5ae6e9e4910c96d3",
+        "text_sha256": "fcce8b5a69369e81c6d522a11974749592849c91c3a6eaf339569885e5d22348",
+        "tokens": 13606
+      },
+      {
+        "characters": 45395,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "18d268afccd3b1ed9e68e1d584f12d69a6a94141a8c2ea09316b99bf6d5600c5",
+        "text_sha256": "096657071499acc4e8c1faefd5f0fd5f2433f1f2318a01e36509d54a531a13de",
+        "tokens": 16169
+      },
+      {
+        "characters": 45369,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "BAM",
+        "record_sha256": "7662e2ea3a35280dabedaa448e6cbf72f8df712643881ab1d33fa9a07d033b0d",
+        "text_sha256": "b0df145c6e2bb5e45d27ee635746b0a3c7de88d93ab4afb33e6e9e7af62f41eb",
+        "tokens": 14424
+      },
+      {
+        "characters": 44666,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "2b3ea0d9b53dc32aeb24fc7ffea06235eb2c4fb17def627620759c4d233d1535",
+        "text_sha256": "b0912621b1e4c673c464f5f20165e648ffa154580b69d17a2fa8219c574c0d96",
+        "tokens": 12813
+      }
+    ],
+    "tokens": {
+      "max": 492782,
+      "median": 22376,
+      "min": 10683,
+      "p90": 58545,
+      "p95": 106546,
+      "p99": 314976
+    }
+  },
+  "mapping": {
+    "coverage": 0.8186202622252483,
+    "mapped_n": 375118,
+    "native_to_purpose": {
+      "Bug": "bug_fix",
+      "Build Failure": "bug_fix",
+      "Documentation": "documentation",
+      "Enhancement Request": "feature_enhancement",
+      "Improvement": "feature_enhancement",
+      "Incident": "bug_fix",
+      "Investigation": "research_evaluation",
+      "New Feature": "feature_enhancement",
+      "Problem Ticket": "bug_fix",
+      "Public Security Vulnerability": "bug_fix",
+      "Suggestion": "feature_enhancement",
+      "Test": "testing_validation",
+      "Test Task": "testing_validation",
+      "Wish": "feature_enhancement"
+    },
+    "purpose_counts": {
+      "bug_fix": 217417,
+      "documentation": 699,
+      "feature_enhancement": 156627,
+      "research_evaluation": 22,
+      "testing_validation": 353
+    },
+    "unsupported_n": 83114,
+    "unsupported_native_types": {
+      "Epic": 4157,
+      "Milestone": 44,
+      "Question": 1396,
+      "Release": 4,
+      "Story": 31394,
+      "Sub-task": 14396,
+      "Support Request": 2368,
+      "Task": 28338,
+      "Technical Debt": 30,
+      "Technical task": 987
+    }
+  },
+  "private_review_manifest": {
+    "path": "/Users/noelsaw/.cache/xyz-gh547-tawos/review-sample.jsonl",
+    "published": false,
+    "sha256": "be381ff7a1b38ade5f2f2eb51926e2eab88e9b22029d979a830fd7e414d9b31f"
+  },
+  "retrieved_at_utc": "2026-09-10T18:15:04.840933+00:00",
+  "review_sample": {
+    "n": 429,
+    "over_8192": 0,
+    "records": [
+      {
+        "characters": 2416,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "XD",
+        "record_sha256": "b22eb34537f6f6753da6e0dc05713be0ccc35ef12dae0f6bf19b5206d373af33",
+        "text_sha256": "bda3991085999f428123ea6ae13aa4fd8186d441480e7590239079446a8bac4d",
+        "tokens": 601
+      },
+      {
+        "characters": 331,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "XD",
+        "record_sha256": "01ce4b291ad3ecd240be71870340051b755e74e91e05d5c5baa0d7830c1b75d4",
+        "text_sha256": "345d51b056745ffb24d584645382bbff470e1dc6d24ada39373cb49ff672b053",
+        "tokens": 85
+      },
+      {
+        "characters": 90,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "XD",
+        "record_sha256": "291e5716005fd9d1d21622b8396b34ab075f805dd736c92d8b664c2a6bff7d67",
+        "text_sha256": "ed67d2663b554f967ed314a1d8e0ea4b994bdcaa86f81b00fb7e234147343ff8",
+        "tokens": 22
+      },
+      {
+        "characters": 136,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "XD",
+        "record_sha256": "5f829f9e9b41706a703e4b4d3b89c31f34acaf80ffbe3ed4ac1431c4527800f2",
+        "text_sha256": "f5984b1ccea1449772424e7368253bb706ec71b47c396b6245124c483423906a",
+        "tokens": 31
+      },
+      {
+        "characters": 635,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "XD",
+        "record_sha256": "ea215720034a4c3073d7a7886b27431b89805c01b18329b8af22bc4113a668a4",
+        "text_sha256": "7b9efc3430f358200db9a7f8cb2891e70361b6a2c259b028b0757856408460d0",
+        "tokens": 136
+      },
+      {
+        "characters": 393,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "XD",
+        "record_sha256": "80f8ded29fa2e922c77b98ea8f229ef65ea360daf5d1c9e05b80539e502b5621",
+        "text_sha256": "5e49ae4fc2e714edabcaaacca5631c107769af32c054789cd7a5cee7c667ee36",
+        "tokens": 96
+      },
+      {
+        "characters": 42,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "XD",
+        "record_sha256": "169564455792f758d4dd0e6770c9dd5b9bd905d182e6cffa022e46d950e111f5",
+        "text_sha256": "288c5d3b86d6c7506f77d496965d4e66bb79bca5f851521e679ef80f1a2e4dec",
+        "tokens": 13
+      },
+      {
+        "characters": 307,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "XD",
+        "record_sha256": "7b4f6f46093c9812bff7745ec3bc0f70d49ad40f18ae3bba91f719f15c0571f7",
+        "text_sha256": "6bcd1e97dbd2fa5f88a631dcb9e51244ed8bcb520788e8912ed07dab6e6b148c",
+        "tokens": 82
+      },
+      {
+        "characters": 255,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "XD",
+        "record_sha256": "1e797595727addd0e2663019e48d48a6f1dd555174ab126d482d40a5c752988b",
+        "text_sha256": "ef949ae2831f4c0963bc768dcb050ac77c1c34a3afda5a7d1c61872397184748",
+        "tokens": 64
+      },
+      {
+        "characters": 111,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "XD",
+        "record_sha256": "670b08a8750893e8ba690b1b11f3138c9c6935977a68486854a0a518ce4156ce",
+        "text_sha256": "22e4e3d96c2918617b862a8a3af142365e64683e427a941ce066283ca7513b82",
+        "tokens": 34
+      },
+      {
+        "characters": 278,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DATACASS",
+        "record_sha256": "eb8bff7a00ba4c11dd9b5d08d6d96bea2b409ab393229a6d8dfbeba9b7c4174a",
+        "text_sha256": "4d04f02048011dc5512872e4e34efd7dda037b6e8d9382dc7f59635c8a903172",
+        "tokens": 63
+      },
+      {
+        "characters": 253,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DATACASS",
+        "record_sha256": "fa35076ac94b61de1d976f341dc72d0f0ccdb89a384c2acbdc3da8171cd5a561",
+        "text_sha256": "5cf47e7138ee6f7e292906bed37269aa27ee7798457f3d1bb3847d980a07d320",
+        "tokens": 60
+      },
+      {
+        "characters": 321,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DATACASS",
+        "record_sha256": "bb76b704fd0dcf8ca0089ccc4d09d709d73917a51e88af25abec22a55e20f265",
+        "text_sha256": "f6300435856aeed52f16cdf0e6dead357990c28d635980140a47760b05e82f02",
+        "tokens": 85
+      },
+      {
+        "characters": 27,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DATACASS",
+        "record_sha256": "ad6be454bf93d9c8855c5f8a61fce8497df0d6ccb1debf0cba7aa769ec5095d9",
+        "text_sha256": "5181ea02111ef6029a2b435da1c86f4589bcb5a60ff124ae651e4ed52049f82b",
+        "tokens": 15
+      },
+      {
+        "characters": 152,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "DATACASS",
+        "record_sha256": "b09e885265e03ddbcaa5c0d5b45c5020aa87cff6016ff2b6c013b970866a112f",
+        "text_sha256": "0257f207aa47b8e620d748738ef8dcb682eb6d1e13c14084cb8f66712187cd4e",
+        "tokens": 44
+      },
+      {
+        "characters": 125,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "DATACASS",
+        "record_sha256": "8eb23fb822ff0175c6ed79eabec412502399402fd7ea29ba26b8fcf999728b75",
+        "text_sha256": "70254021908bc8a5f7980c34f178d5e315f5878bdb8e0de3f760f5e1b3cf3741",
+        "tokens": 40
+      },
+      {
+        "characters": 209,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "DATACASS",
+        "record_sha256": "3da8c7b2f0cdecf763dc8314b5ea81fb48ddb01cef3db4a276b623d609f6e355",
+        "text_sha256": "6922aac65284229effaf699ce1b0e44d8c8902db0ac3d7f238e22929d77e6389",
+        "tokens": 44
+      },
+      {
+        "characters": 303,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "DATACASS",
+        "record_sha256": "00f7f5c26f42ca17edf82c887506be0b504abb777a51c52b17c923b810ea992a",
+        "text_sha256": "f406a3852157451a79db43b5499a9dc12356a3f391dc26ca48d0a72aa5de2947",
+        "tokens": 66
+      },
+      {
+        "characters": 32,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "DATACASS",
+        "record_sha256": "57e8be94618ed55010bb400ccde05971a2b7d0d67ebb3c099893e60d05c68c56",
+        "text_sha256": "c4a2e0ff0163697fb1929483b2416a9f93307a52f823f9f7e5767aef2cc6c186",
+        "tokens": 17
+      },
+      {
+        "characters": 36,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "DATACASS",
+        "record_sha256": "60cafa03272449d4129f58adaa38cc9604e1d4c9c74362084ac4fac09b4d6f0d",
+        "text_sha256": "1c9ea346b187ea3b789b07bdbec0220b58cefdc9e3d7969f5a0a7eceef2b1e71",
+        "tokens": 14
+      },
+      {
+        "characters": 601,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "d598b1b8173419235d55d477a94a913a6fbc28def778d642ca56eba263ce3c62",
+        "text_sha256": "f43d288818e20e6c64e378250bd82308f8903a5523111b8b82e5a2578b9b283a",
+        "tokens": 127
+      },
+      {
+        "characters": 1372,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "NEXUS",
+        "record_sha256": "b567edd38e178dac20d4252c7e42ffedd866d91f315ffaa00d6dd682c1586f17",
+        "text_sha256": "2cb75e8fdada96dcabe0acaa6b05ccfbec29d5d4dcc8893562af322988480302",
+        "tokens": 327
+      },
+      {
+        "characters": 658,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "NEXUS",
+        "record_sha256": "71c7b596811785ea48d504607d3fe0e1c2b37a2cdc3cc5128f5613d4958a9790",
+        "text_sha256": "64b01481dcf7e7d710c9b5db254af34c8e3ca207160567e87005a0dd8ff40702",
+        "tokens": 143
+      },
+      {
+        "characters": 1385,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "NEXUS",
+        "record_sha256": "10a3dca4112541f031be3299f90153eb152b0052ed137e74b073c9cc9feb62e3",
+        "text_sha256": "82e46a137c809e0283e7f52f88c7d868b2cc55288074307381eab339c95a9c46",
+        "tokens": 331
+      },
+      {
+        "characters": 171,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "NEXUS",
+        "record_sha256": "7894c77c02c9bd8dc3220f8f652195472f387f96fa66bebdbfe8ea904a1a50ea",
+        "text_sha256": "169dd1fb6cb42423acd167ceaf35466990c7c528be8e465f6aa6d0b01fb4fb3d",
+        "tokens": 45
+      },
+      {
+        "characters": 504,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "NEXUS",
+        "record_sha256": "5dbfd76e584f6a7344136bd93febabde48c6f441196e8eb2094732cf4f63c80c",
+        "text_sha256": "312305852f09f20678ef83edc70c436ebd133ad4ad9aa6d91bb97c81ace7e45f",
+        "tokens": 110
+      },
+      {
+        "characters": 2083,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "NEXUS",
+        "record_sha256": "a969134526e51e5f0a61fce7b4e1a368d65887517799ba408e21ed56840ddfed",
+        "text_sha256": "5d736543471d46e38044df30691cf86e122789612fda6be90d7cb71964e112d6",
+        "tokens": 593
+      },
+      {
+        "characters": 706,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "NEXUS",
+        "record_sha256": "aa0f7dcb54c74ab04eda3fb9f7794d28fa792b6f9945000acb37fcbc95e03306",
+        "text_sha256": "3bb26567d6c7f88a4a2ccd9a6db395a696d0e99f48c62ebb9e2980ab17b575e8",
+        "tokens": 186
+      },
+      {
+        "characters": 36,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "NEXUS",
+        "record_sha256": "e27ff4a5d0f886f9e4d87500673879fc70b13aa7093248e1cda7772834479fc6",
+        "text_sha256": "ddd496c1ccb1f0018f51eacf70d3c8b88d17a381f5e089822e70a04041309d55",
+        "tokens": 14
+      },
+      {
+        "characters": 35,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "NEXUS",
+        "record_sha256": "f0a71f665f90d70a974bfce1fc527be7fba9f7b438c6a8b7fb4dee30446064d1",
+        "text_sha256": "0acd4d1b8b5fe322610216db8909ed87f2d52522b10eeadeec756cba509058f8",
+        "tokens": 13
+      },
+      {
+        "characters": 226,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "NEXUS",
+        "record_sha256": "2539b1fe79aca4da764702e784f5324d156d47ca8849f82cff487298de02e0ad",
+        "text_sha256": "6d45235759e160e34465173da0a9ebd1b35f8b01e782a01b53a02faa46a69534",
+        "tokens": 63
+      },
+      {
+        "characters": 5942,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "NEXUS",
+        "record_sha256": "b4c79208b5692b281b3dbef2203139e1bc8f519694652c241de220fbd104e0f4",
+        "text_sha256": "51aebe8ede3e3b49668993b1fa2fe5d0907233f5fc9f46ce4fd2e9605e72828b",
+        "tokens": 1806
+      },
+      {
+        "characters": 202,
+        "mapped_purpose": null,
+        "native_type": "Technical Debt",
+        "project": "NEXUS",
+        "record_sha256": "d49cf7fc88dfb440638ea6e74ed8c528468ac73ba661ce612fe39e9cd701bfc1",
+        "text_sha256": "1157666e982a6055b39a84fd74f1fc83ee79a345987645c4998fd80c49941516",
+        "tokens": 50
+      },
+      {
+        "characters": 1916,
+        "mapped_purpose": null,
+        "native_type": "Technical Debt",
+        "project": "NEXUS",
+        "record_sha256": "c44066cadb3f91efc94e8a80b0ed370d9e9775d66fad1dac4e546bf9f1916df9",
+        "text_sha256": "306d7eb861978ae1f0ce1aadca0487be4492a494e4a4718272573ccb73a80582",
+        "tokens": 508
+      },
+      {
+        "characters": 325,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "NEXUS",
+        "record_sha256": "1fa5d31168b1f8e20688b733576cc0cbd36571ec57c3a00a7f9cf25bfdf86a8e",
+        "text_sha256": "6e6a74e7153e2ddfa2880fe244c55628f80ab416179a06d1441f9dae4e002e53",
+        "tokens": 95
+      },
+      {
+        "characters": 249,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "NEXUS",
+        "record_sha256": "af5afdf392fbd1356a2ef290fa4fb20e594aa7f0a547bcd90eabe509fdcfa3c3",
+        "text_sha256": "f865cc20ec04307724a2f512a9c31411f9cdaf50fc4a6e49fca6d277e41c7753",
+        "tokens": 67
+      },
+      {
+        "characters": 228,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "5bdd73abc7797011a63e87c31c6df4070fe02c72e63b8cad1f2bdac25729ac62",
+        "text_sha256": "ab83d23f05e318e68d2e92f57da476fbb5438f69b11ab004b6e778b60b85f97b",
+        "tokens": 66
+      },
+      {
+        "characters": 194,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MESOS",
+        "record_sha256": "01957f152c2670a504f5fc1d046ddae442b41ea15ef898eb9381f3026fe81bfb",
+        "text_sha256": "40a2d3c7b18dc931b975ad8669dd490019678e43f0ba06000ced795927cbb480",
+        "tokens": 49
+      },
+      {
+        "characters": 265,
+        "mapped_purpose": "documentation",
+        "native_type": "Documentation",
+        "project": "MESOS",
+        "record_sha256": "97782f82720e70e7aba666de40c371fbf74ab5bc287e6e00ad36b5e78c9dd43e",
+        "text_sha256": "06f1a4148c150d99e2652a972934f8c8847042e421a581fba1d71bb56c6dde2d",
+        "tokens": 56
+      },
+      {
+        "characters": 136,
+        "mapped_purpose": "documentation",
+        "native_type": "Documentation",
+        "project": "MESOS",
+        "record_sha256": "77f9732c1e4bb3caedbe905cb1c9fa0293775e1486a763d2a63eb811c535ad4e",
+        "text_sha256": "dcda19d6e4202328a9b9499c94bf4c4ea5a7b1fa8819076a6af1fd8969e44d72",
+        "tokens": 35
+      },
+      {
+        "characters": 1048,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MESOS",
+        "record_sha256": "5c0b64218f30dcfe02ae308d1fa5efd207f9502a7e0acfd6e7a1f8852677b503",
+        "text_sha256": "7e7f58ed587b749dd5d037f175518fb8392401ca7872537a6f3426f1e2ecd8ca",
+        "tokens": 272
+      },
+      {
+        "characters": 142,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MESOS",
+        "record_sha256": "54c7578b8445706294af9e38280e8447a66f029731146ce21090ee43b21c7140",
+        "text_sha256": "c3c8aaf14527b71daebc32ea4195dd10fc37cc453d1eed5d7b2526c5e6b88e0a",
+        "tokens": 33
+      },
+      {
+        "characters": 531,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "MESOS",
+        "record_sha256": "85cbbd526c593b15c1a2436a53866d43393d05041d0f6693db8b4caba7abbb21",
+        "text_sha256": "f8268154bce9a8dcd5f830ae4ce5e2d544d05cd4411a1220ac67af428e39a30a",
+        "tokens": 109
+      },
+      {
+        "characters": 382,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "MESOS",
+        "record_sha256": "e75e44aab1778ede624cb4eb316397c4e287b0f76299050d2ac110662629f77f",
+        "text_sha256": "e94d16d545c9840cea1f45a6109c00576967f547f9848a62ab68c3f481d8ae20",
+        "tokens": 109
+      },
+      {
+        "characters": 308,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "MESOS",
+        "record_sha256": "5997714e9b8d5d88a866bad4cecc5b2febe3be78f9dff2d26f8aacb18e0fbf62",
+        "text_sha256": "6aa7c54648ad2042cd02a97bc19acd8cea091c01e125c0f8f424468a9f89e699",
+        "tokens": 70
+      },
+      {
+        "characters": 284,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "MESOS",
+        "record_sha256": "132e0d82c78ae044087cf24548c9d211d233f385f3a816ae0bbac49232efc140",
+        "text_sha256": "db621921f1bcae6b231b6b56c2f85df6747a7c195809b1ea75fe92c2a4c17191",
+        "tokens": 67
+      },
+      {
+        "characters": 631,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MESOS",
+        "record_sha256": "2be773d8ee714ecbbfd1440b40c0b9e21877258ddad5754c069ff0e4f5fd4557",
+        "text_sha256": "e72e447889e35579c40807881b0af530aada85863e8c5bf8b573ba49e55ecda6",
+        "tokens": 161
+      },
+      {
+        "characters": 292,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MESOS",
+        "record_sha256": "0e1be4eca7cdaed6b7378219ab374f70e5606ba7bae9cc85128f17ab6b736da1",
+        "text_sha256": "66c57c5a58a9e8ecbbd21fa1414129be6e95e69fef9ad195cbff159c4c832378",
+        "tokens": 79
+      },
+      {
+        "characters": 532,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Wish",
+        "project": "MESOS",
+        "record_sha256": "963c06702e74beb96ffba8a8ef2589d269cabaca917cbaf04029097544349b15",
+        "text_sha256": "a95ac41577744d4b016e605dc2f198a5ce0d1e5f28f983f83c56eaeaf3bb23e5",
+        "tokens": 125
+      },
+      {
+        "characters": 427,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Wish",
+        "project": "MESOS",
+        "record_sha256": "e1f0123e2745d558318d3b05d382de1c5303bb0dac317ec1569abd5d14041f9a",
+        "text_sha256": "ad77bbfda76c907dfa4b8b76face9706ad1dcf48c33dfd9232f95e19bcde34ae",
+        "tokens": 96
+      },
+      {
+        "characters": 199,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "USERGRID",
+        "record_sha256": "48a94d1c3a7efa6f32bf457398c4153de9741e9d0e697af45781f79c7eaf330a",
+        "text_sha256": "40aa13379e266369d13979602ef45c813c6d128cc52ef7fab9a47e2e1dfc1ea3",
+        "tokens": 55
+      },
+      {
+        "characters": 950,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "USERGRID",
+        "record_sha256": "aa77bb79a8d84c12c88502801dae25e96f5436a0698953c6dd8be8ac083335bc",
+        "text_sha256": "0b8c9ed5656920d27ca9fbdd4479a7a985b09a182181e2a03a46e7663f2159c6",
+        "tokens": 282
+      },
+      {
+        "characters": 992,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "USERGRID",
+        "record_sha256": "00a9e941f816cd83f44094354419f2ff6973d2fade5bc347088d7734f0581a0b",
+        "text_sha256": "e53c33c54225891fb0a5ef9ae57ea551bbc00f8b7f48f46155f558a952293e5d",
+        "tokens": 224
+      },
+      {
+        "characters": 18,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "USERGRID",
+        "record_sha256": "e93f8cd778351b4a9e7a4d8371106e4e3a4e87712010f1271bada74312237cb1",
+        "text_sha256": "77622a2b2503c574271c9b9df7e74d3702fba0e9be74a66230dce189ad8b7262",
+        "tokens": 9
+      },
+      {
+        "characters": 395,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "USERGRID",
+        "record_sha256": "eb3004e34adee15ead6a50926605e50611512ff7df66066a76b95db9fb44e45f",
+        "text_sha256": "0b2e442994c636136e2802ad8f1209902d2c54e60e07dffb036f29b35eb98b83",
+        "tokens": 92
+      },
+      {
+        "characters": 30,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "USERGRID",
+        "record_sha256": "fc99027d363ce980e0de3a4c78cbed0e7aab2e551943f74b3e9bcdaeb19f94b3",
+        "text_sha256": "30988431db1d1d97e0e3eca371ee429fd87ff99d4544422018e8c0dfb83826ca",
+        "tokens": 10
+      },
+      {
+        "characters": 53,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "USERGRID",
+        "record_sha256": "8b0896b0ad9261d41482453565ea1601bbe58fc071a868c7d6a5cb07ee8ac788",
+        "text_sha256": "e218a6759215d6214bd171a623cf88a368614ef3bd7cf3606e3df532fcc99a09",
+        "tokens": 12
+      },
+      {
+        "characters": 92,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "USERGRID",
+        "record_sha256": "ae0361559bd58b922653d1e67ccc97700892a9eae99e97216a79b89ff20d6030",
+        "text_sha256": "be8bcee2952534b5e48bf5d7914347e0c5ca175bafc444399420681869be8daa",
+        "tokens": 27
+      },
+      {
+        "characters": 71,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "USERGRID",
+        "record_sha256": "0bfcca242e4f1f3f54b1fac93100b7e7265b9f9ef0574dbbc7008b74fe851eb0",
+        "text_sha256": "4722d063a6b435e172752505c687e212849437d94446ce181042d454352c4e57",
+        "tokens": 18
+      },
+      {
+        "characters": 143,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "USERGRID",
+        "record_sha256": "884fe256293467316fd2592307fe0962575ed9fdf670294a45b57ec782dd089d",
+        "text_sha256": "1d8c12dc510c555466d8b06a199464a0b10eeedf8969efbeb6f2cba6906b9d16",
+        "tokens": 40
+      },
+      {
+        "characters": 6968,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Wish",
+        "project": "USERGRID",
+        "record_sha256": "e291ae302242ca9a78b428cf4f432e79d9a9923d155857e7a2fa23644cb64ff9",
+        "text_sha256": "e4a8e1b95e26e1931c1e33d2abbd463d7746820a3d5b05c8639f6ed360d19ae1",
+        "tokens": 1712
+      },
+      {
+        "characters": 287,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Wish",
+        "project": "USERGRID",
+        "record_sha256": "bee918f2941b7cca23cd161cf85659513726db073ab4f8f44a826f6e0910eb08",
+        "text_sha256": "b78499132bc1c2792ac63b2bb8455cabd053c0a03b34fd1e595fd6bbacd49917",
+        "tokens": 90
+      },
+      {
+        "characters": 219,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MXNET",
+        "record_sha256": "fddb74a00a5a6c1ba602ad72b4b4dc4ab3e521e93e7b4cc9c2be12d3877f0a9e",
+        "text_sha256": "c41c20cf072c970ebb9744adb8348ac262af5be843d5a5d380425451dcda2820",
+        "tokens": 49
+      },
+      {
+        "characters": 117,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MXNET",
+        "record_sha256": "b49fd92275ad2289311250d468349c0e301c2eafaa15c69451e1e939e29c4082",
+        "text_sha256": "d492adef878e137e85261b3730dd9ad00fe28e2d0ffa15a263213ff1b16ecf9a",
+        "tokens": 35
+      },
+      {
+        "characters": 642,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MXNET",
+        "record_sha256": "af01e663006453bfb97d7ce48367786a9e894acc6b50d0e5362825acce6bfd73",
+        "text_sha256": "b63d9ba9b1c567dc3a6edc708e43dce9e5e4ffdad273261fdbf0face1706cd9d",
+        "tokens": 183
+      },
+      {
+        "characters": 62,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MXNET",
+        "record_sha256": "dfc1dbe049891de574ef0e092fa1d655d962d9344810ca8e1f26885f876c385a",
+        "text_sha256": "da1e9a8d735149d857dfbe745fc0177b0c1536a0c37bb80fbd4bd6be5237f8c6",
+        "tokens": 17
+      },
+      {
+        "characters": 73,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "MXNET",
+        "record_sha256": "ed86ee25703b2b847e5f8ee94162e5079144f5f83acb1dfeaf9e267c5932ac54",
+        "text_sha256": "28cbb2b6bbf033ff4cfaa166a97f6affe83ac6775406d44e399c118a44be3a6b",
+        "tokens": 20
+      },
+      {
+        "characters": 108,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "MXNET",
+        "record_sha256": "3e6a2825db846077e82fcce68948d93aab89cdf2d17cbc902f0e672f56f2b51a",
+        "text_sha256": "7e91dd1713f8942ca847091228011ead4f19c1a61c87c700391e36c4e362f150",
+        "tokens": 34
+      },
+      {
+        "characters": 210,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "MXNET",
+        "record_sha256": "5a02928c6e5fd4118e4016206be21952d45b7c37d64675d6a764e8fdea82c4fa",
+        "text_sha256": "b2bcf4485554d629e839f823dee0cc07c53c93402ddaa5f6798852232d16cf32",
+        "tokens": 54
+      },
+      {
+        "characters": 791,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "MXNET",
+        "record_sha256": "0273eba19db0eccad365818f775c9b02e8d7d704a37111d55b447a20e2b2b87a",
+        "text_sha256": "50b804564832ecfa8f667b54a16c3dcc515d47e5bf0a02e068bf4c078c05d6e5",
+        "tokens": 175
+      },
+      {
+        "characters": 36,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "MXNET",
+        "record_sha256": "bd8d327c3b815bdc7b5234d6fbae2d5f936f7f954a1740015d032826295108c5",
+        "text_sha256": "14ce2d4b22c5f916010ba2f2ecb1e68677e86c7e42c673b61b3356fac8d86793",
+        "tokens": 12
+      },
+      {
+        "characters": 31,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "MXNET",
+        "record_sha256": "55d1fd98c4912b4ec9d03c5b7ef3b4e0df1b1760f46b39262634caadb1903b85",
+        "text_sha256": "1bcd177e45eb4af212fe15983d3960a98a56de9d20f3d7e63e94c95fdaa23ebb",
+        "tokens": 10
+      },
+      {
+        "characters": 44,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "MXNET",
+        "record_sha256": "632cce0753d8346784e5459834ef13bafe13bed4b2699a6e92ede59877cb05c0",
+        "text_sha256": "daba6ecea6d6b75f95c16a7d32f870468d08b3303718a71168021b0fccc2fa83",
+        "tokens": 16
+      },
+      {
+        "characters": 161,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "MXNET",
+        "record_sha256": "a2661df80d1fe636f762f1beba106fbbe528d106994f5bd739cecac3f2877591",
+        "text_sha256": "461d952295160955416d58710510be34db59158eca367eb8a66d9d70a9140d9b",
+        "tokens": 41
+      },
+      {
+        "characters": 142,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MXNET",
+        "record_sha256": "485f93d3ac17b14d4188294dab832feaa5574ccf0f59f56b3732db755a39378b",
+        "text_sha256": "b1ec17862c40693e3761d9a168ddbab6f60887f570bba79773c916421204baa4",
+        "tokens": 34
+      },
+      {
+        "characters": 12,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MXNET",
+        "record_sha256": "d0e49cf7bf7a75210dd69155dffa1912b54cd5deb8ea1d370c27a015c180b09c",
+        "text_sha256": "ab83328fc5b63c43cd990d509e895e3b87514dafc5cb7aad2c09e77dc3817ea3",
+        "tokens": 8
+      },
+      {
+        "characters": 44,
+        "mapped_purpose": "testing_validation",
+        "native_type": "Test",
+        "project": "MXNET",
+        "record_sha256": "0de29619030e34b56146df104bf4e0610b491de736505f1b4aa5f8a6fc80faf7",
+        "text_sha256": "fff6324316d1bc99e299ef21ea2d528a9de607f25581458823cf3351da9aaae4",
+        "tokens": 14
+      },
+      {
+        "characters": 309,
+        "mapped_purpose": "testing_validation",
+        "native_type": "Test",
+        "project": "MXNET",
+        "record_sha256": "7b9b1b9bb6c1300e92c47e04aca72b1e70aa27df931f347246c7818f9735d3e1",
+        "text_sha256": "5dba3f69760205c355973683ee3ed6753061c5c388b9a421d117a57eae09cb7d",
+        "tokens": 63
+      },
+      {
+        "characters": 289,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "ALOY",
+        "record_sha256": "68eff672bbe707ae4015f4a74d80ac224f89fb92e8e6e81acabb8bc1e0a167de",
+        "text_sha256": "0ddd290a9af35f3ab586e5de07be0ad6e04d2a15fffd60de66cec6d8a3c60e55",
+        "tokens": 84
+      },
+      {
+        "characters": 772,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "ALOY",
+        "record_sha256": "22d28ce2f1895586326f050cb04cca6e1b8f5e47d56e8e767ce196944087fbd4",
+        "text_sha256": "ed31279fb5d36a15d34088148bd2515b9949c66a86c9ff5f9439f5cf84d08033",
+        "tokens": 202
+      },
+      {
+        "characters": 162,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "ALOY",
+        "record_sha256": "c0847d996065f2ee8fd5a6215e2eac27dda6fe8f921081a4013543cfda9e6e78",
+        "text_sha256": "9c55fddae961667a93464cf7f8c5c7049b46f293a2c3f5c52d888484c69e9b5e",
+        "tokens": 33
+      },
+      {
+        "characters": 26,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "ALOY",
+        "record_sha256": "8a86a35359bf676bcee74aa4b29d538d9a2ce462700726861aa6f11e507758fe",
+        "text_sha256": "1139035226359eac6e95d322775d7d5b6cae03cfca79983b9d32d13157c84132",
+        "tokens": 13
+      },
+      {
+        "characters": 231,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "ALOY",
+        "record_sha256": "c2815704045c457800725582575cde5edd0a7b77505b46b524d82b3b9f9f3cd2",
+        "text_sha256": "b0b57c60b4a42ba07dcfc1161da6b2724dccb3c61a0359c1cdd39c73d99f1ff8",
+        "tokens": 54
+      },
+      {
+        "characters": 360,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "ALOY",
+        "record_sha256": "c6846074601ca805d99025054f3e2991db117d6035dc7de4a985aa9a6c5b5701",
+        "text_sha256": "a222804d686390e7566ade9b897f30d112dc2eb12427ab783837261b71eb9642",
+        "tokens": 74
+      },
+      {
+        "characters": 377,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "ALOY",
+        "record_sha256": "9e3103e86b23e7a0b28387b07900c23b20f5cad881fb4976c04539452b287660",
+        "text_sha256": "7c9fb966fda40694758c768404880c7eee2273e8cbc41bfc17cc0d8cda16aeca",
+        "tokens": 100
+      },
+      {
+        "characters": 875,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "ALOY",
+        "record_sha256": "08f905f9973456e1595972dad632d202c5b04b21b1648dfc8afe6139ea801bc8",
+        "text_sha256": "9672b078c8ba98fa1b2ec21f26be8a19d9ff3f44c0eabfab5c5bb90d877c1797",
+        "tokens": 209
+      },
+      {
+        "characters": 526,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "ALOY",
+        "record_sha256": "14bf92e800e28664afb119b820f9a85eea7dc69a73864d775151ea39f46d13fe",
+        "text_sha256": "24546ce0f165db9d9912b0ea8623a6f44c2f6a5ae8ad772db51894dd7f0f603c",
+        "tokens": 118
+      },
+      {
+        "characters": 258,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "ALOY",
+        "record_sha256": "d629be0404ae618f04c6c9c5a265fec5c607de234401e6182437e2b72aebd40d",
+        "text_sha256": "915fdbeb7cff626f6d5545702b92cd86d5dcb7e9817a3231744dc278d3b33a58",
+        "tokens": 64
+      },
+      {
+        "characters": 423,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "ALOY",
+        "record_sha256": "c35a62f062b15958a36e65e6df957b0cbce90ec8dd0b1ef5815d1555a51c791c",
+        "text_sha256": "8158ac186764d686ba0a175280bd78db52e96d9709b01d7ff48c3a2bfb8df190",
+        "tokens": 86
+      },
+      {
+        "characters": 77,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "ALOY",
+        "record_sha256": "1fe6280a058b34d34e74d7341635b6f55194d818470ca7a3be787406bbbd99f1",
+        "text_sha256": "a05db98fbb6a19809144c3b488a1809bb03f9fa0f999167c3cf35ad4cde0b906",
+        "tokens": 17
+      },
+      {
+        "characters": 485,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "ALOY",
+        "record_sha256": "9cbff7c3d2492b7e278cb2b8d53b6017aac07aed625c25f8faf9496f44e9026c",
+        "text_sha256": "e2bd42320b14e700cd15f24dce97a3ece098082b75bd75d47549ab96286c71c0",
+        "tokens": 120
+      },
+      {
+        "characters": 97,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "ALOY",
+        "record_sha256": "a6217c4c24165578c20eb86fc5c759ac160f3c24b469ae20f8d75beb5fc12a43",
+        "text_sha256": "bb00638b28c014c4294fd340762c2256c917051a696d8d9c5ae9f0b6ec21293c",
+        "tokens": 23
+      },
+      {
+        "characters": 367,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "abfb1a9a2f570390aec80d7e31eec393c07ff1ad1ca13b1b396e32700955f7da",
+        "text_sha256": "88baff515ae1964bfb42b85152cf1610d511872a3b6f48dab7f2f58dd308f4e7",
+        "tokens": 92
+      },
+      {
+        "characters": 1261,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APSTUD",
+        "record_sha256": "9ee6714c7fe3c8b57d320a52a523792ee8d905ac75a6868e0d1b87592fcc27a8",
+        "text_sha256": "ddfcc2d31ec32fc88054570088320f3bb0396c0b236e6d226741cfc4d0d3a9fd",
+        "tokens": 302
+      },
+      {
+        "characters": 275,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "APSTUD",
+        "record_sha256": "1a088993a2ff1bca4ac6fdded26a64676377a0f76f183bf0d03129ae9340e3f8",
+        "text_sha256": "db3ccff61121a4b5730d75ef191130c06233b1cb68f2f57594f326fc104b2d59",
+        "tokens": 74
+      },
+      {
+        "characters": 1206,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "APSTUD",
+        "record_sha256": "263adf80a7a9a4b242f23439bef8846e8003f35bfe104db48e09860440b3d9fd",
+        "text_sha256": "77d782c3eab16c1a7d5c6309790a8350b5939885f858c5c4b750d5c8b1e81e55",
+        "tokens": 339
+      },
+      {
+        "characters": 78,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "APSTUD",
+        "record_sha256": "ba05824b6614e7ebfe2763a21c02497f2d63f9f3d32d56b558f85ad08141155e",
+        "text_sha256": "87962cbd3a58338f31d1bb667d4d9706ec4cdc17acbdda52ff8a70e3b2e59ba3",
+        "tokens": 19
+      },
+      {
+        "characters": 1042,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "APSTUD",
+        "record_sha256": "5ed856d398c0fe5a6a6fc4cd2f13bd055aa09747dc0f44f3ce3a381f927d11e7",
+        "text_sha256": "bb29e77d7bd79d5b8f5d25552ace88c7862c3741ac3f9f3db8db95ee40c6bba4",
+        "tokens": 246
+      },
+      {
+        "characters": 316,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "APSTUD",
+        "record_sha256": "492225b9cdc3ca571c43ade55e8ecae658a43d0e6b4e5ccbffcf085ea4bec4d1",
+        "text_sha256": "bd07c2c66f780a38251a5ca67b51f2110e881cfda4b99be95c4e85f9fb37e6ed",
+        "tokens": 83
+      },
+      {
+        "characters": 33,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "APSTUD",
+        "record_sha256": "bf2fc708e00504016df3c9099a769ac5c38fe8fd7e4024986b1be836a6162fc9",
+        "text_sha256": "e3477f3b8b79e5a235d9abf6fe1b76d64cea39948004fae3cf3aeffaf22f17d9",
+        "tokens": 14
+      },
+      {
+        "characters": 672,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "APSTUD",
+        "record_sha256": "a10454e9d8de0a44633a29e19456f779ba33a9b7dba4da1068cee5b39729f415",
+        "text_sha256": "7d77d9eec18afabf7ee0c8bc054159311d22793d862345791d29c01671f3e691",
+        "tokens": 232
+      },
+      {
+        "characters": 739,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "APSTUD",
+        "record_sha256": "a4c3f7fe4bb1c583c72a14cfa4152e7eb28c596fb50e2f4e7800742d0245ff86",
+        "text_sha256": "22d5ebc78ee01e94a4ac020ce21ffa60e797960ffae1866947b4a5d0a9ede16b",
+        "tokens": 241
+      },
+      {
+        "characters": 164,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "APSTUD",
+        "record_sha256": "cdc4eb5a613b7c75a2bde7f83e58b837556a7d94d168a86dad6de633b59b492e",
+        "text_sha256": "f62d57ebe43f807950de6d882cb9b8c873cdb41c8fee5f5628c5a7c1b47fb898",
+        "tokens": 41
+      },
+      {
+        "characters": 520,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "APSTUD",
+        "record_sha256": "a8af19cbc19b5b2c831f97abf0d3686fb918c1925194b1563ba1b34fc51212ae",
+        "text_sha256": "34e67a390dd4f15bb0d7d5c35d060a7d39eed89244413f9c27396b3d0bf543ca",
+        "tokens": 124
+      },
+      {
+        "characters": 119,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "APSTUD",
+        "record_sha256": "1817d8358de584b3bf27ca647fadc4403b152cc71a2adeca8bcdcd05a2723361",
+        "text_sha256": "d06d9e57f31fa9c538213aeff4dde786fd5690e41cf6738a84d73960ba336754",
+        "tokens": 27
+      },
+      {
+        "characters": 944,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CLI",
+        "record_sha256": "d7777555076b92312083ad961eef5894144b3b80496e6009c5ac5e5bd070f8e5",
+        "text_sha256": "17b75baafb4a1a26072b5b45fd2eaa6ee2802cf8d083264a7e8f20a109f36bad",
+        "tokens": 212
+      },
+      {
+        "characters": 197,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CLI",
+        "record_sha256": "9085aa498408b4a70b82c08b189ff3969bce460065cfbb21ecd8d6777020e266",
+        "text_sha256": "90eb549a45715e00e3c9240611db899cdbf48c39161922bbcaff19203ec0197e",
+        "tokens": 51
+      },
+      {
+        "characters": 140,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "CLI",
+        "record_sha256": "2f077266616bc68fc6bfabca854d9958ac727743a01b26a4ad5eafb4d1037ea3",
+        "text_sha256": "4c256285d0000b20dfab497a49fb919ba20f3c6f2b7c5dcab88db70c52570dac",
+        "tokens": 33
+      },
+      {
+        "characters": 443,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "CLI",
+        "record_sha256": "8215d57d31cbf11d61215e283e0623785330b58dbd18b01f65bfec2bc19f0879",
+        "text_sha256": "fb6c618a143fcbae66c4eec96c5edf70b4fe3f944e27c026eff59bfaf37e1cf2",
+        "tokens": 103
+      },
+      {
+        "characters": 137,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "CLI",
+        "record_sha256": "7caff65481ae6288579154e871c715ffb8a0f86d3a94731a869d497c88c3c8a0",
+        "text_sha256": "82247b48addc3051e112c504cd74549add54cdf5b2b86e7ec317dbe6237e3b3d",
+        "tokens": 37
+      },
+      {
+        "characters": 409,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "CLI",
+        "record_sha256": "e26649aa576ce84a684748ebb1d5341604aab8dc2dd7d4ba5afd58a91b10144d",
+        "text_sha256": "283bfd2bbf6c68d93eafaebe8155cb29e18532b88a102ec94974c35c517df9ba",
+        "tokens": 101
+      },
+      {
+        "characters": 592,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "CLI",
+        "record_sha256": "3e470efba934845adadb053dfcc52edf959a03688ad9daa6721c154d64b804f1",
+        "text_sha256": "0792d1e4a5df085707499cb105738b5dd7bac90ebf3a86919548523a9478cb2d",
+        "tokens": 116
+      },
+      {
+        "characters": 293,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "CLI",
+        "record_sha256": "dbe31a67d240ac8c97973a00bec0ac363b02cfb652a7b1e8196ac2eff6498851",
+        "text_sha256": "330fb185fbcc595f5514dacdcd9692125c1bd85810dc5f15cca5adb50f539918",
+        "tokens": 85
+      },
+      {
+        "characters": 307,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "CLI",
+        "record_sha256": "f823fb68d1439f73d9cb8af4a355f25bbd0cccf6ed421d263c6554f062faaf71",
+        "text_sha256": "afce09c2c0a5011e94bbb8d55d78418613816fb838c7dbb1c9a170870485df48",
+        "tokens": 97
+      },
+      {
+        "characters": 291,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CLI",
+        "record_sha256": "dbfe9479e4d34b239b775853df5fb818f85513542101bb5ca705e084310a60c0",
+        "text_sha256": "0d6b515c0e6cf9061909ef12e545049222a14fbeac7e003a8005ad2d7dec678e",
+        "tokens": 67
+      },
+      {
+        "characters": 53,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CLI",
+        "record_sha256": "537a472e33293397789cc6d2a4e583c687dbd1a0891a2c140eb7491c69c9e9bf",
+        "text_sha256": "098321499bf1cb8e18c2d436db3911b17497663075bf5b0dbe4abd72d605601c",
+        "tokens": 16
+      },
+      {
+        "characters": 295,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DAEMON",
+        "record_sha256": "d92d80bb0a15f6a3a1ba6837868a6ce36eb043f868f1d8c45abafd69187f855a",
+        "text_sha256": "da163add39025fc91a0c669dd6196b043426c1a289ccbc17eb348680d08cb6b0",
+        "tokens": 65
+      },
+      {
+        "characters": 1102,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DAEMON",
+        "record_sha256": "cac43a84a7f68696561f70ddca3883e85e03ef26a9daaf544936773aa47bbcd0",
+        "text_sha256": "6bd43dbc5dd11a83e3f3820988b7bfa4a23310831d54548fff36bc109ec225aa",
+        "tokens": 309
+      },
+      {
+        "characters": 584,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "DAEMON",
+        "record_sha256": "d2121152b5f10827f09d26de8d526a02c0b71848559ee276531c5049ba7a3cc9",
+        "text_sha256": "e2183138de133dc29dba50d6984365789df101378650342c2c1f7af0fde1f4f8",
+        "tokens": 137
+      },
+      {
+        "characters": 233,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "DAEMON",
+        "record_sha256": "f7bcd7e907dcdc665b383a40b44914e9d4a4b8272031a886a2b7644cecf5d4b4",
+        "text_sha256": "c6d2414e234d7ea4238e98f61ff12ee3788207fe5aa7614357534c1d90b8be9d",
+        "tokens": 58
+      },
+      {
+        "characters": 723,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DAEMON",
+        "record_sha256": "5d2e25f056d26b262fe0e4909f5febaa6cc3a6a8afdfdc9fd11d91db6e9e06f4",
+        "text_sha256": "d16c7537c743e3ee380cbd43d4df56421a098b6c6b06117b2975114146b8fedf",
+        "tokens": 232
+      },
+      {
+        "characters": 1010,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DAEMON",
+        "record_sha256": "6708be5dbd1085d49eeb33016217e29ed2aa8688faefbcb49d3bbcfd0b6e0d1f",
+        "text_sha256": "ec7a4c329b2126a02e937d5c74b6d661268b951e5b38c2eca53ac1bc6258e46c",
+        "tokens": 274
+      },
+      {
+        "characters": 1137,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "DAEMON",
+        "record_sha256": "35760435326d4f7c2d9a9990b57e501640fc57c62e1e6d1cb8a8224e5ca35ad8",
+        "text_sha256": "6d754eb87dc273d97c08389f793e13d08731cdacf13eef737296bdbb0ff6d0f1",
+        "tokens": 249
+      },
+      {
+        "characters": 146,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "DAEMON",
+        "record_sha256": "4e8e760d7ba3246d3be36fc1fa51f8e76b7fc3e9f77c77a67fbd2cfcfbe74de4",
+        "text_sha256": "dce9aa6411992bc0be91e9a21c6946cca8be58987429286c014d2931156b54d3",
+        "tokens": 37
+      },
+      {
+        "characters": 273,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DAEMON",
+        "record_sha256": "89690efd82a8c396449e41ca27195dc1b17e1a995a557502c230476269b4fadd",
+        "text_sha256": "4ee16ecd38048f30ec31a6c5b2975d48b6a1cba65100ef0cbd8c3431c3bdfdac",
+        "tokens": 64
+      },
+      {
+        "characters": 337,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DAEMON",
+        "record_sha256": "b52978ef171b7aadbd5d96ffd682e77310839e646a30b7eac814170da6260796",
+        "text_sha256": "105a799ee4f47f534ebf9862bf22444a1e995cf9895a889c138bcfa31ebfb55a",
+        "tokens": 76
+      },
+      {
+        "characters": 267,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIDOC",
+        "record_sha256": "b8b548097b6455bb1445d47515f622db5dabe5620d9300f5b1b14adb140ce11d",
+        "text_sha256": "f39cf59baf345e997e107915b45f5008c48472dc56dd14af54df33fd9d2e04ab",
+        "tokens": 73
+      },
+      {
+        "characters": 151,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIDOC",
+        "record_sha256": "ac4b041948dc78084f3d6474d62fc8448a35dc504bc628410c23920cdd47c47f",
+        "text_sha256": "cc1b54cfdf8a50615ee43446e73da035855c0265a793aa2c0cc65dd373a8b395",
+        "tokens": 39
+      },
+      {
+        "characters": 425,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "TIDOC",
+        "record_sha256": "a31b547a0b487fdff6b852d9ebb5fe1438777e23a6509ae83cb5349be4566c13",
+        "text_sha256": "986fc226020eb4f03a0ffb9a2d1c30b92e43cee4576d46ec16fc35f169e543ff",
+        "tokens": 92
+      },
+      {
+        "characters": 175,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "TIDOC",
+        "record_sha256": "b4bf1afc4ce6392fe9b4ad23836001e15ca08f61fed4cb7c6af03483bbdc19d3",
+        "text_sha256": "cad653275a71e71e299db7addf1c7f77122ee25060dfb69536af8f9d3b760f9c",
+        "tokens": 56
+      },
+      {
+        "characters": 249,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "TIDOC",
+        "record_sha256": "2ccb6860d136b141f91af8712d690e895e439d94287c17d9b3a0aab0237f1fc6",
+        "text_sha256": "4d921c5b801f570be620cea3a0df9685e760d6a9d226faec1095ceaad62b2e5a",
+        "tokens": 63
+      },
+      {
+        "characters": 102,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "TIDOC",
+        "record_sha256": "f8542e916e56e35fb7869d62821992ac850a21973e9002132c1f607ec91c768b",
+        "text_sha256": "a3da9c0e0b03947df4c7228d9edfb476281676820d2b29406c63a383181549ca",
+        "tokens": 33
+      },
+      {
+        "characters": 106,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "TIDOC",
+        "record_sha256": "54741def2ab55ff73602f2b143face2b4bb7ec0a9cbf46facbfc10f3f9e3cedf",
+        "text_sha256": "e94db690101fcd72fe5e3bb42c8fc4490b02ce2e750cf173b4b911519328a180",
+        "tokens": 34
+      },
+      {
+        "characters": 103,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "TIDOC",
+        "record_sha256": "db9e78374a748bc643c874dc7233e1402730a0ffa78652335cbff3bc6b3c554a",
+        "text_sha256": "9b602cc2a687b5f175899aa0f256893bd0a3361c1cfde9fe7cc9e017f4fb9f50",
+        "tokens": 25
+      },
+      {
+        "characters": 45,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "TIDOC",
+        "record_sha256": "1889f91ff4783616b95e440ff8d6dbd5b35eff5a1eb8782d07b5c72343575c00",
+        "text_sha256": "6689b061bf58c6084c05bec3b75ffd0976107e40ea5d38ac18bf81d48f80c792",
+        "tokens": 15
+      },
+      {
+        "characters": 349,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "TIDOC",
+        "record_sha256": "43ec5e19ce26d2d3afa71e91f26a02e07ea0a961ec1068eac13c50485dc1ae45",
+        "text_sha256": "baad7ed67fd6694cdf74ae74361e7f6bab697e6a7ca86b84941d38c56c15777c",
+        "tokens": 88
+      },
+      {
+        "characters": 35,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "TIDOC",
+        "record_sha256": "ea99a23e716a547b48e5b1db8ad1a4ded0722e2f19421be5e4cc9fa1eca32336",
+        "text_sha256": "b3c891d60bbb63fcff1c3532fd0b2cd052b0130fff7537c09405e6b21f57d7c5",
+        "tokens": 12
+      },
+      {
+        "characters": 367,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "TIDOC",
+        "record_sha256": "0cca5f0a007911d1ebfe678fbcf53977037ef1c75f19460c22166c7f3fcf7281",
+        "text_sha256": "e529d004b7027ac702d62492d265102ca345396a575ca0b52faf7e5da85f658d",
+        "tokens": 83
+      },
+      {
+        "characters": 577,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "TIDOC",
+        "record_sha256": "6895926cc5008f71145168c83cd9acf842bd71971c7b2d33ca3ceeaef97ddeeb",
+        "text_sha256": "11d98febf929fdb959edaafecae50d5ca7627ddd9d4ffb2bf86abdc842554b3b",
+        "tokens": 131
+      },
+      {
+        "characters": 24,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "TIDOC",
+        "record_sha256": "a07dd76a977da8e9ba3e2aa09c9131f7c2fb5539db05ed60cb8b722db7a1bdc5",
+        "text_sha256": "a2baf7ddbdcbfe177d573173828cffea38fdf78668611513bcb7016a62104fc8",
+        "tokens": 10
+      },
+      {
+        "characters": 539,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "6d66ce9e62a01cd3a8359120474d005de1a0659399db6900b4bf5e14aa2cbc67",
+        "text_sha256": "c849f471fd6bcb59ab22ce36f23c2739b6e5b5e0b5d1e62b514fe1dd14c13e84",
+        "tokens": 125
+      },
+      {
+        "characters": 286,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TIMOB",
+        "record_sha256": "54ca471b80a5e852b55346105b3596588ecba08a0315afb64d3f53dd5eab6b6a",
+        "text_sha256": "858c522e311d68fcb67c31bbe8a5b9c11da1fd34f98e152417f5b8ca79c8ac48",
+        "tokens": 74
+      },
+      {
+        "characters": 2034,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "TIMOB",
+        "record_sha256": "0e86c87de3ce1beeb971a04412a11af72df94f56d407de3e439f331f6ae59276",
+        "text_sha256": "9b04a16e7deeee02af0964eb643e8870783f9c2029140d53c5b0290ee6d6bfe6",
+        "tokens": 490
+      },
+      {
+        "characters": 269,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "TIMOB",
+        "record_sha256": "6a728fef851f761d0075a1f223441831b08ade417126966a5f09e585b79985b6",
+        "text_sha256": "69cda38febbe5d86b9c8ce0ba1fb0db31152dba4d6faf9a4a1902e1bc0881f60",
+        "tokens": 63
+      },
+      {
+        "characters": 199,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "TIMOB",
+        "record_sha256": "136c17ebfd604c2325f7b55d0f8619f27c6eac6dfa371048c7eab4456a45b7a4",
+        "text_sha256": "a49e4a4a6a50ae114ec5496b7f8d82e692304dad635377e070ad93aba17c5689",
+        "tokens": 57
+      },
+      {
+        "characters": 215,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "TIMOB",
+        "record_sha256": "6afa0fdea4a1f0311f6961a0984f4393b8ec5ce048bc1648661a9d92b953ef27",
+        "text_sha256": "20062c1457e733197bb029b2efec96dd297e160d48c237448c60e85ae497cc41",
+        "tokens": 49
+      },
+      {
+        "characters": 314,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "TIMOB",
+        "record_sha256": "a2aa08380665bb17f00e65c8bbbe64707337d85ff1a015b73faa05b5dcdf457a",
+        "text_sha256": "404e58f9d4f945ee080f40e7e305b542f96726f52afa58b9c32f2acd0d4538d2",
+        "tokens": 84
+      },
+      {
+        "characters": 1370,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "TIMOB",
+        "record_sha256": "adc96a3840f5dd12e71e6f7c3223952779b1fb32cb28fffda00b59f9eef002e3",
+        "text_sha256": "8691877dfee5303cb4efcca39a458af6006c350efacbff64e3f683ff624f6d03",
+        "tokens": 345
+      },
+      {
+        "characters": 35,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "TIMOB",
+        "record_sha256": "2d73d0b812ad29227bcadff63cab2097ad21c3663a0eda6d2dffadfa5041fd5b",
+        "text_sha256": "5cc687b3c742e96556b43dc5523a87cfcca044d5befa1c11a473854a2ebdc2fd",
+        "tokens": 14
+      },
+      {
+        "characters": 959,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "TIMOB",
+        "record_sha256": "577f24465e8d4ed2cac7c217665f4bcbf3bf91c4bda36033f890f453b2a1de30",
+        "text_sha256": "763abaae1b43cb944c210d1bbfd9f9bd6e3a3de0cce233254a9ba1460564c502",
+        "tokens": 297
+      },
+      {
+        "characters": 165,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "TIMOB",
+        "record_sha256": "05c7f14c8e5611dfdd58e8c0c94ea8e5a657f02acb95e2938f773d94731b65a6",
+        "text_sha256": "e30dd6e92b50a12321ab678c5fca3ed48216c317ce00c07d811f413a7e45e169",
+        "tokens": 41
+      },
+      {
+        "characters": 52,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "TIMOB",
+        "record_sha256": "30b2bb836af0f049a6d125662c2e6778e0824d3cd8bddbe736ee4e6c3a572168",
+        "text_sha256": "b52c2f192246fdda3fa0b6e35fe90525aa8b4de7f3999d30c65ac4cf65307854",
+        "tokens": 20
+      },
+      {
+        "characters": 144,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "TIMOB",
+        "record_sha256": "e48897518855beea60cca22e1a81d2c5aa52d00c1941e2d9199bf1137beedc79",
+        "text_sha256": "aed0af6be6d4f238510069ee4f84a59920dc3ded91aef84ee10d14231b67c051",
+        "tokens": 34
+      },
+      {
+        "characters": 575,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "TIMOB",
+        "record_sha256": "9f34697ca38cfbf59f7b97f358b0ac8091d7c57024eec8a4fc81444edc7aa8fe",
+        "text_sha256": "559f3f773c8b43258a77d9dc58384cbd83ff8aa8798cd8d85fdac13f14b5bdcd",
+        "tokens": 175
+      },
+      {
+        "characters": 685,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TISTUD",
+        "record_sha256": "edb51d466cb5fef7baf616cfadbe83b3d21dfc1675dce29e158bbe2a1f83d53e",
+        "text_sha256": "6b2beb81c932db992790a893cb398e1c7981a9f71557142bcf172af1235bec67",
+        "tokens": 226
+      },
+      {
+        "characters": 340,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "TISTUD",
+        "record_sha256": "d30b44f86c8cdc89b7a57a6a66be54186f94147f94f898f68c476aa4d3040852",
+        "text_sha256": "4dc0ba80f375388abf0e97701fe5817e2c4847fd8ada60a1c6753b1ef99a78e3",
+        "tokens": 79
+      },
+      {
+        "characters": 988,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "TISTUD",
+        "record_sha256": "bfeeca276c7b7312a07cb13088edc5e2524222956c700b6aeb362670cfa97b5d",
+        "text_sha256": "e68a99130c3c368684c1a396cd5de175d3777bc84b05dec280f9d1cff13401b6",
+        "tokens": 231
+      },
+      {
+        "characters": 221,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "TISTUD",
+        "record_sha256": "2b765f09d63d9db6c7da457b818efdcc05a2d07a1b531192a8ec3c2cc9d6bd0f",
+        "text_sha256": "b32f1c17365731384176a05b7716b2834a614012a872dd5f064d94e3c7d68417",
+        "tokens": 43
+      },
+      {
+        "characters": 485,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "TISTUD",
+        "record_sha256": "eb3c13bf965246fb9b95097b2d8cc1fe7e0ca80711da3d0325ccf9fc598e4952",
+        "text_sha256": "c7237c9b8bd53c18067e5ff4bd1fc37527ce32f9c9b9079ce96bb6497a21fdf0",
+        "tokens": 111
+      },
+      {
+        "characters": 304,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "TISTUD",
+        "record_sha256": "ae192760a538140c3cc129f134665d0b227ce09a26117e23da134262ad1679c7",
+        "text_sha256": "257e6008df4a11238b1762608280baa240bf06f470fa86071ffc7f0222a36a3d",
+        "tokens": 80
+      },
+      {
+        "characters": 525,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "TISTUD",
+        "record_sha256": "9e7c1d2bdcd4ad9e177f0c68afd9434b8af5601c4fb5a51c40ae01ef183b31b4",
+        "text_sha256": "5a6e01de97acaebe22b74adc3ccacea6906464cf3ccd43aae3f779ce5f13b6c7",
+        "tokens": 119
+      },
+      {
+        "characters": 1051,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "TISTUD",
+        "record_sha256": "fe68b6c67b69054c3954c2f509cf2837275baf95ee850866e85410b8b5f6d24b",
+        "text_sha256": "b9a25ca018fe96554365f0c12b8410a793637441fad861a11dd60d87a568542c",
+        "tokens": 239
+      },
+      {
+        "characters": 263,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "TISTUD",
+        "record_sha256": "292fef05a9fa949e196a2ae1401f3a4d8faff4f1016ff22a3e281e7c1c9009e1",
+        "text_sha256": "04fec218ea556175779ad8265a017246d54a4c7d093f54fc83e97bb64a060d28",
+        "tokens": 65
+      },
+      {
+        "characters": 815,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "TISTUD",
+        "record_sha256": "f525345c8df4831138c9b757a7783a3fbf0db9ac24a1708447ad152119e16718",
+        "text_sha256": "8afd0dfc1f563aa9ded8a8e5c762856ebf65680d83e6c4b6f866de1da97576a1",
+        "tokens": 174
+      },
+      {
+        "characters": 388,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "TISTUD",
+        "record_sha256": "4db9917de5d7607a9f8b5c0236ba1ba0ea80b0dbb5a2e6f63fd6dc5b0b9f476f",
+        "text_sha256": "8ed6666cf1c781b479199bb61aa984c76e047fe6f8589128e5ad29f4349b2111",
+        "tokens": 96
+      },
+      {
+        "characters": 210,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "TISTUD",
+        "record_sha256": "61e7a7b41b8daed7548693f37e2c762688d77a217ad9d5761e62b76ce8ce2d9b",
+        "text_sha256": "9ef68d05be4269e31b5d6defac30065c7b02d914887aa4342851e4826632f662",
+        "tokens": 56
+      },
+      {
+        "characters": 199,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "TISTUD",
+        "record_sha256": "e50e412d14ab0e3ed6bb291a94f6f2120b854e80b4fe7c414453b102ddb04238",
+        "text_sha256": "b4c61ad6a146781e01cc60235b9330ab5feff2d5715c2ff87ed990df5960c640",
+        "tokens": 41
+      },
+      {
+        "characters": 503,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "TISTUD",
+        "record_sha256": "086320c5585a705805b1aec050018528430765e10779531c169461fa9b39baa6",
+        "text_sha256": "86d284923ec4192ca1e099f2ab465b16ed842532b3a12bb0c850b6f76fc92b48",
+        "tokens": 106
+      },
+      {
+        "characters": 1112,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BAM",
+        "record_sha256": "01b97773a56661792fc1c0c557f10a5724e4a807135d13adffc00bca26d6863a",
+        "text_sha256": "f1b7658b141eb5789a314cb81274f17a41d995f787e73304768e86e0e6e6d301",
+        "tokens": 261
+      },
+      {
+        "characters": 626,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BAM",
+        "record_sha256": "7302bfa96bb8b8b6bed7ea83c1f4ae2dff0cd390bf55accb103ba792cb870896",
+        "text_sha256": "f3f1137326735ae4539b07d91bcb4d976a2bbab67633f5e367b33e8bfcca40ba",
+        "tokens": 155
+      },
+      {
+        "characters": 319,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "BAM",
+        "record_sha256": "99e718765e0e9c5a3217d7fe32267bb91e4f946a6cabcb7170716ac72fc30d9b",
+        "text_sha256": "55c3af67e2fe81c519cc61789be0dfd423911903483834269f5f2416f2dbda0f",
+        "tokens": 65
+      },
+      {
+        "characters": 416,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "BAM",
+        "record_sha256": "61c4e550b94c26a58c2b87ef07dc9486d35c586cb7f3ad001a7ec6deac0b0919",
+        "text_sha256": "1abe53596bed0fb1bc0bdbd50d29b631c29b631a79070b792d2e00cbaa9e4645",
+        "tokens": 104
+      },
+      {
+        "characters": 137,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CLOV",
+        "record_sha256": "eb1ab7d63ead80cfb6bf72f2a818f57ae5cf4bf5b88499fd093288c9a5b66f50",
+        "text_sha256": "f7d73803530d44f613039f849135cf954ea040d35f66a5410cce0f9fb82d45c1",
+        "tokens": 29
+      },
+      {
+        "characters": 1361,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CLOV",
+        "record_sha256": "0fb0b7f7fb2c16240f0f48fe3db30f948c1632697753a88c9e64cdf5c85ff479",
+        "text_sha256": "06d975e9c472f8ed0b33543d9d0164684aabb92ef833313087ad956eff015160",
+        "tokens": 384
+      },
+      {
+        "characters": 610,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CLOV",
+        "record_sha256": "2f5dbf5d007715e86f3585af5dfcdfac113f39fa27a3bd28cec962d28ed9caa0",
+        "text_sha256": "e976de1b019fa9f8b1c88a914db058e076e1f067fba2e0be22ac68a0ab97735a",
+        "tokens": 150
+      },
+      {
+        "characters": 177,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CLOV",
+        "record_sha256": "26993f8b4cd4d2c6fe19d86ade41b5353dc1c7c59359f184394da9cce4a28db2",
+        "text_sha256": "481cb8e7e6e46fcd31dd143767b56a0b8137f7577682bee5876ad0a89784bb7d",
+        "tokens": 37
+      },
+      {
+        "characters": 749,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CLOV",
+        "record_sha256": "46038a8d0e9dc21a2da09bc39cb7ea84bf06c1357e7a5ca20115d802d15067a1",
+        "text_sha256": "acdf188edd5e1668f157d1cbcd691999f33aa79143aa0d43f4fa33ab299b2641",
+        "tokens": 231
+      },
+      {
+        "characters": 309,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CLOV",
+        "record_sha256": "8ac9431613e6780596131144f95f5672d38da3d8d64df48086655deddd255b6d",
+        "text_sha256": "e42ab1cc87fc8ca5a6621ac6bfc16c05e5bab41d2406efc282314d738dd1d764",
+        "tokens": 73
+      },
+      {
+        "characters": 224,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CWD",
+        "record_sha256": "e93953499019f73f5738f9e7df7fcbe57c9f30cd5e45d4faa969e64ce259f0fd",
+        "text_sha256": "7f4865a84563cdc0fe73192f6828e65d6b88f6a7f3e4b176d38562aadde1d3f5",
+        "tokens": 49
+      },
+      {
+        "characters": 823,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CWD",
+        "record_sha256": "05902aa8d96b43afe4e3eaefe9ef9bc7a6b9092d5263ea16776b50e8d4d41741",
+        "text_sha256": "4b7a0edf16ddcf95269ecf32727b0167416efa82f4d2eaf13f38ccc464f90b81",
+        "tokens": 216
+      },
+      {
+        "characters": 493,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CWD",
+        "record_sha256": "94ca265fee8a57b45f657de0a2d09ca75d64b43cfcfdb4d8eed253df2c97b6bb",
+        "text_sha256": "03b164592e6ce6d2ebf35f75f6b4c799afd244ec17e2995715d09e70bb3a319a",
+        "tokens": 106
+      },
+      {
+        "characters": 706,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CWD",
+        "record_sha256": "4dff8adaa853b9aaedd39e94da13e405b75700d056528e983aac1c6d74e82050",
+        "text_sha256": "0b555b9f023b79d0696759e88127e882c78b397503027722039b5f1e13db250a",
+        "tokens": 144
+      },
+      {
+        "characters": 409,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "CWD",
+        "record_sha256": "e3330c34178a749d10b11313bd26d3873dbf211ae221b652886764a95589cb1b",
+        "text_sha256": "ac4b01de095e35ef6b035b293e308338b61532e3b0282612b9dfa15d795e3f29",
+        "tokens": 111
+      },
+      {
+        "characters": 763,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "CWD",
+        "record_sha256": "c064b9e8edc056f903a3f6c6d5ab92f3bb80dbff14628db40485bdcef29e4120",
+        "text_sha256": "b548995a5067f819e85e440e10b5dc9812b094d5f7baa837b380e47268725924",
+        "tokens": 182
+      },
+      {
+        "characters": 122,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "FE",
+        "record_sha256": "b761e02d9a3132b2e98a44717831bd37b87d942464abace14e8869e2fa220539",
+        "text_sha256": "c3edfd1408d75ae6afc0796277366ba695074bd5b2d61853ee14a61131f2eb03",
+        "tokens": 27
+      },
+      {
+        "characters": 500,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "FE",
+        "record_sha256": "c00be2c217d4ebbfb88d5a23752ca7bc0401c8009fd4264728ac58acc26160de",
+        "text_sha256": "c5e40b6e6b11fe2e1c1eb0ca747a37268755d15deb14da78aa711bc814029260",
+        "tokens": 119
+      },
+      {
+        "characters": 875,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "FE",
+        "record_sha256": "4e7bc6ff91ea619a978757c516ea4209514fb99a966c118dadfbe29637e80a28",
+        "text_sha256": "20bd4b1cd11ec3864101b55ba0242b1ada51276d030c40843d2c567d111c9404",
+        "tokens": 236
+      },
+      {
+        "characters": 740,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "FE",
+        "record_sha256": "ece21f94e37c95e5afbcbb997522b0e04b4221dc49b0ad6b0d2d7748e88f869b",
+        "text_sha256": "7869498f4ebdca9a12960cab7742c521bca38644c6963c85081830d889c48c87",
+        "tokens": 175
+      },
+      {
+        "characters": 1283,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "FE",
+        "record_sha256": "d30adcf4b2ecfb0ad286bc024cbee83112158bcc3e6bbd73dbc14d15d67f59cf",
+        "text_sha256": "21e69e87674a2bfa1330828efef4ba87a040967dc1747f78e4270e5683864ddd",
+        "tokens": 391
+      },
+      {
+        "characters": 1102,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "FE",
+        "record_sha256": "75717faf5ba0c8e652b6216a14570a4da89bfb9b68f3d80c6dfaf19ef65917e8",
+        "text_sha256": "d804911ea69a33c80a1f053f06b83ef4df7f389b36f4754bdb6cdbc3bd652e8c",
+        "tokens": 301
+      },
+      {
+        "characters": 62,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "d0e01ff65fae6f4e50038e6ef46f8c308e952d7f4deb896f243fc47b73a41f97",
+        "text_sha256": "3b8fd4b6a04c83277d4571c8ca57d2172c1164ae7b021269909c6a9c922f3016",
+        "tokens": 19
+      },
+      {
+        "characters": 383,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRASERVER",
+        "record_sha256": "a69540511a2230aa83241b5b8fbe618d8961fec63fc0326927b33c5877c7795c",
+        "text_sha256": "cb9077b29433a76a6df2f6a13ec17833b7f2329d9fa15263033d4e3ad9b179dd",
+        "tokens": 93
+      },
+      {
+        "characters": 530,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Public Security Vulnerability",
+        "project": "JRASERVER",
+        "record_sha256": "6c46778e9290502f64ed36bdb9b051b3f13688ba418ba8de45395c33278ba962",
+        "text_sha256": "cd0d06df1a7bc03fb9575eddce8e12e82ef94ff9274b149ab638c86a0925e22b",
+        "tokens": 171
+      },
+      {
+        "characters": 1184,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JRASERVER",
+        "record_sha256": "6168783525945aff1d2085c8566d35e44fb21520682ea7d4c39449053574a608",
+        "text_sha256": "8f13aeccc7b060ab3beaf6c3d1e8bde910c362940c425b315d0b52a8f50c4a62",
+        "tokens": 335
+      },
+      {
+        "characters": 1612,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JRASERVER",
+        "record_sha256": "bf116e58b4e1e1e32b9ca23e6bb834577daa6f883c6b71dcabcc24a2ee64f74b",
+        "text_sha256": "ec11787e2b68f75b34fb4fb0df2374bb058ff668b862770eac8a03626cab6f59",
+        "tokens": 475
+      },
+      {
+        "characters": 358,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "JRASERVER",
+        "record_sha256": "a38bba15606eebbd2dfc8c229efa2eedf07eceffc51e4b0e153d6e9300791363",
+        "text_sha256": "817538e10f109d256284c8566d5eb3a8316a633763a258d16a2030eca8a30591",
+        "tokens": 89
+      },
+      {
+        "characters": 315,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "JRASERVER",
+        "record_sha256": "0a51350ce1eb16dc57934c13ace30a0cbfad8015886cafe353e0aeeae961f6be",
+        "text_sha256": "b28b7685a612182a00aed93a361bb24c67941208b402f508fadd2ea0f61c4380",
+        "tokens": 88
+      },
+      {
+        "characters": 827,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JSWCLOUD",
+        "record_sha256": "46ec019a091c1db1333cec4b1a163cddcf7dfaf96a8afb062e7ce5a869f0fb8c",
+        "text_sha256": "51e2d5713f0a3be005b63cd696b92f049f7fb0d73b013326facecaf2a906d154",
+        "tokens": 210
+      },
+      {
+        "characters": 104,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JSWCLOUD",
+        "record_sha256": "b953b3335e86fb836ae980b0a6977621f5ba3bb04521bb7ea0a00953b7f34b67",
+        "text_sha256": "a6c7a2fd93e9c937ff5d692fdb4b744f0eb4117a21b98360d34b7545db7a8bed",
+        "tokens": 22
+      },
+      {
+        "characters": 483,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "JSWCLOUD",
+        "record_sha256": "7d05bf9c6c6b6f8c632d87233fc9b83436241b840ea0e4f3986283a7b690ae0a",
+        "text_sha256": "0fb23f67cdd72d8d0d9a9dafd551ef5ab353f7db12d887653a4eeb5b57cb8280",
+        "tokens": 129
+      },
+      {
+        "characters": 64,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "JSWCLOUD",
+        "record_sha256": "8a1d638420b10b4d7cced4f875438ea58b1dfec75b1b82fdfc9f45cd55c4b0f6",
+        "text_sha256": "208bb9cecac08684637fda508d124b978f44754d09fbc692ddaf6bd39464e77c",
+        "tokens": 18
+      },
+      {
+        "characters": 818,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JSWCLOUD",
+        "record_sha256": "42593b2ce4de62937f15d4f48e07b08d44cd0c1cde29baa8bf2d9287cdecfcc1",
+        "text_sha256": "51efc663908f6e1a332484e832ce98452fcea2c28af5b7e0c93e41f8ae7c51e3",
+        "tokens": 200
+      },
+      {
+        "characters": 299,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JSWCLOUD",
+        "record_sha256": "8f84e708c82d9e3457c3399e5245ee141030624cc60bd3fec577f1cc36306e02",
+        "text_sha256": "a992405a98ac494a152ad387836b66cad7ac1927f8b438c3315b8d2be37a3c34",
+        "tokens": 76
+      },
+      {
+        "characters": 276,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JSWSERVER",
+        "record_sha256": "1d19dbc3a4e04e0bafa87ee53c9160884be71bf2423db290b26a3681a9c284ad",
+        "text_sha256": "fb6b54ea4a6de75fc7c0e10d51b4221f48f8ab367f6bab65e557146b47061914",
+        "tokens": 67
+      },
+      {
+        "characters": 57,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JSWSERVER",
+        "record_sha256": "700a420258b78b6e0c22c1f5410fd77433873a89e7c1f3dded99e03cbd1e30c1",
+        "text_sha256": "fdb87197a0b7ac664c3302dbd1b3a78fe2a0939a488c71239bab2925480ed045",
+        "tokens": 13
+      },
+      {
+        "characters": 131,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JSWSERVER",
+        "record_sha256": "6814a32161489c963e53338e3f495e13770e6a5c6e9950eb41f7154fbfc60ca7",
+        "text_sha256": "61c245bd7012f959d5722f58198f1c9a0d21ec90d3fc6e05a8e602a9baf81eb0",
+        "tokens": 30
+      },
+      {
+        "characters": 431,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JSWSERVER",
+        "record_sha256": "ba68082952767d7884dccb3dac6352d6fc8bd40377befebb78a3f835e9174579",
+        "text_sha256": "b3b3bc4369de53674b7a1dcad4620c4261093b66433f08c37460bf56b95a1714",
+        "tokens": 105
+      },
+      {
+        "characters": 281,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFCLOUD",
+        "record_sha256": "9b53694d7940ee862b8aba8326cbbd3d49658b2044c70d1019a4b51a8a7fda12",
+        "text_sha256": "e8613825fadf1e559d4352e96444630b479c225e24bf30856daa7b2ba3976f4a",
+        "tokens": 74
+      },
+      {
+        "characters": 581,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFCLOUD",
+        "record_sha256": "d340ec57366e78f454005399b90dfc54fc73317b295248bddc1cc3879524bb8b",
+        "text_sha256": "341f188bec829c93f4549e08032498341864b159953ddc6caf8b3488bd0e0809",
+        "tokens": 150
+      },
+      {
+        "characters": 394,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CONFCLOUD",
+        "record_sha256": "d0f9e3c5c5b4b2086208b41754011baf750613291e724379edc84b0cf66c3892",
+        "text_sha256": "a1a3d194d5f57394c0f79a4ff09cc24e439ef43a9bdcb93ab182313970d524b4",
+        "tokens": 82
+      },
+      {
+        "characters": 50,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CONFCLOUD",
+        "record_sha256": "026bad4816c8fd12f2e163019c07054a02fb674f78e61a7977724eba5a6e600d",
+        "text_sha256": "f47c43881434dfeccc6a7784cf31b0362b1fadd4c667a6d74435156c630df8a9",
+        "tokens": 14
+      },
+      {
+        "characters": 511,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CONFCLOUD",
+        "record_sha256": "2ab54a7b1e07fd52a679080264c7f617f7d8dc225516783adfb502be8bcfa60d",
+        "text_sha256": "5bcb7e1d2a674ce56980dc50280c96219bab73f0c02f3ebe8f1b7da933ab9d8b",
+        "tokens": 131
+      },
+      {
+        "characters": 784,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CONFCLOUD",
+        "record_sha256": "bdca3308f6d2c7d90ddb7eb58005105b7e470ce8de8f98879be9992084df7366",
+        "text_sha256": "46e0c664b9cd2c4219fcdeef045c211637e8b6a981bdf48d19515a436a9bc2e8",
+        "tokens": 190
+      },
+      {
+        "characters": 431,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "290f7f1092f5d190347ca3a26badf58f391fdbabbdbc3b0e74595177b97f9830",
+        "text_sha256": "49f2f9e4fcafe7251953ae6b133fdb653de49e403cef095fd11662cd61a0ad87",
+        "tokens": 90
+      },
+      {
+        "characters": 1343,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CONFSERVER",
+        "record_sha256": "46a614b682faf10e15d072fd43478b380bf5e8d9f619bd74d8e972e0c15a17cf",
+        "text_sha256": "fd58f192052f513db7313956b63e4e0153bd59775005db5576ad0cd24e465c32",
+        "tokens": 329
+      },
+      {
+        "characters": 318,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CONFSERVER",
+        "record_sha256": "054e37162860ebc9d4e38d48b9039cf8db84f609020f3732470abb53cb949282",
+        "text_sha256": "40c681f0b19815c34843c010e6fe3ab6231fb7f41651b9b0a9d0bfba7e22b4ef",
+        "tokens": 66
+      },
+      {
+        "characters": 561,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "CONFSERVER",
+        "record_sha256": "3ae950edfeef0bbd1a153f4bdc50ebc63ccfc18a42fe8c3e0efcb9fe4410df13",
+        "text_sha256": "d7f481a00501570e418380ce0674c5074c79a693050b5821505d204e7775bdd2",
+        "tokens": 140
+      },
+      {
+        "characters": 335,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "CONFSERVER",
+        "record_sha256": "b56fe4a9be726208a7f056edec15dea5a4d6ac5b80118ee70a3290b6eaec9e49",
+        "text_sha256": "8054998c392324bd2f782403053cbd6878c62fdfb08f7a75239c9f4fe3756762",
+        "tokens": 79
+      },
+      {
+        "characters": 49,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BE",
+        "record_sha256": "ce628511cca55373003d8e714b437661f63962de7eaafcbae3fe869fb5eeb295",
+        "text_sha256": "8ca334536973ac4eafc3a11c3be75c01cde5858c3b66c96f7cebc3cae20a4e65",
+        "tokens": 17
+      },
+      {
+        "characters": 1327,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "BE",
+        "record_sha256": "c471dc389899bcda05d223f9af015a457fb79f48a806d81b859358584dbeede0",
+        "text_sha256": "b984132e78083ad686223c0b53335f7ceb437355e3cdfb1dae4a75f9e9744a6c",
+        "tokens": 385
+      },
+      {
+        "characters": 44,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "BE",
+        "record_sha256": "28c57c0384990367827708cc0465e7cf74c8481b2d720896aff2ebcbf75b8f4d",
+        "text_sha256": "97dd86f37e75982b6b4f0d94f348ff8769bc624ee861e3d904089a17aa8bfbd3",
+        "tokens": 12
+      },
+      {
+        "characters": 23,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "BE",
+        "record_sha256": "385a990ca90ca823dbf7ead320c7e1244c9021c2dec4d5be26e368edc985f44b",
+        "text_sha256": "8e8e94d79e259bdce30a75619c5b520f69fb15e2772723214ca99f59293fb3c3",
+        "tokens": 8
+      },
+      {
+        "characters": 222,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "BE",
+        "record_sha256": "1bb3b8beffdbee4e57b8565faa2f8299cbdd6909f2d02a6ecf87c4a558489749",
+        "text_sha256": "57fc733e2f62984cc6080feb62ac078e170723cb7c2bbce7fbbbef30514b33a6",
+        "tokens": 53
+      },
+      {
+        "characters": 1057,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "BE",
+        "record_sha256": "22913d497e55050b30978c1b88a71e61e0e50a18dcb41be270a4d0be776ea376",
+        "text_sha256": "c47628cfb23200394d4cbff673af9c8677d7a6b132019e4859c58d8883a4a1cb",
+        "tokens": 274
+      },
+      {
+        "characters": 305,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "BE",
+        "record_sha256": "8cc1783aa4b773ff67d3db16ce6115a36669c254c736daa376e23676e35a7295",
+        "text_sha256": "56c56b2430e3a29c6fde25e6669f18ce6f7745f7c2c31297b7f0581550587e34",
+        "tokens": 67
+      },
+      {
+        "characters": 651,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "BE",
+        "record_sha256": "6276f2705b02d05c717c0ccc1e3a65258bd355e429a457c317714d54da3a1c84",
+        "text_sha256": "c8673425031d63e1ee536bc5fb1a14862aad350944537813bfbe0cb26a186adc",
+        "tokens": 175
+      },
+      {
+        "characters": 54,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "BE",
+        "record_sha256": "a792deb4a7217a5d45b8d991a4b3610c15ef211997ab5eac99bc18605f1c34e6",
+        "text_sha256": "c8c8a414d048ca2d84b684186c64286cf901fb6baf006dd19784d301ec173a16",
+        "tokens": 13
+      },
+      {
+        "characters": 598,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "BE",
+        "record_sha256": "52a1d56b7fa7d0c88790adb2b5dffb28208c7e52e09da8861b81b88dc9986121",
+        "text_sha256": "22708053b201ebf6f0e0b7ca451faf9394620c81434768506ed361a373483ac6",
+        "tokens": 142
+      },
+      {
+        "characters": 119,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "BE",
+        "record_sha256": "4d3e4fa78f9be6aa6d829bf27c14c42b24aa0ee41e194e79e615525ed34a49d4",
+        "text_sha256": "010d7f64a65d1405a023dc9ccdfac033c5c81f80654557e77ba24c2ec79799f5",
+        "tokens": 40
+      },
+      {
+        "characters": 96,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "BE",
+        "record_sha256": "70a688f0066518fe758d6d54ac5f2db463ec067c8d919e2b6681ec8037c3307c",
+        "text_sha256": "9b2ddeb6bd6aca8b0dc4ace9c0257a55729d8b9d46ba3371ed65d29e8bb69fc4",
+        "tokens": 24
+      },
+      {
+        "characters": 584,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "FAB",
+        "record_sha256": "9449b6f9ffa8bc6fd5e7f42f3a3a957d8a84fbd9d140de4e75326ea922b5a2d5",
+        "text_sha256": "47ce0a114fa4dba4c78293970f369700b78c60ba185e0967ce1d9f6b7968e7a4",
+        "tokens": 127
+      },
+      {
+        "characters": 1498,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "FAB",
+        "record_sha256": "677afca4c44541deb31eb9ccad13fcf485ced5116d0ab8126f7be59240c322c2",
+        "text_sha256": "15469cc772ada9cd32c7aa0790887c68f6984f4615a54dcbed29a0da03c201b4",
+        "tokens": 508
+      },
+      {
+        "characters": 58,
+        "mapped_purpose": "documentation",
+        "native_type": "Documentation",
+        "project": "FAB",
+        "record_sha256": "05fc0689bb65f8823e6355e274c9a4b43f3ee8150f5a0afb4cce4b5319793e98",
+        "text_sha256": "480d57bc077b54ca80fb58bdc8a98c0fe5ae444ac7ca74c6ac5a7fdfd3c7a37a",
+        "tokens": 17
+      },
+      {
+        "characters": 113,
+        "mapped_purpose": "documentation",
+        "native_type": "Documentation",
+        "project": "FAB",
+        "record_sha256": "df33391b31e8c91a9a0b8831feef616156b6315bb3afd1f2cee0f194da6cc6b0",
+        "text_sha256": "b12dd2f32afe9a7a379c2247d5e15cdadcfbecfa4edcfe67fd58550a4da248f1",
+        "tokens": 30
+      },
+      {
+        "characters": 783,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "FAB",
+        "record_sha256": "ed120fff2ca0b6776451304deaae6670a2fc4dd22ac14cc2434dc2e83f78b077",
+        "text_sha256": "dede58541f8819732b90195a20b98a988c643f38279161fdc59585292070eb8f",
+        "tokens": 176
+      },
+      {
+        "characters": 364,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "FAB",
+        "record_sha256": "b50330a49729d4ebfd7322947926044e2344c8ab221532f86e313a49187f5104",
+        "text_sha256": "c03559efdf70945f658141ba8efd4a8c7c7f23885ccc4c231c0ba5a4115f59b5",
+        "tokens": 120
+      },
+      {
+        "characters": 107,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "FAB",
+        "record_sha256": "52bb588ddc390e0dd995855cf95c2c75029410728890a535e8aef70fc4df91f4",
+        "text_sha256": "c68dc47fd2cea2a7e65414c1a75d3b52fba5faf629dc9bf24989b685c25fcf9b",
+        "tokens": 26
+      },
+      {
+        "characters": 1805,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "FAB",
+        "record_sha256": "2fed5c615f49f6fbdf29220dd2336772fd465c4385836d65555fe2e4d5b0fd16",
+        "text_sha256": "88a764897d5c1d07e2829229362a8848868632adfbe9a291332c664b141369d5",
+        "tokens": 371
+      },
+      {
+        "characters": 62,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "FAB",
+        "record_sha256": "001fc73a92e0f339c0b74b2b8afda1cb00f4dbad8cf58769b4a58ff304ee97b5",
+        "text_sha256": "e668f4812daf0bc56a3816d4be585923c89ef6ba813eaa3d2417b16217757e4f",
+        "tokens": 15
+      },
+      {
+        "characters": 165,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "FAB",
+        "record_sha256": "09581997eb5edaf1e3108ee80971b947b42331eefb8096785141c339eeaa4901",
+        "text_sha256": "6a3423343a5ae7a6cf7266c00e37dc0588b9022890fdd3652997a7b91c050932",
+        "tokens": 57
+      },
+      {
+        "characters": 488,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "FAB",
+        "record_sha256": "e602afb546a2fa41ff158d6bb9c6ca7556eea4fe208f9f4f4ffbd864bfa832dc",
+        "text_sha256": "b1fa0af1207a5a4f5c8145f145624ac70fafff00ca3379c735a1d4cc47234b93",
+        "tokens": 107
+      },
+      {
+        "characters": 182,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "FAB",
+        "record_sha256": "1e9b679787bb914baad98f65c3aa8c83c3da4a3a83d138e74c8e96a0dadd7e64",
+        "text_sha256": "90265303738b78b9ce75537525541fe8fd158e1e054721cd44d8e7f5941e039c",
+        "tokens": 42
+      },
+      {
+        "characters": 55,
+        "mapped_purpose": "testing_validation",
+        "native_type": "Test Task",
+        "project": "FAB",
+        "record_sha256": "7343331bada963ebe31c56ef7a69147e4735859e43ce100a258bcef588b89370",
+        "text_sha256": "2a777845941d97e372b696c660564b2d2d38ec7d9a4726aab2a040c6a60f302d",
+        "tokens": 15
+      },
+      {
+        "characters": 258,
+        "mapped_purpose": "testing_validation",
+        "native_type": "Test Task",
+        "project": "FAB",
+        "record_sha256": "8f3d5a637b9a02b63ddfd49c22b16f158fa3f3856ce27020c9b535e58a9fd56d",
+        "text_sha256": "e1ddf51e8c6378e54054116d97066bcb9036326060dcd7400837588f97ff9a2e",
+        "tokens": 59
+      },
+      {
+        "characters": 414,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "INDY",
+        "record_sha256": "0284edd69c889eae1c3006b65693ea0bdc2120347a40367bc16f5ceac3566035",
+        "text_sha256": "5d5af3ae2f58b6951cadb14f2a3446c1381030222a30e48d2f8efd6afac83b5b",
+        "tokens": 108
+      },
+      {
+        "characters": 135,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "INDY",
+        "record_sha256": "59dab859722894bbd3f35fa9b00a7c331e979c974c45b5e92aa8a40376b035c8",
+        "text_sha256": "6ea15ae5f489270f4f6ef4c60e9589387a1f11d45f29aad73cabcd6110270fb4",
+        "tokens": 32
+      },
+      {
+        "characters": 21,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "INDY",
+        "record_sha256": "180b099a3e67b386333a45b929feb1e664976311051e16cf6942721f2d59ec15",
+        "text_sha256": "00a7baced5c26570e381f1c812197948d95a9c2c60034646f51fb36992eb0279",
+        "tokens": 8
+      },
+      {
+        "characters": 19,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "INDY",
+        "record_sha256": "2e2a5b58c53cb50832fb6d0ac0399976c6edd7070a057effe1d853b161478c10",
+        "text_sha256": "7132ad4b6928d770fbe7596f5832230fdc2e369f3ba98c9c798bf6cf8b05ee5d",
+        "tokens": 10
+      },
+      {
+        "characters": 106,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "INDY",
+        "record_sha256": "245071c7911551a2f87bdc15bb6750d11c782adaa6f1cc86da69cbbfc82ec020",
+        "text_sha256": "8befd2d4e50ea6c21ead839cb095f196194b2e35bd82aec1c3e05ca02662c72e",
+        "tokens": 29
+      },
+      {
+        "characters": 117,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "INDY",
+        "record_sha256": "e45ecffc11580682b2a73c79976c4bbf54794072fdaa3d0522ed15a1878fa31e",
+        "text_sha256": "0b6745d0ae8399e7589dabfea1f9d4fb9094ff876576870975e0cdcba9a0740b",
+        "tokens": 31
+      },
+      {
+        "characters": 46,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "INDY",
+        "record_sha256": "2bedb6696471fddba1e90f409c8004b7206348402f3f8060c1362bb3488f6d9e",
+        "text_sha256": "148bcbf1bf9b5ab64cb20344985116a726ab8a35fa343e85599ffe5a89e4fc05",
+        "tokens": 14
+      },
+      {
+        "characters": 56,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "INDY",
+        "record_sha256": "f96144c109eab612915c8d230a77eb3df8e605246ffcf74cc0656ad9661a8327",
+        "text_sha256": "d9089268ec9605d1448ef4f2884bf6019a086cedef360eb692447a5236818a7b",
+        "tokens": 13
+      },
+      {
+        "characters": 227,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "INDY",
+        "record_sha256": "31a5b76876e5e29712852578354ef91385b8a6c7ed6d1ee382150b53c9361309",
+        "text_sha256": "7f51f9830ce7ecc007ec1c885f8c74b75a6b687209e791c5f3dfe6e65aa90b35",
+        "tokens": 53
+      },
+      {
+        "characters": 2479,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "INDY",
+        "record_sha256": "22e8eb91b30881cb7355f7efc186de26064b253574eced5a4e409b4ea426953a",
+        "text_sha256": "71650041304ee571a54a920f3b541122b96be44e0b875f1bbd765ea136a2fd79",
+        "tokens": 718
+      },
+      {
+        "characters": 426,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "IS",
+        "record_sha256": "c1303a0ac1a893c91ec846e940276356345379dae06b052446dabbdc28e013ac",
+        "text_sha256": "d441b401d4565340518e9f2769dc49e1ce824b960d107937d8c9e00cc1a70930",
+        "tokens": 119
+      },
+      {
+        "characters": 90,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "IS",
+        "record_sha256": "8d49dcbc119ea72e8c486cc5adccf9fd141eab97f01631d81e2e8edb3dd0532c",
+        "text_sha256": "6e2570e6c905d0b456f6919d106cb697f0753a3d4db224e55c042d2719f5e46c",
+        "tokens": 27
+      },
+      {
+        "characters": 347,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "IS",
+        "record_sha256": "ae0eee0c918b8b88835554d31d9473ad04465a3866e48dba7b1e0fab51d2c4a4",
+        "text_sha256": "5d1bd310375410d2c4f5a7446d8daaf51fec9c8e2a27f13bfbf693872ee5ae42",
+        "tokens": 112
+      },
+      {
+        "characters": 17,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "IS",
+        "record_sha256": "0c3290e162d644cac4862c52e264345b6bfd18f68c3648b35e1dfae4707295b8",
+        "text_sha256": "4e70f4ebcdce70c19c6cb615368ac903f4cf49b10c9614cf47e28f9201a607cd",
+        "tokens": 7
+      },
+      {
+        "characters": 1059,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "IS",
+        "record_sha256": "ec6d6012483e8939093d15c57bbd13483c3bd5f4d6d6c20525c3b855bf254c7b",
+        "text_sha256": "eb96b386dfa497f9e006a0f679d3bfac02ad5a23985f97377ff83a8a3b0dedac",
+        "tokens": 307
+      },
+      {
+        "characters": 68,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "IS",
+        "record_sha256": "f2395c4ec71142fb7c05c78da746dc0c56cd4300611e025012f33244ec06a5b0",
+        "text_sha256": "8a8b3d76ed84a887470b9d15049be115b5dac71ecc5b018b293a462b026466ee",
+        "tokens": 15
+      },
+      {
+        "characters": 398,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "IS",
+        "record_sha256": "4e7e132424b60665cfc0cdddd1627e0c08b7ee4a96522039c3e2717176141d3f",
+        "text_sha256": "c4a1caf2f3a8f49ce99b43df5743960f366afdc4cd50d058eb9db3558b240bd6",
+        "tokens": 96
+      },
+      {
+        "characters": 76,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "IS",
+        "record_sha256": "0a2ef9e4e86076ee9140ca871d56e930c4d8f4da11c9b3b9e5546c346268915a",
+        "text_sha256": "c7ce938446dbdb6d1660443484fedc166832f880932760203c521fb2790cdfbf",
+        "tokens": 20
+      },
+      {
+        "characters": 99,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "IS",
+        "record_sha256": "ab119a712c4db8888a86ff25c9b5bef5a13a9cdc406ef17af4367b5e717a046e",
+        "text_sha256": "7a78ade7923e31e397829e8f619faf9a31215e843468a75b0b6eebbee0f2a7b8",
+        "tokens": 23
+      },
+      {
+        "characters": 156,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "IS",
+        "record_sha256": "d07ba30186d2804ed26b26e25969255cd1a48b0d3bc50b71b5b167713f15e4cd",
+        "text_sha256": "6c04c0378b6270bfa1b976e9acdc68c763d7b778671cf8a46a0a0a26f1e02dd8",
+        "tokens": 41
+      },
+      {
+        "characters": 167,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "IS",
+        "record_sha256": "3fe66c98347f29e6bb2b5083a7735d46687811038de8e6e304ff1263772f981c",
+        "text_sha256": "b410f5f31313f0b69ef9ffadb2d5420f36879847286e6017e254f17a68b107c9",
+        "tokens": 43
+      },
+      {
+        "characters": 578,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "IS",
+        "record_sha256": "3d206f8243999951230577e892fe15515388834ff612331e247237143361c501",
+        "text_sha256": "f26be8fbbce82754c0e033dca62c79ae110f5043e32e5f4859cdc1ed3a41d3bd",
+        "tokens": 143
+      },
+      {
+        "characters": 144,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "STL",
+        "record_sha256": "ce153073eb667ea14ebe3f580280de26fb641ab6ec3245c04d4ce067991db501",
+        "text_sha256": "735e2ac2eb21528f909b16f03fb6558350db3c72efdc1cedc83721bac157de3a",
+        "tokens": 47
+      },
+      {
+        "characters": 325,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "STL",
+        "record_sha256": "777b4265c1783fd93bab858efa5cd0b1b4e1039456b143236c8c2193c79c16eb",
+        "text_sha256": "a3c2c4f01b6b4febe0dd9f8aa1ee76fdc92e8000bafc9d54171fa8e869ad7a59",
+        "tokens": 68
+      },
+      {
+        "characters": 188,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "STL",
+        "record_sha256": "1f93bce169987646cdeef01f08cb054f8136f3e6cdafcccef63d21724dbde9bd",
+        "text_sha256": "82a4b18070b4fdba31468de826a96c56ee399afffba9da73eeb4c3a5135f1d36",
+        "tokens": 46
+      },
+      {
+        "characters": 281,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "STL",
+        "record_sha256": "3c52b97193990c54007964714624df98fb4715fbcb0e5f9dda3f8b3050680762",
+        "text_sha256": "d3c728515be3ee37ef54243e2a9d97b1d8db66743d38cf1fa11abf62cd399923",
+        "tokens": 60
+      },
+      {
+        "characters": 61,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "STL",
+        "record_sha256": "44f57792c81f53acf317979eba10001f7714319b3df360d8c1d0ba0bc6943fb8",
+        "text_sha256": "736e0d77a997cbedcf873ce79daac39f748570ecba4342e15ac8e3cd267a0c61",
+        "tokens": 15
+      },
+      {
+        "characters": 173,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "STL",
+        "record_sha256": "f7317db94c01163d6229f0995a7e4cfc3ef5fd1a201352f1bc1c4a184cf95406",
+        "text_sha256": "ad3a74d380a78332678234dcacd6b9bac42653aeaf7b0898c957147a6f834631",
+        "tokens": 37
+      },
+      {
+        "characters": 46,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "STL",
+        "record_sha256": "8336659c2b5644b40dfb3aae01322c5352327b560177e8dc67862c590c4fb233",
+        "text_sha256": "1b1801d3713d0b4beb3beb274e0240daf6dcf70d138fa5461f42bc58b225ca43",
+        "tokens": 11
+      },
+      {
+        "characters": 75,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "STL",
+        "record_sha256": "921188dc715dbd4798f71122cdb1ab19c8d60af96e9ec04d729c695d02a68bd6",
+        "text_sha256": "2f146915c3c3433730ddc93a1afe3855fa7630db5a8fc03c69b96465792b0085",
+        "tokens": 20
+      },
+      {
+        "characters": 47,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "STL",
+        "record_sha256": "1fd935c7757759424775ee70512c9878f55b2938ba0cba997b15ade518586108",
+        "text_sha256": "dd9e779c902c53392992086d4c78550ab55e6b3ceb6608b8f92e4d7969615fce",
+        "tokens": 17
+      },
+      {
+        "characters": 16,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "STL",
+        "record_sha256": "61017aeb6ad03aa5daf61cd9b000e85c4f95e5cd75d8a649109c5055eadae51b",
+        "text_sha256": "627656793d20969c5aa68d41cb8052983b5dc2dc29ccf2d9fe45cba2bc5be515",
+        "tokens": 8
+      },
+      {
+        "characters": 309,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "STL",
+        "record_sha256": "5b9dfa4ef3ddcad590bf3e0de0f85f2a407bfc94b828b3798db165808b385a37",
+        "text_sha256": "19caa17037f3b165feb001a3379a3bcbad2068657119281a883cf5613e65f31c",
+        "tokens": 86
+      },
+      {
+        "characters": 81,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "STL",
+        "record_sha256": "b8e919b2e8b744b2ec28e1398c9de6c88cb470f8c06c9bcc6ea88c173227471b",
+        "text_sha256": "1aa75b97ffc22b78face3c378475e7bfbd84cfca8c0505267e328e36d49c337d",
+        "tokens": 18
+      },
+      {
+        "characters": 206,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DM",
+        "record_sha256": "14b2504ad22bb6ae540a750ae1b779916327c6c9befe50cf6317ff5f4f6245d2",
+        "text_sha256": "94bc48f2ffb203e9c048232b79bc60dd41882fd91c1cbdd013e4a3eedd036e8e",
+        "tokens": 53
+      },
+      {
+        "characters": 533,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DM",
+        "record_sha256": "c4de41853f6cb84855cf79dc504e050d5ee1733914931d1a7cc21416e9535516",
+        "text_sha256": "07daeb1a00ea9c02dd0f1aac0043959f0db1fe0d34d0ef761af73935c0d68ed7",
+        "tokens": 140
+      },
+      {
+        "characters": 235,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "DM",
+        "record_sha256": "5f4689295eb077af0bf419e24c8c3d065063fe66f8f0c438f49c0d5d9dc9d818",
+        "text_sha256": "e60043cf42214af588ccc4b8ea85418c98b6ebb295458e1a7c1066ccdedec9e3",
+        "tokens": 69
+      },
+      {
+        "characters": 251,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "DM",
+        "record_sha256": "2da4a38afd84414f75c9601979222536687060a42b213cbc8fc48829c7096da5",
+        "text_sha256": "195296fbe6c2dd2a6b59d824fbc56434a75ca65a209363a980187ac2e6fc5084",
+        "tokens": 56
+      },
+      {
+        "characters": 231,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DM",
+        "record_sha256": "42dbf562178d376e08ed33379652c336932d9778ba9091eac06ea910cd5a6ea5",
+        "text_sha256": "38c5dc1dbd31fcfdfb645ff549ecff412d1d774b9cd7bd79f37956f9f20f2e15",
+        "tokens": 58
+      },
+      {
+        "characters": 453,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DM",
+        "record_sha256": "6264af7245da014adceb3933da3b744d721e197a1ddbb7789dae9c2520bc6cde",
+        "text_sha256": "e24362832bab4c10c8f01c17defbfb0fa63b1ffaa5edb6f5693bff4b6337c747",
+        "tokens": 103
+      },
+      {
+        "characters": 36,
+        "mapped_purpose": null,
+        "native_type": "Milestone",
+        "project": "DM",
+        "record_sha256": "bf392d6781e11453e615c972ca45e93ef09ea15d196b27ad66a9f85165c02e3c",
+        "text_sha256": "ab0d2faf243bd71e243ec9f68634a3c648e8ebc6a54bee22d424e5dbd8c239bc",
+        "tokens": 14
+      },
+      {
+        "characters": 178,
+        "mapped_purpose": null,
+        "native_type": "Milestone",
+        "project": "DM",
+        "record_sha256": "7a1d8790946c491acc1ceb0da30180be2b8b46f74d417ec7eb11db9a1992d608",
+        "text_sha256": "e967236c3f22a390633624a98ccc10e43ab90c291f9c4278331344f5c6a15ea9",
+        "tokens": 54
+      },
+      {
+        "characters": 1602,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DM",
+        "record_sha256": "c75a8a606c3f07e7e937bb5e7da6c9f2bc84ac4118435cd06d4ac68553d110f3",
+        "text_sha256": "d8e619990e065dbf8710854e106be66ff5a3ed0faaa79c153d4c41ef3917841d",
+        "tokens": 627
+      },
+      {
+        "characters": 411,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DM",
+        "record_sha256": "0a60cdc89833d990361d057093f8ef4200d81fe9e472bce711604cd1e9c8ef53",
+        "text_sha256": "e1e4e06eb94f9daf5b429eb6ecee06eb6b9000ab913fdb3296eefea39fd77e51",
+        "tokens": 89
+      },
+      {
+        "characters": 352,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "DM",
+        "record_sha256": "dc39cc978b0b9a10ded8d0205978db9faafd4882ad0e112296c25e92a6b82c4c",
+        "text_sha256": "f4dc3f7b27c87bb653a3787c03c159b0c6a1edaafde0dd1289591bc1146f9084",
+        "tokens": 70
+      },
+      {
+        "characters": 136,
+        "mapped_purpose": null,
+        "native_type": "Technical task",
+        "project": "DM",
+        "record_sha256": "4436b330979f648ad78a25d7c10f70df8ad680f0c255559c07340e49e96d856f",
+        "text_sha256": "e0730082f98929871a4c8497f393f042a6382c72b3f271ad57e337dc7f46d183",
+        "tokens": 49
+      },
+      {
+        "characters": 233,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DURACLOUD",
+        "record_sha256": "9a83f01fb189dbcc24f734e58f335fe805d0b7c4e9e29a9c4076c71bae536d5f",
+        "text_sha256": "0e5af04b7f07653b9fc8213bfb0e079078199a84873c8be3fc3183ec9387a2f5",
+        "tokens": 55
+      },
+      {
+        "characters": 467,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DURACLOUD",
+        "record_sha256": "418b08de0dbac956d5b7cecfbe23cc3856eaf71912b8c3a46e0d5a50693f5270",
+        "text_sha256": "8d527fab76b848be02c83e8b84099a8edfd5a6862ac0ccf44b6f07708cee8705",
+        "tokens": 122
+      },
+      {
+        "characters": 231,
+        "mapped_purpose": "documentation",
+        "native_type": "Documentation",
+        "project": "DURACLOUD",
+        "record_sha256": "7466611a37536afbbae47393c7c50ad6f58003bf6ba4deb9689436bf6f5ba739",
+        "text_sha256": "2455d4531a69a339951e434a2b585f738d6a757b6a25cbfc52a4260508b8e883",
+        "tokens": 53
+      },
+      {
+        "characters": 616,
+        "mapped_purpose": "documentation",
+        "native_type": "Documentation",
+        "project": "DURACLOUD",
+        "record_sha256": "49fd865fcf8494ee1ea8390684a9f50c8e890948d1f2a600cc10c52eafd630c3",
+        "text_sha256": "2a3f49a0fda232194b64d88cb6108da907a829dadbff6014870ce10826f61540",
+        "tokens": 164
+      },
+      {
+        "characters": 142,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DURACLOUD",
+        "record_sha256": "39d6d643b3054f64b22d7231ab23d50215e9a9ab31655a07615c4c7f667579b0",
+        "text_sha256": "ab75697c20868aacc6c8bec118db1bdcc283bcc8b1fc10d84e541a288bf026f8",
+        "tokens": 33
+      },
+      {
+        "characters": 325,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DURACLOUD",
+        "record_sha256": "b4b44741986690ec7c76d6d9da7e1df97cca11a7b7baa68ff88023fca8085090",
+        "text_sha256": "3ae76779ec7e38cbb62809135da75aef526702968ae3c066792c879021a8e62f",
+        "tokens": 75
+      },
+      {
+        "characters": 478,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "DURACLOUD",
+        "record_sha256": "962f91b20a480fbc6d1fe988aba524eaacb5c850e149e53fb4e177505c99767e",
+        "text_sha256": "ac52053306a269171b1380c163a274a3427ef0bd55d72f149ac9a288750bf698",
+        "tokens": 123
+      },
+      {
+        "characters": 324,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "DURACLOUD",
+        "record_sha256": "4b32e385df2420f49a7925c25bf3e474e68bf389dc9801f9c41ddd10bce982f5",
+        "text_sha256": "7b7c653aabf56e272f72d537745fc07edb073e95abb24cb2dd9c5286139e7560",
+        "tokens": 68
+      },
+      {
+        "characters": 72,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "COMPASS",
+        "record_sha256": "caf739ca7ed267db09c26940d810bef230f7219b0e26d3f07f196dd5d917cd68",
+        "text_sha256": "eb32b44b124f702b01bed9b08c444bb7ee78f46c596bc26dd7c6360104d1b648",
+        "tokens": 18
+      },
+      {
+        "characters": 893,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "COMPASS",
+        "record_sha256": "f7c50b7fee53a2923f979066f7e235ba223fa056670b18ede76c7743371c0a43",
+        "text_sha256": "a5c5e91f269286b573eb40c9e58ee1c445110fd9572ed69fd03747c664ab3e5f",
+        "tokens": 212
+      },
+      {
+        "characters": 719,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "COMPASS",
+        "record_sha256": "c84d159d3948cc9ef88c43ebb249c9b9fa060610f27ef56dfde2e4d2c9d09bb3",
+        "text_sha256": "198323ad3c2ea37893bc9eadb6fbacbb721f7ed5fc3e61f218ed2272947840b5",
+        "tokens": 164
+      },
+      {
+        "characters": 49,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "COMPASS",
+        "record_sha256": "64bce106c3cd2e20f4d37af02537e7f67216f182b6d75841a6f0d6ea02ab6734",
+        "text_sha256": "329db79cea01b9ecd5dc84903e26e31c87437ccf70e1ab93fc88834ef738eb10",
+        "tokens": 15
+      },
+      {
+        "characters": 719,
+        "mapped_purpose": "research_evaluation",
+        "native_type": "Investigation",
+        "project": "COMPASS",
+        "record_sha256": "fc93f6689fce019e2039531a30959fbc42c2d8d150242415ca93bdb8adece594",
+        "text_sha256": "2209abd5d0db985818300cd21cd49de42144b512180b4af0837f0620de9664cb",
+        "tokens": 175
+      },
+      {
+        "characters": 187,
+        "mapped_purpose": "research_evaluation",
+        "native_type": "Investigation",
+        "project": "COMPASS",
+        "record_sha256": "2818c49edbe2995b950b2ff2438dcc9d05afcf23df997ff846cf351d4000c13e",
+        "text_sha256": "3417b25158d1eba8e08e6bff2b90e1934cffd6003f076d023a3f7eed6e11f269",
+        "tokens": 49
+      },
+      {
+        "characters": 370,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "COMPASS",
+        "record_sha256": "64ed475926e846e68f71a42070a50290939de652d777419894d33561d72e4874",
+        "text_sha256": "8da2d8f5b777b1b8da699850b650d04ead4ef5dc15bb3976ebe554d028d61656",
+        "tokens": 76
+      },
+      {
+        "characters": 404,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "COMPASS",
+        "record_sha256": "05bffa8ffdcf8bafc8b29df766dd096bb827a692739cdbfaafa1c500eb5502af",
+        "text_sha256": "7e59c3bf945e3f5c300b31d986685e44e35280828323fd4629a2acebcb9ccf3b",
+        "tokens": 96
+      },
+      {
+        "characters": 28,
+        "mapped_purpose": null,
+        "native_type": "Release",
+        "project": "COMPASS",
+        "record_sha256": "c60a1fa12ade5c79dc93067d68ba3e4f0a40d94fe955ba0f455970e8ae273af9",
+        "text_sha256": "c4f8c92c56a34a0a0d2e82e2806f1f77212a76d888dd4434166e846edf3b7b1c",
+        "tokens": 12
+      },
+      {
+        "characters": 157,
+        "mapped_purpose": null,
+        "native_type": "Release",
+        "project": "COMPASS",
+        "record_sha256": "b918d76edce2a6d705166c8712a86ebfb155344fc5acd29864bce36906f56fc9",
+        "text_sha256": "5dae052f9ec6cbf5893de0ca15ad9cc7a9ea4384527e94c645a6cf608afd60ea",
+        "tokens": 44
+      },
+      {
+        "characters": 674,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "COMPASS",
+        "record_sha256": "32852f3d10199a1e95a558454ea0667598d85a98e7ac11913f0246b8747d119a",
+        "text_sha256": "0d14799eb6f0ee4e311edd0961d7ce8154e8e6a6bd48fd89089ac7f4f1cfeb51",
+        "tokens": 152
+      },
+      {
+        "characters": 519,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "COMPASS",
+        "record_sha256": "44098c7327f3e7b3145b74a25e4116b2cc5c0a6eb444b9731330757a01f69123",
+        "text_sha256": "49cd61c073ae74b30f0ebb9e3413226ba85c91ab3d243042c887e7d9146b983f",
+        "tokens": 126
+      },
+      {
+        "characters": 260,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "COMPASS",
+        "record_sha256": "e27c064e0ae7d4f9e958f3d6e388e05451b4f529d4b3cee940218202326e9dd0",
+        "text_sha256": "b5c538c98b763c029acebc2eaa29b710c4403a65d6ee4f05d142b62422a3c297",
+        "tokens": 62
+      },
+      {
+        "characters": 204,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "COMPASS",
+        "record_sha256": "9d65a0afad6c43fc676579403cc9875b8dc9262c285b3cc19d8641ca0215194b",
+        "text_sha256": "85b8b2b87ab415eb384b77521e2a6ca66a781a33403a973085148036ce4fbf27",
+        "tokens": 55
+      },
+      {
+        "characters": 162,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "COMPASS",
+        "record_sha256": "f92afbe5412c2918480d3b73961101cf0098b84f564219c8b23a19de89cf9cc4",
+        "text_sha256": "4a98788367755aba0e75f281a908283bb465bf5ba479be7835fff2c8bb7c19d9",
+        "tokens": 56
+      },
+      {
+        "characters": 843,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "COMPASS",
+        "record_sha256": "dcf0609e1c00ac3ab8f6d0bc10dcd9559b7e2d77b646235d0b3a45f170a3f850",
+        "text_sha256": "cde8ccd5a8838f9344fe0cba69316fc65e645918fe1cd0af66e3281af8cb064c",
+        "tokens": 168
+      },
+      {
+        "characters": 503,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CXX",
+        "record_sha256": "b75a5313e3544d4879e46b111a120236f887734a08d0aca54da8c070654df189",
+        "text_sha256": "9a5b375a2e6fed8df7fb3326521e70e470c5b8950966376508c392fb20864570",
+        "tokens": 109
+      },
+      {
+        "characters": 475,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "CXX",
+        "record_sha256": "9588aad143f46707c79242afeac6a4f3a61bb4c28356272f163fc1ec639bf7c0",
+        "text_sha256": "78d61e1f8b28b272709b28bdcc6db3f808d6b37801e9d1f6d76c2d02c1d75f7d",
+        "tokens": 120
+      },
+      {
+        "characters": 313,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "CXX",
+        "record_sha256": "1e901d41d4adf393476f9ee90ad40affbba82a90cf6f50980e059aa45670834e",
+        "text_sha256": "82cad4837b7f096ebbacbf1e458c06303d34726774669d4be6e823ca5d3aa58f",
+        "tokens": 96
+      },
+      {
+        "characters": 111,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "CXX",
+        "record_sha256": "4a06239889db8f72b67fc277880a05373567da7ee92c318ae39de3a3a8d46c8e",
+        "text_sha256": "028880bed7926d7d1e1c4da62cd5bc024cba2ffa6339c3ea4eb6291e81b40b6a",
+        "tokens": 35
+      },
+      {
+        "characters": 492,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "CXX",
+        "record_sha256": "6ee53cc56c1d4dd0aa167652f7d85ce7fa411d8b996ce54483bdc69da1e2d03a",
+        "text_sha256": "b195e40ef9244001d7abc2229cd3d66b68a10adb46be2e03e09610b57d8e9414",
+        "tokens": 116
+      },
+      {
+        "characters": 461,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "CXX",
+        "record_sha256": "41fb1c2d6094ea35dc033a31420fec83f8ed81d1166c20019ccbee616aea1e40",
+        "text_sha256": "b3d0b704a2108ee0e23ed8c0faa8703e89c8c6bb9dcbec9ff399b2bbc64d9892",
+        "tokens": 168
+      },
+      {
+        "characters": 716,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "CXX",
+        "record_sha256": "7d1df7637a0316a73c61bf830da8ad9789757d26c4329a9a88356ecc01a596a3",
+        "text_sha256": "e7a979053571844c2880638c4bc0985b7352a73e425cefc54f84cb45c04374bd",
+        "tokens": 174
+      },
+      {
+        "characters": 69,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "CXX",
+        "record_sha256": "2cd7c0c8c081ed43a03e67f7a99853a010485bc365d81d8726869dddb243a780",
+        "text_sha256": "2725e32b431fae85170751f60202128e08eb31627f3441a7963d744d2bd9fc73",
+        "tokens": 23
+      },
+      {
+        "characters": 624,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "CXX",
+        "record_sha256": "65e56860c966b2845a5119c8112339f76d8d566c87f333e7c032114eeef0e2e3",
+        "text_sha256": "1ca3d29b2e24b5998103bda823b719c83998b58c5f67b5c68a30056a4fff84b4",
+        "tokens": 146
+      },
+      {
+        "characters": 826,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "CXX",
+        "record_sha256": "898eb423d1c198874364a10b3a817658c88b0f4bdecbba374e7685cb2513ce89",
+        "text_sha256": "81ce0a84566ced5621af5540d449ffa15816821fdb3862c44984c4dadf0c7a87",
+        "tokens": 197
+      },
+      {
+        "characters": 524,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CXX",
+        "record_sha256": "e65502ec983edf280a70bdeb1dc60bec253f36b9b73a9879875c127924e98a19",
+        "text_sha256": "c6098450cdbf87fb41e3c52d54009facf2cda0ec5f70754b73b8ee2b2e7efe94",
+        "tokens": 130
+      },
+      {
+        "characters": 28,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "CXX",
+        "record_sha256": "f278dc24eebb7df3222e13969eaa2e78fba4522b9390705daf12734c55c56126",
+        "text_sha256": "8479bc2f50957d10fa6e52e68e582293c223204b2c0f0cc41288b6068f964527",
+        "tokens": 11
+      },
+      {
+        "characters": 55,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "CXX",
+        "record_sha256": "3da8f53b9821907479f15423dbe6baf6263c785d52650c755b15b87b721a48d7",
+        "text_sha256": "72f910904f7cbcc3defed1b09552071e3f724cb3e7a99eb06f56779941c35e7a",
+        "tokens": 19
+      },
+      {
+        "characters": 213,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "CXX",
+        "record_sha256": "9176456069b3b4c2c741119c9f95c9a7ea0a86b9f9fbf0d9dc6a55184959ec5b",
+        "text_sha256": "2fe2854013c1571eef069fb01db3cd4c8ce276869778932ce4b31f25cc974ef4",
+        "tokens": 52
+      },
+      {
+        "characters": 84,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JAVA",
+        "record_sha256": "6f498bd45c9c340813a2f7ae83e369bc8db973b31abebafd5561e52b885f9538",
+        "text_sha256": "6d6b75a6c8d0dbd48cf11b591d293c5e187b0a494e6a500b97af7ecd7e9b3fcc",
+        "tokens": 20
+      },
+      {
+        "characters": 759,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JAVA",
+        "record_sha256": "c4986bacd77311150dd58ab7cdbd508ba59020c3256c7e217636ac9a2a783ffc",
+        "text_sha256": "85f8a298f639ca383e803ed6e2d77ec7a346d6441ca3e3682cf054a8a341f1b0",
+        "tokens": 185
+      },
+      {
+        "characters": 128,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "JAVA",
+        "record_sha256": "a31d5c7f63f9c0ae084c3cf10bfbed70119ba77f594e633dbd3103960b14d803",
+        "text_sha256": "0efb52cf138b265c4e9faf83c4c05c99cf4d4f0d38adf1c8082305d56f36dc0c",
+        "tokens": 36
+      },
+      {
+        "characters": 21,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "JAVA",
+        "record_sha256": "72643a4f1558b03ff540b871deb7f0bd158d419ed90e5aa0997417393ff35aaa",
+        "text_sha256": "65082f9c8dc26be02f43e2c8b12bd67c76a96d6c2af393cbedcc9873aecd8ac3",
+        "tokens": 10
+      },
+      {
+        "characters": 449,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "JAVA",
+        "record_sha256": "8ee32cb8b277937945e7bda931b08d9cca6d9e7cf9af768c6c2b6a9b92b0a9b3",
+        "text_sha256": "056c55a776ab93de3edeeec1b4d56b83b78c9663762a41297ef53b84512c6900",
+        "tokens": 97
+      },
+      {
+        "characters": 597,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "JAVA",
+        "record_sha256": "b4cd7ebd37d1a96f8d31b4746d29619eca076306beb730bb551f5d62bebc6b0b",
+        "text_sha256": "b81e409a86049e93d5b3cdb70068f4c5a9990cc3f2a029a304933d86d58655dd",
+        "tokens": 162
+      },
+      {
+        "characters": 672,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "JAVA",
+        "record_sha256": "68d6dfdfb34a3f2e05ec37e91482e07dc45fe82708cb60ae54d3aa8124db266e",
+        "text_sha256": "09415d771c0c677c721e51bc3ec079805ed0dbef899921cdad7bb9fb1cea768d",
+        "tokens": 180
+      },
+      {
+        "characters": 75,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "JAVA",
+        "record_sha256": "7af0d61f8fb614c28921db25199186e46f374cf0a03d9a58e83e88b48f6801ff",
+        "text_sha256": "8a61da3c64b2e595a5c18244c04afcf8672e8ae4e4773c28d6677da4de16222a",
+        "tokens": 24
+      },
+      {
+        "characters": 15,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "JAVA",
+        "record_sha256": "5435c3cd83b77472812a2f079df44e21a81014b6b09d40ff9a5e7ea730bc035e",
+        "text_sha256": "c3761c0baa39c64bc3f05375552f18bcbabcf0a2933a4812aaf78574565eb3b4",
+        "tokens": 7
+      },
+      {
+        "characters": 78,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "JAVA",
+        "record_sha256": "90df82c2504010cdb17da0e31924c9506f195f1d172baeee241e38d79555aa51",
+        "text_sha256": "64676a97995f864b530a0e559cb02b586b093da87e2011cba90dd2ab9567687e",
+        "tokens": 25
+      },
+      {
+        "characters": 98,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "JAVA",
+        "record_sha256": "26d0f43842c44da55afabbbc8a3d8b1670e6b727c724a281bc20a52147a10628",
+        "text_sha256": "a05153312336412b567e593b3c0b33f0439ff4df1f299fa1de801145c9b9a683",
+        "tokens": 28
+      },
+      {
+        "characters": 235,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "JAVA",
+        "record_sha256": "b0c2fbb014182cded08c3bbf2e2e6981be191cc2b7d03eb5e3eef2d7e06be241",
+        "text_sha256": "f1bd91afecdba05d59915d479a5868a2b7c48120aa9581c4f56a7c05c5892752",
+        "tokens": 54
+      },
+      {
+        "characters": 53,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "JAVA",
+        "record_sha256": "6660bab1f939bd684a7d0089f331eea5f5969606b8bc42780044e50ee7600330",
+        "text_sha256": "5472949dce31a43f95a97e638278d3689e1666227931fd1c0d64ef8909cde7cd",
+        "tokens": 13
+      },
+      {
+        "characters": 188,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "SERVER",
+        "record_sha256": "e1bad6ba25628fc60cb12e4cf4c18379fec3e60b53cbad0dafe8434f61facfc8",
+        "text_sha256": "f207379e81269e6ca783fad6aa0ff7ac74cd69b968e94b3ceb42858ffdc40c3a",
+        "tokens": 43
+      },
+      {
+        "characters": 1129,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "SERVER",
+        "record_sha256": "c5cd57c472e57d81676376affeed7689659ee9ea16b17bca0f23043c90af79ec",
+        "text_sha256": "4e8cdb6e0d055129fb004036367dfb665a7224e63c9273bb17b446c10562fc24",
+        "tokens": 295
+      },
+      {
+        "characters": 148,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "SERVER",
+        "record_sha256": "421d945904b1e8dbc7ffb663afee51138979d86b9b88d86513269f1bb23df416",
+        "text_sha256": "555bc07a368d2837386672345f698787bbbe4e859d4eb7b68e429b4e39b4456e",
+        "tokens": 32
+      },
+      {
+        "characters": 1447,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "SERVER",
+        "record_sha256": "e74a50f3074e2948d7b0d81b32f5429e3a74b48d2a6d12ee1bc963c9f825073a",
+        "text_sha256": "1f59547c95de046ab7d0f295dae90d0523ba658a0b50f991965ed2433ad900af",
+        "tokens": 315
+      },
+      {
+        "characters": 1034,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "SERVER",
+        "record_sha256": "d325f2417133e171b25655e448fa0748687c7250cd5d8e14bb4290d2ee23229e",
+        "text_sha256": "3f93adfb5ffa2960de46d643db9072ed95d0112acc1d85e70328729e123832d3",
+        "tokens": 253
+      },
+      {
+        "characters": 543,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "SERVER",
+        "record_sha256": "e7085f724d8532f9ec36ca13ccfc65cd9034a5ef803f9b5e02db094ba260d194",
+        "text_sha256": "2e315d160ec5ca200656877e9eaca4e218901421a8e944cb6722091a962059a3",
+        "tokens": 162
+      },
+      {
+        "characters": 386,
+        "mapped_purpose": null,
+        "native_type": "Question",
+        "project": "SERVER",
+        "record_sha256": "cdd1989159222aaba648724f551e49b467c84a0102b01cd441d2b3a2ab8d0715",
+        "text_sha256": "f68d935d064a514eebb6b59607980d9ee3af59dad6ef576aedd6624f45298b7b",
+        "tokens": 95
+      },
+      {
+        "characters": 185,
+        "mapped_purpose": null,
+        "native_type": "Question",
+        "project": "SERVER",
+        "record_sha256": "ca2b14a0e5d64221d954075b62607bcef1cdddb44023e1eb2c9330495a48d537",
+        "text_sha256": "304eeff44ec91c815162afa36b319e30ec22b2b7110e07806848d847259aaf01",
+        "tokens": 45
+      },
+      {
+        "characters": 195,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "SERVER",
+        "record_sha256": "b76fd15bc9b588700396f1c146beba5d3e84e9feaf96d122571688d34b462cfb",
+        "text_sha256": "2172db6be0f214a4b255dc5cf4682ef9efa8dbc3d5be55333d1edf018fc7cd38",
+        "tokens": 51
+      },
+      {
+        "characters": 155,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "SERVER",
+        "record_sha256": "03d48acfda58f5290596564942cd7b6af16e09e3417d2dbf3ef0662be610dc22",
+        "text_sha256": "55ddbe45a379e81bb1eb78ab5361a0150027bb23055833a111783ea65f3ec053",
+        "tokens": 33
+      },
+      {
+        "characters": 143,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "d9e25917bce00bcdd6043064f2e2edd2325514a0a886e3f02350af8821de6eae",
+        "text_sha256": "b330b3e34051117c3308b4f6e1ee47677e08f963d10557bff2071cd638e33cb1",
+        "tokens": 32
+      },
+      {
+        "characters": 447,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MDL",
+        "record_sha256": "b29fce0e5a62ecaf9717ebfefbc05f50999748998634ddcc67c6a63c9a07e51c",
+        "text_sha256": "55f21567d6b2864d9f973241dbc7a2bb9fecfe91eeb21fc768768f98f28b1b9d",
+        "tokens": 107
+      },
+      {
+        "characters": 113,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MDL",
+        "record_sha256": "f2643f1fdf2e88114519264457a762a59b794fd304ecbaa804b6e531a5beae0f",
+        "text_sha256": "0d7b63c18949ada6e1bd8b9b67aedd632d82db74a0b1c89a002ed10cae2d5f26",
+        "tokens": 23
+      },
+      {
+        "characters": 79,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MDL",
+        "record_sha256": "cc74bcc30a50c1530ad2463341275363ff2682370ba9eb1fce3a6ef73ee7bf06",
+        "text_sha256": "850bfc614bac59010147ca2b603fda8c42a1df71d416243508bfacd579dbcf38",
+        "tokens": 22
+      },
+      {
+        "characters": 273,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "MDL",
+        "record_sha256": "fc0de672fe9a1d6c8a94bcfeed234817960ebc5eb1321c371eaed09add842445",
+        "text_sha256": "15f493a5c8eebf8b2406d0654e16da930d178abcc314e0e10cd1809b711eff26",
+        "tokens": 59
+      },
+      {
+        "characters": 391,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "MDL",
+        "record_sha256": "f212feea9085092d74b044f2c1ea1d6581a39d73a5bf499fd759a6463c31faec",
+        "text_sha256": "88142849664fea27703c94646e99d94ac36d49cd3036c68d2e200599bcf8640b",
+        "tokens": 86
+      },
+      {
+        "characters": 404,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "MDL",
+        "record_sha256": "dbb44c23d7998ccf8d18d272ea5a806a2fda7b7c81d9afaffafa676f656961b1",
+        "text_sha256": "750e401292b60d38ad38710d491f1a80080d0c9cd01bade95aa7fc04211f7686",
+        "tokens": 90
+      },
+      {
+        "characters": 171,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "MDL",
+        "record_sha256": "37347082be475ab3afecb85e89a97518879c672bc8edee8d6f24ccee27834ec4",
+        "text_sha256": "f0a2b601b3572c526c82a23fec027d7f067301c26a33574598a1985278506f41",
+        "tokens": 48
+      },
+      {
+        "characters": 130,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "MDL",
+        "record_sha256": "7a1f9e515db15dab39e47755f1aa49c5b1e33dbdb51e01a6831a5b87e5472985",
+        "text_sha256": "31e9b8e7f966ae80d06b62f4441e85fb400a8eb7c725b9f4eb9d17ce021c1aad",
+        "tokens": 31
+      },
+      {
+        "characters": 32,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "MDL",
+        "record_sha256": "685d3fea9361777224718d2e7b2c6b82521c300f5243c45ef81a174f9777ab5a",
+        "text_sha256": "1bcbefad1d0cfb992b824a5f832b5ecf83f4a3d50543755656d488e291acd7ce",
+        "tokens": 10
+      },
+      {
+        "characters": 430,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MDL",
+        "record_sha256": "49cd0c11b2c2fc301811a41462fa916b1287daa8dde9e4bd3fe5d91c37dfeee9",
+        "text_sha256": "36073e0b856a658df637df7fe8abd9899ad127e791beff2831ffb81734d4a139",
+        "tokens": 106
+      },
+      {
+        "characters": 274,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MDL",
+        "record_sha256": "bc2ddd54a5cd6fa2308848e23a95418482ae2a55acc76658df990d38682a508e",
+        "text_sha256": "ab0d57610a4a7e611d75f40f7c62292b7e0b84d2a1cdfc35e0f3a0aad15eea76",
+        "tokens": 63
+      },
+      {
+        "characters": 392,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APIKIT",
+        "record_sha256": "5e4ce1e4abc6a4d188d3ad75b80e5760c8325db4153092bd2a8ea86cfe20f3e4",
+        "text_sha256": "7cb306f29a9f00d62988481f141e9ce707365f9c580b7d10f9d7e784fa0974fa",
+        "tokens": 90
+      },
+      {
+        "characters": 98,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "APIKIT",
+        "record_sha256": "b9c6aff61f6400e849a306148412b96db12e3a82d410e18afd3083f8261f3c9d",
+        "text_sha256": "c49cbdae82efd6c2ca0ea6d1446a5196d4567203a1339b1a75677602f12c253f",
+        "tokens": 29
+      },
+      {
+        "characters": 470,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Enhancement Request",
+        "project": "APIKIT",
+        "record_sha256": "b7a01e5eca878e8d3bb9a5b7093b5d58ac0ebabda20c9fedcafb1c811cbf981b",
+        "text_sha256": "c4205c2ffa3985f28cc48fbb9cb0c4baa02834e98f420163c92aafcff5031e6c",
+        "tokens": 97
+      },
+      {
+        "characters": 186,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Enhancement Request",
+        "project": "APIKIT",
+        "record_sha256": "0782b1993ba8b8c52a6496a79aeea3d2cb7f82ecf0b07333e6a4851e496869a4",
+        "text_sha256": "3d3a92ea3854438a2057f5ce6999591c073116dbc1da62b81a11cf0d5b0e4889",
+        "tokens": 42
+      },
+      {
+        "characters": 148,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "APIKIT",
+        "record_sha256": "82a3fee77eedcf2074fbf66b62746d35cb3a875bddc662bd16099e51d8d6301f",
+        "text_sha256": "53400fb7b9a5a414cc12b6ba00b509990f2d9656e2901b1c7ef17cf18cd814a3",
+        "tokens": 38
+      },
+      {
+        "characters": 49,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "APIKIT",
+        "record_sha256": "bf6b6632fa022cbc7451cd26b2e7f5929b07224d7ed27711e183610b336d2287",
+        "text_sha256": "b7d7050bc77edb0120c2275c5427c5de246409427660c5582aec08dfbd0cf42f",
+        "tokens": 14
+      },
+      {
+        "characters": 140,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "APIKIT",
+        "record_sha256": "94989738d9b6235a5d12c8d901374eaec44e35df689711809e10ae77fea55876",
+        "text_sha256": "b7c875d12208d718f674efdc3909aeb2f11980e1f05537e2efd11564eb838a4f",
+        "tokens": 43
+      },
+      {
+        "characters": 947,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "APIKIT",
+        "record_sha256": "f37b9a081a236cff96673995f88a9dd92d9d36ddd02df63421adf1e5e2b476d8",
+        "text_sha256": "2095d829e6fd0c9e9028709a27dc541ceeb1eb8744a1dfea3b82b4fa3aa380cb",
+        "tokens": 269
+      },
+      {
+        "characters": 207,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "APIKIT",
+        "record_sha256": "9b8be99adb665ca45ad64dba09af954fc20fab77bf770389af56907a58dd0510",
+        "text_sha256": "d53de03cb73e4783966d2ddfd73b9859b3df2e0f39265d80d8af4e5551f86a6f",
+        "tokens": 60
+      },
+      {
+        "characters": 87,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "APIKIT",
+        "record_sha256": "a3c13c170be4bb1bde98a743e7e15a88c85822680199a5c175fb5934bff3d0b4",
+        "text_sha256": "3e49e4c57282c66506e24cdbd79a032e5c06aeb8b59a6cba1c5c39b6173838a9",
+        "tokens": 21
+      },
+      {
+        "characters": 79,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "APIKIT",
+        "record_sha256": "3d05829c6038a657d8dfb50e64e79b73b0ee0863dbd7365834ef1032f5ff9eb3",
+        "text_sha256": "483dbf9dd2a9cc2e85dbc9fe779287af58a23843eca5acbb235bf7ec63ece6c7",
+        "tokens": 28
+      },
+      {
+        "characters": 53,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "APIKIT",
+        "record_sha256": "78e62e274dfdf1566224d0a7909ea70fa28c505ccec8449d995409b27192213f",
+        "text_sha256": "aa49ca60c5b38a388ca44a4457b8b729e758da0e9a15b00e3c76011a128332ba",
+        "tokens": 16
+      },
+      {
+        "characters": 233,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MULE",
+        "record_sha256": "9f120896d2296a14b269eab7a590b7c504f9e5f7cb56bab8da0b23bd5a1f773a",
+        "text_sha256": "7d53331927ff0db9bcfc845852af3af9baebdf64f909b279a6e3c5195a1dfcb0",
+        "tokens": 53
+      },
+      {
+        "characters": 319,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "MULE",
+        "record_sha256": "98a63c86992208d01addde018c3c427a98e891647833104098f15849164399f7",
+        "text_sha256": "f39babc4d790adf9a8dac9d17ebbb8f3dec4c5ecb6047259b76a978ca67bd3d0",
+        "tokens": 100
+      },
+      {
+        "characters": 343,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Enhancement Request",
+        "project": "MULE",
+        "record_sha256": "a2cca0936b323eebcd70aaf09f68bf1636d364ea3be63b9d0ef36626302d5fca",
+        "text_sha256": "96e50f8985a9ecb92efd35959e47be923c2ee027427cdd1645d16384c92e9d1d",
+        "tokens": 77
+      },
+      {
+        "characters": 205,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Enhancement Request",
+        "project": "MULE",
+        "record_sha256": "abe45e3c258b612823242099b740fe50bca89bee12db34cf104ec310c5847017",
+        "text_sha256": "6d861a58310892bde087af2cbb93dc34d5691f896a77d003573662b3f37d234c",
+        "tokens": 58
+      },
+      {
+        "characters": 79,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MULE",
+        "record_sha256": "24d344d5dfc1a8b6717153b2180ad376f3cb28aa7787872ab11edb0cdb8df0b7",
+        "text_sha256": "ef8f8df2a9950f64c15cd3afc1d1767b68eb041811c5a7d9fa92e9faa7b0c522",
+        "tokens": 16
+      },
+      {
+        "characters": 173,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "MULE",
+        "record_sha256": "889b69b42c4aebd4aa23b0db6640ebb734458f9dacff8ae5bcb29f8a1c7364b9",
+        "text_sha256": "625cd7bd5fe325f7daf5217db5662dc6f2d058d97c7421195f0734625c8ab4f9",
+        "tokens": 47
+      },
+      {
+        "characters": 1171,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "MULE",
+        "record_sha256": "34ef649cce7f729025d4c0c1bbe1dbb737f4b2e50412c4f35b3db60348161cd2",
+        "text_sha256": "5b66165d6fddc24a854ab786c496365e9218bbe9c449e65ef87df8240c746c5b",
+        "tokens": 329
+      },
+      {
+        "characters": 113,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "MULE",
+        "record_sha256": "9e1085967ab158fb3114a81250dcbb86b92b4bc279ab9bf5429dc7d7447918eb",
+        "text_sha256": "cff4f8bcd9c731c0856780006cb29b8f965ad18193cfe330b63b8f30bf2f3368",
+        "tokens": 31
+      },
+      {
+        "characters": 105,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "MULE",
+        "record_sha256": "453785b6bad4c15c5a87c0eb2604363002eecf3efc91076e73a7f4947a755549",
+        "text_sha256": "20cfe45585e78c39d3a0191bc5484c1a9902cfbfd6e5f0ce78c92a7d328ac5e6",
+        "tokens": 20
+      },
+      {
+        "characters": 127,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "MULE",
+        "record_sha256": "339bea0b3b0548c45a1cf8e9d7852644c163d2962adb8b55c08ab34a5746fb91",
+        "text_sha256": "43e1e9be4b06d59b215094cfcab5aadbb48a90c2a977f80f7fc3f4c645d8a28a",
+        "tokens": 33
+      },
+      {
+        "characters": 112,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MULE",
+        "record_sha256": "099d965efd0a8207f06dc3f0f32846693bef20422307e004cf3e0f513f87d33c",
+        "text_sha256": "b1475e163b38e33bfcc4cb0a5b0ff66e7b719e40785b922794bf87bce3aee185",
+        "tokens": 28
+      },
+      {
+        "characters": 284,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "MULE",
+        "record_sha256": "7821a8a7384548fa46cb20d982975d54f27b6f562cca3c85e4e71f3a3c3801df",
+        "text_sha256": "0b4065e842cc17f33a81b08c6a4d67e10b8d673624b99021152c560f40da69e9",
+        "tokens": 94
+      },
+      {
+        "characters": 219,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DNN",
+        "record_sha256": "577c1b1705189f1bc498c9399ac96faedb0ec1f8bf23ba238e432c0552fea813",
+        "text_sha256": "1eed3d111d1c73aff3f878cfa0ae5a0af41c00611527e36c882efc2b8de896d3",
+        "tokens": 60
+      },
+      {
+        "characters": 651,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "DNN",
+        "record_sha256": "23e811114fa082d385a6de660f5ded93d03cb464a2e1c12ccd90dd87fd4ecc52",
+        "text_sha256": "3ece1e8f8bb18f0f47ab8dbe1f8734e11037a31df51c62424ec9bbec14d2af49",
+        "tokens": 195
+      },
+      {
+        "characters": 2414,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "DNN",
+        "record_sha256": "2097b285e2a632efe1adea61ef17c422a736c0e67f9d991626f665f563d76fac",
+        "text_sha256": "2f636a23ec256fc7b5fa185cec9a60a12489e404f5e9af7dfb4143e7bf84a330",
+        "tokens": 567
+      },
+      {
+        "characters": 46,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "DNN",
+        "record_sha256": "cb78710e80f145ff9e3a975c70e7b0c597f4644c2ff67cafaad4b0fb608c0d7c",
+        "text_sha256": "675bafd86a9f4b632c550d7884bcf59954be58a7059ae4003349cc2c76f9aa5e",
+        "tokens": 14
+      },
+      {
+        "characters": 469,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DNN",
+        "record_sha256": "cee302c181bb1f752339cf461704015dd83bd4e1f85d49d0b0a8317c7a007ff8",
+        "text_sha256": "2120a00562ff067f03b447728ded4062440da15f8ea149d06e129af7bc72c06d",
+        "tokens": 112
+      },
+      {
+        "characters": 1012,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "DNN",
+        "record_sha256": "6d3486b6136bf84f7d2467da5b438554a9788abfbe9bd6dfa258da89d7606b6d",
+        "text_sha256": "05c9dd7e2633b4f3e083c565d57aba088ca4b80ac0d75d2b2e104441a24ec843",
+        "tokens": 256
+      },
+      {
+        "characters": 839,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "DNN",
+        "record_sha256": "2a365492fce36a34d19755e868d2bdc05b4c0a883d2e10b518c72ab4f14371c6",
+        "text_sha256": "b7ce188740a52532c0f4c74d3b3f39d1a586c21480542a8713ae5521738b688c",
+        "tokens": 197
+      },
+      {
+        "characters": 1070,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "DNN",
+        "record_sha256": "a195149b0e1f2a43a2dca13b8ac08c20f9e91363a871214aabceaa9b75eeed10",
+        "text_sha256": "74143f0127d070b3d22f740b12fe840446962664ce24bf72fb0ab68047324e2a",
+        "tokens": 231
+      },
+      {
+        "characters": 450,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DNN",
+        "record_sha256": "231d43f265bf3b280481bf4b96d17f65905295bc146973b9c74705a44fbcffc8",
+        "text_sha256": "e84f803be0993f7249aeba57758b3ba6f889b5bf72857427955a94a73e6362a5",
+        "tokens": 107
+      },
+      {
+        "characters": 249,
+        "mapped_purpose": null,
+        "native_type": "Story",
+        "project": "DNN",
+        "record_sha256": "735ba5b6cffa473a04754542d9f122160e790858670a6f059a8a9d40fe693789",
+        "text_sha256": "ef2dcb0917a8746fccfa39cbe431e42139fcbb1944ea0ece75218b9e5f439fb2",
+        "tokens": 55
+      },
+      {
+        "characters": 358,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "DNN",
+        "record_sha256": "fb34587c4458825a6e158153989be2775a0dcc4c1c17f199af938204e149d44f",
+        "text_sha256": "13d802ceeeeae989a399768ee8971ed8845b0cfecd473a3c9d484818cdac0fd4",
+        "tokens": 86
+      },
+      {
+        "characters": 123,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "DNN",
+        "record_sha256": "68e6662582feb1bcace1049ca7d3c2a0bb23c0446e4e1dea4f14703f828ad412",
+        "text_sha256": "00e6cdfe827763e8e84b874f49599fd735c64cf59a372ada441360be4d1dec6d",
+        "tokens": 25
+      },
+      {
+        "characters": 759,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "DNN",
+        "record_sha256": "e8ef4524926f412890c8e421982324bc9656f9dcc36427243c2032f898c0f4a2",
+        "text_sha256": "7189dc1833aa938abcf8e1bf6cc4575be114f47c680e872875123600eb1ca6be",
+        "tokens": 165
+      },
+      {
+        "characters": 255,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "DNN",
+        "record_sha256": "3a201b7f29a20a74a9d384c9d778191b09a8f047b2cc0d69200ece0b3d2b37a2",
+        "text_sha256": "2b7390066368c8134cfbd594b521e5583f6662b87de64d5cd58ec3d024b2fe3f",
+        "tokens": 58
+      },
+      {
+        "characters": 67,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "EVG",
+        "record_sha256": "c1fc573a0a2e82eb8d9387915c54e5bd3230713d6882a5d41f90104e91e41e60",
+        "text_sha256": "f323d75a7c8e6f5a41abc197756bc6c47df6e36e8759e940e29ab11111ae9991",
+        "tokens": 16
+      },
+      {
+        "characters": 26,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "EVG",
+        "record_sha256": "cc914110a830b7d1a14dd57ddc19f23e2bf342bf0d1b9e505bf2198549d035a7",
+        "text_sha256": "9c15246e83f8fc2abc030050cb4440fa2b6acddd2ad82ae923dcf496858bcc57",
+        "tokens": 11
+      },
+      {
+        "characters": 459,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Build Failure",
+        "project": "EVG",
+        "record_sha256": "cdbeb8097db1ce669f938ac6e2dc1372e9e4d8c3f361fc7f7d5d96f85ced716a",
+        "text_sha256": "bf68fb21e3b5937ec0e9f8eed3a74f82640f20cbbe2f82eaed3dd29aa9af1f55",
+        "tokens": 191
+      },
+      {
+        "characters": 454,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Build Failure",
+        "project": "EVG",
+        "record_sha256": "9dc8f167b74d7dfc3f66423959eb4598651b70078afc550da3f186cba84cd6cc",
+        "text_sha256": "337e176ba76fb3e5078273745829f2faf4f73ca3cfa9d458cb519b52c878d292",
+        "tokens": 193
+      },
+      {
+        "characters": 701,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "EVG",
+        "record_sha256": "97ac3ef9965125ed8781a56f1ab59304f8ccc37b7252d7dad27619a6ac2a8d32",
+        "text_sha256": "e98fb6e8d9170b1089f27711187a4f77f27bcad37690d750e538cd4cf2c8ae28",
+        "tokens": 153
+      },
+      {
+        "characters": 34,
+        "mapped_purpose": null,
+        "native_type": "Epic",
+        "project": "EVG",
+        "record_sha256": "f5f5d07156ef7bf5615de7552af0524ed630b663b1dac5ed33a65ef9d16e474e",
+        "text_sha256": "71b3f7314e1c0a4deae4a9f0e0d3d3a03fde290f4d8575dd3c6adef2588ddc7a",
+        "tokens": 13
+      },
+      {
+        "characters": 174,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "EVG",
+        "record_sha256": "e99988af063fd3f51c95ac7ce410f96ff0b34019ecd04d3ee70683e646e6ace5",
+        "text_sha256": "de4206821893310d4307d6a002e56b39d5d0c27049f8e669daa40a9fd9cb956e",
+        "tokens": 46
+      },
+      {
+        "characters": 918,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Improvement",
+        "project": "EVG",
+        "record_sha256": "3966ef065ea8d6b350a0b98f1247c16c67c07e64e3fcf1a3d17f2675ca7a9b22",
+        "text_sha256": "e4a78c58c3244b3b5c1450fd6633e54b320791084a8bb7641eaa5d9d37acfe72",
+        "tokens": 192
+      },
+      {
+        "characters": 122,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Incident",
+        "project": "EVG",
+        "record_sha256": "6bd892719fd4bb1573acf3644fbb5dcb313a63de631952ec7a56771f1776dc2b",
+        "text_sha256": "1c8f87eb2a9620bad57fb1b40d2519e83ce153e67dbf625a099b0395bc7bff03",
+        "tokens": 32
+      },
+      {
+        "characters": 36,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Incident",
+        "project": "EVG",
+        "record_sha256": "e37be0b7178f37e9aeaedbff015dda7e285186809c3f9275816239dc8172ce09",
+        "text_sha256": "8d928ee28aca11587e66205c8705af7e331cd10653f2dd53bad204d9d3027485",
+        "tokens": 12
+      },
+      {
+        "characters": 306,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "EVG",
+        "record_sha256": "bc8df06a08a71ea3efa34aff390b347bdc717dca8219521c11c543242b97ec81",
+        "text_sha256": "d3ca0abf12b57ced4dc857c7349448eadccb99e6d00e289d0d0a5318f655cbf7",
+        "tokens": 81
+      },
+      {
+        "characters": 62,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "New Feature",
+        "project": "EVG",
+        "record_sha256": "f85ad3fca5b92efa81a870b96965c57bf6d23b3fc004b4e9b49803e1f14c2e1c",
+        "text_sha256": "8936b782dc30f6b49ef3abe077884ee63d1f53db547cbd1ca93b7d1fe1e15c6c",
+        "tokens": 15
+      },
+      {
+        "characters": 220,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Problem Ticket",
+        "project": "EVG",
+        "record_sha256": "f8582d9e441065d9c4a262ffbfc7e74628bcdfbfabb00c77683e3bf701a99252",
+        "text_sha256": "bf1173b17882a3fea54c6bd750d93781167c4b8629ff0689d6a524c5cc0722b1",
+        "tokens": 43
+      },
+      {
+        "characters": 498,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Problem Ticket",
+        "project": "EVG",
+        "record_sha256": "10a711a8c82f01c19c82810fa5cf678278b153c612f4f0335f591dcc7ba058b1",
+        "text_sha256": "d90ee2afe239b6e1f9b64e2cf5a57ba2969cc0a88136da022508d3bcb0ecca98",
+        "tokens": 193
+      },
+      {
+        "characters": 108,
+        "mapped_purpose": null,
+        "native_type": "Question",
+        "project": "EVG",
+        "record_sha256": "4f3c31f14894ea43ab2137fc3defcfcd1f795db265690f82624d55e30e114bc7",
+        "text_sha256": "8dd1243a14517fe9c1bf02049042f942c7b31642cfb9d70f64cb4c0637b9abbd",
+        "tokens": 29
+      },
+      {
+        "characters": 132,
+        "mapped_purpose": null,
+        "native_type": "Question",
+        "project": "EVG",
+        "record_sha256": "ec8ae164b3098e6230866673ec62776d4b3f834a594f4ae0095e37c579c9e557",
+        "text_sha256": "91777396e9b0cc6cc001d2a19ebb3dd8c1e34f9ef180454ad0f544e7be24940a",
+        "tokens": 28
+      },
+      {
+        "characters": 58,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "EVG",
+        "record_sha256": "46cbd5ddad5ad32cbea0a07e0fc349d38512a617401fdf26829bd91b53d98782",
+        "text_sha256": "dbb7c830708c8f2dc85ed14f47405f213cdd87f6b67c280b17c4b71305c10ac4",
+        "tokens": 16
+      },
+      {
+        "characters": 16,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "EVG",
+        "record_sha256": "131e295ba5902aeba733ffe7d70e7c9aee9b33e8dc26d11e45c5d372e26a3765",
+        "text_sha256": "da86ecfaff3b53642650e2ba308e14914f4e4e69bca1abb60254f025f6057152",
+        "tokens": 7
+      },
+      {
+        "characters": 207,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "EVG",
+        "record_sha256": "c7d77a8612e00d3df92dd833850d712f1cc7cfb0c20153a750be3a1cb2e1be96",
+        "text_sha256": "6d8c5b7d46644db6c8800615c3d582a500208ab5e99906f9d989cfbbc7e50803",
+        "tokens": 81
+      },
+      {
+        "characters": 52,
+        "mapped_purpose": null,
+        "native_type": "Task",
+        "project": "EVG",
+        "record_sha256": "6c1fb18ebd31bda44550c36df7404eaec42717a63513012822fa7b6d31cac56f",
+        "text_sha256": "955ad469f8e1f97cdf4b408c9e416aa2b182fd20ca12ffc32a355ad761abf72e",
+        "tokens": 12
+      },
+      {
+        "characters": 434,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRACLOUD",
+        "record_sha256": "92a9fdae29b451d88aee2b9a4dada7838e3498dd4aa321539528ea252127ad1f",
+        "text_sha256": "000328fd2a43565099800848ea1a94155230f5f27990a5721f8961520576874c",
+        "tokens": 124
+      },
+      {
+        "characters": 657,
+        "mapped_purpose": "bug_fix",
+        "native_type": "Bug",
+        "project": "JRACLOUD",
+        "record_sha256": "88dc0f571aefb77ca89dab0e5cecab21b6d23aafff415f481eb1769f50557ca4",
+        "text_sha256": "b1c506cb570a0358ba0e615ed0236f822d23269fd833d36fd987403293178028",
+        "tokens": 180
+      },
+      {
+        "characters": 299,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "JRACLOUD",
+        "record_sha256": "6b7ceb28d731c9b0e37618bd2bf22fd5f627826430dfa76accfa9011ac28cc8f",
+        "text_sha256": "f0e8a61bfc9636c1a9453663736f7164fe27ddc8edd512da5e0f4b3ee276dcaa",
+        "tokens": 66
+      },
+      {
+        "characters": 433,
+        "mapped_purpose": null,
+        "native_type": "Sub-task",
+        "project": "JRACLOUD",
+        "record_sha256": "3a6159256b1e4d030ac7f7ad1771d1a923a1b12b8e8faceb88977a9280b77b8a",
+        "text_sha256": "7ed9661d77636659571e6ed56c2fff3e9088670dc765b5dfc9bb93b6aed166cc",
+        "tokens": 94
+      },
+      {
+        "characters": 992,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JRACLOUD",
+        "record_sha256": "5714c6e5c085e49e4d58de1254fc5a6f79f1b597f5ece00fab747def633e457b",
+        "text_sha256": "7e9b6e451f711b58a1addf635e2ee42fd01dd302664317276623ce9be5237f56",
+        "tokens": 293
+      },
+      {
+        "characters": 230,
+        "mapped_purpose": "feature_enhancement",
+        "native_type": "Suggestion",
+        "project": "JRACLOUD",
+        "record_sha256": "fd231f141101904ff272c6fddb5076e423024130e2592429058268d7fb60cc2d",
+        "text_sha256": "67ebe0e51aff7ced6785e3b4151654635a9a213cc66397ca65c888b8d0420f18",
+        "tokens": 58
+      },
+      {
+        "characters": 8514,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "JRACLOUD",
+        "record_sha256": "ccdfcc1553684524225e0fd8fd7567828d460c534fcb045a3648d70dff0aea4b",
+        "text_sha256": "a1df6c6cafd67f3bf30ffb1e183c27f6cf7032342e05591be56e8395f4f860de",
+        "tokens": 2491
+      },
+      {
+        "characters": 832,
+        "mapped_purpose": null,
+        "native_type": "Support Request",
+        "project": "JRACLOUD",
+        "record_sha256": "05ef5870570195e43bf2d5b1f2151a71cdd8e69d0cefbe292091fb1b56abbbce",
+        "text_sha256": "85e1a1c7f273bfc6be3cd18dd5cd855a0c8ec14b978f087f29432c48fa5b9d09",
+        "tokens": 255
+      }
+    ],
+    "tokens": {
+      "max": 2491,
+      "median": 66,
+      "min": 7,
+      "p90": 239,
+      "p95": 327,
+      "p99": 601
+    }
+  },
+  "schema_version": "gh547-tawos-qualification@1"
+}
