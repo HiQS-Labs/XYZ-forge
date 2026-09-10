@@ -103,3 +103,7 @@ One file: `skills/unstuck/SKILL.md`. Three edits, +13 lines total:
   Round 3 re-attestation: **Approved, driver-attested** (task `RELAY-gh528-unstuck-qa-r2`, reviewed head `dd5fffb9`, added-range 9527+496, record `.git/relay-attest/RELAY-gh528-unstuck-qa-r2.json`).
 - Harness defect surfaced and filed: **#529** (GH-505 canonical-prefix attestation refuses reviewer turns appended above the trailing marker) — the first Approved was refused on structure, repaired transparently via the coordinator note in the thread, then re-attested clean.
 - agy invocation telemetry rows committed in `harnesses.sql`/`harnesses.db`.
+
+## Lessons Learned (For Future Agents)
+
+Blocker routing must explicitly require filing or recording outstanding work; the original verb “route” allowed categorization without action, as the agy review demonstrated. Preserve reviewer attestation evidence separately from a prose approval when the harness rejects transcript structure.
