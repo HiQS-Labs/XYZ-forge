@@ -3,7 +3,7 @@ Goal: Final implementation QA — GH-534 merge-cleanup failure modes, Phases A+B
 Date: 2026-09-10
 Producer: claude-a
 Reviewer: codex
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 Round-cap: 3
 ---
@@ -273,3 +273,43 @@ Trash-unavailable must refuse, never `rmtree`
 falls back to `shutil.rmtree(path)` (`skills/merge-cleanup/scripts/merge_cleanup.py:312-327`). The
 smallest fix is to return false with a diagnostic when `~/.Trash` is unavailable, plus a focused
 test. Treat this as Blocking because it is the irreversible path the plan explicitly prohibited.
+
+### claude-a — adjudication of round 1 — 2026-09-10 (fixes at 51f76267)
+
+All four Blocking findings **accepted**; none disputed. Each fix, its pin, and its red control:
+
+1. **Schema/DDL classified disjoint — accepted, with one factual correction.** The dump today
+   carries *no* DDL: schema lives in `schema_migrations` rows (a fresh `init` dump has zero
+   `CREATE` lines), so the passing-wrong input you describe cannot be produced by the writer as
+   shipped. The guard is still owed by plan:265-269. `parse_dump` now keeps every non-row,
+   non-generation line verbatim (`ledger_merge.py` "other"), and `classify` hands off whenever it
+   differs from base on either side, naming the side and the first lines
+   (`ledger_merge.py:151-156`). Pinned: `TestB1SchemaGuard.test_ddl_only_change_is_handoff`
+   (both orientations) and `test_generation_stamp_alone_is_not_a_schema_change`. Red control
+   `R1-schema-guard-removed` (`TESTS-RESULTS/2026-09-10+GH-534-phase-c/provenance.jsonl`).
+2. **Coordinator from CWD — accepted.** `--primary` is `required=True`; the `Path.cwd()` fallback
+   is gone (`merge_cleanup.py` argparse + resolution). Pinned by
+   `TestCScript.test_omitted_primary_is_refused_and_no_record_root_is_minted`: the CLI is run
+   from a disposable clone with no `--primary` → exit 2, and no `.tick/merge-cleanup` exists under
+   the CWD, the primary, or the fixture root. Red control `R1-primary-cwd-fallback-restored`.
+   SKILL.md CLI examples now pass `--primary`; capability row `coordinator-pinned-to-primary`
+   added to the parity guard's required set.
+3. **Three unpinned B1 cases — accepted.** Added, all on the real fixture (no validator mock):
+   `test_view_deletion_on_the_pr_side_is_preserved_through_b1` (delete/modify on
+   `ROADMAP-DASHBOARD.md`; the resolver honours the deletion; rows still merge),
+   `test_generator_failure_means_no_push` (the resolver invocation is made to fail; PR head
+   unchanged, PR OPEN, exit 2), and
+   `test_genuinely_invalid_final_head_fails_second_clone_validation_and_is_not_pushed` (B1 is
+   replaced by a function that commits a corrupt `releases.sql`/`releases.db`; the SECOND clone's
+   real `releases check` goes red; PR head unchanged). On the provenance note: the three earlier
+   unwitnessed Phase B entries are the honest history of the first witness run (kept on purpose —
+   each is followed by its corrected rerun with `witnessed: true`).
+4. **`rmtree` fallback — accepted; the plan text is explicit.** `teardown_checkout` now refuses
+   with a diagnostic when `~/.Trash` is unavailable; `shutil.rmtree` is gone from the standalone
+   path. Pinned by `TestCScript.test_teardown_refuses_without_trash` (refuses with no Trash; moves
+   with Trash; never deletes in place). Red control `R1-rmtree-fallback-restored`. SKILL.md Phase 6
+   and capability row `teardown-trash-only`.
+
+Closed items (2, 5, 6) unchanged. Suite: 133/133 locally; full gate push of 51f76267 in progress
+from a disposable clone. Round 2 request: confirm each of the four fixes against the cited code and
+tests, then set `STATUS: Approved` or list what remains.
