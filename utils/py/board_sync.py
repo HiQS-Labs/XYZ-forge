@@ -59,12 +59,17 @@ STATE_PATH = Path(
     os.environ.get("XYZ_BOARD_SYNC_STATE_PATH", "~/.xyz/board_sync_state.json")
 ).expanduser()
 
+# GH-549: project_owner, project_number and repos carry NO default. They used to ship one
+# person's board as a zero-config default, so any other user of this harness wrote to that
+# board. They are now required configuration: unconfigured, board_sync refuses before it makes
+# a single network call. The empty string / 0 / [] are sentinels for "not configured", chosen
+# so resolve_device_block still knows each value's type for env coercion.
 DEFAULTS = {
-    "project_owner": "noelsaw1",
-    "project_number": 3,
+    "project_owner": "",
+    "project_number": 0,
     "status_field": "Status",
     "in_progress": "In progress",
-    "repos": ["HiQS-Labs/XYZ-forge"],
+    "repos": [],
     "clone_dirs": ["~/Documents/GH Repos"],
     "mention_policy": "strong-signals-write",
     "adapters": ["pdda", "git-hooks", "harness-fires", "sweeper"],  # consumed in Phase 2
@@ -220,6 +225,28 @@ def scan(root, cfg, allow_empty=False):
 # ── board side (network; gh api graphql is the auth layer) ─────────────────────
 
 
+def _raise_if_insufficient_scopes(blob):
+    """GH-549: name a missing token scope, and print the exact remediation.
+
+    This is the most likely first failure on a fresh machine — verified on this host, whose gh
+    token carries `gist, read:org, repo, workflow` and NOT `read:project` — and it used to
+    arrive as an opaque `gh api graphql rc=1` or `GraphQL errors: [...]` blob. It is checked on
+    BOTH failure paths because real `gh` exits nonzero for this, so the payload branch alone
+    would never have seen it.
+
+    We never run an auth command on anyone's behalf: the operator is told the command and runs
+    it themselves.
+    """
+    if not blob:
+        return
+    if "INSUFFICIENT_SCOPES" in blob or "read:project" in blob:
+        raise RuntimeError(
+            "the gh token lacks the Projects scope, so no board call can succeed. "
+            "Grant it with:  gh auth refresh -s read:project,project   "
+            "(this tool will not run an auth command for you). Underlying error: %s"
+            % blob.strip()[:200])
+
+
 def _gql(query, variables=None):
     # GH-405: the gh executable is a seam so the mock board (utils/py/mock_gh_board.py) can
     # stand in for the real API offline. Default is the real `gh` — nothing changes unless
@@ -228,8 +255,8 @@ def _gql(query, variables=None):
     gh_bin = os.environ.get("XYZ_BOARD_SYNC_GH_BIN", "gh")
     cmd = [gh_bin, "api", "graphql", "-f", f"query={query}"]
     for k, v in (variables or {}).items():
-        # -F applies type inference and @file expansion — a project_owner of "@noelsaw1"
-        # would read a FILE named noelsaw1 (review r2 #7). Raw -f for strings; -F only
+        # -F applies type inference and @file expansion — a project_owner of "@someuser"
+        # would read a FILE named someuser (review r2 #7). Raw -f for strings; -F only
         # where the schema wants a typed scalar (Int).
         flag = "-F" if isinstance(v, int) and not isinstance(v, bool) else "-f"
         cmd += [flag, f"{k}={v}"]
@@ -238,13 +265,17 @@ def _gql(query, variables=None):
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise RuntimeError(f"gh api graphql failed ({gh_bin}): {exc}") from exc
     if proc.returncode != 0:
+        blob = (proc.stderr or "") + (proc.stdout or "")
+        _raise_if_insufficient_scopes(blob)
         raise RuntimeError(f"gh api graphql rc={proc.returncode} ({gh_bin}): {proc.stderr.strip()[:300]}")
     try:
         payload = json.loads(proc.stdout)
     except ValueError as exc:
         raise RuntimeError(f"gh api graphql returned non-JSON: {exc}") from exc
     if "errors" in payload:
-        raise RuntimeError(f"GraphQL errors: {json.dumps(payload['errors'])[:300]}")
+        blob = json.dumps(payload["errors"])
+        _raise_if_insufficient_scopes(blob)
+        raise RuntimeError(f"GraphQL errors: {blob[:300]}")
     return payload["data"]
 
 
@@ -263,12 +294,30 @@ def _load_state():
         return {}
 
 
+def require_board_identity(cfg):
+    """Refuse before any network call when the board identity is not configured (GH-549).
+
+    This is what replaces the old personal defaults. It must run BEFORE the first _gql, so an
+    unconfigured harness cannot write to anyone's board — not even by accident, and not even
+    once.
+    """
+    missing = [k for k in ("project_owner", "project_number", "repos") if not cfg.get(k)]
+    if missing:
+        _die("board identity is not configured (missing: %s). Set them in "
+             "~/.xyz/device_config.json under \"board_sync\", or via "
+             "XYZ_BOARD_SYNC_PROJECT_OWNER / XYZ_BOARD_SYNC_PROJECT_NUMBER / "
+             "XYZ_BOARD_SYNC_REPOS. There is no "
+             "default — a default would write to somebody else's board."
+             % ", ".join(missing), 2)
+
+
 def resolve_ids(cfg, force=False):
     """Resolve project / field / option IDs BY NAME, cached in state, re-resolved on
     demand (S5) — a board edit (renamed option) must self-heal, not persist stale IDs.
     The cache records the SETTINGS it was resolved from: change project_number (or any
     input) and the cache self-invalidates instead of silently writing to the old board
     (review r2 #1)."""
+    require_board_identity(cfg)
     wanted_inputs = {
         "project_owner": cfg["project_owner"],
         "project_number": int(cfg["project_number"]),
@@ -388,6 +437,7 @@ def board_add(cfg, num, write, snapshot=None):
     candidates cost one pagination, not 2N, review r2 #5). A card that already exists
     with a DIFFERENT status gets a status-only write — the work-start event must not be
     missed just because the card predates it (review r2 #2)."""
+    require_board_identity(cfg)   # GH-549: before repos[0], which would otherwise IndexError
     repo = cfg["repos"][0]
     board_name = f"{cfg['project_owner']}/projects/{cfg['project_number']}"
     on_board = snapshot if snapshot is not None else fetch_board_issues(cfg)
