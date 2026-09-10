@@ -3,8 +3,8 @@ Goal: Final implementation QA — GH-534 merge-cleanup failure modes, Phases A+B
 Date: 2026-09-10
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 Round-cap: 3
 ---
 
@@ -313,3 +313,42 @@ All four Blocking findings **accepted**; none disputed. Each fix, its pin, and i
 Closed items (2, 5, 6) unchanged. Suite: 133/133 locally; full gate push of 51f76267 in progress
 from a disposable clone. Round 2 request: confirm each of the four fixes against the cited code and
 tests, then set `STATUS: Approved` or list what remains.
+
+### Codex review — implementation QA round 2 — 2026-09-10
+
+VERDICT: PASS
+
+Verdict: **Approved**. The four round-1 blockers are closed by implementation paths with focused
+tests. I did not execute the suite or gate in this containment-limited reviewer turn; the test
+assessment below is source inspection plus the committed witnessed red-control ledger.
+
+1. **Schema/DDL handoff — Closed.** `parse_dump` now retains every non-empty, non-generation,
+   non-row line in `other` (`skills/merge-cleanup/scripts/ledger_merge.py:95-121`), and `classify`
+   records a reason whenever either side's `other` differs from base, making `disjoint` false
+   (`skills/merge-cleanup/scripts/ledger_merge.py:138-155,225-226`). The focused test covers the
+   change on both ours and theirs, while separately proving that a generation-stamp-only change
+   remains eligible (`test/gh534_phase_c_tests.py:381-398`). The exact guard has a witnessed red
+   control (`TESTS-RESULTS/2026-09-10+GH-534-phase-c/provenance.jsonl:9`).
+2. **Explicit coordinator — Closed.** The orchestrator requires `--primary` and resolves only its
+   value; the CWD fallback is absent (`skills/merge-cleanup/scripts/merge_cleanup.py:564-590`). The
+   focused CLI test invokes from a foreign clone without the option, expects argparse exit 2, checks
+   that no candidate record root was created, and confirms PR state remained open
+   (`test/gh534_phase_c_tests.py:275-286`). The exact restored-fallback mutation is witnessed red
+   (`TESTS-RESULTS/2026-09-10+GH-534-phase-c/provenance.jsonl:10`).
+3. **Previously unpinned B1 cases — Closed.** View deletion is exercised through the real B1 flow
+   and verified absent after both PRs merge (`test/gh534_phase_c_tests.py:314-334`). Resolver/
+   generator failure is injected at the resolver command boundary and proves non-zero return,
+   unchanged PR head, and OPEN state (`test/gh534_phase_c_tests.py:336-350`). Final-head validation
+   commits a genuinely corrupt ledger, lets the real second-clone check reject it, and proves the PR
+   head was not pushed (`test/gh534_phase_c_tests.py:352-370`). These are direct pins for the three
+   acceptance bullets; no remaining test-coverage blocker.
+4. **Trash-only standalone teardown — Closed.** `teardown_checkout` now refuses when `~/.Trash` is
+   absent and the standalone-clone path has no in-place deletion fallback
+   (`skills/merge-cleanup/scripts/merge_cleanup.py:312-332`). Its focused test proves both halves:
+   refusal preserves the victim without Trash, and an available Trash causes a move
+   (`test/gh534_phase_c_tests.py:288-311`). The restored-`rmtree` mutation is witnessed red
+   (`TESTS-RESULTS/2026-09-10+GH-534-phase-c/provenance.jsonl:11`).
+
+The capability table also names the new coordinator and Trash-only guarantees and their pins
+(`skills/merge-cleanup/SKILL.md:159-175`). Questions 2, 5, and 6 remain Closed as adjudicated in
+round 1. The persisted `75/70/50/30` rating (calc 225) remains grounded, with appeal neutral at 50.
