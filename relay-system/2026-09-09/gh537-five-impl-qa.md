@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -265,5 +265,21 @@ ARCHITECTURE.md                               |   1 +
 Only the named surfaces plus governance paperwork (capture doc, ledger trio + generated views, relay threads, telemetry registry) appear; no fourth surface.
 
 Handing off to Reviewer (codex) — take your turn: re-adjudicate against the corrected skill text and this record.
+
+## Reviewer — codex — round 2 — 2026-09-09
+
+swept file: yes
+
+- [Pass] Q1: The full current skill encodes the requested instructions: folded frontmatter (skills/five/SKILL.md:3), two five-slot lists (:36), substantive citations (:81), silence routing (:72), honest markers (:75), empty/whitespace precedence (:83), and mandatory reading pointer (:48, :88). The empty-existing-artifact defect is fixed at :58. Fix: retain these rules.
+- [Should] Q3: The newly supplied dense input exposes a false sparse marker. Decisions 7 explicitly says “The old folder's lock files are deleted, not migrated” (this relay:196), in addition to the three Non-goals (:199) and no fallback copy (:192). The unchanged output still gives only four exclusions and “— no further exclusions stated” (embedded dense output; reaffirmed at :204). Five substantive exclusions are available; the marker is therefore false under skills/five/SKILL.md:75. Fix: replace NOT slot 5 with “Does not migrate the old folder's lock files; deletes them — Decisions 7”, then record the corrected full dense output and reassess its verdict. This defect became auditable only when the full input was supplied.
+- [Should] Q3: The corrected sparse example fixes its reading pointer (this relay:222), but collapses slots 2–5 into one inline range (:219-220). The skill requires “two full slots lists” (skills/five/SKILL.md:86) and the exact output block (:31). Fix: record the actual corrected output with five individually numbered slots in each list, retaining the honest markers and corrected bottom line. Keep the behavioral acceptance box (PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:88) pending until both corrected examples pass.
+- [Pass] Q3: Source grounding and request context are now reviewable (this relay:182, :186, :208). Absent and empty-file cases emit the refusal (:226, :228), consistent with skills/five/SKILL.md:58 and :83. The manual red control's “Improves platform alignment!” and uncited Windows/GUI/pricing exclusions visibly fail the marketing/citation/silence rules (:95, :81, :72); this is a valid manual negative example, not an automated test claim. Fix: retain the full inputs and red control.
+- [Pass] Q2/Q5: The skill, its index row, and its dated entry exist (skills/five/SKILL.md:1; ARCHITECTURE.md:55; CHANGELOG.md:7). The producer's base-to-head summary reports one index insertion and 17 changelog insertions (this relay:250-251), no added executable, and additional governance/registry files (:235-247). No duplicate runtime or writer appears in the complete 133-line skill, which explicitly declares “Zero scripts, zero runtime” (skills/five/SKILL.md:133). Fix: retain the implementation scope. Limitation: the supplied summary supports a three-surface implementation plus bookkeeping, not a literal three-file branch; without full diffs, the content/necessity of the registry and generated-view changes is not independently verified. No git or gates were run in this reviewer turn.
+- [Pass] Q4: The CHANGELOG description matches the skill's intended behavior (CHANGELOG.md:7-16), and its verification list distinguishes YAML parsing, prior plan approval, recorded behavioral QA, and PDDA (:18-20); it does not claim final implementation approval. Fix: correct the behavioral record before relying on that verification citation. YAML/PDDA execution remains producer-reported, not reproduced here. The supporting status table is now two columns (PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:21).
+- [Nit] Q6: The slogan contradiction is fixed (skills/five/SKILL.md:27), but the in-scope decision-checksum qualifier at :10-11 grammatically modifies only the final “or asks” clause; “Use whenever” still applies independently to “key highlights” and “top five” (:8-10). Fix: put the in-scope decision-checksum condition before the natural-language trigger list while keeping explicit /five available. This remains non-blocking; the complete skill sweep found no additional defects beyond the trigger ambiguity already raised.
+
+Verdict: Changes requested. Handing off to Producer (claude-a) to correct the dense exclusion and render the sparse example as full five-slot lists before round 3.
+VERDICT: FAIL
+Basis: Behavioral QA still passes a false no-further-exclusions marker and a sparse output that omits the required individual slots.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
