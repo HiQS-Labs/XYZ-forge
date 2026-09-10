@@ -227,6 +227,71 @@ else
   bad "shipped code also failed — the fix does not hold"
 fi
 
+echo "11. shared nested-block config resolution (device_config.resolve_device_block)"
+# Absent config is a silent no-op; a malformed file must be distinguishable from it. That
+# distinction is the whole reason profile_resolve.py re-opens the file by hand today.
+cat > "$WORK/cfgprobe.py" <<'PYPROBE'
+import sys, os, json, tempfile
+sys.path.insert(0, os.path.join(os.environ["GH549_ROOT"], "utils", "py"))
+import device_config as D
+
+DEF = {"owner": "", "number": 0, "repos": [], "on": False}
+
+def probe(path):
+    os.environ["XYZ_DEVICE_CONFIG_PATH"] = path
+    return D.resolve_device_block("work_connectors", DEF, "XYZ_WC")
+
+tmp = tempfile.mkdtemp()
+missing = os.path.join(tmp, "nope.json")
+cfg, err = probe(missing)
+print("absent_err=%s absent_defaults=%s" % (err is None, cfg == DEF))
+
+bad = os.path.join(tmp, "bad.json")
+open(bad, "w").write("{not json")
+cfg, err = probe(bad)
+print("malformed_err=%s" % (err is not None))
+
+empty = os.path.join(tmp, "empty.json")
+open(empty, "w").write("")
+cfg, err = probe(empty)
+print("empty_is_absent=%s" % (err is None))
+
+good = os.path.join(tmp, "good.json")
+json.dump({"work_connectors": {"owner": "someone", "number": 7, "repos": "o/n"}}, open(good, "w"))
+cfg, err = probe(good)
+print("file_tier=%s list_coerced=%s" % (cfg["owner"] == "someone" and cfg["number"] == 7,
+                                        cfg["repos"] == ["o/n"]))
+
+os.environ["XYZ_WC_OWNER"] = "envwins"
+os.environ["XYZ_WC_NUMBER"] = "42"
+cfg, err = probe(good)
+print("env_wins=%s int_coerced=%s" % (cfg["owner"] == "envwins", cfg["number"] == 42))
+PYPROBE
+CFGOUT="$(GH549_ROOT="$ROOT" python3 "$WORK/cfgprobe.py" 2>&1)"
+[ -n "$CFGOUT" ] || bad "config probe produced no output"
+case "$CFGOUT" in *"absent_err=True absent_defaults=True"*)
+  ok "an absent config is a silent no-op returning the defaults" ;;
+  *) bad "absent config not handled: $CFGOUT" ;; esac
+case "$CFGOUT" in *"malformed_err=True"*)
+  ok "a malformed config reports an error instead of looking absent" ;;
+  *) bad "malformed config was indistinguishable from absent: $CFGOUT" ;; esac
+case "$CFGOUT" in *"empty_is_absent=True"*)
+  ok "an empty config file counts as absent, not malformed" ;;
+  *) bad "empty file misclassified: $CFGOUT" ;; esac
+case "$CFGOUT" in *"file_tier=True list_coerced=True"*)
+  ok "the file tier resolves, and a bare string where a list belongs is coerced" ;;
+  *) bad "file tier wrong: $CFGOUT" ;; esac
+case "$CFGOUT" in *"env_wins=True int_coerced=True"*)
+  ok "the env tier outranks the file and coerces to the default's type" ;;
+  *) bad "env tier wrong: $CFGOUT" ;; esac
+
+# board_sync must behave identically after being migrated onto the shared resolver.
+BS="$(XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$ROOT/utils/py/board_sync.py" config 2>&1)"
+case "$BS" in
+  *'"project_owner"'*) ok "board_sync config still resolves through the shared block resolver" ;;
+  *) bad "board_sync config broke after the migration: $BS" ;;
+esac
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

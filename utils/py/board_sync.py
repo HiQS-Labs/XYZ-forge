@@ -40,10 +40,10 @@ from pathlib import Path
 
 XYZ_ROOT = Path(__file__).resolve().parent.parent.parent
 try:
-    from device_config import get_device_config_path, load_local_device_config
+    from device_config import get_device_config_path, load_local_device_config, resolve_device_block
 except ImportError:  # direct execution outside utils/py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from device_config import get_device_config_path, load_local_device_config
+    from device_config import get_device_config_path, load_local_device_config, resolve_device_block
 
 # --root default: the CONSUMER repo, not the harness copy this file lives in. In a
 # vendored install XYZ_ROOT is <consumer>/.xyz — scanning there reads the harness's own
@@ -88,34 +88,15 @@ def _warn(msg):
 
 def resolve_settings():
     """3-tier resolution per GH-174: XYZ_BOARD_SYNC_<KEY> env > device_config board_sync
-    object > feature defaults. The nested object's env tier lives HERE, not in
-    device_config.py — the generic resolver handles top-level keys only (N3)."""
-    cfg = dict(DEFAULTS)
-    local = load_local_device_config().get("board_sync", {})
-    if not isinstance(local, dict):
-        _warn("board_sync setting is not an object — ignoring it")
-        local = {}
-    for key in DEFAULTS:
-        env = f"XYZ_BOARD_SYNC_{key.upper()}"
-        if env in os.environ:
-            raw = os.environ[env]
-            if isinstance(DEFAULTS[key], list):
-                raw = [p.strip() for p in raw.split(",") if p.strip()]
-            elif isinstance(DEFAULTS[key], int) and not isinstance(DEFAULTS[key], bool):
-                try:
-                    raw = int(raw)
-                except ValueError:
-                    _warn(f"{env}={raw!r} is not an integer — ignoring it")
-                    continue
-            cfg[key] = raw
-        elif key in local:
-            cfg[key] = local[key]
-    # JSON-file values skip the env tier's comma-splitting, so a bare string where a
-    # list belongs ("repos": "owner/name") would iterate characters downstream —
-    # coerce (review r1 F6).
-    for key in ("repos", "clone_dirs", "adapters"):
-        if isinstance(cfg.get(key), str):
-            cfg[key] = [cfg[key]]
+    object > feature defaults.
+
+    GH-549: the nested-object merge this used to carry inline now lives once in
+    device_config.resolve_device_block, so board_sync, work_connectors and anything after
+    them share one implementation instead of a copy each. Behaviour is unchanged — the
+    suite pins `board_sync config` byte-for-byte across the migration."""
+    cfg, error = resolve_device_block("board_sync", DEFAULTS, "XYZ_BOARD_SYNC")
+    if error:
+        _warn(error)
     return cfg
 
 
