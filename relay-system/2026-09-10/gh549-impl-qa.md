@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -164,5 +164,83 @@ Definition of Done:
 Verdict: Changes requested.
 
 Handing off to Producer — go to the Producer window and say "take your turn".
+
+### Producer · claude-a · round 2
+
+Both blockers upheld. The first is the substantive finding of this review and I was wrong to
+have shipped without it.
+
+- **[Blocker] the vendored `github_board` module did not exist — IMPLEMENTED, and you are right
+  that it makes criterion 1 unmet.** `REGISTRY` named `work_connectors.github_board`, the package
+  held only `__init__.py`, and the plan's own step 4.1
+  (`PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md:404`) called for exactly that adapter. So
+  the branch shipped a seam, a registry entry, a cursor protocol and no connector: every ordinary
+  configured run failed to import rather than touching a board. Your diagnosis of why the suite
+  missed it is also right — every leg injected a stub through the registry overlay, and the one
+  normal-config leg asserted only that a connector which cannot succeed does not break the host.
+  `utils/py/work_connectors/github_board.py` now exists as the thin adapter: it owns no write
+  protocol, holds no database handle, and drives `board_sync`'s existing resolve / add /
+  set-status, so the stale-ID self-heal, the repo-qualified idempotence check and the
+  board-identity refusal are the ones already reviewed rather than new copies.
+  - It reports the last event it **actually applied**, not the end of the batch, so a failure at
+    event 7 leaves 7 replayable instead of buried — which is the behaviour your round-1 bounds
+    fix now enforces from the other side.
+  - Issue #549 requires the columns to be user settings, so the event-to-column mapping is
+    config (`status_map`), merging onto defaults per key; an empty value disables a transition
+    and an unmapped event is skipped rather than failing a ledger verb. Column names carry
+    defaults because they are presentation; `project_owner`/`project_number`/`repos` still carry
+    none.
+  - `board_sync` gained the arbitrary-column write this needs. `resolve_ids` already made one
+    round trip that returned every option and kept only `in_progress`; it now caches the whole
+    table, and a pre-GH-549 cache lacking it re-resolves rather than `KeyError`ing mid-write.
+  - **Writing the test found a second half to your finding, which I would have missed.** With the
+    module present the child still failed: `_launch` spawns `python -m work_connectors.<name>`
+    with cwd at the repo root and no `PYTHONPATH`, so it could not import the package it was
+    being asked to run. Fixed by prepending `utils/py` to the child's path. The module's absence
+    and its unreachability were two independent defects on the same path.
+- **[Blocker] `XYZ_WORK_CONNECTORS=0` — IMPLEMENTED, and partly.** The switch was honoured, but
+  only at `releases_app.py:1564` in `_dispatch_work_connectors`, which you did not read. Your
+  conclusion is right for the reason you did not name: `cmd_work_reconcile` calls
+  `work_connectors.dispatch()` directly (`releases_app.py:4915`) and sails past that check
+  entirely. The check now lives in `load_connectors`, the one function both paths go through; the
+  hot-path early return stays so an unconfigured write still pays no import.
+- **[Pass] × 2 — noted**, both cited, and the round-1 fix reading is accurate.
+- **[Should] whole-file sweep — still open**, and honestly declared as such twice now. See below.
+
+**Verification.** `test/gh549-work-events.sh` **55 passed, 0 failed**; `gh402` 34/0; `gh405` 19/0,
+at `acff58ca`. Leg 17 drives the real vendored connector through normal config against the offline
+mock with **no registry overlay anywhere** and asserts the card reached the configured column —
+the non-overlay coverage you asked for. Leg 18 pins the kill switch with a sentinel-file stub plus
+a red control proving the same command runs the child without the switch.
+
+**One more disclosure, because it is the second vacuous assertion this review has surfaced.** Leg
+17's first draft read the card's column as `item["status"]`, which the mock does not store — it
+keys `field_values` by field id and holds an option id. The probe now resolves the option id back
+to the column name. It reported `absent -> None` and I chased it as a code failure before reading
+the mock; the code was right and the probe was wrong.
+
+**Round 3 is the cap.** What it must cover, in priority order:
+
+1. **The whole-file sweep (GH-268), completed this time.** It has been outstanding for two rounds
+   and it is the one Definition-of-Done item no fix has touched. If the budget will not cover
+   every large file, sweep `utils/py/work_connectors/__init__.py` and
+   `utils/py/work_connectors/github_board.py` end to end, plus `utils/py/board_sync.py`, and say
+   precisely which files you did and did not finish rather than declaring the sweep incomplete as
+   a whole.
+2. **The new connector**, `utils/py/work_connectors/github_board.py` — it is entirely new code
+   that has had no review. Failure mid-batch, the `advanced_to` contract against round 1's bounds
+   check, the config merge, and whether `require_board_identity` is genuinely reached before any
+   network call.
+3. **`board_sync.set_issue_status` / `option_id_for` / the widened `resolve_ids` cache** — the
+   self-heal recursion and the stale-cache path in particular.
+4. Legs 17 and 18, given two probes in this review have now been vacuous on first draft.
+
+VERDICT: PARKED
+Basis: producer turn — both round-2 blockers implemented (the missing connector built, plus a
+second import defect the test surfaced; the kill switch moved to the shared seam), one further
+vacuous probe self-disclosed and fixed, suites green at 55/0, 34/0, 19/0. Handing back for the
+final round; the whole-file sweep is the outstanding item.
+
+Handing off to Reviewer (codex) — take round 3, the final round, starting with the sweep.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
