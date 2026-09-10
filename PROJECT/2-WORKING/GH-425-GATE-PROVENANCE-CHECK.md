@@ -1,31 +1,31 @@
 ---
-title: --gate's provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-04
-owner: noelsaw1
 gh_issue: 425
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/425
-doc_type: bug
+title: "GH-425: the --gate provenance check never compares the PR number"
+status: 2-WORKING
+created: 2026-09-04
+updated: 2026-09-08
+owner: unassigned
+goal: "--gate verifies receipts by PR number, not just directory non-emptiness"
+doc_type: bugfix
 complexity: 1
 risk: 3
 effort: 2
 phases: 1
-ratings_provisional: true
-non_goals:
-  - Automating the reconciler — GH-421, which this gates.
-  - Redesigning provenance receipts. Either match the PR, or remove the flag.
+marathon: gh-490
 related:
-  - GH-421 (Phase 2 may not pass --gate until this lands)
-  - GH-406 (the external review that catalogued this defect class)
-  - GH-414 (nothing deterministic checks whether a claim in a comment is still true)
-goal: >
-  Make --gate verify what its message claims — that a provenance receipt exists for THIS PR — or
-  remove the flag. A gate that cannot fail is worse than no gate, because it gets cited as evidence.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-425: a gate that cannot fail
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## The defect
 
@@ -83,15 +83,55 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "test", "pattern": "gh425-gate-provenance" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_present",
+      "path": "utils/py/wave_reconcile.py",
+      "pattern": "os.walk\\(results_dir\\)",
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh425-gate-provenance-pr.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-425-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
+    }
+  ],
+  "artifacts": [
     "utils/py/wave_reconcile.py",
-    "test/gh425-gate-provenance.sh",
+    "test/gh425-gate-provenance-pr.sh",
     "test/baselines/GH-425-negative-control.md"
   ],
-  "remediation": { "source": "issue#425", "criteria": "--gate refuses a merged PR that has no receipt of its own even when other receipts exist in TESTS-RESULTS/; the success line names the receipt that matched; a missing TESTS-RESULTS/ still exits 6; a run without --gate is unaffected — or the flag is removed outright and its documentation with it" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#425",
+    "criteria": "--gate fails a PR whose TESTS-RESULTS receipts belong to a different PR number; pinned red-first"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/baselines/GH-425-negative-control.md",
+    "test/gh425-gate-provenance-pr.sh"
+  ]
 }
 ```
+
+## Acceptance
+
+- `--gate` fails when a merged PR's receipts carry a different PR number than the one being closed out.
+- `--gate` passes when receipts match the PR number.
+- Pinned red-first in a new suite.

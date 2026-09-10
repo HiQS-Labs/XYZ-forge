@@ -1,0 +1,25 @@
+test_legacy_verbs_do_not_infer_marker (__main__.MarkerTests.test_legacy_verbs_do_not_infer_marker) ... ok
+test_marker_writes_preserve_fields_and_receipt_bulk (__main__.MarkerTests.test_marker_writes_preserve_fields_and_receipt_bulk) ... ok
+test_refusals_and_dry_run_do_not_write (__main__.MarkerTests.test_refusals_and_dry_run_do_not_write) ... ok
+test_rollback_removes_originally_absent_artifacts (__main__.MarkerTests.test_rollback_removes_originally_absent_artifacts) ... TRANSITION ["roadmap", "update", "--issue-num", "424", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-424 · fixture 424** ✅ **SHIPPED 2026-09-08 (PR #42)** — [GH-424-test.md](PROJECT/1-INBOX/GH-424-test.md) · [#424](https://example.test/issues/424)"]
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 1:
+GH424 injected after second write
+
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+test_rollback_restores_all_artifacts_before_first_write (__main__.MarkerTests.test_rollback_restores_all_artifacts_before_first_write) ... TRANSITION ["roadmap", "update", "--issue-num", "424", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-424 · fixture 424** ✅ **SHIPPED 2026-09-08 (PR #42)** — [GH-424-test.md](PROJECT/1-INBOX/GH-424-test.md) · [#424](https://example.test/issues/424)"]
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 1:
+GH424 injected after second write
+
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.860s
+
+OK

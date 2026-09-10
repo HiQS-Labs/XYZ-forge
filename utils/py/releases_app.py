@@ -83,6 +83,7 @@ ROADMAP_SECTIONS = (
     "Deferred · vision",
 )
 
+
 EXIT_OK = 0
 EXIT_CHECK_FAILED = 1
 EXIT_USAGE = 2
@@ -3223,7 +3224,8 @@ def _roadmap_issue_url(raw, link_target, gh_number):
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
     from its bullet line (`- **` or `- [`) to the next bullet, `###`, or `##`."""
-    lines = open(path, encoding="utf-8").read().splitlines()
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
     entries = []
     sec = None
     inledger = False
@@ -3610,12 +3612,15 @@ def cmd_roadmap_sections(args):
 
 
 def cmd_roadmap_update(args):
-    """GH-257: update an existing parked roadmap row's raw_text.
+    """Update a parked row's explicit fields through the receipt-backed writer.
 
-    `roadmap add` refuses duplicates, `rate` scores an existing row, and `repoint` moves doc_path.
-    Nothing edited `raw_text` directly without manually editing releases.sql.
-    This command closes that gap with a validated, receipt-backed update path.
+    GH-257 adds raw_text/section updates; GH-424 adds an explicit status marker.
+    Marker-only updates preserve raw_text, ratings, section and doc_path.
     """
+    marker = getattr(args, "status_marker", None)  # `move` shares this handler.
+    if marker is not None and marker not in _ROADMAP_STATUS_MARKERS:
+        refuse("invalid-status-marker", "--status-marker must be one of %s"
+               % ", ".join(_ROADMAP_STATUS_MARKERS))
     if args.section is not None:
         validate_roadmap_section(args.section)
     # `roadmap move` delegates here with its OWN namespace, which has no --issue-url. Read it
@@ -3641,8 +3646,8 @@ def cmd_roadmap_update(args):
         if not row:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
 
-        if args.raw_text is None and args.section is None and issue_url is None:
-            refuse("no-update", "pass at least one of --raw-text, --section or --issue-url")
+        if args.raw_text is None and args.section is None and marker is None and issue_url is None:
+            refuse("no-update", "pass at least one of --raw-text, --section, --status-marker or --issue-url")
 
         new_raw_text = None
         rating = None
@@ -3650,7 +3655,7 @@ def cmd_roadmap_update(args):
             new_raw_text = validate_raw_text(args.raw_text, row["gh_number"])
             old_raw_text = row["raw_text"] or ""
             if (new_raw_text == old_raw_text.strip()
-                    and args.section is None and issue_url is None):
+                    and args.section is None and marker is None and issue_url is None):
                 print("roadmap update: %s raw_text unchanged; nothing written" % label)
                 return
             rating = parse_rating(new_raw_text, row["title"])
@@ -3672,6 +3677,8 @@ def cmd_roadmap_update(args):
                         print("ovr: %d" % rating["rating_ovr"])
             if args.section:
                 print("section: -> %s" % args.section)
+            if marker is not None:
+                print("status_marker: -> %s" % marker)
             if issue_url:
                 print("issue_url: %s -> %s" % (row["issue_url"], issue_url))
             return
@@ -3690,6 +3697,9 @@ def cmd_roadmap_update(args):
             if args.section is not None:
                 updates.append("section = ?")
                 params.append(args.section)
+            if marker is not None:
+                updates.append("status_marker = ?")
+                params.append(marker)
             if issue_url is not None:
                 updates.append("issue_url = ?")
                 params.append(issue_url)
@@ -3818,7 +3828,9 @@ def cmd_roadmap_sync(args):
         if len(parsed) == 0:
             ledger_has_content = False
             in_ledger_check = False
-            for line in open(md_path, encoding="utf-8").read().splitlines():
+            with open(md_path, encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+            for line in lines:
                 if re.match(r"^##\s+Ledger\s*$", line.strip()):
                     in_ledger_check = True
                     continue
@@ -3959,6 +3971,79 @@ def cmd_roadmap_sync(args):
         print(summary + " (txn %s, generation %d)" % (txn[:12], get_generation(conn)))
     finally:
         conn.close()
+
+
+def roadmap_render(conn):
+    """Replay the ledger, preserving section names and each stored entry block (GH-423).
+
+    Positions are section-local. The GID breaks position ties deterministically without
+    depending on SQLite's row order. Unknown sections are retained, just as sync retains them;
+    consumers still decide which sections they accept.
+    """
+    parts = ["## Ledger\n"]
+    if not _table_exists(conn, "roadmap_items"):
+        return parts[0]
+    section = None
+    for row in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position, global_id"):
+        if row["section"] != section:
+            section = row["section"]
+            parts.append("\n### %s\n\n" % section)
+        raw = row["raw_text"]
+        if not raw or not raw.strip():
+            title = row["title"]
+            gh = row["gh_number"]
+            if gh is not None and _roadmap_gh_number(title) != gh:
+                title = "GH-%d · %s" % (gh, title)
+            raw = "- **%s**" % title
+            if row["status_marker"]:
+                raw += " " + row["status_marker"]
+            if all(_col(row, c) is not None for c in RATING_COLUMNS[:4]):
+                raw += " rated " + "/".join(str(row[c]) for c in RATING_COLUMNS[:4])
+                if _col(row, "rating_ovr") is not None:
+                    raw += " ovr %s" % row["rating_ovr"]
+            elif all(_col(row, c) is not None for c in ("complexity", "risk", "effort")):
+                raw += " cx/risk/eff %s/%s/%s" % (row["complexity"], row["risk"], row["effort"])
+            if row["doc_path"]:
+                raw += " → [doc](%s)" % row["doc_path"]
+            if row["issue_url"]:
+                raw += " · [issue](%s)" % row["issue_url"]
+        parts.append(raw)
+        parts.append("\n\n")
+    return "".join(parts)
+
+
+def cmd_roadmap_render(args):
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    out = os.path.realpath(args.out) if args.out else None
+    if out:
+        if out in {os.path.realpath(p) for p in paths.values()}:
+            refuse("roadmap-render-output", "--out must not overwrite a releases ledger artifact")
+        # Check the destination's repository, including foreign repos and symlink targets.
+        # Fail closed when git cannot establish whether ROADMAP.md is tracked.
+        for candidate in dict.fromkeys((out, os.path.abspath(args.out))):
+            if os.path.basename(candidate) != ROADMAP_NAME:
+                continue
+            try:
+                tracked = subprocess.run(
+                    ["git", "-C", os.path.dirname(candidate), "ls-files", "--error-unmatch", "--", ROADMAP_NAME],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except OSError as exc:
+                refuse("roadmap-render-output", "cannot check tracked ROADMAP.md: %s" % exc)
+            if tracked.returncode != 1:
+                refuse("roadmap-render-output", "--out refuses tracked ROADMAP.md (or unverifiable tracking)")
+    conn = connect(paths["db"])
+    try:
+        rendered = roadmap_render(conn)
+    finally:
+        conn.close()
+    if out:
+        try:
+            _atomic_write(out, rendered)
+        except OSError as exc:
+            refuse("roadmap-render-output", "cannot write --out: %s" % exc)
+    else:
+        sys.stdout.write(rendered)
 
 
 def cmd_roadmap_list(args):
@@ -4532,7 +4617,8 @@ def cmd_check(args):
 
             dump_ok = False
             if os.path.exists(paths["dump"]):
-                dump_content = open(paths["dump"], encoding="utf-8").read()
+                with open(paths["dump"], encoding="utf-8") as fh:
+                    dump_content = fh.read()
                 dump_gen = dump_generation_from_text(dump_content)
                 if dump_gen != db_gen:
                     fail("generation-mismatch",
@@ -4552,7 +4638,8 @@ def cmd_check(args):
                 print("OK: generation trio consistent at %d (DB <-> dump)" % db_gen)
 
             if os.path.exists(paths["gen"]):
-                first = open(paths["gen"], encoding="utf-8").readline().strip()
+                with open(paths["gen"], encoding="utf-8") as fh:
+                    first = fh.readline().strip()
                 m = GEN_MARKER_RE.match(first)
                 gen_file_gen = int(m.group(1)) if m else None
                 if gen_file_gen != db_gen:
@@ -5064,7 +5151,8 @@ def _rebuild(root, conn):
                "for git-merge resolution only, never crash recovery")
     if not os.path.exists(paths["dump"]):
         refuse("dump-missing", "nothing to rebuild from")
-    dump_content = open(paths["dump"], encoding="utf-8").read()
+    with open(paths["dump"], encoding="utf-8") as fh:
+        dump_content = fh.read()
     dump_gen = dump_generation_from_text(dump_content)
     if dump_gen is None:
         refuse("dump-generation", "%s carries no generation header — not a canonical dump"
@@ -5457,7 +5545,7 @@ def build_parser():
     sp_ss.add_argument("value", help="new value")
     sp_ss.add_argument("--dry-run", action="store_true", help="print the change, write nothing")
 
-    sp = sub.add_parser("roadmap", help="Roadmap ledger (GH-269): sync/list the ledger items")
+    sp = sub.add_parser("roadmap", help="Roadmap ledger: sync/list/render the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
     sp_sections = rsub.add_parser("sections", help="list accepted roadmap section names (no DB required)")
     sp_sections.add_argument("--json", dest="as_json", action="store_true",
@@ -5477,6 +5565,8 @@ def build_parser():
     sp_rl.add_argument("--json", dest="as_json", action="store_true",
                        help="emit rows as a JSON array (machine-readable; the default rendering "
                             "is a display, not an API)")
+    sp_render = rsub.add_parser("render", help="replay DB rows as ledger markdown (stdout by default)")
+    sp_render.add_argument("--out", help="output file (relative to cwd); refuses tracked ROADMAP.md")
 
     sp_ra = rsub.add_parser("add", help="intake a single issue into the roadmap ledger directly")
     sp_ra.add_argument("--issue-num", required=True, type=int, help="GH issue number")
@@ -5511,10 +5601,12 @@ def build_parser():
     sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
     sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
-    sp_ru = rsub.add_parser("update", help="update an existing roadmap row's raw_text (GH-257)")
+    sp_ru = rsub.add_parser("update", help="update a roadmap row's text, section or status marker")
     sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
     sp_ru.add_argument("--raw-text", help="new raw_text for the row")
+    sp_ru.add_argument("--status-marker", choices=_ROADMAP_STATUS_MARKERS,
+                       help="explicit lifecycle marker; never inferred from raw_text")
     sp_ru.add_argument("--section", help="new section; accepted names: " + ", ".join(ROADMAP_SECTIONS))
     sp_ru.add_argument("--issue-url", help="corrected GitHub issue URL for the row (GH-527). Must "
                        "name the same issue as the row's gh_number — this is the only verb that "
@@ -5637,6 +5729,7 @@ def main(argv=None):
         # form was already one subcommand past readable.
         "roadmap": lambda a: {"add": cmd_roadmap_add, "sync": cmd_roadmap_sync,
                               "rate": cmd_roadmap_rate, "list": cmd_roadmap_list,
+                              "render": cmd_roadmap_render,
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
                               "move": cmd_roadmap_move, "sections": cmd_roadmap_sections,
                               "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
