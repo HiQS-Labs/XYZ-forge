@@ -1,0 +1,1 @@
+Review GH-496 PR 1 (Phase 0 Recon & Phase 1 Out-of-Tree Telemetry Relocation): inspect utils/py/harness_app.py, test/gh496-telemetry-isolation.sh, validate.sh, utils/ci-route.sh, and TESTS-RESULTS/2026-09-09+GH-496-PR1/SUMMARY.md on branch feat/gh496-selective-ci. Verify correctness, edge cases, backwards compatibility, and sign off for PR 1 readiness.

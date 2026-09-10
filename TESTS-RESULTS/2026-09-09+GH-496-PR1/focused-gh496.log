@@ -1,0 +1,16 @@
+== test: gh496-telemetry-isolation ==
+  PASS: get_db_path() defaults to ~/.xyz/projects/<project_key>/telemetry/harnesses.db when unset
+  PASS: get_db_path() honors XYZ_HARNESS_DB environment override
+  PASS: get_sql_path() and get_generated_md_path() stay alongside the out-of-tree database
+  PASS: check_integrity() strictly fails when explicit XYZ_HARNESS_DB does not exist (no silent fallback)
+  PASS: Real CLI flag --local check succeeds and validates in-repo harnesses.db
+  PASS: normalize_remote_url unifies git@, ssh://git@, and https:// URLs to identical canonical identity
+  PASS: First-turn auto-seed: newly initialized database auto-populates harnesses and models on log
+  PASS: Evaluation records cleanly into out-of-tree database without touching git working tree
+  PASS: Concurrency test: 10 parallel loggers wrote 10 rows with zero integrity failures
+  PASS: Turn logging successfully routed to host runtime location (~/.xyz/.../telemetry/harnesses.db)
+  PASS: Row persistence: exact query on invocation_logs verifies row committed (count=1)
+  PASS: Working tree cleanliness: git status --porcelain shows zero tracked harness telemetry churn
+  PASS: Red control: unregistered harness_id is strictly rejected by foreign key constraint
+  PASS: Negative control: tracked root files remain 100% byte-identical
+gh496-telemetry-isolation: 14 pass, 0 fail
