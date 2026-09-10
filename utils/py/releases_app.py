@@ -1513,6 +1513,20 @@ def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None):
     it the real txn_id: the id is minted inside this transaction, and work_events is append-only,
     so a caller cannot stamp it afterwards.
     """
+    # Order matters for the WRITER LOCK, not just for tidiness. This runs inside
+    # perform_write's transaction, so every query here lengthens the critical section that
+    # concurrent-writer suites (gh57-releases-fuzz, jog-queue) race against. Resolve the op
+    # from the in-memory registry FIRST — a dict lookup — and only touch sqlite_master for the
+    # writes that will actually emit. 22 of the 27 ops are non-eventful, so the common path now
+    # costs one dict lookup instead of a schema query.
+    if explicit is None:
+        try:
+            if extractor_for(op) is None:
+                return None
+        except KeyError:
+            # An unclassified op must not break a ledger write in production; the coverage test
+            # is where this fails, loudly, before it ships.
+            return None
     if not _table_exists(conn, "work_events"):
         return None
     if explicit is not None:
@@ -1525,14 +1539,7 @@ def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None):
                      (new_gid("wev-"), repo_id, gh_number, txn_id, event,
                       json.dumps(payload, sort_keys=True) if payload is not None else None, at))
         return event
-    try:
-        extractor = extractor_for(op)
-    except KeyError:
-        # An unclassified op must not break a ledger write in production; the coverage test is
-        # where this is meant to fail, loudly, before it ships.
-        return None
-    if extractor is None:
-        return None
+    extractor = extractor_for(op)   # already validated above; cannot raise here
     result = extractor(conn, op, target_gid)
     if result is None:
         return None
