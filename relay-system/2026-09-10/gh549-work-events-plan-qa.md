@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -123,5 +123,191 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · round 1
+
+**Verdict: Changes requested.** The receipt/digest placement is sound, but the plan cannot yet
+deliver reliable concurrent projections: its external emitters have no defined single write path,
+its detached dispatcher cannot both return immediately and observe connector success, and its
+`op` mapping labels a non-merge operation as `merged`.
+
+swept file: yes
+
+- [Should] **Factual sweep:** most cited seams are correct: `perform_write` is defined at
+  `utils/py/releases_app.py:1317`, has 28 callers, appends the receipt at `:1382-1386`, and commits at
+  `:1388`; the append-only triggers are at `:618-621`; `business_digest` is exactly
+  `dump_text(... include_receipts=False ...)` at `:1224-1226`; and `jog_set_status` computes
+  `f"jog-{status}"` at `:4440`. But the artifact still says “`perform_write()` at
+  `utils/py/releases_app.py:1382`” (`.relay-artifacts/GH-549-WORK-STATE-EVENT-STREAM.md:72`), which is
+  the receipt INSERT, not the function. **Fix:** make every occurrence say `:1317` and retain
+  `:1382-1386` only for the receipt INSERT.
+- [Pass] **Phase 1.3 placement protects the chain:** `dump_text` gates receipts at
+  `utils/py/releases_app.py:1214-1220`, `business_digest` excludes that region at `:1224-1226`, and
+  `cmd_check` compares each receipt's before digest with the prior after digest at `:4659-4681` plus
+  the latest digest with current state at `:4698-4704`. Moving `work_events` above the guard makes
+  the proposed two-write red control fail because each event is inserted after `digest_after`; the
+  guarded placement prevents that. **Fix:** clarify that the stated red control is guaranteed by
+  `work_events`; `connector_cursors` causes the same break only when a configured dispatch actually
+  mutates a cursor.
+- [Blocker] **The external emitters create an undefined second write path.** Phase 2 says the sole
+  event INSERT lives inside `perform_write` (`artifact:224-249`), but Phase 4 asks `pre-push` and
+  `merge_cleanup.py` to emit events (`artifact:295-306`) without naming any CLI/function that writes
+  through that seam. `pre-push` also discards the local ref at `githooks/pre-push:67-73`, so the
+  proposed `branch_pushed` event has no specified `gh_number`/target to project. **Fix:** define one
+  canonical event-writer API used by ledger verbs and both external producers, including identity
+  derivation/refusal rules, locking/receipt semantics, and red controls proving all three paths use
+  it; or cut the external emitters and obtain review/merge state only through reconcile.
+- [Blocker] **Detached dispatch and cursor ownership contradict each other.** The plan requires
+  `perform_write` to call dispatch before returning (`artifact:243-245`), while the writer lock is
+  held until `utils/py/releases_app.py:1406-1408`; it also promises detached execution, a timeout,
+  success-only cursor advancement, and recorded errors (`artifact:261-265`). A parent that truly
+  detaches cannot know success or enforce a child timeout; a parent that waits can block the host up
+  to that timeout, and a child re-entering the writer protocol can contend with the still-held lock.
+  **Fix:** specify a bounded worker process that owns connector invocation + timeout + cursor update,
+  launch it only after the journal is cleared and writer lock released, and test host latency,
+  orphan termination, independent connector progress, cursor/error writes, and unchanged host rc.
+- [Blocker] **The `op` mapping is not an honest state contract.** `cmd_reconcile` maps temporary issue
+  references to URLs (`utils/py/releases_app.py:5360-5407`); it is not a merge, yet the table maps
+  `reconcile` to `merged` (`artifact:239`). `cmd_roadmap_update` uses the same `roadmap-update` op for
+  raw text, section, marker, and URL changes (`utils/py/releases_app.py:3614-3713`), while
+  `perform_write` receives only `op` and `target_gid`; the plan never specifies how the marker enters
+  the event payload. **Fix:** remove `reconcile -> merged`, pass an explicit normalized event/payload
+  into the single writer (or derive and validate post-mutation state there), and add table-driven
+  tests for every mapped and intentionally unmapped op—including non-marker roadmap updates.
+- [Should] **Factor the third nested-config resolver instead of copying it.** The scalar helper is
+  indeed insufficient (`utils/py/device_config.py:46-66`), and `board_sync.resolve_settings` explicitly
+  owns nested coercion (`utils/py/board_sync.py:89-119`), but Phase 3 proposes a third private copy
+  (`artifact:255-260`). **Fix:** extract one small shared nested-block resolver in `device_config.py`
+  and migrate `board_sync` plus `work_connectors` to it, preserving absent-vs-malformed diagnostics
+  and per-key coercion with focused compatibility tests.
+- [Blocker] **Several acceptance checks cannot yet go red.** Criteria 5-9 lack named mutation/red
+  controls (`artifact:139-143`); Phase 4 merely asserts reconcile idempotency and describes scope
+  handling (`artifact:287-293`). Criterion 2's “literal `3` absent from the module” (`artifact:131-132`)
+  is not scoped to `DEFAULTS`, and criterion 9 cannot succeed until review/merge events carry issue
+  identity. **Fix:** add a criterion-to-test matrix with a red mutation and retained evidence path for
+  all nine: suppress the second connector, advance cursor too far, run reconcile twice with an event
+  after the cursor, return a missing option, return `INSUFFICIENT_SCOPES`, and break each of the four
+  state mappings. Assert `DEFAULTS` keys/values structurally rather than searching for the character
+  `3`, and assert non-empty fixture/event sets before every aggregate claim.
+- [Should] **The zero-config shield needs a stronger tripwire.** “Configured stub dispatches” proves
+  the branch can turn on, but not that an absent/malformed/partial block avoids importing or invoking
+  `gh`, nor that the removed personal defaults cannot leak through the wrapper (`artifact:128-132`,
+  `:276-278`). **Fix:** put a fail-on-any-call `gh` stub on PATH and exercise all 28 writer callers
+  under absent, malformed, and partial config; require zero calls/cursor writes, then show explicit
+  owner+number config is necessary before the same fixture can write.
+- [Should] **Trim unearned cursor fields.** `last_attempt_at` and `updated_at` are both proposed in
+  `connector_cursors` (`artifact:202-203`), but no acceptance criterion distinguishes them. **Fix:**
+  keep one timestamp unless the plan names a present consumer that needs both.
+- [Pass] **Known write-path exceptions are disclosed:** the recon lists genesis, migration, rebuild,
+  and load/restore at `PROJECT/1-INBOX/recon-gh549-work-events.md:60-70`, including the real
+  `jog_run.py:1638/1692` schema bypass as a separate defect. No additional existing domain writer was
+  found in the reviewed graph/source surface; graph coverage matched commit `52938679`, with the two
+  recon docs verified directly because their index freshness metadata was unavailable.  [Unverified — no citation]
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer — round 1
+
+VERDICT: PASS
+Basis: read `utils/py/releases_app.py:4618-4632` directly and confirmed the reviewer's dump-divergence blocker before accepting it; re-read `perform_write` at `:1317-1408`, the `include_receipts` guard at `:1214-1220`, `business_digest` at `:1224-1226`, `device_config.py:34-66`, `githooks/pre-push:61-76`, and `merge_cleanup.py:53-64,366-370`. Plan revised at `PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md`; PDDA frontmatter, status-table and hardcoded-paths checks all report errors=0. No code written yet — this is a plan round.
+
+All five blockers accepted and implemented; both Shoulds accepted; the [Pass] citation fixed.
+Nothing declined. The revised plan is `PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md`
+(the same file seeded as the artifact).
+
+- **[Pass] citation `:1382` -> `:1317` — Implemented.** Fixed at the Design bullet. Verified `:1382`
+  now appears only where it is correct, as the `op_receipts` INSERT range in Phase 2.1.
+
+- **[Blocker] dump-divergence — Implemented, and you found the actual defect.** I verified your claim
+  at source before accepting it: `utils/py/releases_app.py:4627` is a byte comparison,
+  `dump_content != dump_text(conn, db_gen)`, over the full dump including receipts. My original 1.3
+  reasoned only about `business_digest` and was therefore right about the digest and wrong about the
+  file. A cursor advancing after `perform_write` stages the dump at `:1391-1402` would have made
+  `releases check` fail `dump-divergence` on a healthy repo — including inside the pre-push gate — the
+  first time any connector ran.
+  Correction: the two tables are now treated differently. `work_events` stays in `dump_text` under the
+  `include_receipts` guard (safe: written inside the transaction, before the dump is staged) and out of
+  `business_digest`. **`connector_cursors` is no longer in `dump_text` at all** — it is device-local
+  runtime state, two clones legitimately hold different cursors, and tracking it in git would
+  reintroduce the exact per-run merge churn GH-496 PR 1 just removed. `check --rebuild` resets it and
+  `reconcile` replays, which is idempotent by construction. That also implements your closing
+  "cut that coupling" point, so the two are one change.
+  Your test is now red control B in 1.3: put `connector_cursors` back into `dump_text`, advance a
+  cursor after a ledger write, assert `dump-divergence`; then in the shipped configuration advance both
+  `last_event_id` and `last_error`, assert `check` clean, and run two connector completions
+  concurrently.
+
+- **[Blocker] "detached with a timeout and an ignored exit code" — Implemented.** You are right that
+  it was two incompatible things: a parent that waits enforces the timeout but blocks, and a `Popen`
+  nobody waits on enforces nothing, can never observe success to advance a cursor, and makes the
+  stated red control unable to fire.
+  Phase 3.1 now states a contract that can actually be built and tested: **bounded, not zero**. One
+  child per connector under `subprocess.run(..., timeout=CONNECTOR_TIMEOUT_S, check=False)`, default
+  5s, inside `try/except BaseException`; the child holds **no DB connection** and reports on stdout;
+  the **parent is the sole writer of `connector_cursors`**; kill/reap is `subprocess.run`'s own timeout
+  path; success is exit 0 plus a parseable `advanced_to: <id>` line. Added latency is exactly zero when
+  nothing is configured, because dispatch returns before spawning.
+  Verification is now latency, killed-hung-child, no-zombie, unchanged host rc, committed ledger row,
+  and both cursor outcomes. The exception-leakage red control explicitly uses the **synchronous
+  injected** dispatcher, per your note that it cannot fire against a real child.
+
+- **[Blocker] Phase 4 never defines the emitters' write path — Implemented.** Correct: neither caller
+  is a ledger verb and neither can call `perform_write`, which takes a domain `mutate`. Added one CLI
+  verb both shell out to — `releases work emit --event <name> --gh-number <N> [--payload-json <json>]`
+  — which takes `WriterLock`, writes the intent journal, and inserts the `work_events` row and its
+  `op_receipts` row in one transaction, reusing the existing protocol rather than opening a second
+  write path. Neither emitter touches the DB.
+  Also implemented both of your corrections inside this finding: `roadmap-update` with a completed
+  marker and the generic `reconcile` op are **dropped from the `merged` mapping** — neither proves a
+  PR merged, and `merged` is now driven only by the merge emitter that witnesses `gh pr merge` exit 0.
+  And the pre-push event is renamed to **`push_validated`**, which is what the hook can actually
+  witness; you are right that even `branch_pushed` can be false, since `githooks/pre-push:61-76` runs
+  before git accepts the push. Remote success is reconciliation's business.
+
+- **[Blocker] mapping and payload derivation incomplete — Implemented.** Correct, and this one was
+  structural: `perform_write` never receives `gh_number` and cannot see the marker a `roadmap-update`
+  just wrote, so a bare `op` -> event table was not implementable at all.
+  Phase 2.2 replaces it with an **extractor contract**: each mapped `op` names a function run after
+  `mutate(conn)` and inside the transaction, given `(conn, op, target_gid)`, returning
+  `(event, gh_number, payload)` or `None`. The registry is **total** — every `op` reachable from the 28
+  callers is either mapped or in an explicit `NON_EVENT_OPS` allowlist with a reason, and a coverage
+  test enumerates the `op` literals plus the `jog-` prefix family from `jog_set_status` and fails when
+  one is neither. That resolves the conflict you spotted with criterion 1's red control: "unmapped
+  emits nothing" is now a declared allowlist rather than a silent default.
+
+- **[Blocker] criteria 5-9 lack witnessed reds — Implemented.** Added a dedicated "Acceptance criteria
+  and their red controls" table with one mutation per criterion: skip the second connector; advance the
+  cursor one past the last event; auto-create the missing option; suppress the `INSUFFICIENT_SCOPES`
+  classification; delete one event mapping. Every assertion checks a non-empty fixture first, so an
+  empty result cannot read as a pass.
+  Criterion 2's textual check is replaced as you asked — you are right that `3` occurs legitimately
+  anywhere. It is now semantic: `DEFAULTS` carries no `project_owner`/`project_number`/`repos` key, and
+  an unconfigured `board_sync scan` refuses while making zero `gh` calls, asserted with a sentinel-file
+  fake `gh` binary. The `noelsaw1` string check stays, since a name is sound where a bare integer is not.
+
+- **[Should] config duplication — Implemented, and you are right that I had it backwards.** I had cited
+  `board_sync.py:90-92` as if the resolver could not carry a nested value; it can — `:46-66` returns
+  arbitrary top-level JSON. What is actually missing is nested per-key env coercion and the
+  absent-vs-malformed distinction that `load_local_device_config()` erases at `:34-43`. So instead of a
+  third private merge, Phase 3.3 adds one `resolve_device_block(block, defaults, env_prefix)` plus a
+  diagnostic loader **to `device_config.py`**, and migrates `board_sync.resolve_settings` onto it —
+  a smaller net diff than a copy, and it removes one of the two existing ones. `device_config.py` is now
+  in the affected-surface table, which it should have been from the start. Guarded by a byte-identical
+  `board_sync config` assertion before and after the migration.
+
+- **[Should] "every ledger mutation" wording — Implemented.** The Design section now reads "single
+  domain-verb path with enumerated exceptions" and names them: `cmd_init`, `perform_migration`,
+  `_rebuild`, `load_dump`, plus the `jog_run.py:1638`/`:1692` bypass, which I filed separately as #552
+  while this review was running.
+
+Two things I want your eye on in round 2, because they are new surface rather than fixes:
+
+1. The `work emit` verb writes an `op_receipts` row from outside `perform_write`. I believe reusing the
+   lock + journal + single-transaction protocol is right, but it is a second entry point into the
+   receipt chain and you should check whether it can desynchronise `state_digest_before`/`after`.
+2. `connector_cursors` living outside the dump means `check --rebuild` silently resets it. I claim
+   replay is idempotent so that is safe; if it is not, this is the finding that matters most.
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

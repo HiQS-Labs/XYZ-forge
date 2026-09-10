@@ -69,9 +69,13 @@ Full design is on the issue. The load-bearing decisions:
 - **The stream is the product; connectors are thin.** The core emits rich domain events — parked,
   rated, running, PR opened, merged, escalated — never a board's column vocabulary. Each connector
   maps to its own presentation. The core does not inherit GitHub's column model.
-- **Same database, same transaction, one seam.** `perform_write()` at `utils/py/releases_app.py:1382`
-  is the single function every ledger mutation passes through, and it already writes its `op_receipts`
-  row inside the transaction. The work event is written there, so it is atomic with the ledger write.
+- **Same database, same transaction, one seam.** `perform_write()` at `utils/py/releases_app.py:1317`
+  is the single path for **domain verbs** — 28 callers — and it already writes its `op_receipts` row
+  inside the transaction. The work event is written there, so it is atomic with the ledger write.
+  It is not the only thing that can touch the file: `cmd_init`, `perform_migration`, `_rebuild` and
+  `load_dump` are enumerated exceptions, and `jog_run.py:1638`/`:1692` is a bypass filed as #552.
+  The accurate claim is "single domain-verb path with enumerated exceptions", not "every ledger
+  mutation" (Codex r1).
 - **Sibling tables, not wider `op_receipts`.** This is a deliberate refinement of the operator's
   "extend `op_receipts`" answer, made after reading the schema at `releases_app.py:603-620`.
   `op_receipts` is append-only via `op_no_update` / `op_no_delete` triggers and carries a
@@ -171,17 +175,17 @@ both CI workflows, every git hook, all repo skills, `package.json`, `crontab` an
 It ships another person's board as a zero-config default (`:63-64`, `:67`). And three surfaces each
 compute "in flight" privately: `board_sync.py` from `roadmap_items.status_marker` + `jog_queue.status`,
 HQ from `ROADMAP.md`, Flightdeck from its own extract.
-
 ## Smallest affected surface
 
 | File | Change |
 |---|---|
-| `utils/py/releases_app.py` | migration 008; two tables in `dump_text` + `load_dump`; one insert in `perform_write`; `work reconcile` verb |
-| `utils/py/work_connectors/__init__.py` | registry, config resolution, detached dispatch |
+| `utils/py/releases_app.py` | migration 008; `work_events` in `dump_text` + `load_dump`; one insert in `perform_write`; `work emit` and `work reconcile` verbs |
+| `utils/py/device_config.py` | one new `resolve_device_block()` + a loader that distinguishes absent from malformed |
+| `utils/py/board_sync.py` | personal literals out of `DEFAULTS`; `resolve_settings` migrated onto `resolve_device_block` |
+| `utils/py/work_connectors/__init__.py` | registry, config resolution, bounded dispatch |
 | `utils/py/work_connectors/github_board.py` | the GitHub connector, built from `board_sync.py` |
-| `utils/py/board_sync.py` | personal literals out of `DEFAULTS` |
 | `utils/py/mock_gh_board.py` | one new fault: `insufficient_scopes` |
-| `githooks/pre-push` | one backgrounded emit before each green exit |
+| `githooks/pre-push` | one bounded emit before each green exit |
 | `skills/merge-cleanup/scripts/merge_cleanup.py` | one emit inside `if merged:` |
 | `test/gh549-work-events.sh` (new), `test/gh405-mock-board-harness.sh` | proof, and the six assertions that must stop depending on a coincidence |
 | `validate.sh`, `utils/ci-route.sh` | registration |
@@ -191,7 +195,9 @@ HQ from `ROADMAP.md`, Flightdeck from its own extract.
 Carried verbatim from the issue: no two-way sync, no dynamic plugin discovery, no board schema
 mutation, no connector becomes authoritative, no HQ or Flightdeck connector, `releases_app.py project
 sync` stays, no historical backfill. Added after recon: **not** fixing the `jog_run.py` dry-run write
-(filed separately), and **not** fixing the mock's missing pagination.
+(#552), and **not** fixing the mock's missing pagination. Added after Codex r1: **no cross-clone
+cursor history** — a cursor is device-local runtime state, and nothing in the acceptance criteria
+needs it to survive a rebuild or travel between clones.
 
 ## Phase 1 — the tables
 
@@ -203,139 +209,248 @@ sync` stays, no historical backfill. Added after recon: **not** fixing the `jog_
   `updated_at`.
 
 **1.2** `_migration_008(conn)` applying it statement-by-statement via `_ddl_statements()`
-(`:659-679`) — **never `executescript()`**, which commits `perform_migration`'s open transaction
-(the warning at `:711-715`). Register `8: {"apply": _migration_008, "txn_safe": True}` at `:966-974`.
+(`:659-679`) — **never `executescript()`**, which commits the open transaction (the warning at
+`:711-715`). Register `8: {"apply": _migration_008, "txn_safe": True}` at `:966-974`.
 
-**1.3** Emit both tables in `dump_text` **inside the `include_receipts` guard** (`:1214-1220`), beside
-`op_receipts`. This is the load-bearing decision from recon finding 1: `connector_cursors` is mutated
-after the transaction by the dispatcher, so if it entered `business_digest` (`:1224-1226`) the next
-write's `digest_before` would not match the previous `digest_after` and `cmd_check`'s chain walk
-(`:4659-4681`) would report a broken chain on **every** write. `work_events` follows the same
-placement for symmetry and because it is provenance, not business state.
+**1.3 — corrected after Codex r1. The two tables are treated differently, and the reason is a check
+I originally missed.**
 
-**1.4** Matching loaders in `load_dump` (`:5125-5133` pattern), parent-before-child, or
-`check --rebuild` and the merge driver break.
+My first plan put both tables in `dump_text` under the `include_receipts` guard, reasoning only about
+`business_digest`. That reasoning was right as far as it went and **wrong overall**, because
+`cmd_check` runs a second, stricter comparison:
 
-*Verification:* migrate a fixture from 007 -> 008, assert both tables exist and `schema_migrations`
-carries 8. **Red control:** with the `dump_text` emit moved *above* the `include_receipts` guard,
-two consecutive `roadmap add` calls must make `releases check` report `receipt-chain` — proving the
-placement is what protects the chain, not luck.
+```
+utils/py/releases_app.py:4627
+    elif dump_content != dump_text(conn, db_gen):
+        ... fail("dump-divergence", ...)
+```
+
+That is a byte comparison of the committed `releases.sql` against the canonical dump of the DB, and it
+includes receipts. `perform_write` writes the dump once, at `:1391-1402`, immediately after commit. A
+cursor advances *after* that. So a `connector_cursors` row inside `dump_text` would put the file and
+the database out of sync the moment any connector ran, and the next `releases check` — including the
+one behind the pre-push gate — would fail `dump-divergence` on a healthy repo.
+
+Corrected placement:
+
+- **`work_events` -> in `dump_text` under the `include_receipts` guard (`:1214-1220`), excluded from
+  `business_digest` (`:1224-1226`).** Safe because every row is written inside the transaction, before
+  the dump is staged, so file and DB agree. Excluded from the digest because it is provenance, not
+  business state.
+- **`connector_cursors` -> not in `dump_text` at all.** It is device-local runtime state: two clones of
+  the same repo legitimately hold different cursors, and a git-tracked cursor would reintroduce
+  exactly the per-run merge churn GH-496 PR 1 just removed. `check --rebuild` therefore resets it and
+  `work reconcile` replays from the start, which is idempotent by construction (4.4). This is also
+  Codex's "cut that coupling" point in the same finding.
+
+**1.4** `work_events` gets matching loaders in `load_dump` (`:5125-5133` pattern), parent-before-child.
+`connector_cursors` deliberately gets none.
+
+*Verification:* migrate a fixture 007 -> 008; assert both tables exist and `schema_migrations` carries
+8; assert `check` is clean after a `roadmap add`.
+**Red control A (digest):** move the `work_events` emit above the `include_receipts` guard; two
+consecutive `roadmap add` calls must make `check` report `receipt-chain`.
+**Red control B (divergence — the one Codex's blocker demands):** add `connector_cursors` to
+`dump_text`, advance a cursor after a ledger write, assert `check` reports `dump-divergence`. Then in
+the shipped configuration advance **both** `last_event_id` and `last_error` and assert `check` is
+clean, and run two connector completions concurrently as the concurrency control.
 
 ## Phase 2 — emission at the one seam
 
 **2.1** Inside `perform_write` (`:1317`), immediately after the `op_receipts` INSERT (`:1382-1386`)
-and before `conn.commit()` (`:1388`), insert one `work_events` row. `op`, `target_gid`, `txn_id`,
-`session_id()` and `now` are all already in scope.
+and before `conn.commit()` (`:1388`), insert one `work_events` row.
 
-**2.2** Map `op` -> domain event through one table. The mapping must handle
-`jog_set_status`'s computed `f"jog-{status}"` (`:4417`, writes at `:4440`) with a prefix rule, not a
-fixed literal list. Unmapped ops emit nothing — a new verb must be added deliberately, not guessed.
+**2.2 — the extractor contract, added after Codex r1.** `perform_write` receives only `root`, `conn`,
+`op`, `target_gid` and `mutate`. It does **not** receive `gh_number`, and it cannot see the marker a
+`roadmap-update` just wrote. So a bare `op` -> event table is not implementable, which the first draft
+missed. Each mapped `op` instead names an **extractor**: a function run after `mutate(conn)` and
+inside the transaction, given `(conn, op, target_gid)`, returning `(event, gh_number, payload)` or
+`None`.
 
-| `op` | event |
-|---|---|
-| `roadmap-add` | `parked` |
-| `roadmap-rate` | `rated` |
-| `roadmap-update` (marker `🚧`) | `in_flight` |
-| `roadmap-update` (marker `✅`), `reconcile` | `merged` |
-| `jog-lease` | `in_flight` |
-| `jog-completed` / `jog-failed` / `jog-parked` (prefix `jog-`) | `jog_<status>` |
+The registry is **total**. Every `op` string reachable from the 28 callers is either mapped to an
+extractor or listed in an explicit `NON_EVENT_OPS` allowlist with a one-line reason. A coverage test
+enumerates the `op` literals in `releases_app.py` — plus the `jog-` prefix family from
+`jog_set_status` (`:4417`, writes at `:4440`) — and **fails when one is neither mapped nor
+allowlisted**. That is what stops a new verb from silently dropping a state.
 
-**2.3** Dispatch happens **after** `conn.commit()`, not inside the transaction — the ledger write must
-never depend on the network. `perform_write` calls the dispatcher once, after the dump and rename at
-`:1391-1402`, wrapped so no exception can escape.
+| `op` | event | extracted from |
+|---|---|---|
+| `roadmap-add` | `parked` | the inserted `roadmap_items` row |
+| `roadmap-rate` | `rated` | the updated row's four axes |
+| `roadmap-update` | `in_flight` / `updated` | re-read `status_marker` after `mutate` |
+| `jog-lease` | `in_flight` | `jog_queue` row |
+| `jog-<status>` (prefix) | `jog_<status>` | `jog_queue` row |
+| everything else | — | `NON_EVENT_OPS`, with a reason |
 
-*Verification:* every one of the 28 callers still exits 0 with no config present. **Red control:**
-inject a crash between the domain mutate and the commit and assert neither the ledger row nor the
-event survives; the existing `_crash("pre-commit")` hook at `:1387` is the seam for it.
+**Codex is right that `roadmap-update` with a completed marker does not prove a PR merged**, and
+neither does the generic `reconcile` op. Both are dropped from the `merged` mapping. The `merged`
+board state is driven only by the merge emitter in 4.5, which witnesses an actual `gh pr merge`
+exit 0.
+
+**2.3** Dispatch happens after `conn.commit()` and after the dump/rename at `:1391-1402`, wrapped so
+no exception escapes.
+
+*Verification:* all 28 callers exit 0 with no config present; plus the coverage test above.
+**Red control:** the existing `_crash("pre-commit")` hook at `:1387` — inject the crash and assert
+neither the ledger row nor the event survives.
 
 ## Phase 3 — the connector layer
 
-**3.1** `utils/py/work_connectors/__init__.py`:
+**3.1 — the dispatch contract, rewritten after Codex r1.** The first draft said "detached with a
+timeout and an ignored exit code". Codex is right that this is not implementable as one thing: a
+parent that waits enforces the timeout but blocks; a `Popen` nobody waits on enforces nothing, can
+never observe success to advance a cursor, and makes the stated red control unable to fire.
 
-- `load_connectors()` — reads the `work_connectors` block. **Copies `board_sync.py:89-119`'s
-  `resolve_settings()` idiom**, because `device_config.resolve_device_setting` handles top-level
-  scalars only and cannot carry a nested dict (stated in-source at `board_sync.py:90-92`). Follows
-  `profile_resolve.py:201-207` in re-opening the config file to distinguish **absent** (silent no-op)
-  from **unparseable** (warn), since `load_local_device_config()` collapses both to `{}`
-  (`device_config.py:34-43`).
-- `dispatch(events)` — for each enabled connector, run it detached with a timeout and an **ignored
-  exit code**. This is the adapter contract `board_sync.py:22-24` declares and that no adapter has
-  ever provided; `board_sync.py`'s own `touch`/`dedupe` exit nonzero on write failure *by design*, so
-  the dispatcher is what makes it non-blocking.
-- Cursor advance on success only; on failure record `last_error` and leave `last_event_id` alone.
+The honest, testable contract:
 
-**3.2** Registry is a literal dict of name -> module in that file. No entry points, no import by
-string from config — a connector is added in a PR.
+> A ledger verb's added latency is **bounded**, not zero. Each enabled connector runs as a child
+> process under `subprocess.run(..., timeout=CONNECTOR_TIMEOUT_S, check=False)`, default 5 seconds,
+> inside a `try/except BaseException`. The host's exit code never changes, the ledger row is already
+> committed before dispatch begins, and a hung connector is killed and reaped rather than waited on
+> forever. With no connectors configured the added latency is exactly zero, because dispatch returns
+> before spawning anything.
 
-*Verification:* two stub connectors, one raising and one succeeding; assert the host verb exits 0,
-the ledger row is present, the failing cursor did not move and the succeeding one did.
-**Red control:** remove the `try` around dispatch and assert the host verb now exits nonzero.
+Named explicitly, per Codex: the **process boundary** is one child per connector, spawned by the
+calling process; the child owns **no DB connection** — it receives its event batch as JSON on stdin
+and reports on stdout, and the **parent is the only writer of `connector_cursors`**; **kill/reap** is
+`subprocess.run`'s own timeout path, which terminates and reaps; **success acknowledgement** is child
+exit 0 plus a parseable `advanced_to: <id>` line.
+
+*Verification:* bounded host latency (a connector that sleeps 60s adds about 5s, not 60s); the hung
+child is killed with no zombie left; host rc unchanged; ledger row present; the failing cursor did not
+move and the succeeding one did.
+**Red control:** remove the `try/except` and assert the host verb exits nonzero when a **synchronous
+injected** dispatcher raises. Codex's point stands — this control tests exception leakage, so it must
+use the injected synchronous path, not the child-process path.
+
+**3.2** `load_connectors()` reads the `work_connectors` block through the shared helper below. Absent
+config is a silent no-op; malformed config warns and disables.
+
+**3.3 — extend the config subsystem, do not copy it a third time (Codex r1, accepted).** Codex is
+right that `device_config.resolve_device_setting` (`:46-66`) already returns arbitrary top-level JSON
+values; what is genuinely missing is nested per-key env coercion and the ability to tell **absent**
+from **malformed**, since `load_local_device_config()` (`:34-43`) collapses both to `{}`. So rather
+than write a third private merge — after `board_sync.resolve_settings` and `profile_resolve` — add one
+`resolve_device_block(block, defaults, env_prefix)` plus a diagnostic loader to `device_config.py`, and
+migrate `board_sync.resolve_settings` onto it. That is a smaller net diff than a third copy and
+removes one of the two existing ones. `device_config.py` is now in the affected-surface table, which
+it should have been from the start.
+
+*Verification:* `board_sync config` output is byte-identical before and after the migration.
+**Red control:** a malformed `work_connectors` block must warn and disable, not raise and not look
+like absent config.
 
 ## Phase 4 — the GitHub connector, `reconcile`, and the PR emitters
 
 **4.1** `github_board.py` wraps `board_sync.py`'s existing resolve/add/set-status functions. Personal
-literals leave `DEFAULTS` (`:63-64`, `:67`); owner and number become required config with **no
-default**, so an unconfigured connector cannot write anywhere.
+literals leave `DEFAULTS` (`:63-64`, `:67`); owner and number become **required** config with no
+default, so an unconfigured connector cannot write anywhere.
 
-**4.2** Fix the six assertions this breaks. `test/gh405-mock-board-harness.sh` legs 4-6 (`:105`,
+**4.2 — criterion 2's check, rewritten after Codex r1.** The issue proposes asserting the literals
+`noelsaw1` and `3` are absent from the module. Codex is right that this is unsound: `3` occurs
+legitimately all over any Python file. Replaced with semantic assertions:
+
+- `DEFAULTS` contains no `project_owner`, `project_number` or `repos` key at all.
+- With no config, `board_sync scan` **refuses** with a named error and makes zero `gh` calls — asserted
+  by pointing `XYZ_BOARD_SYNC_GH_BIN` at a script that writes a sentinel file, then asserting the
+  sentinel does not exist.
+- A grep for the string `noelsaw1` stays: it is a name, not a number, so it is sound.
+
+Then repair the six assertions this breaks. `test/gh405-mock-board-harness.sh` legs 4-6 (`:105`,
 `:114`, `:126`, `:136`, `:143`, `:158`) pass today only because `board_sync.py:63-64` and
 `mock_gh_board.py:31-32` hardcode the same values and agree by coincidence. Give those legs explicit
-`XYZ_BOARD_SYNC_PROJECT_OWNER` / `_NUMBER`, and pin `XYZ_DEVICE_CONFIG_PATH` — recon confirmed this
-host has no `board_sync` block, so the legs read the real user config today and pass only because it
-is empty.
+`XYZ_BOARD_SYNC_PROJECT_OWNER` / `_NUMBER` and pin `XYZ_DEVICE_CONFIG_PATH` — recon confirmed this host
+has no `board_sync` block, so the legs read the real user config today and pass only because it
+happens to be empty.
 
 **4.3** Scope detection. `_gql` (`:242-267`) folds every GraphQL error into one opaque string at
-`:265`. Detect `INSUFFICIENT_SCOPES` there and print `gh auth refresh -s read:project,project`. Verified
-unsandboxed: this host's token is `gist, read:org, repo, workflow`. Add an `insufficient_scopes` fault
-to `mock_gh_board.py` beside `stale_option_once` (`:210-221`) — criterion 8 has no mock affordance today.
+`:265`. Classify `INSUFFICIENT_SCOPES` there and print `gh auth refresh -s read:project,project`.
+Verified unsandboxed: this host's token is `gist, read:org, repo, workflow`. Add an
+`insufficient_scopes` fault to `mock_gh_board.py` beside `stale_option_once` (`:210-221`).
 
-**4.4** `work reconcile --connector <name>` replays events after the cursor. Idempotent because the
-board write is a set-to-value, not an increment.
+**4.4** `work reconcile --connector <name>` replays every event after the cursor. Idempotent because
+each board write is set-to-value, never an increment, and because replaying from zero is the rebuild
+path by design (1.3).
 
-**4.5** PR emitters.
+**4.5 — the emitter write path, added after Codex r1.** The first draft said pre-push and
+merge-cleanup "emit" without saying through what. Neither is a ledger verb and neither can call
+`perform_write`, which takes a domain `mutate`. Phase 4 adds **one** CLI verb both use:
 
-- `githooks/pre-push` — one backgrounded call before each of the three green exits (`:275`, `:292`,
-  `:309`). **The honest event is `branch_pushed`, not `pr_opened`**: the hook discards the ref name at
-  `:73`, makes no `gh` call anywhere in `githooks/`, and runs *before* the push is accepted. The
-  connector maps `branch_pushed` to the review column. It must be backgrounded — the file runs
-  `set -uo pipefail` with no `-e`, so a failing emitter cannot abort the push, but a hanging one would
-  stall it, the hazard `:157-161` already guards against with a timeout.
-- `merge_cleanup.py` — emit inside the `if merged:` block at `:369-370`, gated on `not dry_run`.
-  **Not** in `execute_pr_merge` above `:58`, where the dry-run arm returns `True` without merging.
-  `--reconcile-pr` (`:286-290`) never verifies merge state, so it does **not** emit; that path is
-  covered by `reconcile`.
+```
+releases work emit --event <name> --gh-number <N> [--payload-json <json>]
+```
+
+It takes `WriterLock`, writes the intent journal, inserts one `work_events` row and its `op_receipts`
+row in one transaction, and refreshes the canonical artifacts — the same protocol `perform_write`
+follows, reusing that machinery rather than opening a second write path. Both emitters shell out to
+it; neither touches the DB itself.
+
+- `githooks/pre-push` — one bounded call before each of the three green exits (`:275`, `:292`,
+  `:309`). **The event is `push_validated`, not `branch_pushed`** — Codex is right that the hook runs
+  before git accepts the push (`:61-76`), so even `branch_pushed` can be false. `push_validated` is
+  exactly what the hook witnesses: the gate went green. The connector maps it to the review column,
+  and remote success is reconciliation's business.
+- `merge_cleanup.py` — emit `pr_merged` inside the `if merged:` block at `:369-370`, gated on
+  `not dry_run`. **Not** in `execute_pr_merge` above `:58`, where the dry-run arm returns `True`
+  without merging. `--reconcile-pr` (`:286-290`) never verifies merge state, so it does not emit.
 
 Accepted blind spots, closed only by `reconcile`: `git push --no-verify` (`:34`), `XYZ_SKIP_PREPUSH`
-(`:82-86`), a merge performed in the GitHub UI.
+(`:82-86`), and a merge performed in the GitHub UI.
+
+## Acceptance criteria and their red controls
+
+Codex r1 was right that criteria 5-9 had happy-path checks only. One mutation each:
+
+| # | Criterion | Witnessed red |
+|---|---|---|
+| 1 | unconfigured = zero network, zero writes | configure a stub connector; the same verbs must dispatch |
+| 2 | no personal defaults | restore `project_owner` to `DEFAULTS`; the refusal assertion must stop firing |
+| 3 | event and ledger row are one transaction | `_crash("pre-commit")`; neither may survive |
+| 4 | a failing connector changes nothing | remove the `try/except`; host rc must go nonzero |
+| 5 | two connectors, one failing | skip the second connector in the loop; its cursor must stop advancing |
+| 6 | `reconcile` replays exactly, twice safely | advance the cursor one past the last event; replay must skip a real event and the test must catch it |
+| 7 | missing option reports, never mutates schema | auto-create the missing option; the "never mutates schema" assertion must fail |
+| 8 | missing scope names the remediation | suppress the `INSUFFICIENT_SCOPES` classification; the remediation line must disappear |
+| 9 | four states reachable end-to-end | delete one event mapping; that state must become unreachable |
+
+Every assertion checks a non-empty fixture first, so an empty result can never read as a pass.
 
 ## Registration
 
 `test/gh549-work-events.sh` into `validate.sh`'s `TESTS` array, then the three-part act in
 `utils/ci-route.sh` (`SUBSYSTEMS` `:24`, `SUBSYSTEM_TESTS_*` `:25-33`, `subsystem_of()` `:35-47`).
-`test/gh35-test-tiers.sh:133-142` fails if the pair drifts. Note `githooks/pre-push` and
-`skills/merge-cleanup/*` are unmapped in `subsystem_of()`, so this branch will run the full tier-3
-gate on every push — expected, not a defect.
+`test/gh35-test-tiers.sh:133-142` fails if the pair drifts. `githooks/pre-push` and
+`skills/merge-cleanup/*` are unmapped in `subsystem_of()`, so this branch runs the full tier-3 gate on
+every push — expected, not a defect.
 
 ## Risks and rollback
 
 | Risk | Mitigation |
 |---|---|
-| A cursor write breaks the receipt chain | Both tables excluded from `business_digest`; red control in 1.4 proves it |
-| Migration 008 lands without dump/load support | `check --rebuild` in the suite, which fails loudly if either is missing |
-| A connector blocks a ledger verb | Detached + timeout + ignored rc; red control removes the guard and asserts the failure |
-| The first write after merge creates live cards on someone's board | No default owner or number; criterion-1 red control |
-| Vendored `.xyz/` ledgers migrate on next use | `perform_migration` already handles this; migration is `txn_safe` and idempotent |
+| A cursor write breaks the receipt chain | `work_events` outside `business_digest`; red control A |
+| A cursor write breaks the dump comparison | `connector_cursors` outside `dump_text` entirely; red control B |
+| Migration 008 lands without dump/load support | `check --rebuild` in the suite, which fails loudly |
+| A connector delays a ledger verb | 5s per-connector ceiling, measured; zero when unconfigured |
+| A connector changes a host exit code | `try/except BaseException`; red control 4 |
+| The first write after merge creates live cards | no default owner or number; red control 2 |
+| Vendored `.xyz/` ledgers migrate on next use | `perform_migration` handles it; `txn_safe`, idempotent |
 
 **Rollback:** revert the branch. Migration 008 leaves two unused tables in any ledger that already
-migrated; both are `IF NOT EXISTS` and outside `business_digest`, so a reverted binary ignores them.
+migrated; both are `IF NOT EXISTS`, `work_events` is append-only and empty, and `connector_cursors` was
+never in the dump, so a reverted binary ignores both.
 
 ## Ordered implementation list
 
-1. Migration 008 + `dump_text` + `load_dump`; migrate-a-fixture check and the chain red control.
-2. `work_events` insert in `perform_write` + the `op` map; crash red control.
-3. Connector registry, config resolution, detached dispatch; two-stub red control.
-4. GitHub connector; personal literals out; repair `gh405` legs 4-6 and pin `XYZ_DEVICE_CONFIG_PATH`.
-5. Scope detection + `insufficient_scopes` mock fault.
-6. `work reconcile`; idempotency check.
-7. `pre-push` and `merge_cleanup` emitters.
-8. Register the suite in `validate.sh` and `utils/ci-route.sh`; full gate in a disposable clone.
+1. Migration 008; `work_events` in `dump_text` + `load_dump`; `connector_cursors` in neither. Red
+   controls A (receipt-chain) and B (dump-divergence).
+2. `work_events` insert in `perform_write`; the extractor registry, `NON_EVENT_OPS` allowlist, and the
+   coverage test that fails on an unclassified `op`. Crash red control.
+3. `resolve_device_block()` + diagnostic loader in `device_config.py`; migrate
+   `board_sync.resolve_settings` onto it and assert `board_sync config` is byte-identical.
+4. Connector registry and bounded dispatch; latency, kill/reap, zombie, rc and cursor checks.
+5. GitHub connector; personal literals out; semantic criterion-2 checks; repair `gh405` legs 4-6 and
+   pin `XYZ_DEVICE_CONFIG_PATH`.
+6. Scope classification + `insufficient_scopes` mock fault.
+7. `work emit` verb; then the `pre-push` (`push_validated`) and `merge_cleanup` (`pr_merged`) callers.
+8. `work reconcile`; idempotency and the cursor-overshoot red control.
+9. Register the suite in `validate.sh` and `utils/ci-route.sh`; full gate in a disposable clone.
