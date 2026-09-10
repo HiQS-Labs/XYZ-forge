@@ -205,6 +205,15 @@ class ReconcileTests(unittest.TestCase):
         self.assertEqual([r['section'] for r in self.rows('SELECT section FROM roadmap_items')], ['Completed']*3)
         self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), [])
 
+    def test_catch_up_finds_roadmap_only_drift(self):
+        # No active document or dialed-in manifest remains, but the roadmap is stale.
+        (self.root / self.doc).unlink()
+        self.cli('manifest', 'ship', '--gid', self.gid,
+                 'https://github.com/test/repo/issues/421', '--evidence', 'a'*40)
+        self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), ['42'])
+        self.apply('--catch-up')
+        self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), [])
+
     def test_catch_up_applies_missed_event(self):
         self.apply('--catch-up')
         self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'shipped')

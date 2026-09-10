@@ -1,0 +1,9 @@
+test_full_findings_roll_back (__main__.ReconcilerDefects.test_full_findings_roll_back) ... ok
+test_observe_findings_complete (__main__.ReconcilerDefects.test_observe_findings_complete) ... ok
+test_old_stdout_gate_fails_completion_assertion (__main__.ReconcilerDefects.test_old_stdout_gate_fails_completion_assertion) ... ok
+test_unnamed_releases_export_and_reconcile (__main__.ReconcilerDefects.test_unnamed_releases_export_and_reconcile) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.165s
+
+OK
