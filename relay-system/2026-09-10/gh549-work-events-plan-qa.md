@@ -504,4 +504,57 @@ swept file: yes
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
 
+### Producer — round 3 (relay at cap; awaiting operator decision)
+
+VERDICT: PARKED
+Basis: all four r3 findings implemented in `PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md`; PDDA frontmatter, status-table and hardcoded-paths all errors=0. The relay reached its configured cap of 3 rounds with STATUS: Escalated, so per the start-task workflow implementation stops here pending an operator decision — this block records the dispositions and the exact next action rather than claiming an approval nobody gave.
+
+Both blockers accepted; both Shoulds accepted. Nothing declined.
+
+- **[Blocker] dispatch left the single seam — Implemented, and this was my regression, not a new
+  requirement.** You are right and the point is sharp: fixing the lock in r2 by moving dispatch into
+  the callers replaced one audited seam with 29 independently correct call sites, and the extractor
+  coverage test cannot catch a caller that simply never dispatches — it classifies `op`s, not call
+  sites. That would violate criteria 1 and 5 silently, which is exactly the failure mode this design
+  exists to prevent.
+  Corrected: dispatch stays **inside `perform_write`**. Its lock-scoped durability section ends with an
+  explicit `WriterLock` release (the `finally` stays as the failure path), and **one common post-lock
+  section, still inside `perform_write`**, launches and joins the children. No caller invokes anything.
+  Your red control is in: remove that single central call and assert a mapped verb's configured stub
+  connector sees no event.
+
+- **[Blocker] the rollback claim is false once the feature is used — Implemented.** Correct, and I
+  should have caught it: I wrote "append-only and empty" while Phase 2 inserts a row on every mapped
+  write. After any real use the table is populated, it *is* in the tracked dump, and a reverted
+  migration-007 binary has no loader for it.
+  Rollback is now stated in two cases. Before the first event: revert the branch, both tables empty,
+  007 ignores them. After any real use: reverting code alone is **not** safe, and a documented
+  down-conversion is required — drop `work_events` from the dump and DB and roll `schema_migrations`
+  back to 7 via `check --rebuild` on a dump written without it. Red control as you specified: populate
+  a migration-008 ledger with real events, run the reverted binary's `check` and rebuild/load path
+  against it, and assert the down-conversion is what makes it clean and that skipping it does not.
+
+- **[Should] superseded same-transaction statements — Implemented.** The Design section now says only
+  the ledger row and its `work_events` row share the governance transaction, and that cursor state is
+  deliberately post-commit and device-local.
+
+- **[Should] `work-emit` no-double-insert contract — Implemented as an executable sentinel.** Its
+  extractor returns `None`, with the documented reason that its own `mutate` already inserted the row;
+  `perform_write` inserts only when an extractor returns a tuple, so `None` means "already written"
+  rather than "no event". Assertion added: one `work emit` creates exactly one row — not zero, not two.
+
+- **[Pass] receipt/digest placement**, **[Pass] concurrent window**, **[Pass] extends the existing
+  config and write protocols** — noted, and thank you for re-deriving each from source rather than
+  from the revision's own description.
+
+**Trajectory across the relay**, for whoever picks this up: r1 five blockers, r2 four, r3 two, with
+three findings promoted to [Pass] and no finding declined at any round. Every r3 blocker was a defect
+introduced by an r2 fix or an inherited claim I failed to re-check, not a new requirement — which is
+the argument for one more round rather than for stopping. But the cap is the cap, and this workflow
+does not let the producer approve its own plan.
+
+**Next action is the operator's, and it is one of two:** authorize a round 4 against the round-cap, or
+accept the plan producer-adjudicated and proceed to implementation. Recorded here rather than decided
+here.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

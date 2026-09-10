@@ -83,8 +83,10 @@ Full design is on the issue. The load-bearing decisions:
   deliberately excluding itself. Widening it means migrating a trigger-protected, self-verifying
   audit chain to carry a payload that is not an audit record — and connector cursors must be mutable,
   which an append-only table forbids outright. So: `work_events` (append-only, mirroring the receipt
-  discipline) and `connector_cursors` (mutable by design), both in the same DB and the same
-  transaction.
+  discipline) and `connector_cursors` (mutable by design), both in the same DB.
+  **Corrected after Codex r3:** only the ledger row and its `work_events` row share the governance
+  transaction. Cursor state is deliberately **post-commit and device-local** — written after connectors
+  finish, on a separate connection, and absent from the tracked dump entirely.
 - **Connectors are vendored modules enabled by name in config**, resolved through the existing
   `device_config.py` 3-tier resolver (`XYZ_<KEY>` env > `device_config` key > defaults, per GH-174).
   No new config system, no dynamic discovery, no loading code the harness did not vendor. Adding a
@@ -337,12 +339,25 @@ The contract:
 dump and rename at `:1391-1402`" — still inside `perform_write`, therefore **inside the governance
 lock, across network time**. That was wrong. Corrected:
 
-1. `perform_write` completes and releases its lock. It returns `txn_id` and dispatches nothing.
-2. The **caller** — one shared helper each `cmd_*` invokes after `perform_write` returns — reads the
-   pending events, launches every child, and joins them under the single window.
+**Corrected again after Codex r3.** My r2 answer moved dispatch into the *callers*, which fixed the
+lock but broke the thing this whole design rests on: it turned one audited seam into 29 independently
+correct call sites, where a new or missed caller could commit an event that is never projected — and
+the extractor coverage test would not catch it, because it checks `op` classification, not whether a
+caller dispatched. Dispatch stays **inside `perform_write`**, after the lock:
+
+1. `perform_write`'s lock-scoped section runs exactly as today — journal, `BEGIN IMMEDIATE`,
+   `mutate`, `work_events` insert, receipt, commit, staged dump, atomic rename — and then **releases
+   `WriterLock`**, moved out of the `finally` into an explicit release at the end of the durability
+   section (the `finally` remains as the failure path).
+2. **One common post-lock section, still inside `perform_write`**, dispatches the committed
+   transaction's events: it launches every child concurrently and joins them under the single window.
+   No caller invokes anything; there is still exactly one seam.
 3. Cursor and error outcomes for **all** connectors are then persisted in **one short explicit
    transaction on a separate device-local connection**, taken after the join and never held across a
    child's lifetime.
+
+**Red control (Codex r3's):** remove that single central dispatch call and assert a mapped verb's
+configured stub connector sees no event — proving the seam, not the callers, is what projects.
 
 Named explicitly, per Codex r1: the **process boundary** is one child per connector; the child holds
 **no DB connection** — it receives its event batch as JSON on stdin and reports on stdout, and the
@@ -424,7 +439,11 @@ Corrected: `releases work emit --event <name> --gh-number <N> [--payload-json <j
 `work_events` row. Generation, `state_digest_before`/`after`, the receipt, the journal, the staged dump
 and the atomic rename are all whatever `perform_write` already does — nothing is recomputed and there
 is no second protocol to keep in step. `work-emit` is registered in the extractor table as
-self-describing (its event is its argument), so the generic extractor does not double-emit.
+registered with an explicit sentinel, made executable after Codex r3: its extractor **returns `None`,
+and the documented reason is that its own `mutate` already inserted the row**. `perform_write`'s seam
+inserts an event only when an extractor returns a tuple, so `None` here means "already written", not
+"no event". **Assertion:** one `work emit` command creates exactly one `work_events` row — not zero,
+not two.
 
 *Verification:* a crash-boundary matrix — `_crash("pre-commit")` and `_crash("post-commit")` against
 both `roadmap add` and `work emit` — must show identical recovery, generation, dump and receipt-chain
@@ -492,9 +511,21 @@ Every assertion checks a non-empty fixture first, so an empty result can never r
 | The first write after merge creates live cards | no default owner or number; red control 2 |
 | Vendored `.xyz/` ledgers migrate on next use | `perform_migration` handles it; `txn_safe`, idempotent |
 
-**Rollback:** revert the branch. Migration 008 leaves two unused tables in any ledger that already
-migrated; both are `IF NOT EXISTS`, `work_events` is append-only and empty, and `connector_cursors` was
-never in the dump, so a reverted binary ignores both.
+**Rollback — corrected after Codex r3, because my first claim was false the moment the feature was
+used.** I wrote that a revert leaves `work_events` "append-only and empty". That is only true *before
+the first event*. Phase 2 inserts a row on every mapped write, so a used ledger has a populated table
+that **is** in the tracked dump, and a reverted migration-007 binary has no loader for it.
+
+Honest statement, in two cases:
+
+- **Before the first event** — revert the branch. Both tables are empty, `connector_cursors` was never
+  in the dump, and the 007 binary ignores them.
+- **After any real use** — reverting the code alone is **not** safe. A down-conversion step is required:
+  drop `work_events` from the dump and the DB and roll `schema_migrations` back to 7, via a documented
+  `check --rebuild` on a dump written without it.
+  **Red control:** populate a migration-008 ledger with real events, run the *reverted* binary's
+  `check` and its rebuild/load path against it, and assert the documented down-conversion is what makes
+  it clean — and that skipping it does not.
 
 ## Ordered implementation list
 
