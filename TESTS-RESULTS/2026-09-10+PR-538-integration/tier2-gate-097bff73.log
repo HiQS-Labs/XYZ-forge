@@ -1,0 +1,207 @@
+pre-push: utility-only update — running the tier 2 subsystem gate, not the full suite (GH-35).
+pre-push:   validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+pre-push:   validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+pre-push:     NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+pre-push:   validate.sh: tier 2 — subsystem/docs selection is NEVER promotion evidence (GH-35/GH-509).
+validate.sh: classified tier 2 — subsystems: releases (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh roadmap-dashboard.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 docs gate (docs paths in the change set)
+===============================
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-494-SESSION-CONTEXT-PLAN.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-555-METER-EXIT-CRITERION.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-564-FIXTURE-CONTAINMENT.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-204-BSD-SED-IDIOM.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=39
+
+== pdda-check-changelog ==
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2026-09-09) predates the latest commit (2026-09-10) by 1 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md:1 issue #505 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md PROJECT/3-COMPLETED/GH-505-RELAY-REVIEWER-INTEGRITY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md:1 issue #509 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md PROJECT/3-COMPLETED/GH-509-RELAY-TERMINAL-AUTHORIZATION.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md:1 issue #563 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-564-FIXTURE-CONTAINMENT.md:1 issue #564 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 doc status reads 'complete' (done) but issue #494 is still OPEN — close the issue or correct the status
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 doc status reads 'complete' (done) but issue #494 is still OPEN — close the issue or correct the status
+WARN [pdda-check-issue-doc-sync] releases.db issue #505 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #509 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #510 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #515 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=10 info=0
+
+== pdda-check-releases ==
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=0
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:54 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:63 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] README.md:86 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:42 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:428 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:498 dead reference 'blank.md' — no file at blank.md
+INFO [pdda-check-governance] src/project.js:334 comment reference '.tick/STATE.md' in source tree cites generated/ignored state — exempt from existence check
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=8 info=1
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 19 warning(s) to review — pdda-check-changelog pdda-check-issue-doc-sync pdda-check-governance
+
+===============================
+Running tier-2 static syntax checks on changed files
+===============================
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.2Y6F1x/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  21 pooled suites + 0 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=1
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=1
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] roadmap-dashboard.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+[parallel] gh257-roadmap-ledger-fixes.sh rc=0
+[parallel] gh269-roadmap-retired.sh rc=0
+
+===============================
+FAILED in parallel (rc=1): gh53-releases-merge-resolve.sh — re-running it alone to see if that verdict survives
+===============================
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+  ... This means a shared resource is contended — see the warning at the end of this run.
+
+===============================
+FAILED in parallel (rc=1): gh32-release-target-advisory.sh — re-running it alone to see if that verdict survives
+===============================
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+  ... This means a shared resource is contended — see the warning at the end of this run.
+
+===============================================================================
+WARNING (GH-528): 2 suite(s) failed in parallel and passed alone.
+These are CONTENTION, not product failure: each verdict flipped the moment the
+shared resource was free, so the suite is counted as PASSED and named here.
+The contended resource is almost always THIS CLONE's .git/relay-driver.lock
+(GH-42): it is taken by the real relay-drive.sh BEFORE argument parsing, so a
+suite merely INVOKING a driver contends — add such suites to DRIVER_LOCK_LANE
+in validate.sh so they run in the serialized lane:
+    gh53-releases-merge-resolve.sh
+    gh32-release-target-advisory.sh
+Until then --parallel is doing extra serial work and this run took longer than it should.
+===============================================================================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 21 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /Users/noelsaw/marathon-clones/b1-gh534/.tick/telemetry/validate-parallel-1789075044586-37399.jsonl (25 suite events, 366 registered)
+passed: 24 / 24
+  + tier2:pdda
+  + tier2:static
+  + gh103-timeline-exporter.sh
+  + gh32-releases-artifacts.sh
+  + gh53-releases-merge-resolve.sh
+  + gh54-merged-dump-refusals.sh
+  + gh57-live-merge-resolve.sh
+  + gh32-releases-app.sh
+  + gh32-release-target-advisory.sh
+  + gh39-releases-project-sync.sh
+  + gh153-releases-sidebar-rollup.sh
+  + releases-skill.sh
+  + gh69-roadmap-shadow.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + litmus-release.sh
+  + nightwatch-release.sh
+  + meter-release.sh
+  + ballast-release.sh
+  + roadmap-dashboard.sh
+  + gh57-releases-fuzz.sh
+  + gh257-roadmap-ledger-fixes.sh
+  + gh269-roadmap-retired.sh
+  + clone-identity-invariant
+pre-push: tier 2 gate GREEN in 95s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   1d1ed80c..097bff73  HEAD -> fix/merge-cleanup-failure-modes
+rc=0
