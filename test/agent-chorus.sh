@@ -14,6 +14,12 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-test.XXXXXX")" || {
   echo "FAIL: mktemp -d returned an invalid directory" >&2
   exit 1
 }
+# GH-1 / GH-564: this suite now drives git through its mktemp fixtures (the GH-524 citation
+# fixture is a real repository), which puts it in the class gh1-adoption-guard audits. Adopt the
+# shared guard rather than avoiding the construct: `git -C ""` and `cd ""` are silent no-ops that
+# target the CALLER'S clone, and this suite must never be able to reach a real repo.
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
 case "$WORK" in
   "${TMPDIR:-/tmp}"/agent-chorus-test.*) ;;
   *) echo "FAIL: refusing unsafe cleanup target: $WORK" >&2; exit 1 ;;
@@ -1027,6 +1033,321 @@ if [ -n "$g327b_seed" ] && [ -f "$g327b_seed" ]; then
     || fail "the repo-inside-store geometry still leaks telemetry: $g327b_leaked"
 else
   fail "gh327 inverted-geometry fixture could not be seeded"
+fi
+
+# --- GH-524: every turn names the lab, model and effort behind its seat -----------
+# A transcript that attributes a turn to "agent2" and nothing else cannot be judged, reproduced,
+# or weighed against a different model later. The only place that knew the model was telemetry --
+# metadata-only, outside the repository, and removed by `telemetry purge` -- so the durable record
+# lost the one fact a reader needs. The stamp is written by the helper, not asked of the model:
+# an identity that depends on a participant remembering to type it goes missing exactly when the
+# transcript matters.
+SEATW="$WORK/gh524-repo"; SEATS_STORE="$WORK/gh524-store"
+mkdir -p "$SEATW" "$SEATS_STORE"
+seat_cli() { python3 "$CLI" --root "$SEATW" --store "$SEATS_STORE" "$@"; }
+
+seat_cli start --subject "gh524 identity" --agents 3 --packet-file "$PACKET" --id 924001 >/dev/null 2>&1
+SEAT_FILE="$(find "$SEATS_STORE" -path "*924001*" -name conversation.md 2>/dev/null | head -1)"
+if [ -z "$SEAT_FILE" ]; then
+  fail "gh524 fixture could not be seeded"
+else
+  seat_join_out="$(seat_cli join --id 924001 --agent 2 --lab Anthropic --model claude-opus-5 --effort high 2>&1)"
+  expect_contains "join echoes the seat identity back to the participant" \
+    "$seat_join_out" "**Seat:** agent2 · Anthropic · claude-opus-5 · effort high"
+  expect_file_contains "the identity is recorded in the TRANSCRIPT, not only telemetry" \
+    "$SEAT_FILE" "SEATS: agent2=Anthropic|claude-opus-5|high"
+  expect_file_contains "the protocol tells participants to identify themselves" \
+    "$SEAT_FILE" "join with \`--lab\`, \`--model\` and \`--effort\`"
+
+  seat_cli send --id 924001 --agent 2 --next-agent 3 --message "Considered the packet." >/dev/null 2>&1
+  seat_turn="$(awk '/^### Turn 2 /{f=1} f' "$SEAT_FILE" | head -4)"
+  case "$seat_turn" in
+    *"**Seat:** agent2 · Anthropic · claude-opus-5 · effort high"*)
+      pass "the turn itself carries lab, model and effort" ;;
+    *) fail "turn 2 is not attributed: $seat_turn" ;;
+  esac
+
+  # Effort is optional -- many harnesses expose none. Lab and model still land.
+  seat_cli join --id 924001 --agent 3 --lab OpenAI --model gpt-5-codex >/dev/null 2>&1
+  seat_cli send --id 924001 --agent 3 --next-agent 2 --message "Agreed." >/dev/null 2>&1
+  seat3="$(awk '/^### Turn 3 /{f=1} f' "$SEAT_FILE" | head -4)"
+  case "$seat3" in
+    *"**Seat:** agent3 · OpenAI · gpt-5-codex"*)
+      case "$seat3" in
+        *effort*) fail "an absent effort was invented: $seat3" ;;
+        *) pass "a seat with no effort level is still attributed by lab and model" ;;
+      esac ;;
+    *) fail "turn 3 is not attributed: $seat3" ;;
+  esac
+
+  # NEGATIVE CONTROL: without the flags the transcript says so, and says how to fix it.
+  SEAT2_STORE="$WORK/gh524-store-bare"; mkdir -p "$SEAT2_STORE"
+  python3 "$CLI" --root "$SEATW" --store "$SEAT2_STORE" \
+    start --subject "gh524 anonymous" --agents 2 --packet-file "$PACKET" --id 924002 >/dev/null 2>&1
+  python3 "$CLI" --root "$SEATW" --store "$SEAT2_STORE" join --id 924002 --agent 2 >/dev/null 2>&1
+  python3 "$CLI" --root "$SEATW" --store "$SEAT2_STORE" \
+    send --id 924002 --agent 2 --next-agent 1 --message "Anonymous turn." >/dev/null 2>&1
+  BARE_FILE="$(find "$SEAT2_STORE" -path "*924002*" -name conversation.md 2>/dev/null | head -1)"
+  expect_file_contains "an unidentified seat is named as unrecorded, not left blank" \
+    "$BARE_FILE" "identity unrecorded"
+  expect_file_contains "the unrecorded stamp says how to fix it" \
+    "$BARE_FILE" "re-join with"
+  if grep -q '^SEATS:' "$BARE_FILE"; then
+    fail "a join with no identity flags still wrote a SEATS header"
+  else
+    pass "a join with no identity flags writes no SEATS header"
+  fi
+
+  # A model id legitimately contains '/' and ':'; only the field's own separators are scrubbed.
+  seat_cli join --id 924001 --agent 2 --lab "Z.ai" --model "zai-org/glm-5.3" --effort max >/dev/null 2>&1
+  expect_file_contains "a slash-bearing model id survives the header round-trip" \
+    "$SEAT_FILE" "agent2=Z.ai|zai-org/glm-5.3|max"
+
+  # Separator injection must not forge a second seat or corrupt a neighbour.
+  seat_cli join --id 924001 --agent 2 --lab "Evil|agent9=Fake" --model "m;x" --effort low >/dev/null 2>&1
+  seat_line="$(grep '^SEATS:' "$SEAT_FILE")"
+  # Assert the PARSED seat set, not a substring: the property is "no seat was forged", and the
+  # helper's own parser is what any consumer will use to read this header back.
+  seat_parsed="$(python3 -c '
+import sys
+sys.path.insert(0, "skills/agent-chorus/scripts")
+import agent_chorus as ac
+seats = ac.parse_seats(open(sys.argv[1]).read())
+a2 = seats.get("agent2", {})
+print("|".join([",".join(sorted(seats)), a2.get("lab", "?"), a2.get("model", "?"), a2.get("effort", "?")]))' "$SEAT_FILE")"
+  # The roster must not gain a seat AND agent2's own fields must round-trip intact. Unscrubbed
+  # separators do not forge a seat -- they truncate and cross-contaminate the values, which is
+  # the failure this pins.
+  [ "$seat_parsed" = "agent2,agent3|Evil/agent9-Fake|m,x|low" ] \
+    && pass "separator injection is neutralised: roster unchanged and agent2's fields round-trip" \
+    || fail "separator injection corrupted the header, parsed as '$seat_parsed': $seat_line"
+  case "$seat_line" in
+    *"agent3=OpenAI|gpt-5-codex"*) pass "an injected identity leaves its neighbour's seat intact" ;;
+    *) fail "agent3's seat was corrupted: $seat_line" ;;
+  esac
+
+  # A partial re-join updates only what it supplies.
+  seat_cli join --id 924001 --agent 3 --effort medium >/dev/null 2>&1
+  expect_file_contains "a partial re-join keeps the fields it did not supply" \
+    "$SEAT_FILE" "agent3=OpenAI|gpt-5-codex|medium"
+
+  # Closed is terminal: joining a closed discussion must not rewrite it.
+  seat_cli close --id 924001 --agent 2 --trivial --message "Administrative close for gh524." >/dev/null 2>&1
+  closed_before="$(shasum "$SEAT_FILE" | cut -d' ' -f1)"
+  seat_cli join --id 924001 --agent 3 --lab Google --model gemini-3 >/dev/null 2>&1
+  closed_after="$(shasum "$SEAT_FILE" | cut -d' ' -f1)"
+  [ "$closed_before" = "$closed_after" ] \
+    && pass "joining a CLOSED discussion does not rewrite the transcript" \
+    || fail "a join mutated a closed discussion"
+fi
+
+# --- GH-524 round 1 QA (Codex): the identity write is a WRITER, and the stamp is not evidence ---
+Q1W="$WORK/gh524r1-repo"; Q1S="$WORK/gh524r1-store"
+mkdir -p "$Q1W" "$Q1S"
+q1_cli() { python3 "$CLI" --root "$Q1W" --store "$Q1S" "$@"; }
+
+# B2: `replace_field` fed its value to re.subn as a REPLACEMENT STRING, which expands backslash
+# escapes. A literal \n in a lab name therefore forged extra header lines -- and because SEATS is
+# inserted ABOVE the real STATUS, an injected `STATUS: Closed` would be the one `field()` returns.
+q1_cli start --subject "gh524 escapes" --agents 2 --packet-file "$PACKET" --id 925101 \
+  --lab Anthropic --model claude-opus-5 --effort high >/dev/null 2>&1
+Q1_FILE="$(find "$Q1S" -path "*925101*" -name conversation.md 2>/dev/null | head -1)"
+if [ -z "$Q1_FILE" ]; then
+  fail "gh524 round-1 fixture could not be seeded"
+else
+  expect_file_contains "start records the producer seat (agent1) in the transcript" \
+    "$Q1_FILE" "SEATS: agent1=Anthropic|claude-opus-5|high"
+  turn1="$(awk '/^### Turn 1 /{f=1} f' "$Q1_FILE" | head -3)"
+  case "$turn1" in
+    *"**Seat:** agent1 · Anthropic · claude-opus-5 · effort high"*)
+      pass "Turn 1 -- the producer's own contribution -- is attributed too" ;;
+    *) fail "Turn 1 is unattributed: $turn1" ;;
+  esac
+
+  # THE PIN (B2): a literal backslash-n must not become a real newline in the header.
+  q1_cli join --id 925101 --agent 2 --lab 'OpenAI\nSTATUS: Closed\nX: marker' --model m2 >/dev/null 2>&1
+  q1_inject_rc=$?
+  [ "$q1_inject_rc" -eq 0 ] \
+    && pass "the escape-bearing join succeeded (its assertions are not vacuous)" \
+    || fail "the escape-bearing join was rejected (rc=$q1_inject_rc) — the checks below prove nothing"
+  expect_file_contains "the escape-bearing identity is persisted, sanitised" \
+    "$Q1_FILE" "agent2=OpenAI/nSTATUS: Closed/nX: marker|m2|"
+  q1_status="$(grep -c '^STATUS: Open' "$Q1_FILE")"
+  [ "$q1_status" = "1" ] \
+    && pass "a backslash escape in an identity cannot forge header lines" \
+    || fail "escape injection changed the header: $(grep -n '^STATUS' "$Q1_FILE")"
+  if grep -q '^X: marker' "$Q1_FILE"; then
+    fail "escape injection wrote an arbitrary header field"
+  else
+    pass "escape injection wrote no arbitrary header field"
+  fi
+  # The join must SUCCEED and persist a sanitised value; asserting only that control fields are
+  # unchanged would stay green if the join were simply rejected (R2-S2).
+  if q1_cli join --id 925101 --agent 2 --lab 'Weird\q' --model m3 >/dev/null 2>&1; then
+    pass "a lone backslash in an identity is stored, not raised"
+  else
+    fail "a lone backslash in an identity still errors out"
+  fi
+  expect_file_contains "the sanitised identity is actually persisted (not a silently rejected join)" \
+    "$Q1_FILE" "agent2=Weird/q|m3|"
+fi
+
+# THE PIN for the callable itself. The CLI cases above cannot prove it: `_seat_scrub` strips
+# backslashes before `replace_field` ever sees them, so reverting only the callable changes
+# nothing there. A literal backslash reaching the field writer is the case that matters, and it
+# covers every OTHER header field too, which is where this defect actually lived (R2-S2).
+q1_field="$(python3 - <<'FIELDPY'
+import sys
+sys.path.insert(0, "skills/agent-chorus/scripts")
+import agent_chorus as ac
+header = "AGENT2AGENT-ID: 111111\nSUBJECT: s\nAGENTS: agent1 agent2\nSTATUS: Open\nTURN: 1\n"
+try:
+    newline = ac.replace_field(header, "SUBJECT", "OpenAI\\nSTATUS: Closed")
+except Exception as exc:
+    print("RAISED-n:%s" % type(exc).__name__, end=" ")
+else:
+    forged = sum(1 for ln in newline.splitlines() if ln.startswith("STATUS:"))
+    print("lines=%d status=%d" % (len(newline.splitlines()), forged), end=" ")
+try:
+    lone = ac.replace_field(header, "SUBJECT", "Weird\\q")
+except Exception as exc:
+    print("RAISED-q:%s" % type(exc).__name__)
+else:
+    print("lone=%s" % ("kept" if "Weird\\q" in lone else "MANGLED"))
+FIELDPY
+)"
+[ "$q1_field" = "lines=5 status=1 lone=kept" ] \
+  && pass "replace_field stores a literal backslash value verbatim -- no escape expansion, no raise" \
+  || fail "replace_field still expands replacement escapes: $q1_field"
+
+# S1: the stamp carries a model id, and a legitimate one (zai-org/glm-5.3) matches the citation
+# path pattern. Left in the extracted body it made every stamped turn cite a nonexistent file.
+Q2W="$WORK/gh524r1-cite"; Q2S="$WORK/gh524r1-cite-store"
+mkdir -p "$Q2W" "$Q2S"
+# Deliberately NO `cd`: a directory change here would put this suite in gh1-adoption-guard's
+# "creates fixtures and drives them" class, which is a real signal that must not be silenced with
+# an exemption marker for the sake of a shorter git invocation. `git -C` does the same work.
+mkdir -p "$Q2W/docs"
+require_fixture "$Q2W" "gh524 citation fixture repo"
+printf 'hello\n' > "$Q2W/docs/real.txt"
+git -C "$Q2W" init -q . >/dev/null 2>&1
+git -C "$Q2W" config user.email t@e.com >/dev/null 2>&1
+git -C "$Q2W" config user.name T >/dev/null 2>&1
+git -C "$Q2W" add docs/real.txt >/dev/null 2>&1
+git -C "$Q2W" commit -qm seed >/dev/null 2>&1
+python3 "$CLI" --root "$Q2W" --store "$Q2S" start --subject "gh524 citations" --agents 2 \
+  --packet-file "$PACKET" --id 925102 >/dev/null 2>&1
+python3 "$CLI" --root "$Q2W" --store "$Q2S" join --id 925102 --agent 2 \
+  --lab "Z.ai" --model "zai-org/glm-5.3" --effort max >/dev/null 2>&1
+python3 "$CLI" --root "$Q2W" --store "$Q2S" send --id 925102 --agent 2 --next-agent 1 \
+  --message "Checked docs/real.txt:1 as evidence." >/dev/null 2>&1
+q2_out="$(python3 "$CLI" --root "$Q2W" --store "$Q2S" verify-citations --id 925102 2>&1)"
+q2_rc=$?
+case "$q2_out" in
+  *"zai-org/glm-5.3"*) fail "the seat stamp's model id was read as a file citation: $q2_out" ;;
+  *) pass "the seat stamp is attribution, not evidence -- its model id is not cited" ;;
+esac
+[ "$q2_rc" -eq 0 ] \
+  && pass "citation verification still passes on a stamped transcript" \
+  || fail "stamping broke citation verification (rc=$q2_rc): $q2_out"
+case "$q2_out" in
+  *docs/real.txt*) pass "a real citation in the message is still recognised" ;;
+  *) fail "the participant's own citation was lost: $q2_out" ;;
+esac
+
+# R2-S1: only the LEADING generated stamp is metadata. A participant's own line that happens to
+# start with the same prefix is their content -- dropping it would hide a bad citation and turn a
+# failing audit green.
+python3 "$CLI" --root "$Q2W" --store "$Q2S" join --id 925102 --agent 1 \
+  --lab Anthropic --model claude-opus-5 >/dev/null 2>&1
+python3 "$CLI" --root "$Q2W" --store "$Q2S" send --id 925102 --agent 1 --next-agent 2 \
+  --message "Intro paragraph.
+**Seat:** evidence is docs/missing.txt:1" >/dev/null 2>&1
+q2b_out="$(python3 "$CLI" --root "$Q2W" --store "$Q2S" verify-citations --id 925102 2>&1)"
+q2b_rc=$?
+case "$q2b_out" in
+  *docs/missing.txt*)
+    [ "$q2b_rc" -ne 0 ] \
+      && pass "a participant's own Seat-prefixed line is still evidence, and its bad citation still fails" \
+      || fail "the bad citation was reported but verification still passed (rc=$q2b_rc)" ;;
+  *) fail "a participant's Seat-prefixed evidence line was swallowed by the stamp filter: $q2b_out" ;;
+esac
+
+# S2: a supersession notice is written by the HELPER. Attributing it to whoever holds agent1
+# would put a model's name on text no model wrote.
+python3 "$CLI" --root "$Q2W" --store "$Q2S" start --subject "gh524 replacement" --agents 2 \
+  --packet-file "$PACKET" --id 925103 --supersedes 925102 >/dev/null 2>&1
+q2_old="$(find "$Q2S" -path "*925102*" -name conversation.md 2>/dev/null | head -1)"
+expect_file_contains "an administrative turn says the helper wrote it, not a model" \
+  "$q2_old" "administrative (helper-written, no model)"
+
+# B1: recording an identity makes join a WRITER. Without the discussion lock its stale snapshot
+# could overwrite a turn written between its read and its write. The lock is non-blocking, so the
+# correct behaviour under contention is a clean REFUSAL that changes nothing -- the same answer
+# every other writer in this file gives.
+Q3W="$WORK/gh524r1-lock"; Q3S="$WORK/gh524r1-lock-store"
+mkdir -p "$Q3W" "$Q3S"
+python3 "$CLI" --root "$Q3W" --store "$Q3S" start --subject "gh524 lock" --agents 2 \
+  --packet-file "$PACKET" --id 925104 >/dev/null 2>&1
+Q3_FILE="$(find "$Q3S" -path "*925104*" -name conversation.md 2>/dev/null | head -1)"
+q3_out="$(CLI_PATH="$CLI" Q3W="$Q3W" Q3S="$Q3S" Q3_FILE="$Q3_FILE" python3 - <<'LOCKPY'
+import os, subprocess, sys, threading, time
+sys.path.insert(0, os.path.join("skills", "agent-chorus", "scripts"))
+import agent_chorus as ac
+from pathlib import Path
+
+cli, root, store, path = os.environ["CLI_PATH"], os.environ["Q3W"], os.environ["Q3S"], Path(os.environ["Q3_FILE"])
+started = threading.Event()
+
+def holder():
+    """Hold the lock across a read-modify-write, snapshotting BEFORE the join can interleave.
+
+    This is the shape that loses data: whoever writes last from a stale snapshot erases the
+    other's work. An unlocked join reads and writes inside this window, and the holder's stale
+    write then removes its seat.
+    """
+    with ac.DiscussionLock(path):
+        content = path.read_text()          # snapshot taken FIRST
+        started.set()
+        time.sleep(1.5)                     # an unlocked join reads and writes in here
+        content = ac.replace_field(content, "TURN", "2")
+        content = content.rstrip() + "\n\n### Turn 2 — agent2 — later\n\nRACE MARKER\n"
+        ac.atomic_write(path, content)      # stale write lands last
+
+th = threading.Thread(target=holder)
+th.start()
+started.wait(5)
+time.sleep(0.2)
+proc = subprocess.run([sys.executable, cli, "--root", root, "--store", store, "join",
+                       "--id", "925104", "--agent", "2", "--lab", "Anthropic", "--model", "m"],
+                      capture_output=True, text=True)
+th.join()
+final = path.read_text()
+# Match the HEADER line, not the word "SEATS:" that appears in the protocol prose.
+seat_written = any(ln.startswith("SEATS:") for ln in final.splitlines())
+print("rc=%s marker=%s seat=%s" % (
+    "nonzero" if proc.returncode else "zero",
+    "kept" if "RACE MARKER" in final else "LOST",
+    "yes" if seat_written else "no",
+))
+LOCKPY
+)"
+case "$q3_out" in
+  "rc=nonzero marker=kept seat=no")
+    pass "an identity join refuses cleanly under contention: the concurrent turn survives, nothing half-written" ;;
+  *"marker=LOST"*) fail "the identity join erased a concurrently written turn: $q3_out" ;;
+  "rc=zero"*) fail "the identity join wrote through another writer's lock: $q3_out" ;;
+  *) fail "identity join lock probe inconclusive: $q3_out" ;;
+esac
+
+# ...and once the lock is free the same join records the seat, so the refusal above is contention,
+# not a broken write path.
+python3 "$CLI" --root "$Q3W" --store "$Q3S" join --id 925104 --agent 2 \
+  --lab Anthropic --model claude-opus-5 >/dev/null 2>&1
+if grep -q '^SEATS: agent2=Anthropic|claude-opus-5' "$Q3_FILE"; then
+  pass "the same join records the seat once the lock is free"
+else
+  fail "the identity join never records a seat: $(grep -c '^SEATS:' "$Q3_FILE") header(s)"
 fi
 
 printf '  agent-chorus: %s pass, %s fail\n' "$PASS" "$FAIL"

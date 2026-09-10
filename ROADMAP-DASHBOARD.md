@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -35,16 +35,16 @@ Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work | — | [GH-402-BOARD-SYNC.md](PROJECT/2-WORKING/GH-402-BOARD-SYNC.md) · [#402](https://github.com/HiQS-Labs/XYZ-forge/issues/402) |
 | GH-406 · External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | [GH-406-RUSS-EXTERNAL-REVIEW.md](PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md) · [#406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) |
 | GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer | — | [GH-416-DOC-TRUES-UP-BATCH.md](PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md) · [#416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) |
-| GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip | — | [GH-418-MARATHON-ADOPT-RELEASES-DB.md](PROJECT/1-INBOX/GH-418-MARATHON-ADOPT-RELEASES-DB.md) · [#418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) |
-| GH-421 · Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first | — | [GH-421-AUTO-WAVE-RECONCILE.md](PROJECT/1-INBOX/GH-421-AUTO-WAVE-RECONCILE.md) · [#421](https://github.com/HiQS-Labs/XYZ-forge/issues/421) |
-| GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on | — | [GH-423-ROADMAP-RENDER.md](PROJECT/1-INBOX/GH-423-ROADMAP-RENDER.md) · [#423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) |
+| GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip | — | [GH-418-MARATHON-ADOPT-RELEASES-DB.md](PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md) · [#418](https://github.com/HiQS-Labs/XYZ-forge/issues/418) |
+| GH-421 · Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first | — | [GH-421-AUTO-WAVE-RECONCILE.md](PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md) · [#421](https://github.com/HiQS-Labs/XYZ-forge/issues/421) |
+| GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on | — | [GH-423-ROADMAP-RENDER.md](PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md) · [#423](https://github.com/HiQS-Labs/XYZ-forge/issues/423) |
 | GH-424 · roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕 | — | [GH-424-ROADMAP-STATUS-MARKER-WRITER.md](PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md) · [#424](https://github.com/HiQS-Labs/XYZ-forge/issues/424) |
-| GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified | — | [GH-425-GATE-PROVENANCE-CHECK.md](PROJECT/1-INBOX/GH-425-GATE-PROVENANCE-CHECK.md) · [#425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) |
+| GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified | — | [GH-425-GATE-PROVENANCE-CHECK.md](PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md) · [#425](https://github.com/HiQS-Labs/XYZ-forge/issues/425) |
 | GH-443 · marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the marathon before it fires | — | [capture](PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md) |
 | GH-445 · runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0 | — | [GH-445-TURN-SHIM-HELP-PARITY.md](PROJECT/1-INBOX/GH-445-TURN-SHIM-HELP-PARITY.md) · [#445](https://github.com/HiQS-Labs/XYZ-forge/issues/445) |
 | GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run | — | [GH-446-MARATHON-PLAN-WRITE-GUARD.md](PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md) · [#446](https://github.com/HiQS-Labs/XYZ-forge/issues/446) |
 | GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release) | — | [GH-452-RELEASE-TAGS.md](PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md) · [#452](https://github.com/HiQS-Labs/XYZ-forge/issues/452) |
-| GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/1-INBOX/GH-454-RECONCILE-GATE-DEFECTS.md) |
+| GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo | — | [GH-454-RECONCILE-GATE-DEFECTS.md](PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md) |
 | GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes | — | [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/460) · [doc](PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md) |
 | GH-453 · Governance document identity audit | — | [Plan](PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md) · [#453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) |
 | GH-484 · Deploy Skills | — | [plan](PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md) · [#484](https://github.com/HiQS-Labs/XYZ-forge/issues/484) |
@@ -60,6 +60,8 @@ Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
 | GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
 | GH-536 · relocate: Deployed Skills moves INTO the live Git Pulse Sync checkout (supersedes #508 verdict) | — | [#536](https://github.com/HiQS-Labs/XYZ-forge/issues/536) |
+| GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
+| GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
 | GH-528 · /unstuck — queue simultaneous blockers, tripwire recurring blocker classes | — | [GH-528-UNSTUCK-QUEUED-TRIPWIRE.md](PROJECT/2-WORKING/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md) · [#528](https://github.com/HiQS-Labs/XYZ-forge/issues/528) |
 
 ## Queue

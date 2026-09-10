@@ -1,0 +1,13 @@
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md:1 issue #505 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md PROJECT/3-COMPLETED/GH-505-RELAY-REVIEWER-INTEGRITY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md:1 issue #509 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-509-RELAY-TERMINAL-AUTHORIZATION.md PROJECT/3-COMPLETED/GH-509-RELAY-TERMINAL-AUTHORIZATION.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 issue #544 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-555-METER-EXIT-CRITERION.md:1 issue #555 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md:1 issue #563 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-564-FIXTURE-CONTAINMENT.md:1 issue #564 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 doc status reads 'complete' (done) but issue #494 is still OPEN — close the issue or correct the status
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 doc status reads 'complete' (done) but issue #494 is still OPEN — close the issue or correct the status
+WARN [pdda-check-issue-doc-sync] releases.db issue #505 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #509 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #510 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #515 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=12 info=0

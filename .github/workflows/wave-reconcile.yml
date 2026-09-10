@@ -1,0 +1,94 @@
+name: Wave reconciliation
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [development]
+  workflow_dispatch:
+  # Recover missed close events from committed lifecycle state, including queue overflow.
+  schedule:
+    - cron: '23 */6 * * *'
+
+concurrency:
+  group: wave-reconcile
+  cancel-in-progress: false
+  # Supported since 2026-05-07; retain up to 100 pending runs instead of replacing one.
+  # https://github.blog/changelog/2026-05-07-github-actions-concurrency-groups-now-allow-larger-queues/
+  queue: max
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development')
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+      - name: Check direct-push prerequisite
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # development was unprotected when implemented. Fail before writes if that changes;
+          # a protected branch needs a reviewed bot-bypass policy, never an implicit bypass.
+          test "$(gh api "repos/$REPO/branches/development" --jq .protected)" = false
+      - name: Install runtime dependencies
+        run: npm ci
+      - name: Reconcile merged PR or catch up
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = pull_request ]; then
+            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --gate
+          else
+            python3 utils/py/wave_reconcile.py --catch-up --gate
+          fi
+      - name: Commit declared artifacts and push
+        shell: python3 {0}
+        run: |
+          import os
+          import re
+          import subprocess
+
+          def git(*args):
+              return subprocess.check_output(['git', *args])
+
+          # Include both sides of doc moves; --no-renames makes the deletions explicit.
+          changed = set(filter(None, git('diff', '--name-only', '--no-renames', '-z', 'HEAD').split(b'\0')))
+          changed.update(filter(None, git('ls-files', '--others', '--exclude-standard', '-z').split(b'\0')))
+          exact = {'releases.db', 'releases.sql', 'RELEASES.generated.md', 'ROADMAP.md',
+                   'ROADMAP-DASHBOARD.md', 'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md'}
+          doc = r'PROJECT/(?:2-WORKING|3-COMPLETED|4-MISC)/(?:GH-)?[0-9]+-[^/]+\.md'
+          plan = r'(?:PROJECT/2-WORKING/)?MARATHON-PLAN-[0-9]{4}-[0-9]{2}-[0-9]{2}\.md'
+          paths = sorted(os.fsdecode(path) for path in changed)
+          unexpected = [p for p in paths if p not in exact and not re.fullmatch(doc, p) and not re.fullmatch(plan, p)]
+          if unexpected:
+              raise SystemExit('Refusing undeclared reconciliation artifacts: ' + repr(unexpected))
+          if not paths:
+              print('Nothing to commit')
+              raise SystemExit(0)
+          # Explicit paths only; a downstream generator cannot widen the bot commit.
+          git('add', '-A', '--', *paths)
+          git('config', 'user.name', 'github-actions[bot]')
+          git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
+          git('commit', '-m', 'chore: reconcile merged development work')
+          # One fast-forward push; never rebase a generated SQLite DB or force-push.
+          # A concurrent merge rejects this push and fails the job. The next scheduled/manual
+          # catch-up starts from fresh development and recomputes the unlanded transitions.
+          git('push', 'origin', 'HEAD:development')
