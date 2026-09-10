@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -619,5 +619,52 @@ swept file: yes
   post-commit/device-local (`artifact:79-89`).
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer — round 4
+
+VERDICT: PASS
+Basis: read `WriterLock.release()` at `utils/py/releases_app.py:418-424` and confirm your idempotence finding independently — it acts only when `self.fh is not None` and then clears it, so the retained `finally` is a no-op after an explicit release and still releases on an earlier exception. Plan revised at `PROJECT/2-WORKING/GH-549-WORK-STATE-EVENT-STREAM.md`; PDDA frontmatter, status-table and hardcoded-paths all errors=0. Plan round; no code written.
+
+The one blocker and both Shoulds are implemented. Nothing declined.
+
+- **[Blocker] the post-use rollback is not runnable as written — Implemented.** You are right that
+  "a documented `check --rebuild` on a dump written without `work_events`" describes an outcome and
+  not a procedure, and that the red control was therefore resting on the thing it was meant to prove.
+  The plan now specifies a concrete v008-owned command, `releases work downgrade --to 7 [--dry-run]`,
+  run **before** the revert because only v008 knows the schema it is removing, with the ordered steps
+  you named: back up the trio and refuse if the backup cannot be written; take `WriterLock` and refuse
+  unless `check` is already clean, so a downgrade cannot mask a pre-existing failure; **drop the two
+  append-only triggers first**, since they block the table's own removal — the exact case your finding
+  raises; drop both tables; delete the `schema_migrations` row for 8; rewrite the dump and generated
+  view through the existing staged-write-and-rename path; run `check`; and **restore the backup and
+  exit nonzero on any failure in those steps**, so the ledger is never left half-converted.
+  Event history is deliberately discarded rather than migrated, and the plan says so and says why:
+  `work_events` is projection provenance, and the board is rebuildable from the ledger by `reconcile`.
+  Your red control is now three-part and runnable: the reverted v007 binary must **fail** against a
+  populated v008 ledger; must be **clean** after the conversion; and an injected failure at the
+  migration-row step must restore the backup and leave the ledger passing `check` at v008.
+
+- **[Should] stale risk row reintroducing caller-dispatch — Implemented.** Caught cleanly: the row
+  still described the contract two rounds out of date, and its red control named a mutation that was
+  already the shipped state. It now reads that dispatch runs inside `perform_write` in one common
+  section after the explicit lock release, and the red mutation is moving that section **before** the
+  release — which is the edit that actually reintroduces the hazard.
+
+- **[Should] stale caller count — Implemented, and I took the stronger of your two options.** Rather
+  than update the numbers, the coverage test **derives** the caller/op inventory from source, so no
+  count is hardcoded anywhere in the verification. `work emit` cannot escape criterion 1, and neither
+  can the 30th caller. The one narrative mention of "28" now reads "28 today, 29 once this work adds
+  `work emit`".
+
+- **[Pass] × 4** — noted, and the reason round 4 was worth running: all three round-3 fixes were the
+  riskiest edits in the plan and you verified each from source rather than from my description of it.
+  The `WriterLock` idempotence check in particular is the finding I would have wanted and could not
+  give myself.
+
+**Trajectory:** r1 five blockers, r2 four, r3 two, r4 one — and that one was a procedural gap in the
+rollback section, not a design defect. Nothing has been declined in any round, and every structural
+claim in this plan now carries a [Pass] derived from source.
+
+Handing off to Reviewer — go to the codex window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

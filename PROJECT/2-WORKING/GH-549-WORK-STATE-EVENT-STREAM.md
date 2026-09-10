@@ -70,7 +70,8 @@ Full design is on the issue. The load-bearing decisions:
   rated, running, PR opened, merged, escalated — never a board's column vocabulary. Each connector
   maps to its own presentation. The core does not inherit GitHub's column model.
 - **Same database, same transaction, one seam.** `perform_write()` at `utils/py/releases_app.py:1317`
-  is the single path for **domain verbs** — 28 callers — and it already writes its `op_receipts` row
+  is the single path for **domain verbs** — 28 callers today, 29 once this work adds `work emit` —
+  and it already writes its `op_receipts` row
   inside the transaction. The work event is written there, so it is atomic with the ledger write.
   It is not the only thing that can touch the file: `cmd_init`, `perform_migration`, `_rebuild` and
   `load_dump` are enumerated exceptions, and `jog_run.py:1638`/`:1692` is a bypass filed as #552.
@@ -288,7 +289,8 @@ missed. Each mapped `op` instead names an **extractor**: a function run after `m
 inside the transaction, given `(conn, op, target_gid)`, returning `(event, gh_number, payload)` or
 `None`.
 
-The registry is **total**. Every `op` string reachable from the 28 callers is either mapped to an
+The registry is **total**. Every `op` string reachable from any `perform_write` caller — the count is
+derived from source, never hardcoded — is either mapped to an
 extractor or listed in an explicit `NON_EVENT_OPS` allowlist with a one-line reason. A coverage test
 enumerates the `op` literals in `releases_app.py` — plus the `jog-` prefix family from
 `jog_set_status` (`:4417`, writes at `:4440`) — and **fails when one is neither mapped nor
@@ -311,7 +313,10 @@ exit 0.
 **2.3** Dispatch happens after `conn.commit()` and after the dump/rename at `:1391-1402`, wrapped so
 no exception escapes.
 
-*Verification:* all 28 callers exit 0 with no config present; plus the coverage test above.
+*Verification:* **every** `perform_write` caller exits 0 with no config present. The count is not
+hardcoded — the coverage test **derives** the caller/op inventory from the source (Codex r4), so
+`work emit`, which makes it 29, cannot escape criterion 1 and neither can the 30th. Plus the coverage
+test above.
 **Red control:** the existing `_crash("pre-commit")` hook at `:1387` — inject the crash and assert
 neither the ledger row nor the event survives.
 
@@ -505,7 +510,7 @@ Every assertion checks a non-empty fixture first, so an empty result can never r
 | A cursor write breaks the dump comparison | `connector_cursors` outside `dump_text` entirely; red control B |
 | Migration 008 lands without dump/load support | `check --rebuild` in the suite, which fails loudly |
 | A connector delays a ledger verb | one 5s total window for all connectors, launched concurrently and measured; zero when unconfigured |
-| Dispatch holds the governance lock across network time | dispatch runs in the caller, after `perform_write` releases `WriterLock`; red control moves it back and asserts a second writer blocks |
+| Dispatch holds the governance lock across network time | dispatch runs **inside `perform_write`**, in one common section after its explicit `WriterLock` release; red control moves that section back **before** the release and asserts a second writer blocks |
 | `work emit` drifts from `perform_write`'s protocol | it *is* a `perform_write` caller; crash-boundary matrix proves equivalence |
 | A connector changes a host exit code | `try/except BaseException`; red control 4 |
 | The first write after merge creates live cards | no default owner or number; red control 2 |
@@ -520,12 +525,39 @@ Honest statement, in two cases:
 
 - **Before the first event** — revert the branch. Both tables are empty, `connector_cursors` was never
   in the dump, and the 007 binary ignores them.
-- **After any real use** — reverting the code alone is **not** safe. A down-conversion step is required:
-  drop `work_events` from the dump and the DB and roll `schema_migrations` back to 7, via a documented
-  `check --rebuild` on a dump written without it.
-  **Red control:** populate a migration-008 ledger with real events, run the *reverted* binary's
-  `check` and its rebuild/load path against it, and assert the documented down-conversion is what makes
-  it clean — and that skipping it does not.
+- **After any real use** — reverting the code alone is **not** safe, and "a documented rebuild" was
+  not a procedure. Codex r4 is right; here is the actual one. **The v008 binary owns it** — it must be
+  run *before* the revert, because only v008 knows the schema it is removing:
+
+  ```
+  releases work downgrade --to 7 [--dry-run]
+  ```
+
+  Ordered, and each step is a real command rather than a description:
+
+  1. **Back up** `releases.db`, `releases.sql` and `RELEASES.generated.md` into
+     `.releases-downgrade-<txn>/`. Refuse to continue if the backup cannot be written.
+  2. Take `WriterLock` and refuse if `releases check` is not already clean — a downgrade must not be
+     the thing that hides a pre-existing failure.
+  3. `DROP TRIGGER work_events_no_update; DROP TRIGGER work_events_no_delete;` **first** — the
+     append-only triggers block the table's own removal path, which is exactly the case the r4 finding
+     asks about.
+  4. `DROP TABLE work_events; DROP TABLE connector_cursors;`
+  5. `DELETE FROM schema_migrations WHERE version = 8;`
+  6. Rewrite `releases.sql` and the generated view from the now-v007 schema through the existing
+     staged-write-and-atomic-rename path, so the trio is consistent at a new generation.
+  7. Run `releases check`. **On any failure in steps 3-7, restore the step-1 backup and exit nonzero**
+     — the ledger is never left half-converted.
+
+  `--dry-run` prints the plan and writes nothing. Event history is deliberately **discarded**, not
+  migrated: `work_events` is projection provenance, the board is rebuildable from the ledger by
+  `reconcile`, and preserving it would mean carrying a v008 table into a v007 world.
+
+  **Red control (Codex r4's):** populate a migration-008 ledger with real events, then
+  (a) run the *reverted* v007 binary's `check` and its rebuild/load path against it and assert it
+  **fails** — proving the conversion is necessary; (b) run `work downgrade --to 7`, then the same v007
+  `check` and rebuild/load, and assert both are **clean**; (c) inject a failure at step 5 and assert
+  the backup is restored and the ledger still passes `check` at v008.
 
 ## Ordered implementation list
 
