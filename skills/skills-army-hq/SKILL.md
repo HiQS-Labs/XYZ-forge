@@ -9,7 +9,9 @@ description: >-
 
 # Skills Army HQ
 
-Keep actual skill folders in the user's `Documents/Deployed Skills`. Apps discover
+Keep actual skill folders in the user's `~/git-pulse-sync/Deployed Skills` (GH-536:
+the collection lives inside the live Git Pulse Sync checkout — the hourly pulse writer
+stages it, and machine-local state is excluded by the collection's own `.gitignore`). Apps discover
 directory symlinks to these stable copies, not disposable task clones. This skill is
 the conversational interface for existing agents/extensions; no extension install
 or background service is required. macOS/Python 3.9+ is the supported alpha; other
@@ -59,18 +61,18 @@ the examples below are templates, not a hardcoded source inventory.
 ```bash
 python3 /path/to/skills-army-hq/scripts/intake.py init
 python3 /path/to/skills-army-hq/scripts/intake.py --apply init
-python3 "$HOME/Documents/Deployed Skills/intake.py" list
-python3 "$HOME/Documents/Deployed Skills/intake.py" add /path/to/local-repo/skills/example
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply add /path/to/local-repo/skills/example
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply update example
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply update example --source /new/repo/skills/example
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply remove example
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply catalog
-python3 "$HOME/Documents/Deployed Skills/intake.py" targets
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply targets --id chosen-app --path /verified/app/skills --consumer "Chosen app"
-python3 "$HOME/Documents/Deployed Skills/intake.py" --apply targets --id chosen-app --disable
-python3 "$HOME/Documents/Deployed Skills/sync.py" --status
-python3 "$HOME/Documents/Deployed Skills/sync.py" --apply
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" add /path/to/local-repo/skills/example
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply add /path/to/local-repo/skills/example
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply update example
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply update example --source /new/repo/skills/example
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply remove example
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply catalog
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" targets
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply targets --id chosen-app --path /verified/app/skills --consumer "Chosen app"
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply targets --id chosen-app --disable
+python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --status
+python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --apply
 ```
 
 Both scripts accept `--root /chosen/collection` for redirected Documents or another
