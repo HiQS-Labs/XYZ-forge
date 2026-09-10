@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -309,5 +309,72 @@ Two things I want your eye on in round 2, because they are new surface rather th
    replay is idempotent so that is safe; if it is not, this is the finding that matters most.
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer · round 2
+
+**Verdict: Changes requested.** Round 1's mapping, config, and dump/digest defects are substantially
+repaired, but the revised plan still does not define concurrent dispatch or a safe cursor-write
+boundary, and its external emitter remains a second implementation of the write protocol.
+
+swept file: yes
+
+- [Blocker] **The connector execution described is sequential, not concurrent.** The requested
+  outcome explicitly says “multiple connectors consuming it concurrently”
+  (`.relay-artifacts/GH-549-WORK-STATE-EVENT-STREAM.md:60-63`), but Phase 3 specifies only that each
+  connector runs via blocking `subprocess.run(... timeout=5)` (`artifact:304-317`). No executor,
+  parallel launch/join, or total latency bound is named, and criterion 5 merely proves that iteration
+  continues (`artifact:404-411`). Two hung connectors can therefore cost 10 seconds rather than 5.
+  **Fix:** specify concurrent launch with one total bounded join/collection window, preserve input
+  connector order only for deterministic cursor/error persistence, and add a timing red control in
+  which two 5-second sleepers take about 5 seconds together and fail when dispatch is serialized.
+- [Blocker] **Cursor persistence still has no safe transaction/lock boundary.** The artifact says
+  dispatch occurs after dump/rename (`artifact:290-291`) and that the calling parent writes cursors
+  (`artifact:313-317`), but `perform_write` retains `WriterLock` until its `finally` after return
+  (`utils/py/releases_app.py:1317-1408`). It never says whether dispatch is inside that lock, which
+  connection/transaction commits cursor changes, or how concurrent completions serialize. That can
+  hold the governance lock across network time, lose uncommitted cursor updates, or contend on one
+  SQLite connection. **Fix:** make `perform_write` finish and release its lock before dispatch; collect
+  child results without a DB handle; then persist all cursor/error outcomes in one short, explicit
+  device-local transaction under a named lock policy. Test that another ledger writer proceeds while
+  connectors are blocked and that concurrent completion persists both outcomes after reopening DB.
+- [Blocker] **`work emit` still forks the single write protocol instead of extending it.** Phase 4.5
+  promises a new verb that independently takes `WriterLock`, writes the journal, receipt, transaction,
+  and artifacts (`artifact:375-386`), even though `perform_write` already owns that exact protocol and
+  accepts an arbitrary `mutate` callback (`utils/py/releases_app.py:1317-1408`). This is the second
+  entry point the Definition of Done excludes, and the plan does not explicitly compute generation or
+  `state_digest_before/after`, stage/rename, clear/recover the journal, or prove equivalence. **Fix:**
+  route external emission through `perform_write` (with a declared `work-emit` extractor suppression
+  or explicit event payload), or first extract one shared write primitive used by both paths; add a
+  crash-boundary matrix proving identical recovery, generation, dump, and receipt-chain behavior.
+- [Blocker] **The pre-push emitter still cannot supply its required issue identity and does not prove
+  “ready for review.”** The CLI requires `--gh-number` (`artifact:379-381`), but the hook currently
+  retains only local/remote SHA pairs and has no issue/PR lookup (`githooks/pre-push:61-76`). The plan
+  says only to call the verb before three green exits and maps `push_validated` to the review column
+  (`artifact:388-392`); a green push may target a branch with no PR, so that mapping can falsely claim
+  the promised review state. **Fix:** define fail-soft identity derivation from each pushed local ref,
+  query/verify an actual open PR and its readiness state, emit one event per unambiguous PR only, and
+  test no-PR, multiple-ref, draft, ready, lookup-failure, and push-rejection cases; otherwise cut this
+  emitter and derive review readiness in `reconcile`.
+- [Should] **The whole artifact retains superseded contracts.** Its design and phase summary still say
+  “detached with a timeout and an ignored exit code” and “detached dispatch” (`artifact:95-98`,
+  `:150-157`), contradicting the later bounded synchronous contract (`artifact:299-317`). Criterion
+  2 also retains the rejected bare-`3` text assertion (`artifact:135-136`). **Fix:** update the whole
+  document, not only the implementation section, so builders and acceptance reviewers see one
+  contract.
+- [Should] **Append-only is asserted but not planned.** The design calls `work_events` append-only
+  (`artifact:79-87`), while the migration field list names no update/delete triggers
+  (`artifact:202-209`). **Fix:** add `work_events` no-update/no-delete triggers mirroring
+  `op_receipts`, plus mutation tests that witness both refusals.
+- [Pass] **The dump/digest correction is now coherent:** `work_events` is placed beneath the
+  `include_receipts` guard and cursors are excluded from the dump (`artifact:234-247`), matching
+  `business_digest = dump_text(... include_receipts=False ...)`
+  (`utils/py/releases_app.py:1224-1226`). Replaying cursorless rebuilds is safe for the stated GitHub
+  adapter because Phase 4.4 defines writes as set-to-value rather than increments (`artifact:371-373`).
+- [Pass] **The op mapping no longer invents a merge:** `roadmap-update` is derived from post-mutation
+  state, every op must be mapped or allowlisted (`artifact:263-288`), and `pr_merged` is emitted only
+  after `execute_pr_merge` returns true outside dry-run (`artifact:393-395`;
+  `skills/merge-cleanup/scripts/merge_cleanup.py:50-64,366-370`).
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
