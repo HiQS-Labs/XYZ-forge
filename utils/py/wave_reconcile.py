@@ -581,9 +581,12 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
     issues = {m["issue"] for m in manifest_members(repo_root, repo_slug)}
     # Roadmap-only drift survives when a doc was archived or a manifest already shipped.
     # Terminal rows must drop out again so successful catch-up remains idempotent.
-    issues.update(row["gh_number"] for row in ledger_rows(repo_root,
-        "SELECT gh_number FROM roadmap_items WHERE gh_number IS NOT NULL "
-        "AND section NOT IN (?, ?)", ("Completed", "Deferred · vision")))
+    for row in ledger_rows(repo_root,
+            "SELECT gh_number, issue_url FROM roadmap_items WHERE gh_number IS NOT NULL "
+            "AND section NOT IN (?, ?)", ("Completed", "Deferred · vision")):
+        expected = f"https://github.com/{repo_slug}/issues/{row['gh_number']}"
+        if repo_slug and (row["issue_url"] or "").lower() == expected.lower():
+            issues.add(row["gh_number"])
     for path in Path(repo_root, "PROJECT/2-WORKING").glob("GH-*.md"):
         match = re.match(r"GH-([0-9]+)-", path.name)
         if match:

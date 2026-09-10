@@ -214,6 +214,17 @@ class ReconcileTests(unittest.TestCase):
         self.apply('--catch-up')
         self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), [])
 
+    def test_roadmap_catch_up_preserves_repository_identity(self):
+        for number, url in [(422, 'https://github.com/other/repo/issues/422'),
+                            (423, 'not-an-issue-url')]:
+            self.cli('roadmap', 'add', '--issue-num', str(number), '--title', 'foreign or corrupt',
+                     '--created', '2026-09-01', '--issue-url', url,
+                     '--doc-path', f'PROJECT/1-INBOX/GH-{number}-fixture.md')
+        # Neither row may be looked up as a same-number issue in this repository.
+        with patch.object(wave, 'fetch_issue_state', wraps=wave.fetch_issue_state) as lookup:
+            self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), ['42'])
+        self.assertEqual([call.args[1] for call in lookup.call_args_list], [421])
+
     def test_catch_up_applies_missed_event(self):
         self.apply('--catch-up')
         self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'shipped')
