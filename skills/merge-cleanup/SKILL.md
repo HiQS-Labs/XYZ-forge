@@ -131,7 +131,7 @@ the answer will inform a landing.
 ### Phase 6: Safe Teardown
 - **Linked Worktrees:** Always removed via `git worktree remove <path>` from parent clone, followed by `git worktree prune` and `git worktree repair`. **Zero `rm -rf` on linked worktrees!**
 - **Fresh inspection first (A.5):** the Phase 1–3 table is display. Before any removal, **every** non-exempt checkout (all `PRESERVE_*` and `SAFE_REMOVE_*` alike; only `PRIMARY_CHECKOUT`, `PRESERVED_USER_EXCLUDE`, `PRESERVE_WIKI` are exempt) is re-inspected after a fresh fetch, and only that verdict is acted on. A `PRESERVE_UNPUSHED` clone whose PR landed in Phase 5 becomes eligible here; anything that became dirty, claimed, or grew a local ref since the scan is preserved. `teardown_checkout()` refuses a record that is not a fresh Phase 6 inspection.
-- **Standalone Clones:** Only deleted if verified 100% clean across Phase 2 & 3. Moved to Trash (`~/.Trash`) when available.
+- **Standalone Clones:** Only removed if verified 100% clean across Phase 2 & 3, and only by moving to Trash (`~/.Trash`). If Trash is unavailable the removal is **refused** — `rmtree` is not a removal path.
 - **Symlink Cleanup:** Prunes dangling skill symlinks in `~/.claude/skills/` and `~/.gemini/**/skills/`.
 
 ---
@@ -164,6 +164,8 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | landing-refetch-and-gate | 5 | script | TestE6Gate.test_gate_red_prevents_the_merge |
 | ledger-resolution-disjoint | 5 | script | TestPhase5EndToEnd.test_same_key_update_on_both_sides_is_handoff_and_nothing_is_overwritten |
 | ledger-handoff-and-record | 5 | script | TestCScript.test_two_clones_one_coordinator_third_repair_is_refused |
+| coordinator-pinned-to-primary | 5 | script | TestCScript.test_omitted_primary_is_refused_and_no_record_root_is_minted |
+| teardown-trash-only | 6 | script | TestCScript.test_teardown_refuses_without_trash |
 | dependents-blocked | 5 | script | TestCScript.test_dependent_of_a_handed_off_pr_is_not_attempted_and_an_independent_pr_proceeds |
 | reconciliation-gating | 5 | script | TestPhase5EndToEnd.test_failed_reconcile_stops_before_the_next_pr |
 | code-conflict-recon | 5 | caller | — |
@@ -178,7 +180,7 @@ Run scripts directly from the skill directory or via python:
 
 ```bash
 # 1. Full Dry-Run Inspection (Default)
-python3 skills/merge-cleanup/scripts/merge_cleanup.py --prefix XYZ-forge
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge
 
 # 2. Audit Only (Scan Clones and Worktrees)
 python3 skills/merge-cleanup/scripts/scan_clones.py --prefix XYZ-forge
@@ -187,13 +189,13 @@ python3 skills/merge-cleanup/scripts/scan_clones.py --prefix XYZ-forge
 python3 skills/merge-cleanup/scripts/toposort_prs.py
 
 # 4. Execute Full Sequence (Merges, Reconciliation, and Teardown)
-python3 skills/merge-cleanup/scripts/merge_cleanup.py --prefix XYZ-forge --execute
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --execute
 
 # 5. Teardown Only (Clean Clones/Worktrees without merging PRs)
-python3 skills/merge-cleanup/scripts/merge_cleanup.py --prefix XYZ-forge --teardown-only --execute
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --teardown-only --execute
 
 # 6. Exclude Active In-Flight Work (e.g. PR 427)
-python3 skills/merge-cleanup/scripts/merge_cleanup.py --prefix XYZ-forge --exclude 427 --execute
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --exclude 427 --execute
 
 # 7. Caller repair rung (Phase C): the handoff line printed the record path
 export MERGE_CLEANUP_RECORD=/abs/primary/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-538.json

@@ -316,15 +316,16 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
 
         log(f"Removing verified clean standalone clone: {path}...")
         try:
-            # Prefer Trash if available
+            # Trash is the ONLY removal path (plan: "where Trash is unavailable the skill must
+            # refuse, not rmtree"). A wrong eligibility verdict is recoverable from Trash and from
+            # nowhere else.
             trash_dir = Path.home() / ".Trash"
-            if trash_dir.exists() and trash_dir.is_dir():
-                trash_target = trash_dir / f"{path.name}-{os.getpid()}"
-                shutil.move(str(path), str(trash_target))
-                log(f"✅ Moved clone {path.name} to Trash ({trash_target})")
-            else:
-                shutil.rmtree(path)
-                log(f"✅ Removed clone directory {path}")
+            if not (trash_dir.exists() and trash_dir.is_dir()):
+                log_err(f"REFUSING to remove {path}: {trash_dir} is unavailable and rmtree is not a permitted removal path")
+                return False
+            trash_target = trash_dir / f"{path.name}-{os.getpid()}"
+            shutil.move(str(path), str(trash_target))
+            log(f"✅ Moved clone {path.name} to Trash ({trash_target})")
             return True
         except Exception as exc:
             log_err(f"Failed to remove clone directory {path}: {exc}")
@@ -564,7 +565,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="/merge-cleanup — Consolidate checkouts, sequence PRs, reconcile docs, and tear down safely."
     )
-    parser.add_argument("--primary", default=None, help="Path to primary working repo (default: current directory)")
+    # C: the primary is the coordinator of the attempt record and the target of every landing.
+    # It is never inferred from the CWD — a disposable clone running this script would otherwise
+    # mint its own record root and its own landing target.
+    parser.add_argument("--primary", required=True, help="Path to the primary working repo (required; never inferred from the CWD)")
     parser.add_argument("--root", action="append", help="Root directory to search for checkouts")
     parser.add_argument("--prefix", default="", help="Filter checkouts by repo name substring")
     parser.add_argument("--exclude", action="append", default=[], help="Pattern or branch to exclude from cleanup")
@@ -580,7 +584,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        primary_repo = Path(args.primary).expanduser().resolve() if args.primary else Path.cwd().resolve()
+        primary_repo = Path(args.primary).expanduser().resolve()
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2

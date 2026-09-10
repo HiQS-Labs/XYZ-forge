@@ -20,9 +20,15 @@ sys.path.insert(0, str(REPO / "utils" / "py"))
 sys.path.insert(0, str(REPO / "test"))
 
 import attempt_record as ar  # noqa: E402
+import contextlib
+import io
+import ledger_merge  # noqa: E402
+import merge_cleanup  # noqa: E402
+import scan_clones  # noqa: E402
+import unittest.mock as mock
 from attempt_record import RECORD_ENV, RecordError, RecordLock, reserve  # noqa: E402
 from gh534_phase_a_tests import TestA2Provenance, TestA4OpenHandles, TestA4TickClaims, TestA5FailClosed, TestA5FreshInspection  # noqa: E402,F401
-from gh534_phase_b_tests import LedgerFixture, TestE6Gate, TestPhase5EndToEnd, _app, _git, park  # noqa: E402,F401
+from gh534_phase_b_tests import LedgerFixture, TestE6Gate, TestPhase5EndToEnd, _app, _git, commit_all, park  # noqa: E402,F401
 
 CLI = REPO / "skills" / "merge-cleanup" / "scripts" / "attempt_record.py"
 
@@ -266,6 +272,131 @@ class TestCScript(LedgerFixture):
         self.assertFalse(self.record_for(3).exists())
         self.pruner.assert_not_called()  # a handoff is still a non-zero Phase 5; teardown does not run
 
+    def test_omitted_primary_is_refused_and_no_record_root_is_minted(self):
+        """R1-2: the coordinator is never the CWD. Run the orchestrator from a disposable clone
+        with no --primary: it must stop before any phase and mint no record root anywhere."""
+        self.same_key_conflict()
+        foreign = self.tmp / "w-2"
+        r = subprocess.run([sys.executable, str(MC_SRC), "--root", str(self.tmp / "no-roots"), "--execute"],
+                           cwd=str(foreign), capture_output=True, text=True, env={**os.environ})
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertIn("--primary", r.stderr)
+        for d in (foreign, self.primary, self.tmp):
+            self.assertFalse((d / ".tick" / "merge-cleanup").exists(), f"a record root was minted under {d}")
+        self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"OPEN"})
+
+    def test_teardown_refuses_without_trash(self):
+        """R1-4: Trash is the only removal path; with no ~/.Trash the clone is refused, not rmtree'd."""
+        victim = self.clone("victim")
+        rec = {"path": str(victim), "name": "victim", "checkout_type": "standalone_clone", "type": "standalone_clone", "disposition": "SAFE_REMOVE_CLONE",
+               "scan_disposition": "SAFE_REMOVE_CLONE", "parent_clone": None}
+        fake_home = self.tmp / "home-without-trash"
+        fake_home.mkdir()
+        err = io.StringIO()
+        roots = mock.patch.object(scan_clones, "DEFAULT_SAFE_ROOTS", [self.tmp.resolve()])  # the fixture dir is a safe root here
+        roots.start()
+        self.addCleanup(roots.stop)
+        with mock.patch.object(Path, "home", return_value=fake_home), contextlib.redirect_stderr(err):
+            ok = merge_cleanup.teardown_checkout(rec, dry_run=False)
+        self.assertFalse(ok)
+        self.assertTrue(victim.is_dir(), "the clone was removed without Trash")
+        self.assertIn("REFUSING", err.getvalue())
+        self.assertFalse((fake_home / ".Trash").exists())
+        # With Trash present the same record is moved there, never rmtree'd.
+        (fake_home / ".Trash").mkdir()
+        with mock.patch.object(Path, "home", return_value=fake_home), contextlib.redirect_stderr(err):
+            ok = merge_cleanup.teardown_checkout(rec, dry_run=False)
+        self.assertTrue(ok)
+        self.assertFalse(victim.exists())
+        self.assertTrue(any(d.name.startswith("victim-") for d in (fake_home / ".Trash").iterdir()))
+
+    # --- R1-3: the three B1 acceptance cases that had no direct pin ---------------------------
+    def test_view_deletion_on_the_pr_side_is_preserved_through_b1(self):
+        """A view un-adopted on the PR side while the integration side regenerated it (delete/modify)
+        stays deleted after B1; the resolver honours the deletion, the rows still merge."""
+        seed = self.clone("seed-view")
+        (seed / "ROADMAP-DASHBOARD.md").write_text("baked view v0\n")
+        commit_all(seed, "adopt dashboard")
+        _git(seed, "push", "-q", "origin", "development")
+        def pr1(r):
+            park(r, 200, "from PR 1")
+            (r / "ROADMAP-DASHBOARD.md").write_text("baked view v1 (regenerated)\n")
+        def pr2(r):
+            park(r, 201, "from PR 2")
+            (r / "ROADMAP-DASHBOARD.md").unlink()
+        self.branch("feat/a", 1, pr1)
+        self.branch("feat/b", 2, pr2)
+        rc = self.run_main()
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
+        self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
+        c = self.clone("verify-view")
+        self.assertFalse((c / "ROADMAP-DASHBOARD.md").exists(), "the deleted view was resurrected")
+
+    def test_generator_failure_means_no_push(self):
+        """The resolver (rebuild + view generation) failing → B1 stops, nothing is pushed to the PR."""
+        self.same_key_free_conflict()
+        real = ledger_merge._run
+        def failing(argv, cwd, **kw):
+            if any(str(a).endswith("releases-merge-resolve.sh") for a in argv):
+                return subprocess.CompletedProcess(argv, 1, stdout="", stderr="generator exploded (injected)")
+            return real(argv, cwd, **kw)
+        before = self.pr_head("feat/b")
+        with mock.patch.object(ledger_merge, "_run", side_effect=failing):
+            rc = self.run_main()
+        self.assertEqual(rc, 2)
+        self.assertIn("resolver refused", self.err)
+        self.assertEqual(self.pr_head("feat/b"), before, "the PR branch was pushed despite a generator failure")
+        self.assertEqual(self.load()["prs"]["2"]["state"], "OPEN")
+
+    def test_genuinely_invalid_final_head_fails_second_clone_validation_and_is_not_pushed(self):
+        """Not a mock of the validator: B1 is made to commit a corrupt ledger; the SECOND clone's
+        real `releases check` goes red and the head is never pushed."""
+        self.same_key_free_conflict()
+        def corrupt_b1(clone, execute):
+            for f in ("releases.sql", "releases.db"):
+                (clone / f).write_text("corrupt\n")
+            _git(clone, "add", "-A")
+            _git(clone, "commit", "-q", "-m", "bad merge")
+            head = _git(clone, "rev-parse", "HEAD").stdout.strip()
+            return {"resolved": True, "handoff": False, "reason": "x", "log": [], "commit": head, "conflict_set": ["releases.sql"]}
+        before = self.pr_head("feat/b")
+        with mock.patch.object(merge_cleanup, "resolve_ledger_conflict", side_effect=corrupt_b1):
+            rc = self.run_main()
+        self.assertEqual(rc, 2)
+        self.assertIn("failed validation", self.err)
+        self.assertIn("releases check red in the second clone", self.err)
+        self.assertEqual(self.pr_head("feat/b"), before, "an invalid head was pushed")
+        self.assertEqual(self.load()["prs"]["2"]["state"], "OPEN")
+
+    def same_key_free_conflict(self):
+        """Two disjoint parks: a real ledger conflict that B1 WOULD resolve."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2"))
+
+    def pr_head(self, branch):
+        return _git(self.probe, "ls-remote", str(self.origin), f"refs/heads/{branch}").stdout.split()[0]
+
+
+class TestB1SchemaGuard(unittest.TestCase):
+    """R1-1: non-row dump content (DDL/unknown statements) differing from base on either side is
+    never disjoint — the classifier hands off instead of resolving a shape it cannot read."""
+    BASE = "-- generation: 5\n-- table: roadmap_items\nINSERT INTO roadmap_items(gid, gh_number) VALUES('g1', '100');\n"
+
+    def test_ddl_only_change_is_handoff(self):
+        ours = self.BASE + "CREATE INDEX idx_gh ON roadmap_items(gh_number);\n"
+        theirs = self.BASE.replace("generation: 5", "generation: 6")
+        cls = ledger_merge.classify(self.BASE, ours, theirs)
+        self.assertFalse(cls["disjoint"])
+        self.assertTrue(any("non-row dump content changed on ours" in r and "CREATE INDEX" in r for r in cls["reasons"]), cls["reasons"])
+        cls = ledger_merge.classify(self.BASE, theirs, ours)
+        self.assertTrue(any("changed on theirs" in r for r in cls["reasons"]))
+
+    def test_generation_stamp_alone_is_not_a_schema_change(self):
+        theirs = self.BASE.replace("generation: 5", "generation: 6")
+        cls = ledger_merge.classify(self.BASE, self.BASE, theirs)
+        self.assertTrue(cls["disjoint"], cls["reasons"])
+
 
 # --- Parity guard: SKILL.md's capability table vs the code and the tests ------------------------
 SKILL_MD = REPO / "skills" / "merge-cleanup" / "SKILL.md"
@@ -278,6 +409,7 @@ REQUIRED_CAPABILITIES = {
     "preservation-fail-closed": "script", "landing-refetch-and-gate": "script",
     "ledger-resolution-disjoint": "script", "ledger-handoff-and-record": "script",
     "dependents-blocked": "script", "reconciliation-gating": "script",
+    "coordinator-pinned-to-primary": "script", "teardown-trash-only": "script",
     "code-conflict-recon": "caller", "code-conflict-resolution": "caller",
     "teardown-fresh-inspection": "script",
 }

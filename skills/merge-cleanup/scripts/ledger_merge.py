@@ -92,9 +92,16 @@ def parse_dump(text: str) -> Dict[str, Any]:
     if m:
         gen = int(m.group(1))
     tables: Dict[str, Dict[Any, Dict[str, Optional[str]]]] = {}
+    # Everything that is not a row and not the generation stamp — DDL, pragmas, unknown
+    # statements, structural comments. The dump carries none today, so any difference here is
+    # a shape this classifier was never taught and must hand off (plan: "schema changes →
+    # handoff"). Compared verbatim, never interpreted.
+    other: List[str] = []
     for line in text.splitlines():
         mm = _INSERT_RE.match(line)
         if not mm:
+            if line.strip() and not line.startswith("-- generation:"):
+                other.append(line.rstrip())
             continue
         table, cols_s, vals_s = mm.groups()
         cols = [c.strip() for c in cols_s.split(",")]
@@ -111,7 +118,7 @@ def parse_dump(text: str) -> Dict[str, Any]:
         else:
             key = row.get(cols[0])
         tables.setdefault(table, {})[key] = row
-    return {"generation": gen, "tables": tables}
+    return {"generation": gen, "tables": tables, "other": other}
 
 
 def _changes(base: Dict[Any, Dict], side: Dict[Any, Dict]) -> Dict[Any, str]:
@@ -141,6 +148,11 @@ def classify(base_text: str, ours_text: str, theirs_text: str) -> Dict[str, Any]
         return {"disjoint": False, "reasons": [f"dump unparseable: {exc}"], "ours": {}, "theirs": {},
                 "keep": "theirs", "replay": [], "gen": (None, None)}
     reasons: List[str] = []
+    for side_name, side in (("ours", ours), ("theirs", theirs)):
+        if side.get("other") != base.get("other"):
+            changed = sorted(set(side.get("other", [])) ^ set(base.get("other", [])))
+            reasons.append(f"non-row dump content changed on {side_name} (schema/DDL or unknown statements): "
+                           + "; ".join(c[:60] for c in changed[:3]))
     ours_ch: Dict[str, Dict[Any, str]] = {}
     theirs_ch: Dict[str, Dict[Any, str]] = {}
     all_tables = set(base["tables"]) | set(ours["tables"]) | set(theirs["tables"])
