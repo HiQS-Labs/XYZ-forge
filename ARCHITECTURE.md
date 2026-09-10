@@ -52,6 +52,7 @@ without reading all of them first.
 | [express](skills/express/SKILL.md) | Hotfix fast lane — one motion: fix + suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
 | [feynman](skills/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [file-xyz-bug](skills/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
+| [five](skills/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
 | [front-door](skills/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
 | [github-auth-debug](skills/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |
 | [honest](skills/honest/SKILL.md) | Produce a defensible ground-truth assessment of repository maturity and claims. |

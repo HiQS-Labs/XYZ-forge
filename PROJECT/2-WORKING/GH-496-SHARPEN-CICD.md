@@ -1,62 +1,91 @@
 ---
-title: "GH-496: ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459) and widen Tier-2 routing"
+title: "GH-496: Reduce merge churn, then select CI by impact"
 status: In progress
 created: 2026-09-07
-updated: 2026-09-07
-owner: Antigravity
-goal: sharpen CI/CD by extending existing patterns (fix CI PR twin guard, widen Tier-2 routing, clarify offline levers) with zero new subsystems
+updated: 2026-09-10
+owner: Antigravity (implementation); independent reviewer (QA)
+goal: Reduce merge churn by relocating routine telemetry and decoupling generated views first, then select CI by impact across four profiles using the existing selector
 gh_issue: 496
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/496
-branch: feat/gh496-sharpen-cicd
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/496#issuecomment-5611834496
+branch: feat/gh496-selective-ci
 doc_type: enhancement
 effort: 4
-complexity: 2
-risk: 1
+complexity: 3
+risk: 2
 ---
 
-# GH-496 — Sharpen CI/CD per Ponytail & Guiding Principles
+# GH-496 — Reduce Merge Churn, Then Select CI by Impact
+
+Canonical implementation plan: [Issue 496 Comment 5611834496](https://github.com/HiQS-Labs/XYZ-forge/issues/496#issuecomment-5611834496)
+Steering / Execution alignment: XYZ AgentChorus #358084 (stored in AgentChorus store)
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| Implemented Phases 1–3: moved twin guard to `vendored-smoke` (closes #459), widened Tier-2 routing for releases & PDDA, clarified offline bypass in pre-push; verified all suites (ci-workflow: 45 pass, ci-route: 63 pass, gh544-pre-push: 103 pass, gh35: 71 pass, pdda: 0 errors) | Commit, push task branch, and open PR against `development` |
+| PR 1 open as [#548](https://github.com/HiQS-Labs/XYZ-forge/pull/548). Operator review resolved: dead variables dropped from `check_integrity`, repo-identity resolution memoized, gate re-qualified at the final head after the branch was rewritten | PR 2 — history continuity for the relocated store ([#551](https://github.com/HiQS-Labs/XYZ-forge/issues/551)), then CI selection by impact |
+
+### Known limitation carried out of PR 1
+
+Routine turns now write to `~/.xyz/projects/<key>/telemetry/harnesses.db`, but two
+in-repo consumers still read the committed `harnesses.db`:
+
+- `utils/py/site_build.py` bakes the public grades table from `evaluations JOIN
+  invocation_logs` and refuses to bake an empty table, so the models page freezes at
+  the merge-time row counts (801 invocations, 25 evaluations) while real evaluations
+  accrue out-of-tree.
+- `harness_app model add` writes out-of-tree unless `--local`, so the curated in-repo
+  registry no longer evolves through the normal command.
+
+Neither breaks a gate — the committed rows stay valid — but the evidence chain GH-346
+established does stop growing in git. PR 2 owns the fix and is tracked as
+[#551](https://github.com/HiQS-Labs/XYZ-forge/issues/551). Until it lands, edit the
+curated registry with `harness_app.py --local`.
 
 ## Problem statement
 
-Applying `/ponytail` and `GUIDING-PRINCIPLES.md` (lines 18–22: *"Do not build a new layer, module, or sub-system when an existing piece of code can be extended easily, logically, and safely"*), we rejected speculative machinery (such as custom hermetic runner sandboxes or complex suite-caching systems).
+Historical merge landing data (last 40 first-parent commits on `development`) shows routine churn on 6 shared files:
+- `releases.sql` / `releases.db` (22/40)
+- `ROADMAP-DASHBOARD.md` (19/40)
+- `LEADERBOARD.md` (18/40)
+- `harnesses.sql` / `harnesses.db` (7/40)
 
-Instead, we take the shortest, most durable path to fastest and safest CI/CD by extending existing patterns with zero new subsystems:
+These shared files cause repeated merge collisions across parallel task branches, dirty checkouts, and trigger expensive Tier-3 gate runs. Per the canonical plan synthesized by Astra and consensus reached in AgentChorus #358084, we address this in an ordered sequence of focused PRs.
 
-1. **Fix Unreachable PR Guard (#459):**
-   - In `.github/workflows/ci.yml`, move the `Frozen Bash twin guard (GH-308)` step into the existing `vendored-smoke` job (which already runs on `pull_request` and `development`). Zero new jobs, zero new runner minutes.
-2. **Widen Tier-2 Subsystem Routing in `utils/ci-route.sh`:**
-   - Extend `subsystem_of()` to map high-frequency utilities (e.g. `utils/py/releases_app.py`, `utils/pdda/`) to their existing test suites so routine edits stay in Tier 2 (~30s) instead of triggering the 10-minute Tier-3 gate.
-3. **Clarify Offline Push Diagnostics in `githooks/pre-push`:**
-   - When `git ls-remote` cannot verify remote base freshness (offline / captive portal), update the stderr diagnostic to explicitly remind the operator of the existing canonical levers (`XYZ_SKIP_PREPUSH=1` or `git push --no-verify`) rather than introducing new environment flags.
-4. **Preserve GH-564 & Worktree Discipline:**
-   - Maintain the established maintainer SOP (fresh-clone-per-task) for full-gate runs without adding complex sandbox wrapper code.
+## Multi-PR Sequence (AgentChorus #358084 Consensus)
 
-## Plan & Phases
+1. **PR 1: Phase 0 (Baseline Freeze & Recon) + Phase 1 (Out-of-Tree Telemetry Relocation)**
+   - Replay baseline file sets and commit recon map.
+   - Route live invocation/evaluation telemetry in `harness_app.py` out of task checkouts to stable runtime location (`~/.xyz/projects/<stable-project-key>/telemetry/harnesses.db`), preserving versioned curated registry configurations in git.
+2. **PR 2: Phase 2 (Single Reconciliation Owner, View Decoupling & Pre-Merge Closeout Checks)**
+   - Task branches stop committing routine `ROADMAP-DASHBOARD.md` and `LEADERBOARD.md`; reconciler owns generated views.
+   - Pre-merge closeout checks detect missing metadata (e.g. Lessons Learned) before merge.
+3. **PR 3: Phase 3 (Conditional Release DB Transport Change Spike)**
+   - Spike untracking `releases.db`, treating `releases.sql` as versioned logical transport, with atomic `check --rebuild` bootstrap.
+4. **PR 4: Phase 4 (Four Impact Profiles in `ci-route.sh`)**
+   - CI/CD, Skills, Core harness, and Accessories profiles extending existing subsystem registry.
+5. **PR 5: Phase 5 (Contention Serialization & Speed Benchmark)**
+   - Serialize known-flaky contention (GH-528) and measure performance across replay corpus.
 
-### Phase 1: Fix Unreachable PR Guard in `.github/workflows/ci.yml`
-- Move `Frozen Bash twin guard (GH-308)` step out of `canary-ubuntu` and into `vendored-smoke`.
-- Configure it to check `--base origin/development --allow-exceptions` on pull requests.
-- Update `test/ci-workflow.sh` to lock this requirement.
+## PR 1 Execution Checklist (Phase 0 & Phase 1)
 
-### Phase 2: Widen Tier-2 Subsystem Routing in `utils/ci-route.sh`
-- Map `utils/py/releases_app.py` and related CLI code to `test/gh32-releases-app.sh`.
-- Map `utils/pdda/*` to `test/pdda-repo-contract.sh`.
-- Add test coverage in `test/ci-route.sh` proving these paths classify as `tier=2` and route `fast`.
+### Phase 0: Baseline Freeze, Recon Map, and Preservation Spikes
+- [x] Create fresh full clone at `~/marathon-clones/xyz-gh496-build` on `feat/gh496-selective-ci`.
+- [x] Install and verify git hooks (`bash githooks/install.sh --check`).
+- [x] Grounded recon of `harness_app.py`, writers, readers, callers, and runtime paths.
+- [x] Isolated preservation spikes: verify existing path overrides, assert no writes to tracked repo during turns, ensure model/device registry reads remain intact.
+- [x] Baseline replay of changed-file sets from #495, #526, #531.
 
-### Phase 3: Clarify Offline Lever in `githooks/pre-push`
-- Update the `_base_note` in `githooks/pre-push` when `git ls-remote` fails/times out to explicitly recommend:
-  `To bypass while offline: XYZ_SKIP_PREPUSH=1 git push`
-- Verify with `test/gh544-pre-push-gate.sh`.
+### Phase 1: Stop Routine Telemetry from Rewriting Task Branches
+- [x] Update `harness_app.py` path resolution to default runtime telemetry to `~/.xyz/projects/<stable-project-key>/telemetry/harnesses.db` when not overridden.
+- [x] Preserve environment overrides: `XYZ_HARNESS_DB`, `XYZ_HARNESS_SQL`, `XYZ_HARNESS_GENERATED_MD`, `XYZ_HARNESS_DOCS_DIR`.
+- [x] Keep versioned model/harness registry inputs intact in git while runtime logs append to external store.
+- [x] Concurrency, migration, and idempotent import tests with fixture-contained paths (`test/gh496-telemetry-isolation.sh`).
+- [x] Witnessed red controls: dropped row, writer directed to checkout, conflicting ID, foreign key validation.
+- [x] Verify clean git status on ordinary harness/relay turns.
 
-## Acceptance criteria (debug-mantra plan pivot)
-
-- [x] `.github/workflows/ci.yml` runs the frozen-twin guard on pull requests within `vendored-smoke` (closing #459).
-- [x] `utils/ci-route.sh` routes mapped utility edits to Tier-2 dedicated tests, verified with contract tests in `test/ci-route.sh`.
-- [x] `githooks/pre-push` stderr message clearly documents `XYZ_SKIP_PREPUSH=1` upon offline probe failure.
-- [x] Zero new subsystems, daemons, or workflow files added.
+## Acceptance Criteria (PR 1)
+- [x] Live harness turns write invocation logs and evaluations to external runtime store without modifying tracked files in task clone.
+- [x] Tests hermetically contain all telemetry writes to fixture directories with zero writes to real home directory.
+- [x] Curated model registry configurations and benchmarks remain versioned and accessible in git.
+- [x] Full gate passes in a disposable clone with committed provenance and test logs.
