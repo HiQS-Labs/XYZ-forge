@@ -1,0 +1,168 @@
+Loading weights:   0%|          | 0/134 [00:00<?, ?it/s]Loading weights: 100%|██████████| 134/134 [00:00<00:00, 6565.47it/s]
+[transformers] [1mModernBertModel LOAD REPORT[0m from: /Users/noelsaw/.cache/huggingface/hub/models--answerdotai--ModernBERT-base/snapshots/8949b909ec900327062f0ebf497f51aef5e6f0c8
+Key               | Status     |  | 
+------------------+------------+--+-
+head.dense.weight | UNEXPECTED |  | 
+head.norm.weight  | UNEXPECTED |  | 
+decoder.bias      | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+{
+  "utc": "2026-09-10T04:38:30.771523+00:00",
+  "raw_count": 36,
+  "unique_count": 33,
+  "supported_count": 15,
+  "out_of_scope_count": 18,
+  "support": {
+    "bug_report": 3,
+    "implementation": 9,
+    "merged": 3
+  },
+  "test_batch_seconds": [
+    0.6121098329967936,
+    0.6019858750005369
+  ],
+  "repeat_identical": true,
+  "models": {
+    "tfidf": {
+      "correct": 5,
+      "accuracy": 0.3333333333333333,
+      "macro_f1_present_classes": 0.4069264069264069,
+      "confusion_labels": [
+        "bug_report",
+        "implementation",
+        "merged",
+        "review_requested",
+        "validation_failed",
+        "validation_passed"
+      ],
+      "confusion": [
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          3,
+          2,
+          0,
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          3,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "out_of_scope_forced_labels": {
+        "implementation": 1,
+        "validation_passed": 6,
+        "bug_report": 3,
+        "merged": 7,
+        "review_requested": 1
+      }
+    },
+    "modernbert": {
+      "correct": 5,
+      "accuracy": 0.3333333333333333,
+      "macro_f1_present_classes": 0.35555555555555557,
+      "confusion_labels": [
+        "bug_report",
+        "implementation",
+        "merged",
+        "review_requested",
+        "validation_failed",
+        "validation_passed"
+      ],
+      "confusion": [
+        [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          8,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "out_of_scope_forced_labels": {
+        "bug_report": 14,
+        "review_requested": 1,
+        "merged": 3
+      }
+    }
+  },
+  "label_hash": "96c7bd405ca3605958da355b32ad987d452ce6658859e0e07bacfd7c7d54739d"
+}
