@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 4
 
@@ -339,5 +339,28 @@ control in `test/gh549-work-events.sh`. The specific questions:
    first?
 5. Is leg 19 deterministic, or can it pass by timing luck? Its red control asserts two children
    run without the flock — could that be flaky under load?
+
+### Reviewer · codex · round 4 — concurrency-fix review
+
+swept file: yes
+
+- [Blocker — High] `_ConnectorLock.acquire()` deliberately returns `True` after it cannot open the lock file or receives any non-contention `flock` error, and `dispatch()` therefore runs `_dispatch_locked()` without serialization (`utils/py/work_connectors/__init__.py:318-329, 351-359`). This is not a harmless availability fallback: it re-enables the exact stale board projection race from round 3 while merely warning to stderr. An `EINTR`, unsupported/failed lock operation, or a filesystem where the database remains usable but the adjacent new lock file cannot be opened makes concurrent dispatches apply overlapping batches again. The stated invariant is consequently conditional but the implementation treats it as guaranteed. Fix: treat lock setup/acquisition failure exactly like contention—return `False`, leave cursors untouched, and defer replay—or establish a demonstrated equivalent serialization mechanism. This is high because it can silently publish an older board state after a newer event.
+- [Pass] Where the flock is available, the lock closes rather than merely narrows the reviewed race: it spans cursor read, child projection, and parent persistence (`utils/py/work_connectors/__init__.py:351-366, 370-394`), so a second dispatcher cannot snapshot an old cursor until the first has committed its advance.
+- [Pass] A normal bounded contention timeout is safe for event retention: `dispatch()` returns before `_dispatch_locked()` and therefore performs neither child projection nor `_persist` (`utils/py/work_connectors/__init__.py:354-358`); the prior cursor remains the replay point. It can defer an update, but does not lose one.
+- [Should] `work reconcile --reset` deletes cursor rows before acquiring `_ConnectorLock` (`utils/py/releases_app.py:4908-4916`). Concurrently with an in-flight dispatch, that deletion can be overwritten by the first dispatcher’s later `_persist`, after which the reset dispatcher acquires the lock and finds no work. The monotonic upsert is correct for a sequential reset—deletion removes the old maximum—but reset is not atomic against dispatch. Serialize reset deletion with the same connector lock (or document/reject concurrent reset) so `--reset` reliably means replay from zero.
+- [Should] Leg 19 is a useful mutation-based control, but not deterministic under arbitrary scheduler delay. Its red path starts both processes without a barrier (`test/gh549-work-events.sh:763-769`); if the second is not scheduled until the first has persisted, it sees the advanced cursor and produces one child even with flock removed, making the red assertion fail spuriously. Add a two-party readiness barrier in the stub or parent probe before either batch is allowed to advance. The shipped positive result is still meaningful, but this test cannot prove the no-lock overlap on every run.
+
+Definition of Done:
+
+1. **Partly satisfied.** The prior mapping remains valid, but the high-severity unlocked fallback leaves connector projection correctness unmet under a lock failure.
+2. **Partly matches the plan.** The connector-only serialization is the planned-style improvement; bypassing it on acquisition failure is an undocumented regression.
+3. **No second domain-write path found.** The reviewed change only adds serialization around the existing dispatcher (`utils/py/work_connectors/__init__.py:351-366`).
+4. **Partly substantiated.** Leg 19 mutates the imported flock call and asserts that mutation landed (`test/gh549-work-events.sh:748-761`), but its overlap red control lacks a scheduling barrier as above.
+5. **Not safe enough to approve.** Contention defers safely and monotonic persistence is correct after a sequential reset; lock-failure fallback permits stale projection, and reset is not serialized with dispatch.
+6. **No additional pre-existing defect found** in the round-4 scope; the reset race is introduced by this concurrency correction's lock boundary.
+
+Verdict: Changes requested — the lock-error fallback is a high-severity blocker under the operator's stated ship bar.
+
+Handing off to Producer — go to the Producer window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
