@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -339,5 +339,21 @@ Bottom line: single-decision change — read the fix body, sentence 1; it is the
 VERDICT: PASS.
 
 Handing off to Reviewer (codex) — take your turn: re-adjudicate the corrected outputs and frontmatter.
+
+## Reviewer — codex — round 3 — 2026-09-09
+
+swept file: yes
+
+- [Pass] Q1: The complete 136-line skill satisfies the instruction criteria: folded trigger description (skills/five/SKILL.md:3), 5+5 output (:39, :44), citations (:84), silence-is-not-a-non-goal (:75), honest markers (:79), empty/whitespace precedence (:86), and mandatory reading pointer (:51, :91). Fix: retain these contracts.
+- [Pass] Q3: The corrected dense output now has five substantive, cited exclusions, including lock-file non-migration (this relay:304-309), grounded in the full input at :186-202. Telemetry is surfaced first as unrequested (:298), supported by request context (:182); uncertainty stays outside the NOT list (:311), and the bottom line points to Decisions 6 (:313). The corrected sparse output supplies ten individual slots with honest markers (:321-333) and the required reading pointer (:337), consistent with its source (:208-215). Fix: retain these corrected outputs as the authoritative examples.
+- [Pass] Q3: Absent and existing-empty cases record refusal (this relay:226, :228), matching skills/five/SKILL.md:61-64. The red control's quoted “Improves platform alignment!” and uncited Windows/GUI/pricing exclusions violate the marketing, grounding, and silence rules (skills/five/SKILL.md:98, :84, :75). This is sound manual behavioral evidence, including an actual rejected producer example at this relay:274; it is not an automated-test result. Fix: retain the inputs, corrections, and rejected examples.
+- [Pass] Q2/Q5: The three implementation surfaces exist (skills/five/SKILL.md:1; ARCHITECTURE.md:55; CHANGELOG.md:7). The complete skill introduces no duplicate subsystem or writer and explicitly states “Zero scripts, zero runtime” (skills/five/SKILL.md:136). The supplied base-e569ca72 summary lists additional governance/registry surfaces (this relay:235-262), so this is a three-surface implementation, not a literal three-file branch. Fix: retain the scope; branch-wide content/necessity of those additional changes remains unverified without full diffs. Approval does not certify those unseen changes.
+- [Pass] Q4: CHANGELOG.md:7-20 accurately describes the implemented contract and names YAML parsing, prior plan approval, recorded behavioral QA, and PDDA checks. The corrected manual behavioral record now supports that citation (this relay:293-339). YAML/PDDA execution remains producer-reported; no git, artifact execution, or project gates were run in this turn. Fix: retain the distinction between recorded manual evidence and gate execution.
+- [Pass] Q6: The in-scope decision-checksum qualifier now precedes the entire natural-language trigger list (skills/five/SKILL.md:8-12), with ordinary-summary and specific-question boundaries at :16-18. The slogan includes the uncertainty and reading-pointer lines (:30). Whole-file sweep found no additional pre-existing defects or internal contradictions. Fix: retain these boundaries.
+- [Nit] Supporting-plan bookkeeping: PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:23 still points to round 2, and :88 remains unchecked pending this verdict. Fix: Producer may update those records during authorized closeout to cite this round-3 approval; the reviewer leaves them untouched under the one-file constraint. This is not an implementation blocker.
+
+Verdict: Approved. Relay closed (Approved), no further turn needed. Producer (claude-a) owns subsequent bookkeeping; the harness owns the file-scoped commit and gate.
+VERDICT: PASS
+Basis: All implementation and manual behavioral criteria pass after the dense/sparse corrections; unseen branch bookkeeping and producer-reported gates retain the stated evidence limits.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
