@@ -36,6 +36,7 @@ from toposort_prs import (
     format_pr_table
 )
 from scan_clones import GH_BIN_ENV
+import attempt_record
 from ledger_merge import (
     LEDGER_DUMP,
     pre_merge_ledger_gate,
@@ -405,9 +406,20 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     branch = args.integration_branch
     workdir = Path(tempfile.mkdtemp(prefix="merge-cleanup-"))
     keep_workdir = False
+    origin = origin_url(primary_repo) or ""
+    # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
+    # handed-off PR must not be attempted at all.
+    failed: Dict[int, str] = {}
+    handoffs = 0
     try:
         for pr in ordered_prs:
             p_num = pr["number"]
+            blocked_by = [d for d in pr.get("_deps", []) if d in failed]
+            if blocked_by:
+                why = ", ".join(f"#{d} ({failed[d]})" for d in blocked_by)
+                log_err(f"PR #{p_num}: NOT attempted — depends on {why}")
+                failed[p_num] = f"blocked by {', '.join('#%d' % d for d in blocked_by)}"
+                continue
             info = refresh_pr(p_num, primary_repo)
             if info.get("error"):
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
@@ -437,18 +449,53 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
 
             if prep["merge_rc"] != 0:
                 log(f"PR #{p_num}: landing merge conflicts (GitHub said {mergeable}) — routing to B1")
+                # C: one durable attempt record at the pinned coordinator (the --primary path),
+                # shared with the caller's repair rungs. B1 is a repair: it needs a slot.
+                record = attempt_record.record_path(primary_repo, origin, p_num)
+                fresh = attempt_record.new_record(p_num, origin, base_sha=info.get("headRefOid", ""))
+                log(f"PR #{p_num}: attempt record {record}")
+                try:
+                    if dry_run:
+                        idx, why = None, "dry run: no slot reserved"
+                        if attempt_record.repair_count(attempt_record.load(record, fresh)) >= attempt_record.MAX_REPAIRS:
+                            why = "budget exhausted (dry run would park)"
+                    else:
+                        idx, why = attempt_record.reserve(record, by="script", head_sha=info["headRefOid"], rung="B1",
+                                                          clone_path=str(clone), create=fresh)
+                except attempt_record.RecordError as exc:
+                    log_err(f"PR #{p_num}: {exc} — stopping")
+                    keep_workdir = True
+                    return 2
+                if idx is None and why.startswith("budget exhausted"):
+                    log_err(f"PR #{p_num}: PARKED — {why}")
+                    log_err(f"  export {attempt_record.RECORD_ENV}={record}  # then /unstuck; the record already shows {attempt_record.MAX_REPAIRS} repairs")
+                    failed[p_num] = "parked: repair budget exhausted"
+                    handoffs += 1
+                    continue
+                log(f"PR #{p_num}: {why}")
                 b1 = resolve_ledger_conflict(clone, execute=not dry_run)
                 for line in b1["log"]:
                     log(f"  B1: {line}")
+                if not dry_run:
+                    attempt_record.set_conflicts(record, b1.get("conflict_set", []))
                 if b1["handoff"]:
+                    if idx is not None:
+                        attempt_record.finish(record, idx, "handoff", reason=b1["reason"])
                     log_err(f"PR #{p_num}: HANDOFF — {b1['reason']}")
                     log_err(f"  conflict set: {', '.join(b1['conflict_set']) or '(none extracted)'}")
+                    log_err(f"  export {attempt_record.RECORD_ENV}={record}  # caller ladder: /debug-mantra → /recon → /ponytail → /start-task → /unstuck")
+                    failed[p_num] = "handoff"
+                    handoffs += 1
                     keep_workdir = True
-                    return 3
+                    continue
                 if not b1["resolved"]:
+                    if idx is not None:
+                        attempt_record.finish(record, idx, "stopped", reason=b1["reason"])
                     log_err(f"PR #{p_num}: B1 stopped — {b1['reason']} (clone kept at {clone})")
                     keep_workdir = True
                     return 2 if not dry_run else 0
+                if idx is not None:
+                    attempt_record.finish(record, idx, "resolved", commit=b1["commit"])
                 ok, why = validate_head_in_second_clone(primary_repo, clone, b1["commit"], workdir)
                 if not ok:
                     log_err(f"PR #{p_num}: resolved head failed validation — {why}; NOT pushed")
@@ -501,6 +548,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if not run_post_merge_reconcile(p_num, primary_repo, dry_run=False):
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
                 return 2
+        if handoffs:
+            log_err(f"{handoffs} PR(s) handed off or parked; dependents were not attempted: "
+                    + ", ".join(f"#{n} ({w})" for n, w in failed.items()))
+            return 3
         return 0
     finally:
         if keep_workdir:

@@ -136,6 +136,7 @@ class LedgerFixture(unittest.TestCase):
         shutil.copy(RESOLVER_SRC, self.seed / "utils" / "releases-merge-resolve.sh")
         shutil.copy(REPO / ".gitattributes", self.seed / ".gitattributes")
         (self.seed / "README.md").write_text("fixture\n")
+        (self.seed / ".gitignore").write_text(".tick/\n")  # as the real repo: the Phase C record is untracked state
         _app(self.seed, "init", "--slug", "fx")
         park(self.seed, 100, "first")
         park(self.seed, 101, "second", rated="50/50/50/50")

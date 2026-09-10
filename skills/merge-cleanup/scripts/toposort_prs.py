@@ -115,6 +115,11 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                             f"File collision on {len(overlap)} file(s) between PR #{num2} and PR #{num1} — ordering #{num2} before #{num1}"
                         )
 
+    # GH-534 C: Kahn's loop below consumes dep_graph. Keep the edges on each PR so Phase 5 can
+    # refuse a dependent whose predecessor was parked or handed off.
+    for pr in prs:
+        pr["_deps"] = sorted(dep_graph[pr["number"]])
+
     # 3. Topological sort with cycle detection (Kahn's algorithm)
     in_degree = {num: 0 for num in pr_by_num}
     for num, deps in dep_graph.items():

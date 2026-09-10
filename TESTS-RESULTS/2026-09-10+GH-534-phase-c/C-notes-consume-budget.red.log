@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_diagnosis_and_recon_do_not_consume_budget (gh534_phase_c_tests.TestCRecord.test_diagnosis_and_recon_do_not_consume_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 101, in test_diagnosis_and_recon_do_not_consume_budget
+    self.assertEqual(ar.repair_count(ar.load(self.record)), 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 0
+
+----------------------------------------------------------------------
+Ran 1 test in 0.178s
+
+FAILED (failures=1)

@@ -598,6 +598,7 @@ class TestDanglingSymlinkPrune(unittest.TestCase):
 # by module attribute, and a named list would silently drop a new class.
 from gh534_phase_a_tests import *  # noqa: E402,F401,F403
 from gh534_phase_b_tests import *  # noqa: E402,F401,F403
+from gh534_phase_c_tests import *  # noqa: E402,F401,F403
 
 
 if __name__ == "__main__":

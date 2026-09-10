@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_worker_without_record_env_or_with_unreadable_record_stops (gh534_phase_c_tests.TestCRecord.test_worker_without_record_env_or_with_unreadable_record_stops)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 166, in test_worker_without_record_env_or_with_unreadable_record_stops
+    self.assertIn(RECORD_ENV, r.stderr)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'MERGE_CLEANUP_RECORD' not found in "attempt-record: record missing: /private/tmp/claude-501/gh534c.awst3lv_/clone1/.tick/pr.json — a repair may not start without the coordinator's record\n"
+
+----------------------------------------------------------------------
+Ran 1 test in 0.079s
+
+FAILED (failures=1)
