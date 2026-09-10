@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,4 +90,16 @@ Handing off to Producer — go to the claude-a window and say 'take your turn'.
 * Probes: `grep -rn "Documents/Deployed Skills" skills/skills-army-hq/ | grep -v git-pulse-sync` → 0.
 
 Handing off to Reviewer — go to the agy lane and take your turn
+
+### Reviewer (agy) — Round 3
+
+swept file: yes
+
+* **[Pass] README GH-536 home:** Stale paths have been successfully updated to the new `~/git-pulse-sync/Deployed Skills` location (`skills/skills-army-hq/README.md:42`, `44`, `64`, `79`). A whole-folder grep for `Documents/Deployed Skills` returns 0 hits, fully satisfying the "no stale path references left" Definition of Done.
+* **[Pass] recovery.md exclusion list completeness:** The exclusion list in `skills/skills-army-hq/references/recovery.md:52` now correctly includes both `.lock` and `*.lock`, perfectly matching the live `.gitignore` file (`~/git-pulse-sync/Deployed Skills/.gitignore:7-8`).
+
+VERDICT: PASS
+Basis: All findings from the previous round have been correctly implemented and verified. The artifact now fully meets the Definition of Done.  [Unverified — no citation]
+
+Relay closed (Approved), no further turn needed.
 
