@@ -1,0 +1,434 @@
+[
+  {
+    "id": "bug_report-train-1",
+    "label": "bug_report",
+    "split": "train",
+    "text": "Opening an issue: the dashboard crashes when the project has no commits."
+  },
+  {
+    "id": "bug_report-train-2",
+    "label": "bug_report",
+    "split": "train",
+    "text": "The user reports that pressing refresh freezes the window."
+  },
+  {
+    "id": "bug_report-train-3",
+    "label": "bug_report",
+    "split": "train",
+    "text": "Reproduction steps: select an empty repository, then observe the exception."
+  },
+  {
+    "id": "bug_report-train-4",
+    "label": "bug_report",
+    "split": "train",
+    "text": "A newly filed defect describes stale results after switching branches."
+  },
+  {
+    "id": "bug_report-train-5",
+    "label": "bug_report",
+    "split": "train",
+    "text": "The reporter attached an error trace from yesterday's failed launch."
+  },
+  {
+    "id": "bug_report-train-6",
+    "label": "bug_report",
+    "split": "train",
+    "text": "Issue description: the counter displays negative values after a restart."
+  },
+  {
+    "id": "bug_report-train-7",
+    "label": "bug_report",
+    "split": "train",
+    "text": "A customer says the application loses saved preferences."
+  },
+  {
+    "id": "bug_report-train-8",
+    "label": "bug_report",
+    "split": "train",
+    "text": "New ticket documents duplicate notifications with a minimal example."
+  },
+  {
+    "id": "bug_report-test-1",
+    "label": "bug_report",
+    "split": "test",
+    "text": "An operator describes missing history and supplies steps that reproduce it."
+  },
+  {
+    "id": "bug_report-test-2",
+    "label": "bug_report",
+    "split": "test",
+    "text": "Incoming defect: selecting a deleted folder terminates the application."
+  },
+  {
+    "id": "bug_report-test-3",
+    "label": "bug_report",
+    "split": "test",
+    "text": "The newly opened ticket says startup fails; no patch is attached."
+  },
+  {
+    "id": "bug_report-test-4",
+    "label": "bug_report",
+    "split": "test",
+    "text": "A maintainer records an unexpected timeout as a reproducible problem."
+  },
+  {
+    "id": "implementation-train-1",
+    "label": "implementation",
+    "split": "train",
+    "text": "The patch adds a null check before reading the project settings."
+  },
+  {
+    "id": "implementation-train-2",
+    "label": "implementation",
+    "split": "train",
+    "text": "Changed the parser to accept an optional timestamp field."
+  },
+  {
+    "id": "implementation-train-3",
+    "label": "implementation",
+    "split": "train",
+    "text": "The commit replaces the retry loop with a bounded attempt counter."
+  },
+  {
+    "id": "implementation-train-4",
+    "label": "implementation",
+    "split": "train",
+    "text": "Added a regression test and updated the serializer implementation."
+  },
+  {
+    "id": "implementation-train-5",
+    "label": "implementation",
+    "split": "train",
+    "text": "The diff removes an unused helper and updates its two callers."
+  },
+  {
+    "id": "implementation-train-6",
+    "label": "implementation",
+    "split": "train",
+    "text": "Implemented a cache key that includes the repository identity."
+  },
+  {
+    "id": "implementation-train-7",
+    "label": "implementation",
+    "split": "train",
+    "text": "The worker modified three source files to handle empty input."
+  },
+  {
+    "id": "implementation-train-8",
+    "label": "implementation",
+    "split": "train",
+    "text": "Updated the configuration loader to reject malformed values."
+  },
+  {
+    "id": "implementation-test-1",
+    "label": "implementation",
+    "split": "test",
+    "text": "This revision introduces a new parameter and adjusts the functions that call it."
+  },
+  {
+    "id": "implementation-test-2",
+    "label": "implementation",
+    "split": "test",
+    "text": "The submitted diff changes an off-by-one comparison in the scheduler."
+  },
+  {
+    "id": "implementation-test-3",
+    "label": "implementation",
+    "split": "test",
+    "text": "A source edit now preserves the original exception when cleanup fails."
+  },
+  {
+    "id": "implementation-test-4",
+    "label": "implementation",
+    "split": "test",
+    "text": "The author added support for paths containing whitespace."
+  },
+  {
+    "id": "validation_failed-train-1",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "The test runner exited with code 1 after an assertion mismatch."
+  },
+  {
+    "id": "validation_failed-train-2",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "CI finished red because the integration suite timed out."
+  },
+  {
+    "id": "validation_failed-train-3",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "The validation command failed: expected four rows but found three."
+  },
+  {
+    "id": "validation_failed-train-4",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "A failing test shows that the new serializer drops the identifier."
+  },
+  {
+    "id": "validation_failed-train-5",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "The linter rejected the change for an undefined variable."
+  },
+  {
+    "id": "validation_failed-train-6",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "The build did not complete because a dependency could not be resolved."
+  },
+  {
+    "id": "validation_failed-train-7",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "The regression suite reported two failures and stopped."
+  },
+  {
+    "id": "validation_failed-train-8",
+    "label": "validation_failed",
+    "split": "train",
+    "text": "The gate refused publication after finding a broken reference."
+  },
+  {
+    "id": "validation_failed-test-1",
+    "label": "validation_failed",
+    "split": "test",
+    "text": "Verification terminated unsuccessfully: the observed response differs from the fixture."
+  },
+  {
+    "id": "validation_failed-test-2",
+    "label": "validation_failed",
+    "split": "test",
+    "text": "The workflow concluded failure when compilation encountered a syntax error."
+  },
+  {
+    "id": "validation_failed-test-3",
+    "label": "validation_failed",
+    "split": "test",
+    "text": "An automated check rejected the artifact because required metadata was missing."
+  },
+  {
+    "id": "validation_failed-test-4",
+    "label": "validation_failed",
+    "split": "test",
+    "text": "The smoke run returned a nonzero status after the server failed to start."
+  },
+  {
+    "id": "validation_passed-train-1",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "The test runner exited with code 0 and all assertions passed."
+  },
+  {
+    "id": "validation_passed-train-2",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "CI finished green for the current commit."
+  },
+  {
+    "id": "validation_passed-train-3",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "The validation command completed successfully with zero failures."
+  },
+  {
+    "id": "validation_passed-train-4",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "All integration checks passed on the candidate revision."
+  },
+  {
+    "id": "validation_passed-train-5",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "The linter accepted every changed file without errors."
+  },
+  {
+    "id": "validation_passed-train-6",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "The build completed successfully and produced the expected artifact."
+  },
+  {
+    "id": "validation_passed-train-7",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "The regression suite reported 120 passes and no failures."
+  },
+  {
+    "id": "validation_passed-train-8",
+    "label": "validation_passed",
+    "split": "train",
+    "text": "The gate verified all required references and returned success."
+  },
+  {
+    "id": "validation_passed-test-1",
+    "label": "validation_passed",
+    "split": "test",
+    "text": "Verification completed successfully; actual responses match every fixture."
+  },
+  {
+    "id": "validation_passed-test-2",
+    "label": "validation_passed",
+    "split": "test",
+    "text": "The workflow concluded success after compilation and its checks completed."
+  },
+  {
+    "id": "validation_passed-test-3",
+    "label": "validation_passed",
+    "split": "test",
+    "text": "Automated checks accepted the artifact and found all required metadata."
+  },
+  {
+    "id": "validation_passed-test-4",
+    "label": "validation_passed",
+    "split": "test",
+    "text": "The smoke run returned zero after confirming that the server responded correctly."
+  },
+  {
+    "id": "review_requested-train-1",
+    "label": "review_requested",
+    "split": "train",
+    "text": "Please review this pull request before we merge it."
+  },
+  {
+    "id": "review_requested-train-2",
+    "label": "review_requested",
+    "split": "train",
+    "text": "The author requested an independent reviewer for the patch."
+  },
+  {
+    "id": "review_requested-train-3",
+    "label": "review_requested",
+    "split": "train",
+    "text": "A maintainer asks for feedback on the proposed API change."
+  },
+  {
+    "id": "review_requested-train-4",
+    "label": "review_requested",
+    "split": "train",
+    "text": "The branch is ready for code review; approval is still pending."
+  },
+  {
+    "id": "review_requested-train-5",
+    "label": "review_requested",
+    "split": "train",
+    "text": "Assigned the pull request to a reviewer for inspection."
+  },
+  {
+    "id": "review_requested-train-6",
+    "label": "review_requested",
+    "split": "train",
+    "text": "Could someone assess whether this diff preserves compatibility?"
+  },
+  {
+    "id": "review_requested-train-7",
+    "label": "review_requested",
+    "split": "train",
+    "text": "The producer handed the committed changes to the QA reviewer."
+  },
+  {
+    "id": "review_requested-train-8",
+    "label": "review_requested",
+    "split": "train",
+    "text": "Requesting a second opinion on the final implementation."
+  },
+  {
+    "id": "review_requested-test-1",
+    "label": "review_requested",
+    "split": "test",
+    "text": "The developer invites a teammate to inspect the changes before landing."
+  },
+  {
+    "id": "review_requested-test-2",
+    "label": "review_requested",
+    "split": "test",
+    "text": "This proposal awaits an independent assessment of correctness."
+  },
+  {
+    "id": "review_requested-test-3",
+    "label": "review_requested",
+    "split": "test",
+    "text": "The author asks a colleague to examine the patch and leave a verdict."
+  },
+  {
+    "id": "review_requested-test-4",
+    "label": "review_requested",
+    "split": "test",
+    "text": "A review invitation was sent for the latest revision."
+  },
+  {
+    "id": "merged-train-1",
+    "label": "merged",
+    "split": "train",
+    "text": "GitHub reports that the pull request was merged into development."
+  },
+  {
+    "id": "merged-train-2",
+    "label": "merged",
+    "split": "train",
+    "text": "The squash merge completed and the target branch includes the change."
+  },
+  {
+    "id": "merged-train-3",
+    "label": "merged",
+    "split": "train",
+    "text": "The pull request state is MERGED with a recorded merge timestamp."
+  },
+  {
+    "id": "merged-train-4",
+    "label": "merged",
+    "split": "train",
+    "text": "The maintainer landed the approved patch on the integration branch."
+  },
+  {
+    "id": "merged-train-5",
+    "label": "merged",
+    "split": "train",
+    "text": "The feature branch was integrated into the main line successfully."
+  },
+  {
+    "id": "merged-train-6",
+    "label": "merged",
+    "split": "train",
+    "text": "The merge operation succeeded and created a new target commit."
+  },
+  {
+    "id": "merged-train-7",
+    "label": "merged",
+    "split": "train",
+    "text": "The change is now included in development after a completed merge."
+  },
+  {
+    "id": "merged-train-8",
+    "label": "merged",
+    "split": "train",
+    "text": "The repository records the pull request as merged, not merely closed."
+  },
+  {
+    "id": "merged-test-1",
+    "label": "merged",
+    "split": "test",
+    "text": "The platform confirms successful integration of the proposed commits into the target branch."
+  },
+  {
+    "id": "merged-test-2",
+    "label": "merged",
+    "split": "test",
+    "text": "The approved revision has landed; its resulting commit is present on development."
+  },
+  {
+    "id": "merged-test-3",
+    "label": "merged",
+    "split": "test",
+    "text": "The pull request now has a merge commit and a nonempty mergedAt field."
+  },
+  {
+    "id": "merged-test-4",
+    "label": "merged",
+    "split": "test",
+    "text": "The source changes were incorporated through a completed squash operation."
+  }
+]
