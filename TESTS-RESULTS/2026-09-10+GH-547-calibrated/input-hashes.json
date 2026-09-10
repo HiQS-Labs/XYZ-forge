@@ -1,0 +1,10 @@
+{
+  "sample.json": "1169b326e6963ac296a7e6d2e5dd198f746a9aabdb53aac13f8dff8c1eaf5101",
+  "labels-1.json": "2bdb13324bf258b7fddada307607b3203de2f2930cd7c948048c710dad5adb27",
+  "labels-2.json": "3b4b07647d32a7d317579f9871e0ab0d6fa1c0c1425c7c579c7d170358deb350",
+  "labels-extra.json": "20578768deaecfdf7beb690bac8b77e3c62976e2151b5983bc9a7c299fa5a8ef",
+  "holdout-labels.json": "70aa61d43044c7f33664474e8ee3a6717402b81c590dcc8adf81c956c5207bd4",
+  "taxonomy.md": "2a373c3b08cb78779be6b14d433bf353f99d40365d0014447f05fdd72f0c8891",
+  "planning-candidates.json": "43741ba46a78cc205ef2b87a3054f34addeb068006147e16c04170a72464122c",
+  "planning-extra-labels.json": "c6188e162dbb75ca4be1ac33763b89e6588cfc7d755b67a1c1e5c9d0814258f8"
+}
