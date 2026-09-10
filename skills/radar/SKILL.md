@@ -1,21 +1,27 @@
 ---
 name: radar
 description: >-
-  Per-repo strategic compass over the last 2-3 weeks of activity. Reports the Run/Grow/Transform
-  flow distribution (are we treading water or moving the needle), clusters recurring defects into
-  high-value fix targets ranked by what one durable fix would retire, and flags where the release plan
-  planning has drifted from what the repo is actually doing. Analysis is read-only; findings persist
-  to two sinks (an immutable dated report doc + one live radar-labeled issue checklist) so they
-  survive across sittings. Use when the operator asks "what have we actually been doing", "are we
-  just fixing bugs", "what keeps breaking", "what should we fix once to stop the bleeding", "is the
-  plan still right", "strategic review", "impact review", "run the radar", or "/radar". Not for
-  end-user shipped recaps (weekly-shipped), not for ranking marathon candidates (marathon-triage),
-  not for maturity assessment (/honest), and it never executes fixes (/10days does that).
+  Per-repo SDLC process coach and strategic compass over the last 2-3 weeks of activity.
+  Delivers a user-friendly narrative that celebrates high-level wins, evaluates engineering momentum,
+  diagnoses process health, and identifies potential regressions alongside recurring defect clusters.
+  Under the hood, it rigorously analyzes Run/Grow/Transform flow distribution, checks open-PR collisions,
+  and flags release plan drift. Scans for historical reports across RADAR/, docs/radar/, or
+  PROJECT/1-INBOX/ to track multi-week trajectory arcs and offers long-horizon retrospectives.
+  Analysis is read-only; findings persist to two sinks (an immutable dated report doc + one live
+  radar-labeled issue checklist) so they survive across sittings. Use when the operator asks
+  "how is our development cycle going", "what have we actually been doing", "are we just fixing bugs",
+  "what keeps breaking", "did we introduce any regressions", "summarize radar history", "radar arc",
+  "summarize radar reports", "what should we fix once to stop the bleeding", "is the plan still right",
+  "strategic review", "impact review", "run the radar", "/radar", or "/radar --arc". Not for end-user
+  shipped recaps (weekly-shipped), not for ranking marathon candidates (marathon-triage), not for
+  maturity assessment (/honest), and it never executes fixes (/10days does that).
 ---
 
 # radar
 
-A per-repo compass: three lenses over one window, then a persisted, reconcilable report.
+A per-repo SDLC process coach and strategic compass: pairs a friendly, constructive engineering narrative
+(celebrating high-level wins, coaching process health, and spotting potential regressions) with three
+rigorous empirical lenses over one window, persisting to a reconcilable report.
 Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
 ## Guardrails
@@ -33,11 +39,24 @@ Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 - **Degrade loudly.** Missing `gh`, no `PROJECT/**`, no conventional commits → run the lenses you
   can and state plainly which signal was unavailable and what that costs the verdict (table below).
 
-## Step 0 — Frame the window
+## Step 0 — Frame the window & discover prior reports
 
 Default **21 days**; honor an operator override. Resolve to explicit dates and state them.
 Read the repo's trunk (`main`, or `development` where that is the declared WIP branch), not the
 current feature branch. Compute the prior window of equal length for the trend comparison.
+
+**Discover prior reports and historical arc:**
+Scan the repository for historical Radar reports across standard locations:
+- `RADAR/`
+- `docs/radar/` or `docs/RADAR/`
+- `PROJECT/1-INBOX/RADAR-REPORT-*.md`
+- Repo root fallback (`RADAR-REPORT-*.md`)
+
+When prior reports exist:
+- Sort chronologically by date/run.
+- Extract historical RGT percentages, identified target IDs, and retirement states.
+- If ≥2 prior reports exist spanning multiple weeks, use them to compute the multi-week macro-arc
+  for Lens 1 and the SDLC Process Coach narrative (Step 4).
 
 ## Step 1 — Lens 1: flow distribution
 
@@ -85,9 +104,13 @@ silently compensating forever.
 mechanical one.** Second calibration run: mechanical inference read 5% Grow where the adjusted read was 19%,
 a ~4x undercount in the one direction that flatters nobody. Report both; label which is which.
 
-## Step 2 — Lens 2: recurring-defect radar
+## Step 2 — Lens 2: recurring defects & regression detection
 
-Build clusters, then rank. Signals in order of precision:
+Build clusters, then rank. This lens has two essential jobs:
+1. **Find chronic recurring defects**: long-standing friction, architectural debt, or seams that repeatedly break over weeks or months.
+2. **Detect potential regressions**: fresh breakage, short-cycle bouncebacks, or destabilized tests/guards introduced by recent work in the window.
+
+Signals in order of precision:
 
 **Signal precision is repo-dependent — measure it, don't assume it.** The order below is a
 starting prior, not a ranking. Run every signal, report each one's **yield** (how many clusters it
@@ -135,6 +158,19 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
    from "6 issues over 12 days" into "6 issues, and it refused to start in 5 of the last 9 nightly
    runs" — the difference between a backlog item and an active outage. Third calibration run found
    its top target this way; neither tooling repo had the signal at all.
+7. **Recent seam bounceback & regression heuristic** — check for short-cycle regressions:
+   - Identify files modified by recent feature or refactoring work (`feat:`, `refactor:`) within the
+     window (especially the last 7–14 days, measured backward from the window end date or run date).
+   - Look for subsequent `fix:`, `hotfix:`, or `revert:` commits touching those same files or functions.
+   - **Apply the regression recurrence discriminator (prevent false positives on in-branch authoring):**
+     a bounceback counts as a potential regression only if the `fix:`/`hotfix:`/`revert:` commit originates
+     from a **different PR/branch** than the original `feat:`/`refactor:` commit, OR lands on a
+     **different calendar day**. (Otherwise it is ordinary in-branch authoring, not a regression).
+   - Look for fast-follow issues filed shortly after a PR merge complaining about broken pre-existing
+     functionality or degraded performance.
+   - When detected, flag them specifically as **Potential Regressions** rather than generic tech debt:
+     they indicate that recent changes skipped sufficient edge-case testing, lacked automated guards,
+     or broke assumptions made by other components.
 
 **Guard against corpus drift when comparing runs.** Signal 1's citation graph is scoped to a set of
 directories, so a *lifecycle* action — a PDDA sweep moving docs from `2-WORKING` to `3-COMPLETED`
@@ -163,10 +199,12 @@ target score ≈ (distinct issues in cluster)
              × (blast radius: repos / lanes the seam or class touches)
              ÷ (fix cost: the cluster's median effort rating)
              × 1.5 if any member was closed without a code change
+             × 1.3 if identified as a recent regression (bounceback from a recent feat/refactor)
 ```
 
 For each target report: the cluster (issue numbers + docs), the shared seam or class, the span in
-days, why it recurs, and what a single durable fix would retire.
+days, whether it represents a **recent regression** or **chronic tech debt**, why it recurs, and what a
+single durable fix would retire.
 
 ## Step 2b — Open-PR collision check
 
@@ -203,7 +241,8 @@ overlap as one of these states and act accordingly:
 Report only PRs that change the operator's next step. In the in-session reply, translate the
 result as "Already being worked on," "Blocked or stale work," or "No work underway" — not a raw
 PR inventory. A plan recommendation must name any matching PR and say whether the operator should
-merge it, unblock it, close it, or deliberately schedule a non-duplicate follow-up.
+merge it, unblock it, close it, or deliberately schedule a non-duplicate follow-up. Carry the PR
+classification results directly into Step 4.3 for the "In-Flight Work & Open PRs" summary.
 
 ## Step 3 — Lens 3: release recalibration
 
@@ -236,49 +275,75 @@ Advisory only. Say "the plan says X, the repo is doing Y" and stop.
 
 ## Step 4 — Report in-session
 
-Treat the in-session reply as a decision memo, not a data dump. Start with exactly these two
-segments, in this order. Keep the full measurements, commit subjects, target IDs, and citations in
-the persisted evidence report; bring them into chat only when they support the recommended action.
+Treat the in-session reply as an **SDLC Process Coach & Strategic Decision Memo**, not a cold forensic data dump.
+Speak in the voice of an experienced, encouraging Principal Engineer or Agile Process Coach who cares about
+developer momentum, team health, and sustainable delivery velocity.
 
-### 1. Overall direction
+When no targets were found, report only the flow distribution (§3) and the all-clear recommendation; skip the multi-paragraph coaching narrative and retrospective sections.
 
-Open with a short, plain-English answer to: **Where is this project heading right now?** Do not use
-Radar labels, acronyms, percentages, or internal tool names before answering it. State whether the
-project should keep course, change course, or stop and address a specific problem. Then end the
-segment with one blunt, concrete line:
+Lead directly with a warm, insightful two-paragraph executive narrative, followed by prioritized coaching recommendations and a clean summary of the evidence. Keep the raw commit tallies, mathematical proofs, and forensic debug traces in the persisted evidence report unless specifically requested.
 
-    Recommended next step: <imperative action, owner/decision when known, and the result that proves it is done>
+### 1. The SDLC Process Coach Narrative (The Opening Two Paragraphs)
 
-Example: "The team is spending most of its energy keeping the existing system reliable, while two
-repeat problems are still being left behind. That is sensible only if reliability is the current
-priority; otherwise the project is not moving toward new customer value. Recommended next step:
-choose one unowned repeat problem for the next work cycle and give it a named owner."
+The first two paragraphs set the human context and direction for the entire report. Avoid dense cybernetic jargon, cold acronyms, or adversarial auditor language.
 
-### 2. What the evidence means
+#### Paragraph 1 — High-Level Wins & Velocity (Celebrate Momentum)
+- **Acknowledge and celebrate progress first**: Recap what actually went well during this window. Highlight newly shipped user-facing features (`feat:`), major architectural milestones, closed blockers, and performance or DX wins.
+- **Affirm team effort**: Give the engineering team genuine credit for moving the needle, recognizing where delivery momentum is strong and durable improvements were made.
 
-Translate the technical lenses into only the findings that change what the operator should do. For
-each finding, use this shape:
+*Example*: "Over the past three weeks, the team has sustained impressive feature momentum—landing major capabilities including the GitHub Pages documentation portal and the cross-device AgentChorus bridge. Crucially, the team also demonstrated excellent follow-through on quality by knocking out repeat blockers in the telemetry subsystem, turning hard-won operational lessons directly into durable repo policies."
 
-    <Blunt finding in ordinary language>
-    Why it matters: <the real-world effect on customers, delivery speed, reliability, cost, or risk>
-    Recommended next step: <specific imperative action and completion condition>
+#### Paragraph 2 — SDLC Health, Flow Friction & Potential Regressions (Process Coaching)
+- **Assess process health & the RGT trajectory (The Arc)**: Contextualize where engineering energy is actually going over time. Compare the current Run/Grow/Transform (RGT) mix against predecessor runs or the prior window (see §3 below for the full trajectory numbers), evaluating whether the team is gradually escaping high-maintenance "Run" churn to unlock more "Grow" feature velocity, or if the arc has remained stalled in firefighting across multiple sittings.
+- **Spotlight potential regressions & hot spots**: Explicitly identify any **regressions** (e.g. recently modified files or new features that suffered rapid follow-up hotfixes, broken test guards, or reopened tickets) as well as chronic recurring defects that keep pulling developers away from forward progress.
+- **Provide empathetic coaching**: Explain the real-world impact on team velocity, cognitive load, or release stability, pointing out whether the team needs a focused stabilization sprint, better guard tests, or unblocking on stuck PRs.
 
-Write the flow mix, recurring targets, open-PR landscape, plan comparison, and any degraded or uncertain signal in
-this form. Replace jargon with its consequence: say "most effort went to maintenance" rather than
-"Run was 71%"; say "this bug has returned in three separate reports" rather than a target slug;
-and say "the release plan does not yet cover this work" rather than "the target is unclaimed." Put
-the exact count, target ID, file, commit, or percentage in parentheses only when it lets the
-operator act or verify the claim.
+*Example*: "At the same time, our delivery rhythm is feeling the strain of reactive maintenance: over 75% of recent non-harness commits were consumed by bug fixes and chores (essentially unchanged from 76.7% in our previous run, showing that our maintenance arc has remained stubbornly flat). More importantly, we're seeing signs of short-cycle regressions in the root resolution logic, where three separate follow-up fixes had to be applied within days of landing. Left unchecked, this churn will continue to siphon bandwidth away from our next milestone; taking a dedicated stabilization pass here will restore smooth sailing."
 
-Every item must have a call to action. Do not include an FYI, a raw measurement, or a caveat by
-itself. If the correct conclusion is that no change is needed, say so directly and make the action
-to preserve that state explicit: "Recommended next step: keep the current plan; rerun Radar after
-the next work cycle to confirm the balance holds." If evidence is too incomplete to support a
-decision, do not soften it into an observation: say "Do not make a planning decision from this
-run," then name the missing signal and the rerun needed to obtain it.
+### 2. Prioritized Coaching Action Items
 
-Be direct when the evidence calls for a change. Never make the operator infer the recommendation
-from the data, and never end with an open-ended `ASK`.
+Follow the coach's narrative with 2–3 clear, high-leverage recommendations framed constructively. Every recommendation must specify an actionable step and how to know it succeeded:
+
+    Recommended next step: <specific, high-leverage action, owner/decision when known, and completion condition>
+
+*Example*: "Recommended next step: Pause new feature branches in the vendoring area for one work cycle to implement a unified path resolver, retiring the cluster of 12 recurring resolution issues once and for all."
+
+### 3. Structured Evidence & Technical Highlights
+
+Translate the underlying analytical lenses into clean, easily digested human takeaways:
+- **Flow Balance & RGT Arc**: Summarize the Run/Grow/Transform effort mix alongside the trend across prior runs or windows (e.g. "Run/Maintenance: 76.9% [vs 76.7% in Run 2] · Grow/Features: 14.2% [vs 14.4%] · Transform: 0% (rgt: adoption: 0 docs) · Denominator: 607 commits"), clearly illustrating whether the development arc is trending toward feature momentum or stuck in KTLO.
+- **Top Recurring Targets & Regressions**: List the top 2–4 defect clusters in a simple bulleted format, clearly distinguishing **Recent Regressions** (bounceback on recently touched code) from **Chronic Tech Debt** (long-standing multi-week issues). Include why each recurs and what a single clean fix accomplishes.
+- **In-Flight Work & Open PRs**: State clearly whether current PRs are actively addressing these targets, blocked by conflicts/stale reviews, or if the targets are completely unowned.
+- **Release Plan Alignment**: Highlight in one or two sentences whether actual work matches the active roadmap milestone, calling out any untracked orphan work.
+
+If no action or intervention is needed, affirm that cleanly: "Recommended next step: Keep current course; the flow balance is healthy and no significant regressions were detected."
+
+### 4. Multi-Week Retrospective Arc (Offer & Invocation)
+
+When prior reports spanning multiple weeks (or runs) are discovered across `RADAR/`, `docs/radar/`, or `PROJECT/1-INBOX/`, conclude the in-session response with a proactive offer:
+
+> *"Found <N> prior radar reports spanning the last <X> weeks (<start_date> → <end_date>). Would you like a high-level multi-week retrospective summarizing our long-term RGT trajectory, defect retirement rate, and roadmap convergence?"*
+
+If invoked directly with `/radar --arc`, `/radar --summary`, or when the operator accepts the offer, produce a dedicated **Multi-Week Arc Retrospective** formatted as follows:
+
+1. **The Macro-Arc Narrative (SDLC Process Coach)**:
+   A 2-paragraph retrospective framing the team's multi-week journey: how the balance of feature delivery vs maintenance has shifted over the full horizon, acknowledging major systemic wins, and evaluating whether tech debt is draining or compounding over time.
+2. **Longitudinal Flow Trajectory (RGT Across Weeks)**:
+   A compact comparison table tracking the progression across every recorded report:
+
+   | Report / Date | Window | Run (KTLO) | Grow (Feat) | Transform | Context / Milestone |
+   |---|---|---|---|---|---|
+   | `2026-08-07` (Run 1) | Jul 17 → Aug 07 | 94.0% | 6.0% | 0% | Gate-repair cycle |
+   | `2026-08-28` (Run 2) | Aug 07 → Aug 28 | 76.7% | 14.4% | 0% | Core feature unlock |
+   | `2026-09-02` (Run 3) | Aug 12 → Sep 02 | 76.9% | 14.2% | 0% | Steady flow, resolver churn |
+
+3. **Defect & Regression Scorecard**:
+   - **Total Unique Targets Tracked**: Count of all targets across all historical runs.
+   - **Durable Retirements**: Targets struck through citing fixing commits (and verified quiet).
+   - **Recent Regressions vs. Chronic Debt**: Targets that bounced back vs targets remaining open across multiple runs.
+   - **Symptom-Masked / Unresolved**: Targets marked quiet without verified code fixes.
+4. **Strategic Recommendation for the Next Arc**:
+   One high-leverage strategic recommendation for engineering leadership advising where to focus team energy in the upcoming cycle or quarter.
 
 ## Step 5 — Persist the report (two sinks, one confirmation)
 
@@ -309,6 +374,13 @@ with citations, and the checklist as it stands at generation time (a historical 
 second live copy). Never edit a prior report; a new run writes a new dated doc. No ROADMAP pointer
 — 1-INBOX carries no coverage requirement. If the repo has no `PROJECT/` tree, offer repo root as
 a fallback location and say so in the report header.
+
+**Executive Summary Requirement for the Report Document**:
+The written report doc must open with the identical **two-paragraph SDLC Process Coach Executive Summary**
+(Paragraph 1: High-Level Wins & Velocity; Paragraph 2: SDLC Health, Flow Friction & Potential Regressions)
+immediately below the frontmatter and window metadata header. This guarantees that anyone browsing
+`PROJECT/1-INBOX/` immediately encounters an encouraging, insightful overview of the cycle before diving
+into the technical lens tables, degradation matrix, and forensic commit citations.
 
 ### Sink B — completion state, live
 
