@@ -3,7 +3,7 @@ Goal: Final implementation QA — GH-534 merge-cleanup failure modes, Phases A+B
 Date: 2026-09-10
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 Round-cap: 3
 ---
@@ -81,3 +81,195 @@ would accept.
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Codex review — implementation QA
+
+VERDICT: FAIL
+Basis: B1 ignores schema/DDL changes, the Phase C coordinator can still be inferred from CWD, three named B1 acceptance cases lack direct pins, and teardown retains the expressly forbidden no-Trash `rmtree` fallback.
+
+Verdict: **Blocking**. Phases A, E/E.6, most of B1, Phase C's record mechanics, the parity guard,
+and gate registration are implemented, but the approved B1 contract can classify a schema-only
+change as disjoint, and the orchestrator still permits the Phase C coordinator to be inferred from
+its CWD. The acceptance matrix also names three B1 cases that have no specific pinning test.
+
+#### 1. Acceptance items — **Blocking**
+
+- **A.1 satisfied:** `DEFAULT_SAFE_ROOTS` includes `~/marathon-clones` and uses resolved,
+  component-aware containment (`skills/merge-cleanup/scripts/scan_clones.py:20-29,51-82`), pinned by
+  `TestA1Roots.test_marathon_clones_is_a_safe_root`,
+  `test_doc_and_code_root_lists_agree`, and
+  `test_strict_root_prefix_sibling_and_symlink_escape_are_rejected`
+  (`test/gh534_phase_a_tests.py:119-152`).
+- **A.2 satisfied:** `classify_local_refs` fetches first, enumerates all local refs, handles detached
+  HEAD, proves reachability or exact squash provenance/content, and preserves every other tip with
+  ref/SHA/reason (`skills/merge-cleanup/scripts/scan_clones.py:413-495`). The nine requested cases
+  are pinned by `TestA2Provenance` (`test/gh534_phase_a_tests.py:156-263`); the two stated red
+  controls are witnessed in `TESTS-RESULTS/2026-09-09+GH-534/provenance.jsonl:2-3`.
+- **A.3 satisfied:** the full NUL-safe porcelain result is retained and every dirty entry is named
+  (`skills/merge-cleanup/scripts/scan_clones.py:566-585,666-671`), pinned by
+  `TestA3Dirt.test_twelve_dirty_files_all_named` (`test/gh534_phase_a_tests.py:284-294`).
+- **A.4 satisfied:** tick is invoked with the coordination root pinned and malformed/non-zero output
+  is unverified (`skills/merge-cleanup/scripts/scan_clones.py:186-244`); lsof distinguishes normal
+  0/1 completion, stderr, signal/other exit, and actual holders
+  (`skills/merge-cleanup/scripts/scan_clones.py:263-318`); `inspect_checkout` binds both results to
+  preserving dispositions (`skills/merge-cleanup/scripts/scan_clones.py:645-664`). `tick claims`
+  directly folds `readAllEvents` without projecting files (`bin/tick:356-390`). The acceptance
+  cases and AST/write-free pins are in `TestA4TickClaims` and `TestA4OpenHandles`
+  (`test/gh534_phase_a_tests.py:309-484`), with the stated red controls witnessed in
+  `TESTS-RESULTS/2026-09-09+GH-534/provenance.jsonl:4-10`.
+- **A.5 satisfied:** every non-exempt scan result is re-inspected and tagged as fresh
+  (`skills/merge-cleanup/scripts/merge_cleanup.py:243-265`), stale records are refused
+  (`skills/merge-cleanup/scripts/merge_cleanup.py:268-284`), and the scanner aggregates query
+  failures before eligibility (`skills/merge-cleanup/scripts/scan_clones.py:587-614,673-677`). Pins
+  are `TestA5FailClosed` and `TestA5FreshInspection`
+  (`test/gh534_phase_a_tests.py:486-617`); both stated red controls are witnessed in
+  `TESTS-RESULTS/2026-09-09+GH-534/provenance.jsonl:11-12`.
+- **E satisfied:** each PR is refreshed and unknown/API/target failures stop
+  (`skills/merge-cleanup/scripts/merge_cleanup.py:415-447`); a conflicting landing routes to B1
+  (`skills/merge-cleanup/scripts/merge_cleanup.py:450-476`); successful `gh pr merge` is re-queried
+  for `MERGED` (`skills/merge-cleanup/scripts/merge_cleanup.py:75-94`); post-merge fetch/ff/reconcile
+  gate subsequent work (`skills/merge-cleanup/scripts/merge_cleanup.py:536-550`). The orchestration
+  pins are at `test/gh534_phase_b_tests.py:305-370,344-359`. (The initial `fetch_open_prs` API
+  still collapses failure to an empty list at `skills/merge-cleanup/scripts/toposort_prs.py:16-33`,
+  but the approved acceptance's tested API-failure case is explicitly the per-PR refresh at
+  `test/gh534_phase_b_tests.py:315-324`.)
+- **E.6 satisfied:** every clean simulated landing reaches the semantic/check/reconcile gate before
+  merge (`skills/merge-cleanup/scripts/merge_cleanup.py:521-536`; gate implementation
+  `skills/merge-cleanup/scripts/ledger_merge.py:464-493`). Pins are
+  `TestE6Gate.test_check_failure_names_the_rule`, `test_check_command_error_is_red`,
+  `test_gate_red_prevents_the_merge`, and `test_gate_runs_against_the_current_integration_head`
+  (`test/gh534_phase_b_tests.py:484-524`); the red control is witnessed at
+  `TESTS-RESULTS/2026-09-10+GH-534-phase-b/provenance.jsonl:1`.
+- **B1 partial / Blocking:** conflict extraction, excluded/non-ledger routing, per-table row
+  classification, same-key/duplicate/FK checks, writer-only replay, resolver/check/unmerged gate,
+  second-clone validation, and remote-head equality are present
+  (`skills/merge-cleanup/scripts/ledger_merge.py:131-226,249-314,319-330,374-460`;
+  `skills/merge-cleanup/scripts/merge_cleanup.py:499-519`). However, `parse_dump` inspects only
+  lines matching `INSERT INTO ...` and the generation comment; all DDL/schema text is ignored
+  (`skills/merge-cleanup/scripts/ledger_merge.py:49,85-114`). Thus `classify` can return
+  `disjoint=True` for a schema-only change despite the explicit schema-change handoff contract
+  (`PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:265-269`). A passing-wrong input is:
+  base and theirs byte-identical, ours changing only a `CREATE TABLE` column/constraint while all
+  parsed INSERT rows remain identical; `_changes` sees no row changes and returns no reason.
+  Further, the acceptance bullets **view deletion preserved**, **generator failure -> no push**,
+  and **final-head gate failure -> no push** (`PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:417-424`)
+  have no specifically named test among the complete Phase B test definitions
+  (`test/gh534_phase_b_tests.py:218-273,279-524`). The second-clone failure test is close to the
+  final-head bullet (`test/gh534_phase_b_tests.py:425-434`) but mocks validation rather than making
+  the final committed head fail. The B1 red controls that are claimed are eventually witnessed,
+  but the provenance retains three earlier unwitnessed entries before their corrected reruns
+  (`TESTS-RESULTS/2026-09-10+GH-534-phase-b/provenance.jsonl:5-10`).
+- **C partial / Blocking:** record path construction, absolute worker env, locking, lifetime cap,
+  note accounting, and dependency blocking are implemented and pinned
+  (`skills/merge-cleanup/scripts/attempt_record.py:49-51,61-89,129-177`;
+  `skills/merge-cleanup/scripts/merge_cleanup.py:410-422,452-498`;
+  `test/gh534_phase_c_tests.py:51-178,191-267`). But the orchestrator's `--primary` remains optional
+  and explicitly falls back to `Path.cwd()` (`skills/merge-cleanup/scripts/merge_cleanup.py:567,582-584`),
+  contrary to the explicit-primary/no-CWD contract
+  (`PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:285-296`). Existing C red controls mutate
+  `attempt_record.py` or run the orchestrator with a supplied primary
+  (`test/gh534_phase_c_tests.py:51-95,191-229`); none rejects an omitted `--primary`.
+- **Parity guard satisfied as written:** fixed rows, owners, test existence, argparse surface, and
+  AST connections are checked with negative controls (`test/gh534_phase_c_tests.py:270-389`), and
+  the table is present (`skills/merge-cleanup/SKILL.md:153-173`). It does not pin that `--primary`
+  is required or B1 schema sensitivity, so it does not close the two gaps above.
+- **Gate satisfied by recorded evidence:** the suite wrapper is the registered gate entry
+  (`test/gh436-merge-cleanup.sh:2-9`), and all three committed provenance ledgers report green
+  controls (`TESTS-RESULTS/2026-09-09+GH-534/provenance.jsonl:1-12`,
+  `TESTS-RESULTS/2026-09-10+GH-534-phase-b/provenance.jsonl:1-10`,
+  `TESTS-RESULTS/2026-09-10+GH-534-phase-c/provenance.jsonl:1-8`). I did not rerun the full gate,
+  per this review turn's containment instruction.
+
+#### 2. Fail-closed audit — **Closed**
+
+No queried function defaults a failed/empty/malformed required result to an eligible state:
+`inspect_tick_claims` distinguishes absent `.tick/` from missing/unreadable events and rejects
+non-zero/malformed JSON (`skills/merge-cleanup/scripts/scan_clones.py:198-244`);
+`inspect_open_handles` rejects launch/timeout/abnormal return/stderr
+(`skills/merge-cleanup/scripts/scan_clones.py:276-291`); `classify_local_refs` rejects fetch/ref
+parse/ancestry/diff failures or conservatively names the ref unlanded
+(`skills/merge-cleanup/scripts/scan_clones.py:424-494`); `inspect_checkout` accumulates git query
+failures and preserves (`skills/merge-cleanup/scripts/scan_clones.py:568-614,673-677`); and
+`refresh_for_teardown` uses only a new `inspect_checkout` result
+(`skills/merge-cleanup/scripts/merge_cleanup.py:250-265`). The schema omission in question 3 is a
+semantic-classification defect, not one of these query-failure defaults.
+
+#### 3. B1 safety — **Blocking**
+
+`classify` separates identical key values by table and detects ordinary same-key, update/delete,
+duplicate-natural-key, and cross-table value references (`skills/merge-cleanup/scripts/ledger_merge.py:146-191`).
+It removes only `settings.generation` from row changes and selects the higher parsed generation
+(`skills/merge-cleanup/scripts/ledger_merge.py:155-157,193-226`). But because the parser ignores
+every non-INSERT line (`skills/merge-cleanup/scripts/ledger_merge.py:95-99`), schema changes can be
+reported disjoint. Its FK heuristic also compares deleted string keys to any value rather than
+validating the actual schema/FK graph (`skills/merge-cleanup/scripts/ledger_merge.py:179-191`), so
+schema-level reference changes are invisible for the same reason.
+
+`resolve_ledger_conflict` never pushes; it ends at a local merge commit
+(`skills/merge-cleanup/scripts/ledger_merge.py:455-461`). The only orchestrated push follows
+`validate_head_in_second_clone`, and `push_resolved_head` re-queries and compares the remote PR head
+first (`skills/merge-cleanup/scripts/merge_cleanup.py:499-505,155-190`). `replay_ops` invokes only
+`releases_app.py` roadmap verbs (`skills/merge-cleanup/scripts/ledger_merge.py:231-314`); it does not
+write raw SQL.
+
+#### 4. Phase C accounting — **Blocking**
+
+The worker CLI has no CWD fallback: `from_env` requires an absolute `MERGE_CLEANUP_RECORD`
+(`skills/merge-cleanup/scripts/attempt_record.py:170-177`). The script-side record is derived from
+`primary_repo` (`skills/merge-cleanup/scripts/merge_cleanup.py:452-464`), but `primary_repo` itself
+can still be minted from CWD when `--primary` is omitted
+(`skills/merge-cleanup/scripts/merge_cleanup.py:567,582-584`), so the end-to-end answer is **no**.
+
+For each reservation, `RecordLock` spans load -> count -> append -> atomic replace
+(`skills/merge-cleanup/scripts/attempt_record.py:61-89,129-143`). Timeout raises `RecordError` with
+no write and the CLI exits 2 (`skills/merge-cleanup/scripts/attempt_record.py:78-83,195-214`). Count
+is simply the record's attempts, independent of head or clone
+(`skills/merge-cleanup/scripts/attempt_record.py:125-143`). `_deps` is captured before Kahn mutates
+its working graph, including both explicit and file-collision edges
+(`skills/merge-cleanup/scripts/toposort_prs.py:75-121`); Phase 5 blocks only dependents in the failed
+map and continues to independents (`skills/merge-cleanup/scripts/merge_cleanup.py:410-422,481-490,551-555`).
+
+#### 5. Duplicate subsystem / writer check — **Closed**
+
+No production raw-SQL or direct-dump replay path appears in the GH-534 implementation: all ledger
+replay commands are built from `_app(root)` and roadmap verbs
+(`skills/merge-cleanup/scripts/ledger_merge.py:231-314`). Tick claims uses the existing
+`readAllEvents` + `fold` kernel and writes neither projected file (`bin/tick:356-390`; decision
+contract `decisions/2026-09-09-tick-claims-verb.md:10-15`). The sole record store is
+`attempt_record.py`'s adjacent JSON plus lock and atomic temp replacement
+(`skills/merge-cleanup/scripts/attempt_record.py:61-89,101-122`); the orchestrator calls that module
+rather than maintaining a second store (`skills/merge-cleanup/scripts/merge_cleanup.py:452-498`).
+
+#### 6. Rating — **Closed**
+
+`rated 75/70/50/30` (calc 225) remains grounded for the implemented scope: the work spans scanner
+truthfulness, merge orchestration, semantic ledger handling, durable cross-clone accounting,
+documentation parity, and extensive controls. The neutral appeal 50 is unchanged because there is
+still no operator value. The two blocking correctness gaps do not retroactively make the effort or
+severity estimate ungrounded; they prevent implementation approval.
+
+#### Blocking findings / smallest accepted fixes
+
+1. **Schema changes can auto-resolve.** Extend the three-way classifier to fingerprint/compare the
+   schema/DDL (or conservatively hand off whenever the non-row portion differs from base on either
+   side), and add a test where only `CREATE TABLE`/constraint text changes. Expect `disjoint=False`,
+   no resolver/push, with a red control that removes that exact guard. Evidence:
+   `skills/merge-cleanup/scripts/ledger_merge.py:85-114,131-226` versus
+   `PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:265-269`.
+2. **Coordinator can be CWD-derived.** Make `--primary` required for the orchestrator (or fail before
+   any phase when absent) and add a CLI test that invokes from a foreign/disposable CWD without it,
+   expecting a stop and no `.tick/merge-cleanup` creation anywhere. Evidence:
+   `skills/merge-cleanup/scripts/merge_cleanup.py:567,582-584` versus
+   `PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:285-296`.
+3. **Three named B1 acceptance cases lack direct pins.** Add focused tests for stale-view deletion,
+   generator/resolver failure preventing push, and a genuinely invalid final committed head failing
+   second-clone validation and preventing push. Evidence: required at
+   `PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:417-424`; current Phase B definitions at
+   `test/gh534_phase_b_tests.py:218-273,279-524` do not contain those cases.
+
+Additional non-acceptance safety defect noticed during review: the approved rollback text says
+Trash-unavailable must refuse, never `rmtree`
+(`PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:343-345`), but standalone teardown still
+falls back to `shutil.rmtree(path)` (`skills/merge-cleanup/scripts/merge_cleanup.py:312-327`). The
+smallest fix is to return false with a diagnostic when `~/.Trash` is unavailable, plus a focused
+test. Treat this as Blocking because it is the irreversible path the plan explicitly prohibited.
