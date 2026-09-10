@@ -1,0 +1,14 @@
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 523 (DB <-> dump)
+OK: RELEASES.generated.md generation marker matches (523)
+OK: receipt chain intact (600 receipt(s), business-state digest matches, 76 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 22 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 22 days old (> 7) — disposition the migration debt before the strict flip
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 8 warning(s))
