@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -543,12 +543,12 @@ Both blockers accepted; both Shoulds accepted. Nothing declined.
   `perform_write` inserts only when an extractor returns a tuple, so `None` means "already written"
   rather than "no event". Assertion added: one `work emit` creates exactly one row — not zero, not two.
 
-- **[Pass] receipt/digest placement**, **[Pass] concurrent window**, **[Pass] extends the existing
+- **[Unverified — no citation] receipt/digest placement**, **[Unverified — no citation] concurrent window**, **[Unverified — no citation] extends the existing
   config and write protocols** — noted, and thank you for re-deriving each from source rather than
   from the revision's own description.
 
 **Trajectory across the relay**, for whoever picks this up: r1 five blockers, r2 four, r3 two, with
-three findings promoted to [Pass] and no finding declined at any round. Every r3 blocker was a defect
+three findings promoted to [Unverified — no citation] and no finding declined at any round. Every r3 blocker was a defect
 introduced by an r2 fix or an inherited claim I failed to re-check, not a new requirement — which is
 the argument for one more round rather than for stopping. But the cap is the cap, and this workflow
 does not let the producer approve its own plan.
@@ -573,5 +573,51 @@ Reviewer, round 4 is a **verification round on the round-3 fixes specifically**,
 5. Anything the previous three rounds and these fixes have left contradictory in the document.
 
 Handing off to Reviewer — go to the codex window and say "take your turn".
+
+### Reviewer · round 4
+
+**Verdict: Changes requested.** The single-seam and `work-emit` fixes are coherent, but the artifact
+still contradicts the central dispatch placement and does not provide a runnable post-use rollback.
+At round 4 / 4 this remains escalated.
+
+swept file: yes
+
+- [Pass] **The explicit lock release can preserve every failure path without double-release damage.**
+  The proposed durability section explicitly releases before the common post-lock dispatch, while
+  the `finally` remains for exceptions (`.relay-artifacts/GH-549-WORK-STATE-EVENT-STREAM.md:348-357`).
+  `WriterLock.release()` is idempotent because it acts only when `self.fh is not None` and then sets
+  it to `None` (`utils/py/releases_app.py:418-424`), so the later `finally` is a no-op after a successful
+  explicit release and still releases on an earlier exception.
+- [Pass] **Central post-lock dispatch restores the single seam and its red control can fire.** Phase
+  3 requires one dispatch section inside `perform_write`, after its lock-scoped durability section,
+  with no caller invocation (`artifact:342-360`). Removing that call makes a configured mapped verb
+  commit its event without invoking the stub connector, which directly falsifies the projection claim.
+- [Pass] **The `work-emit` sentinel is executable and prevents both zero and duplicate rows.** Its
+  mutate inserts the event, its registered extractor returns `None`, and the generic seam inserts only
+  for a tuple (`artifact:437-446`); the explicit exactly-one-row assertion distinguishes zero and two.
+- [Blocker] **The post-use rollback is still not runnable as written.** It requires “a documented
+  `check --rebuild` on a dump written without” `work_events` (`artifact:523-528`) but never names which
+  version produces that dump, the exact command/order that removes the table statements and migration
+  row, or how append-only triggers and the populated DB are handled before the reverted v007 binary is
+  invoked. The proposed red control therefore depends on the missing procedure it is meant to prove.
+  **Fix:** specify one concrete forward down-conversion tool/command owned by v008 (including backup,
+  trigger/table removal, migration-row downgrade, canonical dump rewrite, and failure rollback), then
+  test its output with the actual reverted v007 `check` and rebuild/load paths; show the same populated
+  fixture fails without conversion.
+- [Should] **A stale risk row still reintroduces the rejected caller-dispatch contract.** The risk
+  table says “dispatch runs in the caller” (`artifact:508`), contradicting the corrected single common
+  section inside `perform_write` (`artifact:342-360`). Its red control also says to move dispatch “back
+  inside `perform_write`,” where it already is; the actual mutation is moving it back **inside the
+  lock**. **Fix:** state that dispatch runs in `perform_write` after explicit lock release and make the
+  red mutation move it before release.
+- [Should] **The zero-config caller count is stale after adding `work emit`.** Phase 4 calls it the
+  29th `perform_write` caller (`artifact:437-439`), while Phase 2 still verifies “all 28 callers”
+  (`artifact:291-295,314`). **Fix:** derive the expected caller/op inventory in the coverage test or
+  update every count to include `work emit`, so the new external emitter cannot escape criterion 1.
+- [Pass] **No additional contradiction was found in the round-3 transaction correction.** The design
+  now limits atomicity to the ledger row plus `work_events` and explicitly makes cursor persistence
+  post-commit/device-local (`artifact:79-89`).
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
