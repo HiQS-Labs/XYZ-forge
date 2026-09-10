@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -64,3 +64,21 @@ ROUND: 1 / 4
 ## Log
 
 <!-- GH-529 mitigation: no trailing marker — append at end of file -->
+
+### Reviewer (agy) — Round 1
+
+swept file: yes
+
+* **[Pass] README GH-536 home:** The primary-use-case paragraph correctly names the new location and points to the runbook (`skills/skills-army-hq/README.md:22-26`: "The actual skill folders stay in one collection — since GH-536, `~/git-pulse-sync/Deployed Skills`, carried by the hourly Git Pulse writer (see SKILL.md → \"Adopting the collection on another machine\").").
+* **[Blocker] Stale path references:** The whole-folder grep revealed 4 remaining stale `Documents/Deployed Skills` paths in `skills/skills-army-hq/README.md`.
+  * Fix: Update paths on lines 42, 44, 64, and 79 to the new `~/git-pulse-sync/Deployed Skills` path to fully satisfy the "no stale path references left" DoD.
+* **[Nit] recovery.md exclusion list completeness:** The list in `skills/skills-army-hq/references/recovery.md:50-53` is missing `.lock`, which is present in the live `.gitignore`.
+  * Fix: Add `.lock` to the listed items in `recovery.md` to perfectly match the live file's contents.
+* **[Pass] Commit-after-mutation rule:** Correctly stated with the proper failure mode (`skills/skills-army-hq/references/recovery.md:55-57`: "The carrier's pre-write `pull --rebase` refuses on uncommitted tracked changes, wedging its whole cycle (observed: exit 128...)").
+* **[Pass] Digest mode-normalization rule:** Technically accurate (`skills/skills-army-hq/references/recovery.md:58-60`: "git normalizes file modes (only the executable bit survives)").
+* **[Pass] Scope:** Branch diff contains only docs and ledgers (`README.md`, `recovery.md`, `ROADMAP-DASHBOARD.md`, `LEADERBOARD.md`, `releases.*`, `relay-system/`). No behavioral code changes were found.
+
+VERDICT: FAIL
+Basis: Remaining stale path references in README.md violate the Definition of Done.
+
+Handing off to Producer — go to the claude-a window and say 'take your turn'.
