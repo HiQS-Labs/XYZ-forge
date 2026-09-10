@@ -1,41 +1,31 @@
 ---
-title: Make wave reconciliation automatic post-merge — after giving it a lifecycle write it does not have
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-04
-updated: 2026-09-04
-owner: noelsaw1
 gh_issue: 421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/421
-doc_type: feature
+title: "GH-421: wave reconciliation is never invoked automatically — fix its ledger write, then wire it post-merge"
+status: 2-WORKING
+created: 2026-09-04
+updated: 2026-09-08
+owner: unassigned
+goal: "wave_reconcile writes the releases ledger correctly and is then invoked automatically on merged PRs"
+doc_type: bugfix
 complexity: 3
 risk: 4
 effort: 3
 phases: 3
-ratings_provisional: true
-non_goals:
-  - A new runtime script or module. utils/py/wave_reconcile.py exists and is already shaped for unattended use; this wires and corrects it. (A privileged workflow IS a new subsystem — see Phase 2 — and is counted as one.)
-  - Retiring ROADMAP.md or mode-gating the reconciler's markdown writes — GH-269.
-  - Teaching the marathon planner to read the DB — GH-418, blocked on GH-423.
-  - Reconciling any branch other than development.
-  - A bot that opens PRs. The reconciled artifacts commit directly to development or the feature is not automatic.
-depends_on:
-  - GH-424 (status_marker CLI writer + journal snapshot fix — hard prerequisite)
-  - GH-425 (--gate's provenance check is vacuous — prerequisite for Phase 2 only)
+marathon: gh-490
 related:
-  - GH-165 (the reconciler itself — CLOSED, shipped operator-invoked)
-  - GH-269 (retire ROADMAP.md — this is its writer half)
-  - GH-418 (planner still reads the frozen file — the reader half)
-  - GH-423 (roadmap render — GH-418's blocking dependency)
-goal: >
-  Fire utils/py/wave_reconcile.py automatically when a PR merges into development — but only after
-  giving it a supported atomic lifecycle write, which the ledger CLI does not currently expose.
-  Ordering is the point: automating it first would write a confident wrong record at machine speed
-  and exit 0.
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
 ---
+
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
 
 # GH-421: automate the reconciler, after giving it a lifecycle write it does not have
 
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 Phases that must land in order. Automating before the ledger writes are real is actively worse
 than the status quo — that ordering is the plan's whole thesis, and it survived two review rounds.
@@ -274,17 +264,69 @@ is one policy change away from failing every automated run.
 
 ```json
 {
-  "target":      { "repo": ".", "ref": "development" },
-  "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "utils/py/wave_reconcile.py", "pattern": "manifest\", \"ship" } ],
-  "artifacts":   [
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_present",
+      "path": ".github/workflows/ci.yml",
+      "pattern": "contents: read",
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": ".github/workflows/wave-reconcile.yml",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh421-auto-wave-reconcile.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-421-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
+    }
+  ],
+  "artifacts": [
+    ".github/workflows/ci.yml",
     "utils/py/wave_reconcile.py",
-    "utils/py/releases_app.py",
     ".github/workflows/wave-reconcile.yml",
     "test/gh421-auto-wave-reconcile.sh",
     "test/baselines/GH-421-negative-control.md"
   ],
-  "remediation": { "source": "issue#421", "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte" },
-  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+  "remediation": {
+    "source": "issue#421",
+    "criteria": "a PR merged into development reconciles without operator action: the manifest item is shipped with the merge sha as evidence, the active doc moves, its roadmap row is repointed AND marked completed through a supported CLI verb, the dashboards regenerate, and the artifacts land on development under a staging allowlist; three close events during one run all reconcile; a second apply under a frozen clock is byte-identical; an OPEN issue behind a merged PR is not promoted; failure injected at any mutation boundary restores the DB and dump byte-for-byte"
+  },
+  "lanes": {
+    "agy_safe": [],
+    "orchestrator_only": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/wave-reconcile.yml"
+    ]
+  },
+  "artifacts_new": [
+    ".github/workflows/wave-reconcile.yml",
+    "test/baselines/GH-421-negative-control.md",
+    "test/gh421-auto-wave-reconcile.sh"
+  ]
 }
 ```
+
+## Acceptance
+
+- `pull_request: closed` + merged + `base.ref == development` invokes `wave_reconcile --pr N --gate`.
+- Idempotent: second run writes nothing and is byte-identical; serialized via a concurrency group (queue, never cancel).
+- Least privilege: `contents: write` on the reconcile job only.
+- Baseline reds witnessed first in `test/baselines/` (dialed_in not left; 2-WORKING+closed not left; releases-mode no fake exit 0).
+
+## Acceptance — reviewer-tightened criteria (CodeRabbit round 1)
+
+- [ ] Every ledger transition records manifest evidence (`manifest ship --evidence <merge commit / PR>`); the CLI refuses empty evidence.
+- [ ] Lifecycle completion, three-event handling (merged PR with: dialed-in item, open issue, no linked issue), and open-issue protection are each asserted.
+- [ ] Regenerated dashboards land with the artifacts, and a rollback (induced failure) leaves releases.db/.sql and docs untouched.

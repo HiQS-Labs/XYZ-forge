@@ -13,8 +13,8 @@ in place from ``parse_lanes_table()`` (was the ``_inject_review_lanes`` post-ren
 
 Output is intentionally identical to the Bash engine on fixed fixtures. It is invoked by
 ``utils/py/marathon_plan.py``; the CLI wrapper, exit-code handling, ``--check``/``--dry-run``
-modes, and hermetic test seams live there. ``utils/marathon-plan.sh`` (Bash) remains the
-authoritative, dual-maintained twin per GH-308 — this port does not change that.
+modes, and hermetic test seams live there. Python is authoritative (GH-362); the Bash
+fallback remains frozen.
 
 Stdlib only; no external dependency, no third renderer.
 """
@@ -26,6 +26,12 @@ import os
 import re
 import subprocess
 import sys
+import sqlite3
+from contextlib import closing
+from pathlib import Path
+
+from router_audit import parse_pdda_mode
+from releases_app import roadmap_render
 
 # Ledger sections we sequence from vs. only reference.
 SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"]
@@ -758,82 +764,48 @@ class Engine:
         return out
 
     def _load_ledger_from_db(self, db_path):
-        import sqlite3
-        if not os.path.isfile(db_path):
-            return []
+        # Reuse the releases renderer: one row-to-ledger grammar, including sparse rows.
+        # Read-only URI avoids creating a missing DB; closing also covers failed queries.
         try:
-            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-            conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
-            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='roadmap_items'")
-            if not cur.fetchone():
-                conn.close()
-                return []
-            rows = cur.execute("SELECT * FROM roadmap_items ORDER BY position").fetchall()
-            conn.close()
-            out = []
-            for r in rows:
-                raw = (r["raw_text"] or "").strip()
-                section = r["section"] or "Queue / parked intake"
-                if raw:
-                    out.append(self._parse_bullet([raw], section))
-                else:
-                    title = r["title"] or ""
-                    gh_number = r["gh_number"]
-                    gh = f"GH-{gh_number} · " if gh_number is not None else ""
-                    status = r["status_marker"] or "—"
-                    links = []
-                    if r["doc_path"]:
-                        links.append({"label": os.path.basename(r["doc_path"]), "target": r["doc_path"]})
-                    if r["issue_url"]:
-                        links.append({"label": f"#{gh_number}" if gh_number else "issue", "target": r["issue_url"]})
-                    raw_synth = f"- **{gh}{title}** {status}"
-                    out.append({"title": title, "status": status, "links": links, "raw": raw_synth, "section": section})
-            return out
-        except Exception:
-            return []
+            with closing(sqlite3.connect(Path(db_path).resolve().as_uri() + "?mode=ro", uri=True)) as conn:
+                conn.row_factory = sqlite3.Row
+                if not conn.execute("SELECT name FROM sqlite_master WHERE name='roadmap_items' AND type='table'").fetchone():
+                    raise EngineExit(3, "marathon-plan: releases.db has no roadmap_items table")
+                return self._parse_ledger(roadmap_render(conn))
+        except sqlite3.Error as exc:
+            raise EngineExit(3, "marathon-plan: cannot read releases.db roadmap_items: %s" % exc) from exc
 
     # ── main compute ────────────────────────────────────────────────────────────
     def run(self, render_out):
         """Parse → resolve → score → wave-pack → render. Prints the report to stdout,
         writes the rendered doc to ``render_out``, returns the exit code."""
         db_path = os.path.join(self.ROOT, "releases.db")
-        pdda_mode_path = os.path.join(self.ROOT, ".pdda-mode")
-        is_releases_mode = False
-        if os.path.isfile(pdda_mode_path):
-            try:
-                with open(pdda_mode_path, "r", encoding="utf-8") as f:
-                    if "ROADMAP_SOURCE=releases" in f.read():
-                        is_releases_mode = True
-            except OSError:
-                pass
-
         explicit_roadmap_env = os.environ.get("QUEUE_PLAN_ROADMAP")
-
-        ledger = None
+        is_releases_mode, mode_error = parse_pdda_mode(self.ROOT)
+        if mode_error:
+            raise EngineExit(3, "marathon-plan: %s" % mode_error)
+        self.SOURCE_NAME = "ROADMAP.md"
+        self.SOURCE_LINK = "../../ROADMAP.md"
         if explicit_roadmap_env:
+            # Explicit test-only fixture seam, never an implicit production fallback.
+            self.SOURCE_NAME = os.path.relpath(self.ROADMAP, self.ROOT)
+            self.SOURCE_LINK = os.path.relpath(self.ROADMAP, self.QUEUE_DIR)
             raw = self._read_file_safe(self.ROADMAP)
             if raw is None:
                 raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
             ledger = self._parse_ledger(raw)
-        elif is_releases_mode and os.path.isfile(db_path):
-            ledger = self._load_ledger_from_db(db_path)
-            if not ledger and os.path.isfile(self.ROADMAP):
-                raw = self._read_file_safe(self.ROADMAP)
-                if raw is not None:
-                    ledger = self._parse_ledger(raw)
-        elif not os.path.isfile(self.ROADMAP) and os.path.isfile(db_path):
+        elif is_releases_mode:
+            self.SOURCE_NAME = "releases.db (roadmap_items)"
+            self.SOURCE_LINK = os.path.relpath(db_path, self.QUEUE_DIR)
             ledger = self._load_ledger_from_db(db_path)
         else:
             raw = self._read_file_safe(self.ROADMAP)
             if raw is not None:
                 ledger = self._parse_ledger(raw)
-            elif os.path.isfile(db_path):
-                ledger = self._load_ledger_from_db(db_path)
             else:
                 raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
 
-        if not ledger:
+        if not ledger and (explicit_roadmap_env or not is_releases_mode):
             raise EngineExit(3, "marathon-plan: no ledger items parsed (is '## Ledger' present?)")
 
         records = []
@@ -1267,21 +1239,21 @@ class Engine:
         o.append("owner: noel")
         o.append("branch: %s" % self._resolve_branch())   # GH-346: derived trunk, was the literal "main"
         o.append("doc_type: project")
-        o.append("source: ../../ROADMAP.md (open ledger entries)")
+        o.append("source: %s (open ledger entries)" % ("../../ROADMAP.md" if self.SOURCE_NAME == "ROADMAP.md" else self.SOURCE_NAME))
         o.append("generated_by: %s" % self.MP_CMD)
         o.append("roadmap_exempt: true")
         o.append("goal: >")
-        o.append("  A sequenced concurrency plan derived from ROADMAP.md: ranks surviving work by PDDA")
+        o.append("  A sequenced concurrency plan derived from %s: ranks surviving work by PDDA" % self.SOURCE_NAME)
         o.append("  complexity/risk/effort, validates each item is still real, and batches collision-safe")
         o.append("  lanes into waves. Generated — edit the ledger, not this file.")
         o.append("---")
         o.append("")
-        o.append("<!-- GENERATED by utils/marathon-plan.sh from ROADMAP.md — re-run to refresh; edit the ledger, not this file. -->")
+        o.append("<!-- GENERATED by utils/marathon-plan.sh from %s — re-run to refresh; edit the ledger, not this file. -->" % self.SOURCE_NAME)
         o.append("")
         o.append("# Marathon Plan %s — pre-pre-flight sequenced queue" % self.TODAY)
         o.append("")
-        o.append("> Derived from [ROADMAP.md](../../ROADMAP.md) · policy `%s` · weights {%s} · gh=%s."
-                 % (self.POLICY, weight_str, self.GH_MODE))
+        o.append("> Derived from [%s](%s) · policy `%s` · weights {%s} · gh=%s."
+                 % (self.SOURCE_NAME, self.SOURCE_LINK, self.POLICY, weight_str, self.GH_MODE))
         o.append("> The roadmap says **what/why**; this says **what is still real and in what order**. Execution")
         o.append("> detail still lives in each `PROJECT/**` doc — this is a scheduling overlay.")
         o.append("")
@@ -1391,7 +1363,7 @@ class Engine:
             o.append("## Review lanes (manual overlay — run via relay-xyz)")
             o.append("")
             o.append("A separate manual overlay — [%s](%s) — is not derived from" % (review_rel, review_rel))
-            o.append("ROADMAP.md and does not appear in the waves above (a review lane evaluates an existing PR")
+            o.append("%s and does not appear in the waves above (a review lane evaluates an existing PR" % self.SOURCE_NAME)
             o.append("diff; it doesn't remediate a ledger item). Fire each via `relay-xyz`, per the overlay doc.")
             o.append("")
             if review_lanes:
@@ -1418,7 +1390,8 @@ class Engine:
         o.append("")
         o.append("---")
         o.append("")
-        o.append("*Generated from [ROADMAP.md](../../ROADMAP.md) (source of truth). Re-run `%s` after editing the ledger.*" % self.MP_CMD)
+        o.append("*Generated from [%s](%s) (source of truth). Re-run `%s` after editing the ledger.*"
+                 % (self.SOURCE_NAME, self.SOURCE_LINK, self.MP_CMD))
         return "\n".join(o) + "\n"
 
 

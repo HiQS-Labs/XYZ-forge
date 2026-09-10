@@ -185,7 +185,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
     rows = cx.execute(
         "SELECT r.id, r.version, r.codename, r.status, r.target_date, r.shipped_date, "
         "       r.description, r.exit_criterion, r.milestone, r.marathon_id, ir.url, "
-        + baseline_cols +
+        + baseline_cols + ", r.global_id" +
         " FROM releases r JOIN issue_refs ir ON ir.id = r.tracking_ref_id"
     ).fetchall()
     # Rail order: shipped/cut history on the far left (by ship date), then the
@@ -198,7 +198,10 @@ def release_columns(cx, repo_url, roadmap_idx, today):
         )
     )
     for (rid, version, codename, status, target, shipped, descr, exit_c, milestone, mar_id,
-         ref_url, base_count, base_at, base_source) in rows:
+         ref_url, base_count, base_at, base_source, gid) in rows:
+        # GH-454: both names may be NULL. Use the GID's random suffix (not its shared
+        # timestamp prefix) so unnamed releases retain stable, distinct display handles.
+        name = codename or version or f"unnamed-{gid[-8:].lower()}"
         db_status = status
         cards = manifest_cards(cx, rid, roadmap_idx, today)
         # GH-111 denominator: COMMITTED work only — dialed_in + shipped, cut excluded. The old
@@ -254,7 +257,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
                     "type": "marathon",
                     "id": f"GH-{gh.group(2)}" if gh else "marathon",
                     "url": m["gh"],
-                    "title": f"{codename} marathon",
+                    "title": f"{name} marathon",
                     "meta": m["status"],
                     "state": "done" if m["status"] == "done" else "run",
                     "cards": members,
@@ -274,9 +277,9 @@ def release_columns(cx, repo_url, roadmap_idx, today):
 
         columns.append(
             {
-                "id": "c-" + (version or codename or "untitled").lower().replace(".", "-").replace(" ", "-"),
-                "slug": (codename or version).lower(),
-                "name": codename or version,
+                "id": "c-" + (version or name).lower().replace(".", "-").replace(" ", "-"),
+                "slug": name.lower(),
+                "name": name,
                 "version": version,
                 "status": {"active": "active", "draft": "draft"}.get(status, "shipped"),
                 "flags": flags,

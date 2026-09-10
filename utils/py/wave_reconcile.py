@@ -13,6 +13,7 @@ import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -66,8 +67,6 @@ class ReconcilerLock:
             try:
                 fcntl.flock(self.fd, fcntl.LOCK_UN)
                 self.fd.close()
-                if os.path.exists(self.lock_path):
-                    os.unlink(self.lock_path)
             except OSError:
                 pass
 
@@ -106,6 +105,13 @@ class RollbackJournal:
             except OSError as e:
                 log_err(f"Failed restoring {orig} from {backup}: {e}")
         self.cleanup()
+
+    def changed(self):
+        """Whether any journaled artifact differs, ignoring empty directories."""
+        return any(os.path.exists(p) for p in self.created_files) or any(
+            not os.path.exists(p) or Path(p).read_bytes() != Path(backup).read_bytes()
+            for p, backup in self.backups.items()
+        )
 
     def cleanup(self):
         for backup in self.backups.values():
@@ -233,6 +239,7 @@ def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
         content = f.read()
     if ("\n- " + label + " " + verb + " ") in content or content.startswith("- " + label + " " + verb + " "):
         return  # idempotent
+    print("TRANSITION " + json.dumps(["doc", "merge-evidence", label, os.path.basename(doc_path)]), flush=True)
     if not dry_run:
         if journal is not None:
             journal.snapshot(doc_path)
@@ -258,7 +265,7 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         "view",
         str(pr_id),
         "--json",
-        "number,title,state,mergedAt,baseRefName,headRefName,body,url",
+        "number,title,state,mergedAt,mergeCommit,baseRefName,headRefName,body,url",
     ]
     r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
     if r.returncode != 0:
@@ -292,6 +299,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
                     "baseRefName": "development", "body": message,
                     "url": entry.get("url", ""), "artifactKind": "commit",
                     "sha": entry.get("sha", commit_id),
+                    "mergeCommit": {"oid": entry.get("sha", commit_id)},
                 }
         die(f"Commit {commit_id} not found in offline manifest", code=4)
 
@@ -321,7 +329,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
         "number": sha[:12], "title": message.splitlines()[0], "state": "MERGED",
         "mergedAt": committed_at, "baseRefName": "development", "body": message,
         "url": f"https://github.com/{slug}/commit/{sha}" if slug else "",
-        "artifactKind": "commit", "sha": sha,
+        "artifactKind": "commit", "sha": sha, "mergeCommit": {"oid": sha},
     }
 
 
@@ -332,23 +340,63 @@ def landing_label(meta):
 
 
 def check_provenance_receipts(repo_root, pr_meta):
-    """Check committed provenance receipts for marathon gate (GH-430)."""
+    """Require a JSONL receipt attributable to this PR (GH-425).
+
+    Accept top-level pr/pr_number (positive integer or decimal string), or an
+    exact full commit matching GitHub's mergeCommit. Explicit PR fields must all
+    match; a conflicting PR cannot be rescued by a commit match. Filenames and
+    issue numbers are not PR identity. This checks attribution, not test success
+    or whether the receipt was committed; report only the identity actually read.
+    """
     pr_num = pr_meta.get("number")
     results_dir = os.path.join(repo_root, "TESTS-RESULTS")
     if not os.path.isdir(results_dir):
         die(f"--gate failure: TESTS-RESULTS directory missing; cannot verify provenance for PR #{pr_num}", code=6)
-    # Search for committed receipts matching PR or recent date
-    found = False
-    for root, _, files in os.walk(results_dir):
-        for f in files:
-            if f in ("error_log.jsonl", "provenance.jsonl"):
-                found = True
-                break
-        if found:
-            break
-    if not found:
-        die(f"--gate failure: No committed provenance.jsonl or error_log.jsonl found in TESTS-RESULTS/ for PR #{pr_num}", code=6)
-    log(f"  Provenance receipts verified for PR #{pr_num} (GH-430 compliant)")
+
+    def pr_number(value):
+        if type(value) is int and value > 0:
+            return str(value)
+        if isinstance(value, str) and re.fullmatch(r"[1-9][0-9]*", value):
+            return value
+        return None
+
+    expected_pr = pr_number(pr_num)
+    merge_commit = pr_meta.get("mergeCommit") or {}
+    merge_sha = merge_commit.get("oid") if isinstance(merge_commit, dict) else None
+    if not isinstance(merge_sha, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", merge_sha):
+        merge_sha = None
+    for root, dirs, files in os.walk(results_dir):
+        dirs.sort()
+        for name in sorted(files):
+            if name not in ("error_log.jsonl", "provenance.jsonl"):
+                continue
+            path = os.path.join(root, name)
+            if os.path.islink(path) or not os.path.isfile(path):
+                continue
+            try:
+                with open(path, encoding="utf-8") as receipt:
+                    for line_num, line in enumerate(receipt, 1):
+                        try:
+                            entry = json.loads(line)
+                        except ValueError:
+                            continue
+                        if not isinstance(entry, dict):
+                            continue
+                        pr_fields = [key for key in ("pr", "pr_number") if key in entry]
+                        matched = None
+                        if pr_fields:
+                            if expected_pr and all(pr_number(entry[key]) == expected_pr for key in pr_fields):
+                                matched = f"{pr_fields[0]}={expected_pr}"
+                        elif merge_sha and entry.get("commit") == merge_sha:
+                            matched = f"commit={merge_sha}"
+                        if matched:
+                            relpath = os.path.relpath(path, repo_root)
+                            log(f"  Provenance receipt matched for PR #{pr_num}: {relpath}:{line_num} ({matched})")
+                            return
+            except (OSError, UnicodeError):
+                continue  # An unreadable receipt cannot establish attribution.
+    die(f"--gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #{pr_num} "
+        "by pr/pr_number or exact merge commit in TESTS-RESULTS/", code=6)
 
 
 # GH-271: closing-keyword clause + trailing title tag decide LINKAGE (what a merged PR may
@@ -501,6 +549,7 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
 
     dest_dir = os.path.join(os.path.dirname(os.path.dirname(doc_path)), dest_folder)
     dest_path = os.path.join(dest_dir, os.path.basename(doc_path))
+    print("TRANSITION " + json.dumps(["doc", "move", os.path.basename(doc_path), dest_folder, ship_date]), flush=True)
 
     if not dry_run:
         if journal:
@@ -518,7 +567,115 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
 
     return dest_path, ship_date
 
-def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None):
+def ledger_rows(repo_root, sql, params=()):
+    """Read the existing ledger without creating a DB or silently hiding schema errors."""
+    db = Path(repo_root) / "releases.db"
+    if not db.is_file():
+        return []
+    # Some legacy adopters carry an empty placeholder; their markdown remains authoritative.
+    mode = Path(repo_root, ".pdda-mode")
+    releases_mode = mode.is_file() and "ROADMAP_SOURCE=releases" in mode.read_text()
+    if db.stat().st_size == 0 and not releases_mode:
+        return []
+    try:
+        conn = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True)
+        try:
+            conn.row_factory = sqlite3.Row
+            return [dict(row) for row in conn.execute(sql, params)]
+        finally:
+            conn.close()
+    except sqlite3.Error as exc:
+        die(f"Cannot read reconciliation ledger: {exc}", code=6)
+
+
+def ledger_write(repo_root, args, dry_run=False, journal=None):
+    # Both paths emit the same stable intent; dry-run never calls a mutating CLI.
+    # In particular repoint --dry-run requires a destination that preview has not created.
+    print("TRANSITION " + json.dumps(args, ensure_ascii=False), flush=True)
+    if dry_run:
+        return
+    snapshot_ledger_artifacts(repo_root, journal=journal)
+    cmd = ["python3", harness_tool(repo_root, "utils/py/releases_app.py"), "--root", repo_root, *args]
+    result = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
+    if result.returncode:
+        die(f"{' '.join(args[:2])} failed (exit {result.returncode}): {result.stderr}\n{result.stdout}", code=6)
+
+
+def manifest_members(repo_root, repo_slug):
+    rows = ledger_rows(repo_root, """SELECT r.global_id AS release_gid, i.url
+        FROM manifest_items m JOIN releases r ON r.id=m.release_id
+        JOIN issue_refs i ON i.id=m.issue_ref_id WHERE m.state='dialed_in'""")
+    if rows and not repo_slug:
+        die("Cannot resolve repository identity for manifest lookup", code=6)
+    members = []
+    for row in rows:
+        match = re.fullmatch(r"https://github.com/([^/]+/[^/]+)/issues/([1-9][0-9]*)", row["url"] or "")
+        if match and match[1].lower() == repo_slug.lower():
+            members.append(dict(row, issue=int(match[2])))
+    return members
+
+
+def ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, dry_run=False, journal=None):
+    for member in manifest_members(repo_root, repo_slug):
+        if member["issue"] != issue_num:
+            continue
+        sha = (pr_meta.get("mergeCommit") or {}).get("oid", "")
+        if not re.fullmatch(r"[0-9a-fA-F]{40}", sha):
+            die(f"PR #{pr_meta.get('number')} has no full merge commit for manifest evidence", code=6)
+        ledger_write(repo_root, ["manifest", "ship", "--gid", member["release_gid"],
+                     member["url"], "--evidence", sha], dry_run, journal)
+
+
+def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
+    """Derive drift from committed state; no PR watermark or auxiliary ledger.
+
+    Timeline pagination recovers closing PRs even outside an arbitrary recent-PR window.
+    Only merged development PRs whose closers match the closed issue qualify.
+    """
+    issues = {m["issue"] for m in manifest_members(repo_root, repo_slug)}
+    # Roadmap-only drift survives when a doc was archived or a manifest already shipped.
+    # Terminal rows must drop out again so successful catch-up remains idempotent.
+    for row in ledger_rows(repo_root,
+            "SELECT gh_number, issue_url FROM roadmap_items WHERE gh_number IS NOT NULL "
+            "AND section NOT IN (?, ?)", ("Completed", "Deferred · vision")):
+        expected = f"https://github.com/{repo_slug}/issues/{row['gh_number']}"
+        if repo_slug and (row["issue_url"] or "").lower() == expected.lower():
+            issues.add(row["gh_number"])
+    for path in Path(repo_root, "PROJECT/2-WORKING").glob("GH-*.md"):
+        match = re.match(r"GH-([0-9]+)-", path.name)
+        if match:
+            issues.add(int(match[1]))
+    found = set()
+    for issue in sorted(issues):
+        if fetch_issue_state(repo_root, issue, offline_manifest) != "CLOSED":
+            continue
+        if offline_manifest is not None:
+            candidates = offline_manifest.get("prs", [])
+        else:
+            result = subprocess.run(["gh", "api", "--paginate", "--slurp",
+                f"repos/{repo_slug}/issues/{issue}/timeline?per_page=100"],
+                cwd=repo_root, capture_output=True, text=True, check=False)
+            if result.returncode:
+                die(f"Catch-up timeline for GH-{issue} failed: {result.stderr}", code=6)
+            numbers = set()
+            for page in json.loads(result.stdout):
+                for event in page:
+                    referenced = (event.get("source") or {}).get("issue") or {}
+                    if referenced.get("pull_request") and referenced.get("repository_url", "").lower() == (
+                        f"https://api.github.com/repos/{repo_slug}".lower()):
+                        numbers.add(referenced["number"])
+            candidates = [fetch_pr_metadata(repo_root, n) for n in sorted(numbers)]
+        matches = [pr for pr in candidates if pr.get("state", "").upper() == "MERGED"
+                   and pr.get("baseRefName") == "development"
+                   and issue in extract_linked_issues(pr, repo_slug)[0]]
+        if not matches:
+            die(f"Closed GH-{issue} has reconciliation drift but no attributable merged development PR", code=6)
+        # The most recent closing PR owns the current lifecycle transition.
+        found.add(str(max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr["number"]))["number"]))
+    return sorted(found, key=int)
+
+
+def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None):
     """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
     db_path = os.path.join(repo_root, "releases.db")
@@ -528,43 +685,28 @@ def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=Tru
 
     updated = False
 
-    # 1. Update releases.db if present
+    # GH-421: read desired state first; every write uses the existing receipt-backed CLI.
     if os.path.isfile(db_path):
-        import sqlite3
-        try:
-            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-            conn.row_factory = sqlite3.Row
-            row = conn.execute("SELECT * FROM roadmap_items WHERE gh_number = ?", (issue_num,)).fetchone()
-            conn.close()
-            if row:
-                raw_text = row["raw_text"] or ""
-                title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", raw_text)
-                title_part = title_match.group(1).strip() if title_match else f"GH-{issue_num} · {row['title']}"
-                if "—" in raw_text:
-                    rest = raw_text.split("—", 1)[1]
-                else:
-                    after_title = raw_text[title_match.end():] if title_match else raw_text
-                    rest = re.sub(r"^(?:\s*✅\s*(?:\*\*.*?\*\*)?|\s*🚧\s*(?:\*\*.*?\*\*)?|\s*🛑\s*(?:\*\*.*?\*\*)?|\s*🆕\s*(?:\*\*.*?\*\*)?|\s*)", "", after_title)
-                    if not rest.startswith(" ") and rest != "\n" and rest != "":
-                        rest = " " + rest
-                    if not rest.endswith("\n"):
-                        rest += "\n"
-                dest_dir = "3-COMPLETED" if is_merged else "4-MISC"
-                rest = re.sub(r"PROJECT/(?:1-INBOX|2-WORKING)/", f"PROJECT/{dest_dir}/", rest)
-                new_raw_text = f"- **{title_part}** {badge_sub} —{rest}".strip()
-
-                releases_app = harness_tool(repo_root, "utils/py/releases_app.py")
-                cmd = ["python3", releases_app, "--root", repo_root, "roadmap", "update",
-                       "--issue-num", str(issue_num),
-                       "--section", target_section_db,
-                       "--raw-text", new_raw_text]
-                if dry_run:
-                    cmd.append("--dry-run")
-                r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
-                if r.returncode == 0:
-                    updated = True
-        except Exception as e:
-            log_err(f"Failed to update releases.db roadmap entry for GH-{issue_num}: {e}")
+        rows = ledger_rows(repo_root, "SELECT * FROM roadmap_items WHERE gh_number = ?", (issue_num,))
+        if rows:
+            row = rows[0]
+            raw_text = row["raw_text"] or ""
+            title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", raw_text)
+            title_part = title_match.group(1).strip() if title_match else f"GH-{issue_num} · {row['title']}"
+            rest = raw_text.split("—", 1)[1] if "—" in raw_text else " " + (
+                raw_text[title_match.end():].strip() if title_match else raw_text)
+            if doc_path and row["doc_path"]:
+                rest = rest.replace(row["doc_path"], doc_path)
+            new_raw_text = f"- **{title_part}** {badge_sub} —{rest}".strip()
+            marker = "✅" if is_merged else "⛔"
+            if doc_path and row["doc_path"] != doc_path:
+                ledger_write(repo_root, ["roadmap", "repoint", "--issue-num", str(issue_num),
+                             "--doc-path", doc_path], dry_run, journal)
+            if (row["section"], row["status_marker"], raw_text) != (target_section_db, marker, new_raw_text):
+                ledger_write(repo_root, ["roadmap", "update", "--issue-num", str(issue_num),
+                             "--section", target_section_db, "--status-marker", marker,
+                             "--raw-text", new_raw_text], dry_run, journal)
+            updated = True
 
     # 2. Update ROADMAP.md if present (legacy mode)
     if os.path.isfile(roadmap_path):
@@ -760,33 +902,33 @@ def handle_marathon_plan_result(result, reconciled_issues):
         log(f"    - {describe_finding(finding)}")
 
 
+def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
+    """GH-424: capture the ledger and generated views BEFORE the first write.
+
+    Repeated calls retain the original state, including originally absent artifacts.
+    Both per-issue writes and downstream regeneration use this same snapshot set.
+    """
+    if dry_run or journal is None:
+        return
+    for name in (
+        "releases.db", "releases.sql", "RELEASES.generated.md",
+        "ROADMAP-DASHBOARD.md", "RELEASES-PREVIEW.html",
+        "LEADERBOARD.html", "LEADERBOARD.md",
+    ):
+        path = os.path.abspath(os.path.join(repo_root, name))
+        if path in journal.backups or path in journal.created_files:
+            continue
+        if os.path.exists(path):
+            journal.snapshot(path)
+        else:
+            journal.track_created(path)
+
+
 def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=None):
     """Orchestrate releases sync, view exports, and marathon replanning with DB rollback protection."""
     log("Running downstream database sync and dashboard regeneration...")
 
-    # Snapshot DB files in journal for transactional integrity
-    db_file = os.path.join(repo_root, "releases.db")
-    sql_file = os.path.join(repo_root, "releases.sql")
-    pre_views = set()
-    if not dry_run and journal:
-        journal.snapshot(db_file)
-        journal.snapshot(sql_file)
-        # GH-271: the regen steps below also rewrite the baked views and marathon-plan drops
-        # a dated plan doc — none of which the journal previously knew about, which is how a
-        # failed run's rollback left regenerated dashboards and a stray MARATHON-PLAN behind
-        # while reporting success (2026-08-23). Snapshot existing views (new ones are tracked
-        # as created post-run); plan docs are always new files, so a before/after glob covers
-        # them.
-        for view in (
-            "ROADMAP-DASHBOARD.md",
-            "RELEASES-PREVIEW.html",
-            "LEADERBOARD.html",
-            "LEADERBOARD.md",
-        ):
-            view_path = os.path.join(repo_root, view)
-            if os.path.exists(view_path):
-                journal.snapshot(view_path)
-                pre_views.add(view_path)
+    snapshot_ledger_artifacts(repo_root, dry_run=dry_run, journal=journal)
 
     def _plan_docs():
         found = set()
@@ -805,8 +947,8 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     # vendored install these five live only under <repo>/.xyz/ and every one was unreachable,
     # so the reconciler died on its first downstream step.
     releases_app = harness_tool(repo_root, "utils/py/releases_app.py")
-    sync_cmd = ["python3", releases_app, "roadmap", "sync"]
-    check_cmd = ["python3", releases_app, "check"]
+    sync_cmd = ["python3", releases_app, "--root", repo_root, "roadmap", "sync"]
+    check_cmd = ["python3", releases_app, "--root", repo_root, "check"]
     timeline_cmd = ["python3", harness_tool(repo_root, "utils/timeline/export_timeline.py"), "--preview"]
     dash_cmd = ["bash", harness_tool(repo_root, "utils/roadmap-dashboard.sh")]
     plan_cmd = ["bash", harness_tool(repo_root, "utils/marathon-plan.sh"), "--format", "json"]
@@ -863,15 +1005,6 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
                 die(f"Subprocess '{name}' failed with exit {r.returncode}:\n{r.stderr}\n{r.stdout}", code=6)
     finally:
         if journal and not dry_run:
-            for view in (
-                "ROADMAP-DASHBOARD.md",
-                "RELEASES-PREVIEW.html",
-                "LEADERBOARD.html",
-                "LEADERBOARD.md",
-            ):
-                view_path = os.path.join(repo_root, view)
-                if os.path.exists(view_path) and view_path not in pre_views:
-                    journal.track_created(view_path)
             for plan_doc in _plan_docs() - pre_plan_docs:
                 journal.track_created(plan_doc)
 
@@ -959,8 +1092,10 @@ def main():
         "--require-receipts",
         action="store_true",
         dest="require_receipts",
-        help="Enforce provenance receipts on merged PRs before marathon closeout (GH-430)",
+        help="Require a receipt matching each PR number or exact merge commit before closeout (GH-425)",
     )
+
+    parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
 
     args = parser.parse_args()
 
@@ -996,12 +1131,15 @@ def main():
             except Exception as e:
                 die(f"Failed loading manifest from {args.manifest}: {e}", code=4)
 
-        if not landing_items and not args.marathon:
-            die("No PRs, commits, or marathon specified. Pass --pr <N>..., --commit <SHA>..., or --marathon <name>", code=2)
+        if not landing_items and not args.marathon and not args.catch_up:
+            die("No PRs, commits, or marathon specified. Pass --pr <N>..., --commit <SHA>..., --marathon <name>, or --catch-up", code=2)
 
         with ReconcilerLock(lock_file):
             reconciled_issues = set()
             repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
+            if args.catch_up:
+                landing_items.extend(("pr", str(n)) for n in catch_up_prs(repo_root, repo_slug, offline_manifest))
+            landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
             for landing_kind, landing_id in landing_items:
                 if landing_kind == "commit":
                     pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
@@ -1022,10 +1160,14 @@ def main():
                         code=4,
                     )
 
+                linked_issues, mentioned_issues = extract_linked_issues(pr_meta, repo_slug=repo_slug)
+                # GH-425: unconditional whenever --gate/--require-receipts is requested — this
+                # attributes evidence to the PR itself, not to whichever issue it happens to
+                # close. Narrowing this to "only if the PR closes/references a tracked issue"
+                # (introduced in GH-421's build) silently drops the guarantee for exactly the
+                # PRs least likely to be scrutinized: ones with no linked issue at all.
                 if args.require_receipts:
                     check_provenance_receipts(repo_root, pr_meta)
-
-                linked_issues, mentioned_issues = extract_linked_issues(pr_meta, repo_slug=repo_slug)
                 reconciled_issues.update(linked_issues)
                 log(f"  {landing} closes {linked_issues}; references {mentioned_issues}")
                 # GH-271: mentions never act on their own. --force-promote is the one
@@ -1055,6 +1197,8 @@ def main():
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
                         log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
                     elif doc_path:
+                        if is_merged:
+                            ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, args.dry_run, journal)
                         log(f"  Found active doc: {os.path.basename(doc_path)}")
                         dest_path, ship_date = validate_and_update_doc(
                             doc_path, pr_meta, is_merged=is_merged, dry_run=args.dry_run, journal=journal
@@ -1068,13 +1212,16 @@ def main():
                             is_merged=is_merged,
                             dry_run=args.dry_run,
                             journal=journal,
+                            doc_path=os.path.relpath(dest_path, repo_root),
                         )
                         if updated:
                             log(f"  ROADMAP.md entry updated for GH-{issue_num}")
                     else:
                         log(f"  No active doc in 2-WORKING for GH-{issue_num}")
-                        ship_date = datetime.now().strftime("%Y-%m-%d")
+                        ship_date = (pr_meta.get("mergedAt") or datetime.now().isoformat())[:10]
                         if not is_open or args.force_promote:
+                            if is_merged:
+                                ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, args.dry_run, journal)
                             updated = update_roadmap_entry(
                                 repo_root,
                                 issue_num,
@@ -1114,6 +1261,21 @@ def main():
 
             # Global roadmap cleanups
             fix_mangled_roadmap_entries(repo_root, dry_run=args.dry_run, journal=journal)
+
+            # GH-421: skip downstream regeneration only when there was genuinely nothing to
+            # act on this run (catch-up mode found no new PRs, and no --pr/--marathon target
+            # was given) — the scheduled cron trigger's common case. NOT when a real PR or
+            # marathon lane was processed but happened not to move a doc: run_subprocesses does
+            # independent, valuable work every time (release-timeline export incl. the GH-474
+            # preview refresh, releases check, the PDDA gate) that existing suites (gh202,
+            # gh425, gh454) already pin as running on every real post-merge invocation,
+            # regardless of doc lifecycle outcome. Byte-identical output on a genuine repeat
+            # (issue #421's actual idempotency requirement) is satisfied by these regenerators
+            # already being deterministic, not by skipping them.
+            if not args.dry_run and not landing_items and not args.marathon:
+                log("Nothing to reconcile; no artifacts written")
+                journal.cleanup()
+                return
 
             # Subprocess orchestration
             run_subprocesses(
