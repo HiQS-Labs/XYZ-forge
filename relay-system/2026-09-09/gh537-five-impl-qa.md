@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -281,5 +281,63 @@ swept file: yes
 Verdict: Changes requested. Handing off to Producer (claude-a) to correct the dense exclusion and render the sparse example as full five-slot lists before round 3.
 VERDICT: FAIL
 Basis: Behavioral QA still passes a false no-further-exclusions marker and a sparse output that omits the required individual slots.
+
+## Producer — claude-a — round 3 — 2026-09-09
+
+Dispositions for round 2 (all three findings Implemented):
+
+- **[Should] false "no further exclusions" marker — Implemented, and it stung.** Decision 7 (lock files deleted, not migrated) is indeed a fifth substantive exclusion; my marker was false. Corrected dense output below fills NOT slot 5 with it. Worth recording: this is the exact producer failure mode the skill exists to catch, caught by the review layer — evidence the contract is falsifiable in practice.
+- **[Should] sparse slots collapsed inline — Implemented.** Corrected sparse output below renders five individually numbered slots in each list per the exact output block.
+- **[Nit] trigger qualifier scoping only the last clause — Implemented.** Frontmatter description restructured (commit preceding this block): the in-scope decision-checksum condition now precedes and governs the whole natural-language trigger list, with explicit negative boundaries (not for ordinary content summaries with no artifact under decision; not for one specific question). YAML re-parsed after the edit (1062 chars).
+
+### Corrected dense output (full five-slot NOT list, no marker)
+
+**Five — Move the run-time folder from ~/.xyz-rt to ~/Library/Application Support/XYZForge**
+
+**Does (5):**
+1. Telemetry flips to enabled-by-default after the move (was opt-in) — Decisions 6  [UNREQUESTED]
+2. Config format changes JSON -> TOML at the new location, auto-converted once — Decisions 5
+3. First-launch confirmation prompt removed; daemon starts unattended — Decisions 4  [UNREQUESTED]
+4. Move is one-way (atomic rename); no fallback copy of the old folder is kept — Decisions 3
+5. A symlink ~/.xyz-rt -> new location is left behind for existing scripts — Decisions 2
+
+**Does NOT (5):**
+1. Does not migrate the legacy cache directory (regenerated on first run) — Non-goals
+2. Does not update third-party docs referencing ~/.xyz-rt — Non-goals
+3. Does not add a --rt-path CLI flag — Non-goals
+4. Does not keep a fallback copy of the old folder — Decisions 3
+5. Does not migrate the old folder's lock files; they are deleted — Decisions 7
+
+Not specified (called, not assumed): fate of the symlink in later releases; Windows path handling; non-cache user data left in the old folder.
+
+Bottom line: if telemetry-on-by-default matters to you, read Decisions 6 before approving.
+
+VERDICT: PASS (five substantive exclusions, zero markers, all cited).
+
+### Corrected sparse output (exact block, five individual slots)
+
+**Five — Fix: reorder startup checks so the fast path runs first**
+
+**Does (5):**
+1. Cheap validation runs before the network round-trip (validate() before connect()) — body, sentence 1
+2. — nothing else load-bearing found
+3. — nothing else load-bearing found
+4. — nothing else load-bearing found
+5. — nothing else load-bearing found
+
+**Does NOT (5):**
+1. No config changes — body, last line
+2. — no further exclusions stated
+3. — no further exclusions stated
+4. — no further exclusions stated
+5. — no further exclusions stated
+
+Not specified (called, not assumed): none.
+
+Bottom line: single-decision change — read the fix body, sentence 1; it is the whole plan.
+
+VERDICT: PASS.
+
+Handing off to Reviewer (codex) — take your turn: re-adjudicate the corrected outputs and frontmatter.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
