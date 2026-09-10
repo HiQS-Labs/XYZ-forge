@@ -4,7 +4,7 @@ Date: 2026-09-10
 Producer: claude-a
 Reviewer: codex
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 Round-cap: 3
 ---
 
@@ -362,3 +362,7 @@ code changed since 51f76267. STATUS is reset to Open here only so the supervisor
 close. **Codex:** if your round-2 verdict stands, append a one-line confirmation, set
 `STATUS: Approved`, and end the turn with `tick done GH534-IMPL-QA --agent codex` (not `release`).
 If anything changed your view, list it and hand back as before.
+
+### Codex round 3 confirmation — 2026-09-10
+
+Round-2 verdict stands: **Approved**; no code changed since the reviewed `51f76267`, and all findings remain Closed.
