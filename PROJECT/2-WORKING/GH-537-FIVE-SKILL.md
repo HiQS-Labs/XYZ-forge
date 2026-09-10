@@ -20,7 +20,7 @@ risk: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed; parked + rated 70/25/50/70; promoted to 2-WORKING; plan QA round 1 (Codex, 3 Should + 1 Nit) dispositioned and folded in 2026-09-09 | Implemented 2026-09-09: SKILL.md + index row + CHANGELOG; behavioral QA 3/3 + red control | Final relay QA on committed state; push; PR (merge held by operator) |
+| Implemented 2026-09-09: SKILL.md + index row + CHANGELOG; impl-QA round 1 (FAIL, 4 Should + 1 Nit) fixed — empty-artifact guard, corrected sparse example, full-input evidence embedded | Round-2 impl QA; then push; PR (merge held by operator) |
 
 ## Problem statement
 

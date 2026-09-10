@@ -7,8 +7,8 @@ description: >
   explicitly does NOT do, so unwelcome decisions surface before approval instead
   of after. Use whenever the user says "five", "/five", "give me the five", "key
   highlights", "top five", "what does this plan do", "what did you decide", "what
-  does this NOT do", "what am I not getting", or asks for a skim-layer checksum
-  of a plan, spec, PR description, or fix — during planning, writing, or
+  does this NOT do", "what am I not getting", or asks for a decision-checksum skim of a
+  plan, spec, PR description, or fix **that is in scope** — during planning, writing, or
   mid-implementation, and before final reports. Every item cites where the
   artifact says it; silence in the artifact is reported as "not specified",
   never dressed up as an explicit non-goal. Not a substitute for reading the
@@ -24,7 +24,7 @@ buried, and approval happened on trust. Five is the layer that was missing: a ch
 computed **from the artifact**, cheap enough to skim in ten seconds, sharp enough to catch
 the decision you would have vetoed.
 
-**Exactly 5 + 5. Five things it does. Five things it does not. Nothing else.**
+**Exactly 5 + 5: two five-slot lists, plus the uncertainty line and the reading pointer.**
 
 ## The output contract
 
@@ -54,9 +54,11 @@ that replaces reading is a checksum that lies by omission.
 ## Procedure
 
 1. **Find the artifact.** A plan file, spec, capture doc, PR description, or the branch
-   diff under discussion. If the operator names none and no plan/diff is in scope, stop:
-   emit `Five: no artifact to checksum` and stop. **An empty input passes every check** —
-   never summarize from vibes or memory of an earlier draft.
+   diff under discussion. If the operator names none and no plan/diff is in scope, stop.
+   An artifact that **exists but is empty or whitespace-only** is the same case — a
+   zero-byte plan checksums to nothing. Either way emit `Five: no artifact to checksum`
+   and stop. **An empty input passes every check** — never summarize from vibes or memory
+   of an earlier draft.
 2. **Read the whole artifact**, not the diff. The decisions worth surfacing are usually
    the ones made quietly between the asked-for lines.
 3. **List candidate highlights** — every decision and behavior the artifact commits to.
@@ -78,8 +80,9 @@ that replaces reading is a checksum that lies by omission.
 
 - **Grounded.** Every substantive item carries a citation to where the artifact says it
   (section, `file:line`, commit). The two honest-fill markers carry none and need none.
-- **Empty-input guard outranks the count.** No artifact → say so and stop, even though
-  that means emitting fewer than ten lines. This rule beats the 5+5 contract every time.
+- **Empty-input guard outranks the count.** No artifact — or an empty/whitespace-only
+  one — → say so and stop, even though that means emitting fewer than ten lines. This
+  rule beats the 5+5 contract every time.
 - **Exactly five and five** when the artifact supports it — two full slots lists, never
   four-plus-a-shrug, never six because they all felt important.
 - **Checksum, not substitute.** Never claim or imply the operator can skip reading the

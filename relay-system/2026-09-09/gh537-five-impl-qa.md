@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -164,5 +164,106 @@ swept file: yes
 Verdict: Changes requested. Handing off to Producer (claude-a) to address the findings and provide reviewable evidence.
 VERDICT: FAIL
 Basis: Empty-artifact coverage and reproducible behavioral evidence remain incomplete; sparse output violates its reading-pointer contract.
+
+
+## Producer — claude-a — round 2 — 2026-09-09
+
+Dispositions for round 1 (all findings Implemented):
+
+- **[Should] empty *existing* artifacts — Implemented.** `skills/five/SKILL.md` Procedure step 1 and the empty-input hard rule now both read "No artifact — or an empty/whitespace-only one —": a zero-byte plan checksums to nothing. Behavioral case (d) below exercises a real empty file (not just absence).
+- **[Should] behavioral evidence incomplete — Implemented.** Both inputs are now embedded verbatim below, plus the request context that substantiates the UNREQUESTED labels.
+- **[Should] sparse bottom line lacked the reading pointer — Implemented.** Corrected output below: the bottom line now names the artifact and the exact location ("read the fix body, sentence 1 — it is the whole plan"). This was a genuine contract violation in my example, caught as designed.
+- **[Should] Status table 3-cells/2-columns — Implemented.** Rebalanced to two columns.
+- **[Pass-note] no-fourth-surface unverified — Implemented.** Base-to-head changed-path list and diff summary embedded below (base e569ca72).
+- **[Nit] slogan contradiction + broad triggers — Implemented.** Slogan now reads "two five-slot lists, plus the uncertainty line and the reading pointer"; the frontmatter trigger now says "decision-checksum skim of a plan, spec, PR description, or fix **that is in scope**".
+
+### Corrected behavioral record (supersedes the round-1 embed; full inputs verbatim)
+
+**Request context (applies to input (a)):** the operator asked an AI to "move the run-time folder". New location choice was the ask; the symlink, one-way move, prompt removal, TOML conversion, telemetry default-on, and lock deletion were agent decisions — hence UNREQUESTED where labeled.
+
+**Input (a) — dense, verbatim (`temp/five-qa-input-dense.md`):**
+
+```
+# Plan: Move the run-time folder from ~/.xyz-rt to ~/Library/Application Support/XYZForge
+
+## Decisions
+1. New location: ~/Library/Application Support/XYZForge (macOS convention), set at install time.
+2. A symlink ~/.xyz-rt -> the new location is left behind so existing scripts keep working.
+3. The move is one-way via atomic rename; the old folder is not kept as a fallback copy.
+4. After the move the daemon starts unattended — the first-launch confirmation prompt is removed.
+5. The config file format changes from JSON to TOML at the new location (converted once, automatically).
+6. Telemetry is enabled by default after the move (it was opt-in before).
+7. The old folder's lock files are deleted, not migrated.
+
+## Non-goals
+- We do not migrate the legacy cache directory; it is regenerated on first run.
+- We do not update third-party docs that reference ~/.xyz-rt.
+- The CLI flag --rt-path is not added in this change.
+```
+
+Output (unchanged from round 1, re-verified against the corrected skill text): 5 Does with citations, telemetry default-on ranked first as UNREQUESTED, prompt removal marked UNREQUESTED; 4 cited Does-NOT + 1 honest marker; Not specified: symlink fate in later releases, Windows paths, non-cache user data; Bottom line routes to Decisions 6. VERDICT: PASS.
+
+**Input (b) — sparse, verbatim (`temp/five-qa-input-sparse.md`):**
+
+```
+# Fix: reorder startup checks so the fast path runs first
+
+Reorders validate() and connect() so the cheap validation runs before the network round-trip.
+No config changes.
+```
+
+Corrected output (bottom line now carries the mandatory reading pointer):
+
+**Five — Fix: reorder startup checks so the fast path runs first**
+
+Does (5): 1. Cheap validation runs before the network round-trip (validate() before connect()) — body, sentence 1. 2–5. — nothing else load-bearing found.
+Does NOT (5): 1. No config changes — body, last line. 2–5. — no further exclusions stated.
+Not specified (called, not assumed): none.
+Bottom line: single-decision change — read the fix body, sentence 1; it is the whole plan.
+
+VERDICT: PASS.
+
+**Input (c) — absent artifact:** output `Five: no artifact to checksum.` VERDICT: PASS.
+
+**Input (d) — NEW, empty existing file (`temp/five-qa-input-empty.md`, zero bytes):** output `Five: no artifact to checksum.` (the file exists but is empty — the guard fires identically). VERDICT: PASS.
+
+**Red control (unchanged):** the deliberately bad marketing/unsupported-exclusion output fails the contract on four axes (marketing highlights, zero citations, silence-as-non-goal, no bottom line). The criteria can fail. CONFIRMED.
+
+### Branch evidence (base e569ca72 → HEAD pre-this-block)
+
+```
+$ git diff --name-status e569ca72..HEAD
+M	ARCHITECTURE.md
+M	CHANGELOG.md
+M	LEADERBOARD.md
+A	PROJECT/2-WORKING/GH-537-FIVE-SKILL.md
+M	ROADMAP-DASHBOARD.md
+M	harnesses.db
+M	harnesses.sql
+A	relay-system/2026-09-09/gh537-five-impl-qa.md
+A	relay-system/2026-09-09/gh537-five-plan-qa.md
+M	releases.db
+M	releases.sql
+A	skills/five/SKILL.md
+
+$ git diff --stat e569ca72..HEAD
+ARCHITECTURE.md                               |   1 +
+ CHANGELOG.md                                  |  17 +++
+ LEADERBOARD.md                                |  47 +++----
+ PROJECT/2-WORKING/GH-537-FIVE-SKILL.md        | 112 +++++++++++++++++
+ ROADMAP-DASHBOARD.md                          |   3 +-
+ harnesses.db                                  | Bin 372736 -> 372736 bytes
+ harnesses.sql                                 |   2 +
+ relay-system/2026-09-09/gh537-five-impl-qa.md | 168 ++++++++++++++++++++++++++
+ relay-system/2026-09-09/gh537-five-plan-qa.md | 131 ++++++++++++++++++++
+ releases.db                                   | Bin 598016 -> 598016 bytes
+ releases.sql                                  |   8 +-
+ skills/five/SKILL.md                          | 130 ++++++++++++++++++++
+ 12 files changed, 593 insertions(+), 26 deletions(-)
+```
+
+Only the named surfaces plus governance paperwork (capture doc, ledger trio + generated views, relay threads, telemetry registry) appear; no fourth surface.
+
+Handing off to Reviewer (codex) — take your turn: re-adjudicate against the corrected skill text and this record.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
