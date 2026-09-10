@@ -29,13 +29,51 @@ def slugify(value: str) -> str:
     return re.sub(r"[-\s]+", "-", cleaned) or "repository"
 
 
+def get_canonical_repository_root(root: Path) -> Path:
+    """Resolve canonical repository root even inside a linked worktree (GH-496)."""
+    try:
+        r_top = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=False
+        )
+        top = r_top.stdout.strip() if r_top.returncode == 0 else ""
+        r_common = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, check=False
+        )
+        common = r_common.stdout.strip() if r_common.returncode == 0 else ""
+        if common:
+            c_path = Path(common).resolve()
+            if c_path.name == ".git":
+                return c_path.parent
+        if top:
+            return Path(top).resolve()
+    except Exception:
+        pass
+    return root.resolve()
+
+
+def normalize_remote_url(remote: str) -> str:
+    """Normalize git remote URL so git@... and https://... resolve to the same canonical identity (GH-496)."""
+    norm = remote.strip().rstrip("/")
+    if norm.endswith(".git"):
+        norm = norm[:-4]
+    # Convert git@github.com:org/repo to https://github.com/org/repo
+    if norm.startswith("git@"):
+        norm = "https://" + norm[4:].replace(":", "/", 1)
+    elif norm.startswith("ssh://git@"):
+        norm = "https://" + norm[10:].replace(":", "/", 1)
+    return norm
+
+
 def get_canonical_repo_identity(repo_root: Optional[str] = None) -> Tuple[str, str]:
     """Derive stable repository slug and canonical remote/path identity (GH-496)."""
     root = Path(repo_root or get_repo_root()).resolve()
+    canon_root = get_canonical_repository_root(root)
     remote = ""
     try:
         r = subprocess.run(
-            ["git", "-C", str(root), "config", "--get", "remote.origin.url"],
+            ["git", "-C", str(canon_root), "config", "--get", "remote.origin.url"],
             capture_output=True,
             text=True,
             check=False,
@@ -45,10 +83,11 @@ def get_canonical_repo_identity(repo_root: Optional[str] = None) -> Tuple[str, s
     except Exception:
         remote = ""
 
-    identity = remote.rstrip("/") if remote else str(root)
-    if identity.endswith(".git"):
-        identity = identity[:-4]
-    name = identity.rsplit("/", 1)[-1].rsplit(":", 1)[-1] or root.name
+    if remote:
+        identity = normalize_remote_url(remote)
+    else:
+        identity = str(canon_root)
+    name = identity.rsplit("/", 1)[-1].rsplit(":", 1)[-1] or canon_root.name
     short_id = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
     return f"{slugify(name)}--{short_id}", identity
 
@@ -304,14 +343,24 @@ def seed_canonical_registry(conn: sqlite3.Connection):
 
 
 def dump_sql(conn: sqlite3.Connection, sql_path: str):
-    """Losslessly dump database schema and contents into SQL text file."""
-    with open(sql_path, "w", encoding="utf-8") as f:
-        for line in conn.iterdump():
-            f.write(f"{line}\n")
+    """Losslessly dump database schema and contents into SQL text file atomically."""
+    os.makedirs(os.path.dirname(os.path.abspath(sql_path)), exist_ok=True)
+    tmp_path = f"{sql_path}.tmp.{os.getpid()}"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            for line in conn.iterdump():
+                f.write(f"{line}\n")
+        os.replace(tmp_path, sql_path)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
 
 def generate_markdown(conn: sqlite3.Connection, md_path: str):
-    """Render canonical HARNESS-MODELS-REGISTRY.generated.md view from database."""
+    """Render canonical HARNESS-MODELS-REGISTRY.generated.md view from database atomically."""
     harnesses = conn.execute("SELECT * FROM harnesses ORDER BY harness_id;").fetchall()
     models = conn.execute("SELECT * FROM models ORDER BY lab, canonical_name;").fetchall()
     evals = conn.execute("""
@@ -376,8 +425,18 @@ def generate_markdown(conn: sqlite3.Connection, md_path: str):
             lines.append("")
 
     content = "\n".join(lines) + "\n"
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    os.makedirs(os.path.dirname(os.path.abspath(md_path)), exist_ok=True)
+    tmp_path = f"{md_path}.tmp.{os.getpid()}"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        os.replace(tmp_path, md_path)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
 
 def check_integrity(repo_root: Optional[str] = None) -> int:
@@ -385,8 +444,9 @@ def check_integrity(repo_root: Optional[str] = None) -> int:
     root = repo_root or get_repo_root()
     db_p = get_db_path(root)
     # GH-496: If out-of-tree telemetry DB does not exist yet (e.g. cold runner),
-    # but in-repo harnesses.db exists, fall back to in-repo DB for check.
-    if not os.path.exists(db_p):
+    # but in-repo harnesses.db exists, fall back to in-repo DB for check ONLY IF
+    # XYZ_HARNESS_DB was not explicitly overridden.
+    if "XYZ_HARNESS_DB" not in os.environ and not os.path.exists(db_p):
         in_repo = os.path.join(root, "harnesses.db")
         if os.path.exists(in_repo):
             db_p = in_repo
@@ -409,7 +469,7 @@ def check_integrity(repo_root: Optional[str] = None) -> int:
         print(f"harness check: FAIL — SQLite integrity check failed: {integ}", file=sys.stderr)
         return 1
 
-    print("OK: SQLite database integrity verified (foreign_keys=ON, integrity_check=ok)")
+    print(f"OK: SQLite database integrity verified at {db_p} (foreign_keys=ON, integrity_check=ok)")
     print("harness check: clean (0 failures, 0 warnings)")
     return 0
 
@@ -610,8 +670,17 @@ def main() -> int:
         dump_sql(conn, sql_p)
         out_path = get_blog_doc_path(args.slug, root)
         os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(story_md)
+        tmp_out = f"{out_path}.tmp.{os.getpid()}"
+        try:
+            with open(tmp_out, "w", encoding="utf-8") as f:
+                f.write(story_md)
+            os.replace(tmp_out, out_path)
+        finally:
+            if os.path.exists(tmp_out):
+                try:
+                    os.remove(tmp_out)
+                except OSError:
+                    pass
         print(f"Generated blog story {story_id} -> {out_path}")
         return 0
 

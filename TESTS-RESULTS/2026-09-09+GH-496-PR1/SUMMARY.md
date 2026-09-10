@@ -9,12 +9,14 @@ Gate: `./validate.sh` (368 parallel test suites + pytest layer + clone invariant
 
 | Suite / Check | Result | Detail |
 |---|---|---|
-| `test/gh496-telemetry-isolation.sh` | 10 / 10 PASS | Default out-of-tree path, env overrides, auto-seed, clean working tree, red control |
+| `test/gh496-telemetry-isolation.sh` | 14 / 14 PASS | Out-of-tree path, env overrides, 10-worker concurrency, auto-seed, exact row query, clean tree, red control |
 | `test/gh35-test-tiers.sh` | 71 / 71 PASS | Test tiers, registry drift, subsystem mappings |
 | `test/ci-route.sh` | 63 / 63 PASS | Fast routing, telemetry subsystem mappings |
 | `test/mktemp-trap-guard.sh` | 1 / 1 PASS | Static audit of 523 shell scripts; no unguarded mktemp patterns |
 | `test/gh1-adoption-guard.sh` | 11 / 11 PASS | Fixture containment audit; zero unaudited suites |
+| `validate.sh --subsystem telemetry` | 5 / 5 PASS | Telemetry subsystem suites + clone invariants |
 | Full `./validate.sh` | **368 / 368 PASS** | All suites passed; 0 failed |
+| `Codex Consult Review` | PASSED | Independent review completed; all blocker and should recommendations resolved |
 | `clone-identity-invariant` | PASS | `core.bare=false`, `origin` intact, `HEAD` unchanged |
 
 ## Telemetry Relocation Invariant Attestation
