@@ -316,6 +316,15 @@ class _ConnectorLock:
     Waiting is bounded (CONNECTOR_LOCK_WAIT_S) and failing to acquire is not an error: the batch
     stays unacknowledged, and the next write or `work reconcile` replays it. A ledger verb must
     never block on another process's connectors.
+
+    **It fails CLOSED.** An earlier version returned success when the lock file could not be
+    opened or flocked, on the reasoning that a lock we cannot create should not disable
+    connectors. Impl QA r4 graded that High and was right: it silently re-enables the very race
+    this class exists to close, and it does so on exactly the paths nobody exercises — an
+    interrupted call, a filesystem where the database is usable but locking is not. The cost of
+    failing closed is a deferred board update, which the next write or reconcile repairs; the
+    cost of failing open is a board published at an older state with only a stderr warning. Those
+    are not comparable, so every failure to hold the lock is treated as contention.
     """
 
     def __init__(self, db_path):
@@ -328,20 +337,27 @@ class _ConnectorLock:
         try:
             self.fh = open(self.path, "a+")
         except Exception as exc:
-            _warn("cannot open the connector lock (%r) — dispatching without it" % (exc,))
-            return True                 # a lock we cannot create must not disable connectors
+            _warn("cannot open the connector lock (%r) — deferring this batch" % (exc,))
+            return False
         while True:
             try:
                 fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 return True
             except OSError as exc:
+                if exc.errno == errno.EINTR:
+                    continue            # a signal is not a lock failure; retry within the window
                 if exc.errno not in (errno.EAGAIN, errno.EACCES, errno.EWOULDBLOCK):
-                    _warn("connector lock failed (%r) — dispatching without it" % (exc,))
-                    return True
+                    _warn("connector lock unavailable (%r) — deferring this batch" % (exc,))
+                    self.release()
+                    return False
                 if time.monotonic() >= deadline:
                     self.release()
                     return False
                 time.sleep(0.05)
+            except Exception as exc:    # a platform whose flock raises something else entirely
+                _warn("connector lock unusable (%r) — deferring this batch" % (exc,))
+                self.release()
+                return False
 
     def release(self):
         if self.fh is None:
@@ -357,7 +373,7 @@ class _ConnectorLock:
         self.fh = None
 
 
-def dispatch(db_path, at, connectors=None, window_s=None):
+def dispatch(db_path, at, connectors=None, window_s=None, reset=False):
     """Launch every enabled connector concurrently, join under one window, persist cursors.
 
     Returns {name: (advanced_to, error)}. Never raises, and never changes a host exit code:
@@ -373,13 +389,32 @@ def dispatch(db_path, at, connectors=None, window_s=None):
         _warn("another dispatch holds the connector lock — leaving this batch for the next run")
         return {}
     try:
-        return _dispatch_locked(db_path, at, conns, window_s)
+        return _dispatch_locked(db_path, at, conns, window_s, reset)
     finally:
         lock.release()
 
 
-def _dispatch_locked(db_path, at, conns, window_s):
+def _reset_cursors(db_path, names):
+    """Drop these connectors' cursors. Called INSIDE the lock (impl QA r4).
+
+    `work reconcile --reset` used to delete the rows before dispatch took the lock, so an
+    in-flight dispatch could re-persist its advance afterwards and the reset would find nothing
+    to replay. Deleting inside the same critical section makes "replay from zero" mean it.
+    """
+    conn = sqlite3.connect(db_path, timeout=30)
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        for name in names:
+            conn.execute("DELETE FROM connector_cursors WHERE connector = ?", (name,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _dispatch_locked(db_path, at, conns, window_s, reset=False):
     """The read-cursor / project / write-cursor section, run under _ConnectorLock."""
+    if reset:
+        _reset_cursors(db_path, list(conns))
     read = sqlite3.connect(db_path, timeout=30)
     try:
         batches, bounds = {}, {}

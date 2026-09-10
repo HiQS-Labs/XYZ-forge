@@ -724,6 +724,25 @@ import json, os, sys, time
 b = json.load(sys.stdin)
 with open(os.environ["GH549_RUNLOG"], "a") as fh:
     fh.write("start %d\n" % os.getpid())
+# A two-party readiness barrier (impl QA r4). Without it the red control could pass by scheduling
+# luck: if the second process is not scheduled until the first has already persisted its advance,
+# it sees the new cursor and runs no child even with the lock removed, and the red assertion fails
+# spuriously. Here each child announces arrival and waits for a peer, so the overlap the control
+# claims to observe is FORCED rather than hoped for. A child that waits alone (the serialized
+# case, where the second never gets this far) simply times out and proceeds -- that path is the
+# positive assertion, which wants exactly one child.
+bar = os.environ.get("GH549_BARRIER")
+if bar:
+    with open(bar, "a") as fh:
+        fh.write("%d\n" % os.getpid())
+    deadline = time.monotonic() + float(os.environ.get("GH549_BARRIER_WAIT", "6"))
+    while time.monotonic() < deadline:
+        try:
+            if len(open(bar).read().split()) >= 2:
+                break
+        except Exception:
+            pass
+        time.sleep(0.05)
 time.sleep(1.5)
 with open(os.environ["GH549_RUNLOG"], "a") as fh:
     fh.write("end %d\n" % os.getpid())
@@ -742,7 +761,7 @@ for i in 1 2; do
     python3 "$APP" --root "$FXC" work reconcile >/dev/null 2>&1 &
 done
 wait
-STARTS="$(grep -c '^start ' "$RUNLOG" 2>/dev/null || echo 0)"
+STARTS="$(grep -c '^start ' "$RUNLOG" 2>/dev/null | head -1)"; STARTS="${STARTS:-0}"
 [ "$STARTS" = "1" ] \
   && ok "two concurrent dispatches ran exactly ONE child — the second saw the advanced cursor" \
   || bad "the connector lock did not serialize: $STARTS children ran"
@@ -768,14 +787,16 @@ PYMUT2
 grep -q "lock removed by the red control" "$GUARD2/work_connectors/__init__.py" \
   || bad "red control: the mutation did not land in the copy the app will import"
 : > "$RUNLOG"
+BARRIER="$WORK/conc_barrier"; : > "$BARRIER"
 sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
 for i in 1 2; do
-  GH549_RUNLOG="$RUNLOG" XYZ_CONNECTOR_LOCK_WAIT_S=15 XYZ_CONNECTOR_WINDOW_S=30 \
+  GH549_RUNLOG="$RUNLOG" GH549_BARRIER="$BARRIER" GH549_BARRIER_WAIT=8 \
+    XYZ_CONNECTOR_LOCK_WAIT_S=15 XYZ_CONNECTOR_WINDOW_S=40 \
     XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_SLOW" \
     python3 "$GUARD2/releases_app.py" --root "$FXC" work reconcile >/dev/null 2>&1 &
 done
 wait
-STARTS2="$(grep -c '^start ' "$RUNLOG" 2>/dev/null || echo 0)"
+STARTS2="$(grep -c '^start ' "$RUNLOG" 2>/dev/null | head -1)"; STARTS2="${STARTS2:-0}"
 [ "$STARTS2" -ge 2 ] \
   && ok "red control: without the lock BOTH dispatches ran the same batch ($STARTS2 children) — the lock is what stops it" \
   || bad "red control did not reproduce the overlap ($STARTS2 children)"
@@ -800,6 +821,63 @@ PYMONO
   && ok "a late older persist cannot lower the cursor (9 stays 9)" \
   || bad "the cursor is not monotonic — an older batch lowered it"
 sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+
+echo "20. the connector lock fails CLOSED, and --reset is inside it (impl QA r4)"
+# r4 graded the old fail-open fallback High: a lock we cannot take used to dispatch anyway, which
+# silently re-enabled the round-3 race on exactly the paths nobody exercises. Point the lock at a
+# path that cannot be created and assert the batch is DEFERRED, not dispatched unserialized.
+: > "$RUNLOG"
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+NOLOCKDIR="$WORK/nolock"; rm -rf "$NOLOCKDIR"; mkdir -p "$NOLOCKDIR"
+cp "$FXC/releases.db" "$NOLOCKDIR/releases.db"
+python3 - "$ROOT" "$NOLOCKDIR/releases.db" "$WORK/stub_slow.py" "$RUNLOG" <<'PYFAILCLOSED'
+import os, sys
+root, db, stub, runlog = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+sys.path.insert(0, os.path.join(root, "utils", "py"))
+os.environ["GH549_RUNLOG"] = runlog
+os.environ["XYZ_WORK_CONNECTORS_REGISTRY"] = '{"github_board": "%s"}' % stub
+import work_connectors as W
+# A lock path that cannot be opened: its parent is a FILE, so open() raises ENOTDIR.
+blocker = db + "-blocked"
+open(blocker, "w").write("x")
+real = W._ConnectorLock          # captured BEFORE the rebind, or the subclass recurses into itself
+class Blocked(real):
+    def __init__(self, db_path):
+        real.__init__(self, db_path)
+        self.path = os.path.join(blocker, "impossible.lock")
+W._ConnectorLock = Blocked
+try:
+    out = W.dispatch(db, "t", connectors={"github_board": {"enabled": True}}, window_s=20)
+finally:
+    W._ConnectorLock = real
+assert out == {}, "an unopenable lock still dispatched: %r" % (out,)
+print("fail-closed-ok")
+PYFAILCLOSED
+[ $? -eq 0 ] \
+  && ok "a lock that cannot be opened DEFERS the batch instead of dispatching unserialized" \
+  || bad "the lock failed open — the round-3 race is reachable again"
+STARTS3="$(grep -c '^start ' "$RUNLOG" 2>/dev/null | head -1)"; STARTS3="${STARTS3:-0}"
+[ "$STARTS3" = "0" ] \
+  && ok "and no connector child ran at all under the unopenable lock" \
+  || bad "$STARTS3 child(ren) ran despite the lock being unavailable"
+NLC="$(sqlite3 "$NOLOCKDIR/releases.db" "SELECT count(*) FROM connector_cursors;" 2>/dev/null)"
+[ "$NLC" = "0" ] \
+  && ok "and no cursor moved, so the batch stays replayable" \
+  || bad "the deferred batch still wrote $NLC cursor row(s)"
+
+# --reset now happens inside the lock, so "replay from zero" cannot be undone by an in-flight
+# dispatch persisting its advance after the delete.
+sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+  python3 "$APP" --root "$FXC" work reconcile >/dev/null 2>&1
+PRE="$(sqlite3 "$FXC/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ -n "$PRE" ] && [ "$PRE" -gt 0 ] || bad "fixture guard: cursor not advanced before the reset probe"
+RS="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+      python3 "$APP" --root "$FXC" work reconcile --reset 2>&1)"
+case "$RS" in
+  *"replayed through event"*) ok "--reset still replays from zero with the delete inside the lock" ;;
+  *) bad "--reset stopped replaying after the lock change: $RS" ;;
+esac
 
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"

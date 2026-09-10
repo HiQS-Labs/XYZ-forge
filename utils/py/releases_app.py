@@ -4905,15 +4905,11 @@ def cmd_work_reconcile(args):
     if not conns:
         print("no connectors enabled — nothing to reconcile")
         return
-    if args.reset:
-        rc = connect(paths["db"])
-        try:
-            with rc:
-                for name in conns:
-                    rc.execute("DELETE FROM connector_cursors WHERE connector = ?", (name,))
-        finally:
-            rc.close()
-    results = work_connectors.dispatch(paths["db"], now_iso(), connectors=conns)
+    # --reset is handled INSIDE dispatch's connector lock (impl QA r4). Deleting the cursors out
+    # here first let an in-flight dispatch re-persist its advance afterwards, so "replay from
+    # zero" could quietly find nothing to replay.
+    results = work_connectors.dispatch(paths["db"], now_iso(), connectors=conns,
+                                       reset=bool(args.reset))
     if not results:
         print("nothing to replay (every cursor is current)")
         return
