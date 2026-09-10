@@ -329,6 +329,10 @@ def resolve_ids(cfg, force=False):
     if ids and ids.get("_inputs") != wanted_inputs:
         _warn("cached board IDs were resolved from different settings — re-resolving")
         ids = {}
+    if ids and "options" not in ids:
+        # A cache written before GH-549 has no option table. Re-resolve rather than fail
+        # later with a KeyError in the middle of a status write.
+        ids = {}
     if not ids:
         # GH-405: ask for BOTH owner shapes in one round trip. `user(login:)` returns null
         # for an organization and vice versa, so the v1 user-only query could never reach an
@@ -363,6 +367,11 @@ def resolve_ids(cfg, force=False):
             "project": proj["id"],
             "status_field": field["id"],
             "in_progress_option": option["id"],
+            # GH-549: the whole option table, by name. board_add only ever needed
+            # in_progress, but a kanban connector moves a card to a column named by
+            # config, so the id for every column has to survive the one round trip we
+            # already make rather than costing a query each.
+            "options": {o["name"]: o["id"] for o in options},
         }
         state["ids"] = ids
         _atomic_state_write(state)
@@ -481,12 +490,68 @@ def board_add(cfg, num, write, snapshot=None):
     return f"gh-{num}: added + Status={cfg['in_progress']!r} on {board_name}"
 
 
-def _set_status(cfg, ids, item_id):
+def _set_status_option(cfg, ids, item_id, option_id):
     _gql(
         "mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{"
         "projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}",
-        {"p": ids["project"], "i": item_id, "f": ids["status_field"], "o": ids["in_progress_option"]},
+        {"p": ids["project"], "i": item_id, "f": ids["status_field"], "o": option_id},
     )
+
+
+def _set_status(cfg, ids, item_id):
+    _set_status_option(cfg, ids, item_id, ids["in_progress_option"])
+
+
+def option_id_for(cfg, column, force=False):
+    """The option id for a column NAME, with one self-heal retry (GH-549).
+
+    A board owner renames or adds a column and the cached table goes stale; that must
+    re-resolve, exactly as S5 already does for a renamed in_progress option, rather than
+    write to the wrong column or fail permanently.
+    """
+    ids = resolve_ids(cfg, force=force)
+    option = (ids.get("options") or {}).get(column)
+    if option is None and not force:
+        return option_id_for(cfg, column, force=True)
+    if option is None:
+        raise RuntimeError(
+            f"column {column!r} not found on field {cfg['status_field']!r} "
+            f"(columns: {sorted((ids.get('options') or {}).keys())})"
+        )
+    return ids, option
+
+
+def set_issue_status(cfg, num, column, write=True, snapshot=None):
+    """Move gh-<num>'s card to <column>, adding the card if the board has none (GH-549).
+
+    Set-to-value, never an increment — which is what makes connector replay idempotent and
+    lets `work reconcile` re-run a batch without double-applying anything.
+    """
+    require_board_identity(cfg)
+    repo = cfg["repos"][0]
+    board_name = f"{cfg['project_owner']}/projects/{cfg['project_number']}"
+    on_board = snapshot if snapshot is not None else fetch_board_issues(cfg)
+    existing = on_board.get((repo, num))
+    if existing and existing.get("status") == column:
+        return f"gh-{num}: already {column!r} on {board_name} — no-op"
+    if not write:
+        return (f"gh-{num}: dry-run — would set {column!r} on {board_name} "
+                f"(currently {existing.get('status') if existing else 'not on the board'!r})")
+    item_id = existing.get("item_id") if existing else None
+    if item_id is None:
+        issue = issue_node_id(cfg, num)
+        ids = resolve_ids(cfg)
+        item_id = _add_item(cfg, ids, issue["id"])
+    ids, option = option_id_for(cfg, column)
+    try:
+        _set_status_option(cfg, ids, item_id, option)
+    except RuntimeError as exc:
+        ids, option = option_id_for(cfg, column, force=True)   # S5: stale-ID self-heal
+        _set_status_option(cfg, ids, item_id, option)
+        _warn(f"status write failed ({exc}); re-resolved IDs and succeeded")
+    if snapshot is None:
+        fetch_board_issues(cfg)
+    return f"gh-{num}: Status={column!r} on {board_name}"
 
 
 def dedupe(cfg, write):

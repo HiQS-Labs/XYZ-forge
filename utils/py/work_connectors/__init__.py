@@ -46,6 +46,9 @@ CONNECTOR_DEFAULTS = {
     "owner_type": "user",
     "repos": [],
     "status_field": "Status",
+    # Event -> board column. Empty here so a user's partial override merges onto the
+    # connector's own defaults rather than replacing them wholesale; see github_board.py.
+    "status_map": {},
 }
 
 # The registry is a literal table of name -> module path. No entry points, no import-by-string
@@ -66,6 +69,13 @@ def load_connectors(warn=True):
     pins. A malformed config warns and returns {}: it must never be mistaken for absent, and it
     must never raise into a ledger verb.
     """
+    # The global kill switch, checked HERE rather than only at the hot-path call site, because
+    # `work reconcile` calls dispatch() directly and would otherwise sail past it (impl QA r2).
+    # This is the one function both paths go through.
+    if os.environ.get("XYZ_WORK_CONNECTORS") == "0":
+        if warn:
+            _warn("XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing")
+        return {}
     try:
         cfg, error = resolve_device_block("work_connectors", {"enabled": False}, "XYZ_WORK_CONNECTORS")
     except Exception as exc:            # a config read must never break a ledger write
@@ -158,10 +168,20 @@ def _launch(name, cfg, events):
     """Start one child. Never raises: a connector that cannot even be spawned is a connector
     that failed, not a ledger verb that failed."""
     payload = json.dumps({"connector": name, "config": cfg, "events": events})
+    # A vendored connector is invoked as `python -m work_connectors.<name>`, which resolves the
+    # package off the child's own sys.path, not ours. cwd is the repo root, so without this the
+    # import fails and every ordinary configured run reports "No module named work_connectors" —
+    # the exact failure impl QA r2 found. Prepend utils/py rather than replace, so an operator's
+    # PYTHONPATH still works.
+    pkg_parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join([pkg_parent] + (
+        [env["PYTHONPATH"]] if env.get("PYTHONPATH") else []))
     try:
         proc = subprocess.Popen(_child_argv(name), stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True, cwd=os.path.dirname(os.path.dirname(
+                                text=True, env=env,
+                                cwd=os.path.dirname(os.path.dirname(
                                     os.path.dirname(os.path.abspath(__file__)))))
     except Exception as exc:
         return (name, None, "spawn failed: %r" % (exc,))

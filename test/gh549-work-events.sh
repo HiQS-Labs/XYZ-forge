@@ -595,6 +595,114 @@ case "$MCOUT" in
   *) bad "dry run emitted an event: $MCOUT" ;;
 esac
 
+echo "17. the VENDORED github_board connector, through normal config, offline (impl QA r2)"
+# The registry names work_connectors.github_board. Round 2 found the module did not exist, so
+# every ordinary configured run failed to import instead of touching a board. This leg drives the
+# real vendored connector -- NO XYZ_WORK_CONNECTORS_REGISTRY overlay anywhere -- against the
+# offline mock, which is the only path a real user ever takes.
+MOCK="$ROOT/utils/py/mock_gh_board.py"
+[ -f "$ROOT/utils/py/work_connectors/github_board.py" ] \
+  || bad "the registry's github_board module does not exist — every configured run would fail to import"
+python3 "$MOCK" --reset --state "$WORK/mock17.json" >/dev/null 2>&1
+python3 "$MOCK" --seed  --state "$WORK/mock17.json" >/dev/null 2>&1
+cat > "$WORK/board_cfg.json" <<'PYCFG'
+{"board_sync": {"project_owner": "noelsaw1", "project_number": 3,
+                "repos": ["HiQS-Labs/XYZ-forge"], "status_field": "Status",
+                "in_progress": "In progress"},
+ "work_connectors": {"github_board": {"enabled": true, "project_owner": "noelsaw1",
+                     "project_number": 3, "repos": ["HiQS-Labs/XYZ-forge"],
+                     "status_map": {"pr_merged": "Done", "rated": ""}}}}
+PYCFG
+FXB="$WORK/fx_board"; rm -rf "$FXB"; mkdir -p "$FXB"
+( cd "$FXB" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXB/"
+sqlite3 "$FXB/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXB" work emit \
+  --event pr_merged --gh-number 405 --payload-json '{"pr":559}' >/dev/null 2>&1
+NEV="$(sqlite3 "$FXB/releases.db" "SELECT count(*) FROM work_events WHERE event='pr_merged';")"
+[ "$NEV" -gt 0 ] || bad "fixture guard: no pr_merged event to feed the connector — leg 17 would be vacuous"
+B4="$(python3 "$MOCK" --dump --state "$WORK/mock17.json" 2>/dev/null | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+# The mock stores status as an option id under field_values, keyed by the Status field id --
+# resolve it back to the column NAME, so this asserts the column and not an opaque id.
+f=d.get('fields',{}).get('Status',{})
+names={o['id']:o['name'] for o in f.get('options',[])}
+it=next((i for i in d.get('items',[]) if i.get('number')==405), None)
+print('absent' if it is None else names.get(next(iter((it.get('field_values') or {}).values()), None),'unset'))" 2>/dev/null)"
+R17="$(XYZ_DEVICE_CONFIG_PATH="$WORK/board_cfg.json" XYZ_BOARD_SYNC_GH_BIN="$MOCK" \
+       XYZ_MOCK_BOARD_STATE="$WORK/mock17.json" XYZ_BOARD_SYNC_STATE_PATH="$WORK/sync17.json" \
+       python3 "$APP" --root "$FXB" work reconcile 2>&1)"
+case "$R17" in
+  *"replayed through event"*) ok "the vendored connector runs from normal config with no registry overlay" ;;
+  *) bad "the vendored connector did not complete: $R17" ;;
+esac
+AFTER="$(python3 "$MOCK" --dump --state "$WORK/mock17.json" 2>/dev/null | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+# The mock stores status as an option id under field_values, keyed by the Status field id --
+# resolve it back to the column NAME, so this asserts the column and not an opaque id.
+f=d.get('fields',{}).get('Status',{})
+names={o['id']:o['name'] for o in f.get('options',[])}
+it=next((i for i in d.get('items',[]) if i.get('number')==405), None)
+print('absent' if it is None else names.get(next(iter((it.get('field_values') or {}).values()), None),'unset'))" 2>/dev/null)"
+[ "$AFTER" = "Done" ] \
+  && ok "and it MOVED THE CARD to the configured column (was '$B4', now '$AFTER')" \
+  || bad "the card did not reach the configured column (was '$B4', now '$AFTER')"
+CUR17="$(sqlite3 "$FXB/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ -n "$CUR17" ] && [ "$CUR17" -gt 0 ] \
+  && ok "and its cursor advanced, so the batch is acknowledged" \
+  || bad "the cursor did not advance (last_event_id=$CUR17)"
+# The column mapping is user config, not code: an empty mapping means 'do not place this one'.
+python3 - "$ROOT" <<'PYMAP'
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+from work_connectors.github_board import column_for, DEFAULT_STATUS_MAP
+m = dict(DEFAULT_STATUS_MAP); m.update({"pr_merged": "Shipped", "rated": ""})
+assert column_for("pr_merged", m) == "Shipped", "a user override did not win"
+assert column_for("rated", m) is None, "an empty mapping did not disable the transition"
+assert column_for("no_such_event", m) is None, "an unknown event was not skipped"
+print("mapping-ok")
+PYMAP
+[ $? -eq 0 ] \
+  && ok "the event -> column mapping is user config: an override wins and an empty value disables it" \
+  || bad "the status_map override contract is broken"
+
+echo "18. XYZ_WORK_CONNECTORS=0 is a GLOBAL kill switch, not just a hot-path one (impl QA r2)"
+# Round 2 found the switch was checked only in _dispatch_work_connectors, so `work reconcile`,
+# which calls dispatch() directly, sailed past it. The check now lives in load_connectors, which
+# is the one function both paths go through. The stub writes a sentinel file if it ever runs.
+cat > "$WORK/stub_sentinel.py" <<'PYSTUB'
+import json, os, sys
+b = json.load(sys.stdin)
+open(os.environ["GH549_SENTINEL"], "w").write("ran")
+print("advanced_to: %d" % max(e["id"] for e in b["events"]))
+PYSTUB
+SENT="$WORK/killswitch.sentinel"; rm -f "$SENT"
+sqlite3 "$FXB/releases.db" "DELETE FROM connector_cursors;"
+REG_SENT="{\"github_board\":\"$WORK/stub_sentinel.py\"}"
+KS="$(GH549_SENTINEL="$SENT" XYZ_WORK_CONNECTORS=0 XYZ_DEVICE_CONFIG_PATH="$WORK/board_cfg.json" \
+      XYZ_WORK_CONNECTORS_REGISTRY="$REG_SENT" python3 "$APP" --root "$FXB" work reconcile 2>&1)"
+[ ! -f "$SENT" ] \
+  && ok "with the switch off, work reconcile spawned NO connector child" \
+  || bad "the kill switch did not stop reconcile — the connector ran anyway"
+CUR18="$(sqlite3 "$FXB/releases.db" "SELECT count(*) FROM connector_cursors;")"
+[ "$CUR18" = "0" ] \
+  && ok "and no cursor was written" \
+  || bad "the kill switch left $CUR18 cursor row(s) behind"
+case "$KS" in
+  *"no connectors enabled"*|*"XYZ_WORK_CONNECTORS=0"*) ok "and it says why, rather than looking like an empty config" ;;
+  *) bad "the switch was silent about itself: $KS" ;;
+esac
+# Red control: the same command with the switch OFF must run the child. Without this, leg 18
+# would pass against a build where the connector was broken for some entirely other reason.
+rm -f "$SENT"
+KS2="$(GH549_SENTINEL="$SENT" XYZ_DEVICE_CONFIG_PATH="$WORK/board_cfg.json" \
+       XYZ_WORK_CONNECTORS_REGISTRY="$REG_SENT" python3 "$APP" --root "$FXB" work reconcile 2>&1)"
+[ -f "$SENT" ] \
+  && ok "red control: without the switch the SAME command does run the child — the switch is what stopped it" \
+  || bad "red control: the child did not run even with the switch off ($KS2)"
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
