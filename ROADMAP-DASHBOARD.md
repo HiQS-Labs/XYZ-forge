@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 51 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -60,8 +60,6 @@ Summary: 53 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
 | GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
 | GH-536 · relocate: Deployed Skills moves INTO the live Git Pulse Sync checkout (supersedes #508 verdict) | — | [#536](https://github.com/HiQS-Labs/XYZ-forge/issues/536) |
-| GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
-| GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
 | GH-528 · /unstuck — queue simultaneous blockers, tripwire recurring blocker classes | — | [GH-528-UNSTUCK-QUEUED-TRIPWIRE.md](PROJECT/2-WORKING/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md) · [#528](https://github.com/HiQS-Labs/XYZ-forge/issues/528) |
 
 ## Queue
@@ -88,7 +86,7 @@ Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 96 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 63 · 🔮 0 · 🔲 0
+Summary: 98 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 65 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -188,6 +186,8 @@ Summary: 96 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 63 · �
 | GH-487 · ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | ✅ | [GH-487-BOUNDED-GATES.md](PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md) · [#487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) |
 | GH-508 · Git Sync Pulse as a portable Skills Army HQ projection | ✅ | [GH-508-GIT-PULSE-SKILLS.md](PROJECT/3-COMPLETED/GH-508-GIT-PULSE-SKILLS.md) · [#508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) |
 | GH-516 · skills: express hotfix lane v2 — true direct-push mode, commit-driven reconciliation, recovery subcommand, and central telemetry | ✅ | [doc](PROJECT/3-COMPLETED/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md) · [#516](https://github.com/HiQS-Labs/XYZ-forge/issues/516) |
+| GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | ✅ | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
+| GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | ✅ | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
 
 ## Deferred · vision
 

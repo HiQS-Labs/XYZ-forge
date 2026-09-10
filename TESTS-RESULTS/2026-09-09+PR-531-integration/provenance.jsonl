@@ -4,3 +4,4 @@
 {"pr": 531, "base": "e569ca72c23f1e25d52832594ae29f02fc1be169", "case": "GH508 completion and GH536 intake refresh; GH536 recreated through CLI with new GID", "exit_code": 0, "previous_head": "0817d87661a9416a33ddcc115ace763b63b8b898"}
 {"pr": 531, "case": "canonical-base CLI replay", "exit_code": 0, "preserved_all_business_fields": true, "gid_mapping": {"528": {"old": "rmi-01M23Z061BYA0ABSXPG8SBDDBR", "new": "rmi-01M24GDN32CRTZSPXFM9MDNAED"}, "536": {"old": "rmi-01M24GB512THSDK90R4T0CYY3K", "new": "rmi-01M24FBY9Z40HJ08WY1E568WAP"}}}
 {"pr": 531, "case": "post-495 merge CLI replay; branch intake retained, canonical development rows preserved, exact registry union", "exit_code": 0, "base": "0226866816c981b6c08b267944fdca72b502f98c"}
+{"pr": 531, "case": "post-495 merge CLI replay; branch intake retained, canonical development rows preserved, exact registry union", "exit_code": 0, "base": "bd11f8e9ee49cb601f41c45ae9edbdb84fe9b614"}

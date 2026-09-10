@@ -26,7 +26,7 @@ while the four axes keep their honest values underneath.
 | 14 | **305** | [GH-410](https://github.com/HiQS-Labs/XYZ-forge/issues/410) — relay-block validator never runs on the driven path | Front-Door | queue | 95 | 80 | 90 | 40 | 305 | — |
 | 15 | **305** | [GH-424](https://github.com/HiQS-Labs/XYZ-forge/issues/424) — roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕 | — | Queue / parked intake | 90 | 70 | 75 | 70 | 305 | — |
 | 16 | **300** | [GH-174](https://github.com/HiQS-Labs/XYZ-forge/issues/174) — Harness & Models Registry SQLite Migration: Per-Device Config, Reasoning Effort Tracking, AI Grading Hooks & Blog Generator | Bulkhead | completed | 85 | 75 | 95 | 45 | 300 | — |
-| 17 | **300** | [GH-523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) — merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | Queue / parked intake | 80 | 85 | 50 | 85 | 300 | — |
+| 17 | **300** | [GH-523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) — merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | Completed | 80 | 85 | 50 | 85 | 300 | — |
 | 18 | **298** | [GH-421](https://github.com/HiQS-Labs/XYZ-forge/issues/421) — Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first | — | Queue / parked intake | 85 | 75 | 88 | 50 | 298 | — |
 | 19 | **295** | [GH-14](https://github.com/HiQS-Labs/XYZ-forge/issues/14) — appendEvent writes non-atomically, so concurrent readers can observe torn event files | — | Completed | 85 | 85 | 70 | 55 | 295 | — |
 | 20 | **295** | [GH-155](https://github.com/HiQS-Labs/XYZ-forge/issues/155) — 3rd Gen ATE & Fuzzing | — | Completed | 85 | 70 | 90 | 50 | 295 | — |
@@ -88,7 +88,7 @@ while the four axes keep their honest values underneath.
 | 76 | **250** | [GH-243](https://github.com/HiQS-Labs/XYZ-forge/issues/243) — GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard | — | Completed | 70 | 55 | 65 | 60 | 250 | — |
 | 77 | **250** | [GH-246](https://github.com/HiQS-Labs/XYZ-forge/issues/246) — relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix) | — | Completed | 60 | 35 | 70 | 85 | 250 | — |
 | 78 | **250** | [GH-439](https://github.com/HiQS-Labs/XYZ-forge/issues/439) — start-task governed workflow skill | — | Completed | 80 | 35 | 50 | 85 | 250 | — |
-| 79 | **250** | [GH-524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) — agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | Queue / parked intake | 60 | 55 | 50 | 85 | 250 | — |
+| 79 | **250** | [GH-524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) — agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | Completed | 60 | 55 | 50 | 85 | 250 | — |
 | 80 | **245** | [GH-108](https://github.com/HiQS-Labs/XYZ-forge/issues/108) — pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override) | Daybreak | cut | 80 | 50 | 75 | 40 | 245 | — |
 | 81 | **245** | [GH-496](https://github.com/HiQS-Labs/XYZ-forge/issues/496) — ci: hermetic local gate runner (retire GH-564 clone requirement) and offline pre-push fallback | — | In progress | 75 | 65 | 50 | 55 | 245 | — |
 | 82 | **240** | [GH-453](https://github.com/HiQS-Labs/XYZ-forge/issues/453) — Governance document identity audit | — | Queue / parked intake | 70 | 65 | 50 | 55 | 240 | — |
