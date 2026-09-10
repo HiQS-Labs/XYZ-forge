@@ -84,7 +84,7 @@ Hard rules the skill body must encode:
       boundary stated as hard rules.
 - [x] One-line row in `ARCHITECTURE.md` → Skills Index; one CHANGELOG.md entry.
 - [x] Zero new scripts of any kind (GH-551).
-- [ ] `utils/pdda/pdda.sh run` zero errors after promotion. (run pending at commit; ticked in the impl-QA commit if green)
+- [x] `utils/pdda/pdda.sh run` zero errors after promotion. (green twice: post-intake 2026-09-09 and post-implementation 2026-09-09)
 - [ ] **Behavioral QA (manual, no scripts; run during final relay QA and recorded in the
       relay thread)** — the criteria above check instructions; this one checks output.
       Exercise the drafted skill's procedure on three inputs:
