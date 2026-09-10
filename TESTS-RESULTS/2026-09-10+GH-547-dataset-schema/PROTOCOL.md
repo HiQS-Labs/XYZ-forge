@@ -10,6 +10,10 @@ Test whether NLBSE '23, TAWOS 1.1, and one verified SWE-Gym trajectory dataset e
 - TAWOS 1.1, Figshare article `21308124`, public schema plus archive metadata only.
 - SWE-Gym `MoatlessTools-Agent-Verifier-Train-Data`, pinned Hugging Face revision `57a05d234f92268307d6db677094e0b33d62c15e`.
 
+### Recorded amendment after the first successful probe
+
+The pinned verifier dataset proved to contain short patch-generation conversations rather than chronological tool trajectories. Keep that negative result and add `SWE-Gym/OpenHands-Sampled-Trajectories`, pinned at `baf3a4e4bff514d48ddc08a93a2ade5c126212c7`, as the actual bounded trajectory schema probe. The preferred Moatless sampled trajectories are packaged as 5.52 GB of ZIP files and are not exposed through the dataset server, so they remain outside this bounded phase.
+
 ## Method
 
 1. Fetch authoritative repository, dataset-server, and archive metadata.
@@ -21,4 +25,3 @@ Test whether NLBSE '23, TAWOS 1.1, and one verified SWE-Gym trajectory dataset e
 ## Decision gate
 
 A source passes the schema gate only when its actual fields and grouping keys support the intended task and its data-use terms are identified. An unclear dataset license, missing chronology, or unavailable bounded sample is recorded as an unresolved gate rather than inferred away.
-
