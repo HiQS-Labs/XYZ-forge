@@ -72,3 +72,11 @@ VERDICT: PASS
 Basis: The execution record is evidence-backed, the relocation was completed without breaking the pulse sync, and all `SKILL.md` paths were updated correctly.
 
 relay closed (Approved), no further turn needed
+
+### Attestation · relay-drive — 2026-09-10T02:20:22Z
+task: RELAY-gh536-relocation-qa
+reviewer: agy
+status: Approved
+reviewed-head: 9254e9f69588db2a2d30db101b5e93fd1ed7b18f
+added-range: 4548+826
+added-sha256: 88c55d2627a99b127a95f8fccc7355f5b39815e0d08977d483ba53f3739112f8
