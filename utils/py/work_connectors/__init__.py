@@ -119,10 +119,17 @@ def _registry():
 
     XYZ_WORK_CONNECTORS_REGISTRY is a JSON object of {name: "path/to/script.py"} and exists so a
     suite can inject stub connectors without shipping them. Same shape of seam as
-    XYZ_BOARD_SYNC_GH_BIN, which board_sync already uses to point at the offline mock. It is a
-    test seam, not a plugin mechanism: it names a SCRIPT PATH, so it cannot be used to import an
-    arbitrary installed module, and production config still cannot name a connector the harness
-    did not vendor.
+    XYZ_BOARD_SYNC_GH_BIN, which board_sync already uses to point at the offline mock.
+
+    Be precise about what contains it, because an earlier version of this docstring was not.
+    The overlay is read from the ENVIRONMENT and from nowhere else. Device config cannot
+    introduce one: load_connectors only consults names already in this registry, so a
+    work_connectors block naming an overlay connector does nothing unless the environment
+    already defined it. The environment is therefore the whole trust boundary — and anyone who
+    can set XYZ_WORK_CONNECTORS_REGISTRY on the machine that runs the ledger can equally run
+    python3 directly, so the overlay grants no capability they did not already hold. What it
+    would otherwise cost is legibility, which is why an active overlay announces itself below:
+    a production run must never use one silently.
     """
     reg = dict(REGISTRY)
     raw = os.environ.get("XYZ_WORK_CONNECTORS_REGISTRY")
@@ -130,7 +137,11 @@ def _registry():
         try:
             overlay = json.loads(raw)
             if isinstance(overlay, dict):
+                names = sorted(k for k, v in overlay.items() if isinstance(v, str))
                 reg.update({k: v for k, v in overlay.items() if isinstance(v, str)})
+                if names:
+                    _warn("XYZ_WORK_CONNECTORS_REGISTRY is active — running non-vendored "
+                          "connector(s) %s from the environment" % ", ".join(names))
         except Exception as exc:
             _warn("registry overlay unreadable (%r) — ignoring" % (exc,))
     return reg
@@ -162,8 +173,16 @@ def _launch(name, cfg, events):
     return (name, proc, None)
 
 
-def _collect(launched, deadline):
-    """Join every child under ONE shared deadline. Returns {name: (advanced_to, error)}."""
+def _collect(launched, deadline, bounds):
+    """Join every child under ONE shared deadline. Returns {name: (advanced_to, error)}.
+
+    `bounds` is {name: (prior_cursor, batch_max_id)} — the closed range a connector is allowed to
+    report. A child's stdout is UNTRUSTED input, so its advanced_to is validated here, at the
+    parse boundary, rather than in _persist: a value above batch_max would skip events the
+    connector was never handed, and a value at or below prior_cursor would replay events it
+    already acknowledged. Either one is a failed run, not an advance — the cursor stays put and
+    `work reconcile` replays the batch.
+    """
     results = {}
     for name, proc, err in launched:
         if proc is None:
@@ -198,6 +217,17 @@ def _collect(launched, deadline):
                     advanced = None
         if advanced is None:
             results[name] = (None, "exited 0 without an advanced_to line")
+            continue
+        prior, batch_max = bounds.get(name, (0, None))
+        if batch_max is None:
+            results[name] = (None, "reported advanced_to=%d but no batch was dispatched" % advanced)
+        elif advanced > batch_max:
+            results[name] = (None, "advanced_to=%d overshoots the dispatched batch (max event id "
+                                   "%d) — refusing to skip events the connector never saw"
+                                   % (advanced, batch_max))
+        elif advanced <= prior:
+            results[name] = (None, "advanced_to=%d does not move the cursor forward from %d"
+                                   % (advanced, prior))
         else:
             results[name] = (advanced, None)
     return results
@@ -249,19 +279,22 @@ def dispatch(db_path, at, connectors=None, window_s=None):
         return {}
     read = sqlite3.connect(db_path, timeout=30)
     try:
-        batches = {}
+        batches, bounds = {}, {}
         for name, cfg in conns.items():
             last = cursor_for(read, name)
             evs = events_after(read, last)
             if evs:
                 batches[name] = (cfg, evs)
+                # The closed range this connector is allowed to report back. Captured here,
+                # from the rows we actually handed it — never re-derived from the child.
+                bounds[name] = (last, evs[-1]["id"])
     finally:
         read.close()
     if not batches:
         return {}
     launched = [_launch(name, cfg, evs) for name, (cfg, evs) in sorted(batches.items())]
     deadline = time.monotonic() + (CONNECTOR_WINDOW_S if window_s is None else window_s)
-    results = _collect(launched, deadline)
+    results = _collect(launched, deadline, bounds)
     try:
         _persist(db_path, results, at)
     except Exception as exc:

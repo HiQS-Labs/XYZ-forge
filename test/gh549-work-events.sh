@@ -481,8 +481,11 @@ case "$R3" in
   *"replayed through event"*) ok "--reset replays from the beginning (the rebuild recovery path)" ;;
   *) bad "--reset did not replay: $R3" ;;
 esac
-# Red control: overshoot the cursor and a real event is silently skipped.
+# Red control: an overshot cursor IN THE TABLE skips real events. This is why a connector is
+# never trusted to set that number itself — the guard below is what keeps it from doing so.
 LAST="$(sqlite3 "$FXE/releases.db" "SELECT max(id) FROM work_events;")"
+[ -n "$LAST" ] && [ "$LAST" -gt 0 ] \
+  || bad "fixture guard: no work_events rows — the overshoot control would be vacuous"
 sqlite3 "$FXE/releases.db" "UPDATE connector_cursors SET last_event_id = $((LAST + 5)) WHERE connector='github_board';"
 R4="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
       python3 "$APP" --root "$FXE" work reconcile 2>&1)"
@@ -490,6 +493,83 @@ case "$R4" in
   *"nothing to replay"*) ok "red control: an overshot cursor skips real events — which is why replay is cursor-driven, not scan-driven" ;;
   *) bad "an overshot cursor still replayed: $R4" ;;
 esac
+
+echo "15b. a connector cannot advance its own cursor out of the batch it was handed (impl QA r1)"
+# The child's stdout is untrusted input. Reset the cursor so there IS a real batch to dispatch,
+# then have the stub report a number beyond it. The old behaviour stored that number verbatim,
+# permanently skipping every event up to it.
+sqlite3 "$FXE/releases.db" "DELETE FROM connector_cursors WHERE connector='github_board';"
+cat > "$WORK/stub_overshoot.py" <<'PYSTUB'
+import json, sys
+b = json.load(sys.stdin)
+print("advanced_to: %d" % (max(e["id"] for e in b["events"]) + 5))
+PYSTUB
+REG_OVER="{\"github_board\":\"$WORK/stub_overshoot.py\"}"
+BATCH="$(sqlite3 "$FXE/releases.db" "SELECT count(*) FROM work_events;")"
+[ "$BATCH" -gt 0 ] || bad "fixture guard: nothing to dispatch — the overshoot guard test would be vacuous"
+R5="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_OVER" \
+      python3 "$APP" --root "$FXE" work reconcile 2>&1)"
+case "$R5" in
+  *"overshoots the dispatched batch"*) ok "an overshooting connector is REFUSED, with the reason named" ;;
+  *) bad "overshoot was not refused: $R5" ;;
+esac
+CUR="$(sqlite3 "$FXE/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ "$CUR" = "0" ] \
+  && ok "and its cursor did NOT move — the batch stays replayable" \
+  || bad "the cursor advanced to $CUR despite the refusal"
+ERRTXT="$(sqlite3 "$FXE/releases.db" "SELECT last_error FROM connector_cursors WHERE connector='github_board';")"
+case "$ERRTXT" in
+  *overshoot*) ok "the refusal is recorded on the cursor row, not just printed" ;;
+  *) bad "no overshoot error persisted (last_error=$ERRTXT)" ;;
+esac
+# A backwards report is equally a failed run: it would replay events already acknowledged.
+XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
+  python3 "$APP" --root "$FXE" work reconcile >/dev/null 2>&1
+cat > "$WORK/stub_back.py" <<'PYSTUB'
+import json, sys
+json.load(sys.stdin)
+print("advanced_to: 1")
+PYSTUB
+REG_BACK="{\"github_board\":\"$WORK/stub_back.py\"}"
+sqlite3 "$FXE/releases.db" "DELETE FROM connector_cursors WHERE connector='github_board';"
+XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$APP" --root "$FXE" work emit \
+  --event pr_merged --gh-number 552 --payload-json '{"pr":559}' >/dev/null 2>&1
+sqlite3 "$FXE/releases.db" "INSERT INTO connector_cursors(connector,last_event_id,updated_at) VALUES('github_board',2,'x') ON CONFLICT(connector) DO UPDATE SET last_event_id=2;"
+R6="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_BACK" \
+      python3 "$APP" --root "$FXE" work reconcile 2>&1)"
+case "$R6" in
+  *"does not move the cursor forward"*) ok "a backwards report is refused too, so acknowledged events are not replayed" ;;
+  *) bad "a backwards advanced_to was accepted: $R6" ;;
+esac
+
+echo "15c. red control — the bounds guard is load-bearing"
+# Strip the guard and the same overshoot lands. Without this, 15b would pass against a build
+# that never had the check, because a stub COULD legitimately report the batch maximum.
+# releases_app.py puts its OWN directory first on sys.path before importing work_connectors, so
+# PYTHONPATH cannot shadow the module. Mutate a full copy of utils/py and run the copy's app.
+GUARDED="$WORK/wc_guarded"; rm -rf "$GUARDED"; mkdir -p "$GUARDED"
+cp -R "$ROOT/utils/py/." "$GUARDED/"
+python3 - "$GUARDED/work_connectors/__init__.py" <<'PYMUT'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+anchor = "        elif advanced > batch_max:"
+assert anchor in s, "red control found no anchor to mutate — the guard moved; fix this control"
+s = s.replace(anchor, "        elif False:", 1)
+io.open(p, "w", encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "red control mutation failed"
+grep -q "elif False:" "$GUARDED/work_connectors/__init__.py" \
+  || bad "red control: the mutation did not land in the copy the app will import"
+sqlite3 "$FXE/releases.db" "DELETE FROM connector_cursors WHERE connector='github_board';"
+MAXID="$(sqlite3 "$FXE/releases.db" "SELECT max(id) FROM work_events;")"
+XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_OVER" \
+  python3 "$GUARDED/releases_app.py" --root "$FXE" work reconcile >/dev/null 2>&1
+CUR2="$(sqlite3 "$FXE/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ "$CUR2" = "$((MAXID + 5))" ] \
+  && ok "red control: without the guard the overshoot IS stored ($CUR2 > $MAXID) — the guard is what stops it" \
+  || bad "red control did not reproduce the defect (cursor=$CUR2, expected $((MAXID + 5)))"
+sqlite3 "$FXE/releases.db" "DELETE FROM connector_cursors WHERE connector='github_board';"
 
 echo "16. the merge emitter keys on the issue, never the PR"
 MC="$ROOT/skills/merge-cleanup/scripts/merge_cleanup.py"
