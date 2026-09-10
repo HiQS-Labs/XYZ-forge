@@ -36,6 +36,8 @@ def main():
     swe_info = json.loads(get("https://datasets-server.huggingface.co/info?dataset=" + urllib.parse.quote(SWE, safe="")))
     swe_rows = json.loads(get("https://datasets-server.huggingface.co/first-rows?dataset=" + urllib.parse.quote(SWE, safe="") + "&config=default&split=train"))
     hf_meta = json.loads(get("https://huggingface.co/api/datasets/" + SWE))
+    swe_repo = json.loads(get("https://api.github.com/repos/SWE-Gym/SWE-Gym"))
+    nlbse_repo = json.loads(get("https://api.github.com/repos/nlbse2023/issue-report-classification"))
 
     row_shapes = []
     fail_counts = Counter()
@@ -80,6 +82,9 @@ def main():
                 if len(samples) < 5:
                     samples.append({k: {"present": bool(v), "length": len(v or ""), "sha256": digest(v or "")} for k, v in row.items()})
             nlbse = {
+                "source_repository_revision": nlbse_repo.get("pushed_at"),
+                "source_repository_license": (nlbse_repo.get("license") or {}).get("spdx_id"),
+                "linked_dataset_license_separately_declared": False,
                 "archive_bytes": archive.stat().st_size,
                 "member_name_sha256": digest(members[0].name),
                 "member_bytes": members[0].size,
@@ -97,7 +102,8 @@ def main():
             "dataset": SWE,
             "revision": hf_meta.get("sha"),
             "revision_matches_pin": hf_meta.get("sha") == SWE_REV,
-            "repository_license_declared": None,
+            "dataset_metadata_license": swe_info["dataset_info"]["default"].get("license") or None,
+            "code_repository_license": (swe_repo.get("license") or {}).get("spdx_id"),
             "dataset_server": swe_info["dataset_info"]["default"],
             "bounded_sample_rows": len(row_shapes),
             "bounded_sample_fail_counts": dict(fail_counts),
@@ -113,6 +119,10 @@ def main():
         },
     }
     payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if not nlbse["rows"] or not row_shapes or not tables:
+        raise RuntimeError("empty source evidence cannot pass the schema probe")
+    if hf_meta.get("sha") != SWE_REV:
+        raise RuntimeError("SWE-Gym revision moved from the frozen pin")
     (OUT / "results.json").write_text(payload)
     elapsed = (datetime.now(timezone.utc) - started).total_seconds()
     (OUT / "runtime.log").write_text(f"status=completed\nelapsed_seconds={elapsed:.3f}\nstdout_bytes={len(payload.encode())}\n")
