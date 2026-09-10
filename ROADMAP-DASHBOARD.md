@@ -58,10 +58,10 @@ Summary: 52 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-510 · jog: operator-confirmed merge path ignores gh pr merge failure and records the task as completed | — | [GH-510-JOG-MERGE-FALSE-SUCCESS.md](PROJECT/1-INBOX/GH-510-JOG-MERGE-FALSE-SUCCESS.md) · [#510](https://github.com/HiQS-Labs/XYZ-forge/issues/510) |
 | GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window | — | [GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md](PROJECT/1-INBOX/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md) · [#515](https://github.com/HiQS-Labs/XYZ-forge/issues/515) |
 | GH-494 · Flight dashboard HTML design review | — | [plan](PROJECT/2-WORKING/GH-494-FLIGHT-DASHBOARD.md) · [#494](https://github.com/HiQS-Labs/XYZ-forge/issues/494) |
-| GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
 | GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence | — | [GH-518-MUSE-SPARK-HARNESS-ROUTE.md](PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md) · [#518](https://github.com/HiQS-Labs/XYZ-forge/issues/518) |
-| GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
 | GH-536 · relocate: Deployed Skills moves INTO the live Git Pulse Sync checkout (supersedes #508 verdict) | — | [#536](https://github.com/HiQS-Labs/XYZ-forge/issues/536) |
+| GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | — | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
+| GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | — | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
 
 ## Queue
 
