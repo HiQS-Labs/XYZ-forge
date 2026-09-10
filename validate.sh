@@ -108,6 +108,7 @@ TESTS=(
   "gh518-muse-adapter-containment.sh" # GH-518 (adapter-level: execution-vs-coordination root classification, process-group reap on timeout)
   "gh346-resolver-fallback.sh"  # GH-346 Phase 1 (alias resolver is an enhancement over a literal floor, never a dependency)
   "gh346-telemetry-row-written.sh" # GH-346 Phase 0 checkbox 0.5 (a row actually lands, with the dispatched model)
+  "gh496-telemetry-isolation.sh"   # GH-496 Phase 1 (routine telemetry written out-of-tree to ~/.xyz/projects/<key>/telemetry/)
   "gh346-registry-view-freshness.sh" # GH-346 (the generated registry view must match harnesses.db)
   "gh346-gateway-allowlists.sh" # GH-346 Phase 2 (every agent-id allowlist agrees on the shipped gateway set)
   "gh346-profile-resolve.sh"    # GH-346 Phase 3a (one name -> harness/gateway/model; no tier may block a turn)

@@ -7,9 +7,12 @@ reasoning effort levels, deterministic post-turn AI evaluations, and grounded bl
 
 import argparse
 import datetime
+import hashlib
 import json
 import os
+import re
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -20,40 +23,101 @@ def get_repo_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+def slugify(value: str) -> str:
+    """Normalize a name into a stable slug."""
+    cleaned = re.sub(r"[^\w\s-]", "", value).strip().lower()
+    return re.sub(r"[-\s]+", "-", cleaned) or "repository"
+
+
+def get_canonical_repo_identity(repo_root: Optional[str] = None) -> Tuple[str, str]:
+    """Derive stable repository slug and canonical remote/path identity (GH-496)."""
+    root = Path(repo_root or get_repo_root()).resolve()
+    remote = ""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "config", "--get", "remote.origin.url"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            remote = r.stdout.strip()
+    except Exception:
+        remote = ""
+
+    identity = remote.rstrip("/") if remote else str(root)
+    if identity.endswith(".git"):
+        identity = identity[:-4]
+    name = identity.rsplit("/", 1)[-1].rsplit(":", 1)[-1] or root.name
+    short_id = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
+    return f"{slugify(name)}--{short_id}", identity
+
+
+def get_project_key(repo_root: Optional[str] = None) -> str:
+    """Derive stable project key for host telemetry store (GH-496)."""
+    key, _ = get_canonical_repo_identity(repo_root)
+    return key
+
+
 def get_db_path(repo_root: Optional[str] = None) -> str:
+    """Resolve SQLite database path (GH-496).
+    
+    Precedence:
+    1. XYZ_HARNESS_DB env var (explicit override for testing/fixtures).
+    2. Out-of-tree default: ~/.xyz/projects/<project-key>/telemetry/harnesses.db
+    3. In-repo fallback: <repo_root>/harnesses.db if HOME is unavailable.
+    """
     if "XYZ_HARNESS_DB" in os.environ:
         return os.environ["XYZ_HARNESS_DB"]
     root = repo_root or get_repo_root()
+    home = os.environ.get("HOME")
+    if home and os.path.isdir(home):
+        project_key = get_project_key(root)
+        telemetry_dir = os.path.join(home, ".xyz", "projects", project_key, "telemetry")
+        return os.path.join(telemetry_dir, "harnesses.db")
     return os.path.join(root, "harnesses.db")
 
 
 def get_sql_path(repo_root: Optional[str] = None) -> str:
+    """Resolve logical SQL dump path (GH-496)."""
     if "XYZ_HARNESS_SQL" in os.environ:
         return os.environ["XYZ_HARNESS_SQL"]
     if "XYZ_HARNESS_DB" in os.environ:
         base = os.path.splitext(os.environ["XYZ_HARNESS_DB"])[0]
         return base + ".sql"
     root = repo_root or get_repo_root()
-    return os.path.join(root, "harnesses.sql")
+    db_p = get_db_path(root)
+    base = os.path.splitext(db_p)[0]
+    return base + ".sql"
 
 
 def get_generated_md_path(repo_root: Optional[str] = None) -> str:
+    """Resolve generated markdown registry view path (GH-496)."""
     if "XYZ_HARNESS_GENERATED_MD" in os.environ:
         return os.environ["XYZ_HARNESS_GENERATED_MD"]
     if "XYZ_HARNESS_DB" in os.environ:
         db_dir = os.path.dirname(os.path.abspath(os.environ["XYZ_HARNESS_DB"]))
         return os.path.join(db_dir, "HARNESS-MODELS-REGISTRY.generated.md")
     root = repo_root or get_repo_root()
+    db_p = get_db_path(root)
+    db_dir = os.path.dirname(os.path.abspath(db_p))
+    if db_dir != os.path.abspath(root):
+        return os.path.join(db_dir, "HARNESS-MODELS-REGISTRY.generated.md")
     return os.path.join(root, "HARNESS-MODELS-REGISTRY.generated.md")
 
 
 def get_blog_doc_path(slug: str, repo_root: Optional[str] = None) -> str:
+    """Resolve generated blog case study path (GH-496)."""
     if "XYZ_HARNESS_DOCS_DIR" in os.environ:
         return os.path.join(os.environ["XYZ_HARNESS_DOCS_DIR"], f"blog-{slug}.md")
     if "XYZ_HARNESS_DB" in os.environ:
         db_dir = os.path.dirname(os.path.abspath(os.environ["XYZ_HARNESS_DB"]))
         return os.path.join(db_dir, "docs", f"blog-{slug}.md")
     root = repo_root or get_repo_root()
+    db_p = get_db_path(root)
+    db_dir = os.path.dirname(os.path.abspath(db_p))
+    if db_dir != os.path.abspath(root):
+        return os.path.join(db_dir, "docs", f"blog-{slug}.md")
     return os.path.join(root, "docs", f"blog-{slug}.md")
 
 
@@ -176,6 +240,10 @@ def init_db(db_path: str) -> sqlite3.Connection:
                 # migration having succeeded, not a failure — a turn must never lose its row to it.
                 if "duplicate column" not in str(e).lower():
                     raise
+        # GH-496: Auto-seed canonical registry if harnesses table is empty
+        h_count = conn.execute("SELECT COUNT(*) FROM harnesses;").fetchone()[0]
+        if h_count == 0:
+            seed_canonical_registry(conn)
     return conn
 
 
@@ -316,6 +384,13 @@ def check_integrity(repo_root: Optional[str] = None) -> int:
     """Validate database foreign keys, schema consistency, and generated views."""
     root = repo_root or get_repo_root()
     db_p = get_db_path(root)
+    # GH-496: If out-of-tree telemetry DB does not exist yet (e.g. cold runner),
+    # but in-repo harnesses.db exists, fall back to in-repo DB for check.
+    if not os.path.exists(db_p):
+        in_repo = os.path.join(root, "harnesses.db")
+        if os.path.exists(in_repo):
+            db_p = in_repo
+
     sql_p = get_sql_path(root)
     gen_md = get_generated_md_path(root)
 
@@ -341,6 +416,7 @@ def check_integrity(repo_root: Optional[str] = None) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="harness_app.py — Harness & Models SQLite Registry CLI")
+    parser.add_argument("--local", action="store_true", help="Force using in-repo harnesses.db instead of user telemetry path (GH-496)")
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     # Subcommand: init
@@ -394,6 +470,8 @@ def main() -> int:
 
     args = parser.parse_args()
     root = get_repo_root()
+    if getattr(args, "local", False):
+        os.environ["XYZ_HARNESS_DB"] = os.path.join(root, "harnesses.db")
     db_p = get_db_path(root)
     sql_p = get_sql_path(root)
     md_p = get_generated_md_path(root)
