@@ -3,7 +3,7 @@ Goal: Bounded round 4 — re-adjudicate ONLY R3-A, R3-B and E.6 of plan rev 4 (G
 Date: 2026-09-09
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 Round-cap: 1
 Supersedes: relay-system/2026-09-09/gh534-merge-cleanup-plan-qa-codex.md (three rounds, cap exhausted)
@@ -74,4 +74,39 @@ otherwise leave `STATUS: Open` and set `NEXT: claude-a`.
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
-# Log
+## Log
+
+### Codex — bounded round 4 — 2026-09-09
+
+VERDICT: FAIL
+Basis: R3-A and R3-B remain Blocking for the narrow reasons below; E.6 is Closed. STATUS remains Open. This consumes the one authorized round; no further automated review is authorized here.
+
+Here “plan” means `PROJECT/1-INBOX/GH-534-MERGE-CLEANUP-FAILURE-MODES.md` rev 4. No findings from previously accepted sections are reopened.
+
+**1. R3-A — Blocking: empty stderr is not sufficient proof of completed execution.**
+
+The supplied macOS probe supports rejecting stderr warnings and distinguishes its four observed cases. It does not justify plan:179's unconditional “Empty stderr → the enumeration is complete” or :167's “exit code is not the signal.” A subprocess terminated by a signal can return partial or empty stdout, empty stderr, and a negative Python return code without raising a Python exception. Under :174–183 that becomes verified idle. Preserve abnormal termination/unexpected statuses; distinguish the observed ordinary 0/1 outcomes using stderr and validated records. This is not reinstating blanket nonzero rejection. Any stderr remains a conservative preserve rule; absence of stderr is only usable after successful completion under the bounded accepted-status contract.
+
+The real idle and held-descriptor fixtures are the right controls. (viii) correctly goes red when blanket nonzero rejection returns; (x) correctly goes red when its stderr guard is removed, provided the unreadable-subdirectory fixture has no independent live matching descriptor that would preserve anyway. Require that isolation and assert the injected warning was actually produced. Add a terminated-process/empty-stderr fixture that preserves and goes red when the completion guard is removed. (xii)'s absent-events refusal addresses `readAllEvents()`'s empty default; give it a removal control for that explicit check. The pinned tick root and no-write tests are accepted.
+
+Small implementation correction within A.4: `-F pn` does not request the `c` field promised at :183; request `c` as well if the diagnostic must include commands. The stderr distinction is supported by the producer's supplied observations, not independently reproduced in this turn, and is not a claim of universal process visibility on macOS.
+
+**2. R3-B — Blocking: the proposed existing flock does not exist at the cited interface.**
+
+The physical-record and accounting corrections are closed: plan:274–300 pins one explicit primary, carries one absolute `MERGE_CLEANUP_RECORD`, refuses unavailable accounting, counts only repairs, stores each attempted head, and keeps the two-attempt ceiling across changed heads. The two-full-clone fixture at :394–402 genuinely detects CWD-derived reset: the third invocation must see both prior reservations. The race fixture is also appropriate.
+
+The remaining disputed text is :281–283: “under the existing `flock` from `relay-automation/driver-lock-lib.sh` (the same lock the drivers use...)”. That entire shell library only resolves a pathname; it does not acquire flock. The actual drivers acquire a **directory** using `os.mkdir(lock_dir)` (`utils/py/relay_drive.py:495–499`, `utils/py/marathon_drive.py:1203–1206`) and retain a PID file. An independent flock does not serialize with that directory protocol, and a worker cannot simply reacquire its active parent driver's lifetime lock.
+
+Correct this one admission contract before building: name an actual mutual-exclusion primitive around read-count plus durable reservation, at the pinned coordinator, and state how a worker under an already-running driver enters it without deadlocking. A small record-adjacent advisory lock using the existing stdlib `fcntl.flock` pattern is sufficient; no new coordination framework is needed. All record writers must honor it. Keep the two-clone and racing-last-slot acceptance checks; include the active-parent-driver case so a nominal “same lock” implementation cannot satisfy review while making workers unusable.
+
+**3. E.6 — Closed.**
+
+For the requested ledger-content gate, a clean ordinary three-way merge of the current integration branch into the PR head is adequate; a squash does not inherently require different ledger contents. Keep the existing B1 merge context: `utils/releases-merge-resolve.sh:98–120` checks the generation floor against HEAD and MERGE_HEAD. Substituting `git merge --squash` would remove MERGE_HEAD and bypass that check unless both parent generations were supplied separately. No squash conversion is requested.
+
+Plan:217–225 correctly routes an actual conflict to B1/Phase C, parks a clean merge with failed checks, and makes post-merge check gating. A nonzero command/refusal is red even without `FAIL:` output. `cmd_roadmap_reconcile_state` at `utils/py/releases_app.py:3711–3780` refuses unavailable/invalid issue-state lookups, but :3766 emits `warn: rule=roadmap-issue-identity` and skips the defective row without failing the command. Thus **that warning is not red under E.6 as written**. This preserves #527's per-row behavior; do not silently turn every warning into a command-wide blocker. A dry-run “would move” is likewise not a failure. Retain those diagnostics in the gate output.
+
+The PR-2-after-PR-1 fixture and gate-removal control are sufficient for the new ordering regression, together with the failed-command case and the existing B1 fixtures. They remain implementation-time obligations, not witnessed passing evidence. Gate evidence must concern the current head/base used for this landing; the ordinary merge recommendation does not excuse checking an older integration snapshot.
+
+Evidence boundary: source review only; no git commands, project suites, ledger CLI execution, or live process probes. Verify-tier graph inventory was fully paginated (56 projects); this worktree has no index. The alternate XYZ-forge index is generation 2026-09-01T15:54:30Z; the releases symbol query returned no matches and coverage reports changed/untracked/excluded relevant paths. Direct local source was therefore used, including the full lock-path library and resolver, tick root/event reader, driver acquisition blocks, and releases check/reconcile implementations. The macOS four-case experiment is producer-supplied evidence. Only the relay document structural validator is run for this edit.
+
+Out of scope, noted: none.
