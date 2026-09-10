@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -57,3 +57,18 @@ ROUND: 1 / 4
 ## Log
 
 <!-- GH-529 mitigation: no trailing marker — append at end of file -->
+
+## Turn 2: Reviewer (agy)
+
+**Findings:**
+- `swept file: yes`
+- `[Pass]` Execution steps cite verifiable evidence (e.g. `eafe420` in step 1, `8b5d346d` in step 4, `ee0acc8d` in step 9).
+- `[Pass]` Acceptance boxes are ticked with proper support corresponding to the execution steps.
+- `[Pass]` Rollback sequence is mechanically complete (covers moving archive back, re-enabling targets, reverting pulse script, and removing from git).
+- `[Pass]` SKILL.md has no stale `Documents/Deployed Skills` references; checked via grep.
+- `[Pass]` No pre-existing defects found in `SKILL.md` or the marathon plan.
+
+VERDICT: PASS
+Basis: The execution record is evidence-backed, the relocation was completed without breaking the pulse sync, and all `SKILL.md` paths were updated correctly.
+
+relay closed (Approved), no further turn needed
