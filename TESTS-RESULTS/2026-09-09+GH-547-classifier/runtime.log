@@ -1,0 +1,65 @@
+Loading weights:   0%|          | 0/134 [00:00<?, ?it/s]Loading weights: 100%|██████████| 134/134 [00:00<00:00, 4212.10it/s]
+[transformers] [1mModernBertModel LOAD REPORT[0m from: /Users/noelsaw/.cache/huggingface/hub/models--answerdotai--ModernBERT-base/snapshots/8949b909ec900327062f0ebf497f51aef5e6f0c8
+Key               | Status     |  | 
+------------------+------------+--+-
+head.norm.weight  | UNEXPECTED |  | 
+head.dense.weight | UNEXPECTED |  | 
+decoder.bias      | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+{
+  "utc": "2026-09-10T04:30:17.536861+00:00",
+  "versions": {
+    "python": "3.12.13",
+    "torch": "2.14.0",
+    "transformers": "5.17.0",
+    "sklearn": "1.9.0"
+  },
+  "counts": {
+    "train": 48,
+    "test": 24
+  },
+  "labels": [
+    "bug_report",
+    "implementation",
+    "merged",
+    "review_requested",
+    "validation_failed",
+    "validation_passed"
+  ],
+  "controls": {
+    "empty_test": {
+      "rejected": true,
+      "reason": "empty split"
+    },
+    "missing_class": {
+      "rejected": true,
+      "reason": "missing training class"
+    },
+    "duplicate": {
+      "rejected": true,
+      "reason": "cross-split duplicate"
+    }
+  },
+  "timings": {
+    "tfidf_fit_and_predict_s": 0.013525292000849731,
+    "load_s": 0.45020916700013913,
+    "train_encoding_s": 1.1662520419995417,
+    "linear_fit_s": 0.07764162499370286,
+    "test_pass_1_24_messages_s": 0.28716191700368654,
+    "test_pass_2_24_messages_s": 0.2886295419957605
+  },
+  "device": "cpu",
+  "repeat_predictions_identical": true,
+  "screen_pass": true,
+  "input_hashes": {
+    "corpus.json": "53d5c9fda6dacac41d47e2cc98523e961e3a017a62332012736ed0c6605ce704",
+    "PROTOCOL.md": "bf3fba609ac9f50c99434fcf5520bc01e25e36283742a406cb4757ec8d75dcb9",
+    "run.py": "de7bcebe1da1f4f4f58304342751d679f9fb6860cc684313367ed2836b0b3f97"
+  }
+}
+majority 0.16666666666666666 0.047619047619047616 {'bug_report': 1.0, 'implementation': 0.0, 'merged': 0.0, 'review_requested': 0.0, 'validation_failed': 0.0, 'validation_passed': 0.0}
+tfidf 0.6666666666666666 0.6074555074555075 {'bug_report': 0.75, 'implementation': 0.0, 'merged': 1.0, 'review_requested': 1.0, 'validation_failed': 0.5, 'validation_passed': 0.75}
+modernbert_frozen 0.8333333333333334 0.8328523328523327 {'bug_report': 1.0, 'implementation': 0.5, 'merged': 1.0, 'review_requested': 0.75, 'validation_failed': 1.0, 'validation_passed': 0.75}
+shuffled_label_control 0.25 0.22011784511784507 {'bug_report': 0.25, 'implementation': 0.0, 'merged': 0.25, 'review_requested': 0.25, 'validation_failed': 0.0, 'validation_passed': 0.75}
