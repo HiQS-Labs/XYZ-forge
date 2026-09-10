@@ -1,0 +1,20 @@
+  ok   intake refuses an issue_url that names a different issue
+  ok   fixture baseline is consistent (bad data, valid chain) like GH-61 was
+  ok   a URL naming a different issue than gh_number is refused
+  ok   refusal names the invariant
+  ok   a non-issue URL is refused
+  ok   update with no field to change is still refused
+  ok   issue_url is corrected
+  ok   the repair wrote an op_receipt
+  ok   check is clean after a CLI repair (no dump-divergence, no receipt-chain break)
+  ok   reconcile-state no longer refuses the whole run over one bad row
+  ok   the healthy row is still reconciled
+  ok   the unresolvable row is named, not silently dropped
+  ok   the warning names the repair command
+  FAIL mixed-row apply succeeds (expected [0], got [3])
+refused: rule=negative-control: mixed-row apply refused
+warn: rule=roadmap-issue-identity: GH-901 has no matching issue URL; skipped (fix with `releases roadmap update --issue-num 901 --issue-url <url>`)
+  ok   the skipped row's state was never guessed
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+AssertionError
