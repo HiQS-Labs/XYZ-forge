@@ -110,3 +110,7 @@ approval-misunderstanding class that cost creates, is real but bounded process p
 runtime or data consequence; appeal 50: neutral, none supplied; effort 70: well-scoped
 single-file authoring with an existing QA loop (calibrated against GH-514 keel at
 70/25/50/65; five has no precedence stack or modes, slightly cheaper).
+
+## Merge evidence
+
+- PR #542 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
