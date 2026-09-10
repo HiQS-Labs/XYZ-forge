@@ -1,0 +1,12 @@
+{
+  "answer_sha256": "3c368bfa733532e94061b0e8c3c038e7feb1c26650762b56611c864d906dc404",
+  "answer_bytes": 24872,
+  "json_blocks": 0,
+  "think_closed": false,
+  "output_budget_exhausted": true,
+  "scoreable": false,
+  "grade": "F",
+  "original_grader_returncode": 1,
+  "original_grader_stdout": "",
+  "original_grader_stderr": "AssertionError: Expected one distinct final JSON answer; got 0 from 0 blocks"
+}

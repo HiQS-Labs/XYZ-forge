@@ -3,5 +3,7 @@
   "fresh_process_each_run": true,
   "answer_hashes_identical": true,
   "original_grader_controls_passed": true,
-  "both_original_grader_rejected": true
+  "both_original_grader_rejected": true,
+  "both_outputs_nonempty": true,
+  "both_missing_final_json": true
 }
