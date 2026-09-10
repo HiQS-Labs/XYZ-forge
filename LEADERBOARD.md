@@ -115,7 +115,7 @@ while the four axes keep their honest values underneath.
 | 103 | **195** | [GH-35](https://github.com/HiQS-Labs/XYZ-forge/issues/35) — 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | Completed | 55 | 45 | 50 | 45 | 195 | — |
 | 104 | **195** | [GH-487](https://github.com/HiQS-Labs/XYZ-forge/issues/487) — ci: make new-branch skill/test pushes use bounded gates and clarify draft-review bypass | — | Completed | 55 | 30 | 50 | 60 | 195 | — |
 | 105 | **190** | [GH-39](https://github.com/HiQS-Labs/XYZ-forge/issues/39) — RELEASES app: one-way GitHub Project release-card projection | — | Completed | 50 | 30 | 65 | 45 | 190 | — |
-| 106 | **190** | [GH-61](https://github.com/HiQS-Labs/XYZ-forge/issues/62) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
+| 106 | **190** | [GH-61](https://github.com/HiQS-Labs/XYZ-forge/issues/61) — RELEASES ledger durability hardening (GH-57 follow-up) | — | Queue / parked intake | 45 | 55 | 40 | 50 | 190 | — |
 | 107 | **185** | [GH-17](https://github.com/HiQS-Labs/XYZ-forge/issues/17) — SOP for evaluating new agent harnesses and frontier models | — | Queue / parked intake | 45 | 30 | 50 | 60 | 185 | — |
 | 108 | **185** | [GH-42](https://github.com/HiQS-Labs/XYZ-forge/issues/42) — relay automation: supported Commandcode turn-taker | — | Completed | 50 | 35 | 55 | 45 | 185 | — |
 | 109 | **175** | [GH-101](https://github.com/HiQS-Labs/XYZ-forge/issues/101) — Feasibility Study: Promoting Programmatic Script Runner (`script_runner.py`) into Core Relay & Consult Runtimes | — | Completed | 45 | 20 | 70 | 40 | 175 | — |
