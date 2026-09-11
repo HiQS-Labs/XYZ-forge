@@ -231,20 +231,39 @@ def clean_stray_active_clauses(line):
     return ""
 
 
-def is_owned_startup_roadmap_directive(line):
-    """Returns True if a Startup line is the primary directive to read ROADMAP.md or ROADMAP-DASHBOARD.md for current work."""
+def is_affirmative_releases_startup_directive(line):
+    """Returns True if a Startup line affirmatively directs consulting the roadmap via releases_app.py roadmap list (or releases.db) for current work."""
     if is_active_roadmap_startup_directive(line):
+        return False
+    if re.search(r"\b(?:only\s+for\s+historical|for\s+historical\s+reference|historical\s+reference\s+only)\b", line, re.IGNORECASE):
+        return False
+    for clause in split_clauses(line):
+        if re.search(r"\b(?:do\s+not|never)\b", clause, re.IGNORECASE):
+            continue
+        if re.search(r"\b(?:Run|Read|Consult|Open|Check|See|Inspect|Use)\b", clause, re.IGNORECASE):
+            if re.search(r"(?:releases_app\.py\s+roadmap\s+list|releases\s+roadmap\s+list|releases\.db)", clause, re.IGNORECASE):
+                return True
+    return False
+
+
+def is_owned_startup_roadmap_directive(line):
+    """Returns True if a Startup line is the primary directive to read ROADMAP.md or consult the roadmap for current work."""
+    if is_active_roadmap_startup_directive(line):
+        return True
+    if is_affirmative_releases_startup_directive(line):
+        return True
+    if is_affirmative_dashboard_startup_directive(line):
         return True
     if re.search(r"\b(?:only\s+for\s+historical|for\s+historical\s+reference|historical\s+reference\s+only)\b", line, re.IGNORECASE):
         return False
 
-    m = re.match(r"^\s*(?:\d+\.|\-|\*|\+)?\s*(?:Read|Consult|Open|Check|See|Inspect|Use)\s+(`?[^`\s]+`?|\[[^\]]+\]\([^)]+\))", line, re.IGNORECASE)
+    m = re.match(r"^\s*(?:\d+\.|\-|\*|\+)?\s*(?:Read|Run|Consult|Open|Check|See|Inspect|Use)\s+(`?[^`\s]+`?|\[[^\]]+\]\([^)]+\))", line, re.IGNORECASE)
     if not m:
-        if re.search(r"^\s*(?:\d+\.|\-|\*|\+)?\s*(?:Read|Consult|Open|Check|See|Inspect|Use)\s+(?:`?ROADMAP(?:-DASHBOARD)?\.md`?|\[[^\]]*\]\([^)]*ROADMAP(?:-DASHBOARD)?\.md[^)]*\))", line, re.IGNORECASE):
+        if re.search(r"^\s*(?:\d+\.|\-|\*|\+)?\s*(?:Read|Run|Consult|Open|Check|See|Inspect|Use)\s+(?:`?ROADMAP(?:-DASHBOARD)?\.md`?|\[[^\]]*\]\([^)]*ROADMAP(?:-DASHBOARD)?\.md[^)]*\)|(?:python3\s+)?(?:.*?releases_app\.py\s+roadmap\s+list))", line, re.IGNORECASE):
             return True
         return False
     target = m.group(1)
-    if re.search(r"\bROADMAP(?:-DASHBOARD)?\.md\b", target, re.IGNORECASE):
+    if re.search(r"\bROADMAP(?:-DASHBOARD)?\.md\b", target, re.IGNORECASE) or "releases_app" in target or "releases" in target:
         return True
     return False
 
@@ -394,17 +413,11 @@ def audit_router(root, content_override=None):
             result["drift"] = True
             result["reasons"].append("ROUTER.md missing '## Role split' section")
         else:
-            has_affirmative_dashboard = any(
-                is_affirmative_dashboard_role_line(l) for l in all_role_lines
-            )
             owned_roadmap_lines = [
                 l for l in all_role_lines
                 if re.search(OWNED_ROADMAP_DECL_RE, l, re.IGNORECASE)
             ]
 
-            if not has_affirmative_dashboard:
-                result["drift"] = True
-                result["reasons"].append("Role split does not affirmatively declare ROADMAP-DASHBOARD.md as the generated roadmap view")
             if not owned_roadmap_lines:
                 result["drift"] = True
                 result["reasons"].append("Role split does not contain a ROADMAP.md declaration")
@@ -451,16 +464,17 @@ def audit_router(root, content_override=None):
             result["drift"] = True
             result["reasons"].append("ROUTER.md missing '## Startup sequence' section")
         else:
-            has_affirmative_dashboard_startup = any(
-                is_affirmative_dashboard_startup_directive(l) for l in all_startup_lines
+            has_affirmative_releases_startup = any(
+                is_affirmative_releases_startup_directive(l) or is_affirmative_dashboard_startup_directive(l)
+                for l in all_startup_lines
             )
             has_active_roadmap_read = any(
                 is_active_roadmap_startup_directive(l) for l in all_startup_lines
             )
 
-            if not has_affirmative_dashboard_startup:
+            if not has_affirmative_releases_startup:
                 result["drift"] = True
-                result["reasons"].append("Startup sequence does not contain an affirmative directive to read ROADMAP-DASHBOARD.md for current work")
+                result["reasons"].append("Startup sequence does not contain an affirmative directive to consult the roadmap via releases_app.py roadmap list for current work")
             if has_active_roadmap_read:
                 result["drift"] = True
                 result["reasons"].append("Startup sequence contains active ROADMAP.md directive without frozen/legacy note")
@@ -586,13 +600,9 @@ def fix_router(root, dry_run=False):
                     new_r_pieces.append(f"{line_text}{term}")
                     continue
                 if re.search(OWNED_DASHBOARD_DECL_RE, line_text, re.IGNORECASE):
-                    if not dashboard_seen:
-                        new_r_pieces.append(f"- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`){eff_term}")
-                        dashboard_seen = True
+                    # Retired in GH-567; remove dashboard line
+                    continue
                 elif re.search(OWNED_ROADMAP_DECL_RE, line_text, re.IGNORECASE):
-                    if not dashboard_seen:
-                        new_r_pieces.append(f"- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`){eff_term}")
-                        dashboard_seen = True
                     if not roadmap_seen:
                         new_r_pieces.append(f"- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file{eff_term}")
                         roadmap_seen = True
@@ -604,12 +614,7 @@ def fix_router(root, dry_run=False):
                 else:
                     new_r_pieces.append(f"{line_text}{term}")
 
-            if not dashboard_seen and not roadmap_seen:
-                new_r_pieces.append(f"- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`){crlf}")
-                new_r_pieces.append(f"- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file{crlf}")
-            elif not dashboard_seen:
-                new_r_pieces.append(f"- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`){crlf}")
-            elif not roadmap_seen:
+            if not roadmap_seen:
                 new_r_pieces.append(f"- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file{crlf}")
 
             new_role_body = "".join(new_r_pieces)
@@ -620,7 +625,6 @@ def fix_router(root, dry_run=False):
                 "",
                 "- `ROUTER.md` = startup order and canonical entry points",
                 "- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof",
-                "- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)",
                 "- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file",
                 "- `CHANGELOG.md` = the end-of-iteration running log",
                 "- `RELEASES.md` = forward-looking release-planning ledger (optional milestone planning aid)",
@@ -641,13 +645,13 @@ def fix_router(root, dry_run=False):
                     if not dashboard_step_seen:
                         m = re.match(r"^(\s*(?:\d+\.|\-|\*)\s+)(.*)$", line_text)
                         num_prefix = m.group(1) if m else "3. "
-                        new_st_pieces.append(f"{num_prefix}Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.){eff_term}")
+                        new_st_pieces.append(f"{num_prefix}Run `python3 utils/py/releases_app.py roadmap list` (or `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.){eff_term}")
                         dashboard_step_seen = True
                     continue
                 new_st_pieces.append(f"{line_text}{term}")
 
             if not dashboard_step_seen:
-                new_st_pieces.append(f"3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.){crlf}")
+                new_st_pieces.append(f"3. Run `python3 utils/py/releases_app.py roadmap list` (or `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.){crlf}")
 
             new_startup_body = "".join(new_st_pieces)
             if not new_startup_body.endswith("\n") and not new_startup_body.endswith("\r\n"):
@@ -657,7 +661,7 @@ def fix_router(root, dry_run=False):
                 "",
                 "1. Read `ROUTER.md` to understand the repo's operating order and canonical files.",
                 "2. Read `AGENTS.md` before making recommendations or edits.",
-                "3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list` / `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)",
+                "3. Run `python3 utils/py/releases_app.py roadmap list` (or `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)",
                 "4. Read the linked `PROJECT/**` document that owns the work you are touching.",
                 "",
             ]) + crlf

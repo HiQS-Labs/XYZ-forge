@@ -3580,9 +3580,9 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
 def validate_raw_text(raw_text, issue_num=None):
     """GH-257: validate that raw_text matches the markdown shape the renderer requires.
 
-    The renderer (utils/roadmap-dashboard.sh) parses bullets starting with an exact `- **<title>**`
+    The renderer (`roadmap render`) parses bullets starting with an exact `- **<title>**`
     prefix. An unparseable line (e.g. `- [ ] #255 ...`, `-   **`, or unclosed bold) is dropped by
-    the dashboard renderer. Validating at write time catches malformed input immediately.
+    the markdown renderer. Validating at write time catches malformed input immediately.
     """
     if not isinstance(raw_text, str):
         refuse("invalid-raw-text", "raw_text must be a string")
@@ -3788,9 +3788,8 @@ def cmd_roadmap_repoint(args):
     promoting a doc 1-INBOX -> 2-WORKING left the row pointing at a path that no longer exists, and
     pdda-check-roadmap-coverage fails on it with no supported way to fix it.
 
-    The move itself stays a `git mv` by the operator: this verb only rewrites the row (and the
-    dashboard regenerates separately via utils/roadmap-dashboard.sh), so the GH-243 ledger-with-
-    dashboard guard sees a clean regeneration range on the next push.
+    The move itself stays a `git mv` by the operator: this verb only rewrites the row in
+    `releases.db`.
     """
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])

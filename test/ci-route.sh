@@ -157,7 +157,7 @@ expect_tier "text and markdown anywhere are docs (GH-35 widened)" pull_request 1
 expect_tier "HQ utility changes are tier 2" pull_request 2 utils/hq/hq.sh skills/hq/find-hq.sh
 expect_tier "releases subsystem (incl. the one non-twin utils/py file) is tier 2" pull_request 2 utils/py/releases_app.py utils/release-lanes.sh
 expect_tier "releases DB and dump files are tier 2 (GH-496)" pull_request 2 releases.sql releases.db
-expect_tier "releases utilities are tier 2 (GH-496)" pull_request 2 utils/releases-merge-resolve.sh utils/leaderboard.sh utils/roadmap-dashboard.sh
+expect_tier "releases utilities are tier 2 (GH-496)" pull_request 2 utils/releases-merge-resolve.sh utils/leaderboard.sh
 expect_tier "wave_reconcile is tier 2 under PDDA (GH-496)" pull_request 2 utils/py/wave_reconcile.py
 expect_tier "telemetry is tier 2" pull_request 2 utils/telemetry/health-lib.sh
 expect_tier "ATE + fuzzing are tier 2" pull_request 2 utils/ate/install.sh utils/fuzzing/fuzz-loop.sh
@@ -228,12 +228,12 @@ set -e
   && pass "an unknown subsystem fails loudly (exit 2)" \
   || fail "unknown subsystem result: rc=$rc out=$out"
 out="$(bash "$ROUTER" subsystems hq)"
-[[ "$(wc -w <<<"$out")" -eq 14 ]] \
-  && pass "subsystems hq lists its 14 suites" \
+[[ "$(wc -w <<<"$out")" -eq 13 ]] \
+  && pass "subsystems hq lists its 13 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems releases)"
-[[ "$(wc -w <<<"$out")" -eq 22 ]] \
-  && pass "subsystems releases lists its 22 suites (GH-496; +gh549-work-events)" \
+[[ "$(wc -w <<<"$out")" -eq 21 ]] \
+  && pass "subsystems releases lists its 21 suites (GH-496; +gh549-work-events; -roadmap-dashboard)" \
   || fail "subsystems releases listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems pdda)"
 [[ "$(wc -w <<<"$out")" -eq 12 ]] \

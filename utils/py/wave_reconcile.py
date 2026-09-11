@@ -1177,7 +1177,7 @@ def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
         return
     for name in (
         "releases.db", "releases.sql", "RELEASES.generated.md",
-        "ROADMAP-DASHBOARD.md", "RELEASES-PREVIEW.html",
+        "RELEASES-PREVIEW.html",
         "LEADERBOARD.html", "LEADERBOARD.md",
         os.path.join(".tick", "marathon-plan.fingerprint"),
     ):
@@ -1253,7 +1253,6 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     sync_cmd = ["python3", releases_app, "--root", repo_root, "roadmap", "sync"]
     check_cmd = ["python3", releases_app, "--root", repo_root, "check"]
     timeline_cmd = ["python3", harness_tool(repo_root, "utils/timeline/export_timeline.py"), "--preview"]
-    dash_cmd = ["bash", harness_tool(repo_root, "utils/roadmap-dashboard.sh")]
     lb_cmd = ["bash", harness_tool(repo_root, "utils/leaderboard.sh")]
     plan_cmd = ["bash", harness_tool(repo_root, "utils/marathon-plan.sh"), "--format", "json"]
 
@@ -1276,7 +1275,6 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
             steps.append(("export_timeline.py --preview", timeline_cmd))
         else:
             log("  (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)")
-        steps.append(("roadmap-dashboard.sh", dash_cmd))
         if os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
             if os.path.exists(harness_tool(repo_root, "utils/leaderboard.sh")):
                 steps.append(("leaderboard.sh", lb_cmd))

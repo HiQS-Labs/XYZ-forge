@@ -75,8 +75,6 @@ echo '{"status": "PASS"}' > "$REPO/TESTS-RESULTS/$TODAY/provenance.jsonl"
 # Subprocess stubs
 printf '#!/usr/bin/env python3\nprint("MOCK: releases_app OK")\n' > "$REPO/utils/py/releases_app.py"
 chmod +x "$REPO/utils/py/releases_app.py"
-printf '#!/usr/bin/env bash\necho "MOCK: roadmap-dashboard OK"\n' > "$REPO/utils/roadmap-dashboard.sh"
-chmod +x "$REPO/utils/roadmap-dashboard.sh"
 printf '#!/usr/bin/env python3\nprint("MOCK: timeline OK")\n' > "$REPO/utils/timeline/export_timeline.py"
 printf '#!/usr/bin/env bash\necho "MOCK: pdda run OK"\n' > "$REPO/utils/pdda/pdda.sh"
 chmod +x "$REPO/utils/timeline/export_timeline.py"

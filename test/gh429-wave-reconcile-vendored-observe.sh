@@ -35,9 +35,6 @@ build_fixture() {
     "$REPO/TESTS-RESULTS/$TODAY" "$REPO/utils/pdda" "$REPO/.xyz/utils/py" "$REPO/.xyz/utils/timeline"
   cp "$XYZ_ROOT/utils/py/wave_reconcile.py" "$XYZ_ROOT/utils/py/harness_paths.py" "$REPO/.xyz/utils/py/"
   printf '#!/usr/bin/env python3\npass\n' > "$REPO/.xyz/utils/py/releases_app.py"
-  # The dashboard stub records the root it was HANDED — the primitive section 1 asserts on.
-  printf '#!/usr/bin/env bash\nprintf "%%s" "${ROADMAP_DASHBOARD_ROOT:-UNSET}" > "%s/dashboard-root"\n' "$RAN" \
-    > "$REPO/.xyz/utils/roadmap-dashboard.sh"
   printf '#!/usr/bin/env python3\npass\n' > "$REPO/.xyz/utils/timeline/export_timeline.py"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$REPO/.xyz/utils/marathon-plan.sh"
   # An observe-mode pdda: findings on stdout, exit status per the repo's mode.
@@ -88,11 +85,6 @@ grep -q "WARNING — pdda reported 3 finding(s) but exited 0" <<<"$out" \
   && pass "the findings are surfaced as a warning with their count" || fail "no warning with the count: $out"
 grep -q "PDDA validation gate failed" <<<"$out" && fail "gate still died on stdout" || pass "gate did not die on stdout"
 [ -f "$R1/PROJECT/3-COMPLETED/GH-4291-OBSERVE.md" ] && pass "doc promoted to 3-COMPLETED" || fail "doc not promoted"
-# Compare normalised paths: $TMPDIR may carry a trailing slash, and the reconciler abspath()s --root.
-want="$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$R1")"
-[ "$(cat "$R1.ran/dashboard-root" 2>/dev/null)" = "$want" ] \
-  && pass "roadmap-dashboard.sh received ROADMAP_DASHBOARD_ROOT=<repo root>" \
-  || fail "dashboard root was '$(cat "$R1.ran/dashboard-root" 2>/dev/null)', expected '$want'"
 
 echo "-- section 2 negative control: a FULL-mode pdda (exit 1) still blocks and rolls back --"
 R2="$WORK/repo-full"; build_fixture "$R2" "Closes #4291." 1

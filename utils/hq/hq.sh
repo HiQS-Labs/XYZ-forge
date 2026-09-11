@@ -110,10 +110,9 @@ cmd_status(){
   ldocs="$(printf '%s\n' "$I"    | val LOCAL_ACTIVE_DOCS)"
   lmara="$(printf '%s\n' "$I"    | val LOCAL_MARATHON)"
   
-  local lnext lroadmap_open ldash_stale
+  local lnext lroadmap_open
   lnext="$(printf '%s\n' "$I" | val LOCAL_NEXT_RELEASE)"
   lroadmap_open="$(printf '%s\n' "$I" | val LOCAL_ROADMAP_OPEN)"
-  ldash_stale="$(printf '%s\n' "$I" | val LOCAL_DASHBOARD_STALE)"
 
   # capability tier: PDDA present (registry OR on-disk) AND XYZ install present
   local has_pdda=0 has_xyz=0 tier tierdesc
@@ -151,10 +150,7 @@ cmd_status(){
     if [ "$lroadmap" = "broken" ]; then
       rmap_check="✗ (releases-mode declared, but releases.db or CLI missing)"
     elif [ -n "$lroadmap" ]; then
-      rmap_check="✓"
-      local dash_txt="dashboard ✓"
-      [ "$ldash_stale" = "yes" ] && dash_txt="dashboard ✗ stale"
-      rmap_check="$rmap_check ($dash_txt, $lroadmap_open open roadmap items)"
+      rmap_check="✓ ($lroadmap_open open roadmap items)"
     fi
   fi
   

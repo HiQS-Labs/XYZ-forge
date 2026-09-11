@@ -542,7 +542,7 @@ if [[ $rc7 -eq 0 ]]; then
           --arg what "sync ROADMAP ledger" \
           --arg evtype "counts" \
           --arg evpay "$evpay" \
-          --arg close "python3 utils/py/releases_app.py roadmap sync && bash utils/roadmap-dashboard.sh" \
+          --arg close "python3 utils/py/releases_app.py roadmap sync" \
           --arg lstate "$evpay" \
           --arg stale "$m7" \
           '{

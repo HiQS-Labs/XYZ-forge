@@ -879,11 +879,10 @@ cat > "$FR/ROADMAP.md" <<'EOF'
 
 ### Completed
 EOF
-printf '#!/usr/bin/env bash\necho "MOCK: dashboard OK"\n' > "$FR/utils/roadmap-dashboard.sh"
 printf '#!/usr/bin/env bash\necho "MOCK: marathon-plan OK"\n' > "$FR/utils/marathon-plan.sh"
 printf '#!/usr/bin/env python3\nprint("MOCK: timeline OK")\n' > "$FR/utils/timeline/export_timeline.py"
 printf '#!/usr/bin/env bash\necho "MOCK: pdda OK"\n' > "$FR/utils/pdda/pdda.sh"
-chmod +x "$FR/utils/roadmap-dashboard.sh" "$FR/utils/marathon-plan.sh" "$FR/utils/pdda/pdda.sh"
+chmod +x "$FR/utils/marathon-plan.sh" "$FR/utils/pdda/pdda.sh"
 printf '{"status": "PASS"}\n' > "$FR/TESTS-RESULTS/2026-08-28/provenance.jsonl"
 git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "wave fixture prep" >/dev/null 2>&1
 
@@ -1017,12 +1016,8 @@ python3 "$FR/utils/py/releases_app.py" --root "$FR" roadmap add --issue-num 901 
   --issue-url "https://github.com/example/example/issues/901" \
   --title "GH-901 fixture lane" --created 2026-08-28 \
   --doc-path "PROJECT/1-INBOX/$CAPTURE_DOC_NAME" >/dev/null 2>&1
-printf '# Roadmap\n\n### In progress\n' > "$FR/ROADMAP.md"   # renderer reads it even in DB mode
-bash "$FR/utils/roadmap-dashboard.sh" >/dev/null 2>&1 || true
-git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "fixture: commit dashboard baseline" >/dev/null 2>&1
-bash "$FR/utils/roadmap-dashboard.sh" --check >/dev/null 2>&1 \
-  && pass "M0a baseline dashboard is in sync before the run" \
-  || fail "M0a baseline dashboard already drifting — fixture invalid"
+printf '# Roadmap\n\n### In progress\n' > "$FR/ROADMAP.md"
+git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "fixture: commit baseline" >/dev/null 2>&1
 
 M_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
   env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-m-lane" \
@@ -1031,10 +1026,10 @@ M_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
     --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "M0 promoted executor run exits 0" || fail "M0 exit=$rc: $M_OUT"
 
-# M1 (F3): the dashboard is in sync after a promotion (was drift-red pre-fix)
-m1_out="$(bash "$FR/utils/roadmap-dashboard.sh" --check 2>&1)" \
-  && pass "M1 dashboard in sync after promotion (F3)" \
-  || fail "M1 dashboard drifted after promotion — F3 regen missing: $m1_out"
+# M1 (GH-567): dashboard is retired; jog does not create ROADMAP-DASHBOARD.md
+[ ! -f "$FR/ROADMAP-DASHBOARD.md" ] \
+  && pass "M1 dashboard not created after promotion (GH-567)" \
+  || fail "M1 dashboard created after promotion"
 
 # M3 (F1): a jog-state commit exists before dispatch, and a containment-style revert
 # of tracked ledger files cannot destroy the queue row anymore

@@ -353,13 +353,6 @@ hq_inspect_repo(){
         local open_count
         open_count="$(sqlite3 "$p/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE section <> 'Completed'" 2>/dev/null)" || open_count=""
         printf 'LOCAL_ROADMAP_OPEN=%s\n' "${open_count:-0}"
-
-        # 3. Dashboard freshness (ROADMAP-DASHBOARD.md vs DB)
-        if [ -f "$p/ROADMAP-DASHBOARD.md" ] && [ "$p/ROADMAP-DASHBOARD.md" -nt "$p/releases.db" ]; then
-          printf "LOCAL_DASHBOARD_STALE=no\n"
-        else
-          printf "LOCAL_DASHBOARD_STALE=yes\n"
-        fi
       fi
     else
       printf "LOCAL_ROADMAP=broken\n"

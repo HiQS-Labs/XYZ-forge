@@ -74,8 +74,6 @@ echo '{"status": "PASS"}' > "$REPO/TESTS-RESULTS/$TODAY/provenance.jsonl"
 # Subprocess stubs — marathon-plan deliberately exits 5 (items held): the reconcile must CONTINUE.
 printf '#!/usr/bin/env python3\nprint("MOCK: releases_app OK")\n' > "$REPO/utils/py/releases_app.py"
 chmod +x "$REPO/utils/py/releases_app.py"
-printf '#!/usr/bin/env bash\necho "MOCK: roadmap-dashboard OK"\n' > "$REPO/utils/roadmap-dashboard.sh"
-chmod +x "$REPO/utils/roadmap-dashboard.sh"
 printf '#!/usr/bin/env python3\nprint("MOCK: timeline OK")\n' > "$REPO/utils/timeline/export_timeline.py"
 printf '#!/usr/bin/env bash\necho "MOCK: pdda run OK"\n' > "$REPO/utils/pdda/pdda.sh"
 chmod +x "$REPO/utils/timeline/export_timeline.py"
@@ -229,11 +227,11 @@ check_ext "GH-271 QA r3: inline code in the TITLE is stripped" '[]' '[]' 'feat: 
 # moved. Pre-fix, "Rolling back..." reported success over regenerated dashboards and a
 # stray MARATHON-PLAN-<date>.md (observed 2026-08-23).
 git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: pre-rollback state" 2>/dev/null || true
-printf 'ORIGINAL DASHBOARD\n' > "$REPO/ROADMAP-DASHBOARD.md"
-git -C "$REPO" add ROADMAP-DASHBOARD.md && git -C "$REPO" commit -qm "fixture: dashboard original"
-printf '#!/usr/bin/env bash\nprintf "REGENERATED DASHBOARD\\n" > "%s/ROADMAP-DASHBOARD.md"\n' "$REPO" > "$REPO/utils/roadmap-dashboard.sh"
+printf 'ORIGINAL LEADERBOARD\n' > "$REPO/LEADERBOARD.md"
+git -C "$REPO" add LEADERBOARD.md && git -C "$REPO" commit -qm "fixture: leaderboard original"
+printf '#!/usr/bin/env bash\nprintf "REGENERATED LEADERBOARD\\n" > "%s/LEADERBOARD.md"\n' "$REPO" > "$REPO/utils/leaderboard.sh"
 printf '#!/usr/bin/env bash\ntouch "%s/PROJECT/2-WORKING/MARATHON-PLAN-1999-01-01.md"\necho "MOCK: marathon-plan hard failure" >&2\nexit 1\n' "$REPO" > "$REPO/utils/marathon-plan.sh"
-chmod +x "$REPO/utils/roadmap-dashboard.sh" "$REPO/utils/marathon-plan.sh"
+chmod +x "$REPO/utils/leaderboard.sh" "$REPO/utils/marathon-plan.sh"
 cat > "$REPO/manifest_rollback.json" <<'MANIFESTRBEOF'
 {
   "prs": [
@@ -264,9 +262,9 @@ DOCEOF
 git -C "$REPO" add -A && git -C "$REPO" commit -qm "fixture: rollback scenario"
 out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 4001 --offline "$REPO/manifest_rollback.json" --skip-pull 2>&1)"; rc=$?
 [ "$rc" -eq 6 ] && pass "mid-subprocess failure dies with rc=6 (subprocess failure)" || fail "unexpected rc for failed reconcile (rc=$rc): $out"
-grep -q "REGENERATED" "$REPO/ROADMAP-DASHBOARD.md" \
-  && fail "GH-271: rollback left the regenerated dashboard behind" \
-  || pass "GH-271: rollback restored the pre-run dashboard"
+grep -q "REGENERATED" "$REPO/LEADERBOARD.md" \
+  && fail "GH-271: rollback left the regenerated leaderboard behind" \
+  || pass "GH-271: rollback restored the pre-run leaderboard"
 [ -f "$REPO/PROJECT/2-WORKING/MARATHON-PLAN-1999-01-01.md" ] \
   && fail "GH-271: rollback left the stray MARATHON-PLAN doc behind" \
   || pass "GH-271: rollback removed the stray MARATHON-PLAN doc"
@@ -296,10 +294,9 @@ grep -q "STRAY-UNTRACKED.md" <<<"$out" \
   || fail "  leftover path not named: $out"
 rm -f "$REPO/STRAY-UNTRACKED.md"
 # restore the standard stubs for the live-gh section below
-printf '#!/usr/bin/env bash\necho "MOCK: roadmap-dashboard OK"\n' > "$REPO/utils/roadmap-dashboard.sh"
 printf '#!/usr/bin/env bash\necho "MOCK: marathon-plan reports items held"\nexit 5\n' > "$REPO/utils/marathon-plan.sh"
-chmod +x "$REPO/utils/roadmap-dashboard.sh" "$REPO/utils/marathon-plan.sh"
-rm -f "$REPO/ROADMAP-DASHBOARD.md"
+chmod +x "$REPO/utils/marathon-plan.sh"
+rm -f "$REPO/LEADERBOARD.md"
 
 
 # ── LIVE gh path (mock gh on PATH; no --offline) ───────────────────────────────

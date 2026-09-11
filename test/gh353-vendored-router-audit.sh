@@ -850,8 +850,8 @@ MD
 python3 "$AUDIT_PY" --fix "$R_REL_DUP" >/dev/null
 out_dup_check="$(python3 "$AUDIT_PY" --check "$R_REL_DUP" 2>&1)"; rc_dup=$?
 ok "dup roadmap steps fixed and passes audit (rc=0)" "$(is "$rc_dup" "0"; echo $?)"
-dup_count="$(grep -c "ROADMAP-DASHBOARD.md" "$R_REL_DUP/ROUTER.md")"
-ok "Startup sequence collapsed duplicate directives to 1 canonical step" "$(is "$dup_count" "2"; echo $?)"
+cli_count="$(grep -c "releases_app.py roadmap list" "$R_REL_DUP/ROUTER.md")"
+ok "Startup sequence collapsed duplicate directives to 1 canonical step" "$(is "$cli_count" "1"; echo $?)"
 
 # ── 42. Releases --fix: removes duplicate sections down to exactly 1 each ──────────
 python3 "$AUDIT_PY" --fix "$R_REL_DUP_SECT" >/dev/null

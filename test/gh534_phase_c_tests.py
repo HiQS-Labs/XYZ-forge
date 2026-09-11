@@ -315,15 +315,15 @@ class TestCScript(LedgerFixture):
         """A view un-adopted on the PR side while the integration side regenerated it (delete/modify)
         stays deleted after B1; the resolver honours the deletion, the rows still merge."""
         seed = self.clone("seed-view")
-        (seed / "ROADMAP-DASHBOARD.md").write_text("baked view v0\n")
-        commit_all(seed, "adopt dashboard")
+        (seed / "RELEASES-PREVIEW.html").write_text("baked view v0\n")
+        commit_all(seed, "adopt preview")
         _git(seed, "push", "-q", "origin", "development")
         def pr1(r):
             park(r, 200, "from PR 1")
-            (r / "ROADMAP-DASHBOARD.md").write_text("baked view v1 (regenerated)\n")
+            (r / "RELEASES-PREVIEW.html").write_text("baked view v1 (regenerated)\n")
         def pr2(r):
             park(r, 201, "from PR 2")
-            (r / "ROADMAP-DASHBOARD.md").unlink()
+            (r / "RELEASES-PREVIEW.html").unlink()
         self.branch("feat/a", 1, pr1)
         self.branch("feat/b", 2, pr2)
         rc = self.run_main()
@@ -331,7 +331,7 @@ class TestCScript(LedgerFixture):
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
         c = self.clone("verify-view")
-        self.assertFalse((c / "ROADMAP-DASHBOARD.md").exists(), "the deleted view was resurrected")
+        self.assertFalse((c / "RELEASES-PREVIEW.html").exists(), "the deleted view was resurrected")
 
     def test_generator_failure_means_no_push(self):
         """The resolver (rebuild + view generation) failing → B1 stops, nothing is pushed to the PR."""
