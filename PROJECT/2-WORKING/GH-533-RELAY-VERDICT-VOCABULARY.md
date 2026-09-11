@@ -41,3 +41,7 @@ goal: "Give the scaffold, validator, driver, and reviewer one explicit verdict v
   "lanes": {"agy_safe": ["relay-automation/new-relay.sh", "bin/validate-relay-block", "test/new-relay.sh", "test/gh410-relay-block-driven-path.sh"], "orchestrator_only": []}
 }
 ```
+
+## Merge evidence
+
+- PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

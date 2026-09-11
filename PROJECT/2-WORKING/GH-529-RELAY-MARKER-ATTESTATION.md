@@ -48,3 +48,7 @@ goal: "Make one relay turn-placement contract agree with append-only attestation
   "lanes": {"agy_safe": ["relay-automation/new-relay.sh", "utils/py/relay_attest.py", "utils/py/relay_drive.py", "test/new-relay.sh", "test/gh410-relay-block-driven-path.sh"], "orchestrator_only": []}
 }
 ```
+
+## Merge evidence
+
+- PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

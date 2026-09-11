@@ -42,3 +42,7 @@ goal: "Reject unknown tick flags before any state mutation so a mistyped close c
   "lanes": {"agy_safe": ["bin/tick", "test/gh554-tick-unknown-flags.sh"], "orchestrator_only": []}
 }
 ```
+
+## Merge evidence
+
+- PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

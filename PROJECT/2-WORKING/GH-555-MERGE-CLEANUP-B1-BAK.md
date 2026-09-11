@@ -41,3 +41,7 @@ goal: "Leave a successfully resolved B1 landing clone free of the rebuild backup
   "lanes": {"agy_safe": ["skills/merge-cleanup/scripts/ledger_merge.py", "test/gh534_phase_b_tests.py"], "orchestrator_only": []}
 }
 ```
+
+## Merge evidence
+
+- PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
