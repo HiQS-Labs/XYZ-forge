@@ -5095,6 +5095,16 @@ def _scan_review_ready(root, conn):
     Returns (emitted, skipped, failed)."""
     if os.environ.get("XYZ_WORK_CONNECTORS") == "0":
         return (0, 0, 0)
+    # The two conditions _emit_work_event REFUSES on (SystemExit), checked once here so the scan
+    # skips with a reason instead of taking the verb down before dispatch (impl QA r3). A
+    # refusal is right for `work emit`, whose caller wants to know; it is wrong for a
+    # best-effort scan inside a verb that promised never to fail.
+    if not _table_exists(conn, "work_events"):
+        print("review-ready scan skipped: this ledger predates work_events (run `releases migrate`)")
+        return (0, 0, 0)
+    if _repo_id_for_event(conn) is None:
+        print("review-ready scan skipped: the ledger has no repo row to attribute events to")
+        return (0, 0, 0)
     repo = _repo_identity_for_scan(root)
     if not repo:
         print("review-ready scan skipped: no repository identity (set work_connectors.<name>.repos)")
@@ -5127,9 +5137,11 @@ def _scan_review_ready(root, conn):
                 emitted += 1
             except _AlreadyRecorded:
                 skipped += 1
-            except SystemExit:
+            except KeyboardInterrupt:
                 raise
-            except Exception as exc:                  # noqa: BLE001 — one issue must not stop the scan
+            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan
+                # SystemExit included (impl QA r3): a refusal from the writer for ONE issue is a
+                # failed scan item, not a reason to abandon dispatch for every other issue.
                 failed += 1
                 print("review-ready GH-%s: FAILED — %r (continuing)" % (n, exc), file=sys.stderr)
     if emitted or failed:

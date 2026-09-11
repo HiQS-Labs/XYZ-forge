@@ -1203,8 +1203,8 @@ CUR22F="$(sqlite3 "$FXR5/releases.db" "SELECT last_event_id FROM connector_curso
 [ -n "$CUR22F" ] && [ "$CUR22F" -gt 0 ] && ok "22f ...and dispatch still ran (cursor $CUR22F)" || bad "22f dispatch did not run"
 python3 - "$EMF/releases_app.py" <<'PYMUT'
 import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
-a='            except Exception as exc:                  # noqa: BLE001 — one issue must not stop the scan\n'
-assert a in s, "22f red: except anchor missing"; s=s.replace(a,'            except _AlreadyRecorded:\n                raise\n            except ():\n',1)
+a='            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan\n'
+assert s.count(a)==1, "22f red: except anchor must be unique"; s=s.replace(a,'            except _AlreadyRecorded:\n                raise\n            except () as exc:\n',1)
 io.open(p,"w",encoding="utf-8").write(s)
 PYMUT
 [ $? -eq 0 ] || bad "22f red mutation failed"
@@ -1359,6 +1359,66 @@ PYMUT
 FXN2="$WORK/fx_nonobj_red"; rm -rf "$FXN2"; cp -R "$FXN" "$FXN2"
 XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$NOB/releases_app.py" --root "$FXN2" work backfill >"$WORK/nonobj_red.out" 2>&1; RC25R=$?
 [ "$RC25R" != "0" ] && grep -q 'AttributeError' "$WORK/nonobj_red.out" && ok "25 red: with the raw .get restored, backfill DIES with AttributeError (rc=$RC25R)" || bad "25 red did not reproduce (rc=$RC25R)"
+
+
+echo "26. a writer REFUSAL for one issue cannot take reconcile down before dispatch (impl QA r3)"
+# Inject a refuse() (SystemExit) for one issue's emission; the other lands, dispatch runs, rc 0.
+REF="$WORK/app_refuse"; rm -rf "$REF"; mkdir -p "$REF"; cp -R "$ROOT/utils/py/." "$REF/"
+python3 - "$REF/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='                     exclude_source=None, terminal=()):\n'
+assert s.count(a)==1, "26: emit signature anchor must be unique"
+s=s.replace(a, a+'    if gh_number == 9906 and event == "review_ready":\n        refuse("injected", "simulated writer refusal for 9906")\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "26 injection failed"
+cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 706, "isDraft": false, "title": "a", "body": "Closes #9906"},
+ {"number": 707, "isDraft": false, "title": "b", "body": "Closes #9907"}]
+PYJ
+FXS="$WORK/fx_refuse"; rm -rf "$FXS"; mkdir -p "$FXS"
+( cd "$FXS" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXS/"; sqlite3 "$FXS/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+python3 "$MOCK" --reset --state "$WORK/mock26.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock26.json" >/dev/null 2>&1
+R26="$(MOCKSTATE="$WORK/mock26.json" rr python3 "$REF/releases_app.py" --root "$FXS" work reconcile 2>&1)"; RC26=$?
+[ "$RC26" = "0" ] && ok "26 with one emission REFUSING (SystemExit), reconcile still exits 0" || bad "26 rc=$RC26: $R26"
+[ -n "$(sqlite3 "$FXS/releases.db" "SELECT 1 FROM work_events WHERE gh_number=9907 AND event='review_ready';")" ] && ok "26 ...the other issue's event landed" || bad "26 9907 did not land: $R26"
+case "$R26" in *"GH-9906: FAILED"*) ok "26 ...and the refusal was named" ;; *) bad "26 refusal not reported: $R26" ;; esac
+CUR26="$(sqlite3 "$FXS/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ -n "$CUR26" ] && [ "$CUR26" -gt 0 ] && ok "26 ...and dispatch still ran (cursor $CUR26)" || bad "26 dispatch did not run"
+# Red: re-raise SystemExit in the copy → the verb dies before dispatch.
+python3 - "$REF/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan\n'
+assert s.count(a)==1, "26 red: except anchor must be unique"
+s=s.replace(a,'            except SystemExit:\n                raise\n            except Exception as exc:\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "26 red mutation failed"
+python3 -m py_compile "$REF/releases_app.py" || bad "26 red: mutated copy does not compile"
+FXS2="$WORK/fx_refuse_red"; rm -rf "$FXS2"; cp -R "$FXS" "$FXS2"; sqlite3 "$FXS2/releases.db" "DELETE FROM connector_cursors;"
+MOCKSTATE="$WORK/mock26.json" rr python3 "$REF/releases_app.py" --root "$FXS2" work reconcile >/dev/null 2>&1; RC26R=$?
+CUR26R="$(sqlite3 "$FXS2/releases.db" "SELECT count(*) FROM connector_cursors;")"
+[ "$RC26R" != "0" ] && [ "$CUR26R" = "0" ] && ok "26 red: re-raising SystemExit takes the verb down (rc=$RC26R) with NO dispatch — the catch is load-bearing" || bad "26 red did not reproduce (rc=$RC26R, cursors=$CUR26R)"
+# A pre-migration ledger: the scan skips with a reason; the verb does not die.
+FXO="$WORK/fx_old"; rm -rf "$FXO"; mkdir -p "$FXO"
+( cd "$FXO" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXO/"
+sqlite3 "$FXO/releases.db" "DROP TRIGGER IF EXISTS work_events_no_update; DROP TRIGGER IF EXISTS work_events_no_delete; DROP TABLE work_events;" 2>/dev/null
+[ -z "$(sqlite3 "$FXO/releases.db" "SELECT name FROM sqlite_master WHERE name='work_events';")" ] || bad "fixture guard: work_events still present"
+R26O="$(python3 - "$ROOT" "$FXO" <<'PYPROBE'
+import sys, os, sqlite3
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import releases_app as R
+c = sqlite3.connect(os.path.join(sys.argv[2], "releases.db"))
+try:
+    out = R._scan_review_ready(sys.argv[2], c)
+    print("returned", out)
+except SystemExit as e:
+    print("SYSTEMEXIT", e.code)
+PYPROBE
+)"
+case "$R26O" in *"returned (0, 0, 0)"*) ok "26 on a ledger without work_events the scan returns (0,0,0) instead of exiting" ;; *) bad "26 pre-migration ledger: $R26O" ;; esac
 
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
