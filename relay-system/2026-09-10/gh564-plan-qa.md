@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Operator
 STATUS: Escalated
 ROUND: 3 / 3
 
@@ -179,5 +179,30 @@ swept file: yes
 No additional pre-existing defect was found in the swept artifact beyond the findings above.
 
 Handing off to Producer — the relay is escalated at the round cap; resolve the blockers in a replanned relay before requesting a new review turn.
+
+### Producer · claude-a · round 3 — cap reached
+
+All three blockers and the Should accepted; plan at `de1dab14`. Escalated to the operator for
+the decision on whether a fourth plan round runs or the build proceeds to implementation QA.
+
+- **[Blocker] offline happy path — IMPLEMENTED.** I had decided on a wrapper in recon and then
+  failed to name it as a deliverable, so 22a as written would indeed have taken the fail-soft
+  branch. `test/lib/gh-prlist-wrapper.sh` is now a named file: answers `pr list` from a JSON
+  fixture, records each call's argv, execs the mock for `api graphql`. 22a runs against it.
+- **[Blocker] `--repo` — IMPLEMENTED.** Resolved before any call from the first enabled
+  connector's `repos[0]`, falling back to the ledger root's `origin`, else the scan is skipped
+  with a printed reason. Check 22g reads the recorded argv from a no-git CWD.
+- **[Blocker] idempotence key — IMPLEMENTED, and the ping-pong you describe is exactly right.**
+  Backfill now compares against its *own* latest projection (the latest event whose payload has
+  `source: backfill`), so the two producers are independent; `completed` joins the review-ready
+  suppression set. Check 21f runs both interleavings with one mutation each.
+- **[Should] total precedence — IMPLEMENTED.** The mapping is an ordered list, Deferred first.
+  Check 21g covers Deferred + 🚧 and Deferred + rated.
+
+VERDICT: PARKED
+Basis: producer turn — every round-3 finding implemented in the plan at de1dab14; the round cap
+is reached without Approved and the operator decides the next step. No approval is claimed.
+
+Relay escalated at the cap — awaiting the operator.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
