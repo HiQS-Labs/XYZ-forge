@@ -120,3 +120,11 @@ I reviewed `bin/tick` and `test/gh554-tick-unknown-flags.sh` in their entirety.
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-11T02:02:38Z
+task: MARATHON-GH-554-TICK-UNKNOWN-FLAGS-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 379fd76d40d93f3759e9ee817f53cfd31b5177d6
+added-range: 18044+637
+added-sha256: fcf38c56363587921d6eaec1219907fe53b64759b6ec8779e1f40b2e59ca77ed
