@@ -134,3 +134,7 @@ This issue explicitly supersedes the 2026-09-07 rejection recorded in `PROJECT/1
 - [x] `validate.sh` passes 100% clean across all suites.
 - [x] `python3 utils/py/releases_app.py roadmap list` serves as the primary query interface.
 - [ ] Single atomic PR landed in sequence before GH-568.
+
+## Merge evidence
+
+- PR #576 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
