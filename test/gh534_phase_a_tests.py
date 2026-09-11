@@ -378,14 +378,29 @@ class TestA4TickClaims(_Fixture):
         self.assertEqual(info["disposition"], "PRESERVE_UNVERIFIED_SESSION")
 
     def test_xii_events_dir_missing_is_refused_not_empty(self):
-        """THE PIN: readAllEvents() returns [] for a missing dir; the verb must not trust that."""
+        """THE PIN (GH-561-narrowed): a coordination surface present WITHOUT a readable log is
+        refused — the verb must not trust an absent log. A bare telemetry-only .tick/ takes the
+        GH-561 uninitialized path instead (test_xiv)."""
         shutil.rmtree(self.clone / ".tick" / "events")
+        (self.clone / ".tick" / "STATE.md").write_text("(stale derived snapshot)\n")
         r = tick(self.clone, "claims", "--json")
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("events-dir-missing", r.stderr)
         info = self.inspect()
         self.assertEqual(info["disposition"], "PRESERVE_UNVERIFIED_SESSION")
         self.assertIn("events-dir-missing", info["disposition_reason"])
+
+    def test_xiv_telemetry_only_tick_is_uninitialized_eligible(self):
+        """GH-561: a .tick/ holding ONLY gate-run artifacts (telemetry/, orphan-backups/) with no
+        coordination surface is claim-free by construction — exit 0, uninitialized flagged."""
+        shutil.rmtree(self.clone / ".tick")
+        (self.clone / ".tick" / "telemetry").mkdir(parents=True)
+        (self.clone / ".tick" / "orphan-backups").mkdir()
+        r = tick(self.clone, "claims", "--json")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(payload["claimed"], [])
+        self.assertTrue(payload["uninitialized"])
 
     def test_tick_claims_writes_nothing(self):
         self.claim("T-ro", "agy")
