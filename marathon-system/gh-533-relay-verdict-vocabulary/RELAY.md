@@ -1,6 +1,6 @@
 # Marathon Phase gh-533-relay-verdict-vocabulary
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-533-RELAY-VERDICT-VOCABULARY-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -115,3 +115,7 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+- [Blocker] Scoped the `Basis` lookup in `bin/validate-relay-block` to only the final review block containing the `VERDICT` (using awk to extract the block). Added a red regression test in `test/gh410-relay-block-driven-path.sh` to prove that a missing Basis fails validation even if a prior turn included one.
+- [Should] Added a PARKED integration test in `test/new-relay.sh` to ensure `bin/validate-relay-block` accepts a scaffolded PARKED verdict.

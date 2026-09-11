@@ -86,8 +86,24 @@ if ! echo "$last_verdict" | grep -E -i -q '^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[
   exit 8
 fi
 
+# Extract the final review block (the one containing the final VERDICT)
+final_review_block="$(echo "$log_after" | awk '
+/^### / { 
+    if (has_verdict) last_verdict_block = block
+    block = $0
+    has_verdict = 0
+    next 
+}
+{ block = block "\n" $0 }
+toupper($0) ~ /^[[:space:]]*[*`]*VERDICT[*`]*:/ { has_verdict = 1 }
+END { 
+    if (has_verdict) last_verdict_block = block
+    print last_verdict_block 
+}
+')"
+
 # Assertion 4: Basis: line is present and non-empty
-if ! echo "$log_after" | grep -E -i -q '^[[:space:]]*[`*]*Basis[`*]*:[`*]*[[:space:]]*.+'; then
+if ! echo "$final_review_block" | grep -E -i -q '^[[:space:]]*[`*]*Basis[`*]*:[`*]*[[:space:]]*.+'; then
   echo "Basis: line is missing or empty" >&2
   exit 8
 fi

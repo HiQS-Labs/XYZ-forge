@@ -233,6 +233,37 @@ grep -q "VERDICT: value must be exactly PASS, FAIL, or PARKED. Found: 'PASSED'" 
   && pass "1.11b error message explains exact value required" \
   || fail "1.11b unexpected error message: $out"
 
+# 1.12: Final verdict with no Basis but a prior Basis is rejected (exit 8)
+cat >"$TMP/false-green.md" <<'EOF_M12'
+NEXT: Producer
+STATUS: Approved
+ROUND: 2 / 4
+
+## Setup
+Artifact: file.md
+
+## Log
+### Reviewer · Round 1
+VERDICT: FAIL
+Basis: something is wrong
+
+### Builder · Round 2
+fixed it
+
+### Reviewer · Round 2
+VERDICT: PASS
+EOF_M12
+
+set +e
+out="$("$VALIDATE_BIN" "$TMP/false-green.md" 2>&1)"
+rc=$?
+set -e
+[ "$rc" -eq 8 ] && pass "1.12 final verdict missing Basis (but prior Basis exists) rejected with exit 8" \
+  || fail "1.12 final verdict missing Basis expected exit 8, got $rc"
+grep -q "Basis: line is missing or empty" <<<"$out" \
+  && pass "1.12b error message explains missing Basis" \
+  || fail "1.12b unexpected error message: $out"
+
 # --------------------------------------------------------------------------------------------------
 # Section 2: Shared rtl_relay_field parser parity
 # --------------------------------------------------------------------------------------------------

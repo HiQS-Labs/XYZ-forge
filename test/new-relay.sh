@@ -57,5 +57,16 @@ Basis: simulated review turn on real scaffold
 EOF_TURN
 bash "$VAL" "$TMP6" >/dev/null 2>&1 && pass "scaffolded thread passes real validator" || fail "scaffolded thread failed validator"
 
+# --- (7) integration: scaffolded thread passes structural validation after a PARKED reviewer turn -----
+out7="$(bash "$NR" --title "Integration Test Parked" --reviewer agy --print)"
+TMP7="$WORK/integration-parked.md"
+printf '%s\n' "$out7" > "$TMP7"
+cat >>"$TMP7" <<'EOF_TURN'
+### Reviewer · Round 1
+VERDICT: PARKED
+Basis: simulated review turn on real scaffold, parked for now
+EOF_TURN
+bash "$VAL" "$TMP7" >/dev/null 2>&1 && pass "scaffolded thread passes real validator with PARKED verdict" || fail "scaffolded thread failed validator with PARKED verdict"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
