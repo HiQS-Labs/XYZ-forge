@@ -467,6 +467,24 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if r.returncode != 0:
         res.update(reason="releases check red after resolution: " + (r.stderr.strip() or r.stdout.strip())[:400])
         return res
+    # `check --rebuild` intentionally leaves the displaced DB as recovery evidence. B1 owns a
+    # disposable landing clone, so remove only that exact backup after the complete resolution has
+    # passed its final check. Every earlier failure returns above and preserves the evidence.
+    backup = clone / f"{LEDGER_DB}.bak"
+    try:
+        backup.unlink(missing_ok=True)
+    except OSError as exc:
+        res.update(reason=f"verified resolution but could not remove {backup.name}: {exc}")
+        return res
+    res["log"].append(f"removed verified rebuild backup: {backup.name}")
+    status = run_git(clone, ["status", "--porcelain", "--untracked-files=all"])
+    if status.returncode != 0:
+        res.update(reason=f"cannot verify landing-clone status: {status.stderr.strip()[:300]}")
+        return res
+    unexpected = [line for line in status.stdout.splitlines() if line.startswith("?? ")]
+    if unexpected:
+        res.update(reason="unexpected untracked files after B1: " + ", ".join(line[3:] for line in unexpected))
+        return res
     u = run_git(clone, ["ls-files", "-u"])
     if u.returncode != 0 or u.stdout.strip():
         res.update(reason="unmerged entries remain after the resolver: " + u.stdout.strip()[:300])
