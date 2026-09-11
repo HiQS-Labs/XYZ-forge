@@ -4870,10 +4870,14 @@ def _latest_event(conn, gh_number, only_source=None, exclude_source=None):
     for event, payload in rows:
         if only_source is None and exclude_source is None:
             return event
+        # `work emit --payload-json` accepts ANY JSON value, so a prior `[]`, `null` or string
+        # payload is a legitimate row (impl QA r2). Only an object can carry a source; anything
+        # else — including unparseable text — is "no producer named".
         try:
-            src = (json.loads(payload) if payload else {}).get("source")
+            decoded = json.loads(payload) if payload else None
         except ValueError:
-            src = None
+            decoded = None
+        src = decoded.get("source") if isinstance(decoded, dict) else None
         if only_source is not None and src != only_source:
             continue
         if exclude_source is not None and src == exclude_source:

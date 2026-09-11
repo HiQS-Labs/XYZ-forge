@@ -1321,6 +1321,45 @@ XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$BYP/releases_ap
 ORPH2="$(sqlite3 "$FXP2/releases.db" "SELECT count(*) FROM work_events w WHERE w.id > $B2 AND w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
 [ "$ORPH2" -gt 0 ] && ok "24 red: a copy that bypasses perform_write leaves $ORPH2 receipt-less event(s) — the join catches it" || bad "24 red(bypass) did not reproduce"
 
+
+echo "25. a non-object payload on an older row cannot break the producer views (impl QA r2)"
+FXN="$WORK/fx_nonobj"; rm -rf "$FXN"; cp -R "$FXK" "$FXN"
+appn() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXN" "$@"; }
+# Legitimate rows through the real verb: a list, a null and a string payload, all newer than 9930's backfill row.
+appn work emit --event updated --gh-number 9930 --payload-json '[]'      >/dev/null 2>&1
+appn work emit --event updated --gh-number 9930 --payload-json 'null'    >/dev/null 2>&1
+appn work emit --event updated --gh-number 9930 --payload-json '"text"'  >/dev/null 2>&1
+# `null` decodes to None and is stored as SQL NULL, not the text 'null' — count it that way.
+NONOBJ="$(sqlite3 "$FXN/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND event='updated' AND (payload='[]' OR payload IS NULL OR payload='\"text\"');")"
+[ "$NONOBJ" -ge 3 ] || bad "fixture guard: expected >=3 non-object payload rows, got $NONOBJ"
+python3 - "$ROOT" "$FXN/releases.db" <<'PYPROBE'
+import sys, os, sqlite3
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import releases_app as R
+c = sqlite3.connect(sys.argv[2])
+assert R._latest_event(c, 9930, only_source="backfill") == "parked", "own view broke on a non-object payload"
+assert R._latest_event(c, 9930, exclude_source="backfill") == "updated", "exclude view broke on a non-object payload"
+print("views-ok")
+PYPROBE
+[ $? -eq 0 ] && ok "25 both producer views survive list/null/string payloads above the backfill row" || bad "25 a non-object payload broke a producer view"
+NB0="$(sqlite3 "$FXN/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+OUT25="$(appn work backfill 2>&1)"; RC25=$?
+NB1="$(sqlite3 "$FXN/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+[ "$RC25" = "0" ] && [ "$NB0" = "$NB1" ] && ok "25 backfill exits 0 and skips 9930 (still its own latest) with non-object rows present" || bad "25 backfill rc=$RC25, 9930 backfill rows $NB0 -> $NB1: $(echo "$OUT25" | tail -2)"
+# Red: restore the `.get` on the raw decode in a copy → AttributeError, backfill dies.
+NOB="$WORK/app_nonobj"; rm -rf "$NOB"; mkdir -p "$NOB"; cp -R "$ROOT/utils/py/." "$NOB/"
+python3 - "$NOB/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='        src = decoded.get("source") if isinstance(decoded, dict) else None\n'
+assert s.count(a)==1, "25 red: decode anchor must be unique"
+s=s.replace(a,'        src = (decoded if decoded is not None else {}).get("source")\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "25 red mutation failed"
+FXN2="$WORK/fx_nonobj_red"; rm -rf "$FXN2"; cp -R "$FXN" "$FXN2"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$NOB/releases_app.py" --root "$FXN2" work backfill >"$WORK/nonobj_red.out" 2>&1; RC25R=$?
+[ "$RC25R" != "0" ] && grep -q 'AttributeError' "$WORK/nonobj_red.out" && ok "25 red: with the raw .get restored, backfill DIES with AttributeError (rc=$RC25R)" || bad "25 red did not reproduce (rc=$RC25R)"
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
