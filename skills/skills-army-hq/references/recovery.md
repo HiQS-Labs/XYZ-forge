@@ -41,6 +41,27 @@ skills and configure targets there. Retain old backups/history separately; never
 rewrite receipts to pretend they belong to the new root. Locally edited payloads
 need preservation in a local source repository before re-import.
 
+### Relocating into a git-synced checkout (GH-536)
+
+When the new `--root` lives inside a checkout that another scheduled writer pushes
+(a Git Pulse sync checkout, say), three extra rules apply — all learned live, each
+from a real leak or wedge:
+
+1. **Exclude machine state before the first push.** The collection's `.gitignore`
+   must carry at minimum: `.deploy-skills.json`, `.deploy-skills-pending.json`,
+   `targets.json`, `backups/`, `*.zip`, `.lock`, `*.lock`, `.staging/`, `__pycache__/`,
+   `*.pyc`. Note `*.lock`, not `.lock` — the first push leaked
+   `.deploy-skills.lock` on exactly that distinction.
+2. **Commit immediately after every mutation.** The carrier's pre-write
+   `pull --rebase` refuses on uncommitted tracked changes, wedging its whole
+   cycle (observed: exit 128, the documented 229-run failure class).
+3. **Verify cross-device digests against the checkout's copy, not the
+   publisher's live folder** — git normalizes file modes (only the executable
+   bit survives), so byte-identical payloads can digest differently.
+
+Adoption on other machines does NOT bootstrap state inside the shared checkout;
+see SKILL.md → "Adopting the collection on another machine".
+
 Previews deliberately take no write lock. Do not run them during an apply: they
 can observe intermediate state and report transient conflicts. Wait for the writer
 to finish, then preview again; never delete its lock file.
