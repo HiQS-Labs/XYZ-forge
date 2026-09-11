@@ -4281,7 +4281,16 @@ def roadmap_render(conn):
         gh_label = "#%d" % gh if gh is not None else (row["global_id"] or "unknown")
         if raw and raw.strip():
             stripped = raw.strip()
-            if not re.match(r'^- \*\*[^\r\n*]+?\*\*', stripped):
+            first_line = stripped.splitlines()[0]
+            if first_line.startswith("- **"):
+                if not re.match(r'^- \*\*[^\r\n*]+?\*\*', first_line):
+                    unparseable.append(gh_label)
+                    continue
+            elif first_line.startswith("- ["):
+                if _ROADMAP_TASKBOX_RE.match(first_line) or not re.match(r'^- \[[^\r\n\]]+?\]', first_line):
+                    unparseable.append(gh_label)
+                    continue
+            else:
                 unparseable.append(gh_label)
                 continue
         else:
