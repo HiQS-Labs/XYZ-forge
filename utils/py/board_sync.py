@@ -40,10 +40,10 @@ from pathlib import Path
 
 XYZ_ROOT = Path(__file__).resolve().parent.parent.parent
 try:
-    from device_config import get_device_config_path, load_local_device_config
+    from device_config import get_device_config_path, load_local_device_config, resolve_device_block
 except ImportError:  # direct execution outside utils/py
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from device_config import get_device_config_path, load_local_device_config
+    from device_config import get_device_config_path, load_local_device_config, resolve_device_block
 
 # --root default: the CONSUMER repo, not the harness copy this file lives in. In a
 # vendored install XYZ_ROOT is <consumer>/.xyz — scanning there reads the harness's own
@@ -59,12 +59,17 @@ STATE_PATH = Path(
     os.environ.get("XYZ_BOARD_SYNC_STATE_PATH", "~/.xyz/board_sync_state.json")
 ).expanduser()
 
+# GH-549: project_owner, project_number and repos carry NO default. They used to ship one
+# person's board as a zero-config default, so any other user of this harness wrote to that
+# board. They are now required configuration: unconfigured, board_sync refuses before it makes
+# a single network call. The empty string / 0 / [] are sentinels for "not configured", chosen
+# so resolve_device_block still knows each value's type for env coercion.
 DEFAULTS = {
-    "project_owner": "noelsaw1",
-    "project_number": 3,
+    "project_owner": "",
+    "project_number": 0,
     "status_field": "Status",
     "in_progress": "In progress",
-    "repos": ["HiQS-Labs/XYZ-forge"],
+    "repos": [],
     "clone_dirs": ["~/Documents/GH Repos"],
     "mention_policy": "strong-signals-write",
     "adapters": ["pdda", "git-hooks", "harness-fires", "sweeper"],  # consumed in Phase 2
@@ -88,34 +93,15 @@ def _warn(msg):
 
 def resolve_settings():
     """3-tier resolution per GH-174: XYZ_BOARD_SYNC_<KEY> env > device_config board_sync
-    object > feature defaults. The nested object's env tier lives HERE, not in
-    device_config.py — the generic resolver handles top-level keys only (N3)."""
-    cfg = dict(DEFAULTS)
-    local = load_local_device_config().get("board_sync", {})
-    if not isinstance(local, dict):
-        _warn("board_sync setting is not an object — ignoring it")
-        local = {}
-    for key in DEFAULTS:
-        env = f"XYZ_BOARD_SYNC_{key.upper()}"
-        if env in os.environ:
-            raw = os.environ[env]
-            if isinstance(DEFAULTS[key], list):
-                raw = [p.strip() for p in raw.split(",") if p.strip()]
-            elif isinstance(DEFAULTS[key], int) and not isinstance(DEFAULTS[key], bool):
-                try:
-                    raw = int(raw)
-                except ValueError:
-                    _warn(f"{env}={raw!r} is not an integer — ignoring it")
-                    continue
-            cfg[key] = raw
-        elif key in local:
-            cfg[key] = local[key]
-    # JSON-file values skip the env tier's comma-splitting, so a bare string where a
-    # list belongs ("repos": "owner/name") would iterate characters downstream —
-    # coerce (review r1 F6).
-    for key in ("repos", "clone_dirs", "adapters"):
-        if isinstance(cfg.get(key), str):
-            cfg[key] = [cfg[key]]
+    object > feature defaults.
+
+    GH-549: the nested-object merge this used to carry inline now lives once in
+    device_config.resolve_device_block, so board_sync, work_connectors and anything after
+    them share one implementation instead of a copy each. Behaviour is unchanged — the
+    suite pins `board_sync config` byte-for-byte across the migration."""
+    cfg, error = resolve_device_block("board_sync", DEFAULTS, "XYZ_BOARD_SYNC")
+    if error:
+        _warn(error)
     return cfg
 
 
@@ -239,6 +225,28 @@ def scan(root, cfg, allow_empty=False):
 # ── board side (network; gh api graphql is the auth layer) ─────────────────────
 
 
+def _raise_if_insufficient_scopes(blob):
+    """GH-549: name a missing token scope, and print the exact remediation.
+
+    This is the most likely first failure on a fresh machine — verified on this host, whose gh
+    token carries `gist, read:org, repo, workflow` and NOT `read:project` — and it used to
+    arrive as an opaque `gh api graphql rc=1` or `GraphQL errors: [...]` blob. It is checked on
+    BOTH failure paths because real `gh` exits nonzero for this, so the payload branch alone
+    would never have seen it.
+
+    We never run an auth command on anyone's behalf: the operator is told the command and runs
+    it themselves.
+    """
+    if not blob:
+        return
+    if "INSUFFICIENT_SCOPES" in blob or "read:project" in blob:
+        raise RuntimeError(
+            "the gh token lacks the Projects scope, so no board call can succeed. "
+            "Grant it with:  gh auth refresh -s read:project,project   "
+            "(this tool will not run an auth command for you). Underlying error: %s"
+            % blob.strip()[:200])
+
+
 def _gql(query, variables=None):
     # GH-405: the gh executable is a seam so the mock board (utils/py/mock_gh_board.py) can
     # stand in for the real API offline. Default is the real `gh` — nothing changes unless
@@ -247,8 +255,8 @@ def _gql(query, variables=None):
     gh_bin = os.environ.get("XYZ_BOARD_SYNC_GH_BIN", "gh")
     cmd = [gh_bin, "api", "graphql", "-f", f"query={query}"]
     for k, v in (variables or {}).items():
-        # -F applies type inference and @file expansion — a project_owner of "@noelsaw1"
-        # would read a FILE named noelsaw1 (review r2 #7). Raw -f for strings; -F only
+        # -F applies type inference and @file expansion — a project_owner of "@someuser"
+        # would read a FILE named someuser (review r2 #7). Raw -f for strings; -F only
         # where the schema wants a typed scalar (Int).
         flag = "-F" if isinstance(v, int) and not isinstance(v, bool) else "-f"
         cmd += [flag, f"{k}={v}"]
@@ -257,13 +265,17 @@ def _gql(query, variables=None):
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise RuntimeError(f"gh api graphql failed ({gh_bin}): {exc}") from exc
     if proc.returncode != 0:
+        blob = (proc.stderr or "") + (proc.stdout or "")
+        _raise_if_insufficient_scopes(blob)
         raise RuntimeError(f"gh api graphql rc={proc.returncode} ({gh_bin}): {proc.stderr.strip()[:300]}")
     try:
         payload = json.loads(proc.stdout)
     except ValueError as exc:
         raise RuntimeError(f"gh api graphql returned non-JSON: {exc}") from exc
     if "errors" in payload:
-        raise RuntimeError(f"GraphQL errors: {json.dumps(payload['errors'])[:300]}")
+        blob = json.dumps(payload["errors"])
+        _raise_if_insufficient_scopes(blob)
+        raise RuntimeError(f"GraphQL errors: {blob[:300]}")
     return payload["data"]
 
 
@@ -282,12 +294,30 @@ def _load_state():
         return {}
 
 
+def require_board_identity(cfg):
+    """Refuse before any network call when the board identity is not configured (GH-549).
+
+    This is what replaces the old personal defaults. It must run BEFORE the first _gql, so an
+    unconfigured harness cannot write to anyone's board — not even by accident, and not even
+    once.
+    """
+    missing = [k for k in ("project_owner", "project_number", "repos") if not cfg.get(k)]
+    if missing:
+        _die("board identity is not configured (missing: %s). Set them in "
+             "~/.xyz/device_config.json under \"board_sync\", or via "
+             "XYZ_BOARD_SYNC_PROJECT_OWNER / XYZ_BOARD_SYNC_PROJECT_NUMBER / "
+             "XYZ_BOARD_SYNC_REPOS. There is no "
+             "default — a default would write to somebody else's board."
+             % ", ".join(missing), 2)
+
+
 def resolve_ids(cfg, force=False):
     """Resolve project / field / option IDs BY NAME, cached in state, re-resolved on
     demand (S5) — a board edit (renamed option) must self-heal, not persist stale IDs.
     The cache records the SETTINGS it was resolved from: change project_number (or any
     input) and the cache self-invalidates instead of silently writing to the old board
     (review r2 #1)."""
+    require_board_identity(cfg)
     wanted_inputs = {
         "project_owner": cfg["project_owner"],
         "project_number": int(cfg["project_number"]),
@@ -298,6 +328,10 @@ def resolve_ids(cfg, force=False):
     ids = state.get("ids", {}) if not force else {}
     if ids and ids.get("_inputs") != wanted_inputs:
         _warn("cached board IDs were resolved from different settings — re-resolving")
+        ids = {}
+    if ids and "options" not in ids:
+        # A cache written before GH-549 has no option table. Re-resolve rather than fail
+        # later with a KeyError in the middle of a status write.
         ids = {}
     if not ids:
         # GH-405: ask for BOTH owner shapes in one round trip. `user(login:)` returns null
@@ -333,6 +367,11 @@ def resolve_ids(cfg, force=False):
             "project": proj["id"],
             "status_field": field["id"],
             "in_progress_option": option["id"],
+            # GH-549: the whole option table, by name. board_add only ever needed
+            # in_progress, but a kanban connector moves a card to a column named by
+            # config, so the id for every column has to survive the one round trip we
+            # already make rather than costing a query each.
+            "options": {o["name"]: o["id"] for o in options},
         }
         state["ids"] = ids
         _atomic_state_write(state)
@@ -407,6 +446,7 @@ def board_add(cfg, num, write, snapshot=None):
     candidates cost one pagination, not 2N, review r2 #5). A card that already exists
     with a DIFFERENT status gets a status-only write — the work-start event must not be
     missed just because the card predates it (review r2 #2)."""
+    require_board_identity(cfg)   # GH-549: before repos[0], which would otherwise IndexError
     repo = cfg["repos"][0]
     board_name = f"{cfg['project_owner']}/projects/{cfg['project_number']}"
     on_board = snapshot if snapshot is not None else fetch_board_issues(cfg)
@@ -450,12 +490,68 @@ def board_add(cfg, num, write, snapshot=None):
     return f"gh-{num}: added + Status={cfg['in_progress']!r} on {board_name}"
 
 
-def _set_status(cfg, ids, item_id):
+def _set_status_option(cfg, ids, item_id, option_id):
     _gql(
         "mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{"
         "projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}",
-        {"p": ids["project"], "i": item_id, "f": ids["status_field"], "o": ids["in_progress_option"]},
+        {"p": ids["project"], "i": item_id, "f": ids["status_field"], "o": option_id},
     )
+
+
+def _set_status(cfg, ids, item_id):
+    _set_status_option(cfg, ids, item_id, ids["in_progress_option"])
+
+
+def option_id_for(cfg, column, force=False):
+    """The option id for a column NAME, with one self-heal retry (GH-549).
+
+    A board owner renames or adds a column and the cached table goes stale; that must
+    re-resolve, exactly as S5 already does for a renamed in_progress option, rather than
+    write to the wrong column or fail permanently.
+    """
+    ids = resolve_ids(cfg, force=force)
+    option = (ids.get("options") or {}).get(column)
+    if option is None and not force:
+        return option_id_for(cfg, column, force=True)
+    if option is None:
+        raise RuntimeError(
+            f"column {column!r} not found on field {cfg['status_field']!r} "
+            f"(columns: {sorted((ids.get('options') or {}).keys())})"
+        )
+    return ids, option
+
+
+def set_issue_status(cfg, num, column, write=True, snapshot=None):
+    """Move gh-<num>'s card to <column>, adding the card if the board has none (GH-549).
+
+    Set-to-value, never an increment — which is what makes connector replay idempotent and
+    lets `work reconcile` re-run a batch without double-applying anything.
+    """
+    require_board_identity(cfg)
+    repo = cfg["repos"][0]
+    board_name = f"{cfg['project_owner']}/projects/{cfg['project_number']}"
+    on_board = snapshot if snapshot is not None else fetch_board_issues(cfg)
+    existing = on_board.get((repo, num))
+    if existing and existing.get("status") == column:
+        return f"gh-{num}: already {column!r} on {board_name} — no-op"
+    if not write:
+        return (f"gh-{num}: dry-run — would set {column!r} on {board_name} "
+                f"(currently {existing.get('status') if existing else 'not on the board'!r})")
+    item_id = existing.get("item_id") if existing else None
+    if item_id is None:
+        issue = issue_node_id(cfg, num)
+        ids = resolve_ids(cfg)
+        item_id = _add_item(cfg, ids, issue["id"])
+    ids, option = option_id_for(cfg, column)
+    try:
+        _set_status_option(cfg, ids, item_id, option)
+    except RuntimeError as exc:
+        ids, option = option_id_for(cfg, column, force=True)   # S5: stale-ID self-heal
+        _set_status_option(cfg, ids, item_id, option)
+        _warn(f"status write failed ({exc}); re-resolved IDs and succeeded")
+    if snapshot is None:
+        fetch_board_issues(cfg)
+    return f"gh-{num}: Status={column!r} on {board_name}"
 
 
 def dedupe(cfg, write):

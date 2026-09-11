@@ -212,6 +212,12 @@ exit 42
 SH
 chmod +x "$STUB_BIN"
 require_fixture_file "$STUB_BIN" "stub gh binary"
+# GH-549: board_sync no longer defaults a project owner/number/repo, so this seam test must
+# name a board before it can reach _gql at all. The point of the leg is unchanged — that
+# XYZ_BOARD_SYNC_GH_BIN intercepts the call — but the identity now has to be explicit.
+export XYZ_BOARD_SYNC_PROJECT_OWNER="seam-owner"
+export XYZ_BOARD_SYNC_PROJECT_NUMBER="1"
+export XYZ_BOARD_SYNC_REPOS="seam/repo"
 SEAM_OUT="$(XYZ_BOARD_SYNC_GH_BIN="$STUB_BIN" python3 "$TOOL" touch gh-402 --write 2>&1)"; SEAM_RC=$?
 if [ "$SEAM_RC" -ne 0 ] && grep -q "stub-gh-intercepted" <<<"$SEAM_OUT"; then
   ok "XYZ_BOARD_SYNC_GH_BIN overrides gh executable and intercepts _gql (rc=$SEAM_RC)"
@@ -221,6 +227,42 @@ BARE_OUT="$(XYZ_BOARD_SYNC_GH_BIN="$STUB_BIN" python3 "$TOOL" touch 402 --write 
 if [ "$BARE_RC" -ne 0 ] && grep -q "stub-gh-intercepted" <<<"$BARE_OUT"; then
   ok "touch accepts bare integer argument (402)"
 else bad "touch rejected bare integer argument (rc=$BARE_RC): $BARE_OUT"; fi
+
+# ── 13. GH-549: no personal board is baked in; unconfigured refuses before any gh call ──
+echo "13. GH-549 — no default board identity"
+SENTINEL="$WORK/gh-was-called"
+CALL_BIN="$WORK/sentinel-gh"
+cat > "$CALL_BIN" <<SH
+#!/usr/bin/env bash
+touch "$SENTINEL"
+exit 0
+SH
+chmod +x "$CALL_BIN"
+require_fixture_file "$CALL_BIN" "sentinel gh binary"
+NOCFG_OUT="$(env -u XYZ_BOARD_SYNC_PROJECT_OWNER -u XYZ_BOARD_SYNC_PROJECT_NUMBER \
+  -u XYZ_BOARD_SYNC_REPOS XYZ_DEVICE_CONFIG_PATH=/dev/null \
+  XYZ_BOARD_SYNC_GH_BIN="$CALL_BIN" python3 "$TOOL" touch 402 --write 2>&1)"; NOCFG_RC=$?
+case "$NOCFG_OUT" in
+  *"board identity is not configured"*)
+    ok "an unconfigured board_sync refuses by name (rc=$NOCFG_RC)" ;;
+  *) bad "unconfigured board_sync did not refuse: $NOCFG_OUT" ;;
+esac
+[ -f "$SENTINEL" ] && bad "it called gh before refusing — a default board could still be written" \
+                   || ok "and it made ZERO gh calls before refusing"
+DEFS="$(env -u XYZ_BOARD_SYNC_PROJECT_OWNER -u XYZ_BOARD_SYNC_PROJECT_NUMBER \
+  -u XYZ_BOARD_SYNC_REPOS XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$TOOL" config 2>&1)"
+case "$DEFS" in
+  *'"project_owner": ""'*) ok "DEFAULTS carries no project_owner" ;;
+  *) bad "a project_owner default is still baked in: $DEFS" ;;
+esac
+case "$DEFS" in
+  *'"project_number": 0'*) ok "DEFAULTS carries no project_number" ;;
+  *) bad "a project_number default is still baked in: $DEFS" ;;
+esac
+case "$DEFS" in
+  *'"repos": []'*) ok "DEFAULTS carries no repos" ;;
+  *) bad "a repos default is still baked in: $DEFS" ;;
+esac
 
 echo
 echo "GH-402 board_sync Phase 1: $PASS passed, $FAIL failed"

@@ -97,6 +97,23 @@ def resolve_project_v2_field(state, owner, number, field_name):
 
 
 def handle_graphql(query, variables, state, state_path):
+    # GH-549: insufficient_scopes — the single most likely first failure on a fresh machine,
+    # and until now the mock had no way to reproduce it. Unlike stale_option_once this is
+    # STICKY: a missing token scope does not heal itself on retry, and board_sync's one-shot
+    # self-heal must not be able to paper over it. Clear it with --reset or --fault.
+    if state.get("faults", {}).get("insufficient_scopes"):
+        return {
+            "errors": [
+                {
+                    "message": ("Your token has not been granted the required scopes to execute "
+                                "this query. The 'id' field requires one of the following scopes: "
+                                "['read:project'], but your token has only been granted the: "
+                                "['gist', 'read:org', 'repo', 'workflow'] scopes."),
+                    "type": "INSUFFICIENT_SCOPES",
+                }
+            ]
+        }
+
     # 1. user(login) / organization(login) -> projectV2(number) -> field
     if "projectV2" in query and "SingleSelectField" in query:
         owner = variables.get("o", state["project_owner"])

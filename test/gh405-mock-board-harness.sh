@@ -102,6 +102,20 @@ export XYZ_BOARD_SYNC_GH_BIN="$TOOL"
 export XYZ_MOCK_BOARD_STATE="$MOCK_STATE"
 export XYZ_BOARD_SYNC_STATE_PATH="$SYNC_STATE"
 
+# GH-549: board_sync no longer ships a project owner or number as a default — a default
+# would write to somebody else's board — so these legs must state the board they mean.
+# They used to pass only because board_sync.py and mock_gh_board.py hardcoded the same
+# values and agreed by coincidence; removing one side of that coincidence broke six
+# assertions here, exactly as the GH-549 recon predicted.
+export XYZ_BOARD_SYNC_PROJECT_OWNER="noelsaw1"
+export XYZ_BOARD_SYNC_PROJECT_NUMBER="3"
+export XYZ_BOARD_SYNC_REPOS="HiQS-Labs/XYZ-forge"
+# ...and pin the device config, so these legs stop reading the host operator's real
+# ~/.xyz/device_config.json. They do that today and pass only because this host happens to
+# have no board_sync block; any machine that set one would fail them with no code change.
+export XYZ_DEVICE_CONFIG_PATH="$WORK/device_config.json"
+printf '{}\n' > "$XYZ_DEVICE_CONFIG_PATH"
+
 TOUCH_OUT="$(python3 "$SYNC_TOOL" touch 405 --write 2>&1)"; TOUCH_RC=$?
 if [ "$TOUCH_RC" -eq 0 ] && grep -q "gh-405: added + Status='In progress'" <<<"$TOUCH_OUT"; then
   ok "board_sync touch 405 --write completes via mock"
@@ -159,6 +173,36 @@ ORG_OUT="$(python3 "$SYNC_TOOL" touch 405 --write 2>&1)"; ORG_RC=$?
 if [ "$ORG_RC" -eq 0 ] && grep -q "gh-405: added + Status='In progress'" <<<"$ORG_OUT"; then
   ok "an organization-owned project resolves and accepts the write"
 else bad "org-owned board not resolved (rc=$ORG_RC): $ORG_OUT"; fi
+
+# ── 7. GH-549: a missing token scope is named, with the exact remediation ─────
+echo "7. GH-549 — insufficient token scope"
+python3 "$TOOL" --reset --state "$MOCK_STATE" >/dev/null
+python3 "$TOOL" --fault insufficient_scopes --state "$MOCK_STATE" >/dev/null
+SCOPE_OUT="$(python3 "$SYNC_TOOL" touch 549 --write 2>&1)"; SCOPE_RC=$?
+[ -n "$SCOPE_OUT" ] || bad "  scope probe produced no output — the next assertions would be vacuous"
+case "$SCOPE_OUT" in
+  *"gh auth refresh -s read:project,project"*)
+    ok "a missing Projects scope names the exact remediation command (rc=$SCOPE_RC)" ;;
+  *) bad "scope failure did not name the remediation: $SCOPE_OUT" ;;
+esac
+case "$SCOPE_OUT" in
+  *"Traceback"*) bad "scope failure surfaced as a traceback" ;;
+  *) ok "and it is a named refusal, not a traceback" ;;
+esac
+# It must REPORT, never act: the tool may not run an auth command on anyone's behalf.
+case "$SCOPE_OUT" in
+  *"will not run an auth command"*) ok "and it states plainly that it will not auth for you" ;;
+  *) bad "the report does not disclaim running auth itself: $SCOPE_OUT" ;;
+esac
+# Red control: with the fault cleared, the identical call must succeed — so the assertions
+# above are pinned to the fault and not to some unrelated breakage.
+python3 "$TOOL" --reset --state "$MOCK_STATE" >/dev/null
+CLEAR_OUT="$(python3 "$SYNC_TOOL" touch 549 --write 2>&1)"; CLEAR_RC=$?
+if [ "$CLEAR_RC" -eq 0 ]; then
+  ok "red control: with the fault cleared the same call succeeds (rc=0)"
+else
+  bad "red control: the call fails even without the fault (rc=$CLEAR_RC): $CLEAR_OUT"
+fi
 
 echo
 echo "GH-405 mock_gh_board harness: $PASS passed, $FAIL failed"

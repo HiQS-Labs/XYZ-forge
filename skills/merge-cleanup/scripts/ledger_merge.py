@@ -40,7 +40,14 @@ B1_EXCLUDED = {"harnesses.db", "harnesses.sql"}
 
 # Tables whose rows are derived by the writer itself and must not be compared: receipts are
 # rewritten by every replayed verb, and `settings.generation` is the floor the resolver enforces.
-DERIVED_TABLES = {"op_receipts"}
+#
+# GH-549: `work_events` belongs here for the same reason. Every roadmap verb this resolver replays
+# goes through perform_write, which emits that verb's work-state event as part of the write — so
+# the replayed side's events are REPRODUCED by the replay (with fresh ids and txn_ids, as receipts
+# are), and comparing them beforehand would hand off every PR whose ledger carries one, which after
+# #549 is every PR that touched the roadmap. The kept side's events survive untouched in the kept
+# dump. `connector_cursors` never appears in the dump at all (it is device-local runtime state).
+DERIVED_TABLES = {"op_receipts", "work_events"}
 # roadmap_items columns a replay can express through a verb. Anything else that differs → handoff.
 REPLAYABLE_COLUMNS = {"section", "status_marker", "raw_text", "issue_url", "doc_path",
                       "rating_pri", "rating_sev", "rating_appeal", "rating_effort", "rating_ovr",

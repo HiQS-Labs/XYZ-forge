@@ -78,6 +78,11 @@ RELEASES.generated.md.drift
 # artifact guaranteed to disagree with the dump (GH-57 probe, 2026-08-19).
 releases.db.bak
 
+# GH-549: the connector dispatch mutex, beside the ledger it guards. Same reasoning as the
+# agent2agent locks below — a flock file is per-machine runtime state, never repo content, and
+# it must not be unlinked (unlinking a flock file is what reintroduces the steal race).
+releases.db-connectors.lock
+
 # GH-38: agent2agent lock files are flock mutexes, deliberately never unlinked (unlinking is what
 # reintroduced the steal race). They are per-machine runtime state, never discussion content.
 relay-system/**/.*.lock

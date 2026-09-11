@@ -238,6 +238,7 @@ TESTS=(
   "improve-loop-dogfood.sh"
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
+  "gh549-work-events.sh"           # GH-549 (work-state event stream at the single write seam; 17/0 with both red controls)
   "gh402-board-sync.sh"             # GH-402 (Projects-board mirror: strong/weak signal classification, empty-input refusal, kill-switch, settings env tier, witnessed-red extractor break) — offline by design; live write path receipted in the Phase 0 spike
   "gh405-mock-board-harness.sh"     # GH-405 (Projects-board mock harness: CLI contract, GraphQL query/mutation resolvers, duplicate card creation fidelity, fault injection)
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
