@@ -80,3 +80,7 @@ what ran, what proved, and what's next.
   add→status→refresh path is pinned by Phase 0 spike receipts + the first live write above.
   QA r1's calibration answer (a stubbable `gh` seam + `XYZ_BOARD_SYNC_STATE_PATH` so the writer
   is offline-pinnable) is the top Phase 2 candidate — the state-path half landed now (N-3).
+
+## Merge evidence
+
+- PR #559 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

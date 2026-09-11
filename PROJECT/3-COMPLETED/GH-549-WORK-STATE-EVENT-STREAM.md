@@ -1,8 +1,8 @@
 ---
 title: "GH-549: work-state event stream with concurrent connectors — GitHub Kanban first, HQ and Flightdeck next"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 goal: emit one normalized work-state event from the single ledger write seam and let multiple thin connectors project it concurrently, so a user can see what is ready to be worked, in flight, ready for review, and merged — without any connector becoming authoritative
 gh_issue: 549
