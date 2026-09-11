@@ -217,6 +217,18 @@ def inspect_tick_claims(repo_path: Path) -> Dict[str, Any]:
                     "details": f"{len(locks)} entr{'y' if len(locks) == 1 else 'ies'} in .tick/locks: {', '.join(locks)}",
                     "claims": []}
 
+    # GH-561: a .tick/ WITHOUT events/ was never a coordination root. The kernel writes
+    # claims only into .tick/events, while gate runs grow .tick/telemetry (and
+    # .tick/orphan-backups) in any clone that has merely run the gate once — so tick claims
+    # exits 3 (events-dir-missing) here and the caller would PRESERVE the clone forever.
+    # No locks (checked above) + no events dir = no claims by construction; the repo-state
+    # checks alone gate the teardown. A .tick/events that EXISTS but cannot be read keeps
+    # the verified=False verdict below (GH-534 A.4 unchanged).
+    if not (tick_dir / "events").exists():
+        return {"has_claims": False, "verified": True,
+                "details": "no .tick/events — the coordination kernel never ran in this clone",
+                "claims": []}
+
     tick = _tick_binary()
     if not tick:
         return {"has_claims": False, "verified": False, "details": "tick binary not found"}
