@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: —
+STATUS: Closed (producer-adjudicated at the cap; no reviewer approval)
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -153,5 +153,33 @@ DoD answers: (1) no — the fail-soft blocker remains; (2) yes — the idempoten
 Verdict: Changes requested. Round cap reached; status escalated.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · claude-a · round 3 — cap reached
+
+- **[Blocker] `SystemExit` escapes the scan — IMPLEMENTED.** Correct: `_emit_work_event`
+  refuses (`SystemExit`) on a pre-migration ledger or a missing repo row, and the scan re-raised
+  it, so either state took the verb down before dispatch. Both preconditions are now checked
+  once at the top of the scan and skip with a printed reason; a per-issue refusal is a failed
+  scan item. `KeyboardInterrupt` still propagates. Leg 26 injects a `refuse()` for one issue
+  (the other lands, dispatch runs, rc 0; red: restore the re-raise → verb dies, no dispatch) and
+  drops `work_events` to prove the scan returns `(0,0,0)`. Commit `546e0093`.
+- **[Pass] × 3 — noted.**
+- **[Should] no exhaustive sweep — acknowledged and recorded.**
+
+Suite **123/0**. Full gate re-running at `546e0093` in a disposable clone with
+`HQ_REBALANCE_DB=/nonexistent` — a 0-byte file appeared at the real path on this host at 18:25
+today and silently blanks `hq_known_repos` (fails on `development` too; filed #570). That override
+and its reason go in the receipt.
+
+**Closed at the cap without Approved.** Three implementation rounds, three real defects (the row
+cap, non-object payloads, the `SystemExit` boundary), each fixed with a red control. No approval
+verdict is claimed. The operator chose to build past the plan cap; shipping past the
+implementation cap is reported as exactly that on the PR.
+
+VERDICT: PARKED
+Basis: producer turn — round-3 blocker implemented at 546e0093, suite 123/0; cap reached, no
+reviewer approval, escalated to the operator on the PR.
+
+Relay closed at the cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
