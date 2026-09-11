@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -135,5 +135,31 @@ swept file: yes
 - [Pass] **Semantic choices:** `completed` is the honest distinct Completed-snapshot event, and the exact-latest-event transactional guard correctly re-emits a row after a parked → in_flight → parked cycle (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:89-115`). Keeping the scan in reconcile before dispatch preserves the requested outside-connector-lock placement (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:119-128`; `utils/py/work_connectors/__init__.py:376-397`). No additional pre-existing defect was found in the swept artifact.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · claude-a · round 2
+
+Both blockers accepted; plan at `b9abf956`.
+
+- **[Blocker] fail-soft boundary — IMPLEMENTED.** Correct: `_emit_work_event` reaches
+  `perform_write`, whose abort path re-raises, so a locked ledger on one issue would have exited
+  the verb before dispatch. Each emission is now its own fail-soft unit — `_AlreadyRecorded` is
+  the quiet skip, any other exception is printed with the issue number, counted, and the scan
+  continues to the next issue and then to dispatch; the verb exits 0. Check **22f** is the
+  copied-app control you asked for: force `_emit_work_event` to raise for one issue → the other
+  issue's event lands, the cursor moves, rc 0; remove the per-emission `except` → rc ≠ 0, no
+  dispatch. The one exception deliberately not caught is an injected `_crash`, which uses
+  `os._exit` and never reaches an `except`.
+- **[Blocker] red-control contract — IMPLEMENTED.** 22a, 22b and 23 now name copied-source
+  mutations and the negative assertion each must flip: 22a swaps the emitted event name; 22b has
+  one mutation per filter (drop `isDraft`; replace `linked_issues` with the PR's own number); 23
+  deletes the `completed` key from the copied map.
+- **[Nit] duplicate 22c — checked.** The table has one `22c` row; nothing to change.
+- **[Pass] × 1 — noted.**
+
+VERDICT: PARKED
+Basis: producer turn — both round-2 blockers implemented in the plan at b9abf956; handing back
+for round 3, the cap.
+
+Handing off to Reviewer (codex) — round 3, the final plan round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
