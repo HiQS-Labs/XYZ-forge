@@ -2,9 +2,9 @@
 gh_issue: 529
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/529
 title: "Relay attestation rejects the scaffold's required append-above-marker turn"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 2

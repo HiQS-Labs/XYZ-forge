@@ -2,9 +2,9 @@
 gh_issue: 533
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/533
 title: "Relay scaffold verdict vocabulary contradicts validate-relay-block"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 1

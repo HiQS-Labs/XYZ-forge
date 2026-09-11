@@ -2,9 +2,9 @@
 gh_issue: 555
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/555
 title: "merge-cleanup B1 leaves releases.db.bak after ledger conflict resolution"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 1

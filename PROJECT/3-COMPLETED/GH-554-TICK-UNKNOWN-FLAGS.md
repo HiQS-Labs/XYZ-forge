@@ -2,9 +2,9 @@
 gh_issue: 554
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/554
 title: "tick mutating verbs silently accept unknown flags"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 1
