@@ -8,9 +8,9 @@
 # job here is sort, rank, format.
 #
 # LEADERBOARD.md is GENERATED and never hand-edited, following the established
-# ROADMAP.md -> utils/roadmap-dashboard.sh -> ROADMAP-DASHBOARD.md pattern: committed so ranking
-# changes show up in diffs and review, greppable by agents that never open a browser, readable on
-# GitHub. Regeneration is idempotent — a stale checked-in copy is a review signal, not a hazard.
+# generated view pattern: committed so ranking changes show up in diffs and review,
+# greppable by agents that never open a browser, readable on GitHub. Regeneration is
+# idempotent — a stale checked-in copy is a review signal, not a hazard.
 
 set -euo pipefail
 

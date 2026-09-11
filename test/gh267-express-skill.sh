@@ -150,11 +150,6 @@ if os.path.isdir("PROJECT/2-WORKING"):
                 os.makedirs("PROJECT/3-COMPLETED", exist_ok=True)
                 os.replace(src, dst)
 WR
-cat > "$FX/utils/roadmap-dashboard.sh" <<'RD'
-#!/usr/bin/env bash
-printf 'stub-dashboard-refresh\n' >> ROADMAP-DASHBOARD.md
-RD
-chmod +x "$FX/utils/roadmap-dashboard.sh"
 python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db');
 c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)');
 c.execute('CREATE TABLE IF NOT EXISTS releases (id INTEGER PRIMARY KEY, global_id TEXT)');
@@ -165,7 +160,7 @@ c.execute('CREATE TABLE IF NOT EXISTS manifest_items (id INTEGER PRIMARY KEY, re
 c.execute('INSERT INTO manifest_items (id, release_id, issue_ref_id, state) VALUES (1, 1, 1, \"dialed_in\"), (2, 1, 2, \"dialed_in\"), (3, 1, 3, \"dialed_in\")');
 c.commit(); c.close()"
 printf 'base dump\n' > "$FX/releases.sql"
-for projection in RELEASES.generated.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md ROADMAP-DASHBOARD.md; do
+for projection in RELEASES.generated.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md; do
   printf 'base projection\n' > "$FX/$projection"
 done
 printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' > "$FX/CHANGELOG.md"

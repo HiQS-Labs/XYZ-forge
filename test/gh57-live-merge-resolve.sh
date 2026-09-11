@@ -251,13 +251,12 @@ ra "$R8" init --slug c8 >/dev/null
 printf 'ROADMAP_SOURCE=releases\n' > "$R8/.pdda-mode"
 bake_views() {  # <repo> — render every adopted view from that repo's CURRENT ledger
   local r="$1"
-  ROADMAP_DASHBOARD_ROOT="$r" bash "$ROOT_DIR/utils/roadmap-dashboard.sh"
   python3 "$ROOT_DIR/utils/timeline/export_timeline.py" --db "$r/releases.db" --preview "$r/RELEASES-PREVIEW.html"
   python3 "$ROOT_DIR/utils/timeline/export_timeline.py" --db "$r/releases.db" --leaderboard "$r/LEADERBOARD.html"
   LEADERBOARD_DB="$r/releases.db" LEADERBOARD_OUTPUT="$r/LEADERBOARD.md" bash "$ROOT_DIR/utils/leaderboard.sh"
 }
 bake_views "$R8"
-V8="ROADMAP-DASHBOARD.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md"
+V8="RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md"
 for f in $V8; do ok "fixture adopted $f before the merge" "[ -f '$R8/$f' ]"; done
 git -C "$R8" add -A; git -C "$R8" commit -qm base
 git -C "$R8" branch side
@@ -271,7 +270,7 @@ for f in $V8; do printf 'main touched %s\n' "$f" >> "$R8/$f"; done
 git -C "$R8" commit -qam main
 git -C "$R8" merge side -m merge >/dev/null 2>&1 || true
 ok "the adopted views really conflicted (both sides wrote them)" \
-   "has \"\$(git -C '$R8' diff --name-only --diff-filter=U)\" 'ROADMAP-DASHBOARD.md'"
+   "has \"\$(git -C '$R8' diff --name-only --diff-filter=U)\" 'RELEASES-PREVIEW.html'"
 resolve_dump "$R8"
 out="$(resolver "$R8")"; rc=$?
 ok "resolver completes with adopted views in play (rc=$rc)" "[ $rc -eq 0 ]"
@@ -285,9 +284,7 @@ for f in $V8; do
   ok "  $f carries neither side's stale touch" "! grep -q 'touched $f' '$R8/$f'"
 done
 # Idempotence: re-rendering from the resolved ledger reproduces the staged bytes, and the
-# dashboard/leaderboard --check modes agree the staged copies are in sync.
-ok "staged dashboard matches a fresh render (--check in sync)" \
-   "ROADMAP_DASHBOARD_ROOT='$R8' bash '$ROOT_DIR/utils/roadmap-dashboard.sh' --check"
+# leaderboard --check mode agrees the staged copy is in sync.
 ok "staged LEADERBOARD.md matches a fresh render (--check in sync)" \
    "LEADERBOARD_DB='$R8/releases.db' LEADERBOARD_OUTPUT='$R8/LEADERBOARD.md' bash '$ROOT_DIR/utils/leaderboard.sh' --check"
 # The staged preview was rendered from the MERGED ledger, not the stale ours-side: the bake
@@ -353,8 +350,8 @@ for direction in "deleted-on-incoming" "deleted-on-head"; do
      "[ -z \"\$(git -C '$R9' diff --name-only --diff-filter=U)\" ]"
   # The views that were NOT deleted must still be regenerated — honouring one deletion must not
   # switch the whole regen step off.
-  ok "[$direction] the still-adopted dashboard was regenerated anyway" \
-     "[ -f '$R9/ROADMAP-DASHBOARD.md' ] && ! grep -q '^<<<<<<< ' '$R9/ROADMAP-DASHBOARD.md'"
+  ok "[$direction] the still-adopted leaderboard was regenerated anyway" \
+     "[ -f '$R9/LEADERBOARD.md' ] && ! grep -q '^<<<<<<< ' '$R9/LEADERBOARD.md'"
 done
 
 echo

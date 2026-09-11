@@ -33,7 +33,7 @@ from scan_clones import run_git
 
 LEDGER_DUMP = "releases.sql"
 LEDGER_DB = "releases.db"
-LEDGER_VIEWS = ("ROADMAP-DASHBOARD.md", "LEADERBOARD.md", "RELEASES-PREVIEW.html", "LEADERBOARD.html")
+LEDGER_VIEWS = ("LEADERBOARD.md", "RELEASES-PREVIEW.html", "LEADERBOARD.html")
 B1_SET = {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS}
 # Excluded until they have their own resolver: a conflict here is a handoff (plan B1).
 B1_EXCLUDED = {"harnesses.db", "harnesses.sql"}

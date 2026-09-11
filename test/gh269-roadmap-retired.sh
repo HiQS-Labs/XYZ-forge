@@ -22,11 +22,11 @@ else
   pass "marathon_plan.py executed without ROADMAP.md (exit ${rc:-0})"
 fi
 
-# ── 3. Roadmap dashboard passes check ────────────────────────────────────────────────
-if bash "$root/utils/roadmap-dashboard.sh" --check; then
-  pass "roadmap-dashboard.sh --check passed from releases.db source"
+# ── 3. Roadmap CLI operates cleanly from releases.db ─────────────────────────────────
+if python3 "$root/utils/py/releases_app.py" roadmap list >/dev/null 2>&1; then
+  pass "releases_app.py roadmap list passed from releases.db source"
 else
-  fail "roadmap-dashboard.sh --check failed with no ROADMAP.md"
+  fail "releases_app.py roadmap list failed with no ROADMAP.md"
 fi
 
 # ── 4. PDDA doc checks pass without ROADMAP.md ───────────────────────────────────────

@@ -5,7 +5,7 @@ Two artifacts, both regenerated from committed ledgers so the site never hand-ed
 data that the repo already owns:
 
   PAGES/roadmap.html          <- `releases_app.py --root <root> roadmap list --json`
-                                 (the same JSON seam ROADMAP-DASHBOARD.md renders from)
+                                 (the canonical JSON seam for roadmap data)
   PAGES/models-harnesses.html <- harnesses.db (read-only; falls back to loading the
                                  committed harnesses.sql dump into :memory:)
 

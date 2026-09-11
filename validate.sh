@@ -518,7 +518,6 @@ TESTS=(
   "gh4-ungated-clone-warning.sh" # GH-4 (validate.sh warns non-fatally when the push gate is not installed; silent when gated)
   "xyz-harness-hooks.sh"
   "preflight-docs.sh"
-  "roadmap-dashboard.sh"
   "marathon-plan.sh"
   "hq.sh"                        # GH-128 Phase 1 (HQ resolver + read-only project card)
   "hq-park.sh"                   # GH-128 Phase 2 (HQ issue-first intake writer: preview + --create)
@@ -533,7 +532,7 @@ TESTS=(
   "hq-rollup.sh"                 # GH-192 (marathon-scan.sh bridged verbatim into the Obsidian daily rollup)
   "gh238-hq-releases-mode.sh"    # GH-238 (releases-mode park: roadmap add verb + hq park DB sink + sync no-op)
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
-  "gh243-dashboard-staleness-guard.sh" # GH-243 (push guard: ledger write without dashboard regen is refused)
+  "gh567-roadmap-dashboard-retired.sh" # GH-567 (verify ROADMAP-DASHBOARD.md and view-staleness machinery are retired)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
   "gh269-roadmap-retired.sh"          # GH-269 (verify ROADMAP.md is retired, tools operate on releases.db, move/update CLI verbs)
   "gh423-roadmap-render.sh"           # GH-423 (releases roadmap render emits roadmap_items as ledger markdown marathon_plan.py parses unchanged)

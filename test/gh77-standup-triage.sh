@@ -424,10 +424,9 @@ is "  and an unreadable date degrades rather than emitting a dateless item" \
 is "lens 7 carries the ROADMAP.md mtime as staleness" \
    "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["staleness"]')" "1750000000"
 
-# S3 — the lens table's close for lens 7 is sync THEN the dashboard refresh. Half of it leaves the
-# committed dashboard stale, which is the exact drift GH-27's --check gate exists to catch.
-has "lens 7's close refreshes the dashboard after syncing" \
-    "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["close"]')" "roadmap-dashboard.sh"
+# S3 (GH-567): with ROADMAP-DASHBOARD.md retired, lens 7's close is sync-only.
+is "lens 7's close syncs the roadmap ledger" \
+   "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["close"]')" "python3 utils/py/releases_app.py roadmap sync"
 
 echo
 # ── 15. Round-4 review: the two round-3 fixes that MOVED the bug instead of closing it ───────────

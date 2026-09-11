@@ -44,7 +44,7 @@ mkdir -p "$REPO/PROJECT/2-WORKING" "$REPO/PROJECT/3-COMPLETED" "$REPO/PROJECT/4-
 cp "$XYZ_ROOT/utils/py/wave_reconcile.py" "$XYZ_ROOT/utils/py/harness_paths.py" "$REPO/.xyz/utils/py/"
 require_fixture_file "$REPO/.xyz/utils/py/wave_reconcile.py" "vendored-reconciler-copy"
 
-# The five harness tools exist ONLY under .xyz — this is the whole point of the fixture.
+# The four harness tools exist ONLY under .xyz — this is the whole point of the fixture.
 # Each mock drops a marker FILE, not a log line: wave_reconcile captures subprocess stdout and
 # does not echo it on success, so asserting on the reconciler's own output would silently pass
 # whether or not the tool ever ran. A file on disk is the primitive that cannot be faked.
@@ -52,13 +52,12 @@ RAN="$WORK/ran"
 mkdir -p "$RAN"
 printf '#!/usr/bin/env python3\nimport os\nopen(os.path.join(%s, "releases_app-xyz"), "w").close()\n' \
   "\"$RAN\"" > "$REPO/.xyz/utils/py/releases_app.py"
-printf '#!/usr/bin/env bash\ntouch "%s/dashboard-xyz"\n' "$RAN" > "$REPO/.xyz/utils/roadmap-dashboard.sh"
 printf '#!/usr/bin/env python3\nimport os\nopen(os.path.join(%s, "timeline-xyz"), "w").close()\n' \
   "\"$RAN\"" > "$REPO/.xyz/utils/timeline/export_timeline.py"
 printf '#!/usr/bin/env bash\ntouch "%s/marathon-plan-xyz"\nexit 0\n' "$RAN" > "$REPO/.xyz/utils/marathon-plan.sh"
-chmod +x "$REPO/.xyz/utils/py/releases_app.py" "$REPO/.xyz/utils/roadmap-dashboard.sh" \
+chmod +x "$REPO/.xyz/utils/py/releases_app.py" \
   "$REPO/.xyz/utils/timeline/export_timeline.py" "$REPO/.xyz/utils/marathon-plan.sh"
-for missing in utils/py/releases_app.py utils/roadmap-dashboard.sh \
+for missing in utils/py/releases_app.py \
                utils/timeline/export_timeline.py utils/marathon-plan.sh; do
   [ -e "$REPO/$missing" ] && { echo "FIXTURE BROKEN: $missing must NOT exist at the repo root"; exit 1; }
 done
@@ -120,13 +119,12 @@ require_fixture_file "$REPO/RELEASES-PREVIEW.html" "adopted preview (so the --pr
 out="$(python3 "$REPO/.xyz/utils/py/wave_reconcile.py" --root "$REPO" --pr 4581 \
         --offline "$REPO/manifest.json" --skip-pull 2>&1)"; rc=$?
 
-echo "-- section 1: the five harness tools resolve under .xyz --"
+echo "-- section 1: the four harness tools resolve under .xyz --"
 [ "$rc" -eq 0 ] && pass "vendored reconcile exits 0" || fail "vendored reconcile exited $rc: $out"
 grep -q "can't open file" <<<"$out" \
   && fail "a tool was still resolved against the repo root: $(grep "can't open file" <<<"$out")" \
   || pass "no 'can't open file' — every harness tool was found"
 [ -f "$RAN/releases_app-xyz" ] && pass "releases_app ran from .xyz" || fail "releases_app did not run from .xyz"
-[ -f "$RAN/dashboard-xyz" ] && pass "roadmap-dashboard ran from .xyz" || fail "roadmap-dashboard did not run from .xyz"
 [ -f "$RAN/timeline-xyz" ] && pass "export_timeline ran from .xyz" || fail "export_timeline did not run from .xyz"
 [ -f "$RAN/marathon-plan-xyz" ] && pass "marathon-plan ran from .xyz" || fail "marathon-plan did not run from .xyz"
 

@@ -5,7 +5,7 @@
 # travel with a vendored copy (xyz-vendor.sh mirrors relay-automation/bin/src/utils/test/skills only —
 # see relay-automation/xyz-vendor.sh:250). A consumer standing in a vendored copy has no obvious "how
 # do I self-verify" path. This script fills that gap without assuming any repo-root file exists:
-# individual tests that DO need a root-only file (e.g. ROADMAP-DASHBOARD.md, .github/workflows/ci.yml,
+# individual tests that DO need a root-only file (e.g. .github/workflows/ci.yml,
 # validate.sh itself) already self-skip via their own skip() guards, so this runner just needs to find
 # and invoke test/*.sh — it makes no assumption about what lives above test/.
 #

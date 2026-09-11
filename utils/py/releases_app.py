@@ -3580,9 +3580,9 @@ _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
 def validate_raw_text(raw_text, issue_num=None):
     """GH-257: validate that raw_text matches the markdown shape the renderer requires.
 
-    The renderer (utils/roadmap-dashboard.sh) parses bullets starting with an exact `- **<title>**`
+    The renderer (`roadmap render`) parses bullets starting with an exact `- **<title>**`
     prefix. An unparseable line (e.g. `- [ ] #255 ...`, `-   **`, or unclosed bold) is dropped by
-    the dashboard renderer. Validating at write time catches malformed input immediately.
+    the markdown renderer. Validating at write time catches malformed input immediately.
     """
     if not isinstance(raw_text, str):
         refuse("invalid-raw-text", "raw_text must be a string")
@@ -3788,9 +3788,8 @@ def cmd_roadmap_repoint(args):
     promoting a doc 1-INBOX -> 2-WORKING left the row pointing at a path that no longer exists, and
     pdda-check-roadmap-coverage fails on it with no supported way to fix it.
 
-    The move itself stays a `git mv` by the operator: this verb only rewrites the row (and the
-    dashboard regenerates separately via utils/roadmap-dashboard.sh), so the GH-243 ledger-with-
-    dashboard guard sees a clean regeneration range on the next push.
+    The move itself stays a `git mv` by the operator: this verb only rewrites the row in
+    `releases.db`.
     """
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
@@ -4275,14 +4274,30 @@ def roadmap_render(conn):
     if not _table_exists(conn, "roadmap_items"):
         return parts[0]
     section = None
+    unparseable = []
     for row in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position, global_id"):
-        if row["section"] != section:
-            section = row["section"]
-            parts.append("\n### %s\n\n" % section)
         raw = row["raw_text"]
-        if not raw or not raw.strip():
+        gh = row["gh_number"]
+        gh_label = "#%d" % gh if gh is not None else (row["global_id"] or "unknown")
+        if raw and raw.strip():
+            stripped = raw.strip()
+            first_line = stripped.splitlines()[0]
+            if first_line.startswith("- **"):
+                if not re.match(r'^- \*\*[^\r\n*]+?\*\*', first_line):
+                    unparseable.append(gh_label)
+                    continue
+            elif first_line.startswith("- ["):
+                if _ROADMAP_TASKBOX_RE.match(first_line) or not re.match(r'^- \[[^\r\n\]]+?\]', first_line):
+                    unparseable.append(gh_label)
+                    continue
+            else:
+                unparseable.append(gh_label)
+                continue
+        else:
             title = row["title"]
-            gh = row["gh_number"]
+            if not title or not title.strip():
+                unparseable.append(gh_label)
+                continue
             if gh is not None and _roadmap_gh_number(title) != gh:
                 title = "GH-%d · %s" % (gh, title)
             raw = "- **%s**" % title
@@ -4298,8 +4313,17 @@ def roadmap_render(conn):
                 raw += " → [doc](%s)" % row["doc_path"]
             if row["issue_url"]:
                 raw += " · [issue](%s)" % row["issue_url"]
+
+        if row["section"] != section:
+            section = row["section"]
+            parts.append("\n### %s\n\n" % section)
         parts.append(raw)
         parts.append("\n\n")
+
+    if unparseable:
+        print("roadmap: warning: dropped %d unparseable row(s): %s" % (
+            len(unparseable), ", ".join(unparseable)), file=sys.stderr)
+
     return "".join(parts)
 
 

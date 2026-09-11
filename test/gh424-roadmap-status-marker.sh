@@ -28,7 +28,7 @@ def load(name, path):
 app = load('gh424_app', os.environ.get('GH424_APP', source / 'utils/py/releases_app.py'))
 wave = load('gh424_wave', os.environ.get('GH424_WAVE', source / 'utils/py/wave_reconcile.py'))
 artifacts = ('releases.db', 'releases.sql', 'RELEASES.generated.md',
-             'ROADMAP-DASHBOARD.md', 'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md')
+             'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md')
 
 class MarkerTests(unittest.TestCase):
     def setUp(self):

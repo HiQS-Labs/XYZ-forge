@@ -79,8 +79,6 @@ class ReconcileTests(unittest.TestCase):
             if args[:1] == ['--root']:
                 args = args[2:]
             self.cli(*args)
-        elif 'roadmap-dashboard.sh' in cmd[1]:
-            (self.root / 'ROADMAP-DASHBOARD.md').write_text('dashboard\n')
         elif 'marathon-plan.sh' in cmd[1] and '--dry-run' not in cmd:
             (self.root / 'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md').write_text('plan\n')
         elif 'pdda' in cmd[1] or '--dry-run' in cmd:
@@ -131,7 +129,6 @@ class ReconcileTests(unittest.TestCase):
         self.assertFalse((self.root / self.doc).exists())
         self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'shipped')
         self.assertEqual(self.rows('SELECT reason FROM manifest_state_events')[-1]['reason'], 'a'*40)
-        self.assertTrue((self.root / 'ROADMAP-DASHBOARD.md').is_file())
         self.assertTrue((self.root / 'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md').is_file())
         before = self.snapshot()
         self.calls.clear()
@@ -171,7 +168,7 @@ class ReconcileTests(unittest.TestCase):
 
     def test_rollback_each_boundary(self):
         for boundary in ('manifest ship', 'roadmap repoint', 'roadmap update', 'roadmap sync',
-                         'releases_app.py --root', 'roadmap-dashboard.sh', 'marathon-plan.sh', 'pdda'):
+                         'releases_app.py --root', 'marathon-plan.sh', 'pdda'):
             with self.subTest(boundary=boundary):
                 before = self.snapshot()
                 self.fail_after = boundary
@@ -341,7 +338,7 @@ class WorkflowTests(unittest.TestCase):
         return calls
 
     def test_publish_allowlist_and_plan_lands(self):
-        paths = ['releases.db', 'releases.sql', 'ROADMAP-DASHBOARD.md',
+        paths = ['releases.db', 'releases.sql',
                  'PROJECT/2-WORKING/GH-421-fixture.md', 'PROJECT/3-COMPLETED/GH-421-fixture.md',
                  'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md']
         calls = self.publish(paths)

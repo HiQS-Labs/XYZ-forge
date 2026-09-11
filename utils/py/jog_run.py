@@ -241,30 +241,6 @@ def _ledger_rel_path(root, gid, path):
     return rel
 
 
-def jog_regenerate_dashboard(root):
-    """GH-292 F3: jog's promotion repoints roadmap rows and stalens the committed
-    ROADMAP-DASHBOARD.md — the lane's own gate then fails on drift (observed on both Phase-4
-    dogfood items). Regenerate after promotion, before dispatch. Best-effort and scoped to
-    installs that ship the renderer."""
-    script = None
-    for candidate in (os.path.join(root, "utils", "roadmap-dashboard.sh"),
-                      os.path.join(harness_home(), "utils", "roadmap-dashboard.sh")):
-        if os.path.isfile(candidate):
-            script = candidate
-            break
-    if not script:
-        return
-    try:
-        env = dict(os.environ)
-        env["ROADMAP_DASHBOARD_ROOT"] = str(root)
-        r = subprocess.run(["bash", script], cwd=root, env=env, capture_output=True, text=True, timeout=120)
-        if r.returncode != 0:
-            print(f"jog: warning: roadmap-dashboard refresh failed ({r.returncode}): {(r.stderr or r.stdout).strip()}",
-                  file=sys.stderr)
-    except (OSError, subprocess.SubprocessError) as e:
-        print(f"jog: warning: roadmap-dashboard refresh exception: {e}", file=sys.stderr)
-
-
 def jog_commit_supervisor_state(root, gh_num, exec_id):
     """GH-292 F1: commit the supervisor's own ledger/doc writes before dispatch.
 
@@ -288,7 +264,7 @@ def jog_commit_supervisor_state(root, gh_num, exec_id):
               f"lane are the containment-revert tradeoff (GH-292 F1)")
         return False
     paths = [p for p in ("releases.db", "releases.sql", "releases.gen",
-                         "ROADMAP-DASHBOARD.md", "LEADERBOARD.html", "RELEASES-PREVIEW.html")
+                         "LEADERBOARD.html", "RELEASES-PREVIEW.html")
              if os.path.exists(os.path.join(root, p))]
     if paths:
         subprocess.run(["git", "-C", root, "add", "--"] + paths, capture_output=True)
@@ -611,12 +587,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     env["RELAY_DRIVER_LOCKED"] = "1"
 
     # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
-    # containment pass (which restores tracked modifications to HEAD) has nothing of the
-    # supervisor's to revert. GH-292 F3: the dashboard was regenerated after promotion —
-    # the call was previously dead code (defined, never invoked), observed live 2026-08-29
-    # when the supervisor commit carried a stale dashboard and the lane's gate failed
-    # roadmap-dashboard.sh drift; regenerate BEFORE the commit so the fresh one rides it.
-    jog_regenerate_dashboard(root)
+    # supervisor's to revert.
     jog_commit_supervisor_state(root, gh_num, exec_id)
 
     print(f"jog: dispatching marathon-drive ({invocation['drive_command']})")
@@ -1743,7 +1714,6 @@ def jog_run_main(args=None):
                     builder=args.builder, reviewer=args.reviewer,
                     auto_merge=getattr(args, "auto_merge", False))
                 jog_set_status(root, gh_num, action, failure_reason=reason)
-                jog_regenerate_dashboard(root)
                 if action == "completed":
                     tasks_processed += 1
                     continue

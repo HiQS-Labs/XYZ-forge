@@ -85,12 +85,12 @@
     },
     {
       "id": "roadmap-dashboard-md",
-      "label": "ROADMAP-DASHBOARD.md",
+      "label": "ROADMAP-DASHBOARD.md (retired)",
       "type": "storage",
       "group": "views",
-      "tech": "REQUIRED — not adopted-by-presence",
+      "tech": "RETIRED — GH-567",
       "trust": "shared-state",
-      "description": "The asymmetric one. Two gates require it, so regenerating it unconditionally is correct and un-adopting it is not available at all without first rewriting a gate."
+      "description": "Retired in GH-567. Previously required; now excised along with the push guard to eliminate merge churn. Roadmap inspection is on-demand via releases_app.py roadmap list."
     },
     {
       "id": "leaderboard-md",
@@ -189,7 +189,7 @@
       "group": "guard",
       "tech": "Python · gated by test/gh353-vendored-router-audit.sh",
       "trust": "off-live-path-governance",
-      "description": "The second gate that makes ROADMAP-DASHBOARD.md required: ROUTER.md must declare it as the generated roadmap view and route startup to it."
+      "description": "Validates ROUTER.md structure. Under GH-567, no longer requires ROADMAP-DASHBOARD.md; routes startup directly to releases_app.py roadmap list."
     },
     {
       "id": "exit-contract-suites",

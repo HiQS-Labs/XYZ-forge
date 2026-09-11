@@ -27,13 +27,10 @@ git init >/dev/null 2>&1
 echo "ROADMAP_SOURCE=releases" > .pdda-mode
 cp "$root/utils/py/releases_app.py" "utils/py/"
 python3 utils/py/releases_app.py init >/dev/null
-# Wait 1s to ensure ROADMAP-DASHBOARD.md is newer than releases.db
-sleep 1
-touch ROADMAP-DASHBOARD.md
 cd "$root"
 
 out="$(bash utils/hq/hq.sh status "repo-healthy")"
-grep -q "RELEASES-DB ✓ (dashboard ✓" <<<"$out" || fail "healthy repo missing RELEASES-DB ✓ or dashboard ✓"
+grep -q "RELEASES-DB ✓ (0 open roadmap items)" <<<"$out" || fail "healthy repo missing RELEASES-DB ✓ (0 open roadmap items)"
 
 # 3. Releases-mode repo (broken DB)
 mkdir -p "$WORK/repo-broken"

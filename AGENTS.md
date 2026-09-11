@@ -52,7 +52,7 @@ Do not restate routing, roadmap, changelog, or active-doc contracts here. Those 
 `ROUTER.md` and `PROJECT/PDDA.md`.
 
 After a PR merges into `development`, the hosted reconciliation workflow (`wave-reconcile.yml`)
-automatically reconciles docs, ledger, and views (`ROADMAP-DASHBOARD.md`, `LEADERBOARD.md`). Task
+automatically reconciles docs, ledger, and views (`LEADERBOARD.md`). Task
 branches do not commit routine views. Local reconciliation via `python3 utils/py/wave_reconcile.py --pr <N>`
 serves as an emergency fallback (failing closed if a hosted reconciler is in-flight; pass `--force-local-reconcile`
 to override); `pdda.sh issue-doc-sync` is the deterministic drift detector when in doubt.
@@ -140,7 +140,7 @@ local change.
 
   1. **Exactly one long-horizon marathon is in flight at a time.** When one lands, choosing the next
      is a real decision, not a default. It is named in the roadmap ledger's **Immediate next-up**
-     (read `ROADMAP-DASHBOARD.md`; the RELEASES DB is the source of truth since the
+     (query via `python3 utils/py/releases_app.py roadmap list`; the RELEASES DB is the source of truth since the
      `ROADMAP_SOURCE=releases` flip) as the marathon, so an agent arriving cold can tell which item
      is the load and which items are riding alongside it.
   2. **Prefer the marathon-shaped candidate.** *Marathon-shaped* means: decomposable into many items
@@ -159,7 +159,7 @@ local change.
 - **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
   release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
   flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: park intake
-  with `releases roadmap add` (or `hq park`), and read with `roadmap list` / `ROADMAP-DASHBOARD.md`.
+  with `releases roadmap add` (or `hq park`), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
   `roadmap sync` is for legacy-mode repos only and no-ops here — it mirrors markdown and would delete
   `add`-parked rows. Never hand-edit `releases.sql` or `releases.db`. Merge conflicts on the dump have
   a one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a real

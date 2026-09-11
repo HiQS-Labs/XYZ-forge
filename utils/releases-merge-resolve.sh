@@ -13,8 +13,8 @@
 #   2. take either side of the derived artifacts — they are about to be regenerated anyway
 #   3. `releases check --rebuild`  — dump -> DB, atomic, .bak of the displaced DB
 #   4. `releases check`           — must come back clean, or we refuse and leave the merge open
-#   5. regenerate adopted views   — ROADMAP-DASHBOARD.md / RELEASES-PREVIEW.html /
-#                                  LEADERBOARD.html / LEADERBOARD.md are all rendered from
+#   5. regenerate adopted views   — RELEASES-PREVIEW.html / LEADERBOARD.html /
+#                                  LEADERBOARD.md are all rendered from
 #                                  ledger state, so the resolved dump staled every one of
 #                                  them (GH-272; until now each was hand-regenerated after
 #                                  every concurrent merge)
@@ -157,7 +157,7 @@ fi
 # generator fails, refuse and leave the merge open rather than warn-and-continue: the
 # write path can afford best-effort refreshes, a merge resolver cannot (a stale view is
 # exactly the hand-regen tax this step exists to end).
-VIEWS="ROADMAP-DASHBOARD.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md"
+VIEWS="RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md"
 REGEN=""
 for f in $VIEWS; do
   if printf '%s\n' "$UNMERGED" | grep -qx "$f"; then
@@ -193,16 +193,6 @@ done
 
 if [ -n "$REGEN" ]; then
   say "regenerating adopted views: $REGEN"
-  case " $REGEN " in
-    *" ROADMAP-DASHBOARD.md "*)
-      say "  -> roadmap-dashboard.sh"
-      if ! ROADMAP_DASHBOARD_ROOT="$ROOT" bash "$HERE/roadmap-dashboard.sh"; then
-        die "roadmap-dashboard.sh failed. The merge is left open on purpose — staging the
-  stale dashboard against a rebuilt ledger would commit exactly the divergence this
-  resolver exists to prevent."
-      fi
-      ;;
-  esac
   case " $REGEN " in
     *" RELEASES-PREVIEW.html "*)
       say "  -> export_timeline.py --preview"

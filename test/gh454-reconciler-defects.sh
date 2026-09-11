@@ -36,8 +36,6 @@ class ReconcilerDefects(unittest.TestCase):
             shutil.copyfile(ROOT / rel, self.root / rel)
         # Unrelated sync/planning are stubs; exporter, validation, and rollback are real.
         (self.root / "utils/py/releases_app.py").write_text("pass\n")
-        (self.root / "utils/roadmap-dashboard.sh").write_text(
-            "printf 'regenerated dashboard\\n' > ROADMAP-DASHBOARD.md\n")
         (self.root / "utils/marathon-plan.sh").write_text("exit 0\n")
         (self.root / "utils/pdda/pdda.sh").write_text('''\
 unset PDDA_MODE PDDA_REPO_ROOT
@@ -102,8 +100,6 @@ exit "$rc"
         self.assertIn("Wave reconciliation completed successfully!", output)
         self.assertNotIn("Rolling back", output)
         self.assertIn('id="ledger-data"', self.preview.read_text())
-        self.assertEqual((self.root / "ROADMAP-DASHBOARD.md").read_text(),
-                         "regenerated dashboard\n")
 
     def test_unnamed_releases_export_and_reconcile(self):
         before = self.db.read_bytes()

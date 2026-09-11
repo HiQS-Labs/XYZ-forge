@@ -133,7 +133,7 @@ Both `utils/fuzzing/` and `utils/ate/` emit newline-delimited JSON (`JSONL`) adh
 
 ### Release Ledger & Database
 * [`releases-merge-resolve.sh`](releases-merge-resolve.sh): One-command 3-way conflict resolver for `releases.sql` SQLite dumps.
-* [`roadmap-dashboard.sh`](roadmap-dashboard.sh) & [`leaderboard.sh`](leaderboard.sh): Visualizes ledger queues, calculates `rated N/N/N/N` calc sums, and prints prioritized task leaderboards.
+* [`leaderboard.sh`](leaderboard.sh): Visualizes ledger queues, calculates `rated N/N/N/N` calc sums, and prints prioritized task leaderboards.
 
 ### Quality, CI Routing & Auditing
 * [`ci-route.sh`](ci-route.sh): 3-tier test suite routing engine (`docs`, `utility`, `core`) and CPU throttling governor consumed by `validate.sh` and `githooks/pre-push`.

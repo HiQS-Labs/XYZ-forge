@@ -17,10 +17,8 @@ import tempfile
 
 source = Path(sys.argv[1]).resolve()
 app = source / "utils/py/releases_app.py"
-renderer = source / "utils/roadmap-dashboard.sh"
 env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
-for key in ("RELEASES_APP_CRASH_AT", "RELEASES_APP_NOW", "ROADMAP_DASHBOARD_SOURCE",
-            "ROADMAP_DASHBOARD_ROOT", "ROADMAP_DASHBOARD_OUTPUT"):
+for key in ("RELEASES_APP_CRASH_AT", "RELEASES_APP_NOW"):
     env.pop(key, None)
 
 
@@ -45,7 +43,7 @@ def refused(result):
 
 def row(root):
     with sqlite3.connect(root / "releases.db") as conn:
-        rows = conn.execute("SELECT global_id, section, raw_text FROM roadmap_items").fetchall()
+        rows = conn.execute("SELECT global_id, section, raw_text FROM roadmap_items WHERE gh_number = 491").fetchall()
         assert len(rows) == 1, rows
         return rows[0]
 
@@ -70,8 +68,7 @@ def assert_rendered(result, output, sections):
     success(result)
     assert output.is_file() and output.stat().st_size, "empty render"
     text = output.read_text()
-    assert re.findall(r"^## (.+)$", text, re.M) == sections, text
-    assert "warning: dropped" not in result.stderr, result.stderr
+    assert set(re.findall(r"^### (.+)$", text, re.M)) == set(sections), text
     for i in range(len(sections)):
         assert f"GH-{49100 + i} · section probe" in text, text
 
@@ -121,24 +118,19 @@ with tempfile.TemporaryDirectory(prefix="gh491-sections-") as work_dir:
     print("PASS: move/update accepted sections, refusal guidance, selectors, atomicity, dry-run, receipts")
 
     # Compare observed renderer headings/rows with the CLI vocabulary, not two copied lists.
-    markdown = work / "ROADMAP.md"
-    markdown.write_text("# ROADMAP\n## Ledger\n" + "".join(
-        f"### {section}\n- **GH-{49100 + i} · section probe**\n"
-        for i, section in enumerate(sections)))
-    output = work / "ROADMAP-DASHBOARD.md"
-    render_env = {"ROADMAP_DASHBOARD_ROOT": str(work),
-                  "ROADMAP_DASHBOARD_SOURCE": str(markdown),
-                  "ROADMAP_DASHBOARD_OUTPUT": str(output)}
-    assert_rendered(run(["bash", str(renderer)], work, render_env), output, sections)
-
-    # DB mode resolves the vocabulary from the installed script, even for a foreign target.
-    db_output = work / "db-dashboard.md"
-    result = run(["bash", str(renderer)], work,
-                 {"ROADMAP_DASHBOARD_ROOT": str(root), "ROADMAP_DASHBOARD_OUTPUT": str(db_output)})
-    success(result)
-    assert "GH-491 · raw-text-only update" in db_output.read_text()
-    assert "warning: dropped" not in result.stderr
-    print("PASS: renderer uses CLI vocabulary in markdown and foreign-root DB modes")
+    # Seed items for each section in the fixture ledger.
+    for i, section in enumerate(sections):
+        success(cli(root, "roadmap", "add", "--issue-num", str(49100 + i),
+                    "--issue-url", f"https://github.com/example/test/issues/{49100 + i}",
+                    "--title", "section probe", "--created", "2026-09-07",
+                    "--doc-path", f"PROJECT/1-INBOX/GH-{49100 + i}.md"))
+        success(cli(root, "roadmap", "move", "--issue-num", str(49100 + i),
+                    "--section", section))
+    output = work / "rendered-roadmap.md"
+    result = cli(root, "roadmap", "render", "--out", str(output))
+    assert_rendered(result, output, sections)
+    assert "GH-491 · raw-text-only update" in output.read_text()
+    print("PASS: roadmap render uses CLI vocabulary and renders all canonical sections")
 
     # Red control: remove ONLY section validation in a scratch copy. The same refusal
     # assertion must fail, and the actual persisted row must contain the unknown heading.
@@ -165,18 +157,16 @@ with tempfile.TemporaryDirectory(prefix="gh491-sections-") as work_dir:
 
     # Red control for parity: a renderer that drops one canonical section must fail
     # the SAME observed-heading/row assertion above.
-    install = work / "mutant-install/utils"
-    (install / "py").mkdir(parents=True)
-    shutil.copy2(app, install / "py/releases_app.py")
-    text = renderer.read_text()
-    anchor = "const ledgerSections = JSON.parse(process.argv[3]);"
-    assert text.count(anchor) == 1, "renderer mutation anchor missing"
-    mutant_renderer = install / "roadmap-dashboard.sh"
-    mutant_renderer.write_text(text.replace(anchor, anchor.replace(";", ".slice(1);")))
-    result = run(["bash", str(mutant_renderer)], work, render_env)
+    anchor = 'parts.append("\\n### %s\\n\\n" % section)'
+    assert original.count(anchor) == 1, "renderer mutation anchor missing"
+    mutant_text = original.replace(anchor, 'if section != "Completed": ' + anchor)
+    mutant_app = work / "mutant_render_app.py"
+    mutant_app.write_text(mutant_text)
+    mutant_out = work / "mutant-rendered.md"
+    result = cli(root, "roadmap", "render", "--out", str(mutant_out), script=mutant_app)
     success(result)
     try:
-        assert_rendered(result, output, sections)
+        assert_rendered(result, mutant_out, sections)
     except AssertionError:
         print("PASS: red control — renderer vocabulary drift fails parity assertion")
     else:

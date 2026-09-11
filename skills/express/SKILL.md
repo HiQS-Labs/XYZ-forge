@@ -82,7 +82,7 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
    plus the CHANGELOG entry appended in the same motion.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
-   adopted release/leaderboard projections and `ROADMAP-DASHBOARD.md` refresh
+   adopted release/leaderboard projections refresh
    in the same phase and are the only accepted driver outputs.
 7. **Gate** — the fix's suite runs green, the tree is RE-SNAPSHOTTED afterwards
    by path and content (`tree-drift`: new paths and changed qualified bytes both
