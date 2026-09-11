@@ -72,17 +72,40 @@ if [ -z "$stripped_log" ]; then
   exit 8
 fi
 
-# Assertion 3: VERDICT: line is present and valid
-if ! echo "$log_after" | grep -E -i -q '^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[[:space:]]*(PASS|FAIL|PARKED)'; then
-  echo "VERDICT: line is missing or invalid" >&2
+# Extract the last VERDICT: line
+last_verdict="$(echo "$log_after" | grep -E -i '^[[:space:]]*[`*]*VERDICT[`*]*:' | tail -n 1 || true)"
+
+if [ -z "$last_verdict" ]; then
+  echo "VERDICT: line is missing" >&2
   exit 8
 fi
 
+if ! echo "$last_verdict" | grep -E -q '^[[:space:]]*[`*]*[Vv][Ee][Rr][Dd][Ii][Cc][Tt][`*]*:[`*]*[[:space:]]*(PASS|FAIL|PARKED)[`*[:space:]]*$'; then
+  val="$(echo "$last_verdict" | sed -E -e 's/^[[:space:]]*[`*]*[Vv][Ee][Rr][Dd][Ii][Cc][Tt][`*]*:[`*]*[[:space:]]*//' -e 's/[`*[:space:]]*$//')"
+  echo "VERDICT: value must be exactly PASS, FAIL, or PARKED. Found: '$val'" >&2
+  exit 8
+fi
+
+# Extract the final review block (the one containing the final VERDICT)
+final_review_block="$(echo "$log_after" | awk '
+/^### / {
+    if (has_verdict) last_verdict_block = block
+    block = $0
+    has_verdict = 0
+    next
+}
+{ block = block "\n" $0 }
+toupper($0) ~ /^[[:space:]]*[*`]*VERDICT[*`]*:/ { has_verdict = 1 }
+END {
+    if (has_verdict) last_verdict_block = block
+    print last_verdict_block
+}
+')"
+
 # Assertion 4: Basis: line is present and non-empty
-if ! echo "$log_after" | grep -E -i -q '^[[:space:]]*[`*]*Basis[`*]*:[`*]*[[:space:]]*.+'; then
+if ! echo "$final_review_block" | grep -E -i -q '^[[:space:]]*[`*]*Basis[`*]*:[`*]*[[:space:]]*[^[:space:]]'; then
   echo "Basis: line is missing or empty" >&2
   exit 8
 fi
 
 exit 0
-
