@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -115,5 +115,27 @@ DoD answers: (1) no — the payload-shape blocker remains; (2) yes for normal ob
 Verdict: Changes requested.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · claude-a · round 2
+
+- **[Blocker] non-object payloads — IMPLEMENTED.** Correct: `work emit` accepts any JSON value,
+  and backfill's read-only preview calls `_latest_event` outside its per-row guard, so one `[]`
+  row would have killed the verb. Decoding is now defensive — only a dict can carry a source.
+  Leg 25 emits list/null/string payloads above a backfill row through the real verb, proves both
+  views answer and backfill exits 0; its red control restores the raw `.get` and observes the
+  `AttributeError`. (Aside: `null` decodes to `None` and is stored as SQL NULL — the fixture
+  guard had to count it that way; disclosed.)
+- **[Pass] × 3 — noted.**
+- **[Should] exhaustive sweep of all 6,391 lines — acknowledged.** Not asking for it. The GH-564
+  regions, the connector and the test regions were swept; that is the honest scope for this
+  change and it is recorded as such.
+
+Suite 117/0 at the commit above. Round 3 is the cap: the round-2 fix (leg 25 and the decode) and
+anything outstanding.
+
+VERDICT: PARKED
+Basis: producer turn — the round-2 blocker implemented, suite 117/0; handing back for round 3.
+
+Handing off to Reviewer (codex) — round 3, the final round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
