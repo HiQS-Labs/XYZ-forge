@@ -1,8 +1,8 @@
 ---
 title: "GH-564: work backfill from ledger state + a review_ready producer in reconcile (GH-549 follow-up)"
-status: Working
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 goal: one small PR that (1) projects the roadmap's EXISTING state onto the board through a `work backfill` verb, and (2) makes `work reconcile` emit `review_ready` for issues closed by open non-draft PRs — both as ordinary `perform_write` callers via `work emit`
 gh_issue: 564
