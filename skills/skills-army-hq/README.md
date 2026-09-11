@@ -19,7 +19,7 @@ Skills Army HQ gives your skill army one headquarters. Talk to one system to
 import and update your skills, then deploy them to your configured apps. It knows
 your target folders and updates their links on your command.
 
-The actual skill folders stay in a separate `Documents/Deployed Skills` collection.
+The actual skill folders stay in one collection — since GH-536, `~/git-pulse-sync/Deployed Skills`, carried by the hourly Git Pulse writer (see SKILL.md → "Adopting the collection on another machine").
 Each app points to those same copies through directory symlinks, so you can see
 exactly what's deployed without maintaining separate versions for every agent.
 Run a health check to spot missing links or conflicts; app discovery and runtime
@@ -39,9 +39,9 @@ The agent instructions live in the skill folder's `SKILL.md`.
 ## Where this copy lives
 
 Initialization copies the **entire skill folder**, including this README, into
-`~/Documents/Deployed Skills/skills-army-hq/`. Updating the manager refreshes this
+`~/git-pulse-sync/Deployed Skills/skills-army-hq/`. Updating the manager refreshes this
 README along with its scripts and instructions. The installer also writes a real
-copy at **`~/Documents/Deployed Skills/README.md`**, beside `catalog.md`.
+copy at **`~/git-pulse-sync/Deployed Skills/README.md`**, beside `catalog.md`.
 That top-level README is installer-managed and refreshed during applied operations;
 keep personal notes in a separate file. It is an actual copy, not a link
 back to the source checkout, so deleting a temporary clone does not remove it.
@@ -61,7 +61,7 @@ checkout, preview initialization, then apply it:
 ```bash
 python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py init
 python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py --apply init
-python3 "$HOME/Documents/Deployed Skills/intake.py" list
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
 ```
 
 Targets start disabled. Ask your agent to configure the apps you choose, preview
@@ -76,7 +76,7 @@ Ask your agent: **“Run a health check on my deployed skills.”** The health c
 uses the existing sync tool's read-only status command; no separate script is needed:
 
 ```bash
-python3 "$HOME/Documents/Deployed Skills/sync.py" --status
+python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --status
 ```
 
 It validates the local collection and reports missing or incorrect directory

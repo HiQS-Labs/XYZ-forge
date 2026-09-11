@@ -45,5 +45,39 @@ fence_line4="$(printf '%s\n' "$out4" | grep -E '^`+$' | head -1)"
 bash "$NR" --reviewer codex --print >/dev/null 2>&1 && fail "missing --title should error" || pass "errors without --title"
 bash "$NR" --title T --reviewer codex --embed --print >/dev/null 2>&1 && fail "--embed without artifact should error" || pass "errors on --embed without --artifact-file"
 
+# --- (6) integration: scaffolded thread passes structural validation after a valid reviewer turn -----
+VAL="$(cd "$(dirname "$0")/.." && pwd)/bin/validate-relay-block"
+out6="$(bash "$NR" --title "Integration Test" --reviewer agy --print)"
+TMP6="$WORK/integration.md"
+printf '%s\n' "$out6" > "$TMP6"
+cat >>"$TMP6" <<'EOF_TURN'
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: simulated review turn on real scaffold
+EOF_TURN
+bash "$VAL" "$TMP6" >/dev/null 2>&1 && pass "scaffolded thread passes real validator" || fail "scaffolded thread failed validator"
+
+# --- (7) integration: scaffolded thread passes structural validation after a PARKED reviewer turn -----
+out7="$(bash "$NR" --title "Integration Test Parked" --reviewer agy --print)"
+TMP7="$WORK/integration-parked.md"
+printf '%s\n' "$out7" > "$TMP7"
+cat >>"$TMP7" <<'EOF_TURN'
+### Reviewer · Round 1
+VERDICT: PARKED
+Basis: simulated review turn on real scaffold, parked for now
+EOF_TURN
+bash "$VAL" "$TMP7" >/dev/null 2>&1 && pass "scaffolded thread passes real validator with PARKED verdict" || fail "scaffolded thread failed validator with PARKED verdict"
+
+# --- (8) integration: scaffolded thread passes structural validation after a FAIL reviewer turn -----
+out8="$(bash "$NR" --title "Integration Test Fail" --reviewer agy --print)"
+TMP8="$WORK/integration-fail.md"
+printf '%s\n' "$out8" > "$TMP8"
+cat >>"$TMP8" <<'EOF_TURN'
+### Reviewer · Round 1
+VERDICT: FAIL
+Basis: simulated review turn on real scaffold, failed
+EOF_TURN
+bash "$VAL" "$TMP8" >/dev/null 2>&1 && pass "scaffolded thread passes real validator with FAIL verdict" || fail "scaffolded thread failed validator with FAIL verdict"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

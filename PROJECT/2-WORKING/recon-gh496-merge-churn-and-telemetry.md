@@ -149,3 +149,8 @@ When initializing an out-of-tree database for the first time:
   - PR 3: Untracking `releases.db` (conditional spike).
   - PR 4: Adding four profile classifications to `utils/ci-route.sh`.
   - PR 5: Contention serialization & benchmarking.
+
+## Merge evidence
+
+- PR #550 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+- PR #553 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

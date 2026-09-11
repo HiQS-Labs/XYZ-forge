@@ -276,6 +276,42 @@ class TestB1Classify(LedgerFixture):
 # --- E / E.6 / B1 end to end --------------------------------------------------------------------
 
 class TestPhase5EndToEnd(LedgerFixture):
+    def b1_conflict_clone(self):
+        """Land PR 1, then return PR 2's real conflicted landing clone."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2"))
+        subprocess.run([str(self.gh), "pr", "merge", "1"], check=True, capture_output=True, text=True)
+        info = merge_cleanup.refresh_pr(2, self.primary)
+        prep = merge_cleanup.prepare_landing_clone(info, self.primary, "development", self.tmp)
+        self.assertNotEqual(prep["merge_rc"], 0, "fixture did not produce a B1 ledger conflict")
+        return prep["clone"]
+
+    def test_b1_success_removes_only_the_rebuild_backup(self):
+        clone = self.b1_conflict_clone()
+        outside_backup = self.tmp / "releases.db.bak"
+        outside_backup.write_bytes(b"outside")
+        result = resolve_ledger_conflict(clone, execute=True)
+        self.assertTrue(result["resolved"], result)
+        self.assertFalse((clone / "releases.db.bak").exists(), "successful B1 left rebuild backup")
+        self.assertEqual(outside_backup.read_bytes(), b"outside", "cleanup escaped the landing clone")
+        status = _git(clone, "status", "--porcelain", "--untracked-files=all").stdout.splitlines()
+        self.assertFalse([line for line in status if line.startswith("?? ")], status)
+
+    def test_b1_failed_rebuild_preserves_recovery_backup(self):
+        clone = self.b1_conflict_clone()
+        real = ledger_merge._run
+
+        def fail_rebuild(argv, cwd, **kwargs):
+            if list(argv)[-2:] == ["check", "--rebuild"]:
+                (Path(cwd) / "releases.db.bak").write_bytes(b"recovery evidence")
+                return subprocess.CompletedProcess(argv, 1, stdout="", stderr="injected rebuild failure")
+            return real(argv, cwd, **kwargs)
+
+        with mock.patch.object(ledger_merge, "_run", side_effect=fail_rebuild):
+            result = resolve_ledger_conflict(clone, execute=True)
+        self.assertFalse(result["resolved"], result)
+        self.assertEqual((clone / "releases.db.bak").read_bytes(), b"recovery evidence")
+
     def test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it(self):
         """THE run: PR 2 is re-fetched after PR 1 lands, reads CONFLICTING, is resolved through the
         writer path + resolver, validated in a second clone, pushed, re-gated, and merged."""

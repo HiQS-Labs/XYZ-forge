@@ -62,6 +62,7 @@ TESTS=(
   "scope-change.sh"
   "tick-foreign-cwd.sh"
   "gh411-tick-log-foreign-cwd.sh" # GH-411 (tick log guarded for all event types except cost.*)
+  "gh554-tick-unknown-flags.sh" # GH-554 (every verb rejects unknown flags before mutation)
   "gh251-validate-pytest-skip.sh" # GH-251 (pytest absence handled as named skip in validate.sh)
   "gh412-transient-claim-exit.sh" # GH-412 (transient claim lock collision exits 75 and is retried)
   "gh413-launch-artifact-destination-guard.sh" # GH-413 (launch artifact marker deletion & destination history guard)
@@ -598,6 +599,7 @@ TESTS=(
   "gh312-vendor-preserves-state.sh" # GH-312 (vendor/sync must not destroy the target's runtime state)
   "relay-uncited-findings.sh"       # GH-173 B3 (rtl_check_uncited_findings downgrades uncited review claims)
   "wave-reconcile.sh"               # GH-165 (canonical post-merge reconciler behavior)
+  "gh496-phase2-reconciliation-views.sh" # GH-496 (hosted reconciler in-flight collision detection, pre-merge checks, marathon plan fingerprinting)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
   "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
   "gh-gen4-phase1-domain-oracles.sh" # GH-299 Phase 1 (Gen 4 semantic domain oracles: zero-state, containment, idempotence, crash-recovery; +/- controls)

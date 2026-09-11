@@ -33,6 +33,9 @@ TRANSCRIPT_DIR = "relay-system"
 PHASE_RECORDS = ("ESCALATION.md", "PHASE-INTERRUPTED.md")
 
 _HEADER_KEYS = (b"STATUS:", b"NEXT:", b"ROUND:")
+_NEXT_TURN_MARKER = ("<!-- \u2193\u2193\u2193 NEXT TURN goes here "
+                     "(append above nothing \u2014 this marker stays last) "
+                     "\u2193\u2193\u2193 -->").encode("utf-8")
 
 # The ONE other edit the harness itself makes to pre-existing relay lines: rtl_check_uncited_findings
 # (relay-turn-lib.sh, GH-173 B3) downgrades an uncited [Pass]/"verified" claim in place after a
@@ -108,6 +111,16 @@ def _normalise_headers(lines):
     return out
 
 
+def _without_next_turn_marker(lines):
+    """Drop the scaffold's position-only sentinel from append-only attestation.
+
+    Reviewers are instructed to insert their block directly above this exact line, so the
+    sentinel moves without its bytes changing.  Only the exact scaffold line is structural;
+    near-matches and every other pre-existing byte remain covered by the prefix check.
+    """
+    return [line for line in lines if line.rstrip(b"\r\n") != _NEXT_TURN_MARKER]
+
+
 def canonical_bytes(raw, context_raw=None):
     """The relay bytes with (a) the FIRST STATUS:/NEXT:/ROUND: lines reduced to bare keys and (b) the
     harness's own uncited-claim downgrade applied — with the look-ahead reading `context_raw` when
@@ -118,8 +131,9 @@ def canonical_bytes(raw, context_raw=None):
     "append-only" checkable whatever the file's leading format (marathon's and jog's title-first
     renders, frontmatter threads, bare KEY: lines) and whatever the harness stamped after the turn.
     """
-    lines = _normalise_headers(_split_lines(raw))
-    ctx = _normalise_headers(_split_lines(context_raw)) if context_raw is not None else None
+    lines = _without_next_turn_marker(_normalise_headers(_split_lines(raw)))
+    ctx = (_without_next_turn_marker(_normalise_headers(_split_lines(context_raw)))
+           if context_raw is not None else None)
     return b"".join(_downgrade_uncited(lines, ctx))
 
 
@@ -132,6 +146,32 @@ def canonical_prefix(pre_raw, post_raw):
     """The pre-turn snapshot as the post-turn file will carry it: header keys normalised and the
     uncited-claim downgrade judged with the post-turn lines as look-ahead context."""
     return canonical_bytes(pre_raw, context_raw=post_raw)
+
+
+def append_before_marker(path, text):
+    """Append harness-owned text while keeping the scaffold sentinel as the final line."""
+    payload = text.encode("utf-8")
+    with open(path, "rb") as f:
+        raw = f.read()
+    lines = raw.splitlines(keepends=True)
+    marker_at = next((i for i in range(len(lines) - 1, -1, -1)
+                      if lines[i].rstrip(b"\r\n") == _NEXT_TURN_MARKER), None)
+    if marker_at is None:
+        updated = raw + payload
+    else:
+        updated = b"".join(lines[:marker_at]) + payload + b"".join(lines[marker_at:])
+    directory = os.path.dirname(os.path.abspath(path))
+    fd, tmp = tempfile.mkstemp(prefix=".relay-append.", dir=directory)
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(updated)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def file_status(path):
