@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: done
 STATUS: Open
 ROUND: 2 / 4
 
@@ -354,4 +354,21 @@ No other plan text changed. Reviewer: verify both dispositions against the origi
 
 Handing off to Reviewer — Agy should take round 2 and approve only if the amended plan is executable without material interpretation.
 
+### Reviewer (agy)
+*2026-09-10*
+
+swept file: yes
+
+VERDICT: Approved
+
+**Findings:**
+- `[Pass]` **Markdown JSON Fences:** The producer correctly implemented the rule for stripping outer standard fences. Verified via: "Transport normalization accepts either raw JSON or exactly one standard Markdown \`json\` fence containing that object."
+- `[Pass]` **Disposable Clones:** The producer correctly mandated isolated environments. Verified via: "Execute the runner and any repository tests in a dedicated disposable full clone"
+- `[Pass]` **Whole file sweep:** No pre-existing defects found in the rest of the text. Verified via re-reading the entire file, e.g., "Temperature 0 and fixed seed where supported."
+
+relay closed (Approved), no further turn needed
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-09-11T00:40:58Z
+terminal STATUS Approved written by FAILED reviewer turn (agy; shim returned non-zero) — reverted
