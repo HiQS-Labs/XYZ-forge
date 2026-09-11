@@ -512,7 +512,7 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2 — [doc](%s) · [#%d](%s)" %
+        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2/2 — [doc](%s) · [#%d](%s)" %
                (args.issue, meta["title"], doc, args.issue, meta["url"]))
         run_releases(root, "roadmap", "add",
                      "--issue-num", str(args.issue), "--issue-url", meta["url"],
@@ -532,12 +532,11 @@ def cmd_ledger(args):
         rel = m.group(1)
     run_releases(root, "manifest", "dial-in", meta["url"], "--gid", rel,
                  "--reason", "express hotfix %s (GH-267 lane)" % datetime.date.today().isoformat())
-    dashboard = os.path.join(root, "utils", "roadmap-dashboard.sh")
-    if os.path.isfile(dashboard):
-        r = subprocess.run(["bash", dashboard], cwd=root, capture_output=True, text=True)
-        if r.returncode != 0:
-            die("roadmap dashboard refresh failed: %s" %
-                ((r.stderr or r.stdout).strip() or "exit %d" % r.returncode))
+    # Under GH-496 Phase 2, generated views (ROADMAP-DASHBOARD.md, LEADERBOARD.md) are decoupled
+    # from task branches and owned exclusively by wave_reconcile on development upon landing.
+    # Revert routine view writes caused by dial-in so task branch commits do not trip the guard.
+    for view in ("ROADMAP-DASHBOARD.md", "LEADERBOARD.md", "LEADERBOARD.html", "RELEASES.generated.md", "RELEASES-PREVIEW.html"):
+        git(root, "checkout", "origin/development", "--", view, check=False)
     print("express-ledger: dialed into %s" % rel)
     return dict(release=rel)
 
