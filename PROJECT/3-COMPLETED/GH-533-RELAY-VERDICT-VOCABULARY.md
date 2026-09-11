@@ -2,9 +2,9 @@
 gh_issue: 533
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/533
 title: "Relay scaffold verdict vocabulary contradicts validate-relay-block"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -45,3 +45,9 @@ goal: "Give the scaffold, validator, driver, and reviewer one explicit verdict v
 ## Merge evidence
 
 - PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Lessons Learned (For Future Agents)
+
+- Harness scaffolding instructions and validation scripts must strictly share a single canonical vocabulary enum (`VERDICT: PASS|FAIL|PARKED` + `Basis:`) rather than diverging into natural-language variants like `Approved` or `Changes requested`.
+- Structural validators should provide clear diagnostics and fail closed with defined exit codes upon encountering unrecognized verdict tokens.
+

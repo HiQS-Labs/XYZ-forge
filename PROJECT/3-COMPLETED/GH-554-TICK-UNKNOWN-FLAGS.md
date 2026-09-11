@@ -2,9 +2,9 @@
 gh_issue: 554
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/554
 title: "tick mutating verbs silently accept unknown flags"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -46,3 +46,9 @@ goal: "Reject unknown tick flags before any state mutation so a mistyped close c
 ## Merge evidence
 
 - PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Lessons Learned (For Future Agents)
+
+- CLI flag parsers for state-mutating tools must reject unrecognized arguments before performing any filesystem or state mutations, preventing mistyped command options from triggering partial or unintended state transitions.
+- Regression suites should test both positive execution paths and rejection of unknown flag invocations across all mutating verbs.
+

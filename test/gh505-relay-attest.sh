@@ -67,6 +67,18 @@ case "\$mode" in
     printf '\n### Round 1 · Reviewer · %s\nlooks fine\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
     "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  markerapprove)
+    awk '
+      /^<!-- ↓↓↓ NEXT TURN goes here/ {
+        print ""
+        print "### Round 1 · Reviewer · " ENVIRON["RELAY_AGENT"]
+        print "VERDICT: PASS"
+        print "Basis: \`src.txt:1\`"
+      }
+      { print }
+    ' "\$f" >"\$f.new" && mv "\$f.new" "\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/; s/^NEXT:.*/NEXT: done/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
   uncited)
     printf '\n### Round 1 · Reviewer · %s\n- [Pass] verified the thing works\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
@@ -169,6 +181,18 @@ assert hashlib.sha256(added).hexdigest() == rec["added_sha256"]
 ok, why = relay_attest.candidate_ok(rec, relay_attest.rev_parse(os.path.dirname(sys.argv[2])), os.path.dirname(sys.argv[2]))
 assert ok, why
 PY
+
+# --- B1: generated instruction's append-above-marker placement is structurally append-only -------
+reset_repo
+"$MAIN/relay-automation/new-relay.sh" --title fixture --reviewer rev --producer bld --out "$A/relay.md" >/dev/null
+perl -pi -e 's/^NEXT: Reviewer/NEXT: rev/; s/^ROUND: 1 \/ 4/ROUND: 1 \/ 2/' "$A/relay.md"
+perl -0pi -e 's/(<!-- ↓↓↓ NEXT TURN goes here)/## Body\n\nseeded body line one\n\n$1/' "$A/relay.md"
+git -C "$A" commit -qam "generated scaffold fixture" >/dev/null
+seed_to T-B1 rev
+run_driver "$DRIVER" T-B1 markerapprove --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 0 ] && pass "B1: reviewer following generated append-above-marker instruction is attested" || fail "B1: rc=$rc reason=$(reason): $(tail -4 "$WORK/out-T-B1")"
+[ "$(grep -c '^<!-- ↓↓↓ NEXT TURN goes here' "$A/relay.md")" -eq 1 ] && pass "B1: exactly one trailing marker remains" || fail "B1: marker duplicated or removed"
+[ "$(tail -1 "$A/relay.md")" = '<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->' ] && pass "B1: marker remains the final line" || fail "B1: marker is not last"
 
 # --- B4: a parent commit during the turn does not move reviewed_head; candidate check refuses -----
 reset_repo; seed_to T-B4 rev

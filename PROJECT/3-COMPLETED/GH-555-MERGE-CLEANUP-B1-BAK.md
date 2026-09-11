@@ -2,9 +2,9 @@
 gh_issue: 555
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/555
 title: "merge-cleanup B1 leaves releases.db.bak after ledger conflict resolution"
-status: 2-WORKING
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -45,3 +45,9 @@ goal: "Leave a successfully resolved B1 landing clone free of the rebuild backup
 ## Merge evidence
 
 - PR #563 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Lessons Learned (For Future Agents)
+
+- Temporary backup artifacts generated during database rebuilds (such as `releases.db.bak`) must be deterministically removed upon successful verification to avoid leaving untracked files that fail gate clean-tree invariants, while remaining preserved for forensic diagnosis if the rebuild fails.
+- Cleanup routines must be strictly bounded to known, named file targets within the repository root rather than employing wide or unconstrained path sweeps.
+
