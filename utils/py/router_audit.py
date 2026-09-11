@@ -5,9 +5,8 @@ Contract:
 - Checks if a target repository is in releases mode (releases.db present or anchored ROADMAP_SOURCE=releases in .pdda-mode).
 - If in releases mode:
   - Asserts exactly one exact ## Role split and ## Startup sequence section exists (ignoring headings inside fenced code blocks and prefixed custom sections like '## Role split rationale').
-  - Asserts ## Role split affirmatively declares ROADMAP-DASHBOARD.md as generated view of the roadmap ledger (rejecting 'generated deployment manifest', 'not a generated view', 'lives elsewhere', 'historical archive', 'do not read', 'obsolete').
   - Asserts ## Role split declares ROADMAP.md frozen/legacy AND affirmatively declares the releases DB (releases.db / releases.sql) as the source of truth (rejecting 'releases.db is present for compatibility', 'ROADMAP_SOURCE=releases' without DB source of truth, unrelated frozen subjects like 'OLD-API.md is frozen', active/current/priority claims or negated frozen/legacy in owned ROADMAP.md entries, while preserving non-owned entries like PROJECT/PDDA.md and examples inside code fences).
-  - Asserts ## Startup sequence directs to ROADMAP-DASHBOARD.md for current work/state/active effort in the directive clause itself (rejecting purpose-free reads like 'Read ROADMAP-DASHBOARD.md for deployment instructions; TEAM.md tracks current work', 'not current state', 'historical reference only', 'do not read') and forbids active ROADMAP.md directives in all clauses (supporting valid negations like 'do not use ROADMAP.md', while preserving custom steps and historical reads like 'Read ROADMAP.md only for historical reference').
+  - Asserts ## Startup sequence directs to releases_app.py roadmap list (or releases.db / releases roadmap list) for finding active effort/current work/parked intake, and forbids active ROADMAP.md directives in all clauses (supporting valid negations like 'do not use ROADMAP.md', while preserving custom steps and historical reads like 'Read ROADMAP.md only for historical reference').
 - If in legacy mode:
   - Asserts exactly one exact ## Role split and ## Startup sequence section exists (ignoring code fences).
   - Asserts ## Role split affirmatively declares active ROADMAP.md pointer ledger of current/active work in its own clause (rejecting 'pointer ledger for deployment policy', 'archived', 'frozen', 'legacy', 'releases.db', while preserving unrelated legacy entries like OLD-API.md and historical CHANGELOG entries like '- `CHANGELOG.md` = records when `ROADMAP.md` was frozen during the 2025 migration').
@@ -252,8 +251,6 @@ def is_owned_startup_roadmap_directive(line):
         return True
     if is_affirmative_releases_startup_directive(line):
         return True
-    if is_affirmative_dashboard_startup_directive(line):
-        return True
     if re.search(r"\b(?:only\s+for\s+historical|for\s+historical\s+reference|historical\s+reference\s+only)\b", line, re.IGNORECASE):
         return False
 
@@ -292,40 +289,6 @@ def is_active_roadmap_startup_directive(line):
             if not re.search(r"\b(?:is\s+(?:the\s+)?(?:frozen|legacy)|obsolete|frozen\s+since)\b", clause, re.IGNORECASE):
                 return True
 
-    return False
-
-
-def is_affirmative_dashboard_role_line(line):
-    """Returns True if a Role split line affirmatively declares ROADMAP-DASHBOARD.md as the generated view of the roadmap ledger."""
-    m = re.search(OWNED_DASHBOARD_DECL_RE, line, re.IGNORECASE)
-    if not m:
-        return False
-    desc = m.group(1)
-
-    if re.search(r"\b(do\s+not\s+read|do\s+not\s+use|obsolete|deprecated|not\s+active|not\s+used|historical\s+archive|historical\s+context|not\s+the\s+source|not\s+(?:a\s+)?generated|not\s+current|lives\s+elsewhere)\b", desc, re.IGNORECASE):
-        return False
-    if (re.search(r"\b(?:generated|human-readable)\b.*?\b(?:view\s+of\s+(?:the\s+)?roadmap|roadmap\s+ledger|view\s+of\s+the\s+ledger)\b", desc, re.IGNORECASE)
-            or re.search(r"\b(?:view\s+of\s+(?:the\s+)?roadmap|roadmap\s+ledger)\b.*?\b(?:generated|human-readable)\b", desc, re.IGNORECASE)):
-        return True
-    return False
-
-
-def is_affirmative_dashboard_startup_directive(line):
-    """Returns True if a Startup line affirmatively directs reading the dashboard for current work/state in the dashboard clause itself."""
-    if not re.search(DASHBOARD_MENTION_RE, line, re.IGNORECASE):
-        return False
-    for clause in split_clauses(line):
-        if not re.search(DASHBOARD_MENTION_RE, clause, re.IGNORECASE):
-            continue
-        if not re.search(r"\b(?:Read|Consult|Open|Check|See|Inspect|Use)\s+(?:`?ROADMAP-DASHBOARD\.md`?|\[[^\]]*\]\([^)]*ROADMAP-DASHBOARD\.md[^)]*\))", clause, re.IGNORECASE):
-            continue
-        if re.search(r"\b(?:do\s+not|never)\s+(?:read|consult|open|check|use)\b", clause, re.IGNORECASE):
-            continue
-        if re.search(r"\b(?:historical\s+(?:reference|archive|context)|only\s+for\s+historical|obsolete|not\s+current|not\s+for\s+current)\b", clause, re.IGNORECASE):
-            continue
-        if re.search(r"\b(active\s+effort|parked\s+intake|current\s+state|active\s+tasks|current\s+work|find\s+(?:the\s+)?active|active\s+work|roadmap\s+ledger)\b", clause, re.IGNORECASE) or re.search(r"\b(?:find\s+(?:the\s+)?active|to\s+find)\b", clause, re.IGNORECASE):
-            if not re.search(r"\bnot\s+current\b", clause, re.IGNORECASE):
-                return True
     return False
 
 
@@ -465,7 +428,7 @@ def audit_router(root, content_override=None):
             result["reasons"].append("ROUTER.md missing '## Startup sequence' section")
         else:
             has_affirmative_releases_startup = any(
-                is_affirmative_releases_startup_directive(l) or is_affirmative_dashboard_startup_directive(l)
+                is_affirmative_releases_startup_directive(l)
                 for l in all_startup_lines
             )
             has_active_roadmap_read = any(

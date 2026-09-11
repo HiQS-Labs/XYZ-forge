@@ -116,16 +116,16 @@ This issue explicitly supersedes the 2026-09-07 rejection recorded in `PROJECT/1
 
 ## Acceptance Criteria
 
-- [ ] `ROADMAP-DASHBOARD.md` is removed from git tracking and deleted, and `utils/roadmap-dashboard.sh` is retired.
-- [ ] `githooks/dashboard-staleness-guard.sh` is deleted and unregistered from `githooks/pre-push`.
-- [ ] `utils/py/jog_run.py`, `utils/py/express.py`, and `skills/standup/collect.sh` no longer reference or stage `ROADMAP-DASHBOARD.md`.
-- [ ] `utils/releases-merge-resolve.sh` and `skills/merge-cleanup/scripts/ledger_merge.py` remove `ROADMAP-DASHBOARD.md` from derived views.
-- [ ] `utils/ci-route.sh` and `test/ci-route.sh` update test routing registries.
-- [ ] `utils/py/wave_reconcile.py`, `.github/workflows/wave-reconcile.yml`, and tests (`test/wave-reconcile.sh`, `test/gh421-auto-wave-reconcile.sh`, `test/gh454-reconciler-defects.sh`, `test/gh202-wave-reconcile-issue-state.sh`) succeed without generating or committing `ROADMAP-DASHBOARD.md`.
-- [ ] `utils/py/router_audit.py` passes without requiring `ROADMAP-DASHBOARD.md`, and `--fix` emits `releases roadmap list` directive.
-- [ ] Hand-maintained `ARCHITECTURE/ledger-diagram.json` and `ARCHITECTURE/ledger-diagram.html` are updated.
-- [ ] Rehomed test coverage in `test/gh269-roadmap-retired.sh`, `test/gh491-roadmap-section-validation.sh`, and `test/gh257-roadmap-ledger-fixes.sh` passes cleanly.
-- [ ] Dedicated regression guard `test/gh567-roadmap-dashboard-retired.sh` with witnessed red controls is registered in `validate.sh`.
-- [ ] `validate.sh` passes 100% clean across all suites.
-- [ ] `python3 utils/py/releases_app.py roadmap list` serves as the primary query interface.
+- [x] `ROADMAP-DASHBOARD.md` is removed from git tracking and deleted, and `utils/roadmap-dashboard.sh` is retired.
+- [x] `githooks/dashboard-staleness-guard.sh` is deleted and unregistered from `githooks/pre-push`.
+- [x] `utils/py/jog_run.py`, `utils/py/express.py`, and `skills/standup/collect.sh` no longer reference or stage `ROADMAP-DASHBOARD.md`.
+- [x] `utils/releases-merge-resolve.sh` and `skills/merge-cleanup/scripts/ledger_merge.py` remove `ROADMAP-DASHBOARD.md` from derived views.
+- [x] `utils/ci-route.sh` and `test/ci-route.sh` update test routing registries.
+- [x] `utils/py/wave_reconcile.py`, `.github/workflows/wave-reconcile.yml`, and tests (`test/wave-reconcile.sh`, `test/gh421-auto-wave-reconcile.sh`, `test/gh454-reconciler-defects.sh`, `test/gh202-wave-reconcile-issue-state.sh`) succeed without generating or committing `ROADMAP-DASHBOARD.md`.
+- [x] `utils/py/router_audit.py` passes without requiring `ROADMAP-DASHBOARD.md`, and `--fix` emits `releases roadmap list` directive.
+- [x] Hand-maintained `ARCHITECTURE/ledger-diagram.json` and `ARCHITECTURE/ledger-diagram.html` are updated.
+- [x] Rehomed test coverage in `test/gh269-roadmap-retired.sh`, `test/gh491-roadmap-section-validation.sh`, and `test/gh257-roadmap-ledger-fixes.sh` passes cleanly.
+- [x] Dedicated regression guard `test/gh567-roadmap-dashboard-retired.sh` with witnessed red controls is registered in `validate.sh`.
+- [x] `validate.sh` passes 100% clean across all suites.
+- [x] `python3 utils/py/releases_app.py roadmap list` serves as the primary query interface.
 - [ ] Single atomic PR landed in sequence before GH-568.

@@ -362,12 +362,6 @@ cmd_park(){
     else
       echo '  ! dashboard: releases gen failed — regenerate manually' >&2
     fi
-  elif [ -f "$path/utils/roadmap-dashboard.sh" ]; then
-    if ( cd "$path" && bash utils/roadmap-dashboard.sh >/dev/null 2>&1 ); then
-      echo '  ✓ dashboard: ROADMAP-DASHBOARD.md regenerated'
-    else
-      echo '  ! dashboard: utils/roadmap-dashboard.sh failed — regenerate manually' >&2
-    fi
   fi
 
   local fm_ok=1

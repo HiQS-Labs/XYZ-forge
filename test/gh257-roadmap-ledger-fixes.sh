@@ -184,7 +184,48 @@ case "$out" in
 esac
 
 ## -----------------------------------------------------------------------------
-# Cases 10-12 (roadmap-dashboard and staleness guard):
+# Case 10: roadmap render emits stderr warning on dropped unparseable rows (rehomed under GH-567)
+# -----------------------------------------------------------------------------
+# Red control (negative): verify no dropped-row warning when ledger is well-formed
+clean_err="$(app --root "$R" roadmap render 2>&1 >/dev/null)" || true
+case "$clean_err" in
+  *"warning: dropped"*) fail "well-formed ledger unexpectedly warned on dropped rows: $clean_err" ;;
+  *) pass "red control (negative): well-formed ledger emits no dropped-row warning" ;;
+esac
+
+# Inject malformed rows directly into database (bypassing write-time validation) to test render-time protection
+REPO_ID="$(sqlite3 "$R/releases.db" "SELECT id FROM repos LIMIT 1;")"
+sqlite3 "$R/releases.db" <<EOSQL
+INSERT INTO roadmap_items (global_id, repo_id, gh_number, title, section, position, raw_text, first_seen, updated_at)
+VALUES ('rmi-01M27JVPAPE8HRJQDY8JSV1999', $REPO_ID, 999, 'bad checkbox', 'Queue / parked intake', 90, '- [ ] #999 malformed row', '2026-09-10T00:00:00Z', '2026-09-10T00:00:00Z');
+INSERT INTO roadmap_items (global_id, repo_id, gh_number, title, section, position, raw_text, first_seen, updated_at)
+VALUES ('rmi-01M27JVPAPE8HRJQDY8JSV2000', $REPO_ID, 1000, 'dropped bullet', 'Queue / parked intake', 91, '- #1000 another dropped bullet', '2026-09-10T00:00:00Z', '2026-09-10T00:00:00Z');
+INSERT INTO roadmap_items (global_id, repo_id, gh_number, title, section, position, raw_text, first_seen, updated_at)
+VALUES ('rmi-01M27JVPAPE8HRJQDY8JSV2001', $REPO_ID, 1001, 'unclosed bold', 'Queue / parked intake', 92, '- **GH-1001 unclosed bold', '2026-09-10T00:00:00Z', '2026-09-10T00:00:00Z');
+EOSQL
+
+render_out="$WORK/rendered_ledger.md"
+render_err="$(app --root "$R" roadmap render 2>&1 > "$render_out")" || true
+
+case "$render_err" in
+  *"warning: dropped 3 unparseable row(s): #999, #1000, #1001"*)
+    pass "roadmap render warned on dropped unparseable rows on stderr"
+    ;;
+  *) fail "expected warning naming dropped rows #999, #1000, #1001 on stderr, got: $render_err" ;;
+esac
+
+# Red control (falsification): verify the malformed rows are genuinely omitted from rendered markdown output
+if grep -q "malformed row" "$render_out" || grep -q "unclosed bold" "$render_out"; then
+  fail "unparseable rows should be dropped from rendered output"
+else
+  pass "red control (positive): unparseable rows are omitted from rendered markdown output"
+fi
+
+# Clean up injected rows
+sqlite3 "$R/releases.db" "DELETE FROM roadmap_items WHERE gh_number IN (999, 1000, 1001);"
+
+## -----------------------------------------------------------------------------
+# Cases 11-12 (roadmap-dashboard and staleness guard):
 # Retired under GH-567 alongside ROADMAP-DASHBOARD.md, utils/roadmap-dashboard.sh,
 # and githooks/dashboard-staleness-guard.sh.
 # -----------------------------------------------------------------------------

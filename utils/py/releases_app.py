@@ -4274,14 +4274,21 @@ def roadmap_render(conn):
     if not _table_exists(conn, "roadmap_items"):
         return parts[0]
     section = None
+    unparseable = []
     for row in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position, global_id"):
-        if row["section"] != section:
-            section = row["section"]
-            parts.append("\n### %s\n\n" % section)
         raw = row["raw_text"]
-        if not raw or not raw.strip():
+        gh = row["gh_number"]
+        gh_label = "#%d" % gh if gh is not None else (row["global_id"] or "unknown")
+        if raw and raw.strip():
+            stripped = raw.strip()
+            if not re.match(r'^- \*\*[^\r\n*]+?\*\*', stripped):
+                unparseable.append(gh_label)
+                continue
+        else:
             title = row["title"]
-            gh = row["gh_number"]
+            if not title or not title.strip():
+                unparseable.append(gh_label)
+                continue
             if gh is not None and _roadmap_gh_number(title) != gh:
                 title = "GH-%d · %s" % (gh, title)
             raw = "- **%s**" % title
@@ -4297,8 +4304,17 @@ def roadmap_render(conn):
                 raw += " → [doc](%s)" % row["doc_path"]
             if row["issue_url"]:
                 raw += " · [issue](%s)" % row["issue_url"]
+
+        if row["section"] != section:
+            section = row["section"]
+            parts.append("\n### %s\n\n" % section)
         parts.append(raw)
         parts.append("\n\n")
+
+    if unparseable:
+        print("roadmap: warning: dropped %d unparseable row(s): %s" % (
+            len(unparseable), ", ".join(unparseable)), file=sys.stderr)
+
     return "".join(parts)
 
 

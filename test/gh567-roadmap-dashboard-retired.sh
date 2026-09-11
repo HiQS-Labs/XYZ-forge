@@ -78,6 +78,16 @@ check_writer_audit() {
     return 1
   fi
 
+  # 4. Search for invocations of roadmap-dashboard.sh (excluding comments in frozen/legacy code)
+  local renderer_matches
+  renderer_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null | \
+    xargs -0 grep -n -E '\broadmap-dashboard\.sh\b' 2>/dev/null | grep -v -E ':[0-9]+:\s*(#|//)' || true)
+
+  if [ -n "$renderer_matches" ]; then
+    echo "$renderer_matches" >&2
+    return 1
+  fi
+
   return 0
 }
 
@@ -194,6 +204,19 @@ if [ "$empty_rc" -eq 2 ]; then
   pass "red control 6: empty-input guard correctly returned exit 2 on empty candidate directory"
 else
   fail "red control 6: empty-input guard returned $empty_rc instead of 2 on empty candidate directory"
+fi
+
+# Red Control 7: Mutated writer audit with retired renderer invocation
+MUT_DIR7="$WORK/mut_renderer"
+mkdir -p "$MUT_DIR7/utils"
+cat > "$MUT_DIR7/utils/bad_call.sh" <<'EOF'
+#!/usr/bin/env bash
+bash utils/roadmap-dashboard.sh
+EOF
+if ! check_writer_audit "$MUT_DIR7" >/dev/null 2>&1; then
+  pass "red control 7: writer audit correctly reported RED when roadmap-dashboard.sh invocation was injected"
+else
+  fail "red control 7: writer audit failed to detect roadmap-dashboard.sh invocation"
 fi
 
 echo "== GH-567 ALL PASSED =="

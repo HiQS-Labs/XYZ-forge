@@ -26,7 +26,6 @@ printf 'observe\n' > "$BETA/.pdda-mode"
 mkdir -p "$BETA/PROJECT/1-INBOX" "$BETA/utils/pdda" "$BETA/utils"
 printf '# Roadmap\n\n## Ledger\n\n### Queue / parked intake\n\n### In progress\n\n### Completed\n\n### Deferred · vision\n' > "$BETA/ROADMAP.md"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$BETA/utils/pdda/pdda.sh"; chmod +x "$BETA/utils/pdda/pdda.sh"
-printf '#!/usr/bin/env bash\necho "MOCK dashboard GH-900" > ROADMAP-DASHBOARD.md\n' > "$BETA/utils/roadmap-dashboard.sh"; chmod +x "$BETA/utils/roadmap-dashboard.sh"
 mkdir -p "$BETA/utils/py"
 cp "$HERE/../utils/py/releases_app.py" "$BETA/utils/py/"
 
@@ -77,22 +76,13 @@ grep -q 'What was just completed | What.s next' "$DOC" && pass "Status table has
 ( cd "$BETA" && PDDA_ONLY_FILE="PROJECT/1-INBOX/GH-900-IDEA-INTAKE-PIPELINE.md" bash utils/pdda/pdda.sh frontmatter >/dev/null 2>&1 )
 pass "target's own pdda.sh frontmatter check accepted (stubbed to exit 0 — real gate exercised in hq-park.sh)"
 
-# ── (2) dashboard regeneration wired into --create ("only if present") ─────────────────────────────
-if command -v node >/dev/null 2>&1; then
-  [ -f "$BETA/ROADMAP-DASHBOARD.md" ] && pass "ROADMAP-DASHBOARD.md regenerated after --create" || fail "dashboard was not regenerated"
-  grep -q 'GH-900' "$BETA/ROADMAP-DASHBOARD.md" 2>/dev/null && pass "regenerated dashboard reflects the new ROADMAP pointer" || fail "dashboard content stale/missing the new entry"
-else
-  echo "  SKIP: node absent — dashboard regen assertions skipped"
-fi
-
-# ── (3) dashboard script ABSENT in target: no failure, no false claim ──────────────────────────────
+# ── (2) dashboard regeneration retired: no file created, no false claim ─────────────────────────────
 rm -rf "$BETA/PROJECT" "$BETA/.tick"; mkdir -p "$BETA/PROJECT/1-INBOX"
-rm -f "$BETA/ROADMAP-DASHBOARD.md" "$BETA/utils/roadmap-dashboard.sh"
 printf '# Roadmap\n\n### Queue / parked intake\n\n### In progress\n' > "$BETA/ROADMAP.md"
 OUT="$(bash "$HQ" park --create beta-app "a second unrelated idea" 2>&1)"; rc=$?
-[ "$rc" = 0 ] && pass "--create still succeeds when utils/roadmap-dashboard.sh is absent" || fail "create failed without dashboard script: $OUT (rc=$rc)"
-[ -f "$BETA/ROADMAP-DASHBOARD.md" ] && fail "a dashboard file appeared despite the script being absent" || pass "no phantom dashboard file when the script is absent"
-grep -qi 'dashboard' <<<"$(printf '%s\n' "$OUT")" && fail "claimed dashboard action with no script present" || pass "no false dashboard claim when the script is absent"
+[ "$rc" = 0 ] && pass "--create succeeds cleanly without dashboard generation" || fail "create failed: $OUT (rc=$rc)"
+[ -f "$BETA/ROADMAP-DASHBOARD.md" ] && fail "a dashboard file appeared" || pass "no phantom dashboard file created"
+grep -qi 'dashboard: ROADMAP-DASHBOARD.md' <<<"$(printf '%s\n' "$OUT")" && fail "claimed dashboard action" || pass "no false dashboard claim"
 
 # ── (4) synthesis passthrough via HQ_PARK_* env vars populates the real fields ─────────────────────
 rm -rf "$BETA/PROJECT"; mkdir -p "$BETA/PROJECT/1-INBOX"

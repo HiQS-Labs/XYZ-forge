@@ -121,13 +121,13 @@ touch "$R_REL_CLEAN/releases.db"
 cat > "$R_REL_CLEAN/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
-- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger (read this; regenerate with `utils/roadmap-dashboard.sh` or `.xyz/utils/roadmap-dashboard.sh`)
+- `ROUTER.md` = startup order and canonical entry points
 - `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file
 - `CHANGELOG.md` = running log of completed work
 ## Startup sequence
 1. Read ROUTER.md
 2. Read AGENTS.md
-3. Read `ROADMAP-DASHBOARD.md` (or `python3 utils/py/releases_app.py roadmap list`) to find the active effort. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)
+3. Run `python3 utils/py/releases_app.py roadmap list` to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)
 MD
 
 out="$(python3 "$AUDIT_PY" --check "$R_REL_CLEAN" 2>&1)"; rc=$?
@@ -717,11 +717,11 @@ touch "$R_REL_PDDA_CUSTOM/releases.db"
 cat > "$R_REL_PDDA_CUSTOM/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
-- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROUTER.md` = startup order and canonical entry points
 - `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — the RELEASES DB (`releases.db`) is the source of truth
 - `PROJECT/PDDA.md` = governs the `ROADMAP.md` contract
 ## Startup sequence
-1. Read `ROADMAP-DASHBOARD.md` to find active effort. (`ROADMAP.md` is frozen legacy.)
+1. Run `python3 utils/py/releases_app.py roadmap list` to find active effort. (`ROADMAP.md` is frozen legacy.)
 MD
 
 out="$(python3 "$AUDIT_PY" --check "$R_REL_PDDA_CUSTOM" 2>&1)"; rc=$?
@@ -776,11 +776,11 @@ touch "$R_REL_HIST_READ/releases.db"
 cat > "$R_REL_HIST_READ/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
-- `ROADMAP-DASHBOARD.md` = the generated, human-readable view of the roadmap ledger
+- `ROUTER.md` = startup order and canonical entry points
 - `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — the RELEASES DB (releases.db) is the source of truth
 ## Startup sequence
 1. Read ROUTER.md
-2. Read `ROADMAP-DASHBOARD.md` to find active effort.
+2. Run `python3 utils/py/releases_app.py roadmap list` to find active effort.
 3. Read ROADMAP.md only for historical reference.
 MD
 
@@ -798,10 +798,10 @@ touch "$R_REL_VALID_NEG/releases.db"
 cat > "$R_REL_VALID_NEG/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
-- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROUTER.md` = startup order and canonical entry points
 - `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — the RELEASES DB (releases.db) is the source of truth
 ## Startup sequence
-1. Read `ROADMAP-DASHBOARD.md` to find active effort.
+1. Run `python3 utils/py/releases_app.py roadmap list` to find active effort.
 2. ROADMAP.md is frozen; do not use it for current work.
 MD
 
@@ -815,7 +815,7 @@ touch "$R_REL_FENCED/releases.db"
 cat > "$R_REL_FENCED/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
-- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROUTER.md` = startup order and canonical entry points
 - `ROADMAP.md` = LEGACY pointer ledger, frozen since releases.db flip — the RELEASES DB (releases.db) is the source of truth
 
 ```markdown
@@ -826,7 +826,7 @@ cat > "$R_REL_FENCED/ROUTER.md" <<'MD'
 ```
 
 ## Startup sequence
-1. Read `ROADMAP-DASHBOARD.md` to find active effort. (ROADMAP.md is frozen legacy.)
+1. Run `python3 utils/py/releases_app.py roadmap list` to find active effort. (ROADMAP.md is frozen legacy.)
 MD
 
 out="$(python3 "$AUDIT_PY" --check "$R_REL_FENCED" 2>&1)"; rc=$?
@@ -1044,10 +1044,10 @@ MODE
 cat > "$R_PDDA_WS/ROUTER.md" <<'MD'
 # ROUTER.md
 ## Role split
-- `ROADMAP-DASHBOARD.md` = the generated view of the roadmap ledger
+- `ROUTER.md` = startup order and canonical entry points
 - `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db`) is the source of truth
 ## Startup sequence
-1. Read `ROADMAP-DASHBOARD.md` to find active effort. (`ROADMAP.md` is frozen legacy.)
+1. Run `python3 utils/py/releases_app.py roadmap list` to find active effort. (`ROADMAP.md` is frozen legacy.)
 MD
 
 out="$(python3 "$AUDIT_PY" --check "$R_PDDA_WS" 2>&1)"; rc=$?
