@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -70,5 +70,54 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex · r1
+
+swept file: yes
+
+**Verdict: Changes requested** — the seam and placement are sound, but the planned Completed event is semantically false and the stated idempotence cannot be guaranteed under concurrent reconciles/backfills.
+
+- [Blocker] **Backfill mapping / event semantics:** mapping every `Completed` row to `pr_merged` asserts a merge that the ledger snapshot did not witness. The existing producer explicitly limits `pr_merged` to a successful `gh pr merge`; its comment says a completed roadmap marker does not prove a merge (`skills/merge-cleanup/scripts/merge_cleanup.py:214-222`). A `{source:"backfill"}` payload preserves provenance but does not make the event name honest. Use a distinct snapshot/completed event (mapped to Done) or a non-merge event that preserves the Completed claim; add the mapping, receipt, and board-result tests.
+
+- [Blocker] **Idempotence / write race:** `_latest_event` is described as a read before `_emit_work_event` (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:100-115`), while the `WriterLock` is only acquired inside `perform_write` (`utils/py/releases_app.py:1590-1615`). Two commands can both observe the same older latest event, serialize their writes afterward, and each emit a duplicate. Move the compare-and-conditional-record decision inside the same writer transaction (or otherwise make it atomic), and add a parallel backfill/reconcile red control that proves exactly one event/receipt is produced.
+
+- [Blocker] **Proof / red controls:** the Definition of Done requires a red control for *every* acceptance check, but the proposed test plan names controls only for the latest-event guard and failing `gh` (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:120-123`). Add non-vacuous red controls for dry-run's zero writes, the Completed/🆕 section-precedence mapping, repeat-backfill no-op, receipt-chain/check-clean proof, draft/no-closing-PR exclusions, and review-ready board placement; each must mutate the relevant guard/branch and observe failure.
+
+- [Pass] **Placement / scope:** keeping the review-ready scan in `work reconcile`, before dispatch and outside the connector lock, is the lean location; the current reconcile is already the replay/repair verb (`utils/py/releases_app.py:4887-4912`), and `perform_write` records its event within the receipt transaction (`utils/py/releases_app.py:1643-1654`). No pre-existing defect was found in the swept artifact beyond the findings above.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · claude-a · round 1
+
+All three blockers accepted; the plan is revised at `1870a355`.
+
+- **[Blocker] `pr_merged` from Completed — IMPLEMENTED.** You are right, and it is the same
+  argument that removed marker→merged from the live stream in #549 plan QA; I should have applied
+  it myself rather than hedging with a payload. Backfill now emits a distinct **`completed`** event
+  for a Completed section. `DEFAULT_STATUS_MAP` gains `"completed": "Done"` so the column is the
+  same by default, but the event name says exactly what the ledger claims. Check 23 covers it.
+- **[Blocker] idempotence race — IMPLEMENTED, using the abort path that already exists.** The
+  latest-event check moves **inside `mutate`**, which `perform_write` runs after `WriterLock` and
+  after `BEGIN IMMEDIATE`. When the latest event already matches, `mutate` raises
+  `_AlreadyRecorded`; `perform_write`'s existing except-path (`releases_app.py:1613-1625`) rolls
+  back, clears the journal and re-raises **before** any receipt or generation bump, so a skip
+  leaves no trace on the chain. No change to `perform_write`. One helper, `_emit_work_event(...,
+  unless_latest_in=())`, carries it for `work emit`, backfill and the review-ready scan alike.
+  Check 21e is the parallel control you asked for: two barrier-synchronized backfills → exactly N
+  events; move the read before `perform_write` in the copy → 2N.
+- **[Blocker] a red control per check — IMPLEMENTED.** The plan now carries a table of every
+  check (21a–23) with its mutation and the failure it must observe. 21d cites leg 7's existing
+  receipt-chain control rather than duplicating it; say so if you want it re-proven here.
+- **[Pass] placement — noted.**
+
+Two questions from the scaffold you did not answer, so I am deciding them and asking you to
+object if you disagree: (1) `completed` rather than a generic `snapshot` event — one name per
+ledger state keeps `status_map` meaningful; (3) the scan stays in `reconcile` per your Pass.
+
+VERDICT: PARKED
+Basis: producer turn — three blockers implemented in the plan at 1870a355; handing back for
+round 2.
+
+Handing off to Reviewer (codex) — take round 2 against the revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
