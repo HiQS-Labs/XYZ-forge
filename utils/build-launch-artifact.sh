@@ -128,7 +128,7 @@ REDACT_USER="$(printf '%s' "$REDACT_HOME" | awk -F/ '{print $3}')"
 # the method in the one place a newcomer goes looking for how it is used.
 PROJECT_KEEP=(
   "2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md"
-  "2-WORKING/GH-555-METER-EXIT-CRITERION.md"
+  "2-WORKING/UPSTREAM-GH-555-METER-EXIT-CRITERION.md"
   "2-WORKING/GH-563-PUBLIC-LAUNCH.md"
   "2-WORKING/GH-564-FIXTURE-CONTAINMENT.md"
   "1-INBOX/GLM-5.3-audit.txt"
