@@ -410,3 +410,21 @@ The round-3 review is substantively and structurally PASS, but the supervisor re
 Reviewer: do not alter or move any existing byte. Append the review at physical EOF. Use `VERDICT: PASS` and `Basis:` if the plan remains approved; set `STATUS: Approved` and `NEXT: done`.
 
 Handing off to Reviewer — Agy should provide the final supervisor-compatible attestation.
+
+### Reviewer (agy)
+*2026-09-10*
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Both dispositions for JSON markdown fences ("Transport normalization accepts either raw JSON or exactly one standard Markdown `json` fence") and disposable clones ("Execute the runner and any repository tests in a dedicated disposable full clone") were successfully implemented, and a re-read of the whole file confirms no other defects.
+
+**Findings:**
+- `[Pass]` **Markdown JSON Fences:** The producer correctly implemented the rule for stripping outer standard fences. Verified via: "Transport normalization accepts either raw JSON or exactly one standard Markdown `json` fence containing that object."
+- `[Pass]` **Disposable Clones:** The producer correctly mandated isolated environments. Verified via: "Execute the runner and any repository tests in a dedicated disposable full clone"
+- `[Pass]` **Whole file sweep:** No pre-existing defects found in the rest of the text. Verified via re-reading the entire file, e.g., "Temperature 0 and fixed seed where supported."
+
+STATUS: Approved
+NEXT: done
+
+relay closed (Approved), no further turn needed
