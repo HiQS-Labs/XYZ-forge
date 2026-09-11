@@ -1,8 +1,8 @@
 ---
 Goal: Implementation QA for End-to-End Removal of ROADMAP-DASHBOARD.md (GH-567)
 Date: 2026-09-10
-NEXT: Codex
-STATUS: In review
+NEXT: agy
+STATUS: Approved
 ROUND: 2 / 3
 ---
 
@@ -107,6 +107,48 @@ All three required changes from Round 1 have been implemented, tested, and commi
    - Removed obsolete `is_affirmative_dashboard_role_line` and `is_affirmative_dashboard_startup_directive` functions, enforcing affirmative `is_affirmative_releases_startup_directive` (`releases_app.py roadmap list`) for releases mode startup.
    - In `test/gh353-vendored-router-audit.sh:120-136, 715-835, 1040-1055`, updated all clean releases-mode fixtures to use the affirmative CLI-only contract (`python3 utils/py/releases_app.py roadmap list`). All 108 tests in `test/gh353-vendored-router-audit.sh` pass cleanly.
    - Verified `python3 utils/py/router_audit.py --check .` passes clean.
+
+## Codex implementation QA — approved (Round 2)
+
+**Verdict: approved.** The three Round 1 blockers are resolved in the committed
+implementation; the removal is complete for active production paths, with the
+CLI now the affirmative route. I did not run tests, per this relay's containment
+rule; this finding is from source and test-contract inspection.
+
+1. **Completeness of removal — pass.** `utils/hq/hq.sh:356-365` regenerates only
+   `RELEASES.md`; it neither dispatches the retired renderer nor claims to create
+   the dashboard. The focused active-path scan found no executable invocation of
+   `roadmap-dashboard.sh`, `dashboard-staleness-guard.sh`, or a dashboard writer
+   in `utils/`, `githooks/`, `relay-automation/`, `skills/`, or workflow YAML.
+   The remaining occurrences in `utils/marathon-plan.sh:173,462` are comments.
+   `utils/py/router_audit.py:31-37,565-567,643-644` intentionally recognizes and
+   removes stale dashboard declarations from foreign/legacy ROUTER inputs; it
+   does not render, require, or route to the retired artifact.
+
+2. **Rehomed coverage and regression defense — pass.** The permanent guard
+   scans non-empty candidate input before deciding (`test/gh567-roadmap-dashboard-retired.sh:52-58`),
+   audits writers, guard calls, and renderer dispatches (`:60-89`), and witnesses
+   each relevant failure, including a live-shaped `bash utils/roadmap-dashboard.sh`
+   injection (`:209-220`). `roadmap_render` again omits malformed stored rows and
+   emits the deterministic stderr warning (`utils/py/releases_app.py:4277-4318`);
+   GH-257 proves both the warning and absence from emitted Markdown
+   (`test/gh257-roadmap-ledger-fixes.sh:187-225`).
+
+3. **Merge and conflict resolution — pass.** The resolver's adopted-view set now
+   excludes the dashboard (`utils/releases-merge-resolve.sh:160-191`), while its
+   delete/modify branch explicitly honours un-adoption rather than regenerating a
+   deleted view (`:164-181`). Merge-cleanup's corresponding `LEDGER_VIEWS` set
+   agrees (`skills/merge-cleanup/scripts/ledger_merge.py:34-37`), so neither path
+   can resurrect the retired file or classify it as an adopted derived view.
+
+4. **Router and documentation integrity — pass.** The user-facing route is
+   explicit at `ROUTER.md:23-31`, and releases-mode auditing requires that same
+   affirmative CLI direction (`utils/py/router_audit.py:430-443`); `--fix` emits
+   the canonical command (`:607-617`). The dashboard strings retained in
+   `test/gh353-vendored-router-audit.sh` are deliberately invalid legacy/stale
+   inputs that prove remediation, whereas its clean releases fixture uses the CLI
+   (`:117-135`). They are regression inputs, not an active governance route or a
+   dead link.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
