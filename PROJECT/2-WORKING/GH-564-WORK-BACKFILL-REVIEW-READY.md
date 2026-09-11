@@ -28,7 +28,7 @@ risk: 2
 
 | What was just completed | What's next |
 |---|---|
-| Issue #564 filed; clone `~/task-clones/xyzforge-gh564-backfill` at `59b692b2` on `feat/gh564-work-backfill-review-ready`, **stacked on #559's head** | Park + rate, recon the two seams, plan, Codex plan QA, build |
+| Built and green: `test/gh549-work-events.sh` 109/0 (from 63), gh402 34/0, gh405 19/0, gh534-b rc 0. Three plan-QA rounds (9 blockers, all folded in; escalated at the cap, operator chose build) | Full gate in a disposable clone → Codex implementation QA → PR (stacked on #559) |
 
 ## Why
 
@@ -190,3 +190,24 @@ write path.
 
 ### Rollback
 Two verbs, no schema change, no new table. Revert the commit.
+
+## Implementation notes — what changed from the plan while building
+
+- **The ping-pong had a second half the plan missed.** Scoping backfill to its own rows
+  (`only_source="backfill"`) stopped backfill re-emitting after a `review_ready`, but reconcile
+  still used the global latest, so a backfill `rated` let the next reconcile re-emit
+  `review_ready` once. Fixed symmetrically: reconcile ignores backfill rows
+  (`exclude_source="backfill"`). Leg 21f now proves both directions with a red control each.
+- **A terminal claim must suppress regardless of producer.** `completed` only ever comes from
+  backfill, so excluding backfill rows would have blinded reconcile to it. `_emit_work_event`
+  gained `terminal=(...)`: the global latest in that set suppresses whoever made it. Reconcile
+  passes `terminal=("completed", "pr_merged")`.
+- **`_linked_issues` is inlined**, not imported from `merge_cleanup.py`: that is a skill script off
+  `sys.path`, and a ledger verb must not depend on a skill's file layout. Same regex.
+- **Test-authoring defects found by the controls themselves, disclosed:** 21a's first mutation
+  anchored on `if args.dry_run:`, which has 12 occurrences — it mutated a different verb and the
+  control passed vacuously; it now anchors on backfill's unique print. 21f first used #405, which
+  is a Completed issue in the real ledger, so backfill emitted `completed` and terminal
+  suppression hid the interleave; it now creates a fresh parked issue. 22b's draft control asserted
+  on the linked issue while the same copy had `linked_issues` bypassed, so the draft emitted for its
+  own number instead.
