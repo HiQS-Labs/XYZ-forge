@@ -879,6 +879,547 @@ case "$RS" in
   *) bad "--reset stopped replaying after the lock change: $RS" ;;
 esac
 
+echo "21. work backfill — projects existing ledger state, idempotent, through the one seam (GH-564)"
+FXD="$WORK/fx_backfill"; rm -rf "$FXD"; mkdir -p "$FXD"
+( cd "$FXD" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXD/"
+appd() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXD" "$@"; }
+# One row per mapping cell. Built through the verbs, never by SQL.
+for N in 9911 9912 9913 9914 9915; do
+  appd roadmap add --issue-num $N --issue-url "https://example.invalid/$N" --title "cell $N" \
+       --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+done
+appd roadmap update --issue-num 9911 --section "Completed" >/dev/null 2>&1
+appd roadmap update --issue-num 9912 --status-marker "🚧" >/dev/null 2>&1
+appd roadmap rate   --issue-num 9913 --rated 10/20/30/40 >/dev/null 2>&1
+appd roadmap update --issue-num 9915 --section "Deferred · vision" --status-marker "🚧" >/dev/null 2>&1
+CELLS="$(sqlite3 "$FXD/releases.db" "SELECT gh_number||':'||section||':'||status_marker FROM roadmap_items WHERE gh_number IN ('9911','9912','9913','9914','9915') ORDER BY gh_number;")"
+case "$CELLS" in
+  *"9911:Completed:🆕"*"9915:Deferred"*) ok "fixture rows built through the verbs, one per mapping cell" ;;
+  *) bad "fixture guard: mapping cells not as intended: $CELLS" ;;
+esac
+# 21a — dry-run writes nothing.
+EV0="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events;")"
+RC0="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM op_receipts;")"
+DRY="$(appd work backfill --dry-run 2>&1)"
+EV1="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events;")"
+RC1="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM op_receipts;")"
+[ "$EV0" = "$EV1" ] && [ "$RC0" = "$RC1" ] \
+  && ok "21a dry-run: zero events and zero receipts written" \
+  || bad "21a dry-run wrote (events $EV0->$EV1, receipts $RC0->$RC1)"
+case "$DRY" in *"would emit"*"0 written"*) ok "21a dry-run prints the plan and says 0 written" ;; *) bad "21a dry-run output: $DRY" ;; esac
+# 21a red: strip the dry-run return in a copy → it writes.
+DRYC="$WORK/app_nodry"; rm -rf "$DRYC"; mkdir -p "$DRYC"; cp -R "$ROOT/utils/py/." "$DRYC/"
+python3 - "$DRYC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='            print("dry-run: %d row(s), %d would emit, 0 written"'
+assert s.count(a)==1, "21a red: backfill dry-run anchor must be unique"
+i=s.index(a); j=s.rfind("        if args.dry_run:\n", 0, i)
+assert j>0 and i-j<200, "21a red: the if is not right above the print"
+s=s[:j]+"        if False:\n"+s[j+len("        if args.dry_run:\n"):]
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21a red control mutation failed"
+FXD2="$WORK/fx_backfill_red"; rm -rf "$FXD2"; cp -R "$FXD" "$FXD2"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$DRYC/releases_app.py" --root "$FXD2" work backfill --dry-run >/dev/null 2>&1
+EVR="$(sqlite3 "$FXD2/releases.db" "SELECT count(*) FROM work_events;")"
+[ "$EVR" -gt "$EV0" ] && ok "21a red: without the dry-run return, --dry-run DOES write ($EV0 -> $EVR)" \
+                       || bad "21a red control did not reproduce (events $EV0 -> $EVR)"
+# 21b — the mapping, per cell.
+appd work backfill >/dev/null 2>&1
+bf_latest() { sqlite3 "$FXD/releases.db" "SELECT event FROM work_events WHERE gh_number=$1 AND payload LIKE '%\"source\": \"backfill\"%' ORDER BY id DESC LIMIT 1;"; }
+[ "$(bf_latest 9911)" = "completed" ] && ok "21b Completed/🆕 -> completed (section wins; NOT pr_merged)" || bad "21b 9911 got '$(bf_latest 9911)'"
+[ "$(bf_latest 9912)" = "in_flight" ] && ok "21b 🚧 -> in_flight" || bad "21b 9912 got '$(bf_latest 9912)'"
+[ "$(bf_latest 9913)" = "rated" ]     && ok "21b rated 🆕 -> rated" || bad "21b 9913 got '$(bf_latest 9913)'"
+[ "$(bf_latest 9914)" = "parked" ]    && ok "21b unrated 🆕 -> parked" || bad "21b 9914 got '$(bf_latest 9914)'"
+[ -z "$(bf_latest 9915)" ]            && ok "21g Deferred + 🚧 -> skipped (Deferred is checked first)" || bad "21g 9915 emitted '$(bf_latest 9915)'"
+PM="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events WHERE event='pr_merged' AND payload LIKE '%backfill%';")"
+[ "$PM" = "0" ] && ok "21b backfill never emits pr_merged" || bad "21b backfill emitted $PM pr_merged event(s)"
+# 21g red: reorder the copy so Completed/marker run before the Deferred check.
+MAPC="$WORK/app_map"; rm -rf "$MAPC"; mkdir -p "$MAPC"; cp -R "$ROOT/utils/py/." "$MAPC/"
+python3 - "$MAPC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='    if sec.lower().startswith("deferred"):\n        return None\n    if sec.lower().startswith("completed"):\n        return "completed"\n'
+assert a in s, "21g red: precedence anchor missing"
+s=s.replace(a,'    if sec.lower().startswith("completed"):\n        return "completed"\n    if marker == "\\U0001F6A7":\n        return "in_flight"\n    if sec.lower().startswith("deferred"):\n        return None\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21g red control mutation failed"
+FXD3="$WORK/fx_backfill_map"; rm -rf "$FXD3"; cp -R "$FXD" "$FXD3"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$MAPC/releases_app.py" --root "$FXD3" work backfill >/dev/null 2>&1
+R9915="$(sqlite3 "$FXD3/releases.db" "SELECT event FROM work_events WHERE gh_number=9915 ORDER BY id DESC LIMIT 1;")"
+[ "$R9915" = "in_flight" ] && ok "21g red: with the order swapped, Deferred/🚧 DOES emit in_flight — the order is load-bearing" \
+                            || bad "21g red did not reproduce (got '$R9915')"
+# 21c — second run emits zero.
+EVA="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events;")"
+OUT2="$(appd work backfill 2>&1 | tail -1)"
+EVB="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events;")"
+[ "$EVA" = "$EVB" ] && ok "21c a second backfill emits zero ($OUT2)" || bad "21c second run emitted $((EVB-EVA)) ($OUT2)"
+# 21c red: strip the suppression in the copy → duplicates.
+IDC="$WORK/app_noidem"; rm -rf "$IDC"; mkdir -p "$IDC"; cp -R "$ROOT/utils/py/." "$IDC/"
+python3 - "$IDC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='unless_latest_in=(event,), only_source="backfill")'
+assert a in s, "21c red: suppression anchor missing"; s=s.replace(a,')',1)
+s=s.replace('_emit_work_event(root, conn, event, gh, payload,\n                                 )','_emit_work_event(root, conn, event, gh, payload)',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21c red control mutation failed"
+python3 -m py_compile "$IDC/releases_app.py" || bad "21c red: mutated copy does not compile"
+FXD4="$WORK/fx_backfill_idem"; rm -rf "$FXD4"; cp -R "$FXD" "$FXD4"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$IDC/releases_app.py" --root "$FXD4" work backfill >/dev/null 2>&1
+EVD="$(sqlite3 "$FXD4/releases.db" "SELECT count(*) FROM work_events;")"
+[ "$EVD" -gt "$EVA" ] && ok "21c red: without the transactional guard a second backfill DUPLICATES ($EVA -> $EVD)" \
+                       || bad "21c red did not reproduce ($EVA -> $EVD)"
+# 21d — receipts and check.
+NBF="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events WHERE payload LIKE '%\"source\": \"backfill\"%';")"
+NRC="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM op_receipts WHERE op='work-emit';")"
+ORPH21="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events w WHERE w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
+[ "$NBF" -gt 0 ] && [ "$ORPH21" = "0" ] && ok "21d every backfill event ($NBF) has its own work-emit receipt, joined on txn_id (0 orphans)" \
+                                          || bad "21d $ORPH21 of $NBF backfill events have no receipt"
+appd check >/dev/null 2>&1 && ok "21d releases check is clean after backfill" || bad "21d check dirty after backfill"
+# 21e — two concurrent backfills, exactly one event per row.
+FXE2="$WORK/fx_backfill_conc"; rm -rf "$FXE2"; cp -R "$FXD" "$FXE2"
+sqlite3 "$FXE2/releases.db" "DROP TRIGGER work_events_no_delete; DELETE FROM work_events WHERE payload LIKE '%backfill%'; CREATE TRIGGER work_events_no_delete BEFORE DELETE ON work_events BEGIN SELECT RAISE(ABORT,'work_events is append-only'); END;" 2>/dev/null
+NROWS="$(sqlite3 "$FXE2/releases.db" "SELECT count(*) FROM roadmap_items WHERE gh_number IS NOT NULL AND gh_number!='' AND section NOT LIKE 'Deferred%';")"
+for i in 1 2; do XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXE2" work backfill >/dev/null 2>&1 & done; wait
+NBF2="$(sqlite3 "$FXE2/releases.db" "SELECT count(*) FROM work_events WHERE payload LIKE '%\"source\": \"backfill\"%';")"
+[ "$NBF2" = "$NROWS" ] && ok "21e two concurrent backfills produced exactly one event per row ($NBF2 = $NROWS), not two" \
+                        || bad "21e concurrent backfills produced $NBF2 events for $NROWS rows"
+# 21e red: move the decision BEFORE perform_write in a copy → duplicates under the same race.
+RACE="$WORK/app_race"; rm -rf "$RACE"; mkdir -p "$RACE"; cp -R "$ROOT/utils/py/." "$RACE/"
+python3 - "$RACE/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='''        if not suppress:
+            return
+        latest = _latest_event(c, gh_number, only_source=only_source, exclude_source=exclude_source)
+        if latest in suppress:
+            raise _AlreadyRecorded(latest)'''
+assert a in s, "21e red: mutate anchor missing"
+s=s.replace(a,'        return',1)
+b='''    terminal_set = set(terminal)
+'''
+assert b in s, "21e red: terminal anchor missing"
+s=s.replace(b,'''    terminal_set = set(terminal)
+    if suppress:
+        _pre = _latest_event(conn, gh_number, only_source=only_source, exclude_source=exclude_source)
+        if _pre in suppress:
+            raise _AlreadyRecorded(_pre)
+        import time as _t; _t.sleep(0.4)
+''',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21e red control mutation failed"
+FXE3="$WORK/fx_backfill_race"; rm -rf "$FXE3"; cp -R "$FXE2" "$FXE3"
+sqlite3 "$FXE3/releases.db" "DROP TRIGGER work_events_no_delete; DELETE FROM work_events WHERE payload LIKE '%backfill%'; CREATE TRIGGER work_events_no_delete BEFORE DELETE ON work_events BEGIN SELECT RAISE(ABORT,'work_events is append-only'); END;" 2>/dev/null
+for i in 1 2; do XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$RACE/releases_app.py" --root "$FXE3" work backfill >/dev/null 2>&1 & done; wait
+NBF3="$(sqlite3 "$FXE3/releases.db" "SELECT count(*) FROM work_events WHERE payload LIKE '%\"source\": \"backfill\"%';")"
+[ "$NBF3" -gt "$NROWS" ] && ok "21e red: with the read moved outside the transaction, the race DUPLICATES ($NBF3 > $NROWS)" \
+                          || bad "21e red did not reproduce ($NBF3 vs $NROWS)"
+
+echo "22. review_ready from open non-draft PRs, inside reconcile, fail-soft (GH-564)"
+WRAP="$ROOT/test/lib/gh-prlist-wrapper.sh"
+[ -x "$WRAP" ] || bad "fixture guard: $WRAP missing or not executable"
+FXR="$WORK/fx_rr"; rm -rf "$FXR"; mkdir -p "$FXR"
+( cd "$FXR" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR/"
+sqlite3 "$FXR/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+python3 "$MOCK" --reset --state "$WORK/mock22.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock22.json" >/dev/null 2>&1
+cat > "$WORK/rr_cfg.json" <<'PYCFG'
+{"board_sync": {"project_owner": "noelsaw1", "project_number": 3, "repos": ["HiQS-Labs/XYZ-forge"], "status_field": "Status", "in_progress": "In progress"},
+ "work_connectors": {"github_board": {"enabled": true, "project_owner": "noelsaw1", "project_number": 3,
+                     "repos": ["HiQS-Labs/XYZ-forge"], "status_map": {"review_ready": "Todo"}}}}
+PYCFG
+prs3() { cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 700, "isDraft": false, "title": "feat: x", "body": "Closes #405"},
+ {"number": 701, "isDraft": true,  "title": "wip",     "body": "Closes #9902"},
+ {"number": 702, "isDraft": false, "title": "chore",   "body": "no linked issue"}]
+PYJ
+}
+prs3
+CALLS="$WORK/prlist_calls.log"; : > "$CALLS"
+rr() { GH549_PRLIST_JSON="$WORK/prs.json" GH549_PRLIST_CALLS="$CALLS" GH549_MOCK="$MOCK" \
+       XYZ_DEVICE_CONFIG_PATH="$WORK/rr_cfg.json" XYZ_BOARD_SYNC_GH_BIN="$WRAP" \
+       XYZ_MOCK_BOARD_STATE="${MOCKSTATE:-$WORK/mock22.json}" XYZ_BOARD_SYNC_STATE_PATH="$WORK/sync22.json" "$@"; }
+mock_col() { python3 "$MOCK" --dump --state "$1" 2>/dev/null | python3 -c "
+import json,sys; d=json.load(sys.stdin); f=d.get('fields',{}).get('Status',{}); names={o['id']:o['name'] for o in f.get('options',[])}
+it=next((i for i in d.get('items',[]) if i.get('number')==$2), None)
+print('absent' if it is None else names.get(next(iter((it.get('field_values') or {}).values()), None),'unset'))"; }
+R22="$(rr python3 "$APP" --root "$FXR" work reconcile 2>&1)"
+RR405="$(sqlite3 "$FXR/releases.db" "SELECT event FROM work_events WHERE gh_number=405 ORDER BY id DESC LIMIT 1;")"
+[ "$RR405" = "review_ready" ] && ok "22a an open non-draft PR closing #405 emitted review_ready" || bad "22a got '$RR405': $R22"
+COL405="$(mock_col "$WORK/mock22.json" 405)"
+[ "$COL405" = "Todo" ] && ok "22a and the card reached the configured review_ready column" || bad "22a card column: $COL405"
+[ -z "$(sqlite3 "$FXR/releases.db" "SELECT event FROM work_events WHERE gh_number=9902;")" ] && ok "22b a DRAFT PR emitted nothing" || bad "22b draft PR emitted"
+[ -z "$(sqlite3 "$FXR/releases.db" "SELECT event FROM work_events WHERE gh_number=702;")" ] && ok "22b a PR closing nothing emitted nothing" || bad "22b closes-nothing PR emitted"
+grep -q -- '--repo HiQS-Labs/XYZ-forge' "$CALLS" && ok "22g the scan passed --repo from the connector's identity, not the CWD" || bad "22g no --repo in: $(cat "$CALLS")"
+: > "$CALLS"; ( cd "$WORK" && rr python3 "$APP" --root "$FXR" work reconcile >/dev/null 2>&1 )
+grep -q -- '--repo HiQS-Labs/XYZ-forge' "$CALLS" && ok "22g ...and still does from a directory with no git checkout" || bad "22g from no-git CWD: $(cat "$CALLS")"
+# 22c — idempotent.
+N405A="$(sqlite3 "$FXR/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=405 AND event='review_ready';")"
+rr python3 "$APP" --root "$FXR" work reconcile >/dev/null 2>&1
+N405B="$(sqlite3 "$FXR/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=405 AND event='review_ready';")"
+[ "$N405A" = "$N405B" ] && [ "$N405A" = "1" ] && ok "22c a second reconcile emits no second review_ready" || bad "22c review_ready count $N405A -> $N405B"
+# 21f — interleave, both directions, on a fresh fixture.
+FXI="$WORK/fx_interleave"; rm -rf "$FXI"; mkdir -p "$FXI"
+( cd "$FXI" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXI/"; sqlite3 "$FXI/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+python3 "$MOCK" --reset --state "$WORK/mock21f.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock21f.json" >/dev/null 2>&1
+prs21f() { cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 710, "isDraft": false, "title": "feat: y", "body": "Closes #9920"}]
+PYJ
+}
+rr python3 "$APP" --root "$FXI" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" --title "interleave" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+prs21f
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work backfill  >/dev/null 2>&1   # 9920 -> parked, source=backfill
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work reconcile >/dev/null 2>&1   # 405 -> review_ready (latest non-backfill was None)
+SEQ="$(sqlite3 "$FXI/releases.db" "SELECT group_concat(event,',') FROM (SELECT event FROM work_events WHERE gh_number=9920 ORDER BY id);")"
+case "$SEQ" in *",review_ready") ok "21f fixture: backfill then reconcile gives ...,review_ready ($SEQ)" ;; *) bad "21f fixture guard: unexpected sequence '$SEQ'" ;; esac
+NBI="$(sqlite3 "$FXI/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920;")"
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work backfill  >/dev/null 2>&1   # own latest is unchanged -> must skip
+NBI2="$(sqlite3 "$FXI/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920;")"
+[ "$NBI" = "$NBI2" ] && ok "21f backfill after a review_ready does NOT re-emit — it compares against its OWN last projection" || bad "21f backfill re-emitted ($NBI -> $NBI2)"
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work reconcile >/dev/null 2>&1   # latest non-backfill is review_ready -> must skip
+NBI3="$(sqlite3 "$FXI/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920;")"
+[ "$NBI2" = "$NBI3" ] && ok "21f reconcile after a backfill does NOT re-emit review_ready — it ignores backfill rows" || bad "21f reconcile re-emitted ($NBI2 -> $NBI3)"
+# A completed issue with an open PR must stay put.
+rr python3 "$APP" --root "$FXI" roadmap add --issue-num 9903 --issue-url "https://example.invalid/9903" --title "done" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+rr python3 "$APP" --root "$FXI" roadmap update --issue-num 9903 --section "Completed" >/dev/null 2>&1
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work backfill >/dev/null 2>&1
+cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 703, "isDraft": false, "title": "late pr", "body": "Closes #9903"}]
+PYJ
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work reconcile >/dev/null 2>&1
+[ -z "$(sqlite3 "$FXI/releases.db" "SELECT event FROM work_events WHERE gh_number=9903 AND event='review_ready';")" ] \
+  && ok "21f an open PR against a COMPLETED issue does not pull it back to review_ready" || bad "21f completed issue got review_ready"
+# 21f red (i): drop only_source → the mutated backfill sees the global latest (review_ready) and re-emits.
+SRC="$WORK/app_nosrc"; rm -rf "$SRC"; mkdir -p "$SRC"; cp -R "$ROOT/utils/py/." "$SRC/"
+python3 - "$SRC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='unless_latest_in=(event,), only_source="backfill")'
+assert a in s, "21f red(i): only_source anchor missing"; s=s.replace(a,'unless_latest_in=(event,))',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21f red(i) mutation failed"
+FXR2="$WORK/fx_rr_nosrc"; rm -rf "$FXR2"; cp -R "$FXI" "$FXR2"
+BFX="$(sqlite3 "$FXR2/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920 AND payload LIKE '%backfill%';")"
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$SRC/releases_app.py" --root "$FXR2" work backfill >/dev/null 2>&1
+BFY="$(sqlite3 "$FXR2/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920 AND payload LIKE '%backfill%';")"
+[ "$BFY" -gt "$BFX" ] && ok "21f red(i): with the global latest, backfill DOES re-emit after review_ready ($BFX -> $BFY) — the ping-pong" \
+                       || bad "21f red(i) did not reproduce ($BFX -> $BFY)"
+# 21f red (iii): drop exclude_source in reconcile → it re-emits review_ready after a backfill.
+EXC="$WORK/app_noexc"; rm -rf "$EXC"; mkdir -p "$EXC"; cp -R "$ROOT/utils/py/." "$EXC/"
+python3 - "$EXC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='                                 exclude_source="backfill",\n'
+assert a in s, "21f red(iii): exclude_source anchor missing"; s=s.replace(a,'',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21f red(iii) mutation failed"
+FXR7="$WORK/fx_rr_noexc"; rm -rf "$FXR7"; mkdir -p "$FXR7"
+( cd "$FXR7" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR7/"; sqlite3 "$FXR7/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+rr python3 "$APP" --root "$FXR7" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" --title "interleave" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+prs21f
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXR7" work reconcile >/dev/null 2>&1   # review_ready
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXR7" work backfill  >/dev/null 2>&1   # rated (backfill) now global latest
+RRX="$(sqlite3 "$FXR7/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920 AND event='review_ready';")"
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$EXC/releases_app.py" --root "$FXR7" work reconcile >/dev/null 2>&1
+RRY="$(sqlite3 "$FXR7/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920 AND event='review_ready';")"
+[ "$RRY" -gt "$RRX" ] && ok "21f red(iii): with backfill rows visible, reconcile DOES re-emit review_ready ($RRX -> $RRY)" \
+                       || bad "21f red(iii) did not reproduce ($RRX -> $RRY)"
+# 21f red (ii): drop completed from the suppression set.
+SUP="$WORK/app_nosup"; rm -rf "$SUP"; mkdir -p "$SUP"; cp -R "$ROOT/utils/py/." "$SUP/"
+python3 - "$SUP/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='terminal=("completed", "pr_merged"))'
+assert a in s, "21f red(ii): terminal anchor missing"; s=s.replace(a,'terminal=("pr_merged",))',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "21f red(ii) mutation failed"
+FXR3="$WORK/fx_rr_nosup"; rm -rf "$FXR3"; cp -R "$FXI" "$FXR3"
+cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 703, "isDraft": false, "title": "late pr", "body": "Closes #9903"}]
+PYJ
+MOCKSTATE="$WORK/mock21f.json" rr python3 "$SUP/releases_app.py" --root "$FXR3" work reconcile >/dev/null 2>&1
+[ -n "$(sqlite3 "$FXR3/releases.db" "SELECT event FROM work_events WHERE gh_number=9903 AND event='review_ready';")" ] \
+  && ok "21f red(ii): without completed in the suppression set the card IS pulled back" || bad "21f red(ii) did not reproduce"
+# 22a/22b red: source mutations.
+EVN="$WORK/app_evname"; rm -rf "$EVN"; mkdir -p "$EVN"; cp -R "$ROOT/utils/py/." "$EVN/"
+python3 - "$EVN/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='_emit_work_event(root, conn, "review_ready", n, {"pr": pr.get("number")},'
+assert a in s, "22a red: event-name anchor missing"; s=s.replace(a,'_emit_work_event(root, conn, "updated", n, {"pr": pr.get("number")},',1)
+b='        if not isinstance(pr, dict) or pr.get("isDraft"):\n            continue'
+assert b in s, "22b red: isDraft anchor missing"; s=s.replace(b,'        if not isinstance(pr, dict):\n            continue',1)
+c='        for n in _linked_issues(pr):'
+assert c in s, "22b red: linked_issues anchor missing"; s=s.replace(c,'        for n in [pr.get("number")]:',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "22a/22b red mutation failed"
+prs3
+FXR4="$WORK/fx_rr_red"; rm -rf "$FXR4"; mkdir -p "$FXR4"
+( cd "$FXR4" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR4/"; sqlite3 "$FXR4/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+python3 "$MOCK" --reset --state "$WORK/mock22r.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock22r.json" >/dev/null 2>&1
+MOCKSTATE="$WORK/mock22r.json" rr python3 "$EVN/releases_app.py" --root "$FXR4" work reconcile >/dev/null 2>&1
+[ -z "$(sqlite3 "$FXR4/releases.db" "SELECT 1 FROM work_events WHERE gh_number=405 AND event='review_ready';")" ] \
+  && ok "22a red: with the event name swapped, 405 does NOT get review_ready" || bad "22a red did not reproduce"
+[ -n "$(sqlite3 "$FXR4/releases.db" "SELECT 1 FROM work_events WHERE gh_number=701;")" ] \
+  && ok "22b red: without the isDraft filter, the draft PR DOES emit (for its own number, since linked_issues is bypassed in the same copy)" || bad "22b red (draft) did not reproduce"
+[ -n "$(sqlite3 "$FXR4/releases.db" "SELECT 1 FROM work_events WHERE gh_number=702;")" ] \
+  && ok "22b red: with linked_issues bypassed, the closes-nothing PR DOES emit for its own number" || bad "22b red (linked) did not reproduce"
+# 22d — gh fails → reconcile still replays, exit 0.
+prs3; : > "$CALLS"
+sqlite3 "$FXR/releases.db" "DELETE FROM connector_cursors;"
+R22D="$(GH549_PRLIST_RC=1 rr python3 "$APP" --root "$FXR" work reconcile 2>&1)"; RC22D=$?
+[ "$RC22D" = "0" ] && ok "22d with gh pr list failing, reconcile exits 0" || bad "22d rc=$RC22D: $R22D"
+case "$R22D" in *"review-ready scan skipped"*"exited 1"*) ok "22d ...and says why" ;; *) bad "22d no reason printed: $R22D" ;; esac
+case "$R22D" in *"replayed through event"*) ok "22d ...and still replayed" ;; *) bad "22d did not replay: $R22D" ;; esac
+# 22f — one emission raises → the other lands, dispatch runs, rc 0. Red: remove the except → rc≠0.
+EMF="$WORK/app_emitfail"; rm -rf "$EMF"; mkdir -p "$EMF"; cp -R "$ROOT/utils/py/." "$EMF/"
+python3 - "$EMF/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='                     exclude_source=None, terminal=()):\n'
+assert s.count(a)==1, "22f: emit signature anchor must be unique"
+s=s.replace(a, a+'    if gh_number == 9904 and event == "review_ready":\n        raise RuntimeError("injected emission failure for 9904")\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "22f injection failed"
+cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 704, "isDraft": false, "title": "a", "body": "Closes #9904"},
+ {"number": 705, "isDraft": false, "title": "b", "body": "Closes #9905"}]
+PYJ
+FXR5="$WORK/fx_rr_emitfail"; rm -rf "$FXR5"; mkdir -p "$FXR5"
+( cd "$FXR5" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR5/"; sqlite3 "$FXR5/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+python3 "$MOCK" --reset --state "$WORK/mock22f.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock22f.json" >/dev/null 2>&1
+R22F="$(MOCKSTATE="$WORK/mock22f.json" rr python3 "$EMF/releases_app.py" --root "$FXR5" work reconcile 2>&1)"; RC22F=$?
+[ "$RC22F" = "0" ] && ok "22f one emission raising: reconcile still exits 0" || bad "22f rc=$RC22F: $R22F"
+[ -n "$(sqlite3 "$FXR5/releases.db" "SELECT 1 FROM work_events WHERE gh_number=9905 AND event='review_ready';")" ] \
+  && ok "22f ...the OTHER issue's event still landed" || bad "22f 9905 did not land: $R22F"
+case "$R22F" in *"GH-9904: FAILED"*) ok "22f ...and the failure was named" ;; *) bad "22f failure not reported: $R22F" ;; esac
+CUR22F="$(sqlite3 "$FXR5/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ -n "$CUR22F" ] && [ "$CUR22F" -gt 0 ] && ok "22f ...and dispatch still ran (cursor $CUR22F)" || bad "22f dispatch did not run"
+python3 - "$EMF/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan\n'
+assert s.count(a)==1, "22f red: except anchor must be unique"; s=s.replace(a,'            except _AlreadyRecorded:\n                raise\n            except () as exc:\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "22f red mutation failed"
+python3 -m py_compile "$EMF/releases_app.py" || bad "22f red: mutated copy does not compile"
+FXR6="$WORK/fx_rr_emitfail_red"; rm -rf "$FXR6"; cp -R "$FXR5" "$FXR6"; sqlite3 "$FXR6/releases.db" "DELETE FROM connector_cursors;"
+MOCKSTATE="$WORK/mock22f.json" rr python3 "$EMF/releases_app.py" --root "$FXR6" work reconcile >/dev/null 2>&1; RC22FR=$?
+[ "$RC22FR" != "0" ] && ok "22f red: without the per-emission except, the verb FAILS (rc=$RC22FR)" || bad "22f red did not reproduce (rc=0)"
+# 22e — kill switch: no gh call at all.
+prs3; : > "$CALLS"
+XYZ_WORK_CONNECTORS=0 rr python3 "$APP" --root "$FXR" work reconcile >/dev/null 2>&1
+[ ! -s "$CALLS" ] && ok "22e XYZ_WORK_CONNECTORS=0: the scan made no gh call" || bad "22e gh was called under the kill switch: $(cat "$CALLS")"
+rr python3 "$APP" --root "$FXR" work reconcile >/dev/null 2>&1
+[ -s "$CALLS" ] && ok "22e red: without the switch the SAME command calls gh" || bad "22e red: gh not called"
+
+echo "23. completed is a mapped column, user-overridable (GH-564)"
+python3 - "$ROOT" <<'PYMAP'
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+from work_connectors.github_board import column_for, DEFAULT_STATUS_MAP
+assert column_for("completed", DEFAULT_STATUS_MAP) == "Done", "completed not mapped to Done"
+m = dict(DEFAULT_STATUS_MAP); m["completed"] = ""
+assert column_for("completed", m) is None, "empty override did not disable completed"
+print("ok")
+PYMAP
+[ $? -eq 0 ] && ok "23 completed -> Done by default; a user's empty override disables it" || bad "23 completed mapping contract broken"
+MAPR="$WORK/gb_nocompleted"; rm -rf "$MAPR"; mkdir -p "$MAPR"; cp -R "$ROOT/utils/py/." "$MAPR/"
+python3 - "$MAPR/work_connectors/github_board.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='    "completed": "Done",\n'
+assert a in s, "23 red: completed anchor missing"; s=s.replace(a,"",1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "23 red mutation failed"
+R23="$(python3 - "$MAPR" <<'PYMAP'
+import sys, os
+sys.path.insert(0, sys.argv[1])
+from work_connectors.github_board import column_for, DEFAULT_STATUS_MAP
+print("mapped" if column_for("completed", DEFAULT_STATUS_MAP) else "unmapped")
+PYMAP
+)"
+[ "$R23" = "unmapped" ] && ok "23 red: with the key deleted, completed is unmapped — the entry is load-bearing" || bad "23 red did not reproduce ($R23)"
+
+
+echo "24. the producer-scoped lookup has no row cap (impl QA r1), and every backfill event has ITS OWN receipt"
+FXK="$WORK/fx_cap"; rm -rf "$FXK"; mkdir -p "$FXK"
+( cd "$FXK" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXK/"
+appk() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXK" "$@"; }
+appk roadmap add --issue-num 9930 --issue-url "https://example.invalid/9930" --title "cap" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+appk work backfill >/dev/null 2>&1                                    # one backfill row for 9930
+# Bury it under 60 newer non-backfill rows for the same issue, through the real verb.
+for i in $(seq 1 60); do appk work emit --event updated --gh-number 9930 --payload-json "{\"n\":$i}" >/dev/null 2>&1; done
+DEPTH="$(sqlite3 "$FXK/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930;")"
+[ "$DEPTH" -ge 61 ] || bad "fixture guard: only $DEPTH rows for 9930 — the cap probe would be vacuous"
+python3 - "$ROOT" "$FXK/releases.db" <<'PYPROBE'
+import sys, os, sqlite3
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import releases_app as R
+c = sqlite3.connect(sys.argv[2])
+own = R._latest_event(c, 9930, only_source="backfill")
+assert own == "parked", "backfill's own latest hidden behind newer rows: %r" % (own,)
+other = R._latest_event(c, 9930, exclude_source="backfill")
+assert other == "updated", "exclude view wrong: %r" % (other,)
+print("views-ok")
+PYPROBE
+[ $? -eq 0 ] && ok "24 backfill's own latest is still found under 60 newer rows from another producer" || bad "24 the lookup lost the producer row"
+NB0="$(sqlite3 "$FXK/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+appk work backfill >/dev/null 2>&1
+NB1="$(sqlite3 "$FXK/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+[ "$NB0" = "$NB1" ] && ok "24 ...so a backfill after 60 unrelated events still emits nothing" || bad "24 duplicate under depth ($NB0 -> $NB1)"
+# Red: reinstate a LIMIT below the depth in a copy → the own-row is hidden and backfill duplicates.
+CAPC="$WORK/app_cap"; rm -rf "$CAPC"; mkdir -p "$CAPC"; cp -R "$ROOT/utils/py/." "$CAPC/"
+python3 - "$CAPC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='                           ORDER BY id DESC""", (gh_number,))\n    for event, payload in rows:'
+assert s.count(a)==1, "24 red: lookup anchor must be unique"
+s=s.replace(a,'                           ORDER BY id DESC LIMIT 50""", (gh_number,))\n    for event, payload in rows:',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "24 red mutation failed"
+FXK2="$WORK/fx_cap_red"; rm -rf "$FXK2"; cp -R "$FXK" "$FXK2"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$CAPC/releases_app.py" --root "$FXK2" work backfill >/dev/null 2>&1
+NB2="$(sqlite3 "$FXK2/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+[ "$NB2" -gt "$NB0" ] && ok "24 red: with LIMIT 50 restored, the own-row is hidden and backfill DUPLICATES ($NB0 -> $NB2)" || bad "24 red did not reproduce ($NB0 -> $NB2)"
+# Per-event receipts (impl QA r1 [Should]): every NEW backfill event's txn_id must have its own
+# work-emit receipt — a join, not an aggregate count that unrelated receipts could satisfy.
+FXP="$WORK/fx_rcpt"; rm -rf "$FXP"; cp -R "$FXD" "$FXP"
+BEFORE_IDS="$(sqlite3 "$FXP/releases.db" "SELECT coalesce(max(id),0) FROM work_events;")"
+appp() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXP" "$@"; }
+appp roadmap add --issue-num 9931 --issue-url "https://example.invalid/9931" --title "rcpt" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+appp roadmap add --issue-num 9932 --issue-url "https://example.invalid/9932" --title "rcpt" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+appp work backfill >/dev/null 2>&1
+ORPHANS="$(sqlite3 "$FXP/releases.db" "SELECT count(*) FROM work_events w WHERE w.id > $BEFORE_IDS AND w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
+NEWBF="$(sqlite3 "$FXP/releases.db" "SELECT count(*) FROM work_events WHERE id > $BEFORE_IDS AND payload LIKE '%backfill%';")"
+[ "$NEWBF" -ge 2 ] || bad "fixture guard: expected >=2 new backfill events, got $NEWBF"
+[ "$ORPHANS" = "0" ] && ok "24 every one of the $NEWBF new backfill events has its OWN work-emit receipt (join on txn_id)" || bad "24 $ORPHANS backfill event(s) have no receipt of their own"
+# Red: a copy that bypasses perform_write and INSERTs the event directly → orphan detected.
+BYP="$WORK/app_bypass"; rm -rf "$BYP"; mkdir -p "$BYP"; cp -R "$ROOT/utils/py/." "$BYP/"
+python3 - "$BYP/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='''                _emit_work_event(root, conn, event, gh, payload,
+                                 unless_latest_in=(event,), only_source="backfill")'''
+assert s.count(a)==1, "24 red(bypass): backfill emit anchor must be unique"
+s=s.replace(a,'''                conn.execute("INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event, payload, at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                             (new_gid("wev-"), _repo_id_for_event(conn), gh, "bypass-%d" % gh, event, json.dumps(payload), now_iso()))
+                conn.commit()''',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "24 red(bypass) mutation failed"
+FXP2="$WORK/fx_rcpt_red"; rm -rf "$FXP2"; cp -R "$FXD" "$FXP2"
+B2="$(sqlite3 "$FXP2/releases.db" "SELECT coalesce(max(id),0) FROM work_events;")"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXP2" roadmap add --issue-num 9933 --issue-url "https://example.invalid/9933" --title "rcpt" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$BYP/releases_app.py" --root "$FXP2" work backfill >/dev/null 2>&1
+ORPH2="$(sqlite3 "$FXP2/releases.db" "SELECT count(*) FROM work_events w WHERE w.id > $B2 AND w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
+[ "$ORPH2" -gt 0 ] && ok "24 red: a copy that bypasses perform_write leaves $ORPH2 receipt-less event(s) — the join catches it" || bad "24 red(bypass) did not reproduce"
+
+
+echo "25. a non-object payload on an older row cannot break the producer views (impl QA r2)"
+FXN="$WORK/fx_nonobj"; rm -rf "$FXN"; cp -R "$FXK" "$FXN"
+appn() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXN" "$@"; }
+# Legitimate rows through the real verb: a list, a null and a string payload, all newer than 9930's backfill row.
+appn work emit --event updated --gh-number 9930 --payload-json '[]'      >/dev/null 2>&1
+appn work emit --event updated --gh-number 9930 --payload-json 'null'    >/dev/null 2>&1
+appn work emit --event updated --gh-number 9930 --payload-json '"text"'  >/dev/null 2>&1
+# `null` decodes to None and is stored as SQL NULL, not the text 'null' — count it that way.
+NONOBJ="$(sqlite3 "$FXN/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND event='updated' AND (payload='[]' OR payload IS NULL OR payload='\"text\"');")"
+[ "$NONOBJ" -ge 3 ] || bad "fixture guard: expected >=3 non-object payload rows, got $NONOBJ"
+python3 - "$ROOT" "$FXN/releases.db" <<'PYPROBE'
+import sys, os, sqlite3
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import releases_app as R
+c = sqlite3.connect(sys.argv[2])
+assert R._latest_event(c, 9930, only_source="backfill") == "parked", "own view broke on a non-object payload"
+assert R._latest_event(c, 9930, exclude_source="backfill") == "updated", "exclude view broke on a non-object payload"
+print("views-ok")
+PYPROBE
+[ $? -eq 0 ] && ok "25 both producer views survive list/null/string payloads above the backfill row" || bad "25 a non-object payload broke a producer view"
+NB0="$(sqlite3 "$FXN/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+OUT25="$(appn work backfill 2>&1)"; RC25=$?
+NB1="$(sqlite3 "$FXN/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+[ "$RC25" = "0" ] && [ "$NB0" = "$NB1" ] && ok "25 backfill exits 0 and skips 9930 (still its own latest) with non-object rows present" || bad "25 backfill rc=$RC25, 9930 backfill rows $NB0 -> $NB1: $(echo "$OUT25" | tail -2)"
+# Red: restore the `.get` on the raw decode in a copy → AttributeError, backfill dies.
+NOB="$WORK/app_nonobj"; rm -rf "$NOB"; mkdir -p "$NOB"; cp -R "$ROOT/utils/py/." "$NOB/"
+python3 - "$NOB/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='        src = decoded.get("source") if isinstance(decoded, dict) else None\n'
+assert s.count(a)==1, "25 red: decode anchor must be unique"
+s=s.replace(a,'        src = (decoded if decoded is not None else {}).get("source")\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "25 red mutation failed"
+FXN2="$WORK/fx_nonobj_red"; rm -rf "$FXN2"; cp -R "$FXN" "$FXN2"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$NOB/releases_app.py" --root "$FXN2" work backfill >"$WORK/nonobj_red.out" 2>&1; RC25R=$?
+[ "$RC25R" != "0" ] && grep -q 'AttributeError' "$WORK/nonobj_red.out" && ok "25 red: with the raw .get restored, backfill DIES with AttributeError (rc=$RC25R)" || bad "25 red did not reproduce (rc=$RC25R)"
+
+
+echo "26. a writer REFUSAL for one issue cannot take reconcile down before dispatch (impl QA r3)"
+# Inject a refuse() (SystemExit) for one issue's emission; the other lands, dispatch runs, rc 0.
+REF="$WORK/app_refuse"; rm -rf "$REF"; mkdir -p "$REF"; cp -R "$ROOT/utils/py/." "$REF/"
+python3 - "$REF/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='                     exclude_source=None, terminal=()):\n'
+assert s.count(a)==1, "26: emit signature anchor must be unique"
+s=s.replace(a, a+'    if gh_number == 9906 and event == "review_ready":\n        refuse("injected", "simulated writer refusal for 9906")\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "26 injection failed"
+cat > "$WORK/prs.json" <<'PYJ'
+[{"number": 706, "isDraft": false, "title": "a", "body": "Closes #9906"},
+ {"number": 707, "isDraft": false, "title": "b", "body": "Closes #9907"}]
+PYJ
+FXS="$WORK/fx_refuse"; rm -rf "$FXS"; mkdir -p "$FXS"
+( cd "$FXS" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXS/"; sqlite3 "$FXS/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+python3 "$MOCK" --reset --state "$WORK/mock26.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock26.json" >/dev/null 2>&1
+R26="$(MOCKSTATE="$WORK/mock26.json" rr python3 "$REF/releases_app.py" --root "$FXS" work reconcile 2>&1)"; RC26=$?
+[ "$RC26" = "0" ] && ok "26 with one emission REFUSING (SystemExit), reconcile still exits 0" || bad "26 rc=$RC26: $R26"
+[ -n "$(sqlite3 "$FXS/releases.db" "SELECT 1 FROM work_events WHERE gh_number=9907 AND event='review_ready';")" ] && ok "26 ...the other issue's event landed" || bad "26 9907 did not land: $R26"
+case "$R26" in *"GH-9906: FAILED"*) ok "26 ...and the refusal was named" ;; *) bad "26 refusal not reported: $R26" ;; esac
+CUR26="$(sqlite3 "$FXS/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ -n "$CUR26" ] && [ "$CUR26" -gt 0 ] && ok "26 ...and dispatch still ran (cursor $CUR26)" || bad "26 dispatch did not run"
+# Red: re-raise SystemExit in the copy → the verb dies before dispatch.
+python3 - "$REF/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan\n'
+assert s.count(a)==1, "26 red: except anchor must be unique"
+s=s.replace(a,'            except SystemExit:\n                raise\n            except Exception as exc:\n',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "26 red mutation failed"
+python3 -m py_compile "$REF/releases_app.py" || bad "26 red: mutated copy does not compile"
+FXS2="$WORK/fx_refuse_red"; rm -rf "$FXS2"; cp -R "$FXS" "$FXS2"; sqlite3 "$FXS2/releases.db" "DELETE FROM connector_cursors;"
+MOCKSTATE="$WORK/mock26.json" rr python3 "$REF/releases_app.py" --root "$FXS2" work reconcile >/dev/null 2>&1; RC26R=$?
+CUR26R="$(sqlite3 "$FXS2/releases.db" "SELECT count(*) FROM connector_cursors;")"
+[ "$RC26R" != "0" ] && [ "$CUR26R" = "0" ] && ok "26 red: re-raising SystemExit takes the verb down (rc=$RC26R) with NO dispatch — the catch is load-bearing" || bad "26 red did not reproduce (rc=$RC26R, cursors=$CUR26R)"
+# A pre-migration ledger: the scan skips with a reason; the verb does not die.
+FXO="$WORK/fx_old"; rm -rf "$FXO"; mkdir -p "$FXO"
+( cd "$FXO" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXO/"
+sqlite3 "$FXO/releases.db" "DROP TRIGGER IF EXISTS work_events_no_update; DROP TRIGGER IF EXISTS work_events_no_delete; DROP TABLE work_events;" 2>/dev/null
+[ -z "$(sqlite3 "$FXO/releases.db" "SELECT name FROM sqlite_master WHERE name='work_events';")" ] || bad "fixture guard: work_events still present"
+R26O="$(python3 - "$ROOT" "$FXO" <<'PYPROBE'
+import sys, os, sqlite3
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import releases_app as R
+c = sqlite3.connect(os.path.join(sys.argv[2], "releases.db"))
+try:
+    out = R._scan_review_ready(sys.argv[2], c)
+    print("returned", out)
+except SystemExit as e:
+    print("SYSTEMEXIT", e.code)
+PYPROBE
+)"
+case "$R26O" in *"returned (0, 0, 0)"*) ok "26 on a ledger without work_events the scan returns (0,0,0) instead of exiting" ;; *) bad "26 pre-migration ledger: $R26O" ;; esac
+
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

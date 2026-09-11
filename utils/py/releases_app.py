@@ -4855,6 +4855,87 @@ def _parse_reanchor_breaks(target_gid):
     return -1
 
 
+class _AlreadyRecorded(Exception):
+    """Raised INSIDE perform_write's mutate when the event to emit is already the row's latest
+    (GH-564). perform_write's own abort path rolls back, clears the journal and re-raises
+    before any receipt or generation bump, so a skip leaves nothing on the chain. The decision
+    is made under WriterLock and inside BEGIN IMMEDIATE, which is what makes it safe against
+    two producers racing (Codex plan QA r1): a read before perform_write could let both see the
+    same stale latest event and each emit a duplicate."""
+
+
+def _latest_event(conn, gh_number, only_source=None, exclude_source=None):
+    """The most recent work_events.event for this issue, filtered by producer.
+
+    `only_source="backfill"` sees only backfill's own rows; `exclude_source="backfill"` sees
+    everything BUT them. Each producer compares against a view that ignores the other (Codex
+    plan QA r3): with one global latest, a backfill `rated` after a `review_ready` lets the
+    next reconcile re-emit `review_ready`, whose presence lets the next backfill re-emit
+    `rated` — two honest observers ping-ponging forever. Backfill events are snapshots of the
+    ledger's claim, not state transitions, so they must not reset what reconcile has already
+    announced; and reconcile's events must not make backfill think its projection changed."""
+    # No LIMIT (impl QA r1): the producer filter runs in Python, so a cap applied before it
+    # would hide a producer's last row behind enough newer rows from the other producer, and
+    # the "already recorded" check would answer None — a duplicate. A per-issue event list is
+    # small; correctness is not worth a cap here. The cursor iterates lazily either way.
+    rows = conn.execute("""SELECT event, payload FROM work_events WHERE gh_number = ?
+                           ORDER BY id DESC""", (gh_number,))
+    for event, payload in rows:
+        if only_source is None and exclude_source is None:
+            return event
+        # `work emit --payload-json` accepts ANY JSON value, so a prior `[]`, `null` or string
+        # payload is a legitimate row (impl QA r2). Only an object can carry a source; anything
+        # else — including unparseable text — is "no producer named".
+        try:
+            decoded = json.loads(payload) if payload else None
+        except ValueError:
+            decoded = None
+        src = decoded.get("source") if isinstance(decoded, dict) else None
+        if only_source is not None and src != only_source:
+            continue
+        if exclude_source is not None and src == exclude_source:
+            continue
+        return event
+    return None
+
+
+def _emit_work_event(root, conn, event, gh_number, payload, unless_latest_in=(), only_source=None,
+                     exclude_source=None, terminal=()):
+    """Record one work event through perform_write — the ONE seam (GH-549), reused by `work
+    emit`, `work backfill` and the review-ready scan (GH-564).
+
+    Returns the txn_id, or raises _AlreadyRecorded when the issue's latest event (scoped by
+    `only_source` / `exclude_source`) is any name in `unless_latest_in`, OR when its latest
+    event from ANY producer is in `terminal` — a terminal claim (`completed`, `pr_merged`)
+    suppresses whoever made it, since a backfill `completed` is the only producer of that name
+    and reconcile must still honour it. An empty `unless_latest_in` means unconditional —
+    `work emit`'s contract. The check runs inside `mutate`, i.e. inside the transaction — see
+    _AlreadyRecorded.
+    """
+    if not _table_exists(conn, "work_events"):
+        refuse("schema-old", "this ledger predates work_events — run `releases migrate` first")
+    if _repo_id_for_event(conn) is None:
+        refuse("no-repo", "the ledger has no repo row to attribute this event to")
+    suppress = set(unless_latest_in)
+    terminal_set = set(terminal)
+
+    def mutate(c):
+        """Changes no domain row. The only thing it does is decide, atomically with the write,
+        whether the write should happen at all."""
+        if terminal_set:
+            anyone = _latest_event(c, gh_number)
+            if anyone in terminal_set:
+                raise _AlreadyRecorded(anyone)
+        if not suppress:
+            return
+        latest = _latest_event(c, gh_number, only_source=only_source, exclude_source=exclude_source)
+        if latest in suppress:
+            raise _AlreadyRecorded(latest)
+
+    return perform_write(root, conn, "work-emit", None, mutate,
+                         work_event=(event, gh_number, payload))
+
+
 def cmd_work_emit(args):
     """`work emit` — record one work event from OUTSIDE a domain verb (GH-549).
 
@@ -4872,29 +4953,213 @@ def cmd_work_emit(args):
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
-        if not _table_exists(conn, "work_events"):
-            refuse("schema-old", "this ledger predates work_events — run `releases migrate` first")
-        repo_id = _repo_id_for_event(conn)
-        if repo_id is None:
-            refuse("no-repo", "the ledger has no repo row to attribute this event to")
         payload = None
         if args.payload_json:
             try:
                 payload = json.loads(args.payload_json)
             except ValueError as exc:
                 refuse("bad-payload", "--payload-json is not valid JSON (%s)" % exc)
-        at = now_iso()
-
-        def mutate(c):
-            """Nothing to mutate: this verb records an observation, it changes no domain row.
-            The event itself is passed to perform_write, which writes it with the real txn_id
-            inside the same transaction as the receipt."""
-
-        txn_id = perform_write(root, conn, "work-emit", None, mutate,
-                               work_event=(args.event, args.gh_number, payload))
+        # `work emit` is unconditional by contract: merge-cleanup calls it to report a merge it
+        # witnessed, and a witnessed event is recorded whatever came before it.
+        txn_id = _emit_work_event(root, conn, args.event, args.gh_number, payload)
         print("emitted %s for GH-%s (txn %s)" % (args.event, args.gh_number, txn_id))
     finally:
         conn.close()
+
+
+def _backfill_event_for(section, marker, rated):
+    """Which event a roadmap row's CURRENT state projects to (GH-564). Ordered; first match wins
+    (Codex plan QA r3 asked for the order to be total):
+
+      1. a Deferred section is skipped whatever the marker — a deferred 🚧 is still deferred
+      2. a Completed section is `completed`, whatever the marker — closeout writes the section,
+         and 40 live rows carry a stale 🆕 from the #424 marker bug. NOT `pr_merged`: that name
+         asserts a merge the snapshot did not witness (plan QA r1, and the same reasoning that
+         kept marker→merged out of the live stream in #549).
+      3. 🚧, or an In-progress section, is `in_flight`
+      4. otherwise rated → `rated`, unrated → `parked`
+    """
+    sec = (section or "").strip()
+    if sec.lower().startswith("deferred"):
+        return None
+    if sec.lower().startswith("completed"):
+        return "completed"
+    if marker == "\U0001F6A7" or sec.lower().startswith("in progress"):
+        return "in_flight"
+    return "rated" if rated else "parked"
+
+
+def cmd_work_backfill(args):
+    """`work backfill` — project the roadmap's EXISTING state onto the event stream (GH-564).
+
+    work_events begins at migration 008, so `reconcile --reset` can only replay what was emitted
+    after #549 landed; every issue that was parked, rated, started or completed before that has
+    no event and sits off the board. This walks roadmap_items and emits one event per row from
+    its current section/marker, each through _emit_work_event → perform_write, so every synthetic
+    event carries a real receipt and txn_id. Never a direct INSERT.
+
+    Idempotent: a row is skipped when its latest BACKFILL event already names the same state —
+    decided inside the transaction. A second run emits zero. A row whose state changed since
+    the last backfill emits again. --dry-run prints the whole table and touches nothing.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        if not _table_exists(conn, "work_events"):
+            refuse("schema-old", "this ledger predates work_events — run `releases migrate` first")
+        rows = conn.execute("""SELECT gh_number, section, status_marker,
+                                      (rating_pri IS NOT NULL) AS rated
+                               FROM roadmap_items
+                               WHERE gh_number IS NOT NULL AND gh_number != ''
+                               ORDER BY CAST(gh_number AS INTEGER)""").fetchall()
+        plan = []
+        for gh, section, marker, rated in rows:
+            try:
+                gh_int = int(gh)
+            except (TypeError, ValueError):
+                continue
+            event = _backfill_event_for(section, marker, bool(rated))
+            if event is None:
+                plan.append((gh_int, section, marker, None, "skip: deferred"))
+                continue
+            # Read-only preview of the decision the transaction will make for real below. The
+            # authoritative check is inside mutate; this only makes --dry-run and the summary
+            # line honest about what a real run would do.
+            latest = _latest_event(conn, gh_int, only_source="backfill")
+            note = "skip: already %s" % latest if latest == event else "emit"
+            plan.append((gh_int, section, marker, event, note))
+        for gh, section, marker, event, note in plan:
+            print("GH-%-5s %-24s %-2s -> %-10s %s" % (gh, (section or "")[:24], marker or "",
+                                                     event or "-", note))
+        if args.dry_run:
+            print("dry-run: %d row(s), %d would emit, 0 written"
+                  % (len(plan), sum(1 for p in plan if p[4] == "emit")))
+            return
+        emitted = skipped = failed = 0
+        for gh, section, marker, event, note in plan:
+            if event is None:
+                skipped += 1
+                continue
+            payload = {"source": "backfill", "section": section, "marker": marker}
+            try:
+                _emit_work_event(root, conn, event, gh, payload,
+                                 unless_latest_in=(event,), only_source="backfill")
+                emitted += 1
+            except _AlreadyRecorded:
+                skipped += 1
+            except SystemExit:
+                raise
+            except Exception as exc:              # noqa: BLE001 — one bad row must not stop the rest
+                failed += 1
+                print("GH-%s: FAILED — %r" % (gh, exc), file=sys.stderr)
+        print("backfill: %d emitted, %d skipped, %d failed" % (emitted, skipped, failed))
+        if emitted:
+            _dispatch_work_connectors(paths["db"], now_iso())
+    finally:
+        conn.close()
+
+
+def _repo_identity_for_scan(root):
+    """`owner/name` for `gh pr list --repo` (GH-564, Codex plan QA r3). `work reconcile --root X`
+    can run from any CWD, so the repository must be resolved from the ledger's own identity —
+    never from the caller's checkout. First enabled connector's repos[0], else the root's
+    origin remote, else None (the scan is skipped with a printed reason)."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import work_connectors
+        for name, cfg in sorted(work_connectors.load_connectors(warn=False).items()):
+            repos = cfg.get("repos") or []
+            if repos and isinstance(repos[0], str) and "/" in repos[0]:
+                return repos[0]
+    except Exception:                                # noqa: BLE001 — identity lookup is best-effort
+        pass
+    try:
+        r = subprocess.run(["git", "-C", root, "remote", "get-url", "origin"],
+                           capture_output=True, text=True, timeout=10)
+        url = (r.stdout or "").strip()
+        m = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?/?$", url)
+        if r.returncode == 0 and m:
+            return m.group(1)
+    except Exception:                                # noqa: BLE001
+        pass
+    return None
+
+
+def _linked_issues(pr):
+    """Issue numbers a PR closes, from its title and body — the same regex merge_cleanup uses
+    (skills/merge-cleanup/scripts/merge_cleanup.py:CLOSES_RE), inlined rather than imported
+    because that is a skill script off sys.path and a ledger verb must not grow a dependency
+    on a skill's file layout."""
+    text = "%s\n%s" % (pr.get("title") or "", pr.get("body") or "")
+    seen, out = set(), []
+    for m in re.finditer(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)", text, re.I):
+        n = int(m.group(1))
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
+
+
+def _scan_review_ready(root, conn):
+    """Emit `review_ready` for every issue an OPEN, NON-DRAFT PR closes (GH-564). Runs before
+    dispatch and outside the connector lock. Fail-soft at every layer: no repo identity, no gh,
+    a failing gh, bad JSON, or one emission raising — each is printed and the verb continues.
+    Returns (emitted, skipped, failed)."""
+    if os.environ.get("XYZ_WORK_CONNECTORS") == "0":
+        return (0, 0, 0)
+    # The two conditions _emit_work_event REFUSES on (SystemExit), checked once here so the scan
+    # skips with a reason instead of taking the verb down before dispatch (impl QA r3). A
+    # refusal is right for `work emit`, whose caller wants to know; it is wrong for a
+    # best-effort scan inside a verb that promised never to fail.
+    if not _table_exists(conn, "work_events"):
+        print("review-ready scan skipped: this ledger predates work_events (run `releases migrate`)")
+        return (0, 0, 0)
+    if _repo_id_for_event(conn) is None:
+        print("review-ready scan skipped: the ledger has no repo row to attribute events to")
+        return (0, 0, 0)
+    repo = _repo_identity_for_scan(root)
+    if not repo:
+        print("review-ready scan skipped: no repository identity (set work_connectors.<name>.repos)")
+        return (0, 0, 0)
+    gh_bin = os.environ.get("XYZ_BOARD_SYNC_GH_BIN", "gh")
+    try:
+        r = subprocess.run([gh_bin, "pr", "list", "--repo", repo, "--state", "open",
+                            "--json", "number,isDraft,title,body", "--limit", "200"],
+                           capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            print("review-ready scan skipped: %s pr list exited %s: %s"
+                  % (gh_bin, r.returncode, (r.stderr or "").strip()[:200]))
+            return (0, 0, 0)
+        prs = json.loads(r.stdout or "[]")
+        if not isinstance(prs, list):
+            raise ValueError("not a list")
+    except Exception as exc:                          # noqa: BLE001 — never fails the verb
+        print("review-ready scan skipped: %r" % (exc,))
+        return (0, 0, 0)
+    emitted = skipped = failed = 0
+    for pr in prs:
+        if not isinstance(pr, dict) or pr.get("isDraft"):
+            continue
+        for n in _linked_issues(pr):
+            try:
+                _emit_work_event(root, conn, "review_ready", n, {"pr": pr.get("number")},
+                                 unless_latest_in=("review_ready", "pr_merged"),
+                                 exclude_source="backfill",
+                                 terminal=("completed", "pr_merged"))
+                emitted += 1
+            except _AlreadyRecorded:
+                skipped += 1
+            except KeyboardInterrupt:
+                raise
+            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan
+                # SystemExit included (impl QA r3): a refusal from the writer for ONE issue is a
+                # failed scan item, not a reason to abandon dispatch for every other issue.
+                failed += 1
+                print("review-ready GH-%s: FAILED — %r (continuing)" % (n, exc), file=sys.stderr)
+    if emitted or failed:
+        print("review-ready: %d emitted, %d already current, %d failed" % (emitted, skipped, failed))
+    return (emitted, skipped, failed)
 
 
 def cmd_work_reconcile(args):
@@ -4918,6 +5183,13 @@ def cmd_work_reconcile(args):
     if not conns:
         print("no connectors enabled — nothing to reconcile")
         return
+    # GH-564: derive "ready for review" from actually-open, non-draft PRs — before dispatch,
+    # outside the connector lock, and unable to fail the verb.
+    sc = connect(paths["db"])
+    try:
+        _scan_review_ready(root, sc)
+    finally:
+        sc.close()
     # --reset is handled INSIDE dispatch's connector lock (impl QA r4). Deleting the cursors out
     # here first let an in-flight dispatch re-persist its advance afterwards, so "replay from
     # zero" could quietly find nothing to replay.
@@ -5933,6 +6205,9 @@ def build_parser():
     sp_we.add_argument("--event", required=True, help="domain event name, e.g. pr_merged")
     sp_we.add_argument("--gh-number", type=int, required=True, help="the issue this is about")
     sp_we.add_argument("--payload-json", help="optional JSON object of extra detail")
+    sp_wb = wsub.add_parser("backfill", help="project the roadmap's existing state onto the "
+                                             "event stream (GH-564); idempotent")
+    sp_wb.add_argument("--dry-run", action="store_true", help="print the plan, write nothing")
     sp_wr = wsub.add_parser("reconcile", help="replay events a connector has not seen")
     sp_wr.add_argument("--connector", help="only this connector (default: every enabled one)")
     sp_wr.add_argument("--reset", action="store_true",
@@ -6129,7 +6404,7 @@ def main(argv=None):
         "settings": lambda a: {"set": cmd_settings_set,
                                "list": cmd_settings_list,
                                "get": cmd_settings_get}[a.settings_cmd](a),
-        "work": lambda a: {"emit": cmd_work_emit,
+        "work": lambda a: {"emit": cmd_work_emit, "backfill": cmd_work_backfill,
                            "reconcile": cmd_work_reconcile}[a.work_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,

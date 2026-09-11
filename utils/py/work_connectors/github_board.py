@@ -66,6 +66,9 @@ DEFAULT_STATUS_MAP = {
     "jog_leased": "In progress",
     "review_ready": "In review",
     "pr_merged": "Done",
+    # GH-564: what `work backfill` emits for a Completed section. Same column as pr_merged by
+    # default; a distinct NAME because the ledger's claim is not a witnessed merge.
+    "completed": "Done",
 }
 
 
