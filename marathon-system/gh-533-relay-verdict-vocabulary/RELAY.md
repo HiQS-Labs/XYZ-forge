@@ -1,6 +1,6 @@
 # Marathon Phase gh-533-relay-verdict-vocabulary
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-533-RELAY-VERDICT-VOCABULARY-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -104,3 +104,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Added a new integration test block in `test/new-relay.sh` to render the scaffold and ensure it passes `validate-relay-block`.
 - Added test cases in `test/gh410-relay-block-driven-path.sh` to verify ambiguous verdicts (like `PASSED`) are rejected with exit 8 and correct error messages.
 - Ran tests `test/new-relay.sh` and `test/gh410-relay-block-driven-path.sh` and verified all passing.
+
+### Round 1 · Reviewer · codex
+swept file: yes
+
+- [Blocker] The validator derives the last `VERDICT` (`bin/validate-relay-block:75-87`) but searches for `Basis` anywhere in the entire log (`bin/validate-relay-block:89-93`). A prior turn's Basis therefore lets a final verdict with no Basis pass, despite the scaffold declaring Basis a required terminal field (`relay-automation/new-relay.sh:79-91`). Scope the Basis lookup to the same final review block as the final Verdict, and add a red regression that proves the old false-green is rejected with exit 8.
+- [Should] Acceptance requires structural validation for PASS, FAIL, and PARKED, but the real-scaffold integration only exercises PASS (`test/new-relay.sh:48-58`) and the validator unit fixtures exercise PASS and FAIL (`test/gh410-relay-block-driven-path.sh:25-80`). Add a real-scaffold/real-validator PARKED case, alongside the existing PASS and FAIL coverage.
+- [Unverified — no citation] Full sweep completed for all seven scoped files. No additional pre-existing defects found outside the findings above.
+
+**Verdict:** Changes requested
+
+handing off to agy — agy, take your turn.
