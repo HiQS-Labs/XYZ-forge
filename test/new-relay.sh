@@ -45,5 +45,17 @@ fence_line4="$(printf '%s\n' "$out4" | grep -E '^`+$' | head -1)"
 bash "$NR" --reviewer codex --print >/dev/null 2>&1 && fail "missing --title should error" || pass "errors without --title"
 bash "$NR" --title T --reviewer codex --embed --print >/dev/null 2>&1 && fail "--embed without artifact should error" || pass "errors on --embed without --artifact-file"
 
+# --- (6) integration: scaffolded thread passes structural validation after a valid reviewer turn -----
+VAL="$(cd "$(dirname "$0")/.." && pwd)/bin/validate-relay-block"
+out6="$(bash "$NR" --title "Integration Test" --reviewer agy --print)"
+TMP6="$WORK/integration.md"
+printf '%s\n' "$out6" > "$TMP6"
+cat >>"$TMP6" <<'EOF_TURN'
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: simulated review turn on real scaffold
+EOF_TURN
+bash "$VAL" "$TMP6" >/dev/null 2>&1 && pass "scaffolded thread passes real validator" || fail "scaffolded thread failed validator"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

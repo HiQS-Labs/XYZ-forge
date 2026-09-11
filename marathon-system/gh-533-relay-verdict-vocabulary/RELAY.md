@@ -1,6 +1,6 @@
 # Marathon Phase gh-533-relay-verdict-vocabulary
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-533-RELAY-VERDICT-VOCABULARY-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -97,3 +97,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+- Updated `relay-automation/new-relay.sh` to explicitly instruct the reviewer to use exactly `PASS`, `FAIL`, or `PARKED` for the VERDICT.
+- Updated `bin/validate-relay-block` to anchor the accepted `VERDICT` values strictly and provide a precise diagnostic if an invalid value is supplied. It now exits 8 if the value isn't exactly one of the allowed.
+- Added a new integration test block in `test/new-relay.sh` to render the scaffold and ensure it passes `validate-relay-block`.
+- Added test cases in `test/gh410-relay-block-driven-path.sh` to verify ambiguous verdicts (like `PASSED`) are rejected with exit 8 and correct error messages.
+- Ran tests `test/new-relay.sh` and `test/gh410-relay-block-driven-path.sh` and verified all passing.

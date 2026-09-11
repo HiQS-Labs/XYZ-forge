@@ -211,6 +211,28 @@ set -e
 [ "$rc" -eq 8 ] && pass "1.10 missing Basis: line rejected with exit 8" \
   || fail "1.10 missing Basis: expected exit 8, got $rc"
 
+# 1.11: Ambiguous VERDICT: PASSED is rejected (exit 8)
+cat >"$TMP/ambiguous-verdict.md" <<'EOF_M11'
+NEXT: Producer
+STATUS: Approved
+ROUND: 1 / 4
+
+## Log
+### Reviewer · Round 1
+VERDICT: PASSED
+Basis: passed
+EOF_M11
+
+set +e
+out="$("$VALIDATE_BIN" "$TMP/ambiguous-verdict.md" 2>&1)"
+rc=$?
+set -e
+[ "$rc" -eq 8 ] && pass "1.11 ambiguous VERDICT: PASSED rejected with exit 8" \
+  || fail "1.11 ambiguous VERDICT: PASSED expected exit 8, got $rc"
+grep -q "VERDICT: value must be exactly PASS, FAIL, or PARKED. Found: 'PASSED'" <<<"$out" \
+  && pass "1.11b error message explains exact value required" \
+  || fail "1.11b unexpected error message: $out"
+
 # --------------------------------------------------------------------------------------------------
 # Section 2: Shared rtl_relay_field parser parity
 # --------------------------------------------------------------------------------------------------

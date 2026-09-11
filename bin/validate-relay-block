@@ -72,9 +72,17 @@ if [ -z "$stripped_log" ]; then
   exit 8
 fi
 
-# Assertion 3: VERDICT: line is present and valid
-if ! echo "$log_after" | grep -E -i -q '^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[[:space:]]*(PASS|FAIL|PARKED)'; then
-  echo "VERDICT: line is missing or invalid" >&2
+# Extract the last VERDICT: line
+last_verdict="$(echo "$log_after" | grep -E -i '^[[:space:]]*[`*]*VERDICT[`*]*:' | tail -n 1 || true)"
+
+if [ -z "$last_verdict" ]; then
+  echo "VERDICT: line is missing" >&2
+  exit 8
+fi
+
+if ! echo "$last_verdict" | grep -E -i -q '^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[[:space:]]*(PASS|FAIL|PARKED)[`*[:space:]]*$'; then
+  val="$(echo "$last_verdict" | sed -E -e 's/^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[[:space:]]*//i' -e 's/[`*[:space:]]*$//')"
+  echo "VERDICT: value must be exactly PASS, FAIL, or PARKED. Found: '$val'" >&2
   exit 8
 fi
 
