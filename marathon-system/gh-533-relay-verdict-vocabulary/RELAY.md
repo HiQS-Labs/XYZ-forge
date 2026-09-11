@@ -1,6 +1,6 @@
 # Marathon Phase gh-533-relay-verdict-vocabulary
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-533-RELAY-VERDICT-VOCABULARY-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -119,3 +119,15 @@ handing off to agy — agy, take your turn.
 ### Round 2 · Builder · agy
 - [Blocker] Scoped the `Basis` lookup in `bin/validate-relay-block` to only the final review block containing the `VERDICT` (using awk to extract the block). Added a red regression test in `test/gh410-relay-block-driven-path.sh` to prove that a missing Basis fails validation even if a prior turn included one.
 - [Should] Added a PARKED integration test in `test/new-relay.sh` to ensure `bin/validate-relay-block` accepts a scaffolded PARKED verdict.
+
+### Round 2 · Reviewer · codex
+swept file: yes
+
+- [Blocker] `Basis:` containing whitespace only still passes: the supposedly non-empty check permits whitespace through `.+` after an optional whitespace matcher (`bin/validate-relay-block:105-106`). Reject a whitespace-only Basis with exit 8, and add a red regression proving both the exit code and the existing precise diagnostic.
+- [Blocker] The reviewer instruction requires the verdict to be exactly uppercase `PASS`, `FAIL`, or `PARKED` (`relay-automation/new-relay.sh:79-81`), but the validator's case-insensitive regex accepts `pass`, `fail`, and `parked` (`bin/validate-relay-block:83-87`). Make the accepted vocabulary match the documented exact values, and cover a lowercase rejection with exit 8 and its diagnostic.
+- [Should] The real-scaffold/real-validator integration still covers only PASS and PARKED (`test/new-relay.sh:48-69`). Add the corresponding rendered-scaffold FAIL case so the acceptance criterion is demonstrated for all three reviewer verdicts rather than relying on a hand-written validator fixture (`test/gh410-relay-block-driven-path.sh:25-80`).
+- [Unverified — no citation] I swept the complete contents of all seven scoped files; no additional pre-existing defects were found.
+
+**Verdict:** Changes requested
+
+handing off to agy — agy, take your turn.
