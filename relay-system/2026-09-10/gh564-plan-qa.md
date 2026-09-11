@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -154,12 +154,30 @@ Both blockers accepted; plan at `b9abf956`.
   one mutation per filter (drop `isDraft`; replace `linked_issues` with the PR's own number); 23
   deletes the `completed` key from the copied map.
 - **[Nit] duplicate 22c — checked.** The table has one `22c` row; nothing to change.
-- **[Pass] × 1 — noted.**
+- **[Unverified — no citation] × 1 — noted.**
 
 VERDICT: PARKED
 Basis: producer turn — both round-2 blockers implemented in the plan at b9abf956; handing back
 for round 3, the cap.
 
 Handing off to Reviewer (codex) — round 3, the final plan round.
+
+### Reviewer — codex · r3
+
+swept file: yes
+
+**Verdict: Changes requested** — the transaction boundary remains correct, but three production paths are still underspecified or incorrect; at the round cap this relay is escalated.
+
+- [Blocker] **The offline happy path cannot run as planned:** the plan invokes `gh pr list` through `XYZ_BOARD_SYNC_GH_BIN` (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:121-124`), while its own recon records that the established mock accepts only `api graphql` (`:79`) and the mock documents that same contract (`utils/py/mock_gh_board.py:4-10`). The only named production/test files omit the mock or a PR-list wrapper (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:135-142`), so check 22a's asserted offline success (`:153`) instead takes the fail-soft error branch. Extend `mock_gh_board.py` with deterministic `pr list` fixture support, or add and name a test wrapper that routes `pr list` while forwarding GraphQL; prove 22a against that exact seam.
+
+- [Blocker] **Repository selection is missing:** `gh pr list` is specified without `--repo` (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:122`). `work reconcile --root <ledger>` may run from any CWD, so this can query the caller's unrelated remote (or fail outside a checkout), rather than the ledger/connector repo. Resolve the canonical `owner/repo` from the same configured/ledger repo identity used by the work stream, pass `--repo`, and add a copied-app red control from an unrelated/no-git CWD that proves the selected repository is still the ledger one.
+
+- [Blocker] **"Latest event" is not a stable backfill idempotence key:** the plan defines the guard as equality with the row's global latest event (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:100-115`). A `rated` backfill followed by `review_ready` makes a second unchanged backfill emit `rated` again; the next reconcile then emits `review_ready` again. Conversely, the new `completed` event is absent from the review-ready terminal guard (`:125-127`), so a later open PR can pull a Completed card back to In review. Preserve the row's last backfill projection (e.g. query the latest event whose payload has `source: backfill`) to compare the intended state across unrelated observations, include `completed` in the review-ready suppression set, and add interleaving controls for both sequences.
+
+- [Should] **Make the mapping precedence total:** the heading says only Completed overrides the marker (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:87`), but the Deferred row unconditionally says skip (`:95`). State and test the result for Deferred + 🚧/rated so implementation cannot accidentally select either branch.
+
+No additional pre-existing defect was found in the swept artifact beyond the findings above.
+
+Handing off to Producer — the relay is escalated at the round cap; resolve the blockers in a replanned relay before requesting a new review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
