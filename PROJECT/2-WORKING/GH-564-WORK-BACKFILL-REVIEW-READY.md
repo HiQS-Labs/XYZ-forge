@@ -124,7 +124,12 @@ A second run therefore emits zero. A row whose state changed since the last back
    reason once, continue to replay. **Never fails the verb.**
 3. For each non-draft PR, `linked_issues(pr)`; for each issue, `_emit_work_event(..., "review_ready",
    n, {"pr": num}, unless_latest_in=("review_ready", "pr_merged"))` — the same transactional guard
-   as backfill, so a concurrent reconcile cannot double-emit either.
+   as backfill, so a concurrent reconcile cannot double-emit either. **Each emission is its own
+   fail-soft unit (Codex r2):** `_AlreadyRecorded` is a quiet skip; any *other* exception from
+   `_emit_work_event` — a locked ledger, a refused write, a bad row — is caught, printed with the
+   issue number, counted, and the scan continues to the next issue and then to dispatch. The verb
+   exits 0 regardless. The one thing that must not be swallowed is an injected `_crash`, which uses
+   `os._exit` and never reaches an `except` anyway.
 4. Then the existing dispatch.
 
 ### Files
@@ -145,12 +150,13 @@ A second run therefore emits zero. A row whose state changed since the last back
 | 21c | second `backfill` emits zero | strip `unless_latest_in` in the copy → second run duplicates every row |
 | 21d | every event has a `work-emit` receipt; `check` clean | count receipts == count events added; `check` rc 0. Red: the existing receipt-chain control (leg 7) already proves `check` detects a broken chain — cited, not duplicated |
 | 21e | **concurrency:** two `backfill` processes fired together with a barrier stub produce exactly N events for N rows, not 2N | move the latest-event read *before* `perform_write` in the copy → 2N |
-| 22a | open non-draft PR closing #N → card N reaches the `review_ready` column (mock, mapped to "Todo" since the mock has no "In review") | wrapper `gh` returns the PR as `isDraft: true` → no event, card unmoved |
-| 22b | draft PR → nothing; PR closing nothing → nothing | inverse of 22a: flip `isDraft` false → event appears; add `Closes #N` to the body → event appears |
+| 22a | open non-draft PR closing #N → card N reaches the `review_ready` column (mock, mapped to "Todo" since the mock has no "In review") | **source mutation:** in the copied app, replace the `review_ready` event name in the scan with `updated` → the card does not reach the column |
+| 22b | draft PR → nothing; PR closing nothing → nothing | **source mutations, one each:** remove the `isDraft` filter in the copy → the draft PR emits; replace `linked_issues(pr)` with `[pr["number"]]` in the copy → a PR closing nothing emits for its own number |
+| 22f | one emission raises (not `_AlreadyRecorded`) → `reconcile` prints it, continues to the next issue, dispatches, exits 0 | copied app: make `_emit_work_event` raise `RuntimeError` for one specific issue number; assert the other issue's event still lands, dispatch ran (cursor moved), rc 0. **Red:** remove the per-emission `except` in the copy → rc ≠ 0 and no dispatch |
 | 22c | second `reconcile` → zero new `review_ready` | strip `unless_latest_in` → duplicate |
 | 22d | wrapper `gh` exits 1 → `reconcile` prints the reason, still replays, exit 0 | remove the try/except in the copy → rc ≠ 0 |
 | 22e | `XYZ_WORK_CONNECTORS=0` → no scan, no `gh` call (sentinel) | unset → sentinel appears |
-| 23 | `completed` is in `DEFAULT_STATUS_MAP` and maps to Done; unmapped by a user's `""` override | `column_for` probe as in leg 17 |
+| 23 | `completed` is in `DEFAULT_STATUS_MAP` and maps to Done; unmapped by a user's `""` override | **source mutation:** delete the `completed` key from the copied `DEFAULT_STATUS_MAP` → `column_for("completed", …)` is `None` and the mapping assertion fails |
 
 ### Non-goals (from the issue)
 Two-way sync; inferring review-ready from anything but an open PR; the pre-push hook; any new
