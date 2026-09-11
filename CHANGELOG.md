@@ -4,6 +4,8 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-10
 
+- **GH-529: relay attestation accepts the scaffold's prescribed append-above-marker turn.** The exact generated `NEXT TURN` sentinel is treated as position-only during canonical-prefix comparison, while every other pre-existing byte remains protected; attestation trailers are inserted atomically above that sentinel so it remains unique and last. The real generated scaffold now drives the regression, and the existing body-rewrite negative control still refuses tampering. Reversibility: **Easy** — revert the canonicalization and append helper. Verification: `test/gh505-relay-attest.sh` passes including the witnessed pre-fix `review-body-rewritten` red control.
+
 - **GH-529/GH-533/GH-554/GH-555: admit four harness hotfixes to the serial Jog queue.** Positions 1–4 address the relay verdict vocabulary, relay marker attestation, Tick unknown-flag mutation, and merge-cleanup B1 backup residue before the older pending queue. Each issue now carries acceptance criteria copied verbatim into a `2-WORKING` capture and passes dry-run swarm preflight. The exempt upstream-era GH-555 Meter capture is renamed with an `UPSTREAM-` prefix so current HiQS-Labs issue #555 resolves deterministically. Reversibility: **Easy** — drop the four queue rows, remove their roadmap entries and captures, and restore the exempt filename. Verification: all four dry-run preflights ready; Releases DB generation/receipt consistency clean; PDDA run has zero errors.
 
 ## 2026-09-09
