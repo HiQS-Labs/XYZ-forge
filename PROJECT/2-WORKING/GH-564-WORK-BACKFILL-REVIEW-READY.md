@@ -84,7 +84,12 @@ is decided below from the live distribution, not guessed.
 
 ## Plan
 
-### Backfill mapping — section wins for Completed, marker otherwise
+### Backfill mapping — evaluated in this order, first match wins (total, Codex r3)
+
+1. section starts with `Deferred` → **skip**, whatever the marker (a deferred 🚧 is still deferred)
+2. section `Completed` → `completed`, whatever the marker
+3. marker 🚧, or section `In progress` → `in_flight`
+4. otherwise, rated → `rated`; unrated → `parked`
 
 | ledger row | event | why |
 |---|---|---|
@@ -99,7 +104,12 @@ only — the event *name* is what carries the claim, which is why Completed gets
 
 ### Idempotence — decided INSIDE the writer transaction, not before it (Codex r1)
 
-The check is "the row's latest `work_events` event already equals the intended one" — and it runs
+The check compares against the row's latest **backfill** event — the most recent `work_events`
+row for that issue whose payload carries `"source": "backfill"` — not its latest event of any
+kind (Codex r3). With the global latest, `rated` (backfill) → `review_ready` (reconcile) →
+backfill again would re-emit `rated`, and the next reconcile would re-emit `review_ready`: a
+ping-pong between two honest observers. Comparing each producer against its own last projection
+makes the two independent. The check runs
 **inside `mutate`**, which `perform_write` executes after taking `WriterLock` and after
 `BEGIN IMMEDIATE`. A read before `perform_write` would let two concurrent backfills (or a backfill
 and a reconcile) both see the same stale latest event, serialize their writes, and each emit a
@@ -109,7 +119,7 @@ Mechanism, reusing what exists rather than adding to `perform_write`: when the l
 matches, `mutate` raises `_AlreadyRecorded`. `perform_write`'s existing abort path
 (`releases_app.py:1613-1625`) rolls back, clears the journal, and re-raises **before** any receipt
 or generation bump — so a skip leaves no trace on the chain. The caller catches it and counts a
-skip. One helper carries this: `_emit_work_event(root, conn, event, gh, payload, unless_latest_in=())`;
+skip. One helper carries this: `_emit_work_event(root, conn, event, gh, payload, unless_latest_in=(), only_source=None)` — `only_source="backfill"` scopes the latest-event lookup to that producer's own rows;
 `cmd_work_emit` becomes its first caller, `backfill` and the review-ready scan its second and third.
 
 A second run therefore emits zero. A row whose state changed since the last backfill emits again.
@@ -119,11 +129,23 @@ A second run therefore emits zero. A row whose state changed since the last back
 ### `review_ready` in `reconcile` — before dispatch, outside the lock, fail-soft
 
 1. `XYZ_WORK_CONNECTORS=0` → skip the scan, as everything else.
-2. `gh pr list --state open --json number,isDraft,title,body --limit 200` via
-   `XYZ_BOARD_SYNC_GH_BIN` (default `gh`). Non-zero exit, missing binary, or bad JSON → print the
-   reason once, continue to replay. **Never fails the verb.**
+2. Resolve the repository **before** any call (Codex r3): `--repo <owner/name>` is taken from the
+   first enabled connector's `repos[0]` (`work_connectors.load_connectors()`), falling back to
+   `git -C <root> remote get-url origin` parsed to `owner/name`; if neither yields one, print
+   "review-ready scan skipped: no repository identity" and go straight to replay. `work reconcile
+   --root X` can run from any CWD and must never query the caller's unrelated remote.
+   Then `gh pr list --repo <owner/name> --state open --json number,isDraft,title,body --limit 200`
+   via `XYZ_BOARD_SYNC_GH_BIN` (default `gh`). Non-zero exit, missing binary, or bad JSON → print
+   the reason once, continue to replay. **Never fails the verb.**
+   **The offline seam (Codex r3):** `mock_gh_board.py` speaks only `api graphql`. The suite ships
+   `test/lib/gh-prlist-wrapper.sh` — a named file, ~15 lines — which answers `pr list` from the
+   JSON file `$GH549_PRLIST_JSON` (records every call's argv to `$GH549_PRLIST_CALLS` so the
+   `--repo` control can read it back) and execs the mock for everything else. 22a runs against
+   exactly that wrapper, so its success is the real branch and not the fail-soft one.
 3. For each non-draft PR, `linked_issues(pr)`; for each issue, `_emit_work_event(..., "review_ready",
-   n, {"pr": num}, unless_latest_in=("review_ready", "pr_merged"))` — the same transactional guard
+   n, {"pr": num}, unless_latest_in=("review_ready", "pr_merged", "completed"))` — `completed`
+   in the suppression set (Codex r3) so an open PR against a Completed issue cannot pull its card
+   back to In review — the same transactional guard
    as backfill, so a concurrent reconcile cannot double-emit either. **Each emission is its own
    fail-soft unit (Codex r2):** `_AlreadyRecorded` is a quiet skip; any *other* exception from
    `_emit_work_event` — a locked ledger, a refused write, a bad row — is caught, printed with the
@@ -138,6 +160,7 @@ A second run therefore emits zero. A row whose state changed since the last back
 |---|---|
 | `utils/py/releases_app.py` | `_emit_work_event(root, conn, event, gh, payload)` (the shared in-process body `cmd_work_emit` becomes a caller of); `_latest_event(conn, gh)`; `_backfill_event_for(row)`; `cmd_work_backfill`; the scan step in `cmd_work_reconcile`; `work backfill` subparser |
 | `utils/py/work_connectors/github_board.py` | `DEFAULT_STATUS_MAP["completed"] = "Done"` |
+| `test/lib/gh-prlist-wrapper.sh` | new — answers `pr list` from a JSON fixture, records argv, execs the mock for `api graphql` |
 | `test/gh549-work-events.sh` | legs 21–23, each check with its own red control — the table below |
 | `PROJECT/2-WORKING/GH-564-…` | this doc |
 
@@ -156,6 +179,9 @@ A second run therefore emits zero. A row whose state changed since the last back
 | 22c | second `reconcile` → zero new `review_ready` | strip `unless_latest_in` → duplicate |
 | 22d | wrapper `gh` exits 1 → `reconcile` prints the reason, still replays, exit 0 | remove the try/except in the copy → rc ≠ 0 |
 | 22e | `XYZ_WORK_CONNECTORS=0` → no scan, no `gh` call (sentinel) | unset → sentinel appears |
+| 21f | interleave: backfill → reconcile emits `review_ready` → backfill again emits **nothing**; then a Completed issue with an open PR: reconcile emits **nothing** | copied app: (i) drop `only_source` → the second backfill re-emits `rated`; (ii) drop `completed` from the suppression set → the Completed card gets `review_ready` |
+| 21g | Deferred + 🚧 → skip; Deferred + rated → skip | copied app: reorder so the Completed/marker branches run before the Deferred check → Deferred/🚧 emits `in_flight` |
+| 22g | `--repo` is the connector's `repos[0]`, and from a no-git CWD the scan still names the ledger repo (read from `$GH549_PRLIST_CALLS`) | copied app: drop `--repo` → the wrapper records no `--repo` argv (and real `gh` would have used the CWD) |
 | 23 | `completed` is in `DEFAULT_STATUS_MAP` and maps to Done; unmapped by a user's `""` override | **source mutation:** delete the `completed` key from the copied `DEFAULT_STATUS_MAP` → `column_for("completed", …)` is `None` and the mapping assertion fails |
 
 ### Non-goals (from the issue)
