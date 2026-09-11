@@ -67,3 +67,24 @@ clean build.
 emit, is waste worth removing regardless. What is withdrawn is the causal claim that it *fixed*
 the rotating failures. It did not demonstrably do that, and the contention count dropping from
 11-13 to 2 is one observation, not a controlled result.
+
+
+## Post-implementation-QA gate — `2a05c71a`
+
+Four rounds of Codex implementation QA followed the gate above
+(`relay-system/2026-09-10/gh549-impl-qa.md`). Each round found a real defect and each was fixed
+with a red control:
+
+| Round | Finding | Fix |
+|---|---|---|
+| 1 | a connector could report any `advanced_to` and skip events permanently | bounds check at the parse boundary |
+| 2 | the vendored `github_board` connector was never built; the child could not import the package either | `work_connectors/github_board.py`; `PYTHONPATH` for the child; `XYZ_WORK_CONNECTORS=0` moved to the shared seam |
+| 3 | dispatch runs outside the writer lock by design, so two writes could leave the board at an older column | connector-only flock; monotonic cursor upsert |
+| 4 | the flock failed **open**, silently re-enabling round 3's race | fail closed; `--reset` inside the lock; barrier in leg 19's red control |
+
+The suite grew from 42 to **63** assertions. Full gate at `2a05c71a`: **369 / 369**, one GH-528
+contention flip (`gh35-test-tiers`, passed alone — a different suite from #558's `gh32`, same
+class). Log: `full-gate-2a05c71a.log.gz`.
+
+The relay closed on the operator's explicit ship bar (high-or-critical findings only); the
+reviewer never issued `Approved` and none is claimed.
