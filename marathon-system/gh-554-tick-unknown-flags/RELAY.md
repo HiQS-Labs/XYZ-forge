@@ -1,6 +1,6 @@
 # Marathon Phase gh-554-tick-unknown-flags
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-554-TICK-UNKNOWN-FLAGS-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -97,3 +97,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented a verb-specific flag allowlist in `bin/tick`, checked immediately after parsing and before
+repository/root resolution, so an unknown option exits 2 with usage without reading or writing coordination
+state. Added `test/gh554-tick-unknown-flags.sh`: it covers the original `release --status done` and arbitrary
+unknown-flag reproductions, every other mutating verb, read-only verbs, an invalid `init` with no state
+directory, and valid `--flag=value` plus `TICK_AGENT` fallback behavior. No tests were run locally, as
+required by this isolated relay turn.

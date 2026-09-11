@@ -100,6 +100,50 @@ function parsePathsFlag(v) {
   return String(v).split(',').map(s => s.trim()).filter(Boolean);
 }
 
+// Keep flag parsing deliberately generic, then validate each verb's public
+// surface before resolving a root or touching its event log. Previously an
+// unknown flag was retained in `flags` and simply ignored by the switch case:
+// `tick release TASK --agent alice --status done` therefore released TASK
+// despite `--status` not being a release option (GH-554).
+const FLAGS_BY_VERB = {
+  init: [],
+  log: ['agent', 'note', 'paths', 'to', 'reason', 'priority', 'epoch'],
+  project: [],
+  fences: [],
+  claim: ['agent', 'paths', 'force'],
+  take: ['agent'],
+  next: ['agent'],
+  scope: ['agent', 'paths', 'force'],
+  release: ['agent', 'to', 'relay-file'],
+  break: ['agent', 'reason'],
+  done: ['agent', 'note', 'relay-file'],
+  drift: ['agent', 'task', 'prior-sha', 'current-sha', 'diff-lines', 'turn'],
+  ping: ['agent', 'note'],
+  reap: ['by', 'task'],
+  claims: ['json'],
+  info: [],
+  cost: [
+    'agent', 'human-minutes', 'compressor-mb', 'swap-free-mb', 'peak-rss-mb',
+    'from-gemini-json', 'tool', 'tokens-in', 'tokens-out', 'tokens-total',
+  ],
+  analyze: ['format', 'write'],
+  '-h': [],
+  '--help': [],
+  help: [],
+};
+
+function validateFlags(verb, flags) {
+  // Leave the existing unknown-verb diagnostic authoritative. Every known verb
+  // has an explicit allowlist, including the read-only verbs with no flags.
+  if (!Object.prototype.hasOwnProperty.call(FLAGS_BY_VERB, verb)) return true;
+  const allowed = new Set(FLAGS_BY_VERB[verb]);
+  const unknown = Object.keys(flags).filter(flag => !allowed.has(flag));
+  if (!unknown.length) return true;
+  process.stderr.write(`tick: unknown flag(s) for ${verb}: ${unknown.map(flag => `--${flag}`).join(', ')}\n`);
+  usage();
+  return false;
+}
+
 function usage() {
   process.stderr.write(`tick — coordination layer CLI
 
@@ -140,6 +184,9 @@ function main(argv) {
   const verb = argv[0];
   const rest = argv.slice(1);
   const { positional, flags } = parseArgs(rest);
+  // This must precede repoRoot()/assertResolvedRoot(): a malformed command must
+  // be a pure usage failure, never read or create coordination state.
+  if (!validateFlags(verb, flags)) return 2;
   const { root, source } = repoRoot();
   const eventType = verb === 'log' ? positional[0] : undefined;
   assertResolvedRoot(verb, root, source, eventType);
