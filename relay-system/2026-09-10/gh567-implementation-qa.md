@@ -49,3 +49,46 @@ Write your verdict below and change `STATUS` to Approved/Closed if it passes, or
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex implementation QA — required changes
+
+**Verdict: required changes; do not approve.** The tracked artifact, renderer, hook,
+and their dedicated old tests are absent, and the DB CLI route in `ROUTER.md:11,27`
+is correct. The merger change is also safe: `utils/releases-merge-resolve.sh:160-191`
+and `skills/merge-cleanup/scripts/ledger_merge.py:34-37` omit the dashboard from their
+derived-view sets, and the resolver's delete/modify handling prevents adopted views
+from being silently recreated. However, the promised complete retirement and
+non-vacuous regression contract have not landed.
+
+1. **Completeness of removal — fail.** `utils/hq/hq.sh:365-369` still conditionally
+   invokes `utils/roadmap-dashboard.sh` and reports that it regenerated
+   `ROADMAP-DASHBOARD.md`. If this is deliberately retained for *foreign legacy
+   targets*, document that narrow compatibility exemption and test it as such; if this
+   issue means end-to-end retirement, remove/migrate it. In either case, the GH-567
+   guard's stated claim that no active script invokes the retired renderer is false:
+   its audit at `test/gh567-roadmap-dashboard-retired.sh:60-79` only detects a write
+   pattern or the old hook, not an invocation of `roadmap-dashboard.sh`.
+
+2. **Regression defense and rehomed coverage — fail.** The red control at
+   `test/gh567-roadmap-dashboard-retired.sh:162-173` witnesses only a `>` redirection;
+   it does not inject the live `bash utils/roadmap-dashboard.sh` shape above, so the
+   audit would pass with that dependency restored. Add that mutation (or an explicit,
+   scoped legacy exemption) and make the production scan assert the corresponding
+   contract. Separately, `test/gh257-roadmap-ledger-fixes.sh:186-190` simply retires
+   cases 10–12, including the dropped-unparseable-row warning, rather than rehoming
+   the promised `list`/`render` stderr coverage. Restore equivalent positive and
+   witnessed-red coverage before deleting that behavior's only stated test.
+
+3. **Router/documentation integrity — fail.** Although the current router has the
+   correct CLI instruction, `utils/py/router_audit.py:8-10,299-329` still documents
+   and implements the dashboard-specific affirmative predicate, and
+   `test/gh353-vendored-router-audit.sh:124-134` still calls a dashboard-renderer
+   route the clean releases-mode fixture. Those obsolete predicates/fixtures must be
+   removed or replaced with the affirmative CLI-only matrix (including `--fix`
+   idempotence). Otherwise the governance code and its regression suite continue to
+   maintain a retired contract even if the current repository happens to pass via the
+   CLI alternative.
+
+No test was run: this reviewer turn is constrained to the relay record, and the
+workspace is a linked worktree where the repository rails prohibit running test
+suites. The findings above are direct, line-cited source evidence.
