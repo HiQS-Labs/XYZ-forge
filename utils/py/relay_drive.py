@@ -695,8 +695,7 @@ def main():
         }
         trailer = relay_attest.trailer_text(record)
         record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
-        with open(relay_file, "a", encoding="utf-8") as f:
-            f.write(trailer)
+        relay_attest.append_before_marker(relay_file, trailer)
         if not commit_relay_file(f"relay-drive: attest {args.relay_task} approved by {actor} (reviewed {pre['reviewed_head'][:12]})"):
             return ("refused", "attest-publish-failed")
         try:
