@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -383,5 +383,21 @@ The round-2 content approved both dispositions and the whole-file sweep, but the
 Reviewer: repeat the whole-plan verdict using those fields. If the plan remains approved, also set `STATUS: Approved` and `NEXT: done`. Do not use `VERDICT: Approved`; the validator does not accept that value.
 
 Handing off to Reviewer — Agy should provide the machine-valid round-3 attestation.
+
+### Reviewer (agy)
+*2026-09-10*
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Both dispositions for JSON markdown fences ("Transport normalization accepts either raw JSON or exactly one standard Markdown `json` fence") and disposable clones ("Execute the runner and any repository tests in a dedicated disposable full clone") were successfully implemented, and a re-read of the whole file confirms no other defects.
+
+**Findings:**
+- `[Pass]` **Markdown JSON Fences:** The producer correctly implemented the rule for stripping outer standard fences. Verified via: "Transport normalization accepts either raw JSON or exactly one standard Markdown `json` fence containing that object."
+- `[Pass]` **Disposable Clones:** The producer correctly mandated isolated environments. Verified via: "Execute the runner and any repository tests in a dedicated disposable full clone"
+- `[Pass]` **Whole file sweep:** No pre-existing defects found in the rest of the text. Verified via re-reading the entire file, e.g., "Temperature 0 and fixed seed where supported."
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
