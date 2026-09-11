@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 584
+-- generation: 585
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -11,7 +11,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('6', '2026-08-27T04:35
 INSERT INTO schema_migrations(version, applied_at) VALUES('7', '2026-09-08T05:45:05Z');
 -- table: settings
 INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
-INSERT INTO settings(key, value, updated_at) VALUES('generation', '584', '2026-09-11T01:37:41Z');
+INSERT INTO settings(key, value, updated_at) VALUES('generation', '585', '2026-09-11T01:38:17Z');
 INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
 -- table: repos
 INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
@@ -565,7 +565,7 @@ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M15ZWA7V00XR5PFAV2DH0ST5', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '310', '1', 'parked', '2026-08-29T05:29:02Z', '2026-08-29T07:14:15Z', '1', NULL, 'preflight-refused (exit 6):   Remediation: promote issue #310 to a GH-310 capture doc with a preflight contract first.');
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M15ZWAY1C9TYYEEWETCVZ87B', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '314', '1', 'completed', '2026-08-29T05:29:03Z', '2026-08-29T08:53:49Z', '4', NULL, 'landed via PR #320 (merged 2fedf191)');
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M26ZN8FFQCP926KW77EQTQXC', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '533', '1', 'failed', '2026-09-11T01:00:08Z', '2026-09-11T01:37:41Z', '1', NULL, 'marathon escalated: review-body-rewritten (exit 4) [gh533-exec1; result: gh533-exec1/preflight/marathon-result.json]');
-INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M26ZN8Q0QASN002VXN51M8B9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '529', '1', 'pending', '2026-09-11T01:00:08Z', '2026-09-11T01:00:08Z', '0', NULL, NULL);
+INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M26ZN8Q0QASN002VXN51M8B9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '529', '1', 'running', '2026-09-11T01:00:08Z', '2026-09-11T01:38:17Z', '1', NULL, NULL);
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M26ZN8YPGWBVSMAQ7BSMTNVB', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '554', '1', 'pending', '2026-09-11T01:00:08Z', '2026-09-11T01:00:08Z', '0', NULL, NULL);
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M26ZN96BASE5PR5C5T9Q3PA8', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '555', '2', 'pending', '2026-09-11T01:00:08Z', '2026-09-11T01:00:08Z', '0', NULL, NULL);
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M15ZWAJYZRX9E4ZM2E2EEMJB', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '313', '3', 'pending', '2026-08-29T05:29:03Z', '2026-08-29T05:29:03Z', '0', NULL, NULL);
@@ -1236,3 +1236,4 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-lease', 'GH-533', '2026-09-11T01:25:05Z', 'ecfb66ca439c44f1bf8c89b7a54bdac8', 'default', '6c85d3bc0fbc158cf0867414a6ce8bfb839026631d816525d8f0320d90b91944', '6f4ebaddea86e3b9a9b2877594633f58a4a63f80df647b56e939503d2ab62b3f');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-failed', 'GH-533', '2026-09-11T01:37:07Z', '671fd4816b92493d87f507edc373915a', 'default', '6f4ebaddea86e3b9a9b2877594633f58a4a63f80df647b56e939503d2ab62b3f', 'cfdde95dfe23e6518167149a136a554f150af58416a9953b6b27d5d5f6515c0f');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-failed', 'GH-533', '2026-09-11T01:37:41Z', '03a6492866384ed6a6d9f1397f265281', 'default', 'cfdde95dfe23e6518167149a136a554f150af58416a9953b6b27d5d5f6515c0f', 'f6ffd59ad0543dd1f251de2bc0868596147ca0146310aa62b6dec3b3ca060363');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-lease', 'GH-529', '2026-09-11T01:38:17Z', '82697f3d36b04ba680ecadc2962bda7a', 'default', 'f6ffd59ad0543dd1f251de2bc0868596147ca0146310aa62b6dec3b3ca060363', 'cf8617d490c6a46723e94b96bb7c7e4709478fec64a8e80edd16b033aef3f39e');
