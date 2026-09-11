@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 596
+-- generation: 597
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -12,7 +12,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('7', '2026-09-08T05:45
 INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-10T15:42:31Z');
 -- table: settings
 INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
-INSERT INTO settings(key, value, updated_at) VALUES('generation', '596', '2026-09-11T02:28:48Z');
+INSERT INTO settings(key, value, updated_at) VALUES('generation', '597', '2026-09-11T02:42:11Z');
 INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
 -- table: repos
 INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
@@ -1255,5 +1255,6 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M252E5ZN5C57DDMRYQ91PTWP', '2026-09-11T02:16:15Z', '261f01f21ab74ddaa3d294c734280986', 'default', 'b7890ea36e20170f001c2f03501c9e713d125f261c8d10813f9f8fda1976a902', '58be9591a69386260f5429c713fe27e9d3c9264d343aeb9c7499371787919e46');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-retry', 'GH-307', '2026-09-11T02:28:48Z', '7964159736c54a12bc4982500f769589', 'default', '58be9591a69386260f5429c713fe27e9d3c9264d343aeb9c7499371787919e46', 'b68324ecc95359dd02629f889c9e9a39cae645b7965cfb76e56936e76feaa72f');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-retry', 'GH-313', '2026-09-11T02:28:48Z', '7fd9e2a7bc7d46798a5b00ea05bab865', 'default', 'b68324ecc95359dd02629f889c9e9a39cae645b7965cfb76e56936e76feaa72f', '30d94134ef8e5e47abc00a14e3ce7be025585003366e0cb385e203e657e47eea');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:82', '2026-09-11T02:42:11Z', 'd7c968415b82434ea2951551d95cf6e4', 'default', '30d94134ef8e5e47abc00a14e3ce7be025585003366e0cb385e203e657e47eea', '2aefc00d302a4f9571d7b631f8780ed23c7dfd0cfbbb87d1c5441ee07dd97178');
 -- table: work_events
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2740MPZ030TTKYCT8NZX8XG', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '549', '261f01f21ab74ddaa3d294c734280986', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-11T02:16:15Z');
