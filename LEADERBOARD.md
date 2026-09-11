@@ -127,13 +127,17 @@ while the four axes keep their honest values underneath.
 | 115 | **170** | [GH-195](https://github.com/HiQS-Labs/XYZ-forge/issues/195) — marathon-root-audit's blind spot: a direct `python3 marathon_drive.py` call | — | Completed | 60 | 40 | 50 | 20 | 170 | — |
 | 116 | **170** | [GH-28](https://github.com/HiQS-Labs/XYZ-forge/issues/28) — RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | Queue / parked intake | 40 | 35 | 40 | 55 | 170 | — |
 | 117 | **160** | [GH-18](https://github.com/HiQS-Labs/XYZ-forge/issues/18) — Harness evaluation: Command Code (cmd) and model matrix | — | Queue / parked intake | 35 | 25 | 45 | 55 | 160 | — |
-| 118 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | Cargo | queue | 3 | 3 | 3 | 3 | 12 | — |
-| 119 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
-| 120 | **9** | [GH-399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) — Let the profile carry the route | — | Queue / parked intake | 2 | 3 | 2 | 2 | 9 | — |
-| 121 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Cargo | queue | 3 | 2 | 2 | 1 | 8 | — |
-| 122 | **8** | [GH-508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) — Git Sync Pulse as a portable Skills Army HQ projection | — | Completed | 2 | 3 | 2 | 1 | 8 | — |
-| 123 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Cargo | queue | 1 | 1 | 1 | 1 | 4 | — |
-| 124 | **4** | [GH-406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) — External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | Queue / parked intake | 3 | 3 | 4 | 3 | 13 | 4 |
+| 118 | **91** | [GH-533](https://github.com/HiQS-Labs/XYZ-forge/issues/533) — Relay scaffold verdict vocabulary contradicts validate-relay-block | — | In progress | 94 | 90 | 92 | 88 | 364 | 91 |
+| 119 | **89** | [GH-554](https://github.com/HiQS-Labs/XYZ-forge/issues/554) — tick mutating verbs silently accept unknown flags | — | In progress | 90 | 86 | 88 | 92 | 356 | 89 |
+| 120 | **88** | [GH-529](https://github.com/HiQS-Labs/XYZ-forge/issues/529) — Relay attestation rejects scaffold-required marker placement | — | In progress | 92 | 88 | 90 | 82 | 352 | 88 |
+| 121 | **83** | [GH-555](https://github.com/HiQS-Labs/XYZ-forge/issues/555) — merge-cleanup B1 leaves releases.db.bak after resolution | — | In progress | 82 | 74 | 80 | 94 | 330 | 83 |
+| 122 | **12** | [GH-267](https://github.com/HiQS-Labs/XYZ-forge/issues/267) — /express: hotfix fast lane — fix + suite + ledger + born-complete docs + gateless development landing + reconcile | Cargo | queue | 3 | 3 | 3 | 3 | 12 | — |
+| 123 | **12** | [GH-325](https://github.com/HiQS-Labs/XYZ-forge/issues/325) — Vendor legacy SWE skills and make skills/ canonical | — | In progress | 3 | 3 | 3 | 3 | 12 | — |
+| 124 | **9** | [GH-399](https://github.com/HiQS-Labs/XYZ-forge/issues/399) — Let the profile carry the route | — | Queue / parked intake | 2 | 3 | 2 | 2 | 9 | — |
+| 125 | **8** | [GH-256](https://github.com/HiQS-Labs/XYZ-forge/issues/256) — No preflight checks the builder can reach a phase artifact paths | Cargo | queue | 3 | 2 | 2 | 1 | 8 | — |
+| 126 | **8** | [GH-508](https://github.com/HiQS-Labs/XYZ-forge/issues/508) — Git Sync Pulse as a portable Skills Army HQ projection | — | Completed | 2 | 3 | 2 | 1 | 8 | — |
+| 127 | **4** | [GH-255](https://github.com/HiQS-Labs/XYZ-forge/issues/255) — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT | Cargo | queue | 1 | 1 | 1 | 1 | 4 | — |
+| 128 | **4** | [GH-406](https://github.com/HiQS-Labs/XYZ-forge/issues/406) — External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims | — | Queue / parked intake | 3 | 3 | 4 | 3 | 13 | 4 |
 
 **Top of the line:** GH-413 — launch-artifact marker authorises destructive rebuild (score 365).
 
