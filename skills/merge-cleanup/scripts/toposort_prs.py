@@ -8,6 +8,7 @@ detects file collisions, and produces a safe merge order.
 import sys
 import re
 import json
+import os
 import subprocess
 from typing import List, Dict, Any, Set, Tuple, Optional
 
@@ -15,7 +16,7 @@ from typing import List, Dict, Any, Set, Tuple, Optional
 def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Fetches open PRs via GitHub CLI."""
     cmd = [
-        "gh", "pr", "list",
+        os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
         "--state", "open",
         "--json", "number,title,headRefName,baseRefName,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
     ]
@@ -113,6 +114,11 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                         warnings.append(
                             f"File collision on {len(overlap)} file(s) between PR #{num2} and PR #{num1} — ordering #{num2} before #{num1}"
                         )
+
+    # GH-534 C: Kahn's loop below consumes dep_graph. Keep the edges on each PR so Phase 5 can
+    # refuse a dependent whose predecessor was parked or handed off.
+    for pr in prs:
+        pr["_deps"] = sorted(dep_graph[pr["number"]])
 
     # 3. Topological sort with cycle detection (Kahn's algorithm)
     in_degree = {num: 0 for num in pr_by_num}

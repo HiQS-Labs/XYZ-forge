@@ -1,0 +1,15 @@
+F
+======================================================================
+FAIL: test_ast_inspect_checkout_calls_inspect_tick_claims (gh534_phase_a_tests.TestA4TickClaims.test_ast_inspect_checkout_calls_inspect_tick_claims)
+THE PIN: a call, not a mention in a string or comment.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 408, in test_ast_inspect_checkout_calls_inspect_tick_claims
+    self.assertTrue(calls, "inspect_checkout never calls inspect_tick_claims")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [] is not true : inspect_checkout never calls inspect_tick_claims
+
+----------------------------------------------------------------------
+Ran 1 test in 0.331s
+
+FAILED (failures=1)

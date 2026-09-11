@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_ddl_only_change_is_handoff (gh534_phase_c_tests.TestB1SchemaGuard.test_ddl_only_change_is_handoff)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 390, in test_ddl_only_change_is_handoff
+    self.assertFalse(cls["disjoint"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

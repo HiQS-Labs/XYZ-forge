@@ -1,0 +1,29 @@
+F
+======================================================================
+FAIL: test_doc_and_code_root_lists_agree (gh534_phase_a_tests.TestA1Roots.test_doc_and_code_root_lists_agree)
+THE PIN: WORKTREE-SAFETY.md's SAFE_ROOTS example IS DEFAULT_SAFE_ROOTS.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 129, in test_doc_and_code_root_lists_agree
+    self.assertEqual(doc_roots, DEFAULT_SAFE_ROOTS)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [Posi[127 chars]gent-workspaces'), PosixPath('/Users/noelsaw/marathon-clones')] != [Posi[127 chars]gent-workspaces')]
+
+First list contains 1 additional elements.
+First extra element 3:
+PosixPath('/Users/noelsaw/marathon-clones')
+
+  [PosixPath('/Users/noelsaw/Documents/GH Repos'),
+   PosixPath('/Users/noelsaw/agent-workspaces'),
+-  PosixPath('/Users/noelsaw/Documents/agent-workspaces'),
+?                                                        ^
+
++  PosixPath('/Users/noelsaw/Documents/agent-workspaces')]
+?                                                        ^
+
+-  PosixPath('/Users/noelsaw/marathon-clones')]
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

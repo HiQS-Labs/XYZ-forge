@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_a_repair_that_mints_a_new_head_does_not_reset_the_budget (gh534_phase_c_tests.TestCRecord.test_a_repair_that_mints_a_new_head_does_not_reset_the_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 118, in test_a_repair_that_mints_a_new_head_does_not_reset_the_budget
+    self.assertIsNone(idx3)
+    ~~~~~~~~~~~~~~~~~^^^^^^
+AssertionError: 0 is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.019s
+
+FAILED (failures=1)

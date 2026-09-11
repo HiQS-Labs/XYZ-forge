@@ -1,0 +1,15 @@
+F
+======================================================================
+FAIL: test_x_unreadable_subdirectory_is_incomplete_not_idle (gh534_phase_a_tests.TestA4OpenHandles.test_x_unreadable_subdirectory_is_incomplete_not_idle)
+Isolated: the WARNING must actually be produced, and no live descriptor of our own.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 452, in test_x_unreadable_subdirectory_is_incomplete_not_idle
+    self.assertFalse(h["verified"], h)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : {'verified': True, 'active': False, 'details': 'no open handles', 'holders': []}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.639s
+
+FAILED (failures=1)

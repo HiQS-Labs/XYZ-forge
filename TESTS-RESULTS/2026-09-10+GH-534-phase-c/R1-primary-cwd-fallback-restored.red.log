@@ -1,0 +1,15 @@
+F
+======================================================================
+FAIL: test_omitted_primary_is_refused_and_no_record_root_is_minted (gh534_phase_c_tests.TestCScript.test_omitted_primary_is_refused_and_no_record_root_is_minted)
+R1-2: the coordinator is never the CWD. Run the orchestrator from a disposable clone
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_c_tests.py", line 283, in test_omitted_primary_is_refused_and_no_record_root_is_minted
+    self.assertIn("--primary", r.stderr)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '--primary' not found in "merge-cleanup: WARNING — This sequence is NOT executable as things stand: the primary checkout cannot receive the landing (see PHASE 0). --execute would refuse.\nmerge-cleanup: ERROR — REFUSING to merge: the primary checkout cannot receive the landing.\nmerge-cleanup: ERROR —   - on 'feat/b', not the integration branch 'development' — `git merge --ff-only origin/development` will not land here\nmerge-cleanup: ERROR —   - HEAD is not an ancestor of origin/development — `git merge --ff-only` would refuse\nmerge-cleanup: ERROR — Fix the primary first, or pass --allow-unready-primary to proceed anyway.\n"
+
+----------------------------------------------------------------------
+Ran 1 test in 4.699s
+
+FAILED (failures=1)

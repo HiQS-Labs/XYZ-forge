@@ -1,0 +1,68 @@
+merge-cleanup: Operating on primary repo: /private/tmp/claude-501/gh534b._pgqm2hl/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/tmp/claude-501/gh534b._pgqm2hl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (4 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | PASS | MERGEABLE | 0 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | PASS | MERGEABLE | 0 |
+| 3 | [#3](https://example.invalid/pr/3) | PR 3 | `feat/c` | `development` | PASS | MERGEABLE | 0 |
+| 4 | [#4](https://example.invalid/pr/4) | PR 4 | `feat/d` | `development` | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/tmp/claude-501/gh534b._pgqm2hl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: PR #1: pre-merge ledger gate green on 393437bbe7 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as b1b4ce6ee2
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/tmp/claude-501/gh534b._pgqm2hl/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/tmp/claude-501/gh534b._pgqm2hl/primary/.tick/merge-cleanup/gh534b._pgqm2hl-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head ea9e427032)
+merge-cleanup: PR #4: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #4: attempt record /private/tmp/claude-501/gh534b._pgqm2hl/primary/.tick/merge-cleanup/gh534b._pgqm2hl-origin/pr-4.json
+merge-cleanup: PR #4: attempt 1/2 reserved (script, rung B1, head 43a7a09350)
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
+merge-cleanup:   B1: check --rebuild on the kept side: rc=0
+merge-cleanup:   B1: roadmap add GH-301: rc=0 
+merge-cleanup:   B1: roadmap update GH-301 (section/marker): rc=0 
+merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
+merge-cleanup: PR #4: pushed aedbad18c6 to feat/d; re-fetching and re-gating the new head
+merge-cleanup: PR #4: pre-merge ledger gate green on aedbad18c6 + origin/development
+merge-cleanup: Merging PR #4 via `gh pr merge 4 --squash --delete-branch`...
+merge-cleanup: ✅ PR #4 is MERGED as 83c8e8446d
+merge-cleanup: Running post-merge reconciliation for PR #4 in /private/tmp/claude-501/gh534b._pgqm2hl/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: Landing clones kept for inspection under /tmp/claude-501/merge-cleanup-0tw66ji1
+.
+----------------------------------------------------------------------
+Ran 1 test in 11.942s
+
+OK

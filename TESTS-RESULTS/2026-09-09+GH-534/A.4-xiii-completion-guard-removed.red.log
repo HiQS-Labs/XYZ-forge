@@ -1,0 +1,15 @@
+F
+======================================================================
+FAIL: test_xiii_signal_killed_lsof_is_incomplete_even_with_empty_stderr (gh534_phase_a_tests.TestA4OpenHandles.test_xiii_signal_killed_lsof_is_incomplete_even_with_empty_stderr)
+THE PIN: completion is checked before stderr is trusted.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/gh-merge-cleanup-fm/test/gh534_phase_a_tests.py", line 473, in test_xiii_signal_killed_lsof_is_incomplete_even_with_empty_stderr
+    self.assertFalse(h["verified"], h)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : {'verified': True, 'active': False, 'details': 'no open handles', 'holders': []}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.542s
+
+FAILED (failures=1)

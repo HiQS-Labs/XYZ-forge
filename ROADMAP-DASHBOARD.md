@@ -86,7 +86,7 @@ Summary: 7 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 100 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 67 · 🔮 0 · 🔲 0
+Summary: 101 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 67 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -190,6 +190,7 @@ Summary: 100 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 67 · �
 | GH-523 · merge-cleanup: primary on-disk checkout is not reviewed first; PRs merge into a tree that cannot receive them | ✅ | [GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md](PROJECT/1-INBOX/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md) · [#523](https://github.com/HiQS-Labs/XYZ-forge/issues/523) |
 | GH-528 · /unstuck — queue simultaneous blockers, tripwire recurring blocker classes | ✅ | [GH-528-UNSTUCK-QUEUED-TRIPWIRE.md](PROJECT/3-COMPLETED/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md) · [#528](https://github.com/HiQS-Labs/XYZ-forge/issues/528) |
 | GH-524 · agent-chorus: transcripts do not record the lab, model, or effort level behind a seat | ✅ | [GH-524-AGENT-CHORUS-SEAT-IDENTITY.md](PROJECT/1-INBOX/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md) · [#524](https://github.com/HiQS-Labs/XYZ-forge/issues/524) |
+| GH-534 · merge-cleanup: promises merge + conflict-resolution + teardown, implements one and a half — six verified failure modes | — | [GH-534-MERGE-CLEANUP-FAILURE-MODES.md](PROJECT/3-COMPLETED/GH-534-MERGE-CLEANUP-FAILURE-MODES.md) · [#534](https://github.com/HiQS-Labs/XYZ-forge/issues/534) |
 
 ## Deferred · vision
 
