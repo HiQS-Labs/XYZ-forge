@@ -336,7 +336,7 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         "view",
         str(pr_id),
         "--json",
-        "number,title,state,mergedAt,mergeCommit,baseRefName,headRefName,body,url",
+        "number,title,state,mergedAt,mergeCommit,baseRefName,headRefName,body,url,headRefOid,commits",
     ]
     r = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
     if r.returncode != 0:
@@ -348,6 +348,8 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
                 "state": "MERGED",
                 "mergedAt": datetime.now().isoformat() + "Z",
                 "baseRefName": "development",
+                "headRefOid": None,
+                "commits": [],
                 "body": f"Closes #{pr_id}",
             }
         die(f"gh pr view {pr_id} failed: {r.stderr}", code=4)
@@ -432,10 +434,25 @@ def check_provenance_receipts(repo_root, pr_meta):
         return None
 
     expected_pr = pr_number(pr_num)
+
+    candidate_shas = set()
     merge_commit = pr_meta.get("mergeCommit") or {}
     merge_sha = merge_commit.get("oid") if isinstance(merge_commit, dict) else None
-    if not isinstance(merge_sha, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", merge_sha):
-        merge_sha = None
+    if isinstance(merge_sha, str) and re.fullmatch(r"[0-9a-fA-F]{40}", merge_sha):
+        candidate_shas.add(merge_sha.lower())
+
+    head_oid = pr_meta.get("headRefOid")
+    if isinstance(head_oid, str) and re.fullmatch(r"[0-9a-fA-F]{40}", head_oid):
+        candidate_shas.add(head_oid.lower())
+
+    commits_list = pr_meta.get("commits") or []
+    if isinstance(commits_list, list):
+        for c in commits_list:
+            if isinstance(c, dict):
+                c_oid = c.get("oid")
+                if isinstance(c_oid, str) and re.fullmatch(r"[0-9a-fA-F]{40}", c_oid):
+                    candidate_shas.add(c_oid.lower())
+
     for root, dirs, files in os.walk(results_dir):
         dirs.sort()
         for name in sorted(files):
@@ -458,8 +475,19 @@ def check_provenance_receipts(repo_root, pr_meta):
                         if pr_fields:
                             if expected_pr and all(pr_number(entry[key]) == expected_pr for key in pr_fields):
                                 matched = f"{pr_fields[0]}={expected_pr}"
-                        elif merge_sha and entry.get("commit") == merge_sha:
-                            matched = f"commit={merge_sha}"
+                        elif candidate_shas:
+                            entry_commits = []
+                            for key in ("commit", "identity_before", "identity_after"):
+                                val = entry.get(key)
+                                if isinstance(val, str):
+                                    val = val.strip()
+                                    if len(val) >= 7 and re.fullmatch(r"[0-9a-fA-F]{7,40}", val):
+                                        entry_commits.append((key, val))
+                            for key, c_val in entry_commits:
+                                c_lower = c_val.lower()
+                                if any(cand.startswith(c_lower) or c_lower.startswith(cand) for cand in candidate_shas):
+                                    matched = f"{key}={c_val}"
+                                    break
                         if matched:
                             relpath = os.path.relpath(path, repo_root)
                             log(f"  Provenance receipt matched for PR #{pr_num}: {relpath}:{line_num} ({matched})")

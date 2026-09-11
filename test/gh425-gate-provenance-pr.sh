@@ -76,13 +76,38 @@ class Receipts(unittest.TestCase):
     def test_unattributable_receipts_fail(self):
         for record in ({}, {"issue": 425}, {"pr": 4250}, {"pr": True},
                        {"pr": 425.0}, {"pr": {"number": 425}},
-                       {"message": "PR #425 passed"}, {"commit": SHA[:8]},
+                       {"message": "PR #425 passed"}, {"commit": SHA[:6]},
                        {"commit": "b2" * 20}, {"commit": None},
                        {"pr": 999, "commit": SHA},
                        {"pr": 425, "pr_number": 999}):
             with self.subTest(record=record):
                 self.receipt(json.dumps(record) + "\n")
                 self.assertEqual(self.gate()[0], 6)
+
+    def test_short_sha_matches_candidate_prefix(self):
+        self.receipt(json.dumps({"commit": SHA[:8]}) + "\n")
+        code, output = self.gate()
+        self.assertEqual(code, 0, output)
+        self.assertIn(f"commit={SHA[:8]}", output)
+
+    def test_squashed_branch_commit_lineage_matches(self):
+        squash_sha = "c3" * 20
+        branch_head = "d4" * 20
+        branch_commit_1 = "e5" * 20
+        branch_commit_2 = "f6" * 20
+        meta = {
+            "number": 565,
+            "state": "MERGED",
+            "mergeCommit": {"oid": squash_sha},
+            "headRefOid": branch_head,
+            "commits": [{"oid": branch_commit_1}, {"oid": branch_commit_2}],
+        }
+        for commit_val in (branch_head, branch_head[:8], branch_commit_1, branch_commit_2[:10]):
+            with self.subTest(commit_val=commit_val):
+                self.receipt(json.dumps({"commit": commit_val}) + "\n")
+                code, output = self.gate(meta=meta)
+                self.assertEqual(code, 0, output)
+                self.assertIn(f"commit={commit_val}", output)
 
     def test_missing_directory_fails(self):
         code, output = self.gate()
@@ -118,7 +143,10 @@ class Receipts(unittest.TestCase):
             run.return_value.returncode = 0
             run.return_value.stdout = json.dumps(META)
             self.assertEqual(wave.fetch_pr_metadata(str(self.repo), 425), META)
-            self.assertIn("mergeCommit", run.call_args.args[0][-1].split(","))
+            fields = run.call_args.args[0][-1].split(",")
+            self.assertIn("mergeCommit", fields)
+            self.assertIn("headRefOid", fields)
+            self.assertIn("commits", fields)
 
     def test_cli_gate_and_ungated_path(self):
         (self.repo / ".git").mkdir()
