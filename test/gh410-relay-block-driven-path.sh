@@ -264,6 +264,56 @@ grep -q "Basis: line is missing or empty" <<<"$out" \
   && pass "1.12b error message explains missing Basis" \
   || fail "1.12b unexpected error message: $out"
 
+# 1.13: Whitespace-only Basis is rejected (exit 8)
+cat >"$TMP/whitespace-basis.md" <<'EOF_M13'
+NEXT: Producer
+STATUS: Approved
+ROUND: 1 / 4
+
+## Setup
+Artifact: file.md
+
+## Log
+### Reviewer · Round 1
+VERDICT: PASS
+Basis:    
+EOF_M13
+
+set +e
+out="$("$VALIDATE_BIN" "$TMP/whitespace-basis.md" 2>&1)"
+rc=$?
+set -e
+[ "$rc" -eq 8 ] && pass "1.13 whitespace-only Basis rejected with exit 8" \
+  || fail "1.13 whitespace-only Basis expected exit 8, got $rc"
+grep -q "Basis: line is missing or empty" <<<"$out" \
+  && pass "1.13b error message explains missing Basis" \
+  || fail "1.13b unexpected error message: $out"
+
+# 1.14: Lowercase verdict is rejected (exit 8)
+cat >"$TMP/lowercase-verdict.md" <<'EOF_M14'
+NEXT: Producer
+STATUS: Approved
+ROUND: 1 / 4
+
+## Setup
+Artifact: file.md
+
+## Log
+### Reviewer · Round 1
+VERDICT: pass
+Basis: verified.
+EOF_M14
+
+set +e
+out="$("$VALIDATE_BIN" "$TMP/lowercase-verdict.md" 2>&1)"
+rc=$?
+set -e
+[ "$rc" -eq 8 ] && pass "1.14 lowercase verdict rejected with exit 8" \
+  || fail "1.14 lowercase verdict expected exit 8, got $rc"
+grep -q "VERDICT: value must be exactly PASS, FAIL, or PARKED. Found: 'pass'" <<<"$out" \
+  && pass "1.14b error message explains exact value required" \
+  || fail "1.14b unexpected error message: $out"
+
 # --------------------------------------------------------------------------------------------------
 # Section 2: Shared rtl_relay_field parser parity
 # --------------------------------------------------------------------------------------------------

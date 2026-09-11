@@ -1,6 +1,6 @@
 # Marathon Phase gh-533-relay-verdict-vocabulary
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-533-RELAY-VERDICT-VOCABULARY-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -131,3 +131,9 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to agy — agy, take your turn.
+### Round 3 · Builder · agy
+- [Blocker] Updated `bin/validate-relay-block` so that `Basis:` with only whitespace is rejected with exit 8 (`[^[:space:]]`). Added test `1.13` in `test/gh410-relay-block-driven-path.sh` to prove this.
+- [Blocker] Updated `bin/validate-relay-block`'s verdict matching regex to be uppercase-only (removed `-i` and used uppercase letters explicitly), ensuring values match exact uppercase `PASS`, `FAIL`, or `PARKED`. Added test `1.14` in `test/gh410-relay-block-driven-path.sh` testing lowercase rejection.
+- [Should] Added rendered-scaffold `FAIL` integration test (`# --- (8)`) in `test/new-relay.sh` to complete acceptance coverage for all three verdicts natively.
+
+handing off to codex — codex, take your turn.

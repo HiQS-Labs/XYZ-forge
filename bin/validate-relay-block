@@ -80,8 +80,8 @@ if [ -z "$last_verdict" ]; then
   exit 8
 fi
 
-if ! echo "$last_verdict" | grep -E -i -q '^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[[:space:]]*(PASS|FAIL|PARKED)[`*[:space:]]*$'; then
-  val="$(echo "$last_verdict" | sed -E -e 's/^[[:space:]]*[`*]*VERDICT[`*]*:[`*]*[[:space:]]*//i' -e 's/[`*[:space:]]*$//')"
+if ! echo "$last_verdict" | grep -E -q '^[[:space:]]*[`*]*[Vv][Ee][Rr][Dd][Ii][Cc][Tt][`*]*:[`*]*[[:space:]]*(PASS|FAIL|PARKED)[`*[:space:]]*$'; then
+  val="$(echo "$last_verdict" | sed -E -e 's/^[[:space:]]*[`*]*[Vv][Ee][Rr][Dd][Ii][Cc][Tt][`*]*:[`*]*[[:space:]]*//' -e 's/[`*[:space:]]*$//')"
   echo "VERDICT: value must be exactly PASS, FAIL, or PARKED. Found: '$val'" >&2
   exit 8
 fi
@@ -103,7 +103,7 @@ END {
 ')"
 
 # Assertion 4: Basis: line is present and non-empty
-if ! echo "$final_review_block" | grep -E -i -q '^[[:space:]]*[`*]*Basis[`*]*:[`*]*[[:space:]]*.+'; then
+if ! echo "$final_review_block" | grep -E -i -q '^[[:space:]]*[`*]*Basis[`*]*:[`*]*[[:space:]]*[^[:space:]]'; then
   echo "Basis: line is missing or empty" >&2
   exit 8
 fi
