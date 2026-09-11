@@ -114,6 +114,11 @@ This issue explicitly supersedes the 2026-09-07 rejection recorded in `PROJECT/1
     - **Falsification & Red-Control Contract:** Test fixture verifies that restoring a root dashboard AND injecting a simulated production writer each cause the guard to report RED. Asserts non-empty candidate scan so an empty search root cannot pass.
     - Registered in `validate.sh` `TESTS` array.
 
+## Lessons Learned (For Future Agents)
+
+1. **Derived Views in Git Cause Compounding Friction:** Committing generated Markdown artifacts (`ROADMAP-DASHBOARD.md`) as derived views of a transactional database (`releases.db`) inevitably creates merge collisions, complex staleness hooks, and sync race conditions. Providing on-demand CLI queries (`releases roadmap list`, `roadmap render`) is cleaner, faster, and eliminates collision surfaces completely.
+2. **Remove the Whole Surface Atomically:** When retiring a root artifact, every secondary subsystem built around it (pre-push hooks, reconciler passes, router-audit gates, merge resolver derived-views lists, tool adapters) must be updated simultaneously, guarded by a permanent regression test with falsifiable red controls (`test/gh567-roadmap-dashboard-retired.sh`).
+
 ## Acceptance Criteria
 
 - [x] `ROADMAP-DASHBOARD.md` is removed from git tracking and deleted, and `utils/roadmap-dashboard.sh` is retired.
