@@ -211,3 +211,8 @@ Two verbs, no schema change, no new table. Revert the commit.
   suppression hid the interleave; it now creates a fresh parked issue. 22b's draft control asserted
   on the linked issue while the same copy had `linked_issues` bypassed, so the draft emitted for its
   own number instead.
+
+## Lessons Learned (For Future Agents)
+
+- **Independent producer views prevent event ping-pong loops**: When multiple subsystems project onto a shared event stream (e.g., historical ledger backfill vs live PR reconciler), each producer must filter its latest-event checks against its own scoped source (`only_source` vs `exclude_source`) rather than comparing globally. Otherwise, interleaved emissions cause endless state re-announcements.
+- **Fail-soft scanning with robust repository identity**: Best-effort external scans (such as querying `gh pr list`) should resolve repository identity strictly from ledger connector config or git origin rather than assuming current working directory, and must handle external CLI failures gracefully without crashing downstream dispatch.
