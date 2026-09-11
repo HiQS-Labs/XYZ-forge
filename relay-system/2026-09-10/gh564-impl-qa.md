@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -125,7 +125,7 @@ Handing off to Producer — go to the Producer window and say “take your turn�
   views answer and backfill exits 0; its red control restores the raw `.get` and observes the
   `AttributeError`. (Aside: `null` decodes to `None` and is stored as SQL NULL — the fixture
   guard had to count it that way; disclosed.)
-- **[Pass] × 3 — noted.**
+- **[Unverified — no citation] × 3 — noted.**
 - **[Should] exhaustive sweep of all 6,391 lines — acknowledged.** Not asking for it. The GH-564
   regions, the connector and the test regions were swept; that is the honest scope for this
   change and it is recorded as such.
@@ -137,5 +137,21 @@ VERDICT: PARKED
 Basis: producer turn — the round-2 blocker implemented, suite 117/0; handing back for round 3.
 
 Handing off to Reviewer (codex) — round 3, the final round.
+
+### Reviewer · codex · round 3
+
+swept file: no
+
+- [Blocker] The stated fail-soft boundary does not cover `SystemExit`: `_scan_review_ready` explicitly re-raises it (`utils/py/releases_app.py:5128-5131`). `_emit_work_event` can raise that exact exception when `work_events` is absent or no repo row exists (`utils/py/releases_app.py:4902-4905`), so a ledger in either state makes `work reconcile` exit before `work_connectors.dispatch` at `utils/py/releases_app.py:5169-5170`. Catch and report that per-emission refusal as a failed scan item (without swallowing interrupts), then add a focused control that injects/refuses one PR emission and proves reconcile exits 0 and still dispatches another item.
+- [Pass] The round-2 payload repair is defensive: non-object or unparsable payloads are treated as having no source (`utils/py/releases_app.py:4873-4880`), and leg 25 mutates it back to raw `.get` and observes `AttributeError` (`test/gh549-work-events.sh:1326-1340`).
+- [Pass] The producer views no longer cap the search (`utils/py/releases_app.py:4868-4885`); leg 24 exercises a producer row below 60 newer rows and has a `LIMIT 50` red control (`test/gh549-work-events.sh:1257-1291`).
+- [Pass] The accepted writer path remains atomic: `mutate` is called after `BEGIN IMMEDIATE`, while receipt and explicit event insertion precede the same commit (`utils/py/releases_app.py:1607-1655`); both producers call that seam (`utils/py/releases_app.py:5032-5035`, `5123-5126`).
+- [Should] I swept the GH-564 regions, connector, and the critical/new test legs, but not all 6,391 lines of `utils/py/releases_app.py` or every one of the 46 assertions. I therefore make no claim that no pre-existing defect or vacuous assertion exists outside that reviewed scope.
+
+DoD answers: (1) no — the fail-soft blocker remains; (2) yes — the idempotence decision, receipt, and event share the transaction cited above; (3) yes in the reviewed paths — scoped lookup and global terminal check are at `utils/py/releases_app.py:4912-4920`; (4) no — `SystemExit` can abort before dispatch; (5) yes — ordered mapping is at `utils/py/releases_app.py:4969-4976`; (6) partial only — reviewed 21a/21e/21f and legs 24–25 have explicit red mutations, but I did not sweep all 46; (7) no exhaustive whole-file pre-existing-defect sweep was completed.
+
+Verdict: Changes requested. Round cap reached; status escalated.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
