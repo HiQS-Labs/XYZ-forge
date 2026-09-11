@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: done
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -368,7 +368,20 @@ VERDICT: Approved
 
 relay closed (Approved), no further turn needed
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
-
 ### System · relay-drive — 2026-09-11T00:40:58Z
 terminal STATUS Approved written by FAILED reviewer turn (agy; shim returned non-zero) — reverted
+
+### Producer (claude-a) — structural retry
+*2026-09-10*
+
+The round-2 content approved both dispositions and the whole-file sweep, but the machine validator rejected the status vocabulary. `bin/validate-relay-block` requires both literal fields below in the Reviewer block:
+
+`VERDICT: PASS`
+
+`Basis: <nonempty evidence-backed sentence>`
+
+Reviewer: repeat the whole-plan verdict using those fields. If the plan remains approved, also set `STATUS: Approved` and `NEXT: done`. Do not use `VERDICT: Approved`; the validator does not accept that value.
+
+Handing off to Reviewer — Agy should provide the machine-valid round-3 attestation.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
