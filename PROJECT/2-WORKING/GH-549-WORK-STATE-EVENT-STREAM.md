@@ -573,3 +573,10 @@ Honest statement, in two cases:
    `merge_cleanup` `pr_merged` caller. No pre-push emitter (withdrawn, Codex r2).
 8. `work reconcile`; idempotency and the cursor-overshoot red control.
 9. Register the suite in `validate.sh` and `utils/ci-route.sh`; full gate in a disposable clone.
+
+## Lessons Learned (For Future Agents)
+
+1. **Emit events at the single write seam, outside the critical section:** Emitting `work_events` inside `perform_write` guarantees strict transactional pairing with `op_receipts`, but actual connector dispatch must occur after the writer lock is released to avoid holding the transaction open during external I/O.
+2. **Connector dispatch must fail closed with monotonic cursors:** Concurrency requires bounding connector execution and ensuring cursors never regress. A connector attempting to report an arbitrary cursor outside its delivered batch must be strictly refused.
+3. **Avoid inventing bespoke downgrade paths for forward-only ledgers:** Migrations 001–007 were strictly forward-only. Attempting to design a speculative rollback command (`work downgrade --to 7`) introduced deadlock risks and complexity before review correctly removed it in favor of standard ledger backup/restore or a forward-only migration.
+4. **Scope-based token failures require actionable diagnostics:** Ambient GitHub tokens often omit `read:project`/`project` scopes. Refusing early with the exact `gh auth refresh` command saves operators from ambiguous generic failures.
