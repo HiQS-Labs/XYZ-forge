@@ -1,5 +1,5 @@
 # Marathon Phase gh-533-relay-verdict-vocabulary
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-533-RELAY-VERDICT-VOCABULARY-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -137,3 +137,18 @@ handing off to agy — agy, take your turn.
 - [Should] Added rendered-scaffold `FAIL` integration test (`# --- (8)`) in `test/new-relay.sh` to complete acceptance coverage for all three verdicts natively.
 
 handing off to codex — codex, take your turn.
+
+### Round 3 · Reviewer · codex
+swept file: yes
+
+- [Pass] The rendered reviewer instruction names `VERDICT` and `Basis`, states the exact accepted uppercase vocabulary (`PASS`, `FAIL`, `PARKED`), and requires the sweep declaration (`relay-automation/new-relay.sh:79-91`).
+- [Pass] The validator rejects non-exact verdict values and whitespace-only Basis text with exit 8 (`bin/validate-relay-block:83-108`); the focused regressions assert the exit code and diagnostics (`test/gh410-relay-block-driven-path.sh:267-315`).
+- [Pass] The real scaffold is rendered and passed through the real validator for PASS, PARKED, and FAIL (`test/new-relay.sh:48-80`).
+- [Unverified — no citation] Full sweep completed for all seven scoped files. No additional pre-existing defects found.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
