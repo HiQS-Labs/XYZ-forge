@@ -4861,8 +4861,12 @@ def _latest_event(conn, gh_number, only_source=None, exclude_source=None):
     `rated` — two honest observers ping-ponging forever. Backfill events are snapshots of the
     ledger's claim, not state transitions, so they must not reset what reconcile has already
     announced; and reconcile's events must not make backfill think its projection changed."""
+    # No LIMIT (impl QA r1): the producer filter runs in Python, so a cap applied before it
+    # would hide a producer's last row behind enough newer rows from the other producer, and
+    # the "already recorded" check would answer None — a duplicate. A per-issue event list is
+    # small; correctness is not worth a cap here. The cursor iterates lazily either way.
     rows = conn.execute("""SELECT event, payload FROM work_events WHERE gh_number = ?
-                           ORDER BY id DESC LIMIT 50""", (gh_number,)).fetchall()
+                           ORDER BY id DESC""", (gh_number,))
     for event, payload in rows:
         if only_source is None and exclude_source is None:
             return event

@@ -974,8 +974,9 @@ EVD="$(sqlite3 "$FXD4/releases.db" "SELECT count(*) FROM work_events;")"
 # 21d — receipts and check.
 NBF="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events WHERE payload LIKE '%\"source\": \"backfill\"%';")"
 NRC="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM op_receipts WHERE op='work-emit';")"
-[ "$NBF" -gt 0 ] && [ "$NRC" -ge "$NBF" ] && ok "21d every backfill event ($NBF) has a work-emit receipt ($NRC)" \
-                                          || bad "21d receipts $NRC < backfill events $NBF"
+ORPH21="$(sqlite3 "$FXD/releases.db" "SELECT count(*) FROM work_events w WHERE w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
+[ "$NBF" -gt 0 ] && [ "$ORPH21" = "0" ] && ok "21d every backfill event ($NBF) has its own work-emit receipt, joined on txn_id (0 orphans)" \
+                                          || bad "21d $ORPH21 of $NBF backfill events have no receipt"
 appd check >/dev/null 2>&1 && ok "21d releases check is clean after backfill" || bad "21d check dirty after backfill"
 # 21e — two concurrent backfills, exactly one event per row.
 FXE2="$WORK/fx_backfill_conc"; rm -rf "$FXE2"; cp -R "$FXD" "$FXE2"
@@ -1245,6 +1246,80 @@ print("mapped" if column_for("completed", DEFAULT_STATUS_MAP) else "unmapped")
 PYMAP
 )"
 [ "$R23" = "unmapped" ] && ok "23 red: with the key deleted, completed is unmapped — the entry is load-bearing" || bad "23 red did not reproduce ($R23)"
+
+
+echo "24. the producer-scoped lookup has no row cap (impl QA r1), and every backfill event has ITS OWN receipt"
+FXK="$WORK/fx_cap"; rm -rf "$FXK"; mkdir -p "$FXK"
+( cd "$FXK" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXK/"
+appk() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXK" "$@"; }
+appk roadmap add --issue-num 9930 --issue-url "https://example.invalid/9930" --title "cap" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+appk work backfill >/dev/null 2>&1                                    # one backfill row for 9930
+# Bury it under 60 newer non-backfill rows for the same issue, through the real verb.
+for i in $(seq 1 60); do appk work emit --event updated --gh-number 9930 --payload-json "{\"n\":$i}" >/dev/null 2>&1; done
+DEPTH="$(sqlite3 "$FXK/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930;")"
+[ "$DEPTH" -ge 61 ] || bad "fixture guard: only $DEPTH rows for 9930 — the cap probe would be vacuous"
+python3 - "$ROOT" "$FXK/releases.db" <<'PYPROBE'
+import sys, os, sqlite3
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py"))
+import releases_app as R
+c = sqlite3.connect(sys.argv[2])
+own = R._latest_event(c, 9930, only_source="backfill")
+assert own == "parked", "backfill's own latest hidden behind newer rows: %r" % (own,)
+other = R._latest_event(c, 9930, exclude_source="backfill")
+assert other == "updated", "exclude view wrong: %r" % (other,)
+print("views-ok")
+PYPROBE
+[ $? -eq 0 ] && ok "24 backfill's own latest is still found under 60 newer rows from another producer" || bad "24 the lookup lost the producer row"
+NB0="$(sqlite3 "$FXK/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+appk work backfill >/dev/null 2>&1
+NB1="$(sqlite3 "$FXK/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+[ "$NB0" = "$NB1" ] && ok "24 ...so a backfill after 60 unrelated events still emits nothing" || bad "24 duplicate under depth ($NB0 -> $NB1)"
+# Red: reinstate a LIMIT below the depth in a copy → the own-row is hidden and backfill duplicates.
+CAPC="$WORK/app_cap"; rm -rf "$CAPC"; mkdir -p "$CAPC"; cp -R "$ROOT/utils/py/." "$CAPC/"
+python3 - "$CAPC/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='                           ORDER BY id DESC""", (gh_number,))\n    for event, payload in rows:'
+assert s.count(a)==1, "24 red: lookup anchor must be unique"
+s=s.replace(a,'                           ORDER BY id DESC LIMIT 50""", (gh_number,))\n    for event, payload in rows:',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "24 red mutation failed"
+FXK2="$WORK/fx_cap_red"; rm -rf "$FXK2"; cp -R "$FXK" "$FXK2"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$CAPC/releases_app.py" --root "$FXK2" work backfill >/dev/null 2>&1
+NB2="$(sqlite3 "$FXK2/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9930 AND payload LIKE '%backfill%';")"
+[ "$NB2" -gt "$NB0" ] && ok "24 red: with LIMIT 50 restored, the own-row is hidden and backfill DUPLICATES ($NB0 -> $NB2)" || bad "24 red did not reproduce ($NB0 -> $NB2)"
+# Per-event receipts (impl QA r1 [Should]): every NEW backfill event's txn_id must have its own
+# work-emit receipt — a join, not an aggregate count that unrelated receipts could satisfy.
+FXP="$WORK/fx_rcpt"; rm -rf "$FXP"; cp -R "$FXD" "$FXP"
+BEFORE_IDS="$(sqlite3 "$FXP/releases.db" "SELECT coalesce(max(id),0) FROM work_events;")"
+appp() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXP" "$@"; }
+appp roadmap add --issue-num 9931 --issue-url "https://example.invalid/9931" --title "rcpt" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+appp roadmap add --issue-num 9932 --issue-url "https://example.invalid/9932" --title "rcpt" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+appp work backfill >/dev/null 2>&1
+ORPHANS="$(sqlite3 "$FXP/releases.db" "SELECT count(*) FROM work_events w WHERE w.id > $BEFORE_IDS AND w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
+NEWBF="$(sqlite3 "$FXP/releases.db" "SELECT count(*) FROM work_events WHERE id > $BEFORE_IDS AND payload LIKE '%backfill%';")"
+[ "$NEWBF" -ge 2 ] || bad "fixture guard: expected >=2 new backfill events, got $NEWBF"
+[ "$ORPHANS" = "0" ] && ok "24 every one of the $NEWBF new backfill events has its OWN work-emit receipt (join on txn_id)" || bad "24 $ORPHANS backfill event(s) have no receipt of their own"
+# Red: a copy that bypasses perform_write and INSERTs the event directly → orphan detected.
+BYP="$WORK/app_bypass"; rm -rf "$BYP"; mkdir -p "$BYP"; cp -R "$ROOT/utils/py/." "$BYP/"
+python3 - "$BYP/releases_app.py" <<'PYMUT'
+import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+a='''                _emit_work_event(root, conn, event, gh, payload,
+                                 unless_latest_in=(event,), only_source="backfill")'''
+assert s.count(a)==1, "24 red(bypass): backfill emit anchor must be unique"
+s=s.replace(a,'''                conn.execute("INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event, payload, at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                             (new_gid("wev-"), _repo_id_for_event(conn), gh, "bypass-%d" % gh, event, json.dumps(payload), now_iso()))
+                conn.commit()''',1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYMUT
+[ $? -eq 0 ] || bad "24 red(bypass) mutation failed"
+FXP2="$WORK/fx_rcpt_red"; rm -rf "$FXP2"; cp -R "$FXD" "$FXP2"
+B2="$(sqlite3 "$FXP2/releases.db" "SELECT coalesce(max(id),0) FROM work_events;")"
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXP2" roadmap add --issue-num 9933 --issue-url "https://example.invalid/9933" --title "rcpt" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$BYP/releases_app.py" --root "$FXP2" work backfill >/dev/null 2>&1
+ORPH2="$(sqlite3 "$FXP2/releases.db" "SELECT count(*) FROM work_events w WHERE w.id > $B2 AND w.payload LIKE '%backfill%' AND NOT EXISTS (SELECT 1 FROM op_receipts r WHERE r.txn_id = w.txn_id AND r.op = 'work-emit');")"
+[ "$ORPH2" -gt 0 ] && ok "24 red: a copy that bypasses perform_write leaves $ORPH2 receipt-less event(s) — the join catches it" || bad "24 red(bypass) did not reproduce"
 
 echo
 echo "GH-549 work-state event stream: $PASS passed, $FAIL failed"
