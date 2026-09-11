@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -119,5 +119,21 @@ Basis: producer turn — three blockers implemented in the plan at 1870a355; han
 round 2.
 
 Handing off to Reviewer (codex) — take round 2 against the revised plan.
+
+### Reviewer — codex · r2
+
+swept file: yes
+
+**Verdict: Changes requested** — r1's event semantics and transactional idempotence are now sound, but the review-ready scan still has an uncontained write failure and the table does not yet give every check a mutation-backed red control.
+
+- [Blocker] **Fail-soft boundary is incomplete:** the plan catches only PR-list failures, then calls `_emit_work_event` per issue (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:121-128`). That helper reaches `perform_write`, whose `mutate` exception is rolled back and re-raised (`utils/py/releases_app.py:1613-1628`), so one locked/invalid/write-failed observation can still exit `work reconcile` before dispatch — contrary to “Never fails the verb.” Catch and report each emission failure (continue the scan and dispatch), while retaining `_AlreadyRecorded` as a quiet skip; add a copied-app control that forces one emission failure and proves reconcile exits 0 and replay still runs.
+
+- [Blocker] **Red-control contract:** checks 22a, 22b, and 23 name an alternate fixture input/probe, not the promised source mutation and observed red result (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:148-153`). Add explicit copied-source mutations: remove/bypass the non-draft and linked-issue filters and observe their negative assertions fail; remove `completed` from the copied status map and observe the mapping assertion fail. This is required by the Definition of Done’s per-check red control, not additional feature scope.
+
+- [Nit] The check table contains one `22c` row at `.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:150`; retain one canonical entry so implementation evidence has an unambiguous checklist.
+
+- [Pass] **Semantic choices:** `completed` is the honest distinct Completed-snapshot event, and the exact-latest-event transactional guard correctly re-emits a row after a parked → in_flight → parked cycle (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:89-115`). Keeping the scan in reconcile before dispatch preserves the requested outside-connector-lock placement (`.relay-artifacts/GH-564-WORK-BACKFILL-REVIEW-READY.md:119-128`; `utils/py/work_connectors/__init__.py:376-397`). No additional pre-existing defect was found in the swept artifact.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
