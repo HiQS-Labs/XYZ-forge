@@ -88,21 +88,33 @@ is decided below from the live distribution, not guessed.
 
 | ledger row | event | why |
 |---|---|---|
-| section `Completed` (any marker) | `pr_merged` | closeout writes the section; 40 rows carry a stale 🆕 from the #424 marker bug |
+| section `Completed` (any marker) | **`completed`** — a new event name, *not* `pr_merged` | closeout writes the section; 40 rows carry a stale 🆕 from the #424 marker bug. **Codex r1:** `pr_merged` asserts a merge the snapshot did not witness — the same argument that removed marker→merged from the live stream in #549. `completed` says exactly what the ledger claims and no more. `DEFAULT_STATUS_MAP` gains `"completed": "Done"`, so it lands in the same column by default; a user who wants them distinguishable maps it elsewhere. |
 | marker 🚧, or section `In progress` | `in_flight` | either signal is the work-start claim |
 | marker 🆕 / empty, rated | `rated` | |
 | marker 🆕 / empty, unrated | `parked` | |
 | section `Deferred …` | *(none)* | a deferred item has no column; skipped, counted in the summary |
 
-Payload on every backfill event: `{"source": "backfill", "section": …, "marker": …}` so a consumer
-can distinguish a snapshot of the ledger's claim from a witnessed event.
+Payload on every backfill event: `{"source": "backfill", "section": …, "marker": …}`. Provenance
+only — the event *name* is what carries the claim, which is why Completed gets its own.
 
-### Idempotence — compare against the row's LATEST event, not "any event"
+### Idempotence — decided INSIDE the writer transaction, not before it (Codex r1)
 
-`work backfill` skips a row when its most recent `work_events` row already has the intended event
-name. So a second run emits zero; a row whose state changed since the last backfill emits again.
+The check is "the row's latest `work_events` event already equals the intended one" — and it runs
+**inside `mutate`**, which `perform_write` executes after taking `WriterLock` and after
+`BEGIN IMMEDIATE`. A read before `perform_write` would let two concurrent backfills (or a backfill
+and a reconcile) both see the same stale latest event, serialize their writes, and each emit a
+duplicate. Inside the transaction the read and the decision are atomic with the write.
+
+Mechanism, reusing what exists rather than adding to `perform_write`: when the latest event already
+matches, `mutate` raises `_AlreadyRecorded`. `perform_write`'s existing abort path
+(`releases_app.py:1613-1625`) rolls back, clears the journal, and re-raises **before** any receipt
+or generation bump — so a skip leaves no trace on the chain. The caller catches it and counts a
+skip. One helper carries this: `_emit_work_event(root, conn, event, gh, payload, unless_latest_in=())`;
+`cmd_work_emit` becomes its first caller, `backfill` and the review-ready scan its second and third.
+
+A second run therefore emits zero. A row whose state changed since the last backfill emits again.
 `--dry-run` prints the full table (gh, section, marker, → event, or `skip: already <event>` /
-`skip: deferred`) and returns before touching `perform_write`.
+`skip: deferred`) and returns before touching `perform_write` at all.
 
 ### `review_ready` in `reconcile` — before dispatch, outside the lock, fail-soft
 
@@ -110,9 +122,9 @@ name. So a second run emits zero; a row whose state changed since the last backf
 2. `gh pr list --state open --json number,isDraft,title,body --limit 200` via
    `XYZ_BOARD_SYNC_GH_BIN` (default `gh`). Non-zero exit, missing binary, or bad JSON → print the
    reason once, continue to replay. **Never fails the verb.**
-3. For each non-draft PR, `linked_issues(pr)`; for each issue whose latest event is not already
-   `review_ready` or `pr_merged`, emit `review_ready` with `{"pr": <num>}` — through the same
-   `perform_write(..., "work-emit", ...)` seam `cmd_work_emit` uses, in-process.
+3. For each non-draft PR, `linked_issues(pr)`; for each issue, `_emit_work_event(..., "review_ready",
+   n, {"pr": num}, unless_latest_in=("review_ready", "pr_merged"))` — the same transactional guard
+   as backfill, so a concurrent reconcile cannot double-emit either.
 4. Then the existing dispatch.
 
 ### Files
@@ -120,8 +132,25 @@ name. So a second run emits zero; a row whose state changed since the last backf
 | File | Change |
 |---|---|
 | `utils/py/releases_app.py` | `_emit_work_event(root, conn, event, gh, payload)` (the shared in-process body `cmd_work_emit` becomes a caller of); `_latest_event(conn, gh)`; `_backfill_event_for(row)`; `cmd_work_backfill`; the scan step in `cmd_work_reconcile`; `work backfill` subparser |
-| `test/gh549-work-events.sh` | leg 21 (backfill: dry-run zero writes, mapping table incl. Completed/🆕, second run zero, receipts, check clean) · leg 22 (review-ready: wrapper `gh`, open non-draft → column; draft → nothing; closes-nothing → nothing; second run → nothing) · red controls: strip the latest-event guard → duplicate; wrapper `gh` exits 1 → replay proceeds rc 0 |
+| `utils/py/work_connectors/github_board.py` | `DEFAULT_STATUS_MAP["completed"] = "Done"` |
+| `test/gh549-work-events.sh` | legs 21–23, each check with its own red control — the table below |
 | `PROJECT/2-WORKING/GH-564-…` | this doc |
+
+### Every check and its red control (Codex r1 — none may be vacuous)
+
+| # | Check | Red control (mutation → observed failure) |
+|---|---|---|
+| 21a | `backfill --dry-run` writes zero rows, zero receipts | mutate the dry-run early return away in an imported copy → rows appear |
+| 21b | mapping: Completed/🆕 → `completed`; 🚧 → `in_flight`; 🆕 rated → `rated`; 🆕 unrated → `parked`; Deferred → skip | fixture rows constructed for each cell; swap section/marker precedence in the copy → the Completed/🆕 row emits `parked` |
+| 21c | second `backfill` emits zero | strip `unless_latest_in` in the copy → second run duplicates every row |
+| 21d | every event has a `work-emit` receipt; `check` clean | count receipts == count events added; `check` rc 0. Red: the existing receipt-chain control (leg 7) already proves `check` detects a broken chain — cited, not duplicated |
+| 21e | **concurrency:** two `backfill` processes fired together with a barrier stub produce exactly N events for N rows, not 2N | move the latest-event read *before* `perform_write` in the copy → 2N |
+| 22a | open non-draft PR closing #N → card N reaches the `review_ready` column (mock, mapped to "Todo" since the mock has no "In review") | wrapper `gh` returns the PR as `isDraft: true` → no event, card unmoved |
+| 22b | draft PR → nothing; PR closing nothing → nothing | inverse of 22a: flip `isDraft` false → event appears; add `Closes #N` to the body → event appears |
+| 22c | second `reconcile` → zero new `review_ready` | strip `unless_latest_in` → duplicate |
+| 22d | wrapper `gh` exits 1 → `reconcile` prints the reason, still replays, exit 0 | remove the try/except in the copy → rc ≠ 0 |
+| 22e | `XYZ_WORK_CONNECTORS=0` → no scan, no `gh` call (sentinel) | unset → sentinel appears |
+| 23 | `completed` is in `DEFAULT_STATUS_MAP` and maps to Done; unmapped by a user's `""` override | `column_for` probe as in leg 17 |
 
 ### Non-goals (from the issue)
 Two-way sync; inferring review-ready from anything but an open PR; the pre-push hook; any new
