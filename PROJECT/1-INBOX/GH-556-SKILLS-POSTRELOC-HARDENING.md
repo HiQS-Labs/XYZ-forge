@@ -11,6 +11,7 @@ goal: >
   Carry the three GH-536-learned behavioral fixes as trackable work: a source re-anchor
   path for unchanged-byte updates, a shipped machine-state ignore list for git-backed
   collection roots, and a decision on mode-stable digests.
+roadmap_exempt: true
 ---
 
 # GH-556 — post-relocation hardening
