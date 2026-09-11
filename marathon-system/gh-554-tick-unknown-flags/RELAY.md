@@ -1,5 +1,5 @@
 # Marathon Phase gh-554-tick-unknown-flags
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-554-TICK-UNKNOWN-FLAGS-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -106,3 +106,17 @@ state. Added `test/gh554-tick-unknown-flags.sh`: it covers the original `release
 unknown-flag reproductions, every other mutating verb, read-only verbs, an invalid `init` with no state
 directory, and valid `--flag=value` plus `TICK_AGENT` fallback behavior. No tests were run locally, as
 required by this isolated relay turn.
+
+### Round 1 · Reviewer · agy
+
+**swept file: yes**
+
+I reviewed `bin/tick` and `test/gh554-tick-unknown-flags.sh` in their entirety.
+- The newly added `FLAGS_BY_VERB` and `validateFlags` correctly intercept unknown flags and exit 2 with usage before touching any state or files.
+- The flag validation works across all mutating verbs and read-only verbs as specified.
+- The tests are comprehensive and correctly cover both the specific regression (`--status done`) and the general case for all verbs.
+- No pre-existing defects were identified in `bin/tick` during the sweep. 
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
