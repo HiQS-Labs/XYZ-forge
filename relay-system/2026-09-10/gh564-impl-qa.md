@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -99,5 +99,21 @@ Basis: producer turn — blocker and both Shoulds implemented at ac0742f0, suite
 the sweep, and leg 24.
 
 Handing off to Reviewer (codex) — round 2.
+
+### Reviewer · codex · round 2
+
+swept file: no
+
+- [Blocker] `_latest_event` assumes every syntactically valid payload decodes to an object: `(json.loads(payload) if payload else {}).get("source")` (`utils/py/releases_app.py:4873-4875`). But `work emit --payload-json` accepts any JSON value (`utils/py/releases_app.py:4940-4944`), so a perfectly valid prior `[]`, `null`, or string payload for an issue raises `AttributeError` when the new `only_source`/`exclude_source` views inspect it. `cmd_work_backfill` makes that filtered lookup before its per-row exception boundary (`utils/py/releases_app.py:5012-5014`), making the entire backfill fail. Decode into a value and treat non-dicts as no source; add a focused control with a newer non-object payload above a backfill row, proving both views remain correct and backfill skips rather than exits.
+- [Pass] The prior bounded-lookback defect is fixed: the filtered lookup now has no SQL cap (`utils/py/releases_app.py:4864-4882`), while leg 24 buries the producer row below 60 newer rows and restores `LIMIT 50` as a red control (`test/gh549-work-events.sh:1251-1291`).
+- [Pass] The receipt assertion is now per event, joined by `txn_id`, and its direct-insert red control produces orphaned events (`test/gh549-work-events.sh:1292-1322`).
+- [Pass] The acceptance path otherwise remains one atomic writer path: the decision runs in `mutate` after `BEGIN IMMEDIATE` (`utils/py/releases_app.py:1613-1628`, `4905-4919`), then receipt and work event commit together (`utils/py/releases_app.py:1642-1655`); backfill and review-ready use that helper (`utils/py/releases_app.py:5027-5033`, `utils/py/releases_app.py:5109-5122`), and completed maps to Done (`utils/py/work_connectors/github_board.py:61-78`).
+- [Should] I reviewed the complete small connector and GH-564/test regions, including the new controls, but did not complete an exhaustive pre-existing-defect sweep of all 6,391 lines of `utils/py/releases_app.py`; therefore I make no claim that none exists outside the examined region.
+
+DoD answers: (1) no — the payload-shape blocker remains; (2) yes for normal object payloads; (3) no — malformed non-object rows break filtered producer views; (4) yes, `--repo` and fail-soft scan are present at `utils/py/releases_app.py:5046-5124`; (5) yes at `utils/py/releases_app.py:4953-4972`; (6) 21a/21e/21f and the added 24 controls are non-vacuous by their explicit red mutations at `test/gh549-work-events.sh:981-1289`; (7) no exhaustive whole-file pre-existing sweep was completed.
+
+Verdict: Changes requested.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
