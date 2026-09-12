@@ -1204,7 +1204,7 @@ def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
     if dry_run or journal is None:
         return
     for name in (
-        "releases.db", "releases.sql", "RELEASES.generated.md",
+        "releases.db", "releases.sql",
         "RELEASES-PREVIEW.html",
         "LEADERBOARD.html", "LEADERBOARD.md",
         os.path.join(".tick", "marathon-plan.fingerprint"),

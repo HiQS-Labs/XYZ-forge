@@ -127,7 +127,7 @@ the answer will inform a landing.
   - Wait for hosted `wave-reconcile.yml` run to complete on `development` (`gh run list --workflow wave-reconcile.yml`).
   - Fast-forward primary onto `origin/development`.
   - If hosted run fails or for offline/local reconciliation: `python3 utils/py/wave_reconcile.py --pr <PR_NUM>` (use `--force-local-reconcile` only if an active run was manually killed).
-  - `python3 utils/py/releases_app.py gen && python3 utils/py/releases_app.py check`
+  - `python3 utils/py/releases_app.py check`
   - Verify with `bash utils/pdda/pdda.sh issue-doc-sync`.
 
 ### Phase 6: Safe Teardown

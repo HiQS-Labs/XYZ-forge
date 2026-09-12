@@ -285,42 +285,79 @@ check_completed_status() {
 check_release_milestone() {
   pdda_reset_counts
   local CHECK_NAME="pdda-local-check-release-milestone" rc=0
-  local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
   local release status target_date codename description gh_url line_no
   local front_door shakedown license_file iterations milestone status_lc rows
+  local db="$PDDA_REPO_ROOT/releases.db"
 
-  if [ ! -f "$RELEASES_FILE_EFF" ]; then
-    pdda_record_finding info "$CHECK_NAME" "$RELEASES_FILE_EFF" 0 \
-      "RELEASES.md not found — nothing to check" "skip"
-    pdda_emit_summary "$CHECK_NAME" 0
-    return "$(pdda_gated_exit 0)"
-  fi
-
-  # A ledger with no blocks is a VALID state (sparse is fine, and RELEASES.md is optional per
-  # GH-381) — report exactly as clean as an absent file, and record no finding of our own.
-  rows="$(pdda_releases_list "$RELEASES_FILE_EFF")"
-  if [ -z "$rows" ]; then
-    pdda_emit_summary "$CHECK_NAME" 0
-    return "$(pdda_gated_exit 0)"
-  fi
-
-  while IFS=$'\037' read -r release status target_date codename description gh_url \
-    front_door shakedown license_file iterations milestone line_no; do
-    [ -n "$(pdda_trim "$release")" ] || continue
-    status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
-
-    # Scoped to blocks carrying a Target Date so the shipped example block (and any placeholder)
-    # stays quiet: a dated entry is a real planned release, which is exactly when the linkage is
-    # needed. Shipped releases are exempt — backfilling a milestone onto history buys nothing.
-    if [ -n "$(pdda_trim "$target_date")" ] && [ "$status_lc" != "shipped" ] \
-       && [ -z "$(pdda_trim "$milestone")" ]; then
-      pdda_record_finding warn "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
-        "release '$release' has a Target Date but no 'Milestone:' — without it the release cannot resolve to a set of issues (gh issue list --milestone ...), so it cannot drive marathon selection" \
-        "add-release-milestone"
+  if [ -n "${PDDA_RELEASES_FILE:-}" ]; then
+    if [ ! -f "$PDDA_RELEASES_FILE" ]; then
+      pdda_record_finding error "$CHECK_NAME" "$PDDA_RELEASES_FILE" 0 \
+        "specified PDDA_RELEASES_FILE does not exist: $PDDA_RELEASES_FILE" "missing-releases-file"
+      pdda_emit_summary "$CHECK_NAME" 1
+      return "$(pdda_gated_exit 1)"
     fi
-  done <<EOF
+    # Legacy fallback when an explicit PDDA_RELEASES_FILE is provided (e.g. test fixture or external repo)
+    local RELEASES_FILE_EFF="$PDDA_RELEASES_FILE"
+    rows="$(pdda_releases_list "$RELEASES_FILE_EFF")"
+    if [ -z "$rows" ]; then
+      pdda_emit_summary "$CHECK_NAME" 0
+      return "$(pdda_gated_exit 0)"
+    fi
+
+    while IFS=$'\037' read -r release status target_date codename description gh_url \
+      front_door shakedown license_file iterations milestone line_no; do
+      [ -n "$(pdda_trim "$release")" ] || continue
+      status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
+
+      if [ -n "$(pdda_trim "$target_date")" ] && [ "$status_lc" != "shipped" ] \
+         && [ -z "$(pdda_trim "$milestone")" ]; then
+        pdda_record_finding warn "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
+          "release '$release' has a Target Date but no 'Milestone:' — without it the release cannot resolve to a set of issues (gh issue list --milestone ...), so it cannot drive marathon selection" \
+          "add-release-milestone"
+      fi
+    done <<EOF
 $rows
 EOF
+  elif [ -f "$db" ]; then
+    local sql_out sql_err
+    sql_err="$(mktemp 2>/dev/null || true)"
+    if [ -z "$sql_err" ] || [ ! -f "$sql_err" ]; then
+      pdda_record_finding error "$CHECK_NAME" "$db" 0 \
+        "failed to create secure temporary file for sqlite error log" "mktemp-failed"
+      pdda_emit_summary "$CHECK_NAME" 1
+      return "$(pdda_gated_exit 1)"
+    fi
+    sql_out="$(sqlite3 "$db" "SELECT version, status, target_date, milestone FROM releases;" 2>"$sql_err")"
+    local sql_rc=$?
+    if [ "$sql_rc" -ne 0 ]; then
+      local err_msg
+      err_msg="$(head -n 1 "$sql_err" 2>/dev/null || echo "query failed")"
+      rm -f "$sql_err"
+      pdda_record_finding error "$CHECK_NAME" "$db" 0 \
+        "sqlite3 query failed ($err_msg) — release milestone check cannot run" "db-query-failed"
+      rc=1
+    else
+      rm -f "$sql_err"
+      while IFS='|' read -r release status target_date milestone; do
+        [ -n "$release" ] || continue
+        status_lc="$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')"
+        if [ -n "$target_date" ] && [ "$status_lc" != "shipped" ] && [ -z "$milestone" ]; then
+          pdda_record_finding warn "$CHECK_NAME" "$db" 0 \
+            "release '$release' has a Target Date but no 'Milestone:' in releases.db — without it the release cannot resolve to a set of issues (gh issue list --milestone ...), so it cannot drive marathon selection" \
+            "add-release-milestone"
+        fi
+      done <<EOF
+$sql_out
+EOF
+    fi
+  elif [ -f "$PDDA_REPO_ROOT/releases.sql" ]; then
+    pdda_record_finding error "$CHECK_NAME" "$db" 0 \
+      "releases.db not found (releases.sql present) — run releases check --rebuild" "missing-db"
+    rc=1
+  else
+    pdda_record_finding info "$CHECK_NAME" "$db" 0 \
+      "no release ledger found (releases.db absent) — skipping release milestone check" "skip"
+  fi
 
   pdda_emit_summary "$CHECK_NAME" "$rc"
   return "$(pdda_gated_exit "$rc")"

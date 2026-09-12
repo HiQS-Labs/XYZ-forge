@@ -191,8 +191,6 @@ printf '%s\n' '-- Scenario 4: crash injection and journal recovery'
 for BOUNDARY in pre-commit post-commit post-stage mid-rename post-rename; do
   R4="$(repo "s4-$BOUNDARY")"
   ra "$R4" init --slug "s4-$BOUNDARY" >/dev/null
-  # mid-rename is between the dump and generated-view renames, so make that second output real.
-  ra "$R4" gen >/dev/null
   CRASH_OUT="$(RELEASES_APP_CRASH_AT="$BOUNDARY" ra "$R4" add --version 4.0.0 --status draft --description crash --tracking-issue "https://github.com/GH57/ledger/issues/401" 2>&1)"; RC=$?
   ok "[$BOUNDARY] injected writer exits 70" "$( [ "$RC" -eq 70 ]; echo $? )"
   BLOCK_OUT="$(ra "$R4" add --version 4.1.0 --status draft --description blocked --tracking-issue "https://github.com/GH57/ledger/issues/402" 2>&1)"; RC=$?
@@ -243,25 +241,14 @@ TORN_REPO_LINE="$(printf '%s\n' "$REPO_LINE" | sed "s/'repo-[^']*'/'repo-01ARZ3N
 printf '%s\n' "$TORN_REPO_LINE" >> "$R6/releases.sql"
 refused_rebuild "$R6" dump-load 'torn dump with duplicate repo natural key'
 
-# ── Scenario 7: human Markdown is read-only and drift is reported beside the generated view ────
-printf '%s\n' '-- Scenario 7: generated Markdown drift report'
+# ── Scenario 7: releases gen is retired in GH-568 ─────────────────────────────
+printf '%s\n' '-- Scenario 7: releases gen is retired (GH-568)'
 R7="$(repo s7)"
 ra "$R7" init --slug s7 >/dev/null
 add_release "$R7" 7.0.0 701 'generated view seed.'
-printf '%s\n' \
-  'Release: 7.0.0' \
-  'Status: Draft' \
-  'Description: generated view seed.' \
-  'Tracking Issue: https://github.com/GH57/ledger/issues/701' \
-  '' \
-  'Release: 7.1.0' \
-  'Status: Draft' \
-  'Description: hand-edited Markdown only.' \
-  'Tracking Issue: https://github.com/GH57/ledger/issues/702' > "$R7/RELEASES.md"
 ra "$R7" gen >"$WORK/s7.gen.out" 2>&1; RC=$?
-ok 'gen produces the side-by-side generated Markdown and drift report' "$( [ "$RC" -eq 0 ] && [ -f "$R7/RELEASES.generated.md" ] && [ -f "$R7/RELEASES.generated.md.drift" ]; echo $? )"
-DRIFT="$(cat "$R7/RELEASES.generated.md.drift")"
-ok 'modified RELEASES.md appears in RELEASES.generated.md.drift' "$( has "$DRIFT" '[hand-edit] blocks in RELEASES.md with no DB counterpart: 7.1.0'; echo $? )"
+ok 'gen refuses as retired' "$( [ "$RC" -eq 3 ] && has "$(cat "$WORK/s7.gen.out")" 'rule=retired'; echo $? )"
+ok 'no generated view or drift report is produced' "$( [ ! -e "$R7/RELEASES.generated.md" ] && [ ! -e "$R7/RELEASES.generated.md.drift" ]; echo $? )"
 
 printf '\n== gh57-releases-fuzz: %d passed, %d failed ==\n' "$pass" "$fail"
 exit "$fail"

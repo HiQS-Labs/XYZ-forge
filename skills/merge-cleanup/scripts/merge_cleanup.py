@@ -252,7 +252,7 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
 
 
 def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True) -> bool:
-    """Executes wave_reconcile.py, RELEASES DB generation/check, and pdda issue-doc-sync."""
+    """Executes wave_reconcile.py, RELEASES DB check, and pdda issue-doc-sync."""
     if dry_run:
         log(f"[DRY RUN] Would run wave_reconcile.py --pr {pr_num} and RELEASES DB sync")
         return True
@@ -274,13 +274,9 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True)
             log_err(f"wave_reconcile FAILED for PR #{pr_num} (exit {r_res.returncode}): {(r_res.stderr.strip() or r_res.stdout.strip())[-600:]}")
             ok = False
 
-    # 2. releases_app.py gen & check
+    # 2. releases_app.py check
     releases_app = repo_path / "utils" / "py" / "releases_app.py"
     if releases_app.exists():
-        g_res = subprocess.run([sys.executable, str(releases_app), "gen"], cwd=str(repo_path), capture_output=True, text=True, check=False)
-        if g_res.returncode != 0:
-            log_err(f"RELEASES gen FAILED (exit {g_res.returncode}): {(g_res.stderr.strip() or g_res.stdout.strip())[-400:]}")
-            ok = False
         c_res = subprocess.run([sys.executable, str(releases_app), "check"], cwd=str(repo_path), capture_output=True, text=True, check=False)
         if c_res.returncode == 0:
             log("✅ RELEASES DB check passed")

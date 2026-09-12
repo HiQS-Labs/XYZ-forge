@@ -66,7 +66,6 @@ DRIVER_LEDGER = ("releases.db", "releases.sql")
 # releases app's opt-in signal, so only files already adopted by this checkout
 # are accepted as driver output. The dashboard is rendered explicitly below.
 RELEASES_PROJECTIONS = (
-    "RELEASES.generated.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",
@@ -693,7 +692,6 @@ CLOSEOUT_ALLOWLIST_FILES = {
     "releases.db",
     "releases.sql",
     "ROADMAP-DASHBOARD.md",
-    "RELEASES.generated.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",

@@ -178,7 +178,7 @@ so each gets its own lock, `.tick/`, and worktrees:
 Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
 `.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,
 `.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312).
-Note that RELEASES ledger runtime state (`releases.db`, `releases.sql`, `RELEASES.md`,
+Note that RELEASES ledger runtime state (`releases.db`, `releases.sql`,
 `RELEASES-PREVIEW.html`) lives at the target repository root, outside `.xyz/`, while `.xyz/`-resident
 runtime state is preserved across swaps. This matters because `.xyz/` is gitignored: state lost there
 is unrecoverable, with no reflog or stash behind it. A new runtime artifact under `.xyz/` must be added

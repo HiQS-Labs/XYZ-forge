@@ -4,7 +4,7 @@
 #
 # RE-POINTED 2026-08-15. This file previously measured Meter's metering manifest (#378/#379/#380/
 # #382/#491/#551). That manifest moved to Sundown when the operator re-scoped Meter to publication;
-# see RELEASES.md's Meter block. The command and the two-half shape are deliberately unchanged —
+# see releases.db's Meter release record. The command and the two-half shape are deliberately unchanged —
 # that shape is why Litmus and Nightwatch could tell a finished entry from a claimed one — but what
 # the halves measure is now the launch.
 #
@@ -90,7 +90,7 @@ info() { printf '  INFO: %s\n' "$*"; INFO=$((INFO+1)); }
 
 # ── The FROZEN manifest ───────────────────────────────────────────────────────────────────────────
 # RE-SCOPED TO TWO on 2026-08-15 by explicit operator decision; scope is CLOSED to further admission.
-# Adding one here is a RE-SCOPE and must be matched in RELEASES.md's `Manifest-Members:` field — the
+# Adding one here is a RE-SCOPE and must be matched in releases.db's `Manifest-Members:` field — the
 # cross-check below compares the two in BOTH directions.
 #
 # Format: <issue>|<gate test file, or '-' if satisfied by another gate>|<note>
@@ -440,13 +440,16 @@ run_stranger_path() {  # <artifact root> — sets STR_PASS / STR_FAIL / STR_MISS
 # Reads a single machine-readable field, NOT the prose Manifest: paragraph. The paragraph records the
 # release's re-scope history and therefore names retired members; matching against it is how the
 # previous version of this check became unable to fail.
-manifest_matches_releases_md() {
-  local rel="${1:-$ROOT/RELEASES.md}" line entry n missing="" extra="" declared
-  [ -f "$rel" ] || { info "RELEASES.md absent — manifest cross-check skipped"; return 0; }
+manifest_matches_releases_db() {
+  local db="${1:-$ROOT/releases.db}" line entry n missing="" extra="" declared
+  if [ ! -f "$db" ]; then
+    bad "releases.db absent ($db) — manifest cross-check failed"
+    return 1
+  fi
 
-  line="$(/usr/bin/awk '/^Codename: Meter/,/^$/' "$rel" | /usr/bin/grep '^Manifest-Members:')"
+  line="$(sqlite3 "$db" "SELECT l.content FROM legacy_lines l JOIN releases r ON l.release_id = r.id WHERE (r.version = '0.6.0' OR r.codename = 'Meter' OR r.codename = 'Front-Door') AND l.content LIKE 'Manifest-Members:%' LIMIT 1;" 2>/dev/null)"
   if [ -z "$line" ]; then
-    bad "RELEASES.md's Meter block has no machine-readable 'Manifest-Members:' field — the frozen boundary is not recorded in a form this gate can check (the prose Manifest: paragraph names retired members and cannot be used)"
+    bad "releases.db's Meter/0.6.0 block has no machine-readable 'Manifest-Members:' field — the frozen boundary is not recorded in a form this gate can check (the prose Manifest: paragraph names retired members and cannot be used)"
     return 1
   fi
   declared="${line#Manifest-Members:}"
@@ -458,18 +461,18 @@ manifest_matches_releases_md() {
   done
   # direction 2 — everything the ledger declares must be named in this file. This is the direction
   # the previous check lacked entirely, and it is the one that catches a re-scope landing in
-  # RELEASES.md while this file still measures the old manifest.
+  # releases.db while this file still measures the old manifest.
   for n in $declared; do
     case "$n" in ''|*[!0-9]*) continue ;; esac
     printf '%s\n' "${MANIFEST[@]}" | /usr/bin/grep -q "^$n|" || extra="$extra #$n"
   done
 
   if [ -n "$missing" ] || [ -n "$extra" ]; then
-    [ -n "$missing" ] && bad "RELEASES.md's Manifest-Members does not declare:$missing — this file names members the ledger does not"
+    [ -n "$missing" ] && bad "releases.db's Manifest-Members does not declare:$missing — this file names members the ledger does not"
     [ -n "$extra" ]   && bad "this file does not name:$extra — the ledger declares members this gate does not measure"
     return 1
   fi
-  ok "the frozen manifest here matches RELEASES.md's Manifest-Members field in both directions ($declared)"
+  ok "the frozen manifest here matches releases.db's Manifest-Members field in both directions ($declared)"
 }
 
 # ── Mutation mode: the negative control for this audit ────────────────────────────────────────────
@@ -592,18 +595,22 @@ if [ "$MODE" = mutate ]; then
 
   # The ledger check, mutated in BOTH directions — this is the defect that made the previous
   # version of this file unable to fail, so the control must observe both halves of the fix.
+  DB_FIX="$TMP/releases.db"
+  sqlite3 "$DB_FIX" "CREATE TABLE releases(id INTEGER PRIMARY KEY, version TEXT, codename TEXT);
+                     CREATE TABLE legacy_lines(id INTEGER PRIMARY KEY, release_id INTEGER, content TEXT);
+                     INSERT INTO releases(id, version, codename) VALUES(1, '0.6.0', 'Front-Door');"
+
   echo "-- mutation 6: ledger declares a RETIRED member (direction 2 — ledger has one this file lacks)"
-  REL_FIX="$TMP/RELEASES.md"
-  { echo "Codename: Meter"; echo "Manifest-Members: 555 563 378"; echo; } > "$REL_FIX"
-  if manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest-Members: 555 563 378');"
+  if ( manifest_matches_releases_db "$DB_FIX" ) >/dev/null 2>&1; then
     mut_bad "a ledger declaring retired #378 was ACCEPTED — the cross-check is still one-directional"
   else
     mut_ok "a ledger declaring retired #378 is DETECTED (direction 2 works)"
   fi
 
   echo "-- mutation 7: ledger drops a current member (direction 1 — this file has one the ledger lacks)"
-  { echo "Codename: Meter"; echo "Manifest-Members: 555"; echo; } > "$REL_FIX"
-  if manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest-Members: 555');"
+  if ( manifest_matches_releases_db "$DB_FIX" ) >/dev/null 2>&1; then
     mut_bad "a ledger missing #563 was ACCEPTED — direction 1 does not work"
   else
     mut_ok "a ledger missing #563 is DETECTED (direction 1 works)"
@@ -611,17 +618,24 @@ if [ "$MODE" = mutate ]; then
 
   echo "-- mutation 8: the OLD prose-matching failure must not be reproducible"
   # A history paragraph naming every number ever admitted must NOT satisfy the check.
-  { echo "Codename: Meter"; echo "Manifest: FROZEN — #378, #379, #380, #382, #491, #551, #555, #563 ..."; echo; } > "$REL_FIX"
-  if manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest: FROZEN — #378, #379, #380, #382, #491, #551, #555, #563 ...');"
+  if ( manifest_matches_releases_db "$DB_FIX" ) >/dev/null 2>&1; then
     mut_bad "a prose Manifest: paragraph naming every number was ACCEPTED — the original defect is back"
   else
     mut_ok "a prose Manifest: paragraph cannot satisfy the cross-check (the original defect stays fixed)"
   fi
 
+  echo "-- mutation 9: missing releases.db must not silently pass"
+  if ( manifest_matches_releases_db "$TMP/absent.db" ) >/dev/null 2>&1; then
+    mut_bad "missing releases.db was ACCEPTED — missing ledger must fail, not silently pass"
+  else
+    mut_ok "missing releases.db is DETECTED (fail-closed)"
+  fi
+
   echo "-- restore: the unmutated fixture must be green again in this same run"
   audit_artifact "$FIX" "$REF" >/dev/null 2>&1
-  { echo "Codename: Meter"; echo "Manifest-Members: 555 563"; echo; } > "$REL_FIX"
-  if [ "$ART_BAD" -eq 0 ] && manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest-Members: 555 563');"
+  if [ "$ART_BAD" -eq 0 ] && manifest_matches_releases_db "$DB_FIX" >/dev/null 2>&1; then
     mut_ok "restoring the inputs restores the verdict — the detector is not simply always-red"
   else
     mut_bad "restored inputs do not reproduce the baseline verdict (failures: $ART_BAD [$ART_FAILED_IDS], expected 0)"
@@ -637,7 +651,7 @@ fi
 echo "== meter-release (${MODE}) — release 0.6.0 public-launch goalpost =="
 echo
 echo "-- the frozen manifest"
-manifest_matches_releases_md
+manifest_matches_releases_db
 audit_manifest
 
 if [ "$MODE" = gate ]; then

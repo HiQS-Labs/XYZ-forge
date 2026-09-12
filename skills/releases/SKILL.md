@@ -1,11 +1,11 @@
 ---
 name: releases
-description: Read, synthesize, diagnose, clean, author, and publish the optional RELEASES.md planning ledger through one routed workflow. Use for /releases; release status or health checks; stale-plan review against merged PRs, commits, and CHANGELOG entries; disciplined release creation or updates; ledger cleanup; historical anchors or backfill; publishing a planned GitHub Release; or deciding whether Radar or Finish Line is the better follow-up. Default invocation is read-only and every write or publication requires a preview and confirmation.
+description: Read, synthesize, diagnose, clean, author, and publish the releases.db planning ledger (or legacy RELEASES.md where retained) through one routed workflow. Use for /releases; release status or health checks; stale-plan review against merged PRs, commits, and CHANGELOG entries; disciplined release creation or updates; ledger cleanup; historical anchors or backfill; publishing a planned GitHub Release; or deciding whether Radar or Finish Line is the better follow-up. Default invocation is read-only and every write or publication requires a preview and confirmation.
 ---
 
 # /releases — one release-planning router
 
-Treat `RELEASES.md` as an optional forward-looking planning ledger, never as a second
+Treat the release ledger as an optional forward-looking planning aid, never as a second
 `CHANGELOG.md`. Start every invocation by reading and synthesizing the ledger. Route into a mutating
 subroutine only when the operator explicitly chooses or requests one.
 
@@ -34,14 +34,15 @@ edited that ledger, finish with `releases roadmap sync` (a no-change sync is a f
 
 1. Resolve the repository root. Require `utils/pdda/pdda.sh`; stop if PDDA is absent because there
    is no fallback release-ledger format.
-2. **Detect the ledger backend (GH-32).** If `releases.db` exists at the repository root, this repo
-   is **app-managed**: the SQLite database is the source of truth, `RELEASES.md` is on its way to
-   becoming generated output, and **every mutation this skill performs MUST go through the
-   `releases` CLI (`utils/py/releases_app.py`) — never a direct edit of `RELEASES.md`.** A direct
-   edit in an app-managed repo is overwritten by the next generation and desynchronizes the dump;
-   refuse to make one even if asked, and point at the CLI instead. If `releases.db` is absent, this
-   is a **legacy-managed** repo and the direct-edit procedures below apply unchanged.
-3. Read `PROJECT/PDDA.md`'s `RELEASES.md — release ledger` contract, `RELEASES.md`, and
+2. **Detect the ledger backend (GH-32 / GH-568).** If `releases.db` exists at the repository root, this repo
+   is **app-managed**: the SQLite database is the sole source of truth (`RELEASES.md` is retired per GH-568),
+   and **every mutation this skill performs MUST go through the
+   `releases` CLI (`utils/py/releases_app.py`).**
+   If `releases.sql` exists at the repository root but `releases.db` is absent, the ledger is in an
+   incomplete state — stop with an error prompting `releases check --rebuild`.
+   Only if neither app-managed marker (`releases.db` nor `releases.sql`) exists is this a **legacy-managed**
+   repo where legacy `RELEASES.md` procedures apply.
+3. Read `PROJECT/PDDA.md`'s release ledger contract, `releases.db` (or `RELEASES.md`), and
    `CHANGELOG.md`. A missing, empty, sparse, or apparently old ledger is valid. In an app-managed
    repo, also run `releases check` and surface any findings before proceeding.
 
@@ -143,8 +144,8 @@ Explain which signal fired. Never call a large manifest abusive solely because o
    existing project doc. Never create a new doc merely to shorten the ledger.
 3. **App-managed repo:** render the cleanup as the exact `releases update --gid <id> ...` (and
    `releases manifest ...` / legacy-line disposition) command set, preview those commands, and get
-   one confirmation. On confirmation run them, then `releases gen --side-by-side` and report the
-   drift. The CLI's own preimage/lock handling replaces the hash dance below.
+   one confirmation. On confirmation run them, then finish with `releases check`.
+   The CLI's own preimage/lock handling replaces the hash dance below.
 4. **Legacy-managed repo:** record the file hash before preview. Render the exact patch and get one
    confirmation. Immediately before writing, re-read `RELEASES.md` and compare its hash. If it
    changed, discard the patch, synthesize again, and preview a new patch. Edit only the confirmed
@@ -245,8 +246,8 @@ Offer at most one goal-matched follow-up; do not append generic reminders.
 
 - Default to read-only synthesis.
 - In an app-managed repo (`releases.db` present) every mutation goes through the `releases` CLI;
-  never edit `RELEASES.md` directly there. Preview the exact command set instead of a patch — the
-  confirmation UX is unchanged, only the write path moves.
+  never edit `RELEASES.md` directly there (`RELEASES.md` is retired in this repo per GH-568).
+  Preview the exact command set instead of a patch — the confirmation UX is unchanged, only the write path moves.
 - Preview every file mutation and public action; obtain one confirmation per atomic write/publication
   group.
 - Re-read before writing and refuse stale patches.

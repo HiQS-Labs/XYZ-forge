@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the PUBLIC LAUNCH ARTIFACT — the sanitized, fresh-history tree that becomes XYZ's public
-# repository. See RELEASES.md's Meter block and #563.
+# repository. See releases.db's Front-Door/Meter block and #563.
 #
 # The published thing is NOT this repository. It is a clone-shaped directory containing only tracked,
 # committed files, minus runtime state and internal working material, committed as ONE initial commit
@@ -26,7 +26,7 @@
 #
 #   <dest>        absolute path to build into. Created if absent. If it already exists it must be
 #                 SAFE TO REBUILD (see the history rule below) or the script refuses.
-#   --remote URL  origin to set on the artifact. Default: the launch destination in RELEASES.md.
+#   --remote URL  origin to set on the artifact. Default: the launch destination in releases.db.
 #   --no-commit   extract and prune but leave the tree uncommitted, for inspecting a diff.
 #   --discard-history
 #                 explicitly permit replacing a git destination with more than one commit.
