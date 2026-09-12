@@ -33,7 +33,7 @@ set -uo pipefail
 # strict-mode: -e exempt — reporting tool; gh/git probes are expected-nonzero-safe and handled explicitly.
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RELEASES_FILE="${RELEASES_FILE:-$ROOT/RELEASES.md}"
+RELEASES_DB="${RELEASES_DB:-$ROOT/releases.db}"
 
 die()  { printf 'release-lanes: %s\n' "$*" >&2; exit 2; }
 # $1 is the message, $2 the exit code. Deliberately NOT "$*": that appended the exit code to the
@@ -65,67 +65,65 @@ done
 [[ -z "$MILESTONE" || -z "$RELEASE" ]] || die "--milestone and --release are mutually exclusive"
 
 # ── milestone resolution ────────────────────────────────────────────────────────────────────────
-# Reads RELEASES.md directly rather than shelling out to `pdda.sh releases-current`: that command is
-# a human-facing report whose formatting is free to change, and parsing a report to drive automation
-# is how you get a silent break the day someone improves the wording.
+# Reads releases.db directly (GH-568) instead of parsing legacy RELEASES.md prose.
 resolve_milestone() {
   [[ -n "$MILESTONE" ]] && { printf '%s' "$MILESTONE"; return 0; }
-  [[ -f "$RELEASES_FILE" ]] || fail "RELEASES.md not found at $RELEASES_FILE"
-  RELEASE="$RELEASE" python3 - "$RELEASES_FILE" <<'PYEOF'
+  [[ -f "$RELEASES_DB" ]] || fail "releases.db not found at $RELEASES_DB"
+  RELEASE="$RELEASE" python3 - "$RELEASES_DB" <<'PYEOF'
 import os
-import re
+import sqlite3
 import sys
 
 want = os.environ.get("RELEASE", "").strip()
-blocks, cur = [], {}
-for raw in open(sys.argv[1], encoding="utf-8"):
-    line = raw.rstrip("\n")
-    m = re.match(r'^([A-Za-z][A-Za-z ._-]*):\s*(.*)$', line)
-    if m:
-        key, val = m.group(1).strip(), m.group(2).strip()
-        if key == "Release":
-            if cur:
-                blocks.append(cur)
-            cur = {}
-        if cur or key == "Release":
-            cur[key] = val
-if cur:
-    blocks.append(cur)
+db_path = sys.argv[1]
 
 def emit(msg, code):
     print(msg, file=sys.stderr)
     raise SystemExit(code)
 
+try:
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+except Exception as e:
+    emit(f"release-lanes: cannot open releases.db at {db_path}: {e}", 3)
+
 if want:
-    hits = [b for b in blocks
-            if b.get("Release", "") == want or b.get("Codename", "") == want]
+    cur = conn.execute(
+        "SELECT version, codename, status, milestone FROM releases WHERE version = ? OR codename = ?",
+        (want, want)
+    )
+    hits = cur.fetchall()
     if not hits:
-        emit(f"release-lanes: no RELEASES.md block matches --release {want!r} "
-             f"(matched against Release: and Codename:)", 3)
+        emit(f"release-lanes: no release matches --release {want!r} in releases.db "
+             f"(matched against version and codename)", 3)
     if len(hits) > 1:
-        emit(f"release-lanes: --release {want!r} matches {len(hits)} blocks — disambiguate with "
+        emit(f"release-lanes: --release {want!r} matches {len(hits)} releases — disambiguate with "
              f"--milestone", 3)
-    ms = hits[0].get("Milestone", "")
-    if not ms:
+    ms = hits[0]["milestone"]
+    if not ms or not ms.strip():
         # Phase 3's own wording. A release with no join key cannot resolve to an issue set, and
         # returning an empty list here would look identical to a milestone with no open issues.
         emit(f"release-lanes: release {want!r} has no Milestone: — it cannot resolve to an issue "
-             f"set. Add the GitHub milestone title to its RELEASES.md block.", 3)
-    print(ms)
+             f"set. Add the GitHub milestone title to its release record in releases.db.", 3)
+    print(ms.strip())
     raise SystemExit(0)
 
-# No --release: fall back to the in-progress blocks that carry a milestone. "Shipped" is history and
-# is deliberately excluded — a rollup of a finished release is not a marathon seed.
-live = [b for b in blocks
-        if b.get("Status", "").strip().lower() != "shipped" and b.get("Milestone", "")]
+# No --release: fall back to the in-progress releases that carry a milestone. "shipped" and "cut" are excluded.
+cur = conn.execute(
+    "SELECT version, codename, status, milestone FROM releases WHERE status NOT IN ('shipped', 'cut') AND milestone IS NOT NULL AND trim(milestone) != ''"
+)
+live = cur.fetchall()
 if not live:
-    emit("release-lanes: no in-progress RELEASES.md block carries a Milestone:. Pass --milestone "
+    emit("release-lanes: no in-progress release in releases.db carries a Milestone:. Pass --milestone "
          "explicitly, or add the join key to the release you mean.", 3)
 if len(live) > 1:
-    names = ", ".join(sorted(b.get("Milestone", "") for b in live))
-    emit(f"release-lanes: {len(live)} in-progress releases carry a Milestone: ({names}). "
-         f"Pass --release NAME or --milestone TITLE to say which one.", 3)
-print(live[0]["Milestone"])
+    names = ", ".join(sorted(set(b["milestone"].strip() for b in live if b["milestone"])))
+    emit(f"release-lanes: multiple in-progress releases carry milestones ({names}) — pass --release or "
+         f"--milestone to pick one", 3)
+
+ms = live[0]["milestone"]
+print(ms.strip())
+raise SystemExit(0)
 PYEOF
 }
 

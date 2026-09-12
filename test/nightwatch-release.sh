@@ -63,8 +63,8 @@ bad()  { printf '  FAIL: %s\n' "$*" >&2; FAIL=$((FAIL+1)); }
 info() { printf '  INFO: %s\n' "$*"; INFO=$((INFO+1)); }
 
 # ── The FROZEN manifest ───────────────────────────────────────────────────────────────────────────
-# Frozen 2026-08-11 in RELEASES.md, before execution started. Eight entries, a fixed denominator
-# rather than a percentage. Adding one here is a RE-SCOPE and must be matched in RELEASES.md — the
+# Frozen 2026-08-11 in releases.db, before execution started. Eight entries, a fixed denominator
+# rather than a percentage. Adding one here is a RE-SCOPE and must be matched in releases.db — the
 # audit below checks that the two agree, because a manifest that lives in two places will disagree.
 #
 # Format: <issue>|<gate test file, or '-' if the entry is satisfied by another issue's gate>|<note>
@@ -77,11 +77,11 @@ MANIFEST=(
   "384|test/gh384-crash-recovery.sh|the crash-recovery report distinguishes a gated phase from an ungated one"
   "358|test/gh358-lock-instrumentation.sh|a lost concurrent-append record names its terminal lock state"
   # NOT a manifest entry: #514 was FILED while executing this release and is deliberately not
-  # admitted. RELEASES.md's admission rule is explicit — "discovery is not admission" — and adding it
+  # admitted. releases.db's admission rule is explicit — "discovery is not admission" — and adding it
   # here would be a re-scope of a frozen boundary, which is the exact drift the freeze exists to
   # stop. It appears in LIFECYCLE below, because the exit criterion always named that case; what was
   # missing was a suite driving it, not a new manifest member. (Adding it here anyway would fail
-  # manifest_matches_releases_md, which is that check doing its job.)
+  # manifest_matches_releases_db, which is that check doing its job.)
   "354|test/gh376-relay-drive-lock-parity.sh|Phase 1 only: clone-wide driver exclusion from a linked worktree (delivered by #376)"
 )
 
@@ -181,28 +181,31 @@ run_lifecycle() {  # executes the behavioural half
   done
 }
 
-manifest_matches_releases_md() {
-  # The manifest lives here AND in RELEASES.md. Two copies of a frozen list will disagree the first
+manifest_matches_releases_db() {
+  # The manifest lives here AND in releases.db. Two copies of a frozen list will disagree the first
   # time one is edited, and a release boundary that disagrees with itself is not frozen.
-  local rel="$ROOT/RELEASES.md" line entry n missing=""
-  [ -f "$rel" ] || { info "RELEASES.md absent — manifest cross-check skipped"; return 0; }
-  line="$(awk '/^Codename: Nightwatch/,/^$/' "$rel" | /usr/bin/grep '^Manifest:')"
+  local db="${1:-$ROOT/releases.db}" line entry n missing=""
+  if [ ! -f "$db" ]; then
+    bad "releases.db absent ($db) — manifest cross-check failed"
+    return 1
+  fi
+  line="$(sqlite3 "$db" "SELECT l.content FROM legacy_lines l JOIN releases r ON l.release_id = r.id WHERE r.version = '0.3.0' AND l.content LIKE 'Manifest:%';" 2>/dev/null)"
   if [ -z "$line" ]; then
-    bad "RELEASES.md has no Manifest: line for Nightwatch — the frozen boundary is not recorded"
+    bad "releases.db has no Manifest: line for Nightwatch — the frozen boundary is not recorded"
     return 1
   fi
   case "$line" in
-    *"NOT YET FROZEN"*) bad "RELEASES.md still says the Nightwatch manifest is NOT YET FROZEN"; return 1 ;;
+    *"NOT YET FROZEN"*) bad "releases.db still says the Nightwatch manifest is NOT YET FROZEN"; return 1 ;;
   esac
   for entry in "${MANIFEST[@]}"; do
     n="${entry%%|*}"
     printf '%s' "$line" | /usr/bin/grep -q "#$n" || missing="$missing #$n"
   done
   if [ -n "$missing" ]; then
-    bad "RELEASES.md's frozen manifest does not name:$missing — this file and the ledger disagree"
+    bad "releases.db's frozen manifest does not name:$missing — this file and the ledger disagree"
     return 1
   fi
-  ok "the frozen manifest here matches RELEASES.md's Nightwatch block (8 entries)"
+  ok "the frozen manifest here matches releases.db's Nightwatch block (8 entries)"
 }
 
 # ── Mutation mode: the negative control for this audit ────────────────────────────────────────────
@@ -244,11 +247,30 @@ if [ "$MODE" = mutate ]; then
     bad "deleting a control changed nothing — this audit does not read test/baselines/"
   fi
 
+  echo "-- mutation 3: ledger in releases.db drops a member"
+  DB_TMP="$TMP/releases.db"
+  sqlite3 "$DB_TMP" "CREATE TABLE releases(id INTEGER PRIMARY KEY, version TEXT, codename TEXT);
+                     CREATE TABLE legacy_lines(id INTEGER PRIMARY KEY, release_id INTEGER, content TEXT);
+                     INSERT INTO releases(id, version, codename) VALUES(1, '0.3.0', 'Nightwatch');
+                     INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest: FROZEN — #408 #409');"
+  if ( manifest_matches_releases_db "$DB_TMP" ) >/dev/null 2>&1; then
+    bad "incomplete manifest in releases.db was ACCEPTED — manifest cross-check is not discriminating"
+  else
+    ok "incomplete manifest in releases.db is DETECTED (missing members caught)"
+  fi
+
+  echo "-- mutation 4: missing releases.db must not silently pass"
+  if ( manifest_matches_releases_db "$TMP/absent.db" ) >/dev/null 2>&1; then
+    bad "missing releases.db was ACCEPTED — missing ledger must fail, not silently pass"
+  else
+    ok "missing releases.db is DETECTED (fail-closed)"
+  fi
+
   echo "-- restore: the unmutated inputs must be green again in this same run"
   cp "$ROOT/validate.sh" "$TMP/validate.sh"
   cp "$ROOT"/test/baselines/*.md "$TMP/baselines/" 2>/dev/null || true
   audit_manifest "$TMP/validate.sh" "$TMP/baselines" >/dev/null 2>&1
-  if [ "$COMPLETE" -eq "$base_complete" ]; then
+  if [ "$COMPLETE" -eq "$base_complete" ] && manifest_matches_releases_db "$ROOT/releases.db" >/dev/null 2>&1; then
     ok "restoring the inputs restores the verdict — the detector is not simply always-red"
   else
     bad "restored inputs do not reproduce the baseline verdict ($COMPLETE vs $base_complete)"
@@ -264,7 +286,7 @@ fi
 echo "== nightwatch-release (${MODE}) — release 0.3.0 frozen-manifest goalpost =="
 echo
 echo "-- half A: the frozen manifest"
-manifest_matches_releases_md
+manifest_matches_releases_db
 audit_manifest
 
 if [ "$MODE" = gate ]; then

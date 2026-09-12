@@ -7,7 +7,7 @@ To enable the ledger, simply initialize it:
 ```bash
 releases init
 ```
-*(Optional) You can then author `RELEASES.md` as needed.*
+*(Optional) Use `releases add` to plan forward releases.*
 
 Nothing runs until the ledger is invoked.
 

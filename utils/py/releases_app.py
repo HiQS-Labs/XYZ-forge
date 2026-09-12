@@ -4842,24 +4842,8 @@ def cmd_jog_land(args):
 
 
 def cmd_gen(args):
-    root = resolve_root(args.root)
-    paths = artifact_paths(root)
-    conn = connect(paths["db"])
-    lock = WriterLock(root)
-    lock.acquire()
-    try:
-        if os.path.exists(lock.journal_path):
-            refuse("journal-live", "run `releases check` to recover the interrupted write first")
-        generation = get_generation(conn)
-        _atomic_write(paths["gen"], gen_marker(generation) + "\n" + render_ledger(conn))
-        write_drift_report(root, conn)
-        print("generated %s (side-by-side, generation %d) + drift report %s"
-              % (paths["gen"], generation, paths["drift"]))
-        print("NOTE: Phase 0 is side-by-side ONLY — %s is never written by this tool"
-              % LEDGER_NAME)
-    finally:
-        lock.release()
-        conn.close()
+    refuse("retired",
+           "releases gen is retired — RELEASES.generated.md and drift reporting have been removed (GH-568); use releases list or releases show instead")
 
 
 # ── check ───────────────────────────────────────────────────────────────────────────────────────
@@ -5303,17 +5287,6 @@ def cmd_check(args):
             if dump_ok:
                 print("OK: generation trio consistent at %d (DB <-> dump)" % db_gen)
 
-            if os.path.exists(paths["gen"]):
-                with open(paths["gen"], encoding="utf-8") as fh:
-                    first = fh.readline().strip()
-                m = GEN_MARKER_RE.match(first)
-                gen_file_gen = int(m.group(1)) if m else None
-                if gen_file_gen != db_gen:
-                    fail("generation-mismatch",
-                         "%s carries generation %s but the DB is at %d — regenerate with "
-                         "`releases gen`" % (GEN_NAME, gen_file_gen, db_gen))
-                else:
-                    print("OK: %s generation marker matches (%d)" % (GEN_NAME, db_gen))
 
             # receipt chain (r3): before == previous after. A git branch switch, rebase, or divergent-dump
             # merge legitimately forks the receipt chain between operations. The merge-rebuild receipt

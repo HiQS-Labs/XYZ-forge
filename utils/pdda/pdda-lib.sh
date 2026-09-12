@@ -445,7 +445,9 @@ pdda_write_gh_state_cache() {  # <table>
   mv "$tmp" "$PDDA_GH_STATE_CACHE" 2>/dev/null || { rm -f "$tmp"; return 1; }
 }
 
-# --- RELEASES.md helpers -------------------------------------------------------------------------
+# --- RELEASES.md helpers (Legacy) ----------------------------------------------------------------
+# RELEASES.md is retired in XYZ-forge in favor of releases.db (GH-568). These helpers are preserved
+# for downstream repos using legacy Markdown ledgers.
 # RELEASES.md is a single forward-looking planning ledger (like ROADMAP.md/CHANGELOG.md), not a
 # bucket of per-tag docs — see PROJECT/PDDA.md "RELEASES.md — release ledger". Each release is a
 # flat "Label: value" block; a block starts at a line matching ^Release: and runs until the next

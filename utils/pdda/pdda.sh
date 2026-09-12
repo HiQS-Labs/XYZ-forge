@@ -839,6 +839,11 @@ cmd_releases_current() {
   local front_door shakedown license_file iterations milestone
 
   if [ ! -f "$RELEASES_FILE_EFF" ]; then
+    if [ -f "$PDDA_REPO_ROOT/releases.db" ] && [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ]; then
+      printf 'PDDA releases-current — releases.db active releases (GH-568):\n'
+      python3 "$PDDA_REPO_ROOT/utils/py/releases_app.py" list || true
+      return 0
+    fi
     printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
     return 0
   fi

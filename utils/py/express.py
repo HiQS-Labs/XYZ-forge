@@ -66,7 +66,6 @@ DRIVER_LEDGER = ("releases.db", "releases.sql")
 # releases app's opt-in signal, so only files already adopted by this checkout
 # are accepted as driver output. The dashboard is rendered explicitly below.
 RELEASES_PROJECTIONS = (
-    "RELEASES.generated.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",
@@ -533,7 +532,7 @@ def cmd_ledger(args):
     # Under GH-496 Phase 2, generated views (LEADERBOARD.md, etc.) are decoupled
     # from task branches and owned exclusively by wave_reconcile on development upon landing.
     # Revert routine view writes caused by dial-in so task branch commits do not trip the guard.
-    for view in ("LEADERBOARD.md", "LEADERBOARD.html", "RELEASES.generated.md", "RELEASES-PREVIEW.html"):
+    for view in ("LEADERBOARD.md", "LEADERBOARD.html", "RELEASES-PREVIEW.html"):
         git(root, "checkout", "origin/development", "--", view, check=False)
     print("express-ledger: dialed into %s" % rel)
     return dict(release=rel)
@@ -693,7 +692,6 @@ CLOSEOUT_ALLOWLIST_PREFIXES = (
 CLOSEOUT_ALLOWLIST_FILES = {
     "releases.db",
     "releases.sql",
-    "RELEASES.generated.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",

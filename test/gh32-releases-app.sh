@@ -24,7 +24,7 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP="$HERE/../utils/py/releases_app.py"
-REAL_LEDGER="$HERE/../RELEASES.md"
+REAL_LEDGER="$HERE/fixtures/legacy-releases.md"
 
 pass=0; fail=0
 ok(){ if [ "$2" = "0" ]; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
@@ -35,7 +35,7 @@ has(){ printf '%s' "$1" | grep -q "$2"; }
 echo "== test: gh32-releases-app =="
 
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
-[ -f "$REAL_LEDGER" ] || { echo "real RELEASES.md not found at $REAL_LEDGER" >&2; exit 1; }
+[ -f "$REAL_LEDGER" ] || { echo "fixture legacy-releases.md not found at $REAL_LEDGER" >&2; exit 1; }
 command -v sqlite3 >/dev/null 2>&1 || { echo "sqlite3 required" >&2; exit 1; }
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh32-app.XXXXXX")"
@@ -121,14 +121,11 @@ V="$(rlog check)"; if has "$V" "check: clean"; then ok "check is green right aft
 V="$(rlog import "$REAL_LEDGER")"; if has "$V" "rule=import-once"; then ok "second import is refused (the legacy import is ONE-SHOT)" 0; else ok "import once" 1; fi
 cp "$REAL_LEDGER" "$R/RELEASES.md"
 FILES_BEFORE="$(cd "$R" && ls -A | grep -v -E '^(releases\.db|releases\.sql|RELEASES\.md)$' | sort | tr '\n' ' ')"
-rout gen
-FILES_AFTER="$(cd "$R" && ls -A | grep -v -E '^(releases\.db|releases\.sql|RELEASES\.md|RELEASES\.generated\.md|RELEASES\.generated\.md\.drift)$' | sort | tr '\n' ' ')"
-if [ -f "$R/RELEASES.generated.md" ] && [ -f "$R/RELEASES.generated.md.drift" ] && [ "$FILES_AFTER" = "$FILES_BEFORE" ]; then ok "gen writes ONLY RELEASES.generated.md + drift report" 0; else ok "gen writes only side-by-side artifacts" 1; fi
-ok "the real ledger is byte-identical after gen (hash unchanged; read-only contract)" "$(is "$(md5 -q "$REAL_LEDGER")" "$LEDGER_HASH"; echo $?)"
-if has "$(cat "$R/RELEASES.generated.md.drift")" "0 file-only block(s), 0 field-level difference(s)"; then ok "drift report shows zero hand-edits against the freshly imported ledger" 0; else ok "drift zero" 1; fi
-printf '\nRelease: 9.9.9\nStatus: Draft\nDescription: hand edit.\n' >> "$R/RELEASES.md"
-rout gen
-if grep -q "^\[hand-edit\] blocks in RELEASES.md with no DB counterpart: 9\.9\.9" "$R/RELEASES.generated.md.drift"; then ok "a hand-edit to the ledger copy is REPORTED by the drift report (sole-writer clock reset)" 0; else ok "drift hand-edit" 1; fi
+V="$(rlog gen 2>&1 || true)"
+if has "$V" "rule=retired"; then ok "releases gen is refused (retired in GH-568)" 0; else ok "gen retired" 1; fi
+FILES_AFTER="$(cd "$R" && ls -A | grep -v -E '^(releases\.db|releases\.sql|RELEASES\.md)$' | sort | tr '\n' ' ')"
+if [ ! -f "$R/RELEASES.generated.md" ] && [ ! -f "$R/RELEASES.generated.md.drift" ] && [ "$FILES_AFTER" = "$FILES_BEFORE" ]; then ok "gen does NOT write RELEASES.generated.md or drift report" 0; else ok "no side-by-side artifacts" 1; fi
+ok "the fixture ledger is byte-identical (hash unchanged; read-only contract)" "$(is "$(md5 -q "$REAL_LEDGER")" "$LEDGER_HASH"; echo $?)"
 BD_BEFORE="$(python3 - "$R" "$APP" <<'PYEOF2'
 import importlib.util, sys, os
 spec = importlib.util.spec_from_file_location("releases_app", sys.argv[2])
@@ -267,7 +264,7 @@ echo "-- H: journal protocol recovery, per boundary"
 for B in pre-commit post-commit post-stage mid-rename post-rename; do
   R="$(mkrepo "h-$B")"
   rout init --slug h
-  rout gen
+  touch "$R/RELEASES.generated.md"
   export RELEASES_APP_CRASH_AT="$B"
   RA add --version 9.9.9 --status draft --description "crash" --tracking-issue "https://github.com/A/B/issues/99" >/dev/null 2>&1
   CRC=$?
@@ -401,7 +398,7 @@ rout init --slug lima
 if [ ! -f "$R/RELEASES-PREVIEW.md" ]; then ok "init does NOT create RELEASES-PREVIEW.md" 0; else ok "no preview at init" 1; fi
 rout add --version 3.0.0 --status draft --description "Preview seed." --tracking-issue "https://github.com/A/B/issues/3"
 if [ ! -f "$R/RELEASES-PREVIEW.md" ]; then ok "a CLI write does NOT create RELEASES-PREVIEW.md" 0; else ok "no preview on write" 1; fi
-rout gen
+rout gen 2>/dev/null || true
 if [ ! -f "$R/RELEASES-PREVIEW.md" ]; then ok "releases gen does NOT create RELEASES-PREVIEW.md" 0; else ok "no preview on gen" 1; fi
 V="$(rlog check)"
 if has "$V" "check: clean"; then ok "check is clean with no preview present (the preview-stale rule is gone)" 0; else ok "check clean without preview" 1; fi

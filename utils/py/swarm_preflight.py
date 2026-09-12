@@ -803,7 +803,7 @@ def frozen_manifest_members(target_root):
     GH-557. The authoritative, machine-readable statement of a frozen manifest is the `MANIFEST=(...)`
     array inside each `test/*-release.sh` goalpost, whose documented row format is
     `"<issue>|<gate test file, or '-'>|<note>"`. That array is ALREADY cross-checked against
-    RELEASES.md by the goalpost itself — `audit_manifest` fails when the two disagree, because "a
+    releases.db by the goalpost itself — `audit_manifest` fails when the two disagree, because "a
     boundary that disagrees with itself is not frozen" — so reading it here inherits that agreement
     instead of re-deriving it.
 

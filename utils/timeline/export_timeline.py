@@ -366,95 +366,17 @@ def roadmap_detours(path, manifest_ghs, roadmap_idx=None):
     return cards
 
 
-def parse_releases_md(path):
-    """RELEASES.md 'Release:' blocks -> {version: {status, codename}}. None if unreadable."""
-    if not path.is_file():
-        return None
-    blocks, cur = {}, None
-    for line in path.read_text().splitlines():
-        if m := re.match(r"^Release:\s*(\S+)", line):
-            cur = blocks.setdefault(m.group(1), {})
-        elif cur is not None and (m := re.match(r"^(Status|Codename|Iterations):\s*(.+?)\s*$", line)):
-            cur.setdefault(m.group(1).lower(), m.group(2))
-    return blocks
-
-
-def _ver(v):
-    try:
-        return tuple(int(p) for p in v.split("."))
-    except (ValueError, AttributeError):  # AttributeError: version is NULL for codename-only releases
-        return None
-
-
-def in_md_band(version, md):
-    """True when an md block's Iterations band (e.g. 0.7.0-0.7.4) covers this version.
-
-    The RELEASES.md contract: versions inside a reserved band ship freely, are
-    recorded in CHANGELOG.md only, and never get a block — so a DB release inside
-    a band is accounted for, NOT drift.
-    """
-    v = _ver(version)
-    if v is None:
-        return False
-    for block in md.values():
-        if m := re.match(r"^\s*(\S+?)\s*-\s*(\S+?)\s*$", block.get("iterations", "")):
-            lo, hi = _ver(m.group(1)), _ver(m.group(2))
-            if lo and hi and lo <= v <= hi:
-                return True
-    return False
-
-
-def md_drift(md, columns):
-    """Compare RELEASES.md (canonical during the GH-32 shadow phase) with the DB rows.
-
-    Only shipped-ness is compared — the md vocabulary (Shipped/Draft) has no
-    'active' state, so draft-vs-active is not drift. The real drift classes are
-    releases existing on one side only, and shipped/unshipped disagreement.
-    """
-    if md is None:
-        return None
-    db = {c["version"]: c["_raw"] for c in columns}
-    db_only = [v for v in db if v not in md and not in_md_band(v, md)]
-    md_only = [v for v in md if v not in db]
-    flipped = [
-        v for v in db.keys() & md.keys()
-        if (md[v].get("status", "").lower() == "shipped") != (db[v]["db_status"] in ("shipped", "cut"))
-    ]
-    if not (db_only or md_only or flipped):
-        return None
-    parts = []
-    if db_only:
-        # v can be None (codename-only release): sorted() on mixed None/str raises, and
-        # "None (Falcon)" is not a name — lead with the codename for those rows.
-        names = ", ".join(f"{v} ({db[v]['codename']})" if v else str(db[v]["codename"])
-                          for v in sorted(db_only, key=lambda v: v or ""))
-        parts.append(f"{len(db_only)} release(s) exist only in releases.db, outside every RELEASES.md Iterations band: {names}.")
-    if md_only:
-        parts.append(f"{len(md_only)} release(s) exist only in RELEASES.md: {', '.join(sorted(md_only))}.")
-    if flipped:
-        parts.append(f"shipped-status disagreement on: {', '.join(sorted(flipped))}.")
-    return {
-        "stale": True,
-        "sourceFile": "RELEASES.md",
-        "rowsDiffer": len(db_only) + len(md_only) + len(flipped),
-        "heading": "⚠ ledger drift — RELEASES.md (canonical) and releases.db disagree",
-        "message": " ".join(parts) + " Everything below reflects the DB. Fix at the source per the RELEASES.md "
-        "contract: a band-opening release gets a block, an in-band version is covered by its band (CHANGELOG.md "
-        "records it) — never fix it in this page.",
-    }
-
-
-def build_payload(cx, today, md_path=None):
+def build_payload(cx, today, repo_root=None):
     settings = dict(cx.execute("SELECT key, value FROM settings"))
     repo_url = repo_url_from_refs(cx.execute("SELECT url FROM issue_refs WHERE url IS NOT NULL"))
     roadmap_idx = load_roadmap_index(cx)
     columns, n_open, n_overdue = release_columns(cx, repo_url, roadmap_idx, today)
     jf, wn = strip_entries(columns, today)
-    sync = md_drift(parse_releases_md(md_path) if md_path else None, columns)
+    sync = None
 
     # Ad-hoc lane: in-flight non-manifest ROADMAP work attaches to the active release.
     active = next((c for c in columns if c["flags"].get("now")), None)
-    if active and md_path:
+    if active and repo_root:
         manifest_ghs = {
             int(m.group(2))
             for (url,) in cx.execute(
@@ -465,8 +387,9 @@ def build_payload(cx, today, md_path=None):
             )
             if (m := GH_URL_RE.match(url))
         }
-        active["detours"] = roadmap_detours(md_path.parent / "ROADMAP.md", manifest_ghs,
-                                            roadmap_idx)
+        roadmap_file = Path(repo_root) / "ROADMAP.md"
+        if roadmap_file.is_file():
+            active["detours"] = roadmap_detours(roadmap_file, manifest_ghs, roadmap_idx)
 
     (receipts,) = cx.execute("SELECT COUNT(*) FROM op_receipts").fetchone()
     (last_op,) = cx.execute(  # `at` is free-form in old rows; only trust date-shaped values
@@ -546,7 +469,7 @@ def build_payload(cx, today, md_path=None):
     }
 
 
-def serve(db_path, md_path, template_dir, port):
+def serve(db_path, repo_root, template_dir, port):
     """Live mode: /data.json re-queries releases.db on every request — no stale file."""
     import http.server
 
@@ -565,7 +488,7 @@ def serve(db_path, md_path, template_dir, port):
                 return super().do_GET()
             cx = sqlite3.connect(f"{db_path.as_uri()}?mode=ro", uri=True)
             try:
-                body = json.dumps(build_payload(cx, date.today(), md_path)).encode()
+                body = json.dumps(build_payload(cx, date.today(), repo_root)).encode()
             finally:
                 cx.close()
             self.send_response(200)
@@ -593,14 +516,14 @@ def bake_static(template_html, payload):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--db", default="releases.db", type=Path)
-    ap.add_argument("--md", type=Path, help="RELEASES.md for drift check (default: next to --db)")
+    ap.add_argument("--md", type=Path, help="Deprecated: retained for compatibility")
     ap.add_argument("--template", default=HERE / "RELEASES.html", type=Path)
     ap.add_argument("--out", default=Path("temp/timeline"), type=Path)
     ap.add_argument("--json", action="store_true",
                     help="print the payload (same single-object shape as data.json) to stdout; "
                          "no files written — the input the leaderboard and /radar consume")
     ap.add_argument("--check-drift", action="store_true",
-                    help="no files written: exit 1 listing RELEASES.md-vs-DB drift, exit 0 when aligned")
+                    help="deprecated: RELEASES.md retired in GH-568; releases.db is authoritative")
     ap.add_argument("--serve", type=int, metavar="PORT", default=None,
                     help="serve live: /data.json re-queries the DB on every request (no files written)")
     ap.add_argument("--preview", nargs="?", const=Path("RELEASES-PREVIEW.html"), default=None,
@@ -613,14 +536,14 @@ def main(argv=None):
 
     if not args.db.is_file():
         sys.exit(f"releases DB not found: {args.db}")
-    md_path = args.md if args.md else args.db.resolve().parent / "RELEASES.md"
+    repo_root = args.db.resolve().parent
 
     if args.serve:
-        serve(args.db.resolve(), md_path, args.template.resolve().parent, args.serve)
+        serve(args.db.resolve(), repo_root, args.template.resolve().parent, args.serve)
         return
     cx = sqlite3.connect(f"{args.db.resolve().as_uri()}?mode=ro", uri=True)
     try:
-        payload = build_payload(cx, date.today(), md_path)
+        payload = build_payload(cx, date.today(), repo_root)
     finally:
         cx.close()
 
@@ -629,11 +552,7 @@ def main(argv=None):
         return
 
     if args.check_drift:
-        sync = payload.get("sync")
-        if sync:
-            print(f"DRIFT ({sync['rowsDiffer']}): {sync['message']}")
-            sys.exit(1)
-        print("releases.db and RELEASES.md agree (releases present on both sides, shipped-status aligned)")
+        print("releases.db is authoritative (RELEASES.md retired in GH-568; no drift)")
         return
 
     if args.leaderboard:
