@@ -242,9 +242,9 @@ Offer at most one goal-matched follow-up; do not append generic reminders.
 ## Guardrails
 
 - Default to read-only synthesis.
-- In an app-managed repo (`releases.db` present) every mutation goes through the `releases` CLI
-  (`RELEASES.md` is retired in this repo per GH-568). Preview the exact command set instead of a
-  patch — the confirmation UX is unchanged, only the write path moves.
+- In an app-managed repo (`releases.db` present) every mutation goes through the `releases` CLI;
+  never edit `RELEASES.md` directly there (`RELEASES.md` is retired in this repo per GH-568).
+  Preview the exact command set instead of a patch — the confirmation UX is unchanged, only the write path moves.
 - Preview every file mutation and public action; obtain one confirmation per atomic write/publication
   group.
 - Re-read before writing and refuse stale patches.

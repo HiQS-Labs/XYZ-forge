@@ -2,8 +2,11 @@
 gh_issue: 568
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/568
 title: "feat(ledger): end-to-end retirement of RELEASES.md in favor of releases.db"
-status: "Active (2-WORKING)"
+status: "In progress"
 created: 2026-09-10
+updated: 2026-09-12
+owner: noelsaw
+goal: "End-to-end retirement of RELEASES.md in favor of releases.db across 14 scopes with permanent regression guard"
 doc_type: enhancement
 effort: 4
 complexity: 4
@@ -13,6 +16,12 @@ sequence_after: 567
 ---
 
 # GH-568: End-to-End Retirement of RELEASES.md in Favor of releases.db
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Complete removal of `RELEASES.md`, retirement of `RELEASES.generated.md`, rewiring of goalpost checkers and tests to `releases.db`, author permanent regression guard `test/gh568-releases-md-retired.sh` with witnessed red controls (clean pass). | Full disposable clone validation gate pass, final Codex relay QA, push branch and open PR against `development`. |
 
 ## Problem Statement
 
