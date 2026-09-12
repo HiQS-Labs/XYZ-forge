@@ -99,6 +99,7 @@ TESTS=(
   "gh308-frozen-twin-guard.sh"  # GH-308 (Python-authoritative twins: banner + committed-change guard)
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
+  "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
