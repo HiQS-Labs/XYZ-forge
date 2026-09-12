@@ -34,10 +34,12 @@ This document records durable negative control evidence demonstrating that:
   PASS: incomplete manifest in releases.db is DETECTED (missing members caught)
 -- mutation 4: missing releases.db must not silently pass
   PASS: missing releases.db is DETECTED (fail-closed)
+-- mutation 5: extra member in releases.db manifest must be rejected
+  PASS: extra member in releases.db is DETECTED (bidirectional cross-check works)
 -- restore: the unmutated inputs must be green again in this same run
   PASS: restoring the inputs restores the verdict — the detector is not simply always-red
 
-  nightwatch-release --mutate-evidence: 37 passed, 0 failed
+  nightwatch-release --mutate-evidence: 38 passed, 0 failed
   negative control OBSERVED in both directions
 ```
 
@@ -118,5 +120,6 @@ WITNESS_RED_CONTROL_2: PASS (correctly detected RELEASES.generated.md presence)
 WITNESS_RED_CONTROL_3: PASS (correctly detected write redirection to RELEASES.md)
 WITNESS_RED_CONTROL_4: PASS (correctly detected Python write to RELEASES.generated.md)
 WITNESS_RED_CONTROL_5: PASS (empty-input guard returned code 2 on empty search root)
-== ALL 5 RED CONTROLS WITNESSED PASSING ==
+WITNESS_RED_CONTROL_6: PASS (runtime probe correctly detected mutated/overwritten retired file)
+== ALL 6 RED CONTROLS WITNESSED PASSING ==
 ```

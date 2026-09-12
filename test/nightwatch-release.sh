@@ -184,7 +184,7 @@ run_lifecycle() {  # executes the behavioural half
 manifest_matches_releases_db() {
   # The manifest lives here AND in releases.db. Two copies of a frozen list will disagree the first
   # time one is edited, and a release boundary that disagrees with itself is not frozen.
-  local db="${1:-$ROOT/releases.db}" line entry n missing=""
+  local db="${1:-$ROOT/releases.db}" line entry n missing="" extra="" head
   if [ ! -f "$db" ]; then
     bad "releases.db absent ($db) — manifest cross-check failed"
     return 1
@@ -197,15 +197,37 @@ manifest_matches_releases_db() {
   case "$line" in
     *"NOT YET FROZEN"*) bad "releases.db still says the Nightwatch manifest is NOT YET FROZEN"; return 1 ;;
   esac
+
+  # The manifest list is in the first sentence before the period:
+  head="${line%%.*}"
+
+  # direction 1 — everything this file names must be declared in the ledger
   for entry in "${MANIFEST[@]}"; do
     n="${entry%%|*}"
-    printf '%s' "$line" | /usr/bin/grep -q "#$n" || missing="$missing #$n"
+    printf '%s' "$head" | /usr/bin/grep -q "#$n" || missing="$missing #$n"
   done
-  if [ -n "$missing" ]; then
-    bad "releases.db's frozen manifest does not name:$missing — this file and the ledger disagree"
+
+  # direction 2 — everything the ledger declares must be named in this file (bidirectional check)
+  for token in $(printf '%s\n' "$head" | /usr/bin/grep -o '#[0-9]\+'); do
+    n="${token#\#}"
+    local found=0
+    for entry in "${MANIFEST[@]}"; do
+      if [ "${entry%%|*}" = "$n" ]; then
+        found=1
+        break
+      fi
+    done
+    if [ "$found" -eq 0 ]; then
+      extra="$extra #$n"
+    fi
+  done
+
+  if [ -n "$missing" ] || [ -n "$extra" ]; then
+    [ -n "$missing" ] && bad "releases.db's frozen manifest does not name:$missing — this file and the ledger disagree"
+    [ -n "$extra" ]   && bad "this file does not name:$extra — the ledger declares members this gate does not measure"
     return 1
   fi
-  ok "the frozen manifest here matches releases.db's Nightwatch block (8 entries)"
+  ok "the frozen manifest here matches releases.db's Nightwatch block in both directions (8 entries)"
 }
 
 # ── Mutation mode: the negative control for this audit ────────────────────────────────────────────
@@ -264,6 +286,18 @@ if [ "$MODE" = mutate ]; then
     bad "missing releases.db was ACCEPTED — missing ledger must fail, not silently pass"
   else
     ok "missing releases.db is DETECTED (fail-closed)"
+  fi
+
+  echo "-- mutation 5: extra member in releases.db manifest must be rejected"
+  DB_TMP_EXTRA="$TMP/releases-extra.db"
+  sqlite3 "$DB_TMP_EXTRA" "CREATE TABLE releases(id INTEGER PRIMARY KEY, version TEXT, codename TEXT);
+                     CREATE TABLE legacy_lines(id INTEGER PRIMARY KEY, release_id INTEGER, content TEXT);
+                     INSERT INTO releases(id, version, codename) VALUES(1, '0.3.0', 'Nightwatch');
+                     INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest: FROZEN — #408 #409 #426 #388 #387 #384 #358 #354 #9999.');"
+  if ( manifest_matches_releases_db "$DB_TMP_EXTRA" ) >/dev/null 2>&1; then
+    bad "extra member in releases.db was ACCEPTED — bidirectional cross-check is not discriminating"
+  else
+    ok "extra member in releases.db is DETECTED (bidirectional cross-check works)"
   fi
 
   echo "-- restore: the unmutated inputs must be green again in this same run"

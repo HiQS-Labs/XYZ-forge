@@ -191,8 +191,6 @@ printf '%s\n' '-- Scenario 4: crash injection and journal recovery'
 for BOUNDARY in pre-commit post-commit post-stage mid-rename post-rename; do
   R4="$(repo "s4-$BOUNDARY")"
   ra "$R4" init --slug "s4-$BOUNDARY" >/dev/null
-  # mid-rename is between the dump and generated-view renames, so make that second output real.
-  touch "$R4/RELEASES.generated.md"
   CRASH_OUT="$(RELEASES_APP_CRASH_AT="$BOUNDARY" ra "$R4" add --version 4.0.0 --status draft --description crash --tracking-issue "https://github.com/GH57/ledger/issues/401" 2>&1)"; RC=$?
   ok "[$BOUNDARY] injected writer exits 70" "$( [ "$RC" -eq 70 ]; echo $? )"
   BLOCK_OUT="$(ra "$R4" add --version 4.1.0 --status draft --description blocked --tracking-issue "https://github.com/GH57/ledger/issues/402" 2>&1)"; RC=$?

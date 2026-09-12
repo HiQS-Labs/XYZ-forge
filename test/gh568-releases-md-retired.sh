@@ -86,6 +86,17 @@ check_writer_audit() {
   return 0
 }
 
+check_runtime_untouched() {
+  local target_dir="$1"
+  if [ ! -f "$target_dir/RELEASES.md" ] || [ "$(cat "$target_dir/RELEASES.md")" != "CANARY_LEDGER_ORIGINAL" ]; then
+    return 1
+  fi
+  if [ ! -f "$target_dir/RELEASES.generated.md" ] || [ "$(cat "$target_dir/RELEASES.generated.md")" != "CANARY_GEN_ORIGINAL" ]; then
+    return 1
+  fi
+  return 0
+}
+
 # If --mutate-evidence was requested, run only the negative controls and report evidence
 if [ "$MUTATE_EVIDENCE" = "1" ]; then
   echo "== GH-568 Mutate Evidence Mode =="
@@ -152,7 +163,28 @@ SUBEOF
     exit 1
   fi
 
-  echo "== ALL 5 RED CONTROLS WITNESSED PASSING =="
+  # Control 6: Mutated runtime probe — prove check_runtime_untouched detects modified/resurrected files
+  M6="$WORK/m6"
+  mkdir -p "$M6"
+  git init "$M6" >/dev/null 2>&1
+  python3 "$root/utils/py/releases_app.py" --root "$M6" init --slug m6 >/dev/null 2>&1
+  echo "CANARY_LEDGER_ORIGINAL" > "$M6/RELEASES.md"
+  echo "CANARY_GEN_ORIGINAL" > "$M6/RELEASES.generated.md"
+  python3 "$root/utils/py/releases_app.py" --root "$M6" add --version 1.0.0 --status draft --description "test" --tracking-issue "https://github.com/A/B/issues/1" >/dev/null 2>&1
+  if check_runtime_untouched "$M6"; then
+    echo "CORRUPTED_BY_WRITER" > "$M6/RELEASES.generated.md"
+    if ! check_runtime_untouched "$M6"; then
+      echo "WITNESS_RED_CONTROL_6: PASS (runtime probe correctly detected mutated/overwritten retired file)"
+    else
+      echo "WITNESS_RED_CONTROL_6: FAIL (runtime probe did not detect mutated file)"
+      exit 1
+    fi
+  else
+    echo "WITNESS_RED_CONTROL_6: FAIL (runtime write modified pre-existing retired files)"
+    exit 1
+  fi
+
+  echo "== ALL 6 RED CONTROLS WITNESSED PASSING =="
   exit 0
 fi
 
@@ -162,6 +194,14 @@ if check_canary "$root"; then
   pass "static canary: RELEASES.md and RELEASES.generated.md absent from repo root"
 else
   fail "static canary: one or more retired releases files found at repo root"
+fi
+
+# ── 1b. Static artifact_paths key audit ─────────────────────────────────────
+
+if python3 -c 'import sys; sys.path.insert(0, "'"$root/utils/py"'"); from releases_app import artifact_paths; p = artifact_paths("."); assert "gen" not in p, "gen in paths"; assert "drift" not in p, "drift in paths"; assert "ledger" not in p, "ledger in paths"'; then
+  pass "artifact_paths() exposes only DB artifacts (no gen, drift, or ledger keys)"
+else
+  fail "artifact_paths() still exposes retired keys (gen, drift, or ledger)"
 fi
 
 # ── 2. Active Tools Execution ────────────────────────────────────────────────
@@ -194,6 +234,21 @@ if bash "$root/utils/release-lanes.sh" --help >/dev/null 2>&1; then
   pass "utils/release-lanes.sh executes cleanly without RELEASES.md"
 else
   fail "utils/release-lanes.sh --help failed"
+fi
+
+# ── 2b. Runtime untouched probe on pre-created retired files ────────────────
+
+RPROBE="$WORK/rprobe"
+mkdir -p "$RPROBE"
+git init "$RPROBE" >/dev/null 2>&1
+python3 "$root/utils/py/releases_app.py" --root "$RPROBE" init --slug rprobe >/dev/null 2>&1
+echo "CANARY_LEDGER_ORIGINAL" > "$RPROBE/RELEASES.md"
+echo "CANARY_GEN_ORIGINAL" > "$RPROBE/RELEASES.generated.md"
+python3 "$root/utils/py/releases_app.py" --root "$RPROBE" add --version 1.0.0 --status draft --description "test" --tracking-issue "https://github.com/A/B/issues/1" >/dev/null 2>&1
+if check_runtime_untouched "$RPROBE"; then
+  pass "runtime probe: pre-created RELEASES.md and RELEASES.generated.md are never touched by releases add"
+else
+  fail "runtime probe: releases add modified pre-created RELEASES.md or RELEASES.generated.md"
 fi
 
 # ── 3. Static Writer & Pipeline Audit on Production Codebase ─────────────────
@@ -270,6 +325,18 @@ if [ "$empty_rc" -eq 2 ]; then
   pass "red control 5: empty-input guard correctly returned exit 2 on empty candidate directory"
 else
   fail "red control 5: empty-input guard returned $empty_rc instead of 2 on empty candidate directory"
+fi
+
+# Red Control 6: Mutated runtime probe detects modified file
+MUT_DIR6="$WORK/mut_runtime"
+mkdir -p "$MUT_DIR6"
+echo "CANARY_LEDGER_ORIGINAL" > "$MUT_DIR6/RELEASES.md"
+echo "CANARY_GEN_ORIGINAL" > "$MUT_DIR6/RELEASES.generated.md"
+echo "CORRUPTED" > "$MUT_DIR6/RELEASES.generated.md"
+if ! check_runtime_untouched "$MUT_DIR6"; then
+  pass "red control 6: runtime probe correctly reported RED when retired file was modified"
+else
+  fail "red control 6: runtime probe failed to detect modified retired file"
 fi
 
 echo "== GH-568 ALL PASSED =="

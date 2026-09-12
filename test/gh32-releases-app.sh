@@ -264,7 +264,6 @@ echo "-- H: journal protocol recovery, per boundary"
 for B in pre-commit post-commit post-stage mid-rename post-rename; do
   R="$(mkrepo "h-$B")"
   rout init --slug h
-  touch "$R/RELEASES.generated.md"
   export RELEASES_APP_CRASH_AT="$B"
   RA add --version 9.9.9 --status draft --description "crash" --tracking-issue "https://github.com/A/B/issues/99" >/dev/null 2>&1
   CRC=$?

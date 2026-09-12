@@ -12,9 +12,10 @@ only. On DB<->dump divergence `releases check` fails and `releases check --rebui
 for MERGE RESOLUTION ONLY, never crash recovery — crash recovery is the per-boundary journal
 protocol in perform_write()/recover_from_journal().
 
-HARD BOUNDARY (Phase 0): this tool NEVER writes RELEASES.md. `gen` is side-by-side only — it
-writes RELEASES.generated.md plus a drift report. If a code path here can reach RELEASES.md for
-writing, that is a bug; the only permitted touch on that file is READING it (import, drift).
+HARD BOUNDARY (GH-568): RELEASES.md and RELEASES.generated.md are permanently retired.
+The SQLite DB (releases.db) is authoritative for reads and writes at runtime; releases.sql is
+authoritative at git merge boundaries. `releases gen` and drift reporting are retired and refuse.
+The only permitted touch on legacy ledger files is reading them during one-shot import.
 
 RELEASES-PREVIEW.md was removed 2026-08-19. It existed to give a human a readable view of the DB
 without SQL, and both of its jobs now have better homes: a desktop SQLite viewer for browsing, and
@@ -27,8 +28,6 @@ Artifacts (repo root unless noted):
   releases.db                    the SQLite DB (committed per-repo, PRD Decision 2)
   releases.sql                   canonical logical dump (committed, git-mergeable)
   releases.db.bak                backup of a DB displaced by `check --rebuild`
-  RELEASES.generated.md          side-by-side generated view (Phase 0; gen only)
-  RELEASES.generated.md.drift    drift report: generated view vs the real RELEASES.md (gen only)
 In the git common-dir (GH-448 idiom — never a literal .git/... path; in a linked worktree .git
 is a file):
   releases-app.lock              the repo-scoped writer lock
@@ -94,9 +93,7 @@ EXIT_CRASH_INJECTED = 70
 DB_NAME = "releases.db"
 DUMP_NAME = "releases.sql"
 DB_BAK_NAME = "releases.db.bak"
-GEN_NAME = "RELEASES.generated.md"
-DRIFT_NAME = "RELEASES.generated.md.drift"
-LEDGER_NAME = "RELEASES.md"          # READ-ONLY for this tool, forever in Phase 0
+LEDGER_NAME = "RELEASES.md"          # legacy import source (PRD Phase 0)
 LOCK_NAME = "releases-app.lock"
 AUDIT_NAME = "releases-app-lock-audit.log"
 JOURNAL_NAME = "releases-app-journal.json"
@@ -354,9 +351,6 @@ def artifact_paths(root):
         "db": os.path.join(root, DB_NAME),
         "dump": os.path.join(root, DUMP_NAME),
         "bak": os.path.join(root, DB_BAK_NAME),
-        "gen": os.path.join(root, GEN_NAME),
-        "drift": os.path.join(root, DRIFT_NAME),
-        "ledger": os.path.join(root, LEDGER_NAME),
     }
 
 
@@ -1311,11 +1305,7 @@ def dump_generation_from_text(text):
 # contract needs it there). The real RELEASES.md never carries one — this tool never writes that
 # file, and no header is added during Phase 0 (the header arrives with the Phase 2 flip).
 
-GEN_MARKER_RE = re.compile(r"^<!-- releases-app generation: (\d+) -->$")
 
-
-def gen_marker(generation):
-    return "<!-- releases-app generation: %d -->" % generation
 
 
 # ── staged writes + crash injection ─────────────────────────────────────────────────────────────
@@ -1599,8 +1589,6 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None):
         generation = get_generation(conn) + 1
         txn_id = new_txn_id()
         planned = [paths["dump"]]
-        if os.path.exists(paths["gen"]):
-            planned.append(paths["gen"])
 
         journal = {
             "app": APP, "txn_id": txn_id, "session_id": session_id(), "op": op,
@@ -1655,16 +1643,11 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None):
         _crash("post-commit")
 
         staged = [(_stage_write(paths["dump"], dump_text(conn, generation)), paths["dump"])]
-        if os.path.exists(paths["gen"]):
-            staged.append((_stage_write(paths["gen"],
-                                        gen_marker(generation) + "\n" + render_ledger(conn)),
-                           paths["gen"]))
         _crash("post-stage")
 
-        for i, (tmp, final) in enumerate(staged):
+        for tmp, final in staged:
             os.replace(tmp, final)
-            if i == 0 and len(staged) > 1:
-                _crash("mid-rename")
+            _crash("mid-rename")
         _crash("post-rename")
 
         os.unlink(lock.journal_path)
@@ -1737,8 +1720,6 @@ def perform_migration(root, conn):
         generation = get_generation(conn) + 1
         txn_id = new_txn_id()
         planned = [paths["dump"]]
-        if os.path.exists(paths["gen"]):
-            planned.append(paths["gen"])
         journal = {
             "app": APP, "txn_id": txn_id, "session_id": session_id(), "op": "migrate",
             "generation": generation, "planned_outputs": planned, "db": paths["db"],
@@ -1789,15 +1770,10 @@ def perform_migration(root, conn):
         _crash("post-commit")
 
         staged = [(_stage_write(paths["dump"], dump_text(conn, generation)), paths["dump"])]
-        if os.path.exists(paths["gen"]):
-            staged.append((_stage_write(paths["gen"],
-                                        gen_marker(generation) + "\n" + render_ledger(conn)),
-                           paths["gen"]))
         _crash("post-stage")
-        for i, (tmp, final) in enumerate(staged):
+        for tmp, final in staged:
             os.replace(tmp, final)
-            if i == 0 and len(staged) > 1:
-                _crash("mid-rename")
+            _crash("mid-rename")
         _crash("post-rename")
         os.unlink(lock.journal_path)
         refresh_preview(root)
@@ -1873,8 +1849,6 @@ def recover_from_journal(root, conn):
         return ("discarded", txn_id)
     if db_gen == jgen:
         _atomic_write(paths["dump"], dump_text(conn, db_gen))
-        if os.path.exists(paths["gen"]):
-            _atomic_write(paths["gen"], gen_marker(db_gen) + "\n" + render_ledger(conn))
         os.unlink(journal_path)
         audit_log(root, "recovered",
                   "post-COMMIT crash completed (txn %s, gen %d); committed operation preserved"
@@ -1950,129 +1924,9 @@ def _normalize_status(raw):
     return "active", True
 
 
-# ── generator: the pinned normalized rendering (PRD Generator contract) ─────────────────────────
-# Canonical field order and spellings are defined HERE, once. Consumers parse fields, not bytes;
-# lossless preservation lives in doc_lines/legacy_lines, both re-rendered verbatim in order until
-# dispositioned. `Manifest-Members:` is generated from manifest_items when they exist (imported
-# bare numbers stay in legacy_lines verbatim instead). `Status: Shipped` normalizes to the enum;
-# the generator renders the canonical capitalized spelling.
-
-def render_ledger(conn):
-    out = []
-
-    def w(s=""):
-        out.append(s)
-
-    for row in conn.execute("""SELECT d.content FROM doc_lines d JOIN repos r ON r.id = d.repo_id
-                               ORDER BY d.repo_id, d.position"""):
-        w(row["content"])
-
-    first = True
-    for rel in conn.execute("""SELECT rel.*, t.url AS tracking_url, t.temp_id AS tracking_temp
-                               FROM releases rel JOIN issue_refs t ON t.id = rel.tracking_ref_id
-                               ORDER BY rel.id""").fetchall():
-        if not first:
-            w()
-        first = False
-        w("Release: %s" % (rel["version"] if rel["version"] else "(unversioned)"))
-        w("Status: %s" % STATUS_RENDER[rel["status"]])
-        if rel["shipped_date"]:
-            w("Shipped: %s" % rel["shipped_date"])
-        if rel["target_date"]:
-            w("Target Date: %s" % rel["target_date"])
-        if rel["codename"]:
-            w("Codename: %s" % rel["codename"])
-        if rel["description"]:
-            w("Description: %s" % rel["description"])
-        if rel["exit_criterion"]:
-            w("Exit criterion: %s" % rel["exit_criterion"])
-        members = conn.execute("""SELECT t.url, t.temp_id FROM manifest_items mi
-                                  JOIN issue_refs t ON t.id = mi.issue_ref_id
-                                  WHERE mi.release_id = ? ORDER BY mi.id""",
-                               (rel["id"],)).fetchall()
-        if members:
-            nums = [ (m["url"] or "").rsplit("/", 1)[-1] or (m["temp_id"] or "?") for m in members ]
-            w("Manifest-Members: %s" % " ".join(nums))
-        if rel["gh_release_url"]:
-            w("GH_URL: %s" % rel["gh_release_url"])
-        if rel["tracking_url"]:
-            w("Tracking Issue: %s" % rel["tracking_url"])
-        elif rel["tracking_temp"]:
-            w("Tracking Issue: %s" % rel["tracking_temp"])
-        if rel["milestone"]:
-            w("Milestone: %s" % rel["milestone"])
-        if rel["front_door_reviewed"]:
-            w("Front-door reviewed: %s" % rel["front_door_reviewed"])
-        if rel["shakedown_reviewed"]:
-            w("Shakedown reviewed: %s" % rel["shakedown_reviewed"])
-        if rel["license_file"]:
-            w("License file: %s" % rel["license_file"])
-        for ll in conn.execute("""SELECT content FROM legacy_lines l
-                                  WHERE l.release_id = ? ORDER BY l.position""",
-                               (rel["id"],)).fetchall():
-            w(ll["content"])
-    return "\n".join(out) + "\n"
-
-
-def write_drift_report(root, conn):
-    """Side-by-side drift report (Phase 0 sole-writer evidence): compares the DB-backed view
-    against the real RELEASES.md. A hand-edit during the measured window is visible here, and
-    each one resets the sole-writer clock (PRD Phase 0). A stale real file after CLI writes is
-    EXPECTED in Phase 0 — the flip is Phase 2 — so direction matters and is labeled."""
-    paths = artifact_paths(root)
-    lines = ["releases-app drift report (GH-32 Phase 0, side-by-side)",
-             "generated: %s" % now_iso(),
-             "real ledger: %s (READ-ONLY — never written by this tool)" % paths["ledger"],
-             ""]
-    if not os.path.exists(paths["ledger"]):
-        lines.append("no real RELEASES.md present — nothing to drift against")
-        _atomic_write(paths["drift"], "\n".join(lines) + "\n")
-        return
-    doc, blocks = parse_legacy_ledger(paths["ledger"])
-    db_rows = {r["version"]: r for r in conn.execute("SELECT * FROM releases ORDER BY id")}
-    db_versions = set(db_rows)
-    file_versions = {b["fields"]["Release"][0] for b in blocks if b["fields"].get("Release")}
-
-    hand_edits = 0
-    only_db = sorted(v for v in (db_versions - file_versions) if v)
-    only_file = sorted(v for v in (file_versions - db_versions) if v)
-    if only_db:
-        lines.append("[stale-file] in the DB but not in RELEASES.md (expected after CLI writes; "
-                     "the real file is refreshed only at the Phase 2 flip): %s"
-                     % ", ".join(only_db))
-    if only_file:
-        hand_edits += len(only_file)
-        lines.append("[hand-edit] blocks in RELEASES.md with no DB counterpart: %s"
-                     % ", ".join(only_file))
-    for b in blocks:
-        version = b["fields"].get("Release", [None])[0]
-        if version not in db_rows:
-            continue
-        row = db_rows[version]
-        f = b["fields"]
-
-        def fv(label):
-            vals = f.get(label, [])
-            return vals[-1] if vals else None
-
-        status, _ = _normalize_status(fv("Status") or "")
-        for label, file_val, db_val in (
-                ("Status", status, row["status"]),
-                ("Codename", fv("Codename"), row["codename"]),
-                ("Target Date", fv("Target Date"), row["target_date"]),
-                ("Description", fv("Description"), row["description"]),
-                ("Milestone", fv("Milestone"), row["milestone"])):
-            if (file_val or "") != (db_val or ""):
-                hand_edits += 1
-                lines.append("[drift] Release %s: %s is %r in the file, %r in the DB "
-                             "(file edited by hand, or stale after a CLI write)"
-                             % (version, label, file_val, db_val))
-    lines.append("")
-    lines.append("summary: %d file-only block(s), %d field-level difference(s). File-only blocks "
-                 "and unexpected field drift are hand-edits — each resets the Phase 0 "
-                 "sole-writer clock. Stale-after-CLI directions do not." % (len(only_file),
-                                                                            hand_edits))
-    _atomic_write(paths["drift"], "\n".join(lines) + "\n")
+# ── retired generator and drift report (GH-568) ──────────────────────────────────
+# RELEASES.generated.md and drift reporting have been retired end-to-end.
+# Releases are inspected via `releases list` or `releases show`.
 
 
 # ── structural validation (refused in BOTH modes — lenient tolerates imported legacy debt,
@@ -2269,7 +2123,7 @@ def cmd_import(args):
             refuse("import-once",
                    "this DB already holds releases; the legacy import is ONE-SHOT (PRD Phase 0) "
                    "— diverge via the dump merge procedure, not re-import")
-        ledger = args.file or paths["ledger"]
+        ledger = args.file or os.path.join(root, LEDGER_NAME)
         if not os.path.exists(ledger):
             refuse("import-source-missing", "no ledger file at %s" % ledger)
         doc_lines, blocks = parse_legacy_ledger(ledger)
@@ -5899,8 +5753,6 @@ def _rebuild(root, conn):
     fresh = connect(paths["db"])
     try:
         _atomic_write(paths["dump"], dump_text(fresh, new_gen))
-        if os.path.exists(paths["gen"]):
-            _atomic_write(paths["gen"], gen_marker(new_gen) + "\n" + render_ledger(fresh))
     finally:
         fresh.close()
     print("rebuilt %s from %s (generation %d -> %d); displaced DB backed up at %s"
@@ -6166,12 +6018,12 @@ def build_parser():
     sp = sub.add_parser("next", help="the next unshipped release, by target date")
     sp.add_argument("--verbose", action="store_true", help="also print its full record")
 
-    sp = sub.add_parser("gen", help="side-by-side generation (Phase 0: NEVER writes RELEASES.md)")
+    sp = sub.add_parser("gen", help="retired: RELEASES.generated.md removed (GH-568); refuses")
     sp.add_argument("--side-by-side", action="store_true", default=True,
                     help="the only mode in Phase 0 (accepted for CLI-shape compatibility)")
 
     sp = sub.add_parser("check",
-                        help="DB<->dump<->generated consistency; FK pragma; stale WAL; "
+                        help="DB<->dump consistency; FK pragma; stale WAL; "
                              "receipt-vs-change bypass detection; temp-ref staleness; "
                              "duplication warnings; per-boundary crash recovery")
     sp.add_argument("--rebuild", action="store_true",
