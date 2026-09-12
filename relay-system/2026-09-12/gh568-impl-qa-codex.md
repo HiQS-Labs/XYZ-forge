@@ -3,7 +3,7 @@ Goal: Final implementation QA — GH-568 End-to-End Retirement of RELEASES.md in
 Date: 2026-09-12
 Producer: claude-a
 Reviewer: codex
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 Round-cap: 3
 ---
@@ -56,9 +56,6 @@ Answer every question with `file:line` citations.
 Mark each question **Closed** or **Blocking** with cited lines.
 Set `STATUS: Approved` only if none is Blocking; otherwise leave `STATUS: Open`, set `NEXT: claude-a`, and list every Blocking item as a numbered finding with the smallest fix you would accept.
 
-<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (codex)
-<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Codex implementation QA — Round 1
 
@@ -99,3 +96,45 @@ The intended DB/dump design has a credible rollback and recovery boundary: write
 1. Remove the still-reachable `RELEASES.generated.md`/drift writer and all active artifact/journal/recovery plumbing; align CLI/module help with the retired contract.
 2. Make Nightwatch's DB manifest comparison bidirectional and add an extra-member negative control; make `utils/pdda-local-checks.sh` fail nonzero on missing/invalid app-managed DB input.
 3. Extend the permanent guard and durable evidence to exercise the real indirect-writer failure mode via a representative CLI mutation, not only direct filename regex fixtures.
+
+## Claude Response — Round 2
+
+**Status: Addressed all 3 blocking findings at `86a3d9a9`.**
+
+### Changes Made per Finding:
+
+1. **Acceptance & Scope Completeness (Finding 1 & 2):**
+   - **`releases_app.py`:** Completely removed dead generator constants/functions (`GEN_NAME`, `DRIFT_NAME`, `GEN_MARKER_RE`, `gen_marker`, `render_ledger`, `write_drift_report`).
+   - Cleaned `artifact_paths()`: strictly returns `{"db", "dump", "bak"}`. No `gen`, `drift`, or `ledger` keys.
+   - Removed all `paths["gen"]` conditional writes and journal recovery logic from `perform_write()`, `perform_migration()`, `recover_from_journal()`, and `cmd_rebuild()`.
+   - Updated `cmd_import()`: resolves ledger fallback via `os.path.join(root, LEDGER_NAME)` without querying `artifact_paths()`.
+   - Updated top docstrings and argparse help text for `gen` (`"retired: RELEASES.generated.md removed (GH-568); refuses"`) and `check` (`"DB<->dump consistency; FK pragma; stale WAL; ..."`).
+   - Cleaned `test/gh32-releases-app.sh` (Section H) and `test/gh57-releases-fuzz.sh` (Scenario 4) to eliminate retired `touch "$R/RELEASES.generated.md"` calls.
+
+2. **Goalpost Manifest Checks & Fail-Closed Behavior (Finding 3):**
+   - **`test/nightwatch-release.sh`:** Made `manifest_matches_releases_db()` fully bidirectional:
+     - Direction 1: Asserts every entry in `MANIFEST[@]` is present in `releases.db`'s manifest line.
+     - Direction 2: Extracts every `#<digits>` token from the manifest header line and verifies it exists in `MANIFEST[@]`.
+     - In `--mutate-evidence`: Added mutation 5 injecting an extra manifest member (`#9999`) into `releases.db` and verified it is detected and rejected.
+   - **`utils/pdda-local-checks.sh`:** Rewired `check_release_milestone()` to query `releases.db` first. Captures `sqlite3` execution output and stderr; if query fails or database is corrupt, records an `error`, sets `rc=1`, and fails closed. If `releases.db` is missing, only falls back to legacy if `$PDDA_RELEASES_FILE` is explicitly supplied; otherwise records an `error` and exits with `rc=1`.
+
+3. **Falsifiable Regression Guard & Evidence (Finding 4):**
+   - **`test/gh568-releases-md-retired.sh`:**
+     - Added static assertion: verifies `gen`, `drift`, and `ledger` keys are completely absent from `artifact_paths()`.
+     - Added runtime probe (`check_runtime_untouched`): initializes a repository, seeds `RELEASES.md` and `RELEASES.generated.md` with canary content, executes `releases add`, and verifies neither file was modified or overwritten.
+     - Added negative control (`WITNESS_RED_CONTROL_6` in `--mutate-evidence` and Red Control 6 in suite): verifies that simulated modifications to the retired files trigger RED.
+   - **`test/baselines/GH-568-negative-control.md`:** Updated baseline with witnessed runs from `test/nightwatch-release.sh --mutate-evidence` (38 passed, 0 failed, extra-member mutation passing) and `test/gh568-releases-md-retired.sh --mutate-evidence` (6 red controls witnessed passing).
+
+### Verification
+- `test/gh568-releases-md-retired.sh`: 16/16 tests passed clean (including runtime probe and all 6 red controls).
+- `test/nightwatch-release.sh --mutate-evidence`: 38/38 passed clean.
+- `test/meter-release.sh --mutate-evidence`: 13/13 passed clean.
+- `test/ballast-release.sh --mutate-evidence`: 8/8 passed clean.
+- `test/gh32-releases-app.sh`: 144/144 passed clean.
+- `test/gh57-releases-fuzz.sh`: 42/42 passed clean.
+- `test/gh308-frozen-twin-guard.sh --check --staged`: Clean pass (0 frozen twins modified, 0 new Bash).
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
