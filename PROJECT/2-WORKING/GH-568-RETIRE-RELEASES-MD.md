@@ -61,8 +61,8 @@ Just as `ROADMAP.md` was retired in GH-269 and `ROADMAP-DASHBOARD.md` is being r
    - Update `test/gh284-p4-release-lanes.sh` and include a red control proving missing/ambiguous DB milestones refuse cleanly.
 
 5. **Decouple Release-Gate Tests & Prevent Vacuous Passes:**
-   - **Rewire Manifest Checks:** In `test/nightwatch-release.sh` and `test/meter-release.sh`, replace awk scraping of `RELEASES.md` with direct checks against `releases.db` (via `releases manifest` CLI or SQL query) or the internal goalpost arrays.
-   - **Eliminate Vacuous-Pass Trap:** Remove the silent skip `[ -f "$rel" ] || return 0` from `test/meter-release.sh:445` and `utils/pdda-local-checks.sh:292-295`. Manifest validation must remain load-bearing against the DB.
+   - **Rewire Manifest Checks:** In `test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh`, replace awk/grep scraping of `RELEASES.md` with direct checks against `releases.db` (via `releases manifest` CLI or SQL query) or the internal goalpost arrays.
+   - **Eliminate Vacuous-Pass Trap:** Remove the silent skip `[ -f "$rel" ] || return 0` from `test/meter-release.sh:445`, `test/ballast-release.sh:163`, and `utils/pdda-local-checks.sh:292-295`. Manifest validation must remain load-bearing against the DB.
    - **Witnessed Negative Controls & Evidence Destination:** Verify that `--mutate-evidence` in `test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh` reports RED when mutated post-rewire, recording durable test evidence in `test/baselines/GH-568-negative-control.md`.
 
 6. **Migrate Build & Preflight Utilities:**
@@ -96,6 +96,7 @@ Just as `ROADMAP.md` was retired in GH-269 and `ROADMAP-DASHBOARD.md` is being r
 12. **Update Test Suites Classification:**
     - **Rehomed / Updated:**
       - `test/release-lanes.sh` & `test/gh284-p4-release-lanes.sh`: rewired to `releases.db` with red controls.
+      - `test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh`: manifest checks rewired to `releases.db` with silent-skip removal and `--mutate-evidence` verification.
       - `test/gh32-releases-app.sh` & `test/gh32-releases-artifacts.sh`: rehome tests to verify DB-only writes, dump consistency, and absence of generated/drift files.
       - `test/gh267-express-skill.sh` & `test/gh424-roadmap-status-marker.sh`: rebaselined without `RELEASES.generated.md`.
       - `test/gh284-p3-release-milestone.sh`: update to test against DB or test fixtures.
@@ -123,7 +124,7 @@ Just as `ROADMAP.md` was retired in GH-269 and `ROADMAP-DASHBOARD.md` is being r
 - [ ] `releases check` verifies DB <-> canonical dump consistency without checking generated Markdown or drift files.
 - [ ] `doc_lines` and `legacy_lines` schema usage is made dormant with no operational writes in this repo.
 - [ ] `utils/release-lanes.sh` resolves milestones from `releases.db` and passes `test/gh284-p4-release-lanes.sh`.
-- [ ] `test/nightwatch-release.sh` and `test/meter-release.sh` manifest checks are rewired to `releases.db` and verified non-vacuous (`--mutate-evidence` reports RED when mutated).
+- [ ] `test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh` manifest checks are rewired to `releases.db` with silent skips removed, and verified non-vacuous (`--mutate-evidence` reports RED when mutated).
 - [ ] Durable negative control evidence committed to `test/baselines/GH-568-negative-control.md`.
 - [ ] `utils/build-launch-artifact.sh`, `utils/py/swarm_preflight.py`, and `utils/timeline/export_timeline.py` execute cleanly without `RELEASES.md`.
 - [ ] `utils/py/wave_reconcile.py`, `.github/workflows/wave-reconcile.yml`, and `utils/py/express.py` remove all references to `RELEASES.generated.md`.

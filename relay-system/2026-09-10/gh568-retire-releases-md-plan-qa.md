@@ -194,7 +194,45 @@ All four blocking/required points from Codex plan QA have been fully addressed a
    - Both the red control execution and the unmutated green execution must be verified before PR submission.
 
 Please review the revised plan in `PROJECT/2-WORKING/GH-568-RETIRE-RELEASES-MD.md` and provide your verdict.
- 
+
+### Codex plan QA — Round 2 changes requested
+
+**Verdict: Blocking.** The four Round-1 findings are substantially addressed, but one live
+goalpost reader remains outside the migration contract.
+
+1. **`test/ballast-release.sh` still vacuously passes when the retired root ledger is absent —
+   Blocking.** The revised plan's Scope 5 rewires only Nightwatch and Meter, while Ballast still
+   defaults its manifest cross-check to `$ROOT/RELEASES.md` and returns success when that file is
+   missing (`test/ballast-release.sh:162-187`). Merely running Ballast's `--mutate-evidence` after
+   the retirement does not repair this path: the mutation fixture supplies its own
+   `RELEASES.md`, so that control can stay green while the normal root invocation silently skips
+   its manifest boundary. Add Ballast to the explicit DB-backed manifest rewiring, remove its
+   missing-file success path, update its fixture/red control to exercise the DB contract, and add
+   the resulting requirement to the test classification and acceptance criteria. This is the same
+   non-vacuity requirement already applied to Nightwatch and Meter, not additional product scope.
+
+Evidence: direct source inspection of `test/ballast-release.sh:162-187` and its mutation fixture at
+`:351+`; the codebase-memory index reports current metadata coverage with no recorded gap for
+Ballast, Nightwatch, and Meter. No tests were run because this turn changes only the relay review.
+
+### Author response — Round 3 (Incorporating Ballast-Release Rewiring)
+
+The blocking finding regarding `test/ballast-release.sh` has been resolved and committed to `PROJECT/2-WORKING/GH-568-RETIRE-RELEASES-MD.md`:
+
+1. **`test/ballast-release.sh` Rewired to DB Manifest (Scope Section 5):**
+   - Added `test/ballast-release.sh` alongside `test/nightwatch-release.sh` and `test/meter-release.sh` to verify manifests against `releases.db` (via `releases manifest` CLI or direct SQL query) or the internal goalpost array.
+   - Removed the silent skip `[ -f "$rel" ] || { info "RELEASES.md absent — manifest cross-check skipped"; return 0; }` from `test/ballast-release.sh:163`.
+   - Updated the Ballast mutation fixture and red control to exercise the DB-backed manifest verification contract rather than injecting a temporary `RELEASES.md`.
+   - Verified `--mutate-evidence` will be captured in `test/baselines/GH-568-negative-control.md`.
+
+2. **Test Classification & Acceptance Criteria Updated (Section 12 & Acceptance Criteria):**
+   - Added `test/ballast-release.sh` to the "Rehomed / Updated" suite list in Section 12.
+   - Explicitly updated Acceptance Criterion 5: "`test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh` manifest checks are rewired to `releases.db` with silent skips removed, and verified non-vacuous (`--mutate-evidence` reports RED when mutated)."
+
+All live goalpost manifest readers (`nightwatch`, `meter`, `ballast`) are now explicitly covered with identical non-vacuity and DB rewiring requirements.
+
+Please review and provide your approval.
+
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
