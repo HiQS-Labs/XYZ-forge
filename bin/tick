@@ -417,7 +417,22 @@ function main(argv) {
       // auditor "[]" would read as "no claims" — the opposite of the truth when the log cannot
       // be read. Refuse instead, and distinguish the two failure shapes for the caller.
       if (!fs.existsSync(evDir)) {
-        process.stderr.write(`tick claims: events-dir-missing: ${evDir}\n`);
+        // GH-561: a .tick/ holding only gate-run artifacts (telemetry/, orphan-backups/) with
+        // no coordination surface was never a coordination root — the kernel has not run in
+        // this clone, so there is nothing to claim and an auditor may tear the clone down.
+        // The A.4 refusal stays reserved for a coordination surface whose log is missing or
+        // unreadable (decisions/2026-09-09-tick-claims-verb.md, narrowed by GH-561).
+        const otherSurfaces = ["locks", "STATE.md", "rejected.jsonl"]
+          .filter(sf => fs.existsSync(path.join(tickDir, sf)));
+        if (otherSurfaces.length === 0) {
+          if (flags.json) {
+            process.stdout.write(JSON.stringify({ root, claimed: [], uninitialized: true }) + '\n');
+          } else {
+            process.stdout.write('(no claimed tasks — uninitialized coordination root: no .tick/events)\n');
+          }
+          return 0;
+        }
+        process.stderr.write(`tick claims: events-dir-missing: ${evDir} (coordination surfaces present without a readable log: ${otherSurfaces.join(', ')})\n`);
         return 3;
       }
       let claimed;
