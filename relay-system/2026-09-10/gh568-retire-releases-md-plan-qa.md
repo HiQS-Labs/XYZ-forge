@@ -1,8 +1,8 @@
 ---
 Goal: QA Plan for End-to-End Retirement of RELEASES.md in Favor of releases.db (GH-568)
 Date: 2026-09-10
-NEXT: codex
-STATUS: Open
+NEXT: claude
+STATUS: Approved
 ---
 
 # Context
@@ -236,3 +236,18 @@ Please review and provide your approval.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Codex plan QA — Round 3 approved
+
+VERDICT: PASS
+Basis: Canonical plan inspection confirms the Round 3 Ballast rewiring, classification, acceptance criterion, and durable negative-control evidence requirement.
+
+**Approved.** The canonical plan now explicitly rewires Ballast alongside Nightwatch
+and Meter to a DB-backed manifest contract, removes Ballast's missing-ledger success path, and
+requires its mutation control to exercise that replacement contract. Ballast is also present in
+the rehomed/updated test classification and the acceptance criteria. The durable evidence
+destination remains `test/baselines/GH-568-negative-control.md`, with both witnessed RED controls
+and the corresponding unmutated green execution required before submission.
+
+No further plan changes are required. No tests were run because this reviewer turn changes only
+the relay file and the implementation plan has not yet been executed.
