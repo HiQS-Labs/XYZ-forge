@@ -2,6 +2,10 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-11
+
+- **GH-496: Fast-lane direct push optimization (`XYZ_SKIP_PREPUSH=1`) and AST selective routing for append-only `validate.sh` registrations.** `utils/py/express.py` automatically sets `XYZ_SKIP_PREPUSH=1` during express landings to prevent duplicate 4–6 minute local pre-push gating after explicit qualification. `utils/ci-route.sh` introduces structural AST/skeleton parsing (`check_validate_append_only`) to allow fast/Tier-2 routing for append-only test registrations in `validate.sh`, strictly verifying that outside-array code is byte-identical and array comments/tests remain in-order subsequences while failing closed on mutations, syntax errors, or diff errors. Reversibility: **Easy** — revert the routing parser in `utils/ci-route.sh` and express flags. Verification: `test/ci-route.sh` 76/76 (13 positive & falsification cases), `test/gh267-express-skill.sh` 76/76, and Codex QA relay `Approved/Closed`.
+
 ## 2026-09-10
 
 - **GH-554/GH-555: reject unknown Tick flags before mutation and clean verified B1 backups.** Every Tick verb now validates its own flag allowlist before resolving a repository or writing coordination state. Merge-cleanup's B1 ledger resolver removes exactly the landing clone's `releases.db.bak` only after final verification; failure paths retain recovery evidence and unexpected untracked files stop the commit. Reversibility: **Easy** — revert the two focused implementation commits. Verification: GH-554 regression 76/76; merge-cleanup 135/135; GH-555 full disposable-clone gate 371/371 with three parallel-only failures passing isolated retries.

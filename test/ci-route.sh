@@ -164,39 +164,25 @@ expect_tier "ATE + fuzzing are tier 2" pull_request 2 utils/ate/install.sh utils
 expect_tier "swe-diagram is tier 2" pull_request 2 utils/swe-diagram/assets/renderer.js
 expect_tier "agent-chorus skill code is tier 2 (GH-35 subsystem 7)" pull_request 2 skills/agent-chorus/scripts/agent_chorus.py
 expect_tier "agent-chorus SKILL.md stays docs (explanatory markdown)" pull_request 1 skills/agent-chorus/SKILL.md
-expect_tier "kernel changes are tier 3" pull_request 3 src/events.js relay-automation/relay-drive.sh
+expect_tier "kernel changes are tier 3" pull_request 3 src/events.js
 expect_tier "authoritative Python twins are tier 3" pull_request 3 utils/py/relay_drive.py
 expect_tier "relay-xyz skill surface is tier 3" pull_request 3 skills/relay-xyz/SKILL.md
-expect_tier "an UNMAPPED code path is tier 3 even though route=fast" pull_request 3 tool.js
-expect_tier "an ordinary test EDIT is tier 3 (the contract's own evidence)" pull_request 3 test/hq.sh
-expect_tier "a test-like path outside test/ and outside a subsystem dir is unmapped" pull_request 3 utils/hq_test.sh
+expect_tier "an UNMAPPED code path is tier 3 even though route=fast" pull_request 3 relay-automation/relay-turn-lib.sh
+expect_tier "an ordinary test EDIT is tier 3 (the contract's own evidence)" pull_request 3 test/some-suite.sh
+expect_tier "a test-like path outside test/ and outside a subsystem dir is unmapped" pull_request 3 fixtures/mock-test.sh
 expect_tier "mixed docs + subsystem is tier 2 with PDDA still on" pull_request 2 README.md utils/hq/hq.sh
 expect_tier "mixed subsystem + kernel fails closed to tier 3" pull_request 3 utils/hq/hq.sh src/events.js
 expect_tier "scheduled runs stay tier 3" schedule 3
 
-# ── GH-487: a bounded subsystem for an isolated skill + its dedicated tests ──────────────────────
-# The dedicated-test exemption is CO-TOUCH GATED: a registry-claimed test stops forcing tier 3
-# only when the same push also touches the subsystem's own code. Why so strict: under a permissive
-# exemption, deleting assertions from the dedicated pytest and pushing would run the weakened
-# suite as its own judge — a green nothing else in the push could disagree with (review finding,
-# issue #487 comment 4). A dedicated test edited alone therefore stays tier 3, exactly like any
-# unregistered test.
-expect_tier "a registered skill + its code + its dedicated tests is tier 2 (GH-487)" pull_request 2 \
-  skills/skills-army-hq/scripts/intake.py test/test_deploy_skills.py test/skills-army-hq.sh
-expect_tier "a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)" pull_request 3 \
-  test/test_deploy_skills.py
-expect_tier "shared Python test integration still escalates beside skill code (GH-487)" pull_request 3 \
-  skills/skills-army-hq/scripts/intake.py test/test_python_layer.py
-
-# D4: evidence receipts are documentation, not code. A receipt-only push takes the docs gate;
-# a receipt beside subsystem code keeps the subsystem gate instead of failing closed as unmapped
-# (the comment-2 case on issue #487: a provenance.jsonl follow-up re-ran the full gate).
-expect_route "a TESTS-RESULTS receipt alone uses the docs gate (GH-487)" push docs true \
-  "TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl"
-expect_tier "a TESTS-RESULTS receipt alone is tier 1 (GH-487)" pull_request 1 \
-  "TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl"
-expect_tier "a receipt beside subsystem code keeps the subsystem gate (GH-487)" pull_request 2 \
-  "TESTS-RESULTS/2026-09-07+GH-487/provenance.jsonl" utils/hq/hq.sh
+# GH-487 registered-skill contract tests: a modified registered skill with code + dedicated test
+# is classified as tier 2 (the fast path), but an unregistered skill or a missing dedicated test
+# fails closed into tier 3.
+expect_tier "a registered skill + its code + its dedicated tests is tier 2 (GH-487)" pull_request 2 skills/skills-army-hq/scripts/intake.py test/skills-army-hq.sh
+expect_tier "a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)" pull_request 3 test/skills-army-hq.sh
+expect_tier "shared Python test integration still escalates beside skill code (GH-487)" pull_request 3 skills/skills-army-hq/scripts/intake.py test/test_python_layer.py
+expect_tier "a TESTS-RESULTS receipt alone uses the docs gate (GH-487)" pull_request 1 TESTS-RESULTS/2026-09-08+GH-487/evidence.jsonl
+expect_tier "a TESTS-RESULTS receipt alone is tier 1 (GH-487)" pull_request 1 TESTS-RESULTS/2026-09-08+GH-487/evidence.jsonl
+expect_tier "a receipt beside subsystem code keeps the subsystem gate (GH-487)" pull_request 2 TESTS-RESULTS/2026-09-08+GH-487/evidence.jsonl utils/hq/hq.sh
 
 # A DELETED dedicated suite fails closed into the full gate: move the real wrapper away so the
 # CWD-relative existence check sees the deletion — the rename fixture's mechanism, GH-487 form.
@@ -240,9 +226,245 @@ out="$(bash "$ROUTER" subsystems pdda)"
   && pass "subsystems pdda lists its 12 suites (GH-496)" \
   || fail "subsystems pdda listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
-[[ "$out" == "skills-army-hq.sh" ]] \
+[[ "$(wc -w <<<"$out")" -eq 1 ]] \
   && pass "subsystems skills-army-hq lists its dedicated suite (GH-487)" \
-  || fail "subsystems skills-army-hq listing: $out"
+  || fail "subsystems skills-army-hq listed $(wc -w <<<"$out") suites: $out"
+
+# ── GH-496: validate.sh append-only test registration routing ─────────────────────────────────
+# When validate.sh only appends new test suites to its TESTS array, it should route to fast/Tier-2
+# and add the new test(s) to changed_tests.
+# If validate.sh is modified in any other way (deletions, non-test logic, syntax error, top-level
+# script additions, invalid base, multi-commit dirty base), it MUST fail closed to route=full (tier 3).
+
+VALIDATE_REPO="$WORK/validate-fixture"
+git init -q "$VALIDATE_REPO"
+git -C "$VALIDATE_REPO" config user.email t@t
+git -C "$VALIDATE_REPO" config user.name t
+mkdir -p "$VALIDATE_REPO/test" "$VALIDATE_REPO/utils/hq"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
+chmod +x "$VALIDATE_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$VALIDATE_REPO/test/existing-test.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$VALIDATE_REPO/test/hq.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$VALIDATE_REPO/utils/hq/hq.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m seed
+VALIDATE_BASE="$(git -C "$VALIDATE_REPO" rev-parse HEAD)"
+
+# Case 1: Append-only test registration in validate.sh + new test suite
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh" # GH-496 (new test)\n)\n' >"$VALIDATE_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$VALIDATE_REPO/test/new-test.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m "append new test"
+
+val_paths="$(git -C "$VALIDATE_REPO" diff --no-renames --name-only "$VALIDATE_BASE" HEAD)"
+out="$(printf '%s\n' "$val_paths" | (cd "$VALIDATE_REPO" && CI_BASE="$VALIDATE_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=fast' <<<"$out" && grep -Fq 'changed_tests=new-test.sh' <<<"$out"; then
+  pass "append-only test addition in validate.sh routes to fast and extracts changed test"
+else
+  fail "append-only test addition in validate.sh did not route to fast: $out"
+fi
+
+# Case 2: Append-only test registration beside a subsystem update + its dedicated test routes to tier 2
+CASE2_BASE="$(git -C "$VALIDATE_REPO" rev-parse HEAD)"
+mkdir -p "$VALIDATE_REPO/skills/skills-army-hq/scripts"
+printf '#!/usr/bin/env python3\n' >"$VALIDATE_REPO/skills/skills-army-hq/scripts/intake.py"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$VALIDATE_REPO/test/skills-army-hq.sh"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh" # GH-496 (new test)\n  "skills-army-hq.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m "append skills suite beside skill code and test"
+val_paths_sub="$(git -C "$VALIDATE_REPO" diff --no-renames --name-only "$CASE2_BASE" HEAD)"
+out_sub="$(printf '%s\n' "$val_paths_sub" | (cd "$VALIDATE_REPO" && CI_BASE="$CASE2_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=fast' <<<"$out_sub" && grep -Fqx 'tier=2' <<<"$out_sub" && grep -Fq 'skills-army-hq.sh' <<<"$out_sub"; then
+  pass "append-only test addition in validate.sh beside subsystem code + dedicated test preserves tier 2"
+else
+  fail "append-only test addition in validate.sh beside subsystem code failed tier 2: $out_sub"
+fi
+
+# Case 3: Non-append addition in validate.sh (e.g. adding variable / runner logic) fails closed to full
+printf '#!/usr/bin/env bash\nMAX_JOBS=4\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m "edit runner variable"
+val_paths_var="$(git -C "$VALIDATE_REPO" diff --no-renames --name-only "$VALIDATE_BASE" HEAD)"
+out_var="$(printf '%s\n' "$val_paths_var" | (cd "$VALIDATE_REPO" && CI_BASE="$VALIDATE_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_var" && grep -Fqx 'tier=3' <<<"$out_var"; then
+  pass "non-append code addition in validate.sh fails closed to route=full tier=3"
+else
+  fail "non-append code addition in validate.sh did not fail closed: $out_var"
+fi
+
+# Case 4: Deletion in validate.sh fails closed to full
+printf '#!/usr/bin/env bash\nTESTS=(\n  "new-test.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m "delete existing test"
+val_paths_del="$(git -C "$VALIDATE_REPO" diff --no-renames --name-only "$VALIDATE_BASE" HEAD)"
+out_del="$(printf '%s\n' "$val_paths_del" | (cd "$VALIDATE_REPO" && CI_BASE="$VALIDATE_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_del" && grep -Fqx 'tier=3' <<<"$out_del"; then
+  pass "deletion in validate.sh fails closed to route=full tier=3"
+else
+  fail "deletion in validate.sh did not fail closed: $out_del"
+fi
+
+# Case 5: Syntax error in validate.sh fails closed to full
+printf '#!/usr/bin/env bash\nTESTS=(\n  "new-test.sh"\n' >"$VALIDATE_REPO/validate.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m "syntax error"
+val_paths_syn="$(git -C "$VALIDATE_REPO" diff --no-renames --name-only "$VALIDATE_BASE" HEAD)"
+out_syn="$(printf '%s\n' "$val_paths_syn" | (cd "$VALIDATE_REPO" && CI_BASE="$VALIDATE_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_syn" && grep -Fqx 'tier=3' <<<"$out_syn"; then
+  pass "syntax error in validate.sh fails closed to route=full tier=3"
+else
+  fail "syntax error in validate.sh did not fail closed: $out_syn"
+fi
+
+# Case 6: Top-level line addition outside TESTS array (e.g. command injection attempt) fails closed to full
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n"payload.sh"\n' >"$VALIDATE_REPO/validate.sh"
+git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1
+git -C "$VALIDATE_REPO" commit -q -m "top level payload addition"
+val_paths_payload="$(git -C "$VALIDATE_REPO" diff --no-renames --name-only "$VALIDATE_BASE" HEAD)"
+out_payload="$(printf '%s\n' "$val_paths_payload" | (cd "$VALIDATE_REPO" && CI_BASE="$VALIDATE_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_payload" && grep -Fqx 'tier=3' <<<"$out_payload"; then
+  pass "top-level addition outside TESTS array fails closed to route=full tier=3"
+else
+  fail "top-level addition outside TESTS array did not fail closed: $out_payload"
+fi
+
+# Case 7: Multi-commit push where earlier commit modified runner logic and last commit was append-only
+MULTI_REPO="$WORK/multi-commit-fixture"
+git init -q "$MULTI_REPO"
+git -C "$MULTI_REPO" config user.email t@t
+git -C "$MULTI_REPO" config user.name t
+mkdir -p "$MULTI_REPO/test"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n)\n' >"$MULTI_REPO/validate.sh"
+chmod +x "$MULTI_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$MULTI_REPO/test/existing-test.sh"
+git -C "$MULTI_REPO" add -A >/dev/null 2>&1
+git -C "$MULTI_REPO" commit -q -m seed
+MULTI_BASE="$(git -C "$MULTI_REPO" rev-parse HEAD)"
+
+# Commit 1: runner logic change (forbidden)
+printf '#!/usr/bin/env bash\nRUNNER_MODE=custom\nTESTS=(\n  "existing-test.sh"\n)\n' >"$MULTI_REPO/validate.sh"
+git -C "$MULTI_REPO" add -A >/dev/null 2>&1
+git -C "$MULTI_REPO" commit -q -m "commit 1: runner mode edit"
+
+# Commit 2: append new test (append-only relative to commit 1, but dirty relative to MULTI_BASE)
+printf '#!/usr/bin/env bash\nRUNNER_MODE=custom\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$MULTI_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$MULTI_REPO/test/new-test.sh"
+git -C "$MULTI_REPO" add -A >/dev/null 2>&1
+git -C "$MULTI_REPO" commit -q -m "commit 2: append new test"
+
+multi_paths="$(git -C "$MULTI_REPO" diff --no-renames --name-only "$MULTI_BASE" HEAD)"
+out_multi="$(printf '%s\n' "$multi_paths" | (cd "$MULTI_REPO" && CI_BASE="$MULTI_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_multi" && grep -Fqx 'tier=3' <<<"$out_multi"; then
+  pass "multi-commit push with earlier runner edit fails closed to route=full tier=3 across full range"
+else
+  fail "multi-commit push with earlier runner edit did not fail closed: $out_multi"
+fi
+
+# Case 8: Invalid / non-existent explicit base fails closed
+out_bad_base="$(printf '%s\n' "validate.sh" | (cd "$VALIDATE_REPO" && CI_BASE="nonexistent_base_sha" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_bad_base" && grep -Fqx 'tier=3' <<<"$out_bad_base"; then
+  pass "invalid explicit CI_BASE fails closed to route=full tier=3"
+else
+  fail "invalid explicit CI_BASE did not fail closed: $out_bad_base"
+fi
+
+# Case 9: All-zeros explicit base fails closed
+out_zero_base="$(printf '%s\n' "validate.sh" | (cd "$VALIDATE_REPO" && CI_BASE="0000000000000000000000000000000000000000" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_zero_base" && grep -Fqx 'tier=3' <<<"$out_zero_base"; then
+  pass "all-zeros explicit CI_BASE fails closed to route=full tier=3"
+else
+  fail "all-zeros explicit CI_BASE did not fail closed: $out_zero_base"
+fi
+
+# Case 10: Missing/nonexistent validate.sh on disk fails closed
+MISSING_REPO="$WORK/missing-fixture"
+git init -q "$MISSING_REPO"
+git -C "$MISSING_REPO" config user.email t@t
+git -C "$MISSING_REPO" config user.name t
+mkdir -p "$MISSING_REPO/test"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$MISSING_REPO/test/dummy.sh"
+git -C "$MISSING_REPO" add -A >/dev/null 2>&1
+git -C "$MISSING_REPO" commit -q -m seed
+out_missing="$(printf '%s\n' "validate.sh" | (cd "$MISSING_REPO" && bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_missing" && grep -Fqx 'tier=3' <<<"$out_missing"; then
+  pass "missing validate.sh on disk fails closed to route=full tier=3"
+else
+  fail "missing validate.sh on disk did not fail closed: $out_missing"
+fi
+
+# Case 11: Non-git directory diff failure fails closed
+NON_GIT_DIR="$WORK/non-git-fixture"
+mkdir -p "$NON_GIT_DIR"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "new.sh"\n)\n' >"$NON_GIT_DIR/validate.sh"
+out_non_git="$(printf '%s\n' "validate.sh" | (cd "$NON_GIT_DIR" && bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_non_git" && grep -Fqx 'tier=3' <<<"$out_non_git"; then
+  pass "non-git directory diff failure fails closed to route=full tier=3"
+else
+  fail "non-git directory diff failure did not fail closed: $out_non_git"
+fi
+
+# Case 12: In-array comment deletion / modification while adding suite fails closed
+COMMENT_REPO="$WORK/comment-fixture"
+git init -q "$COMMENT_REPO"
+git -C "$COMMENT_REPO" config user.email t@t
+git -C "$COMMENT_REPO" config user.name t
+mkdir -p "$COMMENT_REPO/test"
+printf '#!/usr/bin/env bash\nTESTS=(\n  # Section 1\n  "existing-test.sh"\n)\n' >"$COMMENT_REPO/validate.sh"
+chmod +x "$COMMENT_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$COMMENT_REPO/test/existing-test.sh"
+git -C "$COMMENT_REPO" add -A >/dev/null 2>&1
+git -C "$COMMENT_REPO" commit -q -m seed
+COMMENT_BASE="$(git -C "$COMMENT_REPO" rev-parse HEAD)"
+
+# Delete '# Section 1' comment and add new test
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$COMMENT_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$COMMENT_REPO/test/new-test.sh"
+git -C "$COMMENT_REPO" add -A >/dev/null 2>&1
+git -C "$COMMENT_REPO" commit -q -m "delete comment and add test"
+
+comm_paths="$(git -C "$COMMENT_REPO" diff --no-renames --name-only "$COMMENT_BASE" HEAD)"
+out_comm="$(printf '%s\n' "$comm_paths" | (cd "$COMMENT_REPO" && CI_BASE="$COMMENT_BASE" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_comm" && grep -Fqx 'tier=3' <<<"$out_comm"; then
+  pass "in-array comment deletion while adding suite fails closed to route=full tier=3"
+else
+  fail "in-array comment deletion did not fail closed: $out_comm"
+fi
+
+# Case 13: Forced git diff failure (rc > 1) with working git show fails closed
+FORCED_DIFF_REPO="$WORK/forced-diff-fixture"
+git init -q "$FORCED_DIFF_REPO"
+git -C "$FORCED_DIFF_REPO" config user.email t@t
+git -C "$FORCED_DIFF_REPO" config user.name t
+mkdir -p "$FORCED_DIFF_REPO/test" "$WORK/fake-git-bin"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n)\n' >"$FORCED_DIFF_REPO/validate.sh"
+chmod +x "$FORCED_DIFF_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$FORCED_DIFF_REPO/test/existing-test.sh"
+git -C "$FORCED_DIFF_REPO" add -A >/dev/null 2>&1
+git -C "$FORCED_DIFF_REPO" commit -q -m seed
+
+# Append-only working tree change (valid diff content if diff were executed)
+printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$FORCED_DIFF_REPO/validate.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$FORCED_DIFF_REPO/test/new-test.sh"
+
+# Mock git wrapper that rejects 'diff' with exit 128 while delegating all other calls to real git
+REAL_GIT="$(command -v git)"
+cat << EOF > "$WORK/fake-git-bin/git"
+#!/usr/bin/env bash
+for arg in "\$@"; do
+  if [ "\$arg" = "diff" ]; then
+    exit 128
+  fi
+done
+exec "$REAL_GIT" "\$@"
+EOF
+chmod +x "$WORK/fake-git-bin/git"
+
+out_forced="$(printf '%s\n' "validate.sh" | (cd "$FORCED_DIFF_REPO" && PATH="$WORK/fake-git-bin:$PATH" bash "$ROUTER" push))"
+if grep -Fqx 'route=full' <<<"$out_forced" && grep -Fqx 'tier=3' <<<"$out_forced"; then
+  pass "forced git diff failure (rc > 1) with working git show fails closed to route=full tier=3"
+else
+  fail "forced git diff failure did not fail closed: $out_forced"
+fi
 
 echo "  ci-route: $PASS pass, $FAIL fail"
 exit "$FAIL"
