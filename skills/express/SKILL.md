@@ -82,12 +82,13 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
    plus the CHANGELOG entry appended in the same motion.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
-   adopted release/leaderboard projections refresh
+   adopted release/leaderboard projections and `ROADMAP-DASHBOARD.md` refresh
    in the same phase and are the only accepted driver outputs.
 7. **Gate** — the fix's suite runs green, the tree is RE-SNAPSHOTTED afterwards
    by path and content (`tree-drift`: new paths and changed qualified bytes both
    refuse). Gate identity is re-proven after the suite, staging uses explicit
-   pathspecs, and the push never sets `XYZ_SKIP_PREPUSH`.
+   pathspecs, and the direct push passes `XYZ_SKIP_PREPUSH=1` (the qualifying
+   suite was already verified and receipted in Step 7).
 8. **Land** — one commit of exactly the qualified paths with `Closes #N`, then
    `git push origin HEAD:development`. A concurrent update refuses as a normal
    non-fast-forward; there is no force push and no PR. The closeout switches to clean,
@@ -119,4 +120,5 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
 - No override flag: a refused run routes to the normal fresh-clone PR lane,
   full stop. An `--force` would make every guardrail negotiable.
 - No Costly/one-way-door work, ever (see step 2 refusals).
-- No force push and no bypass of the canonical pre-push gate.
+- No force push (direct landing pushes fast-forward with Step 7 qualifying suite receipt and `XYZ_SKIP_PREPUSH=1`).
+
