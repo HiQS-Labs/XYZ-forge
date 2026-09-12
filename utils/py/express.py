@@ -222,8 +222,6 @@ def snapshot_paths(root, paths):
 def driver_projection_paths(root):
     paths = set(DRIVER_LEDGER)
     paths.update(p for p in RELEASES_PROJECTIONS if os.path.lexists(os.path.join(root, p)))
-    if os.path.isfile(os.path.join(root, "utils", "roadmap-dashboard.sh")):
-        paths.add("ROADMAP-DASHBOARD.md")
     return paths
 
 
@@ -536,12 +534,6 @@ def cmd_ledger(args):
         rel = m.group(1)
     run_releases(root, "manifest", "dial-in", meta["url"], "--gid", rel,
                  "--reason", "express hotfix %s (GH-267 lane)" % datetime.date.today().isoformat())
-    dashboard = os.path.join(root, "utils", "roadmap-dashboard.sh")
-    if os.path.isfile(dashboard):
-        r = subprocess.run(["bash", dashboard], cwd=root, capture_output=True, text=True)
-        if r.returncode != 0:
-            die("roadmap dashboard refresh failed: %s" %
-                ((r.stderr or r.stdout).strip() or "exit %d" % r.returncode))
     print("express-ledger: dialed into %s" % rel)
     return dict(release=rel)
 
