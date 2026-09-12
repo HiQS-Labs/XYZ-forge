@@ -3,8 +3,8 @@ Goal: Final implementation QA — GH-568 End-to-End Retirement of RELEASES.md in
 Date: 2026-09-12
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 Round-cap: 7
 ---
 
@@ -265,3 +265,37 @@ The single remaining Round 5 blocking finding has been addressed in code, verifi
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex implementation QA — Round 7
+
+**Verdict: APPROVED.** The Round 5 blocker is closed, and no blocking defect remains. This was a source-only review: I did not run Git, tests, artifacts, or the project gate; I relied on the producer's recorded focused verification and inspected the final source.
+
+### 1. Acceptance & Scope Completeness — **Closed**
+
+All 14 planned scopes are satisfied. (1) the permanent guard rejects either retired root artifact (`test/gh568-releases-md-retired.sh:93-108`); (2–3) the canonical artifact map is DB/dump/backup-only and `gen` is a refusing compatibility verb (`utils/py/releases_app.py:349-354`, `utils/py/releases_app.py:4693-4694`); (4) release-lane milestone resolution is explicitly DB-backed (`utils/release-lanes.sh:20-21`, `utils/release-lanes.sh:68-72`); (5) the three goalposts use bidirectional DB comparisons, exemplified by Meter and Ballast (`test/meter-release.sh:443-475`, `test/ballast-release.sh:161-190`), while the local milestone check is DB-first and fail-closed (`utils/pdda-local-checks.sh:285-318`, `utils/pdda-local-checks.sh:341-348`); (6) build/preflight references were migrated as recorded in the accepted prior review; (7) timeline drift inputs are deprecated no-op compatibility surfaces (`utils/timeline/export_timeline.py:369-375`, `utils/timeline/export_timeline.py:516-527`); (8) reconciliation snapshots and hosted allowlists contain only surviving artifacts (`utils/py/wave_reconcile.py:1198-1208`, `.github/workflows/wave-reconcile.yml:72-80`); (9) onboarding's legacy behavior remains explicitly scoped (`relay-automation/xyz-releases-onboard.sh:11-19`); (10) `releases-current` now describes and delegates to the DB CLI, retaining an identified legacy fallback (`utils/pdda/pdda.sh:830-846`, `utils/pdda/pdda.sh:1675-1677`); (11) the cockpit prefers the DB with a deliberate downstream fallback (`tools/vscode-cockpit/src/dataSources/releases.ts:67-79`); (12) the rehomed suites are represented by DB-backed Meter/Ballast contracts (`test/meter-release.sh:443-475`, `test/ballast-release.sh:161-190`); (13) the accepted prior review found routing/doc contracts migrated; and (14) the permanent guard covers static writers, runtime non-modification, and witnessed mutations (`test/gh568-releases-md-retired.sh:48-90`, `test/gh568-releases-md-retired.sh:257-289`, `test/baselines/GH-568-negative-control.md:106-124`). The last stale active-facing descriptions are corrected in `release-lanes`, PDDA help, Meter, and Ballast (`utils/release-lanes.sh:3-4`, `utils/pdda/pdda.sh:1675-1677`, `test/meter-release.sh:5-9`, `test/ballast-release.sh:2-15`). No unaddressed active remnant or dead path was found.
+
+### 2. Static & Runtime Writer Audit — **Closed**
+
+The active artifact and transaction boundary is DB/dump-only (`utils/py/releases_app.py:349-354`, `utils/py/releases_app.py:1562-1573`, `utils/py/releases_app.py:1644-1651`). The audit spans the named production roots plus `tools/` and the production shell/Python/YAML/JavaScript/TypeScript extensions (`test/gh568-releases-md-retired.sh:48-90`); its representative CLI probe requires pre-created retired files to remain byte-identical (`test/gh568-releases-md-retired.sh:257-269`). No surviving active writer or write redirection was found; the external onboarding exception is narrow and documented (`relay-automation/xyz-releases-onboard.sh:11-19`).
+
+### 3. Goalpost Manifest Checks & Fail-Closed Behavior — **Closed**
+
+Nightwatch rejects absent DB state and compares missing and extra members (`test/nightwatch-release.sh:184-230`, `test/nightwatch-release.sh:272-300`). Meter and Ballast do the same (`test/meter-release.sh:443-475`, `test/meter-release.sh:598-632`; `test/ballast-release.sh:161-190`, `test/ballast-release.sh:353-379`). The local milestone check treats query failure or missing app-managed DB state as an error and permits legacy parsing only through explicit legacy input (`utils/pdda-local-checks.sh:285-318`, `utils/pdda-local-checks.sh:319-348`). The old silent-success behavior is gone.
+
+### 4. Falsifiable Regression Guard & Evidence — **Closed**
+
+The guard asserts a non-empty candidate population and audits the expanded production tree/language boundary (`test/gh568-releases-md-retired.sh:48-90`, `test/gh568-releases-md-retired.sh:272-289`). It exercises a real CLI mutation against both pre-created retired artifacts (`test/gh568-releases-md-retired.sh:257-269`) and includes a witnessed JS/TS-writer red control (`test/gh568-releases-md-retired.sh:191-203`, `test/gh568-releases-md-retired.sh:362-373`). The durable baseline records all seven witnessed controls (`test/baselines/GH-568-negative-control.md:106-124`). This is falsifiable coverage of both the prior indirect runtime defect and future direct production writers.
+
+### 5. Reversibility, Blast Radius, & Downstream Safety — **Closed**
+
+Writes journal intent, commit the DB, stage and atomically replace the dump, and clear the journal only afterward (`utils/py/releases_app.py:1562-1573`, `utils/py/releases_app.py:1591-1656`); recovery regenerates the dump from committed DB state (`utils/py/releases_app.py:1790-1797`, `utils/py/releases_app.py:1839-1853`). Explicit legacy onboarding and the cockpit fallback preserve downstream migration paths (`relay-automation/xyz-releases-onboard.sh:11-19`, `tools/vscode-cockpit/src/dataSources/releases.ts:67-79`). Reversibility is **Costly but bounded**: restoring the retired projection requires a coordinated contract rollback, while individual mutations retain atomic recovery.
+
+No blocking findings.
+
+## Log
+
+### Round 7 — Codex final implementation QA
+
+VERDICT: PASS
+
+Basis: All five QA questions are Closed with cited source evidence; the Round 5 contract-text blocker is corrected and no active writer, fail-open goalpost, regression-guard gap, or unbounded rollback defect remains.
