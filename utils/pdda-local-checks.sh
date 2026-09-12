@@ -350,10 +350,13 @@ EOF
 $sql_out
 EOF
     fi
-  else
+  elif [ -f "$PDDA_REPO_ROOT/releases.sql" ]; then
     pdda_record_finding error "$CHECK_NAME" "$db" 0 \
-      "releases.db not found — release milestone check cannot run" "missing-db"
+      "releases.db not found (releases.sql present) — run releases check --rebuild" "missing-db"
     rc=1
+  else
+    pdda_record_finding info "$CHECK_NAME" "$db" 0 \
+      "no release ledger found (releases.db absent) — skipping release milestone check" "skip"
   fi
 
   pdda_emit_summary "$CHECK_NAME" "$rc"

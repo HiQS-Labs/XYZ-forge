@@ -144,8 +144,8 @@ Explain which signal fired. Never call a large manifest abusive solely because o
    existing project doc. Never create a new doc merely to shorten the ledger.
 3. **App-managed repo:** render the cleanup as the exact `releases update --gid <id> ...` (and
    `releases manifest ...` / legacy-line disposition) command set, preview those commands, and get
-   one confirmation. On confirmation run them, then `releases gen --side-by-side` and report the
-   drift. The CLI's own preimage/lock handling replaces the hash dance below.
+   one confirmation. On confirmation run them, then finish with `releases check`.
+   The CLI's own preimage/lock handling replaces the hash dance below.
 4. **Legacy-managed repo:** record the file hash before preview. Render the exact patch and get one
    confirmation. Immediately before writing, re-read `RELEASES.md` and compare its hash. If it
    changed, discard the patch, synthesize again, and preview a new patch. Edit only the confirmed
