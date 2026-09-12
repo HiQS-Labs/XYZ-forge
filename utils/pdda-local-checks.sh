@@ -289,7 +289,13 @@ check_release_milestone() {
   local front_door shakedown license_file iterations milestone status_lc rows
   local db="$PDDA_REPO_ROOT/releases.db"
 
-  if [ -n "${PDDA_RELEASES_FILE:-}" ] && [ -f "$PDDA_RELEASES_FILE" ]; then
+  if [ -n "${PDDA_RELEASES_FILE:-}" ]; then
+    if [ ! -f "$PDDA_RELEASES_FILE" ]; then
+      pdda_record_finding error "$CHECK_NAME" "$PDDA_RELEASES_FILE" 0 \
+        "specified PDDA_RELEASES_FILE does not exist: $PDDA_RELEASES_FILE" "missing-releases-file"
+      pdda_emit_summary "$CHECK_NAME" 1
+      return "$(pdda_gated_exit 1)"
+    fi
     # Legacy fallback when an explicit PDDA_RELEASES_FILE is provided (e.g. test fixture or external repo)
     local RELEASES_FILE_EFF="$PDDA_RELEASES_FILE"
     rows="$(pdda_releases_list "$RELEASES_FILE_EFF")"
@@ -314,7 +320,13 @@ $rows
 EOF
   elif [ -f "$db" ]; then
     local sql_out sql_err
-    sql_err="$(mktemp 2>/dev/null || echo "/tmp/pdda-sql-err.$$")"
+    sql_err="$(mktemp 2>/dev/null || true)"
+    if [ -z "$sql_err" ] || [ ! -f "$sql_err" ]; then
+      pdda_record_finding error "$CHECK_NAME" "$db" 0 \
+        "failed to create secure temporary file for sqlite error log" "mktemp-failed"
+      pdda_emit_summary "$CHECK_NAME" 1
+      return "$(pdda_gated_exit 1)"
+    fi
     sql_out="$(sqlite3 "$db" "SELECT version, status, target_date, milestone FROM releases;" 2>"$sql_err")"
     local sql_rc=$?
     if [ "$sql_rc" -ne 0 ]; then

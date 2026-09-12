@@ -38,7 +38,10 @@ edited that ledger, finish with `releases roadmap sync` (a no-change sync is a f
    is **app-managed**: the SQLite database is the sole source of truth (`RELEASES.md` is retired per GH-568),
    and **every mutation this skill performs MUST go through the
    `releases` CLI (`utils/py/releases_app.py`).**
-   If `releases.db` is absent, this is a **legacy-managed** repo and legacy `RELEASES.md` procedures apply.
+   If `releases.sql` exists at the repository root but `releases.db` is absent, the ledger is in an
+   incomplete state — stop with an error prompting `releases check --rebuild`.
+   Only if neither app-managed marker (`releases.db` nor `releases.sql`) exists is this a **legacy-managed**
+   repo where legacy `RELEASES.md` procedures apply.
 3. Read `PROJECT/PDDA.md`'s release ledger contract, `releases.db` (or `RELEASES.md`), and
    `CHANGELOG.md`. A missing, empty, sparse, or apparently old ledger is valid. In an app-managed
    repo, also run `releases check` and surface any findings before proceeding.

@@ -5906,8 +5906,7 @@ def cmd_reconcile(args):
 
 def build_parser():
     p = argparse.ArgumentParser(prog="releases",
-                                 description="GH-32 SQLite-backed RELEASES ledger CLI "
-                                             "(Phase 0+1: side-by-side generation only)")
+                                 description="SQLite-backed releases and roadmap ledger CLI")
     p.add_argument("--root", help="repo root (default: git toplevel of the CWD)")
     sub = p.add_subparsers(dest="cmd", required=True)
 

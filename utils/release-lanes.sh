@@ -87,43 +87,46 @@ try:
 except Exception as e:
     emit(f"release-lanes: cannot open releases.db at {db_path}: {e}", 3)
 
-if want:
+try:
+    if want:
+        cur = conn.execute(
+            "SELECT version, codename, status, milestone FROM releases WHERE version = ? OR codename = ?",
+            (want, want)
+        )
+        hits = cur.fetchall()
+        if not hits:
+            emit(f"release-lanes: no release matches --release {want!r} in releases.db "
+                 f"(matched against version and codename)", 3)
+        if len(hits) > 1:
+            emit(f"release-lanes: --release {want!r} matches {len(hits)} releases — disambiguate with "
+                 f"--milestone", 3)
+        ms = hits[0]["milestone"]
+        if not ms or not ms.strip():
+            # Phase 3's own wording. A release with no join key cannot resolve to an issue set, and
+            # returning an empty list here would look identical to a milestone with no open issues.
+            emit(f"release-lanes: release {want!r} has no Milestone: — it cannot resolve to an issue "
+                 f"set. Add the GitHub milestone title to its release record in releases.db.", 3)
+        print(ms.strip())
+        raise SystemExit(0)
+
+    # No --release: fall back to the in-progress releases that carry a milestone. "shipped" and "cut" are excluded.
     cur = conn.execute(
-        "SELECT version, codename, status, milestone FROM releases WHERE version = ? OR codename = ?",
-        (want, want)
+        "SELECT version, codename, status, milestone FROM releases WHERE status NOT IN ('shipped', 'cut') AND milestone IS NOT NULL AND trim(milestone) != ''"
     )
-    hits = cur.fetchall()
-    if not hits:
-        emit(f"release-lanes: no release matches --release {want!r} in releases.db "
-             f"(matched against version and codename)", 3)
-    if len(hits) > 1:
-        emit(f"release-lanes: --release {want!r} matches {len(hits)} releases — disambiguate with "
-             f"--milestone", 3)
-    ms = hits[0]["milestone"]
-    if not ms or not ms.strip():
-        # Phase 3's own wording. A release with no join key cannot resolve to an issue set, and
-        # returning an empty list here would look identical to a milestone with no open issues.
-        emit(f"release-lanes: release {want!r} has no Milestone: — it cannot resolve to an issue "
-             f"set. Add the GitHub milestone title to its release record in releases.db.", 3)
+    live = cur.fetchall()
+    if not live:
+        emit("release-lanes: no in-progress release in releases.db carries a Milestone:. Pass --milestone "
+             "explicitly, or add the join key to the release you mean.", 3)
+    if len(live) > 1:
+        names = ", ".join(sorted(set(b["milestone"].strip() for b in live if b["milestone"])))
+        emit(f"release-lanes: multiple in-progress releases carry milestones ({names}) — pass --release or "
+             f"--milestone to pick one", 3)
+
+    ms = live[0]["milestone"]
     print(ms.strip())
     raise SystemExit(0)
-
-# No --release: fall back to the in-progress releases that carry a milestone. "shipped" and "cut" are excluded.
-cur = conn.execute(
-    "SELECT version, codename, status, milestone FROM releases WHERE status NOT IN ('shipped', 'cut') AND milestone IS NOT NULL AND trim(milestone) != ''"
-)
-live = cur.fetchall()
-if not live:
-    emit("release-lanes: no in-progress release in releases.db carries a Milestone:. Pass --milestone "
-         "explicitly, or add the join key to the release you mean.", 3)
-if len(live) > 1:
-    names = ", ".join(sorted(set(b["milestone"].strip() for b in live if b["milestone"])))
-    emit(f"release-lanes: multiple in-progress releases carry milestones ({names}) — pass --release or "
-         f"--milestone to pick one", 3)
-
-ms = live[0]["milestone"]
-print(ms.strip())
-raise SystemExit(0)
+except sqlite3.Error as e:
+    emit(f"release-lanes: query failed on {db_path}: {e}", 3)
 PYEOF
 }
 

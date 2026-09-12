@@ -87,6 +87,73 @@ check_writer_audit() {
     return 1
   fi
 
+  # 2b. Focused Python AST check: detect open() in write/append mode even with nested expressions (e.g. os.path.join)
+  local py_files
+  py_files=$(find "${dirs[@]}" -type f -name "*.py" 2>/dev/null | \
+    grep -v 'relay-automation/xyz-releases-onboard\.sh' | \
+    grep -v '/node_modules/' | \
+    grep -v '/dist/' | \
+    grep -v '/out/' || true)
+
+  if [ -n "$py_files" ]; then
+    local ast_matches
+    ast_matches=$(echo "$py_files" | python3 -c '
+import ast, sys
+
+findings = []
+for line in sys.stdin:
+    path = line.strip()
+    if not path:
+        continue
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            tree = ast.parse(f.read(), filename=path)
+    except Exception:
+        continue
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            is_open = False
+            if isinstance(node.func, ast.Name) and node.func.id == "open":
+                is_open = True
+            elif isinstance(node.func, ast.Attribute) and node.func.attr == "open":
+                is_open = True
+            if is_open and node.args:
+                mode = None
+                if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant) and isinstance(node.args[1].value, str):
+                    mode = node.args[1].value
+                for kw in node.keywords:
+                    if kw.arg == "mode" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+                        mode = kw.value.value
+                if mode and any(m in mode for m in ("w", "a", "x", "+")):
+                    has_retired = False
+                    for child in ast.walk(node.args[0]):
+                        if isinstance(child, ast.Constant) and isinstance(child.value, str):
+                            if "RELEASES.md" in child.value or "RELEASES.generated.md" in child.value:
+                                has_retired = True
+                                break
+                    if has_retired:
+                        lineno = getattr(node, "lineno", 1)
+                        findings.append(f"{path}:{lineno}: open() in write mode targeting retired releases file")
+            elif isinstance(node.func, ast.Attribute) and node.func.attr in ("write_text", "write_bytes"):
+                has_retired = False
+                for child in ast.walk(node.func.value):
+                    if isinstance(child, ast.Constant) and isinstance(child.value, str):
+                        if "RELEASES.md" in child.value or "RELEASES.generated.md" in child.value:
+                            has_retired = True
+                            break
+                if has_retired:
+                    lineno = getattr(node, "lineno", 1)
+                    findings.append(f"{path}:{lineno}: Path.write_* targeting retired releases file")
+for f in findings:
+    print(f)
+' 2>/dev/null || true)
+
+    if [ -n "$ast_matches" ]; then
+      echo "$ast_matches" >&2
+      return 1
+    fi
+  fi
+
   return 0
 }
 
@@ -202,7 +269,22 @@ SUBEOF
     exit 1
   fi
 
-  echo "== ALL 7 RED CONTROLS WITNESSED PASSING =="
+  # Control 8: Mutated writer audit with Python nested expression write (GH-568 CodeRabbit)
+  M8="$WORK/m8"
+  mkdir -p "$M8/utils/py"
+  cat > "$M8/utils/py/bad_nested_writer.py" <<'SUBEOF'
+import os
+with open(os.path.join("root", "RELEASES.md"), "w") as f:
+    f.write("resurrect\n")
+SUBEOF
+  if ! check_writer_audit "$M8" >/dev/null 2>&1; then
+    echo "WITNESS_RED_CONTROL_8: PASS (correctly detected nested expression Python write to RELEASES.md)"
+  else
+    echo "WITNESS_RED_CONTROL_8: FAIL (did not detect nested expression Python write)"
+    exit 1
+  fi
+
+  echo "== ALL 8 RED CONTROLS WITNESSED PASSING =="
   exit 0
 fi
 
@@ -221,6 +303,20 @@ if python3 -c 'import sys; sys.path.insert(0, "'"$root/utils/py"'"); from releas
 else
   fail "artifact_paths() still exposes retired keys (gen, drift, or ledger)"
 fi
+
+# ── 1c. CLI gen command refusal audit (GH-568 CodeRabbit) ───────────────────
+
+gen_tmp=$(mktemp -d)
+set +e
+gen_out=$(python3 "$root/utils/py/releases_app.py" --root "$gen_tmp" gen 2>&1)
+gen_rc=$?
+set -e
+if [ "$gen_rc" -ne 0 ] && echo "$gen_out" | grep -q "rule=retired" && [ ! -f "$gen_tmp/RELEASES.generated.md" ] && [ ! -f "$gen_tmp/RELEASES.md" ]; then
+  pass "releases_app.py gen exits nonzero ($gen_rc), reports rule=retired, and creates no retired artifacts"
+else
+  fail "releases_app.py gen did not refuse cleanly with rule=retired (rc=$gen_rc)"
+fi
+rm -rf "$gen_tmp"
 
 # ── 2. Active Tools Execution ────────────────────────────────────────────────
 
@@ -370,6 +466,20 @@ if ! check_writer_audit "$MUT_DIR7" >/dev/null 2>&1; then
   pass "red control 7: writer audit correctly reported RED when JS/TS write was injected"
 else
   fail "red control 7: writer audit failed to detect JS/TS write to RELEASES.md"
+fi
+
+# Red Control 8: Mutated writer audit with Python nested expression write
+MUT_DIR8="$WORK/mut_nested_writer"
+mkdir -p "$MUT_DIR8/utils/py"
+cat > "$MUT_DIR8/utils/py/bad_nested_writer.py" <<'SUBEOF'
+import os
+with open(os.path.join("root", "RELEASES.md"), "w") as f:
+    f.write("resurrect\n")
+SUBEOF
+if ! check_writer_audit "$MUT_DIR8" >/dev/null 2>&1; then
+  pass "red control 8: writer audit correctly reported RED when nested expression Python write was injected"
+else
+  fail "red control 8: writer audit failed to detect nested expression Python write to RELEASES.md"
 fi
 
 echo "== GH-568 ALL PASSED =="

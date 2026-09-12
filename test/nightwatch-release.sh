@@ -202,9 +202,14 @@ manifest_matches_releases_db() {
   head="${line%%.*}"
 
   # direction 1 — everything this file names must be declared in the ledger
+  local ledger_tokens
+  ledger_tokens=" $(printf '%s\n' "$head" | /usr/bin/grep -o '#[0-9]\+' | tr '\n' ' ') "
   for entry in "${MANIFEST[@]}"; do
     n="${entry%%|*}"
-    printf '%s' "$head" | /usr/bin/grep -q "#$n" || missing="$missing #$n"
+    case "$ledger_tokens" in
+      *" #$n "*) ;;
+      *) missing="$missing #$n" ;;
+    esac
   done
 
   # direction 2 — everything the ledger declares must be named in this file (bidirectional check)

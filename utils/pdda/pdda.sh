@@ -832,17 +832,24 @@ EOF
 # another repo's tooling (e.g. the XYZ sibling harness). In this repo, delegates to releases.db CLI
 # (or legacy RELEASES.md); lists active/unshipped releases (best-effort filter, not a gate).
 cmd_releases_current() {
-  local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
   local release status target_date codename description gh_url line_no status_lc any=0
   local front_door shakedown license_file iterations milestone
+  local RELEASES_FILE_EFF
 
-  if [ ! -f "$RELEASES_FILE_EFF" ]; then
-    if [ -f "$PDDA_REPO_ROOT/releases.db" ] && [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ]; then
-      printf 'PDDA releases-current — releases.db active releases (GH-568):\n'
-      python3 "$PDDA_REPO_ROOT/utils/py/releases_app.py" list || true
+  if [ -n "${PDDA_RELEASES_FILE:-}" ]; then
+    RELEASES_FILE_EFF="$PDDA_RELEASES_FILE"
+    if [ ! -f "$RELEASES_FILE_EFF" ]; then
+      printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
       return 0
     fi
-    printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
+  elif [ -f "$PDDA_REPO_ROOT/releases.db" ] && [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ]; then
+    printf 'PDDA releases-current — releases.db active releases (GH-568):\n'
+    python3 "$PDDA_REPO_ROOT/utils/py/releases_app.py" list || true
+    return 0
+  elif [ -f "$PDDA_REPO_ROOT/RELEASES.md" ]; then
+    RELEASES_FILE_EFF="$PDDA_REPO_ROOT/RELEASES.md"
+  else
+    printf '%s not found — nothing to report\n' "$(pdda_relpath "$PDDA_REPO_ROOT/RELEASES.md")"
     return 0
   fi
 
