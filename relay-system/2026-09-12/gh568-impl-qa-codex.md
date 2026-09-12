@@ -3,7 +3,7 @@ Goal: Final implementation QA — GH-568 End-to-End Retirement of RELEASES.md in
 Date: 2026-09-12
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 Round-cap: 5
 ---
@@ -138,6 +138,38 @@ The intended DB/dump design has a credible rollback and recovery boundary: write
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Codex implementation QA — Round 5
+
+**Verdict: BLOCKING.** The Round 3 implementation and guard defects are repaired. One bounded contract-cleanup gap remains, so the claimed end-to-end retirement is not yet complete. This was source-only review; I did not run Git, tests, artifacts, or the project gate.
+
+### 1. Acceptance & Scope Completeness — **Blocking**
+
+Scopes 1–9 and 11–14 now have the intended boundary: the canonical CLI exposes only DB/dump/backup artifacts and documents the DB/dump transaction (`utils/py/releases_app.py:349-354`, `utils/py/releases_app.py:1562-1573`); recovery regenerates only the dump (`utils/py/releases_app.py:1790-1797`); `gen` remains a refusing compatibility verb (`utils/py/releases_app.py:4693-4694`, `utils/py/releases_app.py:6015-6022`); timeline drift inputs are explicit no-ops (`utils/timeline/export_timeline.py:369-375`, `utils/timeline/export_timeline.py:516-527`); reconciliation and hosted allowlists retain only DB/dump artifacts (`utils/py/wave_reconcile.py:1198-1208`, `.github/workflows/wave-reconcile.yml:72-80`); and the cockpit reads `releases.db` with a deliberate downstream legacy fallback (`tools/vscode-cockpit/src/dataSources/releases.ts:67-79`). The release goalpost implementations and their missing/extra mutations are DB-backed (`test/nightwatch-release.sh:184-230`, `test/nightwatch-release.sh:272-300`; `test/meter-release.sh:443-475`, `test/meter-release.sh:598-632`; `test/ballast-release.sh:161-190`, `test/ballast-release.sh:353-379`).
+
+Scope 10 and associated migrated command contracts still contain active-facing remnants. `release-lanes.sh` describes itself as turning a `RELEASES.md` release into input and says `--release` matches a `RELEASES.md` block, although its implementation is DB-only (`utils/release-lanes.sh:3-3`, `utils/release-lanes.sh:20-20`, `utils/release-lanes.sh:68-71`). The PDDA CLI usage still advertises `releases-current` as a roll-up of `RELEASES.md`, even though the command delegates to the DB CLI (`utils/pdda/pdda.sh:834-844`, `utils/pdda/pdda.sh:1677-1678`). Migrated Meter and Ballast suite headers/evidence metadata likewise still identify `RELEASES.md` as the manifest source (`test/meter-release.sh:7-7`, `test/ballast-release.sh:2-13`) while their checks query `releases.db`. These are not preserved generic downstream-PDDA documentation like the explicitly marked legacy helpers (`utils/pdda/pdda-lib.sh:448-452`); they describe this repo's migrated active commands and tests.
+
+Smallest acceptable fix: update only those stale headers/help strings to say `releases.db` (and its manifest fields). Preserve the explicitly labeled downstream legacy parser/check contracts.
+
+### 2. Static & Runtime Writer Audit — **Closed**
+
+The active writer surface remains DB/dump-only (`utils/py/releases_app.py:349-354`, `utils/py/releases_app.py:1562-1568`, `utils/py/releases_app.py:1644-1651`, `utils/py/releases_app.py:1790-1797`). The permanent audit now scans production shell, Python, YAML, JS, MJS, and TS across `tools/` as well as the original production roots (`test/gh568-releases-md-retired.sh:48-83`), while the external onboarding writer is narrowly and explicitly exempted (`relay-automation/xyz-releases-onboard.sh:11-19`). The representative CLI probe requires both pre-created retired files to remain byte-equivalent (`test/gh568-releases-md-retired.sh:257-269`). No surviving active writer was found in the stated production scope.
+
+### 3. Goalpost Manifest Checks & Fail-Closed Behavior — **Closed**
+
+Nightwatch rejects absent DB state plus missing and extra members (`test/nightwatch-release.sh:184-230`, `test/nightwatch-release.sh:272-300`). Meter and Ballast enforce the same bidirectional DB contract and carry missing-DB controls (`test/meter-release.sh:443-475`, `test/meter-release.sh:598-632`; `test/ballast-release.sh:161-190`, `test/ballast-release.sh:353-379`). The local milestone check is DB-first, turns SQLite failure into `rc=1`, and permits legacy parsing only when an explicit legacy file was supplied (`utils/pdda-local-checks.sh:285-318`, `utils/pdda-local-checks.sh:319-348`).
+
+### 4. Falsifiable Regression Guard & Evidence — **Closed**
+
+The guard has non-empty candidate counting and scans the expanded production language/tree boundary (`test/gh568-releases-md-retired.sh:48-90`, `test/gh568-releases-md-retired.sh:272-289`). Its runtime control exercises a real CLI write (`test/gh568-releases-md-retired.sh:257-269`), and its JS/TS mutation proves the newly added branch turns red (`test/gh568-releases-md-retired.sh:191-203`, `test/gh568-releases-md-retired.sh:362-373`). The durable record identifies all seven witnessed controls, including empty input, indirect runtime modification, and JS/TS writing (`test/baselines/GH-568-negative-control.md:106-124`).
+
+### 5. Reversibility, Blast Radius, & Downstream Safety — **Closed**
+
+Writes journal intent, commit the DB, stage and atomically replace the dump, then clear the journal (`utils/py/releases_app.py:1562-1573`, `utils/py/releases_app.py:1591-1656`); post-commit recovery derives the dump from DB state (`utils/py/releases_app.py:1790-1797`, `utils/py/releases_app.py:1839-1853`). Legacy import/onboarding and the cockpit fallback preserve downstream migration paths (`relay-automation/xyz-releases-onboard.sh:11-19`, `tools/vscode-cockpit/src/dataSources/releases.ts:67-79`). Reversibility remains **Costly but bounded**: contract rollback is coordinated, while individual mutations retain atomic recovery.
+
+### Blocking findings
+
+1. Replace the stale `RELEASES.md` source descriptions in `utils/release-lanes.sh`, the `pdda.sh releases-current` usage text, and the Meter/Ballast suite headers with their actual `releases.db` contracts; keep explicitly labeled downstream legacy documentation intact.
+
 ## Codex implementation QA — Round 3
 
 **Verdict: BLOCKING.** The three Round 1 behavioral defects are repaired, but the claimed end-to-end retirement still has two bounded gaps. This was a source-only review: I did not run Git, the full gate, or mutation-heavy `test/*.sh` from this linked worktree.
@@ -209,4 +241,3 @@ Both Round 3 blocking findings have been addressed in code, verified with negati
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
-
