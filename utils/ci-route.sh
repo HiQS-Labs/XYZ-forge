@@ -23,7 +23,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # a registry naming a suite that never runs is a green lie (the releases-skill lesson).
 SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup skills-army-hq"
 SUBSYSTEM_TESTS_hq="hq.sh hq-park.sh hq-park-synthesis.sh hq-dispatch.sh hq-next.sh hq-locator.sh hq-hardening.sh hq-promote.sh hq-marathon-scan.sh hq-rollup.sh hq-marathon-live.sh gh238-hq-releases-mode.sh gh239-hq-status-releases-mode.sh"
-SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh549-work-events.sh"
+SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh567-roadmap-dashboard-retired.sh"
 SUBSYSTEM_TESTS_telemetry="xyz-completion.sh gh358-lock-instrumentation.sh archive-telemetry.sh gh496-telemetry-isolation.sh"
 SUBSYSTEM_TESTS_ate="ate-run-variations.sh gh298-ate-gen4-ci-smoke.sh gh-gen4-phase1-domain-oracles.sh gh-gen4-phase2-adaptive-ate.sh gh-gen4-phase3-fuzz-engine.sh gh-gen4-phase4-repro-synth.sh gh-gen4-phase5-campaign.sh gh478-runaway-guard.sh"
 SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
@@ -108,6 +108,141 @@ case "$event_name" in
     ;;
 esac
 
+_validate_checked=0
+_validate_is_append_only=0
+_validate_added_tests=()
+
+check_validate_append_only() {
+  [ "$_validate_checked" -eq 1 ] && return 0
+  _validate_checked=1
+
+  [[ -f "validate.sh" ]] || return 0
+  bash -n "validate.sh" >/dev/null 2>&1 || return 0
+
+  local explicit_base="${CI_BASE:-${BASE_SHA:-${BEFORE_SHA:-}}}"
+  local base_content="" head_content=""
+
+  if [ -n "$explicit_base" ]; then
+    # When an explicit base is set, we MUST use it and NEVER fall back
+    if [ -z "${explicit_base//0/}" ]; then
+      return 0
+    fi
+    if ! git cat-file -e "${explicit_base}^{commit}" 2>/dev/null; then
+      return 0
+    fi
+    base_content="$(git show "${explicit_base}:validate.sh" 2>/dev/null)" || return 0
+    head_content="$(cat validate.sh 2>/dev/null)" || return 0
+  else
+    local diff_rc=0
+    git diff --no-renames --quiet HEAD -- validate.sh 2>/dev/null || diff_rc=$?
+    if [ "$diff_rc" -eq 0 ]; then
+      # Working tree is clean: compare HEAD~1 to HEAD
+      if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+        base_content="$(git show "HEAD~1:validate.sh" 2>/dev/null)" || return 0
+        head_content="$(git show "HEAD:validate.sh" 2>/dev/null)" || return 0
+      else
+        return 0
+      fi
+    elif [ "$diff_rc" -eq 1 ]; then
+      # Working tree has modifications: compare HEAD to working tree
+      base_content="$(git show "HEAD:validate.sh" 2>/dev/null)" || return 0
+      head_content="$(cat validate.sh 2>/dev/null)" || return 0
+    else
+      # diff command failed (e.g. exit 128 / corruption) -> fail closed immediately
+      return 0
+    fi
+  fi
+
+  [ -n "$base_content" ] && [ -n "$head_content" ] || return 0
+
+  local py_out
+  if py_out="$(python3 -c '
+import sys, re
+base_content = sys.argv[1]
+head_content = sys.argv[2]
+
+def parse_validate(content):
+    lines = content.splitlines()
+    in_tests = False
+    array_lines = []
+    skeleton = []
+    start_re = re.compile(r"^\s*TESTS=\(\s*$")
+    end_re = re.compile(r"^\s*\)\s*$")
+    for l in lines:
+        if not in_tests:
+            if start_re.match(l):
+                in_tests = True
+                skeleton.append("TESTS=(")
+            else:
+                skeleton.append(l)
+        else:
+            if end_re.match(l):
+                in_tests = False
+                skeleton.append(")")
+            else:
+                array_lines.append(l)
+    if in_tests:
+        return None, None
+    return skeleton, array_lines
+
+base_skel, base_arr = parse_validate(base_content)
+head_skel, head_arr = parse_validate(head_content)
+
+if base_skel is None or head_skel is None or base_skel != head_skel:
+    sys.exit(1)
+
+it = iter(head_arr)
+if not all(line in it for line in base_arr):
+    sys.exit(1)
+
+test_re = re.compile(r"^\s*\"([a-zA-Z0-9._-]+\.sh)\"(?:\s*#.*)?$")
+comment_re = re.compile(r"^\s*(?:#.*)?$")
+
+base_it = iter(base_arr)
+curr_base = next(base_it, None)
+added_tests = []
+has_added = False
+
+for h_line in head_arr:
+    if curr_base is not None and h_line == curr_base:
+        curr_base = next(base_it, None)
+    else:
+        has_added = True
+        m = test_re.match(h_line)
+        if m:
+            added_tests.append(m.group(1))
+        elif comment_re.match(h_line):
+            pass
+        else:
+            sys.exit(1)
+
+if not has_added or not added_tests:
+    sys.exit(1)
+
+for t in added_tests:
+    print(t)
+sys.exit(0)
+' "$base_content" "$head_content" 2>/dev/null)"; then
+    _validate_is_append_only=1
+    while IFS= read -r t || [[ -n "$t" ]]; do
+      [[ -n "$t" ]] || continue
+      _validate_added_tests+=("$t")
+    done <<< "$py_out"
+  fi
+}
+
+is_validate_append_only() {
+  check_validate_append_only
+  [ "$_validate_is_append_only" -eq 1 ]
+}
+
+extract_validate_added_tests() {
+  check_validate_append_only
+  if [ "${#_validate_added_tests[@]}" -gt 0 ]; then
+    printf '%s\n' "${_validate_added_tests[@]}"
+  fi
+}
+
 docs_only=true
 pdda_needed=false
 full_required=false
@@ -167,7 +302,12 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   # (GH-35 moved utils/pdda/** and skills/agent-chorus code off this list and into the
   # subsystem registry, per the issue's Tier-2 mapping; their focused suites run instead.)
   case "$path" in
-    .github/workflows/*|validate.sh|utils/ci-route.sh|test/ci-route.sh|test/ci-workflow.sh)
+    validate.sh)
+      if ! is_validate_append_only; then
+        full_required=true
+      fi
+      ;;
+    .github/workflows/*|utils/ci-route.sh|test/ci-route.sh|test/ci-workflow.sh)
       full_required=true
       ;;
     bin/tick|bin/validate-relay-block|src/*)
@@ -217,6 +357,11 @@ while IFS= read -r path || [[ -n "$path" ]]; do
     *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
       : # docs — neither disqualifies tier 1 nor joins a subsystem
       ;;
+    validate.sh)
+      if ! is_validate_append_only; then
+        unmapped="$path"
+      fi
+      ;;
     *)
       sub="$(subsystem_of "$path" || true)"
       if [ -n "$sub" ]; then
@@ -243,6 +388,14 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   esac
 
   case "$path" in
+    validate.sh)
+      if is_validate_append_only; then
+        while IFS= read -r added_t || [[ -n "$added_t" ]]; do
+          [[ -n "$added_t" ]] || continue
+          add_changed_test "$added_t"
+        done < <(extract_validate_added_tests)
+      fi
+      ;;
     test/*.sh)
       if [[ -f "$path" ]]; then
         add_changed_test "${path#test/}"
