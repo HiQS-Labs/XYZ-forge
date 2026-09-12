@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# release-lanes.sh — GH-284 Phase 4: turn a RELEASES.md release into marathon input, and report
+# release-lanes.sh — GH-284 Phase 4: turn a releases.db release into marathon input, and report
 # what of it actually landed on trunk.
 #
 # Phase 3 gave a release a join key (`Milestone:` — a GitHub milestone TITLE). This is the half that
@@ -17,8 +17,8 @@
 #   utils/release-lanes.sh seed   [--milestone TITLE | --release NAME] [--limit N]
 #   utils/release-lanes.sh rollup [--milestone TITLE | --release NAME] [--trunk REF] [--json]
 #
-# Milestone resolution, in order: --milestone wins; else --release NAME matches a RELEASES.md block
-# by `Release:` or `Codename:`; else the single in-progress block that carries a `Milestone:`.
+# Milestone resolution, in order: --milestone wins; else --release NAME matches a releases.db release
+# by version or codename; else the single in-progress release that carries a milestone.
 #
 # `rollup` derives trunk from origin/HEAD (never a hardcoded branch name). In this repo that is
 # `origin/main`, which is the release trunk — but day-to-day work lands on `development` first, so
@@ -65,7 +65,7 @@ done
 [[ -z "$MILESTONE" || -z "$RELEASE" ]] || die "--milestone and --release are mutually exclusive"
 
 # ── milestone resolution ────────────────────────────────────────────────────────────────────────
-# Reads releases.db directly (GH-568) instead of parsing legacy RELEASES.md prose.
+# Reads releases.db directly (GH-568) instead of parsing legacy markdown prose.
 resolve_milestone() {
   [[ -n "$MILESTONE" ]] && { printf '%s' "$MILESTONE"; return 0; }
   [[ -f "$RELEASES_DB" ]] || fail "releases.db not found at $RELEASES_DB"

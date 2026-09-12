@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence builds a compliant fixture (gate present+registered, control recorded, manifest agreeing with a fixture RELEASES.md), then unregisters a gate, deletes a recorded control, and forges a stranger-run PASS record it never reads; each is detected, and the unmutated fixture is re-checked green in the same run"}
+# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence builds a compliant fixture (gate present+registered, control recorded, manifest agreeing with releases.db), then unregisters a gate, deletes a recorded control, and forges a stranger-run PASS record it never reads; each is detected, and the unmutated fixture is re-checked green in the same run"}
 # Ballast (release 0.7.0) — the executable goalpost for POST-LAUNCH HARDENING.
 #
 # Ballast's sentence: THE LAUNCHED REPOSITORY HOLDS UP UNDER A STRANGER'S FIRST RUN AND AN OUTSIDE
 # CONTRIBUTOR'S FIRST PUSH. Same two-half shape Litmus, Nightwatch, and Meter established — this
 # file is written FIRST, before any manifest member is fixed, so a finished entry can be told from
-# a claimed one (RELEASES.md's exit-criterion note).
+# a claimed one (releases.db's exit-criterion note).
 #
 #   HALF A — audits the FROZEN MANIFEST (structural, cheap, runs in suite mode). Each member's gate
 #            EXISTS, is REGISTERED in validate.sh's TESTS array (a gate absent from TESTS is
 #            indistinguishable from one that passes — the #461 defect), has a RECORDED negative
-#            control under test/baselines/, and the manifest here agrees with RELEASES.md's
-#            Ballast `Manifest-Members:` field in BOTH directions (a one-directional check, or one
-#            that reads the prose `Manifest:` paragraph instead of the machine field, cannot fail —
+#            control under test/baselines/, and the manifest here agrees with releases.db's
+#            Ballast manifest members in BOTH directions (a one-directional check, or one
+#            that reads non-authoritative prose instead of the machine-backed releases.db manifest, cannot fail —
 #            see meter-release.sh's own history for exactly how that happened).
 #
 #   HALF B — EXECUTES the stranger's path rather than auditing it (--release-gate only; heavy, and

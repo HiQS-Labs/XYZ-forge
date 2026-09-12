@@ -4,7 +4,7 @@
 #
 # RE-POINTED 2026-08-15. This file previously measured Meter's metering manifest (#378/#379/#380/
 # #382/#491/#551). That manifest moved to Sundown when the operator re-scoped Meter to publication;
-# see RELEASES.md's Meter block. The command and the two-half shape are deliberately unchanged —
+# see releases.db's Meter release record. The command and the two-half shape are deliberately unchanged —
 # that shape is why Litmus and Nightwatch could tell a finished entry from a claimed one — but what
 # the halves measure is now the launch.
 #

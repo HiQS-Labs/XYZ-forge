@@ -828,11 +828,9 @@ EOF
 
 # ------------------------------------------------------------------------------------------------
 # releases-current (read-only roll-up; not part of PDDA_DETERMINISTIC_CHECKS — no findings, no gate)
-# ------------------------------------------------------------------------------------------------
 # A rough, non-authoritative answer to "what release is in progress right now" — for a human, or for
-# another repo's tooling (e.g. the XYZ sibling harness) to shell out to rather than re-implementing
-# RELEASES.md parsing itself. Lists every release whose Status is empty or not "Shipped" (Status is
-# free-text and unvalidated, so this is a best-effort filter, not a gate — see PROJECT/PDDA.md).
+# another repo's tooling (e.g. the XYZ sibling harness). In this repo, delegates to releases.db CLI
+# (or legacy RELEASES.md); lists active/unshipped releases (best-effort filter, not a gate).
 cmd_releases_current() {
   local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
   local release status target_date codename description gh_url line_no status_lc any=0
@@ -1675,7 +1673,7 @@ Commands:
   stale              flag stale working docs (flag-only; never moves)
   issue-doc-sync     flag 2-WORKING/GH-*.md docs drifted from their GitHub issue state (warn-only)
   releases           validate RELEASES.md — the release-planning ledger (warn-only nudge)
-  releases-current   read-only roll-up: RELEASES.md entries whose Status isn't "Shipped" (rough, unvalidated)
+  releases-current   read-only roll-up: active releases from releases.db (or legacy RELEASES.md) (rough, unvalidated)
   governance         repo-root governance-doc (ROUTER/AGENTS/CLAUDE/...) cross-reference + doc/code drift
   gh-refresh         refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
   doc-ready          LLM readiness review (delegates to pdda-doc-ready.sh; opt-in via PDDA_LLM_BIN)
