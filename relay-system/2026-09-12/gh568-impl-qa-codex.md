@@ -3,7 +3,7 @@ Goal: Final implementation QA — GH-568 End-to-End Retirement of RELEASES.md in
 Date: 2026-09-12
 Producer: claude-a
 Reviewer: codex
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 Round-cap: 3
 ---
@@ -138,3 +138,39 @@ The intended DB/dump design has a credible rollback and recovery boundary: write
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Codex implementation QA — Round 3
+
+**Verdict: BLOCKING.** The three Round 1 behavioral defects are repaired, but the claimed end-to-end retirement still has two bounded gaps. This was a source-only review: I did not run Git, the full gate, or mutation-heavy `test/*.sh` from this linked worktree.
+
+### 1. Acceptance & Scope Completeness — **Blocking**
+
+The implementation now has the correct DB/dump artifact boundary (`utils/py/releases_app.py:15-18`, `utils/py/releases_app.py:349-354`), `gen` refuses (`utils/py/releases_app.py:4698-4700`), and its CLI help identifies retirement (`utils/py/releases_app.py:6021-6028`). The active transaction and recovery paths now stage/regenerate only `releases.sql` (`utils/py/releases_app.py:1591-1596`, `utils/py/releases_app.py:1644-1651`, `utils/py/releases_app.py:1846-1853`).
+
+However, unaddressed contract remnants remain in active source: the generated-file section still says the side-by-side file carries the trio marker (`utils/py/releases_app.py:1303-1306`), `perform_write()` still documents staging a generated view (`utils/py/releases_app.py:1568-1574`), and recovery still promises to regenerate it (`utils/py/releases_app.py:1796-1803`). The timeline payload likewise still labels `sync` as a `RELEASES.md`-vs-DB drift banner even though `--check-drift` now returns a retirement message (`utils/timeline/export_timeline.py:442-451`, `utils/timeline/export_timeline.py:519-526`, `utils/timeline/export_timeline.py:554-556`). These are dead/stale paths precisely inside Scopes 2, 3, and 7, so the “fully satisfied/no remnants” claim is not yet true.
+
+Smallest acceptable fix: delete the empty generated-marker section; change the two transaction/recovery docstrings to DB+dump-only wording; and rename/remove the timeline `sync` drift comment/compatibility description so it no longer asserts a live Markdown comparison.
+
+### 2. Static & Runtime Writer Audit — **Closed**
+
+The Round 1 writer is gone: `artifact_paths()` exposes only DB, dump, and backup (`utils/py/releases_app.py:349-354`); normal writes journal and stage only the dump (`utils/py/releases_app.py:1591-1596`, `utils/py/releases_app.py:1644-1651`); recovery rewrites only the dump (`utils/py/releases_app.py:1846-1853`). The representative runtime probe pre-creates both retired files, runs `releases add`, and requires byte-equivalent canaries afterward (`test/gh568-releases-md-retired.sh:239-251`). A source sweep of the named production scopes found no surviving non-onboarding writer; the legacy onboarding tool remains explicitly scoped and documented (`relay-automation/xyz-releases-onboard.sh:11-19`).
+
+### 3. Goalpost Manifest Checks & Fail-Closed Behavior — **Closed**
+
+Nightwatch now compares both directions and rejects missing or extra members (`test/nightwatch-release.sh:184-231`), with missing-DB and extra-member mutations (`test/nightwatch-release.sh:284-300`). The local milestone check is DB-first, treats SQLite/query failure as an error, and treats an absent DB as an error unless an explicit legacy input was supplied (`utils/pdda-local-checks.sh:285-318`, `utils/pdda-local-checks.sh:341-348`). Its exit is nonzero in PDDA full mode while observe/light intentionally report without gating (`utils/pdda/pdda-lib.sh:49-55`); that is an explicit mode contract, not a silent skip.
+
+### 4. Falsifiable Regression Guard & Evidence — **Blocking**
+
+The new checks cover the actual Round 1 indirect-writer failure: artifact keys are asserted absent (`test/gh568-releases-md-retired.sh:199-205`), a real `releases add` must leave pre-created retired files untouched (`test/gh568-releases-md-retired.sh:239-251`), and the sixth witnessed control proves the content checker turns red on modification (`test/gh568-releases-md-retired.sh:166-187`). The durable transcript records Nightwatch's missing/extra directions and the six dedicated controls (`test/baselines/GH-568-negative-control.md:29-43`, `test/baselines/GH-568-negative-control.md:112-124`).
+
+But the permanent source audit is not robust across the production codebase it claims to protect: it scans only `.sh`, `.py`, `.yml`, and `.yaml` (`test/gh568-releases-md-retired.sh:48-64`, `test/gh568-releases-md-retired.sh:70-79`) and omits `tools/` entirely (`test/gh568-releases-md-retired.sh:51-55`). A future `.js`, `.mjs`, or `.ts` writer—including one in the migrated VS Code cockpit—would pass this guard. The empty-input count cannot expose that blind spot because unrelated shell/Python files keep it nonzero.
+
+Smallest acceptable fix: include the repository's production JavaScript/TypeScript extensions and the `tools/` production tree in both candidate counting and writer scanning, then add one witnessed JS/TS writer mutation. If the intended boundary is narrower, change the guard/evidence claims to state that narrower boundary and add a separate cockpit writer assertion.
+
+### 5. Reversibility, Blast Radius, & Downstream Safety — **Closed**
+
+The DB/dump transaction remains bounded and recoverable: intent precedes mutation, the DB commits before dump replacement, and the journal clears only after rename (`utils/py/releases_app.py:1591-1599`, `utils/py/releases_app.py:1601-1656`); post-commit recovery regenerates the canonical dump from DB state (`utils/py/releases_app.py:1839-1853`). Legacy import remains read-only (`utils/py/releases_app.py:15-18`, `utils/py/releases_app.py:5925-5925`) and explicit external onboarding remains available (`relay-automation/xyz-releases-onboard.sh:11-19`). Reversibility is **Costly but bounded**: restoring the retired projection would require a coordinated consumer rollback, while individual ledger writes retain atomic recovery.
+
+### Blocking findings
+
+1. Remove or correct the remaining generated-view/drift contract text in `releases_app.py` and the timeline exporter.
+2. Expand the permanent writer audit to cover production JS/TS and `tools/`, with a witnessed mutation (or explicitly narrow its claims and add equivalent cockpit coverage).
