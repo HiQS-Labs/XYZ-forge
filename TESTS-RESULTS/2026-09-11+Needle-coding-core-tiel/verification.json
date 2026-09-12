@@ -1,0 +1,12 @@
+{
+  "dataset_revision_verified": true,
+  "holdout_sha256_verified": true,
+  "holdout_rows": 100,
+  "holdout_instances": 2,
+  "valid_predictions": 100,
+  "invalid_predictions": 0,
+  "private_predictions_committed": false,
+  "private_predictions_sha256": "b3b6ce3e2ac8bcaf4eceb1f02614dedabcdcf4899521c75398303530c90d8d76",
+  "wrong_hash_red_control_rejected": true,
+  "product_code_changed": false
+}

@@ -1,0 +1,5 @@
+{
+  "status": "rejected",
+  "error": "Expected one distinct final JSON answer; got 0 from 0 blocks",
+  "scoreable": false
+}

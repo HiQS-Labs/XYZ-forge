@@ -1,0 +1,13 @@
+{
+  "source_packet_matches_minicpm": true,
+  "prompt_identity_only_diff_reviewed": true,
+  "grader_positive_control_passed": true,
+  "grader_negative_controls_passed": 4,
+  "official_runs": 2,
+  "fresh_server_processes": 2,
+  "raw_outputs_nonempty": true,
+  "final_answers_empty": true,
+  "reasoning_outputs_identical": true,
+  "original_grader_rejected_both": true,
+  "product_code_changed": false
+}

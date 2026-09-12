@@ -1,0 +1,58 @@
+{
+  "schema": "needle/coding-core-tiel-zero-shot@1",
+  "model_id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF-MTP",
+  "model_revision": "bbe9e566f39e4fc9652ac66b71968289a03c520a",
+  "artifact": "Tiel-Coder-35B-A3B-MTP-UD-Q4_K_XL.gguf",
+  "artifact_sha256": "54f46c4ce544c225122b0f066c2336f10404be7bc53b0cc94d1dbbc5e826bdc1",
+  "runtime": "llama.cpp 0.4.0 build 10809 (5266f24da)",
+  "mtp": true,
+  "reasoning": "off",
+  "temperature": 0,
+  "seed": 0,
+  "max_output_tokens": 16,
+  "holdout_sha256": "f016551eda2f9912c2ab81887669281452777ac103737f6e9b092044064a8587",
+  "rows": 100,
+  "valid_outputs": 100,
+  "invalid_outputs": 0,
+  "correct": 19,
+  "top1_accuracy": 0.19,
+  "support": {
+    "edit": 19,
+    "read": 29,
+    "run_command": 26,
+    "run_tests": 7,
+    "search": 19
+  },
+  "correct_by_label": {
+    "edit": 13,
+    "read": 3,
+    "run_command": 1,
+    "run_tests": 1,
+    "search": 1
+  },
+  "recall_by_label": {
+    "edit": 0.6842105263157895,
+    "read": 0.10344827586206896,
+    "run_command": 0.038461538461538464,
+    "run_tests": 0.14285714285714285,
+    "search": 0.05263157894736842
+  },
+  "predicted_distribution": {
+    "edit": 71,
+    "git": 3,
+    "read": 9,
+    "run_command": 9,
+    "run_tests": 5,
+    "search": 3
+  },
+  "latency_seconds": {
+    "total": 92.67033346797689,
+    "mean": 0.9267033346797688,
+    "median": 0.9217791455012048,
+    "p95_nearest_rank": 0.9674546670139534,
+    "min": 0.8863975419953931,
+    "max": 1.018943125003716
+  },
+  "private_predictions_sha256": "b3b6ce3e2ac8bcaf4eceb1f02614dedabcdcf4899521c75398303530c90d8d76",
+  "caveat": "Narrow zero-shot probe on a reused 100-row/two-instance development set; not a full benchmark grade."
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "needle13/tiel-gen1@1",
+  "run": "r2",
+  "status": "complete",
+  "started_unix": 1789191074.9001741,
+  "model_id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF-MTP",
+  "model_revision": "bbe9e566f39e4fc9652ac66b71968289a03c520a",
+  "artifact": "Tiel-Coder-35B-A3B-MTP-UD-Q4_K_XL.gguf",
+  "artifact_sha256": "54f46c4ce544c225122b0f066c2336f10404be7bc53b0cc94d1dbbc5e826bdc1",
+  "runtime": "llama.cpp 0.4.0 build 10809 (5266f24da)",
+  "mtp": {
+    "enabled": true,
+    "draft_n_max": 1,
+    "draft_p_min": 0.0
+  },
+  "temperature": 0,
+  "seed": 0,
+  "max_output_tokens": 6000,
+  "fresh_server_process": true,
+  "wall_seconds": 216.81914483300352,
+  "prompt_sha256": "6d5be18c8319751ca5c56c7d758bcb26f97805f0a9c3bd3e6c2faa7335663938",
+  "request_sha256": "6def718b640bf6aeb6d470dd24e90ba81651427ddaef22bc8f029b8585b1f2e4",
+  "response_sha256": "0824d6379b9f402bbdddd3e1eec6944818a2147543c848e54e6608eac8e3a67c",
+  "answer_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "answer_bytes": 0,
+  "reasoning_bytes": 26554,
+  "finish_reason": "length",
+  "usage": {
+    "completion_tokens": 6000,
+    "prompt_tokens": 32909,
+    "total_tokens": 38909,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 32909,
+    "prompt_ms": 62208.811,
+    "prompt_per_token_ms": 1.8903282080889727,
+    "prompt_per_second": 529.0086640620731,
+    "predicted_n": 6000,
+    "predicted_ms": 154536.81,
+    "predicted_per_token_ms": 25.76042840473412,
+    "predicted_per_second": 38.81923018858743,
+    "draft_n": 3398,
+    "draft_n_accepted": 2600
+  }
+}
