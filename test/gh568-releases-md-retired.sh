@@ -48,7 +48,7 @@ check_canary() {
 check_writer_audit() {
   local search_root="$1"
   local dirs=()
-  for d in githooks utils relay-automation skills .github/workflows; do
+  for d in githooks utils relay-automation skills tools .github/workflows; do
     if [ -d "$search_root/$d" ]; then
       dirs+=("$search_root/$d")
     fi
@@ -59,9 +59,10 @@ check_writer_audit() {
     dirs=("$search_root")
   fi
 
-  # 1. Empty-input guard: count candidate script/workflow files
+  # 1. Empty-input guard: count candidate script/workflow/tool files
   local file_count
-  file_count=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | wc -l | tr -d ' ')
+  file_count=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" -o -name "*.js" -o -name "*.mjs" -o -name "*.ts" \) 2>/dev/null | \
+    grep -v '/node_modules/' | grep -v '/dist/' | grep -v '/out/' | wc -l | tr -d ' ')
   if [ "${file_count:-0}" -eq 0 ]; then
     # Return 2 to distinguish empty-input failure from pattern match failure
     return 2
@@ -70,13 +71,16 @@ check_writer_audit() {
   # 2. Search for active write / redirect / stage patterns targeting RELEASES.md or RELEASES.generated.md
   # Exclude:
   # - test/ directory (not in dirs)
-  # - comments (# or //)
+  # - comments (# or // or /* or * or docstrings)
   # - relay-automation/xyz-releases-onboard.sh (external onboarding tool)
   local writer_matches
-  writer_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | \
+  writer_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" -o -name "*.js" -o -name "*.mjs" -o -name "*.ts" \) 2>/dev/null | \
     grep -v 'relay-automation/xyz-releases-onboard\.sh' | \
-    xargs grep -n -E '((\s|;)>\s*|(\s|;)>>\s*|\|\s*tee\s+|touch\s+|cp\s+.*|mv\s+.*).*RELEASES(\.generated)?\.md|open\([^)]*RELEASES(\.generated)?\.md[^)]*,\s*["\x27][wa]' 2>/dev/null | \
-    grep -v -E ':[0-9]+:\s*(#|//|"""|\x27\x27\x27)' || true)
+    grep -v '/node_modules/' | \
+    grep -v '/dist/' | \
+    grep -v '/out/' | \
+    xargs grep -n -E '((\s|;)>\s*|(\s|;)>>\s*|\|\s*tee\s+|touch\s+|cp\s+.*|mv\s+.*).*RELEASES(\.generated)?\.md|open\([^)]*RELEASES(\.generated)?\.md[^)]*,\s*["\x27][wa]|(writeFileSync|writeFile|createWriteStream)\s*\(.*RELEASES(\.generated)?\.md' 2>/dev/null | \
+    grep -v -E ':[0-9]+:\s*(#|//|/\*|\*|"""|\x27\x27\x27)' || true)
 
   if [ -n "$writer_matches" ]; then
     echo "$writer_matches" >&2
@@ -184,7 +188,21 @@ SUBEOF
     exit 1
   fi
 
-  echo "== ALL 6 RED CONTROLS WITNESSED PASSING =="
+  # Control 7: Mutated writer audit with JS/TS writer
+  M7="$WORK/m7"
+  mkdir -p "$M7/tools/vscode-cockpit"
+  cat > "$M7/tools/vscode-cockpit/bad_writer.ts" <<'SUBEOF'
+import * as fs from 'fs';
+fs.writeFileSync("RELEASES.md", "resurrect\n");
+SUBEOF
+  if ! check_writer_audit "$M7" >/dev/null 2>&1; then
+    echo "WITNESS_RED_CONTROL_7: PASS (correctly detected JS/TS write to RELEASES.md)"
+  else
+    echo "WITNESS_RED_CONTROL_7: FAIL (did not detect JS/TS write to RELEASES.md)"
+    exit 1
+  fi
+
+  echo "== ALL 7 RED CONTROLS WITNESSED PASSING =="
   exit 0
 fi
 
@@ -253,8 +271,10 @@ fi
 
 # ── 3. Static Writer & Pipeline Audit on Production Codebase ─────────────────
 
-prod_count=$(find "$root/githooks" "$root/utils" "$root/relay-automation" "$root/skills" "$root/.github/workflows" \
-  -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | wc -l | tr -d ' ')
+prod_count=$(find "$root/githooks" "$root/utils" "$root/relay-automation" "$root/skills" "$root/tools" "$root/.github/workflows" \
+  -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" -o -name "*.js" -o -name "*.mjs" -o -name "*.ts" \) 2>/dev/null | \
+  grep -v 'relay-automation/xyz-releases-onboard\.sh' | \
+  grep -v '/node_modules/' | grep -v '/dist/' | grep -v '/out/' | wc -l | tr -d ' ')
 
 if [ "$prod_count" -gt 30 ]; then
   pass "audit scanned $prod_count candidate production files (empty-input guard passed)"
@@ -337,6 +357,19 @@ if ! check_runtime_untouched "$MUT_DIR6"; then
   pass "red control 6: runtime probe correctly reported RED when retired file was modified"
 else
   fail "red control 6: runtime probe failed to detect modified retired file"
+fi
+
+# Red Control 7: Mutated writer audit with JS/TS writer
+MUT_DIR7="$WORK/mut_ts_writer"
+mkdir -p "$MUT_DIR7/tools/vscode-cockpit"
+cat > "$MUT_DIR7/tools/vscode-cockpit/bad_writer.ts" <<'SUBEOF'
+import * as fs from 'fs';
+fs.writeFileSync("RELEASES.md", "resurrect\n");
+SUBEOF
+if ! check_writer_audit "$MUT_DIR7" >/dev/null 2>&1; then
+  pass "red control 7: writer audit correctly reported RED when JS/TS write was injected"
+else
+  fail "red control 7: writer audit failed to detect JS/TS write to RELEASES.md"
 fi
 
 echo "== GH-568 ALL PASSED =="

@@ -121,5 +121,7 @@ WITNESS_RED_CONTROL_3: PASS (correctly detected write redirection to RELEASES.md
 WITNESS_RED_CONTROL_4: PASS (correctly detected Python write to RELEASES.generated.md)
 WITNESS_RED_CONTROL_5: PASS (empty-input guard returned code 2 on empty search root)
 WITNESS_RED_CONTROL_6: PASS (runtime probe correctly detected mutated/overwritten retired file)
-== ALL 6 RED CONTROLS WITNESSED PASSING ==
+WITNESS_RED_CONTROL_7: PASS (correctly detected JS/TS write to RELEASES.md)
+== ALL 7 RED CONTROLS WITNESSED PASSING ==
 ```
+

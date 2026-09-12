@@ -1300,12 +1300,6 @@ def dump_generation_from_text(text):
     return None
 
 
-# ── generation marker in the generated file ─────────────────────────────────────────────────────
-# The side-by-side generated file carries the marker as an HTML comment on line 1 (the trio
-# contract needs it there). The real RELEASES.md never carries one — this tool never writes that
-# file, and no header is added during Phase 0 (the header arrives with the Phase 2 flip).
-
-
 
 
 # ── staged writes + crash injection ─────────────────────────────────────────────────────────────
@@ -1570,7 +1564,7 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None):
 
       write intent journal (txn_id, NEXT generation, planned outputs)   [BEFORE the DB commit]
       -> BEGIN IMMEDIATE -> mutate -> stamp generation into settings -> COMMIT
-      -> stage dump (+ generated view when one exists), each carrying that generation
+      -> stage dump carrying that generation
       -> atomic renames -> clear journal.
 
     `mutate(conn)` does the business writes; the op_receipt (before/after business-state digests)
@@ -1797,8 +1791,8 @@ def recover_from_journal(root, conn):
     """Per-boundary crash recovery (PRD Git story 3), run by `check` (which holds the writer
     lock — this function must not take it again). pre-COMMIT (DB generation < journal's):
     discard stage remnants, clear the journal — the DB never changed. post-COMMIT, any later
-    boundary (DB generation == journal's): the DB is truth; REGENERATE the dump and generated
-    view from the DB state (staged files, present or missing, are disposable — they are
+    boundary (DB generation == journal's): the DB is truth; REGENERATE the dump from the
+    DB state (staged files, present or missing, are disposable — they are
     derivable), complete the renames, clear the journal — the committed operation is never
     discarded."""
     paths = artifact_paths(root)

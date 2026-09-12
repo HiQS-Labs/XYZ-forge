@@ -372,7 +372,7 @@ def build_payload(cx, today, repo_root=None):
     roadmap_idx = load_roadmap_index(cx)
     columns, n_open, n_overdue = release_columns(cx, repo_url, roadmap_idx, today)
     jf, wn = strip_entries(columns, today)
-    sync = None
+    sync = None  # retained for template compatibility; Markdown drift retired (GH-568)
 
     # Ad-hoc lane: in-flight non-manifest ROADMAP work attaches to the active release.
     active = next((c for c in columns if c["flags"].get("now")), None)
@@ -447,7 +447,7 @@ def build_payload(cx, today, repo_root=None):
             "sourceLabel": f"releases.db · schema v{schema_v}",
             "repoUrl": repo_url,  # GH-153: sidebar repo links (None -> links stay unwired)
         },
-        "sync": sync,  # RELEASES.md-vs-DB drift banner; None (no banner) when they agree
+        "sync": sync,  # legacy template slot; always None (Markdown drift retired in GH-568)
         # ROADMAP.md row parity: still out of spike scope
         "telemetry": {
             "dbGeneration": int(settings.get("generation", 0)),
@@ -516,7 +516,8 @@ def bake_static(template_html, payload):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--db", default="releases.db", type=Path)
-    ap.add_argument("--md", type=Path, help="Deprecated: retained for compatibility")
+    ap.add_argument("--md", type=Path,
+                    help="deprecated: no-op compatibility flag (RELEASES.md retired in GH-568)")
     ap.add_argument("--template", default=HERE / "RELEASES.html", type=Path)
     ap.add_argument("--out", default=Path("temp/timeline"), type=Path)
     ap.add_argument("--json", action="store_true",
