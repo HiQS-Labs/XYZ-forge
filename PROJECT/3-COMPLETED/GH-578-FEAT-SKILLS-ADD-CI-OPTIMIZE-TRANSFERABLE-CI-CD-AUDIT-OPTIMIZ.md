@@ -1,6 +1,6 @@
 ---
 title: "GH-578: feat(skills): add ci-optimize transferable CI/CD audit & optimization skill"
-status: Active
+status: Complete
 created: 2026-09-11
 updated: 2026-09-11
 owner: operator (via /express)
