@@ -311,7 +311,7 @@ set +e
 gen_out=$(python3 "$root/utils/py/releases_app.py" --root "$gen_tmp" gen 2>&1)
 gen_rc=$?
 set -e
-if [ "$gen_rc" -ne 0 ] && echo "$gen_out" | grep -q "rule=retired" && [ ! -f "$gen_tmp/RELEASES.generated.md" ] && [ ! -f "$gen_tmp/RELEASES.md" ]; then
+if [ "$gen_rc" -ne 0 ] && grep -q "rule=retired" <<< "$gen_out" && [ ! -f "$gen_tmp/RELEASES.generated.md" ] && [ ! -f "$gen_tmp/RELEASES.md" ]; then
   pass "releases_app.py gen exits nonzero ($gen_rc), reports rule=retired, and creates no retired artifacts"
 else
   fail "releases_app.py gen did not refuse cleanly with rule=retired (rc=$gen_rc)"
