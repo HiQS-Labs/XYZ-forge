@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -70,5 +70,14 @@ Plan-only review. No production edits and NO validate.sh/test/*.sh execution in 
 **Review this:** Independently adjudicate all five questions against actual source; Agy approval is context, not a substitute for your review.
 **Verification:** Baseline validate exit 0, 374/374 checks; clean clone identity. gh32 failed four parallel assertions then passed sequential retry; retained log. No implementation yet, no live board/config writes.
 **Next:** Handing off to DeepSeek reviewer, at most two attempts.
+
+### System checkpoint · Codex author · 2026-09-13
+Not a reviewer verdict. Both allowed executions failed without a review block.
+Attempt 1: driver exit 5; dsh reported `STREAM_CLOSED: SSE stream ended without [DONE]`.
+Attempt 2: driver exit 7; 600-second timeout-idle-no-progress, no VERDICT. The runtime
+released both claims; there are no leftover reviewer worktrees. Requested model route was
+deepseek/deepseek-v4.1-flash via openrouter, reasoning high; no completed response establishes
+served-model identity. No substitution or self-approval. Cap exhausted: implementation and
+PR blocked pending operator direction on resolving the route and renewing QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

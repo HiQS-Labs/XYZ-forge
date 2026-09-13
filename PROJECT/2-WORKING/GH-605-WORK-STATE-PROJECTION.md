@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Issue registered and rated; source recon completed against development 38507a23 | Agy then DeepSeek 4.1 Flash plan QA before production edits |
+| Plan committed; Agy Approved with driver attestation; baseline validate passed 374/374 (one sequential retry) | BLOCKED: DeepSeek V4.1 Flash failed both allowed attempts; resolve reviewer route and authorize renewed QA before implementation/PR |
 
 ## Table of contents
 
@@ -103,6 +103,25 @@ The primary checkout's schema-7 DB is observed, not modified by this PR workflow
 
 - [ ] Review inputs committed; both reviewers answer omission-diff against Scope and bet.
 - [ ] All review findings disposed with evidence; no unavailable-model substitution.
+
+### September 13 checkpoint — reviewer route blocked
+
+Agy requested two clarifications, both resolved in 59ac7b2b, then Approved with driver
+exit 0 and attestation in relay-system/2026-09-13/gh605-plan-agy.md. Its first invocation
+omitted --reviewer and returned a non-approval handback; only the explicit-reviewer second
+attempt qualifies. DeepSeek was configured as deepseek/deepseek-v4.1-flash via OpenRouter,
+reasoning high. Attempt 1 returned driver exit 5: `STREAM_CLOSED: SSE stream ended without
+[DONE]`; attempt 2 returned exit 7 after the 600-second idle/no-progress timeout. Both lacked
+a VERDICT, and the harness released the claims. No approval and no model response are claimed.
+The two-attempt cap is exhausted. Per start-task, stop before production edits; resolving the
+reviewer route and renewed QA authority is the next action. No PR, push, deployment, connector
+enablement, live board changes or primary DB migration occurred in this task.
+
+Baseline evidence is retained in TESTS-RESULTS/gh605-plan-preflight/: full validate exit 0,
+374/374 checks, identity unchanged. gh32-releases-app had four failed parallel assertions
+and passed the gate's sequential retry; the original log is retained. This is baseline-only,
+not evidence for an implementation that does not yet exist. Task branch fix/work-state-projection
+and its fresh full clone are retained for resume; do not repeat intake or create another issue.
 
 ## Phase 2 — Consistent events and honest diagnostics
 

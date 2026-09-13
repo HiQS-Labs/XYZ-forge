@@ -1,0 +1,164 @@
+== test: gh32-releases-app ==
+-- A: init, exact-shape GIDs, append-only triggers, FK pragma
+  PASS: init creates releases.db + releases.sql
+  PASS: fresh init checks clean (FK pragma asserted per connection)
+  PASS: migration carries the exact-shape GID check written out in full (26 Crockford classes)
+  PASS: schema refuses a too-short global_id (length is schema-enforced)
+  PASS: schema refuses a wrong-alphabet global_id (Crockford excludes I/L/O/U)
+  PASS: manifest_state_events is append-only (UPDATE refused by trigger)
+  PASS: op_receipts is append-only (DELETE refused by trigger)
+  PASS: the CLI's FK surface: a marathon_id that resolves to nothing is refused before the write
+-- B: import the real RELEASES.md; grandfather ledger; side-by-side gen
+  PASS: import brings in all 9 blocks of the real ledger (9th = Cargo 0.9.0, cut 2026-08-20)
+  PASS: the 100-line preamble lands verbatim in doc_lines (release-less document content)
+  PASS: doc_lines hold the verbatim first line
+  PASS: every tolerated violation is recorded in grandfather_entries (import is not a silent fill)
+  PASS: all 9 imported blocks got import-only MIG- placeholder refs (importer is uniform; GH_URL lines land in legacy_lines)
+  PASS: each MIG- ref is a tracked grandfather entry (rule=tracking-issue-missing)
+  PASS: unmapped lines (Iterations bands, Shipped prose, manifest prose) survive in legacy_lines
+  PASS: check is green right after import (DB<->dump consistent, chain intact)
+  PASS: second import is refused (the legacy import is ONE-SHOT)
+  PASS: releases gen is refused (retired in GH-568)
+  PASS: gen does NOT write RELEASES.generated.md or drift report
+  PASS: the fixture ledger is byte-identical (hash unchanged; read-only contract)
+  PASS: rebuild preserves the BUSINESS state exactly (digest equal; receipts/generation excluded by definition)
+  PASS: the canonical dump contains no integer PKs/FKs as values (rows are GID/natural-keyed)
+  PASS: grandfather_entries rows in the dump carry their PRD natural key (gf-key comments)
+-- C: structural rules refuse in BOTH modes; every refusal names its rule
+  PASS: bad tracking URL shape refused, rule named
+  PASS: MIG- placeholder refused in an ordinary write (import-only shape)
+  PASS: versioned-duplicate refusal (UNIQUE(repo_id, version) — the narrowed guarantee)
+  PASS: unversioned same-codename pair does NOT refuse — check WARNS instead
+  PASS: manifest duplicate refused (UNIQUE(release_id, issue_ref_id))
+  PASS: manifest cut without a reason refused (structural, both modes)
+  PASS: structural refusal is strict even in lenient mode: refused calls wrote nothing
+-- D: mode table for thresholds
+  PASS: lenient mode WARNS and WRITES an over-threshold description
+  PASS: strict mode REFUSES the same write, naming the rule
+-- E: cut needs a reason; events append-only; coupling detectable
+  PASS: a task dialed into a second release is REFUSED, naming the holder (GH-111 exclusivity)
+  PASS: cut-then-dial-in re-homes a task to another release, leaving BOTH rows as history
+  PASS: cut with a reason flips state AND appends the event in one transaction
+  PASS: cut is terminal for that row: a second cut is refused with the transition rule
+  PASS: a direct writer flipping item state WITHOUT an event is caught by the digest chain
+-- F: offline create -> staleness at +7d -> reconcile -> clean
+  PASS: fresh temp ref (T0) draws no staleness warning
+  PASS: temp ref older than 7 days warns (mocked clock)
+  PASS: reconcile fills the real URL and the row keeps its identity
+  PASS: post-reconcile there is no staleness warning at any clock
+-- G: simulated concurrent writer; lock-audit sidecar
+  PASS: a write under a held lock is refused with exit 4 and the writer-lock rule
+  PASS: the refused attempt changed NO committed artifact (r4 control)
+  PASS: lock evidence went to the append-only sidecar in the git common-dir, not the DB
+  PASS: after the holder exits, the same write succeeds (the lock was the only barrier)
+-- H: journal protocol recovery, per boundary
+  PASS: [pre-commit] the injected crash kills the writer (exit 70)
+  PASS: [pre-commit] check recovers and leaves a consistent trio (green)
+  PASS: [pre-commit] pre-COMMIT: the DB never changed — the operation was discarded
+  PASS: [pre-commit] no staged .tmp remnants or journals survive recovery
+  PASS: [post-commit] the injected crash kills the writer (exit 70)
+  PASS: [post-commit] check recovers and leaves a consistent trio (green)
+  PASS: [post-commit] post-COMMIT: the committed operation is PRESERVED
+  PASS: [post-commit] no staged .tmp remnants or journals survive recovery
+  PASS: [post-stage] the injected crash kills the writer (exit 70)
+  PASS: [post-stage] check recovers and leaves a consistent trio (green)
+  PASS: [post-stage] post-COMMIT: the committed operation is PRESERVED
+  PASS: [post-stage] no staged .tmp remnants or journals survive recovery
+  PASS: [mid-rename] the injected crash kills the writer (exit 70)
+  PASS: [mid-rename] check recovers and leaves a consistent trio (green)
+  PASS: [mid-rename] post-COMMIT: the committed operation is PRESERVED
+  PASS: [mid-rename] no staged .tmp remnants or journals survive recovery
+  PASS: [post-rename] the injected crash kills the writer (exit 70)
+  PASS: [post-rename] check recovers and leaves a consistent trio (green)
+  PASS: [post-rename] post-COMMIT: the committed operation is PRESERVED
+  PASS: [post-rename] no staged .tmp remnants or journals survive recovery
+-- I: check failure controls — dump divergence, stale -wal, receipt-less write, dup GID
+  PASS: (1) deliberate DB<->dump divergence fails check
+  PASS: divergence recovery is check --rebuild (atomic, with a .bak of the displaced DB)
+  PASS: (2) a stale -wal with no live journal fails check loudly
+  PASS: (3) a receipt-less direct write fails the business-state digest chain (bypass DETECTED)
+  PASS: (4) a duplicate global ID across two fixture DBs fails the aggregation LOUDLY
+  PASS: cross-repo codename collision WARNS in the aggregation (the survey case), never refuses
+-- J: the tested merge conflict procedure (dump grammar -> check --rebuild)
+  PASS: the two divergent sides carry DISTINCT import runs (same-second imports cannot collide)
+  FAIL: merge rebuild green
+  FAIL: BOTH sides' releases survive the rebuild (4 rows from two 2-block imports)
+  FAIL: grandfather survives both sides
+  FAIL: fork tolerance
+-- K: ship, update, immutability
+  PASS: ship without evidence is refused, rule named
+  PASS: ship with evidence flips status, stamps the date, rides the audit trail
+  PASS: re-shipping a shipped release is refused (transition legality is CLI-enforced)
+  PASS: GH-222 re-point via URL writes through perform_write (check clean, old ref row kept, gh never consulted — closed targets work)
+  PASS: GH-222 bare number with no org/repo slug and no origin remote is refused, rule named
+  PASS: GH-222 bare number expands against the github origin remote (slug 'kappa' is not org/repo)
+  PASS: GH-222 non-GitHub URL refused, rule named
+  PASS: GH-222 re-point to a TMP- placeholder refused, nothing changed (a re-point is URL-to-URL; placeholders belong to add/reconcile)
+  PASS: the receipt log records >=2 distinct ops with session ids (the exit gate reads these)
+-- L: the preview is not regenerated (removal regression guard)
+  PASS: init does NOT create RELEASES-PREVIEW.md
+  PASS: a CLI write does NOT create RELEASES-PREVIEW.md
+  PASS: releases gen does NOT create RELEASES-PREVIEW.md
+  PASS: check is clean with no preview present (the preview-stale rule is gone)
+  PASS: check output no longer mentions a preview at all
+  PASS: the dump and DB are still written (removing the preview did not disturb the staged-write protocol)
+-- M: show + next readers
+  PASS: next picks the earliest-target unshipped release, then lists the rest in order
+  PASS: next excludes shipped releases
+  PASS: an undated release sorts LAST and is labeled unplanned, not urgent
+  PASS: show resolves by --version (no GID lookup round-trip needed)
+  PASS: show by --gid returns the identical record
+  PASS: show with neither selector is refused (rule=selector)
+  PASS: show with BOTH selectors is refused (exactly one)
+  PASS: show on an unknown version is refused by rule, not a silent empty record
+  PASS: long values are elided by default and state their true length
+  PASS: --full prints the value verbatim with no elision marker
+  PASS: the readers take no lock and mutate nothing (DB byte-identical, no journal)
+-- N: releases migrate, migration registry, baseline capture, extended dump grammar
+  PASS: the v2 fixture starts at ledger {1,2} — pre-004 by construction, not by assumption
+  PASS: its manifest rows carry the pre-GH-111 'open' vocabulary
+  PASS: GH-111-first: a registry without 003 stamps {1,2,4} and never claims 3
+  PASS: and the gap is REAL — roadmap_items has none of 003's rating columns
+  PASS: the migrated ledger checks clean (dump regenerated, digest chain intact)
+  PASS: every 'open' row became 'dialed_in' — a vocabulary rename, not a state change
+  PASS: historical EVENTS still say 'open' — copied verbatim, never rewritten (no silent history edit)
+  PASS: an already-active release is backfilled to its current count, flagged 'backfilled' not 'observed'
+  PASS: 003 applies cleanly ON TOP of 004; the ledger reaches the full registry
+  PASS: and the rating columns now exist (5 of them)
+  PASS: migrate is idempotent: nothing pending is a clean no-op that does not bump the generation
+  PASS: the OTHER entry point agrees: a rebuilt v2 dump reports the registry's versions, not {1,2}
+  PASS: a pre-migration dump carrying state='open' still loads and maps to dialed_in
+  PASS: the rebuilt v2 ledger checks clean
+  PASS: a failure mid-migration propagates and RESTORES foreign-key enforcement on the connection
+  PASS: neither pending migration survives: the ledger is still {1,2} (003 did NOT commit mid-flight)
+  PASS: neither migration's SCHEMA survives either (all-or-nothing across both)
+  PASS: no generation bump and no staged dump: the receipt/artifact protocol never reached its stamp
+  PASS: the journal is LEFT IN PLACE — an interrupted migration stops the world, unlike a refused write
+  PASS: plain check recovers the interrupted migration (pre-COMMIT: discarded) and clears the journal
+  PASS: after recovery the same migration succeeds and reaches the registry
+  PASS: draft -> active with a NON-EMPTY manifest captures the baseline automatically, flagged observed
+  PASS: active -> draft -> active preserves the ORIGINAL snapshot silently (a legitimate round trip must not fail)
+  PASS: the EXPLICIT verb refuses a second capture — write-once, because overwriting erases what it measures
+  PASS: write-once is STRUCTURAL: a direct DB writer is refused by trigger, not merely detected
+  PASS: a PARTIAL baseline is refused by trigger (count without provenance can never reach rendering)
+  PASS: baseline PROVENANCE is write-once too — 'observed' cannot be quietly rewritten
+  PASS: and so is baseline_at — the snapshot cannot be back-dated
+  PASS: `add --status active` lands BASELINE-LESS (not a misleading zero) — there is no transition to hook
+  PASS: capturing a baseline on an EMPTY manifest is refused — zero would report every later commitment as growth
+  PASS: the explicit verb fills the activate-first case afterwards (1/observed)
+  PASS: activating an EMPTY manifest takes no baseline at all — baseline-less is the honest state
+  PASS: cut -> redial -> cut on ONE release works: transitions select the LIVE row, not the historical one
+  PASS: manifest ship moves a dialed-in member to shipped (mid-release progress is finally reportable)
+  PASS: dialing in with ANOTHER release's marathon is refused by name (the door #109 came through)
+  PASS: a marathon cannot be named by two releases (partial unique index; links are permanent)
+  PASS: the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID
+  PASS: and marathon_id (an integer FK) never appears as a dump value
+  PASS: a dump -> rebuild round trip preserves every new column AND the business digest
+  PASS: the rebuilt ledger's manifest event digest chain still verifies
+  PASS: a merged dump carrying a duplicate schema_migrations version is refused BY NAME, before anything is written
+PASS: populated v6 migrate and old-dump rebuild; exact dump/load bytes; rebuild preservation
+PASS: all nine insert paths and release/ref/manifest mutation paths maintain timestamps
+PASS: negative controls reject NULL, stale stamp, and actual UPDATE/INSERT omissions
+  PASS: GH-355 timestamp migration and writer coverage
+
+== gh32-releases-app: 140 passed, 4 failed ==
