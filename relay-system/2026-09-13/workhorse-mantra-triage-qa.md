@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 3 / 4
+STATUS: Escalated
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,6 +141,37 @@ swept file: yes
 
 Review limits: Read all 259 artifact lines and the relevant local contracts; no artifact/source execution, git commands, or project test/gate suite ran. The complete graph project listing (62 entries, no further page) contains neither this worktree nor the pinned parent clone, so this non-code review uses direct document reads and makes no graph-generation or coverage claim. Only this relay file was edited. STATUS remains Open and ROUND remains 3 / 4.
 
-Handoff: Producer (claude-a) acts next — disposition R3-1 through R3-4, update the matching parent source and snapshot, and open Round 4. Handing off to Producer — go to the other window and say 'take your turn'.
+### Producer — claude-a — Round 4 — 2026-09-13
+
+Disposition of Round 3 findings:
+- [Unverified — no citation] DoD 1–3 structure and intake mechanics: Noted; retained.
+- [Pass] R2-3, R2-5, R2-6 closed: Noted; retained.
+- [Pass] R2-7 resolved: Noted; maintained synchronized parent source and snapshot.
+- [Should] R3-1 — Emergency routing reconciliation: Implemented. Updated Pushback & Routing Authority so that emergency rollbacks are explicitly governed: Fast-Track applies if the operation is trivial and Easy to reverse (executing Rungs 1, 2, 3, 5, 6 while skipping Rung 4 consult); if the action is Costly or One-way door, the full ladder is executed with full Rung 5 preservation proof, tested rollback/loss disclosure, and fresh verification before mutating.
+- [Should] R3-2 — Canonical intake precedence: Implemented. Updated recital point 1, diagram, and Rung 0 Step 3 to explicitly check and select the repository's canonical structured intake path first (e.g. `PROJECT/1-INBOX/GH-<NUM>-<topic>.md` with immediate roadmap registration per `ROUTER.md:38–40`), resolving issue-first requirements before writing deferred records. `<repo-root>/PARKED/YYYY-MM-DD-<topic>.md` is strictly the fallback when no canonical structured intake system exists.
+- [Should] R3-3 — Lifecycle status and ledger commands: Implemented. Rung 3 Step 5 now defers doc frontmatter status to the applicable lifecycle contract (e.g. `PROJECT/1-INBOX/` with `status: proposed` / `status: draft`, or `PROJECT/2-WORKING/` with `status: active`). Corrected roadmap registration to canonical commands (`releases roadmap add --issue <GH-NUM> ...` with flags per `ROUTER.md:38`) and clarified that task enqueueing (`releases jog add`) is a distinct optional subsequent step.
+- [Should] R3-4 — Scope closeout checks to actual capabilities: Implemented. Rung 6 Step 3 now names applicable canonical repository checks (`python3 utils/py/releases_app.py check`, `utils/pdda/pdda.sh roadmap-coverage`, `roadmap`, `stale`, `issue-doc-sync`, and `utils/pdda-local-checks.sh`), specifies inspecting reported findings/warnings rather than relying on exit code alone, and scopes the completion claim to the ledger and lifecycle invariants actually verified.
+
+New work:
+- Updated `skills/workhorse/SKILL.md` and `.relay-artifacts/SKILL.md` with all R3 improvements (bit-for-bit identical).
+- Requesting Reviewer (Codex) final review against Definition of Done.
+
+Handoff: handing off to codex — go to the codex window or invoke headless turn to take turn 4.
+
+### Reviewer — codex — Round 4 — 2026-09-13
+
+VERDICT: FAIL
+Basis: The revision resolves the routing, canonical-intake precedence, lifecycle-status, and closeout-check findings, but R3-3 retains one incorrect command flag. DoD 4–5 therefore remain unmet. The review cap is reached; escalate rather than open another automatic cycle.
+swept file: yes
+
+- [Pass] DoD 1–3 remain structurally satisfied: frontmatter describes intake, the introduction names seven rungs, the near-top recital contains five numbered points and Overall Goal, and Rung 0 covers both intake forms, the active session queue, canonical intake before dated PARKED fallback, and serial execution (`.relay-artifacts/SKILL.md:4`, `:21`, `:27`, `:36`, `:58`, `:66`, `:67`, `:68`). Fix: retain. No independent canonical mantra wording was supplied, so external verbatim equivalence remains unassessed.
+- [Pass] R3-1, R3-2, and R3-4 are resolved: emergency routing now explicitly applies Fast-Track rules, which exclude destructive/external/Costly/One-way-door actions; it retains the required rungs (`.relay-artifacts/SKILL.md:229`, `:231`, `:250`). Canonical intake takes precedence with issue-first resolution (`:67`). Closeout names coverage, roadmap, stale, and issue-state checks and requires inspection of warnings (`:213`). Fix: retain.
+- [Pass] R3-3 is partly resolved: lifecycle status now follows the applicable contract, and jog enqueueing is explicitly separate from roadmap registration (`.relay-artifacts/SKILL.md:135`, `:136`). Fix: retain these corrections and fix the flag below.
+- [Should] R4-1 / remaining R3-3 — `.relay-artifacts/SKILL.md:136` specifies `releases roadmap add --issue <GH-NUM> ...`. The parser defines two distinct required flags, `--issue-num` and `--issue-url` (`utils/py/releases_app.py:6082`, `:6083`); `--issue` is an ambiguous prefix, not the canonical issue-number flag. `ROUTER.md:38` supplies the correct invocation. Fix: replace the example with `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P`, or omit the copied command and defer entirely to ROUTER. This is a static contract finding; the CLI was not executed.
+- [Pass] The whole-file sweep retained the specialized-skill composition, consult locator/degraded handling, bounded recon, and preservation gates (`.relay-artifacts/SKILL.md:38`, `:74`, `:145`, `:146`, `:174`, `:184`, `:188`, `:192`). Read-only `cmp` returned exit 0 for the complete snapshot and `/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh603-merge-cleanup-mantra/skills/workhorse/SKILL.md`; the intended parent source matches this reviewed artifact. Fix: retain synchronization. No additional pre-existing defects were found in this sweep.
+
+Review limits: Read all 259 artifact lines and the relay history. Used direct document/source reads; graph tools were unavailable in this turn, so no project-generation or index-coverage claim is made. No artifact/source execution, git commands, or project tests/gates ran. Only this relay file was edited; header is NEXT: Producer, STATUS: Escalated, ROUND: 4 / 4.
+
+Handoff: Producer (claude-a) receives the token to address R4-1 and report the capped review to the operator. Handing off to Producer — go to the other window and say 'take your turn'; this relay requires an explicit continuation decision before another review cycle.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
