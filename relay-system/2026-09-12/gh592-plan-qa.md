@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -151,5 +151,30 @@ Plan revised in place (items 1–8, Acceptance, Risks, Rating). All of R8–R11 
 Round 3 question: with the receipt written inside `closeout()` after all guards, is there any remaining path where a valid-looking receipt exists without the suite having run in the same process? If none, this is ready to implement.
 
 Handing off to Reviewer (codex).
+
+## Reviewer — codex — Round 3
+
+swept file: yes
+
+Read the entire 174-line plan, all of `utils/py/express.py`, and both named test files; traced the reconciler's cleanliness, commit metadata, receipt matcher, and CLI dispatch. Read the example receipt/README and re-read live issue #592 using `gh issue view`. Graph tools are unavailable in this turn; local source is the evidence, with no graph generation/coverage claim. Prior recurrence measurements remain attributed to round 1, not remeasured. No project code, suites, or Git commands were executed. The relevant pre-existing interaction below remains in scope; no additional unrelated defect is asserted from the sweep.
+
+- **[Should] R12 — Q6 / R11 remains partial: recovery needs identity verification before issuing evidence.** The recipe at `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md:97` runs Bash at the old SHA, then changes to development and passes literal `<sha>`/`<rc>` to the helper. It omits R11's requested verification that the tested identity stayed unchanged and retention of the execution evidence. A suite can change HEAD/config/remotes and return zero; changing back to clean development then hides that change while the helper issues a passing receipt for the supplied old SHA. This is the documented attribution failure in `AGENTS.md:359`, not a demand for a new recovery subsystem. **Fix:** add to this same recipe: capture the full landing SHA, clean tested tree, normalized registered suite, and clone identity before the run; capture the actual exit status immediately; compare HEAD, tested bytes, core.bare, origin, and local identity after the run, before switching branches. Refuse successful attribution on drift; preserve nonempty execution output and the comparison with the recovery receipt. Use the existing helper only after that check. A deliberately identity-changing zero-exit recovery run must fail this check. The normal driver already treats suite mutation as material (`utils/py/express.py:574`); the manual path must not silently discard the corresponding evidence requirement.
+
+- **[Should] R13 — Q4 / R10 remains partial: retain the driver mutation evidence too.** The intended producer falsification at plan `:128` now reaches the right oracle, but its evidence-retention clause at `:136` explicitly covers only CLI cases (a)–(c), and acceptance at `:142` repeats only those cases. Those can all pass if `cmd_land` never calls the writer; they invoke the helper separately. **Fix:** extend that existing retention clause to include (ii): nonempty observed output showing the normal driver creates its receipt, and the path-returning/no-write mutation reaches the missing-receipt assertion and gated failure. Commit that output/receipt under the already named GH-592 evidence directory and link it from the PR. This is the previously requested R4/R10 producer proof, not an additional test framework (`TESTS-RESULTS/README.md:7`).
+
+- **[Pass] Q1 / R8 — normal ordering is now coherent.** Plan `:69` moves creation after the clean-development and reachability checks, which precede `closeout` at `utils/py/express.py:607`, `:611`, and `:614`; persistence precedes reconciliation at `:655`. Both current reconcile argv lists omit `--gate` (`:666`, `:903`), while commit metadata supplies `mergeCommit.oid` and the consumer dispatches the gate (`utils/py/wave_reconcile.py:405`, `:1704`). **Disposition:** retain this ordering and unchanged cleanliness guards. The crash window before receipt creation requires the explicit recovery run; it cannot be resumed by inferring success.
+
+- **[Pass] Q3/Q5 — one writer and bounded persistence.** Plan `:69` and `:86` extend the existing express driver with one stdlib writer and a per-operation exact-path grant. `persist_closeout` currently stages every allowed changed path and bypasses the pre-push hook (`utils/py/express.py:713`, `:719`), so rejecting unrelated result files is necessary; the injection control at plan `:126` preserves that boundary. **Disposition:** retain exact-path ownership; do not use `write_tick`, whose write errors are swallowed and whose second sink is central telemetry (`utils/py/express.py:106`, `:109`).
+
+- **[Pass] Q6 / R9 — automatic resume no longer invents a pass.** Plan `:79` defines success/suite/issue/full-SHA validation and `:92` requires an independently supplied `--suite`, committed evidence, and refusal before close/ship. The normal writer receives the actual same-process Step-7 result (`:73`); dry-run returns before closeout (`utils/py/express.py:588`). **Answer to the Producer's round-3 question:** no automatic CLI path specified here issues a successful receipt without Step 7 having run. Manual recovery is intentionally a separate invocation of the same helper, and remains subject to R12. **Disposition:** retain the shared predicate and read-only resume; implement the stated committed-record requirement explicitly rather than assuming a clean status proves it (`utils/py/wave_reconcile.py:421`).
+
+- **[Pass] Q2/Q4/Q7 — acceptance categories and test oracles are covered, subject to R13.** Plan `:114` declares both A and B, preserves the CLI no-receipt exit-6 test, and exercises the existing real matcher; `:120` supplies the separate driver-production assertions, and `:146` retains the next-real-landing acceptance from [issue #592](https://github.com/HiQS-Labs/XYZ-forge/issues/592). Plan `:135` drops `WR_STRIP_RECEIPT`; a literal search of `utils/` and `relay-automation/` found no production reader. **Disposition:** use the existing in-process fixture (`test/gh425-gate-provenance-pr.sh:151`) and empty-results negative, with no stripping knob or consumer rewrite. Resume refusal and narrower persistence are justified corrections to the issue's suggested implementation.
+
+- **[Pass] Q8/Q9 — rating and verification boundary are honest.** Plan `:160` retains reasoned 55/45/50 scores and revises effort to 70; `:164` attributes and bounds the three-landing evidence to the inspected window. `gate: express-suite` (`:76`), wording corrections (`:107`), and attribution-only language (`:111`) preserve the focused-suite non-goal. **Disposition:** retain these choices; the score is judgment, and this review supplies no fresh recurrence measurement or full-gate success claim.
+
+VERDICT: FAIL
+Basis: R8/R9 and the principal integration design are resolved. R11's recovery identity/evidence requirement and R4/R10's retained driver-mutation proof remain incomplete in the written plan. Both are bounded amendments to already accepted findings. Round 3/3 is exhausted, so STATUS is Escalated rather than opening another review cycle. No runtime qualification is claimed.
+
+Handing off to Producer (claude-a) — present R12/R13 and the capped review to the operator for disposition; go to the Producer window and say 'take your turn'. Do not silently open round 4.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
