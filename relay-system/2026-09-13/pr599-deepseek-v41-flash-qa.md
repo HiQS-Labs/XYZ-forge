@@ -1957,3 +1957,17 @@ Hmm, but actually there's a subtlety: `rt
 Tokens: 155k sent, 2.7k received. Cost: $0.02 message, $0.05 session.
 
 ```
+
+### Codex adjudication of DeepSeek producer review — 2026-09-13
+
+Reviewer verdict was PARKED, not an approval, with no proven Blocker. The operator delegated disposition to Codex. No runtime changes are warranted by these findings:
+
+1. **Telemetry contract concern — resolved from source and retained real data.** test/lib/runner-telemetry.sh:65-77 writes under $here/.tick/telemetry unless XYZ_VALIDATE_TELEMETRY overrides it; qualify_landings strips XYZ_VALIDATE_* at wave_reconcile.py:531-538. The lib's own documentation (:11-14) distinguishes this store from harnesses.db. Its filename is runner-mode-time-$$ and its run id is commit-prefix-$$. Both tier and registered are unquoted numeric JSON (:76-77). The committed candidate-sequential-red.jsonl starts with sequential mode, tier3 and registered371 as integers, consistent with the actual producer. That historical run failed one suite, so it is contract evidence only, never passing qualification evidence.
+2. **Nested process-group concern — declined.** proc_group.py:94-101 starts the outer Bash as a new session and returns its PID as pgid. runner-telemetry.sh:71-75 uses shell PID $$, not OS PGID. A nested Bash process may share the group but has a different PID/filename. Selecting one file for the launched PID is intentional; accepting ambiguous files would weaken the check. Existing retained nested-telemetry red control already covers the original broad-directory selection problem.
+3. **Manual forgery boundary — documentation clarification accepted.** Hashes and ancestry bind recorded artifacts under a trusted-repository-writer assumption; they are not a signing authority. No new signing service or ledger is justified. Record this trust assumption in the public QA status.
+4. **Empty directories, duplicated passed/total fields, and per-command/job time bounds — declined as cosmetic or already explicit.** Empty directories are not Git outputs, do not block a fresh retry, and do not create receipts. Consumer decisions use validated telemetry rather than duplicate display counters. The job supplies the overall wall-clock ceiling.
+5. **Suggested extra negative tests — not blockers.** Symlink and missing-file rejection are explicit in wave_reconcile.py:468-483; --qualify without --gate is rejected before work at :1815-1817. No failing behavior was demonstrated. Existing PR tests cover schema/hash/identity refusal and malformed receipts. Avoid adding assertions that merely repeat these guards without a demonstrated gap.
+6. **Remaining nits — declined.** pr_number is an intentional conflicting-alias rejection for input receipts, even though the writer emits pr only. The real Git hook-boundary fixture witnesses the failed two-pass hypothesis; it was not claimed to run qualification.
+
+Disposition: producer implementation unchanged; no demonstrated correctness blocker remains from this review. DeepSeek's recorded PARKED verdict is preserved. Actual hosted qualification, scheduled recovery and three consecutive automatic reconciliations remain pending.
+
