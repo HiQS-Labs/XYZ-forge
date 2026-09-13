@@ -471,11 +471,15 @@ umbrella found by signal 8.** The first line is the fixed row; the second is a c
 - `filed at legacy` when the umbrella has no signature (the baseline is reconstructed and can
   show `class survived`, but never earns quiet credit until an operator adds a real signature —
   radar never edits the umbrella).
-- **holding** — the class is not solved and not proven alive: score below 5, or no fix merged
-  yet. `quiet k/2` counts consecutive quiet observations *after* the cutoff.
-- **class survived — recommend reopening** — the umbrella is closed and the post-cutoff score is
-  ≥ 5 (whack-a-mole's own floor is "no cluster *above* 5"; radar deliberately keeps the
-  conservative boundary). Radar recommends; it never reopens.
+- **holding** — the fallback: every observation that is neither `class survived` nor `solved`.
+  That includes an open umbrella with no fix yet, an open umbrella whose fix merged but whose
+  post-cutoff score is still ≥ 5 (the displayed score says the class is alive; the umbrella
+  is still open so there is nothing to reopen), and an observation whose evidence was
+  unavailable. `quiet k/2` counts consecutive below-5 observations *after* the cutoff; an
+  active (≥ 5) or unavailable observation earns 0 and resets the streak.
+- **class survived — recommend reopening** — the umbrella is **closed** and the post-cutoff
+  score is ≥ 5 (whack-a-mole's own floor is "no cluster *above* 5"; radar deliberately keeps
+  the conservative boundary). Radar recommends; it never reopens.
 - **solved** — the only state that is struck through, and only on `quiet 2/2` **and** a `fix
   merged` PR. This is the umbrella form of the "names the seam" rule above: a citable fix plus
   two quiet observations. "Consecutive" means the two most recent Sink A reports (filename
