@@ -1,0 +1,4 @@
+interface:
+  display_name: "Whack-a-Mole"
+  short_description: "Find recurring bug clusters and file one root-cause umbrella issue"
+  default_prompt: "Use $whack-a-mole to scan 14 days of issues, fixes, and reverts, rank bug clusters by churn, and draft one umbrella issue for approval."

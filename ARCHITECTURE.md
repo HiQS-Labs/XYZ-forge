@@ -2,7 +2,7 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-09-07
+updated: 2026-09-12
 owner: noelsaw
 doc_type: architecture
 summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap query pipeline and the adoption gate for derived views.
@@ -75,6 +75,7 @@ without reading all of them first.
 | [rpr](skills/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |
 | [shakedown](skills/shakedown/SKILL.md) | Audit script-calling skills across CWD, install, symlink, and permission scenarios. |
 | [skills-army-hq](skills/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
+| [sop](skills/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [spike-360](skills/spike-360/SKILL.md) | Interrogate authority before introducing or moving a source of truth. |
 | [start-task](skills/start-task/SKILL.md) | Carry one or more issues through governed intake, grounded planning, relay QA, execution, and ready PRs. |
 | [standup](skills/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
@@ -84,6 +85,7 @@ without reading all of them first.
 | [vendor-stack](skills/vendor-stack/SKILL.md) | Install the XYZ harness + optional PDDA runtime into a target repo. |
 | [vscode-color](skills/vscode-color/SKILL.md) | Assign a stable per-repository VS Code workspace tint. |
 | [weekly-shipped](skills/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
+| [whack-a-mole](skills/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 | [xyz](skills/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 
 ## Verified Scope
