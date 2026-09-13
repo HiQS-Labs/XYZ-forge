@@ -40,7 +40,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md` (the plan). Read it in full, then the code it cites: `utils/py/express.py` (cmd_land ~L547, closeout ~L621, persist_closeout + CLOSEOUT_ALLOWLIST_* ~L700-730, cmd_resume ~L851), `utils/py/wave_reconcile.py` (fetch_commit_metadata ~L362, check_provenance_receipts ~L415, the require_receipts call ~L1699), `test/gh267-express-skill.sh` (fixture + stubbed wave_reconcile ~L135, happy path ~L310), `test/gh425-gate-provenance-pr.sh`, `TESTS-RESULTS/README.md` and one existing `TESTS-RESULTS/*/provenance.jsonl`. Umbrella context: GitHub issues #591, #592, #546, #584.
+- Artifact under review: `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md` (the plan). Read it in full, then the code it cites: `utils/py/express.py` (cmd_land ~L547, closeout ~L621, persist_closeout + CLOSEOUT_ALLOWLIST_* ~L700-730, cmd_resume ~L851), `utils/py/wave_reconcile.py` (fetch_commit_metadata ~L362, check_provenance_receipts ~L415, the require_receipts call ~L1699), `test/gh267-express-skill.sh` (fixture + stubbed wave_reconcile ~L135, happy path ~L310), `test/gh425-gate-provenance-pr.sh`, `TESTS-RESULTS/README.md` and `TESTS-RESULTS/2026-09-11+GH-567/provenance.jsonl`. Umbrella context: GitHub issues #591, #592, #546, #584.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-12
 - Definition of Done: the plan is grounded, complete for #592, extends the existing express driver with no parallel writer, and its red control can actually fail.
