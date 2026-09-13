@@ -8,6 +8,23 @@ description: Catch a repo's SOP (standard operating procedure) and lessons-learn
 Bring SOP and lessons-learned docs up to date from recent events. Recon → propose → confirm → apply.
 Prompt-only; no bundled scripts. Never rewrites — only proposes additive diffs until the user approves.
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **SOP Discipline:**
+> 1. **Locate operational docs & discover conventions (Step 1a–1b).** Find existing SOP and lessons-learned documentation (`SOP.md`, `LESSONS.md`, runbooks, postmortems) across the repository, learn local doc conventions, or offer to scaffold minimal additive structure if none exist.
+> 2. **Mine recent events & grade evidence (Step 1c).** Collect recent changes across commits, PRs, issues, incident logs, changelogs, and transcripts within the lookback window (Express 7d vs. Deep); strictly grade every finding by evidence strength (**`FACT`** · **`PATTERN`** · **`HYPOTHESIS`**).
+> 3. **Draft surgical, additive proposal diffs (Step 2).** Group candidates by target document (SOP first, then LESSONS), show exact proposed additive lines with evidence citations, isolate low-confidence hypotheses, and disclose anything unverified.
+> 4. **Solicit operator confirmation before mutation (Step 3).** Present candidate diffs to the human operator, prompt for any missing incidents or context, and wait for explicit approval (all / by ID / edit / drop) before modifying any files.
+> 5. **Apply additively & record audit trail (Step 3 / Governance).** Apply approved diffs additively (newest first, never deleting without explicit request), persist the run audit log to `.sop/<timestamp>/`, re-verify disk writes, and provide a suggested commit message (strictly read-only git).
+>
+> **Overall Goal:** Operational procedures and lessons-learned documentation continuously synchronized with verified empirical events, with zero unconfirmed assertions, zero destructive overwrites, and strict evidence-graded operator approval.
+
+Then begin work.
+
+---
+
 ## Hard guardrails
 
 - Git operations are **read-only** (`log`, `diff`, `blame`, `show`, `ls-files`). Never commit, checkout, stash, or reset.
