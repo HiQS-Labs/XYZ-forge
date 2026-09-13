@@ -1,0 +1,5 @@
+{"command": "GH421_WAVE=/private/tmp/gh584-before.py bash test/gh421-auto-wave-reconcile.sh", "source_commit": "5fa5520ce9ef11d80987b415c3dd365907e3658a", "rc": 1, "result": "expected red", "output": "recovery-red.log", "reason": "Parent source aborts on GH-52 and has no receipt-backed recovery"}
+{"command": "bash test/gh421-auto-wave-reconcile.sh", "rc": 0, "output": "gh421-auto-wave-reconcile.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}
+{"command": "bash test/gh425-gate-provenance-pr.sh", "rc": 0, "output": "gh425-gate-provenance-pr.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}
+{"command": "bash test/wave-reconcile.sh", "rc": 0, "output": "wave-reconcile.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}
+{"command": "bash test/gh496-phase2-reconciliation-views.sh", "rc": 0, "output": "gh496-phase2-reconciliation-views.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}

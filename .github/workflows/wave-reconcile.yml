@@ -57,7 +57,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$EVENT_NAME" = pull_request ]; then
-            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --gate --qualify
+            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --catch-up --gate --qualify
           else
             python3 utils/py/wave_reconcile.py --catch-up --gate --qualify
           fi

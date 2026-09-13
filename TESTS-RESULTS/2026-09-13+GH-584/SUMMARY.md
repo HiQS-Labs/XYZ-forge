@@ -1,0 +1,39 @@
+# Recovery verification — GH-584 / umbrella GH-591
+
+## Table of contents
+- [Change and scope](#change-and-scope)
+- [Witnessed controls](#witnessed-controls)
+- [Validation and pending acceptance](#validation-and-pending-acceptance)
+
+## Change and scope
+
+The owning execution plan remains `PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md`, Phase 2.
+Unattributable closed legacy rows warn without blocking valid work. API failures remain errors.
+The existing catch-up path recovers every missing qualified PR since the workflow's first introduction,
+using full Git history, paginated API metadata and committed validated receipts. No-issue landings and
+open-issue references therefore survive lost events and rejected bot pushes. The PR-triggered job also
+collects pending merges so one full validation qualifies a batch and queued repeats reuse its proof.
+
+All pending landings get receipts; each issue's newest known closer owns its document/manifest/ledger
+writes. Shallow history and malformed metadata fail closed. Empty qualified sweeps write nothing.
+
+## Witnessed controls
+
+- Parent source `5fa5520ce9ef11d80987b415c3dd365907e3658a`, loaded with `GH421_WAVE`, fails the new
+  mixed fixture: `Closed GH-52 has reconciliation drift but no attributable merged development PR`.
+  Full command and output are in `provenance.jsonl` and `recovery-red.log`; the current source passes.
+- Removing lifecycle ownership reproduces an old merge SHA in manifest evidence; current source
+  records the newest SHA, newest document date and newest PR in the roadmap. See `recovery-owner-red.log`.
+- Two-page discovery recovers no-issue/open-reference PRs, retains invalid-receipt candidates, excludes
+  pre-activation/unmerged PRs and only suppresses validated committed qualification.
+- Missing/shallow history, API failure and malformed records are witnessed error controls.
+- Live read-only discovery returned 24 pending PRs since `2026-09-09T19:08:00-07:00`;
+  `live-recovery-discovery.log` retains the exact IDs. No reconciliation or receipt writes were run.
+
+## Validation and pending acceptance
+
+Focused checks: GH-421 23 tests, GH-425 22 tests, core reconciliation 16 checks, GH-496 checks pass.
+PDDA has zero errors and 30 existing governance/issue-sync warnings; LLM doc-readiness is not enabled.
+Full local pre-push gate and real hosted/scheduled acceptance are still pending. Red controls, actual
+commands, and raw outputs are retained alongside this summary. This PR depends on the producer PR;
+the umbrella remains open until three consecutive merges and the next scheduled sweep reconcile.
