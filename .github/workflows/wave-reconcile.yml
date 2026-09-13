@@ -48,8 +48,8 @@ jobs:
           test "$(gh api "repos/$REPO/branches/development" --jq .protected)" = false
       - name: Install runtime dependencies
         run: npm ci
-      - name: Install pytest for complete qualification
-        run: python3 -m pip install --quiet --break-system-packages pytest
+      - name: Install Python dependencies for complete qualification
+        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
       - name: Reconcile merged PR or catch up
         env:
           EVENT_NAME: ${{ github.event_name }}

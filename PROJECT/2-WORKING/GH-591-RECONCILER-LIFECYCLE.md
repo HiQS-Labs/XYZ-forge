@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Producer implementation and full local gate verified; recovery focused checks pass | Both fixes locally verified; obtain merge approval, then observe hosted/scheduled acceptance |
+| Producer implementation and full local gate verified; recovery focused checks pass | Merge authorized; #599 landed, hosted qualification exposed runner assumptions; correct through #600 and observe acceptance |
 
 ## Table of contents
 - [Phase 0 — diagnosis and decision](#phase-0--diagnosis-and-decision)
@@ -72,7 +72,7 @@ No new service, workflow, ledger or PR-class exemption. The local pre-push gate 
 
 ## Phase 3 — live acceptance
 
-- [ ] User approves concrete merges/outward follow-ups at the PR review boundary.
+- [x] User approves concrete merges/outward follow-ups at the PR review boundary.
 - [ ] Producer PR's own Wave reconciliation run is green without manual evidence.
 - [ ] Recovery PR and next scheduled catch-up run are green.
 - [ ] Three consecutive merged PRs reconcile automatically; run URLs recorded here and on #591.
@@ -118,3 +118,23 @@ correction 4cdb82a2 passed 374/374 in 896 seconds and published it to PR #600. T
 self-sufficiency suite failed in the pool and passed the built-in isolated retry without source
 changes; the cause is unproven, and both outcomes are retained. This remains local push evidence,
 not hosted qualification. See agy-qa-full-prepush.log and its diagnostic telemetry in that campaign.
+
+
+### First hosted run — bounded correction cycle 1
+
+PR #599 landed at `38507a23303bebab6184607b15e3099cc2dd88e3`. Automatic run
+[34778194670](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/34778194670) failed after 50 minutes:
+six suites failed and rollback prevented publication of a passing receipt. Five failures reproduce
+in an independent clone with a fresh Python environment, absent agent clients, three reported CPU
+cores and `GITHUB_ACTIONS=true`. The small correction adds the declared requests/PyYAML dependencies
+to both existing full-suite workflow environments; fixtures supply their own client binaries,
+exercise explicit three/eight-core cases, and select local Actions state themselves. No assertions
+are skipped. The bridge suite passes locally through the exact bounded qualification launcher;
+its hosted cause remains unproven. Its existing startup probes now capture a Python stack before
+the unchanged deadline so another failure can identify the blocked operation.
+
+This changes the landing dependency: #600 carries the runner corrections needed to qualify the
+already-landed producer. Waiting for unchanged #599 to become green cannot restore the missing
+dependencies. Land the reviewed correction only after the normal full gate; then observe the
+automatic recovery run. Preserve the failed run as evidence; never count it as acceptance. The
+three-consecutive-merge and scheduled-sweep criteria remain open.
