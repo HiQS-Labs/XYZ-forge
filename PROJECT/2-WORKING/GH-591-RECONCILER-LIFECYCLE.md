@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Producer implementation and full local gate verified; recovery focused checks pass | Open producer/recovery PRs, then request merge approval for live acceptance |
+| Producer implementation and full local gate verified; recovery focused checks pass | Both fixes locally verified; obtain merge approval, then observe hosted/scheduled acceptance |
 
 ## Table of contents
 - [Phase 0 — diagnosis and decision](#phase-0--diagnosis-and-decision)
@@ -61,14 +61,14 @@ No new service, workflow, ledger or PR-class exemption. The local pre-push gate 
 
 ## Phase 2 — recovery
 
-- [ ] Separate #584 PR warns and continues on legacy unattributable closed rows; API failures remain errors.
-- [ ] Committed validated qualification receipts drive recovery of all merged development PRs since workflow activation, including no-issue PRs and open-issue references.
-- [ ] Mixed legacy + attributable fixture and lost-event/rejected-push fixtures demonstrate red then green.
-- [ ] No-op sweep writes nothing; actual failure rolls back; focused/full/PDDA gates pass.
+- [x] Separate #584 PR warns and continues on legacy unattributable closed rows; API failures remain errors.
+- [x] Committed validated qualification receipts drive recovery of all merged development PRs since workflow activation, including no-issue PRs and open-issue references.
+- [x] Mixed legacy + attributable fixture and lost-event/rejected-push fixtures demonstrate red then green.
+- [x] No-op sweep writes nothing; actual failure rolls back; focused/full/PDDA gates pass.
 
 ### QA
-- [ ] Full workflow introduction history is the recovery boundary, not an arbitrary recent window or second ledger.
-- [ ] Invalid receipt identities/hashes cannot suppress recovery.
+- [x] Full workflow introduction history is the recovery boundary, not an arbitrary recent window or second ledger.
+- [x] Invalid receipt identities/hashes cannot suppress recovery.
 
 ## Phase 3 — live acceptance
 
@@ -97,3 +97,13 @@ Ship a gate's producer, consumer and recovery path together. Git hook writes do 
 objects. A successful exit without complete telemetry is insufficient. The suite tests the integrated
 snapshot containing a landing, not necessarily the historical merge commit. Public-repository runner
 cost differs from the private-phase comments. A post-merge gate cannot protect the pre-merge boundary.
+
+## Review and rollout findings
+
+Producer PR: [#599](https://github.com/HiQS-Labs/XYZ-forge/pull/599). Both fixes pass the full normal
+pre-push gate, with retained isolated-retry disclosures. Recovery includes canonical document lookup,
+malformed telemetry diagnostics, exact process binding and isolated Git fixtures. The pending batch
+read identified 18 closing issues across 24 merges; it did not execute downstream ledger/planner
+writes. Existing express ownership is #592 / PR #597, with bounds #594. Ad-hoc direct pushes and the
+observed full-gate environment/contention gaps have concrete issue drafts awaiting outward-action
+approval. No umbrella closeout or clone teardown is authorized by local validation alone.

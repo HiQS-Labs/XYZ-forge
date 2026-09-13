@@ -3,3 +3,4 @@
 {"command": "bash test/gh425-gate-provenance-pr.sh", "rc": 0, "output": "gh425-gate-provenance-pr.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}
 {"command": "bash test/wave-reconcile.sh", "rc": 0, "output": "wave-reconcile.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}
 {"command": "bash test/gh496-phase2-reconciliation-views.sh", "rc": 0, "output": "gh496-phase2-reconciliation-views.sh.log", "source_sha256": "f502c15ade3347f5741ddcaa57b5f1c373e8aac46e92a4eee79c37779e79b3fb"}
+{"command": "git push", "tested_commit": "dc3da06f72f9741a361c2094f76e1b6361c40b78", "rc": 0, "elapsed_seconds": 827, "mode": "normal full parallel pre-push", "telemetry": "candidate-full-gate.jsonl", "output": "candidate-full-gate.log", "isolated_retries": []}

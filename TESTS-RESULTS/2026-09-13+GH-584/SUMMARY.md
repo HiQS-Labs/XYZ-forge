@@ -34,7 +34,7 @@ writes. Shallow history and malformed metadata fail closed. Empty qualified swee
 
 Focused checks: GH-421 24 tests, GH-425 22 tests, core reconciliation 16 checks, GH-496 checks pass.
 PDDA has zero errors and 30 existing governance/issue-sync warnings; LLM doc-readiness is not enabled.
-Full local pre-push gate and real hosted/scheduled acceptance are still pending. Red controls, actual
+Full local pre-push gate passes; real hosted/scheduled acceptance remains pending. Red controls, actual
 commands, and raw outputs are retained alongside this summary. This PR depends on the producer PR;
 the umbrella remains open until three consecutive merges and the next scheduled sweep reconcile.
 
@@ -48,3 +48,11 @@ selection moving the supporting note; the current test closes the canonical docu
 the note byte-for-byte. The publisher allowlist remains unchanged.
 
 Published diagnostic copies redact local username, home/clone roots and hostname. Original local logs remain outside Git; result values, run IDs and test counts are unchanged. These diagnostic copies are not machine-generated reconciliation receipts.
+
+## Final local gate
+
+Final normal pre-push gate: **374/374 passed** at `dc3da06f72f9741a361c2094f76e1b6361c40b78` in 827s, with no bypass or exclusions. This is local full-suite validation; hosted/sequential promotion remains unverified.
+
+The Git boundary fixture now isolates global/system config and templates. A hostile inherited template
+reproduced failure before the change and passes afterward; both outputs are retained. Malformed receipt
+path hashes also fail the actual publisher. Runtime pytest remains required for qualification.
