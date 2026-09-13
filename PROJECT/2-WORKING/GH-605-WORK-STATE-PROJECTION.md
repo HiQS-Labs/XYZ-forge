@@ -21,7 +21,18 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| GLM and recovered Qwen feedback reconciled; expanded policy contract specified below | Renewed plan QA, then implement and verify both reusable scripts and live Rev. 2 application |
+| Expanded plan approved; Sol High implementation and correction checkpoints saved; sweep rollback test passes | Implementation QA and remaining integration fixes; full gate currently fails one registry assertion; live board unchanged |
+
+September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
+Implementation7e24f54a follows first build1e918e83. The separate-clone first-build full
+validate returned exit1,376/377 checks: gh365 test registry count372 versus374 is a real
+failure, not contention. Correction Python fixtures40/41 pass (odd-path fixture lacks Git
+metadata); the expanded two-completed/one-deferred sweep and injected second-event rollback
+pass. Live read-only probes found user/organization resolver and snapshot GraphQL syntax
+defects; WAL-mode diagnostics can create sidecars despite mode=ro. These remain explicit
+acceptance blockers for the implementation QA loop, not changes to the approved policy.
+No live board writes, configuration changes, merge or deployment has occurred. PR607 remains
+draft on its earlier published head until verification. Evidence: TESTS-RESULTS/gh605-implementation/.
 
 ## Table of contents
 
