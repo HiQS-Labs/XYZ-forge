@@ -39,7 +39,7 @@ else
   fail "workflow missing or empty"
 fi
 
-# PR #151 trialled a third-party Ubuntu runner for the advisory canary; PR #588/#589 retired it after
+# PR #151 trialled a third-party Ubuntu runner for the advisory canary; PR #588/#590 retired it after
 # the pool silently stopped claiming jobs. Every job must now be GitHub-hosted.
 if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*ubuntu-latest[[:space:]]*$' "$WORKFLOW"; then
   pass "workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)"
