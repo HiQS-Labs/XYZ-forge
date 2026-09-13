@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| Codex plan-QA rounds 1–3: all blockers resolved (R1, R2, R8, R9); round-3 shoulds R12 (recovery identity check + retained run log) and R13 (retain driver-mutation evidence) folded in. Relay cap 3/3 exhausted → STATUS Escalated with no open blocker | Operator decision: proceed to implementation on this plan (final Codex QA still runs on the implementation per start-task step 8) |
+| Codex plan-QA rounds 1–3: all blockers resolved (R1, R2, R8, R9); round-3 shoulds R12 (recovery identity check + retained run log) and R13 (retain driver-mutation evidence) folded in. Relay cap 3/3 exhausted → STATUS Escalated with no open blocker | Round 4 (operator-authorized): R13 Pass, no new blocker; R12 amended to snapshot HEAD + porcelain + remotes + local config hash. Cap 4/4 exhausted, STATUS Escalated with zero open blockers | Operator decision: implement on this plan (final Codex QA runs on the implementation per start-task step 8) |
 
 ## Observed (recon, base `58d6f05a`)
 
@@ -100,10 +100,12 @@ Revised after Codex plan-QA rounds 1–2 (`relay-system/2026-09-12/gh592-plan-qa
    print(express.write_receipt(".", "<sha>", <issue>, "<suite>", <rc>))'`, commit that one file to
    development and push, then `express resume --issue N --sha <sha> --suite <suite>`. Same helper, same
    predicate, no new CLI verb, no parallel producer; the receipt records the actual rerun `rc`. (R11)
-   **Identity check before issuing evidence (R12):** the recipe records `git rev-parse HEAD` and
-   `git status --porcelain` before and after `bash <suite>`; if HEAD moved or the tree is dirty
-   afterwards, the run is void and no receipt is written (a suite can mutate HEAD/config/remotes and
-   still exit 0 — AGENTS.md's attribution-failure rule). The suite's stdout/stderr is saved beside the
+   **Identity check before issuing evidence (R12):** the recipe snapshots the clone's identity before
+   and after `bash <suite>` — `git rev-parse HEAD`, `git status --porcelain`, `git remote -v`, and the
+   sha256 of `git config --list --local` — and requires all four to be byte-identical afterwards; any
+   difference (HEAD moved, dirt, a remote or local config/identity changed) voids the run and no
+   receipt is written (a suite can mutate any of these and still exit 0 — AGENTS.md's
+   attribution-failure rule). The four before/after values are written into `recovery-run.log`. The suite's stdout/stderr is saved beside the
    receipt as `TESTS-RESULTS/<date>+GH-<n>-express/recovery-run.log` and committed with it.
    Since the receipt is written after the clean check and immediately persisted, the only crash
    window that leaves an *uncommitted* receipt is between `write_receipt` and the ship persist; the

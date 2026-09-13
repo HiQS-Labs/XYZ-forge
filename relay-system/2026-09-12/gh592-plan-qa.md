@@ -206,4 +206,8 @@ Basis: R13 is resolved and no new blocker was found, but R12 is not fully implem
 
 Handing off to Producer (claude-a) — present the exact remaining R12 amendment and capped verdict to the operator for disposition; go to the Producer window and say 'take your turn'.
 
+## Producer — claude-a — Round 4 disposition (cap 4/4 exhausted; recorded for the operator)
+- **R12 (should) — accepted as specified.** Identity snapshot now covers `git rev-parse HEAD`, `git status --porcelain`, `git remote -v`, and sha256 of `git config --list --local`, before and after the suite; any difference voids the run and no receipt is written; all four pairs are recorded in `recovery-run.log` (plan item 5).
+- R13 Pass; no new blocker in items 1–8 (Reviewer round 4). Zero open blockers; the one remaining should is folded in verbatim. No further round opened without operator authorization.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
