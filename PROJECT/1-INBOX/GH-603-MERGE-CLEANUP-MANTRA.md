@@ -1,7 +1,7 @@
 ---
 gh_issue: 603
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/603
-title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, and radar skills"
+title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, radar, and daily skills"
 status: Proposed (1-INBOX — active)
 created: 2026-09-13
 updated: 2026-09-13
@@ -11,13 +11,14 @@ goal: >
   Add verbatim 5-point discipline mantra recital blocks, Rung 0 Intake Triage, and Overall Goal
   anchors at the top of skills/merge-cleanup/SKILL.md, skills/start-task/SKILL.md,
   skills/workhorse/SKILL.md, skills/sop/SKILL.md, skills/whack-a-mole/SKILL.md,
-  skills/unstuck/SKILL.md, skills/express/SKILL.md, and skills/radar/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
+  skills/unstuck/SKILL.md, skills/express/SKILL.md, skills/radar/SKILL.md, and
+  skills/daily/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
 roadmap_exempt: true
 ---
 
-# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, and radar
+# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, radar, and daily
 
-Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, `skills/unstuck/SKILL.md`, `skills/express/SKILL.md`, and `skills/radar/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
+Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, `skills/unstuck/SKILL.md`, `skills/express/SKILL.md`, `skills/radar/SKILL.md`, and `skills/daily/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
 
 ## 1. Merge-Cleanup Discipline Mantra
 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
@@ -82,6 +83,15 @@ Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors t
 4. **Audit release alignment & orphan backlog (Step 3 — Lens 3).** Read `releases.db` and open milestones read-only; measure orphan issue share and surface roadmap plan-vs-execution drift without modifying database state.
 5. **Deliver coaching memo & persist dual sinks on confirmation (Steps 4–5).** Present the SDLC Process Coach narrative (celebrate wins, coach process friction, highlight regressions, offer multi-week arc); upon single operator confirmation, write immutable Sink A (`RADAR-REPORT-*.md`) and sync live Sink B (`radar` issue checklist).
 **Overall Goal:** SDLC process momentum evaluated across 3-lens empirical evidence (RGT flow, defect/regression clusters, release alignment), synthesized into an actionable coaching memo, and persisted to dual historical/live sinks on operator approval with zero unconfirmed mutations.
+
+## 9. Daily Discipline Mantra
+1. **Extract multi-agent intent signal (Step 1).** Read recent operator prompts from `0. Claude Prompts.md` / `clio_prompts` over the rolling 2-hour window across Claude, Agy, Codex, and ZCode to anchor active human directives.
+2. **Collect live operational work signals (Step 2).** Query `get_next_actions()`, `calendar_events`, `sleuth_reminders`, and read-only Apple Reminders snapshots from the local database without external side effects.
+3. **Scan device-wide git state & CPU health (Step 3).** Run unclosed loop and runaway CPU scanners read-only; synchronize `temp/close-the-loop.md` with in-flight worktrees, unmerged branches, open PRs, and process health.
+4. **Evaluate 2-hour trajectory & trigger-grounded coaching (Step 4).** Assess velocity, momentum, and time-gated horizons (exactly-once Morning Retro / Monday Horizon); emit falsifiable coaching nudges strictly citing their telemetry triggers (`[Trigger: ...]`).
+5. **Format deterministic schema & append log (Steps 5–6).** Render the standard Markdown synthesis block (Focus, Trajectory, Velocity, Horizon, Unclosed Loops, CPU Health, Coaching Nudge) and append atomically to `temp/daily-log/YYYY-MM-DD.log`.
+**Overall Goal:** 15-minute multi-agent work synthesis delivered with zero external mutations — fusing prompt intent, operational state, device git activity, and temporal trajectory into deterministic daily logs and trigger-cited adaptive coaching.
+
 
 
 
