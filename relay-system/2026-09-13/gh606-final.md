@@ -100,4 +100,12 @@ Review method: Read-only whole-file sweep of the skill, architecture, plan, reco
 
 Relay closed (Approved), no further turn needed. Producer/harness retains the pending validation and publication work.
 
+
+### Attestation · relay-drive — 2026-09-13T21:05:10Z
+task: gh606-final-review
+reviewer: codex
+status: Approved
+reviewed-head: 2ca1cf801d1f5ffdd051bb1919bf0ee43b048c00
+added-range: 9818+3846
+added-sha256: 1537f9a967b93e39a6fdd6c34f6cba276d144ff036516c517dd6640ae5f5f468
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
