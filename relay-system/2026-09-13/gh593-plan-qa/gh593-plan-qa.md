@@ -3,7 +3,7 @@ Goal: Plan QA — GH-593 radar re-scores whack-a-mole umbrellas
 Date: 2026-09-13
 Producer: claude-a
 Reviewer: codex
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ---
 
@@ -113,3 +113,61 @@ Write your verdict as a `## Reviewer — codex` block below: for each question, 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+
+## Reviewer — codex
+
+**Changes requested.** The two-skill extension is appropriately small, but the no-target write guard prevents quiet-run persistence, and the signature/counting contract leaves materially different scores and retirement decisions possible.
+
+Review evidence: read the plan, both target skills, and LESSONS-LEARNED.md in full; inspected the rating policy and embedded issue requirements/#293 excerpt. This is static plan QA, not an executed radar run. Graph tools are unavailable in this session; these are direct, line-numbered prose-source checks. No git, project scripts, gates, or artifact execution was performed. Live #591 body/timeline and the remainder of #293 were not supplied or independently verified. Citations below use `P` for `PROJECT/2-WORKING/GH-593-RADAR-UMBRELLA-RESCORE.md`, `W` for `skills/whack-a-mole/SKILL.md`, and `R` for `skills/radar/SKILL.md`.
+
+1. **Recon grounding — OK with two factual qualifications (Note).** The three Evidence bullets are exactly at W:155–158. The six weights are at W:85–90; the actual floor is “no cluster scores above 5” at W:105. The re-run suggestion is W:187. Radar's seven signals begin at R:121,134,143,144,152,154,161; the yield rule is R:183–187. The seam-naming strike-through rule is R:398–408, specifically R:405. The complete Boundaries table at R:440–448 has no whack-a-mole row. Thus P:49–63 is grounded. However, P:87–88 calls strict `<5` the producer's own floor: producer currently stops at `<=5`, whereas #593 explicitly treats `>=5` as surviving. Keep #593's conservative boundary, but disclose the equality difference; do not silently change producer scoring. P:65–68 claims the whole live sink has no umbrella section; the supplied first 40 lines only establish the shown section shape, not absence later in the issue. Mark that claim as producer-observed until the full body is cited. LESSONS-LEARNED.md:12–23 supports the failure-chain mechanism, not every timestamp or receipt count in the rating.
+
+2. **Requirement coverage — Fix: mapping exists, but important acceptance coverage is partial.**
+
+   | #593 requirement | Ordered implementation step | Assessment |
+   |---|---|---|
+   | Change 1: fixed-key filing signature/raw signals/run | 1, P:99–106; keys in P:77–79 | Mapped; semantics missing (finding 5). |
+   | Change 2: open/closed discovery, post-fix weighted score, exact Sink B row | 2–3, P:107–119 | Mapped; no-target persistence conflict (finding 3). |
+   | Change 3: two quiet runs; surviving closed class; advisory only | 3 plus decisions 4–5, P:87–92,114–117 | Mapped; run/streak transition rules missing (finding 4). |
+   | Acceptance 1: rendered signature; missing block is violation | 1 | Partial: occurrence count does not check missing-block rejection. |
+   | Acceptance 2: actual #591 line and counted signals | 6, P:124–128 | Partial: hand-running only signal 8 misses full radar discovery/output integration and legacy baseline handling. |
+   | Acceptance 3: closed, active synthetic umbrella stays unstruck | 6 | Mapped; add fixed inputs and expected arithmetic (finding 6). |
+   | Acceptance 4: two sinks only; no closes/reopens | Decisions 5–6 and step 3 | Guardrails are promised at P:141, but no ordered verification audits actual write destinations/verbs. |
+   | Acceptance 5: PDDA clean and docs-only route green | 7, P:129–130 | PDDA mapped; tier-2 releases replaces, rather than demonstrates, the requested docs-only check. |
+
+   Cheapest fix: strengthen existing steps 1, 6 and 7 with the missing checks. A broader releases gate may be necessary for the actual diff; separately identify its docs-check coverage or run the focused docs route and record both. No new test subsystem is needed.
+
+3. **Extend, don't add — Block: reconcile the existing no-target guards.** P:93–95 explicitly excludes umbrella rows from targets. R:37–38 says “No targets → write nothing”; R:282 gives an all-clear when no targets exist; R:350 skips persistence entirely. With zero ordinary targets and one tracked umbrella scoring 0, the proposed consumer must both persist `(1/2 quiet)` and write nothing. The second quiet observation can never reliably become durable. Amend those existing clauses to skip only when there are neither ordinary targets nor umbrella observations requiring tracking; explicitly include umbrella evidence in Sink A and rows in Sink B. Keep the existing one-confirmation flow (R:424). Add an umbrella-only run as the integration control. This is an explicit refinement of the no-target guard, not an extra sink. Otherwise the design extends the existing template and two sinks, introduces no script/DB subsystem, and preserves W:14–15's one-approved-issue boundary and R:29–32's write restrictions. The CHANGELOG edit at P:123 is implementation governance, not a radar runtime write path. Reversibility: Easy for the prose edits; inaccurate published retirement evidence still needs a correction on the next report.
+
+4. **Design decisions — Fix: keep the choices, define their limits and transitions.**
+
+   **Decision 3:** Post-fix scoring follows #593 and prevents old events inflating the current observation. Strongest counterargument: a merge may not reach the affected installation, so the same unresolved pre-fix incident can persist without generating fresh tickets. P:85–86's “forever” rationale is also inaccurate: radar already uses a rolling 21-day window (R:44), so dated events age out. Keep the required cutoff, define it as the window intersected with time strictly after a verified class-fixing merge, and state that merge is not deployment proof. At P:111–112, “linked PR” or “commit that names the umbrella” is too broad: a documentation/reference commit or one symptom fix must not reset the clock. Require evidence it fixes the class on the evaluated trunk; specify which fix wins when multiple PRs exist, and how reverted/superseded fixes affect eligibility. Known continued operational failure (R:154–160) must be disclosed and prevent a false solved claim, without inventing churn weights for logs.
+
+   **Decision 4:** Two observations are the requested minimum, but P:87–90 does not define consecutive. Strongest counterargument: R:368–371 explicitly supports same-day reruns; two near-identical snapshots minutes after a merge can satisfy the phrase while measuring almost no exposure. Define distinct run identity/order, the previous comparable observation, same-day replay behavior, and whether a changed window is comparable. Specify streak reset on `>=5`, missing/unreadable evidence, a changed signature/fix, and reactivation after retirement. An unavailable signal must never become score 0 or increment quiet count (R:183–187). Store prior/current run references and fix identity in the existing sinks. A minimum elapsed horizon would be a policy change beyond #593; either propose it explicitly or candidly label two runs as two observations, not proof of a durable elapsed-time horizon.
+
+   **Decision 6:** Separate ledger rows and formulas are sound. Strongest counterargument: excluding an active umbrella's evidence from all target ranking hides precisely the recurrence radar should prioritize. Clarify that the *row* is excluded, while its matching active class can feed an existing/new stable RADAR target through normal Lens 2 scoring and the open-PR collision check (R:195–207,209–244). Link/deduplicate the class; never add a second numerical target merely because it has an umbrella.
+
+5. **Signature contract — Fix before implementation.** P:70–79 supplies key names, not a reproducible contract; P:108–112 adds “matches” and “lineage” without defining either. Add one concrete valid block and concise semantics in the existing skills, with one canonical owner. Define `cluster` identity/stability; `run` UTC syntax (reuse W:31); list serialization/escaping and empty values; repo-relative exact-file versus directory-prefix `paths`; literal versus regex/case-sensitive `errors`; repository-qualified `issues`; and whether `commits` enumerates member fixes or ancestry anchors. Explicitly preserve or deliberately resolve W:67–75's two-independent-signals membership rule: path overlap alone is currently only adjacency. Bound lineage traversal and distinguish new evidence of the class from background references to its umbrella.
+
+   For `signals`, define all raw fields, per-event timestamps, `size` membership, PR/commit identity and double-counting policy, repeat fixes “beyond first” after the cutoff, comment rounding, and how oldest-still-open days are clipped to the measurement interval. W:85–90 does not settle these new post-fix semantics. Record filing window and actual weights: producer permits window overrides and custom weights (W:24–31,92), while radar defaults to 21 days (R:44); equal default weights alone do not make the two totals directly comparable as claimed at P:80–83. Label differing exposure/weights.
+
+   Also specify legacy/malformed handling. #591 predates this template change, and its actual block is not in the supplied evidence. P:124–128 assumes a usable signature and filed-at score without establishing either. Never invent historical numbers or silently omit the umbrella. Emit an explicit unavailable/legacy observation, prohibit quiet credit, and distinguish any reconstructed baseline from an observed filing baseline. If exact numeric #591 acceptance requires historical reconstruction or an operator-authorized migration, name that dependency and evidence in step 6; neither skill is authorized to patch #591 in place (W:15; R:29).
+
+6. **Falsifiability — Fix the witness, not a new harness.** Each acceptance can fail, but the current plan leaves weak checks:
+
+   | Acceptance | Concrete failure input / required observation |
+   |---|---|
+   | 1 | Render a nonempty draft, then remove the fenced signature or one mandatory key: must be reported as a template violation. P:105–106's `grep` count “or as counted” can pass with stray headings and no usable block; replace it with this bounded check. |
+   | 2 | Discover at least #591, then drop its emitted row or make its signature unreadable: must visibly fail/degrade, not yield a clean run. Record discovery count, actual body/baseline evidence, window, input signals and complete output. Signal-8-only arithmetic does not exercise R:350's skip. |
+   | 3 | Pin a closed umbrella, a verified earlier fix, and post-fix matching evidence totaling exactly 5 (e.g. one reopen = 3 plus two member issues = 2; other signals 0). It must be `class survived`, unstruck; mutate output to struck/solved and the reviewer check must reject it. Include a below-5 counterpart so “always print class survived” cannot pass. |
+   | 4 | A proposed `gh issue close/reopen`, an edit to the umbrella, or a third persistent file must fail the write audit. Use the nonempty #591/umbrella-only witness, not an empty no-op run as evidence of preserved functionality. |
+   | 5 | A controlled malformed doc must produce a relevant docs-gate finding; show the corrected candidate passes and name the routed checks. A clean unrelated/default gate alone does not establish the requested docs route. |
+
+   The proposed active-closed red control detects closure-as-solved only if the activity really matches and is after the verified cutoff; merely assuming `state: closed` in P:127 does not establish that. It also misses the two-run success path: add a short observation table covering quiet/quiet, quiet/active/quiet, unavailable evidence, and umbrella-only persistence. Record the input/output and intentional rejection in the PR body as planned. These are proposed checks, not tests executed in this review.
+
+7. **Rating — provisionally reasonable axes; Fix the recurrence evidence.** The order is `pri/sev/appeal/effort`, not severity first (RELEASES-DB-FAQS.md:25–31). Priority 60 versus severity 55 is a modest, explained scheduling premium; appeal 50 correctly follows skills/start-task/SKILL.md:183; effort 80 is plausible for prose work, though the live evidence/contract work makes it an estimate rather than “two easy edits.” Severity 55 is defensible for GH-593's misleading completion signal and manual recovery, provided it is not used to downrate an independently work-blocking gate defect (skills/start-task/SKILL.md:181–184). No evidence here justifies a precise replacement score.
+
+   P:157–159's comparison is not grounded as written: its “prior 14 days” for a recent Aug 30–Sep 13 window would precede Aug 30, yet the cited radar runs include Sep 1 and Sep 2. The three-run analogy is useful qualitative history, not a prior-window incident count. Name both windows and give dated distinct incidents/coverage limits, or say trend unknown, as required by skills/start-task/SKILL.md:186–193. LESSONS-LEARNED.md:21–23 supports manual fallback but does not independently substantiate the exact two PR/four receipt count at P:153–154. Cite the records or label those counts producer-reported. Do not manufacture a numeric rerating from missing history.
+
+VERDICT: Changes requested
