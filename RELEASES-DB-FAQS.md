@@ -42,8 +42,9 @@ compare-and-swap across devices, so the lock cannot exclude another device: ever
 status is re-read immediately before mutation. An unmatched intent or interrupted/indeterminate
 request must be read back and freshly previewed, never blindly retried or overwritten.
 Project lookup uses GitHub's `repositoryOwner` union for either user or organization boards, and
-event connectors carry each event's recorded repository identity instead of guessing from the
-first configured repository.
+database events and policy evidence retain each roadmap row's repository identity. The legacy raw
+event connector remains its existing configured single-repository replay path; policy preview/apply
+is the complete repo-qualified projection for multi-repository board decisions.
 
 ## Re-pointing a release's tracking issue (GH-222)
 

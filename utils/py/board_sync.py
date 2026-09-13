@@ -223,12 +223,14 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
     as_of_dt = as_of_dt or dt.datetime.now(dt.timezone.utc)
     allowed = set(policy["repos"])
     gh = {_identity(x): x for x in github_items if _identity(x) and _identity(x)[0] in allowed}
-    ledger_by = {}
+    ledger_by, invalid_ledger = {}, set()
     for row in ledger:
         ident = _identity(row)
-        if (ident and ident[1] == "issue" and ident[0] in allowed
-                and row.get("identity_valid", True)):
-            ledger_by.setdefault(ident, []).append(row)
+        if ident and ident[1] == "issue" and ident[0] in allowed:
+            if row.get("identity_valid", True):
+                ledger_by.setdefault(ident, []).append(row)
+            else:
+                invalid_ledger.add(ident)
     board_by, opaque, duplicates = {}, [], set()
     for item in board_items:
         ident = _identity(item)
@@ -261,7 +263,11 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
                 linked_rows = ledger_by.get(ref_ident, [])
                 linked_section = (str(linked_rows[0].get("section") or "").strip().lower()
                                   if len(linked_rows) == 1 else "")
-                if (ref_ident in duplicates or len(linked_rows) != 1
+                # GitHub is authoritative for an explicit OPEN closing link when the ledger has
+                # no row yet. Preserve only evidence that is actually contradictory or ambiguous:
+                # an invalid row, duplicate ledger/card identity, or one known terminal row.
+                if (ref_ident in duplicates or ref_ident in invalid_ledger
+                        or len(linked_rows) > 1
                         or linked_section.startswith("completed")
                         or linked_section.startswith("deferred")):
                     unresolved.append({"identity": ref_ident,

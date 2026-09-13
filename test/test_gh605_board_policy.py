@@ -11,6 +11,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "utils" / "py"))
 import board_sync
+import work_connectors
 from work_connectors import github_board
 
 
@@ -105,6 +106,20 @@ class PlannerTests(unittest.TestCase):
                 targets = {tuple(d["identity"]): d["status"] for d in plan["decisions"]}
                 self.assertEqual(targets[("owner/repo", "issue", 1)], "In review")
 
+    def test_closing_pr_can_place_an_open_issue_without_a_ledger_row(self):
+        open_issue = issue(1)
+        for draft, expected in ((False, "In review"), (True, "In progress")):
+            with self.subTest(draft=draft):
+                pr = {"repo": "owner/repo", "kind": "pr", "number": 9,
+                      "state": "OPEN", "draft": draft,
+                      "updated_at": "2026-09-13T11:00:00Z",
+                      "closing_issues": [{"repo": "owner/repo", "number": 1}]}
+                plan = board_sync.plan_selection_policy(POLICY, [], [], [open_issue, pr], as_of=AS_OF)
+                targets = {tuple(d["identity"]): d["status"] for d in plan["decisions"]}
+                self.assertEqual(targets[("owner/repo", "issue", 1)], expected)
+                self.assertFalse([u for u in plan["unresolved"]
+                                  if tuple(u["identity"]) == ("owner/repo", "issue", 1)])
+
     def test_unknown_pr_state_or_date_is_preserved(self):
         board = [{"repo": "owner/repo", "kind": "pr", "number": 9,
                   "item_id": "p9", "status": "In review"}]
@@ -133,7 +148,9 @@ class PlannerTests(unittest.TestCase):
               "draft": False, "closing_issues": [{"repo": "owner/repo", "number": 1}]}
         board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
                   "item_id": "i1", "status": "Done"}]
-        for rows in ([ledger(1, 90, section="Completed")], [ledger(1, 90), ledger(1, 80)]):
+        for rows in ([ledger(1, 90, section="Completed")],
+                     [ledger(1, 90), ledger(1, 80)],
+                     [ledger(1, 90, identity_valid=False)]):
             with self.subTest(rows=len(rows)):
                 plan = board_sync.plan_selection_policy(POLICY, rows, board, [issue(1), pr], as_of=AS_OF)
                 issue_changes = [c for c in plan["changes"] if c["identity"][-1] == 1]
@@ -250,16 +267,24 @@ class WriterAuditTests(unittest.TestCase):
                 github_board.run({"config": cfg, "events": [{"id": 1}]})
         fetch.assert_not_called()
 
-    def test_connector_routes_event_by_recorded_repository_identity(self):
-        cfg = {"repos": ["owner/repo", "owner/other"]}
-        event = {"id": 1, "repo": "owner/other", "gh_number": 7, "event": "in_flight"}
+    def test_legacy_connector_batch_keeps_single_repo_replay_contract(self):
+        conn = __import__("sqlite3").connect(":memory:")
+        conn.executescript("""
+          CREATE TABLE repos(id INTEGER PRIMARY KEY, slug TEXT);
+          CREATE TABLE work_events(id INTEGER PRIMARY KEY, repo_id INTEGER, gh_number INTEGER,
+                                   event TEXT, payload TEXT, at TEXT);
+          INSERT INTO repos VALUES(1, 'recorded/owner');
+          INSERT INTO work_events VALUES(1, 1, 7, 'in_flight', NULL, '2026-09-13T00:00:00Z');
+        """)
+        events = work_connectors.events_after(conn, 0)
+        conn.close()
+        self.assertNotIn("repo", events[0])
+
+        cfg = {"repos": ["owner/repo"]}
         with mock.patch.object(board_sync, "set_issue_status", return_value="ok") as write:
-            applied, _ = github_board.apply_event(cfg, event, github_board.DEFAULT_STATUS_MAP, {})
+            applied, _ = github_board.apply_event(cfg, events[0], github_board.DEFAULT_STATUS_MAP, {})
         self.assertTrue(applied)
-        self.assertEqual(write.call_args.kwargs["repo"], "owner/other")
-        with self.assertRaisesRegex(RuntimeError, "unknown repository"):
-            github_board.apply_event(cfg, dict(event, repo="foreign/repo"),
-                                     github_board.DEFAULT_STATUS_MAP, {})
+        self.assertEqual(write.call_args.kwargs["repo"], "owner/repo")
 
     def test_preview_future_timestamp_is_invalid(self):
         preview = {"created_at": "2999-01-01T00:00:00Z", "as_of": "2999-01-01T00:00:00Z"}

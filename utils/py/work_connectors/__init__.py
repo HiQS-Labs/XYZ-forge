@@ -125,11 +125,16 @@ def cursor_for(conn, name):
 
 
 def events_after(conn, last_id, limit=500):
-    rows = conn.execute("""SELECT e.id, e.gh_number, e.event, e.payload, e.at, r.slug
-                           FROM work_events e LEFT JOIN repos r ON r.id = e.repo_id
+    """Return the established raw-replay payload; repository routing stays connector-configured.
+
+    Database rows retain repo_id for complete policy/evidence consumers. The legacy event connector
+    is intentionally a single-repository projection and predates repo-qualified batch payloads.
+    """
+    rows = conn.execute("""SELECT e.id, e.gh_number, e.event, e.payload, e.at
+                           FROM work_events e
                            WHERE e.id > ? ORDER BY e.id LIMIT ?""", (last_id, limit)).fetchall()
     return [{"id": r[0], "gh_number": r[1], "event": r[2],
-             "payload": json.loads(r[3]) if r[3] else None, "at": r[4], "repo": r[5]}
+             "payload": json.loads(r[3]) if r[3] else None, "at": r[4]}
             for r in rows]
 
 

@@ -9,7 +9,7 @@ repo-qualified idempotence check and the board-identity refusal.
 The contract with the parent (`work_connectors/__init__.py`) is deliberately narrow, because
 the parent treats everything here as untrusted:
 
-  stdin   {"connector": name, "config": {...}, "events": [{"id","repo","gh_number",
+  stdin   {"connector": name, "config": {...}, "events": [{"id","gh_number",
                                                            "event","payload","at"}, ...]}
   stdout  advanced_to: <the id of the last event this connector actually applied>
   exit    0 = the batch was applied · non-zero = it was not, and the cursor stays put
@@ -21,8 +21,10 @@ it handed us, so we cannot skip events by reporting past the end.
 **Batch failure is conservative.** If event 7 fails after 1–6 landed, the child exits non-zero;
 the parent deliberately ignores any partial `advanced_to` and keeps the whole prior cursor.
 `work reconcile` therefore replays 1–7. Legacy writes are set-to-value, so this is idempotent;
-policy-managed boards refuse this raw replay path because their multi-item policy needs a fresh
-snapshot instead.
+policy-managed boards refuse this raw replay path because their multi-item policy needs a fresh,
+repo-qualified snapshot instead. Legacy raw replay remains the existing configured single-repo
+path; repository ownership on database events is consumed by policy/evidence projection, not by
+widening this protocol.
 
 ## The column mapping is configuration, not code
 
@@ -89,9 +91,10 @@ def apply_event(cfg, ev, status_map, snapshot):
     if column is None:
         return (True, "event %s (%s): unmapped in status_map — skipped"
                 % (ev.get("id"), ev.get("event")))
-    repo = ev.get("repo")
-    if repo not in cfg.get("repos", []):
-        raise RuntimeError("event %s has unknown repository identity %r" % (ev.get("id"), repo))
+    repos = cfg.get("repos") or []
+    if not repos:
+        raise RuntimeError("event %s has no configured repository" % ev.get("id"))
+    repo = repos[0]
     msg = board_sync.set_issue_status(cfg, int(num), column, write=True, snapshot=snapshot,
                                       repo=repo)
     return (True, "event %s (%s): %s" % (ev.get("id"), ev.get("event"), msg))

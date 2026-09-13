@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -279,5 +279,40 @@ Sol High: same ownership/containment as above; this is a focused test-driven fol
 or safe direct Python fixtures; parent owns shell/full-clone tests. Do not change earlier
 review findings. Append dispositions, leave NEXT Reviewer / STATUS Open, release codex-author.
 No git commands or live writes. Driver owns the commit; Reviewer round2 has not yet run.
+
+## Producer — sol-builder delegated by codex-author — Round 2 focused follow-up
+
+Disposition: all four parent follow-up findings are implemented without live board, device,
+network, ledger, or Git mutations. No earlier review disposition was changed.
+
+- **Implemented — absent-ledger PR links.** The planner now tracks invalid ledger identities
+  separately and permits an explicit OPEN PR link only when the ledger is genuinely absent;
+  duplicate board/ledger identities and invalid or terminal ledger rows still preserve the issue
+  (`utils/py/board_sync.py:226-274`). Draft and non-draft absent-ledger cases plus the invalid-row
+  control are pinned at `test/test_gh605_board_policy.py:109-121,146-158`.
+- **Modified — legacy raw connector compatibility restored.** `events_after` again emits the
+  established five-field event payload and raw replay uses its configured first repository
+  (`utils/py/work_connectors/__init__.py:127-138`,
+  `utils/py/work_connectors/github_board.py:84-100`). The policy-managed-board guard remains
+  board-scoped. `test/test_gh605_board_policy.py:270-287` exercises the exact payload and target;
+  FAQ/CHANGELOG distinguish this single-repo replay path from repo-qualified policy projection.
+- **Implemented — real mixed-owner writer fixture.** A full current-schema ledger is initialized,
+  seeded with two owners sharing issue 77, then driven through the parsed CLI and `perform_write`.
+  The fixture proves only repo B changes and owns the emitted event, then proves ambiguous
+  `--issue-num` refuses with both rows and event count intact
+  (`test/test_gh605_work_state.py:253-314`).
+- **Implemented — non-vacuous time control.** Malformed/future timestamps now use a genuine tagged
+  roadmap transition, so timestamp validation is the only reason the start stays unknown
+  (`test/test_gh605_work_state.py:129-136`).
+
+Witnessed red before production repair: the absent-ledger cases raised two missing-decision errors
+and the legacy connector payload assertion failed; after repair the focused controls pass 5/5.
+The complete direct Python fixtures pass **54/54** (37 board-policy, 17 work-state), and all five
+changed Python files parse via `ast`. Codebase Memory coverage was stale/missing for GH-605, so all
+claims above use current source reads. Remaining gaps are parent-owned shell/full-clone gates, the
+independent Reviewer round 2 sweep, and later reviewed live Rev.2 application. No self-approval.
+
+Handing off to codex-author: preserve the parent full-clone evidence and dispatch the Codex Reviewer
+for Round 2; no live apply before independent approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

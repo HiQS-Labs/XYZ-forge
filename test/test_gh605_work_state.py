@@ -1,4 +1,6 @@
 import datetime as dt
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -7,6 +9,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -128,7 +131,7 @@ class EvidenceTests(unittest.TestCase):
             conn = sqlite3.connect(self.db)
             conn.execute("DELETE FROM work_events")
             conn.commit(); conn.close()
-            self.add_event("jog_running", {"status": "running"}, at)
+            self.add_event("in_flight", {"source": "roadmap-update", "transition": True}, at)
             report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
             self.assertEqual(report["issues"][0]["activity"], "unknown")
 
@@ -245,6 +248,70 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(report["schema_ready"])
         self.assertEqual({p.name: p.read_bytes() for p in (self.db, dump, config)}, before)
         self.assertEqual(sorted(p.name for p in self.root.iterdir()), before_names)
+
+
+class MultiRepositoryWriteTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="gh605-multi-repo-")
+        self.root = Path(self.tmp.name)
+        (self.root / ".git").mkdir()
+        with contextlib.redirect_stdout(io.StringIO()):
+            app.main(["--root", str(self.root), "init", "--slug", "owner/repo-a"])
+        self.gid_a = app.new_gid("rmi-")
+        self.gid_b = app.new_gid("rmi-")
+        conn = sqlite3.connect(self.root / "releases.db")
+        repo_a = conn.execute("SELECT id FROM repos WHERE slug='owner/repo-a'").fetchone()[0]
+        repo_gid_b = app.new_gid("repo-")
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(repos)")}
+        if "updated_at" in cols:
+            conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
+                         (repo_gid_b, "owner/repo-b", app.now_iso()))
+        else:
+            conn.execute("INSERT INTO repos(global_id,slug) VALUES(?,?)",
+                         (repo_gid_b, "owner/repo-b"))
+        repo_b = conn.execute("SELECT id FROM repos WHERE slug='owner/repo-b'").fetchone()[0]
+        now = app.now_iso()
+        for gid, repo_id, slug in ((self.gid_a, repo_a, "owner/repo-a"),
+                                   (self.gid_b, repo_b, "owner/repo-b")):
+            conn.execute("""INSERT INTO roadmap_items(
+                global_id,repo_id,gh_number,title,section,position,status_marker,doc_path,
+                issue_url,raw_text,first_seen,updated_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (gid, repo_id, 77, "same number", "Queue / parked intake", 1, "",
+                 "PROJECT/1-INBOX/GH-77.md", "https://github.com/%s/issues/77" % slug,
+                 "- GH-77 same number", now, now))
+        conn.commit()
+        conn.close()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _run_update(self, *argv):
+        with mock.patch.object(app, "refresh_preview"), \
+             mock.patch.object(app, "_dispatch_work_connectors"), \
+             contextlib.redirect_stdout(io.StringIO()), \
+             contextlib.redirect_stderr(io.StringIO()):
+            return app.main(["--root", str(self.root), "roadmap", "update", *argv])
+
+    def test_gid_write_targets_repo_b_event_and_ambiguous_number_refuses(self):
+        self._run_update("--gid", self.gid_b, "--section", "In progress")
+        conn = sqlite3.connect(self.root / "releases.db")
+        rows = dict(conn.execute("SELECT global_id,section FROM roadmap_items"))
+        event = conn.execute("""SELECT r.slug,e.event FROM work_events e
+                                JOIN repos r ON r.id=e.repo_id ORDER BY e.id DESC LIMIT 1""").fetchone()
+        conn.close()
+        self.assertEqual(rows[self.gid_a], "Queue / parked intake")
+        self.assertEqual(rows[self.gid_b], "In progress")
+        self.assertEqual(event, ("owner/repo-b", "in_flight"))
+
+        with self.assertRaises(SystemExit):
+            self._run_update("--issue-num", "77", "--status-marker", "🚧")
+        conn = sqlite3.connect(self.root / "releases.db")
+        after = dict(conn.execute("SELECT global_id,section FROM roadmap_items"))
+        event_count = conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0]
+        conn.close()
+        self.assertEqual(after, rows)
+        self.assertEqual(event_count, 1)
 
 
 if __name__ == "__main__":
