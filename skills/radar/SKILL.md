@@ -24,6 +24,23 @@ A per-repo SDLC process coach and strategic compass: pairs a friendly, construct
 rigorous empirical lenses over one window, persisting to a reconcilable report.
 Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Radar Discipline:**
+> 1. **Frame window & discover historical arc (Step 0).** Default to 21 days on trunk (`main`/`development`); discover prior reports in `RADAR/`, `docs/radar/`, or `PROJECT/1-INBOX/` to extract historical baseline RGT metrics and multi-week trajectory.
+> 2. **Prove flow distribution & RGT mix (Step 1 — Lens 1).** Pipe trunk commit subjects to a verified tally file, prove counts sum to `wc -l`, isolate Harness machinery from the denominator, classify Run/Grow/Transform (Transform strictly declared via `rgt: transform`), and report Unclassified drift.
+> 3. **Cluster defects, detect regressions & check PR collisions (Steps 2–2b — Lens 2).** Mine 7 evidence signals to isolate chronic debt and short-cycle regressions (applying $\ge 2$ days / $\ge 2$ PRs recurrence discriminator); score targets, and cross-check open PRs to prevent duplicate scheduling.
+> 4. **Audit release alignment & orphan backlog (Step 3 — Lens 3).** Read `releases.db` and open milestones read-only; measure orphan issue share and surface roadmap plan-vs-execution drift without modifying database state.
+> 5. **Deliver coaching memo & persist dual sinks on confirmation (Steps 4–5).** Present the SDLC Process Coach narrative (celebrate wins, coach process friction, highlight regressions, offer multi-week arc); upon single operator confirmation, write immutable Sink A (`RADAR-REPORT-*.md`) and sync live Sink B (`radar` issue checklist).
+>
+> **Overall Goal:** SDLC process momentum evaluated across 3-lens empirical evidence (RGT flow, defect/regression clusters, release alignment), synthesized into an actionable coaching memo, and persisted to dual historical/live sinks on operator approval with zero unconfirmed mutations.
+
+Then begin work.
+
+---
+
 ## Guardrails
 
 - **Analysis reads; only the report writes.** The two report sinks (Step 5) are the *only* writes.

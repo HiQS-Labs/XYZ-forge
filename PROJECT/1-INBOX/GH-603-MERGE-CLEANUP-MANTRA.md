@@ -1,7 +1,7 @@
 ---
 gh_issue: 603
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/603
-title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, and express skills"
+title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, and radar skills"
 status: Proposed (1-INBOX — active)
 created: 2026-09-13
 updated: 2026-09-13
@@ -11,13 +11,13 @@ goal: >
   Add verbatim 5-point discipline mantra recital blocks, Rung 0 Intake Triage, and Overall Goal
   anchors at the top of skills/merge-cleanup/SKILL.md, skills/start-task/SKILL.md,
   skills/workhorse/SKILL.md, skills/sop/SKILL.md, skills/whack-a-mole/SKILL.md,
-  skills/unstuck/SKILL.md, and skills/express/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
+  skills/unstuck/SKILL.md, skills/express/SKILL.md, and skills/radar/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
 roadmap_exempt: true
 ---
 
-# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, and express
+# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, and radar
 
-Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, `skills/unstuck/SKILL.md`, and `skills/express/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
+Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, `skills/unstuck/SKILL.md`, `skills/express/SKILL.md`, and `skills/radar/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
 
 ## 1. Merge-Cleanup Discipline Mantra
 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
@@ -74,6 +74,15 @@ Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors t
 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute regression suite green, prove tree identity, and re-snapshot tree to prevent drift.
 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
 **Overall Goal:** Critical, risk-bounded hotfix implemented, tested, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+
+## 8. Radar Discipline Mantra
+1. **Frame window & discover historical arc (Step 0).** Default to 21 days on trunk (`main`/`development`); discover prior reports in `RADAR/`, `docs/radar/`, or `PROJECT/1-INBOX/` to extract historical baseline RGT metrics and multi-week trajectory.
+2. **Prove flow distribution & RGT mix (Step 1 — Lens 1).** Pipe trunk commit subjects to a verified tally file, prove counts sum to `wc -l`, isolate Harness machinery from the denominator, classify Run/Grow/Transform (Transform strictly declared via `rgt: transform`), and report Unclassified drift.
+3. **Cluster defects, detect regressions & check PR collisions (Steps 2–2b — Lens 2).** Mine 7 evidence signals to isolate chronic debt and short-cycle regressions (applying $\ge 2$ days / $\ge 2$ PRs recurrence discriminator); score targets, and cross-check open PRs to prevent duplicate scheduling.
+4. **Audit release alignment & orphan backlog (Step 3 — Lens 3).** Read `releases.db` and open milestones read-only; measure orphan issue share and surface roadmap plan-vs-execution drift without modifying database state.
+5. **Deliver coaching memo & persist dual sinks on confirmation (Steps 4–5).** Present the SDLC Process Coach narrative (celebrate wins, coach process friction, highlight regressions, offer multi-week arc); upon single operator confirmation, write immutable Sink A (`RADAR-REPORT-*.md`) and sync live Sink B (`radar` issue checklist).
+**Overall Goal:** SDLC process momentum evaluated across 3-lens empirical evidence (RGT flow, defect/regression clusters, release alignment), synthesized into an actionable coaching memo, and persisted to dual historical/live sinks on operator approval with zero unconfirmed mutations.
+
 
 
 
