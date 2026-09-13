@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -241,5 +241,43 @@ independent Reviewer round 2, and later reviewed live Rev.2 application. No self
 
 Handing off to codex-author: run the separate-full-clone verification, preserve its receipts,
 then dispatch the Codex Reviewer for Round 2; no live apply before independent approval.
+
+### Parent runtime verification — focused follow-up before Reviewer round 2
+
+db17cb49 passes52/52 Python tests. Real policy-preview now succeeds, selects the independently
+expected Ready10, and proposes51 changes (49 Done,1 Backlog,1 PR In review). No mutations.
+Two regressions prevent requesting approval; this remains the same round2 Producer phase:
+
+1. Linked issues603/593/592/595 all have explicit current OPEN non-draft closing PRs, but no
+   ledger rows in development yet. `len(linked_rows) != 1` treats ABSENCE as AMBIGUITY and
+   wrongly preserves/omits them. Absence alone must not block GH-authoritative PR links.
+   Guard known contradictory terminal rows, duplicate rows/cards and invalid known ledger
+   identity; distinguish invalid rows filtered out of ledger_by from genuinely absent rows.
+   Add both nondraft/draft no-ledger link tests. Expected current preview55 changes; Ready10
+   unchanged. Don't update the live board or run real preview yourself.
+2. gh549 legacy test17 now fails three assertions: event2 has unknown repo identity
+   'XYZ-forge' while config explicitly names HiQS-Labs/XYZ-forge. The new raw protocol change
+   in events_after/apply_event was incidental to the requested DB ownership fix. Restore
+   the pre-db17 raw connector payload/caller compatibility (7e24f54a shape), retaining the
+   board-scoped policy guard. Keep ALL database event repo_id and selector corrections and
+   the explicitly repo-qualified policy writer. Do not add a new raw protocol or guess owners
+   from basenames/config. Document that the legacy event connector remains its existing
+   single-repo replay path and policy-preview/apply is the complete repo-qualified projection.
+   No unrelated connector architecture expansion. The accepted ownership finding concerns
+   event insertion and evidence consumption; the policy guard keeps this board off raw replay.
+3. The reviewer requested an actual two-owner/same-number WRITE fixture, but current ownership
+   fixture still seeds history directly. Add a real CLI/perform_write regression covering
+   repo B update, correct event repo_id, no change to repo A, and ambiguous --issue-num refusal
+   with both rows intact. Use existing full-schema fixture infrastructure, not a toy schema
+   that misses the writer. Tests only, no real ledger edits.
+4. Strengthen the malformed/future-start fixture: it currently uses jog_running without a
+   matching jog_queue row, so it would stay unknown even if the timestamp check disappeared.
+   Use a genuine tagged roadmap transition or a valid matching jog row to isolate time.
+
+Sol High: same ownership/containment as above; this is a focused test-driven follow-up,
+15-minute ceiling. Reproduce against named fixtures, make minimal changes, AST/syntax only
+or safe direct Python fixtures; parent owns shell/full-clone tests. Do not change earlier
+review findings. Append dispositions, leave NEXT Reviewer / STATUS Open, release codex-author.
+No git commands or live writes. Driver owns the commit; Reviewer round2 has not yet run.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
