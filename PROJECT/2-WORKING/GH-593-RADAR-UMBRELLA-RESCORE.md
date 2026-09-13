@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Implemented (commit 1970a42b + witness fixes): both SKILL.md edits, CHANGELOG. Step-7 witness run against #591 → `now 6, holding`; it surfaced two contract gaps fixed in text (discovery restricted to whack-a-mole-form titles — 10 hits, 1 umbrella; membership gates repeat_fixes — 9 path-touching fixes, 1 member). Witness at relay-system/2026-09-13/gh593-plan-qa/WITNESS.md | Final Codex QA on the implementation + witness, then push through the gate and open the PR against development |
+| Final Codex QA Approved (relay-system/2026-09-13/gh593-final-qa, 2 rounds: nested fence for the signature block, `holding` as the explicit fallback state, witness case-F rationale). Witness at relay-system/2026-09-13/gh593-plan-qa/WITNESS.md | Push through the pre-push gate (tier-2 releases route — releases.sql in the diff), open PR against development; awaiting merge — not shipped until it lands and reconciles |
 
 ## Why
 
