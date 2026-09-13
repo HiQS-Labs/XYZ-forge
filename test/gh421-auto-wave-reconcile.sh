@@ -302,7 +302,8 @@ class WorkflowTests(unittest.TestCase):
         for marker in ('types: [closed]', 'branches: [development]', 'queue: max',
                        'cancel-in-progress: false', 'ref: development', 'fetch-depth: 0',
                        'github.event.pull_request.merged == true', "github.event.pull_request.base.ref == 'development'",
-                       '--pr "$PR_NUMBER" --gate', '--catch-up --gate'):
+                       '--pr "$PR_NUMBER" --gate --qualify', '--catch-up --gate --qualify',
+                       'timeout-minutes: 60', 'python3 -m pip install --quiet --break-system-packages pytest'):
             self.assertIn(marker, self.workflow)
         self.assertIsNone(re.search(r'^  push:', self.workflow, re.M))
         self.assertIn('permissions:\n  contents: read', self.workflow)
@@ -341,11 +342,15 @@ class WorkflowTests(unittest.TestCase):
         paths = ['releases.db', 'releases.sql',
                  'PROJECT/2-WORKING/GH-421-fixture.md', 'PROJECT/3-COMPLETED/GH-421-fixture.md',
                  'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md']
+        paths += ['TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/provenance.jsonl',
+                  'TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/validation.jsonl']
         calls = self.publish(paths)
         self.assertIn(['add', '-A', '--', *sorted(paths)], calls)
         self.assertEqual(calls[-1], ['push', 'origin', 'HEAD:development'])
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
             self.publish(paths + ['utils/py/unexpected.py'])
+        with self.assertRaisesRegex(SystemExit, 'undeclared'):
+            self.publish(paths + ['TESTS-RESULTS/arbitrary/provenance.jsonl'])
         with self.assertRaises(wave.subprocess.CalledProcessError):
             self.publish(paths, reject_push=True)
         with self.assertRaises(SystemExit) as result:
