@@ -2,6 +2,7 @@ import datetime as dt
 import json
 import os
 from pathlib import Path
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -56,14 +57,15 @@ class EvidenceTests(unittest.TestCase):
           INSERT INTO schema_migrations VALUES(8,'2026-09-13T00:00:00Z');
           CREATE TABLE settings(key TEXT PRIMARY KEY,value TEXT); INSERT INTO settings VALUES('generation','9');
           CREATE TABLE repos(id INTEGER PRIMARY KEY,slug TEXT); INSERT INTO repos VALUES(1,'HiQS-Labs/XYZ-forge');
-          CREATE TABLE roadmap_items(global_id TEXT,gh_number INTEGER,issue_url TEXT,section TEXT,
+          CREATE TABLE roadmap_items(global_id TEXT,repo_id INTEGER,gh_number INTEGER,issue_url TEXT,section TEXT,
             status_marker TEXT,rating_pri INTEGER,rating_sev INTEGER,rating_appeal INTEGER,
             rating_effort INTEGER,rating_ovr INTEGER);
           CREATE TABLE work_events(id INTEGER PRIMARY KEY,repo_id INTEGER,gh_number INTEGER,event TEXT,payload TEXT,at TEXT);
           CREATE TABLE connector_cursors(connector TEXT,last_event_id INTEGER,last_attempt_at TEXT,last_error TEXT,updated_at TEXT);
+          CREATE TABLE jog_queue(id INTEGER PRIMARY KEY,repo_id INTEGER,gh_number INTEGER,status TEXT);
         """)
-        conn.execute("INSERT INTO roadmap_items VALUES(?,?,?,?,?,?,?,?,?,?)",
-                     ("rmi-a", 1, "https://github.com/HiQS-Labs/XYZ-forge/issues/1",
+        conn.execute("INSERT INTO roadmap_items VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                     ("rmi-a", 1, 1, "https://github.com/HiQS-Labs/XYZ-forge/issues/1",
                       "In progress", "🚧", 80, 70, 60, 50, None))
         conn.commit()
         conn.close()
@@ -71,10 +73,10 @@ class EvidenceTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def add_event(self, event, payload, at, event_id=None):
+    def add_event(self, event, payload, at, event_id=None, repo_id=1):
         conn = sqlite3.connect(self.db)
         conn.execute("INSERT INTO work_events(id,repo_id,gh_number,event,payload,at) VALUES(?,?,?,?,?,?)",
-                     (event_id, 1, 1, event, json.dumps(payload) if payload is not None else None, at))
+                     (event_id, repo_id, 1, event, json.dumps(payload) if payload is not None else None, at))
         conn.commit()
         conn.close()
 
@@ -115,6 +117,56 @@ class EvidenceTests(unittest.TestCase):
             report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
             self.assertEqual(report["issues"][0]["activity"], "unknown")
 
+    def test_backfill_never_qualifies_as_a_start(self):
+        for event in ("in_flight", "jog_running", "jog_leased"):
+            conn = sqlite3.connect(self.db)
+            conn.execute("DELETE FROM work_events")
+            conn.execute("DELETE FROM jog_queue")
+            conn.execute("INSERT INTO jog_queue(repo_id,gh_number,status) VALUES(1,1,'running')")
+            conn.commit(); conn.close()
+            self.add_event(event, {"source": "backfill", "transition": True},
+                           "2026-09-12T12:00:00Z")
+            report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
+            self.assertEqual(report["issues"][0]["activity"], "unknown")
+
+    def test_jog_running_and_leased_require_one_consistent_current_row(self):
+        for event, status in (("jog_running", "running"), ("jog_leased", "leased")):
+            conn = sqlite3.connect(self.db)
+            conn.execute("DELETE FROM work_events")
+            conn.execute("DELETE FROM jog_queue")
+            conn.execute("INSERT INTO jog_queue(repo_id,gh_number,status) VALUES(1,1,?)", (status,))
+            conn.commit(); conn.close()
+            self.add_event(event, {"source": "jog", "transition": True},
+                           "2026-09-12T12:00:00Z")
+            report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
+            self.assertEqual(report["issues"][0]["activity"], "recent")
+        conn = sqlite3.connect(self.db)
+        conn.execute("INSERT INTO jog_queue(repo_id,gh_number,status) VALUES(1,1,'running')")
+        conn.commit(); conn.close()
+        report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
+        self.assertEqual(report["issues"][0]["activity"], "unknown")
+        self.assertTrue(any("ambiguous multiple jog rows" in w for w in report["warnings"]))
+
+    def test_roadmap_repo_id_cannot_borrow_a_matching_other_repo(self):
+        conn = sqlite3.connect(self.db)
+        conn.execute("INSERT INTO repos VALUES(2,'Other-Owner/XYZ-forge')")
+        conn.execute("UPDATE roadmap_items SET repo_id=2")
+        conn.commit(); conn.close()
+        self.add_event("in_flight", {"source": "roadmap-update", "transition": True},
+                       "2026-09-12T12:00:00Z", repo_id=1)
+        report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
+        self.assertFalse(report["issues"][0]["identity_valid"])
+        self.assertIsNone(report["issues"][0]["recent_start"])
+
+    def test_read_only_uri_handles_space_hash_and_question_mark(self):
+        odd_dir = self.root / "space # question ?"
+        odd_dir.mkdir()
+        odd_db = odd_dir / "releases #?.db"
+        shutil.copy2(self.db, odd_db)
+        report = app.load_work_evidence(odd_db, as_of="2026-09-13T12:00:00Z")
+        self.assertTrue(report["schema_ready"])
+        self.assertEqual(len(report["issues"]), 1)
+
     def test_sidecar_refuses_before_open(self):
         (Path(str(self.db) + "-wal")).write_bytes(b"nonempty")
         report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
@@ -132,6 +184,18 @@ class EvidenceTests(unittest.TestCase):
         self.assertFalse(report["schema_ready"])
         self.assertEqual(report["schema_version"], 7)
         self.assertEqual(old.read_bytes(), before)
+
+    def test_schema_eight_status_preserves_db_dump_config_and_sidecars(self):
+        dump = self.root / "releases.sql"
+        config = self.root / "device.json"
+        dump.write_bytes(b"nonempty logical dump\n")
+        config.write_bytes(b'{"work_connectors": {}}\n')
+        before = {p.name: p.read_bytes() for p in (self.db, dump, config)}
+        before_names = sorted(p.name for p in self.root.iterdir())
+        report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
+        self.assertTrue(report["schema_ready"])
+        self.assertEqual({p.name: p.read_bytes() for p in (self.db, dump, config)}, before)
+        self.assertEqual(sorted(p.name for p in self.root.iterdir()), before_names)
 
 
 if __name__ == "__main__":

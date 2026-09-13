@@ -120,8 +120,7 @@ def run(batch):
     except ValueError as exc:
         raise RuntimeError("saved github_board_selection_policy is invalid: %s" % exc) from exc
     if (policy and policy["project_owner"] == cfg.get("project_owner")
-            and policy["project_number"] == int(cfg.get("project_number") or 0)
-            and set(policy["repos"]) & set(cfg.get("repos") or [])):
+            and policy["project_number"] == int(cfg.get("project_number") or 0)):
         raise RuntimeError(
             "raw event replay is disabled for this policy-managed board; use "
             "board_sync.py policy-preview followed by policy-apply")

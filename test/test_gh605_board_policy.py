@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -74,6 +75,49 @@ class PlannerTests(unittest.TestCase):
         self.assertEqual(targets[("owner/repo", "pr", 9)], "In review")
         self.assertEqual(targets[("owner/repo", "issue", 2)], "In review")
 
+    def test_recent_completed_issue_needs_no_ledger_row(self):
+        gh = [issue(7, "CLOSED", state_reason="COMPLETED",
+                    closed_at="2026-09-07T12:00:00Z")]
+        plan = board_sync.plan_selection_policy(POLICY, [], [], gh, as_of=AS_OF)
+        self.assertEqual(plan["decisions"][0]["status"], "Done")
+
+    def test_invalid_or_future_terminal_date_preserves_existing_card(self):
+        board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                  "item_id": "i1", "status": "Done"}]
+        for stamp in ("garbage", "2026-09-14T00:00:00Z"):
+            with self.subTest(stamp=stamp):
+                gh = [issue(1, "CLOSED", state_reason="COMPLETED", closed_at=stamp)]
+                plan = board_sync.plan_selection_policy(POLICY, [], board, gh, as_of=AS_OF)
+                self.assertFalse(plan["changes"])
+                self.assertEqual(plan["unresolved"][0]["reason"], "unknown closure date")
+
+    def test_non_draft_closing_pr_wins_in_both_input_orders(self):
+        open_issue = issue(1)
+        review = {"repo": "owner/repo", "kind": "pr", "number": 8, "state": "OPEN",
+                  "draft": False, "closing_issues": [{"repo": "owner/repo", "number": 1}]}
+        draft = {"repo": "owner/repo", "kind": "pr", "number": 9, "state": "OPEN",
+                 "draft": True, "updated_at": "2026-09-13T11:00:00Z",
+                 "closing_issues": [{"repo": "owner/repo", "number": 1}]}
+        for prs in ((review, draft), (draft, review)):
+            with self.subTest(order=[p["number"] for p in prs]):
+                plan = board_sync.plan_selection_policy(POLICY, [ledger(1, 90)], [],
+                                                         [open_issue, *prs], as_of=AS_OF)
+                targets = {tuple(d["identity"]): d["status"] for d in plan["decisions"]}
+                self.assertEqual(targets[("owner/repo", "issue", 1)], "In review")
+
+    def test_unknown_pr_state_or_date_is_preserved(self):
+        board = [{"repo": "owner/repo", "kind": "pr", "number": 9,
+                  "item_id": "p9", "status": "In review"}]
+        for row in (
+            {"repo": "owner/repo", "kind": "pr", "number": 9, "state": "MYSTERY"},
+            {"repo": "owner/repo", "kind": "pr", "number": 9, "state": "CLOSED",
+             "closed_at": "garbage", "merged_at": None},
+        ):
+            with self.subTest(row=row):
+                plan = board_sync.plan_selection_policy(POLICY, [], board, [row], as_of=AS_OF)
+                self.assertFalse(plan["changes"])
+                self.assertTrue(plan["unresolved"])
+
     def test_reopen_unknown_and_duplicates_preserve(self):
         rows = [ledger(1, 90, section="Completed")]
         board = [{"repo": "owner/repo", "kind": "issue", "number": 1, "item_id": "a", "status": "Done"},
@@ -114,11 +158,49 @@ class WriterAuditTests(unittest.TestCase):
         self.assertEqual(gql.call_count, 1)
         self.assertEqual(calls[-1]["outcome"], "indeterminate")
 
+    def test_add_success_status_failure_preserves_added_item_id(self):
+        cfg = {"project_owner": "owner", "project_number": 4,
+               "repos": ["owner/repo"], "status_field": "Status"}
+        ids = {"project": "p", "status_field": "f", "options": {"Ready": "ready"}}
+        calls, added = [], []
+        with mock.patch.object(board_sync, "content_node", return_value={"id": "content"}), \
+             mock.patch.object(board_sync, "resolve_ids", return_value=ids), \
+             mock.patch.object(board_sync, "_gql", side_effect=[
+                 {"addProjectV2ItemById": {"item": {"id": "new-item"}}},
+                 RuntimeError("status response lost")]):
+            with self.assertRaises(board_sync.IndeterminateMutation):
+                board_sync.set_issue_status(
+                    cfg, 1, "Ready", snapshot={}, audit=calls.append,
+                    policy_mode=True, repo="owner/repo", on_added=added.append)
+        self.assertEqual(added, ["new-item"])
+        self.assertEqual([x["phase"] for x in calls],
+                         ["intent", "result", "intent", "result"])
+        self.assertEqual(calls[-1]["outcome"], "indeterminate")
+
     def test_clear_uses_existing_writer_seam(self):
         calls = []
         with mock.patch.object(board_sync, "_gql", return_value={"clearProjectV2ItemFieldValue": {"projectV2Item": {"id": "i"}}}):
             board_sync._clear_status({}, {"project": "p", "status_field": "f"}, "i", audit=calls.append)
         self.assertEqual(calls[0]["operation"], "clearProjectV2ItemFieldValue")
+
+    def test_intent_audit_failure_prevents_remote_request(self):
+        invoke = mock.Mock()
+        with self.assertRaisesRegex(OSError, "audit unavailable"):
+            board_sync._remote_request(
+                "op", {}, invoke, audit=mock.Mock(side_effect=OSError("audit unavailable")))
+        invoke.assert_not_called()
+
+    def test_result_audit_failure_is_indeterminate_after_one_request(self):
+        phases = []
+        def audit(entry):
+            phases.append(entry["phase"])
+            if entry["phase"] == "result":
+                raise OSError("audit unavailable")
+        invoke = mock.Mock(return_value={"ok": True})
+        with self.assertRaises(board_sync.IndeterminateMutation):
+            board_sync._remote_request("op", {}, invoke, audit=audit)
+        invoke.assert_called_once_with()
+        self.assertEqual(phases, ["intent", "result"])
 
     def test_policy_managed_board_refuses_raw_replay_before_network(self):
         cfg = {"project_owner": "owner", "project_number": 4, "repos": ["owner/repo"],
@@ -128,6 +210,211 @@ class WriterAuditTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "policy-managed"):
                 github_board.run({"config": cfg, "events": [{"id": 1}]})
         fetch.assert_not_called()
+
+    def test_policy_guard_is_board_scoped_not_repo_intersection_scoped(self):
+        cfg = {"project_owner": "owner", "project_number": 4, "repos": ["owner/other"],
+               "status_field": "Status", "status_map": {}}
+        with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+             mock.patch.object(board_sync, "fetch_board_issues") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "policy-managed"):
+                github_board.run({"config": cfg, "events": [{"id": 1}]})
+        fetch.assert_not_called()
+
+    def test_preview_future_timestamp_is_invalid(self):
+        preview = {"created_at": "2999-01-01T00:00:00Z", "as_of": "2999-01-01T00:00:00Z"}
+        self.assertFalse(board_sync._preview_age_ok(preview))
+
+    def test_unmatched_intent_is_detected_by_request_id(self):
+        operations = [
+            {"phase": "intent", "request_id": "a"},
+            {"phase": "intent", "request_id": "b"},
+            {"phase": "result", "request_id": "a"},
+        ]
+        self.assertEqual([x["request_id"] for x in board_sync._unmatched_intents(operations)], ["b"])
+
+    def test_durable_json_replace_and_existing_apply_result_refusal(self):
+        with tempfile.TemporaryDirectory(prefix="gh605-audit-") as tmp:
+            path = Path(tmp) / "audit.json"
+            board_sync._write_json(path, {"nonempty": True})
+            self.assertEqual(json.loads(path.read_text()), {"nonempty": True})
+            preview = Path(tmp) / "preview.json"
+            preview.write_text(json.dumps({"schema": "github-board-policy-preview@1",
+                                           "created_at": AS_OF, "as_of": AS_OF}))
+            with self.assertRaisesRegex(RuntimeError, "already exists"):
+                with mock.patch.object(board_sync, "_preview_age_ok", return_value=True):
+                    board_sync.apply_policy_preview(tmp, preview, path)
+
+    def test_apply_releases_lock_when_fresh_preflight_fails(self):
+        class FakeLock:
+            released = False
+            def __init__(self, _path): pass
+            def acquire(self): return True
+            def release(self): self.released = True
+
+        with tempfile.TemporaryDirectory(prefix="gh605-lock-") as tmp:
+            preview_path = Path(tmp) / "preview.json"
+            result_path = Path(tmp) / "result.json"
+            preview_path.write_text(json.dumps({
+                "schema": "github-board-policy-preview@1", "created_at": AS_OF,
+                "as_of": AS_OF, "policy": POLICY, "warnings": [], "changes": []}))
+            lock = FakeLock(None)
+            with mock.patch.object(board_sync, "_preview_age_ok", return_value=True), \
+                 mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch("work_connectors._ConnectorLock", return_value=lock), \
+                 mock.patch.object(board_sync, "build_policy_preview", side_effect=RuntimeError("fresh fail")):
+                with self.assertRaisesRegex(RuntimeError, "fresh fail"):
+                    board_sync.apply_policy_preview(tmp, preview_path, result_path)
+            self.assertTrue(lock.released)
+            self.assertFalse(result_path.exists())
+
+    def test_apply_refuses_same_status_with_replaced_item_id_before_mutation(self):
+        class FakeLock:
+            def __init__(self, _path): pass
+            def acquire(self): return True
+            def release(self): pass
+
+        change = {"identity": ["owner/repo", "issue", 1], "item_id": "old-item",
+                  "before": "Ready", "after": "In progress", "reason": "test"}
+        preview = {"schema": "github-board-policy-preview@1", "created_at": AS_OF,
+                   "as_of": AS_OF, "policy": POLICY, "ledger_generation": 1,
+                   "source_digest": "digest", "decisions": [], "changes": [change],
+                   "warnings": [], "unresolved": [], "observations": []}
+        fresh = dict(preview)
+        fresh.pop("schema"); fresh.pop("created_at"); fresh.pop("policy")
+        with tempfile.TemporaryDirectory(prefix="gh605-cas-") as tmp:
+            preview_path = Path(tmp) / "preview.json"
+            result_path = Path(tmp) / "result.json"
+            preview_path.write_text(json.dumps(preview))
+            replacement = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                            "item_id": "replacement", "status": "Ready"}]
+            with mock.patch.object(board_sync, "_preview_age_ok", return_value=True), \
+                 mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch("work_connectors._ConnectorLock", FakeLock), \
+                 mock.patch.object(board_sync, "build_policy_preview", return_value=fresh), \
+                 mock.patch.object(board_sync, "_policy_board_cfg", return_value={}), \
+                 mock.patch.object(board_sync, "option_id_for", return_value=({}, "opt")), \
+                 mock.patch.object(board_sync, "fetch_board_items", return_value=replacement), \
+                 mock.patch.object(board_sync, "set_issue_status") as mutate:
+                with self.assertRaisesRegex(RuntimeError, "board item changed"):
+                    board_sync.apply_policy_preview(tmp, preview_path, result_path)
+            mutate.assert_not_called()
+
+    def test_apply_missing_destination_option_makes_zero_mutations(self):
+        class FakeLock:
+            def __init__(self, _path): pass
+            def acquire(self): return True
+            def release(self): pass
+
+        change = {"identity": ["owner/repo", "issue", 1], "item_id": "i1",
+                  "before": "Ready", "after": "Missing", "reason": "test"}
+        preview = {"schema": "github-board-policy-preview@1", "created_at": AS_OF,
+                   "as_of": AS_OF, "policy": POLICY, "ledger_generation": 1,
+                   "source_digest": "digest", "decisions": [], "changes": [change],
+                   "warnings": [], "unresolved": [], "observations": []}
+        fresh = {k: v for k, v in preview.items() if k not in ("schema", "created_at", "policy")}
+        with tempfile.TemporaryDirectory(prefix="gh605-option-") as tmp:
+            preview_path = Path(tmp) / "preview.json"
+            result_path = Path(tmp) / "result.json"
+            preview_path.write_text(json.dumps(preview))
+            with mock.patch.object(board_sync, "_preview_age_ok", return_value=True), \
+                 mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch("work_connectors._ConnectorLock", FakeLock), \
+                 mock.patch.object(board_sync, "build_policy_preview", return_value=fresh), \
+                 mock.patch.object(board_sync, "_policy_board_cfg", return_value={}), \
+                 mock.patch.object(board_sync, "option_id_for", side_effect=RuntimeError("missing option")), \
+                 mock.patch.object(board_sync, "set_issue_status") as mutate:
+                with self.assertRaisesRegex(RuntimeError, "missing option"):
+                    board_sync.apply_policy_preview(tmp, preview_path, result_path)
+            mutate.assert_not_called()
+            self.assertFalse(result_path.exists())
+
+    def test_restore_reports_partial_added_card_and_unmatched_intent(self):
+        with tempfile.TemporaryDirectory(prefix="gh605-restore-") as tmp:
+            result_path = Path(tmp) / "result.json"
+            result_path.write_text(json.dumps({
+                "schema": "github-board-policy-result@1", "policy": POLICY,
+                "root": tmp, "operations": [
+                    {"phase": "change", "identity": ["owner/repo", "issue", 1],
+                     "before": None, "after": "Ready", "item_id": "new-1",
+                     "added": True, "outcome": "pending"},
+                    {"phase": "intent", "request_id": "lost", "operation": "update"},
+                ]}))
+            board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                      "item_id": "new-1", "status": None}]
+            with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch.object(board_sync, "fetch_board_items", return_value=board):
+                report = board_sync.restore_policy_result(result_path)
+            self.assertEqual(report["status"], "indeterminate")
+            self.assertEqual(report["residual_added"][0]["item_id"], "new-1")
+            self.assertFalse(report["changes"])
+
+    def test_restore_unset_status_clears_with_durable_request_audit(self):
+        class FakeLock:
+            def __init__(self, _path): pass
+            def acquire(self): return True
+            def release(self): pass
+
+        with tempfile.TemporaryDirectory(prefix="gh605-clear-") as tmp:
+            result_path = Path(tmp) / "result.json"
+            report_path = Path(tmp) / "restore.json"
+            result_path.write_text(json.dumps({
+                "schema": "github-board-policy-result@1", "policy": POLICY, "root": tmp,
+                "operations": [{"phase": "change",
+                    "identity": ["owner/repo", "issue", 1], "before": None,
+                    "after": "In progress", "item_id": "item-1", "added": False,
+                    "outcome": "success"}]}))
+            board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                      "item_id": "item-1", "status": "In progress"}]
+            response = {"clearProjectV2ItemFieldValue": {"projectV2Item": {"id": "item-1"}}}
+            with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch.object(board_sync, "_policy_board_cfg", return_value={}), \
+                 mock.patch.object(board_sync, "fetch_board_items", return_value=board), \
+                 mock.patch("work_connectors._ConnectorLock", FakeLock), \
+                 mock.patch.object(board_sync, "resolve_ids",
+                                   return_value={"project": "p", "status_field": "f"}), \
+                 mock.patch.object(board_sync, "_gql", return_value=response) as gql:
+                report = board_sync.restore_policy_result(
+                    result_path, write=True, report_path=report_path)
+            self.assertEqual(report["status"], "complete")
+            self.assertIn("clearProjectV2ItemFieldValue", gql.call_args.args[0])
+            persisted = json.loads(report_path.read_text())
+            self.assertEqual([x["phase"] for x in persisted["operations"]],
+                             ["restore", "intent", "result"])
+
+    def test_restore_preserves_concurrently_changed_status(self):
+        with tempfile.TemporaryDirectory(prefix="gh605-restore-drift-") as tmp:
+            result_path = Path(tmp) / "result.json"
+            result_path.write_text(json.dumps({
+                "schema": "github-board-policy-result@1", "policy": POLICY, "root": tmp,
+                "operations": [{"phase": "change",
+                    "identity": ["owner/repo", "issue", 1], "before": "Ready",
+                    "after": "In progress", "item_id": "item-1", "added": False,
+                    "outcome": "success"}]}))
+            board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                      "item_id": "item-1", "status": "Operator changed"}]
+            with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch.object(board_sync, "fetch_board_items", return_value=board):
+                report = board_sync.restore_policy_result(result_path)
+            self.assertEqual(report["status"], "partial")
+            self.assertFalse(report["changes"])
+            self.assertIn("preserved", report["warnings"][0])
+
+    def test_fetch_board_items_refuses_missing_cursor_and_preserves_opaque(self):
+        ids = {"project": "p", "status_field": "f"}
+        malformed = {"node": {"items": {"nodes": [],
+                                           "pageInfo": {"hasNextPage": True, "endCursor": None}}}}
+        with mock.patch.object(board_sync, "resolve_ids", return_value=ids), \
+             mock.patch.object(board_sync, "_gql", return_value=malformed):
+            with self.assertRaisesRegex(RuntimeError, "fresh cursor"):
+                board_sync.fetch_board_items({"status_field": "Status"}, cache=False)
+        opaque = {"node": {"items": {"nodes": [{"id": "opaque", "content": None,
+                                                     "fieldValueByName": {"name": "Ready"}}],
+                                        "pageInfo": {"hasNextPage": False, "endCursor": None}}}}
+        with mock.patch.object(board_sync, "resolve_ids", return_value=ids), \
+             mock.patch.object(board_sync, "_gql", return_value=opaque):
+            items = board_sync.fetch_board_items({"status_field": "Status"}, cache=False)
+        self.assertEqual(items[0]["kind"], "opaque")
+        self.assertEqual(items[0]["item_id"], "opaque")
 
 
 if __name__ == "__main__":

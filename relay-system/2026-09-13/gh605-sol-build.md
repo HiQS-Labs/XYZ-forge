@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 2
 
@@ -172,5 +172,43 @@ than creating new policy. Reproduce each relevant failure in focused fixtures be
 Disposition every numbered item briefly in your final appended block, note anything still
 unfinished honestly, leave STATUS Open and NEXT Reviewer, release to codex-author, finish.
 The parent will run tests and independent final Codex QA after this build. No self-approval.
+
+### Producer r2 — correction build complete
+
+- 1 **Implemented:** terminal issue/PR timestamps must parse and be non-future before demotion;
+  recent GH COMPLETED issues no longer require a ledger row; non-draft closing PR review wins over
+  draft progress in both input orders; unknown PR state/date is preserved.
+- 2 **Implemented:** evidence reads each roadmap row's actual `repo_id`, accepts a basename only
+  when origin proves the owner/name, URI-quotes DB paths, rejects tagged backfill for every start
+  kind, accepts consistent running/leased jog state, and reports duplicate jog rows. Sweep batch
+  events now retain per-row repo identity; the fixture is two completed + one deferred with the
+  second insert forced red and full transaction rollback assertions.
+- 3 **Implemented:** apply holds the existing connector lock across fresh preflight and writes,
+  resolves uncached board IDs/options, refuses future previews/existing result artifacts, compares
+  item ID plus status immediately before each mutation, and releases the lock on preflight/audit
+  creation failure. Preview remains remotely read-only and cache-free.
+- 4 **Implemented:** JSON audits fsync file contents before atomic replace and fsync the directory
+  where supported; request IDs expose unmatched intents; policy mode stops indeterminate without
+  legacy retry; successful add IDs are persisted before status; partial adds remain recoverable.
+- 5 **Implemented:** restore validates policy/identity allowlists, reports unmatched intents and
+  residual added cards, pre-resolves destinations, rechecks item ID plus status, audits set/clear
+  requests durably, requires `--out` for writes, returns partial/indeterminate nonzero, and never
+  deletes cards.
+- 6 **Implemented/expanded:** fixtures now cover terminal authority/date guards, PR precedence in
+  both orders, repo ownership, odd DB paths, backfill/jog provenance, missing options, same-status
+  item replacement, audit failures, add-success/status-failure, partial recovery, unset-status
+  clear, opaque pagination and concurrent restore preservation. Existing batch/event tests remain.
+- 7 **Modified:** FAQ and CHANGELOG now match locking, cross-device compare/read limits, durable
+  restore evidence and partial recovery; focused Python tests were already registered in
+  `validate.sh`. Produced: `utils/py/releases_app.py`, `utils/py/board_sync.py`,
+  `utils/py/work_connectors/github_board.py`, `test/test_gh605_work_state.py`,
+  `test/test_gh605_board_policy.py`, `test/gh492-roadmap-state-sweep.sh`,
+  `RELEASES-DB-FAQS.md`, `CHANGELOG.md`, and this relay file.
+- Verification deliberately limited here: AST parse **OK (6 files)** and Bash syntax **OK (3
+  existing suites)**, logs under `.relay-scratch/`. Runtime tests, legacy suites, full gate,
+  independent QA and live Rev. 2 preview/apply/readback remain for the parent in a separate full
+  clone; no live board/config/ledger mutation and no Git command was run.
+
+Handing off to Reviewer — go to the codex-author window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

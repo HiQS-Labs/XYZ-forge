@@ -30,11 +30,14 @@ top-N Ready selection, the Done window, reopen handling, or preservation of unkn
 An explicit `github_board_selection_policy` uses `utils/py/board_sync.py policy-preview --out
 <preview.json>`, followed within 15 minutes by `policy-apply --preview <preview.json> --result-out
 <result.json>`. Preview is remotely read-only and apply re-reads the ledger, GitHub and board under
-the existing connector exclusion lock before each change. `policy-restore --result <result.json>`
-previews conditional status restoration; add `--write` to perform it. Newly added cards are retained
-because this path never deletes. A policy-managed board refuses raw event replay. GitHub Projects
-does not offer an atomic compare-and-swap across devices, so an interrupted/indeterminate request
-must be read back and freshly previewed, never blindly retried.
+the existing connector exclusion lock, then keeps that same-ledger lock through every change.
+`policy-restore --result <result.json>` previews conditional status restoration; add `--write --out
+<restore.json>` to perform it with durable per-request evidence. Newly added cards are retained
+because this path never deletes; partial add/status failures are reported as residual cards. A
+policy-managed board refuses raw event replay. GitHub Projects does not offer an atomic
+compare-and-swap across devices, so the lock cannot exclude another device: every item ID and
+status is re-read immediately before mutation. An unmatched intent or interrupted/indeterminate
+request must be read back and freshly previewed, never blindly retried or overwritten.
 
 ## Re-pointing a release's tracking issue (GH-222)
 

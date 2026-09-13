@@ -66,6 +66,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+import urllib.parse
 import uuid
 
 # ── constants ───────────────────────────────────────────────────────────────────────────────────
@@ -1514,9 +1515,10 @@ def extractor_for(op):
 def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None, previous=None):
     """Insert at most one work_events row, inside perform_write's open transaction.
 
-    `explicit` is an (event, gh_number, payload) tuple supplied by a caller that already knows
-    its event — `work emit`, which reports something no extractor could derive, such as a merge
-    it witnessed. It takes precedence over the registry and is why `work-emit` needs no
+    `explicit` is an (event, gh_number, payload[, repo_id]) tuple supplied by a caller that already
+    knows its event — `work emit`, which reports something no extractor could derive, such as a
+    merge it witnessed. The optional repo_id keeps multi-repo batch events on their source row.
+    It takes precedence over the registry and is why `work-emit` needs no
     extractor of its own. Writing the row HERE rather than in the caller's mutate is what gets
     it the real txn_id: the id is minted inside this transaction, and work_events is append-only,
     so a caller cannot stamp it afterwards.
@@ -1538,8 +1540,11 @@ def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None, previous
     if not _table_exists(conn, "work_events"):
         return None
     if explicit is not None:
-        event, gh_number, payload = explicit
-        repo_id = _repo_id_for_event(conn)
+        if len(explicit) == 4:
+            event, gh_number, payload, repo_id = explicit
+        else:
+            event, gh_number, payload = explicit
+            repo_id = _repo_id_for_event(conn)
         if repo_id is None:
             return None
         conn.execute("""INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event,
@@ -3972,7 +3977,7 @@ def cmd_roadmap_reconcile_state(args):
             batch.append((event, row["gh_number"], {
                 "source": "roadmap-reconcile-state", "transition": True,
                 "section": target, "previous_section": row["section"],
-            }))
+            }, row["repo_id"]))
         perform_write(root, conn, "roadmap-reconcile-state", None, mutate,
                       work_events=batch)
         for row, target in changes:
@@ -5059,7 +5064,8 @@ def _scan_review_ready(root, conn):
 _START_EVENTS = {"in_flight", "jog_running", "jog_leased"}
 _STOP_EVENTS = {"parked", "rated", "completed", "deferred", "pr_merged",
                 "jog_pending", "jog_completed", "jog_parked", "jog_failed",
-                "jog_dropped", "jog_archived"}
+                "jog_dropped", "jog_archived", "jog_stopped", "jog_stop",
+                "jog_deferred"}
 
 
 def _utc_datetime(value):
@@ -5113,7 +5119,10 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
                                        + ([intent] if intent and os.path.exists(intent) else [])))
         return result
     try:
-        conn = sqlite3.connect("file:%s?mode=ro" % db_path, uri=True, timeout=10)
+        # Quote the path as a URI component: raw # and ? in a filesystem path would otherwise
+        # become a fragment/query and silently open a different file.
+        db_uri = "file:%s?mode=ro" % urllib.parse.quote(db_path, safe="/")
+        conn = sqlite3.connect(db_uri, uri=True, timeout=10)
         conn.row_factory = sqlite3.Row
     except sqlite3.Error as exc:
         result["error"] = "read-only open failed: %s" % exc
@@ -5151,21 +5160,25 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
             events_by_issue.setdefault((ev["repo_id"], ev["gh_number"]), []).append(item)
         jog_state = {}
         if _table_exists(conn, "jog_queue"):
-            jog_state = {(r["repo_id"], r["gh_number"]): r["status"] for r in conn.execute(
-                "SELECT repo_id,gh_number,status FROM jog_queue")}
-        rows = conn.execute("SELECT global_id,gh_number,issue_url,section,status_marker,"
+            for jog in conn.execute("SELECT id,repo_id,gh_number,status FROM jog_queue ORDER BY id"):
+                jog_state.setdefault((jog["repo_id"], jog["gh_number"]), []).append(jog["status"])
+        rows = conn.execute("SELECT global_id,repo_id,gh_number,issue_url,section,status_marker,"
                             "rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr "
                             "FROM roadmap_items WHERE gh_number IS NOT NULL ORDER BY gh_number,global_id")
         for row in rows:
             url_repo, url_number = _repo_from_issue_url(row["issue_url"])
             url_matches_row = url_number == int(row["gh_number"])
-            matching_repo_ids = ([rid for rid, slug in repo_rows.items() if slug == url_repo]
-                                 if url_matches_row else [])
-            if url_matches_row and not matching_repo_ids and origin_repo == url_repo:
-                matching_repo_ids = [rid for rid, slug in repo_rows.items()
-                                     if slug == (url_repo or "").split("/")[-1]]
-            repo_id = matching_repo_ids[0] if len(matching_repo_ids) == 1 else None
-            evs = events_by_issue.get((repo_id, row["gh_number"]), []) if repo_id else []
+            # The roadmap row owns its repo_id. Never borrow another repo row merely because
+            # its slug matches the URL; same-basename cross-owner ledgers make that unsafe.
+            # A legacy basename slug is accepted only when origin proves the full owner/name.
+            repo_id = row["repo_id"]
+            row_slug = repo_rows.get(repo_id)
+            repo_matches = bool(
+                url_repo and url_matches_row and row_slug
+                and (row_slug == url_repo
+                     or (row_slug == url_repo.rsplit("/", 1)[-1] and origin_repo == url_repo))
+            )
+            evs = events_by_issue.get((repo_id, row["gh_number"]), []) if repo_matches else []
             latest = evs[-1] if evs else None
             latest_lifecycle = None
             for ev in reversed(evs):
@@ -5175,17 +5188,26 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
             start = None
             if latest_lifecycle and latest_lifecycle["event"] in _START_EVENTS:
                 payload = latest_lifecycle.get("payload")
-                explicit_transition = (latest_lifecycle["event"] != "in_flight" or
-                                       isinstance(payload, dict) and
-                                       payload.get("source") in ("roadmap-update", "jog") and
-                                       payload.get("transition") is True)
+                source = payload.get("source") if isinstance(payload, dict) else None
+                explicit_transition = (
+                    source != "backfill" and
+                    (latest_lifecycle["event"] in ("jog_running", "jog_leased")
+                     or latest_lifecycle["event"] == "in_flight" and
+                     source in ("roadmap-update", "jog") and
+                     payload.get("transition") is True)
+                )
                 observed = _utc_datetime(latest_lifecycle["at"])
                 sec = (row["section"] or "").strip().lower()
                 ledger_consistent = (row["status_marker"] == "\U0001F6A7"
                                      or sec.startswith("in progress"))
-                is_jog = (latest_lifecycle["event"].startswith("jog_") or
-                          isinstance(payload, dict) and payload.get("source") == "jog")
-                jog_consistent = not is_jog or jog_state.get((repo_id, row["gh_number"])) == "running"
+                is_jog = latest_lifecycle["event"].startswith("jog_") or source == "jog"
+                jog_rows = jog_state.get((repo_id, row["gh_number"]), [])
+                jog_consistent = not is_jog or (len(jog_rows) == 1 and
+                                                 jog_rows[0] in ("running", "leased"))
+                if is_jog and len(jog_rows) > 1:
+                    result["warnings"].append(
+                        "%s#%s has ambiguous multiple jog rows; activity preserved as unknown"
+                        % (url_repo or row_slug or "unknown", row["gh_number"]))
                 if explicit_transition and ledger_consistent and jog_consistent and observed and observed <= now_dt:
                     age = (now_dt - observed).total_seconds() / 86400.0
                     start = dict(latest_lifecycle, age_days=age,
@@ -5193,7 +5215,7 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
             result["issues"].append({
                 "global_id": row["global_id"], "repo": url_repo,
                 "number": int(row["gh_number"]),
-                "identity_valid": bool(url_repo and url_matches_row and repo_id),
+                "identity_valid": repo_matches,
                 "section": row["section"], "marker": row["status_marker"],
                 "ratings": {k.replace("rating_", ""): row[k] for k in RATING_COLUMNS},
                 "latest_event": latest, "latest_lifecycle": latest_lifecycle,
