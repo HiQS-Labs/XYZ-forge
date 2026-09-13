@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -74,5 +74,19 @@ do not re-block on historical exhausted DeepSeek attempts or demand another harn
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+swept file: yes
+VERDICT: FAIL
+Basis: Read the entire controlling artifact, including historical sections, and inspected the named writer/connector/test sources without executing them. Verify-tier graph lookup used XYZ-forge generation 2026-09-01T15:54:30Z; coverage reports releases_app changed and other requested code/tests untracked, so findings use current source fallback. Two concrete safety contracts remain build-blocking; historical reviewer exhaustion is superseded and is not a finding.
+
+- [Blocker] **Start evidence needs supersession and provenance rules.** `PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:226` accepts a recent non-backfill start without excluding a later stop/return-to-Queue transition. An issue started yesterday and explicitly parked today can therefore be put back In progress. Existing `_extract_roadmap_update` also emits `in_flight` for any metadata edit while the marker is 🚧 (`utils/py/releases_app.py:1445`); fixing future emissions does not make those recent historical rows genuine starts. Specify that contradictory current state/later lifecycle evidence invalidates an earlier start, and that legacy ambiguous update emissions require independent start corroboration or remain unknown. Add exact-selection fixtures for start→park, start→stop, and a pre-fix metadata-only in_flight event; none may manufacture In progress.
+- [Blocker] **Journal each remote mutation, including partial add/status outcomes.** Steps 5–6 (`PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:279`) say record after success, but the reused writer adds a card before setting its status and returns only after both (`utils/py/board_sync.py:540`). If add succeeds and status fails, a caller-level success journal loses the new item ID and cannot account for the residual card. Specify per-request intent/result recording through the existing writer, persist the returned add ID before status mutation, and record an indeterminate outcome when a response or journal write is lost; stop and read back before retry/restore. Test add-success/status-failure and response-loss boundaries, asserting residual-card evidence and no blind retry. Also correct step 6's “existing writer capability”: `_set_status_option` only sets a String option (`utils/py/board_sync.py:493`); explicitly extend that same writer with field-clear support and an originally-unset restore fixture.
+- [Pass] Selection and both required outcomes are explicit: exact eligibility/order and preserved unknown Ready cards (`PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:236`), PR/terminal seven-day handling (:217), policy-managed raw replay refusal (:203), shared batch rollback (:253), and independent live read-back/no-op rerun (:295). Preserve these contracts while closing the two gaps above.
+
+Pre-existing defects relevant to this plan are included above (legacy metadata starts and composite add/status failure); other identified existing seams already have explicit repair steps. No tests, source artifacts, board/config mutations, or git commands were run.
+
+Handing off to codex-author (Producer) — resolve both findings in the controlling plan and request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
