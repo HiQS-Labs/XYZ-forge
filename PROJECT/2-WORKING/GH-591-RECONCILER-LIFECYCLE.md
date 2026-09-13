@@ -138,3 +138,15 @@ already-landed producer. Waiting for unchanged #599 to become green cannot resto
 dependencies. Land the reviewed correction only after the normal full gate; then observe the
 automatic recovery run. Preserve the failed run as evidence; never count it as acceptance. The
 three-consecutive-merge and scheduled-sweep criteria remain open.
+
+Agy approved the bounded runner correction in a single relay turn, driver-attested at
+`d442bf64` (reviewed source `b1983192` plus the review scaffold). The full gate remains the
+pre-merge boundary. The bridge diagnostic probe passes 43/43 locally; that result does not
+establish the hosted failure cause or replace automatic acceptance.
+
+The normal full push gate for `b1983192` passed 374/374 in 1224 seconds, without bypass.
+The registry concurrency fixture lost one of 16 rows in the pool and passed its built-in isolated
+retry unchanged; the cause is unproven. Both results are retained. An earlier diagnostic attempt
+was stopped because the driver's worker-count override invalidated the default-setting fixture;
+controlled red/green proves that attribution, and no source change was made for it. This remains
+local evidence; automatic qualification after the dependent merge is still pending.

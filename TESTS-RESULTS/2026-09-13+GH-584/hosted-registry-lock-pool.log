@@ -1,0 +1,8 @@
+registry-lock-concurrency (GH-72): 16 concurrent writers -> 1 registry
+  round 1: rows=15 distinct=15 expected=16
+  FAIL: all 16 concurrent rows present (no lost row / TOCTOU)
+  FAIL: no duplicate or corrupt rows
+  PASS: no lock dir leaked after the round
+  round 2: rows=16 distinct=16 expected=16
+  PASS: round 2 idempotent — still exactly 16 rows
+  registry-lock-concurrency: 2 pass, 2 fail
