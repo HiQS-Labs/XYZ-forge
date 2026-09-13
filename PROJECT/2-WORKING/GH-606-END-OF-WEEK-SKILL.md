@@ -20,7 +20,7 @@ reversibility: Easy — instructions-only artifact; future writes retain before/
 
 | What was just completed | What's next |
 |---|---|
-| Requirements resolved; current-source recon mapped existing readers and writers. | Independent plan QA, then author and verify the skill. |
+| Independent Codex plan QA Approved; skill and index entry authored. | Validate documentation and run final independent QA. |
 
 ## Table of contents
 
@@ -106,7 +106,7 @@ No new end-of-week config schema. Missing settings prompt only for the missing v
 - [x] User decisions and six-task/two-goal contract captured.
 - [x] Current source distinguishes HiQS ranked actions from search, issue kanban from release cards,
       work-start sync from lifecycle replay, and consumer root from harness root.
-- [ ] Ratings read back and independent plan QA Approved.
+- [x] Ratings read back and independent plan QA Approved (`relay-system/2026-09-13/gh606-plan.md`).
 
 ## Phase 2: Skill and verification
 
@@ -144,7 +144,7 @@ Debug-mantra governs diagnosis if a check fails: reproduce, trace, disprove, rec
 
 ### Phase 2 — QA checklist
 
-- [ ] Skill and index entry created; no runtime or machine settings added.
+- [x] Skill and index entry created; no runtime or machine settings added.
 - [ ] Acceptance decisions reviewed; deterministic doc/privacy checks passed with red control.
 - [ ] Final independent QA Approved; PR ready and verified against final head.
 

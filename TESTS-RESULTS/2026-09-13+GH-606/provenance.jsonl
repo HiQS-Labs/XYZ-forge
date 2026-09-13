@@ -3,3 +3,11 @@
 {"check": "pdda status-table", "result": "pass", "details": "0 errors, 0 warnings", "date": "2026-09-13", "scope": "GH-606 documentation authoring", "base_sha": "38507a23303bebab6184607b15e3099cc2dd88e3"}
 {"check": "releases check", "result": "pass_with_warnings", "details": "0 failures, 8 existing stale migration refs", "date": "2026-09-13", "scope": "GH-606 documentation authoring", "base_sha": "38507a23303bebab6184607b15e3099cc2dd88e3"}
 {"check": "initial harness preflight", "result": "invalidated", "details": "caller set XYZ_BOARD_SYNC=0 and XYZ_WORK_CONNECTORS=0; board mocks no-op; run terminated at exit143; repository identity preserved", "date": "2026-09-13", "scope": "GH-606 documentation authoring", "base_sha": "38507a23303bebab6184607b15e3099cc2dd88e3"}
+{"date": "2026-09-13", "check": "public authored docs", "exit_code": 0, "expected_exit_code": 0, "output": "PASS: skills/end-of-week/SKILL.md\nPASS: PROJECT/2-WORKING/GH-606-END-OF-WEEK-SKILL.md\nPASS: PROJECT/2-WORKING/recon-end-of-week.md"}
+{"date": "2026-09-13", "check": "witnessed forbidden-path control", "exit_code": 1, "expected_exit_code": 1, "output": "FAIL: personal path or token-shaped literal: temp/privacy-negative.md"}
+{"date": "2026-09-13", "check": "witnessed empty-input control", "exit_code": 1, "expected_exit_code": 1, "output": "FAIL: empty input: temp/privacy-negative.md"}
+{"date": "2026-09-13", "check": "public authored docs recheck", "exit_code": 0, "expected_exit_code": 0, "output": "PASS: skills/end-of-week/SKILL.md\nPASS: PROJECT/2-WORKING/GH-606-END-OF-WEEK-SKILL.md\nPASS: PROJECT/2-WORKING/recon-end-of-week.md"}
+{"check": "plan relay", "result": "Approved", "exit_code": 0, "reviewed_head": "315cbfeb1577af52894eb0e62b6550ff1fa3299b", "date": "2026-09-13"}
+{"check": "skill creator quick_validate", "result": "valid", "exit_code": 0, "date": "2026-09-13"}
+{"check": "pdda hardcoded-paths", "result": "0 errors 0 warnings", "exit_code": 0, "date": "2026-09-13"}
+{"check": "pdda roadmap-coverage", "result": "0 errors 0 warnings", "exit_code": 0, "date": "2026-09-13"}

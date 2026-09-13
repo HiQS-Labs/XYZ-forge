@@ -20,4 +20,9 @@ HEAD, core.bare, origin and local email matched. A corrected prerequisite run is
 
 ## Remaining
 
-Independent plan review, skill implementation, final checks and final review are pending.
+- Independent Codex plan relay: Approved, exit 0; reviewed-head 315cbfeb1577af52894eb0e62b6550ff1fa3299b. See `relay-system/2026-09-13/gh606-plan.md`.
+- Skill authored and added to ARCHITECTURE skills index.
+- Bundled skill-creator quick_validate.py: Skill is valid.
+- PDDA hardcoded-paths and roadmap-coverage: zero errors/warnings.
+- Public-path check: authored docs pass; injected personal-path and empty-input controls each exit 1; original docs pass again. Re-run with `python3 TESTS-RESULTS/2026-09-13+GH-606/check_public_paths.py skills/end-of-week/SKILL.md`.
+- Final independent review and publication remain pending. Scenario coverage is assessed in review, not a live LLM sweep.
