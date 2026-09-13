@@ -113,5 +113,8 @@ pre-merge path while reviewing #600. The regression witnesses false ambiguity fo
 a skipped canonical-document validation for completed tasks, in both GH-N- and N- naming forms.
 The three-line correction aligns both lookups with the post-merge matcher and sorts completed
 candidates. Focused evidence: 25 GH-421 tests and existing GH-496 pre-merge checks pass; retained
-red/green logs and non-qualifying provenance are in the GH-584 campaign. Final Agy review and the
-normal push gate for this correction are pending.
+red/green logs and non-qualifying provenance are in the GH-584 campaign. Both Agy relay reviews are Approved with driver attestations. The normal full push gate for
+correction 4cdb82a2 passed 374/374 in 896 seconds and published it to PR #600. The live relay
+self-sufficiency suite failed in the pool and passed the built-in isolated retry without source
+changes; the cause is unproven, and both outcomes are retained. This remains local push evidence,
+not hosted qualification. See agy-qa-full-prepush.log and its diagnostic telemetry in that campaign.
