@@ -2,9 +2,9 @@
 gh_issue: 568
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/568
 title: "feat(ledger): end-to-end retirement of RELEASES.md in favor of releases.db"
-status: "In progress"
+status: Complete
 created: 2026-09-10
-updated: 2026-09-12
+updated: 2026-09-13
 owner: noelsaw
 goal: "End-to-end retirement of RELEASES.md in favor of releases.db across 14 scopes with permanent regression guard"
 doc_type: enhancement
