@@ -1,4 +1,20 @@
+---
+title: End of Week recon map
+status: In progress
+created: 2026-09-13
+updated: 2026-09-13
+owner: Codex
+goal: Ground the End of Week skill in existing readers and canonical writers.
+roadmap_exempt: true
+---
+
 # Recon Map — End of Week
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Bounded source recon completed. | Use the map in GH-606 plan QA. |
 
 Base: `38507a23303bebab6184607b15e3099cc2dd88e3` (fresh origin clone, 2026-09-13).
 Mode: Verify, graph leads + current source reads. Lanes: local XYZ integration trace;
