@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -188,5 +188,22 @@ Operator granted one additional review round after the cap (2026-09-13). The pla
 Reviewer: this is a stamp round. Confirm only (1) R12 and R13 are resolved as written, and (2) no new blocker exists in items 1–8. If both hold, set STATUS: Approved with `VERDICT: PASS`; otherwise list the exact remaining amendment.
 
 Handing off to Reviewer (codex).
+
+## Reviewer — codex — Round 4
+
+swept file: yes
+
+Read the entire 183-line plan and all of `utils/py/express.py`; rechecked the receipt matcher, evidence-retention policy, and the exact R12/R13 requests against their amendments. Graph tools are unavailable in this turn, so local source is the evidence; no graph coverage claim is made. This authorized extension is bounded to R12/R13 and new blockers in items 1–8. Earlier issue/recurrence assessments remain attributed to prior rounds. No source, artifact, suite, or Git command was executed; no runtime qualification is claimed.
+
+- **[Should] R12 remains partially unresolved — the specified identity check omits the failure it names.** `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md:103` records only HEAD and porcelain; `:105` nevertheless says a suite can mutate “HEAD/config/remotes”. A zero-exit suite changing only origin or local user identity leaves HEAD and porcelain unchanged, so this recipe still issues evidence after the documented identity drift (`AGENTS.md:359`). The earlier R12 explicitly requested config/remote/local-identity comparison and an identity-changing zero-exit red control; neither appears in item 5 or item 7. **Exact remaining amendment:** extend item 5 to require a clean starting tree at the full landing SHA and normalized registered suite; capture the actual suite exit status immediately; before switching to development, compare HEAD, tested tree, `core.bare`, origin URLs, and local user identity with their pre-run values, refusing receipt creation on drift or failed inspection. Retain the before/after comparison and nonempty run output beside the receipt. Add to item 7 a zero-exit recovery run that changes only origin or local identity and must refuse receipt creation, with retained red evidence. This completes the already accepted R12; it adds no recovery subsystem.
+
+- **[Pass] R13 is resolved in the written plan.** Item 7 explicitly retains CLI cases “**and** the driver-production pair”, including the no-write mutation reaching both the missing-receipt assertion and gated failure (`PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md:141`); acceptance includes that pair (`:150`). **Disposition:** retain this requirement and witness it during implementation. These are specified controls, not tests run by this reviewer.
+
+- **[Pass] No new blocker found in items 1–8; the accepted integration remains intact.** The writer follows the normal cleanliness/reachability checks and receives the actual Step-7 result (plan `:69`; current ordering `utils/py/express.py:559`, `:607`, `:614`), persistence grants only the receipt path (plan `:86`), and resume requires committed validated evidence before close/ship (plan `:92`). Attribution-only wording remains explicit (plan `:116`; `utils/py/wave_reconcile.py:421`). **Disposition:** keep the single writer, exact-path persistence, unchanged consumer, and focused-suite boundary. The sweep found no additional pre-existing blocker relevant to these items; R12 remains the sole unresolved amendment.
+
+VERDICT: FAIL
+Basis: R13 is resolved and no new blocker was found, but R12 is not fully implemented as written: HEAD/porcelain cannot detect the config/remote/local-identity drift explicitly covered by the accepted finding. Approval requires both R12 and R13 resolved. The authorized 4/4 cap is exhausted, so STATUS is Escalated; do not silently open another round.
+
+Handing off to Producer (claude-a) — present the exact remaining R12 amendment and capped verdict to the operator for disposition; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
