@@ -241,6 +241,23 @@ class Receipts(unittest.TestCase):
         # and find_receipt is by content, so a second write for the same landing is a no-op
         self.assertEqual(express.write_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh", 0), rel)
         self.assertEqual(len((self.repo / rel).read_text().splitlines()), 1)
+        # explicit PR identity is not express evidence (the real matcher treats it as conflicting)
+        self.assertFalse(express.valid_express_receipt({**rec, "pr": 999}, sha_a, 592, "test/gh592-demo.sh"))
+        # bare and test/-prefixed suite spellings are one expectation
+        self.assertTrue(express.valid_express_receipt(rec, sha_a, 592, "gh592-demo.sh"))
+        # I5: an unterminated prior line must not swallow the next record
+        (self.repo / rel).write_text((self.repo / rel).read_text().rstrip("\n") + "\n{")
+        rel2 = express.write_receipt(str(self.repo), sha_b, 592, "test/gh592-demo.sh", 0)
+        self.assertEqual(rel2, rel)
+        lines = (self.repo / rel2).read_text().splitlines()
+        self.assertEqual(len(lines), 3, lines)
+        self.assertEqual(json.loads(lines[-1])["commit"], sha_b)
+        code, out = run_cli(sha_b)
+        self.assertNotEqual(code, 6, out)
+        # a symlinked provenance.jsonl is not evidence for express either
+        (self.repo / "TESTS-RESULTS" / "link").mkdir()
+        (self.repo / "TESTS-RESULTS" / "link" / "provenance.jsonl").symlink_to(self.repo / rel)
+        self.assertEqual(express.find_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh"), rel)
 
 
 unittest.main(verbosity=2)

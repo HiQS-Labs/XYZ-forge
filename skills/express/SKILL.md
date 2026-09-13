@@ -104,8 +104,10 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
    (`commit` = the landing sha, `command` = the suite, the real `rc`,
    `gate: express-suite`) and then `manifest ship --gid <rel> --evidence "<sha>;
    registered suite <suite> green (express-suite, not the full gate); receipt <path>;
-   direct development push"`. The GH-205 trap (dialed_in while closed) is
-   structurally impossible in this order.
+   direct development push"`. Ship precedes the issue close below, so the
+   GH-205 shape (an issue closed while its manifest item is still dialed_in)
+   can only arise if the ship persist itself fails — which exits non-zero with
+   an `express-reconcile-failed` receipt and is what `resume` recovers.
 10. **Close the issue** — the commit message says `Closes #<N>` and lands on the
     default branch; the driver verifies and closes explicitly if GitHub has not.
 11. **Persist, reconcile cleanly, persist — fail closed.** The landing is

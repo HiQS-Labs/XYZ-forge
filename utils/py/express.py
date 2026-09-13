@@ -11,9 +11,10 @@ lane's design (GH-267/GH-516) — and every landing leaves a TESTS-RESULTS recei
 saying exactly that (`gate: express-suite`, GH-592).
 
 Landing shape: the qualified commit is pushed directly to development. The
-operator's /express invocation IS the landing authorization; the pre-push gate,
-fast-forward update, commit reachability check, and commit-based reconciliation
-replace the former immediately-merged ghost PR.
+operator's /express invocation IS the landing authorization; the registered
+suite (Step 7), fast-forward update, commit reachability check, and gated
+commit-based reconciliation replace the former immediately-merged ghost PR. The
+full pre-push gate is bypassed on every express push (XYZ_SKIP_PREPUSH=1).
 
 Exit codes: 0 ok; 3 express-refused (guardrail); 4 environment/dependency.
 Every refusal and every fired run appends a .tick event under .tick/events/
@@ -165,13 +166,23 @@ RECEIPT_CASE = "express-landing"
 RECEIPT_GATE = "express-suite"
 
 
+def normalize_suite(suite):
+    """One spelling for the registered suite everywhere it is compared: landing,
+    receipt `command`, and resume's expectation (GH-592 I4)."""
+    suite = suite.strip()
+    if not suite.startswith("test/"):
+        suite = "test/" + suite
+    return suite
+
+
 def receipt_command(suite):
-    return "bash %s" % suite.strip()
+    return "bash %s" % normalize_suite(suite)
 
 
 def valid_express_receipt(rec, sha, issue, suite):
     """The one predicate for dedup AND resume: identity + success + the exact suite."""
     return (isinstance(rec, dict)
+            and "pr" not in rec and "pr_number" not in rec  # express evidence is commit-identified only
             and rec.get("commit") == sha
             and rec.get("issue") == issue
             and rec.get("case") == RECEIPT_CASE
@@ -181,10 +192,23 @@ def valid_express_receipt(rec, sha, issue, suite):
             and rec.get("command") == receipt_command(suite))
 
 
+def _receipt_lines_match(text, sha, issue, suite):
+    for line in text.splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if valid_express_receipt(rec, sha, issue, suite):
+            return True
+    return False
+
+
 def find_receipt(root, sha, issue, suite):
-    """Repo-relative path of the first receipt satisfying valid_express_receipt,
-    scanning every TESTS-RESULTS/**/provenance.jsonl by content (not path) so a
-    date boundary never yields a duplicate. None if absent."""
+    """Repo-relative path of the first working-tree receipt satisfying
+    valid_express_receipt, scanning every TESTS-RESULTS/**/provenance.jsonl by
+    content (not path) so a date boundary never yields a duplicate. Symlinked
+    files are not evidence (the real matcher skips them too). None if absent.
+    Used for dedup at write time; resume uses find_committed_receipt."""
     results = os.path.join(root, "TESTS-RESULTS")
     if not os.path.isdir(results):
         return None
@@ -193,17 +217,32 @@ def find_receipt(root, sha, issue, suite):
         if "provenance.jsonl" not in files:
             continue
         path = os.path.join(dirpath, "provenance.jsonl")
+        if os.path.islink(path) or not os.path.isfile(path):
+            continue
         try:
             with open(path, encoding="utf-8") as f:
-                for line in f:
-                    try:
-                        rec = json.loads(line)
-                    except ValueError:
-                        continue
-                    if valid_express_receipt(rec, sha, issue, suite):
-                        return os.path.relpath(path, root)
+                text = f.read()
         except OSError:
             continue
+        if _receipt_lines_match(text, sha, issue, suite):
+            return os.path.relpath(path, root)
+    return None
+
+
+def find_committed_receipt(root, sha, issue, suite):
+    """Like find_receipt but reads ONLY what HEAD tracks (`git ls-files` +
+    `git show HEAD:<path>`), so an ignored, untracked, or symlinked file can never
+    stand in for committed evidence (GH-592 I1)."""
+    ls = git(root, "ls-files", "-z", "--", "TESTS-RESULTS", check=False).stdout
+    for rel in sorted(p for p in ls.split("\0") if p.endswith("/provenance.jsonl")):
+        mode = git(root, "ls-files", "-s", "--", rel, check=False).stdout.split(" ", 1)[0]
+        if mode == "120000":  # symlink blob
+            continue
+        shown = git(root, "show", "HEAD:%s" % rel, check=False)
+        if shown.returncode != 0:
+            continue
+        if _receipt_lines_match(shown.stdout, sha, issue, suite):
+            return rel
     return None
 
 
@@ -224,20 +263,29 @@ def write_receipt(root, sha, issue, suite, rc):
         "environment": "express driver, direct development push",
     }
     os.makedirs(os.path.join(root, rel_dir), exist_ok=True)
-    with open(os.path.join(root, rel), "a", encoding="utf-8") as f:
+    full = os.path.join(root, rel)
+    if os.path.islink(full):
+        die("refusing to write a receipt through a symlink: %s" % rel)
+    with open(full, "a+", encoding="utf-8") as f:
+        f.seek(0, os.SEEK_END)
+        if f.tell() > 0:
+            f.seek(f.tell() - 1)
+            if f.read(1) != "\n":  # an interrupted or unterminated prior line must not swallow ours
+                f.write("\n")
         f.write(json.dumps(rec) + "\n")
     return rel
 
 
 RECOVERY_RECIPE = (
-    "no valid express receipt bound to commit %s for issue #%d and suite %s. Resume writes no "
-    "evidence. Recover in a DISPOSABLE full clone: snapshot identity "
-    "(git rev-parse HEAD; git status --porcelain; git remote -v; git config --list --local | shasum -a 256), "
-    "git checkout %s, run `bash %s` (save stdout/stderr as recovery-run.log), snapshot identity again — "
-    "any difference voids the run. Then on a clean development checkout of that clone: "
-    "python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
-    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>))', commit that receipt plus "
-    "recovery-run.log under the same TESTS-RESULTS/ folder to development, push, then re-run resume."
+    "no COMMITTED valid express receipt bound to commit %s for issue #%d and suite %s. Resume writes no "
+    "evidence. Recover in a DISPOSABLE full clone, in this order: (1) git checkout %s; "
+    "(2) snapshot identity AT THAT COMMIT into recovery-run.log: git rev-parse HEAD; git status --porcelain; "
+    "git remote -v; git config --list --local | shasum -a 256; (3) run `bash %s` appending its stdout/stderr "
+    "to recovery-run.log and record its exit code immediately (rc=$?); (4) snapshot the same four values "
+    "again — if any inspection fails or any value differs, the run is VOID and no receipt may be written; "
+    "(5) git checkout development (clean), then: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); "
+    "import express; print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>))'; "
+    "(6) copy recovery-run.log beside that receipt, commit both to development, push; (7) re-run resume."
 )
 
 
@@ -457,9 +505,7 @@ def cmd_check(args, expect_driver=frozenset()):
                "already-landed probes before re-doing it" % (args.issue, meta.get("state")), issue=args.issue)
 
     # Step 4 — the fix must carry its regression suite, registered in validate.sh.
-    suite = args.suite
-    if not suite.startswith("test/"):
-        suite = "test/" + suite
+    suite = normalize_suite(args.suite)
     if not os.path.isfile(os.path.join(root, suite)):
         refuse(root, "suite-missing", "%s does not exist — a hotfix without its regression suite is a claim, not a fix" % suite, issue=args.issue)
     validate = os.path.join(root, "validate.sh")
@@ -528,7 +574,7 @@ goal: >
 
 ## Acceptance Criteria
 
-- [x] Regression suite {suite} green at landing (express-suite — the registered suite, not the full pre-push gate; receipt `commit` = landing sha).
+- [x] Regression suite {suite} registered as the landing gate (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
 - [x] Single-subsystem, risk-bounded diff (express qualification passed).
 
 ## Merge evidence
@@ -547,7 +593,7 @@ goal: >
     # CHANGELOG — newest-first under a fresh dated Unreleased section.
     cl = os.path.join(root, "CHANGELOG.md")
     bullet = ("- **GH-%d: %s.** (express hotfix, GH-267 lane; "
-              "suite %s green.)\n" % (args.issue, meta["title"], args.suite))
+              "suite %s registered as the landing gate.)\n" % (args.issue, meta["title"], normalize_suite(args.suite)))
     entry = "## [Unreleased] - %s\n\n### Fixed\n%s\n" % (today, bullet)
     with open(cl, encoding="utf-8", errors="replace") as f:
         cbody = f.read()
@@ -976,7 +1022,7 @@ def cmd_resume(args):
 
     # 2. Resolve and validate the landing commit identity and reachability
     sha = resolve_landing_commit(root, issue, args.sha)
-    suite = args.suite.strip()
+    suite = normalize_suite(args.suite)
 
     if getattr(args, "dry_run", False):
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
@@ -992,17 +1038,14 @@ def cmd_resume(args):
                 dirty_after.replace("\n", "; "))
 
     # 4b (GH-592). Evidence gate BEFORE issue close / ship: resume never writes or
-    # infers a receipt. A committed (or exactly-pending) receipt satisfying
-    # valid_express_receipt must already exist; otherwise refuse with the recipe.
-    receipt = find_receipt(root, sha, issue, suite)
+    # infers a receipt. A COMMITTED receipt (read from HEAD, never the working
+    # tree) satisfying valid_express_receipt must already exist; otherwise refuse
+    # with the recovery recipe. An uncommitted receipt is ordinary dirt — the
+    # cleanliness guards above already refused it and the operator commits it.
+    receipt = find_committed_receipt(root, sha, issue, suite)
     if not receipt:
         die("express-resume: " + recovery_recipe(sha, issue, suite))
-    pending = git(root, "status", "--porcelain=v1", "--", receipt, check=False).stdout.strip()
-    if pending:
-        # Crash window: receipt written, ship persist never ran. Persist exactly it.
-        persist_closeout(root, "chore(releases): express receipt GH-%d (commit %s)" % (issue, sha[:12]),
-                         extra_paths=(receipt,))
-        print("express-resume: persisted pending receipt %s" % receipt)
+    print("express-resume: committed receipt %s attributes commit %s" % (receipt, sha[:12]))
 
     # 4. Check and close issue if still open
     iv = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "state"], check=False)
