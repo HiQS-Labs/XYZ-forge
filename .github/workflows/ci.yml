@@ -242,7 +242,7 @@ jobs:
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
       github.event_name == 'workflow_dispatch'
-    runs-on: starsling-ubuntu-24.04-8
+    runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - name: Check out repo
@@ -507,10 +507,9 @@ jobs:
 
   # GH-396 Phase 4 — Vendored smoke gate: verifies the vendored .xyz/ layout end-to-end in CI.
   # Blocking on development and main (continue-on-error: false).
-  # GitHub-hosted on purpose: this is the only merge-blocking job, and a third-party runner pool
-  # that silently stops claiming jobs (StarSling, 2026-09-12: no runner for 20h, 5 runs queued,
-  # two PRs landed on local evidence) must not be able to stall the trunk. The advisory
-  # canary-ubuntu job above keeps the StarSling label for the speed comparison.
+  # GitHub-hosted on purpose: this is the only merge-blocking job. A third-party runner pool that
+  # silently stopped claiming jobs (2026-09-12: no runner for 20h, 5 runs queued, two PRs landed on
+  # local evidence) stalled the trunk once; every job in this workflow is GitHub-hosted since then.
   vendored-smoke:
     name: vendored smoke gate (blocking on development + main)
     runs-on: ubuntu-latest
