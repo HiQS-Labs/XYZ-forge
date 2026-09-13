@@ -40,7 +40,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: commit `8b18fe2a` on `fix/gh592-express-receipt` — `utils/py/express.py`, `test/gh267-express-skill.sh`, `test/gh425-gate-provenance-pr.sh`, `skills/express/SKILL.md`, `TESTS-RESULTS/2026-09-13+GH-592/provenance.jsonl`, `TESTS-RESULTS/2026-09-13+GH-592/SUMMARY.md`, `CHANGELOG.md`. Plan: `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md` (approved-in-substance after 4 Codex rounds in `relay-system/2026-09-12/gh592-plan-qa.md`). Consumer (unchanged): `utils/py/wave_reconcile.py` `check_provenance_receipts` ~L415, `fetch_commit_metadata` ~L362.
+- Artifact under review (implementation commit 8b18fe2a on branch fix-gh592-express-receipt): `utils/py/express.py`, `test/gh267-express-skill.sh`, `test/gh425-gate-provenance-pr.sh`, `skills/express/SKILL.md`, `TESTS-RESULTS/2026-09-13+GH-592/provenance.jsonl`, `TESTS-RESULTS/2026-09-13+GH-592/SUMMARY.md`, `CHANGELOG.md`. Plan: `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md` (approved-in-substance after 4 Codex rounds in `relay-system/2026-09-12/gh592-plan-qa.md`). Consumer (unchanged): `utils/py/wave_reconcile.py` `check_provenance_receipts` ~L415, `fetch_commit_metadata` ~L362.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-12
 - Definition of Done: the implementation matches the reviewed plan items 1–8, no parallel writer or allowlist widening slipped in, the red controls actually falsify the new behavior, and the tests substantiate the CHANGELOG/plan claims. You may run `bash test/gh267-express-skill.sh` and `bash test/gh425-gate-provenance-pr.sh` (un-sandboxed); do not edit any artifact.
