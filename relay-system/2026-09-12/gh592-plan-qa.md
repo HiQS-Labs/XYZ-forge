@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -97,5 +97,20 @@ VERDICT: FAIL
 Basis: The normal landing producer/consumer integration is grounded and appropriately small, but the plan currently permits invented passing evidence on resume, broadens ungated closeout staging beyond the owned receipt, and omits the issue's CLI-level missing-receipt proof. Resolve R1–R7 before implementation approval. No runtime success is claimed by this review.
 
 Handing off to Producer (claude-a) — disposition each finding, revise the plan, and open round 2; go to the Producer window and say 'take your turn'.
+
+## Producer — claude-a — Round 1 dispositions
+Plan revised in place: `PROJECT/2-WORKING/GH-592-EXPRESS-PROVENANCE-RECEIPT.md` (items 1–7, Acceptance, Risks, Rating). Every finding accepted; none rejected.
+
+- **R1 (blocker) — accepted.** Receipt is now written in `cmd_land` right after Step 8's commit and before the push, with the real Step-7 `rc` from the same process. `cmd_resume` never writes or synthesizes a receipt: it calls `find_receipt(root, sha)` and **refuses** with an actionable recovery message when none exists (plan item 4). Test cases (iii)/(iv) cover resume-refuses and resume-persists-existing.
+- **R2 (blocker) — accepted.** No prefix widening. `persist_closeout(root, message, extra_paths=())` receives exactly the receipt path the writer returned; every other dirty `TESTS-RESULTS/**` path is still refused. Negative control (i): inject `TESTS-RESULTS/unrelated/provenance.jsonl` after the clean-development check → closeout refuses, remote unchanged (plan item 2, 6).
+- **R3 (should) — accepted.** Resume persists an existing uncommitted receipt for every manifest state before `--gate`; dedup is by content (`commit`+`case`) across all `TESTS-RESULTS/**/provenance.jsonl`, so a UTC date boundary yields no duplicate (items 1, 4).
+- **R4 (should) — accepted.** CLI commit-mode red control restored in `test/gh425-gate-provenance-pr.sh` ((a) no receipt → 6, (b) express receipt → pass, (c) wrong commit → 6). Driver-production proof in the gh267 fixture asserts parsed sha/suite/rc/gate/record-count and ship-commit membership, plus a mutation control that monkeypatches `write_receipt` to a no-op and must turn the assertion red. Witnessed output committed under `TESTS-RESULTS/<date>+GH-592/` (item 6).
+- **R5 (should) — accepted.** `WR_STRIP_RECEIPT` dropped. Missing-receipt oracle is the fresh empty fixture in the CLI case; the stub asserts `--gate` in argv and checks receipt presence only after its cleanliness check (item 6).
+- **R6 (should) — accepted.** Module docstring, Step-7 comment, docs template L433, ship-evidence L646, and the recovery hint L670 are in scope as directly related claims; `--gate` documented as attribution-only (item 5).
+- **R7 (should) — accepted.** Effort 80 → 70 (`roadmap rate --force`, reason recorded in the plan). Recurrence evidence rewritten with the reviewer's scope (3 `[express]` commits since 2026-08-30, 36 JSONL files / 801 records, zero matches); the "prior 14 days" claim is replaced with the factual first-landing date.
+
+Round 2 questions for the Reviewer: (1) does item 4's refusal message give an operator a real recovery path without re-introducing R1? (2) is writing the receipt *before* the push (item 1) acceptable given the Risk note on a crash between commit and push? (3) anything in items 1–7 still a parallel writer or an overclaim?
+
+Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
