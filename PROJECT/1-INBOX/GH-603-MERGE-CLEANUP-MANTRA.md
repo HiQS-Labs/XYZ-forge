@@ -63,9 +63,10 @@ Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors t
 1. **Freeze the cogs (Rung 1).** Immediately stop inventing machinery, abstractions, helpers, review loops, or new plans; preserve working state, and record the true requested outcome, nearest milestone, last real movement, and current time sink.
 2. **Re-anchor the finish line (Rung 2).** State the nearest observable task milestone in one sentence (e.g. "failing test passes", "PR exists", "operator chose A vs B"); strip all self-created prerequisites from the critical path.
 3. **Test the claimed blocker (Rung 3).** Ask *"If this item were fixed now, could the next milestone proceed?"*; strictly classify items as Goal Blocker, Required Correctness/Safety, External Dependency, Polish, or Cog; park cogs/polish and queue genuine blockers into durable intake.
-4. **Choose one goal-moving action (Rung 4).** Select the single smallest bounded action that changes task state (execute accepted step, fix one narrow blocker, use existing seam/command, or ask one crisp operator decision); never create a new plan or bypass safety gates.
+4. **Execute foundational resolution — no bandages (Rung 4).** Select the single smallest action that resolves the true root blocker gating the milestone; strictly forbid painkillers, silencing hacks, bypassed invariants, or symptom patches that kick the can down the road (hand off to `/workhorse` if a structural fix is required).
 5. **Act once, verify movement & exit (Rung 5).** Execute the single move, check whether the milestone itself changed, emit the structured UNSTUCK receipt, and immediately resume execution (or return to parent `/workhorse` ladder).
-**Overall Goal:** Stalled session interrupted and goal movement restored immediately via the single smallest bounded action that changes the task's observable state, with zero added machinery and zero bypassed safety invariants.
+**Overall Goal:** Stalled session interrupted and durable goal movement restored immediately via the simplest foundational action that advances the milestone, with zero added machinery, zero symptom bandages, and zero bypassed safety invariants.
+
 
 
 
