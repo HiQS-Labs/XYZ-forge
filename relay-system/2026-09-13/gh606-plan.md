@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -60,5 +60,22 @@ Cite source/plan lines. Read only; update only this relay file. Do not run tests
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — round 1
+
+VERDICT: PASS
+Basis: The complete plan and Recon Map meet the instructions-only Definition of Done; no concrete blocker or additional pre-existing defect was found in either reviewed document. Approval is for authoring the skill, not evidence of implementation or live weekly correctness.
+swept file: yes
+
+- [Pass] Discovery and coverage are explicit: `PROJECT/2-WORKING/GH-606-END-OF-WEEK-SKILL.md:42` pins the seven-day UTC window; `:88` separates consumer/harness roots and GitHub default discovery; `:128` refuses unsupported branch substitution. The existing rejection is present at `utils/py/wave_reconcile.py:1899`. Retain these requirements in the skill.
+- [Pass] HiQS is a cached snapshot, not historical completeness: `PROJECT/2-WORKING/recon-end-of-week.md:43` and `:62` describe the reader and missing-data limits; Rebalance `src/rebalance/mcp/tools/index.py:247` explicitly reads without recomputing, and `src/rebalance/ingest/next_actions.py:1566` reads the latest cache row. Plan `:130` and `:133` reject empty/truncated-source all-clears. Retain those branches.
+- [Pass] Configuration and writes use existing seams: `utils/py/device_config.py:32` resolves the explicit config override; `utils/py/work_connectors/github_board.py:97` merges board defaults into connector settings; `utils/py/board_sync.py:532` selects `repos[0]`. Plan `:73` through `:93` require prior/resulting values, concurrent-change checks, override preservation, authoritative landed state and identity matching. `utils/py/work_connectors/__init__.py:82` supplies the stated per-process `XYZ_WORK_CONNECTORS=0` control. Retain the effective-config check before dispatch.
+- [Pass] Unsupported/fail-soft outcomes remain honest: recon `:54` through `:60` requires diagnostics, bounded pending batches, cursor progress and fresh board read-back; plan `:131` and `:132` distinguish lifecycle projection and zero-exit failure. No runtime-gap repair is required by this plan.
+- [Pass] All six tasks, two goals, up-to-ten evidenced issue items, justified severity prefixes and script-recommendation-only scope are explicit at plan `:38` through `:51`; bounded recital/resume/completion and issue reuse are explicit at `:53` through `:57` and `:135`. Retain this contract without adding tasks.
+- [Pass] Proportional proof and scope are specified at plan `:115` through `:142`: documentation scenarios are distinguished from live execution, deterministic validation needs a witnessed negative control, and sanitized evidence has a committed destination. Plan `:65`, `:73` and `:153` reasonably separate easy authoring rollback from future cross-system operational risk and proposed ratings. Ratings read-back remains an explicit Phase 1 checklist item at `:109`, not a claimed completed check.
+
+Verification limits: Read both artifacts in full and inspected the material source seams above; no tests, runtime artifacts, git commands or business-data actions were run. Graph coverage reports XYZ generation 2026-09-01T15:54:30Z with changed/untracked paths and Rebalance generation 2026-09-02T03:54:57Z with excluded/changed reader paths; direct current-source reads support the cited claims. This is a bounded plan review, not an exhaustive runtime audit.
+
+Handoff: relay closed (Approved), no further turn needed. Producer may proceed to the approved skill-authoring phase; the harness owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
