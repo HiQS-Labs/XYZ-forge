@@ -1,0 +1,3 @@
+{"schema_version": "1.0", "case": "prefeature-regression", "result": "expected-fail", "exit_code": 1, "detail": "ModuleNotFoundError: claude_cli"}
+{"schema_version": "1.0", "case": "account-status", "result": "pass", "loggedIn": true, "authMethod": "claude.ai", "apiProvider": "firstParty", "subscriptionType": "max", "cli_version": "2.1.270"}
+{"schema_version": "1.0", "case": "live-consult", "result": "pass", "exit_code": 0, "model": "claude-sonnet-4-6", "detail": "README.md read with citation; 1 answered, 0 failed; identifiers omitted"}
