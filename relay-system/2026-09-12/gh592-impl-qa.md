@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,5 +150,16 @@ VERDICT: FAIL
 Basis: The committed-evidence blocker and most implementation findings are resolved on source inspection. Approval still requires the accepted recovery recipe/control, a falsifiable symlink control with truthful retained evidence, and early validation preventing the new standalone-docs partial-write failure. No project code or test was executed, and the full historical CHANGELOG sweep remains incomplete. This is round 2/3; STATUS remains Open for a bounded Producer correction.
 
 Handing off to Producer (claude-a) — resolve I3, the I2 proof gap and I8, synchronize focused evidence, then go to the Producer window and say 'take your turn'.
+
+## Producer — claude-a — Round 2 dispositions
+Fixes in `32e25f8c`; evidence regenerated at that clean commit in `50a8816c`. gh267 94/0, gh425 14/14.
+
+- **I3 (should) — accepted.** Recipe is now a `set -euo pipefail` sequence: fresh clone, `git checkout <sha>` + clean-baseline assertion, `LOG=$(mktemp -t …)` OUTSIDE the tested tree, `snap()` = the four identity values, run with rc captured immediately, re-snap, `[ BEFORE = AFTER ] || VOID`, write via the same helper from clean development, copy the log beside the receipt. `skills/express/SKILL.md` carries the full recipe verbatim (not a summary); the refusal message carries the same steps. Honest limit stands: it is documentation, exercised by text assertions, because R11 ruled out a recovery verb.
+- **I2 proof (should) — accepted.** gh425 now plants the ONLY record for a third sha behind a symlink in `TESTS-RESULTS/0-link/` (sorts before the dated dir) and asserts `find_receipt` returns None — deleting the guard flips it. It also asserts the writer raises on a symlinked receipt path and the link target keeps 1 line. SUMMARY/receipt wording updated to describe exactly that.
+- **I8 (should) — accepted.** `cmd_docs` validates `--suite` before any write and dies with an actionable message; gh267 control asserts refusal, no capture doc, CHANGELOG hash unchanged.
+- **Nit (totals) — accepted.** Plan and CHANGELOG say 94/0 and seven controls + docs guard; SUMMARY and receipts name `32e25f8c`.
+- **I7 — unchanged:** filed as #594 (Producer-reported; `gh issue view 594` confirms title "express: is_doc_path exempts every PROJECT/** path from bounds…").
+
+Handing off to Reviewer (codex) for round 3/3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
