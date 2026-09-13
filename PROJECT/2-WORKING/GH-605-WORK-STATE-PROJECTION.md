@@ -21,16 +21,17 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Expanded plan approved; Sol High implementation and correction checkpoints saved; sweep rollback test passes | Implementation QA and remaining integration fixes; full gate currently fails one registry assertion; live board unchanged |
+| GLM/Qwen plan implemented through b9d784e9;54 Python tests and four witnessed red controls pass after restoration; live preview matches55-change oracle | Final independent implementation QA and normal push gate; then fresh reviewed live apply; board unchanged |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
-Implementation7e24f54a follows first build1e918e83. The separate-clone first-build full
-validate returned exit1,376/377 checks: gh365 test registry count372 versus374 is a real
-failure, not contention. Correction Python fixtures40/41 pass (odd-path fixture lacks Git
-metadata); the expanded two-completed/one-deferred sweep and injected second-event rollback
-pass. Live read-only probes found user/organization resolver and snapshot GraphQL syntax
-defects; WAL-mode diagnostics can create sidecars despite mode=ro. These remain explicit
-acceptance blockers for the implementation QA loop, not changes to the approved policy.
+Implementation b9d784e9 incorporates the first independent code review's corrections.
+The first-build full validate failed376/377; its registry defect now passes the focused
+telemetry check. Historical41-test fixture failure and live GraphQL/WAL defects are corrected,
+not relabeled as historical successes. Current54 Python tests and restored sweep pass in
+separate full clones. Four deliberate regressions fail named assertions; all temporary edits
+were restored and clone identity/cleanliness verified. Real read-only preview proposes55
+changes matching independent GH/board analysis, preserving Ready10 and uncertain activity.
+Final full push gate and independent implementation Reviewer round2 are still required.
 No live board writes, configuration changes, merge or deployment has occurred. PR607 remains
 draft on its earlier published head until verification. Evidence: TESTS-RESULTS/gh605-implementation/.
 

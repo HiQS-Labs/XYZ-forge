@@ -1,5 +1,27 @@
 # GH605 implementation evidence — not yet approved
 
+## Latest checkpoint: b9d784e9115fc73a908589a97f4fb8c05ecc1a95
+
+Sol High addressed all first-review findings, followed by parent-discovered missing-ledger
+PR-link and legacy raw-protocol compatibility corrections. Parent direct Python verification:
+54/54 pass in separate full clone2. Real read-only preview succeeds and matches the independent
+55-change oracle:49 Done additions,5 In review additions (592/593/595/603 plus draft607),
+one old Done card463 to Backlog. Ready10 remains67/216/223/418/421/423/424/425/446/454.
+No live writes. No final implementation approval yet; normal push gate is running.
+
+On db17cb49, focused gh402,gh492,gh365 telemetry and both GH605 wrappers passed; gh549 failed
+7 assertions due to the incidental raw connector protocol change. b9d784e9 restores that
+compatibility without removing DB event ownership fixes or the board-scoped policy guard.
+The full legacy suite is being rerun; do not infer its result from Python-only evidence.
+
+All four red controls were repeated on b9d784e9 in separate full clone1: marker-first
+classification, omitted batch events, removed backfill exclusion (both lifecycle filter and
+start guard), and removed top-N slice each failed the named nonempty fixture assertion.
+After exact restoration54/54 Python tests and gh492 sweep pass; clean HEAD, origin, email and
+core.bare=false verified. These are deliberate failing controls, not product test failures.
+
+## Historical checkpoints (retained unchanged)
+
 The controlling expanded plan incorporates GLM5.3 and recovered Qwen feedback. Codex plan
 review Approved8cfad6bb with exit0. Sol High produced1e918e83 and correction7e24f54a.
 See provenance.jsonl for exact heads, commands, outcomes and retained-log hashes.

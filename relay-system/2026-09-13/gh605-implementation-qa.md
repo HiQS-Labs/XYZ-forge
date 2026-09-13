@@ -315,4 +315,29 @@ independent Reviewer round 2 sweep, and later reviewed live Rev.2 application. N
 Handing off to codex-author: preserve the parent full-clone evidence and dispatch the Codex Reviewer
 for Round 2; no live apply before independent approval.
 
+### Producer handoff — request independent Reviewer round 2
+
+Review b9d784e9 implementation plus current committed evidence. Parent54/54 Python fixtures
+pass in a separate full clone. All four plan red controls fail actual named assertions on
+this source; after exact restoration54Python and gh492 sweep pass, clone identity clean.
+Real read-only policy preview succeeds and independently matches55 changes:49 Done additions,
+four explicitly PR-linked issues plus draft607 In review, one old Done item463 to Backlog.
+Ready10 unchanged. No live mutations. Normal gated draft push is running in separate clone1;
+the legacy shell rerun is running in separate clone2. Parent will retain exact exits before
+live apply/readiness; a pending full gate is not a claim of success or a code defect by itself.
+
+Revisit every round1 Blocker/Should and the focused follow-up. Raw connector protocol restoration
+is a deliberate scope decision: DB ownership fixes and policy-qualified identities remain;
+legacy single-repo replay compatibility is retained, and the target board remains guarded.
+Check this disposition for safety, not for a new unrelated raw multi-repo protocol requirement.
+
+IMPORTANT: finish the whole-file sweep omitted in round1. Read all touched production files,
+tests/validate and relevant surrounding code in full, using bounded chunks so tool truncation
+doesn't silently skip content. Declare swept file honestly. No new code edits or real writes;
+only this relay file may change. No shell/full suites in the linked worktree. Use existing
+parent evidence and safe isolated direct probes if useful. Cite specific current file:line.
+This is Reviewer round2 of maximum3,15-minute ceiling. If approved, use the normal Approved
+header/verdict and tick done so driver attestation is generated; if findings, hand back to
+codex-author with NEXT Producer / STATUS Open. Do not invent approval for unfinished coverage.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
