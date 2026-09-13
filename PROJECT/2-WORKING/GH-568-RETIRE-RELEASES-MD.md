@@ -129,15 +129,23 @@ Just as `ROADMAP.md` was retired in GH-269 and `ROADMAP-DASHBOARD.md` is being r
 
 ## Acceptance Criteria
 
-- [ ] `RELEASES.md` and `RELEASES.generated.md` are deleted from repo root and untracked; `.gitignore` is cleaned up.
-- [ ] `releases check` verifies DB <-> canonical dump consistency without checking generated Markdown or drift files.
-- [ ] `doc_lines` and `legacy_lines` schema usage is made dormant with no operational writes in this repo.
-- [ ] `utils/release-lanes.sh` resolves milestones from `releases.db` and passes `test/gh284-p4-release-lanes.sh`.
-- [ ] `test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh` manifest checks are rewired to `releases.db` with silent skips removed, and verified non-vacuous (`--mutate-evidence` reports RED when mutated).
-- [ ] Durable negative control evidence committed to `test/baselines/GH-568-negative-control.md`.
-- [ ] `utils/build-launch-artifact.sh`, `utils/py/swarm_preflight.py`, and `utils/timeline/export_timeline.py` execute cleanly without `RELEASES.md`.
-- [ ] `utils/py/wave_reconcile.py`, `.github/workflows/wave-reconcile.yml`, and `utils/py/express.py` remove all references to `RELEASES.generated.md`.
-- [ ] `tools/vscode-cockpit` and `skills/releases/SKILL.md` route all release operations through `releases_app.py`.
-- [ ] Dedicated regression guard `test/gh568-releases-md-retired.sh` with witnessed red controls is registered in `validate.sh` and passes.
-- [ ] `validate.sh` passes 100% clean across all suites.
-- [ ] Single atomic PR landed in sequence after GH-567.
+- [x] `RELEASES.md` and `RELEASES.generated.md` are deleted from repo root and untracked; `.gitignore` is cleaned up.
+- [x] `releases check` verifies DB <-> canonical dump consistency without checking generated Markdown or drift files.
+- [x] `doc_lines` and `legacy_lines` schema usage is made dormant with no operational writes in this repo.
+- [x] `utils/release-lanes.sh` resolves milestones from `releases.db` and passes `test/gh284-p4-release-lanes.sh`.
+- [x] `test/nightwatch-release.sh`, `test/meter-release.sh`, and `test/ballast-release.sh` manifest checks are rewired to `releases.db` with silent skips removed, and verified non-vacuous (`--mutate-evidence` reports RED when mutated).
+- [x] Durable negative control evidence committed to `test/baselines/GH-568-negative-control.md`.
+- [x] `utils/build-launch-artifact.sh`, `utils/py/swarm_preflight.py`, and `utils/timeline/export_timeline.py` execute cleanly without `RELEASES.md`.
+- [x] `utils/py/wave_reconcile.py`, `.github/workflows/wave-reconcile.yml`, and `utils/py/express.py` remove all references to `RELEASES.generated.md`.
+- [x] `tools/vscode-cockpit` and `skills/releases/SKILL.md` route all release operations through `releases_app.py`.
+- [x] Dedicated regression guard `test/gh568-releases-md-retired.sh` with witnessed red controls is registered in `validate.sh` and passes.
+- [x] `validate.sh` passes 100% clean across all suites.
+- [x] Single atomic PR landed in sequence after GH-567.
+
+## Lessons Learned (For Future Agents)
+
+- Retiring dual-state generated markdown files (`RELEASES.md` / `RELEASES.generated.md`) in favor of an authoritative database (`releases.db`) eliminates an entire class of synchronization, drift, and torn-trio race conditions across CLI tools and web viewers.
+- When decoupling legacy manifest and milestone checks (e.g. `nightwatch-release.sh`, `meter-release.sh`, `ballast-release.sh`), bidirectional member checking with falsifiable red controls (`--mutate-evidence`) guards against hollow verification that could otherwise pass vacuously on empty inputs.
+- In multi-language static writer audits (`test/gh568-releases-md-retired.sh`), AST parsing should account for API variations (such as `Path.open()` vs builtin `open()`) and guard against empty candidate directories (failing closed with status 2) so zero-byte outputs are never mistaken for clean passes.
+- Concurrent ledger merges are handled cleanly and deterministically via `utils/releases-merge-resolve.sh`, which unions rows, advances the generation counter, updates op receipts, and re-renders adopted projections without manual DB manipulation.
+
