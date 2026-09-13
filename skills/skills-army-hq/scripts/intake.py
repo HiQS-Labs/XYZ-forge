@@ -356,7 +356,9 @@ def render_catalog(root, state, config):
              "|---|---|---|---|---|---|"]
     def esc(value):
         return str(value).replace("|", "\\|").replace("\n", " ")
-    found = inventory(root, state)
+    # Rendering must not re-trip the missing-payload guard: the command path already ran it
+    # (or is the remove that acknowledges one of several vanished payloads).
+    found = inventory(root, state, list(state["skills"]))
     for name, info in found.items():
         receipt = state["skills"].get(name, {})
         statuses = []
@@ -618,7 +620,9 @@ def main(argv=None):
         with locked(root) if apply else contextlib.nullcontext():
             state, config = load(root)
             validate_history(root)
-            found = inventory(root, state, [args.name] if args.command == "remove" else [])
+            # remove IS the acknowledgment path: several vanished payloads must not deadlock
+            # each other (each remove still acknowledges exactly one; the rest keep blocking).
+            found = inventory(root, state, list(state["skills"]) if args.command == "remove" else [])
             details, actions = {}, []
             if args.command == "activate-manager":
                 require("skills-army-hq" in found, "Import skills-army-hq before activation")
