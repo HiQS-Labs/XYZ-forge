@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Open
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -405,5 +405,16 @@ Record exact reproduction and post-fix test counts in your appended disposition.
 Reviewer / STATUS Open and release codex-author. Parent gathers runtime evidence before final
 review. The final reviewer must also close the specific remaining coverage gaps (mock file,
 historical docs and truncated GH549 portion); do not claim they have already been swept.
+
+### Harness boundary — parked before final Producer correction
+
+The next builder dispatch returned exit8: lane RELAY-gh605-implementation-qa is parked at
+its default two-attempt cap. No builder process started and no correction was made after
+round2 review. Do not confuse this with completion of Reviewer round3; round3 has not run.
+Per start-task and AGENTS.md GH45, implementation stops here pending explicit operator
+authorization/replan to resume the parked lane. No --force, new lane or self-review bypass.
+All seven round2 findings remain accepted but unimplemented. The existing draft push gate
+may finish collecting/publishing b9d784e9; that does not approve code or authorize live apply.
+Automatic follow-up paused to prevent unattended re-fire. Handing off to the operator.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

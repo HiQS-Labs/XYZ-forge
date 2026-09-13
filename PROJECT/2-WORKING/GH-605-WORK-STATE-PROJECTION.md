@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| GLM/Qwen plan implemented through b9d784e9;54 Python tests and four witnessed red controls pass after restoration; live preview matches55-change oracle | Final independent implementation QA and normal push gate; then fresh reviewed live apply; board unchanged |
+| GLM/Qwen plan implemented through b9d784e9;54 Python tests and six focused suites pass;55-change preview verified | Paused at relay attempt cap after second review requested changes; operator authorization needed for saved correction plan; no live apply |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Implementation b9d784e9 incorporates the first independent code review's corrections.
@@ -31,7 +31,10 @@ not relabeled as historical successes. Current54 Python tests and restored sweep
 separate full clones. Four deliberate regressions fail named assertions; all temporary edits
 were restored and clone identity/cleanliness verified. Real read-only preview proposes55
 changes matching independent GH/board analysis, preserving Ready10 and uncertain activity.
-Final full push gate and independent implementation Reviewer round2 are still required.
+Reviewer round2 returned changes requested:4 Blockers and3 Shoulds. The saved next correction
+brief is accepted but unimplemented: harness refused dispatch at its two-attempt cap, exit8.
+Third review has not run. start-task requires a stop at exhausted caps; no bypass is taken.
+The normal full draft push gate remains in progress, independent from missing QA approval.
 No live board writes, configuration changes, merge or deployment has occurred. PR607 remains
 draft on its earlier published head until verification. Evidence: TESTS-RESULTS/gh605-implementation/.
 

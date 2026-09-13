@@ -7,12 +7,16 @@ PR-link and legacy raw-protocol compatibility corrections. Parent direct Python 
 54/54 pass in separate full clone2. Real read-only preview succeeds and matches the independent
 55-change oracle:49 Done additions,5 In review additions (592/593/595/603 plus draft607),
 one old Done card463 to Backlog. Ready10 remains67/216/223/418/421/423/424/425/446/454.
-No live writes. No final implementation approval yet; normal push gate is running.
+No live writes. No final implementation approval: Reviewer round2 found4 Blockers/3 Shoulds,
+accepted but unimplemented. The next producer dispatch returned exit8 at the lane's two-attempt
+cap; implementation paused for operator authorization, third review not run. Normal draft
+push gate is still running and cannot substitute for QA approval.
 
 On db17cb49, focused gh402,gh492,gh365 telemetry and both GH605 wrappers passed; gh549 failed
 7 assertions due to the incidental raw connector protocol change. b9d784e9 restores that
 compatibility without removing DB event ownership fixes or the board-scoped policy guard.
-The full legacy suite is being rerun; do not infer its result from Python-only evidence.
+All six shell suites were rerun on b9d784e9 in separate clone2 and passed (gh549,gh402,gh492,
+gh365 and both GH605 wrappers); clone HEAD/config/origin/email/cleanliness were unchanged.
 
 All four red controls were repeated on b9d784e9 in separate full clone1: marker-first
 classification, omitted batch events, removed backfill exclusion (both lifecycle filter and
