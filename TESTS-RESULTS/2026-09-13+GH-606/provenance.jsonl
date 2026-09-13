@@ -14,3 +14,6 @@
 {"date": "2026-09-13", "check": "final relay round1", "exit_code": 5, "result": "changes requested", "findings": ["contain connectors before first metadata write", "qualify legacy roadmap sync wording"]}
 {"date": "2026-09-13", "check": "revision quick_validate and public paths", "exit_code": 0, "result": "pass"}
 {"date": "2026-09-13", "check": "final relay round2", "exit_code": 0, "result": "Approved", "reviewed_head": "2ca1cf801d1f5ffdd051bb1919bf0ee43b048c00"}
+{"date": "2026-09-13", "check": "baseline validate.sh", "sha": "38507a23303bebab6184607b15e3099cc2dd88e3", "exit_code": 0, "result": "374/374", "identity_match": true}
+{"date": "2026-09-13", "check": "candidate pre-push tier2 releases", "sha": "d76c350701d720d1e1b4fe6ab319465b546ffd8f", "exit_code": 1, "result": "26/27; gh53 failed including serial retry", "identity_match": true}
+{"date": "2026-09-13", "check": "focused gh53 candidate vs baseline", "candidate_exit": 1, "baseline_exit": 0, "logs": ["candidate-gh53.log", "baseline-gh53.log"], "result": "unresolved branch-sensitive failure"}

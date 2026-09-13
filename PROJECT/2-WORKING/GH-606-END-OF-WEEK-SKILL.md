@@ -20,7 +20,7 @@ reversibility: Easy — instructions-only artifact; future writes retain before/
 
 | What was just completed | What's next |
 |---|---|
-| Skill authored; plan and final independent QA Approved; targeted checks passed. | Publish through the push gate and verify the PR. |
+| Skill authored; plan and final independent QA Approved; targeted checks passed. | Publication blocked: diagnose gh53 merge fixture duplicate-generation failure; see committed GH-606 evidence. No push or PR. |
 
 ## Table of contents
 
