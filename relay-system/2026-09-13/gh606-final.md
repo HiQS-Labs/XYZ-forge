@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -83,5 +83,21 @@ Handing off to Producer — address F1/F2, record dispositions, and return for r
 - F1 implemented: a workflow-wide pre-write rule now covers reconciliation and umbrella intake/rating. All unmerged/task-clone writers suppress connectors; authoritative-store dispatch also requires the task-6 effective config/repo/kill-switch preflight. Added the foreign-board intake scenario to the plan. No runtime change.
 - F2 implemented: architecture now explicitly limits markdown sync to legacy mode and identifies the current RELEASES DB authority/no-op behavior.
 - Recheck the whole skill plus these changes. Public-path checks and quick_validate will be rerun on this revision. Broad prerequisite suite remains pending; no live weekly sweep claimed.
+
+## Reviewer — codex — Round 2
+
+VERDICT: PASS
+Basis: F1 and F2 are resolved by bounded documentation changes. The complete artifact review satisfies the instruction-level Definition of Done; approval does not certify live execution or the pending publication gate.
+swept file: yes
+
+- [Pass] **F1 resolved.** The workflow-wide rule explicitly covers reconciliation and umbrella intake/rating before their first write, suppresses task-clone/unmerged dispatch, and requires effective configuration/repo/kill-switch checks even for authoritative stores (`skills/end-of-week/SKILL.md:65`–`:71`). This matches the suppression seam and unconditional post-write dispatch (`utils/py/releases_app.py:1548`, `:1660`). The new foreign-board intake scenario at `PROJECT/2-WORKING/GH-606-END-OF-WEEK-SKILL.md:130` has the correct expected decision: suppress dispatch before intake, retain events, and defer board publication. No further fix.
+- [Pass] **F2 resolved.** `ARCHITECTURE.md:366`–`:367` now limits markdown mirroring to legacy mode and names the current DB authority/no-op behavior, consistent with `utils/py/releases_app.py:3954`–`:3956`. No further fix.
+- [Pass] **Contract and acceptance sweep.** The six tasks/two goals, seven-day bounds, GitHub default branch, unsupported-target refusal, up-to-ten gaps, justified severity and recommendation-only script boundary remain explicit (`skills/end-of-week/SKILL.md:29`–`:37`, `:49`–`:63`, `:82`–`:88`, `:103`–`:107`, `:143`–`:165`). Same-window issue reuse and the one-time completion audit cover bounded resume (`:39`–`:45`, `:148`–`:151`). No fix needed.
+- [Pass] **Portable evidence-to-board path.** Consumer/harness roots, HiQS freshness/coverage, private-evidence filtering, canonical metadata writers and pending-landing behavior are explicit (`skills/end-of-week/SKILL.md:75`–`:80`, `:115`–`:138`, `:166`–`:184`). Effective device/connector fallback configuration and repos[0] validation precede the lifecycle work commands; fail-soft diagnostics, batch limits and fresh paginated read-back prevent zero-exit success claims (`:186`–`:231`). Source rechecks support device resolution, fallback configuration, work reconcile and 500-event batching (`utils/py/device_config.py:29`–`:31`; `utils/py/work_connectors/github_board.py:101`–`:107`; `utils/py/releases_app.py:5021`–`:5062`; `utils/py/work_connectors/__init__.py:127`–`:131`). No fix needed.
+- [Pass] **Evidence claims stay bounded.** The summary explicitly states no live sweep/board mutation and records the invalidated prerequisite plus pending corrected run (`TESTS-RESULTS/2026-09-13+GH-606/SUMMARY.md:5`–`:6`, `:16`–`:19`). Its validation/provenance records distinguish earlier doc checks and witnessed negative controls from scenario reasoning; the plan explicitly makes that distinction at `PROJECT/2-WORKING/GH-606-END-OF-WEEK-SKILL.md:140`–`:143`. Producer-promised revision rechecks and the harness gate are not asserted completed by this review. No fix needed.
+
+Review method: Read-only whole-file sweep of the skill, architecture, plan, recon and all three evidence files, with targeted current-source checks of material writer semantics. No additional pre-existing defect requiring correction was found in those swept artifacts. Applied the SWE review rubric without expanding this instructions-only task into runtime repair. Graph inventory (both pages) had no matching task worktree; nearest XYZ generation 2026-09-01T15:54:30Z reported missing/changed/untracked relevant paths, so current source reads superseded graph evidence. No artifact, source, test, suite or git command was executed; no live board or runtime conformance certification is implied.
+
+Relay closed (Approved), no further turn needed. Producer/harness retains the pending validation and publication work.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
