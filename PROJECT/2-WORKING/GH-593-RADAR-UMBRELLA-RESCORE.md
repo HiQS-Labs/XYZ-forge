@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Codex round 4 (operator-authorized): findings 1–5 and 7 OK; finding 6 partly closed — reviewer supplied two consistent witness fixtures (nonzero comments/age at score 9; old-fix out-of-window with the old-interval negative control), both applied verbatim. Reviewer states it authorizes no further automated round | BLOCKED on operator: round 5 for a formal Approved, or proceed to the SKILL.md edits with final Codex QA (start-task step 8) covering the witness results |
+| Implemented (commit 1970a42b + witness fixes): both SKILL.md edits, CHANGELOG. Step-7 witness run against #591 → `now 6, holding`; it surfaced two contract gaps fixed in text (discovery restricted to whack-a-mole-form titles — 10 hits, 1 umbrella; membership gates repeat_fixes — 9 path-touching fixes, 1 member). Witness at relay-system/2026-09-13/gh593-plan-qa/WITNESS.md | Final Codex QA on the implementation + witness, then push through the gate and open the PR against development |
 
 ## Why
 

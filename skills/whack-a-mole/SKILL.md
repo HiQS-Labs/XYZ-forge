@@ -191,15 +191,15 @@ filed signature):
   cutoff exists, `event time > cutoff` (strictly after — the fixing merge itself never counts;
   a cutoff older than the window cannot pull pre-window churn back in). Timestamps in UTC. A
   member that predates the interval contributes only its in-interval events.
-- *Membership* — §3 unchanged: two or more signals against the signature's `paths` / `errors` /
-  `issues`; path overlap alone is adjacency. A docs/reconcile commit that merely names the
-  umbrella number needs a second signal.
+- *Membership* — §3 unchanged, and it gates **every** count below: an issue, PR, or commit is a
+  member only with two or more signals against the signature's `paths` / `errors` / `issues`;
+  path overlap alone is adjacency and is never counted. (Witnessed on #591: nine `fix:` commits
+  touched `githooks/pre-push` / `wave_reconcile.py` in one window; one was a member.) A
+  docs/reconcile commit that merely names the umbrella number needs a second signal.
 - *reopens* — `reopened` events on member issues in the interval.
-- *repeat_fixes* — `fix:`/`hotfix:` commits in the interval touching a `paths` entry or closing a
-  member, counted from the **second** such commit within the interval (the first post-cutoff fix
-  is never a repeat). A revert is counted under *reverts* only.
-- *reverts* — `revert:` commits or PRs in the interval reverting a member commit or touching a
-  `paths` entry.
+- *repeat_fixes* — member `fix:`/`hotfix:` commits in the interval, counted from the **second**
+  one (the first post-cutoff fix is never a repeat). A revert is counted under *reverts* only.
+- *reverts* — member `revert:` commits or PRs in the interval.
 - *size* — distinct members with at least one in-interval event; a PR and its merge commit are one.
 - *comments* — raw count of in-interval comments on members.
 - *open_days* — raw days for the oldest still-open member from `max(created, window start,

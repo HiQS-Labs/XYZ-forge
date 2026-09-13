@@ -177,8 +177,12 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
    says a class of bugs has one root cause; "umbrella closed" is not evidence the class stopped
    (the #591 chain closed two fixes and each exposed the next break). Radar is the only thing
    that measures it.
-   - Discover: `gh issue list --state all --limit 200 --search 'Umbrella: in:title'`. Report the
-     count as this signal's yield.
+   - Discover: `gh issue list --state all --limit 200 --search 'Umbrella: in:title'`, then keep
+     only titles that **begin** with `Umbrella:` (case-insensitive) — whack-a-mole's
+     `gh issue create --title "Umbrella: <mechanism>"` form. `MARATHON umbrella:`,
+     `[Umbrella]`, `… — tracking umbrella` and the like are other tools' groupings with no
+     churn claim and are excluded, not reconstructed. Report the yield as `N hits, M
+     whack-a-mole-form` (witnessed: 10 hits, 1 umbrella).
    - Read each body's `### Cluster signature` block — the contract lives in
      `skills/whack-a-mole/SKILL.md` §6 (keys `cluster run window weights paths errors issues
      commits signals`, JSON-array lists). A block present but unparseable is a **parser
@@ -192,7 +196,9 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
      still firing after the cutoff, the umbrella cannot read as solved whatever the score.
    - Count with whack-a-mole's counting rules (§6 of that file, "Counting rules for a
      re-score"): interval = this radar window intersected with strictly-after-cutoff; membership
-     = its §3 two-signal rule; the six raw fields as counted; score with the **default** weights
+     = its §3 two-signal rule and it gates every count (a `fix:` that merely touches a
+     signature path is adjacency, not a repeat fix); the six raw fields as counted; score with
+     the **default** weights
      (`3·reopens + 3·repeat_fixes + 4·reverts + size + floor(comments/5) + floor(open_days/7)`)
      even when the block's `weights:` line differs — a non-default line only marks the baseline
      `filed-custom (non-comparable)`.
