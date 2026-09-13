@@ -507,9 +507,13 @@ jobs:
 
   # GH-396 Phase 4 — Vendored smoke gate: verifies the vendored .xyz/ layout end-to-end in CI.
   # Blocking on development and main (continue-on-error: false).
+  # GitHub-hosted on purpose: this is the only merge-blocking job, and a third-party runner pool
+  # that silently stops claiming jobs (StarSling, 2026-09-12: no runner for 20h, 5 runs queued,
+  # two PRs landed on local evidence) must not be able to stall the trunk. The advisory
+  # canary-ubuntu job above keeps the StarSling label for the speed comparison.
   vendored-smoke:
     name: vendored smoke gate (blocking on development + main)
-    runs-on: starsling-ubuntu-24.04-8
+    runs-on: ubuntu-latest
     continue-on-error: false
     timeout-minutes: 15
     steps:
