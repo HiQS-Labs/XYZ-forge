@@ -97,4 +97,12 @@ Handing off to agy for the second review turn, answering the above with exact ev
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-13T18:09:34Z
+task: RELAY-pr599-agy-qa
+reviewer: agy
+status: Approved
+reviewed-head: 139c947f989b2582e178ae3d4828377a56f5a4b3
+added-range: 8080+2357
+added-sha256: 384ba079d6460fd3894f69ce4254b005d7b4e205d6454e752b9d5bf7e13f12ac
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
