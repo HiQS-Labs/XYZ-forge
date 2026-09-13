@@ -1,7 +1,7 @@
 ---
 gh_issue: 603
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/603
-title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, and whack-a-mole skills"
+title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, and unstuck skills"
 status: Proposed (1-INBOX — active)
 created: 2026-09-13
 updated: 2026-09-13
@@ -10,13 +10,14 @@ doc_type: feedback
 goal: >
   Add verbatim 5-point discipline mantra recital blocks, Rung 0 Intake Triage, and Overall Goal
   anchors at the top of skills/merge-cleanup/SKILL.md, skills/start-task/SKILL.md,
-  skills/workhorse/SKILL.md, skills/sop/SKILL.md, and skills/whack-a-mole/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
+  skills/workhorse/SKILL.md, skills/sop/SKILL.md, skills/whack-a-mole/SKILL.md, and
+  skills/unstuck/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
 roadmap_exempt: true
 ---
 
-# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, and whack-a-mole
+# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, and unstuck
 
-Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, and `skills/whack-a-mole/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
+Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, and `skills/unstuck/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
 
 ## 1. Merge-Cleanup Discipline Mantra
 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
@@ -57,6 +58,15 @@ Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors t
 4. **Isolate root-cause invariant via recon (§5).** Apply `/debug-mantra` and `/recon` to trace failure paths end-to-end, uncover the violated architectural invariant (state, ordering, concurrency, boundary), and falsify coincidental file co-location.
 5. **Draft graded umbrella & file on operator approval (§6–§7).** Structure a concrete umbrella remediation plan with evidence-graded findings (**`FACT`** · **`PATTERN`** · **`HYPOTHESIS`**), ordered tasks (repro $\rightarrow$ guard $\rightarrow$ fix $\rightarrow$ sweep $\rightarrow$ verify), and top-tier priority; file the single issue only after explicit operator approval.
 **Overall Goal:** Recurring bug churn eliminated by identifying the single foundational defect behind symptom clusters and obtaining operator approval to file a top-priority, actionable umbrella remediation plan.
+
+## 6. Unstuck Discipline Mantra
+1. **Freeze the cogs (Rung 1).** Immediately stop inventing machinery, abstractions, helpers, review loops, or new plans; preserve working state, and record the true requested outcome, nearest milestone, last real movement, and current time sink.
+2. **Re-anchor the finish line (Rung 2).** State the nearest observable task milestone in one sentence (e.g. "failing test passes", "PR exists", "operator chose A vs B"); strip all self-created prerequisites from the critical path.
+3. **Test the claimed blocker (Rung 3).** Ask *"If this item were fixed now, could the next milestone proceed?"*; strictly classify items as Goal Blocker, Required Correctness/Safety, External Dependency, Polish, or Cog; park cogs/polish and queue genuine blockers into durable intake.
+4. **Choose one goal-moving action (Rung 4).** Select the single smallest bounded action that changes task state (execute accepted step, fix one narrow blocker, use existing seam/command, or ask one crisp operator decision); never create a new plan or bypass safety gates.
+5. **Act once, verify movement & exit (Rung 5).** Execute the single move, check whether the milestone itself changed, emit the structured UNSTUCK receipt, and immediately resume execution (or return to parent `/workhorse` ladder).
+**Overall Goal:** Stalled session interrupted and goal movement restored immediately via the single smallest bounded action that changes the task's observable state, with zero added machinery and zero bypassed safety invariants.
+
 
 
 

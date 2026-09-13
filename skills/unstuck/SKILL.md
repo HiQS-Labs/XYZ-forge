@@ -28,6 +28,23 @@ Activity is not movement. More findings, helpers, review rounds, scaffolding, or
 do not count unless they enable the next milestone or prevent a demonstrated correctness or safety
 failure.
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Unstuck Discipline:**
+> 1. **Freeze the cogs (Rung 1).** Immediately stop inventing machinery, abstractions, helpers, review loops, or new plans; preserve working state, and record the true requested outcome, nearest milestone, last real movement, and current time sink.
+> 2. **Re-anchor the finish line (Rung 2).** State the nearest observable task milestone in one sentence (e.g. "failing test passes", "PR exists", "operator chose A vs B"); strip all self-created prerequisites from the critical path.
+> 3. **Test the claimed blocker (Rung 3).** Ask *"If this item were fixed now, could the next milestone proceed?"*; strictly classify items as Goal Blocker, Required Correctness/Safety, External Dependency, Polish, or Cog; park cogs/polish and queue genuine blockers into durable intake.
+> 4. **Choose one goal-moving action (Rung 4).** Select the single smallest bounded action that changes task state (execute accepted step, fix one narrow blocker, use existing seam/command, or ask one crisp operator decision); never create a new plan or bypass safety gates.
+> 5. **Act once, verify movement & exit (Rung 5).** Execute the single move, check whether the milestone itself changed, emit the structured UNSTUCK receipt, and immediately resume execution (or return to parent `/workhorse` ladder).
+>
+> **Overall Goal:** Stalled session interrupted and goal movement restored immediately via the single smallest bounded action that changes the task's observable state, with zero added machinery and zero bypassed safety invariants.
+
+Then begin work.
+
+---
+
 ## The five-rung recovery ladder
 
 ```text
