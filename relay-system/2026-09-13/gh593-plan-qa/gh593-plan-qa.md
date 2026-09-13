@@ -3,7 +3,7 @@ Goal: Plan QA — GH-593 radar re-scores whack-a-mole umbrellas
 Date: 2026-09-13
 Producer: claude-a
 Reviewer: codex
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ---
 
@@ -280,3 +280,32 @@ Round 4 (operator-authorized): confirm 2, 5 and 6 are closed, or cite the exact 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Reviewer — codex (round 4)
+
+**Changes requested — findings 2 and 5 are closed; finding 6 has one remaining witness correction.** The scoring design is now consistent on the previously disputed weights, interval and raw arithmetic. Correct the two witness rows below within step 7; no additional subsystem is needed.
+
+Evidence: read the current plan, both target skills and LESSONS-LEARNED.md in full; checked the embedded requirements, prior review dispositions and rating policy. This is static plan QA, using the SWE and debug-mantra plan-review lenses. No graph tools are exposed in this session, so the Markdown evidence is from direct line-numbered source reads. No git command, radar run, project script or gate was executed. Remote #591/#293 observations remain producer-reported. Citations below use `P` = `PROJECT/2-WORKING/GH-593-RADAR-UMBRELLA-RESCORE.md`, `W` = `skills/whack-a-mole/SKILL.md`, and `R` = `skills/radar/SKILL.md`.
+
+1. **Recon grounding — OK, with the existing evidence limits.** W:155–158 contains the three Evidence bullets; W:85–90 supplies the six weights; W:105 says *above* 5; W:187 suggests the re-run. Radar's seven signals start at R:121,134,143,144,152,154,161; R:405 requires a fix naming the seam; R:440–448 has no whack-a-mole row. P:147–149 preserves the disclosed equality difference. LESSONS-LEARNED.md:12–23 supports the motivating mechanism; P:66–70's full remote-body observation is not independently verified here.
+
+2. **Requirement coverage — OK; round-3 finding 2 closed.** P:196–198 now explicitly uses decision 2's default weights for `now`, with filing weights confined to baseline metadata (P:105–111). P:236–237 requires the witness to vary filing weights while keeping evidence fixed and show `now` unchanged. The required row core and named extensions remain at P:201–213. The three numbered changes map to implementation steps 1, 3–4 and 4; the original five acceptance boxes map to steps 1, 7, 7, 7 and 8. Execution evidence remains owed; finding 6 concerns its specified inputs.
+
+3. **Extend, don't add — OK.** P:172–175,189–192 refines the three no-target clauses at R:37–38,282,350. P:243–247 walks an umbrella-only run into both sink previews and specifies the old-wording negative control. The existing template, two sinks and single confirmation remain the runtime boundary (W:14–15; R:29–32,424). No new script, DB or runtime destination is proposed. Reversibility: Easy for the prose edits.
+
+4. **Design decisions — OK; continuity finding remains closed.** P:140–158 retains a verified trunk cutoff, the operational-evidence veto, distinct UTC dates, reset rules and the exposure caveat. The strongest counterarguments remain merge without deployment and two overlapping observations with little elapsed exposure; the plan acknowledges both. P:161–166 keeps umbrella rows out of the target formula while allowing their active evidence into ordinary ranking, addressing the counterargument that recurrence could disappear from prioritization.
+
+5. **Signature/counting contract — OK for the round-3 corrections; finding 5 closed.** P:118–123 explicitly assigns the counting contract to whack-a-mole and intersects the radar window with `event time > cutoff`; it excludes both pre-window churn and the fixing merge. P:133–139 keeps comments/days raw, spells out the single score calculation and gives the 10/14 → 2+2 arithmetic. P:134–135 clips age and specifies zero when no member remains open. The block serialization and canonical membership rules remain at P:87–117. These instructions resolve the specific interval and double-division defects; the inconsistent example below is in the witness, not this decision.
+
+6. **Falsifiability — Fix (Proof); finding 6 partly closed.** P:224–233 now supplies a dated opening for each member, a dated reopen, all raw fields, and the specific event removed for the score-4 counterpart. The original 5/4 threshold control and the persistence/legacy controls are adequately specified. Two parts of the added witness still need correction:
+
+   - **P:235–236 cannot be derived from its stated event fixture.** It adds `open_days=14` to the first case, but P:229 says both members are closed, requiring `open_days=0` under P:135. Even changing one to open cannot produce 14 days with the Sep 1 cutoff and Sep 13 end (at most 12 elapsed days), and the earliest stated creation is Sep 3. Merely assigning raw fields would test arithmetic while bypassing the age-counting rule. Cheapest fix: make this an explicitly separate synthetic fixture with consistent timestamps and state. For example, window Aug 23 00:00Z–Sep 13 00:00Z, cutoff Aug 29 00:00Z; retained member created Aug 30 00:00Z, closed Sep 7 and reopened Sep 8, still open at window end; second member opened Sep 5 and closed Sep 6; ten distinct comments on Sep 9; no fix/revert events. This derives `reopens=1 repeat_fixes=0 reverts=0 size=2 comments=10 open_days=14 score=9`. Keep its membership evidence and event overlay explicitly distinguished as in the existing control.
+   - **P:234–235 tests the cutoff, not the requested old-fix/out-of-window case.** Moving the cutoff forward to Sep 10 excludes all three events even under the previously defective `[cutoff, window end]` rule, so it cannot catch loss of the radar-window lower bound. Keep that useful case and add the previously requested counterexample: window Aug 23–Sep 13, cutoff Aug 1, one member reopen on Aug 10, member closed before window start, no in-window events. Correct counts are all zero; the old interval incorrectly counts the reopen and member, scoring 4. The PR witness should show that restoring the old interval fails this expected-zero case.
+
+   The original five acceptance boxes otherwise retain nonempty failing inputs: deleted block/key, discovered #591 omitted or given a fabricated baseline, score-5 closed umbrella struck/solved, a forbidden write, and a named gate returning nonzero (P:187–188,219–249,250–268). The PR must carry the actual walkthrough results; this review establishes planned coverage only.
+
+7. **Rating — OK as the previously accepted limited estimate.** P:279–291 follows the pri/sev/appeal/effort policy at skills/start-task/SKILL.md:172–193, attributes the receipt counts, and separates unknown history from zero. No new evidence warrants changing `60/55/50/80`.
+
+Round-4 disposition: **2 closed; 5 closed; 6 partly closed — per-member events fixed, but nonzero-age inputs and the old-fix/window-bound control need the exact corrections above.** This verdict returns the token to the producer; it does not request or authorize another automated review round.
+
+VERDICT: Changes requested
