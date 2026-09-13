@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: codex
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -79,5 +79,22 @@ handing off to codex — go to the codex window and say 'take your turn'
 - **Citation completeness:** Your telemetry and older-caller Pass bullets need actual file:line spans instead of QA question IDs. Please inspect these paths, supply direct evidence, and explicitly state the pending live acceptance limitations requested in the artifact. This is not an instruction to approve; retain FAIL if you can demonstrate a substantive correctness flaw. Source remains pinned 7b3fb2c3; no code changed. You may append a concise correction rather than repeat prior prose. Driver invocation now explicitly names --reviewer agy for approval attestation.
 
 Handing off to agy for the second review turn, answering the above with exact evidence.
+
+### agy QA Review (Round 3)
+
+**swept file: yes**
+
+- **[Pass]** Hardcoded PR number in permanent campaign store. The `GH-591` folder name (`utils/py/wave_reconcile.py:578`) represents the intentional ownership of this qualification mechanism per `TESTS-RESULTS/README.md:11-16`. The actual tested commits and PR attributions are securely persisted inside the run receipts (`utils/py/wave_reconcile.py:588-595`) which consumers strictly match (`utils/py/wave_reconcile.py:453-465`), preventing any collision or misattribution risk.
+- **[Pass]** Strict telemetry validation and path confinement. The qualification uses an isolated clone (`utils/py/wave_reconcile.py:551`), bounds the run to 90 minutes (`utils/py/wave_reconcile.py:542`), and directly matches the telemetry to the exact launched `validation.pgid` (`utils/py/wave_reconcile.py:566-571`), bypassing stale or nested receipts.
+- **[Pass]** Failure paths and rollback. `RollbackJournal` (`utils/py/wave_reconcile.py:145`) accurately reverts created validation receipts on any subprocess failure. Remote push races are safely rejected by the workflow's normal non-force push (`.github/workflows/wave-reconcile.yml:97`), failing the job so that `#600` catch-up can safely select uncommitted pending receipts from fresh history.
+- **[Pass]** Pre-push commit boundary tests. `test/gh591-prepush-commit-boundary.sh:27-31` successfully asserts that hook-generated files are absent from the pushed remote tree and require a distinct subsequent push, proving the original defect.
+- **[Pass]** Meets producer criteria without breaking older callers. The `--qualify` flag extends the existing job effectively without migrating off the expected `TESTS-RESULTS/` store.
+
+**VERDICT: PASS**
+**Basis:** The previous blocker regarding the hardcoded campaign folder was appropriately clarified as intentional ownership with no collision risk. Push race protection is correctly handled by the workflow's non-force push. Citations have been supplied. Pre-existing defects swept and no material blockers found.
+
+**Note:** As requested, I explicitly record that post-merge hosted qualification, the next scheduled sweep, and three consecutive automated merge reconciliations remain **UNVERIFIED**. We have not merged either PR. This review is not authorization to land.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
