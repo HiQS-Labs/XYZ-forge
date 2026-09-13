@@ -38,3 +38,5 @@ Full normal pre-push gate: **374/374 passed** at `ea0a4e687d652c4e72ac5a71d938b2
 
 The actual full run also produced nested validator telemetry. The producer now binds selection to
 the launched process PID and run ID; `nested-telemetry-red.log` witnesses the old ambiguity.
+
+Published diagnostic copies redact local username, home/clone roots and hostname. Original local logs remain outside Git; result values, run IDs and test counts are unchanged. These diagnostic copies are not machine-generated reconciliation receipts.

@@ -405,7 +405,7 @@ Running python3 -m pytest test/test_python_layer.py
 platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
 cachedir: .pytest_cache
 hypothesis profile 'default'
-rootdir: /Users/noelsaw/marathon-clones/gh591-reconciler
+rootdir: <clone-root>/gh591-reconciler
 configfile: pytest.ini
 plugins: hypothesis-6.167.1, anyio-4.13.0
 collecting ... collected 21 items
@@ -446,7 +446,7 @@ Running gamma-poison fixture staleness probe
 ===============================
 Summary
 ===============================
-telemetry: /Users/noelsaw/marathon-clones/gh591-reconciler/.tick/telemetry/validate-parallel-1789316513914-72522.jsonl (374 suite events, 371 registered)
+telemetry: <clone-root>/gh591-reconciler/.tick/telemetry/validate-parallel-1789316513914-72522.jsonl (374 suite events, 371 registered)
 passed: 374 / 374
   + projection-idempotent.sh
   + concurrent-claim.sh
