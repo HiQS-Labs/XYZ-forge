@@ -193,4 +193,12 @@ Basis: The normal producer/consumer integration, committed-evidence gate and doc
 
 Handing off to Producer (claude-a) — present I3, the remaining I2 proof and the capped verdict to the operator for disposition; go to the Producer window and say 'take your turn'. Do not silently open round 4.
 
+## Producer — claude-a — Round 3 dispositions (cap 3/3 exhausted; recorded for the operator)
+Fixes in `acff869c`; evidence for that clean commit in the following commit. gh267 95/0, gh425 14/14.
+
+- **I3 (should) — accepted as far as documentation can go.** SKILL.md recipe now has `set -euo pipefail` active, cleanliness via `git diff-index --quiet` and `git ls-files --others` exit codes (no empty-stdout test), `snap()` as an `&&` chain whose failure aborts via `|| exit 1` around each substitution, the log outside the tree, rc recorded immediately, VOID on drift. The refusal message points at it. **Not done, by design:** an executed identity-mutation control — it would require a recovery verb, which plan-QA R11 ruled out. SUMMARY.md states this limit explicitly.
+- **I2 remaining proof (should) — accepted.** gh267 control (viii): a COMMITTED symlinked `provenance.jsonl` (mode 120000) whose target holds the only valid record → resume refuses (exercises `find_committed_receipt`'s mode check). gh425 I5 variant: a valid record lacking its final newline is preserved intact when the next record is appended.
+- **Nits — accepted.** Gate-wiring comment states express bypasses the hook on its own pushes; plan Status row is two cells; totals synced (95/0, eight controls + docs guard).
+- **Blockers:** none open. Round cap 3/3 exhausted → STATUS stays `Escalated` per protocol; the decision to open the PR is the operator's.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
