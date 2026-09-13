@@ -2,7 +2,7 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-09-07
+updated: 2026-09-12
 owner: noelsaw
 doc_type: architecture
 summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap query pipeline and the adoption gate for derived views.
@@ -44,6 +44,7 @@ without reading all of them first.
 | [agent-chorus](skills/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ate](skills/ate/SKILL.md) | Drive bounded, unattended variation-test matrices and roll findings into one issue. |
 | [better-options](skills/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
+| [catchup](skills/catchup/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [ci-doctor](skills/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [consult](skills/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [debug-mantra](skills/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
@@ -84,6 +85,7 @@ without reading all of them first.
 | [vendor-stack](skills/vendor-stack/SKILL.md) | Install the XYZ harness + optional PDDA runtime into a target repo. |
 | [vscode-color](skills/vscode-color/SKILL.md) | Assign a stable per-repository VS Code workspace tint. |
 | [weekly-shipped](skills/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
+| [whack-a-mole](skills/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 | [xyz](skills/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 
 ## Verified Scope
