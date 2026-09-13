@@ -18,7 +18,10 @@ SQLite `mode=ro`, never migrates or creates one, and reports schema readiness, c
 current lifecycle, and the latest unsuperseded non-backfill start observation. The default
 activity window is three days (`--stale-days N`); stale or malformed observations are
 **unverified**, never evidence that work is idle. The board policy's Done window is a separate
-seven-day setting.
+seven-day setting. Diagnostics inspect the SQLite header before opening and refuse a WAL-format
+database even when no `-wal`/`-shm` sidecars currently exist; checkpoint it deliberately first.
+Informational backfills, metadata-only updates, and re-ratings remain visible as the latest event
+but do not supersede a genuine lifecycle transition.
 
 Repair in this order: run `releases check` and recover any interrupted write; deliberately run
 `releases migrate` if status reports schema 7; rerun `releases work status`; review
@@ -38,6 +41,9 @@ policy-managed board refuses raw event replay. GitHub Projects does not offer an
 compare-and-swap across devices, so the lock cannot exclude another device: every item ID and
 status is re-read immediately before mutation. An unmatched intent or interrupted/indeterminate
 request must be read back and freshly previewed, never blindly retried or overwritten.
+Project lookup uses GitHub's `repositoryOwner` union for either user or organization boards, and
+event connectors carry each event's recorded repository identity instead of guessing from the
+first configured repository.
 
 ## Re-pointing a release's tracking issue (GH-222)
 

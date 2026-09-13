@@ -547,8 +547,8 @@ TESTS=(
   "gh421-auto-wave-reconcile.sh"      # GH-421 (post-merge CI auto-trigger for wave_reconcile.py; idempotent repeat, no re-shipped ledger writes)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
-  "test_gh605_work_state.py"          # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
-  "test_gh605_board_policy.py"        # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
+  "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
+  "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
   "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
   "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
@@ -1199,17 +1199,6 @@ trap runner_envelope_scrub EXIT
 # reference must be lane-serialized here or carry an audited fixture-root exemption.
 DRIVER_LOCK_LANE=" gh289-target-root-build-turn.sh gh322-unknown-arg-rejection.sh gh331-cost-summary.sh gh346-gateway-allowlists.sh gh391-emit-marathon-yaml.sh poll-relay.sh relay-artifact-file.sh relay-escalation-not-stall.sh relay-review-once.sh relay-target-root-newfile.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root.sh relay-token-collision.sh relay-untracked-file-warn.sh relay-xyz-skill-guard.sh "
 
-# Most suites are shell; GH-605 adds two focused stdlib-unittest files without introducing
-# wrapper scripts solely to change interpreters. One dispatcher keeps pooled, retry and sequential
-# invocation byte-for-byte equivalent. VALIDATE_HERE is exported for pool workers below.
-validate_run_suite() {
-  case "$1" in
-    *.py) PYTHONDONTWRITEBYTECODE=1 $NICE_CMD python3 -B "$VALIDATE_HERE/test/$1" ;;
-    *)    $NICE_CMD bash "$VALIDATE_HERE/test/$1" ;;
-  esac
-}
-export -f validate_run_suite
-
 if [ -n "$PARALLEL_JOBS" ]; then
   # Workers and the lane subshell each append to their OWN shard (RT_SHARD=1): no process writes
   # a file another process is writing, so no append-atomicity assumption survives from here on.
@@ -1236,7 +1225,7 @@ if [ -n "$PARALLEL_JOBS" ]; then
     # for every suite is what makes the pool/lane/serial-re-run verdicts comparable.
     # GH-35: $NICE_CMD (unquoted, a scheduling HINT) keeps workers below interactive priority.
     _s="$(rt_now_ms)"
-    if validate_run_suite "$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
+    if $NICE_CMD bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
     printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
     rt_suite "$lane" "$t" "$_s" "$(rt_now_ms)" "$rc" "$log"
     echo "[parallel] $t rc=$rc"
@@ -1309,7 +1298,7 @@ if [ -n "$PARALLEL_JOBS" ]; then
     echo "$why: $t — re-running it alone to see if that verdict survives"
     echo "==============================="
     _s="$(rt_now_ms)"
-    if VALIDATE_HERE="$HERE" validate_run_suite "$t" > "$log.serial" 2>&1 </dev/null; then
+    if $NICE_CMD bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
       rc_alone=0
       PASSED+=("$t")
       CONTENDED+=("$t")
@@ -1365,7 +1354,7 @@ for t in "${RUN_TESTS[@]}"; do
   echo "Running $t"
   echo "==============================="
   _s="$(rt_now_ms)"
-  if VALIDATE_HERE="$HERE" validate_run_suite "$t"; then
+  if $NICE_CMD bash "$HERE/test/$t"; then
     PASSED+=("$t")
     rt_suite sequential "$t" "$_s" "$(rt_now_ms)" 0 ""
   else

@@ -29,6 +29,7 @@ Design invariants (each named by the plan's QA, relay 2026-09-02):
 
 import argparse
 import datetime as dt
+import errno
 import hashlib
 import json
 import os
@@ -257,6 +258,15 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
                 linked = gh.get(ref_ident)
                 if not linked or str(linked.get("state") or "").upper() != "OPEN":
                     continue
+                linked_rows = ledger_by.get(ref_ident, [])
+                linked_section = (str(linked_rows[0].get("section") or "").strip().lower()
+                                  if len(linked_rows) == 1 else "")
+                if (ref_ident in duplicates or len(linked_rows) != 1
+                        or linked_section.startswith("completed")
+                        or linked_section.startswith("deferred")):
+                    unresolved.append({"identity": ref_ident,
+                                       "reason": "linked PR cannot override ambiguous or terminal ledger identity"})
+                    continue
                 if not item.get("draft"):
                     targets[ref_ident], reasons[ref_ident] = policy["in_review"], "open non-draft closing PR"
                 elif (targets.get(ref_ident) != policy["in_review"] and
@@ -323,6 +333,9 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
             if not isinstance(score, int) or isinstance(score, bool) or not 4 <= score <= 400:
                 score = sum(axes)
             ready.append((ident, row, score))
+        elif board_by.get(ident, {}).get("status") == policy["ready"]:
+            unresolved.append({"identity": ident,
+                               "reason": "unrated Ready card preserved as unknown"})
     ready.sort(key=lambda x: (-x[2], x[0][0].casefold(), x[0][2], str(x[1].get("global_id") or "")))
     selected = {ident for ident, _, _ in ready[:policy["ready_top_n"]]}
     for ident, _, _ in ready:
@@ -337,7 +350,7 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
         if ident in duplicates:
             continue
         # Old/NOT_PLANNED terminal rows are never added merely to place them in Backlog.
-        if before is None and target == policy["backlog"]:
+        if ident not in board_by and target == policy["backlog"]:
             continue
         if before != target:
             changes.append({"identity": list(ident), "item_id": board_by.get(ident, {}).get("item_id"),
@@ -578,23 +591,22 @@ def resolve_ids(cfg, force=False, cache=True):
         # later with a KeyError in the middle of a status write.
         ids = {}
     if not ids:
-        # GH-405: ask for BOTH owner shapes in one round trip. `user(login:)` returns null
-        # for an organization and vice versa, so the v1 user-only query could never reach an
-        # org board — and this repo's own owner (HiQS-Labs) is an org, which is why the mock
-        # models both (mock_gh_board.py:100-108). One query, no extra call, no guessing.
+        # GitHub's RepositoryOwner union resolves both users and organizations without asking
+        # for a nonexistent concrete owner shape (which GraphQL reports as an error).
         data = _gql(
-            "query($o:String!,$n:Int!,$f:String!){user(login:$o){projectV2(number:$n){id "
-            "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}} "
-            "organization(login:$o){projectV2(number:$n){id "
-            "field(name:$f){... on ProjectV2SingleSelectField{id options{id name}}}}}}",
+            "query($o:String!,$n:Int!,$f:String!){repositoryOwner(login:$o){"
+            "... on User{projectV2(number:$n){id field(name:$f){"
+            "... on ProjectV2SingleSelectField{id options{id name}}}}}"
+            "... on Organization{projectV2(number:$n){id field(name:$f){"
+            "... on ProjectV2SingleSelectField{id options{id name}}}}}}}",
             {"o": cfg["project_owner"], "n": int(cfg["project_number"]), "f": cfg["status_field"]},
         )
-        owner = data.get("user") or data.get("organization") or {}
+        owner = data.get("repositoryOwner") or {}
         proj = owner.get("projectV2")
         if proj is None:
             raise RuntimeError(
                 f"project {cfg['project_owner']}/{cfg['project_number']} not found "
-                f"as either a user or an organization"
+                f"as a repository owner"
             )
         field = proj.get("field")
         if field is None:
@@ -636,7 +648,7 @@ def fetch_board_items(cfg, cache=True):
         "items(first:100,after:$cur){pageInfo{endCursor hasNextPage}nodes{id "
         "content{__typename ... on Issue{number repository{nameWithOwner}} "
         "... on PullRequest{number repository{nameWithOwner}}} "
-        "fieldValueByName(name:$f){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}}"
+        "fieldValueByName(name:$f){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}"
     )
     base_vars = {"id": ids["project"], "f": cfg["status_field"]}
     cur, issues, seen_cursors = None, [], set()
@@ -774,6 +786,8 @@ def board_add(cfg, num, write, snapshot=None):
             _warn(f"status write failed ({exc}); re-resolved IDs and succeeded")
         if snapshot is None:
             fetch_board_issues(cfg)  # refresh snapshot post-write
+        else:
+            existing["status"] = cfg["in_progress"]
         return f"gh-{num}: card existed as {existing.get('status')!r} — set Status={cfg['in_progress']!r} on {board_name}"
     if not write:
         return f"gh-{num} ({issue['state']}): dry-run — would add + set {cfg['in_progress']!r} on {board_name}"
@@ -792,6 +806,10 @@ def board_add(cfg, num, write, snapshot=None):
         _warn(f"first attempt failed ({exc}); re-resolved IDs and succeeded")
     if snapshot is None:
         fetch_board_issues(cfg)  # refresh snapshot post-write
+    else:
+        snapshot[(repo, num)] = {"repo": repo, "num": num, "number": num,
+                                 "kind": "issue", "item_id": item_id,
+                                 "status": cfg["in_progress"]}
     return f"gh-{num}: added + Status={cfg['in_progress']!r} on {board_name}"
 
 
@@ -852,16 +870,17 @@ def set_issue_status(cfg, num, column, write=True, snapshot=None, audit=None,
         return (f"gh-{num}: dry-run — would set {column!r} on {board_name} "
                 f"(currently {existing.get('status') if existing else 'not on the board'!r})")
     item_id = existing.get("item_id") if existing else None
+    # Resolve and validate the destination before an add. The outer policy preflight is not
+    # sufficient for legacy callers or a column disappearing between planning and this seam.
+    ids, option = option_id_for(cfg, column, force=policy_mode)
     if item_id is None:
         issue = content_node(cfg, repo, num, kind)
-        ids = resolve_ids(cfg, force=policy_mode, cache=not policy_mode)
         item_id = _add_item(cfg, ids, issue["id"], audit=audit)
         if on_added is not None:
             on_added(item_id)
         if snapshot is not None:
             snapshot[(repo, kind, num)] = {"repo": repo, "num": num, "number": num,
                                            "kind": kind, "item_id": item_id, "status": None}
-    ids, option = option_id_for(cfg, column, force=policy_mode)
     try:
         _set_status_option(cfg, ids, item_id, option, audit=audit)
     except RuntimeError as exc:
@@ -1040,8 +1059,10 @@ def _write_json(path, value):
                 os.fsync(directory_fd)
             finally:
                 os.close(directory_fd)
-        except OSError:
-            pass  # Some filesystems do not support directory fsync.
+        except OSError as exc:
+            if exc.errno not in (errno.EINVAL, getattr(errno, "ENOTSUP", errno.EINVAL),
+                                 getattr(errno, "EOPNOTSUPP", errno.EINVAL)):
+                raise
     except BaseException:
         try:
             os.unlink(tmp)
@@ -1081,14 +1102,17 @@ def _preview_age_ok(preview):
 
 
 def _unmatched_intents(operations):
-    intents, results = {}, set()
+    intents, results, indeterminate = {}, set(), []
     for entry in operations or []:
         request_id = entry.get("request_id") if isinstance(entry, dict) else None
         if request_id and entry.get("phase") == "intent":
             intents[request_id] = entry
         elif request_id and entry.get("phase") == "result":
             results.add(request_id)
-    return [entry for request_id, entry in intents.items() if request_id not in results]
+            if entry.get("outcome") == "indeterminate":
+                indeterminate.append(entry)
+    return ([entry for request_id, entry in intents.items() if request_id not in results]
+            + indeterminate)
 
 
 def apply_policy_preview(root, preview_path, result_path):
@@ -1198,7 +1222,7 @@ def restore_policy_result(result_path, write=False, move_added_to_backlog=False,
     unmatched = _unmatched_intents(operations)
     proposed, warnings, residual = [], [], []
     if unmatched:
-        warnings.append("%d remote request intent(s) lack a result; fresh readback required"
+        warnings.append("%d remote request(s) lack a conclusive result; fresh readback required"
                         % len(unmatched))
     for old in reversed(changes):
         repo, kind, number = old["identity"]
@@ -1267,7 +1291,8 @@ def restore_policy_result(result_path, write=False, move_added_to_backlog=False,
                     _set_status_option(cfg, ids, live[0]["item_id"], option, audit=audit)
                 restore_record["outcome"] = "success"
                 _write_json(report_path, report)
-            report["status"] = "partial" if warnings else "complete"
+            report["status"] = ("indeterminate" if unmatched or _unmatched_intents(report["operations"])
+                                else "partial" if warnings else "complete")
             _write_json(report_path, report)
         except Exception as exc:
             report["status"] = ("indeterminate" if isinstance(exc, IndeterminateMutation)

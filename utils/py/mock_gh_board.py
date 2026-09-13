@@ -118,15 +118,13 @@ def handle_graphql(query, variables, state, state_path):
             ]
         }
 
-    # 1. user(login) / organization(login) -> projectV2(number) -> field
+    # 1. repositoryOwner(login) union -> projectV2(number) -> field
     if "projectV2" in query and "SingleSelectField" in query:
         owner = variables.get("o", state["project_owner"])
         number = int(variables.get("n", state["project_number"]))
         field_name = variables.get("f", "Status")
         proj = resolve_project_v2_field(state, owner, number, field_name)
-        if state.get("is_org"):
-            return {"data": {"user": None, "organization": {"projectV2": proj}}}
-        return {"data": {"user": {"projectV2": proj}, "organization": None}}
+        return {"data": {"repositoryOwner": {"projectV2": proj}}}
 
     # 2. repository(owner, name) -> issue/pullRequest(number)
     if "repository(owner:" in query and ("issue(number:" in query or "pullRequest(number:" in query):

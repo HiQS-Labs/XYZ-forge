@@ -31,9 +31,10 @@ class ClassifierTests(unittest.TestCase):
         conn = sqlite3.connect(":memory:")
         conn.row_factory = sqlite3.Row
         conn.execute("""CREATE TABLE roadmap_items(global_id TEXT,gh_number INTEGER,
+                     repo_id INTEGER,
                      status_marker TEXT,section TEXT,rating_pri INTEGER,rating_sev INTEGER,
                      rating_appeal INTEGER,rating_effort INTEGER)""")
-        conn.execute("INSERT INTO roadmap_items VALUES('g',1,'🚧','In progress',1,1,1,1)")
+        conn.execute("INSERT INTO roadmap_items VALUES('g',1,7,'🚧','In progress',1,1,1,1)")
         current = conn.execute("SELECT * FROM roadmap_items").fetchone()
         event = app._extract_roadmap_update(conn, "roadmap-update", "g", current)
         self.assertEqual(event[0], "updated")
@@ -42,6 +43,7 @@ class ClassifierTests(unittest.TestCase):
         event = app._extract_roadmap_update(conn, "roadmap-update", "g", current)
         self.assertEqual(event[0], "completed")
         self.assertTrue(event[2]["transition"])
+        self.assertEqual(event[3], 7)
         conn.close()
 
 
@@ -96,6 +98,19 @@ class EvidenceTests(unittest.TestCase):
                        "2026-09-13T00:00:00Z", 2)
         report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
         self.assertIsNone(report["issues"][0]["recent_start"])
+
+    def test_backfill_rerating_and_metadata_do_not_supersede_a_real_start(self):
+        self.add_event("in_flight", {"source": "roadmap-update", "transition": True},
+                       "2026-09-12T12:00:00Z", 1)
+        for event, payload in (
+            ("in_flight", {"source": "backfill", "transition": True}),
+            ("rated", {"rated": "90/80/70/60"}),
+            ("updated", {"source": "roadmap-update", "transition": False}),
+        ):
+            self.add_event(event, payload, "2026-09-13T00:00:00Z")
+            report = app.load_work_evidence(self.db, as_of="2026-09-13T12:00:00Z")
+            self.assertEqual(report["issues"][0]["activity"], "recent")
+            self.assertEqual(report["issues"][0]["latest_event"]["event"], event)
 
     def test_mismatched_issue_url_cannot_supply_activity(self):
         conn = sqlite3.connect(self.db)
@@ -161,11 +176,21 @@ class EvidenceTests(unittest.TestCase):
     def test_read_only_uri_handles_space_hash_and_question_mark(self):
         odd_dir = self.root / "space # question ?"
         odd_dir.mkdir()
+        (odd_dir / ".git").mkdir()
         odd_db = odd_dir / "releases #?.db"
         shutil.copy2(self.db, odd_db)
         report = app.load_work_evidence(odd_db, as_of="2026-09-13T12:00:00Z")
         self.assertTrue(report["schema_ready"])
         self.assertEqual(len(report["issues"]), 1)
+
+    def test_unsupported_root_returns_structured_unready(self):
+        unsupported = self.root / "unsupported"
+        unsupported.mkdir()
+        unsupported_db = unsupported / "releases.db"
+        shutil.copy2(self.db, unsupported_db)
+        report = app.load_work_evidence(unsupported_db, as_of="2026-09-13T12:00:00Z")
+        self.assertFalse(report["schema_ready"])
+        self.assertIn("unsupported ledger root", report["error"])
 
     def test_sidecar_refuses_before_open(self):
         (Path(str(self.db) + "-wal")).write_bytes(b"nonempty")
@@ -184,6 +209,30 @@ class EvidenceTests(unittest.TestCase):
         self.assertFalse(report["schema_ready"])
         self.assertEqual(report["schema_version"], 7)
         self.assertEqual(old.read_bytes(), before)
+
+    def test_wal_header_without_sidecars_refuses_before_open_for_schema_seven_and_eight(self):
+        for version in (7, 8):
+            wal_db = self.root / ("wal-%s.db" % version)
+            if version == 8:
+                shutil.copy2(self.db, wal_db)
+                conn = sqlite3.connect(wal_db)
+            else:
+                conn = sqlite3.connect(wal_db)
+                conn.execute("CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY,applied_at TEXT)")
+                conn.execute("INSERT INTO schema_migrations VALUES(7,'2026-09-01T00:00:00Z')")
+                conn.commit()
+            self.assertEqual(conn.execute("PRAGMA journal_mode=WAL").fetchone()[0].lower(), "wal")
+            conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            conn.close()
+            for suffix in ("-wal", "-shm"):
+                self.assertFalse(Path(str(wal_db) + suffix).exists())
+            before = wal_db.read_bytes()
+            report = app.load_work_evidence(wal_db, as_of="2026-09-13T12:00:00Z")
+            self.assertFalse(report["schema_ready"])
+            self.assertIn("header uses WAL", report["error"])
+            self.assertEqual(wal_db.read_bytes(), before)
+            self.assertFalse(Path(str(wal_db) + "-wal").exists())
+            self.assertFalse(Path(str(wal_db) + "-shm").exists())
 
     def test_schema_eight_status_preserves_db_dump_config_and_sidecars(self):
         dump = self.root / "releases.sql"

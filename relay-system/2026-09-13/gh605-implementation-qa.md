@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -185,5 +185,61 @@ Append one concise disposition block for every review finding with real implemen
 citations and remaining gaps. Do not self-approve. Leave STATUS Open and NEXT Reviewer;
 release runtime token to codex-author so the parent can execute tests and dispatch Codex round2.
 The driver owns the file-scoped commit. No live apply before independent approval.
+
+## Producer — sol-builder delegated by codex-author — Round 2
+
+Disposition: all seven Blockers and both Should findings were implemented in the existing
+writer/planner seams. No live board/config/network mutation or Git command was performed.
+
+- **Implemented — GraphQL integration.** Project resolution now uses the `repositoryOwner`
+  union with User/Organization fragments (`utils/py/board_sync.py:593-610`), and the project
+  snapshot query is balanced (`:646-652`). The mock follows the real response shape; focused
+  tests exercise both owner kinds, missing owner, and both query balances
+  (`test/test_gh605_board_policy.py:283-313`).
+- **Implemented — genuinely read-only diagnostics.** SQLite WAL format is rejected from bytes
+  before connect and unsupported roots return structured unready output
+  (`utils/py/releases_app.py:5102-5110`, `:5142-5175`). Schema7/schema8 closed-WAL fixtures begin
+  without sidecars and assert no DB/sidecar mutation; the URI-metacharacter fixture owns `.git`
+  metadata (`test/test_gh605_work_state.py:174-229`).
+- **Implemented — lifecycle provenance.** Lifecycle selection skips backfill, metadata-only and
+  informational rating events while retaining them as `latest_event`; only tagged transitions
+  supersede starts (`utils/py/releases_app.py:5086-5099`, `:5224-5230`). Start→backfill,
+  start→re-rating, start→metadata and genuine Queue supersession are pinned in
+  `test/test_gh605_work_state.py:85-112`.
+- **Implemented — mixed-repository ownership.** Roadmap/jog extractors carry their source row's
+  `repo_id` through event insertion (`utils/py/releases_app.py:1424-1489`, `:1560-1570`), and
+  rate/update refuse ambiguous issue-number selectors then mutate by `global_id`
+  (`:3626-3634`, `:3825-3835`). Connector batches join the recorded repo and refuse foreign
+  identities rather than guessing `repos[0]` (`utils/py/work_connectors/__init__.py:127-133`,
+  `utils/py/work_connectors/github_board.py:82-99`).
+- **Implemented — preservation before PR precedence.** A linked PR cannot override duplicate or
+  contradictory terminal ledger identity (`utils/py/board_sync.py:261-274`); independent PR
+  cards retain In review. Reopened and duplicate-ledger link fixtures cover both input shapes
+  (`test/test_gh605_board_policy.py:127-146`).
+- **Implemented — shared writer validation and snapshot honesty.** Destination option resolution
+  occurs before content lookup/add (`utils/py/board_sync.py:874-884`), supplied snapshots advance
+  after successful legacy adds/sets (`:787-812`), and policy mode still refuses blind retries.
+  The zero-add missing-column control is `test/test_gh605_board_policy.py:315-325`.
+- **Modified/implemented — acceptance plumbing; parent evidence remains.** Thin shell entries
+  restore the original all-shell validate runner (`validate.sh:550-551`, `:1228`, `:1301`,
+  `:1357`). Focused tests add nonempty WAL, query-shape, top-N, preservation, identity,
+  response-loss and zero-write cases. This turn ran only the two direct Python fixtures:
+  **52/52 passed**; seven Python files parse via `ast`, and both wrappers plus `validate.sh`
+  pass `bash -n`. Per the containment rail, the parent must run legacy shell suites, witnessed
+  red controls and full validate in a separate full clone; no such outcome is claimed here.
+- **Implemented — unset/unknown decisions.** Existing unset terminal cards are distinct from
+  absent cards, and unrated Ready cards are explicitly unresolved and preserved
+  (`utils/py/board_sync.py:336-353`; `test/test_gh605_board_policy.py:148-159`).
+- **Implemented — durable restore uncertainty.** Explicitly indeterminate results now remain
+  unresolved, and write-mode completion cannot overwrite an existing indeterminate state
+  (`utils/py/board_sync.py:1100-1114`, `:1286-1291`). Existing clear-status, response-loss,
+  residual-add and concurrent-change fixtures remain green.
+
+FAQ and CHANGELOG now describe the implemented WAL, owner-union, repository attribution and
+restore contracts. Remaining gaps are verification-only: parent full-clone gates/red controls,
+independent Reviewer round 2, and later reviewed live Rev.2 application. No self-approval.
+
+Handing off to codex-author: run the separate-full-clone verification, preserve its receipts,
+then dispatch the Codex Reviewer for Round 2; no live apply before independent approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -9,8 +9,8 @@ repo-qualified idempotence check and the board-identity refusal.
 The contract with the parent (`work_connectors/__init__.py`) is deliberately narrow, because
 the parent treats everything here as untrusted:
 
-  stdin   {"connector": name, "config": {...}, "events": [{"id","gh_number","event",
-                                                           "payload","at"}, ...]}
+  stdin   {"connector": name, "config": {...}, "events": [{"id","repo","gh_number",
+                                                           "event","payload","at"}, ...]}
   stdout  advanced_to: <the id of the last event this connector actually applied>
   exit    0 = the batch was applied · non-zero = it was not, and the cursor stays put
 
@@ -89,7 +89,11 @@ def apply_event(cfg, ev, status_map, snapshot):
     if column is None:
         return (True, "event %s (%s): unmapped in status_map — skipped"
                 % (ev.get("id"), ev.get("event")))
-    msg = board_sync.set_issue_status(cfg, int(num), column, write=True, snapshot=snapshot)
+    repo = ev.get("repo")
+    if repo not in cfg.get("repos", []):
+        raise RuntimeError("event %s has unknown repository identity %r" % (ev.get("id"), repo))
+    msg = board_sync.set_issue_status(cfg, int(num), column, write=True, snapshot=snapshot,
+                                      repo=repo)
     return (True, "event %s (%s): %s" % (ev.get("id"), ev.get("event"), msg))
 
 

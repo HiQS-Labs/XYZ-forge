@@ -128,6 +128,36 @@ class PlannerTests(unittest.TestCase):
         self.assertTrue(plan["unresolved"])
         self.assertEqual(len(plan["warnings"]), 2)
 
+    def test_open_pr_does_not_override_reopened_or_duplicate_ledger_issue(self):
+        pr = {"repo": "owner/repo", "kind": "pr", "number": 9, "state": "OPEN",
+              "draft": False, "closing_issues": [{"repo": "owner/repo", "number": 1}]}
+        board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                  "item_id": "i1", "status": "Done"}]
+        for rows in ([ledger(1, 90, section="Completed")], [ledger(1, 90), ledger(1, 80)]):
+            with self.subTest(rows=len(rows)):
+                plan = board_sync.plan_selection_policy(POLICY, rows, board, [issue(1), pr], as_of=AS_OF)
+                issue_changes = [c for c in plan["changes"] if c["identity"][-1] == 1]
+                self.assertFalse(issue_changes)
+                self.assertTrue(any("cannot override" in u["reason"] for u in plan["unresolved"]))
+
+    def test_existing_unset_terminal_card_moves_but_absent_one_is_not_added(self):
+        closed = issue(1, "CLOSED", state_reason="COMPLETED", closed_at="2026-09-01T00:00:00Z")
+        board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                  "item_id": "i1", "status": None}]
+        present = board_sync.plan_selection_policy(POLICY, [], board, [closed], as_of=AS_OF)
+        self.assertEqual(present["changes"][0]["after"], "Backlog")
+        absent = board_sync.plan_selection_policy(POLICY, [], [], [closed], as_of=AS_OF)
+        self.assertFalse(absent["changes"])
+
+    def test_unrated_ready_card_is_reported_and_preserved(self):
+        row = ledger(1, 90)
+        row["ratings"] = {"pri": None, "sev": None, "appeal": None, "effort": None, "ovr": None}
+        board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                  "item_id": "i1", "status": "Ready"}]
+        plan = board_sync.plan_selection_policy(POLICY, [row], board, [issue(1)], as_of=AS_OF)
+        self.assertFalse(plan["changes"])
+        self.assertIn("unrated Ready", plan["unresolved"][0]["reason"])
+
     def test_start_to_park_does_not_manufacture_progress(self):
         rows = [ledger(1, 90, recent_start=None, activity="unknown")]
         plan = board_sync.plan_selection_policy(POLICY, rows, [], [issue(1)], as_of=AS_OF)
@@ -220,6 +250,17 @@ class WriterAuditTests(unittest.TestCase):
                 github_board.run({"config": cfg, "events": [{"id": 1}]})
         fetch.assert_not_called()
 
+    def test_connector_routes_event_by_recorded_repository_identity(self):
+        cfg = {"repos": ["owner/repo", "owner/other"]}
+        event = {"id": 1, "repo": "owner/other", "gh_number": 7, "event": "in_flight"}
+        with mock.patch.object(board_sync, "set_issue_status", return_value="ok") as write:
+            applied, _ = github_board.apply_event(cfg, event, github_board.DEFAULT_STATUS_MAP, {})
+        self.assertTrue(applied)
+        self.assertEqual(write.call_args.kwargs["repo"], "owner/other")
+        with self.assertRaisesRegex(RuntimeError, "unknown repository"):
+            github_board.apply_event(cfg, dict(event, repo="foreign/repo"),
+                                     github_board.DEFAULT_STATUS_MAP, {})
+
     def test_preview_future_timestamp_is_invalid(self):
         preview = {"created_at": "2999-01-01T00:00:00Z", "as_of": "2999-01-01T00:00:00Z"}
         self.assertFalse(board_sync._preview_age_ok(preview))
@@ -231,6 +272,57 @@ class WriterAuditTests(unittest.TestCase):
             {"phase": "result", "request_id": "a"},
         ]
         self.assertEqual([x["request_id"] for x in board_sync._unmatched_intents(operations)], ["b"])
+
+    def test_explicit_indeterminate_result_remains_unresolved(self):
+        operations = [
+            {"phase": "intent", "request_id": "a"},
+            {"phase": "result", "request_id": "a", "outcome": "indeterminate"},
+        ]
+        self.assertEqual(board_sync._unmatched_intents(operations)[0]["outcome"], "indeterminate")
+
+    def test_resolver_uses_repository_owner_union_and_valid_balanced_query(self):
+        cfg = {"project_owner": "owner", "project_number": 4, "status_field": "Status",
+               "in_progress": "In progress", "repos": ["owner/repo"]}
+        project = {"id": "p", "field": {"id": "f", "options": [
+            {"id": "ip", "name": "In progress"}, {"id": "r", "name": "Ready"}]}}
+        for owner_kind in ("User", "Organization"):
+            seen = []
+            def gql(query, variables):
+                seen.append(query)
+                return {"repositoryOwner": {"__typename": owner_kind, "projectV2": project}}
+            with mock.patch.object(board_sync, "_gql", side_effect=gql):
+                ids = board_sync.resolve_ids(cfg, force=True, cache=False)
+            self.assertEqual(ids["project"], "p")
+            self.assertIn("repositoryOwner", seen[0])
+            self.assertIn("... on User", seen[0])
+            self.assertIn("... on Organization", seen[0])
+            self.assertEqual(seen[0].count("{"), seen[0].count("}"))
+        with mock.patch.object(board_sync, "_gql", return_value={"repositoryOwner": None}):
+            with self.assertRaisesRegex(RuntimeError, "repository owner"):
+                board_sync.resolve_ids(cfg, force=True, cache=False)
+
+    def test_project_snapshot_query_is_balanced(self):
+        seen = []
+        def gql(query, variables):
+            seen.append(query)
+            return {"node": {"items": {"nodes": [],
+                    "pageInfo": {"hasNextPage": False, "endCursor": None}}}}
+        with mock.patch.object(board_sync, "resolve_ids", return_value={"project": "p"}), \
+             mock.patch.object(board_sync, "_gql", side_effect=gql):
+            self.assertEqual(board_sync.fetch_board_items({"status_field": "Status"}, cache=False), [])
+        self.assertEqual(seen[0].count("{"), seen[0].count("}"))
+
+    def test_shared_writer_validates_destination_before_add(self):
+        cfg = {"project_owner": "owner", "project_number": 4,
+               "repos": ["owner/repo"], "status_field": "Status"}
+        with mock.patch.object(board_sync, "option_id_for", side_effect=RuntimeError("missing")), \
+             mock.patch.object(board_sync, "content_node") as content, \
+             mock.patch.object(board_sync, "_add_item") as add:
+            with self.assertRaisesRegex(RuntimeError, "missing"):
+                board_sync.set_issue_status(cfg, 1, "Missing", snapshot={},
+                                            policy_mode=True, repo="owner/repo")
+        content.assert_not_called()
+        add.assert_not_called()
 
     def test_durable_json_replace_and_existing_apply_result_refusal(self):
         with tempfile.TemporaryDirectory(prefix="gh605-audit-") as tmp:

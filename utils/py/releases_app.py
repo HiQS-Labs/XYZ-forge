@@ -1422,7 +1422,7 @@ def _repo_id_for_event(conn):
 
 
 def _roadmap_row(conn, gid):
-    return conn.execute("SELECT gh_number, status_marker, section, rating_pri, rating_sev, "
+    return conn.execute("SELECT repo_id, gh_number, status_marker, section, rating_pri, rating_sev, "
                         "rating_appeal, rating_effort FROM roadmap_items WHERE global_id = ?",
                         (gid,)).fetchone()
 
@@ -1431,7 +1431,7 @@ def _extract_roadmap_add(conn, op, gid):
     row = _roadmap_row(conn, gid)
     if row is None:
         return None
-    return ("parked", row["gh_number"], {"section": row["section"]})
+    return ("parked", row["gh_number"], {"section": row["section"]}, row["repo_id"])
 
 
 def _extract_roadmap_rate(conn, op, gid):
@@ -1440,7 +1440,8 @@ def _extract_roadmap_rate(conn, op, gid):
         return None
     return ("rated", row["gh_number"],
             {"rated": "%s/%s/%s/%s" % (row["rating_pri"], row["rating_sev"],
-                                       row["rating_appeal"], row["rating_effort"])})
+                                       row["rating_appeal"], row["rating_effort"])},
+            row["repo_id"])
 
 
 def _live_roadmap_event(section, marker, rated):
@@ -1469,23 +1470,23 @@ def _extract_roadmap_update(conn, op, gid, previous=None):
         return ("updated", row["gh_number"], {
             "source": "roadmap-update", "transition": False,
             "marker": marker, "section": row["section"],
-        })
+        }, row["repo_id"])
     event = _live_roadmap_event(row["section"], marker,
                                 row["rating_pri"] is not None)
     return (event, row["gh_number"], {
         "source": "roadmap-update", "transition": True,
         "marker": marker, "section": row["section"],
-    })
+    }, row["repo_id"])
 
 
 def _extract_jog(conn, op, gid):
-    row = conn.execute("SELECT gh_number, status FROM jog_queue WHERE global_id = ?",
+    row = conn.execute("SELECT repo_id, gh_number, status FROM jog_queue WHERE global_id = ?",
                        (gid,)).fetchone()
     if row is None:
         return None
     event = "in_flight" if op == "jog-lease" else "jog_%s" % row["status"]
     return (event, row["gh_number"], {"source": "jog", "transition": True,
-                                      "status": row["status"]})
+                                      "status": row["status"]}, row["repo_id"])
 
 
 WORK_EVENT_EXTRACTORS = {
@@ -1557,8 +1558,11 @@ def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None, previous
               if op == "roadmap-update" else extractor(conn, op, target_gid))
     if result is None:
         return None
-    event, gh_number, payload = result
-    repo_id = _repo_id_for_event(conn)
+    if len(result) == 4:
+        event, gh_number, payload, repo_id = result
+    else:
+        event, gh_number, payload = result
+        repo_id = _repo_id_for_event(conn)
     if repo_id is None:
         return None
     conn.execute("""INSERT INTO work_events(global_id, repo_id, gh_number, txn_id, event,
@@ -3619,11 +3623,15 @@ def cmd_roadmap_rate(args):
             where, param, label = "gh_number = ?", args.issue_num, "GH-%d" % args.issue_num
         else:
             where, param, label = "global_id = ?", args.gid, args.gid
-        row = conn.execute(
+        rows = conn.execute(
             "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
-            "FROM roadmap_items WHERE " + where, (param,)).fetchone()
-        if not row:
+            "FROM roadmap_items WHERE " + where + " LIMIT 2", (param,)).fetchall()
+        if not rows:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
+        if len(rows) != 1:
+            refuse("selector", "%s matches multiple repositories; pass --gid" % label)
+        row = rows[0]
+        where, param = "global_id = ?", row["global_id"]
         if not _has_column(conn, "roadmap_items", "rating_pri"):
             refuse("schema-behind",
                    "this ledger has no rating columns. Run `releases migrate` first — rating "
@@ -3814,10 +3822,17 @@ def cmd_roadmap_update(args):
 
         has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
         select_cols = ["global_id", "gh_number", "title", "raw_text", "issue_url"]
-        row = conn.execute(
-            "SELECT %s FROM roadmap_items WHERE %s" % (", ".join(select_cols), where), (param,)).fetchone()
-        if not row:
+        rows = conn.execute(
+            "SELECT %s FROM roadmap_items WHERE %s LIMIT 2" % (", ".join(select_cols), where),
+            (param,)).fetchall()
+        if not rows:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
+        if len(rows) != 1:
+            refuse("selector", "%s matches multiple repositories; pass --gid" % label)
+        row = rows[0]
+        # Once identity is resolved, mutate exactly that row. A number-only UPDATE can otherwise
+        # cross repository ownership when two configured repositories both have issue #N.
+        where, param = "global_id = ?", row["global_id"]
 
         if args.raw_text is None and args.section is None and marker is None and issue_url is None:
             refuse("no-update", "pass at least one of --raw-text, --section, --status-marker or --issue-url")
@@ -5068,6 +5083,33 @@ _STOP_EVENTS = {"parked", "rated", "completed", "deferred", "pr_merged",
                 "jog_deferred"}
 
 
+def _is_lifecycle_event(ev):
+    """Return whether an event genuinely supersedes earlier lifecycle evidence."""
+    event = ev.get("event")
+    payload = ev.get("payload") if isinstance(ev.get("payload"), dict) else {}
+    if payload.get("source") == "backfill":
+        return False
+    if event in _START_EVENTS:
+        return (event in ("jog_running", "jog_leased")
+                or (event == "in_flight" and payload.get("source") in ("roadmap-update", "jog")
+                    and payload.get("transition") is True))
+    if event in ("rated", "parked"):
+        return (payload.get("source") == "roadmap-update"
+                and payload.get("transition") is True)
+    return event in _STOP_EVENTS
+
+
+def _sqlite_header_uses_wal(db_path):
+    """Inspect SQLite's header without opening it; read/write version 2 denotes WAL."""
+    try:
+        with open(db_path, "rb") as handle:
+            header = handle.read(20)
+    except OSError:
+        return False
+    return (len(header) >= 20 and header.startswith(b"SQLite format 3\x00")
+            and (header[18] == 2 or header[19] == 2))
+
+
 def _utc_datetime(value):
     if not isinstance(value, str) or not value.strip():
         return None
@@ -5109,10 +5151,16 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
         return result
     sidecars = [p for p in (db_path + "-wal", db_path + "-shm", db_path + "-journal")
                 if os.path.exists(p)]
-    try:
-        intent = WriterLock(root).journal_path
-    except Exception:
-        intent = None
+    if _sqlite_header_uses_wal(db_path):
+        result["error"] = ("ambiguous live SQLite state; database header uses WAL mode; "
+                           "checkpoint it and run `releases check` before diagnostics")
+        return result
+    common = git_common_dir(root)
+    if common is None:
+        result["error"] = ("unsupported ledger root for read-only diagnostics: "
+                           "cannot resolve the git common-dir")
+        return result
+    intent = os.path.join(common, JOURNAL_NAME)
     if sidecars or (intent and os.path.exists(intent)):
         result["error"] = ("ambiguous live SQLite state; run `releases check` before diagnostics: "
                            + ", ".join(os.path.basename(p) for p in sidecars
@@ -5182,7 +5230,7 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
             latest = evs[-1] if evs else None
             latest_lifecycle = None
             for ev in reversed(evs):
-                if ev["event"] in _START_EVENTS | _STOP_EVENTS:
+                if _is_lifecycle_event(ev):
                     latest_lifecycle = ev
                     break
             start = None
