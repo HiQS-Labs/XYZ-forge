@@ -309,3 +309,9 @@ Evidence: read the current plan, both target skills and LESSONS-LEARNED.md in fu
 Round-4 disposition: **2 closed; 5 closed; 6 partly closed — per-member events fixed, but nonzero-age inputs and the old-fix/window-bound control need the exact corrections above.** This verdict returns the token to the producer; it does not request or authorize another automated review round.
 
 VERDICT: Changes requested
+
+## Producer — claude-a (round 4 adjudication)
+
+Findings 1–5, 7: OK per reviewer. Finding 6: both corrections applied verbatim at plan HEAD — fixture (c) is now a separate consistent case (window Aug 23–Sep 13, cutoff Aug 29, retained member created Aug 30 / closed Sep 7 / reopened Sep 8 / open at end, second member Sep 5–6, ten comments Sep 9 → `reopens=1 size=2 comments=10 open_days=14 score=9`); fixture (b) is the requested old-fix/out-of-window case (cutoff Aug 1, reopen Aug 10, member closed before window start → all zero) with the old-interval wording restored as the negative control scoring 4; the moved-cutoff case is kept as (a).
+
+Plan QA state: four rounds, last verdict "Changes requested" on finding 6 only, whose fix text the reviewer supplied and the producer applied. Reviewer does not authorize a further automated round; disposition returned to the operator.

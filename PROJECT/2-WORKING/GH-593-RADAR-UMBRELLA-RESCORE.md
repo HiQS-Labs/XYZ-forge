@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Codex round 3 (cap reached, VERDICT: Changes requested): 1/3/4/7 OK; four narrow text corrections applied after the cap — step 3 scores with the six default weights, interval = radar window ∩ strictly-after-cutoff, comments/open_days are raw counts with the score formula spelled out, red-control fixture pins a dated event per member plus old-fix and nonzero-comments rows | BLOCKED on operator: authorize a 4th Codex round on the corrected plan, or accept the plan as revised and proceed to the SKILL.md edits |
+| Codex round 4 (operator-authorized): findings 1–5 and 7 OK; finding 6 partly closed — reviewer supplied two consistent witness fixtures (nonzero comments/age at score 9; old-fix out-of-window with the old-interval negative control), both applied verbatim. Reviewer states it authorizes no further automated round | BLOCKED on operator: round 5 for a formal Approved, or proceed to the SKILL.md edits with final Codex QA (start-task step 8) covering the witness results |
 
 ## Why
 
@@ -230,12 +230,25 @@ radar's SKILL.md cites it and repeats only the block shape.
      `reopens=1 repeat_fixes=0 reverts=0 size=2 comments=0 open_days=0 score=5` → must
      render `class survived — recommend reopening`, unstruck. Counterpart: remove #584's
      opening event (it now has no in-interval event, so it is not counted) → `size=1`,
-     score 4 → `holding`, `quiet 1/2`, unstruck. Two more rows in the same witness: (a) the
-     cutoff moved to 2026-09-10 → the 09-08 reopen and both openings fall before it →
-     score 0; (b) `comments=10 open_days=14` added to the first case → score 5 + 2 + 2 = 9,
-     raw fields shown as 10 and 14. Then vary the filing `weights:` line while holding
-     evidence fixed → `now` unchanged. Then mutate the first result by hand to a
-     strike-through and quote the rule text that rejects it.
+     score 4 → `holding`, `quiet 1/2`, unstruck. Three more fixtures in the same witness,
+     each with its own consistent timestamps and state (membership evidence real, event
+     overlay labelled synthetic):
+     (a) *cutoff moved forward* — same events, cutoff 2026-09-10T00:00Z → all three events
+     precede it → score 0.
+     (b) *old fix, out-of-window churn* — window 2026-08-23 → 2026-09-13, cutoff
+     2026-08-01T00:00Z, one member reopened 2026-08-10, closed before window start, no
+     in-window events → correct counts all zero, score 0. Then restore the old
+     `[cutoff, window end]` interval wording and show it wrongly counts the reopen and the
+     member (score 4) — the negative control for the window lower bound.
+     (c) *nonzero comments and age* — window 2026-08-23T00:00Z → 2026-09-13T00:00Z, cutoff
+     2026-08-29T00:00Z; retained member created 2026-08-30T00:00Z, closed 09-07, reopened
+     09-08, still open at window end; second member opened 09-05, closed 09-06; ten distinct
+     comments on 09-09; no fix/revert events → `reopens=1 repeat_fixes=0 reverts=0 size=2
+     comments=10 open_days=14 score=9` (3 + 2 + floor(10/5) + floor(14/7)), raw fields
+     shown as 10 and 14.
+     Then vary the filing `weights:` line while holding evidence fixed → `now` unchanged.
+     Then mutate the first result by hand to a strike-through and quote the rule text that
+     rejects it.
    - Observation table, each row with two distinct UTC report dates, the same signature,
      the same default weights and the same verified cutoff: quiet/quiet → solved;
      quiet/active/quiet → `quiet 1/2`, not solved; one signal unavailable → `quiet 0/2`, no
