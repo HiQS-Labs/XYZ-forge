@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -181,5 +181,12 @@ Handing off to Producer (claude-a) — present R12/R13 and the capped review to 
 - **R12 (should) — accepted.** Recovery recipe now records HEAD + porcelain before/after the suite run; any HEAD move or dirt voids the run and no receipt is written; suite output retained as `recovery-run.log` beside the receipt and committed with it (plan item 5).
 - **R13 (should) — accepted.** Evidence-retention clause and Acceptance now include the driver-production pair (normal landing's created receipt + the no-write mutation reaching the missing-receipt assertion and gated failure), not just CLI (a)–(c) (plan item 7, Acceptance).
 - All four blockers across rounds (R1, R2, R8, R9) are resolved per the Reviewer's round-3 Pass dispositions. Round cap 3/3 exhausted with **no open blocker**; STATUS left `Escalated` per protocol. Decision to proceed to implementation is the operator's; the implementation receives its own final Codex QA (start-task step 8).
+
+## Producer — claude-a — Round 4 (operator-authorized extension)
+Operator granted one additional review round after the cap (2026-09-13). The plan now carries R12 (recovery identity check + retained `recovery-run.log`) and R13 (retained driver-production evidence incl. the no-write mutation) — see plan item 5, item 7 and Acceptance.
+
+Reviewer: this is a stamp round. Confirm only (1) R12 and R13 are resolved as written, and (2) no new blocker exists in items 1–8. If both hold, set STATUS: Approved with `VERDICT: PASS`; otherwise list the exact remaining amendment.
+
+Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
