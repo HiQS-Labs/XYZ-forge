@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -88,5 +88,15 @@ Basis: Read the entire controlling artifact, including historical sections, and 
 Pre-existing defects relevant to this plan are included above (legacy metadata starts and composite add/status failure); other identified existing seams already have explicit repair steps. No tests, source artifacts, board/config mutations, or git commands were run.
 
 Handing off to codex-author (Producer) — resolve both findings in the controlling plan and request the next review turn.
+
+## Producer — Round 2
+
+Both blockers implemented in controlling specification: start evidence now requires latest
+unsuperseded lifecycle and provenance; untagged legacy starts cannot prove work. Added explicit
+start->park/stop/legacy-metadata fixtures. Existing board writer gains optional per-request
+audit callbacks, persisted add ID before set, pending-intent indeterminate recovery and no
+blind policy mutation retry. Clear-field support is explicitly new in existing writer.
+Review these changes and close if ready. Historical stage-gate text is superseded by the
+controlling revision, not an instruction to restart a failed harness route.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -227,6 +227,13 @@ enables it accidentally. Legacy non-policy configurations preserve their existin
   recorded event with matching repo identity. GH OPEN corroborates nonterminal state; this is
   a recorded start, not proof an agent is currently running. Old 🚧/doc/branch presence alone is
   unverified; preserve its current card and exclude it from Ready rather than silently demote.
+  Evaluate latest lifecycle-bearing evidence, not any historical start: a later parked/rated
+  return-to-Queue, jog stop/failure/completion/deferral supersedes a prior start. Current Queue
+  without progress marker contradicts an old start unless a newer independently witnessed
+  active PR proves otherwise. New update-derived start payloads carry `source: roadmap-update`
+  and `transition: true`; historical untagged in_flight events can be metadata-only artifacts
+  and are never sufficient by themselves. Recent explicit jog events can qualify only while
+  current jog/ledger state remains consistent. Unknown provenance remains unverified.
 - External Rebalance/CLIO/prompt observations are optional normalized JSON evidence records:
   source, issue_url, observed_at (UTC), kind (intent/started/phase_completed/completed), reference.
   Validate identity and freshness; retain only reference/metadata in audit, never raw private text.
@@ -278,20 +285,32 @@ enables it accidentally. Legacy non-policy configurations preserve their existin
    existing connector exclusion lock for the apply window so legacy dispatcher cannot race it.
    Write audit result before first mutation and after each success; stop on first failure, save
    partial state, return nonzero. Re-read before each change and refuse changed status/item identity.
+   Add an optional audit callback to the existing writer: persist intent before EACH remote
+   add/set/clear request and its response immediately afterward. Persist successful add's item ID
+   before attempting status. On lost response or failed result persistence mark the operation
+   indeterminate where possible, stop, and require fresh read-back before any retry/restore;
+   never blindly repeat a mutation. A persisted intent without result is itself indeterminate
+   after a crash. Policy mode disables blind mutation retry; legacy retry behavior is unchanged.
    -> Stale/tampered target, changed GH, missing option and concurrent card edit tests make zero
    unintended writes; failure at operation2 retains operation1 evidence and supports safe resume.
 6. Restore takes result artifact and previews by default; explicit write conditionally restores
    original status through same writer only when current identity/status equals recorded after.
-   Support clearing an originally unset status through existing writer capability. Added cards
+   Extend the same writer with clearProjectV2ItemFieldValue for an originally unset Status
+   (not supported by the current string-only option setter). Added cards
    cannot be removed under no-delete: retain/report them, optionally move to Backlog only as an
    explicit restore decision. Never claim atomic remote rollback. -> Injected failure and concurrent
    edit tests prove restoration preserves unrelated/operator changes and reports residual cards.
+   Also test add-success/status-failure, response loss, and journal failure before/after each
+   request: the add ID or pending intent remains inspectable, no blind retry occurs, and
+   originally-unset status restoration actually clears the field.
 7. Register focused Python fixtures plus existing event/board/sweep suites, document commands and
    settings in RELEASES-DB-FAQS, and add CHANGELOG. Use debug-mantra for observed failures. Run all
    tests in separate disposable full clone with identity checks and committed provenance; red
    controls remove section precedence, batch events, freshness exclusion and top-N limit and must
    fail named nonempty-fixture assertions. Run full validate, qualifying gate as needed, PDDA and
    final Codex relay on committed implementation (three review rounds maximum).
+   Selection fixtures explicitly include start->park, start->stop and pre-fix metadata-only
+   in_flight; none may manufacture In progress.
 8. After verified code, collect recent sources and current GH for the live Rev.2 target. Preserve
    device settings except explicitly documenting policy as implemented; keep automatic replay off.
    Generate preview, inspect all changes, apply it through tested CLI, retain before/result/after
