@@ -1,0 +1,4 @@
+interface:
+  display_name: "SOP"
+  short_description: "Catch SOP and lessons-learned docs up to recent events"
+  default_prompt: "Use $sop to recon the repo's SOP/runbook/lessons docs, mine recent events, and propose additive diffs for approval."

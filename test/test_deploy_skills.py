@@ -367,7 +367,16 @@ class DeploySkillsTest(unittest.TestCase):
             self.assertEqual(tree(self.target), before)
             file.write_bytes(old)
 
-    def test_a5_live_shared_lock_refuses_without_stealing(self):
+    def test_a5_two_missing_payloads_do_not_deadlock_remove(self):
+        self.cli("--apply", "add", self.source("alpha")); self.cli("--apply", "add", self.source("beta"))
+        for name in ("alpha", "beta"):
+            (self.root / name).rename(self.work / f"vanished-{name}")
+        self.cli("--apply", "catalog", code=2)
+        self.cli("--apply", "remove", "alpha")
+        self.cli("--apply", "catalog", code=2)
+        self.cli("--apply", "remove", "beta")
+        self.cli("--apply", "catalog")
+
         with intake.locked(self.root):
             before = (self.root / ".deploy-skills.lock").read_bytes()
             self.cli("--apply", sync=True, code=2)
