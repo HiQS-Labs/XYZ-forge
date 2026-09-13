@@ -590,7 +590,6 @@ def fix_router(root, dry_run=False):
                 "- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof",
                 "- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file",
                 "- `CHANGELOG.md` = the end-of-iteration running log",
-                "- `RELEASES.md` = forward-looking release-planning ledger (optional milestone planning aid)",
                 "",
             ]) + crlf
 

@@ -27,7 +27,7 @@ def load(name, path):
 
 app = load('gh424_app', os.environ.get('GH424_APP', source / 'utils/py/releases_app.py'))
 wave = load('gh424_wave', os.environ.get('GH424_WAVE', source / 'utils/py/wave_reconcile.py'))
-artifacts = ('releases.db', 'releases.sql', 'RELEASES.generated.md',
+artifacts = ('releases.db', 'releases.sql',
              'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md')
 
 class MarkerTests(unittest.TestCase):
@@ -47,11 +47,7 @@ class MarkerTests(unittest.TestCase):
             self.cli('roadmap', 'add', '--issue-num', str(n), '--title', f'fixture {n}',
                      '--created', '2026-09-08', '--issue-url', f'https://example.test/issues/{n}',
                      '--doc-path', self.doc)
-        conn = app.connect(str(self.root / 'releases.db'))
-        (self.root / 'RELEASES.generated.md').write_text(
-            app.gen_marker(app.get_generation(conn)) + '\n' + app.render_ledger(conn))
-        conn.close()
-        for name in artifacts[3:]:
+        for name in artifacts[2:]:
             (self.root / name).write_text(f'original {name}\n')
         self.cli('check')
 
@@ -77,7 +73,6 @@ class MarkerTests(unittest.TestCase):
                   for n in artifacts}
         self.assertTrue(result['releases.db'])
         self.assertTrue(result['releases.sql'])
-        self.assertTrue(result['RELEASES.generated.md'])
         return result
 
     def test_marker_writes_preserve_fields_and_receipt_bulk(self):
@@ -154,10 +149,8 @@ class MarkerTests(unittest.TestCase):
                 return SimpleNamespace(returncode=0, stdout='', stderr='')
             # A second successful ledger write, then an injected downstream failure.
             self.cli('roadmap', 'update', '--issue-num', '425', '--section', 'Completed')
-            for name in artifacts[3:]:
+            for name in artifacts[2:]:
                 (self.root / name).write_text(f'regenerated {name}\n')
-            if absent:
-                (self.root / 'RELEASES.generated.md').write_text('new generated view\n')
             return SimpleNamespace(returncode=1, stdout='', stderr='GH424 injected after second write')
 
         with patch.object(wave.subprocess, 'run', side_effect=run), \
@@ -170,8 +163,8 @@ class MarkerTests(unittest.TestCase):
             journal.rollback()
         self.assertEqual(len(calls), 2)
         after = {n: (self.root / n).read_bytes() if (self.root / n).exists() else None for n in artifacts}
-        # Run the consistency check even when byte comparisons will fail: pre-fix this
-        # names RELEASES.generated.md generation-mismatch, not just generic dirty bytes.
+        # Run the consistency check even when byte comparisons will fail:
+        # names generation-mismatch, not just generic dirty bytes.
         check = io.StringIO()
         with contextlib.redirect_stdout(check), contextlib.redirect_stderr(check):
             try:

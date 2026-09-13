@@ -70,7 +70,7 @@ without reading all of them first.
 | [relay-automation](skills/relay-automation/SKILL.md) | Tick-backed automation library behind the `/relay` review loop. |
 | [relay-to-issue](skills/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [relay-xyz](skills/relay-xyz/SKILL.md) | Drive an automated relay review loop with the shipped harness. |
-| [releases](skills/releases/SKILL.md) | Read/author/publish the optional RELEASES.md planning ledger. |
+| [releases](skills/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
 | [review-xyz](skills/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [rpr](skills/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |
 | [shakedown](skills/shakedown/SKILL.md) | Audit script-calling skills across CWD, install, symlink, and permission scenarios. |

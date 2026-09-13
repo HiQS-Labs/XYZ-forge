@@ -28,7 +28,7 @@ Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
 - **Analysis reads; only the report writes.** The two report sinks (Step 5) are the *only* writes.
   Never edit an existing doc, never edit ROADMAP.md, never commit, never push.
-- **Never edit releases.db or RELEASES.md.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
+- **Never edit releases.db.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
   topping it up). Report drift; stop there.
 - **Transform is declared, never inferred.** No commit prefix promotes work to Transform — only an
   explicit `rgt: transform` frontmatter key on the governing `PROJECT/**` doc. Auto-promoting
@@ -246,7 +246,7 @@ classification results directly into Step 4.3 for the "In-Flight Work & Open PRs
 
 ## Step 3 — Lens 3: release recalibration
 
-Read the DB using `releases check`, `releases roadmap sync --dry-run`, and the `python3 utils/timeline/export_timeline.py --json` payload instead of hand-parsing `RELEASES.md`. Cite the DB generation numbers in the report.
+Read the DB using `releases check`, `releases list`, and the `python3 utils/timeline/export_timeline.py --json` payload. Cite the DB generation numbers in the report.
 
 Skip silently if the DB is absent, has no unshipped releases, or contains only the installer's seed block (e.g., a release whose description says EXAMPLE / "replace this", or that has an empty target date and tracking issue). Reporting drift against a seed is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
 

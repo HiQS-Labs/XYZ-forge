@@ -126,7 +126,7 @@ if a[:2] in (["roadmap", "add"], ["manifest", "dial-in"], ["manifest", "ship"]):
     if a[:2] == ["manifest", "ship"]:
         c.execute("UPDATE manifest_items SET state='shipped'")
     c.commit(); c.close()
-    for name in ("releases.sql", "RELEASES.generated.md", "RELEASES-PREVIEW.html",
+    for name in ("releases.sql", "RELEASES-PREVIEW.html",
                  "LEADERBOARD.html", "LEADERBOARD.md"):
         with open(name, "a", encoding="utf-8") as f:
             f.write("stub-release-write: %s\n" % " ".join(a[:2]))
@@ -160,7 +160,7 @@ c.execute('CREATE TABLE IF NOT EXISTS manifest_items (id INTEGER PRIMARY KEY, re
 c.execute('INSERT INTO manifest_items (id, release_id, issue_ref_id, state) VALUES (1, 1, 1, \"dialed_in\"), (2, 1, 2, \"dialed_in\"), (3, 1, 3, \"dialed_in\")');
 c.commit(); c.close()"
 printf 'base dump\n' > "$FX/releases.sql"
-for projection in RELEASES.generated.md RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md; do
+for projection in RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md; do
   printf 'base projection\n' > "$FX/$projection"
 done
 printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' > "$FX/CHANGELOG.md"

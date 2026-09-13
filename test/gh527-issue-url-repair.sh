@@ -81,7 +81,6 @@ open(p, "w", encoding="utf-8").write(new)
 PY
   python3 "$APP" --root "$WORK" check --rebuild >/dev/null 2>&1 || true
   rm -f "$WORK"/releases.db.bak
-  python3 "$APP" --root "$WORK" gen >/dev/null
 }
 corrupt_901
 set +e
@@ -130,7 +129,6 @@ PY
 )"
 if [ "$recs" -ge 1 ]; then ok "the repair wrote an op_receipt"; else bad "repair left no receipt"; fi
 
-python3 "$APP" --root "$WORK" gen >/dev/null
 set +e
 python3 "$APP" --root "$WORK" check >/dev/null 2>&1; rc=$?
 set -e

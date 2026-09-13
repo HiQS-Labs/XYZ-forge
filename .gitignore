@@ -69,9 +69,7 @@ debug.log
 # GH-509: per-commit local gate evidence — machine-local, self-reported, never committed.
 .gate-evidence/
 
-# GH-32 Phase 0: side-by-side generator output is regenerable proof, never committed
-RELEASES.generated.md
-RELEASES.generated.md.drift
+
 # `check --rebuild` displaces the old DB to this path, and utils/releases-merge-resolve.sh tells the
 # operator it is "untracked and safe to delete". It was not actually ignored, so a `git add -A`
 # during a merge resolution would have committed a ~200KB stale binary copy of the ledger — the one

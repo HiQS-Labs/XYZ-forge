@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence builds a compliant fixture (gate present+registered, control recorded, manifest agreeing with a fixture RELEASES.md), then unregisters a gate, deletes a recorded control, and forges a stranger-run PASS record it never reads; each is detected, and the unmutated fixture is re-checked green in the same run"}
+# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence builds a compliant fixture (gate present+registered, control recorded, manifest agreeing with releases.db), then unregisters a gate, deletes a recorded control, and forges a stranger-run PASS record it never reads; each is detected, and the unmutated fixture is re-checked green in the same run"}
 # Ballast (release 0.7.0) — the executable goalpost for POST-LAUNCH HARDENING.
 #
 # Ballast's sentence: THE LAUNCHED REPOSITORY HOLDS UP UNDER A STRANGER'S FIRST RUN AND AN OUTSIDE
 # CONTRIBUTOR'S FIRST PUSH. Same two-half shape Litmus, Nightwatch, and Meter established — this
 # file is written FIRST, before any manifest member is fixed, so a finished entry can be told from
-# a claimed one (RELEASES.md's exit-criterion note).
+# a claimed one (releases.db's exit-criterion note).
 #
 #   HALF A — audits the FROZEN MANIFEST (structural, cheap, runs in suite mode). Each member's gate
 #            EXISTS, is REGISTERED in validate.sh's TESTS array (a gate absent from TESTS is
 #            indistinguishable from one that passes — the #461 defect), has a RECORDED negative
-#            control under test/baselines/, and the manifest here agrees with RELEASES.md's
-#            Ballast `Manifest-Members:` field in BOTH directions (a one-directional check, or one
-#            that reads the prose `Manifest:` paragraph instead of the machine field, cannot fail —
+#            control under test/baselines/, and the manifest here agrees with releases.db's
+#            Ballast manifest members in BOTH directions (a one-directional check, or one
+#            that reads non-authoritative prose instead of the machine-backed releases.db manifest, cannot fail —
 #            see meter-release.sh's own history for exactly how that happened).
 #
 #   HALF B — EXECUTES the stranger's path rather than auditing it (--release-gate only; heavy, and
@@ -63,7 +63,7 @@ info() { printf '  INFO: %s\n' "$*"; INFO=$((INFO+1)); }
 
 # ── The FROZEN manifest, post-#10-cut (2026-08-17) ───────────────────────────────────────────────
 # Format: <issue>|<gate test file>|<recorded control file>|<note>
-# A re-scope (an admission, a swap, a cut) must be matched in RELEASES.md's `Manifest-Members:`
+# A re-scope (an admission, a swap, a cut) must be matched in releases.db's `Manifest-Members:`
 # field — the cross-check below compares the two in BOTH directions.
 MANIFEST=(
   "14|test/gh14-atomic-append.sh|test/baselines/GH-14-negative-control.md|atomic event append — appendEvent publishes via temp+rename"
@@ -158,13 +158,16 @@ audit_manifest() {  # [<validate.sh>] [<root>] — sets COMPLETE / REMAINING / F
 }
 
 # ── The ledger cross-check, BIDIRECTIONAL ─────────────────────────────────────────────────────────
-manifest_matches_releases_md() {
-  local rel="${1:-$ROOT/RELEASES.md}" line n missing="" extra="" declared
-  [ -f "$rel" ] || { info "RELEASES.md absent — manifest cross-check skipped"; return 0; }
+manifest_matches_releases_db() {
+  local db="${1:-$ROOT/releases.db}" line n missing="" extra="" declared
+  if [ ! -f "$db" ]; then
+    bad "releases.db absent ($db) — manifest cross-check failed"
+    return 1
+  fi
 
-  line="$(/usr/bin/awk '/^Codename: Ballast/,/^$/' "$rel" | /usr/bin/grep '^Manifest-Members:')"
+  line="$(sqlite3 "$db" "SELECT l.content FROM legacy_lines l JOIN releases r ON l.release_id = r.id WHERE (r.version = '0.7.0' OR r.codename = 'Ballast') AND l.content LIKE 'Manifest-Members:%' LIMIT 1;" 2>/dev/null)"
   if [ -z "$line" ]; then
-    bad "RELEASES.md's Ballast block has no machine-readable 'Manifest-Members:' field — the frozen boundary is not recorded in a form this gate can check (the prose Manifest: paragraph names cut/shipped members too and cannot be used)"
+    bad "releases.db's Ballast block has no machine-readable 'Manifest-Members:' field — the frozen boundary is not recorded in a form this gate can check"
     return 1
   fi
   declared="${line#Manifest-Members:}"
@@ -180,11 +183,11 @@ manifest_matches_releases_md() {
   done
 
   if [ -n "$missing" ] || [ -n "$extra" ]; then
-    [ -n "$missing" ] && bad "RELEASES.md's Manifest-Members does not declare:$missing — this file names members the ledger does not"
+    [ -n "$missing" ] && bad "releases.db's Manifest-Members does not declare:$missing — this file names members the ledger does not"
     [ -n "$extra" ]   && bad "this file does not name:$extra — the ledger declares members this gate does not measure"
     return 1
   fi
-  ok "the frozen manifest here matches RELEASES.md's Manifest-Members field in both directions ($declared)"
+  ok "the frozen manifest here matches releases.db's Manifest-Members field in both directions ($declared)"
 }
 
 # ── Half B: the stranger's path, EXECUTED ─────────────────────────────────────────────────────────
@@ -347,28 +350,39 @@ if [ "$MODE" = mutate ]; then
   fi
   rm -f "$FORGED"
 
+  DB_FIX="$TMP/releases.db"
+  sqlite3 "$DB_FIX" "CREATE TABLE releases(id INTEGER PRIMARY KEY, version TEXT, codename TEXT);
+                     CREATE TABLE legacy_lines(id INTEGER PRIMARY KEY, release_id INTEGER, content TEXT);
+                     INSERT INTO releases(id, version, codename) VALUES(1, '0.7.0', 'Ballast');"
+
   echo "-- mutation 4: ledger declares a member this file does not measure (direction 2)"
-  REL_FIX="$TMP/RELEASES.md"
-  { echo "Codename: Ballast"; echo "Manifest-Members: 14 15 4 3 999"; echo; } > "$REL_FIX"
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest-Members: 14 15 4 3 999');"
   saved=("${MANIFEST[@]}")
-  if manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  if ( manifest_matches_releases_db "$DB_FIX" ) >/dev/null 2>&1; then
     mut_bad "a ledger declaring an unmeasured #999 was ACCEPTED — direction 2 does not work"
   else
     mut_ok "a ledger declaring an unmeasured #999 is DETECTED (direction 2 works)"
   fi
 
   echo "-- mutation 5: this file measures a member the ledger drops (direction 1)"
-  { echo "Codename: Ballast"; echo "Manifest-Members: 14 15 4"; echo; } > "$REL_FIX"
-  if manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest-Members: 14 15 4');"
+  if ( manifest_matches_releases_db "$DB_FIX" ) >/dev/null 2>&1; then
     mut_bad "a ledger missing #3 was ACCEPTED — direction 1 does not work"
   else
     mut_ok "a ledger missing #3 is DETECTED (direction 1 works)"
   fi
 
+  echo "-- mutation 6: missing releases.db must not silently pass"
+  if ( manifest_matches_releases_db "$TMP/absent.db" ) >/dev/null 2>&1; then
+    mut_bad "missing releases.db was ACCEPTED — missing ledger must fail, not silently pass"
+  else
+    mut_ok "missing releases.db is DETECTED (fail-closed)"
+  fi
+
   echo "-- restore: the unmutated fixture and ledger must be green again in this same run"
   fixture_audit
-  { echo "Codename: Ballast"; echo "Manifest-Members: 14 15 4 3"; echo; } > "$REL_FIX"
-  if [ "$FALSE_CLAIMS" -eq 0 ] && [ "$COMPLETE" -eq 1 ] && manifest_matches_releases_md "$REL_FIX" >/dev/null 2>&1; then
+  sqlite3 "$DB_FIX" "DELETE FROM legacy_lines; INSERT INTO legacy_lines(release_id, content) VALUES(1, 'Manifest-Members: 14 15 4 3');"
+  if [ "$FALSE_CLAIMS" -eq 0 ] && [ "$COMPLETE" -eq 1 ] && ( manifest_matches_releases_db "$DB_FIX" ) >/dev/null 2>&1; then
     mut_ok "restoring the inputs restores the verdict — the detector is not simply always-red"
   else
     mut_bad "restored inputs do not reproduce the baseline verdict (complete=$COMPLETE false_claims=$FALSE_CLAIMS)"
@@ -384,7 +398,7 @@ fi
 echo "== ballast-release (${MODE}) — release 0.7.0 post-launch-hardening goalpost =="
 echo
 echo "-- the frozen manifest"
-manifest_matches_releases_md
+manifest_matches_releases_db
 audit_manifest
 
 if [ "$MODE" = gate ]; then

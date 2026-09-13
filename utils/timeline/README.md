@@ -13,7 +13,6 @@ From the repo root:
 python3 utils/timeline/export_timeline.py --preview     # bake ./RELEASES-PREVIEW.html (one file, opens from disk)
 python3 utils/timeline/export_timeline.py --serve 8103  # live: http://127.0.0.1:8103/RELEASES.html
 python3 utils/timeline/export_timeline.py               # full export → temp/timeline/
-python3 utils/timeline/export_timeline.py --check-drift # exit 1 if RELEASES.md and the DB disagree
 ```
 
 - `--preview [PATH]` — the on-demand snapshot: current DB state baked into one
@@ -25,7 +24,7 @@ python3 utils/timeline/export_timeline.py --check-drift # exit 1 if RELEASES.md 
 - Full export writes `temp/timeline/`: `data.json` (the viewer's data contract),
   `index.html` (baked, opens from `file://`), and `RELEASES.html` (the fetch-mode
   template copy).
-- `--db`, `--md`, `--template`, `--out` override the defaults.
+- `--db`, `--template`, `--out` override the defaults.
 
 ## Navigation sidebar (GH-153 spike)
 
@@ -45,12 +44,8 @@ disagree. Items with no destination yet are deliberate non-link placeholders (`.
   `releases.description`); the exit criterion renders below as the machine contract.
 - Card titles/doc links are enriched from the GH-69 `roadmap_items` shadow by issue
   number; unshadowed issues degrade to bare links.
-- Drift banner: the exporter parses RELEASES.md `Release:` blocks (canonical during
-  the GH-32 shadow phase) and shows a red banner when the two ledgers disagree —
-  releases existing on one side only, or shipped-status flips (draft-vs-active is
-  not drift; the md vocabulary has no `active`). Band-aware per the RELEASES.md
-  contract: a DB release inside a block's `Iterations:` band is accounted for, not
-  drift.
+- Ledger source of truth: `releases.db` is the sole authoritative source of truth.
+  `RELEASES.md` was retired in GH-568.
 - Not rendered yet (no DB concept / out of spike scope): detour lane, ROADMAP row
   parity, per-card pri/sev metrics.
 

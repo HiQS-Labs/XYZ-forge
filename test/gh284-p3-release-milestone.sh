@@ -194,8 +194,8 @@ printf '%s' "$out" | grep -F "Milestone: MILESTONE-SENTINEL" >/dev/null \
 # against the local check, which is the only thing that can still produce the string it greps for.
 out="$(PDDA_ACTIVITY_LOG=/dev/null bash "$LOCAL_CHECKS" release-milestone 2>&1)"
 printf '%s' "$out" | grep -F "no 'Milestone:'" >/dev/null \
-  && fail "this repo's own RELEASES.md has a dated release with no Milestone: $out" \
-  || pass "the repo's RELEASES.md carries a Milestone for every dated, unshipped release"
+  && fail "this repo's own releases.db has a dated release with no Milestone: $out" \
+  || pass "the repo's releases.db carries a Milestone for every dated, unshipped release"
 
 echo "  gh284-p3-release-milestone: $PASS pass, $FAIL fail"
 exit 0

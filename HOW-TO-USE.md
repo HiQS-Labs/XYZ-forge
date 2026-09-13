@@ -44,8 +44,8 @@ never duplicating either's state by hand, and letting each oracle catch the othe
 - **Same-day dial-in decisions on new intake.** When something lands in `1-INBOX`, either
   `manifest dial-in` it with a `dial_reason` or `cut --reason` it. Undispositioned intake is how
   backlogs of warnings form — the reason columns are your future self's context.
-- **Close the loop before bed**: `releases gen` and treat a non-empty
-  `RELEASES.generated.md.drift` as unfinished business.
+- **Close the loop before bed**: `releases check` and treat any warning or
+  inconsistency as unfinished business.
 
 ## Day to week — release boundaries and disposition sessions
 
