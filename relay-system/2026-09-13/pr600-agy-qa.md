@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: codex
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,17 @@ swept file: yes
 - **Review target update:** For this follow-up review use current HEAD for the three-line correction and regression test, with 5031172f as the source before this QA correction. Prior artifact baseline remains useful for the integrated sweep. No other runtime changes. Live hosted acceptance remains UNVERIFIED and merges still require the user's approval. Normal push gate is being run separately in a disposable full clone. Please verify the disposition and record PASS/FAIL/PARKED with exact citations. Do not run suites in this worktree or reach outside it to commit; the shim owns copyback/commit.
 
 Handing off to agy for the corrected recovery review.
+
+
+### Reviewer (agy) — Round 3
+
+swept file: yes
+
+- `[Pass]` **QA6 (Recovery Verification)**: The producer correctly implemented the canonical lookup fix using `re.match(rf"^(?:GH-)?{issue_num}-", ...)` for `2-WORKING` (`utils/py/wave_reconcile.py:1744`) and for `3-COMPLETED` (`utils/py/wave_reconcile.py:1755`). The regression test `test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs` was verified in `test/gh421-auto-wave-reconcile.sh:57`, which correctly asserts that both stages ignore supporting notes. I swept the touched files for pre-existing defects and found none.
+
+**VERDICT**: PASS
+**Basis**: The single blocker from Round 1 has been resolved exactly as instructed. No material correctness blocker remains.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
