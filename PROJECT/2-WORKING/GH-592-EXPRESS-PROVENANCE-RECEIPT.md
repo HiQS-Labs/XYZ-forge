@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| Codex plan-QA round 1: 2 blockers (resume manufactured evidence; allowlist too wide) + 5 shoulds, all accepted and folded in | Codex round 2 on the revised plan, then implement in `fix/gh592-express-receipt` |
+| Codex plan-QA rounds 1–2 (R1–R11) folded in: receipt written after the clean check inside closeout, shared validation predicate, resume refuses without committed valid evidence | Codex round 3 (final under cap), then implement in `fix/gh592-express-receipt` |
 
 ## Observed (recon, base `58d6f05a`)
 
@@ -64,86 +64,107 @@ goal: >
 
 ## Requirements → change (one subsystem, one writer: the express driver)
 
-Revised after Codex plan-QA round 1 (`relay-system/2026-09-12/gh592-plan-qa.md`, findings R1–R7).
+Revised after Codex plan-QA rounds 1–2 (`relay-system/2026-09-12/gh592-plan-qa.md`, R1–R11).
 
-1. **Receipt writer** — `write_receipt(root, sha, suite, issue, rc)` in `express.py`, reusing `now_iso`
-   and the same JSONL-append shape `write_tick` uses. Returns the receipt's repo-relative path.
-   Called in `cmd_land` **immediately after Step 8's commit and before the push** — the sha is known,
-   and `rc` is the real Step-7 result from this process (never synthesized). Path:
-   `TESTS-RESULTS/<YYYY-MM-DD>+GH-<n>-express/provenance.jsonl`; line:
+1. **Receipt writer** — `write_receipt(root, sha, issue, suite, rc)` in `express.py`; stdlib JSON append,
+   `now_iso` reused, errors **fatal** (not `write_tick`'s swallowed errors). Returns the receipt's
+   repo-relative path. Called from `closeout()` **after** the clean-development check and reachability
+   check and **before** the ship persist — so no cleanliness guard in `cmd_land`/`cmd_resume` is ever
+   tripped by an untracked receipt, and the sha is known. `rc` is the real Step-7 result carried in
+   `state` from the same process (never synthesized). (R1, R8)
+   Path `TESTS-RESULTS/<YYYY-MM-DD>+GH-<n>-express/provenance.jsonl`; record:
    `{"timestamp", "commit": <full sha>, "issue": N, "case": "express-landing", "gate": "express-suite",
-   "command": "bash <suite>", "rc": <int>, "result": "pass", "environment": "express driver, direct
-   development push"}`. `commit` is the identity `check_provenance_receipts` reads; `gate` states what
-   ran (the registered suite, not the full pre-push gate). (R1)
-   Dedup by **content, not path**: `find_receipt(root, sha)` scans every `TESTS-RESULTS/**/provenance.jsonl`
-   for a line with `commit == sha` and `case == "express-landing"`; if found, return it and write
-   nothing — so a repeat resume across a UTC date boundary creates no second record. (R3)
-2. **Persist exactly the receipt, nothing else under `TESTS-RESULTS/`** — `persist_closeout(root,
-   message, extra_paths=())`; `closeout()` passes the receipt path returned by the writer to the ship
-   persist only. `CLOSEOUT_ALLOWLIST_PREFIXES` is **not** widened; any other dirty `TESTS-RESULTS/**`
-   path is still refused as "unexpected dirty path". (R2)
-3. **Gated reconcile** — `closeout()` and `cmd_resume` pass `--gate` on the `--commit` call; the failure
-   hint (~L670) says `wave_reconcile.py --commit <sha> --gate`. (R6)
-4. **Resume never manufactures evidence** — `cmd_resume` calls `find_receipt(root, sha)`; if none
-   exists it **refuses** with: "no express receipt bound to <sha>; re-run `bash <suite>` at that commit
-   in an isolated clone and commit its receipt to TESTS-RESULTS/, then resume". No suite is run and no
-   receipt is written by resume. If the receipt file exists but is uncommitted (interrupted between
-   commit and push), resume persists it via `persist_closeout(..., extra_paths=[receipt])` before
-   `--gate`, for **every** manifest state (dialed_in / shipped / no release). (R1, R3)
-5. **Truthful wording in directly related lines** — module docstring L4–8 ("every oracle a PR would
-   have satisfied" → the registered suite + express qualification, not the full gate); Step-7 comment
-   ("skip duplicate hook" → bypass by lane design); docs template L433 ("green in gate" → "registered
-   suite green"); ship evidence L646 (same); `--gate` in the recovery hint. Add one sentence to the
-   `--gate` line: it proves attribution, not test success. (R6)
-6. **Tests**
-   - `test/gh425-gate-provenance-pr.sh` — new **CLI** commit-mode case: temp repo with an offline
-     manifest declaring commit A; (a) empty `TESTS-RESULTS/` → `wave_reconcile.py --commit A --gate
-     --offline <m> --skip-pull --skip-branch-check --dry-run` exits 6 with the `No provenance.jsonl …`
-     message; (b) a receipt produced by `express.write_receipt` for A → passes the gate; (c) the same
-     receipt vs commit B → 6. This is the red control the issue asks for. (R4)
-   - `test/gh267-express-skill.sh` — happy path: assert the receipt exists, its parsed record has
-     `commit == <pushed sha>`, normalized `command == "bash test/gh999-demo.sh"`, `rc == 0`,
-     `gate == "express-suite"`, exactly one record, and `git show --stat` of the ship commit lists it.
-     Stub `wave_reconcile.py` asserts `--gate` is in argv and, **after** its cleanliness check, exits 6
-     unless a `TESTS-RESULTS/**/provenance.jsonl` line carries its `--commit` sha (mirrors the real
-     matcher's identity check). Negative controls: (i) inject `TESTS-RESULTS/unrelated/provenance.jsonl`
-     after the clean-development check → closeout refuses, remote unchanged; (ii) **mutation control**:
-     run the driver with `write_receipt` monkeypatched to a no-op (`python3 -c "import express; …"`) →
-     the receipt assertion turns red and closeout fails closed with `express-reconcile-failed`;
-     (iii) resume with no receipt → refused with the recovery message; (iv) resume with an uncommitted
-     receipt → persisted, gate passes, second resume writes nothing. `WR_STRIP_RECEIPT` is dropped. (R4, R5)
+   "command": "bash <suite>", "rc": <int>, "result": "pass"|"fail", "environment": "express driver,
+   direct development push"}`. `commit` is the identity the matcher reads; `gate` states what ran.
+2. **One shared validation predicate** — `valid_express_receipt(rec, sha, issue, suite)`: `commit`
+   equals the full sha, `issue == N`, `case == "express-landing"`, `gate == "express-suite"`,
+   `rc` is int `0`, `result == "pass"`, `command == "bash <suite>"` (normalized). `find_receipt(root,
+   sha, issue, suite)` scans every `TESTS-RESULTS/**/provenance.jsonl` and returns the path of the
+   first record satisfying the predicate; malformed / failed / wrong-suite / wrong-issue records are
+   ignored (they never count as evidence). Dedup is by predicate, not by path — a repeat resume across
+   a UTC date boundary writes nothing. (R3, R9)
+3. **Persist exactly the receipt** — `persist_closeout(root, message, extra_paths=())`; `closeout()`
+   passes the returned receipt path to the ship persist only. No prefix widening; any other dirty
+   `TESTS-RESULTS/**` path is still refused as "unexpected dirty path". (R2)
+4. **Gated reconcile** — `closeout()` and `cmd_resume` pass `--gate`; on success the reconciler's stdout
+   is printed (today it is captured and dropped) so the gate outcome is visible in the landing output;
+   the failure hint says `wave_reconcile.py --commit <sha> --gate`. (R6, round-2 pass note)
+5. **Resume never manufactures evidence** — `resume` gains a required `--suite` (the operator names the
+   registered suite; no `--suite` today, so resume has no other trustworthy source of the expectation).
+   `cmd_resume` calls `find_receipt(root, sha, issue, suite)`: if a **committed** valid receipt exists,
+   proceed to `--gate`; if none exists, **refuse** before closing the issue or shipping, with the
+   recovery recipe below. Resume writes no receipt and runs no suite. (R1, R9, R11)
+   Recovery recipe (in the refusal message and SKILL.md): in a disposable full clone, `git checkout
+   <sha>`, run `bash <suite>`, then from a clean `development` checkout of the same clone
+   `python3 -c 'import sys; sys.path.insert(0,"utils/py"); import express;
+   print(express.write_receipt(".", "<sha>", <issue>, "<suite>", <rc>))'`, commit that one file to
+   development and push, then `express resume --issue N --sha <sha> --suite <suite>`. Same helper, same
+   predicate, no new CLI verb, no parallel producer; the receipt records the actual rerun `rc`. (R11)
+   Since the receipt is written after the clean check and immediately persisted, the only crash
+   window that leaves an *uncommitted* receipt is between `write_receipt` and the ship persist; the
+   resume cleanliness guard then reports it as dirt and the operator commits it (it is the exact
+   receipt) — no guard relaxation is needed. (R8)
+6. **Truthful wording in directly related lines** — module docstring L4–8 (registered suite + express
+   qualification, not "every oracle a PR would have satisfied"); Step-7 comment ("bypass by lane
+   design", not "duplicate hook"); docs template L433/L437 ("registered; green asserted at landing
+   (Step 7)" — the scaffold is generated before the suite runs); ship evidence L646 ("registered suite
+   green"); recovery hint with `--gate`; one sentence that `--gate` proves attribution, not test
+   success. (R6, round-2 pass note)
+7. **Tests**
+   - `test/gh425-gate-provenance-pr.sh` — CLI commit-mode case in the existing in-process fixture
+     (mock only unrelated external calls; the offline manifest declares **both** A and B): (a) empty
+     `TESTS-RESULTS/` → `--commit A --gate --offline <m> --skip-pull --skip-branch-check --dry-run`
+     exits 6 with the exact `No provenance.jsonl …` message; (b) `express.write_receipt` for A → passes
+     the gate; (c) same receipt vs `--commit B` → 6 (B declared, so the matcher — not exit 4 — is
+     reached). (R4, R10)
+   - `test/gh267-express-skill.sh` — happy path: receipt exists; exactly one record whose
+     `commit == <pushed sha>` and `case == "express-landing"` (per-sha, not per-file — GH-999 lands
+     repeatedly in this suite); `command == "bash test/gh999-demo.sh"`, `rc == 0`,
+     `gate == "express-suite"`; `git show --stat` of the ship commit lists the receipt. Stub
+     `wave_reconcile.py`: asserts `--gate` in argv; after its cleanliness check, exits 6 unless a
+     `TESTS-RESULTS/**/provenance.jsonl` line carries the `--commit` sha. Negative controls:
+     (i) inject `TESTS-RESULTS/unrelated/provenance.jsonl` after the clean-development check → closeout
+     refuses; remote `development` sha equals the post-fix-push sha (no closeout commits landed);
+     (ii) **mutation control**: `write_receipt` monkeypatched to return the expected path **without
+     writing** → the receipt assertion turns red and the stubbed gate fails closed with
+     `express-reconcile-failed` (a `None` plumbing error cannot impersonate this);
+     (iii) resume with no valid receipt → refused before issue close/ship, message contains the recipe;
+     (iv) resume with a receipt that has `rc: 1`, or the wrong suite, or the wrong issue → refused;
+     (v) genuine interrupted success: valid committed receipt, reconcile never ran → resume passes
+     `--gate`, writes nothing, and a second resume is a no-op (no new record, no extra commit).
+     `WR_STRIP_RECEIPT` is dropped. (R4, R5, R9, R10)
    - Witnessed red/green output of (a)–(c) committed under `TESTS-RESULTS/<date>+GH-592/provenance.jsonl`
      and linked from the PR, per `TESTS-RESULTS/README.md`. (R4)
-7. **CHANGELOG** entry; this doc → `3-COMPLETED` at closeout.
+8. **CHANGELOG** entry; this doc → `3-COMPLETED` at closeout.
 
 ## Acceptance
 
 - [ ] Red control witnessed and committed: CLI `--commit A --gate` with no receipt → 6; express receipt
-      for A → passes; same receipt vs B → 6.
-- [ ] `test/gh267-express-skill.sh` green incl. unrelated-file refusal, mutation control, resume-refuses,
-      resume-persists cases. `test/gh425-gate-provenance-pr.sh` green.
+      for A → passes; same receipt vs declared B → 6.
+- [ ] `test/gh267-express-skill.sh` green incl. controls (i)–(v). `test/gh425-gate-provenance-pr.sh` green.
 - [ ] Full gate green from a disposable clone; PR opened against development; no `XYZ_SKIP_PREPUSH`.
-- [ ] Post-merge: the next real express landing shows `TESTS-RESULTS/<date>+GH-<n>-express/` and a
-      gated reconcile in its output (recorded on #592 when it happens).
+- [ ] Post-merge: the next real express landing shows `TESTS-RESULTS/<date>+GH-<n>-express/` and the
+      printed gated-reconcile outcome (recorded on #592 when it happens).
 
 ## Risks / rollback
 
-- Receipt written between commit and push: if the process dies there, the fix commit is local-only and
-  the receipt is a dirty untracked file; `resume` today refuses an unpushed sha
-  (`resolve_landing_commit`), so the operator pushes and resumes — the receipt is then persisted (item 4).
-- No allowlist widening; the only new writable path in closeout is the exact receipt path the writer
-  returned. Rollback: revert the one commit.
+- The receipt is written after every cleanliness guard and persisted in the very next commit, so the
+  only crash window leaving an uncommitted receipt is between `write_receipt` and the ship persist;
+  resume then reports exactly that file as dirt and the operator commits it. No guard is relaxed.
+- No allowlist widening; the only new writable path in closeout is the exact receipt path.
+- `resume --suite` is a new required argument: any existing operator recipe for `resume` must add it
+  (SKILL.md updated). Rollback: revert the one commit.
 
-## Rating (RELEASES, 2026-09-13; re-assessed after QA round 1)
+## Rating (RELEASES, 2026-09-13; re-assessed after QA rounds 1–2)
 
 `rated 55/45/50/70` — pri 55: evidence gap on the least-reviewed landing path, part of active umbrella
 #591; sev 45: no data loss or breakage, but the gate contract is unenforced on this path; appeal 50
-neutral (no operator preference given); effort 70 (was 80): resume refusal + exact-path persistence +
-CLI red control add ~2 test cases and one helper beyond the first estimate. Recurrence evidence
-(scope-qualified): the three `[express]`-tagged commits on development since 2026-08-30 (`b348d9af`,
-`e30ceb86`, `d1485bc9`) have no matching `commit` in any of the 36 committed provenance/error JSONL
-files (801 records scanned by the reviewer). The lane's first landing is `b348d9af` (2026-09-08), so no
-earlier period exists to compare; no claim is made about deleted history.
+neutral (no operator preference given); effort 70: shared predicate, resume refusal + `--suite`, exact
+path persistence and five negative controls beyond the first estimate. Recurrence evidence
+(scope-qualified, attributed to the round-1 reviewer's search): the three `[express]`-tagged commits on
+development since 2026-08-30 (`b348d9af`, `e30ceb86`, `d1485bc9`) have no matching `commit` in any of
+the 36 committed provenance/error JSONL files (801 records). `b348d9af` (2026-09-08) is the earliest
+landing in the inspected window; no claim is made about earlier periods.
 
 ## Lessons Learned (For Future Agents)
 

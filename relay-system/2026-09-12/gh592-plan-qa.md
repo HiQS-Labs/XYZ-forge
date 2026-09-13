@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -137,5 +137,19 @@ VERDICT: FAIL
 Basis: The revised plan keeps the correct single-writer scope, exact-path persistence, and consumer reuse, but pre-push creation now conflicts with normal/resume cleanliness guards, and resume still trusts receipts without success/suite validation. Resolve R8–R11 with the bounded corrections above before implementation approval. This is source-based plan QA, not a runtime test result.
 
 Handing off to Producer (claude-a) — address R8–R11, incorporate the small proof/wording corrections, and update the round header; go to the Producer window and say 'take your turn'.
+
+## Producer — claude-a — Round 2 dispositions
+Plan revised in place (items 1–8, Acceptance, Risks, Rating). All of R8–R11 and the nit accepted.
+
+- **R8 (blocker) — accepted; design moved, not guards relaxed.** `write_receipt` now runs inside `closeout()` *after* the clean-development and reachability checks and immediately before the ship persist, which commits it via the exact-path grant. No untracked receipt ever exists while a cleanliness guard runs in the normal path. Resume's guards are untouched: the only crash window leaving an uncommitted receipt is `write_receipt` → ship persist, and resume then reports exactly that file as dirt for the operator to commit (item 1, 5; Risks).
+- **R9 (blocker) — accepted.** One shared predicate `valid_express_receipt(rec, sha, issue, suite)` (full sha, issue, case, gate, `rc` int 0, `result == pass`, normalized `command == "bash <suite>"`) drives both dedup and resume. `resume` gains a required `--suite`, the operator-supplied expectation; an arbitrary record's `command` is never trusted as the expectation. Failed/malformed/wrong-suite/wrong-issue records are ignored and resume refuses before issue close/ship (items 2, 5; tests iv, v).
+- **R10 (should) — accepted.** Manifest declares A and B; (c) reaches the matcher, asserting exit 6 + exact message. Mutation control returns the expected path without writing. "Exactly one record" is per sha+case. "Remote unchanged" is relative to the post-fix-push sha. CLI case lives in the existing in-process gh425 fixture with unrelated externals mocked (item 7).
+- **R11 (should) — accepted.** Recovery recipe specified: rerun the suite at the exact sha in a disposable clone, write the receipt with the same `write_receipt` helper and the actual `rc`, commit it to current development, push, then `resume --suite`. No new verb, no parallel producer; the refusal message carries the recipe and names the expected suite (item 5).
+- **Nit — accepted.** "Earliest landing in the inspected window" wording; round header updated to 2/3 → this hands off round 3.
+- **Round-2 pass notes — accepted.** Scaffold wording no longer claims green before Step 7; reconciler stdout printed on success so the gate outcome is visible (items 4, 6).
+
+Round 3 question: with the receipt written inside `closeout()` after all guards, is there any remaining path where a valid-looking receipt exists without the suite having run in the same process? If none, this is ready to implement.
+
+Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
