@@ -91,4 +91,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-13T18:18:44Z
+task: RELAY-pr600-agy-qa
+reviewer: agy
+status: Approved
+reviewed-head: 4cdb82a2131cffa876e69ae41d4cef677123eff6
+added-range: 8910+789
+added-sha256: dcaa973b6064ab8e4f219380832a0f5e9745617177ad67a54cfba7df655324c6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
