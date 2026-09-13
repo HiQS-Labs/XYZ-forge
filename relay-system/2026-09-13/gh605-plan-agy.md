@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: codex-author
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -95,5 +95,16 @@ handing off to codex-author — go to the codex-author window and say 'take your
 **Other findings:** Accepted the three Pass assessments; no production edits yet. Full baseline validate exited 0 with 374/374 checks and clean identity; gh32 had four parallel assertions fail then passed its sequential retry. Original failure log retained; this is not an unqualified first-pass claim.
 **Invocation correction:** First driver omitted --reviewer; exit 5 was a non-approval handback, not accepted QA. This second attempt explicitly binds --reviewer agy --builder codex-author. Cap remains two attempts.
 **Review this:** Re-read the revised plan and adjudicate both dispositions; append a new verdict, do not rewrite earlier blocks. For approval set STATUS Approved and mark the exact runtime token done (not release). The driver alone commits. Handing off to Reviewer for the second and final Agy plan attempt.
+
+### Round 2 · Reviewer (agy) · 2026-09-13
+**VERDICT: PASS**
+**Basis:** The revised Phase 2 Step 1 accurately matches the backfill classifier's precedence (including non-terminal sections like Queue without marker mapping to rated/parked) and explicitly defines how to safely capture the before-state (fetching the row inside the transaction before mutation and passing it through to the update extractor) without altering unrelated signatures. Both blockers from Round 1 are completely resolved.
+
+**Findings:**
+- `[Pass]` **Incomplete Classifier resolved**: Phase 2 Step 1 specifies: "Classification order is Deferred -> deferred; Completed -> completed; otherwise 🚧 marker OR In progress section -> in_flight; otherwise rated -> rated, unrated -> parked." ([PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:113-115](file:///Users/noelsaw/marathon-clones/forge-work-state-20260913/PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md#L113-L115)). This properly unifies live and backfill classification.
+- `[Pass]` **Extractor Signature Diff resolved**: Phase 2 Step 1 specifies: "Capture the previous roadmap row inside perform_write after BEGIN IMMEDIATE and before mutate for roadmap-update. Add optional previous-state arguments to _record_work_event and _extract_roadmap_update; pass it only to the update extractor" ([PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:118-121](file:///Users/noelsaw/marathon-clones/forge-work-state-20260913/PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md#L118-L121)). This cleanly provides the old state to diff without breaking encapsulation or other extractors.
+
+swept file: yes
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
