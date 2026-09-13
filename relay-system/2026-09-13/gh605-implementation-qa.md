@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -362,5 +362,48 @@ Coverage: read releases_app.py, board_sync.py, both connector production modules
 - **[Pass] Legacy connector restoration is an explicit compatible scope choice.** The five-field replay contract and configured first-repository behavior remain (`utils/py/work_connectors/__init__.py:127`, `utils/py/work_connectors/github_board.py:84`), while the policy-board guard remains (`utils/py/work_connectors/github_board.py:125`). No new raw multi-repository protocol is requested. Evidence explicitly retains “No final implementation approval yet” (`TESTS-RESULTS/gh605-implementation/SUMMARY.md:10`); absence of live apply is appropriate.
 
 Handing off to codex-author (Producer): address these findings, retain parent-owned test evidence, and complete the remaining sweep for the final review round. Go to the Producer window and say 'take your turn'. No live apply is approved.
+
+### Producer disposition and Sol High correction brief for final round
+
+Accept all four Blockers and three Shoulds in Reviewer round2. Reproduce with real isolated
+fixtures before changing behavior; these are source findings until the new failing controls
+witness them. Address the smallest existing seams, no new modules/dependencies/schema/writers.
+
+Ownership: Sol may edit only the prior allowlist of production/tests/FAQ/CHANGELOG plus this
+relay. Parent is concurrently running the normal gate in a separate full clone; you are not
+alone. Do not revert other changes. No main-tree edits, no Git commands, no shell/full suites
+in your linked worktree, no live network/config/ledger/board writes. Safe direct Python temp
+fixtures and AST checks only; parent runs full-clone shell/gates. Driver owns commit. Finish
+within20minutes; do not self-approve. This is Producer phase for final Reviewer round3.
+
+1. Actual jog caller/extractor seam: preserve existing GH-number receipt selectors deliberately,
+   but supply/resolve exact jog row global ID and repo for event insertion. Fail closed on
+   ambiguous ownership; no first-row guessing. Real lease/status CLI full-schema fixtures must
+   prove start and stop/failed/parked supersession, event repo and receipt transaction, and
+   metadata-only non-reset. Inspect all jog statuses to ensure no real stop silently disappears.
+2. Apply invalid-identity preservation consistently in issue selection (including valid+invalid
+   row, with/without linked PR). No promotion/demotion by falling through a rejected decision.
+3. Add genuinely integrated real build_policy_preview -> saved preview -> apply -> audit ->
+   conditional restore fixtures. Mock only external GH transport and explicit config/input
+   adapters; do NOT stub the planner/build_policy_preview or fabricate the result under test.
+   Use nonempty temp ledger/current GH/board. Success and second-operation failure, original
+   unset and existing statuses, residual added card, tampered decisions/digest/target, source
+   drift refusal with zero writes, and durable audit assertions. Reuse existing mock transport.
+4. Validate add/set/clear mutation response shape and expected nonempty/matching item ID within
+   the audited invocation before success recording. Missing/null/wrong IDs are indeterminate,
+   never conclusive success, no retry. Preserve add IDs only when established; test all verbs.
+5. Restore exception branch must preserve original unmatched/indeterminate evidence too.
+   Test write mode ordinary error with an existing unresolved request.
+6. Fix rerating's complete old rating/override removal at its existing parser boundary. Do not
+   globally broaden _RATED_TOKEN_RE if other callers only count start markers. Stored raw text
+   must parse back to stored columns after force-rerating with/without old/new overrides.
+7. Repoint selects/updates one global ID and refuses ambiguous issue numbers; prove another
+   repository's same-number row cannot change. Reuse selector conventions, no new identity API.
+
+All prior54Python and six focused shell suites are green at b9d784e9; preserve this baseline.
+Record exact reproduction and post-fix test counts in your appended disposition. Leave NEXT
+Reviewer / STATUS Open and release codex-author. Parent gathers runtime evidence before final
+review. The final reviewer must also close the specific remaining coverage gaps (mock file,
+historical docs and truncated GH549 portion); do not claim they have already been swept.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
