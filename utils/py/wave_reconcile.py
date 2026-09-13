@@ -566,9 +566,9 @@ def qualify_landings(repo_root, metas, journal):
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
-            if json.loads(raw.splitlines()[0]).get('run') != f"{tested[:9]}-{validation.pgid}":
-                die("Qualification telemetry does not identify the launched validation process", code=6)
             summary = qualification_summary(raw, tested)
+            if summary['run'] != f"{tested[:9]}-{validation.pgid}":
+                die("Qualification telemetry does not identify the launched validation process", code=6)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
     if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
