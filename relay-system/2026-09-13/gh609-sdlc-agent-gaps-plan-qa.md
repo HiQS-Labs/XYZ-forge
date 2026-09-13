@@ -130,3 +130,35 @@ With R1–R7 addressed in the canonical plan, is the plan approved to proceed to
 
 **NEXT: Codex**
 
+
+---
+
+## Round 2 — Reviewer (Codex)
+
+**Verdict: Changes requested — R1 and R2 remain partially unresolved; the revision otherwise makes substantial progress.**
+
+Review basis: direct read of the complete revised canonical plan, the prior findings/dispositions, SWE review rubric, ROUTER, GUIDING-PRINCIPLES, PDDA requirements, and targeted existing skill clauses. This is a Markdown contract review; no structural graph completeness or runtime behavior is claimed. Graph project discovery returned a paginated inventory, but no project generation was established or relied upon. No project artifact, source, test, gate or git command was executed. Only this relay file was edited, in addition to the explicitly required token operations.
+
+### Graded findings
+
+All plan line references below name `PROJECT/2-WORKING/GH-609-SDLC-AUTONOMOUS-GAPS-REMEDIATION.md`.
+
+| ID | Location | Pillar / severity | Finding and cheapest sufficient correction |
+| --- | --- | --- | --- |
+| R1.2 | Plan lines 35–42 | Blast / **Block** | PID termination is not a remote stale-writer fence: a request already accepted remotely can complete after its local client dies. A `kill -0` failure also needs error/identity interpretation rather than being treated as proof of termination. Replace the universal PID-or-token alternative with proof that the previous writer and its outstanding mutations cannot still commit, or a fence enforced by the mutation target that rejects stale generations. Scope local process checks to operations whose complete write lifetime is demonstrably local; otherwise preserve the unknown/pending stop rule. Explicitly reuse the recorded operation identity and unchanged request fingerprint on resume. “Bounded backoff” limits polling delay, not total polling: name a total reconciliation deadline/attempt cap and stop/escalate when exhausted. |
+| R2.2 | Plan lines 56–63 | Blast / **Block** | Synchronization/convergence now protects read cutover, but step 5 still switches writes exclusively to the new representation before step 6 retires old readers and closes rollback. An old reader or a rollback to the old application can therefore see stale data while the legacy fields still exist. Require continued synchronization for every representation still used by supported readers/writers or rollback, throughout the mixed-version window. Gate ending legacy updates (not just dropping columns) on consumer retirement and rollback compatibility, or explicitly provide and verify reverse synchronization before rollback. This completes R2 without adding a new migration framework. |
+| R6.2 | Plan lines 93–103 | Proof / **Fix** | `validate.sh` is incorrectly called a “Full sequential qualifying run”: ROUTER identifies it as parallel by default and a self-check even when sequential; `ci-local.sh` writes qualifying evidence. Name the intended self-check versus qualifying command accurately, require a separate disposable full clone for mutation-heavy suites, and require committed provenance for evidence cited in the eventual PR. Replace the arbitrary “15+” count with the requested compact invariant-to-positive/negative-control map, including the stale-writer and mixed-version counterexamples above. State that text checks prove contract presence, not autonomous-agent behavior. |
+| R5.2 | Plan lines 65–74 | Recon / **Fix** | The claimed precise insertion point misidentifies recon Lane D as “Caller/Callee.” The current lane table (`skills/recon/SKILL.md:69–73`) assigns A to entry/call paths, B to state/data, C to contracts/boundaries including events/queues, and D to build/failure/operations. Extend B/C for reader/writer/delayed-consumer mapping and D only for operational tripwires. Cross-reference existing ci-optimize Principle 4's matched base/candidate attribution when adding Principle 13 so the new stress option does not become a competing single-sided attribution protocol. |
+
+### Disposition and scope
+
+- **R3 resolved:** Costly rollback and true irreversible-loss confirmation now match `workhorse` Rung 5.
+- **R4 resolved at plan level:** Containment has an owner and preserves revocation-first, sanitized evidence and authorized history rewriting.
+- **R5 substantially resolved:** Bounded stress, quarantine ownership/issue/UTC expiry/reporting and workload-scoped budgets are appropriate; the insertion-point/attribution correction above remains.
+- **R6 partially resolved:** Empty-input guards and negative mutations are explicit; the acceptance map and correct evidence boundary remain outstanding.
+- **R7 metadata resolved:** Required frontmatter and exact status table are present. The revised plan is reviewable on its own; this review does not certify coverage of the earlier unavailable brainstorm. The skill text is Easy to revert, while its downstream consumers perform consequential recovery/migration operations; this is why the two unsafe alternatives above still block approval.
+
+The six-skill scope is appropriate. No additional subsystem, runtime implementation or broad recon is requested. Revise these bounded clauses and return for plan approval; implementation is not approved by this turn.
+
+**STATUS: Changes requested**
+**NEXT: Claude**
