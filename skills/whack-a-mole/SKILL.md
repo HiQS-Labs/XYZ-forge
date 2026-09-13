@@ -9,6 +9,23 @@ Stop hitting symptoms. Find the one foundational defect behind the bugs that kee
 
 **Scan → cluster → score → understand → draft umbrella → approve → file → verify.**
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Whack-a-Mole Discipline:**
+> 1. **Scan activity & detect repo ranking systems (§1–§2).** Perform a read-only sweep of the last 14 days of issues, merged PRs, fix/revert commits, and comment threads; identify the repo's ranking scheme (PDDA, P0 labels, project fields) to anchor priority.
+> 2. **Cluster by multi-signal correlation (§3).** Group defects sharing $\ge 2$ independent signals (same hot file/module, matching error signatures, explicit issue links, or common component labels), separating single-signal adjacent noise.
+> 3. **Score churn & audit recurrence (§4).** Quantify developer friction using weighted composite churn scoring (reopens, repeat fixes on the same files, reverts, cluster size, comment volume, age open); stop if no cluster scores $> 5$.
+> 4. **Isolate root-cause invariant via recon (§5).** Apply `/debug-mantra` and `/recon` to trace failure paths end-to-end, uncover the violated architectural invariant (state, ordering, concurrency, boundary), and falsify coincidental file co-location.
+> 5. **Draft graded umbrella & file on operator approval (§6–§7).** Structure a concrete umbrella remediation plan with evidence-graded findings (**`FACT`** · **`PATTERN`** · **`HYPOTHESIS`**), ordered tasks (repro $\rightarrow$ guard $\rightarrow$ fix $\rightarrow$ sweep $\rightarrow$ verify), and top-tier priority; file the single issue only after explicit operator approval.
+>
+> **Overall Goal:** Recurring bug churn eliminated by identifying the single foundational defect behind symptom clusters and obtaining operator approval to file a top-priority, actionable umbrella remediation plan.
+
+Then begin work.
+
+---
+
 ## Non-negotiables
 
 - Git is read-only: `log`, `diff`, `show`, `blame`, `ls-files`, `grep`. Never checkout, stash, reset, commit, or push.

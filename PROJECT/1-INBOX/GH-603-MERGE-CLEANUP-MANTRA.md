@@ -1,7 +1,7 @@
 ---
 gh_issue: 603
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/603
-title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, and sop skills"
+title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, and whack-a-mole skills"
 status: Proposed (1-INBOX — active)
 created: 2026-09-13
 updated: 2026-09-13
@@ -10,13 +10,13 @@ doc_type: feedback
 goal: >
   Add verbatim 5-point discipline mantra recital blocks, Rung 0 Intake Triage, and Overall Goal
   anchors at the top of skills/merge-cleanup/SKILL.md, skills/start-task/SKILL.md,
-  skills/workhorse/SKILL.md, and skills/sop/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
+  skills/workhorse/SKILL.md, skills/sop/SKILL.md, and skills/whack-a-mole/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
 roadmap_exempt: true
 ---
 
-# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, and sop
+# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, and whack-a-mole
 
-Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, and `skills/sop/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
+Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, and `skills/whack-a-mole/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
 
 ## 1. Merge-Cleanup Discipline Mantra
 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
@@ -49,5 +49,14 @@ Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors t
 4. **Solicit operator confirmation before mutation (Step 3).** Present candidate diffs to the human operator, prompt for any missing incidents or context, and wait for explicit approval (all / by ID / edit / drop) before modifying any files.
 5. **Apply additively & record audit trail (Step 3 / Governance).** Apply approved diffs additively (newest first, never deleting without explicit request), persist the run audit log to `.sop/<timestamp>/`, re-verify disk writes, and provide a suggested commit message (strictly read-only git).
 **Overall Goal:** Operational procedures and lessons-learned documentation continuously synchronized with verified empirical events, with zero unconfirmed assertions, zero destructive overwrites, and strict evidence-graded operator approval.
+
+## 5. Whack-a-Mole Discipline Mantra
+1. **Scan activity & detect repo ranking systems (§1–§2).** Perform a read-only sweep of the last 14 days of issues, merged PRs, fix/revert commits, and comment threads; identify the repo's ranking scheme (PDDA, P0 labels, project fields) to anchor priority.
+2. **Cluster by multi-signal correlation (§3).** Group defects sharing $\ge 2$ independent signals (same hot file/module, matching error signatures, explicit issue links, or common component labels), separating single-signal adjacent noise.
+3. **Score churn & audit recurrence (§4).** Quantify developer friction using weighted composite churn scoring (reopens, repeat fixes on the same files, reverts, cluster size, comment volume, age open); stop if no cluster scores $> 5$.
+4. **Isolate root-cause invariant via recon (§5).** Apply `/debug-mantra` and `/recon` to trace failure paths end-to-end, uncover the violated architectural invariant (state, ordering, concurrency, boundary), and falsify coincidental file co-location.
+5. **Draft graded umbrella & file on operator approval (§6–§7).** Structure a concrete umbrella remediation plan with evidence-graded findings (**`FACT`** · **`PATTERN`** · **`HYPOTHESIS`**), ordered tasks (repro $\rightarrow$ guard $\rightarrow$ fix $\rightarrow$ sweep $\rightarrow$ verify), and top-tier priority; file the single issue only after explicit operator approval.
+**Overall Goal:** Recurring bug churn eliminated by identifying the single foundational defect behind symptom clusters and obtaining operator approval to file a top-priority, actionable umbrella remediation plan.
+
 
 
