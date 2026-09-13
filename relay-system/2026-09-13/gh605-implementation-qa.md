@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,74 @@ Coverage: Read the controlling plan, committed SUMMARY/provenance, board_sync, c
 - [Pass] **Useful foundations and honest checkpoint reporting are present.** Section-first classification is explicit at `releases_app.py:1449`; metadata-only update emits `updated` at line 1469; receipt/event insertion and commit share rollback handling at line 1646. The sweep fixture has a nonempty five-row baseline (`test/gh492-roadmap-state-sweep.sh:78`), second-event fault injection at line 121, and a no-op rerun assertion at line 157. Per-request intent precedes invocation (`board_sync.py:722`), apply checks exact item ID (`:1139`), and unset restore calls the clear writer (`:1264`). These are source observations, not a passing candidate verdict. `SUMMARY.md:9` explicitly disclaims final approval/live mutation; no premature ship claim found in that checkpoint. The controlling plan's final 80/65/50/45 rating remains appropriate; lack of live application before code approval is expected.
 
 Handing off to codex-author (Producer): address the blockers and acceptance gaps, retain the existing scope, and return the corrected candidate with committed evidence for round 2. No live apply before approval.
+
+## Producer disposition and delegated Sol High correction — opening Round 2
+
+Author disposition: all seven Blockers and both Should findings are accepted. These repair
+the approved contracts in existing seams; no new subsystem, dependency, schema or policy.
+The limited sweep is explicitly NOT approval: the next reviewer must finish surrounding-file
+coverage before approval. Reviewer exit5 is a successful changes-requested handback, not a stall.
+
+Additional verification of7e24f54a in a second full clone: gh549-work-events.sh and
+gh402-board-sync.sh both exit0; the expanded sweep exits0; Python40/41, with the single
+Git-less odd-path fixture error already recorded. First-build full validate376/377 persists
+red on .sh census, with clone identity unchanged. No live writes or config edits.
+
+### Sol High implementation instructions for this Producer turn
+
+Sol-builder is the author's delegated Producer for edits, per operator's explicit Sol High
+implementation preference. Read the round1 findings and controlling plan. You own only the
+allowlisted existing code/docs/tests plus two thin test entry points below. You are not alone;
+preserve other changes. Do not edit plan/evidence or unrelated governance. Use apply_patch.
+No git commands, no network mutations, no device config/ledger edits, no clone creation.
+No full gate or mutation-heavy tests in this linked worktree; parent runs those in a full clone.
+Syntax checks/pure probes are fine. Finish this bounded correction within30minutes and hand
+back honestly, rather than spending the entire time on commentary. Don't run extra QA agents.
+
+Implement every round1 finding and focused tests. In particular:
+- Replace simultaneous user/organization resolver query with repositoryOwner and inline
+  User/Organization fragments. The parent tested that exact approach live: valid Rev.2 ID
+  and all five columns returned. Fix the extra snapshot brace, adapt existing mock transport
+  and test actual query shapes/balanced syntax and both owner types plus missing owner errors.
+- Before sqlite connect, inspect the DB header and refuse WAL-format (not merely existing
+  sidecars). A closed WAL-mode schema7 fixture creates -wal/-shm under mode=ro today. Add
+  WAL7/WAL8 no-sidecar fixtures and bytes/presence protection checks. Do not use immutable=1
+  as a live-data shortcut. Unsupported root yields structured unready (not stray SystemExit).
+  Give the odd-path fixture its own Git metadata so it actually tests URI quoting.
+- Separate informational/latest-event from genuine lifecycle. start->backfill, ->old metadata
+  in_flight, and ->re-rating must retain a valid start; actual Queue/park/jog-stop supersedes.
+  Preserve unknown for genuinely malformed/future start evidence. Keep existing event vocabulary
+  compatible; tagging rate as informational is preferable to breaking existing rated consumers.
+- Carry the source row's repo_id for ordinary roadmap/jog extraction as well as sweep events.
+  Refuse ambiguous --issue-num selectors and mutate the selected global_id, not every same
+  number. Use the already existing event repo-id seam, no new writer/CLI subsystem. Test actual
+  writes in two-repo/same-number fixtures, not only seeded history.
+- Preserve duplicate/contradictory terminal ledger issues even when linked to an open PR;
+  independent PR cards still enter review. Fix unset-versus-absent membership and report unknown
+  unrated Ready cards. Keep the approved top10/ties/PR/dates behavior.
+- Validate column inside the shared writer BEFORE add; update supplied board_add snapshots on
+  success. Keep per-request audit IDs, no blind policy retry and legacy caller compatibility.
+- Keep restore indeterminate while unmatched OR explicitly indeterminate results remain.
+  Add real writer/audit failure+restore integration, digest/decision/target/GH-drift tests,
+  zero-write refusal tests and invalid status/response coverage, not mocks replacing the whole
+  planner. Do not swallow genuine fsync I/O failures as "unsupported directory fsync".
+- Restore validate.sh's original runner plumbing (remove the Python-dispatch helper and changed
+  invocations) and register test/gh605-work-state.sh and test/gh605-board-policy.sh. These should
+  be tiny shell entry points invoking their existing Python fixture files, with no new framework.
+  Existing .sh census then remains correct. No other test registry/pipeline edits.
+- Add fixtures so parent can witness red controls for shared section precedence, omitted batch,
+  informational/backfill freshness and top-N. Update FAQ/CHANGELOG only for actual behavior.
+
+Allowed production/test paths: utils/py/releases_app.py, utils/py/board_sync.py,
+utils/py/work_connectors/github_board.py, utils/py/work_connectors/__init__.py,
+utils/py/mock_gh_board.py, test/test_gh605_work_state.py, test/test_gh605_board_policy.py,
+test/gh605-work-state.sh, test/gh605-board-policy.sh, test/gh549-work-events.sh,
+test/gh492-roadmap-state-sweep.sh, test/gh402-board-sync.sh, validate.sh,
+RELEASES-DB-FAQS.md, CHANGELOG.md and this relay file.
+
+Append one concise disposition block for every review finding with real implementation
+citations and remaining gaps. Do not self-approve. Leave STATUS Open and NEXT Reviewer;
+release runtime token to codex-author so the parent can execute tests and dispatch Codex round2.
+The driver owns the file-scoped commit. No live apply before independent approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
