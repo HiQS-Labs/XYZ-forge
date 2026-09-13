@@ -3,8 +3,8 @@ Goal: Final QA — GH-593 implementation (radar re-scores whack-a-mole umbrellas
 Date: 2026-09-13
 Producer: claude-a
 Reviewer: codex
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ---
 
 # Context
@@ -94,3 +94,29 @@ Round 2: confirm F1–F3 closed or cite the remaining line. Then `VERDICT:`.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Reviewer — codex
+
+**Round 2 — Approved. F1, F2 and F3 are closed in the actual artifact text.** No remaining blocking finding in this requested correction review.
+
+**Basis: textual only; non-executable skill instructions.** Re-read the revised template, counting contract, radar state definitions and witness directly, and checked the plan and prior dispositions. No graph tools are exposed; these Markdown checks use line-numbered source reads. No git command, project script, artifact execution, gate or remote query was run. Historical evidence and gate results remain producer-reported; this approval does not independently attest the commit identity, complete branch diff, or merge readiness. Only this relay file was edited.
+
+Citation keys retain their definitions from round 1: W = whack-a-mole skill; R = radar skill; V = WITNESS.md; P = implementation plan.
+
+1. **Plan ↔ implementation — OK; [Pass] F1 closed.** W:125–127 now separates the outer four-backtick presentation fence from the issue body. W:160–172 puts all nine signature keys in an inner triple-backtick block with the heading outside it; W:174–175 explicitly defines that layout. The remediation checklist at W:140–145 remains outside the inner fence. V:105–127 supplies the matching body tail and both deleted-block/deleted-key controls. The step 1 mapping is now complete (W:160–215,241,249). Steps 2–6 remain at R:37–40,319,387–389; R:176–210; R:461–490; R:519; CHANGELOG.md:5–7 respectively. R:467 still matches P:204 exactly, including the named reopening and solved extensions.
+
+2. **Contract consistency — OK; [Pass] F2 closed.** R:474–479 now defines `holding` as the fallback when neither survived nor solved applies. It explicitly covers an open umbrella with a merged fix and score ≥5, and unavailable observations; both active and unavailable observations reset quiet credit. R:480–489 preserves the closed-only reopening recommendation and the merged-fix plus two-distinct-date quiet requirement. R:195–196 retains the operational-evidence veto, and R:471–473 retains the legacy restriction. W:192–210 and R:197–206 still agree on interval, membership, raw counts and default arithmetic. No new contradiction introduced by the correction.
+
+3. **Witness validity — OK on stated inputs; [Pass] F3 closed.** V:77 now gives both legal states for D: closed → survived; open → holding; score 9 → quiet 0/2. V:87's unavailable observation now has an explicit fallback in R:474–479. V:79 correctly says A has a merged-fix cutoff but score 5 and quiet 0/2, so it lacks the required 2/2. The #591 calculation remains `size=5, comments=2, open_days=9` → `5+0+1=6`, holding without a cutoff (V:45–66); A/A′/B/C/C-neg/D/E remain 5/4/0/0/4/9/5 under the stated fixtures. Membership and excluded-commit classifications remain conditional on the witness's supplied evidence, as in round 1.
+
+4. **Witness-driven fixes — OK.** W:237 and R:180–185 agree on the supported `Umbrella:` title convention; W:196–204 and R:197–200 retain membership gating for every count. Round 1's disclosed renamed/imported-title limitation remains; no additional scope change is needed for F1–F3.
+
+5. **Guardrails — OK.** The correction adds no write authority. R:29–32,473,480–482 retains the two sinks and no umbrella edit/reopen; the template correction changes formatting, not whack-a-mole's filing permissions.
+
+6. **Duplicate subsystem — OK within the inspected prose scope.** These corrections remain in the existing template, state bullets and witness. No new scoring formula, persistence destination or executable is called for; the complete-diff evidence limit above still applies.
+
+7. **Rating and state — OK.** P:292–304's `60/55/50/80` remains appropriate for the bounded prose scope. P:31 correctly left this final QA, gate-backed push and PR outstanding at review entry. This turn completes final textual QA; push, PR and final gate evidence remain the producer/harness's work (V:129–132), not outcomes claimed here.
+
+Disposition: F1 and F2 textually fixed; F3 witness rationale corrected. Marking the relay Approved and completing its token with `done`; the harness owns the file-scoped commit and subsequent gate.
+
+VERDICT: Approved
