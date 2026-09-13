@@ -1,7 +1,8 @@
 ---
 name: workhorse
 description: >
-  End-to-end disciplined problem resolution ladder: establishes ground truth via
+  End-to-end disciplined problem resolution ladder: triages complex multi-task or
+  wall-of-text intake into an atomic priority queue, establishes ground truth via
   /debug-mantra, engineers the leanest safe solution via /ponytail (reusing and
   extending existing subsystems with zero code sprawl), enforces AGENTS.md, SOP.md,
   and GUIDING PRINCIPLES governance, checks cross-repo CHANGELOG cohesion, stress-tests
@@ -12,33 +13,65 @@ description: >
   "methodical progress", or when an ambiguous or complex task requires structured,
   governed execution across the full ladder.
 metadata:
-  argument-hint: "[task, PR, issue, or problem description]"
+  argument-hint: "[task, PR, issue, wall-of-text, or problem description]"
 ---
 
 # /workhorse — Governed End-to-End Problem Resolution Ladder
 
-`workhorse` is a 6-rung execution ladder that transforms ambiguous symptoms, complex bugs, PR reviews, or feature requests into clean, minimal, cross-model-verified, durable solutions.
+`workhorse` is a 7-rung execution ladder (Rung 0 + Rungs 1–6) that transforms ambiguous symptoms, wall-of-text transcripts, multi-task dumps, complex bugs, PR reviews, or feature requests into clean, minimal, cross-model-verified, durable solutions.
 
-It coordinates existing specialized skills (`debug-mantra`, `recon`, `ponytail`, `consult`) and repository governance rules rather than creating duplicate procedural abstractions.
+It coordinates existing specialized skills (`debug-mantra`, `recon`, `ponytail`, `consult`, `relay`) and repository governance rules rather than creating duplicate procedural abstractions.
 
 ---
 
-## The 6-Rung Ladder
+## Recite this — verbatim, as the first thing in your first response
+
+> **Workhorse Discipline:**
+> 1. **Triage & rank intake (Rung 0).** Deconstruct walls of text, multi-symptom dumps, or LLM transcripts into an atomic priority list (P0 → P1 → P2). Hold the active queue in the session plan; for deferred/out-of-scope items, prefer the repository's canonical intake path (e.g. `PROJECT/1-INBOX/`) when available, otherwise park them in `<repo-root>/PARKED/`.
+> 2. **Establish ground truth on current item (Rung 1).** For the top priority item, inspect raw artifacts and live state directly, capture a deterministic repro, trace fail paths end-to-end, and run disproofs first before theorizing.
+> 3. **Design least-mechanism & check governance (Rungs 2–3).** Apply `/ponytail` (YAGNI, standard library first, shortest diff); strictly extend existing subsystems with zero code sprawl or duplicate write paths, complying with `AGENTS.md`/`SOP.md`.
+> 4. **Stress-test via cross-model consensus (Rung 4).** Fan out the plan to independent advisors (Codex + Agy via `/consult`), surface technical disagreements without averaging, and resolve all blocking feedback.
+> 5. **Prove preservation, execute & advance queue (Rungs 5–6).** Classify reversibility (`Easy`/`Costly`/`One-way door`), prove preservation invariants, apply minimal diff, verify against runnable checks, and loop back to the next item until the queue is clear.
+>
+> **Overall Goal:** Complete triage queue resolved serially — each item root-cause proven, simplest architecture validated across independent models, and solution executed with zero code sprawl and verified preservation.
+
+Then begin work. When `/workhorse` is the active orchestrating skill, this recital precedes any subordinate skill invocations; subordinate skills (`/debug-mantra`, `/ponytail`, etc.) are then loaded and followed for their mechanics without duplicating conflicting recitals.
+
+---
+
+## The 7-Rung Ladder
 
 ```text
+0. Intake Triage & Queue           ──► Deconstruct wall-of-text / multi-task dump; hold active queue, prefer canonical intake (or <repo-root>/PARKED/)
 1. Ground Truth & Diagnostics  (/debug-mantra)  ──► Reproduce raw artifact, trace paths, falsify hypotheses
 2. Least-Mechanism Design      (/ponytail)      ──► YAGNI, stdlib first, ZERO duplicate subsystems, minimal diff
 3. Governance & Cohesion Gate                   ──► AGENTS.md, SOP.md, GUIDING-PRINCIPLES.md, CHANGELOG parity
 4. Cross-Model Consensus       (/consult)       ──► Parallel fan-out (Codex + Agy), reconcile disagreements
 5. Preservation & Irreversibility Gate          ──► Inventory state, prove preservation, establish rollback or confirm loss
-6. Governed Execution & Verification            ──► Apply minimal diff, execute runnable checks, verify done
+6. Governed Execution & Verification            ──► Apply minimal diff, execute runnable checks, verify done -> loop to next
 ```
+
+---
+
+## Rung 0: Intake Triage & Queue Decomposition
+
+When `/workhorse` is invoked on a large or ambiguous problem, intake typically arrives in one of two forms:
+- **Human operator task dump:** A list or paragraph of multiple interrelated tasks, bug reports, or feature requests.
+- **Agent transcript / wall of text:** A verbose diagnostic dump, subagent report, or prior LLM reasoning trace.
+
+**Triage Protocol:**
+1. **Atomic Decomposition:** Extract individual, falsifiable items from the dump. Do not attempt a single omnibus fix for multiple disjoint problems.
+2. **Severity/Priority Ranking:** Order the items (P0 critical / blockers → P1 core fixes → P2 polish / optimizations).
+3. **Queue Segmentation:**
+   - **Active Session Queue:** Hold the immediate in-flight items (Top 1–3) in the active session plan / scratchpad.
+   - **Deferred Items (Canonical Intake First / `/PARKED/` Fallback):** For items that are out-of-scope, secondary, or deferred for a future session, check and prefer the repository's canonical structured intake path first (e.g. creating `PROJECT/1-INBOX/GH-<NUM>-<topic>.md` with immediate roadmap registration per `ROUTER.md:38–40`). If and only if the repository lacks a canonical structured intake system, write them to `<repo-root>/PARKED/YYYY-MM-DD-<topic>.md`. Always preserve links, resolve issue-first requirements before writing deferred records, and avoid creating competing records.
+4. **Serial Execution Loop:** Select the highest-priority item from the active queue and advance it through Rungs 1–6. Upon completion, advance to the next item in the queue until all active items are resolved.
 
 ---
 
 ## Rung 1: Ground Truth & Diagnostics (`/debug-mantra`)
 
-Establish primitive ground truth before theorizing or proposing any changes.
+Establish primitive ground truth before theorizing or proposing any changes. Load and follow `/debug-mantra` for detailed diagnostic mechanics.
 
 1. **First is reproducibility / raw artifact inspection:**
    - For a failure/bug: capture a fast, deterministic runnable repro (failing test, curl, CLI run).
@@ -48,7 +81,7 @@ Establish primitive ground truth before theorizing or proposing any changes.
    - Flip one axis at a time in the differential.
 3. **Question your hypothesis (Disproof First):**
    - Generate 2–3 ranked hypotheses. Identify the cleanest **disproof** for each.
-   - Run the disproof first: if it fails, discard immediately to avoid chasing phantoms.
+   - Run the disproof first: if the disproof succeeds (falsifying the hypothesis), discard that hypothesis immediately to avoid chasing phantoms.
 4. **Every run is a breadcrumb:**
    - Maintain a running session ledger of observations, probes, and ruled-out paths.
 
@@ -94,13 +127,13 @@ Validate that the proposed minimal solution complies with the repository's found
 3. **`GUIDING-PRINCIPLES.md` Alignment:**
    - Check the North Star: Durable, Reversible, DRY.
    - Single-writer per contract/table.
-   - Introduce an FSM if state transitions exceed 4 states or multiple conditional branches.
+   - State Complexity: Introduce an FSM only when state complexity exceeds approximately 4 distinct states with non-trivial transitions (per SWE rubric & repo governance); otherwise use lean enums, flags, or explicit conditions.
 4. **`CHANGELOG.md` Check:**
    - Review recent entries in `CHANGELOG.md` across relevant repos (`XYZ-forge`, `rebalanceOS`, etc.).
    - Ensure terms, patterns, and architectural conventions match the active codebase state rather than legacy/superseded patterns.
 5. **PDDA & Releases Ledger Intake:**
-   - *Tracking Doc:* For non-trivial tasks, confirm a capture doc exists in `PROJECT/1-INBOX/` or `PROJECT/2-WORKING/` with frontmatter `status: active`.
-   - *Releases DB / Roadmap:* Verify the issue is registered in `releases.db` (`releases roadmap add <GH-NUM>` / `releases jog add`) in releases-mode repos.
+   - *Tracking Doc:* For non-trivial tasks, confirm a capture doc exists under the applicable lifecycle contract (e.g. `PROJECT/1-INBOX/` with `status: proposed` / `status: draft`, or `PROJECT/2-WORKING/` with `status: active`).
+   - *Releases DB / Roadmap:* For repos using the releases ledger, verify the issue is registered in `releases.db` via canonical roadmap commands (`python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P` with flags per `ROUTER.md:38`). Serial task queueing (`releases jog add`) is a separate optional enqueueing step, not an alternative to roadmap registration.
 
 ---
 
@@ -108,9 +141,9 @@ Validate that the proposed minimal solution complies with the repository's found
 
 Stress-test the finalized plan or architecture across independent AI models before touching production code.
 
-1. **Fan-Out (`consult.sh`):**
-   - Formulate a crisp prompt referencing the real file paths and problem context.
-   - Run `consult.sh --prompt "..." --label ...` to query **Codex** and **Agy** in parallel in isolated throwaway worktrees.
+1. **Fan-Out (`/consult`):**
+   - Load and invoke the `/consult` skill (`skills/consult/SKILL.md`), adhering to its cwd-independent locator and `CONSULT_ROOT` pin.
+   - Query **Codex** and **Agy** in parallel in isolated throwaway worktrees. If an advisor is unavailable, handle degraded output per `/consult` instructions.
 2. **Reconcile Without Averaging (Surface the Seams):**
    - **TLDR:** 1–2 sentence summary of the reconciled call and confidence level.
    - **Disagreements:** Explicitly list every point where advisors differed, with your adjudication and technical rationale.
@@ -177,7 +210,7 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      exist from Rung 5.
 3. **Ledger Closeout & PDDA Reconciliation:**
    - *Doc Promotion:* If a working doc was created, update frontmatter to `status: completed` and move to `PROJECT/3-COMPLETED/` (or let `wave_reconcile` handle it).
-   - *Ledger Integrity:* Run local PDDA/releases checks (e.g. `pdda-local-checks.sh` or `releases roadmap list`) to ensure zero orphaned or unanchored states remain.
+   - *Ledger & Lifecycle Integrity:* Run the applicable canonical repository checks (e.g. `python3 utils/py/releases_app.py check`, `utils/pdda/pdda.sh roadmap-coverage`, `roadmap`, `stale`, `issue-doc-sync`, and `utils/pdda-local-checks.sh`). Inspect reported warnings/findings rather than relying on exit code alone, and ensure all ledger invariants, milestone mappings, and doc sync contracts are satisfied.
 4. **Report & Close:**
    - Present a concise completion summary:
      - Root cause & ground truth established (Rung 1).
@@ -193,7 +226,7 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
 
 - **Fast-Track (Trivial + Easy to Reverse):**
   Only when an action is both obvious/mechanical/trivial **and** classified Easy to reverse:
-  - Execute Rungs 1, 2, 5, and 6 directly (observe ground truth → shortest diff → classify → verify).
+  - Execute Rungs 1, 2, 3, 5, and 6 directly (observe ground truth → shortest diff → verify governance/cohesion → classify Easy reversibility → verify runnable checks).
   - Explicitly skip Rung 4 in one line: `[workhorse fast-track: trivial and Easy to reverse; skipped consult]`.
   - Destructive, externally published, Costly, or One-way-door actions never fast-track, however
     simple the command or small the diff.
@@ -204,7 +237,7 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
     `/unstuck` as a blocking interrupt. Cap exhaustion alone is insufficient while evidenced
     correctness findings are still converging. When movement resumes, return here; Rung 5 and Rung 6
     remain mandatory. Do not restart the ladder or add another consult cycle by default.
-  - **Iterative 1:1 Co-Authoring:** If Rung 4 reveals that an artifact requires multiple iterative drafting rounds, hand off to `/relay-xyz`.
+  - **Iterative 1:1 Co-Authoring:** If Rung 4 reveals that an artifact requires multiple iterative drafting rounds, scaffold via `/relay` and drive via `/relay-xyz` when supported on the repo.
   - **Open-Ended Research / Ideation:** If the task is purely investigatory without code modifications, hand off to `/recon` or `/feynman`.
   - **Ambiguous Stale State:** For each stale clone or folder whose disposition is not already
     proven, run a bounded `/recon` before deciding whether to preserve, merge, archive, or remove it.
@@ -213,13 +246,14 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
     when its report leaves a relevant carrier unchecked or unknown.
 
 - **Pushback & Routing Authority:**
-  If an operator invokes `/workhorse` on an emergency fire drill (incident rollback) or pure open-ended Q&A, the agent is explicitly authorized to state: *"Fast-tracking to immediate remedy / routing to research mode."*
+  If an operator invokes `/workhorse` on an emergency fire drill (incident rollback) or pure open-ended Q&A:
+  - For emergency rollbacks: Apply Fast-Track rules if the operation is trivial and Easy to reverse (executing Rungs 1, 2, 3, 5, 6 while skipping Rung 4 consult); if the action is Costly or One-way door, execute the full ladder including full Rung 5 preservation proof, tested rollback/loss disclosure, and fresh verification before mutating.
+  - For pure open-ended Q&A: Route cleanly to research/recon mode (`/recon`).
 
 ---
 
 ## Operating Rules
 
-- Apply all 6 rungs in order. Never skip Rung 1 (ground truth) or Rung 5 (preservation) to jump to
-  Rung 6 (execution).
+- Execute Rung 0 once per intake, then apply Rungs 1–6 in order for each active queue item. Never skip Rung 1 (ground truth), Rung 3 (governance), or Rung 5 (preservation) to jump to Rung 6 (execution).
 - Keep communication concise and results-driven.
 - If a consult or verification surfaces unexpected failure, loop back to Rung 1 (falsify hypothesis & trace fail path) rather than guessing a patch.
