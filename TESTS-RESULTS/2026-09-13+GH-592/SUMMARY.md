@@ -1,7 +1,7 @@
 # GH-592 — express provenance receipt: witnessed controls
 
 Tested implementation: commit `acff869ce90ff62619c95cb2fd793b7d22405818` on `fix/gh592-express-receipt`, 2026-09-13, disposable clone, working tree clean
-(the receipts' `commit` field names exactly this commit; the PR number is appended once the PR exists).
+(the receipts' `commit` field names exactly this commit; PR #597).
 
 ## Red controls (the gate can fail)
 - `test/gh425-gate-provenance-pr.sh::test_cli_commit_landing_gate_express_receipt`
