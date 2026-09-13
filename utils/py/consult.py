@@ -687,7 +687,9 @@ def main():
                         shutil.copyfile(out, out + ".json")
                         with open(out, "w") as stream:
                             stream.write(answer + "\n")
-                    except ValueError:
+                    except ValueError as error:
+                        with open(out, "a") as stream:
+                            stream.write(f"\nconsult: {error}; CLI diagnostics: {out}.stderr\n")
                         breached = True
                 if m == "agy" and proc.returncode == 0 and os.path.isfile(out) and os.path.getsize(out) > 0:
                     if consult_agy_isolation_breach(out, root):
@@ -715,6 +717,8 @@ def main():
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                     with open(out, "a") as f:
                         f.write(f"\nconsult: advisor failed with exit {proc.returncode}\n")
+                        if m == "claude":
+                            f.write(f"consult: CLI diagnostics: {out}.stderr\n")
                     results.append((m, out, False))
             except subprocess.TimeoutExpired:
                 if getattr(proc, "xyz_own_group", False):

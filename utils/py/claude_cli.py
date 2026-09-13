@@ -28,6 +28,8 @@ def preflight(binary, env, cwd):
         return
     if mode != "subscription":
         raise ValueError("CLAUDE_AUTH_MODE must be inherit or subscription")
+    if not binary:
+        raise ValueError("claude binary not found; install Claude Code or set CLAUDE_BIN")
     overrides = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL",
                  "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "CLAUDE_CODE_USE_FOUNDRY")
     if any(env.get(k) for k in overrides):
@@ -53,8 +55,8 @@ def read_result(path):
         with open(path, encoding="utf-8") as stream:
             data = json.load(stream)
         if (not isinstance(data, dict) or data.get("type") != "result"
-                or data.get("is_error") is True
-                or data.get("subtype", "success") != "success"
+                or data.get("is_error") is not False
+                or data.get("subtype") != "success"
                 or not isinstance(data.get("result"), str) or not data["result"].strip()):
             raise ValueError()
         return data["result"]

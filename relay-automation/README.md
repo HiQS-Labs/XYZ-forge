@@ -85,7 +85,8 @@ Consult uses `CONSULT_TIMEOUT` (default 300 seconds); relay uses `RELAY_TURN_TIM
 a successful preflight verifies the account route, not remaining quota or a billing ceiling.
 JSON error, exhausted-turn, or empty results fail the new Claude consult and subscription
 relay paths even if the CLI exits zero. Inspect the local transcript before retrying.
-Consult retains raw JSON beside its answer as `.md.json`; keep private prompts and account
+Consult retains raw JSON beside its answer as `.md.json` and CLI diagnostics as `.md.stderr`;
+failed-Claude messages point to that stderr file. Keep private prompts and account
 details out of published evidence.
 
 Provider policy is time-sensitive. As of 2026-09-13, Anthropic's

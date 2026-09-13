@@ -18,6 +18,9 @@ class ClaudeSubscription(unittest.TestCase):
             preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
             self.assertEqual(run.call_args.args[0],['/cli','auth','status'])
             self.assertEqual(run.call_args.kwargs['cwd'],'/repo')
+    def test_missing_binary(self):
+        with self.assertRaisesRegex(ValueError,'binary not found'):
+            preflight('',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
     def test_bad_accounts(self):
         good=dict(loggedIn=True,authMethod='claude.ai',apiProvider='firstParty',subscriptionType='max')
         for key,value in [('loggedIn',False),('authMethod','api_key_helper'),('apiProvider','bedrock'),('subscriptionType',None)]:
@@ -41,7 +44,7 @@ class ClaudeSubscription(unittest.TestCase):
     def test_results(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/'result.json'
-            for value,ok in [({'type':'result','is_error':False,'result':'answer'},True),({'type':'result','is_error':True,'result':'quota exceeded'},False),({'type':'result','is_error':False,'subtype':'error_max_turns','result':'partial'},False),({'type':'result','result':''},False),([],False)]:
+            for value,ok in [({'type':'result','is_error':False,'subtype':'success','result':'answer'},True),({'type':'result','is_error':True,'result':'quota exceeded'},False),({'type':'result','is_error':False,'subtype':'error_max_turns','result':'partial'},False),({'type':'result','is_error':False,'result':'partial'},False),({'type':'result','subtype':'success','result':'partial'},False),({'type':'result','result':''},False),([],False)]:
                 p.write_text(json.dumps(value))
                 if ok: self.assertEqual(read_result(str(p)),'answer')
                 else:
@@ -61,7 +64,7 @@ class ClaudeSubscription(unittest.TestCase):
             cli=root/'claude'; env['CLAUDE_BIN']=str(cli)
             cli.write_text('#!'+sys.executable+'\nimport sys,json,os\n'
                 +'if sys.argv[1:]==["auth","status"]: print('+repr(json.dumps(dict(loggedIn=True,authMethod='claude.ai',apiProvider='firstParty',subscriptionType='max')))+')\n'
-                +'else:\n assert "Read,Grep,Glob" in sys.argv and "--strict-mcp-config" in sys.argv\n print("workspace trust warning",file=sys.stderr)\n print(json.dumps(dict(type="result",is_error=os.getenv("STUB_ERROR")=="1",result="README.md:1 contains fixture")))\n')
+                +'else:\n assert "Read,Grep,Glob" in sys.argv and "--strict-mcp-config" in sys.argv\n print("workspace trust warning",file=sys.stderr)\n print(json.dumps(dict(type="result",is_error=os.getenv("STUB_ERROR")=="1",subtype="success",result="README.md:1 contains fixture")))\n')
             cli.chmod(0o755)
             preflight(str(cli),env,str(repo))
             import claude_cli
@@ -94,7 +97,7 @@ printf '\n### Builder\n[Pass] relay.md:1 read.\n' >> "$RELAY_FILE"
 if [ "${STUB_MODE:-}" = error ]; then
   printf '{"type":"result","is_error":true,"result":"rate limited"}\n'
 else
-  printf '{"type":"result","is_error":false,"result":"relay.md:1 updated"}\n'
+  printf '{"type":"result","is_error":false,"subtype":"success","result":"relay.md:1 updated"}\n'
 fi
 STUB
 chmod +x "$WORK/claude"
