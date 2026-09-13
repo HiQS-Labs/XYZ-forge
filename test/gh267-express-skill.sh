@@ -380,7 +380,8 @@ PY
 )"
 [ "$REC_CHECK" = ok ] && ok "exactly one record for the landing sha: command/rc/gate/result/issue as specified" || bad "receipt record wrong: $REC_CHECK"
 SHIP_COMMIT="$(git -C "$FX" log --format=%H --grep='express ship GH-999' -1)"
-git -C "$FX" show --stat --format= "$SHIP_COMMIT" | grep -q 'GH-999-express/provenance.jsonl' && ok "ship transaction commits exactly the receipt" || bad "receipt not in ship commit"
+SHIP_STAT="$(git -C "$FX" show --stat --format= "$SHIP_COMMIT")"
+grep -q 'GH-999-express/provenance.jsonl' <<<"$SHIP_STAT" && ok "ship transaction commits exactly the receipt" || bad "receipt not in ship commit"
 grep -q "Provenance receipt matched for commit" <<<"$RUNOUT" && ok "gated reconcile outcome is printed in the landing output" || bad "gate outcome not visible: $RUNOUT"
 grep -q "registered suite test/gh999-demo.sh green (express-suite, not the full gate)" "$FX/releases.sql" 2>/dev/null || true
 
