@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Codex round 2: findings 1/3/7 OK; 2/4/5/6 accepted — row now matches #593 token for token with extensions on a continuation line, retirement uses the six default weights, counting rules pinned (interval, per-signal timestamps, clipping, dedup), JSON-array lists, reset on changed signature, umbrella-only witness walks the three amended clauses with a negative control | Codex round 3 (final within cap), then the SKILL.md edits, then the step-7 witness |
+| Codex round 3 (cap reached, VERDICT: Changes requested): 1/3/4/7 OK; four narrow text corrections applied after the cap — step 3 scores with the six default weights, interval = radar window ∩ strictly-after-cutoff, comments/open_days are raw counts with the score formula spelled out, red-control fixture pins a dated event per member plus old-fix and nonzero-comments rows | BLOCKED on operator: authorize a 4th Codex round on the corrected plan, or accept the plan as revised and proceed to the SKILL.md edits |
 
 ## Why
 
@@ -116,9 +116,11 @@ radar's SKILL.md cites it and repeats only the block shape.
    Path overlap alone is adjacency and does not count. A reference to the umbrella number in
    a docs/reconcile commit is not evidence of the class; it needs a second signal.
    **Counting rules for `now` (owned by whack-a-mole's SKILL.md, cited by radar):**
-   - *Interval* = `[cutoff, window end]` when a cutoff exists, else `[window start, window end]`.
-     All timestamps UTC. Only events whose own timestamp is inside the interval count; a
-     member that predates the interval contributes only its in-interval events.
+   - *Interval* — an event counts iff `window start ≤ event time ≤ window end` **and**, when
+     a cutoff exists, `event time > cutoff` (strictly after — the fixing merge itself never
+     counts). The radar window always bounds it; a cutoff older than the window start does
+     not pull pre-window churn back in. All timestamps UTC. A member that predates the
+     interval contributes only its in-interval events.
    - *reopens* — `reopened` events on member issues, event time in interval.
    - *repeat_fixes* — `fix:`/`hotfix:` commits in the interval touching a `paths` entry or
      closing a member issue, counted from the **second** such commit *within the interval*
@@ -128,10 +130,13 @@ radar's SKILL.md cites it and repeats only the block shape.
      touching a `paths` entry.
    - *size* — distinct members with at least one in-interval event (opened, merged, reopened,
      commented, or a member commit authored). A PR and its merge commit are one member.
-   - *comments* — comments on members with time in interval, `floor(n / 5)`.
-   - *open_days* — for the oldest still-open member: days from `max(created, interval start)`
-     to interval end, `floor(d / 7)` — clipped to the interval, never the issue's full age.
-   - *score* — the weighted sum; every raw field is printed, including zeroes.
+   - *comments* — the **raw count** `n` of comments on members with time in the interval.
+   - *open_days* — the **raw count** `d` of days for the oldest still-open member, from
+     `max(created, window start, cutoff)` to window end; `0` when no member is still open.
+   - *score* = `3·reopens + 3·repeat_fixes + 4·reverts + size + floor(comments/5) +
+     floor(open_days/7)`. Raw fields are printed as counted, never pre-divided: with
+     `comments=10 open_days=14` the row shows those numbers and they contribute 2 + 2 points.
+     Every raw field is printed, including zeroes.
 4. **Post-fix-only counting, with a verified cutoff.** The cutoff is the merge time on trunk
    of the PR that the umbrella's Remediation **Fix** task names (or that the umbrella's closing
    comment cites). Absent that, there is no cutoff and the full window counts. A merge is not
@@ -188,7 +193,9 @@ radar's SKILL.md cites it and repeats only the block shape.
 3. `skills/radar/SKILL.md` Step 2 — add signal **8. Umbrella re-score** after signal 7:
    `gh issue list --state all --search 'Umbrella: in:title'`; for each, read the signature
    (or reconstruct per decision 8); resolve the cutoff per decision 4; count window items that
-   are members per decision 3 and dated after the cutoff; score with the block's weights;
+   are members per decision 3 and inside the interval; score with decision 2's six default
+   weights (the block's `weights:` line describes the baseline only, never the retirement
+   score);
    report yield in the three states (parser failure = signature present but unreadable).
    *Verify:* signals numbered 1–8 contiguous; the membership rule cites whack-a-mole §3.
 4. `skills/radar/SKILL.md` Step 5 Sink B — add the `## Umbrellas — re-scored` section spec:
@@ -214,14 +221,21 @@ radar's SKILL.md cites it and repeats only the block shape.
      from its body), every raw field including zeroes, the dated in-interval events counted,
      the arithmetic, the resulting two-line row. Verify the cutoff state at execution time
      (`gh pr list --search "591"` for a merged fix PR) rather than assuming none.
-   - **Red control** with real member evidence: a synthetic closed umbrella body whose
-     signature names #546 and #584 (two members, each matching ≥ 2 signals: a `paths` entry
-     `utils/py/wave_reconcile.py` and an explicit link to #591) plus one `reopened` event
-     dated after a stated cutoff → raw fields `reopens=1 repeat_fixes=0 reverts=0 size=2
-     comments=0 open_days=0 score=5` → must render `class survived — recommend reopening`,
-     unstruck. Then drop one member (`size=1`, score 4) → `holding`, `quiet 1/2`, unstruck.
-     Then mutate the first result by hand to a strike-through and quote the rule text that
-     rejects it.
+   - **Red control** with real membership evidence and a labelled synthetic event overlay:
+     a synthetic closed umbrella body whose signature names #546 and #584 (real members,
+     each matching ≥ 2 signals: `paths` entry `utils/py/wave_reconcile.py` + explicit link
+     to #591). Pinned inputs — window 2026-08-23 → 2026-09-13, cutoff 2026-09-01T00:00Z;
+     synthetic overlay: #546 opened 2026-09-03, #584 opened 2026-09-05, one `reopened` on
+     #546 at 2026-09-08, both closed by window end, no comments, no other events → raw
+     `reopens=1 repeat_fixes=0 reverts=0 size=2 comments=0 open_days=0 score=5` → must
+     render `class survived — recommend reopening`, unstruck. Counterpart: remove #584's
+     opening event (it now has no in-interval event, so it is not counted) → `size=1`,
+     score 4 → `holding`, `quiet 1/2`, unstruck. Two more rows in the same witness: (a) the
+     cutoff moved to 2026-09-10 → the 09-08 reopen and both openings fall before it →
+     score 0; (b) `comments=10 open_days=14` added to the first case → score 5 + 2 + 2 = 9,
+     raw fields shown as 10 and 14. Then vary the filing `weights:` line while holding
+     evidence fixed → `now` unchanged. Then mutate the first result by hand to a
+     strike-through and quote the rule text that rejects it.
    - Observation table, each row with two distinct UTC report dates, the same signature,
      the same default weights and the same verified cutoff: quiet/quiet → solved;
      quiet/active/quiet → `quiet 1/2`, not solved; one signal unavailable → `quiet 0/2`, no
