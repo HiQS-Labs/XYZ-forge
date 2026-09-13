@@ -892,11 +892,11 @@ def find_active_doc_for_issue(repo_root, issue_num):
     working_dir = os.path.join(repo_root, "PROJECT", "2-WORKING")
     if not os.path.isdir(working_dir):
         return None
-    for fname in os.listdir(working_dir):
+    for fname in sorted(os.listdir(working_dir)):
         if not fname.endswith(".md"):
             continue
         # Match GH-123-*.md or 123-*.md
-        if re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", fname, re.IGNORECASE):
+        if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
             return os.path.join(working_dir, fname)
     return None
 

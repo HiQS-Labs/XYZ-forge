@@ -271,6 +271,23 @@ class ReconcileTests(unittest.TestCase):
             self.apply()
         self.assertEqual(before, self.snapshot())
 
+    def test_supporting_note_cannot_steal_canonical_closeout(self):
+        recon=self.root/'PROJECT/2-WORKING/recon-gh421-support.md'
+        recon.write_text((self.root/self.doc).read_text())
+        before=recon.read_bytes()
+        original=wave.os.listdir
+        def listdir(path):
+            names=original(path)
+            if str(path)==str(recon.parent):
+                return sorted(names,key=lambda name: name!=recon.name)
+            return names
+        with patch.object(wave.os,'listdir',side_effect=listdir):
+            self.apply()
+        self.assertTrue((self.root/self.doc.replace('2-WORKING','3-COMPLETED')).is_file())
+        self.assertEqual(before,recon.read_bytes())
+        self.assertEqual(self.rows('SELECT doc_path FROM roadmap_items')[0]['doc_path'],
+                         self.doc.replace('2-WORKING','3-COMPLETED'))
+
     def test_legacy_row_does_not_block_attributable_pr(self):
         self.cli('roadmap','add','--issue-num','52','--title','legacy',
                  '--created','2026-09-01','--issue-url','https://github.com/test/repo/issues/52',

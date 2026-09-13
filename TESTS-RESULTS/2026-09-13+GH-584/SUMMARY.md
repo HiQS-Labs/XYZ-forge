@@ -32,8 +32,17 @@ writes. Shallow history and malformed metadata fail closed. Empty qualified swee
 
 ## Validation and pending acceptance
 
-Focused checks: GH-421 23 tests, GH-425 22 tests, core reconciliation 16 checks, GH-496 checks pass.
+Focused checks: GH-421 24 tests, GH-425 22 tests, core reconciliation 16 checks, GH-496 checks pass.
 PDDA has zero errors and 30 existing governance/issue-sync warnings; LLM doc-readiness is not enabled.
 Full local pre-push gate and real hosted/scheduled acceptance are still pending. Red controls, actual
 commands, and raw outputs are retained alongside this summary. This PR depends on the producer PR;
 the umbrella remains open until three consecutive merges and the next scheduled sweep reconcile.
+
+## Rollout lookup correction
+
+Read-only inspection found that GH-496's lookup selected `recon-gh496-merge-churn-and-telemetry.md`
+ahead of `GH-496-SHARPEN-CICD.md`. Recording an open-issue merge on that supporting note would then
+violate the existing publisher's declared-path boundary. The lookup now enforces its documented
+canonical filename prefix and deterministic ordering. `canonical-doc-red.log` witnesses the old
+selection moving the supporting note; the current test closes the canonical document and preserves
+the note byte-for-byte. The publisher allowlist remains unchanged.
