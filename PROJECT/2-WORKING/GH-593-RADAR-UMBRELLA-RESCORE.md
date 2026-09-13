@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Codex round 1 (relay-system/2026-09-13/gh593-plan-qa): 7 findings adjudicated, all accepted — no-target guard conflict (block) fixed by decision 9; signature contract, cutoff, streak, legacy and witness tightened | Codex round 2 on the revised plan, then the SKILL.md edits, then the step-7 witness |
+| Codex round 2: findings 1/3/7 OK; 2/4/5/6 accepted — row now matches #593 token for token with extensions on a continuation line, retirement uses the six default weights, counting rules pinned (interval, per-signal timestamps, clipping, dedup), JSON-array lists, reset on changed signature, umbrella-only witness walks the three amended clauses with a negative control | Codex round 3 (final within cap), then the SKILL.md edits, then the step-7 witness |
 
 ## Why
 
@@ -93,24 +93,45 @@ radar's SKILL.md cites it and repeats only the block shape.
    run:      <YYYYMMDDTHHMMSSZ — the whack-a-mole run ID, UTC>
    window:   <start> → <end>   (the producer's scan window; default 14 days, overrides allowed)
    weights:  reopen=3 repeat_fix=3 revert=4 member=1 comments=1/5 open_days=1/7
-   paths:    <comma-separated, repo-relative; a trailing slash = directory prefix, otherwise exact file>
-   errors:   <comma-separated, double-quoted literal substrings; case-sensitive; no regex>
-   issues:   <#n #n … in this repo; owner/repo#n for another repo — cluster members only, not adjacents>
-   commits:  <member fix/revert commit SHAs — the ones scored, not ancestry>
+   paths:    ["repo/relative/file.py", "dir/prefix/"]   (JSON array; trailing slash = directory prefix, else exact file)
+   errors:   ["literal substring", "another"]           (JSON array of literal, case-sensitive substrings; no regex)
+   issues:   ["#421", "#425", "owner/repo#7"]           (JSON array; cluster members only, never adjacents)
+   commits:  ["58d6f05", "cf99059"]                     (JSON array of member fix/revert SHAs — the ones scored, not ancestry)
    signals:  reopens=N repeat_fixes=N reverts=N size=N comments=N open_days=N score=N
    ```
-   Empty keys are written as `none`, never omitted. A body missing the fenced block or any
-   key is a template violation whack-a-mole must refuse to file.
-2. **Radar re-scores with the weights recorded in the block, not radar's target formula.**
-   The two formulas answer different questions. The `now` score is comparable to `filed at`
-   only when weights match and windows are of similar length; radar records both windows in
-   the row and labels a mismatch (`window 21d vs filed 14d`) rather than claiming equivalence.
-3. **Membership for re-score = whack-a-mole §3's rule, unchanged.** An item in the window
-   (issue, PR, fix/revert commit) is a member if it matches **two or more** of: a `paths`
-   entry, an `errors` substring in its title/body/message, an explicit link to a member issue
-   or to the umbrella, same label + component keyword. Path overlap alone is adjacency and does
-   not count — exactly as at filing. A reference to the umbrella number in a docs/reconcile
-   commit is not evidence of the class; it needs a second signal.
+   Lists are JSON arrays so commas and quotes need no bespoke escaping. Empty keys are
+   written as `[]` or `none`, never omitted. A body missing the fenced block or any key is a
+   template violation whack-a-mole must refuse to file.
+2. **Radar re-scores with #593's six default weights, not radar's target formula and not
+   arbitrary filing weights.** Retirement (`now`, the `< 5` test) always uses
+   `reopen=3 repeat_fix=3 revert=4 member=1 comments=1/5 open_days=1/7`. If the block's
+   `weights:` line differs from those defaults (whack-a-mole allows overrides, W:92), the
+   `filed at` baseline is kept as metadata and labelled `filed-custom (non-comparable)`;
+   it is never used to lower the retirement bar. Window length is recorded on both sides
+   (`21d vs filed 14d`) rather than claimed equivalent.
+3. **Membership for re-score = whack-a-mole §3, cited canonically, not restated.** An item
+   in the interval is a member iff it satisfies the rule at `skills/whack-a-mole/SKILL.md`
+   §3 ("two or more of" the five signals, including the reporter-symptom rule and its
+   PATTERN qualification) evaluated against the signature's `paths` / `errors` / `issues`.
+   Path overlap alone is adjacency and does not count. A reference to the umbrella number in
+   a docs/reconcile commit is not evidence of the class; it needs a second signal.
+   **Counting rules for `now` (owned by whack-a-mole's SKILL.md, cited by radar):**
+   - *Interval* = `[cutoff, window end]` when a cutoff exists, else `[window start, window end]`.
+     All timestamps UTC. Only events whose own timestamp is inside the interval count; a
+     member that predates the interval contributes only its in-interval events.
+   - *reopens* — `reopened` events on member issues, event time in interval.
+   - *repeat_fixes* — `fix:`/`hotfix:` commits in the interval touching a `paths` entry or
+     closing a member issue, counted from the **second** such commit *within the interval*
+     (the reference set is the interval, not filing history — the first post-cutoff fix is
+     never a repeat). A revert is counted under *reverts* only, never twice.
+   - *reverts* — `revert:` commits (or PRs) in the interval reverting a member commit or
+     touching a `paths` entry.
+   - *size* — distinct members with at least one in-interval event (opened, merged, reopened,
+     commented, or a member commit authored). A PR and its merge commit are one member.
+   - *comments* — comments on members with time in interval, `floor(n / 5)`.
+   - *open_days* — for the oldest still-open member: days from `max(created, interval start)`
+     to interval end, `floor(d / 7)` — clipped to the interval, never the issue's full age.
+   - *score* — the weighted sum; every raw field is printed, including zeroes.
 4. **Post-fix-only counting, with a verified cutoff.** The cutoff is the merge time on trunk
    of the PR that the umbrella's Remediation **Fix** task names (or that the umbrella's closing
    comment cites). Absent that, there is no cutoff and the full window counts. A merge is not
@@ -121,11 +142,14 @@ radar's SKILL.md cites it and repeats only the block shape.
    cutoff, on two distinct dates.** Equality note: whack-a-mole's own floor is "no cluster
    *above* 5" (a 5 is "no pattern" there); #593 chose the conservative `≥ 5 survives`, and this
    plan keeps it and says so — no change to whack-a-mole's scoring. "Consecutive" means the
-   two most recent radar reports (Sink A docs, ordered by filename date/run suffix); a same-day
-   rerun (`-runN`) is not a second observation. The streak resets to 0 on any run scoring ≥ 5,
-   on a signal that is *unavailable* (unavailable is never score 0 and never earns quiet
-   credit — R:183-187), or on a changed cutoff. The row shows `(n/2 quiet)` and the two report
-   filenames that make up the streak. Two observations is what #593 asks for and what this
+   two most recent radar reports (Sink A docs, ordered by filename date/run suffix, dates in
+   UTC like the producer's run ID); a same-day rerun (`-runN`) is not a second observation.
+   The streak resets to 0 on any run scoring ≥ 5, on a signal that is *unavailable*
+   (unavailable is never score 0 and never earns quiet credit — R:183-187), on a changed
+   cutoff, or on a changed signature or weights (two low scores over different memberships
+   or scales are not one streak — this matters after an operator edits a legacy signature per
+   decision 8). The row shows `(n/2 quiet)` and the two report filenames that make up the
+   streak. Two observations is what #593 asks for and what this
    plan delivers; it is not a claim about elapsed exposure time.
 6. **Closed umbrella still ≥ 5 → `class survived — recommend reopening`.** Radar never
    reopens; it recommends. Guardrails unchanged.
@@ -168,30 +192,45 @@ radar's SKILL.md cites it and repeats only the block shape.
    report yield in the three states (parser failure = signature present but unreadable).
    *Verify:* signals numbered 1–8 contiguous; the membership rule cites whack-a-mole §3.
 4. `skills/radar/SKILL.md` Step 5 Sink B — add the `## Umbrellas — re-scored` section spec:
+   The first line is #593's row **token for token**; everything else is a continuation line:
    ```
-   - [ ] #<n> <cluster> — filed at <score> (<run>, <window>) | legacy — no signature · now <score> (<window>, weights <same|differ>) · cutoff <PR #m merged YYYY-MM-DD | none> · (<k>/2 quiet: <report-a>, <report-b>) → holding | class survived — recommend reopening | solved
+   - [ ] #<n> — filed at <score> (<run>), now <score> (<window>), fix merged <YYYY-MM-DD PR #m | not yet> → holding | class survived — recommend reopening | solved
+         cluster <slug> · baseline observed | legacy — no signature (reconstructed) | filed-custom (non-comparable) · quiet <k>/2 (<report-a>, <report-b>) · class RADAR-<id> | none
    ```
-   with the streak, reset, unavailable, reconstructed, and `class:` link rules from
-   decisions 4–8. Strike-through only on `solved` (2/2 quiet **and** a cutoff PR) — this is
-   the umbrella form of the existing "names the seam" rule, cross-linked to it.
-   *Verify:* the row in the doc matches the issue's acceptance format token for token.
+   Extensions, each named as such: `filed at legacy` when there is no signature (decision 8);
+   `→ solved` as the third state, reached only on `quiet 2/2` **and** a `fix merged` PR — the
+   umbrella form of the existing "names the seam" rule, cross-linked to it; only `solved`
+   rows are struck through. Streak, reset, unavailable, reconstructed and `class:` rules from
+   decisions 4–8 sit under the format.
+   *Verify:* the first line matches #593's acceptance format token for token; the extensions
+   are listed as extensions.
 5. `skills/radar/SKILL.md` Boundaries table — add a `whack-a-mole` row.
 6. `CHANGELOG.md` — one entry under `## 2026-09-13` per PDDA.md:940.
-7. **Witness (PR body).** Run radar's Step 2 signal 8 and Step 5 umbrella section by hand
-   against this repo for window 2026-08-23 → 2026-09-13, and record:
+7. **Witness (PR body).** Walk radar end to end by hand — Guardrails → Step 2 signal 8 →
+   Step 4 → Step 5 entry decision → Sink A/B preview — against this repo for window
+   2026-08-23 → 2026-09-13 (UTC), and record:
    - discovery: the `gh issue list` command and count (must find ≥ #591);
-   - #591's row: `legacy — no signature`, the reconstructed signature (paths/errors/issues
-     taken from its body), the items counted and their dates, the arithmetic, the resulting
-     line. Expected: no cutoff (no fix PR merged yet) → `now <score>` over the full window,
-     `(0/2 quiet)`, `→ holding`.
-   - **Red control** with pinned inputs: a synthetic closed umbrella whose signature matches
-     exactly one reopen (3) + two member issues (2) = 5 after a stated cutoff → must render
-     `class survived — recommend reopening`, unstruck. Then the same inputs with one member
-     issue (4) → `holding (1/2 quiet)`, unstruck. Then mutate the first result by hand to a
-     strike-through and show the rule text rejects it.
-   - Observation table: quiet/quiet → solved; quiet/active/quiet → `(1/2 quiet)`, not solved;
-     one signal unavailable → `(0/2 quiet)`, no credit; umbrella-only run → both sinks
-     written (not skipped).
+   - #591's row: `filed at legacy` with the reconstructed signature (paths/errors/issues
+     from its body), every raw field including zeroes, the dated in-interval events counted,
+     the arithmetic, the resulting two-line row. Verify the cutoff state at execution time
+     (`gh pr list --search "591"` for a merged fix PR) rather than assuming none.
+   - **Red control** with real member evidence: a synthetic closed umbrella body whose
+     signature names #546 and #584 (two members, each matching ≥ 2 signals: a `paths` entry
+     `utils/py/wave_reconcile.py` and an explicit link to #591) plus one `reopened` event
+     dated after a stated cutoff → raw fields `reopens=1 repeat_fixes=0 reverts=0 size=2
+     comments=0 open_days=0 score=5` → must render `class survived — recommend reopening`,
+     unstruck. Then drop one member (`size=1`, score 4) → `holding`, `quiet 1/2`, unstruck.
+     Then mutate the first result by hand to a strike-through and quote the rule text that
+     rejects it.
+   - Observation table, each row with two distinct UTC report dates, the same signature,
+     the same default weights and the same verified cutoff: quiet/quiet → solved;
+     quiet/active/quiet → `quiet 1/2`, not solved; one signal unavailable → `quiet 0/2`, no
+     credit.
+   - **Umbrella-only entry case:** zero ordinary targets, one valid tracked umbrella,
+     evidence available, a named prior report and cutoff, today's run date. Follow the three
+     amended clauses (Guardrails, Step 4, Step 5) into a preview of **both** sinks. Then
+     restore the old "no targets → write nothing" wording in the reviewed input and show the
+     same case is skipped — recorded as the failing negative control.
    - Write audit: list every write the walkthrough would perform (Sink A path, Sink B issue
      number, nothing else); a `gh issue close/reopen/edit` on the umbrella appears nowhere.
 8. **Gate.** `utils/pdda/pdda.sh run` zero errors (the docs gate — recorded explicitly, since

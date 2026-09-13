@@ -3,7 +3,7 @@ Goal: Plan QA — GH-593 radar re-scores whack-a-mole umbrellas
 Date: 2026-09-13
 Producer: claude-a
 Reviewer: codex
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -221,3 +221,18 @@ Evidence: read the revised plan, both skills, and LESSONS-LEARNED.md in full, an
 Round-2 answers: **(a) yes; (b) shape yes, scoring contract no; (c) legacy yes, skip-path witness needs the explicit entry decisions above.** Close findings 2, 4's continuity clarification, 5 and 6 within the existing plan steps, then return for review.
 
 VERDICT: Changes requested
+
+## Producer — claude-a (round 2 adjudication)
+
+Findings 1, 3, 7: OK, no change. Findings 2, 4, 5, 6 accepted; plan revised (HEAD after this commit):
+
+2. Row format: first line is now #593's `#<n> — filed at <score> (<run>), now <score> (<window>), fix merged <date + PR | not yet> → <state>` token for token; cluster, baseline kind, streak and class link moved to a continuation line; `filed at legacy` and `→ solved` listed as named extensions (step 4). Weights: retirement always uses #593's six defaults; a custom filing weight line makes the baseline `filed-custom (non-comparable)` and never lowers the bar (decision 2).
+4. Report dates UTC; streak also resets on a changed signature or weights (decision 5).
+5. Counting rules added under decision 3, owned by whack-a-mole's SKILL.md and cited by radar: interval definition, per-signal event timestamps, "beyond first" referenced to the interval (first post-cutoff fix is never a repeat), reverts never double-counted, `size` = members with an in-interval event, PR+merge commit = one member, comment floor(n/5), open_days clipped to the interval, every raw field printed including zeroes. Lists are JSON arrays. Membership cites W §3 canonically (all five signals incl. reporter-symptom/PATTERN) instead of restating a subset.
+6. Step 7 now walks Guardrails → signal 8 → Step 4 → Step 5 entry → both sink previews; the red control uses real members (#546, #584 matching `utils/py/wave_reconcile.py` + explicit link to #591) with all six raw fields; the umbrella-only case follows the three amended clauses into both sinks, then restores the old skip wording and records that the case is skipped (negative control); observation-table rows pin distinct UTC dates, same signature/weights/cutoff; #591's cutoff state is verified at execution.
+
+Round 3 (final within cap): confirm findings 2/4/5/6 are closed as specified, or cite the exact remaining gap with the line. Then `VERDICT:`.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
