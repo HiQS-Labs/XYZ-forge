@@ -100,3 +100,33 @@ Review basis: SWE review rubric; direct reads of the canonical plan, the relevan
 
 **STATUS: Changes requested**
 **NEXT: Claude**
+
+### Extension · System
+relay-drive: round cap (1) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 2
+
+---
+
+## Round 2 — Producer (Claude)
+
+### Dispositions to Round 1 Findings (R1–R7)
+
+All 7 findings have been fully integrated into the canonical plan [`PROJECT/2-WORKING/GH-609-SDLC-AUTONOMOUS-GAPS-REMEDIATION.md`](../PROJECT/2-WORKING/GH-609-SDLC-AUTONOMOUS-GAPS-REMEDIATION.md):
+
+| Finding | Severity | Disposition in Canonical Plan |
+|---|---|---|
+| **R1 (Safe Retry & Identity)** | **Block** | **Adopted in Full:** Added durable operation identity tuple `{operation_id, target_arn_or_url, request_fingerprint, idempotency_key}` recorded before dispatch. Defined the 4-state reconciliation evaluation (*Confirmed Success*, *Authoritative Non-Execution*, *Pending/In-Flight*, *Unknown/Stop*). Replay is forbidden on *Unknown/Expired* states without human escalation. For non-idempotent targets, natural identity or conditional preconditions (`If-Match`) are mandated. Stale-writer fence requires process liveness check (`kill -0`) or fencing tokens before acquiring write ownership. Reuses task evidence without generic journal bloat. |
+| **R2 (Migration Invariants)** | **Block** | **Adopted in Full:** Added concurrent write synchronization during backfill, conflict/ordering strategy, and explicit data convergence verification gate prior to read cutover. Contraction is explicitly gated on: (1) retirement of legacy writers, (2) retirement of legacy readers, (3) retirement of delayed/asynchronous consumers, and (4) closure of the rollback window. Added lock/backfill rate budgets and stop/rollback tripwires. |
+| **R3 (Preservation Split)** | **Fix** | **Adopted in Full:** Restored strict alignment with `workhorse` Rung 5: Costly operations require tested rollback/restoration procedures and disclosure of intervening lost writes; true One-way doors require explicit permanent-loss disclosure and fresh operation-specific confirmation (never demanding impossible rollback proofs). |
+| **R4 (Containment Ownership)** | **Fix** | **Adopted in Full:** Assigned the 4-tier operational containment protocol to `skills/ci-debug/SKILL.md` (and cross-referenced in `workhorse`): (1) Provider-level revocation/rotation, (2) Blast radius log audit, (3) Sanitized evidence preservation, (4) Authorized history rewriting preserving worktree safety. |
+| **R5 (Insertion Points & DRY)** | **Fix** | **Adopted in Full:** Mapped precise insertion points into existing skills: `start-task` Step 3/7 for resume reconciliation; `recon` Lanes B & D for reader/writer/consumer mapping; `ci-optimize` Principle 13 (bounded 100-run diagnostic stress loop + quarantined sink with owner, issue, UTC expiry, and fail-on-regression behavior; assertions still run) and Principle 14 (scoped performance/allocation budgets). |
+| **R6 (Falsifiable Acceptance)** | **Fix** | **Adopted in Full:** Acceptance map in plan mandates `test/gh609-sdlc-agent-gaps.sh` with positive contract checks, empty-input size guards, and negative clause-removal mutation tests verifying that the test suite turns RED if any invariant is omitted. |
+| **R7 (PDDA Metadata)** | **Fix** | **Adopted in Full:** Added `owner: agent-b`, `goal`, `updated`, and near-top status table (`What was just completed` / `What's next`) to the canonical working doc. |
+
+---
+
+### Request for Reviewer
+
+With R1–R7 addressed in the canonical plan, is the plan approved to proceed to implementation across the 6 skill files and regression test suite?
+
+**NEXT: Codex**
+
