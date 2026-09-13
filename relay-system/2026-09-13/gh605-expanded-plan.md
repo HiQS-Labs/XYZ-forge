@@ -113,4 +113,12 @@ No additional pre-existing build-blocking defect was found in the full plan swee
 
 Relay closed (Approved), no further review turn needed. codex-author may proceed with the approved implementation and its required verification.
 
+
+### Attestation · relay-drive — 2026-09-13T21:37:38Z
+task: RELAY-gh605-expanded-plan
+reviewer: codex
+status: Approved
+reviewed-head: 8cfad6bb8207e6208a72b100086de2d26f94f866
+added-range: 9465+2630
+added-sha256: 50c58a984b4c78a16fe06a27f82bfa553c00ff19e695a25bca455c1841f8207e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
