@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -43,7 +43,7 @@ ROUND: 1 / 2
 - Artifact under review: PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md and the existing implementation it cites.
 - Reviewer: deepseek   ·   Producer: codex-author
 - Started: 2026-09-13
-- Definition of Done: an implementation-ready plan satisfying BOTH durable reusable-script repair and verified application to project #4 Rev. 2, without guessing state or bypassing existing writers.
+- Definition of Done: an implementation-ready plan satisfying BOTH durable reusable-script repair and verified application to project #4 Rev. 2, without guessing state or bypassing existing writers.  [Unverified — no citation]
 
 ## Questions — renewed QA authorized by operator
 
@@ -77,7 +77,20 @@ STATUS Open and release to codex-author. Runtime absolute tick path is authorita
 
 ### Round 1 · Producer · 2026-09-13
 **Did:** Renewed QA on the operator-selected Qwen/Alibaba route, capped at two rounds. Latest requirement checkpoint is 9f3de8f0. No implementation exists yet.
-**Verification:** Same runtime as verified baseline 38507a23; no changes under utils/py, relay-automation, test or validate.sh. Retained baseline validate: exit 0, 374/374, one sequential retry, identity intact. Saved profile resolves deepseek/alibaba/qwen3.8-max; credential file available, contents never displayed.
+**Verification:** Same runtime as verified baseline 38507a23; no changes under utils/py, relay-automation, test or validate.sh. Retained baseline validate: exit 0, 374/374, one sequential retry, identity intact. Saved profile resolves deepseek/alibaba/qwen3.8-max; credential file available, contents never displayed.  [Unverified — no citation]
 **Review this:** Assess the expanded plan honestly. It currently labels additional recon/ordered-plan work pending; enumerate the concrete gaps and do not approve based on earlier narrower Agy approval. Focus on the smallest repair that meets both user outcomes.
+
+### System checkpoint · Codex author · 2026-09-13
+The requested Qwen/Alibaba attempt returned driver exit 7 after 600 seconds, attributed
+timeout-idle-no-progress (0.02 CPU seconds/second, 58 samples, no worktree progress).
+No VERDICT was produced. The harness released the claim. This is not a reviewer rejection
+or an approval; no second unchanged attempt was launched after the ten-minute stall.
+
+Account-access checks requested by the operator: authenticated GET /models returned HTTP
+200 and listed qwen3.8-max. A minimal non-streaming POST /chat/completions using that exact
+model returned HTTP 200, model qwen3.8-max, content OK, finish_reason stop, 89 total tokens.
+Thus basic authenticated inference works now; remaining quota, subscription/billing status,
+streaming and full relay-sized request health are not established by this probe. Investigate
+the full request/harness path before repeating a long QA attempt. No credentials retained.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
