@@ -63,8 +63,9 @@ about everyone else's work and nothing about their own.
   Phase 0 and the fast-forward alike.
 - **Unpushed commits on the integration branch are a blocker, not a note.** A squash-merge landing
   skips them silently, which is how local work is lost.
-- Not ready is a **refusal**, reported before the PR matrix and enforced before the first merge.
-  It covers `--reconcile-pr` too: that mode launches governance writers straight into this tree.
+- Not ready is a **refusal**, reported before the PR matrix and enforced before the first mutation.
+  It covers zero-PR cleanup, teardown-only cleanup, and `--reconcile-pr`; none may silently defer
+  the primary checkout to the operator after reporting success.
   A dry run still prints the sequence, labelled explicitly as not executable while blockers stand.
   `--allow-unready-primary` overrides the refusal deliberately and records the blockers.
 - The verdict is **re-established against the live remote** immediately before the first merge, so
