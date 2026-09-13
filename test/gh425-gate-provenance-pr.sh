@@ -177,5 +177,71 @@ class Receipts(unittest.TestCase):
                 self.assertEqual(wave.run_subprocesses.call_count, int(expected == 0))
 
 
+    def test_cli_commit_landing_gate_express_receipt(self):
+        """GH-592 red control: --commit <sha> --gate on a direct (express) landing.
+        (a) no receipt -> 6 with the matcher's message; (b) the receipt the express
+        driver's own helper writes for A -> gate passes; (c) same receipt vs a
+        declared commit B -> 6 (B is declared, so the matcher, not exit 4, decides)."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("express", root / "utils/py/express.py")
+        express = importlib.util.module_from_spec(spec)
+        with patch.object(sys, "argv", ["express"]):
+            spec.loader.exec_module(express)
+        (self.repo / ".git").mkdir()
+        sha_a, sha_b = "c3" * 20, "d4" * 20
+        manifest = self.repo / "offline.json"
+        manifest.write_text(json.dumps({"commits": [
+            {"sha": sha_a, "message": "fix(GH-592): demo [express]\n\nCloses #592", "committedAt": "2026-09-13T00:00:00Z"},
+            {"sha": sha_b, "message": "fix(GH-591): other [express]\n\nCloses #591", "committedAt": "2026-09-13T00:00:00Z"},
+        ], "issues": [{"number": 592, "state": "OPEN"}, {"number": 591, "state": "OPEN"}]}))
+
+        def run_cli(commit):
+            with contextlib.ExitStack() as stack:
+                for name, value in (("check_porcelain_cleanliness", None),
+                                    ("check_current_branch", None),
+                                    ("github_slug_from_origin", "example/repo"),
+                                    ("run_subprocesses", None),
+                                    ("run_validation_gate", None)):
+                    stack.enter_context(patch.object(wave, name, return_value=value))
+                stack.enter_context(patch.object(sys, "argv", [
+                    "wave-reconcile", "--root", str(self.repo), "--commit", commit, "--gate",
+                    "--offline", str(manifest), "--skip-pull", "--skip-branch-check", "--dry-run"]))
+                output = stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
+                stack.enter_context(contextlib.redirect_stderr(output))
+                code = 0
+                try:
+                    wave.main()
+                except SystemExit as exc:
+                    code = exc.code
+                return code, output.getvalue()
+
+        # (a) RED: no receipt anywhere
+        self.results.mkdir()
+        code, out = run_cli(sha_a)
+        self.assertEqual(code, 6, out)
+        self.assertIn("No provenance.jsonl or error_log.jsonl entry matches", out)
+        # (b) GREEN: the express driver's own writer produced the receipt for A
+        rel = express.write_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh", 0)
+        self.assertTrue((self.repo / rel).is_file(), rel)
+        rec = json.loads((self.repo / rel).read_text().splitlines()[0])
+        self.assertEqual((rec["commit"], rec["gate"], rec["rc"], rec["command"]),
+                         (sha_a, "express-suite", 0, "bash test/gh592-demo.sh"))
+        code, out = run_cli(sha_a)
+        self.assertNotEqual(code, 6, out)
+        self.assertIn(f"Provenance receipt matched for PR #{sha_a[:12]}", out)
+        # (c) RED again: the same receipt is not evidence for a different declared commit
+        code, out = run_cli(sha_b)
+        self.assertEqual(code, 6, out)
+        self.assertIn("No provenance.jsonl or error_log.jsonl entry matches", out)
+        # the shared predicate rejects failed / wrong-suite / wrong-issue records
+        self.assertTrue(express.valid_express_receipt(rec, sha_a, 592, "test/gh592-demo.sh"))
+        for bad in ({**rec, "rc": 1, "result": "fail"}, {**rec, "command": "bash test/other.sh"},
+                    {**rec, "issue": 591}, {**rec, "commit": sha_b}, {**rec, "rc": "0"}):
+            self.assertFalse(express.valid_express_receipt(bad, sha_a, 592, "test/gh592-demo.sh"), bad)
+        # and find_receipt is by content, so a second write for the same landing is a no-op
+        self.assertEqual(express.write_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh", 0), rel)
+        self.assertEqual(len((self.repo / rel).read_text().splitlines()), 1)
+
+
 unittest.main(verbosity=2)
 PY

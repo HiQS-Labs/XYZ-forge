@@ -50,8 +50,12 @@ python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summa
 # Inspect what would happen without modifying disk, DB, or git state:
 python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summary "<one line>" --dry-run
 
-# Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault):
-python3 utils/py/express.py resume --issue <N> [--sha <SHA>]
+# Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault).
+# --suite names the registered suite the landing ran: resume validates the COMMITTED receipt
+# against it and never runs a suite or writes evidence (GH-592). No valid receipt -> it refuses
+# and prints the recovery recipe (rerun the suite at the exact sha in a disposable clone with an
+# identity snapshot before/after, write the receipt with express.write_receipt, commit, push).
+python3 utils/py/express.py resume --issue <N> --suite test/gh<N>-<slug>.sh [--sha <SHA>]
 ```
 
 What each phase asserts (all refusals and fired runs write `.tick/events/*` and mirror to `~/.config/xyz/events/`):
@@ -87,23 +91,31 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
 7. **Gate** — the fix's suite runs green, the tree is RE-SNAPSHOTTED afterwards
    by path and content (`tree-drift`: new paths and changed qualified bytes both
    refuse). Gate identity is re-proven after the suite, staging uses explicit
-   pathspecs, and the direct push passes `XYZ_SKIP_PREPUSH=1` (the qualifying
-   suite was already verified and receipted in Step 7).
+   pathspecs, and the direct push passes `XYZ_SKIP_PREPUSH=1`. That bypasses the
+   FULL pre-push gate (`validate.sh`) by lane design (GH-267/GH-516) — it is not a
+   duplicate of Step 7, which ran only the fix's registered suite. The receipt
+   written in Step 9 says exactly that (`gate: express-suite`).
 8. **Land** — one commit of exactly the qualified paths with `Closes #N`, then
    `git push origin HEAD:development`. A concurrent update refuses as a normal
    non-fast-forward; there is no force push and no PR. The closeout switches to clean,
    current `development` (ship/reconcile state never rides the task branch).
-9. **Ship with evidence** — `manifest ship --gid <rel> --evidence "<sha>; <suite>
-   green; direct development push"` — post-push, so the sha and receipts exist when the
-   evidence is written. The GH-205 trap (dialed_in while closed) is structurally
-   impossible in this order.
+9. **Receipt, then ship with evidence** (GH-592) — from clean, current
+   `development`, the driver writes `TESTS-RESULTS/<date>+GH-<N>-express/provenance.jsonl`
+   (`commit` = the landing sha, `command` = the suite, the real `rc`,
+   `gate: express-suite`) and then `manifest ship --gid <rel> --evidence "<sha>;
+   registered suite <suite> green (express-suite, not the full gate); receipt <path>;
+   direct development push"`. The GH-205 trap (dialed_in while closed) is
+   structurally impossible in this order.
 10. **Close the issue** — the commit message says `Closes #<N>` and lands on the
     default branch; the driver verifies and closes explicitly if GitHub has not.
 11. **Persist, reconcile cleanly, persist — fail closed.** The landing is
     three pushes total: (1) the hotfix land push (step 8), then from
     `development`, (2) the ship outputs are committed and pushed, and only
-    then (3) `wave_reconcile.py --commit <sha>` runs from the clean tree; its
-    outputs form the third commit and push. Every post-push fault exits
+    then (3) `wave_reconcile.py --commit <sha> --gate` runs from the clean tree —
+    `--gate` proves the receipt from step 9 is attributable to this landing (it
+    proves attribution, not test success) and its stdout is printed; its
+    outputs form the third commit and push. The ship commit (2) carries exactly
+    the receipt file and nothing else under `TESTS-RESULTS/`. Every post-push fault exits
     non-zero with an `express-reconcile-failed` receipt; success prints only
     after every boundary.
 
