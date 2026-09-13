@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
+NEXT: codex-author
 STATUS: Open
 ROUND: 1 / 2
 
@@ -73,3 +73,19 @@ Plan review only. Never run validate.sh or test/*.sh in your linked reviewer wor
 **Commit:** f05ecdb1
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Round 1 · Reviewer (agy) · 2026-09-13
+**VERDICT: FAIL**
+**Basis:** The proposed live classifier rules and event-extraction hook do not align. The live classifier omits non-terminal section transitions, leaving it inconsistent with backfill. The extractor signature (`conn, op, target_gid`) is called after `mutate()`, making it impossible to diff the old and new row for metadata-only suppression unless the signature or `perform_write` event contract is fundamentally changed.
+
+**Findings:**
+- `[Blocker]` **Incomplete Classifier (Live/Backfill Divergence)**: Phase 2 Step 1 states terminal sections win over markers, but ignores non-terminal sections. `_backfill_event_for` (utils/py/releases_app.py:4843) maps an "In progress" section without a marker to `in_flight`, and "Queue" to `parked`/`rated`. If the live classifier only overrides terminal sections, moving an item to "In progress" or "Queue" without changing its marker will emit `updated` instead of `in_flight` or `parked`, failing the goal of a shared section-first classification.
+  - **Fix**: Update the plan to explicitly map non-terminal section changes (Queue -> parked/rated, In Progress -> in_flight) in the live classifier to match `_backfill_event_for`.
+- `[Blocker]` **Extractor Signature Cannot Diff**: Phase 2 Step 1 requires capturing the previous row inside the writer transaction to suppress events for metadata-only edits. However, `_extract_roadmap_update` (utils/py/releases_app.py:1445) is called by `_record_work_event` (utils/py/releases_app.py:1527) *after* `mutate()` executes and overwrites the row. The extractor only receives `(conn, op, target_gid)` and cannot see the old state.
+  - **Fix**: Update Phase 2 Step 1 to explicitly change the extractor signature to receive the before-state, or have `mutate()` return the old state and pass it to `perform_write` as an `explicit` event.
+- `[Pass]` **Batch receipt and rollback safety**: Phase 2 Step 2's plan to expand the `try/except BaseException` boundary in `perform_write` (utils/py/releases_app.py:1596) to cover receipt and event insertion safely preserves rollback. SQLite `BEFORE DELETE` triggers on `op_receipts` do not fire on transaction rollback. Row fences (`current != row`) remain intact inside `mutate()`.
+- `[Pass]` **Work status honesty**: Phase 2 Step 3 correctly specifies a read-only, non-mutating `work status` command that reports schema readiness, isolates backfill/informational timestamps, and warns about current-state reconciliation limits, fulfilling the audit gap.
+- `[Pass]` **Controls and Constraints**: Red controls (Phase 3), boundary definitions (Phase 2), and no-live-board-write policies are explicitly defined and adequate.
+
+swept file: yes
+handing off to codex-author — go to the codex-author window and say 'take your turn'
