@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Plan committed; Agy Approved with driver attestation; baseline validate passed 374/374 (one sequential retry) | BLOCKED: DeepSeek V4.1 Flash failed both allowed attempts; resolve reviewer route and authorize renewed QA before implementation/PR |
+| Operator clarified two required outcomes; verified project #4 is Planning Board Rev. 2 | Expand recon/plan to reusable reconciliation plus live application; renewed plan QA required, DeepSeek route still blocked |
 
 ## Table of contents
 
@@ -30,6 +30,42 @@ phases: 3
 - [Phase 3 — Verification and final QA](#phase-3--verification-and-final-qa)
 
 ## Scope and bet
+
+### Operator clarification — two required outcomes
+
+This clarification supersedes the earlier restriction against live board application and
+the deferral of selection/current-state behavior needed to satisfy this task. The earlier
+Agy approval covers only the narrower plan; it does not approve the expanded scope below.
+
+1. **Primary: durable repository fix.** Extend reusable, repeatable repo scripts and their
+   tests so board state can be reconciled from evidence through the existing writers. A
+   temporary population helper or manual card moves do not satisfy this outcome. Preserve
+   dry-run, auditable decisions, safe retries and no-op rerun behavior. Rebalance/CLIO/prompt
+   evidence must be checked for freshness and issue identity, then corroborated against GH;
+   distinguish intent, started work, phase completion and whole-issue completion. Unknown
+   evidence remains explicit rather than an invented transition.
+2. **Required application: current Rev. 2 board.** Use the tested scripts to reconcile
+   noelsaw1 project #4 (verified title: Q3 2026 - Planning Board - Rev. 2), snapshot before,
+   inspect the proposed changes, apply, then independently read back the board and rerun
+   the preview to verify convergence. Enforce the saved policy: top 10 eligible scored
+   XYZ Forge items in Ready; verified inflight work in In progress; reviewable PRs in
+   In review; recently completed work from the last 7 days in Done. No deletions; do not
+   demote ambiguous items merely because activity is old. Report any unresolved mismatch.
+
+Verified local configuration targets this project and HiQS-Labs/XYZ-forge, with the automatic
+connector disabled and github_board_selection_policy marked pending/unconsumed. Preserve
+those settings until the tested path can enforce them. Application is now authorized; this
+does not independently authorize a recurring scheduler or merge. Live-write reversibility
+is Costly: preserve before/after statuses and item identities for restoration through the
+same writer. Required completion evidence is a reusable-script PR plus verified live-board
+results, not just a diagnostics command or a code-only PR.
+
+**Planning checkpoint:** requirements captured, not yet implementation-ready. The additional
+selection/current-state seams need bounded recon and the ordered implementation list below
+must be revised before renewed QA. DeepSeek's prior two-attempt cap remains exhausted; no
+reviewer substitution or fresh execution is implied by this scope clarification.
+
+### Earlier bounded increment — retained as recon input, not the full clarified scope
 
 Follow-up to GH-549/GH-564 within GH-402. This PR fixes the confirmed deterministic
 event/classification defects and makes projection readiness and evidence age inspectable.
@@ -45,9 +81,10 @@ The six September 13 audit findings are mapped below so limited scope cannot imp
 | Review repair is one-way and issue-only | Document limitation explicitly | Current-state GH repair, reopening, standalone PR lifecycle remain GH-402 |
 | Intent/activity/phase completion conflated | Report lifecycle separately from latest non-backfill start observation | No prompt classifier or automatic multi-source state inference |
 
-Top-10 Ready and seven-day Done selection remain GH-402 follow-up requirements. Do not enable
-the operator's automatic connector or change their board during this task. No deletions,
-board-to-ledger writes, scheduler, new dependency, new schema, or unrelated CI/relay fixes.
+The earlier increment deferred top-10 Ready and seven-day Done selection to GH-402 and
+excluded live application. Those limits are superseded by the operator clarification above.
+Retain these non-goals: deletions, board-to-ledger writes, scheduler, new dependency, new
+schema absent demonstrated necessity, and unrelated CI/relay fixes.
 
 Risk is **Costly** because perform_write is shared by all ledger writers. Shield: existing
 connector disable/kill switch, unchanged opt-in activation, atomic transactions, no external
