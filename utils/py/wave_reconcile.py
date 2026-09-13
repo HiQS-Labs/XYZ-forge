@@ -537,7 +537,7 @@ def qualify_landings(repo_root, metas, journal):
         env.update(GIT_CONFIG_GLOBAL=str(config), GIT_CONFIG_NOSYSTEM="1",
                    RELAY_SELF_SUFFICIENCY_SKIP="1", TICK_REPO_ROOT=str(clone))
         def command(args, capture=False):
-            result = run_bounded(args, cwd=str(clone if clone.exists() else scratch), env=env, timeout=2700)
+            result = run_bounded(args, cwd=str(clone if clone.exists() else scratch), env=env, timeout=5400)
             if not capture:
                 print(result.stdout, end="", flush=True)
                 print(result.stderr, end="", file=sys.stderr, flush=True)
@@ -555,15 +555,19 @@ def qualify_landings(repo_root, metas, journal):
             before_config = command(["git", "config", "--local", "--list"], True).stdout
             command(["python3", "-c", "import pytest"])
             command(["npm", "ci"])
-            command(["bash", "validate.sh", "--sequential"])
+            validation = command(["bash", "validate.sh", "--sequential"])
             if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
                     or command(["git", "status", "--porcelain"], True).stdout.strip()
                     or command(["git", "config", "--local", "--list"], True).stdout != before_config):
                 die("Qualification clone identity/content changed under the suite", code=6)
-            files = list(telemetry.glob("validate-sequential-*.jsonl"))
+            # Suites may launch nested validator probes. Bind proof to the exact
+            # process we launched, not another passing run in the telemetry directory.
+            files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
+            if json.loads(raw.splitlines()[0]).get('run') != f"{tested[:9]}-{validation.pgid}":
+                die("Qualification telemetry does not identify the launched validation process", code=6)
             summary = qualification_summary(raw, tested)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)

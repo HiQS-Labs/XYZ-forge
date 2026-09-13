@@ -112,9 +112,12 @@ snapshot in a separate disposable full clone, then produces durable per-landing 
 the reconciler. Require merge ancestry, passing status and unchanged test identity; keep --gate.
 Commit the receipt with reconciliation, never before qualification. No new workflow/service/ledger.
 
-The strongest objection is serial latency: use the existing 13-15 minute documented local sequential
-duration only as an estimate, not hosted measurement. One run per PR, one per nonempty recovery batch;
-roughly four PR runs/hour at that estimate, plus setup. Raise the existing timeout to a bounded 60 min.
+The strongest objection is serial latency. The first candidate's full sequential local gate took
+3,121 seconds (52 minutes), exceeding the 13–15 minute historical documentation; one ambient-mode
+test failed, so this is runtime evidence, not passing qualification. The hosted duration remains
+unmeasured. Bound validation to 90 minutes and the job to 120 minutes. The recovery PR batches all
+pending merges into one qualification run; committed receipts make queued repeats cheap. A sustained
+queue still blocks closeout and must be measured on the real runner before claiming operational fit.
 Current repo is public; standard GitHub-hosted macOS runner minutes are free under
 [GitHub billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 Private-phase dollar estimates in ci.yml are not current marginal cost. No new artifact service;
@@ -154,3 +157,10 @@ post-merge control, not branch protection. After this change:
 
 Every development PR's evidence, the serialized hosted bot, active PDDA docs, RELEASES ledger/views,
 and maintainer landers using local provenance; no coordination kernel or new data store.
+
+### Concurrent express work discovered during implementation
+
+The direct hotfix receipt gap is now owned by [#592](https://github.com/HiQS-Labs/XYZ-forge/issues/592),
+with [PR #597](https://github.com/HiQS-Labs/XYZ-forge/pull/597) open. Its stated evidence is the
+registered express suite, not a full-suite qualification. It also identifies bounds escape #594.
+These are existing umbrella follow-ups; do not file a duplicate or claim them merged.
