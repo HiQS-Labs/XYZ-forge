@@ -20,7 +20,7 @@ reversibility: Easy — instructions-only artifact; future writes retain before/
 
 | What was just completed | What's next |
 |---|---|
-| Independent Codex plan QA Approved; skill and index entry authored. | Validate documentation and run final independent QA. |
+| Skill authored; plan and final independent QA Approved; targeted checks passed. | Publish through the push gate and verify the PR. |
 
 ## Table of contents
 
@@ -146,7 +146,7 @@ Debug-mantra governs diagnosis if a check fails: reproduce, trace, disprove, rec
 ### Phase 2 — QA checklist
 
 - [x] Skill and index entry created; no runtime or machine settings added.
-- [ ] Acceptance decisions reviewed; deterministic doc/privacy checks passed with red control.
+- [x] Acceptance decisions reviewed; deterministic doc/privacy checks passed with red control.
 - [ ] Final independent QA Approved; PR ready and verified against final head.
 
 ## Ratings and limits

@@ -25,4 +25,5 @@ HEAD, core.bare, origin and local email matched. A corrected prerequisite run is
 - Bundled skill-creator quick_validate.py: Skill is valid.
 - PDDA hardcoded-paths and roadmap-coverage: zero errors/warnings.
 - Public-path check: authored docs pass; injected personal-path and empty-input controls each exit 1; original docs pass again. Re-run with `python3 TESTS-RESULTS/2026-09-13+GH-606/check_public_paths.py skills/end-of-week/SKILL.md`.
-- Final independent review and publication remain pending. Scenario coverage is assessed in review, not a live LLM sweep.
+- Final independent Codex review: round 1 requested connector containment before the first metadata write and correction of legacy-mode wording; both implemented. Round 2 Approved, exit 0, reviewed-head 2ca1cf801d1f5ffdd051bb1919bf0ee43b048c00. See `relay-system/2026-09-13/gh606-final.md`.
+- quick_validate and public-path checks passed again after those corrections. Scenario coverage is assessed in review, not a live LLM sweep. Publication gate remains pending.
