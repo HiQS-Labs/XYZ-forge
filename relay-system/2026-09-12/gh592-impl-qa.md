@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,5 +104,20 @@ VERDICT: FAIL
 Basis: The ordinary producer/consumer wiring and principal negative controls are sound on inspection, but resume can accept uncommitted evidence, validation disagrees with the real gate on accepted receipt shapes, and accepted recovery requirements remain incomplete. Resolve I1–I7 and the evidence-attribution limitation, disposition the pending-path nit, and return for review. The historical CHANGELOG sweep remains incomplete; no runtime or merge-readiness approval is given.
 
 Handing off to Producer (claude-a) — implement or explicitly disposition each finding, retain focused evidence for the corrected state, then go to the Producer window and say 'take your turn'.
+
+## Producer — claude-a — Round 1 dispositions
+Fixes in `2c1ac7b5` (implementation) and `0f916e4a` (evidence for exactly that commit). Tests at the clean tested commit: gh267 92/0, gh425 14/14.
+
+- **I1 (blocker) — accepted.** `find_committed_receipt` reads only what HEAD tracks (`git ls-files` + `git show HEAD:<path>`, symlink blobs skipped); `cmd_resume` uses it exclusively. Control (vi): a valid receipt in an ignored path (`TESTS-RESULTS/.relay-scratch/`, porcelain clean) is refused with the `no COMMITTED valid express receipt` message.
+- **I2 (should) — accepted.** `valid_express_receipt` rejects any record carrying `pr`/`pr_number`; `find_receipt` and the writer skip/refuse symlinks; the gh267 stub mirrors both rules. Control (vii): a committed pr-identified record is refused; gh425 asserts the predicate and the symlink case.
+- **I3 (should) — accepted.** Recipe reordered: (1) checkout the sha, (2) snapshot the four identity values AT THAT COMMIT into `recovery-run.log`, (3) run and record rc immediately, (4) re-snapshot — any inspection failure or difference voids the run, (5) write via the same helper on clean development, (6) commit receipt + log, (7) resume. SKILL.md points at it. Test asserts the ordering text. Honest limit: the identity-changing-zero-exit control cannot be executed by a test without a recovery CLI, which R11 ruled out; the recipe is documentation.
+- **I4 (should) — accepted.** `normalize_suite` shared by landing, `receipt_command`, and resume; Happy Path 1 now resumes with the bare `gh999-demo.sh` and passes; gh425 asserts both spellings.
+- **I5 (should) — accepted.** `write_receipt` inserts a separator when the file lacks a final newline and refuses to write through a symlink; gh425 covers the unterminated tail (3 lines, last record discoverable, CLI gate passes for it).
+- **I6 (should) — accepted.** Docstring paragraph 2 now states the full gate is bypassed on every express push; scaffold acceptance and generated CHANGELOG bullet say "registered as the landing gate" (no green claim before Step 7); SKILL.md replaces "structurally impossible" with the actual order and its failure mode; CHANGELOG recurrence scoped to the inspected window.
+- **I7 (should) — filed, not fixed here.** Pre-existing `PROJECT/**` bounds exemption is #594 with the fix shape and red control described. Out of #592's scope.
+- **Nit — accepted.** Dead pending-receipt branch removed; resume writes nothing and commits nothing.
+- **Q8 — accepted.** Evidence regenerated after the fixes at the clean commit `2c1ac7b5`; both receipts name it in `commit`; the PR number will be appended to the same records once the PR exists.
+
+Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
