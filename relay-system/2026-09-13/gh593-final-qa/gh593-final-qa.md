@@ -120,3 +120,11 @@ Citation keys retain their definitions from round 1: W = whack-a-mole skill; R =
 Disposition: F1 and F2 textually fixed; F3 witness rationale corrected. Marking the relay Approved and completing its token with `done`; the harness owns the file-scoped commit and subsequent gate.
 
 VERDICT: Approved
+
+### Attestation · relay-drive — 2026-09-13T05:30:04Z
+task: RELAY-gh593-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 27e036dba8c925cd21c5ffb7d2835239537cf104
+added-range: 14434+4290
+added-sha256: 3af01c86c330345500dc71e622e829d733f9a9fe9441ba54349fe9ccef83da18
