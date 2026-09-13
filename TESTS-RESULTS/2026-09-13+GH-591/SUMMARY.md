@@ -31,3 +31,10 @@ the normal hook defaults; no bypass or suite exclusion. This red run does not co
 Raw telemetry and the exact failure excerpt are retained beside this summary. Its 52-minute runtime
 also invalidates the historical 13–15 minute estimate, so the bounded validation/job timeouts are
 now 90/120 minutes. Actual hosted latency and sustainable queue behavior remain acceptance work.
+
+## Passing candidate gate
+
+Full normal pre-push gate: **374/374 passed** at `ea0a4e687d652c4e72ac5a71d938b2c968c2e582` in 820s, with no bypass or exclusions. `gh53-releases-merge-resolve.sh` failed in parallel and passed the gate's built-in isolated retry. This is local full-suite validation, not hosted/sequential promotion evidence.
+
+The actual full run also produced nested validator telemetry. The producer now binds selection to
+the launched process PID and run ID; `nested-telemetry-red.log` witnesses the old ambiguity.

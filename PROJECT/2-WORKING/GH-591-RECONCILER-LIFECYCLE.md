@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0: both live failures reproduced; lifecycle and Git boundary mapped | Phase 1: verify full-suite producer and open #546 PR |
+| Producer implementation and full local gate verified; recovery focused checks pass | Open producer/recovery PRs, then request merge approval for live acceptance |
 
 ## Table of contents
 - [Phase 0 — diagnosis and decision](#phase-0--diagnosis-and-decision)
@@ -49,15 +49,15 @@ No new service, workflow, ledger or PR-class exemption. The local pre-push gate 
 ## Phase 1 — producer
 
 - [ ] #546: full sequential validation emits complete retained JSONL, exact tested/landing SHAs and passing receipts.
-- [ ] Failed/missing/incomplete telemetry, wrong identity, unmerged landing and mutation under test refuse receipts.
-- [ ] Receipts join rollback and the bot's narrow artifact allowlist; committed replay is idempotent.
-- [ ] Focused producer/consumer and workflow tests pass with retained red controls.
-- [ ] Full local pre-push gate and deterministic PDDA checks pass; independent review resolved.
+- [x] Failed/missing/incomplete telemetry, wrong identity, unmerged landing and mutation under test refuse receipts.
+- [x] Receipts join rollback and the bot's narrow artifact allowlist; committed replay is idempotent.
+- [x] Focused producer/consumer and workflow tests pass with retained red controls.
+- [x] Full local pre-push gate and deterministic PDDA checks pass; independent review resolved.
 - [ ] Producer PR opened against development; its own automatic run goes green after approved merge.
 
 ### QA
-- [ ] Exact negative command/output and passing commands are retained in the campaign and PR body.
-- [ ] No handwritten reconciliation receipt or bypass is used for this PR.
+- [x] Exact negative command/output and passing commands are retained in the campaign and PR body.
+- [x] No handwritten reconciliation receipt or bypass is used for this PR.
 
 ## Phase 2 — recovery
 
@@ -76,7 +76,7 @@ No new service, workflow, ledger or PR-class exemption. The local pre-push gate 
 - [ ] Producer PR's own Wave reconciliation run is green without manual evidence.
 - [ ] Recovery PR and next scheduled catch-up run are green.
 - [ ] Three consecutive merged PRs reconcile automatically; run URLs recorded here and on #591.
-- [ ] Direct hotfix/raw-push evidence gap has a filed issue linked from #591; #492/#534/#538 remain explicit adjacent work.
+- [ ] Existing express #592 / PR #597 and bounds #594 are linked from #591; any remaining ad-hoc direct-push gap is filed; #492/#534/#538 remain explicit adjacent work.
 
 ### QA
 - [ ] Do not close the umbrella or call the class resolved before live acceptance is observed.
