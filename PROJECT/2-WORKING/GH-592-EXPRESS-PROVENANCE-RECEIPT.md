@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| Codex plan-QA rounds 1–2 (R1–R11) folded in: receipt written after the clean check inside closeout, shared validation predicate, resume refuses without committed valid evidence | Codex round 3 (final under cap), then implement in `fix/gh592-express-receipt` |
+| Codex plan-QA rounds 1–3: all blockers resolved (R1, R2, R8, R9); round-3 shoulds R12 (recovery identity check + retained run log) and R13 (retain driver-mutation evidence) folded in. Relay cap 3/3 exhausted → STATUS Escalated with no open blocker | Operator decision: proceed to implementation on this plan (final Codex QA still runs on the implementation per start-task step 8) |
 
 ## Observed (recon, base `58d6f05a`)
 
@@ -100,6 +100,11 @@ Revised after Codex plan-QA rounds 1–2 (`relay-system/2026-09-12/gh592-plan-qa
    print(express.write_receipt(".", "<sha>", <issue>, "<suite>", <rc>))'`, commit that one file to
    development and push, then `express resume --issue N --sha <sha> --suite <suite>`. Same helper, same
    predicate, no new CLI verb, no parallel producer; the receipt records the actual rerun `rc`. (R11)
+   **Identity check before issuing evidence (R12):** the recipe records `git rev-parse HEAD` and
+   `git status --porcelain` before and after `bash <suite>`; if HEAD moved or the tree is dirty
+   afterwards, the run is void and no receipt is written (a suite can mutate HEAD/config/remotes and
+   still exit 0 — AGENTS.md's attribution-failure rule). The suite's stdout/stderr is saved beside the
+   receipt as `TESTS-RESULTS/<date>+GH-<n>-express/recovery-run.log` and committed with it.
    Since the receipt is written after the clean check and immediately persisted, the only crash
    window that leaves an *uncommitted* receipt is between `write_receipt` and the ship persist; the
    resume cleanliness guard then reports it as dirt and the operator commits it (it is the exact
@@ -133,14 +138,18 @@ Revised after Codex plan-QA rounds 1–2 (`relay-system/2026-09-12/gh592-plan-qa
      (v) genuine interrupted success: valid committed receipt, reconcile never ran → resume passes
      `--gate`, writes nothing, and a second resume is a no-op (no new record, no extra commit).
      `WR_STRIP_RECEIPT` is dropped. (R4, R5, R9, R10)
-   - Witnessed red/green output of (a)–(c) committed under `TESTS-RESULTS/<date>+GH-592/provenance.jsonl`
-     and linked from the PR, per `TESTS-RESULTS/README.md`. (R4)
+   - Witnessed output committed under `TESTS-RESULTS/<date>+GH-592/provenance.jsonl` and linked from the
+     PR, per `TESTS-RESULTS/README.md`: CLI cases (a)–(c) **and** the driver-production pair — the
+     normal fixture landing's created receipt, and mutation control (ii) reaching the missing-receipt
+     assertion and the gated failure. Cases (a)–(c) alone could pass with `cmd_land` never calling the
+     writer; (ii)'s retained output is what proves the driver produced it. (R4, R13)
 8. **CHANGELOG** entry; this doc → `3-COMPLETED` at closeout.
 
 ## Acceptance
 
 - [ ] Red control witnessed and committed: CLI `--commit A --gate` with no receipt → 6; express receipt
-      for A → passes; same receipt vs declared B → 6.
+      for A → passes; same receipt vs declared B → 6; plus the driver-production pair (normal landing
+      creates the receipt; no-write mutation fails closed) — all under `TESTS-RESULTS/<date>+GH-592/`.
 - [ ] `test/gh267-express-skill.sh` green incl. controls (i)–(v). `test/gh425-gate-provenance-pr.sh` green.
 - [ ] Full gate green from a disposable clone; PR opened against development; no `XYZ_SKIP_PREPUSH`.
 - [ ] Post-merge: the next real express landing shows `TESTS-RESULTS/<date>+GH-<n>-express/` and the

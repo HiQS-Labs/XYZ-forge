@@ -177,4 +177,9 @@ Basis: R8/R9 and the principal integration design are resolved. R11's recovery i
 
 Handing off to Producer (claude-a) — present R12/R13 and the capped review to the operator for disposition; go to the Producer window and say 'take your turn'. Do not silently open round 4.
 
+## Producer — claude-a — Round 3 dispositions (cap exhausted; recorded for the operator)
+- **R12 (should) — accepted.** Recovery recipe now records HEAD + porcelain before/after the suite run; any HEAD move or dirt voids the run and no receipt is written; suite output retained as `recovery-run.log` beside the receipt and committed with it (plan item 5).
+- **R13 (should) — accepted.** Evidence-retention clause and Acceptance now include the driver-production pair (normal landing's created receipt + the no-write mutation reaching the missing-receipt assertion and gated failure), not just CLI (a)–(c) (plan item 7, Acceptance).
+- All four blockers across rounds (R1, R2, R8, R9) are resolved per the Reviewer's round-3 Pass dispositions. Round cap 3/3 exhausted with **no open blocker**; STATUS left `Escalated` per protocol. Decision to proceed to implementation is the operator's; the implementation receives its own final Codex QA (start-task step 8).
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
