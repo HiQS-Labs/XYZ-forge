@@ -254,10 +254,25 @@ class Receipts(unittest.TestCase):
         self.assertEqual(json.loads(lines[-1])["commit"], sha_b)
         code, out = run_cli(sha_b)
         self.assertNotEqual(code, 6, out)
-        # a symlinked provenance.jsonl is not evidence for express either
-        (self.repo / "TESTS-RESULTS" / "link").mkdir()
-        (self.repo / "TESTS-RESULTS" / "link" / "provenance.jsonl").symlink_to(self.repo / rel)
+        # a symlinked provenance.jsonl is not evidence for express either — falsifiable: the
+        # ONLY record for sha_c lives behind a symlink in a directory that sorts FIRST
+        # ("0-link" < "2026-…"), so removing the symlink guard would make find_receipt return it.
+        sha_c = "e5" * 20
+        outside = self.repo / "outside-provenance.jsonl"
+        outside.write_text(json.dumps({**rec, "commit": sha_c}) + "\n")
+        (self.repo / "TESTS-RESULTS" / "0-link").mkdir()
+        (self.repo / "TESTS-RESULTS" / "0-link" / "provenance.jsonl").symlink_to(outside)
+        self.assertTrue(express.valid_express_receipt(json.loads(outside.read_text()), sha_c, 592, "test/gh592-demo.sh"))
+        self.assertIsNone(express.find_receipt(str(self.repo), sha_c, 592, "test/gh592-demo.sh"))
         self.assertEqual(express.find_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh"), rel)
+        # and the writer refuses to write THROUGH a symlink at the receipt path
+        linked_dir = self.repo / "TESTS-RESULTS" / ("%s+GH-590-express" % express.datetime.datetime.now(express.datetime.timezone.utc).strftime("%Y-%m-%d"))
+        linked_dir.mkdir()
+        (linked_dir / "provenance.jsonl").symlink_to(outside)
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                express.write_receipt(str(self.repo), sha_c, 590, "test/gh590-demo.sh", 0)
+        self.assertEqual(len(outside.read_text().splitlines()), 1)  # nothing was appended through the link
 
 
 unittest.main(verbosity=2)

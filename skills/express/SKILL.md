@@ -52,10 +52,24 @@ python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summa
 
 # Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault).
 # --suite names the registered suite the landing ran: resume validates the COMMITTED receipt
-# against it and never runs a suite or writes evidence (GH-592). No valid receipt -> it refuses
-# and prints the recovery recipe (rerun the suite at the exact sha in a disposable clone with an
-# identity snapshot before/after, write the receipt with express.write_receipt, commit, push).
+# (read from HEAD, never the working tree) against it and never runs a suite or writes evidence
+# (GH-592). With no committed valid receipt it refuses BEFORE closing the issue or shipping and
+# prints the recovery recipe below.
 python3 utils/py/express.py resume --issue <N> --suite test/gh<N>-<slug>.sh [--sha <SHA>]
+
+# Recovery recipe when resume refuses (run in a FRESH disposable full clone; bash, set -euo pipefail).
+# It reruns the suite at the exact landing commit under an identity snapshot; any drift voids the run.
+git checkout <SHA> && test -z "$(git status --porcelain)"           # 1. clean baseline at the landing commit
+LOG=$(mktemp -t express-recovery)                                    # 2. log lives OUTSIDE the tested tree
+snap(){ git rev-parse HEAD; git status --porcelain; git remote -v; git config --list --local | shasum -a 256; }
+snap >"$LOG"; BEFORE=$(snap)
+set +e; bash test/gh<N>-<slug>.sh >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"   # 3. record rc at once
+AFTER=$(snap); echo "$AFTER" >>"$LOG"; [ "$BEFORE" = "$AFTER" ] || { echo VOID; exit 1; }  # 4. drift => no receipt
+git checkout development && test -z "$(git status --porcelain)"     # 5. write via the SAME helper, actual rc
+python3 -c 'import sys; sys.path.insert(0,"utils/py"); import express; print(express.write_receipt(".", "<SHA>", <N>, "test/gh<N>-<slug>.sh", '"$RC"'))'
+cp "$LOG" TESTS-RESULTS/*+GH-<N>-express/recovery-run.log            # 6. retain the run beside the receipt
+git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-<N> (commit <SHA>)" && git push origin development
+python3 utils/py/express.py resume --issue <N> --suite test/gh<N>-<slug>.sh --sha <SHA>   # 7.
 ```
 
 What each phase asserts (all refusals and fired runs write `.tick/events/*` and mirror to `~/.config/xyz/events/`):

@@ -317,6 +317,10 @@ new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "
 run_check > /dev/null 2> "$ERR" && ok "the lane's own paperwork (CHANGELOG) stays exempt" || bad "CHANGELOG counted against bounds: $(tail -1 "$ERR")"
 
 echo "== docs born complete =="
+# GH-592 I8: docs without --suite must refuse BEFORE any write (no half-born doc, no CHANGELOG mutation)
+CL_BEFORE="$(shasum -a 256 "$FX/CHANGELOG.md")"
+! python3 "$DRIVER" --root "$FX" docs --issue 999 --summary "demo" >/dev/null 2>"$ERR" && grep -q -- "--suite is required" "$ERR" && ok "docs refuses a missing --suite with an actionable message" || bad "docs accepted a missing --suite: $(tail -1 "$ERR")"
+[ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && [ "$(shasum -a 256 "$FX/CHANGELOG.md")" = "$CL_BEFORE" ] && ok "docs without --suite wrote nothing" || bad "docs without --suite left a partial write"
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold failed: $(cat "$ERR")"
 DOC="$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
 [ -f "$DOC" ] && ok "capture doc created" || bad "capture doc missing"
@@ -510,7 +514,7 @@ grep -q "Could not automatically resolve landing commit for GH-99" "$ERR" && ok 
 
 # --- GH-592 control (iii): no receipt for the landing → resume refuses BEFORE closing/shipping, with the recipe ---
 ! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (iii): resume refuses a landing with no valid receipt" || bad "resume accepted a landing with no receipt"
-grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "git remote -v" "$ERR" && grep -q "(1) git checkout" "$ERR" && grep -q "(2) snapshot identity AT THAT COMMIT" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
+grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "git remote -v" "$ERR" && grep -q "(1) git checkout" "$ERR" && grep -q "(2) LOG=\$(mktemp" "$ERR" && grep -q "VOID" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
 grep -q '"state":"OPEN"' "$GH_STATE/issue-999.json" && ok "control (iii): issue #999 still OPEN — refused before close" || bad "resume closed the issue without evidence"
 # --- GH-592 control (iv): failed / wrong-suite / wrong-issue records are not evidence ---
 git -C "$FX" checkout -q development; git -C "$FX" pull -q --ff-only origin development

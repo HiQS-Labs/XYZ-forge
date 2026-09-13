@@ -278,19 +278,24 @@ def write_receipt(root, sha, issue, suite, rc):
 
 RECOVERY_RECIPE = (
     "no COMMITTED valid express receipt bound to commit %s for issue #%d and suite %s. Resume writes no "
-    "evidence. Recover in a DISPOSABLE full clone, in this order: (1) git checkout %s; "
-    "(2) snapshot identity AT THAT COMMIT into recovery-run.log: git rev-parse HEAD; git status --porcelain; "
-    "git remote -v; git config --list --local | shasum -a 256; (3) run `bash %s` appending its stdout/stderr "
-    "to recovery-run.log and record its exit code immediately (rc=$?); (4) snapshot the same four values "
-    "again — if any inspection fails or any value differs, the run is VOID and no receipt may be written; "
-    "(5) git checkout development (clean), then: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); "
-    "import express; print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>))'; "
-    "(6) copy recovery-run.log beside that receipt, commit both to development, push; (7) re-run resume."
+    "evidence. Recover in a FRESH disposable full clone, in this order (bash, `set -euo pipefail`): "
+    "(1) git checkout %s && test -z \"$(git status --porcelain)\"  # clean baseline at the landing commit; "
+    "(2) LOG=$(mktemp -t express-recovery)  # OUTSIDE the tested tree, so the log never dirties it; "
+    "snap(){ git rev-parse HEAD; git status --porcelain; git remote -v; git config --list --local | shasum -a 256; }; "
+    "snap >\"$LOG\"; BEFORE=$(snap); "
+    "(3) set +e; bash %s >>\"$LOG\" 2>&1; RC=$?; set -e; echo \"rc=$RC\" >>\"$LOG\"; "
+    "(4) AFTER=$(snap); echo \"$AFTER\" >>\"$LOG\"; [ \"$BEFORE\" = \"$AFTER\" ] || { echo VOID; exit 1; }  "
+    "# any inspection failure aborts via pipefail; any drift voids the run — write NO receipt; "
+    "(5) git checkout development && test -z \"$(git status --porcelain)\"; "
+    "python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
+    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", '\"$RC\"'))'; "
+    "(6) cp \"$LOG\" TESTS-RESULTS/*+GH-%d-express/recovery-run.log; commit receipt + log to development; push; "
+    "(7) re-run resume."
 )
 
 
 def recovery_recipe(sha, issue, suite):
-    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, suite, sha, issue, suite)
+    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, suite, sha, issue, suite, issue)
 
 
 def gate_check(root):
@@ -534,6 +539,11 @@ def slugify(title):
 
 def cmd_docs(args):
     root = args.root
+    # GH-592 I8: the scaffold names the suite (Status table, acceptance line, CHANGELOG
+    # bullet); validate it before ANY write so a missing --suite cannot leave a half-born doc.
+    if not (args.suite or "").strip():
+        die("express-docs: --suite is required (the registered regression suite, e.g. test/gh%d-<slug>.sh) — "
+            "nothing was written" % args.issue)
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url"])
     meta = json.loads(iv.stdout)
 
