@@ -211,11 +211,13 @@ rows += [dict(event='suite',lane=lane,name=name,rc=0) for lane,name in
           ('non-suite','gamma-poison-staleness-probe')]]
 rows.append(dict(event='run.summary',passed=4,failed=0,total=4,envelope_rc='0',
                  suite_events_match='yes',run_set='1',registered='1'))
-for row in rows: row.update(run='fixture',runner='validate')
+for row in rows: row.update(run=sha[:9]+'-'+str(os.getppid()),runner='validate')
+if os.environ.get('GH591_FIXTURE') == 'wrong-run': rows[0]['run']='unrelated'
 if os.environ.get('GH591_FIXTURE') == 'partial': rows.pop()
 p=pathlib.Path(os.environ.get('XYZ_VALIDATE_TELEMETRY','.tick/telemetry'))
 p.mkdir(parents=True)
-(p/'validate-sequential-fixture.jsonl').write_text(''.join(json.dumps(r)+'\\n' for r in rows))
+(p/'validate-sequential-nested-0.jsonl').write_text('{}')
+(p/('validate-sequential-fixture-'+str(os.getppid())+'.jsonl')).write_text(''.join(json.dumps(r)+'\\n' for r in rows))
 FIXTURE
 ''')
         (self.root / '.gitignore').write_text('.tick/\n')
@@ -251,7 +253,7 @@ FIXTURE
         self.assertEqual(wave.committed_qualifications(str(self.root)), [])
 
     def test_red_partial_and_identity_drift_produce_no_receipt(self):
-        for mode in ('red', 'partial', 'drift'):
+        for mode in ('red', 'partial', 'drift', 'wrong-run'):
             with self.subTest(mode=mode), self.assertRaises(wave.ReconcileError) as caught:
                 self.qualify(mode)
             self.assertEqual(caught.exception.code, 6)
@@ -300,11 +302,11 @@ FIXTURE
 
     def test_bounded_runner_timeout_refuses_receipts(self):
         from proc_group import BoundedResult
-        with patch('proc_group.run_bounded', return_value=BoundedResult(None,'','',True,1,2700)) as bounded:
+        with patch('proc_group.run_bounded', return_value=BoundedResult(None,'','',True,1,5400)) as bounded:
             with self.assertRaises(wave.ReconcileError) as caught:
                 self.qualify()
             self.assertEqual(caught.exception.code,6)
-            self.assertEqual(bounded.call_args.kwargs['timeout'],2700)
+            self.assertEqual(bounded.call_args.kwargs['timeout'],5400)
         self.assertFalse(list(self.root.rglob('provenance.jsonl')))
 
     def test_receipts_participate_in_rollback(self):

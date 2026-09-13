@@ -303,7 +303,7 @@ class WorkflowTests(unittest.TestCase):
                        'cancel-in-progress: false', 'ref: development', 'fetch-depth: 0',
                        'github.event.pull_request.merged == true', "github.event.pull_request.base.ref == 'development'",
                        '--pr "$PR_NUMBER" --gate --qualify', '--catch-up --gate --qualify',
-                       'timeout-minutes: 60', 'python3 -m pip install --quiet --break-system-packages pytest'):
+                       'timeout-minutes: 120', 'python3 -m pip install --quiet --break-system-packages pytest'):
             self.assertIn(marker, self.workflow)
         self.assertIsNone(re.search(r'^  push:', self.workflow, re.M))
         self.assertIn('permissions:\n  contents: read', self.workflow)
