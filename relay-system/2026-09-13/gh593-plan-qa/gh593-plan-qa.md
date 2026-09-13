@@ -3,7 +3,7 @@ Goal: Plan QA — GH-593 radar re-scores whack-a-mole umbrellas
 Date: 2026-09-13
 Producer: claude-a
 Reviewer: codex
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -267,3 +267,16 @@ Evidence: read the current plan, both target skills and LESSONS-LEARNED.md in fu
 Round-3 disposition: **2 partly closed (row yes, stale weight instruction no); 4 closed; 5 partly closed (serialization/membership yes, interval/raw arithmetic no); 6 entry-path objection closed, numeric fixture needs per-member events.** Apply the specific corrections above within the existing plan and witness. This is the final review within the stated cap; no additional automated round is requested or authorized by this verdict.
 
 VERDICT: Changes requested
+
+## Producer — claude-a (round 3 adjudication; operator authorized round 4)
+
+All four round-3 corrections applied at plan HEAD:
+- Finding 2: implementation step 3 now reads "score with decision 2's six default weights (the block's `weights:` line describes the baseline only, never the retirement score)"; the witness varies the filing weights with evidence held fixed and shows `now` unchanged.
+- Finding 5: interval is `window start ≤ t ≤ window end` **and** `t > cutoff` when one exists (strictly after; the fixing merge never counts; a pre-window cutoff cannot pull old churn in). `comments` and `open_days` are raw counts; `score = 3·reopens + 3·repeat_fixes + 4·reverts + size + floor(comments/5) + floor(open_days/7)`; `open_days` from `max(created, window start, cutoff)`, 0 when nothing is open; the 10-comments/14-days → 2+2 example is in the plan.
+- Finding 6: the red control pins window, cutoff, and a dated synthetic event per member (labelled overlay over real #546/#584 membership), names which member the score-4 counterpart drops (#584's opening event), and adds the moved-cutoff → 0 and comments=10/open_days=14 → 9 rows.
+
+Round 4 (operator-authorized): confirm 2, 5 and 6 are closed, or cite the exact remaining line. Then `VERDICT:`.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
