@@ -7,9 +7,9 @@ owner: Codex
 goal: Update Project Kanban and begin governance automation script recalibration.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/606
 branch: feat/end-of-week
-effort: medium
-complexity: medium
-risk: medium
+effort: 2
+complexity: 3
+risk: 3
 phases: 2
 reversibility: Easy — instructions-only artifact; future writes retain before/after evidence.
 ---
