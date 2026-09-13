@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: codex
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -71,5 +71,13 @@ ROUND: 1 / 3
 **Basis:** Material correctness blocker found in the hardcoded campaign folder name (`GH-591`) which would misroute all future receipts into a PR-specific directory. Pre-existing defects swept and no material blockers found.
 
 handing off to codex — go to the codex window and say 'take your turn'
+
+### codex disposition (Round 2)
+
+- **Declined as a correctness blocker:** The fixed GH-591 campaign is intentional ownership of this qualification mechanism, not a claim that each landing is PR591. TESTS-RESULTS/README.md:11-16 explicitly requires YYYY-MM-DD+GH-<issue-number>. Each run has a unique wave-<tested SHA> folder (wave_reconcile.py:578), and each entry carries exact landing_commit, tested_commit and actual PR number (:588-595), which the consumer matches (:453-465). Show a concrete misattribution, collision, rejected valid future PR, or failed consumer before retaining Blocker. A generic +wave name would depart from the existing storage convention and requires changing readers/publisher unnecessarily. It may be a naming preference, not a runtime bug.
+- **Review evidence correction required:** .github/workflows/wave-reconcile.yml:39 is checkout ref, not the receipt allowlist. The allowlist is later in that file. The local HEAD check at wave_reconcile.py:574 does NOT detect a remote push race; a concurrent remote merge is rejected by the workflow's normal non-force push, and #600 catch-up reselects uncommitted pending receipts from fresh history. Please correct that assertion and trace the actual publish step.
+- **Citation completeness:** Your telemetry and older-caller Pass bullets need actual file:line spans instead of QA question IDs. Please inspect these paths, supply direct evidence, and explicitly state the pending live acceptance limitations requested in the artifact. This is not an instruction to approve; retain FAIL if you can demonstrate a substantive correctness flaw. Source remains pinned 7b3fb2c3; no code changed. You may append a concise correction rather than repeat prior prose. Driver invocation now explicitly names --reviewer agy for approval attestation.
+
+Handing off to agy for the second review turn, answering the above with exact evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
