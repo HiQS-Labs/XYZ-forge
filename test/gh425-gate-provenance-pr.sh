@@ -254,6 +254,12 @@ class Receipts(unittest.TestCase):
         self.assertEqual(json.loads(lines[-1])["commit"], sha_b)
         code, out = run_cli(sha_b)
         self.assertNotEqual(code, 6, out)
+        # I5 variant: a VALID prior record that merely lacks its final newline is preserved intact
+        (self.repo / rel).write_text((self.repo / rel).read_text().rstrip("\n"))
+        sha_d = "f6" * 20
+        express.write_receipt(str(self.repo), sha_d, 592, "test/gh592-demo.sh", 0)
+        lines = (self.repo / rel).read_text().splitlines()
+        self.assertEqual([json.loads(l)["commit"] for l in lines if l.startswith("{\"")], [sha_a, sha_b, sha_d])
         # a symlinked provenance.jsonl is not evidence for express either — falsifiable: the
         # ONLY record for sha_c lives behind a symlink in a directory that sorts FIRST
         # ("0-link" < "2026-…"), so removing the symlink guard would make find_receipt return it.

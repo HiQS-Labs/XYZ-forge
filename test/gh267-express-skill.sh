@@ -514,7 +514,7 @@ grep -q "Could not automatically resolve landing commit for GH-99" "$ERR" && ok 
 
 # --- GH-592 control (iii): no receipt for the landing → resume refuses BEFORE closing/shipping, with the recipe ---
 ! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (iii): resume refuses a landing with no valid receipt" || bad "resume accepted a landing with no receipt"
-grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "git remote -v" "$ERR" && grep -q "(1) git checkout" "$ERR" && grep -q "(2) LOG=\$(mktemp" "$ERR" && grep -q "VOID" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
+grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "skills/express/SKILL.md" "$ERR" && grep -q "fails closed" "$ERR" && grep -q "VOIDs on any difference" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
 grep -q '"state":"OPEN"' "$GH_STATE/issue-999.json" && ok "control (iii): issue #999 still OPEN — refused before close" || bad "resume closed the issue without evidence"
 # --- GH-592 control (iv): failed / wrong-suite / wrong-issue records are not evidence ---
 git -C "$FX" checkout -q development; git -C "$FX" pull -q --ff-only origin development
@@ -553,6 +553,19 @@ open(p, "a").write(json.dumps(rec) + "\n")
 PY
 git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: pr-identified record for GH-999" && git -C "$FX" push -q origin development
 ! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (vii): a record carrying an explicit pr field is not express evidence (matches the real matcher's conflict rule)" || bad "resume accepted a pr-identified record"
+# --- GH-592 control (viii): a COMMITTED symlink named provenance.jsonl is not evidence (HEAD reader skips mode 120000) ---
+git -C "$FX" checkout -q development
+python3 - "$FX" "$LAND_SHA" <<'PY'
+import json, sys, os
+root, sha = sys.argv[1], sys.argv[2]
+rec = {"commit": sha, "issue": 999, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh999-demo.sh", "rc": 0, "result": "pass"}
+open(os.path.join(root, "outside-evidence.jsonl"), "w").write(json.dumps(rec) + "\n")
+os.makedirs(os.path.join(root, "TESTS-RESULTS/0-linked"), exist_ok=True)
+os.symlink("../../outside-evidence.jsonl", os.path.join(root, "TESTS-RESULTS/0-linked/provenance.jsonl"))
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: committed symlink receipt for GH-999" && git -C "$FX" push -q origin development
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && grep -q "no COMMITTED valid express receipt" "$ERR" && ok "control (viii): a committed symlinked provenance.jsonl is not evidence for resume" || bad "resume accepted a committed symlink receipt: $(tail -1 "$ERR")"
+git -C "$FX" rm -q -r TESTS-RESULTS/0-linked outside-evidence.jsonl && git -C "$FX" commit -qm "fixture: drop symlink receipt" && git -C "$FX" push -q origin development
 # --- GH-592 control (v): genuine interrupted success — valid receipt written by the driver's own helper and committed, reconcile never ran ---
 python3 - "$DRIVER" "$FX" "$LAND_SHA" <<'PY'
 import importlib.util, sys

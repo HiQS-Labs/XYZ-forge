@@ -278,19 +278,13 @@ def write_receipt(root, sha, issue, suite, rc):
 
 RECOVERY_RECIPE = (
     "no COMMITTED valid express receipt bound to commit %s for issue #%d and suite %s. Resume writes no "
-    "evidence. Recover in a FRESH disposable full clone, in this order (bash, `set -euo pipefail`): "
-    "(1) git checkout %s && test -z \"$(git status --porcelain)\"  # clean baseline at the landing commit; "
-    "(2) LOG=$(mktemp -t express-recovery)  # OUTSIDE the tested tree, so the log never dirties it; "
-    "snap(){ git rev-parse HEAD; git status --porcelain; git remote -v; git config --list --local | shasum -a 256; }; "
-    "snap >\"$LOG\"; BEFORE=$(snap); "
-    "(3) set +e; bash %s >>\"$LOG\" 2>&1; RC=$?; set -e; echo \"rc=$RC\" >>\"$LOG\"; "
-    "(4) AFTER=$(snap); echo \"$AFTER\" >>\"$LOG\"; [ \"$BEFORE\" = \"$AFTER\" ] || { echo VOID; exit 1; }  "
-    "# any inspection failure aborts via pipefail; any drift voids the run — write NO receipt; "
-    "(5) git checkout development && test -z \"$(git status --porcelain)\"; "
-    "python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
-    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", '\"$RC\"'))'; "
-    "(6) cp \"$LOG\" TESTS-RESULTS/*+GH-%d-express/recovery-run.log; commit receipt + log to development; push; "
-    "(7) re-run resume."
+    "evidence. Recover in a FRESH disposable full clone with the script in skills/express/SKILL.md "
+    "(section 'Recovery recipe'): it checks out %s, requires a clean baseline via git diff-index/ls-files "
+    "(each inspection fails closed), snapshots HEAD + porcelain + remotes + local-config hash to a log "
+    "OUTSIDE the tree, runs `bash %s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
+    "Only then, from clean development: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
+    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>))'; commit receipt + recovery-run.log under "
+    "TESTS-RESULTS/*+GH-%d-express/, push, re-run resume."
 )
 
 
@@ -431,8 +425,9 @@ def cmd_check(args, expect_driver=frozenset()):
                issue=args.issue)
 
     # Gate wiring is proven, not assumed (PR #270 review finding 3): hooks do
-    # not travel with a clone, and an unwired push boundary would merge on the
-    # focused suite alone.
+    # not travel with a clone. Express itself bypasses the hook on its own pushes
+    # (XYZ_SKIP_PREPUSH=1, lane design); this check keeps the clone's ordinary
+    # pushes gated so the lane cannot be used from an ungated clone.
     wired, detail = gate_check(root)
     if not wired:
         refuse(root, "gate-unwired",
