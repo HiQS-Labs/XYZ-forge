@@ -78,4 +78,12 @@ Verification limits: Read both artifacts in full and inspected the material sour
 
 Handoff: relay closed (Approved), no further turn needed. Producer may proceed to the approved skill-authoring phase; the harness owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-09-13T20:54:45Z
+task: gh606-plan-review
+reviewer: codex
+status: Approved
+reviewed-head: 315cbfeb1577af52894eb0e62b6550ff1fa3299b
+added-range: 4809+3423
+added-sha256: 01d931196161c6a070bd461751caeb12c3fac300bb11c0dd471a86450af34b50
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
