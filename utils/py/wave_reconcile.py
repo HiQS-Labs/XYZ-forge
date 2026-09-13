@@ -18,7 +18,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -412,6 +412,195 @@ def landing_label(meta):
     return "PR #" + str(meta.get("number", "?"))
 
 
+QUALIFICATION_SCHEMA = "wave-qualification@1"
+QUALIFICATION_PATH = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/validation\.jsonl"
+
+
+def qualification_summary(raw, tested_sha):
+    """Require the existing runner's complete, unquarantined sequential evidence."""
+    rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
+    if not rows or any(not isinstance(row, dict) for row in rows):
+        raise ValueError("missing or malformed validation telemetry")
+    starts = [row for row in rows if row.get("event") == "run.start"]
+    summaries = [row for row in rows if row.get("event") == "run.summary"]
+    if len(starts) != 1 or len(summaries) != 1 or rows[-1] != summaries[0]:
+        raise ValueError("validation telemetry has no unique completed run")
+    start, summary = starts[0], summaries[0]
+    registered = start.get("registered")
+    if (start.get("commit") != tested_sha or start.get("mode") != "sequential"
+            or start.get("tier") != 3 or type(registered) is not int or registered <= 0
+            or not start.get("run") or any(row.get("run") != start["run"]
+                or row.get("runner") != "validate" for row in rows)):
+        raise ValueError("validation run identity, mode or registry does not match")
+    suites = [row for row in rows if row.get("event") == "suite"]
+    sequential = [row for row in suites if row.get("lane") == "sequential"]
+    if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
+            or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
+            or summary.get("failed") != 0 or summary.get("total") != registered + 3
+            or summary.get("passed") != summary["total"]
+            or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
+            or str(summary.get("run_set")) != str(registered)
+            or str(summary.get("registered")) != str(registered)):
+        raise ValueError("validation telemetry is failed, incomplete or quarantined")
+    names = {row.get("name") for row in suites}
+    if not {"python:test_python_layer.py", "gamma-poison-staleness-probe"} <= names:
+        raise ValueError("validation is missing required full-suite probes")
+    return summary
+
+
+def qualification_receipt_matches(repo_root, entry, meta):
+    """An integrated snapshot passed; never claim the historical merge tree ran."""
+    tested, landing = entry.get("tested_commit"), (meta.get("mergeCommit") or {}).get("oid")
+    if (entry.get("schema_version") != QUALIFICATION_SCHEMA
+            or not isinstance(tested, str) or not re.fullmatch(r"[0-9a-f]{40}", tested)
+            or not isinstance(landing, str) or not re.fullmatch(r"[0-9a-f]{40}", landing)
+            or entry.get("landing_commit") != landing
+            or entry.get("result") != "pass" or type(entry.get("rc")) is not int or entry["rc"] != 0
+            or entry.get("gate") != "validate.sh --sequential"
+            or entry.get("artifact_kind") != meta.get("artifactKind", "pr")):
+        return False
+    if meta.get("artifactKind") != "commit" and (
+            type(entry.get("pr")) is not int or entry["pr"] != meta.get("number")):
+        return False
+    if "pr_number" in entry and entry["pr_number"] != entry.get("pr"):
+        return False
+    telemetry = entry.get("telemetry", "")
+    if not isinstance(telemetry, str) or not re.fullmatch(QUALIFICATION_PATH, telemetry):
+        return False
+    path = Path(repo_root).resolve() / telemetry
+    try:
+        if path.resolve() != path:  # Neither a file nor a parent may redirect evidence.
+            return False
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != entry.get("telemetry_sha256"):
+            return False
+        qualification_summary(raw, tested)
+        for older, newer in ((landing, tested), (tested, "HEAD")):
+            if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer],
+                              cwd=repo_root, capture_output=True, check=False).returncode:
+                return False
+    except (OSError, ValueError, TypeError, KeyError):
+        return False
+    return True
+
+
+def committed_qualifications(repo_root):
+    """Only bot-committed completion receipts can suppress a replay or recover a lost event."""
+    paths = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", "HEAD", "--",
+                                     "TESTS-RESULTS/"], cwd=repo_root, text=True).splitlines()
+    found = []
+    for path in paths:
+        if not re.fullmatch(QUALIFICATION_PATH.replace("validation", "provenance"), path):
+            continue
+        raw = subprocess.check_output(["git", "show", f"HEAD:{path}"], cwd=repo_root, text=True)
+        for line in raw.splitlines():
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(entry, dict) and entry.get("schema_version") == QUALIFICATION_SCHEMA:
+                found.append(entry)
+    return found
+
+
+def qualify_landings(repo_root, metas, journal):
+    """Produce retained provenance in the existing closeout transaction, after a real full gate."""
+    from gate_env import gate_env
+    from proc_group import run_bounded
+
+    previous = committed_qualifications(repo_root)
+    pending = [meta for meta in metas if not any(
+        qualification_receipt_matches(repo_root, entry, meta) for entry in previous)]
+    if not pending:
+        return
+    check_porcelain_cleanliness(repo_root)
+    tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip()
+    for meta in pending:
+        landing = (meta.get("mergeCommit") or {}).get("oid", "")
+        if (meta.get("state") != "MERGED" or meta.get("baseRefName") != "development"
+                or not re.fullmatch(r"[0-9a-f]{40}", landing)
+                or subprocess.run(["git", "merge-base", "--is-ancestor", landing, tested],
+                                  cwd=repo_root, capture_output=True, check=False).returncode):
+            die(f"Qualification refuses {landing_label(meta)}: merge not in the tested development snapshot", code=6)
+    log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with the full sequential suite")
+    with tempfile.TemporaryDirectory(prefix="wave-qualification-") as temporary:
+        scratch = Path(temporary).resolve()
+        clone = scratch / "repo"
+        telemetry = clone / ".tick" / "telemetry"
+        # Reuse the harness environment contract, then isolate Git and runner controls.
+        env = {k: v for k, v in gate_env().items()
+               if not k.startswith(("GIT_", "RT_", "XYZ_VALIDATE_", "PYTEST_"))
+               and k not in ("XYZ_HARNESS_DB", "PYTHONPATH", "PYTHONHOME")}
+        config = scratch / "gitconfig"
+        config.write_text('[user]\nname = Qualification Fixture\nemail = qualification@example.invalid\n'
+                          '[init]\ndefaultBranch = main\n')
+        env.update(GIT_CONFIG_GLOBAL=str(config), GIT_CONFIG_NOSYSTEM="1",
+                   RELAY_SELF_SUFFICIENCY_SKIP="1", TICK_REPO_ROOT=str(clone))
+        def command(args, capture=False):
+            result = run_bounded(args, cwd=str(clone if clone.exists() else scratch), env=env, timeout=5400)
+            if not capture:
+                print(result.stdout, end="", flush=True)
+                print(result.stderr, end="", file=sys.stderr, flush=True)
+            if result.timed_out or result.rc != 0:
+                raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                                    result.stdout, result.stderr)
+            return result
+        try:
+            # --no-local prevents object hardlinks/alternates as well as shared git metadata.
+            command(["git", "clone", "--no-local", "--quiet", repo_root, str(clone)])
+            command(["git", "checkout", "--quiet", "--detach", tested])
+            origin = subprocess.check_output(["git", "remote", "get-url", "origin"],
+                                             cwd=repo_root, text=True).strip()
+            command(["git", "remote", "set-url", "origin", origin])
+            before_config = command(["git", "config", "--local", "--list"], True).stdout
+            command(["python3", "-c", "import pytest"])
+            command(["npm", "ci"])
+            validation = command(["bash", "validate.sh", "--sequential"])
+            if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
+                    or command(["git", "status", "--porcelain"], True).stdout.strip()
+                    or command(["git", "config", "--local", "--list"], True).stdout != before_config):
+                die("Qualification clone identity/content changed under the suite", code=6)
+            # Suites may launch nested validator probes. Bind proof to the exact
+            # process we launched, not another passing run in the telemetry directory.
+            files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
+            if len(files) != 1:
+                die("Qualification requires exactly one retained validation run", code=6)
+            raw = files[0].read_bytes()
+            if json.loads(raw.splitlines()[0]).get('run') != f"{tested[:9]}-{validation.pgid}":
+                die("Qualification telemetry does not identify the launched validation process", code=6)
+            summary = qualification_summary(raw, tested)
+        except (subprocess.SubprocessError, OSError, ValueError) as exc:
+            die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
+        die("Publishing HEAD changed during qualification; rerun from fresh development", code=6)
+    check_porcelain_cleanliness(repo_root)
+    now = datetime.now(timezone.utc)
+    folder = Path(repo_root) / "TESTS-RESULTS" / f"{now:%Y-%m-%d}+GH-591" / f"wave-{tested}"
+    folder.mkdir(parents=True, exist_ok=True)
+    telemetry_path, receipt_path = folder / "validation.jsonl", folder / "provenance.jsonl"
+    for path in (telemetry_path, receipt_path):
+        if path.exists():
+            die(f"Refusing to overwrite qualification evidence: {path.name}", code=6)
+        journal.track_created(path)
+    telemetry_path.write_bytes(raw)
+    entries = []
+    for meta in pending:
+        entry = dict(schema_version=QUALIFICATION_SCHEMA, artifact_kind=meta.get("artifactKind", "pr"),
+                     tested_commit=tested, landing_commit=meta["mergeCommit"]["oid"], result="pass", rc=0,
+                     gate="validate.sh --sequential", timestamp=now.isoformat(),
+                     telemetry=str(telemetry_path.relative_to(repo_root)),
+                     telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
+                     total=summary["total"])
+        if meta.get("artifactKind") != "commit":
+            entry["pr"] = meta["number"]
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            entry["run_url"] = (f"https://github.com/{os.environ.get('GITHUB_REPOSITORY', '')}/actions/runs/"
+                                f"{os.environ.get('GITHUB_RUN_ID', '')}")
+        entries.append(json.dumps(entry, sort_keys=True))
+    receipt_path.write_text("\n".join(entries) + "\n", encoding="utf-8")
+    log(f"Full-suite qualification passed; retained {receipt_path.relative_to(repo_root)}")
+
+
 def check_provenance_receipts(repo_root, pr_meta):
     """Require a JSONL receipt attributable to this PR (GH-425).
 
@@ -470,6 +659,12 @@ def check_provenance_receipts(repo_root, pr_meta):
                             continue
                         if not isinstance(entry, dict):
                             continue
+                        if str(entry.get("schema_version", "")).startswith("wave-qualification"):
+                            if qualification_receipt_matches(repo_root, entry, pr_meta):
+                                log(f"  Full-suite integration receipt matched for {landing_label(pr_meta)}: "
+                                    f"{os.path.relpath(path, repo_root)}:{line_num}")
+                                return
+                            continue  # A malformed qualification cannot fall through to legacy PR identity.
                         pr_fields = [key for key in ("pr", "pr_number") if key in entry]
                         matched = None
                         if pr_fields:
@@ -1613,9 +1808,13 @@ def main():
         help="Bypass hosted in-flight reconciler check for emergency local reconciliation (GH-496)",
     )
 
+    parser.add_argument("--qualify", action="store_true",
+                        help="Run the full sequential suite and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
 
     args = parser.parse_args()
+    if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
+        parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
 
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
 
@@ -1675,8 +1874,16 @@ def main():
             if args.catch_up:
                 landing_items.extend(("pr", str(n)) for n in catch_up_prs(repo_root, repo_slug, offline_manifest))
             landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
+            metadata = {}
+            if args.qualify and landing_items:
+                for kind, value in landing_items:
+                    metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
+                                                else fetch_pr_metadata(repo_root, value))
+                qualify_landings(repo_root, list(metadata.values()), journal)
             for landing_kind, landing_id in landing_items:
-                if landing_kind == "commit":
+                if (landing_kind, landing_id) in metadata:
+                    pr_meta = metadata[(landing_kind, landing_id)]
+                elif landing_kind == "commit":
                     pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
