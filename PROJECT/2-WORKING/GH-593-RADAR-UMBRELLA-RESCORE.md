@@ -28,7 +28,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked and rated 60/55/50/80; recon of both SKILL.md files and #293 done; plan written below | Codex relay plan QA, then the two SKILL.md edits, then witnessed re-score of #591 in the PR body |
+| Codex round 1 (relay-system/2026-09-13/gh593-plan-qa): 7 findings adjudicated, all accepted — no-target guard conflict (block) fixed by decision 9; signature contract, cutoff, streak, legacy and witness tightened | Codex round 2 on the revised plan, then the SKILL.md edits, then the step-7 witness |
 
 ## Why
 
@@ -62,99 +62,177 @@ annotated `quiet, unexplained — possible symptom masking`. Boundaries table li
 `marathon-triage`, `/honest`, `/10days` and others — no `whack-a-mole` row. Guardrails:
 only the two sinks write; never edit existing docs; never commit/push.
 
-**Live consumer state — #293.** Sections are `## RADAR-<id> — N issues · first-seen · runs: N`
-with checkboxes, scores (`Score ≈ 9.0`), and claimed/UNCLAIMED bands. It already carries
-the reconciliation rule "never strike through on symptom disappearance alone". There is no
-umbrella section today and no numeric quiet threshold.
+
+**Live consumer state — #293 (full body read, 108 lines, 9 `##` sections).** Sections are
+`## RADAR-<id> — N issues · first-seen · runs: N` with checkboxes, scores (`Score ≈ 9.0`), and
+claimed/UNCLAIMED bands. It already carries the reconciliation rule "never strike through on
+symptom disappearance alone". The string `umbrella` does not appear anywhere in the body:
+there is no umbrella section today and no numeric quiet threshold.
+
+**Existing guards that conflict with the change (Codex round-1 finding 3).** Radar's
+Guardrails say "No targets → write nothing" (`skills/radar/SKILL.md:37-38`); Step 4 gives an
+all-clear when no targets exist (`:282`); Step 5 opens with "Skip entirely when there are no
+targets" (`:350`). A run with zero ordinary targets and one tracked umbrella would be told to
+persist a `(1/2 quiet)` observation **and** to write nothing. Those three clauses must be
+amended, not worked around.
 
 **Contract seam.** The only coupling is the text format of the Cluster signature block:
-whack-a-mole writes it into the issue body; radar greps issue bodies for it. Both are prose
+whack-a-mole writes it into the issue body; radar reads issue bodies for it. Both are prose
 instructions to an agent, so the format must be unambiguous enough that a cold agent produces
-and parses the same shape. Fixed keys, one per line, in a fenced block.
+and parses the same shape from prose alone. whack-a-mole's SKILL.md is the **contract owner**;
+radar's SKILL.md cites it and repeats only the block shape.
 
 ## Design decisions
 
-1. **Signature block is fenced, fixed-key, one key per line** — greppable by a later agent
-   without a parser. Keys: `cluster`, `run`, `paths`, `errors`, `issues`, `commits`,
-   `signals` (the six raw counts + `score`).
-2. **Radar re-scores with whack-a-mole's weights, not radar's target formula.** The two
-   formulas answer different questions (radar: "what deserves to be a candidate"; whack-a-mole:
-   "how much churn is this class still producing"). Mixing them would make the filed-at and
-   now numbers incomparable.
-3. **Post-fix-only counting.** When the umbrella has a fix-merge date, only signals dated
-   after it count toward `now`. Without this, pre-fix churn keeps the score high forever and
-   nothing could ever read as solved. Before a fix merges, the full radar window counts.
-4. **Solved = below 5 on two consecutive radar runs after the fix merged.** 5 is whack-a-mole's
-   own floor. Two runs, not one, because radar cadence is irregular (Aug 28, Sep 1, Sep 2) and
-   a single quiet run can be a short window. Radar records `(1/2 quiet)` / `(2/2 quiet)` so the
-   count is visible.
-5. **Closed umbrella still ≥ 5 → `class survived — recommend reopening`.** Radar never
-   reopens; it recommends. This keeps radar's Guardrails intact.
-6. **Sink B gets one new section, `## Umbrellas — re-scored`**, appended after the target
-   sections. Umbrella rows are not RADAR-<id> targets and do not enter radar's target
-   ranking; they are a completion ledger for another tool's output.
+1. **Signature block: fenced, fixed-key, one key per line, whack-a-mole owns the contract.**
+   The exact block, with semantics (this is what lands in both files):
+
+   ```
+   ### Cluster signature — re-scored by radar on every run
+   cluster:  <mechanism-slug — lowercase, hyphens; stable across runs, never re-slugged>
+   run:      <YYYYMMDDTHHMMSSZ — the whack-a-mole run ID, UTC>
+   window:   <start> → <end>   (the producer's scan window; default 14 days, overrides allowed)
+   weights:  reopen=3 repeat_fix=3 revert=4 member=1 comments=1/5 open_days=1/7
+   paths:    <comma-separated, repo-relative; a trailing slash = directory prefix, otherwise exact file>
+   errors:   <comma-separated, double-quoted literal substrings; case-sensitive; no regex>
+   issues:   <#n #n … in this repo; owner/repo#n for another repo — cluster members only, not adjacents>
+   commits:  <member fix/revert commit SHAs — the ones scored, not ancestry>
+   signals:  reopens=N repeat_fixes=N reverts=N size=N comments=N open_days=N score=N
+   ```
+   Empty keys are written as `none`, never omitted. A body missing the fenced block or any
+   key is a template violation whack-a-mole must refuse to file.
+2. **Radar re-scores with the weights recorded in the block, not radar's target formula.**
+   The two formulas answer different questions. The `now` score is comparable to `filed at`
+   only when weights match and windows are of similar length; radar records both windows in
+   the row and labels a mismatch (`window 21d vs filed 14d`) rather than claiming equivalence.
+3. **Membership for re-score = whack-a-mole §3's rule, unchanged.** An item in the window
+   (issue, PR, fix/revert commit) is a member if it matches **two or more** of: a `paths`
+   entry, an `errors` substring in its title/body/message, an explicit link to a member issue
+   or to the umbrella, same label + component keyword. Path overlap alone is adjacency and does
+   not count — exactly as at filing. A reference to the umbrella number in a docs/reconcile
+   commit is not evidence of the class; it needs a second signal.
+4. **Post-fix-only counting, with a verified cutoff.** The cutoff is the merge time on trunk
+   of the PR that the umbrella's Remediation **Fix** task names (or that the umbrella's closing
+   comment cites). Absent that, there is no cutoff and the full window counts. A merge is not
+   deployment proof; if Lens 2 signal 6 (operational evidence) shows the class still firing
+   after the cutoff, the umbrella cannot read as solved regardless of score. A reverted or
+   superseded fix voids its cutoff; the streak resets. The row records which PR set the cutoff.
+5. **Solved = score below 5 on two consecutive radar runs whose windows end after the
+   cutoff, on two distinct dates.** Equality note: whack-a-mole's own floor is "no cluster
+   *above* 5" (a 5 is "no pattern" there); #593 chose the conservative `≥ 5 survives`, and this
+   plan keeps it and says so — no change to whack-a-mole's scoring. "Consecutive" means the
+   two most recent radar reports (Sink A docs, ordered by filename date/run suffix); a same-day
+   rerun (`-runN`) is not a second observation. The streak resets to 0 on any run scoring ≥ 5,
+   on a signal that is *unavailable* (unavailable is never score 0 and never earns quiet
+   credit — R:183-187), or on a changed cutoff. The row shows `(n/2 quiet)` and the two report
+   filenames that make up the streak. Two observations is what #593 asks for and what this
+   plan delivers; it is not a claim about elapsed exposure time.
+6. **Closed umbrella still ≥ 5 → `class survived — recommend reopening`.** Radar never
+   reopens; it recommends. Guardrails unchanged.
+7. **Umbrella rows live in one new Sink B section, outside target ranking; the class's
+   evidence is not.** `## Umbrellas — re-scored` is appended after the target sections. The
+   *row* does not enter radar's target formula. The activity that re-scored it is still
+   ordinary Lens 2 evidence: if it forms or feeds a RADAR-<id> target, that target is ranked
+   as usual and the umbrella row links to it (`class: RADAR-<id>`) — one class, two ledgers,
+   never a second numeric target because an umbrella exists.
+8. **Legacy umbrellas (filed before this template — #591 today).** Radar emits the row with
+   `filed at: legacy — no signature` and re-scores a **reconstructed** signature built from
+   the umbrella's "Symptoms this explains" list and body paths, labelled `reconstructed`. A
+   reconstructed baseline can show `class survived`; it can never earn quiet credit toward
+   solved until the operator adds a real signature (whack-a-mole may not edit #591 — W:15).
+9. **The no-target guards are refined, not removed.** "No targets → write nothing" becomes
+   "no targets **and no umbrella observations** → write nothing"; the Step 4 all-clear and the
+   Step 5 skip say the same. An umbrella-only run writes both sinks with the umbrella row and
+   the evidence that produced it. One confirmation still covers both sinks (R:424).
 
 ## Implementation (ordered, verification inline)
 
-1. `skills/whack-a-mole/SKILL.md` §6 template — replace the `## Evidence and confidence`
-   block with one that adds a `### Cluster signature — re-scored by radar` fenced block under
-   the existing three bullets. Add one sentence in §7's report line: "radar re-scores this
-   signature on each run and records it on the recurring-targets issue". Add a bullet to the
-   Edge cases list: "Top cluster already has an umbrella → read radar's `## Umbrellas —
-   re-scored` row for it before comparing task lists."
-   *Verify:* the template still renders as valid markdown; `grep -c 'Cluster signature'` = 2
-   (template + edge case) or as counted.
-2. `skills/radar/SKILL.md` Step 2 — add signal **8. Umbrella re-score** after signal 7:
-   list `Umbrella:` issues (open + closed), parse the signature, count window activity that
-   matches its paths / error strings / issue refs / commit lineage, apply whack-a-mole's
-   weights, honor post-fix-only counting. Report yield in the three states like every other
-   signal. State explicitly that the fix-merge date comes from the umbrella's linked PR merge
-   (`gh pr view --json mergedAt`) or, absent one, the commit that names the umbrella number.
-   *Verify:* signal numbering is contiguous 1–8; the yield-state rule applies.
-3. `skills/radar/SKILL.md` Step 5 Sink B — add the `## Umbrellas — re-scored` section spec
-   with the exact row format, the `(n/2 quiet)` counter, the solved rule, and the
-   `class survived` rule. Cross-link it to the existing strike-through rule: an umbrella row
-   is struck only on `2/2 quiet` **and** a fix commit that names the umbrella — both.
-   *Verify:* the row format in the doc matches the issue's acceptance format character for
-   character.
-4. `skills/radar/SKILL.md` Boundaries table — add a `whack-a-mole` row: "Files one umbrella
-   per run for a churn cluster | Radar re-measures the umbrella's signature each run and is
-   the only thing that calls it solved".
-5. `CHANGELOG.md` — one entry under `## 2026-09-13` per PDDA.md:940.
-6. Witness (PR body, not the repo): run radar's signal 8 by hand against #591 with today's
-   window and produce the actual `#591 — filed at … now … → …` line, listing the counted
-   signals. Then the red control: a synthetic closed umbrella body with a signature that
-   matches ≥ 5 points of real window activity (e.g. #591's own signature with `state: closed`
-   assumed) must produce `class survived`, not a strike-through.
-7. Gate: `utils/pdda/pdda.sh run` zero errors; push through the pre-push gate (releases.sql
-   in the diff routes to the tier-2 releases gate, not docs-only — expected).
+1. `skills/whack-a-mole/SKILL.md` §6 template — inside `## Evidence and confidence`, after the
+   three existing bullets, add the fenced Cluster signature block from decision 1 verbatim,
+   with one sentence of semantics per key. Add to the template rules list: "A body without
+   the fenced signature block, or with a key missing, is a template violation — do not file."
+   §7 report line: append "radar re-scores this signature on every run and records the
+   result on the recurring-targets issue; it is the only thing that calls the class solved."
+   Edge cases: extend the existing "already has an umbrella" bullet with "read radar's
+   `## Umbrellas — re-scored` row for it first."
+   *Verify:* render the template into a draft body, then delete the fenced block → the rule
+   text names that as a violation; delete one key → same. Both witnessed in the PR body.
+2. `skills/radar/SKILL.md` Guardrails (:37-38), Step 4 (:282), Step 5 (:350) — refine the
+   three no-target clauses per decision 9.
+   *Verify:* grep shows all three say "no targets and no umbrella observations"; none says
+   "no targets → write nothing" alone.
+3. `skills/radar/SKILL.md` Step 2 — add signal **8. Umbrella re-score** after signal 7:
+   `gh issue list --state all --search 'Umbrella: in:title'`; for each, read the signature
+   (or reconstruct per decision 8); resolve the cutoff per decision 4; count window items that
+   are members per decision 3 and dated after the cutoff; score with the block's weights;
+   report yield in the three states (parser failure = signature present but unreadable).
+   *Verify:* signals numbered 1–8 contiguous; the membership rule cites whack-a-mole §3.
+4. `skills/radar/SKILL.md` Step 5 Sink B — add the `## Umbrellas — re-scored` section spec:
+   ```
+   - [ ] #<n> <cluster> — filed at <score> (<run>, <window>) | legacy — no signature · now <score> (<window>, weights <same|differ>) · cutoff <PR #m merged YYYY-MM-DD | none> · (<k>/2 quiet: <report-a>, <report-b>) → holding | class survived — recommend reopening | solved
+   ```
+   with the streak, reset, unavailable, reconstructed, and `class:` link rules from
+   decisions 4–8. Strike-through only on `solved` (2/2 quiet **and** a cutoff PR) — this is
+   the umbrella form of the existing "names the seam" rule, cross-linked to it.
+   *Verify:* the row in the doc matches the issue's acceptance format token for token.
+5. `skills/radar/SKILL.md` Boundaries table — add a `whack-a-mole` row.
+6. `CHANGELOG.md` — one entry under `## 2026-09-13` per PDDA.md:940.
+7. **Witness (PR body).** Run radar's Step 2 signal 8 and Step 5 umbrella section by hand
+   against this repo for window 2026-08-23 → 2026-09-13, and record:
+   - discovery: the `gh issue list` command and count (must find ≥ #591);
+   - #591's row: `legacy — no signature`, the reconstructed signature (paths/errors/issues
+     taken from its body), the items counted and their dates, the arithmetic, the resulting
+     line. Expected: no cutoff (no fix PR merged yet) → `now <score>` over the full window,
+     `(0/2 quiet)`, `→ holding`.
+   - **Red control** with pinned inputs: a synthetic closed umbrella whose signature matches
+     exactly one reopen (3) + two member issues (2) = 5 after a stated cutoff → must render
+     `class survived — recommend reopening`, unstruck. Then the same inputs with one member
+     issue (4) → `holding (1/2 quiet)`, unstruck. Then mutate the first result by hand to a
+     strike-through and show the rule text rejects it.
+   - Observation table: quiet/quiet → solved; quiet/active/quiet → `(1/2 quiet)`, not solved;
+     one signal unavailable → `(0/2 quiet)`, no credit; umbrella-only run → both sinks
+     written (not skipped).
+   - Write audit: list every write the walkthrough would perform (Sink A path, Sink B issue
+     number, nothing else); a `gh issue close/reopen/edit` on the umbrella appears nowhere.
+8. **Gate.** `utils/pdda/pdda.sh run` zero errors (the docs gate — recorded explicitly, since
+   the push itself routes to the tier-2 releases gate because `releases.sql` is in the diff);
+   then push through the pre-push gate. Both results in the PR body.
 
-## Acceptance (each must be able to fail)
+## Acceptance (each must be able to fail — inputs that fail it in step 7)
 
-- whack-a-mole's template renders a Cluster signature block; a body without one is a
-  template violation.
-- radar, run against this repo, produces a re-score line for #591 in the exact format —
-  witnessed in the PR body with the actual line and the signals counted. Finding
-  `Umbrella:` issues and emitting no line is a failure.
-- Red control: a synthetic closed umbrella whose signature still matches ≥ 5 points of
-  window activity is emitted as `class survived`, not struck through — shown in the PR body.
-- radar's Guardrails hold: no writes beyond the two sinks, no issue closes/reopens.
-- `utils/pdda/pdda.sh run` clean; pre-push gate green.
+- whack-a-mole's template renders a Cluster signature block; a body without the fenced block
+  or with a missing key is named a template violation by the rule text. *Fails if:* the
+  deleted-block draft is not called out.
+- radar discovers `Umbrella:` issues and emits one row per umbrella in the exact format;
+  #591's row is `legacy — no signature` with a reconstructed re-score. *Fails if:* discovery
+  finds #591 and no row is produced, or the row has a fabricated `filed at` number.
+- Red control: pinned inputs totalling 5 after a cutoff → `class survived`, unstruck; 4 →
+  `holding`. *Fails if:* either renders the other, or a strike-through survives the rule text.
+- No-target refinement: an umbrella-only run writes both sinks. *Fails if:* any of the three
+  clauses still reads "no targets → write nothing" alone.
+- Guardrails: the write audit lists only Sink A and Sink B. *Fails if:* any close/reopen/edit
+  of an umbrella or a third file appears.
+- `utils/pdda/pdda.sh run` zero errors; pre-push gate green. *Fails if:* either is red.
 
 ## Risks / rollback
 
-Prose-only; rollback is `git revert` of one commit. The one real risk is format drift between
-the two skills — mitigated by putting the signature keys and the row format in both files
-verbatim and naming the other file as the contract owner in each.
+Prose-only; rollback is `git revert` of one commit. The one real risk is contract drift —
+mitigated by naming whack-a-mole as the contract owner, repeating only the block shape in
+radar, and pinning both with the step-7 witness. Published `solved` on a reconstructed
+baseline is prevented by decision 8.
 
 ## Rating rationale (2026-09-13)
 
-`rated 60/55/50/80`. **sev 55**: consequence is a false "solved" on a recurring class — #591's
-chain cost two fallback PRs (#543, #545) and four hand-written receipts before the pattern
-was named; not a crash or data loss. **pri 60**: severity-led, plus the operator asked for
-it now as follow-through on a live umbrella. **appeal 50**: neutral, no user preference
-given. **effort 80**: two prose SKILL.md edits, no code, cheap. Recurrence window
-2026-08-30 → 2026-09-13: 4 distinct issues in the #591 chain, 2 closed-then-superseded;
-prior 14 days: the radar board's vendored-root target shows the same acceptance-never-
-re-measured shape across 3 runs. Uncertainty: whether two consecutive radar runs is the
-right quiet horizon (radar cadence is irregular).
+`rated 60/55/50/80` (order: pri/sev/appeal/effort). **pri 60**: severity-led plus a modest
+scheduling premium — the operator asked for it as follow-through on a live umbrella. **sev
+55**: consequence is a misleading completion signal on a recurring class, recovered by manual
+work — #591's body reports two fallback PRs (#543, #545) and four hand-written receipts
+(producer-reported in #591, not independently recounted here); not a crash or data loss.
+**appeal 50**: neutral, no user preference. **effort 80**: two prose SKILL.md edits plus a
+hand-run witness; an estimate, no code. **Recurrence:** window 2026-08-30 → 2026-09-13 has
+five distinct issues in the #591 chain (#421, #425 filed 09-04; #546 09-10; #584 09-12;
+#591 09-13), two of them closed-then-superseded. Prior window 2026-08-16 → 2026-08-30: no
+umbrella-class issues existed (whack-a-mole was not yet in use), so the umbrella trend is
+**unknown, not zero**; the radar report of 2026-08-28 (run 1) shows the same
+acceptance-stated-never-re-measured shape once, as qualitative history only. Uncertainty:
+whether two distinct-date runs is the right quiet horizon.

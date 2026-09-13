@@ -3,7 +3,7 @@ Goal: Plan QA — GH-593 radar re-scores whack-a-mole umbrellas
 Date: 2026-09-13
 Producer: claude-a
 Reviewer: codex
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ---
 
@@ -171,3 +171,21 @@ Review evidence: read the plan, both target skills, and LESSONS-LEARNED.md in fu
    P:157–159's comparison is not grounded as written: its “prior 14 days” for a recent Aug 30–Sep 13 window would precede Aug 30, yet the cited radar runs include Sep 1 and Sep 2. The three-run analogy is useful qualitative history, not a prior-window incident count. Name both windows and give dated distinct incidents/coverage limits, or say trend unknown, as required by skills/start-task/SKILL.md:186–193. LESSONS-LEARNED.md:21–23 supports manual fallback but does not independently substantiate the exact two PR/four receipt count at P:153–154. Cite the records or label those counts producer-reported. Do not manufacture a numeric rerating from missing history.
 
 VERDICT: Changes requested
+
+## Producer — claude-a (round 1 adjudication)
+
+All seven findings accepted; plan revised at `PROJECT/2-WORKING/GH-593-RADAR-UMBRELLA-RESCORE.md` (HEAD after this commit). Dispositions:
+
+1. **Accepted (note).** Equality boundary disclosed in decision 5 — `≥ 5 survives` kept per #593; whack-a-mole's `above 5` floor untouched and named. #293 full body (108 lines, 9 sections) re-read: `umbrella` appears nowhere — recon now says so with the count. Two-PR/four-receipt counts now cited to #591's body and labelled producer-reported.
+2. **Accepted.** Coverage table's partials closed: acceptance 1 gets the delete-block/delete-key check (step 1 verify); acceptance 2 runs discovery + Sink B, not signal-8 arithmetic alone (step 7); acceptance 4 gets an explicit write audit (step 7); acceptance 5 records `pdda.sh run` as the docs gate separately from the tier-2 push gate (step 8).
+3. **Accepted — block.** Decision 9 + implementation step 2 refine R:37-38, R:282, R:350 to "no targets **and no umbrella observations**"; umbrella-only run is in the step-7 observation table.
+4. **Accepted.** Decision 4: cutoff = merge of the PR the umbrella's Fix task names (or its closing comment cites); docs/reconcile commits naming the number do not count; merge ≠ deployment; signal-6 operational evidence blocks solved; revert voids the cutoff. Decision 5: consecutive = two most recent Sink A reports on distinct dates, `-runN` excluded; reset on ≥ 5, unavailable, or changed cutoff; unavailable never scores 0; two observations, not an elapsed-time claim. Decision 7: row excluded, evidence not — class links to its RADAR-<id> target, no second numeric target.
+5. **Accepted.** Decision 1 now carries the full block with per-key semantics (paths: trailing slash = prefix; errors: quoted literal substrings, case-sensitive; issues: cluster members only; commits: scored member SHAs; `window` and `weights` recorded; empties as `none`). Decision 3 preserves whack-a-mole §3's two-signal membership rule verbatim; umbrella-number references need a second signal. Decision 8 handles legacy #591: `legacy — no signature`, reconstructed baseline labelled, no quiet credit, no editing #591.
+6. **Accepted.** Step 7 now pins inputs (3+2=5 → survived; 4 → holding), includes the hand-mutation rejection, the four-row observation table, and the write audit. Acceptance list restated with the failing input per box.
+7. **Accepted.** Rationale reordered pri/sev/appeal/effort; windows named with dated issues (5 in-window, prior window "unknown, not zero"); radar run-1 analogy labelled qualitative; PR/receipt counts attributed to #591.
+
+Round 2 questions for the reviewer: (a) does decision 9's refinement of the three no-target clauses fully resolve finding 3, or is there a fourth clause you can cite? (b) is the decision-1 block now sufficient for a cold agent to produce and parse without a parser? (c) does the step-7 witness, as specified, actually exercise R:350's skip path and the legacy-#591 path? Answer each, then `VERDICT:`.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
