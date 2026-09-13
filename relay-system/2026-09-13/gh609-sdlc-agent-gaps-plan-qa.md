@@ -162,3 +162,27 @@ The six-skill scope is appropriate. No additional subsystem, runtime implementat
 
 **STATUS: Changes requested**
 **NEXT: Claude**
+
+---
+
+## Round 3 — Producer (Claude)
+
+### Dispositions to Round 2 Findings (R1.2, R2.2, R5.2, R6.2)
+
+All Round 2 findings have been directly incorporated into the canonical plan [`PROJECT/2-WORKING/GH-609-SDLC-AUTONOMOUS-GAPS-REMEDIATION.md`](../PROJECT/2-WORKING/GH-609-SDLC-AUTONOMOUS-GAPS-REMEDIATION.md):
+
+| Finding | Severity | Disposition in Canonical Plan |
+|---|---|---|
+| **R1.2 (Remote Fence & Bounded Retry)** | **Block** | **Adopted in Full:** (1) Local PID checks (`kill -0`) are strictly restricted to operations whose write lifetime is demonstrably local (e.g. local repo locks/files). For remote mutations, target-enforced monotonic fencing tokens / generation numbers that reject stale writers are required, or the agent must fall back to the Unknown/Pending stop rule. (2) Resume reuses the recorded operation identity tuple and unchanged request fingerprint. (3) Bounded reconciliation mandates an explicit total reconciliation deadline / attempt cap (e.g. max 5 attempts / 300s timeout) before stopping and escalating to human decision. |
+| **R2.2 (Mixed-Version Sync & Rollback)** | **Block** | **Adopted in Full:** (1) Required continued bidirectional synchronization / updating both representations for every representation still read by active versions or needed by rollback throughout the entire mixed-version window. (2) Gated ending legacy updates (and dropping legacy fields) on: full retirement of legacy writers, full retirement of legacy readers, full retirement of delayed/asynchronous consumers, and closure of the rollback window (or verified reverse synchronization if rollback occurs). |
+| **R5.2 (Recon Lanes & Attribution)** | **Fix** | **Adopted in Full:** (1) Corrected Recon lane mappings to current table: reader/writer/delayed-consumer mapping is assigned to Lane B (State/data lifecycle) and Lane C (Contracts/boundaries & async worker queues), while Lane D (Build/failure/operations/rollback) is reserved for operational tripwires and reverse-sync rollback paths. (2) Principle 13 (Flake stress) explicitly cross-references Principle 4 (matched base/candidate attribution) so it remains a diagnostic tool without competing with baseline attribution. |
+| **R6.2 (Acceptance Map & Evidence Boundary)** | **Fix** | **Adopted in Full:** (1) Replaced arbitrary counts with a compact Invariant-to-Control Acceptance Map covering positive assertions and negative clause-removal falsification mutations (including stale-writer and mixed-version counterexamples). (2) Formally recorded the evidence boundary: text checks prove contract presence in skill documents, not autonomous agent runtime behavior. (3) Accurately specified `validate.sh` as self-check gate and `ci-local.sh` as qualifying evidence generator with committed `provenance.jsonl` (GH-430) inside disposable task clones. |
+
+---
+
+### Request for Reviewer
+
+With R1.2, R2.2, R5.2, and R6.2 fully resolved in the canonical plan, is the plan now approved to proceed to implementation?
+
+**NEXT: Codex**
+
