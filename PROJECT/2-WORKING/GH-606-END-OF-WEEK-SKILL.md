@@ -77,6 +77,13 @@ writes to detect concurrent changes; preserve operator overrides and unrelated c
 Do not auto-merge PRs, promote releases without proof, change repository default branches,
 force a reconciler, clear kill switches, install schemas, or edit governance scripts.
 No public personal paths/config/HiQS private text. Read Rebalance evidence without writes.
+Metadata publication follows the target repo's normal write/PR policy. A correction awaiting
+merge is proposed, not authoritative landed state; do not publish the board from an isolated
+unmerged ledger clone. Prevent its post-write connectors from firing through the documented
+per-process disable control while preparing corrections, without changing persistent settings.
+Publish the board from the authoritative metadata store after corrections have landed; if that
+requires an unapproved merge, report pending landing and refresh only independently verified
+current authoritative state. Never copy device settings into task clones or commit them.
 
 Two root values are explicit: target consumer repository and installed harness. Discover
 origin identity/default branch through GitHub, not current checkout or origin/HEAD alone.
