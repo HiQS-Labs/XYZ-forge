@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -101,5 +101,76 @@ tests and final QA. Prioritize full coherent implementation over commentary; cap
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Author checkpoint — first implementation, correction pass
+
+First build saved as 1e918e8344c2b22a0e83454b7e21629033905735. Driver exit7 at
+1200 seconds, classified slow-but-progressing, allowed files committed and token released.
+This is an incomplete build, NOT QA approval. Separate full validation clone ran the new
+Python discovery suite: 18 tests passed. Existing event/sweep/board suites are running there.
+No live board/config writes. The parent does not count the timed-out turn as a reviewer round.
+
+Sol High: finish this implementation in one focused correction turn (30-minute ceiling),
+then STOP and hand back; don't spend the ceiling repeatedly polishing commentary.
+Same ownership and containment rules above. Do not run mutation-heavy suites in the worktree.
+Add deterministic fixtures and syntax-check; parent runs tests in the full clone. No git commits.
+
+Confirmed planner probes against saved 1e918e83 (fixed time 2026-09-13T12:00Z):
+- Invalid identity is now correctly preserved (your late fix worked).
+- CLOSED COMPLETED issue with closed_at='garbage' and existing Done incorrectly moves Backlog.
+- OPEN non-draft PR followed by a recent draft PR, both closing issue1, incorrectly assigns
+  issue1 In progress. Review must outrank progress independent of input order.
+- GH CLOSED COMPLETED issue with valid recent closed_at and no ledger row is omitted. GH
+  terminal truth does not need a rating/ledger row; ledger requirements apply to Ready/starts.
+
+Fix these and complete the traced acceptance gaps below, using the controlling plan rather
+than creating new policy. Reproduce each relevant failure in focused fixtures before fixing.
+
+1. Planner: validate non-future parseable terminal dates before any terminal demotion, and
+   known PR state before classifying old/closed. Unknown PR state/date stays unresolved.
+   Keep duplicate/foreign identity guards, but recent GH completion is authoritative even
+   without a ledger row. Non-draft closing PR always wins over draft in both input orders.
+2. Evidence loader: SELECT/use each roadmap row's actual repo_id, not a different repo row
+   inferred solely from its URL. Cross-owner same-basename and mismatched row ownership must
+   never lend events or Ready identity. Encode SQLite file URI safely for spaces/#/? paths.
+   Reject backfill starts for every start event, and test jog running/leased provenance with
+   the actual current jog state. Do not arbitrarily require running for a legitimate lease.
+   Report ambiguous multiple jog rows conservatively; don't pick unspecified SQL order.
+3. Apply preflight: hold existing connector lock across fresh preflight through all writes;
+   release even if initial audit creation fails. Resolve fresh board IDs/options (not cached
+   IDs), compare item_id as well as status immediately before mutation, and reject future
+   preview timestamps. Preserve automatic connector disabled. Respect read-only preview
+   (explicit artifact only; no state cache/config mutations). Verify complete bounded board
+   pagination including malformed/missing cursors and preserve/report opaque cards.
+4. Audit/recovery: per-request intent/result writes must be durable (fsync then atomic
+   replace, directory durability where supported); do not overwrite an existing result audit
+   during a retry. Preserve successful add ID even if status fails. A persisted unmatched
+   intent is indeterminate. Recovery must report such operations and residual added cards,
+   not return an empty success because only phase=change records were selected. Require
+   readback for indeterminate requests; no blind retry. Keep LEGACY set_issue_status stale-ID
+   retry working when no policy/audit is requested (_remote_request currently wraps all
+   exceptions in IndeterminateMutation, disabling that legacy retry).
+5. Restore: validate every operation identity against policy allowlist, require current
+   item_id AND status at the final check, prevalidate destination options, and use the same
+   audited request seam for set/clear with durable per-request restore evidence. Keep default
+   remote read-only; explicit write only. Report skipped/partial/indeterminate nonzero, retain
+   added cards by default, never delete. A partial add+failed status must be visible in report.
+6. Tests must cover the controlling plan's load-bearing cases, not only helper calls: two
+   completed + one deferred sweep share one txn/receipt; inject failure at second event and
+   prove rows/events/receipt/generation/dump/journal all rollback, no duplicate on rerun;
+   status schema7/8 bytes and all sidecars/config unchanged; start->park, start->stop,
+   backfill/malformed/future exclusions; top10 with ties/override/unrated/foreign/reopened;
+   saved preview drift/tampering/future age/missing option makes zero mutation; concurrent
+   replacement with same status refused; add-success/status-failure and before/after audit
+   failures preserve evidence; restore unset status actually clears and concurrent changes
+   survive. Mock network and device config. Ensure validation registration handles Python
+   in both lanes without changing legacy suite semantics or exported nice defaults.
+7. Sanitized source observations are context only; validate expected source/kind/reference,
+   show their freshness/coverage, never derive mutations solely from intent. Docs must match
+   actual locking/restore behavior. No unrelated refactors or new dependency/module/schema.
+
+Disposition every numbered item briefly in your final appended block, note anything still
+unfinished honestly, leave STATUS Open and NEXT Reviewer, release to codex-author, finish.
+The parent will run tests and independent final Codex QA after this build. No self-approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
