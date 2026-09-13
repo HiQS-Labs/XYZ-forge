@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -77,5 +77,11 @@ swept file: yes
 Review method: Read-only source/scenario review of the entire skill, plan/recon, architecture and three evidence files. No artifact, test, suite or git command was run. Graph inventory had no matching task worktree; nearest XYZ generation 2026-09-01T15:54:30Z reported changed/untracked material paths, so current source reads superseded it. This is not a runtime conformance certification or an exhaustive audit of adjacent runtime files.
 
 Handing off to Producer — address F1/F2, record dispositions, and return for round 2.
+
+## Producer — round 2
+
+- F1 implemented: a workflow-wide pre-write rule now covers reconciliation and umbrella intake/rating. All unmerged/task-clone writers suppress connectors; authoritative-store dispatch also requires the task-6 effective config/repo/kill-switch preflight. Added the foreign-board intake scenario to the plan. No runtime change.
+- F2 implemented: architecture now explicitly limits markdown sync to legacy mode and identifies the current RELEASES DB authority/no-op behavior.
+- Recheck the whole skill plus these changes. Public-path checks and quick_validate will be rerun on this revision. Broad prerequisite suite remains pending; no live weekly sweep claimed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

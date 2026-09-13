@@ -62,6 +62,14 @@ change GitHub's default branch, merge unrelated PRs, force-push, discard local w
 clear kill switches, or invent completion/release evidence. Preserve operator ratings,
 overrides and deliberate board mappings. No automatic model switching or scheduler.
 
+**Before every metadata writer, including reconciliation and umbrella intake/rating:**
+establish connector containment. Suppress post-write connectors for all unmerged or
+task-clone writes using the documented per-process `XYZ_WORK_CONNECTORS=0` control.
+Even on an authoritative store, permit dispatch only after the effective configuration,
+repo identity and kill-switch checks in task 6 have passed. Otherwise keep dispatch
+suppressed for the write and retain the pending events for the verified board step.
+This rule applies from the first write; reaching task 6 is not the first time it applies.
+
 ## Workflow
 
 1. **Resolve the target and establish reconciliation health.**

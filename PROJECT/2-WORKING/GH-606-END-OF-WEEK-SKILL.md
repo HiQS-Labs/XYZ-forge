@@ -127,6 +127,7 @@ No new end-of-week config schema. Missing settings prompt only for the missing v
 |---|---|---|
 | User's default branch is main; installed reconciler accepts development only | Report unsupported-target gap; inspect/correct only through supported writers on intended branch | Reject a recipe that substitutes development or skips branch guard; QA transcript |
 | Vendored harness plus external/repo-local device settings | Use consumer root and effective config; no personal paths/board IDs; validate repo match | Wrong root or another repo in repos[0] must stop board writes; QA transcript |
+| Umbrella intake or reconciliation triggers an enabled foreign board | Contain connectors before the first metadata writer; defer dispatch until effective target checks pass | Step-4 intake must not dispatch foreign/unmerged state; final QA transcript |
 | HiQS cache missing/stale/empty or no connector | Continue independent sources, report missing coverage; never infer no work | Empty source cannot produce a fully verified result; QA transcript |
 | Ready/open PR vs merged PR vs completed metadata | Preserve distinct lifecycle evidence and use configured status_map | touch/reconcile work-start recipe must not move completed cards back; QA transcript |
 | Writer exits zero but logs FAILED or cursor stalls | Report failed/partial board outcome and read back actual cards | A zero-only success assertion is rejected; QA transcript |
