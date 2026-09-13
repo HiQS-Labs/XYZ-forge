@@ -10,7 +10,8 @@ one old Done card463 to Backlog. Ready10 remains67/216/223/418/421/423/424/425/4
 No live writes. No final implementation approval: Reviewer round2 found4 Blockers/3 Shoulds,
 accepted but unimplemented. The next producer dispatch returned exit8 at the lane's two-attempt
 cap; implementation paused for operator authorization, third review not run. Normal draft
-push gate is still running and cannot substitute for QA approval.
+push gate passed377/377 in824s and published b9d784e9 without bypass. Clone identity stayed
+clean and unchanged. This is pre-push evidence, not promotion evidence or QA approval.
 
 On db17cb49, focused gh402,gh492,gh365 telemetry and both GH605 wrappers passed; gh549 failed
 7 assertions due to the incidental raw connector protocol change. b9d784e9 restores that

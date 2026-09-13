@@ -34,9 +34,10 @@ changes matching independent GH/board analysis, preserving Ready10 and uncertain
 Reviewer round2 returned changes requested:4 Blockers and3 Shoulds. The saved next correction
 brief is accepted but unimplemented: harness refused dispatch at its two-attempt cap, exit8.
 Third review has not run. start-task requires a stop at exhausted caps; no bypass is taken.
-The normal full draft push gate remains in progress, independent from missing QA approval.
+The normal full draft push gate passed377/377 in824s and published b9d784e9, independent
+from missing QA approval. Clone identity stayed clean and unchanged; no bypass was used.
 No live board writes, configuration changes, merge or deployment has occurred. PR607 remains
-draft on its earlier published head until verification. Evidence: TESTS-RESULTS/gh605-implementation/.
+draft with implementation published. Evidence: TESTS-RESULTS/gh605-implementation/.
 
 ## Table of contents
 
