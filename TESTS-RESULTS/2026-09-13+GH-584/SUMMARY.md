@@ -46,3 +46,5 @@ violate the existing publisher's declared-path boundary. The lookup now enforces
 canonical filename prefix and deterministic ordering. `canonical-doc-red.log` witnesses the old
 selection moving the supporting note; the current test closes the canonical document and preserves
 the note byte-for-byte. The publisher allowlist remains unchanged.
+
+Published diagnostic copies redact local username, home/clone roots and hostname. Original local logs remain outside Git; result values, run IDs and test counts are unchanged. These diagnostic copies are not machine-generated reconciliation receipts.

@@ -31,7 +31,7 @@ test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allow
 test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
 
 ----------------------------------------------------------------------
-Ran 24 tests in 2.668s
+Ran 24 tests in 2.698s
 
 OK
 Nothing to commit

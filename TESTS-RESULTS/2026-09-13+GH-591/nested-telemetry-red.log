@@ -50,10 +50,10 @@ ERROR: test_batch_qualifies_once_and_retains_each_landing (__main__.Qualificatio
 Traceback (most recent call last):
   File "<stdin>", line 314, in test_batch_qualifies_once_and_retains_each_landing
   File "<stdin>", line 235, in qualify
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
     die("Qualification requires exactly one retained validation run", code=6)
     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
     raise ReconcileError(msg, code=code)
 wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
 
@@ -63,10 +63,10 @@ ERROR: test_committed_proof_makes_replay_idempotent (__main__.Qualification.test
 Traceback (most recent call last):
   File "<stdin>", line 265, in test_committed_proof_makes_replay_idempotent
   File "<stdin>", line 235, in qualify
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
     die("Qualification requires exactly one retained validation run", code=6)
     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
     raise ReconcileError(msg, code=code)
 wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
 
@@ -76,10 +76,10 @@ ERROR: test_full_gate_produces_attributable_retained_proof (__main__.Qualificati
 Traceback (most recent call last):
   File "<stdin>", line 243, in test_full_gate_produces_attributable_retained_proof
   File "<stdin>", line 235, in qualify
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
     die("Qualification requires exactly one retained validation run", code=6)
     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
     raise ReconcileError(msg, code=code)
 wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
 
@@ -89,10 +89,10 @@ ERROR: test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualificat
 Traceback (most recent call last):
   File "<stdin>", line 287, in test_incomplete_or_quarantined_telemetry_is_rejected
   File "<stdin>", line 235, in qualify
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
     die("Qualification requires exactly one retained validation run", code=6)
     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
     raise ReconcileError(msg, code=code)
 wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
 
@@ -102,10 +102,10 @@ ERROR: test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualific
 Traceback (most recent call last):
   File "<stdin>", line 273, in test_new_schema_cannot_fall_through_to_legacy_pr_match
   File "<stdin>", line 235, in qualify
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
     die("Qualification requires exactly one retained validation run", code=6)
     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
     raise ReconcileError(msg, code=code)
 wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
 
@@ -115,10 +115,10 @@ ERROR: test_receipts_participate_in_rollback (__main__.Qualification.test_receip
 Traceback (most recent call last):
   File "<stdin>", line 308, in test_receipts_participate_in_rollback
   File "<stdin>", line 235, in qualify
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
     die("Qualification requires exactly one retained validation run", code=6)
     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/noelsaw/marathon-clones/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
     raise ReconcileError(msg, code=code)
 wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
 

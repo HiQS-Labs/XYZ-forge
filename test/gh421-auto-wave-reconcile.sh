@@ -473,6 +473,9 @@ class WorkflowTests(unittest.TestCase):
             self.publish(paths + ['utils/py/unexpected.py'])
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
             self.publish(paths + ['TESTS-RESULTS/arbitrary/provenance.jsonl'])
+        for sha in ('a'*39, 'a'*41, 'g'*40):
+            with self.subTest(sha=sha), self.assertRaisesRegex(SystemExit, 'undeclared'):
+                self.publish(paths + ['TESTS-RESULTS/2026-09-13+GH-591/wave-'+sha+'/provenance.jsonl'])
         with self.assertRaises(wave.subprocess.CalledProcessError):
             self.publish(paths, reject_push=True)
         with self.assertRaises(SystemExit) as result:

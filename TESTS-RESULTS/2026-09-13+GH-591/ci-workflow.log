@@ -1,5 +1,5 @@
 == test: ci-workflow ==
-  workflow: /Users/noelsaw/marathon-clones/gh591-reconciler/.github/workflows/ci.yml
+  workflow: <clone-root>/gh591-reconciler/.github/workflows/ci.yml
   PASS: workflow exists and is non-empty
   PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
   PASS: no third-party runner labels remain
