@@ -1,9 +1,9 @@
 ---
-name: catchup
-description: Catch a repo's SOP (standard operating procedure) and lessons-learned docs up to what actually happened recently. Deep-recons the codebase for existing SOP / runbook / lessons / postmortem / incident docs (any .md, .txt, .rst), mines recent events from every available source (git, PRs, issues, incident files, changelogs, session logs, chat transcripts), grades each finding by evidence strength, then proposes diffs and asks the user which events must be included before applying anything. Works in any codebase and under any governance layer (CLAUDE.md, AGENTS.md, PDDA, plain repo, none). Use whenever the user says "catch up the docs", "update the SOP", "what did we learn this week", "sync lessons learned", "post-incident writeup", "the runbook is stale", "document what happened", or after a busy week, incident, release, or migration — even if they don't name the docs explicitly.
+name: sop
+description: Catch a repo's SOP (standard operating procedure) and lessons-learned docs up to what actually happened recently. Deep-recons the codebase for existing SOP / runbook / lessons / postmortem / incident docs (any .md, .txt, .rst), mines recent events from every available source (git, PRs, issues, incident files, changelogs, session logs, chat transcripts), grades each finding by evidence strength, then proposes diffs and asks the user which events must be included before applying anything. Works in any codebase and under any governance layer (CLAUDE.md, AGENTS.md, PDDA, plain repo, none). Use whenever the user says "sop", "catch up the docs", "update the SOP", "what did we learn this week", "sync lessons learned", "post-incident writeup", "the runbook is stale", "document what happened", or after a busy week, incident, release, or migration — even if they don't name the docs explicitly.
 ---
 
-# catchup
+# sop
 
 Bring SOP and lessons-learned docs up to date from recent events. Recon → propose → confirm → apply.
 Prompt-only; no bundled scripts. Never rewrites — only proposes additive diffs until the user approves.
@@ -139,7 +139,7 @@ Ask, in this order, one message:
 
 Only after approval:
 - Apply approved diffs additively. New entries go at the **top** of their section (newest first) unless the doc's existing convention is oldest-first — follow the doc.
-- Write an audit record to `.catchup/<YYYYMMDDTHHMMSSZ>/proposal.md` (the full Step 2 output) and update `.catchup/INDEX.md` (one line per run: stamp, mode, window, approved IDs). Skip this only if the user says no.
+- Write an audit record to `.sop/<YYYYMMDDTHHMMSSZ>/proposal.md` (the full Step 2 output) and update `.sop/INDEX.md` (one line per run: stamp, mode, window, approved IDs). Skip this only if the user says no.
 - Re-read each modified file and confirm the new lines are present. Report: files changed, IDs applied, IDs dropped, anything unverified.
 - Do **not** commit. Suggest a commit message; the user commits.
 
