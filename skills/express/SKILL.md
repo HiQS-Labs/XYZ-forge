@@ -24,6 +24,23 @@ born-complete capture doc, the CHANGELOG entry, the landing, and the
 reconciliation — all before the operator's coffee cools. The guardrails are the
 skill; the speed is a side effect.
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Express Discipline:**
+> 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/development` ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
+> 2. **Validate issue & registered regression suite (Phases 3–4).** Confirm the tracking issue is OPEN; verify that a dedicated regression suite exists (`test/gh<N>-<slug>.sh`) and is registered in `validate.sh TESTS` (hotfix without a registered suite is refused).
+> 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
+> 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute regression suite green, prove tree identity, and re-snapshot tree to prevent drift.
+> 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
+>
+> **Overall Goal:** Critical, risk-bounded hotfix implemented, tested, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+
+Then begin work.
+
+---
+
 **Design provenance:** proposed on #259 (comment 5434441831, v2), filed as
 #267, upgraded in #516 (True Direct-Push Mode, commit-driven reconciliation,
 branch flexibility, recovery subcommand, dry-run, and central telemetry):

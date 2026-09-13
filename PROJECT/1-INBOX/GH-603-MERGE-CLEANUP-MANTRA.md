@@ -1,7 +1,7 @@
 ---
 gh_issue: 603
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/603
-title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, and unstuck skills"
+title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, and express skills"
 status: Proposed (1-INBOX — active)
 created: 2026-09-13
 updated: 2026-09-13
@@ -10,14 +10,14 @@ doc_type: feedback
 goal: >
   Add verbatim 5-point discipline mantra recital blocks, Rung 0 Intake Triage, and Overall Goal
   anchors at the top of skills/merge-cleanup/SKILL.md, skills/start-task/SKILL.md,
-  skills/workhorse/SKILL.md, skills/sop/SKILL.md, skills/whack-a-mole/SKILL.md, and
-  skills/unstuck/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
+  skills/workhorse/SKILL.md, skills/sop/SKILL.md, skills/whack-a-mole/SKILL.md,
+  skills/unstuck/SKILL.md, and skills/express/SKILL.md (matching debug-mantra) to enforce re-anchoring across multi-turn agent conversations.
 roadmap_exempt: true
 ---
 
-# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, and unstuck
+# GH-603 — workflow discipline mantras for merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, and express
 
-Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, and `skills/unstuck/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
+Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors to `skills/merge-cleanup/SKILL.md`, `skills/start-task/SKILL.md`, `skills/workhorse/SKILL.md`, `skills/sop/SKILL.md`, `skills/whack-a-mole/SKILL.md`, `skills/unstuck/SKILL.md`, and `skills/express/SKILL.md` to ensure agents reciting the skill at the start of execution re-anchor context across multi-turn sessions.
 
 ## 1. Merge-Cleanup Discipline Mantra
 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
@@ -66,6 +66,15 @@ Add verbatim 5-point discipline mantra recital blocks and Overall Goal anchors t
 4. **Execute foundational resolution — no bandages (Rung 4).** Select the single smallest action that resolves the true root blocker gating the milestone; strictly forbid painkillers, silencing hacks, bypassed invariants, or symptom patches that kick the can down the road (hand off to `/workhorse` if a structural fix is required).
 5. **Act once, verify movement & exit (Rung 5).** Execute the single move, check whether the milestone itself changed, emit the structured UNSTUCK receipt, and immediately resume execution (or return to parent `/workhorse` ladder).
 **Overall Goal:** Stalled session interrupted and durable goal movement restored immediately via the simplest foundational action that advances the milestone, with zero added machinery, zero symptom bandages, and zero bypassed safety invariants.
+
+## 7. Express Discipline Mantra
+1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/development` ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
+2. **Validate issue & registered regression suite (Phases 3–4).** Confirm the tracking issue is OPEN; verify that a dedicated regression suite exists (`test/gh<N>-<slug>.sh`) and is registered in `validate.sh TESTS` (hotfix without a registered suite is refused).
+3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
+4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute regression suite green, prove tree identity, and re-snapshot tree to prevent drift.
+5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
+**Overall Goal:** Critical, risk-bounded hotfix implemented, tested, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+
 
 
 
