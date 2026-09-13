@@ -110,7 +110,16 @@ The primary checkout's schema-7 DB is observed, not modified by this PR workflow
 
 1. Extend the existing classifier so terminal sections win over markers. Live update uses it
    only when section/marker actually changes; metadata-only edits keep informational `updated`.
-   Capture the previous row inside the writer transaction, not before the lock. Backfill keeps
+   Classification order is Deferred -> deferred; Completed -> completed; otherwise 🚧 marker
+   OR In progress section -> in_flight; otherwise rated -> rated, unrated -> parked. Thus
+   Queue without 🚧 maps to rated/parked; Queue with a stale 🚧 retains existing backfill
+   precedence rather than inventing a new demotion rule. Match sections case-insensitively
+   after stripping whitespace, preserving the existing prefix behavior.
+   Capture the previous roadmap row inside perform_write after BEGIN IMMEDIATE and before
+   mutate for roadmap-update. Add optional previous-state arguments to _record_work_event
+   and _extract_roadmap_update; pass it only to the update extractor, leaving other extractor
+   signatures unchanged. Compare section/marker before and after mutation there; never try
+   to recover old state by rereading the overwritten row. Backfill keeps
    its existing Deferred skip. Live Deferred emits an informational `deferred` event, with no
    default column until the operator configures one. -> Expect section-only progress, Completed
    with either marker, no fake pr_merged, and no review-to-Ready regression on metadata edits.
