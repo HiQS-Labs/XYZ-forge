@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Producer implementation and full local gate verified; recovery focused checks pass | Open producer/recovery PRs, then request merge approval for live acceptance |
+| Producer implementation and full local gate verified; recovery focused checks pass | Merge authorized; #599 landed, hosted qualification exposed runner assumptions; correct through #600 and observe acceptance |
 
 ## Table of contents
 - [Phase 0 — diagnosis and decision](#phase-0--diagnosis-and-decision)
@@ -61,18 +61,18 @@ No new service, workflow, ledger or PR-class exemption. The local pre-push gate 
 
 ## Phase 2 — recovery
 
-- [ ] Separate #584 PR warns and continues on legacy unattributable closed rows; API failures remain errors.
-- [ ] Committed validated qualification receipts drive recovery of all merged development PRs since workflow activation, including no-issue PRs and open-issue references.
-- [ ] Mixed legacy + attributable fixture and lost-event/rejected-push fixtures demonstrate red then green.
-- [ ] No-op sweep writes nothing; actual failure rolls back; focused/full/PDDA gates pass.
+- [x] Separate #584 PR warns and continues on legacy unattributable closed rows; API failures remain errors.
+- [x] Committed validated qualification receipts drive recovery of all merged development PRs since workflow activation, including no-issue PRs and open-issue references.
+- [x] Mixed legacy + attributable fixture and lost-event/rejected-push fixtures demonstrate red then green.
+- [x] No-op sweep writes nothing; actual failure rolls back; focused/full/PDDA gates pass.
 
 ### QA
-- [ ] Full workflow introduction history is the recovery boundary, not an arbitrary recent window or second ledger.
-- [ ] Invalid receipt identities/hashes cannot suppress recovery.
+- [x] Full workflow introduction history is the recovery boundary, not an arbitrary recent window or second ledger.
+- [x] Invalid receipt identities/hashes cannot suppress recovery.
 
 ## Phase 3 — live acceptance
 
-- [ ] User approves concrete merges/outward follow-ups at the PR review boundary.
+- [x] User approves concrete merges/outward follow-ups at the PR review boundary.
 - [ ] Producer PR's own Wave reconciliation run is green without manual evidence.
 - [ ] Recovery PR and next scheduled catch-up run are green.
 - [ ] Three consecutive merged PRs reconcile automatically; run URLs recorded here and on #591.
@@ -97,3 +97,56 @@ Ship a gate's producer, consumer and recovery path together. Git hook writes do 
 objects. A successful exit without complete telemetry is insufficient. The suite tests the integrated
 snapshot containing a landing, not necessarily the historical merge commit. Public-repository runner
 cost differs from the private-phase comments. A post-merge gate cannot protect the pre-merge boundary.
+
+## Review and rollout findings
+
+Producer PR: [#599](https://github.com/HiQS-Labs/XYZ-forge/pull/599). Both fixes pass the full normal
+pre-push gate, with retained isolated-retry disclosures. Recovery includes canonical document lookup,
+malformed telemetry diagnostics, exact process binding and isolated Git fixtures. The pending batch
+read identified 18 closing issues across 24 merges; it did not execute downstream ledger/planner
+writes. Existing express ownership is #592 / PR #597, with bounds #594. Ad-hoc direct pushes and the
+observed full-gate environment/contention gaps have concrete issue drafts awaiting outward-action
+approval. No umbrella closeout or clone teardown is authorized by local validation alone.
+
+Agy sequential PR QA approved producer #599 and found the remaining loose filename match in the
+pre-merge path while reviewing #600. The regression witnesses false ambiguity for active tasks and
+a skipped canonical-document validation for completed tasks, in both GH-N- and N- naming forms.
+The three-line correction aligns both lookups with the post-merge matcher and sorts completed
+candidates. Focused evidence: 25 GH-421 tests and existing GH-496 pre-merge checks pass; retained
+red/green logs and non-qualifying provenance are in the GH-584 campaign. Both Agy relay reviews are Approved with driver attestations. The normal full push gate for
+correction 4cdb82a2 passed 374/374 in 896 seconds and published it to PR #600. The live relay
+self-sufficiency suite failed in the pool and passed the built-in isolated retry without source
+changes; the cause is unproven, and both outcomes are retained. This remains local push evidence,
+not hosted qualification. See agy-qa-full-prepush.log and its diagnostic telemetry in that campaign.
+
+
+### First hosted run — bounded correction cycle 1
+
+PR #599 landed at `38507a23303bebab6184607b15e3099cc2dd88e3`. Automatic run
+[34778194670](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/34778194670) failed after 50 minutes:
+six suites failed and rollback prevented publication of a passing receipt. Five failures reproduce
+in an independent clone with a fresh Python environment, absent agent clients, three reported CPU
+cores and `GITHUB_ACTIONS=true`. The small correction adds the declared requests/PyYAML dependencies
+to both existing full-suite workflow environments; fixtures supply their own client binaries,
+exercise explicit three/eight-core cases, and select local Actions state themselves. No assertions
+are skipped. The bridge suite passes locally through the exact bounded qualification launcher;
+its hosted cause remains unproven. Its existing startup probes now capture a Python stack before
+the unchanged deadline so another failure can identify the blocked operation.
+
+This changes the landing dependency: #600 carries the runner corrections needed to qualify the
+already-landed producer. Waiting for unchanged #599 to become green cannot restore the missing
+dependencies. Land the reviewed correction only after the normal full gate; then observe the
+automatic recovery run. Preserve the failed run as evidence; never count it as acceptance. The
+three-consecutive-merge and scheduled-sweep criteria remain open.
+
+Agy approved the bounded runner correction in a single relay turn, driver-attested at
+`d442bf64` (reviewed source `b1983192` plus the review scaffold). The full gate remains the
+pre-merge boundary. The bridge diagnostic probe passes 43/43 locally; that result does not
+establish the hosted failure cause or replace automatic acceptance.
+
+The normal full push gate for `b1983192` passed 374/374 in 1224 seconds, without bypass.
+The registry concurrency fixture lost one of 16 rows in the pool and passed its built-in isolated
+retry unchanged; the cause is unproven. Both results are retained. An earlier diagnostic attempt
+was stopped because the driver's worker-count override invalidated the default-setting fixture;
+controlled red/green proves that attribution, and no source change was made for it. This remains
+local evidence; automatic qualification after the dependent merge is still pending.

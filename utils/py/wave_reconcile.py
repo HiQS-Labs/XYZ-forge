@@ -566,9 +566,9 @@ def qualify_landings(repo_root, metas, journal):
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
-            if json.loads(raw.splitlines()[0]).get('run') != f"{tested[:9]}-{validation.pgid}":
-                die("Qualification telemetry does not identify the launched validation process", code=6)
             summary = qualification_summary(raw, tested)
+            if summary['run'] != f"{tested[:9]}-{validation.pgid}":
+                die("Qualification telemetry does not identify the launched validation process", code=6)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
     if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
@@ -892,11 +892,11 @@ def find_active_doc_for_issue(repo_root, issue_num):
     working_dir = os.path.join(repo_root, "PROJECT", "2-WORKING")
     if not os.path.isdir(working_dir):
         return None
-    for fname in os.listdir(working_dir):
+    for fname in sorted(os.listdir(working_dir)):
         if not fname.endswith(".md"):
             continue
         # Match GH-123-*.md or 123-*.md
-        if re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", fname, re.IGNORECASE):
+        if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
             return os.path.join(working_dir, fname)
     return None
 
@@ -1114,7 +1114,71 @@ def ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, dry_run=False,
                      member["url"], "--evidence", sha], dry_run, journal)
 
 
-def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
+def unreconciled_prs(repo_root, repo_slug, metadata):
+    """Recover every supported merge from committed receipts, not just closed-issue drift.
+
+    The existing workflow's first introduction is the activation boundary. This is
+    deliberately not an arbitrary lookback or a second watermark/ledger.
+    """
+    shallow = subprocess.check_output(['git', 'rev-parse', '--is-shallow-repository'],
+                                      cwd=repo_root, text=True).strip()
+    if shallow != 'false':
+        die('Merged-PR recovery requires a full, non-shallow clone', code=6)
+    dates = subprocess.check_output(
+        ['git', 'log', '--follow', '--diff-filter=A', '--format=%cI', '--',
+         '.github/workflows/wave-reconcile.yml'], cwd=repo_root, text=True).splitlines()
+    if not dates or not repo_slug:
+        die('Cannot recover merged PRs without full workflow history and repository identity', code=6)
+    try:
+        activated = datetime.fromisoformat(dates[-1].replace('Z', '+00:00'))
+    except ValueError:
+        die('Invalid workflow activation timestamp; restore full Git history', code=6)
+    result = subprocess.run(
+        ['gh', 'api', '--paginate', '--slurp',
+         f'repos/{repo_slug}/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100'],
+        cwd=repo_root, capture_output=True, text=True, check=False)
+    if result.returncode:
+        die(f'Merged-PR recovery failed: {result.stderr}', code=6)
+    previous = committed_qualifications(repo_root)
+    pending = []
+    try:
+        pages = json.loads(result.stdout)
+        if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+            raise ValueError('expected paginated pull-request arrays')
+        for page in pages:
+            for pr in page:
+                if not isinstance(pr, dict):
+                    raise ValueError('invalid pull-request record')
+                if ('merged_at' not in pr or not isinstance(pr.get('base'), dict)
+                        or not isinstance(pr['base'].get('ref'), str)):
+                    raise ValueError('pull request lacks merged_at or base.ref')
+                merged = pr['merged_at']
+                if merged is not None and not isinstance(merged, str):
+                    raise ValueError('invalid merged_at timestamp')
+                if merged is None:
+                    continue
+                if datetime.fromisoformat(merged.replace('Z', '+00:00')) < activated:
+                    continue
+                if (pr.get('base') or {}).get('ref') != 'development':
+                    continue
+                if (type(pr.get('number')) is not int or pr['number'] <= 0
+                        or not re.fullmatch(r'[0-9a-f]{40}', pr.get('merge_commit_sha') or '')):
+                    raise ValueError('merged PR has no exact landing identity')
+                meta = dict(number=pr['number'], title=pr.get('title') or '', body=pr.get('body') or '',
+                            state='MERGED', mergedAt=merged, baseRefName='development',
+                            mergeCommit={'oid':pr['merge_commit_sha']}, url=pr.get('html_url') or '',
+                            headRefOid=(pr.get('head') or {}).get('sha'), commits=[])
+                key = ('pr', str(pr['number']))
+                metadata[key] = meta  # Reuse the batch response; no per-PR metadata query.
+                if not any(qualification_receipt_matches(repo_root, entry, meta) for entry in previous):
+                    pending.append(str(pr['number']))
+    except (ValueError, TypeError, AttributeError) as exc:
+        die(f'Malformed merged-PR recovery response: {exc}', code=6)
+    log(f'Receipt recovery found {len(pending)} pending PR(s) since workflow activation {activated.isoformat()}')
+    return pending
+
+
+def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_metadata=None):
     """Derive drift from committed state; no PR watermark or auxiliary ledger.
 
     Timeline pagination recovers closing PRs even outside an arbitrary recent-PR window.
@@ -1133,7 +1197,7 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
         match = re.match(r"GH-([0-9]+)-", path.name)
         if match:
             issues.add(int(match[1]))
-    found = set()
+    found = set(unreconciled_prs(repo_root, repo_slug, qualification_metadata)) if qualification_metadata is not None else set()
     for issue in sorted(issues):
         if fetch_issue_state(repo_root, issue, offline_manifest) != "CLOSED":
             continue
@@ -1152,14 +1216,22 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
                     if referenced.get("pull_request") and referenced.get("repository_url", "").lower() == (
                         f"https://api.github.com/repos/{repo_slug}".lower()):
                         numbers.add(referenced["number"])
-            candidates = [fetch_pr_metadata(repo_root, n) for n in sorted(numbers)]
+            candidates = [(qualification_metadata or {}).get(("pr", str(n))) or fetch_pr_metadata(repo_root, n)
+                          for n in sorted(numbers)]
+        if qualification_metadata is not None:
+            for pr in candidates:
+                qualification_metadata[("pr", str(pr["number"]))] = pr
         matches = [pr for pr in candidates if pr.get("state", "").upper() == "MERGED"
                    and pr.get("baseRefName") == "development"
                    and issue in extract_linked_issues(pr, repo_slug)[0]]
         if not matches:
-            die(f"Closed GH-{issue} has reconciliation drift but no attributable merged development PR", code=6)
+            log(f"WARNING — Closed GH-{issue} has reconciliation drift but no attributable merged development PR; "
+                "leaving this legacy row unchanged and continuing (GH-584; non-PR closure tracked by GH-492)")
+            continue
         # The most recent closing PR owns the current lifecycle transition.
         found.add(str(max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr["number"]))["number"]))
+    if qualification_metadata is not None:
+        return sorted(found, key=lambda n: (qualification_metadata.get(("pr", n), {}).get("mergedAt") or "", int(n)))
     return sorted(found, key=int)
 
 
@@ -1669,7 +1741,7 @@ def run_pre_merge(repo_root, args):
         matches = []
         if os.path.isdir(working_dir):
             for fname in sorted(os.listdir(working_dir)):
-                if fname.endswith(".md") and re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", fname, re.IGNORECASE):
+                if fname.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
                     matches.append(os.path.join(working_dir, fname))
         if len(matches) > 1:
             errors.append(f"Ambiguous active doc match for issue #{issue_num}: {', '.join(os.path.basename(m) for m in matches)}")
@@ -1679,8 +1751,8 @@ def run_pre_merge(repo_root, args):
             completed_dir = os.path.join(repo_root, "PROJECT", "3-COMPLETED")
             comp_matches = [
                 os.path.join(completed_dir, f)
-                for f in os.listdir(completed_dir)
-                if f.endswith(".md") and re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", f, re.IGNORECASE)
+                for f in sorted(os.listdir(completed_dir))
+                if f.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", f, re.IGNORECASE)
             ] if os.path.isdir(completed_dir) else []
             if comp_matches:
                 target_docs.add(comp_matches[0])
@@ -1871,15 +1943,29 @@ def main():
         with ReconcilerLock(lock_file):
             reconciled_issues = set()
             repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
-            if args.catch_up:
-                landing_items.extend(("pr", str(n)) for n in catch_up_prs(repo_root, repo_slug, offline_manifest))
-            landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
             metadata = {}
+            if args.catch_up:
+                landing_items.extend(("pr", str(n)) for n in catch_up_prs(
+                    repo_root, repo_slug, offline_manifest, qualification_metadata=metadata if args.qualify else None))
+            landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
             if args.qualify and landing_items:
                 for kind, value in landing_items:
-                    metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
-                                                else fetch_pr_metadata(repo_root, value))
-                qualify_landings(repo_root, list(metadata.values()), journal)
+                    if (kind, value) not in metadata:
+                        metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
+                                                  else fetch_pr_metadata(repo_root, value))
+                qualify_landings(repo_root, [metadata[item] for item in landing_items], journal)
+            # A recovered batch can contain several closing PRs for one issue.
+            # Qualify every landing, but let its newest known closer own all lifecycle
+            # writes, including when that closer already has a committed receipt.
+            issue_owners = {}
+            if args.catch_up and args.qualify:
+                for key, meta in metadata.items():
+                    if meta.get('state') != 'MERGED' or meta.get('baseRefName') != 'development':
+                        continue
+                    rank = (meta.get('mergedAt') or '', str(meta['number']))
+                    for issue in extract_linked_issues(meta, repo_slug)[0]:
+                        if issue not in issue_owners or rank > issue_owners[issue][0]:
+                            issue_owners[issue] = (rank, key)
             for landing_kind, landing_id in landing_items:
                 if (landing_kind, landing_id) in metadata:
                     pr_meta = metadata[(landing_kind, landing_id)]
@@ -1921,6 +2007,10 @@ def main():
                 )
 
                 for issue_num in action_issues:
+                    owner = issue_owners.get(issue_num)
+                    if owner and owner[1] != (landing_kind, landing_id):
+                        log(f"  GH-{issue_num} lifecycle belongs to newer PR #{owner[1][1]}; retaining this landing's qualification")
+                        continue
                     doc_path = find_active_doc_for_issue(repo_root, issue_num)
                     issue_state = fetch_issue_state(repo_root, issue_num, offline_manifest)
                     fm = parse_doc_frontmatter(doc_path) if doc_path else {}

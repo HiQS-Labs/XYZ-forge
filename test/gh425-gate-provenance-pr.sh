@@ -212,7 +212,10 @@ rows += [dict(event='suite',lane=lane,name=name,rc=0) for lane,name in
 rows.append(dict(event='run.summary',passed=4,failed=0,total=4,envelope_rc='0',
                  suite_events_match='yes',run_set='1',registered='1'))
 for row in rows: row.update(run=sha[:9]+'-'+str(os.getppid()),runner='validate')
-if os.environ.get('GH591_FIXTURE') == 'wrong-run': rows[0]['run']='unrelated'
+if os.environ.get('GH591_FIXTURE') == 'wrong-run':
+    for row in rows: row['run']='unrelated'
+if os.environ.get('GH591_FIXTURE') == 'empty': rows=[]
+if os.environ.get('GH591_FIXTURE') == 'nonobject': rows=[None]
 if os.environ.get('GH591_FIXTURE') == 'partial': rows.pop()
 p=pathlib.Path(os.environ.get('XYZ_VALIDATE_TELEMETRY','.tick/telemetry'))
 p.mkdir(parents=True)
@@ -253,7 +256,7 @@ FIXTURE
         self.assertEqual(wave.committed_qualifications(str(self.root)), [])
 
     def test_red_partial_and_identity_drift_produce_no_receipt(self):
-        for mode in ('red', 'partial', 'drift', 'wrong-run'):
+        for mode in ('red', 'partial', 'drift', 'empty', 'nonobject', 'wrong-run'):
             with self.subTest(mode=mode), self.assertRaises(wave.ReconcileError) as caught:
                 self.qualify(mode)
             self.assertEqual(caught.exception.code, 6)

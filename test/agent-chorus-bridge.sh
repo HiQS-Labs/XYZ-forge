@@ -393,10 +393,25 @@ echo "── unauthenticated-by-default guard (GH-384 review) ──"
 # to launch_quick_tunnel + serve_forever and the assertion HANGS instead of failing. A hanging
 # assertion stalls the whole pool and never reports — strictly worse than a red. Found by running
 # the mutation this block exists to catch. Run it detached, poll for a verdict, reap either way.
+# If startup stalls on a runner, retain its Python stack before the existing deadline.
+# Execute the real entry point; this only adds diagnostics, not a longer wait or a retry.
+cat > "$WORK/bridge-probe.py" <<'PY_PROBE'
+import faulthandler
+import runpy
+import sys
+from pathlib import Path
+
+faulthandler.dump_traceback_later(4)
+script = sys.argv.pop(1)
+sys.argv[0] = script
+sys.path.insert(0, str(Path(script).parent))
+runpy.run_path(script, run_name="__main__")
+PY_PROBE
+
 _noauth_log="$WORK/noauth-tunnel.log"
 : > "$_noauth_log"
 ( env -u CF_ACCESS_CLIENT_ID -u CF_ACCESS_CLIENT_SECRET \
-    PYTHONUNBUFFERED=1 python3 "$BRIDGE" --port 0 --tunnel --root "$REPO" \
+    PYTHONUNBUFFERED=1 python3 "$WORK/bridge-probe.py" "$BRIDGE" --port 0 --tunnel --root "$REPO" \
     > "$_noauth_log" 2>&1; echo "rc=$?" >> "$_noauth_log" ) &
 _noauth_pid=$!
 for _i in $(seq 1 100); do
@@ -411,7 +426,7 @@ case "$noauth_out" in
   *"REFUSING --tunnel without Cloudflare Access credentials"*)
     pass "A1: --tunnel refuses without CF Access credentials" ;;
   *)
-    fail "A1: --tunnel did NOT refuse unauthenticated (got: $(printf '%s' "$noauth_out" | head -1))" ;;
+    fail "A1: --tunnel did NOT refuse unauthenticated (got: $noauth_out)" ;;
 esac
 
 # A1b: the refusal must be an error EXIT, not a warning it continues past. If the guard is gone
@@ -442,7 +457,7 @@ grep -q -- '--insecure-allow-unauthenticated' <<<"$_help_out" \
 _banner() {  # <log> <env-assignments...> — capture the startup banner of a short-lived bridge
   local log="$1"; shift
   : > "$log"
-  ( env "$@" PYTHONUNBUFFERED=1 python3 "$BRIDGE" --port 0 --root "$REPO" > "$log" 2>&1 ) &
+  ( env "$@" PYTHONUNBUFFERED=1 python3 "$WORK/bridge-probe.py" "$BRIDGE" --port 0 --root "$REPO" > "$log" 2>&1 ) &
   local pid=$!
   local i
   for i in $(seq 1 100); do
