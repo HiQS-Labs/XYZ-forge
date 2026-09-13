@@ -1442,16 +1442,39 @@ def _extract_roadmap_rate(conn, op, gid):
                                        row["rating_appeal"], row["rating_effort"])})
 
 
-def _extract_roadmap_update(conn, op, gid):
-    """Re-read the row AFTER mutate so the new marker is visible. `merged` is deliberately NOT
-    derived from a completed marker: only the merge emitter, which witnesses `gh pr merge`
-    exiting 0, may claim a PR merged."""
+def _live_roadmap_event(section, marker, rated):
+    """Classify a live roadmap transition. Terminal sections outrank stale markers."""
+    sec = (section or "").strip().lower()
+    if sec.startswith("deferred"):
+        return "deferred"
+    if sec.startswith("completed"):
+        return "completed"
+    if marker == "\U0001F6A7" or sec.startswith("in progress"):
+        return "in_flight"
+    return "rated" if rated else "parked"
+
+
+def _extract_roadmap_update(conn, op, gid, previous=None):
+    """Classify only an actual lifecycle transition; metadata edits remain informational."""
     row = _roadmap_row(conn, gid)
     if row is None:
         return None
     marker = row["status_marker"] or ""
-    event = "in_flight" if marker == "\U0001F6A7" else "updated"
-    return (event, row["gh_number"], {"marker": marker, "section": row["section"]})
+    changed = previous is not None and (
+        (previous["status_marker"] or "") != marker
+        or (previous["section"] or "").strip() != (row["section"] or "").strip()
+    )
+    if not changed:
+        return ("updated", row["gh_number"], {
+            "source": "roadmap-update", "transition": False,
+            "marker": marker, "section": row["section"],
+        })
+    event = _live_roadmap_event(row["section"], marker,
+                                row["rating_pri"] is not None)
+    return (event, row["gh_number"], {
+        "source": "roadmap-update", "transition": True,
+        "marker": marker, "section": row["section"],
+    })
 
 
 def _extract_jog(conn, op, gid):
@@ -1460,7 +1483,8 @@ def _extract_jog(conn, op, gid):
     if row is None:
         return None
     event = "in_flight" if op == "jog-lease" else "jog_%s" % row["status"]
-    return (event, row["gh_number"], {"status": row["status"]})
+    return (event, row["gh_number"], {"source": "jog", "transition": True,
+                                      "status": row["status"]})
 
 
 WORK_EVENT_EXTRACTORS = {
@@ -1487,7 +1511,7 @@ def extractor_for(op):
     raise KeyError("op %r is neither mapped to a work-event extractor nor in NON_EVENT_OPS" % op)
 
 
-def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None):
+def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None, previous=None):
     """Insert at most one work_events row, inside perform_write's open transaction.
 
     `explicit` is an (event, gh_number, payload) tuple supplied by a caller that already knows
@@ -1524,7 +1548,8 @@ def _record_work_event(conn, op, target_gid, txn_id, at, explicit=None):
                       json.dumps(payload, sort_keys=True) if payload is not None else None, at))
         return event
     extractor = extractor_for(op)   # already validated above; cannot raise here
-    result = extractor(conn, op, target_gid)
+    result = (extractor(conn, op, target_gid, previous)
+              if op == "roadmap-update" else extractor(conn, op, target_gid))
     if result is None:
         return None
     event, gh_number, payload = result
@@ -1559,7 +1584,7 @@ def _dispatch_work_connectors(db_path, at):
         return {}
 
 
-def perform_write(root, conn, op, target_gid, mutate, work_event=None):
+def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_events=None):
     """Run one CLI transaction under the full multi-artifact protocol:
 
       write intent journal (txn_id, NEXT generation, planned outputs)   [BEFORE the DB commit]
@@ -1571,6 +1596,8 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None):
     is appended HERE so no writer can forget it. Recovery per boundary is `check`'s job
     (recover_from_journal); RELEASES_APP_CRASH_AT lands on the five named boundaries. The caller
     must NOT hold the writer lock (this function takes it)."""
+    if work_event is not None and work_events is not None:
+        raise ValueError("work_event and work_events are mutually exclusive")
     paths = artifact_paths(root)
     lock = WriterLock(root)
     lock.acquire()
@@ -1594,7 +1621,36 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None):
         digest_before = business_digest(conn)
         conn.execute("BEGIN IMMEDIATE")
         try:
+            previous = (_roadmap_row(conn, target_gid)
+                        if op == "roadmap-update" and target_gid is not None else None)
             mutate(conn)
+            now = now_iso()
+            if _has_column(conn, "settings", "updated_at"):
+                cur = conn.execute("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?",
+                                   (str(generation), now, GENERATION_KEY))
+                if cur.rowcount == 0:
+                    conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+                                 (GENERATION_KEY, str(generation), now))
+            else:
+                cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
+                                   (str(generation), GENERATION_KEY))
+                if cur.rowcount == 0:
+                    conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
+                                 (GENERATION_KEY, str(generation)))
+            digest_after = business_digest(conn)
+            conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
+                             state_digest_before, state_digest_after)
+                             VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                         (op, target_gid, now, txn_id, session_id(),
+                          digest_before, digest_after))
+            if work_events is not None:
+                for explicit in work_events:
+                    _record_work_event(conn, op, target_gid, txn_id, now, explicit=explicit)
+            else:
+                _record_work_event(conn, op, target_gid, txn_id, now,
+                                   explicit=work_event, previous=previous)
+            _crash("pre-commit")
+            conn.commit()
         except BaseException:
             # a refused/mutating error never leaves a live journal behind: the DB rolled back,
             # so there is nothing to recover — clear the journal and re-raise. (An injected
@@ -1608,32 +1664,6 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None):
             except OSError:
                 pass
             raise
-        now = now_iso()
-        if _has_column(conn, "settings", "updated_at"):
-            cur = conn.execute("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?",
-                               (str(generation), now, GENERATION_KEY))
-            if cur.rowcount == 0:
-                conn.execute("INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
-                             (GENERATION_KEY, str(generation), now))
-        else:
-            cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
-                               (str(generation), GENERATION_KEY))
-            if cur.rowcount == 0:
-                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
-                             (GENERATION_KEY, str(generation)))
-        digest_after = business_digest(conn)
-        conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
-                         state_digest_before, state_digest_after)
-                         VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                     (op, target_gid, now, txn_id, session_id(),
-                      digest_before, digest_after))
-        # GH-549: one work event, in this same transaction, AFTER digest_after. Order matters —
-        # work_events is outside business_digest by design, so emitting it here cannot perturb
-        # the receipt chain, and it is committed atomically with the domain row so the two can
-        # never disagree.
-        _record_work_event(conn, op, target_gid, txn_id, now, explicit=work_event)
-        _crash("pre-commit")
-        conn.commit()
         _crash("post-commit")
 
         staged = [(_stage_write(paths["dump"], dump_text(conn, generation)), paths["dump"])]
@@ -3936,7 +3966,15 @@ def cmd_roadmap_reconcile_state(args):
                 conn.execute("UPDATE roadmap_items SET section = ?, updated_at = ? WHERE global_id = ?",
                              (target, ts, row["global_id"]))
 
-        perform_write(root, conn, "roadmap-reconcile-state", None, mutate)
+        batch = []
+        for row, target in changes:
+            event = "completed" if target == terminal[0] else "deferred"
+            batch.append((event, row["gh_number"], {
+                "source": "roadmap-reconcile-state", "transition": True,
+                "section": target, "previous_section": row["section"],
+            }))
+        perform_write(root, conn, "roadmap-reconcile-state", None, mutate,
+                      work_events=batch)
         for row, target in changes:
             print("moved GH-%d: %s -> %s" % (row["gh_number"], row["section"], target))
     finally:
@@ -5018,6 +5056,194 @@ def _scan_review_ready(root, conn):
     return (emitted, skipped, failed)
 
 
+_START_EVENTS = {"in_flight", "jog_running", "jog_leased"}
+_STOP_EVENTS = {"parked", "rated", "completed", "deferred", "pr_merged",
+                "jog_pending", "jog_completed", "jog_parked", "jog_failed",
+                "jog_dropped", "jog_archived"}
+
+
+def _utc_datetime(value):
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = _dt.datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(_dt.timezone.utc)
+
+
+def _repo_from_issue_url(value):
+    m = re.fullmatch(r"https://github\.com/([^/]+/[^/]+)/issues/(\d+)", value or "")
+    return (m.group(1), int(m.group(2))) if m else (None, None)
+
+
+def _origin_repo_identity(root):
+    try:
+        proc = subprocess.run(["git", "-C", root, "remote", "get-url", "origin"],
+                              capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if proc.returncode:
+        return None
+    match = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?/?$", (proc.stdout or "").strip())
+    return match.group(1) if match else None
+
+
+def load_work_evidence(db_path, stale_days=3, as_of=None):
+    """Read schema-8 work evidence without migration, side effects, config, or network."""
+    db_path = os.path.abspath(os.fspath(db_path))
+    root = os.path.dirname(db_path)
+    result = {"schema_ready": False, "schema_version": None, "generation": None,
+              "as_of": as_of or now_iso(), "stale_days": stale_days,
+              "issues": [], "cursors": [], "warnings": []}
+    if not os.path.isfile(db_path):
+        result["error"] = "missing releases.db; initialize or select the correct --root"
+        return result
+    sidecars = [p for p in (db_path + "-wal", db_path + "-shm", db_path + "-journal")
+                if os.path.exists(p)]
+    try:
+        intent = WriterLock(root).journal_path
+    except Exception:
+        intent = None
+    if sidecars or (intent and os.path.exists(intent)):
+        result["error"] = ("ambiguous live SQLite state; run `releases check` before diagnostics: "
+                           + ", ".join(os.path.basename(p) for p in sidecars
+                                       + ([intent] if intent and os.path.exists(intent) else [])))
+        return result
+    try:
+        conn = sqlite3.connect("file:%s?mode=ro" % db_path, uri=True, timeout=10)
+        conn.row_factory = sqlite3.Row
+    except sqlite3.Error as exc:
+        result["error"] = "read-only open failed: %s" % exc
+        return result
+    try:
+        if not _table_exists(conn, "schema_migrations"):
+            result["error"] = "schema tracker missing; run `releases check`, then migrate deliberately"
+            return result
+        versions = [int(r[0]) for r in conn.execute(
+            "SELECT version FROM schema_migrations ORDER BY version")]
+        result["schema_version"] = max(versions) if versions else 0
+        if result["schema_version"] < 8 or not _table_exists(conn, "work_events"):
+            result["error"] = "schema 8 work events unavailable; run `releases migrate` deliberately"
+            return result
+        result["schema_ready"] = True
+        result["generation"] = get_generation(conn)
+        now_dt = _utc_datetime(result["as_of"])
+        if now_dt is None:
+            result["error"] = "--as-of must be a timezone-qualified ISO timestamp"
+            result["schema_ready"] = False
+            return result
+        repo_rows = {r["id"]: r["slug"] for r in conn.execute("SELECT id, slug FROM repos")}
+        origin_repo = _origin_repo_identity(root)
+        events_by_issue = {}
+        for ev in conn.execute("SELECT id,repo_id,gh_number,event,payload,at FROM work_events "
+                               "WHERE gh_number IS NOT NULL ORDER BY id"):
+            payload = None
+            try:
+                payload = json.loads(ev["payload"]) if ev["payload"] else None
+            except ValueError:
+                pass
+            item = {"id": ev["id"], "repo": repo_rows.get(ev["repo_id"]),
+                    "number": ev["gh_number"], "event": ev["event"],
+                    "payload": payload, "at": ev["at"]}
+            events_by_issue.setdefault((ev["repo_id"], ev["gh_number"]), []).append(item)
+        jog_state = {}
+        if _table_exists(conn, "jog_queue"):
+            jog_state = {(r["repo_id"], r["gh_number"]): r["status"] for r in conn.execute(
+                "SELECT repo_id,gh_number,status FROM jog_queue")}
+        rows = conn.execute("SELECT global_id,gh_number,issue_url,section,status_marker,"
+                            "rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr "
+                            "FROM roadmap_items WHERE gh_number IS NOT NULL ORDER BY gh_number,global_id")
+        for row in rows:
+            url_repo, url_number = _repo_from_issue_url(row["issue_url"])
+            url_matches_row = url_number == int(row["gh_number"])
+            matching_repo_ids = ([rid for rid, slug in repo_rows.items() if slug == url_repo]
+                                 if url_matches_row else [])
+            if url_matches_row and not matching_repo_ids and origin_repo == url_repo:
+                matching_repo_ids = [rid for rid, slug in repo_rows.items()
+                                     if slug == (url_repo or "").split("/")[-1]]
+            repo_id = matching_repo_ids[0] if len(matching_repo_ids) == 1 else None
+            evs = events_by_issue.get((repo_id, row["gh_number"]), []) if repo_id else []
+            latest = evs[-1] if evs else None
+            latest_lifecycle = None
+            for ev in reversed(evs):
+                if ev["event"] in _START_EVENTS | _STOP_EVENTS:
+                    latest_lifecycle = ev
+                    break
+            start = None
+            if latest_lifecycle and latest_lifecycle["event"] in _START_EVENTS:
+                payload = latest_lifecycle.get("payload")
+                explicit_transition = (latest_lifecycle["event"] != "in_flight" or
+                                       isinstance(payload, dict) and
+                                       payload.get("source") in ("roadmap-update", "jog") and
+                                       payload.get("transition") is True)
+                observed = _utc_datetime(latest_lifecycle["at"])
+                sec = (row["section"] or "").strip().lower()
+                ledger_consistent = (row["status_marker"] == "\U0001F6A7"
+                                     or sec.startswith("in progress"))
+                is_jog = (latest_lifecycle["event"].startswith("jog_") or
+                          isinstance(payload, dict) and payload.get("source") == "jog")
+                jog_consistent = not is_jog or jog_state.get((repo_id, row["gh_number"])) == "running"
+                if explicit_transition and ledger_consistent and jog_consistent and observed and observed <= now_dt:
+                    age = (now_dt - observed).total_seconds() / 86400.0
+                    start = dict(latest_lifecycle, age_days=age,
+                                 freshness="recent" if age <= stale_days else "stale")
+            result["issues"].append({
+                "global_id": row["global_id"], "repo": url_repo,
+                "number": int(row["gh_number"]),
+                "identity_valid": bool(url_repo and url_matches_row and repo_id),
+                "section": row["section"], "marker": row["status_marker"],
+                "ratings": {k.replace("rating_", ""): row[k] for k in RATING_COLUMNS},
+                "latest_event": latest, "latest_lifecycle": latest_lifecycle,
+                "recent_start": start,
+                "activity": start["freshness"] if start else "unknown",
+            })
+        max_event_id = conn.execute("SELECT COALESCE(MAX(id),0) FROM work_events").fetchone()[0]
+        result["cursors"] = []
+        for row in conn.execute("SELECT connector,last_event_id,last_attempt_at,last_error,updated_at "
+                                "FROM connector_cursors ORDER BY connector"):
+            cursor = dict(row)
+            cursor["lag"] = max(0, int(max_event_id) - int(cursor["last_event_id"]))
+            result["cursors"].append(cursor)
+        return result
+    except sqlite3.Error as exc:
+        result["schema_ready"] = False
+        result["error"] = "diagnostic query failed: %s" % exc
+        return result
+    finally:
+        conn.close()
+
+
+def cmd_work_status(args):
+    if args.stale_days < 0:
+        refuse("bad-stale-days", "--stale-days must be zero or greater")
+    root = resolve_root(args.root)
+    report = load_work_evidence(artifact_paths(root)["db"], args.stale_days)
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import work_connectors
+        report["enabled_connectors"] = sorted(work_connectors.load_connectors(warn=False))
+    except Exception as exc:
+        report["enabled_connectors"] = []
+        report["warnings"].append("connector config unreadable: %s" % exc)
+    if args.as_json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print("work status: schema=%s generation=%s connectors=%s" % (
+            report.get("schema_version"), report.get("generation"),
+            ",".join(report["enabled_connectors"]) or "disabled"))
+        if report.get("error"):
+            print("UNREADY: %s" % report["error"])
+        for item in report.get("issues", []):
+            print("%s#%s %-22s lifecycle=%s activity=%s" % (
+                (item.get("repo") or "unknown") + ":", item["number"], item["section"],
+                (item.get("latest_lifecycle") or {}).get("event", "unknown"), item["activity"]))
+    if not report.get("schema_ready"):
+        raise SystemExit(EXIT_REFUSED)
+
+
 def cmd_work_reconcile(args):
     """`work reconcile` — replay every event after a connector's cursor (GH-549).
 
@@ -6054,6 +6280,10 @@ def build_parser():
     sp_wr.add_argument("--connector", help="only this connector (default: every enabled one)")
     sp_wr.add_argument("--reset", action="store_true",
                        help="replay from the beginning, not from the cursor")
+    sp_ws = wsub.add_parser("status", help="read-only work lifecycle and observation diagnostics")
+    sp_ws.add_argument("--json", dest="as_json", action="store_true")
+    sp_ws.add_argument("--stale-days", type=int, default=3,
+                       help="age after which a valid start observation is stale (default: 3)")
 
     sp = sub.add_parser("roadmap", help="Roadmap ledger: sync/list/render the ledger items")
     rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
@@ -6247,7 +6477,8 @@ def main(argv=None):
                                "list": cmd_settings_list,
                                "get": cmd_settings_get}[a.settings_cmd](a),
         "work": lambda a: {"emit": cmd_work_emit, "backfill": cmd_work_backfill,
-                           "reconcile": cmd_work_reconcile}[a.work_cmd](a),
+                           "reconcile": cmd_work_reconcile,
+                           "status": cmd_work_status}[a.work_cmd](a),
         "dashboard": cmd_dashboard,
         "jog": lambda a: {"add": cmd_jog_add, "list": cmd_jog_list,
                           "bump": cmd_jog_bump, "drop": cmd_jog_drop,

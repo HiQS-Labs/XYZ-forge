@@ -109,6 +109,31 @@ else:
     assert snapshot() == before
     print('PASS: cached section drift warns without changing the ledger or blocking full mode')
 
+    # GH-605: the sweep's row changes, one receipt and all per-row terminal events are one
+    # transaction. Fail the second event insert and prove every surface rolls back.
+    with sqlite3.connect(root / 'releases.db') as conn:
+        baseline_counts = (
+            conn.execute("SELECT value FROM settings WHERE key='generation'").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM op_receipts").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0],
+        )
+        conn.execute("""CREATE TRIGGER gh605_fail_deferred BEFORE INSERT ON work_events
+                        WHEN NEW.event='deferred' BEGIN SELECT RAISE(ABORT,'gh605 injected'); END""")
+        conn.commit()
+    output = run('roadmap', 'reconcile-state', '--apply', expected=1)
+    with sqlite3.connect(root / 'releases.db') as conn:
+        after_failure = (
+            conn.execute("SELECT value FROM settings WHERE key='generation'").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM op_receipts").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0],
+        )
+        conn.execute('DROP TRIGGER gh605_fail_deferred')
+        conn.commit()
+    assert after_failure == baseline_counts, (baseline_counts, after_failure, output)
+    assert rows() == before_rows, 'event insert failure left roadmap row mutations behind'
+    assert not list((root / '.git').glob('*journal*.json')), 'precommit journal survived rollback'
+    print('PASS: injected second terminal-event failure rolls back rows, receipt, events and generation')
+
     output = run('roadmap', 'reconcile-state', '--apply')
     after_rows = rows()
     assert [r[1] for r in after_rows] == ['Completed', 'In progress', 'Deferred · vision', 'Completed'], after_rows
@@ -116,6 +141,11 @@ else:
     assert [r[3] for r in after_rows] == [r[3] for r in before_rows], 'raw text changed'
     with sqlite3.connect(root / 'releases.db') as conn:
         assert conn.execute("SELECT COUNT(*) FROM op_receipts WHERE op='roadmap-reconcile-state'").fetchone()[0] == 1
+        terminal_events = conn.execute("""SELECT event,txn_id,payload FROM work_events
+                                          WHERE json_extract(payload,'$.source')='roadmap-reconcile-state'
+                                          ORDER BY id""").fetchall()
+        assert [r[0] for r in terminal_events] == ['completed', 'deferred'], terminal_events
+        assert len({r[1] for r in terminal_events}) == 1, terminal_events
     assert 'reconcile-roadmap-state' not in pdda()
     print('PASS: apply corrects both closure reasons, preserves open/terminal rows and records one transaction')
 

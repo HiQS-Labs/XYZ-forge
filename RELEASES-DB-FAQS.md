@@ -11,6 +11,31 @@ releases init
 
 Nothing runs until the ledger is invoked.
 
+## Work-state diagnosis and board policy (GH-605)
+
+`releases work status --json` is a read-only readiness check. It opens an existing database in
+SQLite `mode=ro`, never migrates or creates one, and reports schema readiness, connector cursors,
+current lifecycle, and the latest unsuperseded non-backfill start observation. The default
+activity window is three days (`--stale-days N`); stale or malformed observations are
+**unverified**, never evidence that work is idle. The board policy's Done window is a separate
+seven-day setting.
+
+Repair in this order: run `releases check` and recover any interrupted write; deliberately run
+`releases migrate` if status reports schema 7; rerun `releases work status`; review
+`releases roadmap reconcile-state` and only then pass `--apply`; review/apply `releases work
+backfill`; finally reconcile a connector only after its target is explicitly configured.
+Historical replay is not a complete current-state repair: the stock event connector cannot enforce
+top-N Ready selection, the Done window, reopen handling, or preservation of unknown evidence.
+
+An explicit `github_board_selection_policy` uses `utils/py/board_sync.py policy-preview --out
+<preview.json>`, followed within 15 minutes by `policy-apply --preview <preview.json> --result-out
+<result.json>`. Preview is remotely read-only and apply re-reads the ledger, GitHub and board under
+the existing connector exclusion lock before each change. `policy-restore --result <result.json>`
+previews conditional status restoration; add `--write` to perform it. Newly added cards are retained
+because this path never deletes. A policy-managed board refuses raw event replay. GitHub Projects
+does not offer an atomic compare-and-swap across devices, so an interrupted/indeterminate request
+must be read back and freshly previewed, never blindly retried.
+
 ## Re-pointing a release's tracking issue (GH-222)
 
 When a tracking umbrella issue is superseded (e.g. closed and replaced by a re-scoped one),
@@ -33,4 +58,3 @@ The canonical roadmap rating system scores candidates across four fixed axes:
   - Overrides the computed rank sum (`pri + sev + appeal + effort`) for sorting while preserving the underlying four axis scores.
 - **Legacy Vocabulary**:
   - `cx/risk/eff` (`complexity/risk/effort`) is a legacy triple. The two vocabularies measure different things and cannot share a row or entry. Convert any legacy entry to `rated` syntax.
-

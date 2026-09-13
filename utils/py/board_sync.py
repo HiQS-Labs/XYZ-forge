@@ -28,6 +28,8 @@ Design invariants (each named by the plan's QA, relay 2026-09-02):
 """
 
 import argparse
+import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -76,6 +78,14 @@ DEFAULTS = {
     "token_file": "~/secrets/gh/board-sync.txt",  # reserved (PAT fallback); v1 uses gh
 }
 
+POLICY_DEFAULTS = {
+    "project_owner": "", "project_number": 0, "repo": "", "repos": [],
+    "ready_top_n": 10, "done_lookback_days": 7, "activity_lookback_days": 3,
+    "status_field": "Status", "ready": "Ready", "in_progress": "In progress",
+    "in_review": "In review", "done": "Done", "backlog": "Backlog",
+    "implementation_status": "pending",
+}
+
 STRONG_SOURCES = ("pdda_doc", "branch", "tick_event", "jog_running")
 WEAK_SOURCES = ("clone_dir", "stale_marker")
 
@@ -103,6 +113,221 @@ def resolve_settings():
     if error:
         _warn(error)
     return cfg
+
+
+def resolve_selection_policy(required=False):
+    """Resolve and strictly validate the saved board policy; pending means consumable."""
+    cfg, error = resolve_device_block("github_board_selection_policy", POLICY_DEFAULTS,
+                                      "XYZ_GITHUB_BOARD_POLICY")
+    if error:
+        raise ValueError(error)
+    if cfg.get("repo"):
+        if cfg.get("repos") and cfg["repos"] != [cfg["repo"]]:
+            raise ValueError("policy repo and repos disagree")
+        cfg["repos"] = [cfg["repo"]]
+    absent = [k for k in ("project_owner", "project_number", "repos") if not cfg.get(k)]
+    if absent:
+        if required:
+            raise ValueError("selection policy missing %s" % ", ".join(absent))
+        return None
+    if not isinstance(cfg["project_owner"], str) or not cfg["project_owner"].strip():
+        raise ValueError("project_owner must be a non-empty string")
+    if not isinstance(cfg["project_number"], int) or isinstance(cfg["project_number"], bool) or cfg["project_number"] <= 0:
+        raise ValueError("project_number must be a positive integer")
+    if not isinstance(cfg["repos"], list) or not cfg["repos"]:
+        raise ValueError("repos must be a non-empty list")
+    cfg["repos"] = [str(r).strip() for r in cfg["repos"]]
+    if any(not re.fullmatch(r"[^/\s]+/[^/\s]+", r) for r in cfg["repos"]):
+        raise ValueError("every policy repo must be owner/name")
+    for key in ("ready_top_n", "done_lookback_days", "activity_lookback_days"):
+        if not isinstance(cfg[key], int) or isinstance(cfg[key], bool) or cfg[key] < 0:
+            raise ValueError("%s must be a non-negative integer" % key)
+    for key in ("status_field", "ready", "in_progress", "in_review", "done", "backlog"):
+        if not isinstance(cfg[key], str) or not cfg[key].strip():
+            raise ValueError("%s must be a non-empty string" % key)
+    loaded = load_local_device_config()
+    raw_connectors = loaded.get("work_connectors", {})
+    connector = raw_connectors.get("github_board", {}) if isinstance(raw_connectors, dict) else {}
+    if isinstance(connector, dict) and connector:
+        c_owner, c_number = connector.get("project_owner"), connector.get("project_number")
+        if c_owner and c_owner != cfg["project_owner"] or c_number and int(c_number) != cfg["project_number"]:
+            raise ValueError("selection policy target disagrees with github_board connector")
+    return cfg
+
+
+def _parse_utc(value):
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(dt.timezone.utc)
+
+
+def _identity(obj):
+    kind = str(obj.get("kind") or "issue").lower()
+    if kind in ("pullrequest", "pull_request"):
+        kind = "pr"
+    try:
+        number = int(obj.get("number", obj.get("num")))
+    except (TypeError, ValueError):
+        return None
+    repo = obj.get("repo")
+    return (repo, kind, number) if isinstance(repo, str) and "/" in repo else None
+
+
+def _within(value, days, as_of):
+    observed = _parse_utc(value)
+    return observed is not None and observed <= as_of and as_of - observed <= dt.timedelta(days=days)
+
+
+def sanitize_observations(observations, policy, as_of):
+    """Validate optional external evidence and discard all private/raw fields."""
+    now = _parse_utc(as_of) if isinstance(as_of, str) else as_of
+    if not isinstance(observations, list):
+        raise ValueError("observations must be a JSON array")
+    out = []
+    for index, raw in enumerate(observations):
+        if not isinstance(raw, dict):
+            out.append({"index": index, "valid": False, "reason": "not an object"})
+            continue
+        safe = {k: raw.get(k) for k in ("source", "issue_url", "observed_at", "kind", "reference")}
+        match = re.fullmatch(r"https://github\.com/([^/]+/[^/]+)/issues/(\d+)", safe.get("issue_url") or "")
+        observed = _parse_utc(safe.get("observed_at"))
+        valid_kind = safe.get("kind") in ("intent", "started", "phase_completed", "completed")
+        valid_source = isinstance(safe.get("source"), str) and bool(safe["source"].strip())
+        valid_ref = isinstance(safe.get("reference"), str) and bool(safe["reference"].strip())
+        if not match or match.group(1) not in policy["repos"]:
+            reason = "unmapped issue identity"
+        elif observed is None or observed > now:
+            reason = "malformed or future timestamp"
+        elif not valid_kind or not valid_source or not valid_ref:
+            reason = "invalid source/kind/reference"
+        else:
+            reason = None
+        safe.update(valid=reason is None, reason=reason,
+                    freshness=("recent" if reason is None and
+                               now - observed <= dt.timedelta(days=policy["activity_lookback_days"])
+                               else "stale" if reason is None else "unknown"))
+        out.append(safe)
+    return out
+
+
+def plan_selection_policy(policy, ledger, board_items, github_items, observations=None, as_of=None):
+    """Pure, conservative GH-605 board planner. Unknown/ambiguous identities never move."""
+    as_of_dt = _parse_utc(as_of) if isinstance(as_of, str) else as_of
+    as_of_dt = as_of_dt or dt.datetime.now(dt.timezone.utc)
+    allowed = set(policy["repos"])
+    gh = {_identity(x): x for x in github_items if _identity(x) and _identity(x)[0] in allowed}
+    ledger_by = {}
+    for row in ledger:
+        ident = _identity(row)
+        if (ident and ident[1] == "issue" and ident[0] in allowed
+                and row.get("identity_valid", True)):
+            ledger_by.setdefault(ident, []).append(row)
+    board_by, opaque, duplicates = {}, [], set()
+    for item in board_items:
+        ident = _identity(item)
+        if not ident or ident[0] not in allowed:
+            opaque.append(item)
+            continue
+        if ident in board_by:
+            duplicates.add(ident)
+        else:
+            board_by[ident] = item
+    warnings = []
+    if opaque:
+        warnings.append("%d foreign or opaque board item(s) preserved" % len(opaque))
+    if duplicates:
+        warnings.append("%d duplicate identity group(s) preserved" % len(duplicates))
+
+    targets, reasons, unresolved = {}, {}, []
+    # PR cards and explicit closing links have precedence over issue starts/readiness.
+    for ident, item in gh.items():
+        if ident[1] != "pr":
+            continue
+        state = str(item.get("state") or "").upper()
+        if state == "OPEN":
+            targets[ident], reasons[ident] = policy["in_review"], "open PR"
+            for ref in item.get("closing_issues") or []:
+                ref_ident = _identity(dict(ref, kind="issue"))
+                linked = gh.get(ref_ident)
+                if not linked or str(linked.get("state") or "").upper() != "OPEN":
+                    continue
+                if not item.get("draft"):
+                    targets[ref_ident], reasons[ref_ident] = policy["in_review"], "open non-draft closing PR"
+                elif _within(item.get("updated_at"), policy["activity_lookback_days"], as_of_dt):
+                    targets[ref_ident], reasons[ref_ident] = policy["in_progress"], "recent draft closing PR"
+        elif item.get("merged_at") and _within(item.get("merged_at"), policy["done_lookback_days"], as_of_dt):
+            targets[ident], reasons[ident] = policy["done"], "recently merged PR"
+        elif ident in board_by:
+            targets[ident], reasons[ident] = policy["backlog"], "closed or old PR"
+
+    ready = []
+    for ident, item in gh.items():
+        if ident[1] != "issue" or ident in targets:
+            continue
+        state, reason = str(item.get("state") or "").upper(), item.get("state_reason")
+        rows = ledger_by.get(ident, [])
+        if ident in duplicates or len(rows) != 1:
+            unresolved.append({"identity": ident, "reason": "duplicate/missing ledger or board identity"})
+            continue
+        row = rows[0]
+        section = str(row.get("section") or "").strip().lower()
+        if state == "CLOSED":
+            stamp = item.get("closed_at")
+            if reason == "COMPLETED" and _within(stamp, policy["done_lookback_days"], as_of_dt):
+                targets[ident], reasons[ident] = policy["done"], "recently completed issue"
+            elif reason in ("COMPLETED", "NOT_PLANNED") and ident in board_by and stamp:
+                targets[ident], reasons[ident] = policy["backlog"], "terminal outside Done window"
+            else:
+                unresolved.append({"identity": ident, "reason": "unknown closure reason/date"})
+            continue
+        if state != "OPEN":
+            unresolved.append({"identity": ident, "reason": "unknown GitHub state"})
+            continue
+        if section.startswith("completed") or section.startswith("deferred"):
+            unresolved.append({"identity": ident, "reason": "reopened issue contradicts terminal ledger"})
+            continue
+        start = row.get("recent_start")
+        if isinstance(start, dict) and start.get("freshness") == "recent":
+            targets[ident], reasons[ident] = policy["in_progress"], "recent unsuperseded recorded start"
+            continue
+        if row.get("activity") in ("stale", "unknown") and (row.get("marker") == "\U0001F6A7" or section.startswith("in progress")):
+            unresolved.append({"identity": ident, "reason": "unverified inflight evidence"})
+            continue
+        ratings = row.get("ratings") or {}
+        axes = [ratings.get(k) for k in ("pri", "sev", "appeal", "effort")]
+        if all(isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 100 for v in axes):
+            score = ratings.get("ovr")
+            if not isinstance(score, int) or isinstance(score, bool) or not 4 <= score <= 400:
+                score = sum(axes)
+            ready.append((ident, row, score))
+    ready.sort(key=lambda x: (-x[2], x[0][0].casefold(), x[0][2], str(x[1].get("global_id") or "")))
+    selected = {ident for ident, _, _ in ready[:policy["ready_top_n"]]}
+    for ident, _, _ in ready:
+        targets[ident] = policy["ready"] if ident in selected else policy["backlog"]
+        reasons[ident] = "top-N eligible" if ident in selected else "eligible outside top-N"
+
+    changes, decisions = [], []
+    for ident in sorted(targets, key=lambda x: (x[0].casefold(), x[1], x[2])):
+        before = board_by.get(ident, {}).get("status")
+        target = targets[ident]
+        decisions.append({"identity": list(ident), "status": target, "reason": reasons[ident]})
+        if ident in duplicates:
+            continue
+        # Old/NOT_PLANNED terminal rows are never added merely to place them in Backlog.
+        if before is None and target == policy["backlog"]:
+            continue
+        if before != target:
+            changes.append({"identity": list(ident), "item_id": board_by.get(ident, {}).get("item_id"),
+                            "before": before, "after": target, "reason": reasons[ident]})
+    return {"as_of": as_of_dt.isoformat().replace("+00:00", "Z"),
+            "decisions": decisions, "changes": changes, "warnings": warnings,
+            "unresolved": unresolved, "ready_selected": [list(i) for i in sorted(selected)]}
 
 
 # ── candidate extraction (offline) ─────────────────────────────────────────────
@@ -311,7 +536,7 @@ def require_board_identity(cfg):
              % ", ".join(missing), 2)
 
 
-def resolve_ids(cfg, force=False):
+def resolve_ids(cfg, force=False, cache=True):
     """Resolve project / field / option IDs BY NAME, cached in state, re-resolved on
     demand (S5) — a board edit (renamed option) must self-heal, not persist stale IDs.
     The cache records the SETTINGS it was resolved from: change project_number (or any
@@ -324,7 +549,9 @@ def resolve_ids(cfg, force=False):
         "status_field": cfg["status_field"],
         "in_progress": cfg["in_progress"],
     }
-    state = _load_state()
+    state = _load_state() if cache else {}
+    if not cache:
+        force = True
     ids = state.get("ids", {}) if not force else {}
     if ids and ids.get("_inputs") != wanted_inputs:
         _warn("cached board IDs were resolved from different settings — re-resolving")
@@ -373,23 +600,25 @@ def resolve_ids(cfg, force=False):
             # already make rather than costing a query each.
             "options": {o["name"]: o["id"] for o in options},
         }
-        state["ids"] = ids
-        _atomic_state_write(state)
+        if cache:
+            state["ids"] = ids
+            _atomic_state_write(state)
     return ids
 
 
-def fetch_board_issues(cfg):
+def fetch_board_items(cfg, cache=True):
     """Paginate project items once; cache the snapshot in state. Keyed by
     (nameWithOwner, number) — the board is user-level and multi-repo, and a
     number-only key makes another repo's card with the same number silently
     disable writes for this repo forever (QA r1 B-1). Also captures each item's
     id and Status value so a card that predates its work-start signal can be
     status-flipped without a re-add (review r2 #2)."""
-    ids = resolve_ids(cfg)
+    ids = resolve_ids(cfg, force=not cache, cache=cache)
     q = (
         "query($id:ID!,$cur:String,$f:String!){node(id:$id){... on ProjectV2{"
         "items(first:100,after:$cur){pageInfo{endCursor hasNextPage}nodes{id "
-        "content{... on Issue{number repository{nameWithOwner}}} "
+        "content{__typename ... on Issue{number repository{nameWithOwner}} "
+        "... on PullRequest{number repository{nameWithOwner}}} "
         "fieldValueByName(name:$f){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}}"
     )
     base_vars = {"id": ids["project"], "f": cfg["status_field"]}
@@ -404,40 +633,82 @@ def fetch_board_issues(cfg):
                 fv = item.get("fieldValueByName") or {}
                 issues.append({
                     "repo": key[0], "num": key[1],
+                    "number": key[1],
+                    "kind": "pr" if content.get("__typename") == "PullRequest" else "issue",
                     "item_id": item.get("id"),
                     "status": fv.get("name"),
                 })
         if not node["pageInfo"]["hasNextPage"]:
             break
         cur = node["pageInfo"]["endCursor"]
-    state = _load_state()
-    state["snapshot"] = {"issues": issues, "fetched_at": int(time.time())}
-    _atomic_state_write(state)
-    return {(i["repo"], i["num"]): i for i in issues}
+    if cache:
+        state = _load_state()
+        state["snapshot"] = {"issues": issues, "fetched_at": int(time.time())}
+        _atomic_state_write(state)
+    return issues
 
 
-def issue_node_id(cfg, num):
+def fetch_board_issues(cfg):
+    """Compatibility snapshot for legacy issue-only callers."""
+    return {(i["repo"], i["num"]): i for i in fetch_board_items(cfg)
+            if i.get("kind") == "issue"}
+
+
+def content_node(cfg, repo_name, num, kind="issue"):
     if not cfg.get("repos"):
         raise RuntimeError("no repos configured (board_sync.repos / XYZ_BOARD_SYNC_REPOS)")
-    owner_name = cfg["repos"][0].split("/", 1)  # v1: primary repo (multi-repo: Phase 3)
+    owner_name = repo_name.split("/", 1)
     if len(owner_name) != 2:
         raise RuntimeError(f"repos entry {cfg['repos'][0]!r} is not owner/name")
+    field = "pullRequest" if kind == "pr" else "issue"
     data = _gql(
-        "query($o:String!,$n:String!,$i:Int!){repository(owner:$o,name:$n){issue(number:$i){id state}}}",
+        "query($o:String!,$n:String!,$i:Int!){repository(owner:$o,name:$n){%s(number:$i){id state}}}" % field,
         {"o": owner_name[0], "n": owner_name[1], "i": int(num)},
     )
     repo = data.get("repository") or {}
-    issue = repo.get("issue")
-    if issue is None:
-        raise RuntimeError(f"issue #{num} not found in {cfg['repos'][0]}")
-    return issue
+    content = repo.get(field)
+    if content is None:
+        raise RuntimeError(f"{kind} #{num} not found in {repo_name}")
+    return content
 
 
-def _add_item(cfg, ids, content_id):
-    return _gql(
+def issue_node_id(cfg, num):
+    return content_node(cfg, cfg["repos"][0], num, "issue")
+
+
+class IndeterminateMutation(RuntimeError):
+    pass
+
+
+def _remote_request(operation, variables, invoke, audit=None):
+    entry = {"operation": operation, "variables": dict(variables)}
+    if audit is None:
+        return invoke()                 # legacy self-heal/retry behavior stays byte-compatible
+    if audit:
+        audit(dict(entry, phase="intent"))
+    try:
+        result = invoke()
+    except Exception as exc:
+        if audit:
+            try:
+                audit(dict(entry, phase="result", outcome="indeterminate", error=str(exc)))
+            except Exception:
+                pass
+        raise IndeterminateMutation("%s response indeterminate: %s" % (operation, exc)) from exc
+    if audit:
+        try:
+            audit(dict(entry, phase="result", outcome="success", result=result))
+        except Exception as exc:
+            raise IndeterminateMutation("%s succeeded but result audit failed: %s" % (operation, exc)) from exc
+    return result
+
+
+def _add_item(cfg, ids, content_id, audit=None):
+    variables = {"p": ids["project"], "c": content_id}
+    data = _remote_request("addProjectV2ItemById", variables, lambda: _gql(
         "mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}",
-        {"p": ids["project"], "c": content_id},
-    )["addProjectV2ItemById"]["item"]["id"]
+        variables), audit)
+    return data["addProjectV2ItemById"]["item"]["id"]
 
 
 def board_add(cfg, num, write, snapshot=None):
@@ -490,12 +761,20 @@ def board_add(cfg, num, write, snapshot=None):
     return f"gh-{num}: added + Status={cfg['in_progress']!r} on {board_name}"
 
 
-def _set_status_option(cfg, ids, item_id, option_id):
-    _gql(
+def _set_status_option(cfg, ids, item_id, option_id, audit=None):
+    variables = {"p": ids["project"], "i": item_id,
+                 "f": ids["status_field"], "o": option_id}
+    _remote_request("updateProjectV2ItemFieldValue", variables, lambda: _gql(
         "mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{"
         "projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}",
-        {"p": ids["project"], "i": item_id, "f": ids["status_field"], "o": option_id},
-    )
+        variables), audit)
+
+
+def _clear_status(cfg, ids, item_id, audit=None):
+    variables = {"p": ids["project"], "i": item_id, "f": ids["status_field"]}
+    _remote_request("clearProjectV2ItemFieldValue", variables, lambda: _gql(
+        "mutation($p:ID!,$i:ID!,$f:ID!){clearProjectV2ItemFieldValue(input:{"
+        "projectId:$p,itemId:$i,fieldId:$f}){projectV2Item{id}}}", variables), audit)
 
 
 def _set_status(cfg, ids, item_id):
@@ -521,17 +800,18 @@ def option_id_for(cfg, column, force=False):
     return ids, option
 
 
-def set_issue_status(cfg, num, column, write=True, snapshot=None):
+def set_issue_status(cfg, num, column, write=True, snapshot=None, audit=None,
+                     policy_mode=False, repo=None, kind="issue"):
     """Move gh-<num>'s card to <column>, adding the card if the board has none (GH-549).
 
     Set-to-value, never an increment — which is what makes connector replay idempotent and
     lets `work reconcile` re-run a batch without double-applying anything.
     """
     require_board_identity(cfg)
-    repo = cfg["repos"][0]
+    repo = repo or cfg["repos"][0]
     board_name = f"{cfg['project_owner']}/projects/{cfg['project_number']}"
     on_board = snapshot if snapshot is not None else fetch_board_issues(cfg)
-    existing = on_board.get((repo, num))
+    existing = on_board.get((repo, kind, num)) or on_board.get((repo, num))
     if existing and existing.get("status") == column:
         return f"gh-{num}: already {column!r} on {board_name} — no-op"
     if not write:
@@ -539,17 +819,25 @@ def set_issue_status(cfg, num, column, write=True, snapshot=None):
                 f"(currently {existing.get('status') if existing else 'not on the board'!r})")
     item_id = existing.get("item_id") if existing else None
     if item_id is None:
-        issue = issue_node_id(cfg, num)
+        issue = content_node(cfg, repo, num, kind)
         ids = resolve_ids(cfg)
-        item_id = _add_item(cfg, ids, issue["id"])
+        item_id = _add_item(cfg, ids, issue["id"], audit=audit)
+        if snapshot is not None:
+            snapshot[(repo, kind, num)] = {"repo": repo, "num": num, "number": num,
+                                           "kind": kind, "item_id": item_id, "status": None}
     ids, option = option_id_for(cfg, column)
     try:
-        _set_status_option(cfg, ids, item_id, option)
+        _set_status_option(cfg, ids, item_id, option, audit=audit)
     except RuntimeError as exc:
+        if policy_mode or isinstance(exc, IndeterminateMutation):
+            raise
         ids, option = option_id_for(cfg, column, force=True)   # S5: stale-ID self-heal
-        _set_status_option(cfg, ids, item_id, option)
+        _set_status_option(cfg, ids, item_id, option, audit=audit)
         _warn(f"status write failed ({exc}); re-resolved IDs and succeeded")
-    if snapshot is None:
+    if snapshot is not None:
+        key = (repo, kind, num) if (repo, kind, num) in snapshot else (repo, num)
+        snapshot[key]["status"] = column
+    else:
         fetch_board_issues(cfg)
     return f"gh-{num}: Status={column!r} on {board_name}"
 
@@ -589,6 +877,228 @@ def dedupe(cfg, write):
     return "\n".join(lines)
 
 
+def _policy_board_cfg(policy):
+    cfg = resolve_settings()
+    cfg.update({"project_owner": policy["project_owner"],
+                "project_number": policy["project_number"],
+                "repos": policy["repos"], "status_field": policy["status_field"],
+                "in_progress": policy["in_progress"]})
+    return cfg
+
+
+def collect_github_state(policy):
+    """Read complete bounded issue/PR state for every policy repository."""
+    found = []
+    for repo_name in policy["repos"]:
+        owner, name = repo_name.split("/", 1)
+        for kind, field in (("issue", "issues"), ("pr", "pullRequests")):
+            cursor = None
+            for _page in range(100):
+                if kind == "issue":
+                    body = ("number state stateReason closedAt updatedAt id")
+                else:
+                    body = ("number state isDraft mergedAt closedAt updatedAt id "
+                            "closingIssuesReferences(first:100){pageInfo{hasNextPage}nodes{"
+                            "number repository{nameWithOwner}}}")
+                query = ("query($o:String!,$n:String!,$cur:String){repository(owner:$o,name:$n){"
+                         "%s(first:100,after:$cur,orderBy:{field:UPDATED_AT,direction:DESC}){"
+                         "pageInfo{endCursor hasNextPage}nodes{%s}}}}" % (field, body))
+                variables = {"o": owner, "n": name}
+                if cursor:
+                    variables["cur"] = cursor
+                data = _gql(query, variables)
+                repo = data.get("repository")
+                if not repo or field not in repo:
+                    raise RuntimeError("GitHub returned no %s collection for %s" % (field, repo_name))
+                page = repo[field]
+                for node in page.get("nodes") or []:
+                    item = {"repo": repo_name, "kind": kind, "number": node.get("number"),
+                            "id": node.get("id"), "state": node.get("state"),
+                            "updated_at": node.get("updatedAt"), "closed_at": node.get("closedAt")}
+                    if kind == "issue":
+                        item["state_reason"] = node.get("stateReason")
+                    else:
+                        refs = node.get("closingIssuesReferences") or {}
+                        if (refs.get("pageInfo") or {}).get("hasNextPage"):
+                            raise RuntimeError("closingIssuesReferences truncated for %s#%s" %
+                                               (repo_name, node.get("number")))
+                        item.update({"draft": bool(node.get("isDraft")),
+                                     "merged_at": node.get("mergedAt"),
+                                     "closing_issues": [{"repo": (r.get("repository") or {}).get("nameWithOwner"),
+                                                         "number": r.get("number")} for r in refs.get("nodes") or []]})
+                    found.append(item)
+                info = page.get("pageInfo") or {}
+                if not info.get("hasNextPage"):
+                    break
+                cursor = info.get("endCursor")
+                if not cursor:
+                    raise RuntimeError("GitHub pagination advertised another page without a cursor")
+            else:
+                raise RuntimeError("GitHub pagination exceeded the 100-page safety bound")
+    return found
+
+
+def _json_digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                     default=str).encode()).hexdigest()
+
+
+def _read_json(path):
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("cannot read JSON %s: %s" % (path, exc)) from exc
+    return value
+
+
+def _write_json(path, value):
+    target = Path(path).expanduser().resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(target.parent), prefix=".%s." % target.name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(value, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        os.replace(tmp, target)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def build_policy_preview(root, observations=None, as_of=None):
+    policy = resolve_selection_policy(required=True)
+    from releases_app import load_work_evidence
+    evidence = load_work_evidence(Path(root) / "releases.db",
+                                  policy["activity_lookback_days"], as_of=as_of)
+    if not evidence.get("schema_ready"):
+        raise RuntimeError(evidence.get("error") or "work evidence is not ready")
+    board = fetch_board_items(_policy_board_cfg(policy), cache=False)
+    github = collect_github_state(policy)
+    obs = sanitize_observations(observations or [], policy, evidence["as_of"])
+    plan = plan_selection_policy(policy, evidence["issues"], board, github, obs,
+                                 as_of=evidence["as_of"])
+    source = {"ledger_generation": evidence["generation"], "ledger": evidence["issues"],
+              "github": github, "board": board, "observations": obs}
+    if any(not item.get("valid") or item.get("freshness") != "recent" for item in obs):
+        plan["warnings"].append("external observations include stale/unmapped evidence; no board decision was inferred from it")
+    return {"schema": "github-board-policy-preview@1", "created_at": dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+            "as_of": plan["as_of"], "policy": policy,
+            "ledger_generation": evidence["generation"], "source_digest": _json_digest(source),
+            "observations": obs, "board": board, "github": github, **plan}
+
+
+def _preview_age_ok(preview):
+    created = _parse_utc(preview.get("created_at"))
+    return created is not None and dt.datetime.now(dt.timezone.utc) - created <= dt.timedelta(minutes=15)
+
+
+def apply_policy_preview(root, preview_path, result_path):
+    preview = _read_json(preview_path)
+    if preview.get("schema") != "github-board-policy-preview@1" or not _preview_age_ok(preview):
+        raise RuntimeError("preview is invalid or older than 15 minutes")
+    policy = resolve_selection_policy(required=True)
+    if policy != preview.get("policy"):
+        raise RuntimeError("saved policy changed since preview")
+    fresh = build_policy_preview(root, observations=preview.get("observations") or [],
+                                 as_of=preview.get("as_of"))
+    for key in ("ledger_generation", "source_digest", "decisions", "changes", "warnings", "unresolved"):
+        if fresh.get(key) != preview.get(key):
+            raise RuntimeError("preflight drift in %s; generate and review a new preview" % key)
+    cfg = _policy_board_cfg(policy)
+    # Resolve every destination before the first mutation.
+    for column in sorted({c["after"] for c in preview["changes"]}):
+        option_id_for(cfg, column)
+    from work_connectors import _ConnectorLock
+    lock = _ConnectorLock(str(Path(root) / "releases.db"))
+    if not lock.acquire():
+        raise RuntimeError("connector exclusion lock is busy")
+    result = {"schema": "github-board-policy-result@1", "preview": str(Path(preview_path).resolve()),
+              "root": str(Path(root).resolve()), "policy": policy,
+              "as_of": preview["as_of"], "status": "applying",
+              "operations": [], "warnings": list(preview.get("warnings") or [])}
+    _write_json(result_path, result)
+
+    def audit(entry):
+        result["operations"].append(dict(entry, recorded_at=dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")))
+        _write_json(result_path, result)
+
+    try:
+        for change in preview["changes"]:
+            repo, kind, number = change["identity"]
+            live = [x for x in fetch_board_items(cfg, cache=False) if _identity(x) == (repo, kind, int(number))]
+            if len(live) > 1 or (live[0].get("status") if live else None) != change["before"]:
+                raise RuntimeError("board item changed before %s/%s#%s" % (repo, kind, number))
+            snap = {(repo, kind, int(number)): live[0]} if live else {}
+            set_issue_status(cfg, int(number), change["after"], write=True, snapshot=snap,
+                             audit=audit, policy_mode=True, repo=repo, kind=kind)
+            after_item = snap[(repo, kind, int(number))]
+            result["operations"].append({"phase": "change", "identity": change["identity"],
+                                          "before": change["before"], "after": change["after"],
+                                          "item_id": after_item.get("item_id"),
+                                          "added": change.get("item_id") is None,
+                                          "outcome": "success"})
+            _write_json(result_path, result)
+        result["status"] = "complete"
+        _write_json(result_path, result)
+        return result
+    except Exception as exc:
+        result["status"] = "indeterminate" if isinstance(exc, IndeterminateMutation) else "partial"
+        result["error"] = str(exc)
+        _write_json(result_path, result)
+        raise
+    finally:
+        lock.release()
+
+
+def restore_policy_result(result_path, write=False, move_added_to_backlog=False):
+    result = _read_json(result_path)
+    if result.get("schema") != "github-board-policy-result@1":
+        raise RuntimeError("not a GH-605 result artifact")
+    policy = resolve_selection_policy(required=True)
+    if policy != result.get("policy"):
+        raise RuntimeError("current policy does not match the result artifact")
+    cfg = _policy_board_cfg(policy)
+    changes = [x for x in result.get("operations") or [] if x.get("phase") == "change" and x.get("outcome") == "success"]
+    proposed, warnings = [], []
+    for old in reversed(changes):
+        repo, kind, number = old["identity"]
+        live = [x for x in fetch_board_items(cfg, cache=False) if _identity(x) == (repo, kind, int(number))]
+        if len(live) != 1 or live[0].get("status") != old.get("after") or live[0].get("item_id") != old.get("item_id"):
+            warnings.append("%s/%s#%s changed since apply; preserved" % (repo, kind, number))
+            continue
+        if old.get("added"):
+            warnings.append("%s/%s#%s was added; retained (no-delete)" % (repo, kind, number))
+            if move_added_to_backlog:
+                proposed.append(dict(old, restore_to=policy["backlog"]))
+            continue
+        proposed.append(dict(old, restore_to=old.get("before")))
+    if write:
+        from work_connectors import _ConnectorLock
+        ledger_root = Path(result.get("root") or DEFAULT_SCAN_ROOT).resolve()
+        lock = _ConnectorLock(str(ledger_root / "releases.db"))
+        if not lock.acquire():
+            raise RuntimeError("connector exclusion lock is busy")
+        try:
+            for change in proposed:
+                repo, kind, number = change["identity"]
+                live = [x for x in fetch_board_items(cfg, cache=False) if _identity(x) == (repo, kind, int(number))]
+                if len(live) != 1 or live[0].get("status") != change.get("after"):
+                    raise RuntimeError("restore precondition changed for %s/%s#%s" % (repo, kind, number))
+                ids = resolve_ids(cfg)
+                if change["restore_to"] is None:
+                    _clear_status(cfg, ids, live[0]["item_id"])
+                else:
+                    ids, option = option_id_for(cfg, change["restore_to"])
+                    _set_status_option(cfg, ids, live[0]["item_id"], option)
+        finally:
+            lock.release()
+    return {"schema": "github-board-policy-restore@1", "write": bool(write),
+            "changes": proposed, "warnings": warnings}
+
+
 # ── entry points ────────────────────────────────────────────────────────────────
 
 
@@ -612,6 +1122,19 @@ def main(argv=None):
     sub.add_parser("config", help="print resolved settings (no secrets)")
     t = sub.add_parser("touch", parents=[common], help="explicit add + In progress for one issue")
     t.add_argument("issue", help="issue number or gh-<n>")
+    pp = sub.add_parser("policy-preview", help="write a read-only saved-policy preview")
+    pp.add_argument("--root", default=DEFAULT_SCAN_ROOT)
+    pp.add_argument("--out", required=True, help="explicit output path for the versioned preview")
+    pp.add_argument("--observations", help="optional normalized observation JSON array")
+    pa = sub.add_parser("policy-apply", help="apply a fresh reviewed policy preview")
+    pa.add_argument("--root", default=DEFAULT_SCAN_ROOT)
+    pa.add_argument("--preview", required=True)
+    pa.add_argument("--result-out", required=True)
+    pr = sub.add_parser("policy-restore", help="preview or conditionally restore a result")
+    pr.add_argument("--result", required=True)
+    pr.add_argument("--write", action="store_true")
+    pr.add_argument("--move-added-to-backlog", action="store_true")
+    pr.add_argument("--out", help="optional restore-report path")
 
     args = ap.parse_args(argv)
 
@@ -620,6 +1143,39 @@ def main(argv=None):
         return 0
 
     cfg = resolve_settings()
+
+    if args.cmd == "policy-preview":
+        try:
+            obs = _read_json(args.observations) if args.observations else []
+            preview = build_policy_preview(args.root, observations=obs)
+            _write_json(args.out, preview)
+            print(json.dumps({"preview": str(Path(args.out).resolve()),
+                              "changes": len(preview["changes"]),
+                              "warnings": preview["warnings"],
+                              "unresolved": preview["unresolved"]}, indent=2))
+        except (RuntimeError, ValueError) as exc:
+            _die(str(exc), 1)
+        return 0
+
+    if args.cmd == "policy-apply":
+        try:
+            result = apply_policy_preview(args.root, args.preview, args.result_out)
+            print(json.dumps({"result": str(Path(args.result_out).resolve()),
+                              "status": result["status"]}, indent=2))
+        except (RuntimeError, ValueError) as exc:
+            _die(str(exc), 1)
+        return 0
+
+    if args.cmd == "policy-restore":
+        try:
+            report = restore_policy_result(args.result, write=args.write,
+                                           move_added_to_backlog=args.move_added_to_backlog)
+            if args.out:
+                _write_json(args.out, report)
+            print(json.dumps(report, indent=2, sort_keys=True))
+        except (RuntimeError, ValueError) as exc:
+            _die(str(exc), 1)
+        return 0
 
     if args.cmd == "config":
         safe = {k: v for k, v in cfg.items() if k != "token_file"}
