@@ -107,3 +107,11 @@ read identified 18 closing issues across 24 merges; it did not execute downstrea
 writes. Existing express ownership is #592 / PR #597, with bounds #594. Ad-hoc direct pushes and the
 observed full-gate environment/contention gaps have concrete issue drafts awaiting outward-action
 approval. No umbrella closeout or clone teardown is authorized by local validation alone.
+
+Agy sequential PR QA approved producer #599 and found the remaining loose filename match in the
+pre-merge path while reviewing #600. The regression witnesses false ambiguity for active tasks and
+a skipped canonical-document validation for completed tasks, in both GH-N- and N- naming forms.
+The three-line correction aligns both lookups with the post-merge matcher and sorts completed
+candidates. Focused evidence: 25 GH-421 tests and existing GH-496 pre-merge checks pass; retained
+red/green logs and non-qualifying provenance are in the GH-584 campaign. Final Agy review and the
+normal push gate for this correction are pending.

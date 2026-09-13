@@ -54,6 +54,36 @@ class ReconcileTests(unittest.TestCase):
         self.calls = []
         self.fail_after = None
 
+    def test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs(self):
+        for stage in ('2-WORKING', '3-COMPLETED'):
+            for name in ('GH-421-canonical.md', '421-canonical.md'):
+                with self.subTest(stage=stage, name=name), tempfile.TemporaryDirectory() as root:
+                    folder = Path(root) / 'PROJECT' / stage
+                    folder.mkdir(parents=True)
+                    canonical = folder / name
+                    canonical.write_text('canonical task document')
+                    (folder / 'recon-GH-421-notes.md').write_text('supporting notes')
+                    (folder / 'GH-4210-unrelated.md').write_text('unrelated task')
+                    seen = []
+                    real_listdir = os.listdir
+                    def git_output(command, **kwargs):
+                        if command[1] == 'log':
+                            return 'Fix task\nCloses #421\n'
+                        if command[1] == 'diff':
+                            return ''
+                        return 'a' * 40 + '\n'
+                    with patch.object(wave.subprocess, 'check_output', side_effect=git_output), \
+                         patch.object(wave, 'github_slug_from_origin', return_value='test/repo'), \
+                         patch.object(wave.os, 'listdir', side_effect=lambda p: sorted(real_listdir(p), reverse=True)), \
+                         patch.object(wave, 'validate_frontmatter_schema', side_effect=lambda p: seen.append(p)), \
+                         patch.object(wave, 'validate_lessons_learned', return_value=None), \
+                         patch.object(wave, 'validate_pre_merge_receipts', return_value=None), \
+                         contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+                         self.assertRaises(SystemExit) as stopped:
+                        wave.run_pre_merge(root, SimpleNamespace(pr=None, offline=True))
+                    self.assertEqual(stopped.exception.code, 0)
+                    self.assertEqual(seen, [str(canonical)])
+
     def rows(self, sql):
         with contextlib.closing(sqlite3.connect(self.root / 'releases.db')) as conn:
             conn.row_factory = sqlite3.Row

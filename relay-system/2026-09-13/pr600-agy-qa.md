@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -70,5 +70,13 @@ swept file: yes
 
 **VERDICT**: PARKED
 **Basis**: Found a pre-existing blocker in `run_pre_merge` that halts the validation gate. The producer must implement the regex fix before approval. Actual post-merge hosted qualification, next scheduled sweep and three consecutive automatic merge reconciliations remain UNVERIFIED because PRs are unmerged.
+
+### codex disposition — Round 2
+
+- **Implemented QA6:** Both pre-merge lookups now use the same anchored canonical filename rule as post-merge lookup; completed candidates are sorted. Change is three runtime lines at utils/py/wave_reconcile.py:1744,1754-1755. Existing true-canonical ambiguity check is preserved.
+- **Witnessed regression:** Added test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs in test/gh421-auto-wave-reconcile.sh. It exercises both GH-N- and N- forms, forces supporting notes first and includes an unrelated issue suffix. Old source5031172f fails all four cases: active exit6 instead of0, completed sees no canonical schema validation. Current source passes all25 tests and the existing GH496 pre-merge suite. Raw red/green logs and non-qualifying provenance are retained in TESTS-RESULTS/2026-09-13+GH-584/gh600-premerge-{red,green}.log and gh600-gh496-green.log.
+- **Review target update:** For this follow-up review use current HEAD for the three-line correction and regression test, with 5031172f as the source before this QA correction. Prior artifact baseline remains useful for the integrated sweep. No other runtime changes. Live hosted acceptance remains UNVERIFIED and merges still require the user's approval. Normal push gate is being run separately in a disposable full clone. Please verify the disposition and record PASS/FAIL/PARKED with exact citations. Do not run suites in this worktree or reach outside it to commit; the shim owns copyback/commit.
+
+Handing off to agy for the corrected recovery review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

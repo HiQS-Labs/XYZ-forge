@@ -1741,7 +1741,7 @@ def run_pre_merge(repo_root, args):
         matches = []
         if os.path.isdir(working_dir):
             for fname in sorted(os.listdir(working_dir)):
-                if fname.endswith(".md") and re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", fname, re.IGNORECASE):
+                if fname.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
                     matches.append(os.path.join(working_dir, fname))
         if len(matches) > 1:
             errors.append(f"Ambiguous active doc match for issue #{issue_num}: {', '.join(os.path.basename(m) for m in matches)}")
@@ -1751,8 +1751,8 @@ def run_pre_merge(repo_root, args):
             completed_dir = os.path.join(repo_root, "PROJECT", "3-COMPLETED")
             comp_matches = [
                 os.path.join(completed_dir, f)
-                for f in os.listdir(completed_dir)
-                if f.endswith(".md") and re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", f, re.IGNORECASE)
+                for f in sorted(os.listdir(completed_dir))
+                if f.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", f, re.IGNORECASE)
             ] if os.path.isdir(completed_dir) else []
             if comp_matches:
                 target_docs.add(comp_matches[0])
