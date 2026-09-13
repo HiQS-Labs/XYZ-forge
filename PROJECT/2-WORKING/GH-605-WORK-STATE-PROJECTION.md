@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Operator clarified two required outcomes; verified project #4 is Planning Board Rev. 2 | Expand recon/plan to reusable reconciliation plus live application; renewed plan QA required, DeepSeek route still blocked |
+| GLM and recovered Qwen feedback reconciled; expanded policy contract specified below | Renewed plan QA, then implement and verify both reusable scripts and live Rev. 2 application |
 
 ## Table of contents
 
@@ -60,10 +60,12 @@ is Costly: preserve before/after statuses and item identities for restoration th
 same writer. Required completion evidence is a reusable-script PR plus verified live-board
 results, not just a diagnostics command or a code-only PR.
 
-**Planning checkpoint:** requirements captured, not yet implementation-ready. The additional
-selection/current-state seams need bounded recon and the ordered implementation list below
-must be revised before renewed QA. DeepSeek's prior two-attempt cap remains exhausted; no
-reviewer substitution or fresh execution is implied by this scope clarification.
+**Current checkpoint:** the September 13 revision below supersedes the earlier bounded
+implementation list and deferrals. The operator explicitly requested execution using GLM's
+new review and Qwen's recovered review. Qwen's route now completes (GH-608); its verdict
+was changes requested, not approval. The unrelated harness patch remains outside this PR.
+The revised plan receives a bounded Codex relay check before production edits; final QA
+also uses the start-task Codex reviewer, with GLM/Qwen findings included as acceptance inputs.
 
 ### Earlier bounded increment — retained as recon input, not the full clarified scope
 
@@ -160,7 +162,163 @@ and passed the gate's sequential retry; the original log is retained. This is ba
 not evidence for an implementation that does not yet exist. Task branch fix/work-state-projection
 and its fresh full clone are retained for resume; do not repeat intake or create another issue.
 
-## Phase 2 — Consistent events and honest diagnostics
+## September 13 expanded revision — controlling specification
+
+### Review disposition and additional recon
+
+GLM review: https://github.com/HiQS-Labs/XYZ-forge/issues/605#issuecomment-5656226533.
+Recovered Qwen findings: https://github.com/HiQS-Labs/XYZ-forge/issues/608.
+Both are advisory source-grounded reviews, neither is approval. Earlier historical checkboxes
+and narrower exclusions above are retained as history, not the current implementation scope.
+
+| Finding | Disposition |
+|---|---|
+| GLM B1 / Qwen selection and Done blockers | Add explicit policy planner, fresh GH reads, preview/apply/restore in existing board_sync; never replay raw events onto a policy-managed board |
+| GLM B2 eligibility, ordering, freshness, demotion | Pin all four below; tests assert exact selected identities and preservation |
+| GLM sidecars / lock capture | Refuse source WAL/journal ambiguity for read-only diagnostics; capture previous row only for roadmap-update |
+| GLM registry / Deferred / two day knobs | Named classifier red control; preserve backfill Deferred skip and document incompleteness; 3-day activity and 7-day Done remain distinct |
+| Qwen batch atomicity / metadata | One receipt and transaction for all sweep events; injected second-event failure proves rollback; metadata-after-review named test |
+| Qwen snapshot / restoration | Explicit versioned local artifacts, preconditions, partial result journal and conditional status restoration; never claim remote atomicity |
+| Qwen parameter duplication | Compare prior/current lifecycle only in update extractor; no prior-row queries for unrelated operations |
+| Qwen receipt target / empty batch nits | Preserve bulk NULL target semantics and conservative whole-batch replay; clarify documentation, do not widen cursor semantics |
+
+Additional recon at task HEAD 67bec216, graph Verify tier XYZ-forge generation
+2026-09-01T15:54:30Z: releases_app metadata changed, board_sync/connector not indexed;
+exact source fallback plus read-only board-contract lane. No relevant production changes
+in this task since the baseline. Current radius is the shared ledger writer, work-event
+consumers and configured GitHub project; no new authority or DB schema.
+
+| Seam | Source before implementation | Consequence |
+|---|---|---|
+| Offline scan | board_sync.py:113–211 | Doc/branch presence and tick creation have no freshness; cannot independently prove started work |
+| Snapshot | board_sync.py:387 | Issue-only, duplicate-collapsing dict; extend compatibly to PRs and detect ambiguous duplicate identities |
+| Existing mutation | board_sync.py:524 | Validates column after add and doesn't advance supplied snapshot; preflight options and update snapshot after each successful operation |
+| Resolver/config | device_config.py:76; work_connectors/__init__.py:49,110 | Reuse diagnostic resolver for dedicated saved policy; connector allowlist does not consume policy |
+| Dispatch | work_connectors/__init__.py:233,414 | Nonzero child leaves entire cursor unchanged; no pending events means no dispatch, so policy repair must be explicit and snapshot-based |
+| PR scan | releases_app.py:4960 | Limited200, non-draft/linked only; insufficient as current-state authority |
+| Failure/undo | board_sync.py:476,503,557 | Reuse status writer and option resolution; never call deleting dedupe; status-only undo cannot remove added cards |
+
+### Deterministic selection contract
+
+Policy is the existing `github_board_selection_policy` block in device config, resolved
+through `device_config` with strict types and explicit target identity. Consume
+`project_owner`, `project_number`, `repos`, `ready_top_n=10`, `done_lookback_days=7`;
+add explicit `activity_lookback_days=3` and column names Ready/In progress/In review/Done/Backlog.
+Validate target matches configured connector if present; malformed policy refuses before GH.
+No personal target defaults. Local automatic connector stays disabled; presence of a policy
+for that board blocks raw-event connector writes with an actionable message, even if someone
+enables it accidentally. Legacy non-policy configurations preserve their existing behavior.
+
+- Identity is full GitHub repository + number + content kind, never a number alone. Ledger
+  candidates require exact matching issue_url/gh_number and configured repo. Duplicates or
+  mismatches are reported and preserved. Foreign/opaque board items are never mutated.
+- Read all relevant current GH issues/PRs with bounded complete pagination, including closed
+  board items; a failed/truncated lookup aborts preview/apply, not an empty successful result.
+  Terminal issue state is CLOSED with known COMPLETED/NOT_PLANNED reason. Done age uses GH
+  closed_at or PR merged_at, never ledger updated_at/backfill time. Unknown reason/date preserves.
+- Completed issues/merged PRs within the inclusive UTC seven-day window go Done. Older verified
+  terminal cards already on board go Backlog; absent old terminal items are not added. NOT_PLANNED
+  and closed-unmerged PRs go Backlog only if already on board. No deletion or Deferred column needed.
+- Every open PR card, including a draft, goes In review (operator: whatever is a PR). A linked
+  OPEN issue goes In review for a non-draft open PR. Draft PR evidence can establish its linked
+  issue In progress when PR updated_at is within three days. Use explicit GH closing references,
+  repo-qualified; don't interpret an incidental mention as a closing link.
+- An OPEN issue can also be In progress from a recent non-backfill in_flight/jog_running/leased
+  recorded event with matching repo identity. GH OPEN corroborates nonterminal state; this is
+  a recorded start, not proof an agent is currently running. Old 🚧/doc/branch presence alone is
+  unverified; preserve its current card and exclude it from Ready rather than silently demote.
+- External Rebalance/CLIO/prompt observations are optional normalized JSON evidence records:
+  source, issue_url, observed_at (UTC), kind (intent/started/phase_completed/completed), reference.
+  Validate identity and freshness; retain only reference/metadata in audit, never raw private text.
+  They nominate candidates/explain agreement or conflict but cannot alone move a card, declare
+  whole-issue completion, or substitute for GH corroboration. Missing/stale/unmapped source is
+  unknown, never idle. Live operation collects these sources where available and reports gaps.
+- Ready eligibility: GH OPEN, ledger nonterminal and not unverified-inflight, all four rating
+  axes valid 1–100, no higher-precedence terminal/review/start decision. Sort by existing
+  `rating_ovr` (if valid) else four-axis sum descending, then casefolded repo, number ascending,
+  global_id final tie-breaker. No new scoring formula. Select at most10. Positively eligible
+  excess Ready cards move Backlog; absent excess/unrated items are not bulk-added. Unknown
+  Ready cards stay put and are reported as unresolved, so do not claim exact global10 falsely.
+- Current GH OPEN prevents an old completed event from resurrecting Done. Reopened issue with
+  contradictory terminal ledger state is preserved/reported pending ledger reconciliation,
+  not automatically rewritten by a board projection. In review without an open qualifying PR
+  can become Ready/Backlog only with positive eligible ledger evidence; otherwise preserve.
+
+### Ordered implementation and verification (replaces earlier Phase 2 list)
+
+1. Extend the shared section-first classifier and prior-state handling described in the older
+   Phase 2.1 below. Metadata-only updates emit updated; Completed+🚧 is completed, Deferred+🚧
+   deferred. Backfill retains Deferred skip. Only roadmap-update captures prior row under lock.
+   -> Named tests for section-only progress, Completed+🚧, Queue no marker, metadata-after-review.
+2. Extend perform_write with mutually exclusive single/batch explicit events. Cover generation,
+   receipt, event insertion and COMMIT with precommit rollback; leave postcommit recovery intact.
+   Sweep emits per-row completed/deferred payloads after its existing re-fence, all with one
+   txn_id/time and one receipt. -> Two completed + one deferred, shared receipt, second event
+   insert failure rolls back every row/event/receipt/generation and clears journal; rerun emits0.
+3. Add read-only work status and a reusable read-only evidence loader in releases_app. Use
+   mode=ro on an existing DB only; refuse WAL/hot-journal/live intent ambiguity before open,
+   no migrations/config/cursor/network writes. Schema7 reports unready; schema8 reads rows,
+   events/cursors. Inspect bytes/presence of DB and -wal/-shm/-journal, dump and config before/after.
+   -> UTC malformed/future/backfill timestamps never become recent starts; stale-days default3
+   is separate from policy done_lookback_days7. SQL reads only; missing inputs aren't fabricated.
+4. Extend existing board_sync.py with policy preview/apply/restore subcommands and pure planner;
+   reuse device_config, ledger evidence loader and current board writer. Extend snapshot/resolver
+   compatibly for PR content and optional explicit repo; validate options before add; advance shared
+   snapshot after each successful add/status. Keep all old command callers compatible. Add raw-event
+   connector policy guard and accurate whole-batch failure documentation. No new dependency/module,
+   scheduler, event schema or alternate GraphQL status writer. -> Exact deterministic selection
+   fixtures including ties, foreign identity, duplicates, drafts, reopening, missing evidence,
+   stale signals, two day windows, and policy-enabled connector refusal.
+5. Preview defaults read-only remotely, writes a versioned JSON artifact only with explicit output
+   path. Artifact contains as_of, policy, ledger generation/input digest, sanitized observations,
+   board identities/statuses, decisions/reasons, proposed changes and warnings. Resolve fresh field
+   options, not stored IDs as authority. Apply requires saved preview <=15minutes old, same policy,
+   unchanged ledger input, and fresh GH+board re-plan using saved as_of equal to the reviewed
+   decisions. Preflight every mutation first; unexpected drift refuses before first write. Acquire
+   existing connector exclusion lock for the apply window so legacy dispatcher cannot race it.
+   Write audit result before first mutation and after each success; stop on first failure, save
+   partial state, return nonzero. Re-read before each change and refuse changed status/item identity.
+   -> Stale/tampered target, changed GH, missing option and concurrent card edit tests make zero
+   unintended writes; failure at operation2 retains operation1 evidence and supports safe resume.
+6. Restore takes result artifact and previews by default; explicit write conditionally restores
+   original status through same writer only when current identity/status equals recorded after.
+   Support clearing an originally unset status through existing writer capability. Added cards
+   cannot be removed under no-delete: retain/report them, optionally move to Backlog only as an
+   explicit restore decision. Never claim atomic remote rollback. -> Injected failure and concurrent
+   edit tests prove restoration preserves unrelated/operator changes and reports residual cards.
+7. Register focused Python fixtures plus existing event/board/sweep suites, document commands and
+   settings in RELEASES-DB-FAQS, and add CHANGELOG. Use debug-mantra for observed failures. Run all
+   tests in separate disposable full clone with identity checks and committed provenance; red
+   controls remove section precedence, batch events, freshness exclusion and top-N limit and must
+   fail named nonempty-fixture assertions. Run full validate, qualifying gate as needed, PDDA and
+   final Codex relay on committed implementation (three review rounds maximum).
+8. After verified code, collect recent sources and current GH for the live Rev.2 target. Preserve
+   device settings except explicitly documenting policy as implemented; keep automatic replay off.
+   Generate preview, inspect all changes, apply it through tested CLI, retain before/result/after
+   local artifacts (only sanitized summary committed), independently read back and run new preview.
+   -> Zero intended writes on second run, top10 eligible identities and7day Done verified, unknowns
+   listed. Partial failure stops without success claim; restore only safe statuses as above.
+9. Update existing PR607 against development with exact implementation SHA, tests, reviews and live
+   application evidence. Push through required gate from disposable clone; no merge. Retain task
+   clone until origin completion verified. This is one scope, not a new PR for each finding.
+
+### Acceptance, risk and rating update
+
+Goal1 is complete only when steps1–7's reusable commands and gates pass; Goal2 only when step8's
+fresh independent board read and no-op rerun pass (or clearly reported preserved unknowns).
+Board mutation is Costly, not atomic: shield explicit saved-preview apply, kill switch and
+disabled legacy replay; tripwire first mismatch/failure; undo conditional status restore with
+new-card residuals. Shared writer remains Costly: no network under its lock, bounded local
+prior-row query only for affected op, receipt-chain/fuzz regressions halt execution.
+The source observations format is an interchange boundary, not a new canonical activity store.
+Unavailable source exports remain a disclosed coverage gap, not grounds to invent observations.
+
+Reassessed rating: `80/65/50/45` (240), no override: same urgency/consequence/neutral appeal;
+expanded selection and safe live-application surface is materially less cheap than the earlier
+bounded event fix. Persist/read back through roadmap rate before implementation. Recurrence
+window/rationale above unchanged: known audit, unknown trend, no invented incident count.
+
+## Phase 2 — Consistent events and honest diagnostics (historical detail)
 
 **Goal:** The same lifecycle change produces the same state event, and unknown freshness is visible.
 
