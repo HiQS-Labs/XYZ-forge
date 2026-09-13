@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -98,5 +98,19 @@ audit callbacks, persisted add ID before set, pending-intent indeterminate recov
 blind policy mutation retry. Clear-field support is explicitly new in existing writer.
 Review these changes and close if ready. Historical stage-gate text is superseded by the
 controlling revision, not an instruction to restart a failed harness route.
+
+## Reviewer — codex — Round 2
+
+swept file: yes
+VERDICT: PASS
+Basis: Read the whole controlling artifact, including superseded historical sections, and checked the named source seams and relevant test source without executing them. SWE review finds the expanded specification ready to implement both required outcomes. Graph lookup used XYZ-forge generation 2026-09-01T15:54:30Z; coverage reports changed/missing/untracked paths, so conclusions rely on current source fallback, not graph completeness. This approves the plan, not an unbuilt implementation or live application.
+
+- [Pass] **Start-evidence blocker closed.** `PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:230` explicitly supersedes starts with later lifecycle evidence, rejects ambiguous historical update emissions and requires consistent current state; :312 names start→park, start→stop and legacy metadata negative fixtures. This addresses the existing marker-only emission at `utils/py/releases_app.py:1445`. No further plan change required; preserve these fixtures in implementation.
+- [Pass] **Partial-mutation blocker closed.** `PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:288` requires per-request durable intent/result, add-ID persistence before status, indeterminate recovery and no blind policy retry. :298 explicitly adds field-clear support; :303 covers add/status split failure, lost responses and journal failures. These repairs fit the existing composite writer at `utils/py/board_sync.py:524` and string-only setter at :493. No further plan change required.
+- [Pass] **Selection, containment and completion remain explicit.** `PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:212` specifies qualified identities, complete current-state reads, terminal dates, PR handling and preservation; :243 defines exact Ready eligibility/order; :260 covers shared batch rollback; :279 defines saved-preview preflight and exclusion locking; :296 limits restore and reports residual cards. :306 and :314 require deterministic controls, reusable-command gates, live independent read-back and a no-op rerun. Retain these acceptance boundaries; diagnostics alone cannot close this task.
+
+No additional pre-existing build-blocking defect was found in the full plan sweep. Relevant existing source defects remain explicitly covered by its repair steps; this is not a repository-wide code audit. No tests, source artifacts, board/config changes or git commands were run. Only this relay file was edited.
+
+Relay closed (Approved), no further review turn needed. codex-author may proceed with the approved implementation and its required verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
