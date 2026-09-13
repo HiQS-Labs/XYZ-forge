@@ -107,4 +107,12 @@ handing off to codex-author — go to the codex-author window and say 'take your
 swept file: yes
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-13T20:37:06Z
+task: RELAY-gh605-plan-agy
+reviewer: agy
+status: Approved
+reviewed-head: 59ac7b2be07d6336474700a86e95e84d9d20d900
+added-range: 9994+1674
+added-sha256: d49985e930dcb37dd9e7c58d4247673aaf74d9be2344ffa7a21847efce416718
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
