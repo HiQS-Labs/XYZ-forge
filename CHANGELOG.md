@@ -2,6 +2,10 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-13
+
+- **CI: retire the StarSling runner; every job is GitHub-hosted.** The `starsling-ubuntu-24.04-8` pool silently stopped claiming jobs at 2026-09-12 06:30 UTC (the StarSling account had no organization linked), leaving five runs queued for ~20 h and forcing two PRs to land on locally-run gate evidence. PR #588 moved the merge-blocking `vendored-smoke` job to `ubuntu-latest`; this change moves the advisory `canary-ubuntu` job as well and tightens `test/ci-workflow.sh` to require `ubuntu-latest` and reject any `starsling-*` label. Reversibility: **Easy** — restore the two `runs-on` lines and the previous assertion. Verification: PR #588's gate ran on GitHub-hosted in 14 s; `test/ci-workflow.sh` green including the new negative assertion.
+
 ## 2026-09-12
 
 - **Skills: add `/sop` and `/whack-a-mole`; route skill management to Skills Army HQ.** Two prompt-only skills join `skills/`: `sop` (`skills/sop/SKILL.md`) recons a repo's SOP / runbook / lessons-learned docs, mines recent events from git, PRs, issues and incident files, grades evidence, and proposes additive diffs that apply only after approval; `whack-a-mole` (`skills/whack-a-mole/SKILL.md`) scans 14 days of issues, fix/revert commits and PR threads, clusters recurring bugs, ranks clusters by churn, and drafts one root-cause umbrella issue filed only on approval. Both carry `agents/openai.yaml` manifests and rows in the `ARCHITECTURE.md` Skills Index. `ROUTER.md` gains a routing hint naming `skills-army-hq` as the system's skill-management mechanism (`skills/` is the authoring source; the durable collection lives at `$XYZ_SKILLS_ROOT`, a new env var both manager scripts honor as the default `--root`; `intake.py`/`sync.py` own every mutation). Reversibility: **Easy** — delete the two skill folders and revert the three doc edits. Verification: both `SKILL.md` files carry valid `name`/`description` frontmatter; deployed via `intake.py --apply add` + `sync.py --apply` to all five enabled targets.

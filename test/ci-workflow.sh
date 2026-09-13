@@ -39,12 +39,17 @@ else
   fail "workflow missing or empty"
 fi
 
-# PR #151 moved the advisory canary job to a StarSling Ubuntu runner; either Ubuntu runner
-# label satisfies the "this workflow runs on Ubuntu" invariant this assertion pins.
-if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*(ubuntu-latest|starsling-ubuntu-[0-9.]+(-[0-9]+)?)[[:space:]]*$' "$WORKFLOW"; then
-  pass "workflow runs on an Ubuntu runner (ubuntu-latest or starsling-ubuntu-*)"
+# PR #151 trialled a third-party Ubuntu runner for the advisory canary; PR #588/#589 retired it after
+# the pool silently stopped claiming jobs. Every job must now be GitHub-hosted.
+if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*ubuntu-latest[[:space:]]*$' "$WORKFLOW"; then
+  pass "workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)"
 else
-  fail "workflow must declare runs-on: ubuntu-latest or starsling-ubuntu-*"
+  fail "workflow must declare runs-on: ubuntu-latest"
+fi
+if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*starsling-' "$WORKFLOW"; then
+  fail "workflow still references a starsling-* runner label"
+else
+  pass "no third-party runner labels remain"
 fi
 
 # GH-544 inverted these assertions while the source repo was private. XYZ-forge #16 restores them
