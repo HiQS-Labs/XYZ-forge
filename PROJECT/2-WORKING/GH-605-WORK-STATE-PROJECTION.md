@@ -21,9 +21,17 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| ae7006c8 published through378/378 full gate in879s; parent78Python and six shell suites pass; GH57 passes42/42 with witnessed red control | Review5 escalated: reproduced mock seed-ID defect and incomplete coverage remain; no live writes |
+| Seed correction830455e8 verified79/79; final relay6 Approved with complete19-file coverage; development7d26411a integrated | Finish upstream test-wrap integration correction, one final full gate, then live board apply/readback; no live writes yet |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
+Final authorized continuation: source review6 Approved (driver0, reviewed96261ab2,
+attestation94665101). All19files read toEOF; no remaining source findings. Seed counter
+fixed in830455e8, parent79Pythonpass, removed-line redcontrol fails and restoration passes.
+Development7d26411a integrated with canonicalledgerresolution, generation643checkclean.
+GH616 line rewraps expose GH615's brittle static match; a minimal test-only correction is
+being verified separately. One final full gate follows approval; then fresh boardpreview,
+auditedapply, independentreadback and zero-change rerun. Historical pauses below are not
+current blockers. No merge or automatic connector enablement is included.
 Current disposition supersedes historical continuation paragraphs below: review5/a9a69567
 closed the invalid-source, lease-ownership and queue-compaction findings but did not approve.
 The same lane is exhausted at5/5; operator continuation requested for the mock seed-ID

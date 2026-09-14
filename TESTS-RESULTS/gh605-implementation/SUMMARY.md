@@ -1,4 +1,13 @@
-# GH605 implementation evidence — not yet approved
+# GH605 implementation evidence — source approved, final gate pending
+
+## Final source approval:830455e8 / reviewed96261ab2
+
+Reviewer6 passed with complete19-file17729-line coverage; driver0 and attestation94665101.
+Seed counter correction is one line plus one26-line regression. Independent parent79Python
+passes; removing only the counter correction fails the new distinct-ID assertion, restoring
+returns51/51board-policygreen. Fullclone2 identity remainedclean. Development7d26411a is
+integrated (ledgergeneration643clean8existingwarnings). One finalfullgate will follow the
+small upstreamGH615 test-wrap correction and independent outer review. No livewrites yet.
 
 ## Latest candidate:ae7006c8ec702025f50de6d9b3a517b4579821d5
 
