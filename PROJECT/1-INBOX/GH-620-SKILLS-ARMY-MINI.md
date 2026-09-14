@@ -1,6 +1,6 @@
 ---
 title: "GH-620: XYZ Skills Army mini and reusable spin-off recipe"
-status: Active implementation
+status: Qualifying
 created: 2026-09-14
 updated: 2026-09-14
 owner: Codex
@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Phases 0–2 are implemented and focused checks pass; all three implementation-review rounds produced valid fixes. The pre-push full gate exposed and led to a fix for the new test's mktemp recapture guard; its other failure is the unchanged GH-615 baseline. | The branch remains approval-pending until a separately authorized review cycle can inspect the final seed and fixture-guard fixes; do not open a ready PR or publish the child yet. |
+| Phases 0–2 are implemented; the operator-authorized fresh Codex cycle approved the bounded publisher and test surface after its final ownership mutant passed. | Run one exact-SHA qualifying gate in a disposable full clone, then open the PR into `development`; do not publish the child before merge. |
 
 ## Goal and ownership
 
