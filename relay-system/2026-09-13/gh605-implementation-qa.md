@@ -707,4 +707,18 @@ swept file: no
 Handing off to codex-author (Producer) for Round 5 corrections — go to the Producer window
 and say "take your turn". No live apply before complete approval and qualifying gates.
 
+### Parent continuation for Producer round 5
+
+The operator authorized finishing corrections and verification. Resolve Round 4's two
+blockers and queue-position finding surgically, with direct regression controls and
+dispositions. Preserve independently trusted source identity without treating invalid URLs
+as valid. Resolve lease ownership inside the transaction. Compact positions only on exit
+from active states. No new subsystem or schema. Parent full gate on426f5825 failed:
+gh57-releases-fuzz.sh returned4 both parallel and serial (38 passed,4 failed); this remains
+unresolved, not a passing gate. Parent will investigate it in the separate full clone while
+you correct the three source findings. Do not run shell/full suites in this worktree.
+Run isolated Python fixtures, update FAQ/CHANGELOG if necessary, then hand back to Reviewer
+with ROUND5/5. Do not self-approve or push. Sol High owns implementation edits; parent owns
+verification receipts and final Astra review. Do not edit unrelated changes from PR611.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
