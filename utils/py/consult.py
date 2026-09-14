@@ -205,15 +205,19 @@ def advisor_answer_ok(out_path, model):
         body = body.split("\n\n", 1)[1] if "\n\n" in body else ""
     # codex's raw provenance lines (model:/provider:/sandbox:) are metadata, not an answer
     body = "\n".join(l for l in body.splitlines() if not re.match(r"^(model|provider|sandbox):", l))
-    if out_path.endswith(".json"):  # gemini JSON mode: judge the decoded response text, not the envelope
+    is_json = out_path.endswith(".json")
+    if is_json:  # gemini JSON mode: judge the decoded response text, not the envelope (preamble tolerated like src/cost.js)
         try:
             import json as _json
-            body = str(_json.loads(text).get("response", "") or "")
+            body = str(_json.loads(text[text.index("{"):]).get("response", "") or "")
         except (ValueError, AttributeError):
             body = ""
     if not body.strip():
-        with open(out_path, "a") as f:
-            f.write(f"\nconsult: {model} returned no visible content (exit 0, empty answer) — counted as FAILED.\n")
+        if not is_json:  # keep a JSON transcript byte-identical so the existing cost capture can still parse it
+            with open(out_path, "a") as f:
+                f.write(f"\nconsult: {model} returned no visible content (exit 0, empty answer) — counted as FAILED.\n")
+        else:
+            warn(f"{model} returned no visible content (exit 0, empty JSON response) — counted as FAILED")
         return False
     return True
 

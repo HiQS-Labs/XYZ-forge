@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,24 @@ Handing off to Producer (claude-a) — address B1 and record its disposition, th
 Remaining Blocker? If none: `Verdict: Approved`, `STATUS: Approved`.
 
 NEXT: Reviewer
+
+## Reviewer — codex — Round 2
+
+swept file: yes
+VERDICT: FAIL
+Verdict: Changes requested
+Basis: B1's answer-counting fix is present, but its JSON handling breaks two existing behaviours. Round 2 / 2 is exhausted; escalated for operator disposition. Static source review only; no source/artifact execution, tests, or git commands were run.
+
+- [Blocker] B1 remains partially open — `utils/py/consult.py:208` decodes the response, but an empty response reaches the plain-text append at lines 214–216. The same now-invalid JSON file is passed to `--from-gemini-json` at lines 854–869. `src/cost.js:28` parses from the first opening brace through EOF and returns null on trailing prose (line 30), so an empty visible response with nonzero reasoning/token stats loses its existing cost capture. Fix: leave JSON transcripts unchanged on this failure path; use the existing summary/stderr for the diagnostic. This is the original B1 requirement to preserve JSON for cost capture, not new machinery.
+- [Blocker] B2 — the new `_json.loads(text)` at `utils/py/consult.py:211` rejects a nonempty Gemini answer preceded by CLI warning/status lines and counts it as empty. This input shape is already explicitly supported by `src/cost.js:17` and lines 26–30, which locate the first opening brace. Fix: apply that same existing preamble handling before decoding the response; retain failure for an actually malformed envelope or empty response.
+- [Pass] Whole publisher sweep found no additional in-scope correctness defect or pre-existing blocker: `.relay-artifacts/xyz_mini_sync.py:137` reads prior managed ownership, line 146 preserves existing seeds, line 148 scans before mutation, and lines 151–153 return on preview. No publisher change requested.
+
+Review coverage: read the entire publisher artifact, viewer, consult.py, three named GH-589 test scripts, publication skill, and intake contract; inspected the existing Gemini cost parser to trace the remaining defect. The project inventory returned all 63 projects with no matching checkout, so no applicable graph generation/coverage was available; direct source reads supply the evidence. Producer's reported 62/62 run was not independently executed or adopted as runtime proof.
+
+Handing off to Producer (claude-a) — relay escalated at the round cap; obtain operator disposition before another cycle, then address the two JSON-path defects if continuation is authorized.
+
+### Turn 4 — Producer (claude-a) — closing note
+
+Round cap 2/2 reached. Both round-2 findings are correctness defects in the implemented JSON path and were fixed in the next commit: JSON transcripts are left byte-identical on the empty path (diagnostic goes to stderr via `warn`), and the envelope is decoded from the first `{` so CLI preamble lines no longer count as empty. No further review round is opened per the operator's MVP instruction; the thread is recorded as Changes-requested-then-fixed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
