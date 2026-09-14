@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Resumed on operator authorization; development PR611 merged; all seven review findings corrected in22533bb4;65/65 parent Python tests pass | Fresh gate and final independent review; then reviewed live board apply; no live writes yet |
+| Development PR611 merged;22533bb4 correction checkpoint passes65Python and six focused suites; original four red controls reverified | Final review escalated at3/3: three correctness gaps and mock/coverage follow-up remain; gate finishing; no live apply |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Implementation b9d784e9 incorporates the first independent code review's corrections.
@@ -36,7 +36,12 @@ brief was initially parked at the attempt cap. Operator authorized resuming; the
 was deliberately re-fired and22533bb4 addresses all seven findings with65Python tests passing
 in a separate full clone. Development PR611/ec0823ab is included via57bcbcc5, ledger histories
 combined by the canonical resolver (generation635, check clean). Final third review and fresh
-full gate are running/required; prior evidence below is historical, not fresh approval.
+full gate were started. Final review4b289868 returned FAIL/Escalated at3/3: actual jog
+drop/skip/requeue/recovery event paths remain incomplete; evidence as_of must be fresh even
+if created_at is refreshed; CLOSED issues need invalid/duplicate ledger preservation too.
+Also correct PR-card representation in the stateful mock and finish declared source coverage.
+These findings are accepted but unimplemented pending operator continuation beyond the cap.
+Current65Python, six shell suites and restored red-control tests pass; full gate still running.
 The normal full draft push gate passed377/377 in824s and published b9d784e9, independent
 from missing QA approval. Clone identity stayed clean and unchanged; no bypass was used.
 No live board writes, configuration changes, merge or deployment has occurred. PR607 remains

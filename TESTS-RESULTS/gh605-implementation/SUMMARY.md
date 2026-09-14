@@ -8,8 +8,14 @@ Sol High implemented all seven Reviewer round2 findings. Parent independent dire
 run in full clone2 passes65/65, including real jog writers, identity preservation, complete
 rerating, scoped repoint, real preview/apply/failure/restore and malformed acknowledgements.
 Builder reports four witnessed red controls in the relay (attributed, not parent reruns).
-Fresh six-suite run and full normal push gate are in progress in separate full clones.
-Final Reviewer round3 remains required; no current QA approval, no live board/config changes.
+All six focused suites pass. Parent repeated all four original red controls on22533bb4;
+each failed its named assertion, then restored65Python and sweep passed with clean clone identity.
+Fresh full normal push gate is running in separate clone1. Final Reviewer round3 returned
+FAIL/Escalated4b289868: three correctness gaps plus mock/coverage follow-up remain. Static
+findings accepted, not yet reproduced or fixed: actual jog stop operation names, stale as_of
+with fresh created_at, CLOSED-issue ledger ambiguity; mock PR-kind support and unswept ranges.
+The review cap is exhausted, so no new implementation/review or live apply without operator
+continuation. No current QA approval, no live board/config changes.
 
 ## Prior checkpoint: b9d784e9115fc73a908589a97f4fb8c05ecc1a95
 
