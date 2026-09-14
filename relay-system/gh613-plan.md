@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -77,5 +77,22 @@ Basis: R1–R3 accepted and the plan amended.
 - R2: Add bounded failure handling to existing consult cleanup: preserve the linked worktree, fail with an actionable path, never rmtree it. Add forced removal failure/recovery test. Shared consult radius named in plan.
 - R3: The boundary observation remains preliminary; its QA gate now requires committed reproducible probe/provenance plus a witnessed no-restriction negative control before implementation acceptance. Version/flags and whitelisted account results will be recorded, not raw identifiers. No unbacked promotion claim.
 Please review these focused plan corrections; full implementation remains pending. Return a literal verdict line. Handing off to Reviewer.
+
+## Reviewer — codex — round 2
+
+swept file: yes
+VERDICT: PASS
+Basis: The revised plan is implementable. R1–R3 have concrete dispositions, existing mechanisms remain the implementation seams, and runtime evidence remains an outstanding acceptance gate rather than a prerequisite to approving this plan.
+
+- [Pass] R1 resolved: Phase 1 step 5 explicitly says “no relay process-group or idle guarantee is claimed.” This matches the separate runners: `utils/py/claude-turn.py:186` uses subprocess.run, while `utils/py/consult.py:243` creates the owned session and `utils/py/consult.py:304` calls the shared group killer. Retain the separate consult descendant and relay token assertions during implementation.
+- [Pass] R2 resolved: Phase 1 step 6 requires “preserve the linked worktree and report an actionable error (exit 5)” and a forced removal failure/recovery fixture. This directly replaces the unsafe fallback at `utils/py/consult.py:841` through `:848`, and explicitly names the all-advisor impact. Implement the stated failure path without a second cleanup mechanism.
+- [Pass] R3 resolved for plan readiness: the Phase 0 QA gate now requires “Commit reproducible boundary probe and full secret-free provenance, including a no-restriction negative control.” Keep this gate open until the reproducible procedure and attributable evidence are committed; this verdict does not validate the native CLI observation.
+- [Pass] The five accepted changes remain bounded: Phase 1 steps 1–4 specify subscription fallback refusal, identical auth/request restriction flags, unconditional strict results, and shared optional effort flags with “cli-default” telemetry. Existing `utils/py/claude_cli.py:19` and `utils/py/claude_cli.py:52` supply the auth/result seams; extending them avoids duplicated policy. Preserve the specified native tool boundary and compatibility tests.
+- [Nit] The status row still says “restricted-mode spike passed” while its provenance gate remains open. At the next plan update, use “preliminary restricted-mode observation recorded; provenance pending” so the summary carries the same qualification as the gate.
+- [Nit] S4 still abbreviates the runner scope and says “worktree removed” without its failure exception. At the next plan update, mirror steps 5–6: consult descendants terminated; successful Git cleanup removes the worktree; forced removal failure preserves it and returns exit 5. The detailed steps already resolve the implementation ambiguity, so this is editorial.
+
+Review scope: swept the entire plan and read the Claude adapter, relay Python runner, consult Python runner, and process-group helper; inspected both shell dispatch boundaries. No additional in-scope pre-existing blocker was identified beyond the defects already covered by this plan and R2. Graph inventory returned all 62 projects with no current-worktree match; nearest XYZ-forge coverage generation 2026-09-01T15:54:30Z reports missing/changed/untracked freshness for the relevant paths. Direct local source reads therefore supplied the evidence; no graph completeness claim. No project source, probe, test, gate, or Git command was executed. Only this relay file was edited. Production implementation and its runtime validation remain pending.
+
+Relay closed (Approved), no further turn needed. Operator owns implementation and the outstanding evidence gates; the harness owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
