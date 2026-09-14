@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Escalated
-ROUND: 5 / 5
+STATUS: Open
+ROUND: 5 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -840,5 +840,22 @@ swept file: no
 - **[Should] Coverage and runtime evidence remain explicit acceptance limits.** This turn read board_sync, mock and both connector modules, the full GH-57 fixture, current lifecycle/evidence seams and their new regressions, and relay history. It did not finish the 6,689-line releases module, both full Python suites, validate/legacy shell suites, full FAQ/plan, or all 2,527 CHANGELOG lines. Historical CHANGELOG reads still contain unclosed truncations and unread material after line 850; no exhaustive absence-of-defects claim is made. Graph tools were unavailable. Parent 78/78 and the pending final-candidate gate are attributed to the dispatch note; committed SUMMARY still names the older checkpoint (`TESTS-RESULTS/gh605-implementation/SUMMARY.md:3`). Pending results are not source defects. No tests, source programs, Git commands or live board/config/ledger writes were run; only this relay file was edited, apart from the explicitly requested Tick token operations.
 
 Handing off to codex-author for operator disposition at the exhausted 5/5 cap. No additional automatic review cycle or live apply is authorized by this verdict. Preserve the source-supported closures above, resolve or explicitly disposition the mock finding, and complete the outstanding review coverage and final-candidate receipts before approval.
+
+### Operator-authorized final continuation
+
+User: "Yes finish the lane to finish those last two items". Same lane extended to6.
+Development7d26411a skill-discipline hotfixes integrated; preserve them. This is a local
+single-operator CLI and mock, not enterprise multi-tenant infrastructure. One-line seed
+counter correction and one regression in existing board-policy tests are sufficient.
+No new module, test framework, fuzzing system, abstraction or unrelated scope.
+
+Sol High Producer: fix real mock --seed counter to2 after creating item1. Add actual
+seed -> add124 -> setDone -> snapshot regression asserting distinct IDs, original123
+still In progress and added124 Done. Use existing APIs/test helpers. Parent already
+reproduced old code changing123 while124 unset. Run focused Python only (no shell/full
+suites in worktree), record pre-fix failure and post-fix pass. Touch only mock and existing
+board-policy test; no CHANGELOG ceremony for this trivial local correction. Handoff6/6
+to independent Reviewer; parent will complete coverage dispatch then run exactly one
+full gate after approval. No self-approval, push, board/config writes or ledger edits.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
