@@ -63,9 +63,9 @@ the upstream project. Keep local receipts and imported private skills private.
 
 ## Getting started
 
-Requires Python 3.9+; macOS is the supported alpha platform. From this package folder (the root of
-the Skills Army mini repository, or `skills/skills-army-hq/` inside XYZ Forge), choose a separate
-collection directory, preview initialization, then apply it:
+Requires Python 3.9+; macOS is the supported alpha platform. From this `skills-army-hq` package
+folder, choose a separate collection directory, preview initialization, then apply it. When starting
+at the generated child repository root, first `cd skills-army-hq` (or use the root README's paths):
 
 ```bash
 python3 ./scripts/intake.py --root "/path/to/Deployed Skills" init

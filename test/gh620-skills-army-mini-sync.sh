@@ -67,6 +67,22 @@ head = git(dest, "rev-parse", "HEAD").stdout.strip()
 r = publish("--push")
 ok("republication is idempotent", r.returncode == 0 and git(dest, "rev-parse", "HEAD").stdout.strip() == head)
 
+# A failed push leaves one exact publisher commit: rerun may push it, but an amended extra file may not.
+landing = pathlib.Path(src, "mini/skills-army-README.md")
+landing.write_text(landing.read_text() + "\nRetry fixture.\n")
+git(src, "add", str(landing)); git(src, "commit", "-qm", "publisher retry fixture")
+bad = os.path.join(WORK, "bad-retry"); git(WORK, "clone", "-q", bare, bad)
+r = sh(sys.executable, sync, "--target", "skills-army-mini", "--dest", bad, "--apply")
+pathlib.Path(bad, "UNRELATED.md").write_text("must not travel\n")
+git(bad, "add", "UNRELATED.md"); git(bad, "commit", "--amend", "--no-edit", "-q")
+bad_before = git(bad, "rev-parse", "HEAD").stdout.strip()
+r = sh(sys.executable, sync, "--target", "skills-army-mini", "--dest", bad, "--apply")
+ok("matching metadata plus unrelated amended file is not an exact retry", r.returncode == 2 and git(bad, "rev-parse", "HEAD").stdout.strip() == bad_before, r.stderr[-200:])
+r = publish("--apply")
+retry_head = git(dest, "rev-parse", "HEAD").stdout.strip()
+r = publish("--push")
+ok("exact retained publisher commit retries push", r.returncode == 0 and git(bare, "rev-parse", "refs/heads/main").stdout.strip() == retry_head, r.stderr[-300:])
+
 # Detached real-work smoke: every mutation is confined to WORK.
 collection = os.path.join(WORK, "collection")
 target = os.path.join(WORK, "target"); os.mkdir(target)

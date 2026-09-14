@@ -132,7 +132,7 @@ def expected_revision(sha, branch, dirty):
     return f"source_repo=XYZ-forge\nsource_sha={sha}\nsource_branch={branch}\nsource_dirty={int(dirty)}\n"
 
 
-def destination_ready(dest, managed, revision, message):
+def destination_ready(source, dest, files, managed, revision, message):
     """Refuse stale or unrelated history before writing; permit an exact failed-push retry."""
     current_branch = git(dest, "symbolic-ref", "--quiet", "--short", "HEAD", check=False)
     if current_branch.returncode != 0 or current_branch.stdout.strip() != "main":
@@ -151,11 +151,32 @@ def destination_ready(dest, managed, revision, message):
         subject = git(dest, "show", "-s", "--format=%s", head, check=False)
         old_manifest = git(dest, "show", f"{head}:{MANIFEST_FILE}", check=False)
         old_revision = git(dest, "show", f"{head}:{REVISION_FILE}", check=False)
+        remote_manifest = git(dest, "show", f"{remote}:{MANIFEST_FILE}", check=False)
+        changed = git(dest, "diff", "--name-only", remote, head, check=False)
         wanted_manifest = "".join(path + "\n" for path in managed)
         if (parent.returncode == subject.returncode == old_manifest.returncode == old_revision.returncode == 0
                 and parent.stdout.strip() == remote and subject.stdout.strip() == message
                 and old_manifest.stdout == wanted_manifest and old_revision.stdout == revision):
-            return
+            previous = set(remote_manifest.stdout.splitlines()) if remote_manifest.returncode == 0 else set()
+            allowed = set(managed) | previous | {MANIFEST_FILE, REVISION_FILE}
+            changed_paths = set(changed.stdout.splitlines()) if changed.returncode == 0 else {"<unreadable>"}
+            payload_matches = True
+            for src, dst, mode in files:
+                if mode != "managed":
+                    continue
+                source_path, dest_path = os.path.join(source, src), os.path.join(dest, dst)
+                if os.path.islink(dest_path) or not os.path.isfile(dest_path):
+                    payload_matches = False
+                    break
+                with open(source_path, "rb") as source_file, open(dest_path, "rb") as dest_file:
+                    if source_file.read() != dest_file.read():
+                        payload_matches = False
+                        break
+                if bool(os.stat(source_path).st_mode & 0o111) != bool(os.stat(dest_path).st_mode & 0o111):
+                    payload_matches = False
+                    break
+            if changed_paths <= allowed and payload_matches:
+                return
     raise Refuse("destination main is ahead, behind, or divergent from origin/main")
 
 
@@ -191,7 +212,7 @@ def main(argv=None):
         managed = sorted({d for _, d, m in files if m == "managed"})
         revision = expected_revision(sha, branch, dirty)
         message = f"sync: XYZ-forge@{sha[:12]} ({branch}){' [dirty source]' if dirty else ''}"
-        destination_ready(dest, managed, revision, message)
+        destination_ready(source, dest, files, managed, revision, message)
         prev_path = os.path.join(dest, MANIFEST_FILE)
         prev = set(open(prev_path).read().split()) if os.path.isfile(prev_path) else set()
         owned = prev | {MANIFEST_FILE, REVISION_FILE}
