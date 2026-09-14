@@ -17,7 +17,7 @@ issue_url: https://github.com/HiQS-Labs/XYZ-forge/issues/609
 
 | What was just completed | What's next |
 |---|---|
-| Skill enhancements implemented across 6 files, `test/gh609-sdlc-agent-gaps.sh` authored (33/33 passing with 6 non-empty size guards, 6 positive in-tree checks, 6 unmodified controls, and 15 adversarial negative controls), registered in `validate.sh`, full `./validate.sh` gate green. | Execute final Codex Relay QA (Round 3), run qualifying gate, push branch, and open PR. |
+| Final Codex Relay QA completed and approved (`STATUS: Approved`), test suite passing 33/33 assertions, full `./validate.sh` gate green. | Run qualifying validation gate, push branch, and open PR. |
 
 ---
 
@@ -112,6 +112,6 @@ Rather than fragmenting into separate single-purpose tools, the remediation exte
 7. [x] Author `test/gh609-sdlc-agent-gaps.sh` implementing the complete Acceptance Map above (positive contract presence, negative clause-removal mutations, empty-input size guards).
 8. [x] Register `gh609-sdlc-agent-gaps.sh` in `validate.sh`.
 9. [x] Run `test/gh609-sdlc-agent-gaps.sh` and pre-push self-check gate (`./validate.sh`).
-10. [ ] Execute final Codex Relay QA on completed diff.
+10. [x] Execute final Codex Relay QA on completed diff (`STATUS: Approved`).
 
 
