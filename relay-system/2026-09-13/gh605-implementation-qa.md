@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -508,5 +508,23 @@ append this relay file, preserving history. Emit honest swept file yes/no and PA
 Approve/tick done only if all blockers addressed and coverage complete; otherwise Escalated
 with concrete remaining findings at the cap. Do not self-fix. Parent handles remaining gates
 and live application after approval. No fresh review round beyond this cap is authorized.
+
+## Reviewer — codex — Round 3 final
+
+VERDICT: FAIL
+
+Basis: the seven repairs substantially improve the candidate, but lifecycle stop coverage and saved-preview freshness still have source-visible holes. Identity preservation also remains incomplete on the CLOSED issue path. This is the three-round cap: escalation, not authorization for another automated round or live apply. Findings below are static source review, not executed reproductions.
+
+swept file: no
+
+- **[Blocker] Real jog stop commands still bypass lifecycle emission (round 2 finding 1 only partially closed).** `utils/py/releases_app.py:1408` explicitly exempts `jog-drop`, `jog-retry`, `jog-skip`, and orphan reconciliation; actual drop and skip write terminal queue state through those operations (`:4536`, `:4541`, `:4601`). The corrected extractor cannot run for exempt operations. A recent roadmap-origin start followed by jog skip/drop remains eligible: current queue state is checked only for jog-origin starts (`:5287`), so the planner can still select In progress (`utils/py/board_sync.py:328`). Minimal fix: emit owned superseding lifecycle events for the actual status-changing CLI paths through the existing transaction seam; cover roadmap-start followed by actual drop/skip/requeue, plus orphan recovery where it changes lifecycle. The new helper-status fixtures (`test/test_gh605_work_state.py:402`) do not exercise these operation names. The `GH-N` resolution/ownership and ambiguous rollback repair itself is present at `utils/py/releases_app.py:1482` and tests `:445`.
+- **[Blocker] Refreshing only `created_at` revives stale policy evidence.** `_preview_age_ok` bounds creation age but merely requires `as_of <= now` (`utils/py/board_sync.py:1126`). Apply rebuilds against that saved, potentially arbitrarily old `as_of` (`:1176`). An otherwise unchanged old preview with refreshed creation time can therefore pass the digest/decision comparison while treating an expired start or completion as recent. `build_policy_preview` itself stamps creation independently of its supplied evidence clock (`:1120`). Minimal fix: bound the evidence clock by the same freshness window, validate its relationship to creation, and add a fixed-clock integration case that refreshes creation on an expired preview and expects zero remote requests. Existing future-date checks do not cover this case.
+- **[Blocker] Invalid/duplicate ledger preservation still falls through for CLOSED issues (round 2 finding 2 partially closed).** The CLOSED branch assigns Done/Backlog and continues before the ledger ambiguity guard (`utils/py/board_sync.py:305`, `:319`). Thus a valid-plus-invalid ledger pair, or multiple valid ledger rows, can move an existing CLOSED issue despite the controlling preserve-on-ambiguity contract. Minimal fix: guard known invalid/duplicate ledger identity before terminal selection too, while preserving the explicitly supported absence-of-ledger terminal case. Add recent-completed, old-completed, and NOT_PLANNED fixtures with ambiguous ledger rows. The current regression covers OPEN only (`test/test_gh605_board_policy.py:193`).
+- **[Pass] Round 2 findings 3–5 have concrete repairs.** The integration fixture now uses real preview/planner/apply/audit/restore with full-schema evidence (`test/test_gh605_board_policy.py:605`), including durable nonempty audit and partial-failure scenarios. Mutation acknowledgement validation occurs inside the audited request boundary (`utils/py/board_sync.py:734`, `:762`, `:842`), and restore exception status includes existing unmatched requests (`:1327`; regression `test/test_gh605_board_policy.py:558`). These are source-supported dispositions; the reported runtime passes remain attributed to producer/parent.
+- **[Pass] Round 2 findings 6–7 have concrete repairs.** Forced rerating removes the complete parsed rating/override span (`utils/py/releases_app.py:3315`, `:3681`) with round-trip fixtures (`test/test_gh605_work_state.py:323`). Repoint refuses multiple number matches and updates the resolved global ID (`utils/py/releases_app.py:3720`, `:3740`; ambiguity fixture `test/test_gh605_work_state.py:354`).
+- **[Should] Stateful mock cannot faithfully add a PR card.** Add resolves content IDs only from `issues`, then defaults an unknown ID to issue number zero and omits PR kind (`utils/py/mock_gh_board.py:220`, `:234`). Minimal fix: resolve both issue and PR IDs, preserve kind, and refuse unknown IDs. Extend the real preview/apply/restore fixture with an absent PR card and consume the mock snapshot rather than only its shadow board state; current integration coverage is a meaningful improvement but does not establish this path.
+- **[Should] Complete source coverage and retain final candidate evidence before approval.** This turn read the full plan including history, FAQ, mock, board planner/writer, GitHub connector, both Python test files, gh549 shell suite, and most of the full releases module. Remaining unswept material includes portions of the long historical CHANGELOG, validate, legacy wrappers/gh492/gh402, connector package initialization, and an output-truncated CLI-parser span of releases_app. Earlier-round reads are context, not this turn's complete sweep. Graph discovery found only a stale XYZ-forge generation (2026-09-01); requested coverage returned stale/excluded/missing paths, so no graph completeness claim is made. SUMMARY attributes 65/65 to candidate22533bb4, while the read provenance file ends with earlier candidate evidence. Pending parent gates are not a source defect; append the exact final-candidate receipts when available. No tests, Git commands, source edits, or live writes were performed by this reviewer.
+
+Handing off to codex-author — report these remaining findings to the operator and obtain an explicit continuation decision at the exhausted review cap. No further automatic review round or live application is authorized by this verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
