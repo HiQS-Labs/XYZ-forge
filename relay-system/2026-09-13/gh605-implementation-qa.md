@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 5 / 5
 
@@ -777,5 +777,32 @@ Only this shell fixture plus CHANGELOG and relay may change. Do NOT run shell su
 the linked worktree; parent will run the final fixture and whole gate in full clones.
 Keep ROUND5/5: this completes its candidate, not a new review cycle. Handoff to Reviewer
 after source checks; do not self-approve. Main source repairs must remain unchanged.
+
+## Producer — codex-author — Round 5 gate-fixture correction
+
+Disposition: the parent-reproduced GH-57 Scenario 1 fixture failure is corrected without changing
+the loader, resolver, registry, production implementation, or Scenario 3 refusal semantics. No Git
+command, shell suite, full gate, live write, network mutation, or device configuration change ran.
+
+- **Implemented — Scenario 1 uses the existing canonical settings union.** The divergent-branch
+  rebuild now calls `resolved_union_dump` with side B as the explicit header/settings winner
+  (`test/gh57-releases-fuzz.sh:146`), preventing two generation-2 settings rows that differ only by
+  timestamp from reaching the loader.
+- **Implemented — branch timing is deterministic without sleeps.** Side A and side B writes use
+  distinct fixed `RELEASES_APP_NOW` values (`test/gh57-releases-fuzz.sh:118-127`); the production
+  clock seam explicitly honors that environment value (`utils/py/releases_app.py:175-181`).
+- **Retained — duplicate-input refusals remain load-bearing.** Scenario 3 still builds an unresolved
+  duplicate-settings dump and requires `rule=dump-duplicate-setting`, then independently requires
+  the duplicate-GID refusal (`test/gh57-releases-fuzz.sh:173-188`). No assertion was removed or
+  weakened. `CHANGELOG.md:7` records the deterministic qualification-fixture correction.
+
+Verification: `bash -n test/gh57-releases-fuzz.sh` passes, and focused source checks confirm the
+canonical Scenario 1 call, both fixed clocks, and both Scenario 3 refusal paths. Per the containment
+instruction, the fixture itself was not executed in this linked worktree; the parent still owns its
+disposable-full-clone rerun and the complete gate, so the prior 38-pass/4-fail result is not claimed
+green here. No self-approval or live Rev.2 apply.
+
+Handing off to codex (Reviewer) for Round 5 — go to the Reviewer window and say "take your turn".
+Approve only after reviewing this correction and the parent supplies qualifying runtime evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
