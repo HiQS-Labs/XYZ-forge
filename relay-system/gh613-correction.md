@@ -71,4 +71,12 @@ Coverage limitation: graph project XYZ-forge is a different checkout, generation
 
 relay closed (Approved), no further turn needed. Operator owns the independent full gate and final publication bookkeeping.
 
+
+### Attestation · relay-drive — 2026-09-14T01:48:14Z
+task: RELAY-gh613-correction
+reviewer: codex
+status: Approved
+reviewed-head: 2cbfc53afd7922e881919612cc78a7b9c2d9eb3d
+added-range: 4727+3019
+added-sha256: 27f33dabd3c2ea86849636e3c9a90641fd5fdd0d1959f7622cc457184f6c453d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
