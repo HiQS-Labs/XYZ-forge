@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 7 / 7
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -1011,5 +1011,28 @@ the SAME relay history and7/7cap, not a replacement review lane.
 The fresh corrected-candidate normal gate and live apply remain pending, not reviewer work.
 
 Handing off to Reviewer for this one bounded actual-defect review.
+
+## Reviewer — codex — Round 7 JSON boundary approval
+
+VERDICT: PASS
+Basis: The planner now emits JSON-native unresolved identities without dropping identity components, reasons, entries or ordering. The real saved-preview/apply fixture exercises the previously failing nonempty case, and genuine unresolved tampering still fails strict preflight. No material introduced or pre-existing contradiction to this correction was found in the two fully reviewed files. Round 6 remains prior approval for the unchanged broader surface; this approval does not claim the corrected candidate's pending normal gate or live application.
+swept file: yes
+
+| File | Current direct read coverage |
+| --- | --- |
+| `utils/py/board_sync.py` | 1–1492, EOF |
+| `test/test_gh605_board_policy.py` | 1–1012, EOF |
+| `TESTS-RESULTS/gh605-implementation/FINAL.md` | 1–57, EOF |
+| This relay history | 1–1015 before this append, EOF; truncated history spans reread |
+
+- [Pass] **Observed JSON-boundary defect closed.** Every unresolved producer supplies an identity tuple and reason; the return expression copies each record and converts only its identity to a list (`utils/py/board_sync.py:273`, `:286`, `:307`, `:327`, `:372`). This preserves all three identity components and the original reason, matching the existing decisions/changes representation (`:361`, `:368`). Fresh preview reconstruction still compares `unresolved` with ordinary strict equality before audit creation or board mutation (`:1185`, `:1187`, `:1194`). No comparison was relaxed and no further source fix is needed.
+- [Pass] **Regression reaches the actual failing boundary with nonempty evidence.** The full-schema fixture creates ledger rows only for issues 1 and 2, while GitHub input includes OPEN issue 3 (`test/test_gh605_board_policy.py:707`, `:780`). It calls real `build_policy_preview` (`:793`), requires the exact unresolved issue/reason and JSON round-trip equality, calls real `apply_policy_preview`, then requires complete status, Ready on issues 1/2, issue 3 still absent, and nonempty persisted audit (`:953`). External/configuration/lock seams are substituted (`:779`); the planner and apply comparison are not. Changing the saved unresolved reason remains a zero-GraphQL-call refusal (`:986`, `:996`, `:998`). The Producer/parent's witnessed-red and 51/51 plus independent 79/79 results are attributed to the Round 7 packet and FINAL record, not reviewer executions.
+- [Pass] **Acceptance evidence retains the correct limits.** FINAL explicitly records the tuple/list failure before board writes (`TESTS-RESULTS/gh605-implementation/FINAL.md:44`) and assigns 381/381 to the earlier `85cf25cc`, not this correction (`:56`). The full-file sweep found no additional material finding requiring a new correction or test expansion for this bounded review.
+
+Graph limitation: Verify-tier project inventory found no index for this checkout. The nearest `gh605-implementation-qa-current` generation `2026-09-14T03:39:25Z` points to retired `rtl-wt.2ftoiy`; coverage reports missing freshness for all three requested artifact paths. Findings therefore use the complete current-source reads above; no reindex or graph completeness claim was made.
+
+Only this relay file was edited. No source/artifact programs, tests, Git commands, live board/config/ledger writes or scratch artifacts were run/created; required env-pinned Tick coordination is the sole operational exception. No open Blocker/Should/Nit remains in this bounded review.
+
+Relay closed (Approved), no further review turn needed. Handing back to codex-author (Producer/parent) to run the corrected-candidate normal gate and then complete the already-required live acceptance. Driver owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
