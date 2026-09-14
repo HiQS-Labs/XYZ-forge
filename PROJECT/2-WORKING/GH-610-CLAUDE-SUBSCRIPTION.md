@@ -21,18 +21,18 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implementation, public docs, and live Max account validation complete | Finish full push gate and publish the PR |
+| Implementation, public docs, live Max validation, and 376/376 full gate complete | Merge the reviewed PR after blocking hosted checks |
 
 ## Acceptance Criteria
 
 - [x] Registered regression and existing consult/Claude suites pass.
 - [x] Live subscription consult, reviewer and builder evidence retained with account details redacted.
 - [x] Public docs explain configuration and role/usage limits.
-- [ ] Full gate and independent review pass before landing.
+- [x] Full gate and independent review pass before landing.
 
 ## Merge evidence
 
-- Normal PR delivery; not merged. Full pre-push gate pending.
+- Source branch `codex/claude-subscription`; full pre-push gate green on `04e21ace` (376/376, 883 seconds, no pooled failures). PR and merge evidence follow below.
 
 ## Recon and scope
 
@@ -83,3 +83,5 @@ only by express's official verbs. The generated leaderboard is omitted from the 
   billing from a CLI name, token counts, or total_cost_usd.
 - Reviewers need protocol-file writes and tick handoff; read-only consult tool flags cannot
   be applied wholesale to relay review.
+
+Final source validation: `04e21ace`, normal full pre-push gate 376/376. Subsequent changes are documentation/evidence only.
