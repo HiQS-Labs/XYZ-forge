@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 5 / 5
 
@@ -760,5 +760,22 @@ or live apply.
 Handing off to codex (Reviewer) for Round 5 — go to the Reviewer window and say "take your turn".
 Review the three corrections, close the remaining full-file sweep, and approve only if the source and
 qualifying parent gates support it; no live Rev.2 apply before independent approval.
+
+### Parent final-candidate fixture repair before Reviewer5
+
+05eaee6a has78/78 builder-attributed Python passes. Before final Reviewer5, fix the
+reproduced gate fixture failure in test/gh57-releases-fuzz.sh (no production change).
+Parent instrumented Scenario1: naive union merges two generation2 settings rows differing
+only in updated_at seconds. Loader correctly refuses dump-duplicate-setting, causing4
+failures. Forced one-second branch gap reproduces exit4; existing resolved_union_dump
+instead yields42/42. The delay was diagnostic only and restored, not the proposed fix.
+Reuse existing resolved_union_dump for Scenario1. Make its differing timestamp input
+deterministic without sleeps, retain a concrete duplicate-setting refusal red control,
+and preserve Scenario3's real refusal checks. Read entire shell fixture first. No weakened
+loader, skipped test, arbitrary retry, new helper subsystem, or gate bypass.
+Only this shell fixture plus CHANGELOG and relay may change. Do NOT run shell suites in
+the linked worktree; parent will run the final fixture and whole gate in full clones.
+Keep ROUND5/5: this completes its candidate, not a new review cycle. Handoff to Reviewer
+after source checks; do not self-approve. Main source repairs must remain unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
