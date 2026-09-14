@@ -84,3 +84,32 @@ two controls, and every current managed payload byte and executable mode to matc
 The focused test adds an allowed exact-retry push and a same-metadata amended-extra-file refusal.
 
 Handing back to Codex for implementation re-review.
+
+## Codex implementation re-review — changes requested
+
+The child-root quick-start finding is resolved: the package README now scopes `./scripts/...` to the
+package directory and explicitly directs a child-root operator to enter it or use the landing README
+(`skills/skills-army-hq/README.md:64-74`; `mini/skills-army-README.md:12-20`). The retained-retry
+finding is only partially resolved.
+
+1. **Exact retained-publisher retry — still fail.** The guard allows every path in the previous
+   manifest, but validates bytes and executable mode only for files in the *current* managed payload
+   (`utils/py/xyz_mini_sync.py:160-178`). A matching-parent/subject/manifest/revision commit can
+   therefore retain or arbitrarily alter a previously managed path that the current manifest dropped
+   and still be accepted, even though the publisher itself would delete that path
+   (`utils/py/xyz_mini_sync.py:224-240`). That state is not the exact commit this run would generate.
+   The added mutant proves refusal only for a never-managed `UNRELATED.md`; it does not exercise a
+   dropped previously managed path (`test/gh620-skills-army-mini-sync.sh:70-84`). The same allowlist
+   also omits seed paths, so the default XYZ-mini profile can reject an otherwise exact retry when it
+   newly restores an absent seed such as `TODO.md` (`utils/py/xyz_mini_sync.py:55,161,225`). Compare
+   the retained commit's complete managed/seed result to the publication plan: current managed files
+   must match, previous-only managed files must be absent, and a seed changed by this publication must
+   match the generated commit.
+
+The fixed two-profile seam, closed Skills Army payload, child init path, wrapper, seven-phase
+playbook, and CI registration remain appropriately bounded. The graph's indexed development checkout
+predates the branch versions of the publisher and GH-620 test, so this re-review used direct source
+reads for those files; no tests or project gate were run in this reviewer turn.
+
+VERDICT: FAIL
+Basis: retained-retry validation still admits a non-publisher stale managed payload and can reject an exact default-profile seed retry
