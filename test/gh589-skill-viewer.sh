@@ -15,11 +15,12 @@ pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 
 # 1. against this repo: count equals ls | wc -l and the name set equals the folder set
-expected="$(ls "$REPO"/skills/*/SKILL.md | wc -l | tr -d ' ')"
+skill_files=("$REPO"/skills/*/SKILL.md)
+expected="${#skill_files[@]}"
 out="$(python3 "$VIEWER" --root "$REPO" 2>"$WORK/err")"; rc=$?
 got="$(printf '%s\n' "$out" | tail -1 | awk '{print $1}')"
 [ $rc -eq 0 ] && [ "$got" = "$expected" ] && pass "forge: viewer count $got == ls count $expected (rc=0)" || fail "forge: rc=$rc got=$got expected=$expected $(cat "$WORK/err" | head -3)"
-names_fs="$(ls -d "$REPO"/skills/*/SKILL.md | xargs -n1 dirname | xargs -n1 basename | sort | tr '\n' ' ')"
+names_fs="$(for f in "${skill_files[@]}"; do basename "$(dirname "$f")"; done | sort | tr '\n' ' ')"
 names_v="$(python3 "$VIEWER" --root "$REPO" --json | python3 -c 'import json,sys; print(" ".join(sorted(s["name"] for s in json.load(sys.stdin)["skills"]))+" ")')"
 [ "$names_fs" = "$names_v" ] && pass "forge: viewer name set equals the folder set" || fail "forge: name set mismatch"
 
