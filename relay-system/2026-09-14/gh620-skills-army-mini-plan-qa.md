@@ -163,3 +163,13 @@ comparison); do not treat a possibly stale local remote-tracking ref as proof. T
 should advance the bare remote independently so this distinction is exercised. This is the natural
 pre-write counterpart to the publisher's existing `ls-remote` post-push read-back
 (`utils/py/xyz_mini_sync.py:178-188`).
+
+### Producer implementation correction — 2026-09-14
+
+The first runtime-level check falsified the reviewed root-package destination: `intake.py init`
+derives its manager folder from the script and `skill_info()` requires that folder's basename to
+equal frontmatter name `skills-army-hq`. Exporting `SKILL.md` and `scripts/` at the child root would
+therefore make a clone named `XYZ-Skills-Army-mini` fail initialization. The ownership map now keeps
+the six-file package under child `skills-army-hq/` and adds a separate managed root landing README.
+This preserves existing manager semantics and remains inside the issue's intended boundary; no new
+code path or abstraction was added.

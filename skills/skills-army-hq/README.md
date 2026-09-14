@@ -36,7 +36,15 @@ durable collection of local skills. Ask it to “list my deployed skills”, “
 this local skill folder”, or “preview syncing my skills to the configured apps”.
 The agent instructions live in the skill folder's `SKILL.md`.
 
-## Where this copy lives
+## Source ownership
+
+XYZ Forge is the authoritative source for this managed package. The
+`HiQS-Labs/XYZ-Skills-Army-mini` repository is a generated projection: change managed files in
+XYZ Forge, merge them, and republish. Do not maintain equivalent patches in both repositories.
+Local collections and their receipts, targets, catalogs, history, backups, and imported skills are
+operator-owned state and are never part of the generated repository.
+
+## Where an installed copy lives
 
 Initialization copies the **entire skill folder**, including this README, into
 `~/git-pulse-sync/Deployed Skills/skills-army-hq/`. Updating the manager refreshes this
@@ -55,12 +63,13 @@ the upstream project. Keep local receipts and imported private skills private.
 
 ## Getting started
 
-Requires Python 3.9+; macOS is the supported alpha platform. From an existing local
-checkout, preview initialization, then apply it:
+Requires Python 3.9+; macOS is the supported alpha platform. From this package folder (the root of
+the Skills Army mini repository, or `skills/skills-army-hq/` inside XYZ Forge), choose a separate
+collection directory, preview initialization, then apply it:
 
 ```bash
-python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py init
-python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py --apply init
+python3 ./scripts/intake.py --root "/path/to/Deployed Skills" init
+python3 ./scripts/intake.py --root "/path/to/Deployed Skills" --apply init
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
 ```
 
