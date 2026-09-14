@@ -733,7 +733,8 @@ class PolicyIntegrationTests(unittest.TestCase):
                 {"id": value, "name": name} for name, value in self.ids["options"].items()]}},
             "issues": {"owner/repo": {
                 "1": {"id": "content-1", "state": "OPEN"},
-                "2": {"id": "content-2", "state": "OPEN"}}},
+                "2": {"id": "content-2", "state": "OPEN"},
+                "3": {"id": "content-3", "state": "OPEN"}}},
             "pull_requests": {"owner/repo": {}},
             "items": [{"id": "item-1", "content_id": "content-1",
                        "repository": "owner/repo", "number": 1, "field_values": {}}],
@@ -776,7 +777,7 @@ class PolicyIntegrationTests(unittest.TestCase):
         return data
 
     def _patches(self):
-        github = [issue(1), issue(2)]
+        github = [issue(1), issue(2), issue(3)]
         return (
             mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY),
             mock.patch.object(board_sync, "_policy_board_cfg", return_value={
@@ -951,15 +952,22 @@ class PolicyIntegrationTests(unittest.TestCase):
 
     def test_real_preview_complete_apply_has_nonempty_durable_audit(self):
         preview = self._build_preview()
+        self.assertEqual(preview["unresolved"], [{
+            "identity": ["owner/repo", "issue", 3],
+            "reason": "duplicate/missing ledger or board identity",
+        }])
         preview_path = self.root / "preview.json"
         result_path = self.root / "result.json"
         preview_path.write_text(json.dumps(preview))
+        self.assertEqual(json.loads(preview_path.read_text())["unresolved"],
+                         preview["unresolved"])
         patches = self._patches()
         with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6]:
             result = board_sync.apply_policy_preview(self.root, preview_path, result_path)
         self.assertEqual(result["status"], "complete")
         self.assertEqual(self.board[1]["status"], "Ready")
         self.assertEqual(self.board[2]["status"], "Ready")
+        self.assertNotIn(3, self.board)
         persisted = json.loads(result_path.read_text())
         self.assertTrue(persisted["operations"])
         self.assertTrue(all(x.get("outcome") == "success" for x in persisted["operations"]
@@ -975,6 +983,8 @@ class PolicyIntegrationTests(unittest.TestCase):
         cases["digest"] = digest
         target = json.loads(json.dumps(base)); target["changes"][0]["after"] = "Done"
         cases["target"] = target
+        unresolved = json.loads(json.dumps(base)); unresolved["unresolved"][0]["reason"] = "changed"
+        cases["unresolved"] = unresolved
         for name, preview in cases.items():
             with self.subTest(name=name):
                 preview_path = self.root / ("preview-%s.json" % name)

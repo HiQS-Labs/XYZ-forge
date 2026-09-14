@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/605
 title: Work-state projection correctness
 status: In progress
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-14
 owner: Codex
 goal: Make lifecycle events consistent and expose unknown projection readiness without guessing activity.
 reversibility: Costly
@@ -21,15 +21,17 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Seed correction830455e8 verified79/79; final relay6 Approved with complete19-file coverage; development7d26411a integrated | Finish upstream test-wrap integration correction, one final full gate, then live board apply/readback; no live writes yet |
+| Seed and full-source review complete; 85cf25cc gate passed381/381; live acceptance exposed saved-JSON tuple/list mismatch before writing | Verify surgical JSON-boundary correction, then fresh live apply/readback; PR607 returned to draft, no board writes |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Final authorized continuation: source review6 Approved (driver0, reviewed96261ab2,
 attestation94665101). All19files read toEOF; no remaining source findings. Seed counter
 fixed in830455e8, parent79Pythonpass, removed-line redcontrol fails and restoration passes.
-Development7d26411a integrated with canonicalledgerresolution, generation643checkclean.
-GH616 line rewraps expose GH615's brittle static match; a minimal test-only correction is
-being verified separately. One final full gate follows approval; then fresh boardpreview,
+Development4ee561ed integrated with canonical ledger resolution, generation648.
+GH615's minimal test-only line-wrap correction passed Sol authorship and independent
+Astra outer review: GH615 8/8, GH616 7/7; incoming GH617 9/9 and GH365 16/16.
+The earlier partial gate was interrupted before publication to integrate GH617;
+the settled candidate's final normal gate is running. Then fresh board preview,
 auditedapply, independentreadback and zero-change rerun. Historical pauses below are not
 current blockers. No merge or automatic connector enablement is included.
 Current disposition supersedes historical continuation paragraphs below: review5/a9a69567

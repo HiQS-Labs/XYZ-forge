@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 6 / 6
+NEXT: Reviewer
+STATUS: Open
+ROUND: 7 / 7
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -968,4 +968,46 @@ status: Approved
 reviewed-head: 96261ab2667484feb91cf4cd0e0d09545827cb1e
 added-range: 92797+7083
 added-sha256: f5d69bd88a0da37cab1e851507b7972996482748b7340380a07a384f4cb0425e
+## Producer — Round 7: actual live acceptance JSON boundary correction
+
+VERDICT: PARKED
+Basis: Round6 approval remains historical evidence. The final gate on85cf25cc passed381/381
+in795s and pushed normally, but the subsequent real apply failed before writing because
+fresh unresolved identity tuples differ from the saved JSON arrays. This is an observed
+core acceptance failure, not speculative review scope. Under the operator's instruction
+to finish the lane, this same lane gets ONE bounded correction review (7/7), not a restart.
+
+Disposition: Implemented — Sol High normalizes unresolved identities at the planner output
+boundary. Existing real integration fixture now includes missing-ledger OPEN issue3,
+asserts JSON-native equality, successful apply, preserved unknown, and genuine unresolved
+tampering refusal. No comparison is relaxed. Parent independently79/79pass; Sol witnessed
+the enriched test fail before fix and51/51pass after. Parent and Sol source hashes match.
+Parent log SHA2565e9256a1314e9bad30f642aac102f0bcb2e813e4eb63b30d42f053ab05489fef.
+
+### Current bounded review packet (supersedes historical artifact breadth for this turn)
+
+Operational envelope: local developer CLI, explicit single-board apply. Commensurate
+complexity: no new frameworks, enterprise scenarios, or speculative test expansion.
+Read this relay history, then WHOLE current `utils/py/board_sync.py` and
+`test/test_gh605_board_policy.py`, plus `TESTS-RESULTS/gh605-implementation/FINAL.md`.
+Other production is unchanged since Round6; do not redo the unrelated 17,729-line sweep.
+This is fresh review of the changed JSON seam, with prior approval attributed correctly.
+
+1. Does output normalization preserve every unresolved identity/reason and make real
+   build-preview -> JSON save -> apply compare equal for identical evidence?
+2. Does the existing integration fixture now exercise nonempty unresolved through the
+   actual apply boundary and preserve the unknown issue, while rejecting real tampering?
+3. Do the entire two touched files reveal a material contradiction to this correction?
+   Require concrete reachable acceptance evidence; do not request speculative machinery.
+
+Review only: ALLOW_PATHS empty. Edit only this relay file, no tests/fullgate/Git/source edits
+or live network/config writes. Parent owns verification in separate full clones.
+Report concise cited findings, VERDICT PASS/FAIL, Basis, literal swept file: yes/no,
+and exact read coverage. Approve only if correct; otherwise hand back one concrete fix.
+Complete within8minutes. On PASS set STATUS Approved/NEXT Producer and mark the existing
+RELAY-gh605-implementation-qa token done using the shipped tick CLI; driver owns commit.
+The fresh corrected-candidate normal gate and live apply remain pending, not reviewer work.
+
+Handing off to Reviewer for this one bounded actual-defect review.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1,4 +1,9 @@
-# GH605 implementation evidence — source approved, final gate pending
+# GH605 implementation evidence — live JSON-boundary correction under verification
+
+Current status is in FINAL.md. The 85cf25cc gate passed 381/381 in795s and pushed
+normally. A subsequent live acceptance probe refused tuple/list unresolved drift
+before any mutation. The surgical producer normalization and enriched existing
+integration fixture are now under bounded fresh review; no live board writes yet.
 
 ## Final source approval:830455e8 / reviewed96261ab2
 
@@ -6,8 +11,13 @@ Reviewer6 passed with complete19-file17729-line coverage; driver0 and attestatio
 Seed counter correction is one line plus one26-line regression. Independent parent79Python
 passes; removing only the counter correction fails the new distinct-ID assertion, restoring
 returns51/51board-policygreen. Fullclone2 identity remainedclean. Development7d26411a is
-integrated (ledgergeneration643clean8existingwarnings). One finalfullgate will follow the
-small upstreamGH615 test-wrap correction and independent outer review. No livewrites yet.
+integrated. The upstream GH615 test-wrap correction passed independent outer review,
+GH615 8/8 and GH616 7/7. Latest development GH617 (4ee561ed) is integrated in
+85cf25cc, ledger generation 648; GH617 passes 9/9 and GH365 passes 16/16.
+The partial ef231262 gate was deliberately interrupted (exit 143, no publication)
+to resolve the incoming development ledger conflict. The settled 85cf25cc candidate
+is now running its final normal push gate. Approved Kanban code and GH605 tests are
+unchanged from reviewed 96261ab2. No live writes yet.
 
 ## Latest candidate:ae7006c8ec702025f50de6d9b3a517b4579821d5
 

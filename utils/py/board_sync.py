@@ -369,7 +369,8 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
                             "before": before, "after": target, "reason": reasons[ident]})
     return {"as_of": as_of_dt.isoformat().replace("+00:00", "Z"),
             "decisions": decisions, "changes": changes, "warnings": warnings,
-            "unresolved": unresolved, "ready_selected": [list(i) for i in sorted(selected)]}
+            "unresolved": [dict(item, identity=list(item["identity"])) for item in unresolved],
+            "ready_selected": [list(i) for i in sorted(selected)]}
 
 
 # ── candidate extraction (offline) ─────────────────────────────────────────────

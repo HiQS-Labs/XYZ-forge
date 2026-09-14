@@ -2,6 +2,8 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+- **GH-605: preserve JSON-native unresolved identities across saved preview/apply.** Normalize planner output once so unchanged unknown evidence survives JSON round-tripping; retain exact drift refusal. Existing real integration fixtures now include a missing-ledger issue, assert it stays untouched, and reject tampered unresolved evidence. Reversibility: Easy, revert the output normalization. Verification: witnessed failing regression before correction and 51/51 focused board tests after.
+
 ## 2026-09-13
 
 - **GH-605 qualification: make the GH-57 merge-fuzz fixture deterministic.** Divergent branch writes now use fixed, distinct clocks, and Scenario 1 reuses the existing canonical union helper so one winning settings row reaches rebuild; Scenario 3 still proves that unresolved duplicate settings fail closed. Reversibility: **Easy** — restore the wall clock and naive Scenario 1 union. Verification: shell syntax and focused source checks in the relay worktree; the parent owns the fixture and full-gate runs in disposable full clones.
