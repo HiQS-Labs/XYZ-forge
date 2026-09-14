@@ -164,7 +164,16 @@ def destination_ready(source, dest, files, managed, revision, message):
             payload_matches = all(not os.path.lexists(os.path.join(dest, old))
                                   for old in previous - set(managed))
             for src, dst, mode in files:
-                if mode != "managed" and not (mode == "seed" and dst in changed_paths):
+                if mode == "seed":
+                    remote_seed = git(dest, "cat-file", "-e", f"{remote}:{dst}", check=False).returncode == 0
+                    if remote_seed:
+                        if dst in changed_paths:
+                            payload_matches = False
+                        continue
+                    if dst not in changed_paths:
+                        payload_matches = False
+                        continue
+                elif mode != "managed":
                     continue
                 source_path, dest_path = os.path.join(source, src), os.path.join(dest, dst)
                 if os.path.islink(dest_path) or not os.path.isfile(dest_path):
