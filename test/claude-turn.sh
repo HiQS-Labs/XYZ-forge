@@ -25,6 +25,7 @@ STUB="$WORK/claude"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+printf "fixture CLI diagnostic\n" >&2
 printf '%s\n' "$*" > "$WORK/claude-args" 2>/dev/null || true
 export TICK_REPO_ROOT="$A"
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
@@ -86,6 +87,8 @@ RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-log CL
   bash "$SHIM" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "CLAUDE_LOG inside the tree is ignored (turn still succeeds)" || fail "log-in-tree should not fail the turn (rc=$rc)"
 [ ! -f "$A/claude.log" ] && pass "transcript log cleaned up (not committed)" || fail "log should be removed"
+grep -q "fixture CLI diagnostic" "$A/claude.log.stderr" && pass "in-tree stderr retained outside the artifact commit" || fail "stderr diagnostic lost"
+if git -C "$A" ls-files --error-unmatch claude.log.stderr >/dev/null 2>&1; then fail "stderr committed as artifact"; fi
 
 # --- (3) allowlist violation: off-lane edit -> reverted + fail (exit 6) --
 seed_token RELAY-TURN-bad

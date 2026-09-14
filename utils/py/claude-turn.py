@@ -111,6 +111,14 @@ def main():
                 stub_f.write("exit 127\n")
             os.chmod(stub_path, 0o755)
 
+    # The parent owns this diagnostic file; snapshot it before agent changes so
+    # custom in-tree logs are preserved without counting as an agent edit.
+    stderr_setup_error = None
+    try:
+        with open(claude_stderr, "a"):
+            pass
+    except OSError as error:
+        stderr_setup_error = error
     rtl.before()
     
         # GH-320: this default MUST match the Bash twin's `${RELAY_TURN_TIMEOUT_S:-N}` and the
@@ -133,7 +141,9 @@ def main():
     # a turn EARLY when it is genuinely stuck, and it is builder-agnostic; the wall cap is the
     # backstop behind it and has no reason to vary by agent.
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
-    bounded_rc = 0
+    bounded_rc = 5 if stderr_setup_error else 0
+    if stderr_setup_error:
+        print(f"claude-turn: cannot prepare CLI diagnostics: {claude_stderr}: {stderr_setup_error}", file=sys.stderr)
     
     wt = ""
     run_cwd = root

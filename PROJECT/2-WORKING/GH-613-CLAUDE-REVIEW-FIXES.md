@@ -136,8 +136,10 @@ requested through the shipped adapter, no execution wrapper. Full gate remains p
 
 - Strict parsing requires real success envelopes in old CLI stubs; never special-case
   fixtures or discard the result stream.
-- Diagnostic logs must use the resolved coordination root, including vendored layouts.
+- Diagnostic logs follow the selected JSON transcript path. Create parent-owned sidecars before the containment snapshot so custom in-tree diagnostics survive without becoming artifact commits.
 - An outside-read denial alone is weak evidence; use random markers and a deliberately
   authorized extra-directory control. Do not infer a prior data leak from a review concern.
 
 Final full-gate correction: the 83995bf3 gate passed 371/376. Four failures exposed a mismatched committed ledger pair; regenerated both files through `releases check --rebuild`. The archive containment failure exposed stderr resolving independently of custom `CLAUDE_LOG`; diagnostics now use the selected JSON path plus `.stderr`, retaining its archive/custom location. Isolated archive, ledger and subscription regressions pass; full corrected gate follows. Earlier tick-root stderr review is superseded by this sidecar correction.
+
+The custom in-tree transcript regression then exposed the new stderr sidecar as an off-lane edit. Prepare that parent-owned file before the existing dirty-state snapshot; setup failures still traverse normal turn enforcement. Extended the existing Claude suite to require retained diagnostic content and exclude it from the artifact commit (37 checks pass); archive mode also passes 16 checks.

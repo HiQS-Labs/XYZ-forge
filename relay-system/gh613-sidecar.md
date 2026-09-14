@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -40,7 +40,7 @@ ROUND: 1 / 2
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: `utils/py/claude-turn.py`, `test/claude-turn.sh`, `relay-automation/README.md`
 - Reviewer: codex   ·   Producer: operator
 - Started: 2026-09-13
 - Definition of Done: Reuse approved full review relay-system/gh613-final.md and correction review gh613-correction.md. Review final bounded correction at 4358f276: claude-turn.py now puts stderr beside selected JSON path as .stderr, avoiding archive target-tree leakage. Inspect complete changed function and docs; test/archive-commit.sh and relay-target-root.sh are regression witnesses. Evidence archive-fixed.log (16 pass), ledger-fixed.log (10 pass), focused-sidecar.log (12 Python and 4 Bash). Ledger pair regenerated with official check --rebuild after 371/376 superseded gate (four ledger failures, one archive failure); corrected full gate running separately, do not claim passed. Review only, no execution or git operations in linked worktree; only append this relay. Cite findings, literal VERDICT: PASS/FAIL, Basis:, swept file: yes.
@@ -75,3 +75,6 @@ relay closed (Approved), no further turn needed. Producer/operator owns correcte
 
 ### System · relay-drive — 2026-09-14T02:03:56Z
 terminal STATUS Approved written by builder-role turn (codex) — reverted
+
+## Producer — operator — follow-up
+The previous reviewer PASS was not attested because the driver omitted --reviewer; this rerun supplies the correct role configuration. A full-gate compatibility case subsequently found custom in-tree stderr treated as an off-lane agent edit. The parent now creates its diagnostic sidecar before rtl.before(), retaining setup errors for normal failure/enforcement instead of leaking claims. Review the complete changed function and new test assertions requiring stderr content retained and no artifact commit. Existing isolated claude suite now passes 37 and archive 16. Reuse prior full reviews; no code/test execution in review worktree. Do not assert the full gate is green until separately completed. Append literal VERDICT, Basis, swept file.
