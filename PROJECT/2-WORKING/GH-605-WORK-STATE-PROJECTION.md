@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Development PR611 merged;22533bb4 correction checkpoint passes65Python and six focused suites; original four red controls reverified | Final review escalated at3/3: three correctness gaps and mock/coverage follow-up remain; gate finishing; no live apply |
+| Development PR611 merged;22533bb4 passes65Python, six focused suites and378/378 full gate; correction code published | Final review escalated at3/3: three correctness gaps and mock/coverage follow-up remain; operator continuation required; no live apply |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Implementation b9d784e9 incorporates the first independent code review's corrections.
@@ -41,7 +41,9 @@ drop/skip/requeue/recovery event paths remain incomplete; evidence as_of must be
 if created_at is refreshed; CLOSED issues need invalid/duplicate ledger preservation too.
 Also correct PR-card representation in the stateful mock and finish declared source coverage.
 These findings are accepted but unimplemented pending operator continuation beyond the cap.
-Current65Python, six shell suites and restored red-control tests pass; full gate still running.
+Current65Python, six shell suites and restored red-control tests pass. Full normal gate passed
+378/378 in854s; gh32 failed in parallel then passed sequential retry.22533bb4 is published,
+clone identity intact, no bypass. This does not replace the missing final QA approval.
 The normal full draft push gate passed377/377 in824s and published b9d784e9, independent
 from missing QA approval. Clone identity stayed clean and unchanged; no bypass was used.
 No live board writes, configuration changes, merge or deployment has occurred. PR607 remains

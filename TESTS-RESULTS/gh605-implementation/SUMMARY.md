@@ -10,7 +10,10 @@ rerating, scoped repoint, real preview/apply/failure/restore and malformed ackno
 Builder reports four witnessed red controls in the relay (attributed, not parent reruns).
 All six focused suites pass. Parent repeated all four original red controls on22533bb4;
 each failed its named assertion, then restored65Python and sweep passed with clean clone identity.
-Fresh full normal push gate is running in separate clone1. Final Reviewer round3 returned
+Fresh full normal push gate passed378/378 in854s in separate clone1 and published22533bb4.
+gh32 failed under parallel execution then passed the standard sequential retry; retained log
+preserves both outcomes. Clone identity stayed clean; no bypass or promotion claim.
+Final Reviewer round3 returned
 FAIL/Escalated4b289868: three correctness gaps plus mock/coverage follow-up remain. Static
 findings accepted, not yet reproduced or fixed: actual jog stop operation names, stale as_of
 with fresh created_at, CLOSED-issue ledger ambiguity; mock PR-kind support and unswept ranges.
