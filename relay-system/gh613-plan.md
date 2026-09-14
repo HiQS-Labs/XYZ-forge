@@ -95,4 +95,12 @@ Review scope: swept the entire plan and read the Claude adapter, relay Python ru
 
 Relay closed (Approved), no further turn needed. Operator owns implementation and the outstanding evidence gates; the harness owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-09-14T01:28:05Z
+task: RELAY-gh613-plan
+reviewer: codex
+status: Approved
+reviewed-head: 819683a44ed4a71c5ecd67de0dd05b735648dc6e
+added-range: 8945+3436
+added-sha256: 24f48a3e4141d0d28e180cacd2ea7a6d6752f63669a81ac344d0514362d0b4ed
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
