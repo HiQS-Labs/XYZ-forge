@@ -8,7 +8,7 @@ import json
 import shutil
 from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root, rtl_default_log
 from turn_diagnostics import TurnDiagnostics
-from claude_cli import resolve_binary, preflight, read_result
+from claude_cli import resolve_binary, preflight, read_result, effort_flags
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -65,6 +65,10 @@ def main():
         sys.exit(3)
         
     allow_paths = os.environ.get("ALLOW_PATHS", "")
+    try:
+        native_effort = effort_flags(os.environ)
+    except ValueError as error:
+        die(str(error))
     peer = os.environ.get("RELAY_PEER", "")
     tick_repo_root = os.environ.get("TICK_REPO_ROOT", root)
     
@@ -87,6 +91,7 @@ def main():
     # with the machine. Stays pure JSON (the cost block is json.load-parsed below), so no rtl
     # trace lines are pointed here — unlike the codex/agy logs, which are plain text.
     claude_log = os.environ.get("CLAUDE_LOG") or rtl_default_log(root, "claude-turn", t)
+    claude_stderr = rtl_default_log(root, "claude-stderr", t)
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
     max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
     max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
@@ -174,7 +179,7 @@ def main():
         "--output-format", "json",
         "--max-turns", str(max_turns),
         "--max-budget-usd", str(max_budget)
-    ]
+    ] + native_effort
     cmd = [resolved_claude, "-p", prompt] + claude_cli_flags
     
     # Sample the turn while it runs so an exit-7 timeout can be attributed to a
@@ -182,12 +187,12 @@ def main():
     # nothing can be probed after the fact — see turn_diagnostics.
     diag = TurnDiagnostics(worktree=run_cwd)
     if bounded_rc == 0:
+        print(f"claude-turn: CLI diagnostics: {claude_stderr}", file=sys.stderr)
         diag.start()
         try:
-            with open(claude_log, "w") as log_f:
-                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stdin=subprocess.DEVNULL, check=True)
-            if run_env.get("CLAUDE_AUTH_MODE") == "subscription":
-                read_result(claude_log)
+            with open(claude_log, "w") as log_f, open(claude_stderr, "w") as err_f:
+                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=err_f, stdin=subprocess.DEVNULL, check=True)
+            read_result(claude_log)
         except ValueError as error:
             print(f"claude-turn: {error}", file=sys.stderr)
             bounded_rc = 5
@@ -281,7 +286,7 @@ def main():
             # anthropic/claude-3-7-sonnet in harnesses.db.
             model_id=model,
             gateway=os.environ.get("CLAUDE_GATEWAY", "anthropic"),
-            reasoning_effort=os.environ.get("CLAUDE_REASONING_EFFORT", "high"),
+            reasoning_effort=native_effort[1] if native_effort else "cli-default",
             cli_flags=claude_cli_flags,
             repo_root=xyz_root,
         ) as logger:

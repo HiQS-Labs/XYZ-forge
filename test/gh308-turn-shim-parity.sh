@@ -35,6 +35,7 @@ export TICK_REPO_ROOT="$A"
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
 printf '\n### Round 1 · Builder (claude-stub)\n**Verdict:** Changes requested\n' >>"$RELAY_FILE"
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to gemini >/dev/null 2>&1
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -48,7 +49,7 @@ seed_token RELAY-TURN-drift
 tick_a drift "src/project.js" --agent codex --task post-commit --prior-sha aaa --current-sha bbb --diff-lines 9 >/dev/null 2>&1
 
 RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-drift CLAUDE_AGENT=claude-builder \
-  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
   bash "$SHIM" >/dev/null 2>&1; rc=$?
 brief="$(cat "$WORK/claude-args" 2>/dev/null || true)"
 [ "$rc" -eq 0 ] && pass "claude-turn default lane: turn still completes with a peer drift pending (exit 0)" \
@@ -63,7 +64,7 @@ fi
 seed_token RELAY-TURN-nodrift
 : > "$WORK/claude-args"
 RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-nodrift CLAUDE_AGENT=claude-builder \
-  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
   bash "$SHIM" >/dev/null 2>&1
 brief2="$(cat "$WORK/claude-args" 2>/dev/null || true)"
 grep -qi 'dependency.drift\|dependency-drift\|cross-agent dependency' <<<"$(printf '%s' "$brief2")" \

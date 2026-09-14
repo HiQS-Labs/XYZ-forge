@@ -20,7 +20,7 @@ reversibility: Easy
 
 | What was just completed | What's next |
 |---|---|
-| Opus findings adjudicated; restricted-mode spike passed | Plan relay QA, implementation and PR |
+| Plan relay Approved; implementation and fixtures written | Implementation verification, final QA and PR |
 
 ## Table of contents
 - [Recon map](#recon-map)
@@ -72,8 +72,8 @@ establish distinct incident velocity; trend unknown. No operator override.
 
 ### QA gate
 - [x] Happy read and denied read observed; no real private file accessed.
-- [ ] Commit reproducible boundary probe and full secret-free provenance, including a no-restriction negative control.
-- [ ] Plan independently approved before production edits.
+- [ ] Commit reproducible boundary probe and full secret-free provenance, including a authorized-extra-directory negative control.
+- [x] Plan independently approved before production edits.
 
 ## Phase 1 — Implement and verify
 
@@ -115,3 +115,8 @@ Retries capped at three review rounds; deterministic failures require a diagnosi
 Optional nits: sidecar N1 and effort docs N6 included; no speculative idle detection
 rewrite, billing guarantee, or global MCP policy change. Programmatic consult
 instructions should identify Claude as read-only; no new script execution capability.
+
+Boundary evidence correction: default CLI permissions also denied the first outside
+probe; no baseline data leak is claimed. The recorded control deliberately grants an
+extra fixture directory and returns its random marker; the production restriction
+flags omit that grant and deny it. `boundary_probe.py` reproduces both.

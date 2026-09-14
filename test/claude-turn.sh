@@ -41,7 +41,9 @@ fi
 [ "${STUB_MODE:-good}" = renamestage ]  && git -C "$A" mv rtarget.txt rmoved.txt >/dev/null 2>&1
 # jsonstats: emit a parseable JSON block so the cost-capture path in the shim is exercised
 if [ "${STUB_MODE:-good}" = jsonstats ]; then
-  printf '{"type":"result","usage":{"input_tokens":1234,"cache_read_input_tokens":0,"output_tokens":56},"total_cost_usd":0.012}\n'
+  printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed","usage":{"input_tokens":1234,"cache_read_input_tokens":0,"output_tokens":56},"total_cost_usd":0.012}\n'
+else
+  printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'
 fi
 # tryspawn: model the dogfood rogue — try to spawn external models by bare name (PATH-resolved).
 # The Phase 3.6 PATH-shadow should make these resolve to a blocking stub, not the real CLI.
@@ -56,7 +58,7 @@ seed_token(){ tick_a log task.created "$1" --agent claude-a >/dev/null; tick_a c
 
 run_shim(){ # <relay-task> <agent> <stub-mode>
   RELAY_AGENT="$2" RELAY_FILE="$A/relay.md" RELAY_TASK="$1" CLAUDE_AGENT=claude-builder \
-  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null STUB_MODE="$3" \
+  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" STUB_MODE="$3" \
   bash "$SHIM" >/dev/null 2>&1
 }
 
@@ -121,7 +123,7 @@ rm -f "$A/ambient.md"
 # --- (7) flag check: builder allowlist flags reach the claude stub ---------
 seed_token RELAY-TURN-flags
 RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-flags CLAUDE_AGENT=claude-builder \
-  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null STUB_MODE=good \
+  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" STUB_MODE=good \
   bash "$SHIM" >/dev/null 2>&1
 grep -q -- "--allowedTools" "$WORK/claude-args" && pass "builder --allowedTools flag passed to claude" || fail "--allowedTools missing from invocation"
 grep -q -- "--output-format" "$WORK/claude-args" && pass "--output-format flag passed to claude" || fail "--output-format missing from invocation"
@@ -200,7 +202,7 @@ seed_token RELAY-TURN-missing
   clean_path="$(filter_claude_from_path)"
   
   PATH="$clean_path" HOME="$empty_home" RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-missing \
-    CLAUDE_AGENT=claude-builder CLAUDE_BIN="" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
     bash "$SHIM" >"$err_log" 2>&1; rc=$?
     
   [ "$rc" -eq 3 ] && pass "GH-58: missing claude -> exit 3" || fail "expected exit 3, got $rc"
@@ -220,7 +222,7 @@ seed_token RELAY-TURN-localpath
   clean_path="$(filter_claude_from_path)"
   
   PATH="$clean_path" HOME="$local_home" RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-localpath \
-    CLAUDE_AGENT=claude-builder CLAUDE_BIN="" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
     bash "$SHIM" >/dev/null 2>&1; rc=$?
     
   [ "$rc" -eq 0 ] && pass "GH-58: resolves ~/.claude/local/claude -> exit 0" || fail "expected exit 0, got $rc"
@@ -230,7 +232,7 @@ seed_token RELAY-TURN-localpath
 seed_token RELAY-TURN-explicit
 (
   RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-explicit \
-    CLAUDE_AGENT=claude-builder CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
     bash "$SHIM" >/dev/null 2>&1; rc=$?
     
   [ "$rc" -eq 0 ] && pass "GH-58: resolves explicit CLAUDE_BIN -> exit 0" || fail "expected exit 0, got $rc"

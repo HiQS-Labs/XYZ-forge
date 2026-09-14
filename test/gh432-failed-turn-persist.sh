@@ -40,7 +40,7 @@ if [ "${STUB_MODE:-crash}" = crashbad ]; then
   printf 'off-lane\n' >>"$A/offlane.md"
 fi
 case "${STUB_MODE:-crash}" in
-  good) exit 0 ;;
+  good) printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'; exit 0 ;;
   *)    exit 1 ;;
 esac
 STUB_EOF
