@@ -86,3 +86,33 @@ explicit go for branch pushes as part of the fire confirmation.
 Operator effort level maps through `resolve-profile.sh` (e.g. `glm 5.3 max` →
 `COMMANDCODE_REASONING_EFFORT=max`). State the profile in the umbrella body so reviewers know what
 ran.
+
+## 8. Field notes from the first run (pivots hit in practice)
+
+1. **Node ≥ 22 killed the classic require hooks.** `Module._resolveFilename` and `Module._load`
+   are getter-only and non-configurable; the only surviving seam is `Module.prototype.require`.
+   The vendored harness's own SDK-alias patch (`AgentRegistry`'s `_resolveFilename` assignment)
+   silently no-ops on Node 22 — upstream bug worth filing. Any tool that must import an
+   Electron-adjacent module graph in plain Node should hook `prototype.require` and swap the
+   peer requests for a chain-safe permissive stub.
+2. **Optional peers break plain-Node imports of tool graphs.** `electron` /
+   `@getflywheel/local` are optional peers that a normal checkout never installs, yet some
+   modules import them at load time. Registration paths only build definitions, so a stub is
+   safe — but it must be committed next to the tool that needs it, not left in `node_modules`.
+3. **Generated files must sort deterministically.** `localeCompare` orders differently between
+   a bare Node CLI run and jest's ICU setup — the "committed file matches generator" check
+   failed only under jest. Use plain lexicographic `sort()` for anything committed.
+4. **Watch for elision commas in generated arrays.** `[a, b,]` joining plus a trailing literal
+   comma yields `b,,` — a real `undefined` hole in the array, caught by a name-format test.
+   Array-format tests (every entry matches a shape) catch this class for free.
+5. **Message-level assertions rot on purpose here.** Making a refusal message actionable (the
+   point of the GH) breaks tests that matched the old wording; budget for updating those
+   assertions in the same phase, and pin the NEW wording in the contract's acceptance criteria
+   at authoring time.
+6. **Raw-text drift checks are brittle on annotated files.** A build tool that compares whole
+   file text fails on manifests carrying hand-written header comments even with zero drift.
+   Compare only the fields the tool owns, deep-equal via a stable (key-sorted) stringify.
+7. **The Forge pre-push gate reads the operator's whole tree, not the branch.** A docs-only
+   foreign-branch push was refused because the operator's own uncommitted state was present;
+   `--no-verify` on a docs-only non-default branch is the sanctioned path (the hook's own
+   message offers it).
