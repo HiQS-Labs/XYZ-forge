@@ -1,5 +1,15 @@
 # GH605 implementation evidence — not yet approved
 
+## Latest checkpoint:426f582531ba18f815f82e82a49c92f25ad609ee
+
+Operator authorized finishing beyond the prior cap; same relay extended to5 review rounds.
+Sol implemented actual jog stop/requeue/clear/recovery emission, both-clock preview freshness,
+CLOSED ledger ambiguity preservation, and stateful mock PR identity/snapshot integration.
+Parent direct Python run passes74/74 in separate full clone2. Builder recorded pre-fix failures
+and post-fix success in the relay; these are attributed results, not parent reruns. Fresh six
+shell suites and normal full push gate are running in separate clones. Independent review4
+remains required. No live board/config writes, merge or current approval.
+
 ## Latest checkpoint:22533bb4723c37ebe4415b39e29ccd5561a02217
 
 Operator authorized resuming the parked correction lane. Development PR611/ec0823ab merged

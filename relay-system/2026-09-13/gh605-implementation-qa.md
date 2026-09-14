@@ -599,4 +599,29 @@ No self-approval.
 Handing off to codex-author: retain the parent gate receipts and dispatch the independent Reviewer
 for Round 4; no live apply before approval.
 
+### Parent independent verification — Reviewer4 handoff
+
+Parent74/74Python passes on426f5825 in full clone2. Six focused shell suites and full normal
+push gate are running in separate full clones; their outcomes are not presumed. Operator
+authorizes finishing, same relay4/5. Pending runtime gate does not itself prevent a code verdict;
+both approval and green gates are required before live apply. No live writes occurred.
+
+Review the four new repairs and their real callers/tests against the controlling plan. Confirm
+actual jog operations and no-op behavior, batch ownership/rollback, stale/incoherent clocks,
+both CLOSED and OPEN ambiguity with absence support, and actual mock PR snapshots. Dispose all
+prior findings explicitly, cite file:line. Keep scope to this task's code and surrounding files.
+
+Complete the full-file sweep before approval. Close the known omitted spans FIRST: full
+utils/py/work_connectors/__init__.py; full validate.sh; all test/gh492-roadmap-state-sweep.sh,
+test/gh402-board-sync.sh and GH605 wrappers; entire CLI parser tail of releases_app.py; full
+CHANGELOG.md. Then read full current board_sync.py, releases_app.py, mock_gh_board.py,
+work_connectors/github_board.py, both GH605Python tests, gh549 suite, FAQ, plan and evidence.
+Use bounded output chunks and close every truncation; do not declare missing coverage merely
+because an earlier read was truncated. Twenty-minute ceiling, no reason to finish prematurely
+with unread material when time remains. Whole-file review remains required, not diff-only.
+Review-only: this relay file is the only allowed edit. No Git, shell/full suites, live network,
+config or ledger writes. Safe isolated direct probes optional. Emit PASS/FAIL and Basis, honest
+swept file yes/no. Approve and tick done only if all blockers are closed and coverage complete;
+otherwise hand back concrete minimal findings NEXT Producer/STATUS Open for round5. No code edits.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

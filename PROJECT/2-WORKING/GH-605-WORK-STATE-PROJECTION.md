@@ -21,9 +21,14 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Development PR611 merged;22533bb4 passes65Python, six focused suites and378/378 full gate; correction code published | Final review escalated at3/3: three correctness gaps and mock/coverage follow-up remain; operator continuation required; no live apply |
+| Operator authorized completion;426f5825 addresses actual jog commands, both preview clocks, CLOSED identity guards and PR mock;74/74 parent Python tests pass | Fresh full gate and independent review4/5; then live policy apply and readback; no live writes yet |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
+Latest continuation: operator explicitly authorized finishing corrections and verification.
+Same relay extended to5 review rounds;426f5825 implements the four concrete remaining repairs.
+Parent direct Python verification74/74 passes in a separate full clone. Fresh shell/full gates
+and independent review4 are now required/running. Historical pauses/results below are retained,
+not current blockers or fresh approval. No changes to the approved board policy or non-goals.
 Implementation b9d784e9 incorporates the first independent code review's corrections.
 The first-build full validate failed376/377; its registry defect now passes the focused
 telemetry check. Historical41-test fixture failure and live GraphQL/WAL defects are corrected,
