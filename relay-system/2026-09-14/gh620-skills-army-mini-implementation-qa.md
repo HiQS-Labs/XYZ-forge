@@ -1,8 +1,8 @@
 ---
 Goal: QA GH-620 implementation against its approved plan and issue
 Date: 2026-09-14
-NEXT: codex
-STATUS: Open
+NEXT: claude
+STATUS: Changes requested
 ---
 
 # Context
@@ -43,3 +43,34 @@ Append a concise review with file:line citations. End with exactly `VERDICT: PAS
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Codex implementation review — changes requested
+
+The shared two-profile publisher, literal payload oracle, detached smoke, routing, wrapper, and
+seven-section recipe are appropriately bounded, but two acceptance claims are not yet true.
+
+1. **Child-valid quick start — fail.** The package README says its commands work from either the
+   child repository root or the package directory, then invokes `./scripts/intake.py`
+   (`skills/skills-army-hq/README.md:64-73`). In the generated child, the script is actually at
+   `./skills-army-hq/scripts/intake.py` (`utils/py/xyz_mini_sync.py:59-64`), as the landing README
+   correctly shows (`mini/skills-army-README.md:12-18`). A cold child-root operator following the
+   package README gets a missing-file error, so the required child-valid init path is not satisfied.
+2. **Exact retained-publisher retry — fail.** The preflight accepts any one-commit-ahead HEAD whose
+   parent, subject, `MANIFEST.txt`, and revision marker match (`utils/py/xyz_mini_sync.py:149-158`).
+   It does not compare the retained commit's full tree/diff to the payload that this run would
+   generate. Consequently, a commit with the expected metadata plus an unrelated tracked file is
+   treated as the exact publisher retry and can be pushed, contradicting the claim that arbitrary
+   ahead state is refused. The new suite covers an independently advanced remote, but never the
+   allowed-retry path or a matching-metadata/extra-file mutant
+   (`test/gh620-skills-army-mini-sync.sh:64-68`, `test/gh620-skills-army-mini-sync.sh:104-109`).
+
+Everything else reviewed is consistent with the MVP envelope: the target defaults to `xyz-mini`,
+the Skills Army manifest closes over the six package files plus landing files/licenses, generated
+state is excluded, the detached init/add/target/sync workflow is exercised, CI routing is registered,
+and the playbook covers qualify/manifest/bootstrap/test/land/maintain/rollback without introducing a
+second engine or scheduler (`utils/py/xyz_mini_sync.py:29-79`,
+`test/gh620-skills-army-mini-sync.sh:49-102`, `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md:1-47`,
+`utils/ci-route.sh:33-45`). Graph coverage for the new branch files was unavailable/stale, so these
+findings use direct source reads; no project gate was run in this reviewer turn.
+
+VERDICT: FAIL
+Basis: the child-root quick start is broken and the retained-retry exception can admit unrelated ahead content
