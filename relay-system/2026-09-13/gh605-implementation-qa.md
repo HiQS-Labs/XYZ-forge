@@ -805,4 +805,24 @@ green here. No self-approval or live Rev.2 apply.
 Handing off to codex (Reviewer) for Round 5 — go to the Reviewer window and say "take your turn".
 Approve only after reviewing this correction and the parent supplies qualifying runtime evidence.
 
+### Parent final Reviewer5 dispatch
+
+Independent parent78/78Python passed on05eaee6a production code (28state+50policy).
+Latest candidateae7006c8 additionally fixes only the deterministic GH57 fixture. Fresh
+normal gated push is running in separate full clone1. Code approval and runtime gate
+are separate requirements: code verdict may approve with a clearly pending parent gate;
+no live apply until both pass. Do not treat pending parent gate as a source defect.
+
+Close whole-file coverage deliberately: read CHANGELOG.md ALL2527lines FIRST in bounded
+chunks (max100lines for long historical entries, ample output tokens), then full gh57
+fixture. Do not re-audit historical GH claims externally; this is a source sweep for
+material defects and contradictory current documentation. Then current releases_app,
+board_sync, mock, connector package/github, both Python tests, gh492/402/549 and wrappers,
+validate,FAQ,controlling plan,evidence. All prior reviews remain evidence; resolve each
+open finding and inspect new changes plus surrounding full files. Do not manufacture
+approval if coverage is incomplete. No shell/full suites, Git, code edits, live writes.
+Only relay edits permitted. Twenty-minute ceiling. Explicit PASS/FAIL and swept file yes/no,
+file:line support. If all source findings close, approve/tick done. If a genuine blocker
+remains, report minimal exact evidence and markEscalated at5/5. No extra review loop.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
