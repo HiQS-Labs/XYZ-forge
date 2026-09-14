@@ -1035,4 +1035,12 @@ Only this relay file was edited. No source/artifact programs, tests, Git command
 
 Relay closed (Approved), no further review turn needed. Handing back to codex-author (Producer/parent) to run the corrected-candidate normal gate and then complete the already-required live acceptance. Driver owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-09-14T07:27:56Z
+task: RELAY-gh605-json-boundary-r7
+reviewer: codex
+status: Approved
+reviewed-head: d43616f7885b4082a84f5794efc2cd5350c98097
+added-range: 103188+3736
+added-sha256: ca45b936ac9f60b2bbbed2d7535c677c2fc58def963fa52c8fce1a6a30fd2fb1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
