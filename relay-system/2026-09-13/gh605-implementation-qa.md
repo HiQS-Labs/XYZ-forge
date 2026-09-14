@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 5
 
@@ -591,7 +591,7 @@ incoherent evidence acceptance, and PR/unknown mock identity. After repair the d
 **74/74** (26 work-state, 48 board-policy), and all five changed Python files parse via `ast`; logs
 are retained under `.relay-scratch/`. Codebase Memory generation 2026-09-14T03:39:25Z reports no
 recorded gap for production/tests/FAQ, while mock_gh_board.py and CHANGELOG remain intentionally
-excluded from the fast index and were verified from current source. FAQ/CHANGELOG record only the
+excluded from the fast index and were verified from current source. FAQ/CHANGELOG record only the  [Unverified — no citation]
 implemented behavior. Remaining work is parent-owned separate-full-clone shell/full-gate evidence,
 independent Reviewer round 4 whole-surface coverage, and only then any reviewed live Rev.2 apply.
 No self-approval.
@@ -623,5 +623,88 @@ Review-only: this relay file is the only allowed edit. No Git, shell/full suites
 config or ledger writes. Safe isolated direct probes optional. Emit PASS/FAIL and Basis, honest
 swept file yes/no. Approve and tick done only if all blockers are closed and coverage complete;
 otherwise hand back concrete minimal findings NEXT Producer/STATUS Open for round5. No code edits.
+
+## Reviewer — codex — Round 4
+
+VERDICT: FAIL
+Basis: the latest repairs address their direct cases, but the real loader still loses known
+invalid ledger identity before preservation, and real lease acquisition still assumes the
+first repository. A pre-existing repeated-terminal queue-position defect also remains in the
+touched code. These are source-traced failures, not reviewer-executed reproductions.
+swept file: no
+
+- **[Blocker] Invalid ledger identity disappears at the loader/planner boundary.**
+  `utils/py/releases_app.py:5328` knows the owning repository, but `:5370` exports only
+  `url_repo`. A missing/non-GitHub/malformed URL therefore exports `repo=None` despite an
+  unambiguous qualified source slug. Such URLs are expressly accepted by intake (`:3538`,
+  `:3546`). `utils/py/board_sync.py:228` drops that row before populating `invalid_ledger`.
+  Consequently an existing Ready card for that source issue can move to Done when GitHub
+  says recently COMPLETED (`:307`, `:318`), or In review through an OPEN closing PR (`:269`,
+  `:277`): both paths mistake known-invalid evidence for genuinely absent evidence. A URL
+  naming another owner similarly loses the source identity. Retain an independently trusted
+  source identity (qualified owning slug, or origin-proven legacy basename) for invalid-row
+  preservation; do not make the URL valid or guess an unknown owner. Add real
+  `load_work_evidence` → planner/preview fixtures for missing, malformed and wrong-owner URLs,
+  CLOSED and OPEN+PR cases, and valid-plus-invalid evidence. Assert no issue mutation plus an
+  unresolved report, retaining genuine-absence positive controls. The current tests inject
+  already-qualified invalid rows (`test/test_gh605_board_policy.py:193`, `:209`) and miss this
+  boundary. Round 3's CLOSED ordering is repaired; the end-to-end preservation finding remains open.
+- **[Blocker] Lease acquisition still selects the first repository.**
+  `utils/py/releases_app.py:4702` chooses `repos ORDER BY id LIMIT 1`, then `:4705` looks up
+  the queue row only there. With repo A first and one uniquely numbered pending item in repo B,
+  `jog_acquire_lease` refuses `jog-not-found`; it never reaches the repaired owned extractor.
+  This is reachable from the real supervisor, which selects pending rows across repositories
+  (`utils/py/jog_run.py:1669`) and calls this helper (`:1687`). Resolve the unique actual queue
+  row inside the write transaction, using the same ambiguity refusal as the repaired stop
+  writers, and preserve the GH-N receipt contract. Add a two-repository success fixture where
+  only the second repository owns the requested number; assert its row starts and its event
+  carries the same receipt transaction and correct repo/global ID. Keep the ambiguous-number
+  rollback control. The current successful lease fixture initializes only one repository
+  (`test/test_gh605_work_state.py:367`, `:498`); `:539` covers ambiguity but not this success
+  case. This is the remaining real-start ownership gap, not a request to widen raw connector replay.
+- **[Should] Repeated terminal jog commands corrupt active queue positions.** Drop and skip
+  decrement later active positions unconditionally (`utils/py/releases_app.py:4555`, `:4634`);
+  helper status writes do likewise whenever the destination is terminal (`:4741`). Event
+  suppression on same-state writes does not suppress this mutation. For active positions
+  1/2/3, dropping item 1 leaves the others at 1/2; dropping it again decrements the last to 1,
+  producing duplicate positions. Terminal-to-terminal helper transitions have the same problem.
+  Compact positions only when the prior row actually leaves pending/running. Extend the
+  existing real-command fixtures with three items and repeated drop/skip/helper-terminal
+  calls, asserting stable distinct positions and no duplicate same-state lifecycle events.
+  The present no-op coverage checks event names with one queue item
+  (`test/test_gh605_work_state.py:415`), so it cannot detect this pre-existing surrounding defect.
+- **[Pass] Round 3's actual stop/batch emission, clock and mock repairs have source support.**
+  Actual drop/retry/skip/add now supply owned transitions; clear and orphan recovery batch
+  through the receipt boundary (`utils/py/releases_app.py:4426`, `:4560`, `:4600`, `:4639`,
+  `:4670`, `:4806`; rollback fixture `test/test_gh605_work_state.py:462`). Both clocks are
+  coherently ordered and bounded (`utils/py/board_sync.py:1132`; integration control
+  `test/test_gh605_board_policy.py:774`). The mock resolves PR versus issue content and refuses
+  unknown IDs (`utils/py/mock_gh_board.py:215`), with an actual PR snapshot integration at
+  `test/test_gh605_board_policy.py:787`. These close those specific cases, subject to the
+  remaining identity and queue findings above; runtime results remain parent/producer-attributed.
+- **[Pass] Earlier repaired findings remain supported.** Real preview/apply/failure/restore
+  integration is present (`test/test_gh605_board_policy.py:605`); mutation IDs are validated
+  within the audited boundary and restore retains prior uncertainty on error
+  (`utils/py/board_sync.py:750`, `:769`, `:1336`). Complete rating-token replacement and
+  uniquely scoped repoint remain (`utils/py/releases_app.py:3315`, `:3681`, `:3720`, `:3740`).
+  Owner fragments, bounded snapshots, destination-before-add, WAL-before-open, informational
+  lifecycle filtering, unset/unknown card reporting, and normal shell registrations retain
+  their repairs (`utils/py/board_sync.py:610`, `:650`, `:900`, `:327`;
+  `utils/py/releases_app.py:5193`, `:5210`; `validate.sh:550`). The legacy five-field configured
+  single-repository connector scope remains deliberate (`utils/py/work_connectors/github_board.py:84`).
+- **[Should] Coverage/evidence disposition: approval remains outstanding.** This turn closed
+  the prior connector package, validate runner, GH492/GH402/wrapper and releases CLI-tail
+  reading gaps and read the current production modules, both GH605 Python fixtures, full
+  GH549 suite, FAQ, controlling plan and evidence records. The long historical CHANGELOG
+  remains incompletely swept, including truncated historical spans and material after line
+  800; no whole-surface approval is claimed. Graph tools were unavailable in this runtime;
+  source reads supplied evidence, with no graph completeness claim. The latest SUMMARY
+  attributes 74/74 to 426f5825 and explicitly leaves shell/full gates pending
+  (`TESTS-RESULTS/gh605-implementation/SUMMARY.md:3`). Retain final-candidate receipts when
+  those parent runs finish; their pending status is not an additional code defect. No tests,
+  Git commands, source changes, or live board/config/ledger writes were performed by this reviewer.
+
+Handing off to codex-author (Producer) for Round 5 corrections — go to the Producer window
+and say "take your turn". No live apply before complete approval and qualifying gates.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
