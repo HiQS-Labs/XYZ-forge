@@ -15,6 +15,12 @@ Own the lifecycle from the operator's request to reviewed, ready PRs. Reuse the
 repository's existing execution, governance, and relay tools. Keep the canonical
 plan resumable so another session can continue without reconstructing chat.
 
+**Commensurate Complexity Mantra:** Machinery, defensive handling, and test
+suites must remain strictly commensurate with the scale and role of the core code
+being produced. An 80-line sync script or local utility must not become entangled
+with multiple layers of complexity and enterprise-grade fail-safes unless the
+operator explicitly specifies it.
+
 Invoking this workflow to execute work authorizes its ordinary steps through
 issue creation, task branches, commits, pushes, Codex QA, and opening PRs. Preserve
 explicit limits such as "plan only", "hold after QA", or a different reviewer.
@@ -118,9 +124,12 @@ teardown are separate actions unless the operator explicitly includes them.
    dependency ordering, rollback, and falsifiable checks sufficient? Are per-task
    ratings grounded, recurrence claims supported, appeal neutral unless the user
    set it, and user overrides preserved? Give the reviewer the requirements and
-   source paths, not just a summary of your design. Keep reviewer writes limited
-   to the relay thread. Adjudicate findings against evidence, stated requirements,
-   and repo principles via `/ponytail`: reviewer findings are advisory evaluations,
+   source paths, not just a summary of your design. Explicitly state the
+   operational envelope in the review packet: instruct the reviewer to grade
+   against the stated requirements and commensurate complexity, not unrequested
+   enterprise multi-tenant threat models. Keep reviewer writes limited to the
+   relay thread. Adjudicate findings against evidence, stated requirements, and
+   repo principles via `/ponytail`: reviewer findings are advisory evaluations,
    NOT a mandate to accept scope expansion, speculative abstractions, or enterprise
    machinery for lightweight tasks. Reject unneeded machinery with a documented
    disposition (`Disposition: Rejected (Out of Scope / Ponytail)`). Record every
@@ -151,21 +160,23 @@ teardown are separate actions unless the operator explicitly includes them.
 
 8. **Run final Codex relay QA and resolve findings.** Use `relay-xyz` on the
    committed implementation, plan, per-issue acceptance map, and test evidence.
-   Ask whether each issue is satisfied, its persisted rating matches its latest
-   evidence and user overrides, actual codepaths match the plan, a duplicate
-   subsystem or writer slipped in, and checks substantiate the claims. A textual
-   review does not replace deterministic tests. Keep author and reviewer roles
-   separate, adjudicate each finding against stated requirements (rejecting
-   speculative scope creep with `/ponytail`), apply surgical fixes and rerun
-   affected focused checks and review within the bounded loop. Prevent review
-   thrashing: the 3-round cap is a binding budget; do not extend review cycles
-   for speculative edge cases when core acceptance criteria are green. Require
-   Approved and passing applicable gates for the final artifact revision. Changes
-   after approval must receive appropriate fresh verification/review; do not reuse
-   stale approval for a changed implementation. Treat a nonzero driver exit,
-   empty output or missing verdict as a failed review, even if a transcript sounds
-   positive. Preserve a resumable blocked state when review cannot complete, and
-   continue independent groups.
+   Frame the final review packet with the same commensurate operational envelope
+   so verification checks actual acceptance criteria rather than demanding
+   speculative layers of complexity. Ask whether each issue is satisfied, its
+   persisted rating matches its latest evidence and user overrides, actual codepaths
+   match the plan, a duplicate subsystem or writer slipped in, and checks
+   substantiate the claims. A textual review does not replace deterministic tests.
+   Keep author and reviewer roles separate, adjudicate each finding against stated
+   requirements (rejecting speculative scope creep with `/ponytail`), apply
+   surgical fixes and rerun affected focused checks and review within the bounded
+   loop. Prevent review thrashing: the 3-round cap is a binding budget; do not
+   extend review cycles for speculative edge cases when core acceptance criteria
+   are green. Require Approved and passing applicable gates for the final artifact
+   revision. Changes after approval must receive appropriate fresh verification/review;
+   do not reuse stale approval for a changed implementation. Treat a nonzero driver
+   exit, empty output or missing verdict as a failed review, even if a transcript
+   sounds positive. Preserve a resumable blocked state when review cannot complete,
+   and continue independent groups.
 
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
    and accidental files, push through the repository's required gate, and open the
