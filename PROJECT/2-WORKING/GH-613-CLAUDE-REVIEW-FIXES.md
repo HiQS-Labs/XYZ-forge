@@ -21,7 +21,7 @@ goal: Close the accepted native Claude routing, isolation, result, cleanup and e
 
 | What was just completed | What's next |
 |---|---|
-| Implementation reviewed; nested-root logging corrected | Final corrected full gate and PR |
+| Implemented, reviewed; full gate 376/376; [PR #614](https://github.com/HiQS-Labs/XYZ-forge/pull/614) open | Operator review and merge decision |
 
 ## Table of contents
 - [Recon map](#recon-map)
@@ -109,7 +109,7 @@ establish distinct incident velocity; trend unknown. No operator override.
 - [x] S3 actual restricted tools deny outside reads; auth/request flags agree.
 - [x] S4 wall/idle descendants gone; nonzero diagnostics survive; worktree removed.
 - [x] S5 effort reaches both commands and omitted effort telemetry is truthful.
-- [ ] Public docs, independent QA and full gate complete; PR linked here.
+- [x] Public docs, independent source QA and full gate complete; [PR #614](https://github.com/HiQS-Labs/XYZ-forge/pull/614). Latest delta receipt limitation recorded below.
 
 Debugging follows debug-mantra: reproduce, trace, falsify, retain each breadcrumb.
 Retries capped at three review rounds; deterministic failures require a diagnosis.
@@ -145,3 +145,5 @@ Final full-gate correction: the 83995bf3 gate passed 371/376. Four failures expo
 The custom in-tree transcript regression then exposed the new stderr sidecar as an off-lane edit. Prepare that parent-owned file before the existing dirty-state snapshot; setup failures still traverse normal turn enforcement. Extended the existing Claude suite to require retained diagnostic content and exclude it from the artifact commit (37 checks pass); archive mode also passes 16 checks.
 
 Final delta source review: Codex returned PASS after reading the complete changed adapter and compatibility suite. The driver refused the receipt because the reviewer inserted one blank line above its own block; the review is preserved in gh613-sidecar.md, but this latest delta has no accepted driver attestation. Prior full implementation and correction attestations remain preserved. No new blocking source finding; latest focused logs and fingerprints are published.
+
+Final publication: PR #614 targets development. Full guarded pre-push passed 376/376 (21 Python-layer tests) in 819 seconds on ddd19bee; qualification clone HEAD stayed identical and clean, and origin contains that exact commit. Later commits contain review/evidence/docs only, verified against that runtime/test tree. This is PR readiness evidence, not promotion qualification. Nothing merged or deployed. GH-613 remains active pending merge.
