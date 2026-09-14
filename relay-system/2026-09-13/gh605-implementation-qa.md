@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -824,5 +824,21 @@ approval if coverage is incomplete. No shell/full suites, Git, code edits, live 
 Only relay edits permitted. Twenty-minute ceiling. Explicit PASS/FAIL and swept file yes/no,
 file:line support. If all source findings close, approve/tick done. If a genuine blocker
 remains, report minimal exact evidence and markEscalated at5/5. No extra review loop.
+
+## Reviewer — codex — Round 5
+
+VERDICT: FAIL
+Basis: the three Round 4 repairs and deterministic GH-57 correction have source support. A separate pre-existing mock identity defect remains, and this turn did not complete the mandated whole-file sweep. This is not a claim that the pending parent gate failed, nor a new production blocker inferred from missing coverage.
+swept file: no
+
+- **[Pass] Round 4 invalid-source-identity blocker closed in the reviewed seam.** The loader now retains the independently owning qualified slug, or origin-proven basename, while leaving invalid URL evidence invalid (`utils/py/releases_app.py:5335`). The planner guards that identity before both CLOSED and OPEN selection (`utils/py/board_sync.py:307`) and before linked-PR assignment (`:269`). Real loader/preview fixtures cover missing, malformed and wrong-owner URLs, both CLOSED and OPEN+PR, genuine absence, and valid-plus-invalid rows (`test/test_gh605_board_policy.py:787`, `:829`).
+- **[Pass] Round 4 lease-ownership blocker closed.** Acquisition resolves up to two queue matches inside the mutation callback, refuses ambiguity and updates only the sole row (`utils/py/releases_app.py:4704`). The extractor preserves the GH-N receipt selector while obtaining the actual repository/global ID (`:1486`). The second-repository fixture checks state, PID and receipt/event ownership; the ambiguity control remains (`test/test_gh605_work_state.py:534`, `:626`).
+- **[Pass] Round 4 repeated-terminal compaction finding closed for its named paths.** Drop, skip and helper-terminal writes now compact only on departure from pending/running and suppress same-state lifecycle events (`utils/py/releases_app.py:4555`, `:4635`, `:4747`). The multi-item fixture checks repeated commands and terminal-to-terminal writes against surviving positions and event counts (`test/test_gh605_work_state.py:561`).
+- **[Pass] GH-57 fixture correction is narrow and retains refusal controls.** The full fixture was read: divergent writes use distinct fixed clocks (`test/gh57-releases-fuzz.sh:118`, `:127`), Scenario 1 uses the existing settings-winning union (`:146`), and Scenario 3 retains duplicate-settings and duplicate-GID refusals (`:173`, `:188`). No runtime rerun is claimed by this reviewer.
+- **[Should] The mock's real `--seed` path allocates duplicate item IDs.** `get_default_state` initializes `next_item_id` to 1; `--seed` installs `PVTI_mock_item_0001` without advancing that counter (`utils/py/mock_gh_board.py:344`). The next add allocates that same ID (`:239`), and status/clear mutate the first matching item (`:288`, `:299`). Thus seed -> add issue 124 -> set returned ID can change issue 123 while leaving 124 unset. This is source-traced, not an executed reproduction. Minimal fix: advance the seed counter to 2 and add a seed -> add -> set fixture that reads the actual snapshot, requires distinct IDs and proves only the added card changes. The current policy fixture explicitly supplies `next_item_id: 2`, bypassing this CLI defect (`test/test_gh605_board_policy.py:724`). It does not invalidate that fixture's existing results.
+- **[Pass] Earlier repair dispositions remain supported by the reviewed paths and prior review evidence.** Actual stop/batch writers use owned explicit events (`utils/py/releases_app.py:4561`, `:4672`, `:4813`); both preview clocks are bounded and coherently ordered (`utils/py/board_sync.py:1132`); audited response validation precedes success (`:750`, `:771`); restore retains original uncertainty on exceptions (`:1336`). Real preview/apply/failure/restore and actual PR snapshot fixtures remain (`test/test_gh605_board_policy.py:868`, `:901`). PR-kind/unknown-content repair itself is present (`utils/py/mock_gh_board.py:221`). Earlier rerating/repoint, WAL, metadata filtering, query-shape, unknown-card and shell-registration dispositions are retained as prior reviewer evidence, not represented as a fresh complete sweep. The five-field raw connector contract and board-policy refusal remain deliberate (`utils/py/work_connectors/__init__.py:127`; `utils/py/work_connectors/github_board.py:125`).
+- **[Should] Coverage and runtime evidence remain explicit acceptance limits.** This turn read board_sync, mock and both connector modules, the full GH-57 fixture, current lifecycle/evidence seams and their new regressions, and relay history. It did not finish the 6,689-line releases module, both full Python suites, validate/legacy shell suites, full FAQ/plan, or all 2,527 CHANGELOG lines. Historical CHANGELOG reads still contain unclosed truncations and unread material after line 850; no exhaustive absence-of-defects claim is made. Graph tools were unavailable. Parent 78/78 and the pending final-candidate gate are attributed to the dispatch note; committed SUMMARY still names the older checkpoint (`TESTS-RESULTS/gh605-implementation/SUMMARY.md:3`). Pending results are not source defects. No tests, source programs, Git commands or live board/config/ledger writes were run; only this relay file was edited, apart from the explicitly requested Tick token operations.
+
+Handing off to codex-author for operator disposition at the exhausted 5/5 cap. No additional automatic review cycle or live apply is authorized by this verdict. Preserve the source-supported closures above, resolve or explicitly disposition the mock finding, and complete the outstanding review coverage and final-candidate receipts before approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
