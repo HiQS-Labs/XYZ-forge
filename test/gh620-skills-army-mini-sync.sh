@@ -83,6 +83,32 @@ retry_head = git(dest, "rev-parse", "HEAD").stdout.strip()
 r = publish("--push")
 ok("exact retained publisher commit retries push", r.returncode == 0 and git(bare, "rev-parse", "refs/heads/main").stdout.strip() == retry_head, r.stderr[-300:])
 
+# A previously managed path dropped by the new profile must be absent in an exact retry.
+drop_src = os.path.join(WORK, "drop-src"); git(WORK, "clone", "-q", src, drop_src)
+drop_sync = os.path.join(drop_src, "utils/py/xyz_mini_sync.py")
+drop_text = pathlib.Path(drop_sync).read_text().replace('    ("mini/skills-army-README.md", "README.md", "managed"),\n', "")
+pathlib.Path(drop_sync).write_text(drop_text); git(drop_src, "add", drop_sync); git(drop_src, "commit", "-qm", "drop prior managed path")
+drop_dest = os.path.join(WORK, "drop-dest"); git(WORK, "clone", "-q", bare, drop_dest)
+r = sh(sys.executable, drop_sync, "--target", "skills-army-mini", "--dest", drop_dest, "--apply")
+pathlib.Path(drop_dest, "README.md").write_text("malicious restore\n")
+git(drop_dest, "add", "README.md"); git(drop_dest, "commit", "--amend", "--no-edit", "-q")
+drop_before = git(drop_dest, "rev-parse", "HEAD").stdout.strip()
+r = sh(sys.executable, drop_sync, "--target", "skills-army-mini", "--dest", drop_dest, "--apply")
+ok("retry refuses a restored previously managed deletion", r.returncode == 2 and git(drop_dest, "rev-parse", "HEAD").stdout.strip() == drop_before, r.stderr[-200:])
+
+# Shared default profile: when a publisher retry newly restores an absent seed, it remains exact.
+mini_bare = os.path.join(WORK, "mini.git"); mini_dest = os.path.join(WORK, "mini")
+git(WORK, "init", "-q", "--bare", mini_bare); git(mini_bare, "symbolic-ref", "HEAD", "refs/heads/main")
+git(WORK, "clone", "-q", mini_bare, mini_dest); git(mini_dest, "symbolic-ref", "HEAD", "refs/heads/main")
+def mini_publish(dest_path, *extra): return sh(sys.executable, sync, "--dest", dest_path, *extra)
+mini_publish(mini_dest, "--push")
+seed_drop = os.path.join(WORK, "seed-drop"); git(WORK, "clone", "-q", mini_bare, seed_drop)
+git(seed_drop, "rm", "-q", "TODO.md"); git(seed_drop, "commit", "-qm", "remove seed"); git(seed_drop, "push", "-q", "origin", "main")
+seed_retry = os.path.join(WORK, "seed-retry"); git(WORK, "clone", "-q", mini_bare, seed_retry)
+mini_publish(seed_retry, "--apply"); seed_head = git(seed_retry, "rev-parse", "HEAD").stdout.strip()
+r = mini_publish(seed_retry, "--push")
+ok("default-profile retry may restore an absent seed", r.returncode == 0 and git(mini_bare, "rev-parse", "refs/heads/main").stdout.strip() == seed_head, r.stderr[-300:])
+
 # Detached real-work smoke: every mutation is confined to WORK.
 collection = os.path.join(WORK, "collection")
 target = os.path.join(WORK, "target"); os.mkdir(target)
