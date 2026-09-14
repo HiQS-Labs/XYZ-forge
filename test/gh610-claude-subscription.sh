@@ -91,7 +91,7 @@ class ClaudeSubscription(unittest.TestCase):
             cli.write_text('#!'+sys.executable+'\nimport sys,json,os\n'
                 +'assert "--restricted" in sys.argv and "--strict-mcp-config" in sys.argv\n'
                 +'if sys.argv[-2:]==["auth","status"]: print('+repr(json.dumps(dict(loggedIn=True,authMethod='claude.ai',apiProvider='firstParty',subscriptionType='max')))+')\n'
-                +'else:\n assert "Read,Grep,Glob" in sys.argv\n assert ("--effort" in sys.argv)==bool(os.getenv("CLAUDE_REASONING_EFFORT"))\n if "--effort" in sys.argv: assert sys.argv[sys.argv.index("--effort")+1]==os.environ["CLAUDE_REASONING_EFFORT"]\n print("workspace trust warning",file=sys.stderr)\n if os.getenv("STUB_RC"): sys.exit(int(os.environ["STUB_RC"]))\n print(json.dumps(dict(type="result",is_error=os.getenv("STUB_ERROR")=="1",subtype="success",result="README.md:1 contains fixture")))\n')
+                +'else:\n assert "Read,Grep,Glob" in sys.argv\n assert ("--effort" in sys.argv)==bool(os.getenv("CLAUDE_REASONING_EFFORT"))\n if "--effort" in sys.argv: assert sys.argv[sys.argv.index("--effort")+1]==os.environ["CLAUDE_REASONING_EFFORT"]\n print("workspace trust warning",file=sys.stderr)\n if os.getenv("STUB_HANG"): exec(open(os.environ["STUB_HANG"]).read())\n if os.getenv("STUB_RC"): sys.exit(int(os.environ["STUB_RC"]))\n print(json.dumps(dict(type="result",is_error=os.getenv("STUB_ERROR")=="1",subtype="success",result="README.md:1 contains fixture")))\n')
             cli.chmod(0o755)
             preflight(str(cli),env,str(repo),cli_flags=['--restricted','--strict-mcp-config'])
             import claude_cli
@@ -108,6 +108,33 @@ class ClaudeSubscription(unittest.TestCase):
             answers=list(out.rglob('*.claude.md')); self.assertEqual(len(answers),1)
             self.assertIn('CLI diagnostics:',answers[0].read_text())
             self.assertIn('workspace trust warning',Path(str(answers[0])+'.stderr').read_text())
+            # Drive the entire consult command through wall and actual idle detection.
+            hang=root/'hang.py'
+            child='import os,signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); open(os.environ["STUB_PIDFILE"],"w").write(str(os.getpid())); time.sleep(60)'
+            hang.write_text('import subprocess,time\n'
+                +'subprocess.Popen([sys.executable,"-c",'+repr(child)+'])\ntime.sleep(60)\n')
+            env.update(STUB_RC='',STUB_HANG=str(hang))
+            for mode,wall,idle in [('wall','2','0'),('idle','20','1')]:
+                pidfile=root/(mode+'.pid'); out=root/('timeout-'+mode)
+                env.update(STUB_PIDFILE=str(pidfile),CONSULT_TIMEOUT=wall,CONSULT_IDLE_S=idle)
+                try:
+                    result=subprocess.run([sys.executable,str(consult),'--models','claude','--prompt','Read README.md','--out',str(out)],cwd=repo,env=env,capture_output=True,text=True,timeout=35)
+                    self.assertEqual(result.returncode,5,result.stdout+result.stderr)
+                    self.assertIn('0 answered, 1 failed',result.stdout)
+                    self.assertTrue(pidfile.exists(),'child never announced readiness')
+                    child_pid=int(pidfile.read_text())
+                    status=subprocess.run(['ps','-o','stat=','-p',str(child_pid)],capture_output=True,text=True).stdout.strip()
+                    self.assertTrue(not status or status.startswith('Z'),'consult child still running')
+                    answers=list(out.rglob('*.claude.md')); self.assertEqual(len(answers),1)
+                    self.assertIn('IDLE' if mode=='idle' else 'exceeded the 2s cap',answers[0].read_text())
+                    trees=subprocess.check_output(['git','worktree','list','--porcelain'],cwd=repo,text=True)
+                    self.assertEqual(trees.count('worktree '),1)
+                finally:
+                    if pidfile.exists():
+                        try: os.kill(int(pidfile.read_text()),signal.SIGKILL)
+                        except ProcessLookupError: pass
+            env.pop('STUB_HANG')
+            env.update(CONSULT_TIMEOUT='20',CONSULT_IDLE_S='0')
             # Force only Git's cleanup operation to fail; preserve the linked tree.
             real_git=shutil.which('git'); fakebin=root/'fakebin'; fakebin.mkdir()
             fakegit=fakebin/'git'

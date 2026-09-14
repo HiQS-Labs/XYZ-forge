@@ -12,6 +12,7 @@ complexity: 2
 risk: 3
 phases: 2
 reversibility: Easy
+goal: Close the accepted native Claude routing, isolation, result, cleanup and effort gaps.
 ---
 
 # GH-613 — Claude review follow-ups
@@ -20,7 +21,7 @@ reversibility: Easy
 
 | What was just completed | What's next |
 |---|---|
-| Plan relay Approved; implementation and fixtures written | Implementation verification, final QA and PR |
+| Implementation reviewed; nested-root logging corrected | Final corrected full gate and PR |
 
 ## Table of contents
 - [Recon map](#recon-map)
@@ -120,3 +121,9 @@ Boundary evidence correction: default CLI permissions also denied the first outs
 probe; no baseline data leak is claimed. The recorded control deliberately grants an
 extra fixture directory and returns its random marker; the production restriction
 flags omit that grant and deny it. `boundary_probe.py` reproduces both.
+
+Final QA: first implementation relay Approved with full-gate qualification still pending.
+Post-review corrections root stderr in the resolved coordination checkout (existing
+target-root regression witnessed red then green), clarify programmatic Claude's
+read-only seat, and extend timeout fixtures through the entire consult CLI. The first
+full gate was superseded with known failures; it is not passing evidence.
