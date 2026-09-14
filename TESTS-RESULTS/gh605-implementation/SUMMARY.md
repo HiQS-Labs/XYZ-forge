@@ -1,4 +1,17 @@
-# GH605 implementation evidence — live JSON-boundary correction under verification
+# GH605 implementation evidence — PR ready, live board verified
+
+Final corrected source is approved (round7, reviewed d43616f7, attested dc218240).
+Normal push gate381/381 in789s; GH53 parallel fixture passed its built-in serial
+retry, explicitly retained as contention. Independent focused Python79/79.
+Rev.2 apply64/64 followed by six observed post-add status corrections completed.
+Independent readback matches every intended change, Ready10 and original uncertain
+In progress6 preserved, no missing/duplicate cards. Fresh preview at07:50:18Z has
+ZERO changes. Final columns: Ready10, In progress6, In review15, Done89, Backlog3.
+Unknown evidence remains explicit (120 unresolved repo identities, mostly absent
+ledger rows); zero changes does not mean every activity assertion is verified.
+PR607 ready, awaiting merge; automatic sync disabled. See FINAL.md and completion.json.
+
+## Historical execution checkpoints
 
 Current status is in FINAL.md. The 85cf25cc gate passed 381/381 in795s and pushed
 normally. A subsequent live acceptance probe refused tuple/list unresolved drift

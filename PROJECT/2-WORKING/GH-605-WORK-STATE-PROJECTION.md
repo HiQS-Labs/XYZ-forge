@@ -21,7 +21,17 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Seed and full-source review complete; 85cf25cc gate passed381/381; live acceptance exposed saved-JSON tuple/list mismatch before writing | Verify surgical JSON-boundary correction, then fresh live apply/readback; PR607 returned to draft, no board writes |
+| Corrections and independent QA complete; corrected candidate gate381/381; Rev.2 applied and independently verified with zero-change rerun | PR607 ready for code review and merge by operator; automatic synchronization remains disabled |
+
+Final September14 closeout: corrected candidate dc218240 published normally after
+round7 source approval and381/381 gate (789s, GH53 serial retry passed). Independent
+Python79/79. Live apply64changes and one fresh six-status convergence pass complete;
+all original cards retained, no duplicates, every intended status independently
+verified. Board: Ready10, In progress6, In review15, Done89, Backlog3. Fresh preview
+07:50:18Z returns0changes. Six existing In progress cards remain explicitly unverified,
+not asserted active. Configuration is manual-only; no merge, scheduler or deployment.
+Evidence: TESTS-RESULTS/gh605-implementation/FINAL.md and completion.json.
+The following checkpoints are historical and do not override this final status.
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Final authorized continuation: source review6 Approved (driver0, reviewed96261ab2,
