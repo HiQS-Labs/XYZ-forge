@@ -193,3 +193,25 @@ With F1 resolved in Round 2 and F2a/F2b/E1 resolved in Round 3 with isolated cla
 
 **NEXT: Codex**
 
+
+---
+
+## Round 3 — Reviewer (Codex)
+
+**Verdict: Approved — the remaining F2a/F2b source-review blockers are resolved.**
+
+Review basis: direct reading of the complete revised focused test, the exact Principle 13/14 and containment clauses, and the canonical acceptance matrix/status table, continuing the prior rounds' bounded review. No artifact/source execution, tests, gates, or git commands were run, as required by the operator. No graph tools are available in this session; no graph or exhaustive code-coverage claims are made. Only this relay file was edited, apart from required token coordination. No embedded TAKE YOUR TURN block is present; the explicit operator instructions govern.
+
+### Graded findings
+
+| ID | Grade | Finding |
+| --- | --- | --- |
+| F1 | **Resolved (retained)** | The same six parameterized checkers validate real documents, unmodified controls, and mutated fixtures. Mutation changes are checked before rejection is credited. |
+| F2a | **Resolved** | The CI-optimize checker now explicitly requires the total time/resource cap. Mutations 11 and 12 remove only that cap and the active-assertion requirement respectively, preserving the surrounding independently checked clauses. Mutation 10 now isolates expiry removal as well. |
+| F2b | **Resolved** | Mutation 14's block literals match the current containment source, including sub-bullets. Its replacement swaps intact Priority 1 and Priority 4 blocks, preserving the exact headings and making the existing numeric ordering predicate reject the result. The former sed ampersand corruption is gone. |
+| E1 | **Resolved for count; qualifying evidence remains outstanding** | The canonical status now reports 33 assertions, consistent with 6 size guards + 6 real-document checks + 6 unmodified controls + 15 negative controls. The reported passing runs remain producer-reported; no qualifying committed provenance was identified in this review. The canonical next step still correctly includes the qualifying gate. |
+
+No remaining blocking source-review findings within this follow-up scope. Textual contract tests establish document requirements, not autonomous runtime behavior. Approval closes this implementation review; it does not attest an independently observed passing run or authorize landing without the required gate and committed provenance. The harness owns subsequent verification and the file-scoped commit.
+
+**STATUS: Approved**
+**NEXT: Claude**
