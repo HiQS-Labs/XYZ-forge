@@ -134,3 +134,30 @@ With F1 and F2 resolved with shared checkers and 13 falsification mutations, is 
 
 **NEXT: Codex**
 
+
+---
+
+## Round 2 — Reviewer (Codex)
+
+**Verdict: Changes requested — F1 is resolved; F2 is materially improved but still incomplete.**
+
+Review basis: direct source/text inspection of the revised complete test, canonical acceptance map, Principle 13/14 wording, and prior findings. No artifact/source execution, test execution, gate, or git command was run under the operator's reviewer-only constraint. No graph claims are made; the reviewed surfaces are Markdown and shell text. The file still contains no embedded TAKE YOUR TURN block, so the explicit operator instructions govern.
+
+### Graded findings
+
+| ID | Grade | Location | Finding and required correction |
+| --- | --- | --- | --- |
+| F1 | **Resolved** | `test/gh609-sdlc-agent-gaps.sh:54–178,192–278` | Real documents and fixtures now use the same six checkers, unmodified positive controls reject always-failing validators, and the mutation helper checks that fixture content changed. This resolves the structural proof defect. |
+| F2a | **Fix before shipping / Proof** | `test/gh609-sdlc-agent-gaps.sh:148–153,342–350`; `skills/ci-optimize/SKILL.md:85` | The checker still does not require the total time/resource budget. Removing only `, capped by a total time/resource budget (e.g. 5-minute timeout)` leaves every predicate satisfied. Add a focused budget predicate and a clause-only mutation. The promised active-assertion falsification is also absent: mutation 10 deletes the whole mechanism line, simultaneously removing owner, expiry, assertions, and stress wording, so its rejection does not establish that assertion execution is guarded independently. Add a mutation removing only the active-assertion clause, preserving the other checked clauses. These are explicit Round 1/acceptance-map obligations, not new scope. |
+| F2b | **Fix before shipping / Proof** | `test/gh609-sdlc-agent-gaps.sh:361–367` | Mutation 12 does not move intact ladder steps: it renames their priority labels, making the exact headings sought by the checker disappear. Additionally, the unescaped `&` in the first sed replacement expands to the whole matched text, corrupting that heading further. This can fail solely on heading presence and does not falsify the ordering comparison. Reorder the complete original Priority 4 and Priority 1 lines/blocks while preserving each exact heading once; assert those headings remain before requiring rejection by the shared checker. |
+| E1 | **Evidence limitation / Handoff** | Round 2 execution claims; canonical document Status table | The 31-pass/full-green results remain producer-reported, without qualifying provenance identified in this turn. The canonical Status table still says 26/26. Update that count and identify qualifying committed provenance when the harness completes its gate; review approval must not be represented as independently observed runtime or landing verification. |
+
+The requested corrections are **Easy** to reverse and remain confined to the existing focused test and evidence reporting. Do not redesign the six skills or add a framework.
+
+### Next turn
+
+1. Add the two isolated Principle 13 mutations and the missing budget check; replace the malformed ladder mutation with an intact-block reorder -> each targeted invariant is rejected for its intended reason while unchanged fixtures pass.
+2. Run the focused suite in a separate disposable full clone and report its evidence accurately -> update the stale count and return for review; the harness owns the final gate.
+
+**STATUS: Changes requested**
+**NEXT: Claude**
