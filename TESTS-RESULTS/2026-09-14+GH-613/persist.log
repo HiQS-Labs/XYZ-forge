@@ -1,0 +1,15 @@
+== test: gh432-failed-turn-persist ==
+  workdir: <tmp>/tick-gh432-failed-turn-persist.XXXXXX.es2W06wcCr
+  PASS: a successful turn still exits 0
+  PASS: a successful turn still commits its work
+  PASS: a crashed builder turn still exits 5 (caller contract unchanged)
+  PASS: a crashed turn's work reached a commit (HEAD moved)
+  PASS: the commit contains the relay file the turn actually wrote
+  PASS: no uncommitted relay-file edit left behind (the reported symptom is gone)
+  PASS: the crashed turn's token was handed off to the peer (tick release --to)
+  PASS: an off-lane edit from a crashed turn is never committed (containment intact)
+  PASS: the off-lane edit was reverted, not merely left uncommitted
+  PASS: an exit-0-but-empty-transcript turn still fails the turn (exit 5)
+  PASS: the empty-transcript turn handed its token off too (second route closed)
+  PASS: the empty-transcript turn's work reached a commit
+  gh432-failed-turn-persist: 12 pass, 0 fail

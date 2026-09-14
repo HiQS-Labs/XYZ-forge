@@ -1,0 +1,45 @@
+== test: claude-turn ==
+  workdir: <tmp>/tick-claude-turn.XXXXXX.0LC89anxFJ
+  PASS: non-Claude actor -> shim defers, no commit
+  PASS: Claude turn (good) exits 0
+  PASS: Claude turn committed (file-scoped)
+  PASS: commit touched the relay file
+  PASS: commit message includes agent id
+  PASS: CLAUDE_LOG inside the tree is ignored (turn still succeeds)
+  PASS: transcript log cleaned up (not committed)
+  PASS: off-allowlist edit -> shim fails (exit 6)
+  PASS: off-lane file was reverted/removed
+  PASS: no commit on a violating turn
+  PASS: Claude commit during turn -> shim fails (exit 6)
+  PASS: sneaked commit reset to BEFORE_HEAD
+  PASS: off-lane committed file removed by reset
+  PASS: off-lane path with space -> shim fails (exit 6)
+  PASS: spaced off-lane file reverted (-z parsing)
+  PASS: no commit on spaced-path violation
+  PASS: pre-existing dirty file -> turn still succeeds
+  PASS: pre-existing ambient WIP left untouched (not reverted)
+  PASS: commit excludes pre-existing ambient WIP
+  PASS: builder --allowedTools flag passed to claude
+  PASS: --output-format flag passed to claude
+  PASS: --permission-mode flag passed to claude
+  PASS: Edit tool in builder allowlist
+  PASS: Write tool in builder allowlist
+  PASS: builder pins --model (cost determinism)
+  PASS: builder cannot spawn codex/gemini (PATH-shadow blocks them)
+  PASS: shadow is subprocess-scoped (real gemini still works outside the turn)
+  PASS: staged rename (off-lane) enforced, not skipped as pre-existing
+  PASS: .tick writes exempted when host doesn't gitignore .tick (turn succeeds)
+  PASS: .tick state dir preserved (not rm-rf'd)
+  PASS: GH-58: missing claude -> exit 3
+  PASS: GH-58: clear error message printed
+  PASS: GH-58: resolves ~/.claude/local/claude -> exit 0
+  PASS: GH-58: resolves explicit CLAUDE_BIN -> exit 0
+  PASS: GH-172: vendored/root-split Claude turn succeeds without TICK_BIN
+  PASS: GH-172: vendored/root-split Claude turn still commits the target repo
+  PASS: GH-172: vendored/root-split Claude cost event lands in the coordination repo .tick
+  PASS: GH-172: XYZ_PYTHON=1 Claude turn refuses an unowned token (exit 5)
+  PASS: GH-172: python Claude guard blocks commits before mutation
+  PASS: GH-172: python Claude guard leaves the relay file untouched
+  PASS: GH-296: Python Claude turn (CLAUDE_TURN_ROOT unset) exits 0
+  PASS: GH-296: claude-turn.py's claim --paths stayed repo-relative, no root-escaping '..' (got: "relay.md")
+  claude-turn: 36 pass, 0 fail

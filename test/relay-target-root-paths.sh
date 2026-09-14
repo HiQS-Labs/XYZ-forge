@@ -39,7 +39,7 @@ export TICK_REPO_ROOT="$A"   # coordination stays in the harness repo
 printf 'edited by agent\n' >> "src/sub dir/artifact.txt"
 printf '\n### Round 1 · Agent\n' >> "relay-system/2026-06-24/thread.md"
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to reviewer >/dev/null 2>&1
-printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed","usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB"

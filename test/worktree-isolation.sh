@@ -47,7 +47,7 @@ fi
 # GH-107: a builder tool's own cache dir as an untracked side effect of an otherwise-clean turn
 [ "${STUB_MODE:-good}" = toolcache ] && { mkdir -p .codebase-memory; printf 'index\n' > .codebase-memory/index.json; }
 [ "${STUB_MODE:-good}" = customcache ] && { mkdir -p .mytool-cache; printf 'blob\n' > .mytool-cache/blob; }
-printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'   # minimal cost JSON
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed","usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'   # minimal cost JSON
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -130,7 +130,7 @@ printf '\n### Round 1 · Builder\n' >> relay.md
 "\$TICK" release "\$RELAY_TASK" --agent "\$RELAY_AGENT" --to reviewer >/dev/null 2>&1
 # simulate a peer/harness commit landing on ROOT during the turn (the moved-ROOT-HEAD trigger)
 git -C "$A" commit --allow-empty -q -m "concurrent peer commit during turn" >/dev/null 2>&1
-printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed","usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB2"

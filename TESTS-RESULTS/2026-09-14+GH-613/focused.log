@@ -1,0 +1,23 @@
+test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) ... ok
+test_effort_and_resolution (__main__.ClaudeSubscription.test_effort_and_resolution) ... ok
+test_legacy_and_invalid_mode (__main__.ClaudeSubscription.test_legacy_and_invalid_mode) ... ok
+test_legacy_subscription_refused (__main__.ClaudeSubscription.test_legacy_subscription_refused) ... ok
+test_missing_binary (__main__.ClaudeSubscription.test_missing_binary) ... ok
+test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) ... ok
+test_probe_failures (__main__.ClaudeSubscription.test_probe_failures) ... ok
+test_real_probe_and_consult_dispatch (__main__.ClaudeSubscription.test_real_probe_and_consult_dispatch) ... ok
+test_restricted_probe_uses_request_settings (__main__.ClaudeSubscription.test_restricted_probe_uses_request_settings) ... ok
+test_results (__main__.ClaudeSubscription.test_results) ... ok
+test_subscription_account (__main__.ClaudeSubscription.test_subscription_account) ... ok
+test_wall_and_idle_kill_descendants (__main__.ClaudeSubscription.test_wall_and_idle_kill_descendants) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 11.892s
+
+OK
+== test: gh610-claude-subscription ==
+  workdir: <tmp>/tick-gh610-claude-subscription.XXXXXX.SHGABhftGN
+  PASS: good produces exit 0 and cleans up the claimed turn
+  PASS: error produces exit 5 and cleans up the claimed turn
+  PASS: authfail produces exit 5 and cleans up the claimed turn
+  PASS: inherit-error produces exit 5 and cleans up the claimed turn

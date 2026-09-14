@@ -1,0 +1,12 @@
+== test: relay-turn-timeout ==
+  workdir: <tmp>/tick-relay-turn-timeout.XXXXXX.OHMmbvvI7l
+  PASS: codex: timed-out stub -> shim exits 7
+  PASS: codex: turn killed fast (2s < stub's 5s sleep)
+  PASS: codex: fast stub under cap -> exit 0 (no false-positive kill)
+  PASS: agy: timed-out stub -> shim exits 7
+  PASS: agy: turn killed fast (3s < stub's 5s sleep)
+  PASS: agy: fast stub under cap -> exit 0 (no false-positive kill)
+  PASS: claude: timed-out stub -> shim exits 7
+  PASS: claude: turn killed fast (1s < stub's 5s sleep)
+  PASS: claude: fast stub under cap -> exit 0 (no false-positive kill)
+  relay-turn-timeout: 9 pass, 0 fail
