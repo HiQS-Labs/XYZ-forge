@@ -97,6 +97,24 @@ drop_before = git(drop_dest, "rev-parse", "HEAD").stdout.strip()
 r = sh(sys.executable, drop_sync, "--target", "skills-army-mini", "--dest", drop_dest, "--apply")
 ok("retry refuses a restored previously managed deletion", r.returncode == 2 and git(drop_dest, "rev-parse", "HEAD").stdout.strip() == drop_before, r.stderr[-200:])
 
+# A retry may not use its replacement manifest to claim an operator-owned remote path.
+owner_bare = os.path.join(WORK, "owner.git"); git(WORK, "clone", "-q", "--bare", bare, owner_bare)
+owner_remote = os.path.join(WORK, "owner-remote"); git(WORK, "clone", "-q", owner_bare, owner_remote)
+owner_manifest = pathlib.Path(owner_remote, "MANIFEST.txt")
+owner_manifest.write_text("\n".join(p for p in owner_manifest.read_text().splitlines() if p != "README.md") + "\n")
+pathlib.Path(owner_remote, "README.md").write_text("operator-owned remote README\n")
+git(owner_remote, "add", "MANIFEST.txt", "README.md"); git(owner_remote, "commit", "-qm", "operator owns README"); git(owner_remote, "push", "-q", "origin", "main")
+owner_retry = os.path.join(WORK, "owner-retry"); git(WORK, "clone", "-q", owner_bare, owner_retry)
+shutil.copy(os.path.join(src, "mini/skills-army-README.md"), os.path.join(owner_retry, "README.md"))
+owner_manifest = pathlib.Path(owner_retry, "MANIFEST.txt")
+owner_manifest.write_text("\n".join(sorted(expected - {"MANIFEST.txt", ".xyz-forge-revision"})) + "\n")
+git(owner_retry, "add", "MANIFEST.txt", "README.md")
+owner_message = f"sync: XYZ-forge@{git(src, 'rev-parse', 'HEAD').stdout.strip()[:12]} (fixture)"
+git(owner_retry, "commit", "-qm", owner_message)
+owner_before = git(owner_retry, "rev-parse", "HEAD").stdout.strip()
+r = sh(sys.executable, sync, "--target", "skills-army-mini", "--dest", owner_retry, "--apply")
+ok("retry refuses takeover of an unmanifested operator-owned path", r.returncode == 2 and git(owner_retry, "rev-parse", "HEAD").stdout.strip() == owner_before, r.stderr[-300:])
+
 # Shared default profile: when a publisher retry newly restores an absent seed, it remains exact.
 mini_bare = os.path.join(WORK, "mini.git"); mini_dest = os.path.join(WORK, "mini")
 git(WORK, "init", "-q", "--bare", mini_bare); git(mini_bare, "symbolic-ref", "HEAD", "refs/heads/main")

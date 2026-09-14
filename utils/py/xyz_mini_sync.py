@@ -175,6 +175,9 @@ def destination_ready(source, dest, files, managed, revision, message):
                         continue
                 elif mode != "managed":
                     continue
+                elif dst not in previous and git(dest, "cat-file", "-e", f"{remote}:{dst}", check=False).returncode == 0:
+                    payload_matches = False
+                    continue
                 source_path, dest_path = os.path.join(source, src), os.path.join(dest, dst)
                 if os.path.islink(dest_path) or not os.path.isfile(dest_path):
                     payload_matches = False
