@@ -1,6 +1,6 @@
 ---
 title: "GH-616: fix(skills): enforce commensurate machinery and review-packet envelope in start-task"
-status: Active
+status: Complete
 created: 2026-09-13
 updated: 2026-09-13
 owner: operator (via /express)
