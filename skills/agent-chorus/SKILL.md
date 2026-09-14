@@ -59,7 +59,7 @@ AGENT_CHORUS="<this skill's directory>/scripts/agent_chorus.py"
 
 That holds for a copy install (`~/.claude/skills/agent-chorus/`, a project's `.claude/skills/`),
 a symlink install (the link resolves to the repository copy), and a session started outside any
-Git repository. Inside an XYZ-forge clone the same path is
+Git repository. Inside the source-repo clone (XYZ-forge or XYZ mini) the same path is
 `$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py`; do not use that
 form anywhere else — it prints `fatal: not a git repository` from a non-repo folder and a
 nonexistent path from any other repo. Quote the variable: paths may contain spaces.
