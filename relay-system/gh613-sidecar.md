@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
+STATUS: Open
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,3 +72,6 @@ Coverage limitation: Verify-tier graph metadata for XYZ-forge refers to another 
 relay closed (Approved), no further turn needed. Producer/operator owns corrected full-gate qualification and final publication bookkeeping.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-09-14T02:03:56Z
+terminal STATUS Approved written by builder-role turn (codex) — reverted
