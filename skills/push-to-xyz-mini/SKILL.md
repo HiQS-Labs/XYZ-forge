@@ -23,8 +23,8 @@ around it. Read `utils/py/xyz_mini_sync.py` for the manifest (what ships) and th
    python3 utils/py/xyz_mini_sync.py
    ```
 
-   Read the plan: `+` adds, `~` updates, `-` deletions, seeds kept, files scanned. A refusal
-   (exit 2) names the exact reason; fix it at the source, do not work around it.
+   Read the plan line (files to copy, paths to delete). A refusal (exit 2) names the exact
+   reason; fix it at the source, do not work around it. Exit 4 means the secret scan fired.
 
 2. Show the operator the plan and ask once: "publish this?"
 
@@ -35,27 +35,16 @@ around it. Read `utils/py/xyz_mini_sync.py` for the manifest (what ships) and th
    ```
 
    Exit 0 means the commit exists locally **and** `origin/main` was read back equal to it.
-   Exit 3 means apply/commit/push failed; the message says what was retained (a rerun retries a
-   failed push without creating a second commit). Exit 4 means the secret tripwire fired and
-   nothing was written.
+   Exit 3 means commit or push failed; the local commit is retained and a rerun retries the push.
 
 4. Read back and report: `git -C ../XYZ-mini log -1 --stat` and the pushed SHA.
-
-## After a squash merge
-
-The publisher derives what it previously owned from the forge revision recorded in mini's
-`.xyz-forge-revision`. If that SHA was squashed away and is unreachable in your clone, the run
-refuses (exit 2). Pass the merge commit explicitly, once:
-
-```bash
-python3 utils/py/xyz_mini_sync.py --prior-revision <merge-sha> --push
-```
 
 ## Changing what ships
 
 Edit the `MANIFEST` tuple in `utils/py/xyz_mini_sync.py` in a forge PR. Dropping an entry deletes
-it from mini on the next publication (mirror mode); adding one ships it. Seeds (`TODO.md`) are
-copied once and never touched again. `test/gh589-xyz-mini-sync.sh` is the contract test.
+it from mini on the next publication (mini's `MANIFEST.txt` records what the last run wrote); adding
+one ships it. Seeds (`TODO.md`) are copied once and never touched again. `test/gh589-xyz-mini-sync.sh`
+is the contract test.
 
 ## What this skill never does
 

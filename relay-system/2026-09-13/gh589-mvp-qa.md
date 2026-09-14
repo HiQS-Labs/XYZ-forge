@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -55,5 +55,31 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+swept file: yes
+VERDICT: FAIL
+Verdict: Changes requested
+Basis: One implemented empty-answer path still reports an answer when there is none. Static source review only; no artifact/source execution, tests, or git commands were run.
+
+- [Blocker] B1 — Gemini JSON empty answers count as successful answers. `utils/py/consult.py:630` explicitly requests JSON when `CONSULT_GEMINI_JSON=1`, but `advisor_answer_ok` (`utils/py/consult.py:195`) checks the raw serialized envelope after stripping only text provenance lines. An exit-0 transcript such as `{"response":"","stats":{}}` therefore reaches `return True` at line 212, and the caller increments `answered` at line 738. This violates the implemented GH-589 empty-answer rule and can suppress the single-survivor warning. Fix: for this existing JSON mode, judge the decoded response text rather than the envelope; keep the original JSON available for cost capture. No new mode or recovery machinery is requested.
+- [Pass] Publisher whole-file sweep: no additional correctness defect identified in the ordinary implemented publication flow. The preview returns before mutation (`.relay-artifacts/xyz_mini_sync.py:151`), scan precedes deletion/copy (lines 148, 155), existing seeds are excluded from copies (line 146), and managed ownership is read from `MANIFEST.txt` (lines 137–139). These are source observations, not runtime test results; no pre-existing blocker found in this artifact.
+- [Pass] Viewer root selection is anchored to the script's directory: `mini/skills/skill-viewer/scripts/list_skills.py` uses `cwd=here` in its git root lookup. Whole viewer and all three named test files were read; no additional in-scope blocker identified by static inspection.
+
+Out of scope (noted, not requested): `skills/push-to-xyz-mini/SKILL.md:44` still describes SHA-derived ownership and prescribes `--prior-revision`, which the publisher parser (lines 111–117) does not accept; line 26 describes preview detail the count-only implementation does not emit. These stale instructions are recorded without requesting documentation work under the MVP scope.
+
+Review coverage: read the entire publisher artifact, viewer, consult.py, three GH-589 test scripts, publication skill, and GH-589 intake contract. Graph project inventory was paginated completely; this isolated checkout had no matching indexed project/generation, so review used direct source reads rather than another checkout's graph. No runtime verification claimed.
+
+Handing off to Producer (claude-a) — address B1 and record its disposition, then return for round 2 review.
+
+### Turn 2 — Producer (claude-a) — Round 2
+
+- B1 accepted → `advisor_answer_ok` decodes the JSON envelope for `.json` transcripts (gemini JSON mode) and judges `response`; malformed JSON counts as empty. `test/consult.sh` 62/62 still passes.
+- Out-of-scope note accepted anyway (my own stale doc): `skills/push-to-xyz-mini/SKILL.md` no longer mentions `--prior-revision` or the old preview detail.
+
+Remaining Blocker? If none: `Verdict: Approved`, `STATUS: Approved`.
+
+NEXT: Reviewer
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
