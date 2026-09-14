@@ -599,14 +599,24 @@ Open with a human sentence ("Driving a headless Codex or agy review of `<artifac
 close with the result + exit code. The structured thread lives in the relay file; the operator gets a
 sentence and a verdict, not a wall of transcript.
 
+## Review Scope & Commensurate Complexity Standard
+
+Reviewers (Codex, agy, Claude, etc.) and authors must adhere to a strict standard of **commensurate complexity**:
+
+1. **Surgical, DRY, Safe, Secure, and Stable within Reason:** Reviews must evaluate correctness, safety, and invariants against the stated requirements without encouraging speculative over-engineering.
+2. **Commensurate Machinery & Tests:** Defensive handling, recovery mechanisms, and test footprints must remain strictly commensurate with the scale and role of the core code. An 80-line sync script or local tool must not become entangled with multi-layered enterprise fail-safes, distributed locks, journaled recovery, or bespoke fuzzing/scanning runtimes unless the operator explicitly specifies it.
+3. **Operational Envelope Grounding:** Reviewers must grade against the explicitly declared operational envelope (e.g. local developer CLI, single-repo task) rather than unrequested enterprise multi-tenant threat models.
+4. **Challenge Unwarranted Complexity:** Reviewers should actively challenge speculative abstractions, parallel subsystems, and overbuilding, acting as a filter *against* bloat rather than an engine of scope creep.
+
 ## QA / Consult Template Formatting
 
 Since agents often scaffold relay threads manually (when the `/relay` slash command isn't used or available), it is critical to structure QA / consultation threads correctly. **Do not** write open-ended instructions like "QA this codebase against the requirements."
 
-Headless agents (Codex, agy, Aider) perform best when given **explicit questions to adjudicate**. A proper QA thread must include:
-1. The goal and files to read.
-2. A numbered list of concrete, specific questions to answer.
-3. Instructions on what the agent should output (e.g. file:line citations).
+Headless agents (Codex, agy, Aider) perform best when given **explicit questions and a defined operational envelope**. A proper QA thread must include:
+1. The goal, operational envelope, and files to read.
+2. Explicit statement of commensurate complexity and non-goals.
+3. A numbered list of concrete, specific questions to answer.
+4. Instructions on what the agent should output (e.g. file:line citations).
 
 **Example format:**
 ```markdown
@@ -621,6 +631,8 @@ STATUS: Open
 
 Adjudicate the implementation of Phase 3 Semantic Layer against its plan in PROJECT/2-WORKING/GH-1-firebase-ai-reports-plan.md.
 
+Operational Envelope: Local CLI tool. Tests and machinery must be commensurate with scope; do not demand unrequested enterprise multi-tenant fail-safes.
+
 Read the plan doc in full, plus the code it references:
 - api/src/indexer.ts
 - api/src/semantic.ts
@@ -630,6 +642,7 @@ Questions:
 1. Are the requirements for soft-failing met? Does it gracefully continue if the vector index is missing or empty?
 2. Are limits capped properly? The plan says "findNearest capped at top-K <= 10". Is this enforced securely?
 3. Is the Indexer idempotent? Review `processItem` in `indexer.ts` which uses a hash check. Does this prevent unnecessary re-embedding?
+4. Is the implementation surgical and DRY? Flag any unnecessary layers of abstraction or unneeded machinery.
 
 Flag anything wrong, missing, incorrectly scoped, or over/under-engineered. Be concrete and cite file:line where you disagree with a specific claim.
 
