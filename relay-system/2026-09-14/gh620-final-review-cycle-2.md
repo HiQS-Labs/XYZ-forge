@@ -152,3 +152,11 @@ on that gate passing.
 
 VERDICT: PASS
 Basis: the live-remote ownership check closes the final retained-retry bypass, its red-control mutant covers the previously accepted forged state, and the final bounded implementation and records satisfy issue #620
+
+### Attestation · relay-drive — 2026-09-14T18:09:30Z
+task: RELAY-gh620-final-review-cycle-2
+reviewer: codex
+status: Approved
+reviewed-head: 99e9eebfaceb204cc2582473812befa4f8f75d96
+added-range: 7588+3121
+added-sha256: 2bc614f09e3825f06e72a425e85f555d4274f62e0f2a49e772a9f50a7465e618
