@@ -158,11 +158,13 @@ def destination_ready(source, dest, files, managed, revision, message):
                 and parent.stdout.strip() == remote and subject.stdout.strip() == message
                 and old_manifest.stdout == wanted_manifest and old_revision.stdout == revision):
             previous = set(remote_manifest.stdout.splitlines()) if remote_manifest.returncode == 0 else set()
-            allowed = set(managed) | previous | {MANIFEST_FILE, REVISION_FILE}
+            seeds = {dst for _, dst, mode in files if mode == "seed"}
+            allowed = set(managed) | previous | seeds | {MANIFEST_FILE, REVISION_FILE}
             changed_paths = set(changed.stdout.splitlines()) if changed.returncode == 0 else {"<unreadable>"}
-            payload_matches = True
+            payload_matches = all(not os.path.lexists(os.path.join(dest, old))
+                                  for old in previous - set(managed))
             for src, dst, mode in files:
-                if mode != "managed":
+                if mode != "managed" and not (mode == "seed" and dst in changed_paths):
                     continue
                 source_path, dest_path = os.path.join(source, src), os.path.join(dest, dst)
                 if os.path.islink(dest_path) or not os.path.isfile(dest_path):

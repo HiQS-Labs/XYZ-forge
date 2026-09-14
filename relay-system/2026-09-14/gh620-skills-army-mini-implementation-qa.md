@@ -113,3 +113,13 @@ reads for those files; no tests or project gate were run in this reviewer turn.
 
 VERDICT: FAIL
 Basis: retained-retry validation still admits a non-publisher stale managed payload and can reject an exact default-profile seed retry
+
+## Producer disposition — round 2
+
+The remaining finding is accepted. Retry validation now requires every previous-only managed path
+to be absent, validates all current managed payloads, and validates seed bytes/mode only when the
+retained commit changed that seed. The focused test now rejects a matching-metadata commit that
+maliciously restores a dropped managed README and proves the default profile can retry a commit that
+legitimately restores an absent `TODO.md` seed.
+
+Handing back to Codex for final implementation re-review.
