@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -916,5 +916,48 @@ PASS/FAIL, Basis, swept file yes/no, and file:line citations. All prior source f
 were closed in Round5; do not reopen without contradictory current evidence. If clean,
 setApproved and tickdone. No source edits, Git commands, shell/full suites, board/config
 writes. Only relay may be edited. No self-fixing or speculative new testing requirements.
+
+## Reviewer — codex — Round 6 final source approval
+
+VERDICT: PASS
+Basis: Complete current-file review closes the outstanding coverage requirement and the remaining mock seed defect. No additional material pre-existing or introduced defect was found in these files against the controlling local, single-user, explicitly applied policy contract. This is source approval; the parent-owned final full gate and subsequent live application remain separate steps, as specified in the final coverage packet.
+swept file: yes
+
+Coverage below is direct current-source reading, contiguous through actual EOF (17,729 lines across the 19 artifacts). Truncated reads were split and their omitted spans reread; no truncated span is counted as covered. The relay history was also read in full.
+
+| File | Read coverage |
+| --- | --- |
+| `CHANGELOG.md` | 1–2529, EOF |
+| `utils/py/releases_app.py` | 1–6689, EOF |
+| `utils/py/board_sync.py` | 1–1491, EOF |
+| `utils/py/mock_gh_board.py` | 1–430, EOF |
+| `utils/py/work_connectors/__init__.py` | 1–447, EOF |
+| `utils/py/work_connectors/github_board.py` | 1–186, EOF |
+| `test/test_gh605_work_state.py` | 1–646, EOF |
+| `test/test_gh605_board_policy.py` | 1–1002, EOF |
+| `validate.sh` | 1–1507, EOF |
+| `test/gh549-work-events.sh` | 1–1426, EOF |
+| `test/gh492-roadmap-state-sweep.sh` | 1–160, EOF |
+| `test/gh402-board-sync.sh` | 1–270, EOF |
+| `test/gh57-releases-fuzz.sh` | 1–255, EOF |
+| `test/gh605-work-state.sh` | 1–4, EOF |
+| `test/gh605-board-policy.sh` | 1–4, EOF |
+| `RELEASES-DB-FAQS.md` | 1–88, EOF |
+| `PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md` | 1–446, EOF |
+| `TESTS-RESULTS/gh605-implementation/SUMMARY.md` | 1–121, EOF |
+| `TESTS-RESULTS/gh605-implementation/provenance.jsonl` | 1–28, EOF |
+
+- [Pass] **Round 5 seed finding closed.** The real `--seed` branch reserves `PVTI_mock_item_0001` by setting `next_item_id = 2` before saving (`utils/py/mock_gh_board.py:344`, `:356`). The regression calls that branch, adds issue 124, updates the returned ID, and reads the snapshot; it asserts distinct IDs, issue 123 still In progress, and issue 124 Done (`test/test_gh605_board_policy.py:388`). This directly distinguishes the faulty aliasing behavior from the correction. The Producer's witnessed red control and 51/51 result, and the parent's independent 79/79 result on `830455e8`, are attributed to their preceding relay records, not claimed as reviewer executions. No further seed change is needed.
+- [Pass] **Earlier ownership/lifecycle findings remain closed.** Section-first event classification and informational metadata handling remain in the shared extraction/writer path (`utils/py/releases_app.py:1449`, `:1469`, `:1600`); repository-aware selection and lease handling remain present (`:3830`, `:4704`). Read-only evidence checks precede SQLite access and distinguish lifecycle from informational visibility (`:5193`, `:5255`, `:5270`, `:5335`). Current fixtures cover multi-repository leasing, repeated terminal queue transitions and ambiguity (`test/test_gh605_work_state.py:534`, `:561`, `:626`). The broader module sweep found no contradictory path requiring these dispositions to reopen.
+- [Pass] **Policy preservation and bounded transport remain intact.** Invalid/ambiguous ledger identity is handled before linked-PR targeting, CLOSED ambiguity is preserved, and unset membership is distinct from absence (`utils/py/board_sync.py:226`, `:269`, `:307`, `:327`). The actual owner/snapshot query paths use the corrected owner union and balanced query shape (`:610`, `:650`). Top-N, stable tie/override, time-window and PR precedence handling remain consistent with the controlling plan; no scheduler or implicit live-apply path was introduced (`PROJECT/2-WORKING/GH-605-WORK-STATE-PROJECTION.md:210`).
+- [Pass] **Apply/restore retains its audited refusal boundaries.** Shared writes validate options and mutation acknowledgements around per-request audit callbacks (`utils/py/board_sync.py:735`, `:750`, `:769`). Saved-preview age considers both clocks; apply rechecks evidence/decisions under lock and fences each operation (`:1132`, `:1160`). Restore conditions on exact item identity and status, preserves newly added cards, and keeps unresolved outcomes indeterminate (`:1234`, `:1336`). Tampered preview and remote drift fixtures assert zero GraphQL writes (`test/test_gh605_board_policy.py:975`); no new test requirement is needed for this disposition.
+- [Pass] **Existing integration and gate contracts are preserved.** The connector routes policy-owned writes through the guarded policy surface (`utils/py/work_connectors/github_board.py:125`); the established connector response contract remains present (`utils/py/work_connectors/__init__.py:127`). Both four-line shell wrappers invoke the existing Python fixtures (`test/gh605-work-state.sh:1`, `test/gh605-board-policy.sh:1`), with shell registrations and runner retained (`validate.sh:550`, `:1227`). GH-57 uses deterministic distinct clocks and the resolved-settings union while retaining duplicate guards (`test/gh57-releases-fuzz.sh:118`, `:127`, `:146`, `:173`, `:188`). Its recorded 38/42 red control and restored 42/42 result substantiate the narrow fixture correction (`TESTS-RESULTS/gh605-implementation/provenance.jsonl:26`).
+- [Pass] **Evidence does not prematurely claim current runtime completion.** The stored SUMMARY explicitly says “not yet approved” and identifies its historical candidate (`TESTS-RESULTS/gh605-implementation/SUMMARY.md:1`, `:3`); its 378/378 gate belongs to `ae7006c8`, as does the final stored receipt (`TESTS-RESULTS/gh605-implementation/provenance.jsonl:28`). Those are historical evidence, not a final gate for `830455e8`. The final parent packet explicitly places the one current full gate after this source approval. Historical CHANGELOG entries were reviewed as dated records, without external revalidation. FAQ diagnosis/repair/preview/restore guidance remains aligned (`RELEASES-DB-FAQS.md:14`, `:32`, `:39`).
+
+Graph limitation: Verify-tier inventory and coverage were checked against the nearest project, `gh605-implementation-qa-current`, generation `2026-09-14T03:39:25Z`. It points to retired worktree `rtl-wt.2ftoiy`, not this checkout; every requested path reports missing freshness. CHANGELOG and mock are excluded, and recorded parse gaps include GH-549 lines 898/910/1177 and GH-57 line 214. All those files and ranges were covered by the direct source reads above; no graph completeness claim or reindex mutation is made.
+
+No source/artifact was executed or changed, and no tests, Git commands, live network mutations, board/config/ledger writes, or new scratch artifacts were performed by this Reviewer. Only this relay record and the required token lifecycle were changed. No open Blocker/Should/Nit remains from this review.
+
+Relay closed (Approved), no further turn needed. Parent proceeds with the already-required final full gate before live Rev.2 application; this approval alone does not claim that gate or live application has occurred.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
