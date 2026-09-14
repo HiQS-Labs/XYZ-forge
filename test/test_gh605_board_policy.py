@@ -784,6 +784,88 @@ class PolicyIntegrationTests(unittest.TestCase):
         gql.assert_not_called()
         self.assertFalse(result_path.exists())
 
+    def test_real_loader_preserves_invalid_source_identity_before_planning(self):
+        cfg = {"project_owner": "owner", "project_number": 4,
+               "repos": ["owner/repo"], "status_field": "Status"}
+        self.board[1]["status"] = "Ready"
+
+        def preview_for(github):
+            with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch.object(board_sync, "_policy_board_cfg", return_value=cfg), \
+                 mock.patch.object(board_sync, "collect_github_state", return_value=github), \
+                 mock.patch.object(board_sync, "fetch_board_items",
+                                   side_effect=self._board_snapshot):
+                return board_sync.build_policy_preview(self.root, as_of=self.as_of)
+
+        closed = issue(1, "CLOSED", state_reason="COMPLETED", closed_at=self.as_of)
+        linked_pr = {"repo": "owner/repo", "kind": "pr", "number": 9,
+                     "state": "OPEN", "draft": False,
+                     "closing_issues": [{"repo": "owner/repo", "number": 1}]}
+        conn = __import__("sqlite3").connect(self.root / "releases.db")
+        for invalid_url in (None, "not a github issue URL",
+                            "https://github.com/other/repo/issues/1"):
+            with self.subTest(url=invalid_url):
+                conn.execute("UPDATE roadmap_items SET issue_url=? WHERE gh_number=1",
+                             (invalid_url,))
+                conn.commit()
+                for github in ([closed, issue(2)], [issue(1), issue(2), linked_pr]):
+                    preview = preview_for(github)
+                    issue_changes = [c for c in preview["changes"]
+                                     if c["identity"] == ["owner/repo", "issue", 1]]
+                    self.assertFalse(issue_changes)
+                    self.assertTrue(any(
+                        tuple(u["identity"]) == ("owner/repo", "issue", 1)
+                        and "identity" in u["reason"]
+                        for u in preview["unresolved"]))
+
+        conn.execute("DELETE FROM roadmap_items WHERE gh_number=1")
+        conn.commit(); conn.close()
+        absent = preview_for([closed, issue(2)])
+        self.assertEqual(next(c for c in absent["changes"]
+                              if c["identity"] == ["owner/repo", "issue", 1])["after"],
+                         "Done")
+
+    def test_real_loader_valid_plus_invalid_rows_preserve_one_identity(self):
+        with tempfile.TemporaryDirectory(prefix="gh605-invalid-pair-") as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            conn = __import__("sqlite3").connect(root / "releases.db")
+            conn.executescript("""
+              CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, applied_at TEXT);
+              INSERT INTO schema_migrations VALUES(8,'2026-09-13T00:00:00Z');
+              CREATE TABLE settings(key TEXT PRIMARY KEY,value TEXT);
+              INSERT INTO settings VALUES('generation','1');
+              CREATE TABLE repos(id INTEGER PRIMARY KEY,slug TEXT);
+              INSERT INTO repos VALUES(1,'owner/repo');
+              CREATE TABLE roadmap_items(global_id TEXT,repo_id INTEGER,gh_number INTEGER,
+                issue_url TEXT,section TEXT,status_marker TEXT,rating_pri INTEGER,
+                rating_sev INTEGER,rating_appeal INTEGER,rating_effort INTEGER,rating_ovr INTEGER);
+              CREATE TABLE work_events(id INTEGER PRIMARY KEY,repo_id INTEGER,gh_number INTEGER,
+                event TEXT,payload TEXT,at TEXT);
+              CREATE TABLE connector_cursors(connector TEXT,last_event_id INTEGER,
+                last_attempt_at TEXT,last_error TEXT,updated_at TEXT);
+              CREATE TABLE jog_queue(id INTEGER PRIMARY KEY,repo_id INTEGER,gh_number INTEGER,status TEXT);
+            """)
+            for gid, url in (("valid", "https://github.com/owner/repo/issues/1"),
+                             ("invalid", "malformed")):
+                conn.execute("INSERT INTO roadmap_items VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                             (gid, 1, 1, url, "Queue / parked intake", "",
+                              90, 1, 1, 1, None))
+            conn.commit(); conn.close()
+            board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                      "item_id": "item-1", "status": "Ready"}]
+            github = [issue(1, "CLOSED", state_reason="COMPLETED",
+                            closed_at=self.as_of)]
+            with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch.object(board_sync, "_policy_board_cfg", return_value={}), \
+                 mock.patch.object(board_sync, "collect_github_state", return_value=github), \
+                 mock.patch.object(board_sync, "fetch_board_items", return_value=board):
+                preview = board_sync.build_policy_preview(root, as_of=self.as_of)
+            self.assertFalse(preview["changes"])
+            self.assertTrue(any(tuple(u["identity"]) == ("owner/repo", "issue", 1)
+                                and "identity" in u["reason"]
+                                for u in preview["unresolved"]))
+
     def test_real_preview_apply_adds_absent_pr_with_mock_snapshot_identity(self):
         self.mock_state["pull_requests"] = {"owner/repo": {
             "9": {"id": "pr-content-9", "state": "OPEN", "draft": False,

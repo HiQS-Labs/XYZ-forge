@@ -25,7 +25,9 @@ but do not supersede a genuine lifecycle transition. Jog add/lease/status/drop/s
 their existing `GH-N` receipt selector while resolving the unique queue row inside the transaction;
 ambiguous same-number rows refuse instead of assigning an event to the first repository. Queue clear
 and orphan recovery emit one owned transition per row through the same atomic receipt boundary, while
-same-state metadata updates emit no lifecycle transition.
+same-state metadata updates emit no lifecycle transition. Active queue positions compact only when a
+row actually leaves `pending`/`running`; repeated or terminal-to-terminal commands cannot decrement
+the remaining active rows again.
 
 Repair in this order: run `releases check` and recover any interrupted write; deliberately run
 `releases migrate` if status reports schema 7; rerun `releases work status`; review
@@ -53,6 +55,9 @@ Project lookup uses GitHub's `repositoryOwner` union for either user or organiza
 database events and policy evidence retain each roadmap row's repository identity. The legacy raw
 event connector remains its existing configured single-repository replay path; policy preview/apply
 is the complete repo-qualified projection for multi-repository board decisions.
+Malformed, missing, or foreign issue URLs remain invalid evidence, but a qualified owning `repos.slug`
+(or an origin-proven legacy basename) is retained so the planner preserves that known issue identity
+instead of mistaking invalid evidence for an absent ledger row.
 
 `roadmap rate --force` removes the complete prior canonical rating and optional override before
 writing the replacement, so `raw_text` continues to parse back to the stored rating columns.

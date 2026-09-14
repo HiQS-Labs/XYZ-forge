@@ -531,6 +531,87 @@ class JogLifecycleWriteTests(unittest.TestCase):
         self.assertEqual(report["issues"][0]["latest_lifecycle"]["event"], "jog_archived")
         self.assertEqual(report["issues"][0]["activity"], "unknown")
 
+    def test_real_lease_resolves_unique_queue_row_in_second_repository(self):
+        conn = sqlite3.connect(self.root / "releases.db")
+        now = app.now_iso()
+        conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
+                     (app.new_gid("repo-"), "owner/repo-b", now))
+        repo_b = conn.execute(
+            "SELECT id FROM repos WHERE slug='owner/repo-b'").fetchone()[0]
+        conn.execute("UPDATE jog_queue SET repo_id=? WHERE global_id=?",
+                     (repo_b, self.jog_gid))
+        conn.commit(); conn.close()
+
+        self._writer(app.jog_acquire_lease, str(self.root), 1, 4242)
+        conn = sqlite3.connect(self.root / "releases.db")
+        row = conn.execute(
+            "SELECT repo_id,status,lease_pid FROM jog_queue WHERE global_id=?",
+            (self.jog_gid,)).fetchone()
+        receipt = conn.execute(
+            "SELECT txn_id,target_gid FROM op_receipts WHERE op='jog-lease'").fetchone()
+        event = conn.execute(
+            "SELECT txn_id,repo_id,event,payload FROM work_events ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        conn.close()
+        self.assertEqual(row, (repo_b, "running", 4242))
+        self.assertEqual(receipt[1], "GH-1")
+        self.assertEqual(event[:3], (receipt[0], repo_b, "in_flight"))
+        self.assertEqual(json.loads(event[3])["jog_global_id"], self.jog_gid)
+
+    def test_repeated_terminal_commands_compact_active_positions_only_once(self):
+        conn = sqlite3.connect(self.root / "releases.db")
+        repo_id = conn.execute("SELECT id FROM repos").fetchone()[0]
+        now = app.now_iso()
+        for number, position in ((2, 2), (3, 3)):
+            conn.execute("""INSERT INTO jog_queue(global_id,repo_id,gh_number,position,status,
+                         created_at,updated_at,attempt_count) VALUES(?,?,?,?,?,?,?,?)""",
+                         (app.new_gid("jog-"), repo_id, number, position, "pending",
+                          now, now, 0))
+        conn.commit(); conn.close()
+
+        def active_positions():
+            check = sqlite3.connect(self.root / "releases.db")
+            rows = check.execute(
+                "SELECT gh_number,position FROM jog_queue "
+                "WHERE status IN ('pending','running') ORDER BY position"
+            ).fetchall()
+            check.close()
+            return rows
+
+        drop = ["--root", str(self.root), "jog", "drop", "GH-1",
+                "--reason", "test drop"]
+        self._writer(app.main, drop)
+        self.assertEqual(active_positions(), [(2, 1), (3, 2)])
+        self._writer(app.main, drop)
+        self.assertEqual(active_positions(), [(2, 1), (3, 2)])
+
+        skip = ["--root", str(self.root), "jog", "skip", "GH-2",
+                "--reason", "test skip"]
+        self._writer(app.main, skip)
+        self.assertEqual(active_positions(), [(3, 1)])
+        self._writer(app.main, skip)
+        self.assertEqual(active_positions(), [(3, 1)])
+
+        conn = sqlite3.connect(self.root / "releases.db")
+        conn.execute("""INSERT INTO jog_queue(global_id,repo_id,gh_number,position,status,
+                     created_at,updated_at,attempt_count) VALUES(?,?,?,?,?,?,?,?)""",
+                     (app.new_gid("jog-"), repo_id, 4, 2, "pending", now, now, 0))
+        conn.commit(); conn.close()
+        self._writer(app.jog_set_status, str(self.root), 3, "failed", "test")
+        self.assertEqual(active_positions(), [(4, 1)])
+        self._writer(app.jog_set_status, str(self.root), 3, "failed", "test again")
+        self.assertEqual(active_positions(), [(4, 1)])
+        self._writer(app.jog_set_status, str(self.root), 3, "archived", "test")
+        self.assertEqual(active_positions(), [(4, 1)])
+
+        conn = sqlite3.connect(self.root / "releases.db")
+        events = [row[0] for row in conn.execute(
+            "SELECT event FROM work_events WHERE gh_number IN (1,2,3) ORDER BY id")]
+        conn.close()
+        self.assertEqual(events.count("jog_dropped"), 1)
+        self.assertEqual(events.count("jog_parked"), 1)
+        self.assertEqual(events.count("jog_failed"), 1)
+
     def test_metadata_update_does_not_supersede_real_jog_start(self):
         self._writer(app.jog_acquire_lease, str(self.root), 1, 4242)
         self._writer(app.main, ["--root", str(self.root), "roadmap", "update",

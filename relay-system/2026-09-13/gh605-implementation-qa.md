@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 4 / 5
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -720,5 +720,45 @@ you correct the three source findings. Do not run shell/full suites in this work
 Run isolated Python fixtures, update FAQ/CHANGELOG if necessary, then hand back to Reviewer
 with ROUND5/5. Do not self-approve or push. Sol High owns implementation edits; parent owns
 verification receipts and final Astra review. Do not edit unrelated changes from PR611.
+
+## Producer — codex-author — Round 5 final corrections
+
+Disposition: both Round 4 Blockers and the queue-position Should are implemented in the existing
+loader/planner and jog transaction seams. No live board/network/config/ledger mutation, Git command,
+shell suite, or full gate was run.
+
+- **Implemented — invalid URL evidence retains independently trusted source identity.**
+  `load_work_evidence` now projects a qualified owning `repos.slug`, or an origin-proven legacy
+  basename, independently from URL validity while leaving `identity_valid=False`; it never adopts a
+  foreign URL as identity (`utils/py/releases_app.py:5335-5352`, `:5386-5389`). Real
+  loader→preview fixtures cover missing, malformed and wrong-owner URLs across CLOSED and OPEN+PR
+  paths, a valid-plus-invalid evidence pair, and the genuinely absent-ledger positive control
+  (`test/test_gh605_board_policy.py:787-867`).
+- **Implemented — lease ownership resolves the unique queue row across repositories.** Lease
+  acquisition selects up to two matching queue rows inside `perform_write`, refuses ambiguity, and
+  updates the sole row without a first-repository guess while preserving the `GH-N` receipt target
+  (`utils/py/releases_app.py:4698-4720`). The second-repository fixture proves row state, PID,
+  receipt/event transaction equality, repository ownership and jog global ID; the existing ambiguous
+  rollback control remains (`test/test_gh605_work_state.py:534-559`, `:626-642`).
+- **Implemented — terminal compaction is conditional on an active-state exit.** Drop, skip and the
+  shared status writer decrement later active positions only when the prior row was `pending` or
+  `running` (`utils/py/releases_app.py:4552-4559`, `:4631-4639`, `:4743-4753`). A three-item fixture
+  repeats drop, skip and helper-terminal commands, then checks stable distinct active positions and
+  exactly one same-state lifecycle event (`test/test_gh605_work_state.py:561-613`).
+
+Verification: the new pre-fix controls witnessed the intended failures (first-repository lease
+`jog-not-found`, repeated terminal compaction producing duplicate position 1, and invalid URL
+evidence falling through to Done). After repair the focused direct fixtures pass **78/78** (28
+work-state + 50 board-policy), and all three changed Python files parse via `ast`; logs are retained
+under `.relay-scratch/`. Codebase Memory's nearest GH-605 generation points at a retired worktree and
+reports these paths stale/missing, so implementation claims use current source and direct fixtures.
+FAQ/CHANGELOG now describe the trusted-identity, cross-repository lease and conditional compaction
+contracts. Parent's `gh57-releases-fuzz.sh` failure remains unresolved and no full-gate success is
+claimed; parent owns separate-full-clone investigation and final-candidate receipts. No self-approval
+or live apply.
+
+Handing off to codex (Reviewer) for Round 5 — go to the Reviewer window and say "take your turn".
+Review the three corrections, close the remaining full-file sweep, and approve only if the source and
+qualifying parent gates support it; no live Rev.2 apply before independent approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

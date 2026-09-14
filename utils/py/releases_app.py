@@ -4552,8 +4552,9 @@ def cmd_jog_drop(args):
             cur_pos = row["position"]
             conn.execute("""UPDATE jog_queue SET status = 'dropped', failure_reason = ?, lease_pid = NULL,
                             updated_at = ? WHERE id = ?""", (args.reason, now_iso(), row["id"]))
-            conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
-                         (row["repo_id"], cur_pos))
+            if row["status"] in ("pending", "running"):
+                conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
+                             (row["repo_id"], cur_pos))
             if row["status"] != "dropped":
                 work_events.append(_jog_work_event(row, "dropped"))
 
@@ -4631,8 +4632,9 @@ def cmd_jog_skip(args):
             cur_pos = row["position"]
             conn.execute("""UPDATE jog_queue SET status = 'parked', failure_reason = ?, lease_pid = NULL,
                             updated_at = ? WHERE id = ?""", (args.reason, now_iso(), row["id"]))
-            conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
-                         (row["repo_id"], cur_pos))
+            if row["status"] in ("pending", "running"):
+                conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
+                             (row["repo_id"], cur_pos))
             if row["status"] != "parked":
                 work_events.append(_jog_work_event(row, "parked"))
 
@@ -4699,13 +4701,17 @@ def jog_acquire_lease(root, gh_num, pid):
     try:
         def mutate(conn):
             _ensure_jog_schema(conn)
-            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
-            if not repo:
-                refuse("no-repo", "no repos row")
-            row = conn.execute("SELECT id, status, attempt_count FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
-                               (repo["id"], gh_num)).fetchone()
-            if not row:
+            rows = conn.execute(
+                "SELECT id,global_id,repo_id,gh_number,status,attempt_count "
+                "FROM jog_queue WHERE gh_number = ? LIMIT 2", (gh_num,)).fetchall()
+            if not rows:
+                if conn.execute("SELECT 1 FROM repos LIMIT 1").fetchone() is None:
+                    refuse("no-repo", "no repos row")
                 refuse("jog-not-found", "GH-%d not in jog queue" % gh_num)
+            if len(rows) != 1:
+                refuse("jog-event-identity",
+                       "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
+            row = rows[0]
             ts = now_iso()
             att = row["attempt_count"] + 1
             conn.execute("""UPDATE jog_queue SET status = 'running', lease_pid = ?, attempt_count = ?, updated_at = ?
@@ -4738,7 +4744,8 @@ def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
             pid_clause = ", lease_pid = NULL" if clear_lease else ""
             conn.execute(f"""UPDATE jog_queue SET status = ?, failure_reason = ?, updated_at = ?{pid_clause}
                             WHERE id = ?""", (status, failure_reason, ts, row["id"]))
-            if status in ("completed", "dropped", "archived", "parked", "failed"):
+            if (row["status"] in ("pending", "running")
+                    and status in ("completed", "dropped", "archived", "parked", "failed")):
                 conn.execute("""UPDATE jog_queue SET position = position - 1
                                 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?""",
                              (row["repo_id"], row["position"]))
@@ -5327,6 +5334,16 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
             # A legacy basename slug is accepted only when origin proves the full owner/name.
             repo_id = row["repo_id"]
             row_slug = repo_rows.get(repo_id)
+            # The repos row is the independently owned identity. A malformed or foreign URL
+            # must make the evidence invalid without erasing which configured repository owns
+            # it. Legacy basename-only rows are qualified only when the local origin proves the
+            # full slug; otherwise there is no safe identity to project.
+            source_repo = None
+            if row_slug and "/" in row_slug:
+                source_repo = row_slug
+            elif (row_slug and origin_repo
+                  and row_slug == origin_repo.rsplit("/", 1)[-1]):
+                source_repo = origin_repo
             repo_matches = bool(
                 url_repo and url_matches_row and row_slug
                 and (row_slug == url_repo
@@ -5361,13 +5378,13 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
                 if is_jog and len(jog_rows) > 1:
                     result["warnings"].append(
                         "%s#%s has ambiguous multiple jog rows; activity preserved as unknown"
-                        % (url_repo or row_slug or "unknown", row["gh_number"]))
+                        % (source_repo or "unknown", row["gh_number"]))
                 if explicit_transition and ledger_consistent and jog_consistent and observed and observed <= now_dt:
                     age = (now_dt - observed).total_seconds() / 86400.0
                     start = dict(latest_lifecycle, age_days=age,
                                  freshness="recent" if age <= stale_days else "stale")
             result["issues"].append({
-                "global_id": row["global_id"], "repo": url_repo,
+                "global_id": row["global_id"], "repo": source_repo,
                 "number": int(row["gh_number"]),
                 "identity_valid": repo_matches,
                 "section": row["section"], "marker": row["status_marker"],
