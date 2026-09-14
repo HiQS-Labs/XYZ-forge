@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -54,5 +54,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+VERDICT: PASS
+Basis: The bounded corrections satisfy this turn's Definition of Done. Reused the approved full-source review attested to 0c3da099 in relay-system/gh613-final.md and inspected complete current main functions and the registered test. No additional blocking pre-existing defect identified within that scope. This is source and recorded-evidence review only; the independent full gate on 83995bf3 is not established as passing. No git commands or artifact/test execution performed.
+swept file: yes
+
+- [Pass] Durable stderr now uses the coordination root returned by the claim helper, before containment begins (`utils/py/claude-turn.py:85`, `utils/py/claude-turn.py:94`). Recorded target-root evidence includes “vendored-subdir TURN_ROOT commits” and “12 pass, 0 fail” (`TESTS-RESULTS/2026-09-14+GH-613/targetroot-fixed.log:1`). Fix: none required.
+- [Pass] Programmatic Claude receives the explicit seat-specific instruction “only Read/Grep/Glob are available; inspect source without executing probe scripts,” with the same actual read-only tool list and auth/request restriction flags retained (`utils/py/consult.py:568`, `utils/py/consult.py:572`, `utils/py/consult.py:575`). This qualifies the generic programmatic preamble for this seat. Fix: none required.
+- [Pass] Full consult wall and real idle cases assert exit 5, zero answers/one failure, a child readiness marker, no running child, the distinct timeout diagnostic, and only the original registered worktree (`test/gh610-claude-subscription.sh:117`). The absent-or-zombie check establishes no running child, not complete zombie reaping. Recorded evidence says “Ran 12 tests in 32.495s” and includes all four successful handoff checks (`TESTS-RESULTS/2026-09-14+GH-613/focused-e2e-final.log:15`). Fix: none required.
+- [Pass] Retained behavior includes unconditional relay result validation and subsequent RTL enforcement (`utils/py/claude-turn.py:195`, `utils/py/claude-turn.py:239`), strict consult result classification (`utils/py/consult.py:691`), timeout failure accounting (`utils/py/consult.py:729`), and preservation/error exit on failed Git cleanup (`utils/py/consult.py:848`). Fix: none required.
+- [Pass] All four current SHA-256 fingerprints match the final provenance row, including the registered test (`TESTS-RESULTS/2026-09-14+GH-613/provenance.jsonl:10`). The plan contains “goal: Close the accepted native Claude routing, isolation, result, cleanup and effort gaps.” (`PROJECT/2-WORKING/GH-613-CLAUDE-REVIEW-FIXES.md:15`). Fix: none required; operator retains final gate and acceptance bookkeeping.
+
+Coverage limitation: graph project XYZ-forge is a different checkout, generation 2026-09-01T15:54:30Z; coverage reports changed Python metadata and a missing test. Current source and the explicitly reusable prior sweep supply the evidence instead.
+
+relay closed (Approved), no further turn needed. Operator owns the independent full gate and final publication bookkeeping.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
