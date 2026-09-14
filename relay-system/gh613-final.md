@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -54,5 +54,23 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+VERDICT: PASS
+Basis: The implementation is sound for the approved bounded Claude changes. Current SHA-256 values for all three production Python modules match provenance.jsonl. This is source/evidence review, not an independently executed gate or merge approval; the full gate remains outstanding. No git commands, artifact execution, or production edits were performed.
+swept file: yes
+
+- [Pass] Full-source sweep completed for `utils/py/claude_cli.py`, `utils/py/claude-turn.py`, and `utils/py/consult.py`, including their pre-existing paths. Shared `effort_flags`, `preflight`, and `read_result` remain the actual implementation seams (claude_cli.py:19, claude_cli.py:27, claude_cli.py:61); consult imports them at utils/py/consult.py:44. No additional blocking pre-existing defect identified in those modules within this review. Graph project XYZ-forge generation `2026-09-01T15:54:30Z` is a different checkout and reports missing/changed coverage for these paths; conclusions use the complete current source instead.
+- [Pass] Both narrow shell guards refuse explicit subscription before legacy execution: relay-automation/claude-turn.sh:23 and relay-automation/consult.sh:23. Native consult passes the same `claude_settings` to auth and inference (utils/py/consult.py:568); relay unconditionally calls `read_result(claude_log)` after successful process exit (utils/py/claude-turn.py:196). Failed results still reach RTL enforcement. The inherit-result mutant records `inherit-error expected 5, got 0`, establishing a discriminating negative control.
+- [Pass] Effort validation accepts only native values and is shared by both dispatches; relay telemetry uses `native_effort[1] if native_effort else "cli-default"`. The relay-effort mutant ends with `FAIL: relay omitted effort flag`. Durable stderr is opened separately and its path printed before relay dispatch; consult nonzero-result messages point to `.stderr` (utils/py/consult.py:727). Fix: none required.
+- [Pass] Recorded native boundary evidence contains non-empty inside-marker success in both cases, outside-marker success with the explicit extra-directory grant, and denial without it (`TESTS-RESULTS/2026-09-14+GH-613/boundary-proof.jsonl:1`). The probe asserts those outcomes using random markers. Default denial is explicitly disclosed; this proves neither a prior leak nor an OS sandbox. Five recorded mutants are rejected (`mutant-results.jsonl:1`); descendant-kill output specifically reports `descendant survived kill` for both wall and idle controls. Fix: none required.
+- [Pass] Consult cleanup uses Git removal only; a failed/timeout removal preserves the worktree, prints a recovery command and exits 5 (`utils/py/consult.py:842`). The forced-removal-failure fixture asserts retained registration and directory existence, then recovers through Git (`test/gh610-claude-subscription.sh:118`). Existing consult group termination is exercised, not newly implemented; no relay group/idle guarantee is approved.
+- [Pass] Public setup distinguishes read-only consult from protocol-writing relay reviewers, preserves explicit Claude builder selection, and documents inherited settings changes and CLI-default effort (`relay-automation/README.md:67`, `relay-automation/README.md:80`, `relay-automation/README.md:90`). Compatibility evidence records containment, handoff, root routing, and successful real-shaped JSON fixtures (`TESTS-RESULTS/2026-09-14+GH-613/claude-compat.log:1`, `focused.log:1`). Fix: none required.
+- [Nit] Programmatic consult still sends Claude the generic permission to execute `script_runner.py` (utils/py/consult.py:499), although its actual tools are only Read/Grep/Glob. The plan explicitly requested Claude-specific read-only instructions. Follow up by selecting a read-only preamble for the Claude seat; the current native tool restriction prevents this prompt mismatch from granting execution.
+- [Nit] The wall/idle fixture tests runner helpers with a mocked idle sampler, then accepts absent or zombie child state (`test/gh610-claude-subscription.sh:155`). It does not drive the complete consult main path through timeout to assert failed-answer classification plus worktree removal. Add that integration case when extending timeout coverage; do not describe current evidence as complete end-to-end S4 proof. The source connects these paths, and the unchanged runner's five-mutant evidence supports this implementation approval.
+- [Nit] Keep final bookkeeping accurate when the independent gate finishes: the active plan still has unchecked acceptance items and CHANGELOG.md:7 says full-gate evidence is recorded with the implementation PR. Update these with the actual final result before publication; no full-gate completion is established by this review. Omitted-effort telemetry is source-inspected, not independently checked against a persisted telemetry row here.
+
+relay closed (Approved), no further turn needed. Operator owns remaining gate evidence and PR preparation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
