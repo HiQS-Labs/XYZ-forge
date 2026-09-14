@@ -567,7 +567,10 @@ def main():
                         stream.write(f"consult: {error}\n")
                     procs.append((None, m, f_out, time.time(), None))
                     continue
-                cmd = [claude_bin, "-p", full_prompt, "--output-format", "json",
+                claude_prompt = full_prompt
+                if tool_mode == "programmatic":
+                    claude_prompt += "\nClaude advisory seat: only Read/Grep/Glob are available; inspect source without executing probe scripts."
+                cmd = [claude_bin, "-p", claude_prompt, "--output-format", "json",
                        "--model", cenv.get("CLAUDE_MODEL", "claude-sonnet-4-6"),
                        "--tools", "Read,Grep,Glob", "--allowedTools", "Read,Grep,Glob",
                        "--max-turns", cenv.get("CLAUDE_MAX_TURNS", "12"),
