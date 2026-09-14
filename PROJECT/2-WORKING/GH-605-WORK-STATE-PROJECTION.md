@@ -21,14 +21,14 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| ae7006c8: all Round4 production findings corrected; parent78Python and six shell suites pass; GH57 passes42/42 with witnessed red control | Review5 escalated: reproduced mock seed-ID defect and incomplete coverage remain; final full gate pending, no live writes |
+| ae7006c8 published through378/378 full gate in879s; parent78Python and six shell suites pass; GH57 passes42/42 with witnessed red control | Review5 escalated: reproduced mock seed-ID defect and incomplete coverage remain; no live writes |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Current disposition supersedes historical continuation paragraphs below: review5/a9a69567
 closed the invalid-source, lease-ownership and queue-compaction findings but did not approve.
 The same lane is exhausted at5/5; operator continuation requested for the mock seed-ID
 correction and remaining source coverage. Parent reproduced the mock defect without live
-network writes. The full gate onae7006c8 is still running. Preserve PR607 as draft and do not
+network writes. The full gate onae7006c8 passed378/378 in879s and published normally. Preserve PR607 as draft and do not
 apply the board or change local configuration before fresh approval plus a qualifying gate.
 Latest continuation: operator explicitly authorized finishing corrections and verification.
 Same relay extended to5 review rounds;426f5825 implements the four concrete remaining repairs.

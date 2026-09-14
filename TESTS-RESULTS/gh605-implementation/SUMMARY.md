@@ -8,7 +8,9 @@ and six focused shell suites pass in separate full clone2 with unchanged clean i
 ae7006c8 adds deterministic GH57 fixture clocks and uses its existing resolved-settings
 union. Parent42/42 passes; reverting only that call produces38/42 (exit4); restoring gives
 42/42 again. This explains the prior426f5825 full-gate failure, not a production-loader bug.
-The fresh normal full push gate is pending; no success is presumed.
+The fresh normal full push gate passed378/378 in879s and publishedae7006c8 without bypass.
+Separate full clone1 retained clean identity. Hosted vendored smoke passed; macOS promotion
+and Ubuntu canary were skipped on this draft branch, not claimed as executed promotion.
 
 Reviewer5/a9a69567 closes all three Round4 source findings and accepts the narrow GH57
 repair, but returnsFAIL/Escalated (driver4) at5/5. No final approval: the mock's real --seed
