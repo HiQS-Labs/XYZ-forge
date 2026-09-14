@@ -1,8 +1,8 @@
 ---
 Goal: Fresh final QA of GH-620 after the original implementation-review cap
 Date: 2026-09-14
-NEXT: codex
-STATUS: Open
+NEXT: agy
+STATUS: Changes requested
 ---
 
 # Context
@@ -50,3 +50,48 @@ Append concise findings with file:line citations. End with exactly `VERDICT: PAS
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Codex final review cycle 2 — changes requested
+
+1. **Final seed logic and focused cases — pass.** Retry validation reads each seed at the live
+   remote commit: a seed present there makes any retry diff at that path ineligible, while an absent
+   seed must be added and then match the parent bytes and executable mode
+   (`utils/py/xyz_mini_sync.py:140-145`, `utils/py/xyz_mini_sync.py:161-188`). The focused suite
+   independently exercises the allowed absent-seed addition and refused existing child-owned seed
+   replacement (`test/gh620-skills-army-mini-sync.sh:100-122`). The preflight runs before the first
+   publication write (`utils/py/xyz_mini_sync.py:226-247`).
+2. **Temporary fixture guard — pass.** The suite rejects an empty/invalid `mktemp` result, physically
+   recaptures it, and then pins it through the shared fail-closed guard before passing it to the
+   Python fixture (`test/gh620-skills-army-mini-sync.sh:6-15`; `test/lib/fixture-guard.sh:25-33`).
+   Cleanup also refuses an empty or missing root (`test/gh620-skills-army-mini-sync.sh:9-10`).
+3. **Exact retry still bypasses the publisher's ownership guard — fail.** Retry validation permits
+   any current managed path when its final bytes/mode match the parent, but does not prove that a
+   managed destination absent from the remote `MANIFEST.txt` was itself absent at the remote commit
+   (`utils/py/xyz_mini_sync.py:154-189`). An operator-owned `README.md` (or other future managed
+   destination) present on remote but omitted from its manifest could therefore be replaced in a
+   manually forged matching-metadata ahead commit and accepted as an “exact retry.” After that
+   acceptance, the ordinary ownership guard reads the ahead commit's new manifest, so it now treats
+   the replacement as owned and cannot catch the bypass (`utils/py/xyz_mini_sync.py:227-234`). This
+   contradicts both the one-ownership-guard contract and the claim that only a commit the publisher
+   could have produced is retryable. Require every current managed destination not in the remote
+   manifest to be absent at the remote commit, and add the complementary retained-retry mutant. The
+   existing normal-flow ownership test and retry mutants do not combine these states
+   (`test/gh589-xyz-mini-sync.sh:86-89`; `test/gh620-skills-army-mini-sync.sh:71-122`).
+4. **Remaining MVP surface and records — pass.** The second profile remains a fixed data seam with
+   the original profile as the default, the Skills Army payload is literal and inclusion-only, and
+   routing registers the two focused suites (`utils/py/xyz_mini_sync.py:29-79`,
+   `test/gh620-skills-army-mini-sync.sh:50-69`, `utils/ci-route.sh:24-45`). The child/package quick
+   starts agree, the wrapper remains manual, and the playbook covers the seven required phases
+   (`skills/skills-army-hq/README.md:64-74`, `mini/skills-army-README.md:12-20`,
+   `skills/push-to-skills-army-mini/SKILL.md:9-25`,
+   `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md:1-47`). The plan, ledger, architecture route, and changelog
+   remain consistent with approval still pending (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:24-42`,
+   `PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:121-138`, `ARCHITECTURE.md:65-66`,
+   `CHANGELOG.md:5-7`, `releases.sql:593`).
+
+The available graph generation predates the branch implementation and reports missing freshness for
+the publisher, GH-620 test, and new docs, so this review used direct source reads for those paths. Per
+the review-turn constraints, no Git command, test, or project gate was run. The branch is not ready
+for its exact-SHA qualifying gate or PR until the ownership-retry bypass is closed.
+
+VERDICT: FAIL
+Basis: the retained-retry exception can still replace an unmanifested operator-owned remote path that the canonical publisher would have refused to overwrite
