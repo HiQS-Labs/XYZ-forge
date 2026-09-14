@@ -100,8 +100,9 @@ a successful preflight verifies the account route, not remaining quota or a bill
 JSON error, exhausted-turn, or empty results fail Claude consult and relay in both
 authentication modes, even if the CLI exits zero. Inspect the local transcript before retrying.
 Consult retains raw JSON beside its answer as `.md.json` and CLI diagnostics as `.md.stderr`;
-failed-Claude messages point to that stderr file. Relay prints a separate durable
-CLI-diagnostics path before dispatch, including when `CLAUDE_LOG` is customized.
+failed-Claude messages point to that stderr file. Relay keeps CLI diagnostics beside
+its JSON transcript as `<CLAUDE_LOG>.stderr` and prints that path before dispatch.
+The default transcript location is durable; a custom `CLAUDE_LOG` controls both files.
 Use a regular file for `CLAUDE_LOG`; discarding JSON prevents success validation.
 Keep private prompts and account
 details out of published evidence.

@@ -91,7 +91,8 @@ def main():
     # with the machine. Stays pure JSON (the cost block is json.load-parsed below), so no rtl
     # trace lines are pointed here — unlike the codex/agy logs, which are plain text.
     claude_log = os.environ.get("CLAUDE_LOG") or rtl_default_log(root, "claude-turn", t)
-    claude_stderr = rtl_default_log(tick_repo_root, "claude-stderr", t)
+    # Keep diagnostics beside the selected JSON transcript, including custom/archive paths.
+    claude_stderr = claude_log + ".stderr"
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
     max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
     max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
