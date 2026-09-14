@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Escalated
+STATUS: Open
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -416,5 +416,19 @@ authorization/replan to resume the parked lane. No --force, new lane or self-rev
 All seven round2 findings remain accepted but unimplemented. The existing draft push gate
 may finish collecting/publishing b9d784e9; that does not approve code or authorize live apply.
 Automatic follow-up paused to prevent unattended re-fire. Handing off to the operator.
+
+### Operator-authorized resume
+
+Operator now says: "Did you implement plan yet? If not please start." This follows the explicit
+request for authorization to resume the parked lane. Resume the saved seven-item final-round
+correction brief above, with one deliberate --force dispatch on the SAME lane. Do not create
+a replacement lane or expand the review cap. PR611/development ec0823ab has been merged;
+both ledger histories preserved through the canonical resolver, generation635, check clean.
+Keep its new validate registration and subscription-support changes intact. Prior full gate
+377/377 predates this merge/correction and must be rerun. No live board changes before QA.
+Sol High: follow the existing20-minute correction brief, all seven findings, reproduce then
+fix/test, append dispositions, NEXT Reviewer/STATUS Open, release codex-author. Parent will
+verify in separate full clones and dispatch final Reviewer round3. You are not alone in the
+repo; no main edits, Git commands, live writes or full shell suites in the linked worktree.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
