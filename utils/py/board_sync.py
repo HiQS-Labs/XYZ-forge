@@ -287,7 +287,7 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
                 elif as_of_dt - merged_at <= dt.timedelta(days=policy["done_lookback_days"]):
                     targets[ident], reasons[ident] = policy["done"], "recently merged PR"
                 elif ident in board_by:
-                    targets[ident], reasons[ident] = policy["backlog"], "merged outside Done window"
+                    targets[ident], reasons[ident] = policy["done"], "merged PR retained in Done"
             elif state == "MERGED":
                 unresolved.append({"identity": ident, "reason": "merged PR lacks a known merge date"})
             elif closed_at is None or closed_at > as_of_dt:
@@ -317,8 +317,10 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
                 unresolved.append({"identity": ident, "reason": "unknown closure date"})
             elif reason == "COMPLETED" and as_of_dt - stamp <= dt.timedelta(days=policy["done_lookback_days"]):
                 targets[ident], reasons[ident] = policy["done"], "recently completed issue"
+            elif reason == "COMPLETED" and ident in board_by:
+                targets[ident], reasons[ident] = policy["done"], "completed issue retained in Done"
             elif ident in board_by:
-                targets[ident], reasons[ident] = policy["backlog"], "terminal outside Done window"
+                targets[ident], reasons[ident] = policy["backlog"], "closed not-planned issue"
             continue
         if state != "OPEN":
             unresolved.append({"identity": ident, "reason": "unknown GitHub state"})

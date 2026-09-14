@@ -164,9 +164,26 @@ class PlannerTests(unittest.TestCase):
         board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
                   "item_id": "i1", "status": None}]
         present = board_sync.plan_selection_policy(POLICY, [], board, [closed], as_of=AS_OF)
-        self.assertEqual(present["changes"][0]["after"], "Backlog")
+        self.assertEqual(present["changes"][0]["after"], "Done")
+        self.assertEqual(present["decisions"][0]["reason"], "completed issue retained in Done")
         absent = board_sync.plan_selection_policy(POLICY, [], [], [closed], as_of=AS_OF)
         self.assertFalse(absent["changes"])
+
+    def test_completed_issue_and_merged_pr_older_than_lookback_retained_in_done(self):
+        closed = issue(1, "CLOSED", state_reason="COMPLETED", closed_at="2026-09-01T00:00:00Z")
+        merged_pr = {"repo": "owner/repo", "kind": "pr", "number": 2, "state": "MERGED",
+                     "merged_at": "2026-09-01T00:00:00Z"}
+        not_planned = issue(3, "CLOSED", state_reason="NOT_PLANNED", closed_at="2026-09-01T00:00:00Z")
+        board = [
+            {"repo": "owner/repo", "kind": "issue", "number": 1, "item_id": "i1", "status": "Backlog"},
+            {"repo": "owner/repo", "kind": "pr", "number": 2, "item_id": "i2", "status": "Backlog"},
+            {"repo": "owner/repo", "kind": "issue", "number": 3, "item_id": "i3", "status": "Ready"},
+        ]
+        plan = board_sync.plan_selection_policy(POLICY, [], board, [closed, merged_pr, not_planned], as_of=AS_OF)
+        changes = {c["identity"][-1]: c["after"] for c in plan["changes"]}
+        self.assertEqual(changes[1], "Done")
+        self.assertEqual(changes[2], "Done")
+        self.assertEqual(changes[3], "Backlog")
 
     def test_unrated_ready_card_is_reported_and_preserved(self):
         row = ledger(1, 90)
