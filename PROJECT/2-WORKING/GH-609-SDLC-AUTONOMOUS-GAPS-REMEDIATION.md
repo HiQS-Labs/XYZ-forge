@@ -17,7 +17,7 @@ issue_url: https://github.com/HiQS-Labs/XYZ-forge/issues/609
 
 | What was just completed | What's next |
 |---|---|
-| Codex Round 2 Plan QA reviewed; R1.2, R2.2, R5.2, R6.2 fully integrated into canonical plan. | Finalize Round 3 Plan QA with Codex, implement skill enhancements, and execute verified test suite in disposable task clone. |
+| Skill enhancements implemented across 6 files, `test/gh609-sdlc-agent-gaps.sh` authored (26/26 passing), registered in `validate.sh`, full `./validate.sh` gate green. | Execute final Codex Relay QA on completed diff, run qualifying gate, push branch, and open PR. |
 
 ---
 
@@ -103,14 +103,15 @@ Rather than fragmenting into separate single-purpose tools, the remediation exte
 
 ## Actionable Execution Steps
 
-1. [ ] Update `skills/workhorse/SKILL.md` (Rung 5 & Rung 6) with durable operation identity, 4-state reconciliation-before-retry, stale-writer fencing, and refined preservation/loss splits.
-2. [ ] Update `skills/start-task/SKILL.md` (Step 3 & Step 7) with resume reconciliation and dropped-transport verification.
-3. [ ] Update `skills/swe/SKILL.md` with the Expand-Contract migration rubric and mixed-version compatibility invariants.
-4. [ ] Update `skills/recon/SKILL.md` with reader/writer/consumer mapping in Lanes B & C, operational tripwires in Lane D.
-5. [ ] Update `skills/ci-optimize/SKILL.md` with Principles 13 (Flake quarantine) and 14 (Performance fences).
-6. [ ] Update `skills/ci-debug/SKILL.md` with the operational credential containment protocol.
-7. [ ] Author `test/gh609-sdlc-agent-gaps.sh` implementing the complete Acceptance Map above (positive contract presence, negative clause-removal mutations, empty-input size guards).
-8. [ ] Register `gh609-sdlc-agent-gaps.sh` in `validate.sh`.
-9. [ ] Run `test/gh609-sdlc-agent-gaps.sh` and pre-push self-check gate (`./validate.sh`).
+1. [x] Update `skills/workhorse/SKILL.md` (Rung 5 & Rung 6) with durable operation identity, 4-state reconciliation-before-retry, stale-writer fencing, and refined preservation/loss splits.
+2. [x] Update `skills/start-task/SKILL.md` (Step 3 & Step 7) with resume reconciliation and dropped-transport verification.
+3. [x] Update `skills/swe/SKILL.md` with the Expand-Contract migration rubric and mixed-version compatibility invariants.
+4. [x] Update `skills/recon/SKILL.md` with reader/writer/consumer mapping in Lanes B & C, operational tripwires in Lane D.
+5. [x] Update `skills/ci-optimize/SKILL.md` with Principles 13 (Flake quarantine) and 14 (Performance fences).
+6. [x] Update `skills/ci-debug/SKILL.md` with the operational credential containment protocol.
+7. [x] Author `test/gh609-sdlc-agent-gaps.sh` implementing the complete Acceptance Map above (positive contract presence, negative clause-removal mutations, empty-input size guards).
+8. [x] Register `gh609-sdlc-agent-gaps.sh` in `validate.sh`.
+9. [x] Run `test/gh609-sdlc-agent-gaps.sh` and pre-push self-check gate (`./validate.sh`).
 10. [ ] Execute final Codex Relay QA on completed diff.
+
 
