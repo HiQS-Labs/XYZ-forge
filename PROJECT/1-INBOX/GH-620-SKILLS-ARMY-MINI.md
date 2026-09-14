@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0 confirmed the six tracked package files form a closed standard-library unit and the existing GH-589 publisher is the reusable seam. | Parameterize the existing publisher with a Skills Army target, add the minimum detached-package smoke, review, publish, and read back the generated child. |
+| Phases 0–1 are complete: the closed package, exact child layout, shared publisher profile, divergence preflight, playbook, wrapper skill, and surgical test are implemented. Focused suites pass. | Complete final implementation relay QA, run the qualifying gate once, and open the parent PR. Publication follows only after merge. |
 
 ## Goal and ownership
 

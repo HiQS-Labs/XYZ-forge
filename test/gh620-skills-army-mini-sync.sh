@@ -4,6 +4,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh620-skills-army.XXXXXX")"
+WORK="$(cd "$WORK" && pwd -P)"
 cleanup(){ [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
 trap cleanup EXIT
 . "$HERE/lib/fixture-guard.sh"
@@ -57,6 +58,9 @@ actual = set(filter(None, git(dest, "ls-files").stdout.splitlines()))
 ok("literal inclusion-only payload set", actual == expected, f"missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
 manifest = set(pathlib.Path(dest, "MANIFEST.txt").read_text().splitlines())
 ok("manifest names exactly the ten managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
+if MUTANT == "1":
+    print(f"gh620-skills-army-mini-sync mutant: {P} passed, {F} failed")
+    sys.exit(1 if F else 0)
 source_sha = git(src, "rev-parse", "HEAD").stdout.strip()
 ok("revision records exact parent commit", f"source_sha={source_sha}" in pathlib.Path(dest, ".xyz-forge-revision").read_text())
 head = git(dest, "rev-parse", "HEAD").stdout.strip()
