@@ -73,7 +73,7 @@ establish distinct incident velocity; trend unknown. No operator override.
 
 ### QA gate
 - [x] Happy read and denied read observed; no real private file accessed.
-- [ ] Commit reproducible boundary probe and full secret-free provenance, including a authorized-extra-directory negative control.
+- [x] Commit reproducible boundary probe and full secret-free provenance, including a authorized-extra-directory negative control.
 - [x] Plan independently approved before production edits.
 
 ## Phase 1 — Implement and verify
@@ -104,11 +104,11 @@ establish distinct incident velocity; trend unknown. No operator override.
    final relay QA, and open a PR against development. No merge or deployment.
 
 ### QA gate / acceptance
-- [ ] S1 explicit subscription never reaches legacy inference (witnessed red).
-- [ ] S2 malformed/error/empty result fails in both auth modes with clean handoff.
-- [ ] S3 actual restricted tools deny outside reads; auth/request flags agree.
-- [ ] S4 wall/idle descendants gone; nonzero diagnostics survive; worktree removed.
-- [ ] S5 effort reaches both commands and omitted effort telemetry is truthful.
+- [x] S1 explicit subscription never reaches legacy inference (witnessed red).
+- [x] S2 malformed/error/empty result fails in both auth modes with clean handoff.
+- [x] S3 actual restricted tools deny outside reads; auth/request flags agree.
+- [x] S4 wall/idle descendants gone; nonzero diagnostics survive; worktree removed.
+- [x] S5 effort reaches both commands and omitted effort telemetry is truthful.
 - [ ] Public docs, independent QA and full gate complete; PR linked here.
 
 Debugging follows debug-mantra: reproduce, trace, falsify, retain each breadcrumb.
@@ -127,3 +127,15 @@ Post-review corrections root stderr in the resolved coordination checkout (exist
 target-root regression witnessed red then green), clarify programmatic Claude's
 read-only seat, and extend timeout fixtures through the entire consult CLI. The first
 full gate was superseded with known failures; it is not passing evidence.
+
+Independent final correction review: Approved on 2cbfc53a (production/test tree
+identical to 83995bf3). Live native Opus subscription consult passed with high effort
+requested through the shipped adapter, no execution wrapper. Full gate remains pending.
+
+## Lessons Learned (For Future Agents)
+
+- Strict parsing requires real success envelopes in old CLI stubs; never special-case
+  fixtures or discard the result stream.
+- Diagnostic logs must use the resolved coordination root, including vendored layouts.
+- An outside-read denial alone is weak evidence; use random markers and a deliberately
+  authorized extra-directory control. Do not infer a prior data leak from a review concern.

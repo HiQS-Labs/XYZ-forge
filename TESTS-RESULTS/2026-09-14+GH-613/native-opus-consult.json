@@ -1,0 +1,12 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "result": "**ANSWER:** The first heading is `# XYZ Forge` at README.md:1.\n\n**FINDINGS:**\n- [Pass] The first 15 lines contain exactly one heading (`# XYZ Forge`, README.md:1); no other `#`-prefixed lines appear through README.md:15.\n\n**RECOMMENDATION:** Cite README.md:1 \u2014 `# XYZ Forge` \u2014 as the first heading.",
+  "num_turns": 2,
+  "duration_ms": 4996,
+  "models": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5"
+  ]
+}
