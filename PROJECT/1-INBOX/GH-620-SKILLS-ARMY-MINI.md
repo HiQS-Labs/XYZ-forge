@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Phases 0–1 are complete: the closed package, exact child layout, shared publisher profile, divergence preflight, playbook, wrapper skill, and surgical test are implemented. Focused suites pass. | Complete final implementation relay QA, run the qualifying gate once, and open the parent PR. Publication follows only after merge. |
+| Phases 0–2 are implemented and focused checks pass; all three implementation-review rounds produced valid fixes, with the final seed-ownership fix applied after the binding review cap. | Run the qualifying gate once. The branch remains approval-pending until a separately authorized review cycle can inspect the final fix; do not open a ready PR or publish the child yet. |
 
 ## Goal and ownership
 

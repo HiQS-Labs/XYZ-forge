@@ -147,3 +147,12 @@ review-only turn.
 
 VERDICT: FAIL
 Basis: retained-retry validation can overwrite an existing child-owned seed even though the canonical publisher would preserve it
+
+## Producer disposition — round 3 / review cap reached
+
+The final finding is accepted. Retry validation now queries the live remote commit for every seed:
+an existing remote seed must be absent from the retry diff, while an absent remote seed must be
+added and match the parent bytes/mode. The focused test adds the complementary malicious replacement
+of an existing child-owned `TODO.md` and requires refusal. The binding three-round implementation
+review cap is now exhausted, so no fourth review is being manufactured; deterministic verification
+will run, but reviewer approval remains pending a separately authorized future cycle.

@@ -108,6 +108,17 @@ seed_retry = os.path.join(WORK, "seed-retry"); git(WORK, "clone", "-q", mini_bar
 mini_publish(seed_retry, "--apply"); seed_head = git(seed_retry, "rev-parse", "HEAD").stdout.strip()
 r = mini_publish(seed_retry, "--push")
 ok("default-profile retry may restore an absent seed", r.returncode == 0 and git(mini_bare, "rev-parse", "refs/heads/main").stdout.strip() == seed_head, r.stderr[-300:])
+seed_owner = os.path.join(WORK, "seed-owner"); git(WORK, "clone", "-q", mini_bare, seed_owner)
+pathlib.Path(seed_owner, "TODO.md").write_text("child-owned seed\n")
+git(seed_owner, "add", "TODO.md"); git(seed_owner, "commit", "-qm", "child owns seed"); git(seed_owner, "push", "-q", "origin", "main")
+seed_bad = os.path.join(WORK, "seed-bad"); git(WORK, "clone", "-q", mini_bare, seed_bad)
+shutil.copy(os.path.join(src, "mini/TODO.md"), os.path.join(seed_bad, "TODO.md"))
+git(seed_bad, "add", "TODO.md")
+seed_message = f"sync: XYZ-forge@{git(src, 'rev-parse', 'HEAD').stdout.strip()[:12]} (fixture)"
+git(seed_bad, "commit", "-qm", seed_message)
+seed_bad_before = git(seed_bad, "rev-parse", "HEAD").stdout.strip()
+r = mini_publish(seed_bad, "--apply")
+ok("retry refuses replacement of an existing child-owned seed", r.returncode == 2 and git(seed_bad, "rev-parse", "HEAD").stdout.strip() == seed_bad_before, r.stderr[-300:])
 
 # Detached real-work smoke: every mutation is confined to WORK.
 collection = os.path.join(WORK, "collection")
