@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,10 +71,28 @@ Coverage limitation: Verify-tier graph metadata for XYZ-forge refers to another 
 
 relay closed (Approved), no further turn needed. Producer/operator owns corrected full-gate qualification and final publication bookkeeping.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ### System · relay-drive — 2026-09-14T02:03:56Z
 terminal STATUS Approved written by builder-role turn (codex) — reverted
 
 ## Producer — operator — follow-up
 The previous reviewer PASS was not attested because the driver omitted --reviewer; this rerun supplies the correct role configuration. A full-gate compatibility case subsequently found custom in-tree stderr treated as an off-lane agent edit. The parent now creates its diagnostic sidecar before rtl.before(), retaining setup errors for normal failure/enforcement instead of leaking claims. Review the complete changed function and new test assertions requiring stderr content retained and no artifact commit. Existing isolated claude suite now passes 37 and archive 16. Reuse prior full reviews; no code/test execution in review worktree. Do not assert the full gate is green until separately completed. Append literal VERDICT, Basis, swept file.
+
+## Reviewer — codex — Round 1 follow-up
+
+VERDICT: PASS
+Basis: The bounded in-tree sidecar correction is sound. Reused the approved full reviews in gh613-final.md and gh613-correction.md, read the complete current claude-turn.py and test/claude-turn.sh, and inspected the relevant public documentation and containment snapshot implementation. No additional blocking pre-existing defect identified within this scope. Source review only: no git commands, artifact execution, or tests run; the corrected full gate is not established as passing.
+swept file: yes
+
+- [Pass] Parent-side preparation uses `with open(claude_stderr, "a")` before `rtl.before()` (`utils/py/claude-turn.py:118`, `utils/py/claude-turn.py:122`). The shared snapshot records pre-turn porcelain entries and compares their exact status/path (`relay-automation/relay-turn-lib.sh:1044`, `relay-automation/relay-turn-lib.sh:1062`), so a newly created untracked diagnostic remains pre-existing when dispatch writes its contents. This reuses the existing containment mechanism. Fix: none required.
+- [Pass] Preparation errors are saved as `stderr_setup_error`, converted to exit-5 state, and reported (`utils/py/claude-turn.py:120`, `utils/py/claude-turn.py:144`). Dispatch is guarded by `if bounded_rc == 0`; cleanup and `rtl.enforce(t, me, claude_log, "claude")` still follow. This avoids an early exception exit specifically for sidecar preparation. Fix: none required.
+- [Pass] The regression supplies `CLAUDE_LOG="$A/claude.log"`, requires a successful turn, requires JSON cleanup, searches retained stderr for `fixture CLI diagnostic`, and fails if `git ... ls-files --error-unmatch claude.log.stderr` succeeds (`test/claude-turn.sh`, section 2b). These assertions cover both retained content and exclusion from the artifact commit. Fix: none required for the stated correction.
+- [Pass] The path remains `claude_stderr = claude_log + ".stderr"` (`utils/py/claude-turn.py:95`), matching the documented `<CLAUDE_LOG>.stderr` contract (`relay-automation/README.md:104`). The archive witness supplies an external JSON path and rejects target-tree relay-system creation (`test/archive-commit.sh:68`, `test/archive-commit.sh:84`). Fix: none required.
+- [Nit] The producer reports a new 37-pass Claude run, but the inspected committed provenance ends at the earlier `gate-corrections` row (`TESTS-RESULTS/2026-09-14+GH-613/provenance.jsonl:13`); that row records archive 16, ledger 10, and subscription 12 plus 4, not this latest compatibility run. Preserve the latest run and its provenance with final publication evidence, including a pre-fix red witness for the new sidecar assertions. This review approves the source correction, not an independently verified 37-pass run or full gate.
+
+Coverage limitation: graph project XYZ-forge points to another checkout, generation 2026-09-01T15:54:30Z, and reports changed metadata for the Python and documentation paths. Current source reads and the expressly reusable prior full reviews supply the evidence; no graph completeness claim is made.
+
+relay closed (Approved), no further turn needed. Producer/operator owns the corrected full gate and final evidence bookkeeping.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
