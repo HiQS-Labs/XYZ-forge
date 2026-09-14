@@ -117,6 +117,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-13
 
 ### Fixed
+- **GH-615: fix(skills): reinforce start-task against relay-induced overbuilding and gate thrashing.** (express hotfix, GH-267 lane; suite test/gh615-start-task-reinforce.sh green.)
 - **GH-608: fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution.** (express hotfix, GH-267 lane; suite test/gh608-deepseek-effort.sh green.)
 
 ## [Unreleased] - 2026-09-11
