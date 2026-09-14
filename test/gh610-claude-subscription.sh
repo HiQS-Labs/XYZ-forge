@@ -114,7 +114,7 @@ for mode in good error authfail; do
   expected=5; [ "$mode" = good ] && expected=0
   [ "$rc" -eq "$expected" ] || fail "$mode expected $expected, got $rc: $(cat "$WORK/$mode.log")"
   info="$(tick_a info "$task")"
-  if printf '%s' "$info" | grep -Eq '^claimer:[[:space:]]+claude-builder$'; then fail "$mode orphaned claim"; fi
-  printf '%s' "$info" | grep -q '^handoff-to: operator$' || fail "$mode missing operator handoff: $info"
+  if grep -Eq '^claimer:[[:space:]]+claude-builder$' <<<"$info"; then fail "$mode orphaned claim"; fi
+  grep -q '^handoff-to: operator$' <<<"$info" || fail "$mode missing operator handoff: $info"
   pass "$mode produces exit $expected and cleans up the claimed turn"
 done
