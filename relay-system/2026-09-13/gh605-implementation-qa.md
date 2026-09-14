@@ -482,4 +482,31 @@ No self-approval.
 Handing off to codex-author: run and retain the separate-full-clone verification, then dispatch the
 independent Codex Reviewer for Round 3; no live apply before approval.
 
+### Parent verification and final Reviewer round3 handoff
+
+Parent verified22533bb4:65/65Python fixtures pass in separate full clone2. Full normal push
+gate and six legacy/focused shell suites are running separately; no result is presumed.
+Development PR611/ec0823ab is included. See updated SUMMARY/provenance and producer disposition.
+Final code QA is independent from publication: pending gate is not a source defect, but both
+must pass before live apply. No live writes occurred. Review-only ALLOW_PATHS empty.
+
+Close the prior coverage gaps FIRST: read utils/py/mock_gh_board.py, RELEASES-DB-FAQS.md,
+CHANGELOG.md, the full controlling plan including historical sections, and all of
+test/gh549-work-events.sh in bounded chunks without omitted/truncated ranges. Then review the
+full changed production/test/validate files, using round2's declared source sweep as prior
+context but not as approval. Do not finish early with missing coverage if time remains.
+Prior-reviewed files unchanged except22533bb4 and development's single validate registration.
+This is final Reviewer round3 of3,20-minute ceiling to finish the requested full-file coverage.
+
+Adjudicate each of the seven round2 findings against real code and fixtures: actual jog
+start/terminal ownership and ambiguity rollback; no identity fall-through; real preview->apply
+->failure->restore (no planner stub); strict audited mutation acknowledgements; restore
+uncertainty on exceptions; canonical rerating round-trip; safe repoint. Cite exact source.
+Check surrounding touched code and fresh test assumptions; no new unrelated architecture.
+No real network/config/ledger writes, no shell/full suites in this linked worktree. Only
+append this relay file, preserving history. Emit honest swept file yes/no and PASS/FAIL Basis.
+Approve/tick done only if all blockers addressed and coverage complete; otherwise Escalated
+with concrete remaining findings at the cap. Do not self-fix. Parent handles remaining gates
+and live application after approval. No fresh review round beyond this cap is authorized.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

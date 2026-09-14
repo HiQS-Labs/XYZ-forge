@@ -1,6 +1,17 @@
 # GH605 implementation evidence — not yet approved
 
-## Latest checkpoint: b9d784e9115fc73a908589a97f4fb8c05ecc1a95
+## Latest checkpoint:22533bb4723c37ebe4415b39e29ccd5561a02217
+
+Operator authorized resuming the parked correction lane. Development PR611/ec0823ab merged
+via57bcbcc5; canonical ledger resolution retained both histories and verified generation635.
+Sol High implemented all seven Reviewer round2 findings. Parent independent direct Python
+run in full clone2 passes65/65, including real jog writers, identity preservation, complete
+rerating, scoped repoint, real preview/apply/failure/restore and malformed acknowledgements.
+Builder reports four witnessed red controls in the relay (attributed, not parent reruns).
+Fresh six-suite run and full normal push gate are in progress in separate full clones.
+Final Reviewer round3 remains required; no current QA approval, no live board/config changes.
+
+## Prior checkpoint: b9d784e9115fc73a908589a97f4fb8c05ecc1a95
 
 Sol High addressed all first-review findings, followed by parent-discovered missing-ledger
 PR-link and legacy raw-protocol compatibility corrections. Parent direct Python verification:

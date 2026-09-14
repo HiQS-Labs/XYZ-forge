@@ -21,7 +21,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| GLM/Qwen plan implemented through b9d784e9;54 Python tests and six focused suites pass;55-change preview verified | Paused at relay attempt cap after second review requested changes; operator authorization needed for saved correction plan; no live apply |
+| Resumed on operator authorization; development PR611 merged; all seven review findings corrected in22533bb4;65/65 parent Python tests pass | Fresh gate and final independent review; then reviewed live board apply; no live writes yet |
 
 September13 execution checkpoint: controlling plan QA Approved at8cfad6bb (driver exit0).
 Implementation b9d784e9 incorporates the first independent code review's corrections.
@@ -32,8 +32,11 @@ separate full clones. Four deliberate regressions fail named assertions; all tem
 were restored and clone identity/cleanliness verified. Real read-only preview proposes55
 changes matching independent GH/board analysis, preserving Ready10 and uncertain activity.
 Reviewer round2 returned changes requested:4 Blockers and3 Shoulds. The saved next correction
-brief is accepted but unimplemented: harness refused dispatch at its two-attempt cap, exit8.
-Third review has not run. start-task requires a stop at exhausted caps; no bypass is taken.
+brief was initially parked at the attempt cap. Operator authorized resuming; the same lane
+was deliberately re-fired and22533bb4 addresses all seven findings with65Python tests passing
+in a separate full clone. Development PR611/ec0823ab is included via57bcbcc5, ledger histories
+combined by the canonical resolver (generation635, check clean). Final third review and fresh
+full gate are running/required; prior evidence below is historical, not fresh approval.
 The normal full draft push gate passed377/377 in824s and published b9d784e9, independent
 from missing QA approval. Clone identity stayed clean and unchanged; no bypass was used.
 No live board writes, configuration changes, merge or deployment has occurred. PR607 remains
