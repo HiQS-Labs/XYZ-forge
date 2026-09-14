@@ -2,7 +2,7 @@
 Goal: QA the GH-620 XYZ Skills Army mini implementation plan
 Date: 2026-09-14
 NEXT: claude-a
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -113,3 +113,53 @@ oracle and its mutant, expands the detached workflow assertions, names
 edit is now an explicit Phase 1 item. No speculative machinery was added.
 
 Handing back to Codex for plan re-review.
+
+## Codex re-review — approved
+
+VERDICT: PASS
+Basis: the revision resolves every blocking finding without expanding the MVP envelope
+
+**Review result: Approved.** The plan is ready to build. Extending the existing publisher with one
+fixed target profile remains the smallest DRY seam, and the revised contracts are explicit enough
+to implement and falsify.
+
+### Graded dispositions
+
+1. **Both outcomes — pass.** The generated child flow is carried through land, publish, remote
+   read-back, and issue linkage (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:120-131`); the reusable
+   playbook now has an exact path and the issue-defined seven-section contract
+   (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:94`).
+2. **Reuse seam and compatibility — pass.** The profile owns only manifest, identity, environment,
+   and default checkout, while no-target behavior must retain the existing XYZ-mini values and
+   output (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:82-84`). This directly bounds the currently
+   hard-coded seams in `utils/py/xyz_mini_sync.py:29-60`, `utils/py/xyz_mini_sync.py:78-79`,
+   `utils/py/xyz_mini_sync.py:110-124`, and `utils/py/xyz_mini_sync.py:171-173` without inventing a
+   plugin layer.
+3. **Package boundary — pass.** The nine payload destinations are enumerated exactly, with the six
+   package files, child gitignore, and two licenses all managed (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:68-80`).
+   The only runtime-relative import remains `sync.py` to sibling `intake.py`; the README's current
+   Forge-specific quick start (`skills/skills-army-hq/README.md:56-65`) is now an explicit child-valid
+   Phase 1 edit (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:95`).
+4. **Ownership, provenance, seed, exclusions, rollback — pass.** The child slug, environment/default
+   destination, zero-seed policy, publisher-owned control files, excluded state, authority, and Easy
+   rollback are explicit (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:30-42`). Managed bytes/modes,
+   manifest, revision marker, local/remote equality, and excluded-state read-back form a falsifiable
+   post-push contract (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:122-131`).
+5. **Test scope — pass.** One GH-620 test uses an expected destination set independent of the
+   profile, witnesses that oracle fail after dropping an entry, checks preview/apply containment and
+   detached catalog/link read-through, and adds the divergence negative case
+   (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:106-118`). Reusing the existing throwaway-clone shape
+   while retaining `test/gh589-xyz-mini-sync.sh` and `test/skills-army-hq.sh` is surgical rather than
+   a mirrored child battery (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:133-137`).
+6. **Blast radius, rating, and execution order — pass.** The compatibility failure mode is named,
+   rollback is Easy, four phases match frontmatter, every phase has an observable QA gate, and the
+   rating is justified (`PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:30-36`,
+   `PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:44-49`, `PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:139-143`).
+
+### Implementation watchpoint (non-blocking)
+
+For the Phase 1 divergence guard, resolve `origin/main` from the remote (or fetch immediately before
+comparison); do not treat a possibly stale local remote-tracking ref as proof. The negative test
+should advance the bare remote independently so this distinction is exercised. This is the natural
+pre-write counterpart to the publisher's existing `ls-remote` post-push read-back
+(`utils/py/xyz_mini_sync.py:178-188`).
