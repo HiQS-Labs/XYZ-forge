@@ -886,4 +886,35 @@ Handing off to codex (Reviewer) for Round 6 — go to the Reviewer window and sa
 Complete the outstanding whole-file coverage and approve only if the source and parent-owned
 qualifying gate support it; no live apply before independent approval.
 
+### Parent final coverage-completion packet (Round6)
+
+Independent parent79/79Python passed on830455e8 in separate full clone2. The new seed
+regression passed. Historical ae7006c8 full gate378/378 is not current approval; per the
+updated start-task discipline the ONE final full gate runs AFTER this source approval.
+Pending full gate is not a code defect. Operational envelope: local single-user scripts,
+existing configured board, explicit operator apply. No speculative enterprise machinery.
+
+The remaining acceptance item is COMPLETE source coverage, not another sampling pass.
+Do not stop after identifying truncation: read the omitted span immediately. Do not emit
+an incomplete verdict while time remains. You have30minutes; use it to finish reading.
+Keep a private checklist of contiguous read ranges and close each file to EOF. Read source
+in chunks of at most150lines with max_output_tokens12000; historical CHANGELOG chunks at
+most40lines (long paragraphs). If a tool reports truncation, split that exact chunk again.
+Do NOT combine huge files in one output, and do NOT repeatedly dump the entire relay.
+
+Read to EOF in this order: CHANGELOG.md(2529lines), releases_app.py(6689), both GH605
+Python tests(646 and1002), validate.sh(1507), gh549-work-events.sh(1426), gh492(160),
+gh402(270), gh57(255), both4-lineGH605wrappers, RELEASES-DB-FAQS.md(88), canonical605
+plan(446), SUMMARY/provenance. Then full current board_sync(1491), mock(430), connector
+package(447) and github connector(186). Paths are under utils/py or test as in Setup.
+Linecounts are starting aids; actual EOF controls. Imported FAQ link is reference only;
+do not invent a second whole-repository audit. Historical CHANGELOG claims need no live
+external revalidation. Grade concrete defects against stated requirements, not new scope.
+
+At completion output a compact per-file coverage table, exactseed-finding disposition,
+PASS/FAIL, Basis, swept file yes/no, and file:line citations. All prior source findings
+were closed in Round5; do not reopen without contradictory current evidence. If clean,
+setApproved and tickdone. No source edits, Git commands, shell/full suites, board/config
+writes. Only relay may be edited. No self-fixing or speculative new testing requirements.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
