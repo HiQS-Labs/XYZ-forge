@@ -960,4 +960,12 @@ No source/artifact was executed or changed, and no tests, Git commands, live net
 
 Relay closed (Approved), no further turn needed. Parent proceeds with the already-required final full gate before live Rev.2 application; this approval alone does not claim that gate or live application has occurred.
 
+
+### Attestation · relay-drive — 2026-09-14T06:54:24Z
+task: RELAY-gh605-implementation-qa
+reviewer: codex
+status: Approved
+reviewed-head: 96261ab2667484feb91cf4cd0e0d09545827cb1e
+added-range: 92797+7083
+added-sha256: f5d69bd88a0da37cab1e851507b7972996482748b7340380a07a384f4cb0425e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
