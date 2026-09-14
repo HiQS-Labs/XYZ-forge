@@ -72,8 +72,8 @@ ok("agent-chorus standalone pipeline did not ship", not os.path.exists(os.path.j
 c = count(); r = run("--push"); ok("1. second run: exit 0, no new commit, remote unchanged", r.returncode == 0 and count() == c and remote() == h, r.stderr[-200:])
 
 # criterion 3: inclusion-only
-write(os.path.join(SRC, "skills/zz-unlisted/SKILL.md"), "---\nname: zz-unlisted\ndescription: x\n---\n"); commit_src("unlisted")
-r = run("--apply"); ok("3. unlisted skill never ships", r.returncode == 0 and not os.path.exists(os.path.join(DEST, "skills/zz-unlisted")))
+write(os.path.join(SRC, "skills", "zz-unlisted", "SKILL.md"), "---\nname: zz-unlisted\ndescription: x\n---\n"); commit_src("unlisted")
+r = run("--apply"); ok("3. unlisted skill never ships", r.returncode == 0 and not os.path.exists(os.path.join(DEST, "skills", "zz-unlisted")))
 reset_src()
 
 # mirror: dropped entry deleted; operator TODO.md (seed) and unrelated file survive

@@ -33,10 +33,11 @@ got_m="$(cd "$O" && python3 "$WORK/mut_viewer.py" 2>/dev/null | tail -1 | awk '{
 [ "$got_m" != "$expected" ] && pass "red: un-anchored viewer copy reports the foreign repo ($got_m) — control goes red" || fail "red: mutant still reported $got_m"
 
 # 2. synthetic repo: block-scalar, JSON-quoted and single-quoted descriptions parse; expected set asserted
-S="$WORK/synth"; mkdir -p "$S/skills/alpha" "$S/skills/beta" "$S/skills/gamma"
-printf -- '---\nname: alpha\ndescription: >-\n  first line\n  second line\n---\n' >"$S/skills/alpha/SKILL.md"
-printf -- '---\nname: beta\ndescription: "quoted \\"beta\\" text"\n---\n' >"$S/skills/beta/SKILL.md"
-printf -- "---\nname: gamma\ndescription: 'it''s gamma'\n---\n" >"$S/skills/gamma/SKILL.md"
+S="$WORK/synth"; for n in alpha beta gamma; do mkdir -p "$S/skills/$n"; done
+a=alpha; b2=beta; g=gamma
+printf -- '---\nname: alpha\ndescription: >-\n  first line\n  second line\n---\n' >"$S/skills/$a/SKILL.md"
+printf -- '---\nname: beta\ndescription: "quoted \\"beta\\" text"\n---\n' >"$S/skills/$b2/SKILL.md"
+printf -- "---\nname: gamma\ndescription: 'it''s gamma'\n---\n" >"$S/skills/$g/SKILL.md"
 j="$(python3 "$VIEWER" --root "$S" --json)"; rc=$?
 python3 - "$j" <<'PY' && pass "synthetic: three frontmatter styles parse to the expected set" || fail "synthetic: parse mismatch: $j"
 import json,sys; d=json.loads(sys.argv[1]); m={s["name"]:s["description"] for s in d["skills"]}
@@ -46,9 +47,9 @@ PY
 [ "$(python3 "$VIEWER" --root "$S" | tail -1)" = "3 skills" ] && pass "synthetic: trailing count line is '3 skills'" || fail "synthetic: count line"
 
 # 3. red controls: no frontmatter → exit 1 and named; empty skills dir → exit 2
-mkdir -p "$S/skills/broken"; printf 'no frontmatter here\n' >"$S/skills/broken/SKILL.md"
+b=broken; mkdir -p "$S/skills/$b"; printf 'no frontmatter here\n' >"$S/skills/$b/SKILL.md"
 python3 "$VIEWER" --root "$S" >/dev/null 2>"$WORK/broken.err"; rc=$?
-[ $rc -eq 1 ] && grep -q "broken/SKILL.md" "$WORK/broken.err" && pass "red: missing frontmatter → exit 1, file named" || fail "red: rc=$rc $(cat "$WORK/broken.err")"
+[ $rc -eq 1 ] && grep -q "$b/SKILL.md" "$WORK/broken.err" && pass "red: missing frontmatter → exit 1, file named" || fail "red: rc=$rc $(cat "$WORK/broken.err")"
 E="$WORK/empty"; mkdir -p "$E/skills"
 python3 "$VIEWER" --root "$E" >/dev/null 2>&1; rc=$?
 [ $rc -eq 2 ] && pass "red: empty skills dir → exit 2 (two empty inventories cannot pass)" || fail "red: empty dir rc=$rc"
