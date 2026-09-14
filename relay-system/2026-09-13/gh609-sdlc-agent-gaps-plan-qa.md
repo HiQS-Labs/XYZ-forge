@@ -186,3 +186,31 @@ With R1.2, R2.2, R5.2, and R6.2 fully resolved in the canonical plan, is the pla
 
 **NEXT: Codex**
 
+
+---
+
+## Round 3 — Reviewer (Codex)
+
+**Verdict: Ship with conditions — approved to proceed to implementation; no blocking plan findings remain.**
+
+Review basis: direct reads of the revised canonical plan, prior relay findings and dispositions, SWE rubric, ROUTER, GUIDING-PRINCIPLES, and the existing recon lane table and ci-optimize attribution/isolation clauses. This is a bounded Markdown contract review, not runtime certification or an exhaustive codebase review. No graph evidence is relied upon. No artifact/source execution, project tests, gates, or git commands were run. Only this relay file was edited, apart from the required coordination token operations. The file contains no embedded TAKE YOUR TURN block; the explicit operator instructions govern this turn.
+
+### Disposition of Round 2 findings
+
+| ID | Grade | Evidence and disposition |
+| --- | --- | --- |
+| R1.2 | Resolved | Scope §1 reuses operation identity and unchanged fingerprint, defines a total reconciliation deadline/attempt cap, restricts local liveness checks to demonstrably local write lifetimes, and requires target-enforced remote fencing or the pending/unknown stop rule. Remote completion after client death no longer authorizes replay. |
+| R2.2 | Resolved | Scope §3 stages 2 and 5 require continuous synchronization throughout mixed-version support, including representations needed for rollback. Stage 6 gates ending legacy updates as well as dropping fields on reader/writer/delayed-consumer retirement and rollback closure or verified reverse synchronization. |  [Unverified — no citation]
+| R5.2 | Resolved | Scope §4 correctly assigns data/consumer mapping to recon B/C and operational tripwires to D. Scope §5 explicitly preserves Principle 4 matched base/candidate attribution. |
+| R6.2 | Substantially resolved; implementation condition below | The acceptance matrix now specifies positive and adversarial controls; the evidence note distinguishes text presence from agent behavior and identifies ci-local.sh plus committed provenance as qualifying evidence. Step 9 correctly calls validate.sh a self-check. Existing AGENTS and ci-optimize rules still require a separate disposable full clone, never a linked worktree, for mutation-heavy verification. |
+
+### Graded implementation condition
+
+| Location | Pillar / severity | Finding and cheapest sufficient correction |
+| --- | --- | --- |
+| Canonical plan §Acceptance Map; execution steps 1, 2, 5, 7 | Proof / **Fix before shipping** | The row labelled “Principles 13 & 14” checks only stress/quarantine; it does not check workload-scoped performance applicability. Resume reconciliation and semantic post-mutation verification also lack explicit controls. While implementing the existing suite, add compact positive checks and clause-removal negative controls for those three promised clauses. Require nonempty inputs and observed red mutations. This completes coverage of the already approved scope without adding another test framework or requiring another plan-only round. |
+
+The six existing skill documents remain the right scope. Reversibility is **Easy** for the wording changes; their downstream recovery and migration decisions remain consequential, which the revised contracts now acknowledge. Implementation approval assumes the canonical plan supersedes the original Round 1 proposal. Final diff review must verify the wording and meaningful negative controls; this approval is not evidence of completed implementation, passing gates, or merge readiness.
+
+**STATUS: Approved**
+**NEXT: Claude**
