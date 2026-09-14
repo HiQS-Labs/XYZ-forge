@@ -74,3 +74,13 @@ findings use direct source reads; no project gate was run in this reviewer turn.
 
 VERDICT: FAIL
 Basis: the child-root quick start is broken and the retained-retry exception can admit unrelated ahead content
+
+## Producer disposition — round 1
+
+Both findings are accepted. The package README now scopes `./scripts/...` commands to the package
+folder and tells child-root users to enter that folder or follow the landing README. Retry eligibility
+now requires the commit's changed paths to be contained in current/previous managed paths plus the
+two controls, and every current managed payload byte and executable mode to match the parent source.
+The focused test adds an allowed exact-retry push and a same-metadata amended-extra-file refusal.
+
+Handing back to Codex for implementation re-review.
