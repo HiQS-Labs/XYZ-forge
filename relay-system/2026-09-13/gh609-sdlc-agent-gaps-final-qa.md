@@ -101,3 +101,36 @@ Review basis: direct reads of the six affected skill sections, the complete GH-6
 
 **STATUS: Changes requested**
 **NEXT: Claude**
+
+### Extension · System
+relay-drive: round cap (1) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 2
+
+---
+
+## Round 2 — Producer (Claude)
+
+### Dispositions to Final QA Round 1 Findings (F1 & F2)
+
+Both findings have been resolved in full in `test/gh609-sdlc-agent-gaps.sh`:
+
+| Finding | Severity | Disposition & Verification |
+|---|---|---|
+| **F1 (Unified Parameterized Checkers & Fixture Controls)** | **Fix** | **Adopted in Full:** Refactored `test/gh609-sdlc-agent-gaps.sh` to eliminate duplicate/divergent checking logic. Built 6 shared parameterized contract checkers (`check_workhorse_contract`, `check_start_task_contract`, `check_swe_contract`, `check_recon_contract`, `check_ci_optimize_contract`, `check_ci_debug_contract`). Every checker is run against: (1) real in-tree documents, (2) unmodified copy fixtures (6 positive controls proving validators accept valid text), and (3) mutated adversarial fixtures. Every mutation test explicitly asserts that the mutation modified the fixture (`! cmp -s base mutated`) before verifying that the checker properly reports RED. |
+| **F2 (Deep Clause Checks & Adversarial Mutations)** | **Fix** | **Adopted in Full:** Upgraded all checkers and added 13 targeted adversarial mutations: <br>• **Workhorse:** Deep checks for durable identity tuple, 4 states, Authoritative Non-Execution idempotency key reuse, local PID scoping to demonstrably local writes, remote monotonic fencing tokens, costly tested rollback disclosing lost intervening writes, one-way door permanent loss & fresh confirmation, and semantic post-mutation verification beyond exit 0. Mutations verify that deleting Unknown state, removing key reuse, expanding PID fence to remote, removing permanent loss disclaimer, or removing semantic verification fails validation.<br>• **Start-Task:** Deep checks for Step 3 resume reconciliation (`gh pr list --head <branch>`, live HEAD, task clone) and transport drop handling. Mutation verifies removing remote PR check fails validation.<br>• **SWE:** Deep checks for 6-stage lifecycle, Stage 2 continuous sync with conflict/ordering strategy, Stage 3 convergence gate, Stage 5 dual-write / bidirectional sync throughout mixed-version window, and Stage 6 4-part contraction gating. Mutations verify removing Stage 5 dual-write or removing rollback window closure fails validation.<br>• **Recon:** Scoped lane-row regexes asserting Lane B contains active readers/writers & schema, Lane C contains async queues & delayed consumers, Lane D contains tripwires & rollback. Mutation verifies misassigning Lane B fails validation.<br>• **CI-Optimize:** Deep checks for Principle 13 (bounded 100-run stress loop + Principle 4 attribution, active quarantine sink requiring named owner, tracked issue, UTC expiry date, active assertion execution) and Principle 14 (workload-scoped performance & memory fences). Mutations verify removing UTC expiry or removing performance budgets fails validation.<br>• **CI-Debug:** Deep checks for strictly ordered 4-tier ladder (P1 before P2 before P3 before P4) and WORKTREE-SAFETY.md enforcement. Mutation verifies actual ladder inversion (swapping Priority 1 and Priority 4) fails validation. |
+
+### Test Suite Execution Results
+- Focused Suite (`bash test/gh609-sdlc-agent-gaps.sh`): **31 PASS, 0 FAIL**
+  - 6 File size non-empty guards
+  - 6 Real in-tree contract checks
+  - 6 Unmodified fixture controls
+  - 13 Adversarial negative mutations with diff assertion
+- Self-Check Gate (`./validate.sh`): **100% test suites green**
+
+---
+
+### Request for Reviewer
+
+With F1 and F2 resolved with shared checkers and 13 falsification mutations, is this implementation approved?
+
+**NEXT: Codex**
+
