@@ -1,5 +1,23 @@
 # GH605 implementation evidence — not yet approved
 
+## Latest candidate:ae7006c8ec702025f50de6d9b3a517b4579821d5
+
+05eaee6a corrects independently owning invalid-ledger identity, second-repository lease
+acquisition and repeat terminal queue compaction. Parent78/78Python passes (28state,50policy)
+and six focused shell suites pass in separate full clone2 with unchanged clean identity.
+ae7006c8 adds deterministic GH57 fixture clocks and uses its existing resolved-settings
+union. Parent42/42 passes; reverting only that call produces38/42 (exit4); restoring gives
+42/42 again. This explains the prior426f5825 full-gate failure, not a production-loader bug.
+The fresh normal full push gate is pending; no success is presumed.
+
+Reviewer5/a9a69567 closes all three Round4 source findings and accepts the narrow GH57
+repair, but returnsFAIL/Escalated (driver4) at5/5. No final approval: the mock's real --seed
+counter duplicates item IDs and whole-file coverage remains incomplete. Parent reproduced
+seed123 -> add124 -> setDone changing123 while124 stays unset with the same item ID.
+The existing integration fixtures manually initialize counter2, so their results remain
+valid but do not cover this CLI seed path. No production correction or new review beyond
+the exhausted cap without operator continuation. No live board/config writes or merge.
+
 ## Latest checkpoint:426f582531ba18f815f82e82a49c92f25ad609ee
 
 Operator authorized finishing beyond the prior cap; same relay extended to5 review rounds.
