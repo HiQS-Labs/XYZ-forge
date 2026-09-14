@@ -1,0 +1,13 @@
+{"schema_version": "1.0", "case": "prefeature-regression", "result": "expected-fail", "exit_code": 1, "detail": "ModuleNotFoundError: claude_cli"}
+{"schema_version": "1.0", "case": "account-status", "result": "pass", "loggedIn": true, "authMethod": "claude.ai", "apiProvider": "firstParty", "subscriptionType": "max", "cli_version": "2.1.270"}
+{"schema_version": "1.0", "case": "live-consult", "result": "pass", "exit_code": 0, "model": "claude-sonnet-4-6", "detail": "README.md read with citation; 1 answered, 0 failed; identifiers omitted"}
+{"schema_version": "1.0", "case": "auth-bypass-mutant", "result": "expected-fail", "exit_code": 1, "detail": "Replacing preflight with a no-op fails auth regression assertions."}
+{"schema_version": "1.0", "case": "focused-final", "commit": "8edd90ca", "result": "pass", "detail": "8 Python tests and 3 real shim fixtures; strict success JSON, auth failure and token handoff."}
+{"schema_version": "1.0", "case": "existing-claude", "result": "pass", "assertions": 36}
+{"schema_version": "1.0", "case": "existing-consult", "result": "pass", "assertions": 62}
+{"schema_version": "1.0", "case": "live-review", "result": "pass", "exit_code": 0, "status": "Approved", "scope": "shared Claude helper", "attestation": "review-attestation.json"}
+{"schema_version": "1.0", "case": "pdda", "result": "pass", "checks": ["frontmatter", "status-table", "changelog"], "errors": 0, "warnings": 0}
+{"schema_version": "1.0", "case": "live-builder", "result": "pass", "exit_code": 0, "changed_paths": ["relay-system/gh610-builder.md", "subscription-smoke.txt"], "token_info": "id:       RELAY-gh610-builder\nstatus:   open\npriority: 0\npaths:    (none)\nhandoff-to: operator\n", "source_commit": "8edd90ca"}
+{"schema_version": "1.0", "case": "test-style-regression", "result": "pass", "detail": "GH139 rejected new pipe-into-grep assertions; corrected to here-strings. GH610 and GH139 rerun pass."}
+{"schema_version": "1.0", "case": "first-full-gate", "commit": "8edd90ca2f892f05768b72dc69c0ab0ad52392f3", "result": "fail", "exit_code": 1, "detail": "Only final failure: GH139 test-style guard; corrected in 04e21ace. Four pooled failures passed isolated retries. Full push gate took 991 seconds."}
+{"schema_version": "1.0", "case": "full-prepush-gate", "commit": "04e21ace", "result": "pass", "passed": 376, "total": 376, "wall_seconds": 883, "pooled_retries": 0, "raw_log_sha256": "63b5c5c2576c10ef3596c0e9164682129e44927cb005c1646026523a8637f83b", "note": "Normal full pre-push check; not ci-local promotion evidence. Machine paths redacted in public log."}

@@ -216,9 +216,9 @@ on the machine running it, never into the target repo itself.
 Claude Code session driving `relay-drive.sh`/`marathon-drive.sh` plans, dispatches, and reviews/verifies
 turns — it does not spawn itself as the headless build lane. **Agy CLI and Codex CLI are the builders**:
 the two cost-blind (subscription-billed, not per-call API) headless turn-takers `--agent-cmd` /
-`--builder` default to. **Claude CLI (billed via the Anthropic API) is not a builder by default** —
+`--builder` default to. **Claude CLI (subscription or API, according to authentication) is not a builder by default** —
 `--builder claude` / a `claude-turn.sh` shim stay fully supported, but only as an explicit,
-cost-acknowledged choice the *user* makes locally, never something a session reaches for on its own
+usage-acknowledged choice the *user* makes locally, never something a session reaches for on its own
 reasoning that it's "just another supported turn-taker." If a task needs a headless build lane and
 neither agy nor codex is on PATH, stop and ask — don't default to spawning a headless Claude CLI turn.
 
@@ -299,7 +299,7 @@ source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also
 | Commandcode | `COMMANDCODE_MODEL` | `meta/muse-spark-1.2-contributor` | `cmd --list-models` for the live catalog (GLM, Qwen, DeepSeek all reachable here) |
 | DeepSeek | `DEEPSEEK_MODEL` | `deepseek/deepseek-v4-pro` | accepts a colloquial alias (`"deepseek v4 pro"`); also `DEEPSEEK_PROVIDER` (`openrouter`\|`deepseek`\|`alibaba`) selecting the endpoint and its key variable. An unrecognised value REFUSES the turn (it used to fall through to DeepSeek silently). `alibaba` is the Alibaba Token Plan, which serves Qwen under bare ids (`qwen3.8-max`, not `qwen/...`) and reads its key from `ALIBABA_TOKEN_PLAN_API_KEY` or, failing that, the file named by `ALIBABA_TOKEN_PLAN_API_KEY_FILE`. |
 | Aider | `AIDER_MODEL` | `openrouter/anthropic/claude-sonnet-5`, or `openai/agents-a1` when `AIDER_OPENAI_API_BASE` is set | force `AIDER_FLAGS=--edit-format diff` on GLM |
-| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | API-billed — an explicit operator choice, never a session default |
+| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Explicit operator choice, never a session default; see [subscription setup](../../relay-automation/README.md#claude-subscription-mode) |
 | Pi | `PI_MODEL` | **none — required** | refuses to guess (GH-295) |
 
 Codex example:

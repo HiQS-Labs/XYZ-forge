@@ -26,7 +26,7 @@ its exact current model release awaits the same evidence required of every other
 | Harness | Current policy role | Operating constraint | Policy source |
 |---|---|---|---|
 | Command Code & Codex CLI | Builder evaluation for GH-57 (2026-08-19) | Non-interactive `cmd --print` on complex synthesis stalled across Muse Spark (4.5 min cap), Qwen 3.8-Max, and GLM-5.2 due to stdout buffering / missing interactive turn cycle. Codex CLI fallback succeeded, producing the 42-assertion `test/gh57-releases-fuzz.sh` suite and updating `utils/fuzzing/fuzz-loop.sh` (42/42 pass). | [#57](https://github.com/HiQS-Labs/XYZ-forge/issues/57) |
-| Claude Code | Orchestrator and final reviewer | Do not use as a default headless builder; an API-billed Claude builder is operator-selected only. | GH-221 / [`AGENTS.md`](AGENTS.md) |
+| Claude Code | Orchestrator and final reviewer | Do not use as a default headless builder; a Claude builder is operator-selected only. Native subscription mode is documented in the [harness guide](relay-automation/README.md#claude-subscription-mode). [GH-610 evidence](TESTS-RESULTS/2026-09-13+GH-610/validation.jsonl) covers one Max account: consult, attested standalone review, and a contained builder smoke (CLI 2.1.270); no model-grade promotion. | GH-221 / [`AGENTS.md`](AGENTS.md) |
 | Codex CLI | Cost-blind default builder and reviewer | Use the subscription-authenticated CLI lane; exact model release must be evaluated separately. | GH-212 / [`AGENTS.md`](AGENTS.md) |
 | Antigravity (`agy`) | Cost-blind cross-model builder/reviewer lane | Run sandbox-off; an empty exit-0 response is a known failure mode and its print mode is cost-blind. | GH-178 / [`AGENTS.md`](AGENTS.md) |
 
@@ -121,7 +121,7 @@ All canonical IDs are exact for use with `cmd -p "<prompt>" -m <id> --tools-all 
 
 | Harness | Execution engine | Billing / observability | Headless contract | Notes |
 |---|---|---|---|---|
-| Claude Code | Native Anthropic CLI | API-metered; structured usage available | `claude -p` | Orchestrator/reviewer policy lane; explicit-cost builder only. |
+| Claude Code | Native Anthropic CLI | Subscription or API according to authentication; structured usage is not proof of billing | `claude -p` | Native consult, standalone relay reviewer, explicit operator-selected builder; `CLAUDE_AUTH_MODE=subscription` verifies the account route. |
 | Codex CLI | Native OpenAI CLI | Subscription default; token capture historically partial | `codex exec` | Builder/reviewer policy lane. |
 | Antigravity | Antigravity CLI | Subscription/cost-blind print mode | `agy -p` | Sandbox-off; empty exit-0 must be detected. |
 | Command Code | Node.js / Langbase | Subscription and/or credits | `cmd -p` or `cmd --print --model <id>` | The supported relay route is `commandcode-turn.sh`; current evidence remains pending PR integration. |

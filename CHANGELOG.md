@@ -4,6 +4,8 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-13
 
+- **GH-610: native Claude subscription mode and consult.** Explicit account validation rejects API/provider routes; Claude consult uses read-only tools and rejects failed JSON results. Relay retains scoped handoff and explicit builder selection. Public instructions explain authentication and subscription limits. Reversibility: **Easy** — leave subscription mode unset to retain existing authentication behavior. Verification: 376/376 full pre-push checks, registered account/result regressions and a rejected auth-bypass mutation; live Max-account consult, attested standalone review, and contained builder smoke.
+
 - **GH-591: make complete qualification independent of developer-machine setup.** Hosted full-suite jobs install the Python dependencies used by ATE; fixtures provide agent clients, cover low-core scheduling, and set their own local/hosted state. Bridge startup failures retain a stack trace at the existing deadline. Reversibility: **Easy** — revert these fixture and dependency corrections. Verification: five hosted failures reproduced before the corrections; retained targeted and full-gate evidence records the subsequent results. Automatic acceptance remains pending.
 
 - **GH-584/GH-591: align pre-merge document selection with automatic closeout.** Supporting recon notes can no longer create false ambiguity or bypass validation of a completed task document. Both canonical task-name forms remain supported. Verification: four witnessed red cases now pass, along with the existing pre-merge checks. Reversibility: **Easy** — restore the previous filename matching.
