@@ -293,6 +293,13 @@ class MultiRepositoryWriteTests(unittest.TestCase):
              contextlib.redirect_stderr(io.StringIO()):
             return app.main(["--root", str(self.root), "roadmap", "update", *argv])
 
+    def _run_roadmap(self, verb, *argv):
+        with mock.patch.object(app, "refresh_preview"), \
+             mock.patch.object(app, "_dispatch_work_connectors"), \
+             contextlib.redirect_stdout(io.StringIO()), \
+             contextlib.redirect_stderr(io.StringIO()):
+            return app.main(["--root", str(self.root), "roadmap", verb, *argv])
+
     def test_gid_write_targets_repo_b_event_and_ambiguous_number_refuses(self):
         self._run_update("--gid", self.gid_b, "--section", "In progress")
         conn = sqlite3.connect(self.root / "releases.db")
@@ -312,6 +319,143 @@ class MultiRepositoryWriteTests(unittest.TestCase):
         conn.close()
         self.assertEqual(after, rows)
         self.assertEqual(event_count, 1)
+
+    def test_force_rerating_replaces_complete_score_and_override_token(self):
+        conn = sqlite3.connect(self.root / "releases.db")
+        conn.execute("""UPDATE roadmap_items SET raw_text=?,rating_pri=?,rating_sev=?,
+                     rating_appeal=?,rating_effort=?,rating_ovr=? WHERE global_id=?""",
+                     ("- GH-77 same number (rated 80/70/60/50 ovr 240)",
+                      80, 70, 60, 50, 240, self.gid_b))
+        conn.commit(); conn.close()
+
+        self._run_roadmap("rate", "--gid", self.gid_b, "--rated", "10/20/30/40", "--force")
+        conn = sqlite3.connect(self.root / "releases.db")
+        raw, *stored = conn.execute(
+            "SELECT raw_text,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr "
+            "FROM roadmap_items WHERE global_id=?", (self.gid_b,)).fetchone()
+        conn.close()
+        self.assertEqual(raw.count("rated "), 1)
+        self.assertNotIn("ovr ", raw)
+        parsed = app.parse_rating(raw, "same number")
+        self.assertEqual(stored, [parsed[c] for c in app.RATING_COLUMNS])
+
+        self._run_roadmap("rate", "--gid", self.gid_b, "--rated", "11/22/33/44",
+                          "--ovr", "300", "--force")
+        conn = sqlite3.connect(self.root / "releases.db")
+        raw, *stored = conn.execute(
+            "SELECT raw_text,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr "
+            "FROM roadmap_items WHERE global_id=?", (self.gid_b,)).fetchone()
+        conn.close()
+        self.assertEqual(raw.count("rated "), 1)
+        self.assertEqual(raw.count("ovr "), 1)
+        parsed = app.parse_rating(raw, "same number")
+        self.assertEqual(stored, [parsed[c] for c in app.RATING_COLUMNS])
+
+    def test_repoint_refuses_ambiguous_issue_number_without_mutation(self):
+        conn = sqlite3.connect(self.root / "releases.db")
+        before = dict(conn.execute("SELECT global_id,doc_path FROM roadmap_items"))
+        conn.close()
+        with self.assertRaises(SystemExit):
+            self._run_roadmap("repoint", "--issue-num", "77", "--doc-path", "ignored.md")
+        conn = sqlite3.connect(self.root / "releases.db")
+        after = dict(conn.execute("SELECT global_id,doc_path FROM roadmap_items"))
+        conn.close()
+        self.assertEqual(after, before)
+
+
+class JogLifecycleWriteTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="gh605-jog-writer-")
+        self.root = Path(self.tmp.name)
+        (self.root / ".git").mkdir()
+        with contextlib.redirect_stdout(io.StringIO()):
+            app.main(["--root", str(self.root), "init", "--slug", "owner/repo"])
+        self.roadmap_gid = app.new_gid("rmi-")
+        self.jog_gid = app.new_gid("jog-")
+        conn = sqlite3.connect(self.root / "releases.db")
+        repo_id = conn.execute("SELECT id FROM repos").fetchone()[0]
+        now = app.now_iso()
+        conn.execute("""INSERT INTO roadmap_items(
+            global_id,repo_id,gh_number,title,section,position,status_marker,doc_path,
+            issue_url,raw_text,first_seen,updated_at,rating_pri,rating_sev,
+            rating_appeal,rating_effort)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (self.roadmap_gid, repo_id, 1, "jog item", "In progress", 1, "🚧",
+             "PROJECT/2-WORKING/GH-1.md", "https://github.com/owner/repo/issues/1",
+             "- GH-1 jog item", now, now, 80, 70, 60, 50))
+        conn.execute("""INSERT INTO jog_queue(global_id,repo_id,gh_number,position,status,
+                     created_at,updated_at,attempt_count,lease_pid,failure_reason)
+                     VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                     (self.jog_gid, repo_id, 1, 1, "pending", now, now, 0, None, None))
+        conn.commit(); conn.close()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _writer(self, fn, *args):
+        with mock.patch.object(app, "refresh_preview"), \
+             mock.patch.object(app, "_dispatch_work_connectors"), \
+             contextlib.redirect_stdout(io.StringIO()), \
+             contextlib.redirect_stderr(io.StringIO()):
+            return fn(*args)
+
+    def test_real_lease_and_all_terminal_statuses_emit_owned_lifecycle_events(self):
+        self._writer(app.jog_acquire_lease, str(self.root), 1, 4242)
+        conn = sqlite3.connect(self.root / "releases.db")
+        receipt = conn.execute("SELECT txn_id,target_gid FROM op_receipts WHERE op='jog-lease'").fetchone()
+        event = conn.execute("SELECT txn_id,repo_id,event,payload FROM work_events ORDER BY id DESC LIMIT 1").fetchone()
+        repo_id = conn.execute("SELECT id FROM repos WHERE slug='owner/repo'").fetchone()[0]
+        conn.close()
+        self.assertEqual(receipt[1], "GH-1")
+        self.assertEqual(event[:3], (receipt[0], repo_id, "in_flight"))
+        self.assertEqual(json.loads(event[3])["jog_global_id"], self.jog_gid)
+
+        for status in ("failed", "parked", "completed", "dropped", "archived"):
+            self._writer(app.jog_set_status, str(self.root), 1, status, "test")
+            conn = sqlite3.connect(self.root / "releases.db")
+            latest = conn.execute("SELECT txn_id,event,repo_id,payload FROM work_events ORDER BY id DESC LIMIT 1").fetchone()
+            status_receipt = conn.execute(
+                "SELECT txn_id,target_gid FROM op_receipts WHERE op=? ORDER BY id DESC LIMIT 1",
+                ("jog-%s" % status,)).fetchone()
+            conn.close()
+            self.assertEqual(latest[0], status_receipt[0])
+            self.assertEqual(status_receipt[1], "GH-1")
+            self.assertEqual(latest[1], "jog_%s" % status)
+            self.assertEqual(latest[2], repo_id)
+            self.assertEqual(json.loads(latest[3])["status"], status)
+        as_of = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=1)).isoformat()
+        report = app.load_work_evidence(self.root / "releases.db", as_of=as_of)
+        self.assertEqual(report["issues"][0]["latest_lifecycle"]["event"], "jog_archived")
+        self.assertEqual(report["issues"][0]["activity"], "unknown")
+
+    def test_metadata_update_does_not_supersede_real_jog_start(self):
+        self._writer(app.jog_acquire_lease, str(self.root), 1, 4242)
+        self._writer(app.main, ["--root", str(self.root), "roadmap", "update",
+                                "--gid", self.roadmap_gid, "--raw-text",
+                                "- **GH-1 · jog item** metadata only"])
+        as_of = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=1)).isoformat()
+        report = app.load_work_evidence(self.root / "releases.db",
+                                        as_of=as_of)
+        self.assertEqual(report["issues"][0]["activity"], "recent")
+        self.assertEqual(report["issues"][0]["latest_event"]["event"], "updated")
+
+    def test_ambiguous_same_number_jog_rows_refuse_and_roll_back(self):
+        conn = sqlite3.connect(self.root / "releases.db")
+        now = app.now_iso()
+        repo_gid = app.new_gid("repo-")
+        conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
+                     (repo_gid, "other/repo", now))
+        other_repo = conn.execute("SELECT id FROM repos WHERE slug='other/repo'").fetchone()[0]
+        conn.execute("""INSERT INTO jog_queue(global_id,repo_id,gh_number,position,status,
+                     created_at,updated_at,attempt_count) VALUES(?,?,?,?,?,?,?,?)""",
+                     (app.new_gid("jog-"), other_repo, 1, 1, "pending", now, now, 0))
+        conn.commit(); conn.close()
+        with self.assertRaises(SystemExit):
+            self._writer(app.jog_acquire_lease, str(self.root), 1, 4242)
+        conn = sqlite3.connect(self.root / "releases.db")
+        self.assertEqual(set(r[0] for r in conn.execute("SELECT status FROM jog_queue")), {"pending"})
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0], 0)
+        conn.close()
 
 
 if __name__ == "__main__":

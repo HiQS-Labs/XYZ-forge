@@ -317,7 +317,7 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
             unresolved.append({"identity": ident, "reason": "unknown GitHub state"})
             continue
         rows = ledger_by.get(ident, [])
-        if ident in duplicates or len(rows) != 1:
+        if ident in duplicates or ident in invalid_ledger or len(rows) != 1:
             unresolved.append({"identity": ident, "reason": "duplicate/missing ledger or board identity"})
             continue
         row = rows[0]
@@ -731,15 +731,20 @@ class IndeterminateMutation(RuntimeError):
     pass
 
 
-def _remote_request(operation, variables, invoke, audit=None):
+def _remote_request(operation, variables, invoke, audit=None, validate=None):
     entry = {"request_id": "req-%s-%s" % (os.getpid(), time.time_ns()),
              "operation": operation, "variables": dict(variables)}
     if audit is None:
-        return invoke()                 # legacy self-heal/retry behavior stays byte-compatible
+        result = invoke()               # legacy self-heal/retry behavior stays byte-compatible
+        if validate is not None:
+            validate(result)
+        return result
     if audit:
         audit(dict(entry, phase="intent"))
     try:
         result = invoke()
+        if validate is not None:
+            validate(result)
     except Exception as exc:
         if audit:
             try:
@@ -755,11 +760,26 @@ def _remote_request(operation, variables, invoke, audit=None):
     return result
 
 
+def _validate_mutation_item(result, operation, expected_item_id=None):
+    """Require GraphQL mutation acknowledgement before an audited success is durable."""
+    try:
+        item_id = result[operation]["item" if operation == "addProjectV2ItemById"
+                                    else "projectV2Item"]["id"]
+    except (KeyError, TypeError):
+        raise RuntimeError("%s returned no project item id" % operation)
+    if not isinstance(item_id, str) or not item_id:
+        raise RuntimeError("%s returned no project item id" % operation)
+    if expected_item_id is not None and item_id != expected_item_id:
+        raise RuntimeError("%s returned item %r, expected %r"
+                           % (operation, item_id, expected_item_id))
+
+
 def _add_item(cfg, ids, content_id, audit=None):
     variables = {"p": ids["project"], "c": content_id}
     data = _remote_request("addProjectV2ItemById", variables, lambda: _gql(
         "mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}",
-        variables), audit)
+        variables), audit,
+        validate=lambda result: _validate_mutation_item(result, "addProjectV2ItemById"))
     return data["addProjectV2ItemById"]["item"]["id"]
 
 
@@ -825,14 +845,18 @@ def _set_status_option(cfg, ids, item_id, option_id, audit=None):
     _remote_request("updateProjectV2ItemFieldValue", variables, lambda: _gql(
         "mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{"
         "projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}",
-        variables), audit)
+        variables), audit,
+        validate=lambda result: _validate_mutation_item(
+            result, "updateProjectV2ItemFieldValue", item_id))
 
 
 def _clear_status(cfg, ids, item_id, audit=None):
     variables = {"p": ids["project"], "i": item_id, "f": ids["status_field"]}
     _remote_request("clearProjectV2ItemFieldValue", variables, lambda: _gql(
         "mutation($p:ID!,$i:ID!,$f:ID!){clearProjectV2ItemFieldValue(input:{"
-        "projectId:$p,itemId:$i,fieldId:$f}){projectV2Item{id}}}", variables), audit)
+        "projectId:$p,itemId:$i,fieldId:$f}){projectV2Item{id}}}", variables), audit,
+        validate=lambda result: _validate_mutation_item(
+            result, "clearProjectV2ItemFieldValue", item_id))
 
 
 def _set_status(cfg, ids, item_id):
@@ -1302,7 +1326,7 @@ def restore_policy_result(result_path, write=False, move_added_to_backlog=False,
             _write_json(report_path, report)
         except Exception as exc:
             report["status"] = ("indeterminate" if isinstance(exc, IndeterminateMutation)
-                                or _unmatched_intents(report["operations"]) else "partial")
+                                or unmatched or _unmatched_intents(report["operations"]) else "partial")
             report["error"] = str(exc)
             try:
                 _write_json(report_path, report)

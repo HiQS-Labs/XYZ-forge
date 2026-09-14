@@ -11,6 +11,8 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "utils" / "py"))
 import board_sync
+import mock_gh_board
+import releases_app
 import work_connectors
 from work_connectors import github_board
 
@@ -188,6 +190,22 @@ class PlannerTests(unittest.TestCase):
         self.assertFalse(plan["changes"])
         self.assertTrue(plan["unresolved"])
 
+    def test_valid_plus_invalid_ledger_identity_never_falls_through(self):
+        valid = ledger(1, 90)
+        invalid = ledger(1, 80, global_id="rmi-invalid", identity_valid=False)
+        board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                  "item_id": "i1", "status": "Backlog"}]
+        pr = {"repo": "owner/repo", "kind": "pr", "number": 9, "state": "OPEN",
+              "draft": False, "closing_issues": [{"repo": "owner/repo", "number": 1}]}
+        for github in ([issue(1)], [issue(1), pr]):
+            with self.subTest(linked_pr=len(github) == 2):
+                plan = board_sync.plan_selection_policy(
+                    POLICY, [valid, invalid], board, github, as_of=AS_OF)
+                issue_changes = [c for c in plan["changes"] if c["identity"][-1] == 1]
+                self.assertFalse(issue_changes)
+                self.assertTrue(any("identity" in u["reason"]
+                                    for u in plan["unresolved"] if u["identity"][-1] == 1))
+
 
 class WriterAuditTests(unittest.TestCase):
     def test_add_audits_intent_before_result(self):
@@ -204,6 +222,27 @@ class WriterAuditTests(unittest.TestCase):
                 board_sync._add_item({}, {"project": "p"}, "content", audit=calls.append)
         self.assertEqual(gql.call_count, 1)
         self.assertEqual(calls[-1]["outcome"], "indeterminate")
+
+    def test_malformed_add_set_and_clear_responses_are_indeterminate(self):
+        cases = [
+            (lambda audit: board_sync._add_item(
+                {}, {"project": "p"}, "content", audit=audit), None),
+            (lambda audit: board_sync._set_status_option(
+                {}, {"project": "p", "status_field": "f"}, "item-1", "o", audit=audit),
+             {"updateProjectV2ItemFieldValue": {"projectV2Item": {"id": "wrong"}}}),
+            (lambda audit: board_sync._clear_status(
+                {}, {"project": "p", "status_field": "f"}, "item-1", audit=audit),
+             {"clearProjectV2ItemFieldValue": {"projectV2Item": None}}),
+        ]
+        for invoke, response in cases:
+            with self.subTest(response=response):
+                calls = []
+                with mock.patch.object(board_sync, "_gql", return_value=response) as gql:
+                    with self.assertRaises(board_sync.IndeterminateMutation):
+                        invoke(calls.append)
+                self.assertEqual(gql.call_count, 1)
+                self.assertEqual([entry["phase"] for entry in calls], ["intent", "result"])
+                self.assertEqual(calls[-1]["outcome"], "indeterminate")
 
     def test_add_success_status_failure_preserves_added_item_id(self):
         cfg = {"project_owner": "owner", "project_number": 4,
@@ -516,6 +555,36 @@ class WriterAuditTests(unittest.TestCase):
             self.assertFalse(report["changes"])
             self.assertIn("preserved", report["warnings"][0])
 
+    def test_restore_exception_preserves_preexisting_unmatched_intent(self):
+        class FakeLock:
+            def __init__(self, _path): pass
+            def acquire(self): return True
+            def release(self): pass
+
+        with tempfile.TemporaryDirectory(prefix="gh605-restore-error-") as tmp:
+            result_path = Path(tmp) / "result.json"
+            report_path = Path(tmp) / "restore.json"
+            result_path.write_text(json.dumps({
+                "schema": "github-board-policy-result@1", "policy": POLICY, "root": tmp,
+                "operations": [
+                    {"phase": "change", "identity": ["owner/repo", "issue", 1],
+                     "before": "Backlog", "after": "Ready", "item_id": "item-1",
+                     "added": False, "outcome": "success"},
+                    {"phase": "intent", "request_id": "lost", "operation": "update"},
+                ]}))
+            board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                      "item_id": "item-1", "status": "Ready"}]
+            with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+                 mock.patch.object(board_sync, "_policy_board_cfg", return_value={}), \
+                 mock.patch.object(board_sync, "fetch_board_items", return_value=board), \
+                 mock.patch("work_connectors._ConnectorLock", FakeLock), \
+                 mock.patch.object(board_sync, "option_id_for", side_effect=RuntimeError("preflight")):
+                with self.assertRaisesRegex(RuntimeError, "preflight"):
+                    board_sync.restore_policy_result(
+                        result_path, write=True, report_path=report_path)
+            persisted = json.loads(report_path.read_text())
+            self.assertEqual(persisted["status"], "indeterminate")
+
     def test_fetch_board_items_refuses_missing_cursor_and_preserves_opaque(self):
         ids = {"project": "p", "status_field": "f"}
         malformed = {"node": {"items": {"nodes": [],
@@ -532,6 +601,189 @@ class WriterAuditTests(unittest.TestCase):
             items = board_sync.fetch_board_items({"status_field": "Status"}, cache=False)
         self.assertEqual(items[0]["kind"], "opaque")
         self.assertEqual(items[0]["item_id"], "opaque")
+
+
+class PolicyIntegrationTests(unittest.TestCase):
+    class FakeLock:
+        def __init__(self, _path): pass
+        def acquire(self): return True
+        def release(self): pass
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="gh605-policy-integration-")
+        self.root = Path(self.tmp.name)
+        (self.root / ".git").mkdir()
+        with mock.patch.object(releases_app, "refresh_preview"), \
+             mock.patch.object(releases_app, "_dispatch_work_connectors"), \
+             mock.patch("sys.stdout", new_callable=__import__("io").StringIO):
+            releases_app.main(["--root", str(self.root), "init", "--slug", "owner/repo"])
+        conn = __import__("sqlite3").connect(self.root / "releases.db")
+        repo_id = conn.execute("SELECT id FROM repos").fetchone()[0]
+        now = releases_app.now_iso()
+        for number, score in ((1, 90), (2, 80)):
+            conn.execute("""INSERT INTO roadmap_items(
+                global_id,repo_id,gh_number,title,section,position,status_marker,doc_path,
+                issue_url,raw_text,first_seen,updated_at,rating_pri,rating_sev,
+                rating_appeal,rating_effort)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (releases_app.new_gid("rmi-"), repo_id, number, "issue %d" % number,
+                 "Queue / parked intake", number, "", "PROJECT/1-INBOX/GH-%d.md" % number,
+                 "https://github.com/owner/repo/issues/%d" % number,
+                 "- GH-%d issue (rated %d/1/1/1)" % (number, score), now, now,
+                 score, 1, 1, 1))
+        conn.commit(); conn.close()
+        self.board = {
+            1: {"repo": "owner/repo", "kind": "issue", "number": 1,
+                "item_id": "item-1", "status": None},
+        }
+        self.fail_item = None
+        self.failed_once = False
+        self.ids = {"project": "project", "status_field": "field", "options": {
+            "Ready": "ready", "Backlog": "backlog", "In progress": "progress",
+            "In review": "review", "Done": "done"}}
+        self.mock_state_path = self.root / "mock-board.json"
+        self.mock_state = mock_gh_board.get_default_state()
+        self.mock_state.update({
+            "project_owner": "owner", "project_number": 4, "project_id": "project",
+            "fields": {"Status": {"id": "field", "options": [
+                {"id": value, "name": name} for name, value in self.ids["options"].items()]}},
+            "issues": {"owner/repo": {
+                "1": {"id": "content-1", "state": "OPEN"},
+                "2": {"id": "content-2", "state": "OPEN"}}},
+            "pull_requests": {"owner/repo": {}},
+            "items": [{"id": "item-1", "content_id": "content-1",
+                       "repository": "owner/repo", "number": 1, "field_values": {}}],
+            "next_item_id": 2,
+        })
+        mock_gh_board.save_state(self.mock_state, self.mock_state_path)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _board_snapshot(self, *_args, **_kwargs):
+        return [dict(item) for item in self.board.values()]
+
+    def _gql(self, query, variables):
+        if "updateProjectV2ItemFieldValue" in query:
+            item_id = variables["i"]
+            if (item_id == self.fail_item or self.fail_item == "added" and item_id != "item-1") \
+                    and not self.failed_once:
+                self.failed_once = True
+                raise RuntimeError("lost update response")
+        response = mock_gh_board.handle_graphql(
+            query, variables, self.mock_state, self.mock_state_path)
+        if response.get("errors"):
+            raise RuntimeError(response["errors"][0]["message"])
+        data = response.get("data")
+        if "addProjectV2ItemById" in query:
+            number = int(str(variables["c"]).rsplit("-", 1)[1])
+            item_id = data["addProjectV2ItemById"]["item"]["id"]
+            self.board[number] = {"repo": "owner/repo", "kind": "issue", "number": number,
+                                  "item_id": item_id, "status": None}
+        elif "updateProjectV2ItemFieldValue" in query:
+            number = next(number for number, item in self.board.items()
+                          if item["item_id"] == variables["i"])
+            option_to_name = {value: name for name, value in self.ids["options"].items()}
+            self.board[number]["status"] = option_to_name[variables["o"]]
+        elif "clearProjectV2ItemFieldValue" in query:
+            number = next(number for number, item in self.board.items()
+                          if item["item_id"] == variables["i"])
+            self.board[number]["status"] = None
+        return data
+
+    def _patches(self):
+        github = [issue(1), issue(2)]
+        return (
+            mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY),
+            mock.patch.object(board_sync, "_policy_board_cfg", return_value={
+                "project_owner": "owner", "project_number": 4, "repos": ["owner/repo"],
+                "status_field": "Status"}),
+            mock.patch.object(board_sync, "collect_github_state", return_value=github),
+            mock.patch.object(board_sync, "fetch_board_items", side_effect=self._board_snapshot),
+            mock.patch.object(board_sync, "resolve_ids", return_value=self.ids),
+            mock.patch.object(board_sync, "_gql", side_effect=self._gql),
+            mock.patch("work_connectors._ConnectorLock", self.FakeLock),
+        )
+
+    def _build_preview(self):
+        with self._patches()[0], self._patches()[1], self._patches()[2], self._patches()[3]:
+            preview = board_sync.build_policy_preview(self.root, as_of=AS_OF)
+        self.assertEqual(len(preview["changes"]), 2)
+        self.assertTrue(preview["decisions"])
+        return preview
+
+    def test_real_preview_apply_failure_and_conditional_restore_chain(self):
+        preview = self._build_preview()
+        preview_path = self.root / "preview.json"
+        result_path = self.root / "result.json"
+        restore_path = self.root / "restore.json"
+        preview_path.write_text(json.dumps(preview))
+        self.fail_item = "added"
+        patches = self._patches()
+        with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6]:
+            with self.assertRaises(board_sync.IndeterminateMutation):
+                board_sync.apply_policy_preview(self.root, preview_path, result_path)
+            partial = json.loads(result_path.read_text())
+            self.assertEqual(partial["status"], "indeterminate")
+            self.assertTrue(any(x.get("phase") == "change" and x.get("outcome") == "success"
+                                for x in partial["operations"]))
+            self.assertTrue(any(x.get("phase") == "result" and
+                                x.get("outcome") == "indeterminate"
+                                for x in partial["operations"]))
+            report = board_sync.restore_policy_result(
+                result_path, write=True, report_path=restore_path)
+        self.assertEqual(report["status"], "indeterminate")
+        self.assertIsNone(self.board[1]["status"])
+        self.assertEqual(report["residual_added"][0]["item_id"], self.board[2]["item_id"])
+        self.assertTrue(json.loads(restore_path.read_text())["operations"])
+
+    def test_real_preview_complete_apply_has_nonempty_durable_audit(self):
+        preview = self._build_preview()
+        preview_path = self.root / "preview.json"
+        result_path = self.root / "result.json"
+        preview_path.write_text(json.dumps(preview))
+        patches = self._patches()
+        with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6]:
+            result = board_sync.apply_policy_preview(self.root, preview_path, result_path)
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(self.board[1]["status"], "Ready")
+        self.assertEqual(self.board[2]["status"], "Ready")
+        persisted = json.loads(result_path.read_text())
+        self.assertTrue(persisted["operations"])
+        self.assertTrue(all(x.get("outcome") == "success" for x in persisted["operations"]
+                            if x.get("phase") in ("change", "result")))
+
+    def test_saved_preview_tamper_and_source_drift_refuse_before_write(self):
+        base = self._build_preview()
+        cases = {}
+        decision = json.loads(json.dumps(base))
+        decision["decisions"][0]["status"] = "Done"
+        cases["decision"] = decision
+        digest = json.loads(json.dumps(base)); digest["source_digest"] = "tampered"
+        cases["digest"] = digest
+        target = json.loads(json.dumps(base)); target["changes"][0]["after"] = "Done"
+        cases["target"] = target
+        for name, preview in cases.items():
+            with self.subTest(name=name):
+                preview_path = self.root / ("preview-%s.json" % name)
+                result_path = self.root / ("result-%s.json" % name)
+                preview_path.write_text(json.dumps(preview))
+                patches = self._patches()
+                with patches[0], patches[1], patches[2], patches[3], patches[4], \
+                     mock.patch.object(board_sync, "_gql") as gql, patches[6]:
+                    with self.assertRaisesRegex(RuntimeError, "preflight drift"):
+                        board_sync.apply_policy_preview(self.root, preview_path, result_path)
+                gql.assert_not_called()
+        drift_path = self.root / "preview-drift.json"
+        drift_result = self.root / "result-drift.json"
+        drift_path.write_text(json.dumps(base))
+        self.board[1]["status"] = "Backlog"
+        patches = self._patches()
+        with patches[0], patches[1], patches[2], patches[3], patches[4], \
+             mock.patch.object(board_sync, "_gql") as gql, patches[6]:
+            with self.assertRaisesRegex(RuntimeError, "preflight drift"):
+                board_sync.apply_policy_preview(self.root, drift_path, drift_result)
+        gql.assert_not_called()
 
 
 if __name__ == "__main__":

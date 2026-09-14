@@ -21,7 +21,9 @@ activity window is three days (`--stale-days N`); stale or malformed observation
 seven-day setting. Diagnostics inspect the SQLite header before opening and refuse a WAL-format
 database even when no `-wal`/`-shm` sidecars currently exist; checkpoint it deliberately first.
 Informational backfills, metadata-only updates, and re-ratings remain visible as the latest event
-but do not supersede a genuine lifecycle transition.
+but do not supersede a genuine lifecycle transition. Jog lease/status writes retain their existing
+`GH-N` receipt selector while resolving the unique queue row inside the transaction; ambiguous
+same-number rows refuse instead of assigning an event to the first repository.
 
 Repair in this order: run `releases check` and recover any interrupted write; deliberately run
 `releases migrate` if status reports schema 7; rerun `releases work status`; review
@@ -41,10 +43,17 @@ policy-managed board refuses raw event replay. GitHub Projects does not offer an
 compare-and-swap across devices, so the lock cannot exclude another device: every item ID and
 status is re-read immediately before mutation. An unmatched intent or interrupted/indeterminate
 request must be read back and freshly previewed, never blindly retried or overwritten.
+Add/set/clear responses must acknowledge a nonempty expected Project item ID before the result is
+recorded as successful; missing, null, or mismatched acknowledgements remain indeterminate.
 Project lookup uses GitHub's `repositoryOwner` union for either user or organization boards, and
 database events and policy evidence retain each roadmap row's repository identity. The legacy raw
 event connector remains its existing configured single-repository replay path; policy preview/apply
 is the complete repo-qualified projection for multi-repository board decisions.
+
+`roadmap rate --force` removes the complete prior canonical rating and optional override before
+writing the replacement, so `raw_text` continues to parse back to the stored rating columns.
+Number-only `roadmap repoint` refuses when more than one repository owns that issue number and, for
+a unique match, updates only its resolved global row ID.
 
 ## Re-pointing a release's tracking issue (GH-222)
 

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 3 / 3
 
@@ -430,5 +430,56 @@ Sol High: follow the existing20-minute correction brief, all seven findings, rep
 fix/test, append dispositions, NEXT Reviewer/STATUS Open, release codex-author. Parent will
 verify in separate full clones and dispatch final Reviewer round3. You are not alone in the
 repo; no main edits, Git commands, live writes or full shell suites in the linked worktree.
+
+## Producer — sol-builder delegated by codex-author — Round 3 final correction
+
+Disposition: all four Blockers and three Should findings from Reviewer round 2 are implemented in
+the existing lifecycle, planner, writer, restore and roadmap seams. No live board/network/config/
+ledger mutation, Git command, full suite or shell suite was run.
+
+- **Implemented — real jog lifecycle ownership.** `_extract_jog` resolves the existing `GH-N`
+  receipt target to exactly one queue row inside the write transaction, carries its `repo_id` and
+  `jog_global_id`, and refuses same-number ambiguity (`utils/py/releases_app.py:1482-1505`). Full-
+  schema fixtures exercise real lease plus failed/parked/completed/dropped/archived status writers,
+  matching event/receipt transactions and repository, terminal supersession, metadata-only
+  non-reset, and ambiguous rollback (`test/test_gh605_work_state.py:402-459`).
+- **Implemented — invalid identity preservation on every issue path.** OPEN-issue planning now
+  checks `invalid_ledger` as well as duplicate/missing identity before readiness/progress selection
+  (`utils/py/board_sync.py:319-322`). Valid-plus-invalid fixtures preserve the card both with and
+  without a linked PR (`test/test_gh605_board_policy.py:193-210`).
+- **Implemented — real preview/apply/audit/restore integration.** Full-schema ledger fixtures use
+  real `build_policy_preview`, planner, saved preview, apply and conditional restore with the
+  existing stateful mock GitHub transport. They cover complete apply, second-operation lost
+  response, original unset restoration, residual added card, nonempty durable audits, decision/
+  digest/target tampering and source drift with zero mutation calls
+  (`test/test_gh605_board_policy.py:605-786`).
+- **Implemented — mutation acknowledgement validation.** Add/set/clear validate a nonempty Project
+  item ID, and set/clear require it to match the requested item, before an audited success result is
+  recorded; malformed/null/wrong IDs become indeterminate without retry
+  (`utils/py/board_sync.py:734-782`, `:842-859`; tests `test/test_gh605_board_policy.py:226-249`).
+- **Implemented — restore uncertainty on exceptions.** The restore exception branch now includes
+  pre-existing unmatched/indeterminate requests when selecting its status
+  (`utils/py/board_sync.py:1327-1330`), with a write-mode ordinary-preflight-error fixture at
+  `test/test_gh605_board_policy.py:558-588`.
+- **Implemented — complete forced rerating replacement.** `_without_rating` validates the stored
+  canonical score, removes the full rating and optional override, and cleans the empty wrapper
+  before writing the new token (`utils/py/releases_app.py:3315-3328`, `:3681-3686`). The fixture
+  proves stored raw text parses back to stored columns with and without replacement overrides
+  (`test/test_gh605_work_state.py:323-352`).
+- **Implemented — repository-safe repoint.** Number-only repoint fetches at most two rows, refuses
+  ambiguity, then mutates the resolved `global_id` only (`utils/py/releases_app.py:3720-3742`), with
+  a two-repository no-mutation control at `test/test_gh605_work_state.py:354-365`.
+
+Verification: four defect-restoration controls were witnessed red (mutation acknowledgement,
+valid+invalid identity, `GH-N` jog resolution, complete rerating removal). Post-fix direct fixtures
+pass **65/65** (22 work-state + 43 board-policy); the four changed Python files parse via `ast`.
+Codebase Memory production-path coverage reported no recorded gap but the new test files were
+missing from its generation, so implementation claims above use current source and direct fixtures.
+FAQ and CHANGELOG describe the final contracts. Remaining work is parent-owned legacy shell/full-
+clone gates, independent Reviewer round 3 whole-surface sweep, and later reviewed live Rev.2 apply.
+No self-approval.
+
+Handing off to codex-author: run and retain the separate-full-clone verification, then dispatch the
+independent Codex Reviewer for Round 3; no live apply before approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

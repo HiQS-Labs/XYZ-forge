@@ -1480,13 +1480,29 @@ def _extract_roadmap_update(conn, op, gid, previous=None):
 
 
 def _extract_jog(conn, op, gid):
-    row = conn.execute("SELECT repo_id, gh_number, status FROM jog_queue WHERE global_id = ?",
-                       (gid,)).fetchone()
-    if row is None:
+    if isinstance(gid, str) and gid.startswith("GH-"):
+        try:
+            gh_number = int(gid[3:])
+        except ValueError:
+            refuse("jog-event-identity", "invalid jog receipt target %r" % gid)
+        rows = conn.execute(
+            "SELECT global_id, repo_id, gh_number, status FROM jog_queue "
+            "WHERE gh_number = ? LIMIT 2", (gh_number,)).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT global_id, repo_id, gh_number, status FROM jog_queue "
+            "WHERE global_id = ? LIMIT 2", (gid,)).fetchall()
+    if not rows:
         return None
+    if len(rows) != 1:
+        refuse("jog-event-identity",
+               "jog target %r matches multiple repositories; refusing event ownership guess"
+               % gid)
+    row = rows[0]
     event = "in_flight" if op == "jog-lease" else "jog_%s" % row["status"]
     return (event, row["gh_number"], {"source": "jog", "transition": True,
-                                      "status": row["status"]}, row["repo_id"])
+                                      "status": row["status"],
+                                      "jog_global_id": row["global_id"]}, row["repo_id"])
 
 
 WORK_EVENT_EXTRACTORS = {
@@ -3296,6 +3312,22 @@ def parse_rating(raw, title):
     return out
 
 
+def _without_rating(raw, title):
+    """Remove the one rating accepted by parse_rating, including its optional override."""
+    parse_rating(raw, title)  # refuse malformed/duplicate stored tokens before rewriting them
+    spans = []
+    rated = _RATED_RE.search(raw)
+    if rated:
+        spans.append(rated.span())
+    override = _OVR_RE.search(raw)
+    if override:
+        spans.append(override.span())
+    for start, end in sorted(spans, reverse=True):
+        raw = raw[:start] + raw[end:]
+    raw = re.sub(r"\(\s*\)", "", raw)
+    return re.sub(r"[ \t]{2,}", " ", raw).strip()
+
+
 # GH-349 review (LTVera-Pandas #322): a ledger entry's GH number is a KEY, not a mention. It is
 # only read from the HEAD of the title. An unanchored search harvested 111 out of "Execution
 # checklist for GH-111 + GH-108", which collided with the real GH-111 entry and made
@@ -3650,7 +3682,7 @@ def cmd_roadmap_rate(args):
         # parse_rating is the ONE parser and the ONE validator: a malformed --rated is refused by
         # name here, exactly as it is on the intake path, rather than reaching the columns.
         rating = parse_rating(token, row["title"])
-        raw_text = _RATED_TOKEN_RE.sub("", row["raw_text"]).rstrip()
+        raw_text = _without_rating(row["raw_text"], row["title"])
         raw_text = "%s %s" % (raw_text, token)
 
         if args.dry_run:
@@ -3685,10 +3717,14 @@ def cmd_roadmap_repoint(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
     try:
-        row = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
-                           "WHERE gh_number = ?", (args.issue_num,)).fetchone()
-        if not row:
+        rows = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
+                            "WHERE gh_number = ? LIMIT 2", (args.issue_num,)).fetchall()
+        if not rows:
             refuse("no-such-row", "no roadmap row for GH-%d" % args.issue_num)
+        if len(rows) != 1:
+            refuse("selector", "GH-%d matches multiple repositories; repoint by issue number "
+                   "is ambiguous" % args.issue_num)
+        row = rows[0]
         new = args.doc_path
         if not os.path.isfile(os.path.join(root, new)):
             refuse("no-such-doc", "%s does not exist under %s — re-point to a real doc, never a "
@@ -3703,7 +3739,7 @@ def cmd_roadmap_repoint(args):
 
         def mutate(conn):
             conn.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? "
-                         "WHERE gh_number = ?", (new, raw_text, now_iso(), args.issue_num))
+                         "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 
         perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
         print("repointed GH-%d -> %s" % (args.issue_num, new))
