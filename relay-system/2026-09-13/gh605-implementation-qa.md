@@ -1005,7 +1005,9 @@ or live network/config writes. Parent owns verification in separate full clones.
 Report concise cited findings, VERDICT PASS/FAIL, Basis, literal swept file: yes/no,
 and exact read coverage. Approve only if correct; otherwise hand back one concrete fix.
 Complete within8minutes. On PASS set STATUS Approved/NEXT Producer and mark the existing
-RELAY-gh605-implementation-qa token done using the shipped tick CLI; driver owns commit.
+RELAY-gh605-json-boundary-r7 token done using the shipped tick CLI; driver owns commit.
+The prior token is terminal and cannot be reclaimed; this fresh per-review token retains
+the SAME relay history and7/7cap, not a replacement review lane.
 The fresh corrected-candidate normal gate and live apply remain pending, not reviewer work.
 
 Handing off to Reviewer for this one bounded actual-defect review.
