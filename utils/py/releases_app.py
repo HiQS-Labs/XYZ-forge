@@ -1403,13 +1403,10 @@ NON_EVENT_OPS = {
     "roadmap-sync":            "no-op in releases-mode repos",
     "roadmap-reconcile-state": "sweeps markers; the per-row updates emit on their own",
     "reconcile":               "wave bookkeeping; a merge is proven by the merge emitter, not here",
-    "jog-add":                 "queued, not yet started",
+    "jog-add":                 "emits an explicit pending transition for the changed queue row",
     "jog-bump":                "reprioritisation within the queue",
-    "jog-drop":                "removed from the queue",
-    "jog-retry":               "re-queued; the lease emits when it actually starts",
-    "jog-skip":                "parked in the queue",
-    "jog-clear":               "queue archived wholesale",
-    "jog-reconcile":           "orphan-lease recovery, not a user-visible transition",
+    "jog-clear":               "emits its changed rows explicitly as one atomic batch",
+    "jog-reconcile":           "emits its changed orphan rows explicitly as one atomic batch",
     "migrate":                 "schema change",
     "merge-rebuild":           "rebuild receipt",
     "work-emit":               "carries its own event explicitly (perform_write's work_event arg)",
@@ -1479,6 +1476,12 @@ def _extract_roadmap_update(conn, op, gid, previous=None):
     }, row["repo_id"])
 
 
+def _jog_work_event(row, status, event=None):
+    return (event or "jog_%s" % status, row["gh_number"],
+            {"source": "jog", "transition": True, "status": status,
+             "jog_global_id": row["global_id"]}, row["repo_id"])
+
+
 def _extract_jog(conn, op, gid):
     if isinstance(gid, str) and gid.startswith("GH-"):
         try:
@@ -1499,10 +1502,8 @@ def _extract_jog(conn, op, gid):
                "jog target %r matches multiple repositories; refusing event ownership guess"
                % gid)
     row = rows[0]
-    event = "in_flight" if op == "jog-lease" else "jog_%s" % row["status"]
-    return (event, row["gh_number"], {"source": "jog", "transition": True,
-                                      "status": row["status"],
-                                      "jog_global_id": row["global_id"]}, row["repo_id"])
+    event = "in_flight" if op == "jog-lease" else None
+    return _jog_work_event(row, row["status"], event=event)
 
 
 WORK_EVENT_EXTRACTORS = {
@@ -1510,6 +1511,9 @@ WORK_EVENT_EXTRACTORS = {
     "roadmap-rate":   _extract_roadmap_rate,
     "roadmap-update": _extract_roadmap_update,
     "jog-lease":      _extract_jog,
+    "jog-drop":       _extract_jog,
+    "jog-retry":      _extract_jog,
+    "jog-skip":       _extract_jog,
 }
 
 JOG_STATUS_PREFIX = "jog-"
@@ -4367,6 +4371,7 @@ def cmd_jog_add(args):
             return
 
         gid = new_gid("jog-")
+        work_events = []
 
         def mutate(conn):
             _ensure_jog_schema(conn)
@@ -4374,9 +4379,14 @@ def cmd_jog_add(args):
             if not repo:
                 refuse("no-repo", "the DB has no repos row; run `releases init` first")
 
-            existing = conn.execute(
-                "SELECT id, status, position FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
-                (repo["id"], gh_num)).fetchone()
+            matches = conn.execute(
+                """SELECT id,global_id,repo_id,gh_number,status,position FROM jog_queue
+                   WHERE gh_number = ? LIMIT 2""", (gh_num,)).fetchall()
+            if len(matches) > 1:
+                refuse("jog-event-identity",
+                       "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
+            existing = matches[0] if matches else None
+            repo_id = existing["repo_id"] if existing else repo["id"]
             ts = now_iso()
             if existing:
                 if existing["status"] in ("pending", "running"):
@@ -4386,31 +4396,34 @@ def cmd_jog_add(args):
                 if args.pos is not None:
                     new_pos = max(1, args.pos)
                     conn.execute("UPDATE jog_queue SET position = position + 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position >= ?",
-                                 (repo["id"], new_pos))
+                                 (repo_id, new_pos))
                 else:
                     max_pos = conn.execute("SELECT MAX(position) FROM jog_queue WHERE repo_id = ? AND status IN ('pending', 'running')",
-                                           (repo["id"],)).fetchone()[0]
+                                           (repo_id,)).fetchone()[0]
                     new_pos = (max_pos or 0) + 1
                 conn.execute("""UPDATE jog_queue SET status = 'pending', position = ?, updated_at = ?,
                                 attempt_count = 0, lease_pid = NULL, failure_reason = NULL
                                 WHERE id = ?""", (new_pos, ts, existing["id"]))
+                work_events.append(_jog_work_event(existing, "pending"))
                 return
 
             if args.pos is not None:
                 new_pos = max(1, args.pos)
                 conn.execute("UPDATE jog_queue SET position = position + 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position >= ?",
-                             (repo["id"], new_pos))
+                             (repo_id, new_pos))
             else:
                 max_pos = conn.execute("SELECT MAX(position) FROM jog_queue WHERE repo_id = ? AND status IN ('pending', 'running')",
-                                       (repo["id"],)).fetchone()[0]
+                                       (repo_id,)).fetchone()[0]
                 new_pos = (max_pos or 0) + 1
 
             conn.execute("""INSERT INTO jog_queue(global_id, repo_id, gh_number, position, status,
                             created_at, updated_at, attempt_count, lease_pid, failure_reason)
                             VALUES (?, ?, ?, ?, 'pending', ?, ?, 0, NULL, NULL)""",
-                         (gid, repo["id"], gh_num, new_pos, ts, ts))
+                         (gid, repo_id, gh_num, new_pos, ts, ts))
+            work_events.append(_jog_work_event(
+                {"global_id": gid, "repo_id": repo_id, "gh_number": gh_num}, "pending"))
 
-        perform_write(root, conn, "jog-add", gid, mutate)
+        perform_write(root, conn, "jog-add", gid, mutate, work_events=work_events)
         print("jog: enqueued GH-%d" % gh_num)
     finally:
         conn.close()
@@ -4521,24 +4534,31 @@ def cmd_jog_drop(args):
             print("jog drop: would drop GH-%d with reason: %s" % (gh_num, args.reason))
             return
 
+        work_events = []
+
         def mutate(conn):
             _ensure_jog_schema(conn)
-            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
-            if not repo:
-                refuse("no-repo", "the DB has no repos row; run `releases init` first")
-            row = conn.execute("SELECT id, position, status FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
-                               (repo["id"], gh_num)).fetchone()
-            if not row:
+            rows = conn.execute("""SELECT id,global_id,repo_id,gh_number,position,status
+                                   FROM jog_queue WHERE gh_number = ? LIMIT 2""",
+                                (gh_num,)).fetchall()
+            if not rows:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
+            if len(rows) != 1:
+                refuse("jog-event-identity",
+                       "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
+            row = rows[0]
             if row["status"] == "completed" and not getattr(args, "force", False):
                 refuse("jog-already-completed", "GH-%d is already completed (pass --force to drop anyway)" % gh_num)
             cur_pos = row["position"]
             conn.execute("""UPDATE jog_queue SET status = 'dropped', failure_reason = ?, lease_pid = NULL,
                             updated_at = ? WHERE id = ?""", (args.reason, now_iso(), row["id"]))
             conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
-                         (repo["id"], cur_pos))
+                         (row["repo_id"], cur_pos))
+            if row["status"] != "dropped":
+                work_events.append(_jog_work_event(row, "dropped"))
 
-        perform_write(root, conn, "jog-drop", "GH-%d" % gh_num, mutate)
+        perform_write(root, conn, "jog-drop", "GH-%d" % gh_num, mutate,
+                      work_events=work_events)
         print("jog: dropped GH-%d (reason: %s)" % (gh_num, args.reason))
     finally:
         conn.close()
@@ -4555,23 +4575,30 @@ def cmd_jog_retry(args):
             print("jog retry: would reset GH-%d to pending" % gh_num)
             return
 
+        work_events = []
+
         def mutate(conn):
             _ensure_jog_schema(conn)
-            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
-            if not repo:
-                refuse("no-repo", "the DB has no repos row; run `releases init` first")
-            row = conn.execute("SELECT id FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
-                               (repo["id"], gh_num)).fetchone()
-            if not row:
+            rows = conn.execute("""SELECT id,global_id,repo_id,gh_number,status
+                                   FROM jog_queue WHERE gh_number = ? LIMIT 2""",
+                                (gh_num,)).fetchall()
+            if not rows:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
+            if len(rows) != 1:
+                refuse("jog-event-identity",
+                       "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
+            row = rows[0]
             max_pos = conn.execute("SELECT MAX(position) FROM jog_queue WHERE repo_id = ? AND status IN ('pending', 'running')",
-                                   (repo["id"],)).fetchone()[0]
+                                   (row["repo_id"],)).fetchone()[0]
             new_pos = (max_pos or 0) + 1
             conn.execute("""UPDATE jog_queue SET status = 'pending', position = ?, lease_pid = NULL,
                             failure_reason = NULL, updated_at = ? WHERE id = ?""",
                          (new_pos, now_iso(), row["id"]))
+            if row["status"] != "pending":
+                work_events.append(_jog_work_event(row, "pending"))
 
-        perform_write(root, conn, "jog-retry", "GH-%d" % gh_num, mutate)
+        perform_write(root, conn, "jog-retry", "GH-%d" % gh_num, mutate,
+                      work_events=work_events)
         print("jog: reset GH-%d to pending" % gh_num)
     finally:
         conn.close()
@@ -4588,22 +4615,29 @@ def cmd_jog_skip(args):
             print("jog skip: would park GH-%d with reason: %s" % (gh_num, args.reason))
             return
 
+        work_events = []
+
         def mutate(conn):
             _ensure_jog_schema(conn)
-            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
-            if not repo:
-                refuse("no-repo", "the DB has no repos row; run `releases init` first")
-            row = conn.execute("SELECT id, position FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
-                               (repo["id"], gh_num)).fetchone()
-            if not row:
+            rows = conn.execute("""SELECT id,global_id,repo_id,gh_number,position,status
+                                   FROM jog_queue WHERE gh_number = ? LIMIT 2""",
+                                (gh_num,)).fetchall()
+            if not rows:
                 refuse("jog-not-found", "GH-%d is not in jog queue" % gh_num)
+            if len(rows) != 1:
+                refuse("jog-event-identity",
+                       "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
+            row = rows[0]
             cur_pos = row["position"]
             conn.execute("""UPDATE jog_queue SET status = 'parked', failure_reason = ?, lease_pid = NULL,
                             updated_at = ? WHERE id = ?""", (args.reason, now_iso(), row["id"]))
             conn.execute("UPDATE jog_queue SET position = position - 1 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?",
-                         (repo["id"], cur_pos))
+                         (row["repo_id"], cur_pos))
+            if row["status"] != "parked":
+                work_events.append(_jog_work_event(row, "parked"))
 
-        perform_write(root, conn, "jog-skip", "GH-%d" % gh_num, mutate)
+        perform_write(root, conn, "jog-skip", "GH-%d" % gh_num, mutate,
+                      work_events=work_events)
         print("jog: skipped GH-%d (status: parked)" % gh_num)
     finally:
         conn.close()
@@ -4618,12 +4652,23 @@ def cmd_jog_clear(args):
             print("jog clear: would archive terminal items in jog queue")
             return
 
+        work_events = []
+
         def mutate(conn):
             _ensure_jog_schema(conn)
+            rows = conn.execute("""SELECT global_id,repo_id,gh_number FROM jog_queue
+                                   WHERE status IN ('completed','dropped','parked','failed')
+                                   ORDER BY id""").fetchall()
             conn.execute("""UPDATE jog_queue SET status = 'archived', updated_at = ?
                             WHERE status IN ('completed', 'dropped', 'parked', 'failed')""", (now_iso(),))
+            for row in rows:
+                work_events.append((
+                    "jog_archived", row["gh_number"],
+                    {"source": "jog", "transition": True, "status": "archived",
+                     "jog_global_id": row["global_id"]}, row["repo_id"]))
 
-        perform_write(root, conn, "jog-clear", "jog_queue", mutate)
+        perform_write(root, conn, "jog-clear", "jog_queue", mutate,
+                      work_events=work_events)
         print("jog: archived terminal queue items")
     finally:
         conn.close()
@@ -4676,15 +4721,19 @@ def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
+        work_events = []
+
         def mutate(conn):
             _ensure_jog_schema(conn)
-            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
-            if not repo:
-                refuse("no-repo", "no repos row")
-            row = conn.execute("SELECT id, position FROM jog_queue WHERE repo_id = ? AND gh_number = ?",
-                               (repo["id"], gh_num)).fetchone()
-            if not row:
+            rows = conn.execute("""SELECT id,global_id,repo_id,gh_number,position,status
+                                   FROM jog_queue WHERE gh_number = ? LIMIT 2""",
+                                (gh_num,)).fetchall()
+            if not rows:
                 refuse("jog-not-found", "GH-%d not in jog queue" % gh_num)
+            if len(rows) != 1:
+                refuse("jog-event-identity",
+                       "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
+            row = rows[0]
             ts = now_iso()
             pid_clause = ", lease_pid = NULL" if clear_lease else ""
             conn.execute(f"""UPDATE jog_queue SET status = ?, failure_reason = ?, updated_at = ?{pid_clause}
@@ -4692,9 +4741,12 @@ def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
             if status in ("completed", "dropped", "archived", "parked", "failed"):
                 conn.execute("""UPDATE jog_queue SET position = position - 1
                                 WHERE repo_id = ? AND status IN ('pending', 'running') AND position > ?""",
-                             (repo["id"], row["position"]))
+                             (row["repo_id"], row["position"]))
+            if row["status"] != status:
+                work_events.append(_jog_work_event(row, status))
 
-        perform_write(root, conn, f"jog-{status}", "GH-%d" % gh_num, mutate)
+        perform_write(root, conn, f"jog-{status}", "GH-%d" % gh_num, mutate,
+                      work_events=work_events)
     finally:
         conn.close()
 
@@ -4706,7 +4758,8 @@ def jog_reconcile_orphan_leases(root):
     try:
         if not _table_exists(conn, "jog_queue"):
             return []
-        rows = conn.execute("SELECT id, gh_number, attempt_count, lease_pid FROM jog_queue WHERE status = 'running'").fetchall()
+        rows = conn.execute("""SELECT id,global_id,repo_id,gh_number,attempt_count,lease_pid
+                               FROM jog_queue WHERE status = 'running'""").fetchall()
         orphans = []
         for r in rows:
             pid = r["lease_pid"]
@@ -4723,19 +4776,36 @@ def jog_reconcile_orphan_leases(root):
         if not orphans:
             return []
 
+        work_events = []
+        reconciled = []
+
         def mutate(conn):
             ts = now_iso()
-            for r in orphans:
-                att = r["attempt_count"]
-                if att >= 3:
+            for candidate in orphans:
+                # Re-resolve under BEGIN IMMEDIATE: the liveness probe happens before the writer
+                # transaction, so a concurrently recovered row must not be rewritten or emitted.
+                row = conn.execute("""SELECT id,global_id,repo_id,gh_number,attempt_count
+                                      FROM jog_queue WHERE id = ? AND status = 'running'""",
+                                   (candidate["id"],)).fetchone()
+                if row is None:
+                    continue
+                if row["attempt_count"] >= 3:
+                    status = "parked"
                     conn.execute("""UPDATE jog_queue SET status = 'parked', failure_reason = 'orphan lease: max attempts exceeded',
-                                    lease_pid = NULL, updated_at = ? WHERE id = ?""", (ts, r["id"]))
+                                    lease_pid = NULL, updated_at = ? WHERE id = ?""", (ts, row["id"]))
                 else:
+                    status = "pending"
                     conn.execute("""UPDATE jog_queue SET status = 'pending', lease_pid = NULL, updated_at = ?
-                                    WHERE id = ?""", (ts, r["id"]))
+                                    WHERE id = ?""", (ts, row["id"]))
+                work_events.append((
+                    "jog_%s" % status, row["gh_number"],
+                    {"source": "jog", "transition": True, "status": status,
+                     "jog_global_id": row["global_id"]}, row["repo_id"]))
+                reconciled.append(row["gh_number"])
 
-        perform_write(root, conn, "jog-reconcile", "jog_queue", mutate)
-        return [r["gh_number"] for r in orphans]
+        perform_write(root, conn, "jog-reconcile", "jog_queue", mutate,
+                      work_events=work_events)
+        return reconciled
     finally:
         conn.close()
 

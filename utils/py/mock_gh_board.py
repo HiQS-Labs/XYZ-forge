@@ -217,14 +217,23 @@ def handle_graphql(query, variables, state, state_path):
         proj_id = variables.get("p", state["project_id"])
         content_id = variables.get("c", "")
 
-        # Lookup issue details from content_id
-        found_repo, found_num = "HiQS-Labs/XYZ-forge", 0
-        for repo_key, iss_map in state.get("issues", {}).items():
-            for num, iss in iss_map.items():
-                if iss["id"] == content_id:
-                    found_repo = repo_key
-                    found_num = int(num)
+        # Resolve the exact content identity. Project cards can contain issues or PRs; silently
+        # manufacturing issue #0 makes the stateful mock unable to detect PR-add regressions.
+        found = None
+        for kind, collection_name in (("issue", "issues"), ("pr", "pull_requests")):
+            for repo_key, content_map in state.get(collection_name, {}).items():
+                for num, content in content_map.items():
+                    if content.get("id") == content_id:
+                        found = (kind, repo_key, int(num))
+                        break
+                if found:
                     break
+            if found:
+                break
+        if found is None:
+            return {"errors": [{"message": "Content %r not found" % content_id,
+                                "type": "NOT_FOUND"}]}
+        found_kind, found_repo, found_num = found
 
         # Re-add creates a duplicate card (reproducing real GitHub behavior, [Should] 3)
         item_counter = state.get("next_item_id", len(state.get("items", [])) + 1)
@@ -234,6 +243,7 @@ def handle_graphql(query, variables, state, state_path):
         new_item = {
             "id": item_id,
             "content_id": content_id,
+            "kind": found_kind,
             "repository": found_repo,
             "number": found_num,
             "field_values": {},

@@ -206,6 +206,27 @@ class PlannerTests(unittest.TestCase):
                 self.assertTrue(any("identity" in u["reason"]
                                     for u in plan["unresolved"] if u["identity"][-1] == 1))
 
+    def test_closed_issue_with_ambiguous_ledger_identity_is_preserved(self):
+        board = [{"repo": "owner/repo", "kind": "issue", "number": 1,
+                  "item_id": "i1", "status": "Ready"}]
+        terminal = (
+            issue(1, "CLOSED", state_reason="COMPLETED", closed_at="2026-09-12T12:00:00Z"),
+            issue(1, "CLOSED", state_reason="COMPLETED", closed_at="2026-09-01T12:00:00Z"),
+            issue(1, "CLOSED", state_reason="NOT_PLANNED", closed_at="2026-09-12T12:00:00Z"),
+        )
+        ambiguous_rows = (
+            [ledger(1, 90), ledger(1, 80, global_id="rmi-duplicate")],
+            [ledger(1, 90), ledger(1, 80, global_id="rmi-invalid", identity_valid=False)],
+        )
+        for closed in terminal:
+            for rows in ambiguous_rows:
+                with self.subTest(reason=closed["state_reason"], rows=len(rows)):
+                    plan = board_sync.plan_selection_policy(
+                        POLICY, rows, board, [closed], as_of=AS_OF)
+                    self.assertFalse(plan["changes"])
+                    self.assertTrue(any("identity" in u["reason"]
+                                        for u in plan["unresolved"]))
+
 
 class WriterAuditTests(unittest.TestCase):
     def test_add_audits_intent_before_result(self):
@@ -328,6 +349,41 @@ class WriterAuditTests(unittest.TestCase):
     def test_preview_future_timestamp_is_invalid(self):
         preview = {"created_at": "2999-01-01T00:00:00Z", "as_of": "2999-01-01T00:00:00Z"}
         self.assertFalse(board_sync._preview_age_ok(preview))
+
+    def test_preview_creation_and_evidence_clocks_share_one_fresh_window(self):
+        now = dt.datetime.now(dt.timezone.utc)
+        stamp = lambda value: value.isoformat().replace("+00:00", "Z")
+        self.assertTrue(board_sync._preview_age_ok({
+            "created_at": stamp(now - dt.timedelta(minutes=1)),
+            "as_of": stamp(now - dt.timedelta(minutes=2)),
+        }))
+        for preview in (
+            {"created_at": stamp(now), "as_of": stamp(now - dt.timedelta(minutes=16))},
+            {"created_at": stamp(now - dt.timedelta(minutes=2)), "as_of": stamp(now - dt.timedelta(minutes=1))},
+            {"created_at": stamp(now + dt.timedelta(minutes=1)), "as_of": stamp(now)},
+        ):
+            with self.subTest(preview=preview):
+                self.assertFalse(board_sync._preview_age_ok(preview))
+
+    def test_mock_add_preserves_pr_kind_and_refuses_unknown_content(self):
+        with tempfile.TemporaryDirectory(prefix="gh605-mock-pr-") as tmp:
+            state_path = Path(tmp) / "state.json"
+            state = mock_gh_board.get_default_state()
+            state["pull_requests"] = {"owner/repo": {
+                "9": {"id": "pr-content-9", "state": "OPEN"}}}
+            mock_gh_board.save_state(state, state_path)
+            query = "mutation { addProjectV2ItemById(input: {}) { item { id } } }"
+            response = mock_gh_board.handle_graphql(
+                query, {"p": state["project_id"], "c": "pr-content-9"}, state, state_path)
+            self.assertNotIn("errors", response)
+            self.assertEqual(state["items"][0]["kind"], "pr")
+            self.assertEqual(state["items"][0]["repository"], "owner/repo")
+            self.assertEqual(state["items"][0]["number"], 9)
+            count = len(state["items"])
+            response = mock_gh_board.handle_graphql(
+                query, {"p": state["project_id"], "c": "unknown"}, state, state_path)
+            self.assertIn("errors", response)
+            self.assertEqual(len(state["items"]), count)
 
     def test_unmatched_intent_is_detected_by_request_id(self):
         operations = [
@@ -612,6 +668,8 @@ class PolicyIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="gh605-policy-integration-")
         self.root = Path(self.tmp.name)
+        self.as_of = (dt.datetime.now(dt.timezone.utc) -
+                      dt.timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
         (self.root / ".git").mkdir()
         with mock.patch.object(releases_app, "refresh_preview"), \
              mock.patch.object(releases_app, "_dispatch_work_connectors"), \
@@ -705,12 +763,58 @@ class PolicyIntegrationTests(unittest.TestCase):
             mock.patch("work_connectors._ConnectorLock", self.FakeLock),
         )
 
-    def _build_preview(self):
+    def _build_preview(self, as_of=None):
+        as_of = as_of or self.as_of
         with self._patches()[0], self._patches()[1], self._patches()[2], self._patches()[3]:
-            preview = board_sync.build_policy_preview(self.root, as_of=AS_OF)
+            preview = board_sync.build_policy_preview(self.root, as_of=as_of)
         self.assertEqual(len(preview["changes"]), 2)
         self.assertTrue(preview["decisions"])
         return preview
+
+    def test_real_apply_refuses_stale_evidence_even_with_fresh_creation(self):
+        stale = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=16)).isoformat()
+        preview = self._build_preview(as_of=stale)
+        preview_path = self.root / "preview-stale-evidence.json"
+        result_path = self.root / "result-stale-evidence.json"
+        preview_path.write_text(json.dumps(preview))
+        with mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY), \
+             mock.patch.object(board_sync, "_gql") as gql:
+            with self.assertRaisesRegex(RuntimeError, "older than 15 minutes"):
+                board_sync.apply_policy_preview(self.root, preview_path, result_path)
+        gql.assert_not_called()
+        self.assertFalse(result_path.exists())
+
+    def test_real_preview_apply_adds_absent_pr_with_mock_snapshot_identity(self):
+        self.mock_state["pull_requests"] = {"owner/repo": {
+            "9": {"id": "pr-content-9", "state": "OPEN", "draft": False,
+                  "closing_issues": []}}}
+        mock_gh_board.save_state(self.mock_state, self.mock_state_path)
+        cfg = {"project_owner": "owner", "project_number": 4,
+               "repos": ["owner/repo"], "status_field": "Status"}
+        github = [issue(1), issue(2),
+                  {"repo": "owner/repo", "kind": "pr", "number": 9,
+                   "state": "OPEN", "draft": False, "closing_issues": []}]
+        contexts = (
+            mock.patch.object(board_sync, "resolve_selection_policy", return_value=POLICY),
+            mock.patch.object(board_sync, "_policy_board_cfg", return_value=cfg),
+            mock.patch.object(board_sync, "collect_github_state", return_value=github),
+            mock.patch.object(board_sync, "resolve_ids", return_value=self.ids),
+            mock.patch.object(board_sync, "_gql", side_effect=self._gql),
+            mock.patch("work_connectors._ConnectorLock", self.FakeLock),
+        )
+        with contexts[0], contexts[1], contexts[2], contexts[3], contexts[4]:
+            preview = board_sync.build_policy_preview(self.root, as_of=self.as_of)
+        self.assertTrue(any(change["identity"] == ["owner/repo", "pr", 9]
+                            for change in preview["changes"]))
+        preview_path = self.root / "preview-pr.json"
+        result_path = self.root / "result-pr.json"
+        preview_path.write_text(json.dumps(preview))
+        with contexts[0], contexts[1], contexts[2], contexts[3], contexts[4], contexts[5]:
+            result = board_sync.apply_policy_preview(self.root, preview_path, result_path)
+            snapshot = board_sync.fetch_board_items(cfg, cache=False)
+        self.assertEqual(result["status"], "complete")
+        pr = next(item for item in snapshot if item["kind"] == "pr" and item["number"] == 9)
+        self.assertEqual(pr["status"], "In review")
 
     def test_real_preview_apply_failure_and_conditional_restore_chain(self):
         preview = self._build_preview()

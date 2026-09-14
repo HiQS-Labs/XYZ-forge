@@ -301,6 +301,13 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
     for ident, item in gh.items():
         if ident[1] != "issue" or ident in targets:
             continue
+        rows = ledger_by.get(ident, [])
+        # Known ambiguity preserves every issue state, including CLOSED. Absence is different:
+        # GitHub may authoritatively close an issue before the roadmap has a row for it.
+        if ident in duplicates or ident in invalid_ledger or len(rows) > 1:
+            unresolved.append({"identity": ident,
+                               "reason": "duplicate or invalid ledger or board identity"})
+            continue
         state, reason = str(item.get("state") or "").upper(), item.get("state_reason")
         if state == "CLOSED":
             stamp = _parse_utc(item.get("closed_at"))
@@ -316,8 +323,7 @@ def plan_selection_policy(policy, ledger, board_items, github_items, observation
         if state != "OPEN":
             unresolved.append({"identity": ident, "reason": "unknown GitHub state"})
             continue
-        rows = ledger_by.get(ident, [])
-        if ident in duplicates or ident in invalid_ledger or len(rows) != 1:
+        if len(rows) != 1:
             unresolved.append({"identity": ident, "reason": "duplicate/missing ledger or board identity"})
             continue
         row = rows[0]
@@ -1127,8 +1133,10 @@ def _preview_age_ok(preview):
     created = _parse_utc(preview.get("created_at"))
     as_of = _parse_utc(preview.get("as_of"))
     now = dt.datetime.now(dt.timezone.utc)
-    return (created is not None and as_of is not None and created <= now and as_of <= now
-            and now - created <= dt.timedelta(minutes=15))
+    window = dt.timedelta(minutes=15)
+    return (created is not None and as_of is not None
+            and as_of <= created <= now
+            and now - created <= window and now - as_of <= window)
 
 
 def _unmatched_intents(operations):

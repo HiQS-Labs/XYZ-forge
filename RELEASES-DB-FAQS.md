@@ -21,9 +21,11 @@ activity window is three days (`--stale-days N`); stale or malformed observation
 seven-day setting. Diagnostics inspect the SQLite header before opening and refuse a WAL-format
 database even when no `-wal`/`-shm` sidecars currently exist; checkpoint it deliberately first.
 Informational backfills, metadata-only updates, and re-ratings remain visible as the latest event
-but do not supersede a genuine lifecycle transition. Jog lease/status writes retain their existing
-`GH-N` receipt selector while resolving the unique queue row inside the transaction; ambiguous
-same-number rows refuse instead of assigning an event to the first repository.
+but do not supersede a genuine lifecycle transition. Jog add/lease/status/drop/skip/retry writes retain
+their existing `GH-N` receipt selector while resolving the unique queue row inside the transaction;
+ambiguous same-number rows refuse instead of assigning an event to the first repository. Queue clear
+and orphan recovery emit one owned transition per row through the same atomic receipt boundary, while
+same-state metadata updates emit no lifecycle transition.
 
 Repair in this order: run `releases check` and recover any interrupted write; deliberately run
 `releases migrate` if status reports schema 7; rerun `releases work status`; review
@@ -34,8 +36,10 @@ top-N Ready selection, the Done window, reopen handling, or preservation of unkn
 
 An explicit `github_board_selection_policy` uses `utils/py/board_sync.py policy-preview --out
 <preview.json>`, followed within 15 minutes by `policy-apply --preview <preview.json> --result-out
-<result.json>`. Preview is remotely read-only and apply re-reads the ledger, GitHub and board under
-the existing connector exclusion lock, then keeps that same-ledger lock through every change.
+<result.json>`. Both the preview creation time and its evidence `as_of` clock must be within that
+window, ordered `as_of <= created_at <= now`. Preview is remotely read-only and apply re-reads the
+ledger, GitHub and board under the existing connector exclusion lock, then keeps that same-ledger
+lock through every change.
 `policy-restore --result <result.json>` previews conditional status restoration; add `--write --out
 <restore.json>` to perform it with durable per-request evidence. Newly added cards are retained
 because this path never deletes; partial add/status failures are reported as residual cards. A

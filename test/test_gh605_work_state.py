@@ -399,6 +399,109 @@ class JogLifecycleWriteTests(unittest.TestCase):
              contextlib.redirect_stderr(io.StringIO()):
             return fn(*args)
 
+    def _roadmap_start(self):
+        self._writer(app.main, ["--root", str(self.root), "roadmap", "update",
+                                "--gid", self.roadmap_gid, "--section",
+                                "Queue / parked intake", "--status-marker", "🆕"])
+        self._writer(app.main, ["--root", str(self.root), "roadmap", "update",
+                                "--gid", self.roadmap_gid, "--section", "In progress",
+                                "--status-marker", "🚧"])
+
+    def _assert_unverified(self):
+        as_of = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=1)).isoformat()
+        report = app.load_work_evidence(self.root / "releases.db", as_of=as_of)
+        self.assertEqual(report["issues"][0]["activity"], "unknown")
+
+    def test_actual_drop_retry_skip_and_readd_supersede_a_roadmap_start(self):
+        self._roadmap_start()
+        self._writer(app.main, ["--root", str(self.root), "jog", "drop", "GH-1",
+                                "--reason", "test drop"])
+        self._assert_unverified()
+        self._writer(app.main, ["--root", str(self.root), "jog", "retry", "GH-1"])
+        self._assert_unverified()
+        self._writer(app.main, ["--root", str(self.root), "jog", "retry", "GH-1"])
+        self._writer(app.main, ["--root", str(self.root), "jog", "skip", "GH-1",
+                                "--reason", "test skip"])
+        self._assert_unverified()
+        self._writer(app.main, ["--root", str(self.root), "jog", "add", "GH-1"])
+        self._assert_unverified()
+        conn = sqlite3.connect(self.root / "releases.db")
+        events = [row[0] for row in conn.execute(
+            "SELECT event FROM work_events WHERE event LIKE 'jog_%' ORDER BY id")]
+        conn.close()
+        self.assertEqual(events, ["jog_dropped", "jog_pending", "jog_parked",
+                                  "jog_pending"])
+
+    def test_actual_clear_emits_one_owned_archived_event_per_changed_row(self):
+        self._roadmap_start()
+        conn = sqlite3.connect(self.root / "releases.db")
+        repo_id = conn.execute("SELECT id FROM repos").fetchone()[0]
+        now = app.now_iso()
+        second_gid = app.new_gid("jog-")
+        conn.execute("UPDATE jog_queue SET status='parked' WHERE global_id=?", (self.jog_gid,))
+        conn.execute("""INSERT INTO jog_queue(global_id,repo_id,gh_number,position,status,
+                     created_at,updated_at,attempt_count) VALUES(?,?,?,?,?,?,?,?)""",
+                     (second_gid, repo_id, 2, 2, "failed", now, now, 1))
+        conn.commit(); conn.close()
+        self._writer(app.main, ["--root", str(self.root), "jog", "clear"])
+        conn = sqlite3.connect(self.root / "releases.db")
+        events = conn.execute(
+            "SELECT repo_id,gh_number,event,payload FROM work_events "
+            "WHERE event='jog_archived' ORDER BY id").fetchall()
+        conn.close()
+        self.assertEqual([(row[0], row[1], row[2]) for row in events],
+                         [(repo_id, 1, "jog_archived"), (repo_id, 2, "jog_archived")])
+        self.assertEqual({json.loads(row[3])["jog_global_id"] for row in events},
+                         {self.jog_gid, second_gid})
+        self._assert_unverified()
+
+    def test_clear_batch_event_failure_rolls_back_rows_receipt_and_events(self):
+        conn = sqlite3.connect(self.root / "releases.db")
+        repo_id = conn.execute("SELECT id FROM repos").fetchone()[0]
+        now = app.now_iso()
+        conn.execute("UPDATE jog_queue SET status='parked' WHERE global_id=?", (self.jog_gid,))
+        conn.execute("""INSERT INTO jog_queue(global_id,repo_id,gh_number,position,status,
+                     created_at,updated_at,attempt_count) VALUES(?,?,?,?,?,?,?,?)""",
+                     (app.new_gid("jog-"), repo_id, 2, 2, "failed", now, now, 1))
+        conn.commit(); conn.close()
+        original = app._record_work_event
+        calls = 0
+
+        def fail_second(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise RuntimeError("event insertion failed")
+            return original(*args, **kwargs)
+
+        with mock.patch.object(app, "_record_work_event", side_effect=fail_second):
+            with self.assertRaisesRegex(RuntimeError, "event insertion failed"):
+                self._writer(app.main, ["--root", str(self.root), "jog", "clear"])
+        conn = sqlite3.connect(self.root / "releases.db")
+        self.assertEqual([row[0] for row in conn.execute(
+            "SELECT status FROM jog_queue ORDER BY id")], ["parked", "failed"])
+        self.assertEqual(conn.execute(
+            "SELECT COUNT(*) FROM op_receipts WHERE op='jog-clear'").fetchone()[0], 0)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0], 0)
+        conn.close()
+
+    def test_actual_orphan_recovery_emits_pending_and_parked_transitions(self):
+        self._roadmap_start()
+        conn = sqlite3.connect(self.root / "releases.db")
+        conn.execute("UPDATE jog_queue SET status='running',attempt_count=1,lease_pid=99999999")
+        conn.commit(); conn.close()
+        self._writer(app.jog_reconcile_orphan_leases, str(self.root))
+        conn = sqlite3.connect(self.root / "releases.db")
+        conn.execute("UPDATE jog_queue SET status='running',attempt_count=3,lease_pid=99999999")
+        conn.commit(); conn.close()
+        self._writer(app.jog_reconcile_orphan_leases, str(self.root))
+        conn = sqlite3.connect(self.root / "releases.db")
+        events = [row[0] for row in conn.execute(
+            "SELECT event FROM work_events ORDER BY id")]
+        conn.close()
+        self.assertEqual(events[-2:], ["jog_pending", "jog_parked"])
+        self._assert_unverified()
+
     def test_real_lease_and_all_terminal_statuses_emit_owned_lifecycle_events(self):
         self._writer(app.jog_acquire_lease, str(self.root), 1, 4242)
         conn = sqlite3.connect(self.root / "releases.db")

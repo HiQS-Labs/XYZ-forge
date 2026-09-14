@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 4 / 5
 
@@ -557,5 +557,46 @@ controls, run all focusedPython tests/AST. Parent owns separate-full-clone shell
 20-minute ceiling. Append exact dispositions/test results, NEXT Reviewer STATUS Open, release
 codex-author. Driver owns commit. Final reviewer must close explicitly listed coverage gaps;
 do not claim approval yourself. Parent then verifies and applies the board only after approval.
+
+## Producer — sol-builder delegated by codex-author — Round 4 focused corrections
+
+Disposition: all three Blockers and the mock Should from Reviewer round 3 are implemented in the
+existing lifecycle/planner/writer seams. No live board/network/config/ledger mutation, Git command,
+shell suite, or full gate was run.
+
+- **Implemented — every real jog stop/requeue path emits owned lifecycle evidence.** Actual add,
+  drop, retry, skip and helper status writes resolve one queue identity, refuse same-number
+  ambiguity, and emit only when status changes (`utils/py/releases_app.py:1479-1517`,
+  `:4362-4429`, `:4526-4643`, `:4719-4751`). Clear and orphan recovery collect per-row events
+  inside the transaction and hand the batch to the shared receipt boundary; orphan rows are
+  re-resolved under `BEGIN IMMEDIATE` (`:4646-4674`, `:4754-4809`). Direct fixtures exercise
+  roadmap-start→drop/retry/skip/re-add, clear, orphan pending/parked, same-state retry omission,
+  exact ownership, and second-event rollback (`test/test_gh605_work_state.py:415-506`).
+- **Implemented — preview creation and evidence clocks share one freshness boundary.** Apply now
+  requires `as_of <= created_at <= now` and both clocks within 15 minutes
+  (`utils/py/board_sync.py:1132-1139`). Fixed-clock controls cover stale evidence with refreshed
+  creation, future/inconsistent ordering and a fresh apply (`test/test_gh605_board_policy.py:353-366`,
+  `:774-785`).
+- **Implemented — CLOSED issues preserve known ambiguous identity.** The invalid/duplicate guard
+  now precedes OPEN/CLOSED selection while still allowing genuinely absent-ledger terminal issues
+  (`utils/py/board_sync.py:300-318`). Recent/old COMPLETED and NOT_PLANNED fixtures cover duplicate
+  valid and valid-plus-invalid rows (`test/test_gh605_board_policy.py:209-228`).
+- **Implemented — stateful mock PR identity.** Mock add resolves issues and PRs, preserves kind,
+  and refuses unknown content without creating issue zero (`utils/py/mock_gh_board.py:215-252`).
+  Direct and real preview/apply controls add an absent PR, consume the mock's actual snapshot, and
+  confirm In review (`test/test_gh605_board_policy.py:368-386`, `:787-817`).
+
+Verification: pre-fix controls visibly failed for missing clear events, CLOSED ambiguity, stale or
+incoherent evidence acceptance, and PR/unknown mock identity. After repair the direct fixtures pass
+**74/74** (26 work-state, 48 board-policy), and all five changed Python files parse via `ast`; logs
+are retained under `.relay-scratch/`. Codebase Memory generation 2026-09-14T03:39:25Z reports no
+recorded gap for production/tests/FAQ, while mock_gh_board.py and CHANGELOG remain intentionally
+excluded from the fast index and were verified from current source. FAQ/CHANGELOG record only the
+implemented behavior. Remaining work is parent-owned separate-full-clone shell/full-gate evidence,
+independent Reviewer round 4 whole-surface coverage, and only then any reviewed live Rev.2 apply.
+No self-approval.
+
+Handing off to codex-author: retain the parent gate receipts and dispatch the independent Reviewer
+for Round 4; no live apply before approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
