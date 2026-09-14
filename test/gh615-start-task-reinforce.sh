@@ -23,7 +23,7 @@ check_start_task_reinforce_contract() {
   grep -q "bounded test scope" "$t" || return 1
   grep -q "test non-scope: no speculative test frameworks" "$t" || return 1
   grep -q "test footprint must scale to implementation" "$t" || return 1
-  grep -q "and repo principles via \`/ponytail\`: reviewer findings are advisory evaluations" "$t" || return 1
+  grep -q "repo principles via \`/ponytail\`: reviewer findings are advisory evaluations" "$t" || return 1
   grep -q "NOT a mandate to accept scope expansion" "$t" || return 1
   grep -q "Disposition: Rejected (Out of Scope / Ponytail)" "$t" || return 1
   grep -q "Apply tiered verification discipline" "$t" || return 1
@@ -31,8 +31,9 @@ check_start_task_reinforce_contract() {
   grep -q "Do NOT re-run full qualifying test gates between" "$t" || return 1
   grep -q "Run the full qualifying gate" "$t" || return 1
   grep -q "EXACTLY ONCE on the final approved" "$t" || return 1
-  grep -q "the 3-round cap is a binding budget; do not extend review cycles" "$t" || return 1
-  grep -q "for speculative edge cases when core acceptance criteria are green" "$t" || return 1
+  grep -q "the 3-round cap is a binding budget; do not" "$t" || return 1
+  grep -q "extend review cycles for speculative edge cases when core acceptance criteria" "$t" || return 1
+  grep -q "are green" "$t" || return 1
   return 0
 }
 
