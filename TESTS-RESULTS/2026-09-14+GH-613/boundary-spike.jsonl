@@ -1,0 +1,1 @@
+{"schema_version": "1.0", "case": "native-restricted-boundary", "rc": 0, "subtype": "success", "inside_returned": true, "outside_returned": false, "result": "**allowed.txt**: `<inside-marker>`\n\n**outside.txt**: DENIED (outside the restricted working directory)"}
