@@ -385,6 +385,32 @@ class WriterAuditTests(unittest.TestCase):
             self.assertIn("errors", response)
             self.assertEqual(len(state["items"]), count)
 
+    def test_mock_seed_reserves_item_id_before_add_and_set(self):
+        with tempfile.TemporaryDirectory(prefix="gh605-mock-seed-") as tmp:
+            state_path = Path(tmp) / "state.json"
+            with mock.patch("sys.stdout", new_callable=__import__("io").StringIO):
+                self.assertEqual(mock_gh_board.main(["--seed", "--state", str(state_path)]), 0)
+            state = mock_gh_board.load_state(state_path)
+            add = mock_gh_board.handle_graphql(
+                "mutation { addProjectV2ItemById(input: {}) { item { id } } }",
+                {"p": state["project_id"], "c": "ISS_mock_HiQS-Labs_XYZ-forge_124"},
+                state, state_path)
+            added_id = add["data"]["addProjectV2ItemById"]["item"]["id"]
+            mock_gh_board.handle_graphql(
+                "mutation { updateProjectV2ItemFieldValue(input: {}) { projectV2Item { id } } }",
+                {"p": state["project_id"], "i": added_id, "f": "PVTF_status_001",
+                 "o": "OPT_done_001"}, state, state_path)
+            snapshot = mock_gh_board.handle_graphql(
+                "query { node(id: $id) { ... on ProjectV2 { items(first: 100) { "
+                "nodes { id fieldValueByName(name: $f) { ... on ProjectV2ItemFieldSingleSelectValue "
+                "{ name } } } } } } }",
+                {"id": state["project_id"], "f": "Status"}, state, state_path)
+            items = snapshot["data"]["node"]["items"]["nodes"]
+            by_number = {item["content"]["number"]: item for item in items}
+            self.assertNotEqual(by_number[123]["id"], by_number[124]["id"])
+            self.assertEqual(by_number[123]["fieldValueByName"]["name"], "In progress")
+            self.assertEqual(by_number[124]["fieldValueByName"]["name"], "Done")
+
     def test_unmatched_intent_is_detected_by_request_id(self):
         operations = [
             {"phase": "intent", "request_id": "a"},

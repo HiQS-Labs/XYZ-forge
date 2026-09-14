@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 5 / 6
+ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -857,5 +857,33 @@ suites in worktree), record pre-fix failure and post-fix pass. Touch only mock a
 board-policy test; no CHANGELOG ceremony for this trivial local correction. Handoff6/6
 to independent Reviewer; parent will complete coverage dispatch then run exactly one
 full gate after approval. No self-approval, push, board/config writes or ledger edits.
+
+## Producer — codex-author — Round 6 final mock correction
+
+Disposition: the remaining mock identity finding is implemented with the requested one-line
+counter correction and one regression. No Git command, shell/full suite, live board/config/ledger
+write, network mutation, or CHANGELOG edit was performed.
+
+- **Implemented — `--seed` reserves the seeded item ID.** After installing
+  `PVTI_mock_item_0001`, the real seed path now advances `next_item_id` to 2
+  (`utils/py/mock_gh_board.py:344-357`). The next add therefore allocates a distinct item rather
+  than aliasing the seeded card.
+- **Implemented — actual seed/add/set/snapshot regression.** The focused test invokes the real
+  `--seed` CLI path, adds issue 124, sets the returned item to Done, consumes the mock snapshot,
+  and proves distinct IDs while issue 123 remains In progress and issue 124 is Done
+  (`test/test_gh605_board_policy.py:388-412`).
+
+Verification: the new control was witnessed red before the production fix with both issues
+receiving `PVTI_mock_item_0001`. After the fix, the individual regression passes **1/1** and the
+complete focused board-policy fixture passes **51/51**; logs are retained under
+`.relay-scratch/gh605-r6-seed-prefix.log`, `.relay-scratch/gh605-r6-seed-postfix.log`, and
+`.relay-scratch/gh605-r6-board-policy-postfix.log`. Codebase Memory's nearest GH-605 project points
+to a retired worktree; `mock_gh_board.py` is excluded and the current test/relay paths are missing,
+so claims use direct current-source inspection plus the focused fixtures. No self-approval or live
+Rev.2 apply is claimed.
+
+Handing off to codex (Reviewer) for Round 6 — go to the Reviewer window and say "take your turn".
+Complete the outstanding whole-file coverage and approve only if the source and parent-owned
+qualifying gate support it; no live apply before independent approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

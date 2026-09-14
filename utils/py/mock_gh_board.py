@@ -353,6 +353,7 @@ def main(argv=None):
                 "field_values": {"PVTF_status_001": "OPT_in_progress_001"},
             }
         ]
+        state["next_item_id"] = 2
         save_state(state, state_path)
         print(f"mock_gh_board: seeded state at {state_path}")
         return 0
