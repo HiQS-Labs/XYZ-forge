@@ -1,6 +1,6 @@
 ---
 title: "GH-615: fix(skills): reinforce start-task against relay-induced overbuilding and gate thrashing"
-status: Active
+status: Complete
 created: 2026-09-13
 updated: 2026-09-13
 owner: operator (via /express)
