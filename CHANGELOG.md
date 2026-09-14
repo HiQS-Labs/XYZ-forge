@@ -119,6 +119,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-13
 
 ### Fixed
+- **GH-617: fix(skills): sharpen relay-xyz review scope against over-engineering and uncommensurate machinery.** (express hotfix, GH-267 lane; suite test/gh617-relay-xyz-commensurate-review.sh green.)
 - **GH-616: fix(skills): enforce commensurate machinery and review-packet envelope in start-task.** (express hotfix, GH-267 lane; suite test/gh616-start-task-commensurate-envelope.sh green.)
 - **GH-615: fix(skills): reinforce start-task against relay-induced overbuilding and gate thrashing.** (express hotfix, GH-267 lane; suite test/gh615-start-task-reinforce.sh green.)
 - **GH-608: fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution.** (express hotfix, GH-267 lane; suite test/gh608-deepseek-effort.sh green.)
