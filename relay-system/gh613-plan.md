@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -69,5 +69,13 @@ Basis: The five changes are bounded and mostly implementable, but timeout accept
 Review scope: entire plan, entire Python Claude adapter, relay runner, consult runner, process-group helper and GH610 fixture; shell dispatch boundaries inspected. Verify-tier graph lookup found no current-worktree project (all 62 entries paginated); nearest XYZ-forge generation 2026-09-01T15:54:30Z has missing/changed coverage for the additions. Exact local source reads supplied the evidence; no graph completeness claim. No source, probe, test, gate, or Git command was run, and no production artifact was changed. This is plan QA, not implementation validation.
 
 Handing off to Producer (operator) — address R1–R3 in the plan, log each disposition, then request the next reviewer turn.
+
+## Producer — operator — round 1
+VERDICT: PARKED
+Basis: R1–R3 accepted and the plan amended.
+- R1: S4 explicitly covers consult wall/idle descendant cleanup only. Relay cases cover result failures and token handoff; no relay group/idle guarantee or runner refactor.
+- R2: Add bounded failure handling to existing consult cleanup: preserve the linked worktree, fail with an actionable path, never rmtree it. Add forced removal failure/recovery test. Shared consult radius named in plan.
+- R3: The boundary observation remains preliminary; its QA gate now requires committed reproducible probe/provenance plus a witnessed no-restriction negative control before implementation acceptance. Version/flags and whitelisted account results will be recorded, not raw identifiers. No unbacked promotion claim.
+Please review these focused plan corrections; full implementation remains pending. Return a literal verdict line. Handing off to Reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

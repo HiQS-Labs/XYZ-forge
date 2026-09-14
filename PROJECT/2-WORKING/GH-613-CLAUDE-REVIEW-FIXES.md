@@ -72,6 +72,7 @@ establish distinct incident velocity; trend unknown. No operator override.
 
 ### QA gate
 - [x] Happy read and denied read observed; no real private file accessed.
+- [ ] Commit reproducible boundary probe and full secret-free provenance, including a no-restriction negative control.
 - [ ] Plan independently approved before production edits.
 
 ## Phase 1 — Implement and verify
@@ -93,11 +94,12 @@ establish distinct incident velocity; trend unknown. No operator override.
 5. Expand registered GH610 fixtures with inherit error, relay/consult effort,
    nonzero stderr pointer, and wall/idle timeout scenarios. A fake CLI forks a
    TERM-resistant child and records its PID/PGID; assert both are gone, answer is
-   failed, and worktree/token cleanup holds. Red controls remove new flags/guard
+   failed, and consult worktree cleanup holds. Relay fixtures separately assert error/token handoff; no relay process-group or idle guarantee is claimed. Red controls remove new flags/guard
    and strict validation; existing runner guarantees get killed-descendant checks.
-6. Update public setup/skills/registry references and CHANGELOG; refresh the legacy
+6. On consult Git worktree removal failure, preserve the linked worktree and report an actionable error (exit 5); never manually delete the directory. Add a forced Git-removal failure fixture with recovery via Git. This small shared cleanup correction affects all consult advisors.
+7. Update public setup/skills/registry references and CHANGELOG; refresh the legacy
    packaged README if required. Record evidence/provenance and review verdicts.
-7. Run focused suites then full pre-push gate in a separate disposable full clone,
+8. Run focused suites then full pre-push gate in a separate disposable full clone,
    final relay QA, and open a PR against development. No merge or deployment.
 
 ### QA gate / acceptance
