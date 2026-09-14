@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+STATUS: Open
+ROUND: 4 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -526,5 +526,36 @@ swept file: no
 - **[Should] Complete source coverage and retain final candidate evidence before approval.** This turn read the full plan including history, FAQ, mock, board planner/writer, GitHub connector, both Python test files, gh549 shell suite, and most of the full releases module. Remaining unswept material includes portions of the long historical CHANGELOG, validate, legacy wrappers/gh492/gh402, connector package initialization, and an output-truncated CLI-parser span of releases_app. Earlier-round reads are context, not this turn's complete sweep. Graph discovery found only a stale XYZ-forge generation (2026-09-01); requested coverage returned stale/excluded/missing paths, so no graph completeness claim is made. SUMMARY attributes 65/65 to candidate22533bb4, while the read provenance file ends with earlier candidate evidence. Pending parent gates are not a source defect; append the exact final-candidate receipts when available. No tests, Git commands, source edits, or live writes were performed by this reviewer.
 
 Handing off to codex-author — report these remaining findings to the operator and obtain an explicit continuation decision at the exhausted review cap. No further automatic review round or live application is authorized by this verdict.
+
+### Operator-authorized finish: focused remaining corrections
+
+Operator explicitly authorizes: "Yes, finish corrections and verification." Extend this same
+relay to5 review rounds (two additional rounds maximum), preserving all history. Resume Sol
+High on the four concrete changes below; previous statements stopping at3 are superseded by
+this authorization, not silently bypassed. Development remains ec0823ab and branch is clean.
+
+1. Reproduce and fix ACTUAL jog drop/skip/retry/clear/orphan-recovery commands, not only helper
+   status. Trace every queue lifecycle writer and use the existing explicit/batched event
+   transaction seam where rows are deleted or multiple rows change. Preserve exact row/repo
+   identity and atomic rollback. Roadmap-origin start followed by each real stop/requeue must
+   become unverified, not In progress. No-op/metadata commands must not manufacture transitions.
+2. Bound both preview created_at AND evidence as_of to15minutes, with coherent ordering.
+   Add fixed-clock real apply integration: stale as_of + refreshed created_at refuses before
+   any remote request; future/inconsistent clocks refuse; fresh preview still applies.
+3. Move known invalid/duplicate ledger preservation ahead of CLOSED selection too. Preserve
+   absent-ledger terminal support. Cover recent/old COMPLETED and NOT_PLANNED, both duplicate
+   valid rows and valid+invalid identity, ensuring no mutation through any fall-through.
+4. Correct the existing stateful mock for PR content IDs and kind, refusing unknown content
+   instead of issue0. Extend real preview/apply/restore fixtures with absent PR cards and actual
+   mock snapshots, not only shadow state. Preserve existing issue mock compatibility.
+
+Ownership: only prior allowlist production/tests/FAQ/CHANGELOG and this relay; no new modules,
+schema, dependencies, writers or unrelated cleanup. You are not alone; preserve PR611 and peer
+edits. No Git commands, real network/config/board/ledger writes, or shell/full suites in the
+linked worktree. Reproduce first with safe temp Python fixtures, then fix and witness red
+controls, run all focusedPython tests/AST. Parent owns separate-full-clone shell/gate evidence.
+20-minute ceiling. Append exact dispositions/test results, NEXT Reviewer STATUS Open, release
+codex-author. Driver owns commit. Final reviewer must close explicitly listed coverage gaps;
+do not claim approval yourself. Parent then verifies and applies the board only after approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
