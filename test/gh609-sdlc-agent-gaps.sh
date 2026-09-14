@@ -148,6 +148,7 @@ check_ci_optimize_contract() {
   # Principle 13: Bounded stress + active quarantine sink
   grep -q "13\. Bounded Flake Stress Loops and Active Quarantine Sinks" "$target" || return 1
   grep -q "100-iteration diagnostic stress loop" "$target" || return 1
+  grep -q "capped by a total time/resource budget" "$target" || return 1
   grep -q "Principle 4 (matched base/candidate attribution)" "$target" || return 1
   grep -q "quarantined test requires a named owner, linked tracked issue, explicit UTC expiry date" "$target" || return 1
   grep -q "quarantine sink must continue running and reporting assertions" "$target" || return 1
@@ -342,36 +343,60 @@ run_mutation_test \
   "$WORK/mut9-recon-misassigned-lane.md" \
   "sed -i.bak 's/\| \*\*B\. State & data\*\*/\| \*\*B\. Output only\*\*/g' '$WORK/mut9-recon-misassigned-lane.md'"
 
-# Mutation 10: CI-Optimize - Remove UTC expiry date requirement from active quarantine sink
+# Mutation 10: CI-Optimize - Remove UTC expiry date requirement from active quarantine sink (isolated clause)
 run_mutation_test \
   "negative control 10 (ci-optimize)" \
   "check_ci_optimize_contract" \
   "$CI_OPT" \
   "$WORK/mut10-ci-opt-no-utc-expiry.md" \
-  "sed -i.bak '/explicit UTC expiry date/d' '$WORK/mut10-ci-opt-no-utc-expiry.md'"
+  "sed -i.bak 's/, explicit UTC expiry date//g' '$WORK/mut10-ci-opt-no-utc-expiry.md'"
 
-# Mutation 11: CI-Optimize - Remove workload-scoped performance budget mechanisms (Principle 14)
+# Mutation 11: CI-Optimize - Remove total time/resource budget cap from stress loop (isolated clause)
 run_mutation_test \
   "negative control 11 (ci-optimize)" \
   "check_ci_optimize_contract" \
   "$CI_OPT" \
-  "$WORK/mut11-ci-opt-no-perf-budgets.md" \
-  "sed -i.bak '/heapsnapshot diffing/d' '$WORK/mut11-ci-opt-no-perf-budgets.md'"
+  "$WORK/mut11-ci-opt-no-budget-cap.md" \
+  "sed -i.bak 's/, capped by a total time\/resource budget (e.g. 5-minute timeout)//g' '$WORK/mut11-ci-opt-no-budget-cap.md'"
 
-# Mutation 12: CI-Debug - Invert containment ladder by moving history scrubbing ahead of provider revocation
+# Mutation 12: CI-Optimize - Remove active assertion execution requirement from quarantine sink (isolated clause)
 run_mutation_test \
-  "negative control 12 (ci-debug)" \
+  "negative control 12 (ci-optimize)" \
+  "check_ci_optimize_contract" \
+  "$CI_OPT" \
+  "$WORK/mut12-ci-opt-no-active-assertions.md" \
+  "sed -i.bak 's/quarantine sink must continue running and reporting assertions/quarantine sink skips running assertions/g' '$WORK/mut12-ci-opt-no-active-assertions.md'"
+
+# Mutation 13: CI-Optimize - Remove workload-scoped performance budget mechanisms (Principle 14)
+run_mutation_test \
+  "negative control 13 (ci-optimize)" \
+  "check_ci_optimize_contract" \
+  "$CI_OPT" \
+  "$WORK/mut13-ci-opt-no-perf-budgets.md" \
+  "sed -i.bak '/heapsnapshot diffing/d' '$WORK/mut13-ci-opt-no-perf-budgets.md'"
+
+# Mutation 14: CI-Debug - Invert containment ladder by swapping Priority 1 and Priority 4 blocks intact
+run_mutation_test \
+  "negative control 14 (ci-debug)" \
   "check_ci_debug_contract" \
   "$CI_DEBUG" \
-  "$WORK/mut12-ci-debug-inverted-ladder.md" \
-  "sed -i.bak -e 's/Priority 1 — Provider Revocation & Rotation First:/Priority 4 — Provider Revocation & Rotation First:/g' -e 's/Priority 4 — Explicitly Authorized History Scrubbing:/Priority 1 — Explicitly Authorized History Scrubbing:/g' '$WORK/mut12-ci-debug-inverted-ladder.md'"
+  "$WORK/mut14-ci-debug-inverted-ladder.md" \
+  "python3 -c \"
+with open('$WORK/mut14-ci-debug-inverted-ladder.md', 'r') as f:
+    text = f.read()
+p1_block = '''1. **Priority 1 — Provider Revocation & Rotation First:**\n   - Immediately revoke or rotate the compromised credential in the identity/cloud provider console or CLI before attempting git history manipulation.'''
+p4_block = '''4. **Priority 4 — Explicitly Authorized History Scrubbing:**\n   - History rewriting tools (\x60git-filter-repo\x60 / BFG) require explicit operator confirmation.\n   - Strictly comply with \x60WORKTREE-SAFETY.md\x60: verify that no linked worktrees depend on the rewritten refs, take a full backup of \x60.git\x60 beforehand, and coordinate ref updates across active clones.'''
+mut_text = text.replace(p1_block, 'TEMP_PLACEHOLDER').replace(p4_block, p1_block).replace('TEMP_PLACEHOLDER', p4_block)
+with open('$WORK/mut14-ci-debug-inverted-ladder.md', 'w') as f:
+    f.write(mut_text)
+\""
 
-# Mutation 13: Empty File Fixture
+# Mutation 15: Empty File Fixture
 touch "$WORK/empty-fixture.md"
 if ! check_workhorse_contract "$WORK/empty-fixture.md"; then
-  pass "negative control 13: empty fixture (0 bytes) properly rejected by contract checker"
+  pass "negative control 15: empty fixture (0 bytes) properly rejected by contract checker"
 else
-  fail "negative control 13: empty fixture unexpectedly passed validation"
+  fail "negative control 15: empty fixture unexpectedly passed validation"
 fi
 
 echo "  gh609-sdlc-agent-gaps: $PASS pass, $FAIL fail"

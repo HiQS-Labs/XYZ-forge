@@ -17,7 +17,7 @@ issue_url: https://github.com/HiQS-Labs/XYZ-forge/issues/609
 
 | What was just completed | What's next |
 |---|---|
-| Skill enhancements implemented across 6 files, `test/gh609-sdlc-agent-gaps.sh` authored (26/26 passing), registered in `validate.sh`, full `./validate.sh` gate green. | Execute final Codex Relay QA on completed diff, run qualifying gate, push branch, and open PR. |
+| Skill enhancements implemented across 6 files, `test/gh609-sdlc-agent-gaps.sh` authored (33/33 passing with 6 non-empty size guards, 6 positive in-tree checks, 6 unmodified controls, and 15 adversarial negative controls), registered in `validate.sh`, full `./validate.sh` gate green. | Execute final Codex Relay QA (Round 3), run qualifying gate, push branch, and open PR. |
 
 ---
 
