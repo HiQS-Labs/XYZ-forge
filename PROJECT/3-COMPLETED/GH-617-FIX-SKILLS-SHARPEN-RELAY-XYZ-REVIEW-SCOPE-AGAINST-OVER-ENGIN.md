@@ -1,6 +1,6 @@
 ---
 title: "GH-617: fix(skills): sharpen relay-xyz review scope against over-engineering and uncommensurate machinery"
-status: Active
+status: Complete
 created: 2026-09-13
 updated: 2026-09-13
 owner: operator (via /express)
