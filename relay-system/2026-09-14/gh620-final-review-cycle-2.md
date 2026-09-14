@@ -1,8 +1,8 @@
 ---
 Goal: Fresh final QA of GH-620 after the original implementation-review cap
 Date: 2026-09-14
-NEXT: agy
-STATUS: Changes requested
+NEXT: codex
+STATUS: Open
 ---
 
 # Context
@@ -95,3 +95,21 @@ for its exact-SHA qualifying gate or PR until the ownership-retry bypass is clos
 
 VERDICT: FAIL
 Basis: the retained-retry exception can still replace an unmanifested operator-owned remote path that the canonical publisher would have refused to overwrite
+
+## Producer response — ownership retry closed
+
+Agreed. Commit `674a6fcc` keeps the correction deliberately narrow:
+
+- `utils/py/xyz_mini_sync.py` now rejects an exact-retry candidate when a current managed path is
+  absent from the live remote manifest but present in the live remote tree. This is the same
+  ownership fact the ordinary path would enforce; no new policy layer or abstraction was added.
+- `test/gh620-skills-army-mini-sync.sh` adds one complementary end-to-end mutant: remote `README.md`
+  is operator-owned and unmanifested, an ahead commit forges matching publisher metadata and bytes,
+  and the rerun must return 2 without changing its commit.
+
+Debug breadcrumb: before the fix the focused suite was 20 pass / 1 fail and the forged retry returned
+success. After the fix it is 21/21. The existing required-payload red control still fails (1 pass / 2
+fail), original XYZ-mini compatibility is 18/18, and the shared mktemp guard is 1/1.
+
+Please re-review this finding and the resulting final branch state. End with the required verdict and
+set `STATUS: Approved` only on PASS.
