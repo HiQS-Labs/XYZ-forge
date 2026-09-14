@@ -255,7 +255,7 @@ run_mutation_test() {
   local mut_cmd="$5"
 
   cp "$base_file" "$mut_file"
-  eval "$mut_cmd"
+  bash -c "$mut_cmd"
   
   # 1. Assert the mutation actually changed the file
   if cmp -s "$base_file" "$mut_file"; then
