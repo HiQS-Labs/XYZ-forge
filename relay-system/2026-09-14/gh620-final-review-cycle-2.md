@@ -2,7 +2,7 @@
 Goal: Fresh final QA of GH-620 after the original implementation-review cap
 Date: 2026-09-14
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -113,3 +113,42 @@ fail), original XYZ-mini compatibility is 18/18, and the shared mktemp guard is 
 
 Please re-review this finding and the resulting final branch state. End with the required verdict and
 set `STATUS: Approved` only on PASS.
+
+## Codex final review cycle 2 — approved
+
+1. **Retained-retry ownership is now exact — pass.** For every current managed destination absent
+   from the live remote manifest, retry validation now refuses if that destination nevertheless
+   exists in the live remote tree (`utils/py/xyz_mini_sync.py:154-180`). That restores the ordinary
+   publisher's ownership fact before the ahead commit's replacement manifest can grant ownership;
+   the retry is accepted only when its changed-path allowlist and all managed/seed bytes and modes
+   also match the publication plan (`utils/py/xyz_mini_sync.py:160-193`). Existing remote seeds must
+   remain unchanged, while absent remote seeds must be newly added and match the parent
+   (`utils/py/xyz_mini_sync.py:166-190`).
+2. **The focused mutants cover both ownership and seed branches — pass.** The new operator-owned
+   README case removes the path from the remote manifest, leaves it present in the remote tree,
+   forges the publisher's manifest/message/payload, and requires refusal without advancing HEAD
+   (`test/gh620-skills-army-mini-sync.sh:100-116`). The default-profile cases separately prove an
+   absent seed can be restored by an exact retained publication and an existing child-owned seed
+   cannot be replaced (`test/gh620-skills-army-mini-sync.sh:118-140`). Preflight remains before the
+   ownership guard and every publication write (`utils/py/xyz_mini_sync.py:225-253`).
+3. **Fixture containment and final MVP sweep — pass.** The test validates the `mktemp` result,
+   physically recaptures it, and pins it through the shared fail-closed fixture guard before any
+   fixture operation (`test/gh620-skills-army-mini-sync.sh:6-15`;
+   `test/lib/fixture-guard.sh:25-33`). The publisher remains one fixed two-profile engine with
+   `xyz-mini` as the default and the Skills Army export limited to the approved closed package,
+   landing files, and licenses (`utils/py/xyz_mini_sync.py:29-79`; `PROJECT/1-INBOX/GH-620-SKILLS-ARMY-MINI.md:68-85`).
+   The child/package quick starts, manual wrapper, seven-phase playbook, CI registration, ledger,
+   architecture index, and changelog remain aligned with issue #620
+   (`skills/skills-army-hq/README.md:64-74`; `mini/skills-army-README.md:7-20`;
+   `skills/push-to-skills-army-mini/SKILL.md:11-25`;
+   `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md:1-47`; `utils/ci-route.sh:24-45`;
+   `validate.sh:494-497`; `ARCHITECTURE.md:65-66`; `CHANGELOG.md:5-7`; `releases.sql:593`).
+
+The graph generation reports changed metadata for the publisher and GH-620 test and excludes the
+new docs, so current direct source reads were authoritative for this review. Per the review-turn
+constraints, no Git command, focused test, or project gate was run. Reviewer approval clears the
+branch to run the required exact-SHA qualifying gate; the PR into `development` remains contingent
+on that gate passing.
+
+VERDICT: PASS
+Basis: the live-remote ownership check closes the final retained-retry bypass, its red-control mutant covers the previously accepted forged state, and the final bounded implementation and records satisfy issue #620
