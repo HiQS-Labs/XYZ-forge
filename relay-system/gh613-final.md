@@ -73,4 +73,12 @@ swept file: yes
 
 relay closed (Approved), no further turn needed. Operator owns remaining gate evidence and PR preparation.
 
+
+### Attestation · relay-drive — 2026-09-14T01:41:19Z
+task: RELAY-gh613-final
+reviewer: codex
+status: Approved
+reviewed-head: 0c3da099a04d9ab5b941db89ccf8382186a4b143
+added-range: 5072+5015
+added-sha256: 250d8e3b9fad640cae1664f80892576c3a2a63f4c9ac382bb9aad9994c6956af
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
