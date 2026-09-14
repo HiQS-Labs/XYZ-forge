@@ -76,10 +76,14 @@ post-hoc revert that the skill's own first dogfood flagged as unsafe.
 ```
 consult.sh --prompt-file Q.md            # question is the file's contents (may reference repo paths)
 consult.sh --prompt "Is X sound?"        # inline question
-  [--models codex,agy]                   # which advisors (default both)
+  [--models codex,agy]                   # default pair; claude is also supported (Python runtime)
   [--out DIR]                            # parent dir (default relay-system/<today>/)
   [--label SLUG]                         # run-subdir + transcript stem (default "consult")
 ```
+
+For native Claude, follow [subscription setup](../../relay-automation/README.md#claude-subscription-mode).
+`--models claude` is a single advisory answer, not cross-model consensus. Claude uses read-only
+built-in tools; relay reviews separately retain write access to their protocol file.
 
 Each run gets its own `<label>-<HHMMSS>/` subdir, so two consults the same day never overwrite each
 other. Behavior is covered by `test/consult.sh` in `validate.sh` (WIP preservation, no advisor leak,

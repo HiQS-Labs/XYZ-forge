@@ -1,0 +1,7 @@
+diff --git a/subscription-smoke.txt b/subscription-smoke.txt
+index 8a435501..f7d42181 100644
+--- a/subscription-smoke.txt
++++ b/subscription-smoke.txt
+@@ -1 +1 @@
+-pending
++Claude subscription builder works
