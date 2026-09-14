@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+.deploy-skills.json
+.deploy-skills-pending.json
+targets.json
+catalog.md
+changelog.md
+backups/
+.staging/

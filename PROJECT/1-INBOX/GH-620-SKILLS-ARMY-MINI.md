@@ -52,7 +52,7 @@ and machine-local paths are excluded.
 
 ### Findings
 
-- The package boundary is exactly `skills/skills-army-hq/{SKILL.md,README.md,scripts/intake.py,scripts/sync.py,references/recovery.md,references/targets.md}` plus repository licenses and a child gitignore. The package README becomes the child landing README.
+- The package boundary is exactly `skills/skills-army-hq/{SKILL.md,README.md,scripts/intake.py,scripts/sync.py,references/recovery.md,references/targets.md}` plus repository licenses and a child landing README/gitignore.
 - `scripts/intake.py` uses only Python's standard library. `scripts/sync.py` imports only sibling `intake.py`; there are no Forge runtime imports.
 - Forge-specific assumptions are explanatory rather than imports, but the package README's quick start currently names an XYZ Forge checkout. It must become clone-relative while retaining upstream attribution and the separation from deployed collections and machine state.
 - GH-589's `utils/py/xyz_mini_sync.py` already owns tracked-file expansion, preview/apply/push, managed deletion, seed preservation, secret scanning, commit provenance, and remote read-back. It does not yet preflight destination branch/upstream divergence; that issue requirement needs one bounded guard. A second copied engine would create maintenance drift.
@@ -69,12 +69,13 @@ collection/target.
 
 | XYZ Forge source | Child destination | Ownership |
 |---|---|---|
-| `skills/skills-army-hq/SKILL.md` | `SKILL.md` | managed |
-| `skills/skills-army-hq/README.md` | `README.md` | managed / landing README |
-| `skills/skills-army-hq/scripts/intake.py` | `scripts/intake.py` | managed |
-| `skills/skills-army-hq/scripts/sync.py` | `scripts/sync.py` | managed |
-| `skills/skills-army-hq/references/recovery.md` | `references/recovery.md` | managed |
-| `skills/skills-army-hq/references/targets.md` | `references/targets.md` | managed |
+| `skills/skills-army-hq/SKILL.md` | `skills-army-hq/SKILL.md` | managed |
+| `skills/skills-army-hq/README.md` | `skills-army-hq/README.md` | managed |
+| `skills/skills-army-hq/scripts/intake.py` | `skills-army-hq/scripts/intake.py` | managed |
+| `skills/skills-army-hq/scripts/sync.py` | `skills-army-hq/scripts/sync.py` | managed |
+| `skills/skills-army-hq/references/recovery.md` | `skills-army-hq/references/recovery.md` | managed |
+| `skills/skills-army-hq/references/targets.md` | `skills-army-hq/references/targets.md` | managed |
+| `mini/skills-army-README.md` | `README.md` | managed / landing README |
 | `mini/skills-army-gitignore` | `.gitignore` | managed |
 | `LICENSE` | `LICENSE` | managed |
 | `LICENSE-COMMERCIAL.md` | `LICENSE-COMMERCIAL.md` | managed |
@@ -105,7 +106,7 @@ and output. This is a fixed two-profile data seam, not a plugin API.
 
 ## Phase 2 — Surgical verification and review
 
-1. Add one GH-620 shell test using a throwaway source clone and local bare child remote -> expect the literal destination set in the test (independent of the profile) to equal the nine managed payload files plus the two control files.
+1. Add one GH-620 shell test using a throwaway source clone and local bare child remote -> expect the literal destination set in the test (independent of the profile) to equal the ten managed payload files plus the two control files.
 2. Witness the oracle fail by dropping one required profile entry while the literal expected set stays fixed, then restore the source -> expect nonzero test status before the final green run.
 3. Exercise the detached package: init preview leaves an absent collection untouched; init apply creates only the temporary collection; add/target/sync previews leave collection and target unchanged; applies touch only those temporary roots; final catalog and target-link read-through identify the fixture skill.
 4. Add one divergence negative case -> expect a destination commit not on origin/main to refuse before managed bytes change.
