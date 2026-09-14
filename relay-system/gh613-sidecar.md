@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -54,5 +54,21 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+VERDICT: PASS
+Basis: The bounded sidecar correction satisfies the stated review scope. Reused the approved full sweep in relay-system/gh613-final.md and correction review in relay-system/gh613-correction.md; read the complete current claude-turn.py and relevant documentation and regression witnesses. No additional blocking pre-existing defect identified in that scope. Source and recorded-evidence review only: no git commands or tests executed, and no passing corrected full gate claimed.
+swept file: yes
+
+- [Pass] The selected JSON path is computed once, then diagnostics use `claude_stderr = claude_log + ".stderr"` (`utils/py/claude-turn.py:93-95`). Both streams are opened by the parent before subprocess dispatch, so the child's isolated CWD does not relocate the sidecar (`utils/py/claude-turn.py:194-195`). This removes the independent default-log call that created target-tree directories despite a custom transcript path. Fix: none required.
+- [Pass] Strict JSON validation, failed-turn cleanup and RTL enforcement remain connected (`utils/py/claude-turn.py:196`, `utils/py/claude-turn.py:212`, `utils/py/claude-turn.py:242`). The diagnostic path is printed before dispatch (`utils/py/claude-turn.py:191`). Public documentation accurately states `<CLAUDE_LOG>.stderr` and that the custom path controls both files (`relay-automation/README.md:103-106`). Fix: none required.
+- [Pass] The archive witness supplies an external custom JSON path and explicitly rejects target `relay-system/` creation (`test/archive-commit.sh:68`, `test/archive-commit.sh:84`); recorded corrected output reports “archive-commit: 16 pass, 0 fail” (`TESTS-RESULTS/2026-09-14+GH-613/archive-fixed.log`). The vendored-root witness also supplies an external custom path (`test/relay-target-root.sh:162`). Its earlier “12 pass, 0 fail” record is prior correction evidence, not a newly executed sidecar run (`TESTS-RESULTS/2026-09-14+GH-613/targetroot-fixed.log`). Fix: none required for this bounded correction.
+- [Pass] Recorded focused evidence reports “Ran 12 tests in 32.668s”, “OK”, and four successful handoff cases (`TESTS-RESULTS/2026-09-14+GH-613/focused-sidecar.log`). Ledger evidence reports “10 pass, 0 fail”, including a divergent-dump negative control (`TESTS-RESULTS/2026-09-14+GH-613/ledger-fixed.log`). The final provenance row explicitly labels the superseded gate “371/376; four ledger-derived failures and archive directory leak” and records the official rebuild and sidecar correction (`TESTS-RESULTS/2026-09-14+GH-613/provenance.jsonl`, event `gate-corrections`). Fix: none required; these records do not qualify the independent full gate.
+- [Nit] The plan's older lesson “Diagnostic logs must use the resolved coordination root” is superseded by its final correction paragraph (`PROJECT/2-WORKING/GH-613-CLAUDE-REVIEW-FIXES.md`, Lessons Learned). At final bookkeeping, rewrite that lesson to say diagnostics follow the selected transcript path, and update CHANGELOG.md's full-gate evidence statement with the actual final result. The final paragraph already explicitly supersedes the earlier tick-root review, so this does not block implementation approval.
+
+Coverage limitation: Verify-tier graph metadata for XYZ-forge refers to another checkout, generation 2026-09-01T15:54:30Z, and reports changed claude-turn.py metadata. Current source reads and the explicitly reusable prior full sweep supply the review evidence; no graph completeness or independent commit-identity claim is made.
+
+relay closed (Approved), no further turn needed. Producer/operator owns corrected full-gate qualification and final publication bookkeeping.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
