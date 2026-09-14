@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Phases 0–2 are implemented and focused checks pass; all three implementation-review rounds produced valid fixes, with the final seed-ownership fix applied after the binding review cap. | Run the qualifying gate once. The branch remains approval-pending until a separately authorized review cycle can inspect the final fix; do not open a ready PR or publish the child yet. |
+| Phases 0–2 are implemented and focused checks pass; all three implementation-review rounds produced valid fixes. The pre-push full gate exposed and led to a fix for the new test's mktemp recapture guard; its other failure is the unchanged GH-615 baseline. | The branch remains approval-pending until a separately authorized review cycle can inspect the final seed and fixture-guard fixes; do not open a ready PR or publish the child yet. |
 
 ## Goal and ownership
 

@@ -4,6 +4,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh620-skills-army.XXXXXX")"
+[ -n "$WORK" ] && [ -d "$WORK" ] || exit 1
 WORK="$(cd "$WORK" && pwd -P)"
 cleanup(){ [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
 trap cleanup EXIT
