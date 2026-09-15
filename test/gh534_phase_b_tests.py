@@ -78,9 +78,24 @@ def view(st, pr):
          "labels": [{"name": l} for l in pr.get("labels", [])], "headRefOid": head or pr.get("headRefOid"),
          "mergeCommit": ({"oid": pr["mergeCommit"]} if pr.get("mergeCommit") else None),
          "url": f"https://example.invalid/pr/{pr['number']}", "title": f"PR {pr['number']}", "body": pr.get("body", ""),
-         "files": [], "createdAt": f"2026-09-01T0{pr['number'] % 10}:00:00Z", "statusCheckRollup": []}
+         "files": pr.get("files", []), "createdAt": f"2026-09-01T0{pr['number'] % 10}:00:00Z", "statusCheckRollup": []}
     d["mergeable"] = st.get("force_mergeable", {}).get(str(pr["number"])) or (mergeable(st, pr) if pr["state"] == "OPEN" else "UNKNOWN")
     return d
+def stub_fail(st, key, prnum=None):
+    """GH-623: a failure injector. `True` -> fixed non-transient message (back-compat);
+    {"remaining": N, "msg": ...} -> a global countdown; {"<pr#>": {...}} -> per-PR countdown.
+    Counts down only when it fires, so a test can make exactly the first N calls fail."""
+    spec = st.get(key)
+    if not spec:
+        return None
+    if isinstance(spec, dict):
+        entry = spec.get(str(prnum), spec if "remaining" in spec else None)
+        if entry and entry.get("remaining", 0) > 0:
+            entry["remaining"] -= 1
+            save(st)
+            return entry.get("msg") or f"stub: {key} failed"
+        return None
+    return f"stub: {key} failed"
 a = sys.argv[1:]
 st = load()
 st.setdefault("calls", []).append(a); save(st)
@@ -93,10 +108,15 @@ if a[:2] == ["pr", "list"]:
         print(json.dumps([{"number": p["number"], "state": "MERGED", "headRefOid": p.get("headRefOid"),
                            "mergeCommit": {"oid": p.get("mergeCommit")}, "baseRefName": st["base"]}
                           for p in st["prs"].values() if p["state"] == "MERGED"])); sys.exit(0)
+    fail = stub_fail(st, "list_fail")
+    if fail:
+        print(fail, file=sys.stderr); sys.exit(1)
     print(json.dumps([view(st, p) for p in st["prs"].values() if p["state"] == "OPEN"])); sys.exit(0)
 if a[:2] == ["pr", "view"]:
     pr = st["prs"].get(a[2])
-    if pr is None or st.get("view_fail"): print("stub: view failed", file=sys.stderr); sys.exit(1)
+    fail = stub_fail(st, "view_fail", a[2]) if pr is not None else "stub: view failed"
+    if fail:
+        print(fail, file=sys.stderr); sys.exit(1)
     print(json.dumps(view(st, pr))); sys.exit(0)
 if a[:2] == ["pr", "merge"]:
     pr = st["prs"][a[2]]

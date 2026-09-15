@@ -38,7 +38,8 @@ from scan_clones import (
 from toposort_prs import (
     fetch_open_prs,
     toposort_prs,
-    format_pr_table
+    format_pr_table,
+    FetchError,
 )
 from scan_clones import GH_BIN_ENV
 import attempt_record
@@ -69,6 +70,59 @@ def _gh(args: List[str], cwd: Path, timeout: int = 180) -> subprocess.CompletedP
         return subprocess.run([_gh_bin()] + args, cwd=str(cwd), capture_output=True, text=True, check=False, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=str(exc))
+
+
+# --- GH-623: network resilience — bounded calls, transient-only retry, defer instead of stop ----
+# The incident run lost 3 of 7 PRs to one DNS failure and never retried anything. The contract,
+# pinned by TestGh623Resilience: a TRANSIENT network failure is retried 3 times total (sleeps of
+# 2s then 4s between the three calls) and, at the two pre-decision call sites, DEFERS that one PR
+# while the rest of the queue continues; anything non-transient stops exactly as before. A hung
+# call reaches this machinery because every retry-site git call is bounded in time (_net_git).
+
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_S = (2, 4)      # sleeps BETWEEN attempts: 3 calls, 2 sleeps
+NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
+
+TRANSIENT_RE = re.compile(
+    r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit",
+    re.I,
+)
+
+_sleep = time.sleep  # module alias so tests can record the schedule without waiting for it
+
+
+def _transient(err: str) -> bool:
+    return bool(TRANSIENT_RE.search(err or ""))
+
+
+def _net_git(cwd: Path, args: List[str], timeout: float = NET_TIMEOUT_S) -> subprocess.CompletedProcess:
+    """run_git with a finite timeout for network call sites. A hung git call becomes the same
+    non-zero failure shape as any other error (rc 124, "timed out" diagnostic) so the retry
+    loop can classify it; a plain run_git call with no timeout stays unbounded by default."""
+    try:
+        return run_git(cwd, args, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
+                                           stderr=f"timed out after {timeout}s: git {' '.join(args)}")
+
+
+def _retry_call(attempt_fn, describe: str):
+    """Run `attempt_fn() -> CompletedProcess` up to RETRY_ATTEMPTS times, sleeping
+    RETRY_BACKOFF_S between attempts, retrying only transient failures. Returns the last
+    CompletedProcess; callers keep their existing non-zero handling."""
+    result = None
+    for attempt in range(RETRY_ATTEMPTS):
+        result = attempt_fn()
+        if result.returncode == 0:
+            return result
+        if not _transient(result.stderr):
+            return result
+        if attempt < RETRY_ATTEMPTS - 1:
+            wait = RETRY_BACKOFF_S[min(attempt, len(RETRY_BACKOFF_S) - 1)]
+            log(f"{describe}: transient network failure ({result.stderr.strip()[:120]}) — "
+                f"retry {attempt + 2}/{RETRY_ATTEMPTS} in {wait}s")
+            _sleep(wait)
+    return result
 
 
 def log(msg: str):
@@ -119,6 +173,43 @@ def refresh_pr(pr_num: int, repo_path: Path) -> Dict[str, Any]:
     return info
 
 
+def refresh_pr_with_retry(pr_num: int, repo_path: Path) -> Dict[str, Any]:
+    """refresh_pr, retried on transient network failures (GH-623). A transient failure that
+    survives the retries is still an {"error": ...} — the caller decides (pre-decision sites
+    defer; anything non-transient stops as before)."""
+    info: Dict[str, Any] = {"error": "not attempted"}
+    for attempt in range(RETRY_ATTEMPTS):
+        info = refresh_pr(pr_num, repo_path)
+        err = info.get("error") or ""
+        if not err or not _transient(err):
+            return info
+        if attempt < RETRY_ATTEMPTS - 1:
+            wait = RETRY_BACKOFF_S[min(attempt, len(RETRY_BACKOFF_S) - 1)]
+            log(f"PR #{pr_num}: transient refresh failure ({err[:120]}) — "
+                f"retry {attempt + 2}/{RETRY_ATTEMPTS} in {wait}s")
+            _sleep(wait)
+    return info
+
+
+def fetch_open_prs_with_retry(repo_path: str) -> List[Dict[str, Any]]:
+    """Phase 4 discovery, retried on transient network failures (GH-623). Raises toposort
+    FetchError after the retries are exhausted; an empty list now can only mean EMPTY."""
+    last: Optional[FetchError] = None
+    for attempt in range(RETRY_ATTEMPTS):
+        try:
+            return fetch_open_prs(repo_path)
+        except FetchError as exc:
+            last = exc
+            if not _transient(str(exc)):
+                raise
+            if attempt < RETRY_ATTEMPTS - 1:
+                wait = RETRY_BACKOFF_S[min(attempt, len(RETRY_BACKOFF_S) - 1)]
+                log(f"PR discovery: transient network failure ({str(exc)[:120]}) — "
+                    f"retry {attempt + 2}/{RETRY_ATTEMPTS} in {wait}s")
+                _sleep(wait)
+    raise last  # type: ignore[misc]
+
+
 def hold_label(info: Dict[str, Any]) -> Optional[str]:
     for lab in info.get("labels") or []:
         name = (lab.get("name") if isinstance(lab, dict) else str(lab)) or ""
@@ -158,15 +249,18 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
         return {"clone": None, "merge_rc": None, "error": "primary has no origin remote"}
     clone = Path(tempfile.mkdtemp(prefix=f"pr-{pr['number']}-{pr['headRefOid'][:8]}-", dir=str(workdir)))
     clone.rmdir()  # git clone wants to create it
-    r = run_git(workdir, ["clone", "--quiet", url, str(clone)])
+    # GH-623: clone and fetches are network calls — bounded and retried on transient failures.
+    r = _retry_call(lambda: _net_git(workdir, ["clone", "--quiet", url, str(clone)]), f"PR #{pr['number']} clone")
     if r.returncode != 0:
         return {"clone": None, "merge_rc": None, "error": f"git clone failed: {r.stderr.strip()[:300]}"}
     for k, v in (("user.name", "merge-cleanup"), ("user.email", "merge-cleanup@local")):
         run_git(clone, ["config", k, v])
-    r = run_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch])
+    r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch]),
+                    f"PR #{pr['number']} fetch")
     if r.returncode != 0:
         # Some remotes (a bare fixture) have no pull/N/head; the branch name is the fallback.
-        r = run_git(clone, ["fetch", "--quiet", "origin", pr.get("headRefName") or "", integration_branch])
+        r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", pr.get("headRefName") or "", integration_branch]),
+                        f"PR #{pr['number']} fetch (branch fallback)")
         if r.returncode != 0:
             return {"clone": clone, "merge_rc": None, "error": f"fetch of PR #{pr['number']} head failed: {r.stderr.strip()[:300]}"}
     r = run_git(clone, ["checkout", "--quiet", "--detach", pr["headRefOid"]])
@@ -641,21 +735,45 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     workdir = Path(tempfile.mkdtemp(prefix="merge-cleanup-"))
     keep_workdir = False
     origin = origin_url(primary_repo) or ""
+    if getattr(args, "resume", False):
+        # GH-623 (Antigravity review): say up front what resume does and does not trust. The
+        # live refresh stays authoritative — counts are only known per-PR as the loop reaches
+        # them, never pre-skipped from records alone.
+        coordinator = attempt_record.record_path(primary_repo, origin, 0).parent
+        log(f"Resume mode: attempt records under {coordinator} are consulted only after each "
+            f"PR's live refresh; a repaired, now-mergeable PR still lands.")
     # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
     # handed-off PR must not be attempted at all.
     failed: Dict[int, str] = {}
-    handoffs = 0
     try:
         for pr in ordered_prs:
             p_num = pr["number"]
-            blocked_by = [d for d in pr.get("_deps", []) if d in failed]
+            # C + GH-623: only HARD dependencies (explicit "depends on #N") block a PR on a
+            # failed predecessor. Collision edges (`_soft_deps`) decide sequence only — a
+            # dependent is attempted anyway and the landing simulation decides; a genuinely
+            # conflicting successor hands off on its own merits instead of never being tried.
+            blocked_by = [d for d in pr.get("_hard_deps", []) if d in failed]
+            soft_blocked_by = [d for d in pr.get("_soft_deps", []) if d in failed]
+            if soft_blocked_by and not blocked_by:
+                why_soft = ", ".join(f"#{d} ({failed[d]})" for d in soft_blocked_by)
+                log_err(f"PR #{p_num}: soft predecessor(s) {why_soft} did not land — "
+                        f"attempting anyway; the landing simulation decides")
             if blocked_by:
                 why = ", ".join(f"#{d} ({failed[d]})" for d in blocked_by)
                 log_err(f"PR #{p_num}: NOT attempted — depends on {why}")
                 failed[p_num] = f"blocked by {', '.join('#%d' % d for d in blocked_by)}"
                 continue
-            info = refresh_pr(p_num, primary_repo)
+            # E + GH-623: live refresh, retried on transient failures. A TRANSIENT failure that
+            # survives the retries defers this PR and the queue continues (the incident's S4:
+            # one DNS failure aborted #604/#607/#614 which were never attempted). A failure we
+            # cannot attribute to the network still stops the run: unknown state is never merged.
+            info = refresh_pr_with_retry(p_num, primary_repo)
             if info.get("error"):
+                if _transient(info["error"]):
+                    log_err(f"PR #{p_num}: DEFERRED — network unavailable after {RETRY_ATTEMPTS} attempts: "
+                            f"{info['error']}")
+                    failed[p_num] = f"deferred: network ({info['error'][:120]})"
+                    continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
             label = hold_label(info)
@@ -676,6 +794,11 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             # Simulate this landing against the integration head fetched NOW.
             prep = prepare_landing_clone(info, primary_repo, branch, workdir)
             if prep["error"]:
+                if _transient(prep["error"]):
+                    log_err(f"PR #{p_num}: DEFERRED — network unavailable after {RETRY_ATTEMPTS} attempts: "
+                            f"{prep['error']}")
+                    failed[p_num] = f"deferred: network ({prep['error'][:120]})"
+                    continue
                 log_err(f"PR #{p_num}: {prep['error']} — stopping")
                 keep_workdir = True
                 return 2
@@ -683,6 +806,27 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
 
             if prep["merge_rc"] != 0:
                 log(f"PR #{p_num}: landing merge conflicts (GitHub said {mergeable}) — routing to B1")
+                # GH-623 --resume: the LIVE state above is authoritative — a PR whose last repair
+                # resolved and now merges cleanly never reaches this branch. Only when a repair
+                # is actually NEEDED (the landing still conflicts) does the record decide: at the
+                # ceiling, skip as previously parked instead of re-running the B1 machinery.
+                # reserve() below remains the under-lock authority without --resume.
+                if args.resume:
+                    record_path = attempt_record.record_path(primary_repo, origin, p_num)
+                    rec = None
+                    if record_path.exists():
+                        try:
+                            rec = attempt_record.load(record_path)
+                        except attempt_record.RecordError as exc:
+                            log_warn(f"PR #{p_num}: unreadable attempt record ({exc}) — proceeding; "
+                                     f"reserve() still gates the ceiling")
+                    if rec is not None and attempt_record.repair_count(rec) >= attempt_record.MAX_REPAIRS \
+                            and not any(a.get("outcome") == "in_progress" for a in rec["attempts"]):
+                        log_err(f"PR #{p_num}: PARKED (resume) — the landing still conflicts and the record "
+                                f"already shows {attempt_record.MAX_REPAIRS} repairs")
+                        log_err(f"  export {attempt_record.RECORD_ENV}={record_path}  # caller ladder: /unstuck")
+                        failed[p_num] = "previously parked (resume)"
+                        continue
                 # C: one durable attempt record at the pinned coordinator (the --primary path),
                 # shared with the caller's repair rungs. B1 is a repair: it needs a slot.
                 record = attempt_record.record_path(primary_repo, origin, p_num)
@@ -704,7 +848,6 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     log_err(f"PR #{p_num}: PARKED — {why}")
                     log_err(f"  export {attempt_record.RECORD_ENV}={record}  # then /unstuck; the record already shows {attempt_record.MAX_REPAIRS} repairs")
                     failed[p_num] = "parked: repair budget exhausted"
-                    handoffs += 1
                     continue
                 log(f"PR #{p_num}: {why}")
                 b1 = resolve_ledger_conflict(clone, execute=not dry_run)
@@ -719,7 +862,6 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     log_err(f"  conflict set: {', '.join(b1['conflict_set']) or '(none extracted)'}")
                     log_err(f"  export {attempt_record.RECORD_ENV}={record}  # caller ladder: /debug-mantra → /recon → /ponytail → /start-task → /unstuck")
                     failed[p_num] = "handoff"
-                    handoffs += 1
                     keep_workdir = True
                     continue
                 if not b1["resolved"]:
@@ -770,8 +912,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if not execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False):
                 return 2
             # Land it locally before anything writes into the primary. In particular, emitting
-            # pr_merged before this fast-forward dirties releases.sql and can block the landing.
-            fetched = run_git(primary_repo, ["fetch", "origin", branch])
+            # pr_merged before this fast-forward dirties releases.sql and can block the landing
+            # (GH-624). GH-623: the fetch is bounded and retried on transient network failures.
+            fetched = _retry_call(lambda: _net_git(primary_repo, ["fetch", "origin", branch]),
+                                  f"post-merge fetch for PR #{p_num}")
             if fetched.returncode != 0:
                 log_err(f"post-merge fetch failed: {fetched.stderr.strip()} — stopping")
                 return 2
@@ -790,8 +934,16 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if not commit_and_push_phase5_writes(p_num, primary_repo, branch):
                 log_err(f"PR #{p_num}: post-merge writes were not made durable — stopping before the next PR")
                 return 2
-        if handoffs:
-            log_err(f"{handoffs} PR(s) handed off or parked; dependents were not attempted: "
+        # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
+        # HARD dependents; soft dependents were attempted above. Exit 3 keeps the shape
+        # "the queue completed but not everything landed"; 2 remains a hard stop.
+        if failed:
+            deferred = [n for n, w in failed.items() if w.startswith("deferred:")]
+            resumed_parked = [n for n, w in failed.items() if w == "previously parked (resume)"]
+            other = len(failed) - len(deferred) - len(resumed_parked)
+            log_err(f"{len(failed)} PR(s) did not land "
+                    f"({len(deferred)} deferred by network, {len(resumed_parked)} parked on resume, "
+                    f"{other} handed off or parked): "
                     + ", ".join(f"#{n} ({w})" for n, w in failed.items()))
             return 3
         return 0
@@ -822,6 +974,7 @@ def main():
     parser.add_argument("--marker", action="store_true", help="Post status marker comments to linked canonical GitHub issues for active/incomplete checkouts")
     parser.add_argument("--allow-unready-primary", action="store_true", help="Explicitly defer primary-checkout cleanup and proceed even though the primary cannot receive the landing")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
+    parser.add_argument("--resume", action="store_true", help="Continue a previous run: consult each PR's attempt record and skip one that is already parked (the live refresh stays authoritative — a PR whose repair resolved and now merges cleanly still lands)")
 
     args = parser.parse_args()
 
@@ -897,7 +1050,16 @@ def main():
         return 0
 
     # Phase 4: Open PR Sequencing
-    prs = fetch_open_prs(str(primary_repo))
+    # GH-623: discovery is retried on transient failures, and a FAILED discovery is never read
+    # as an empty queue — an empty list and an error are different facts. Exhaustion exits 2
+    # BEFORE Phase 6: rolling into teardown on a false "no PRs" would report success while the
+    # queue was silently skipped.
+    try:
+        prs = fetch_open_prs_with_retry(str(primary_repo))
+    except FetchError as exc:
+        log_err(f"PR discovery failed after {RETRY_ATTEMPTS} attempts: {exc} — refusing to continue; "
+                f"the queue cannot be verified empty")
+        return 2
     ordered_prs: List[Dict[str, Any]] = []
     if prs:
         ordered_prs, _, warnings = toposort_prs(prs)
@@ -928,7 +1090,11 @@ def main():
         # The Phase 0 verdict above was computed against whatever origin/* this clone had cached.
         # Re-establish it against the live remote before the first irreversible merge (R1-F1).
         log("Refreshing remote refs before the first merge, then re-checking the primary...")
-        fetched = run_git(primary_repo, ["fetch", "origin", args.integration_branch])
+        # GH-623: transient failures are retried (bounded) first. Exhaustion keeps today's
+        # refusal — merging on a stale Phase 0 verdict is the pinned hazard (R2-1) — and the
+        # existing --allow-unready-primary override still applies unchanged.
+        fetched = _retry_call(lambda: _net_git(primary_repo, ["fetch", "origin", args.integration_branch]),
+                              "pre-merge refresh")
         if fetched.returncode != 0 and not args.allow_unready_primary:
             # Re-checking against the SAME cached origin/* the fetch failed to refresh would
             # certify stale evidence as current. Refuse instead (R2-1).

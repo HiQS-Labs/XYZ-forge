@@ -133,19 +133,20 @@ the answer will inform a landing.
 
 ### Phase 4: PR Matrix & Topological Sorting
 - Runs only after Phase 0 has reported. The PR sequence is advice until the primary can receive it.
-- Fetches open PRs via GitHub API (`gh pr list`).
-- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`).
-- Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically.
+- Fetches open PRs via GitHub API (`gh pr list`). The discovery call is bounded in time and retried on transient network failures (GH-623): a FAILED discovery is an error, never an empty queue — after three transient retries it exits 2 before Phase 6, because rolling into teardown on a false "no PRs" would report success while the queue was silently skipped.
+- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges.
+- Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
 - **Refuses every executing cleanup when Phase 0 says the primary is not landing-ready**, unless the operator explicitly passes `--allow-unready-primary` to defer that cleanup. This gate applies before any Phase 5 or Phase 6 mutation, including zero-PR and `--teardown-only` runs; the skill never silently chooses to leave the primary dirty or otherwise unready.
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
-- **Every PR is re-fetched before every decision (E).** `gh pr view` is read fresh per PR; a `gh` failure or a `mergeable` of `UNKNOWN` stops the run (a PR whose state is unknown is never merged). A hold label (`hold`, `do not merge`, `blocked`, `wip`) skips the PR (#444). A PR whose base is not the checked integration branch stops the run.
+- **Every PR is re-fetched before every decision (E).** `gh pr view` is read fresh per PR; a `mergeable` of `UNKNOWN` stops the run, and so does any non-transient `gh` failure (a PR whose state is unknown is never merged). A TRANSIENT network failure (DNS, refused/timed-out connection, TLS, rate limit) is retried three times first (2s, 4s between calls, GH-623); one that survives the retries DEFERS that PR — named in the end-of-run summary — and the queue continues. A hold label (`hold`, `do not merge`, `blocked`, `wip`) skips the PR (#444). A PR whose base is not the checked integration branch stops the run.
 - **Pre-merge ledger gate (E.6):** the landing is simulated in a disposable full clone — PR head, then `git merge --no-ff --no-commit origin/<integration-branch>` against the integration head fetched *now* (the three-way merge keeps `MERGE_HEAD`, which the ledger resolver's generation floor reads). On a clean merge: a three-way ledger classification (a clean textual merge can still be a semantic conflict), then `releases_app.py check` and `roadmap reconcile-state --dry-run`. Any non-zero exit or `FAIL:` line is **red** and the PR is not merged; `warn:` lines, per-row identity skips and `would move` lines are diagnostics, not red.
 - **Ledger-only conflicts, disjoint changes only (B1):** a conflicted landing whose unmerged set (from `git diff --diff-filter=U` + `git ls-files -u`, required non-empty with a zero-exit extraction) is within `{releases.db, releases.sql, LEADERBOARD.md, RELEASES-PREVIEW.html, LEADERBOARD.html}` is classified three-way against the merge base, per table, per key. Only when the two sides' changes are mechanically disjoint — no same-key change on both sides, no reference to a row the other side deleted, no duplicate `gh_number`, nothing outside `roadmap_items` on the replayed side — is it resolved: the side with the higher generation is kept, the other side's roadmap changes are replayed **through the writer** (`roadmap add` / `update` / `rate` / `repoint`; receipts are regenerated, gids are re-minted), then `utils/releases-merge-resolve.sh` rebuilds the DB and views, `releases check` must be clean, `git ls-files -u` must be empty, the merge commit is validated in a **second** disposable clone, and it is pushed to the PR branch only if the remote head is still the SHA that was resolved. Then the PR is re-fetched and re-gated. `harnesses.*` conflicts, code conflicts, same-key edits, deletes, inexpressible tables, a resolver refusal (generation rewind), an extraction error → **handoff** (exit 3) naming the keys; the landing clone is kept for inspection. Never an SQL union.
 - **One durable attempt record per PR, at the pinned coordinator (C):** before B1 runs, the script reserves a repair slot in `<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json` — `<primary>` is the explicit `--primary` path the run started with, never a disposable clone's CWD. Every writer (this script, and each caller repair rung via `attempt_record.py`) holds `fcntl.flock` on `<record>.lock` for the whole read → reserve → write; that lock is independent of the driver's mkdir lock, so a worker under a running driver still reserves. A lock timeout **stops** the attempt (never "skipped"). Only repairs count (`B1`, `ponytail`, `start-task`); `debug-mantra`/`recon` are notes. **Two repairs per PR, whatever the head**: at the ceiling the PR is **parked** with the record path, and B1 does not run. Any handoff or park prints `export MERGE_CLEANUP_RECORD=<record>` for the caller ladder below.
-- **Dependents of a parked or handed-off PR are not attempted (C):** Phase 4 only orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`, or a file-collision edge) failed, naming it. Independent PRs still land. A run with any handoff/park exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately.
+- **Only HARD dependencies block on a failed predecessor (C + GH-623):** Phase 4 orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`) was handed off, parked or deferred, naming it. File-collision edges are SOFT: a collision-adjacent PR is attempted anyway and its own landing simulation decides — a genuinely conflicting successor hands off on its own merits instead of never being tried (the incident's S3 cascade: one handoff removed most of the queue). Independent PRs still land. A run with any non-landed outcome (handoff / park / defer) exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately.
+- **`--resume` continues a previous run (GH-623):** the live refresh stays first and authoritative. Only when a PR's landing actually conflicts — a repair would be needed — does the attempt record decide: at the ceiling with `--resume`, the PR is skipped as `previously parked` without re-running the B1 machinery (and without consuming a slot). A PR whose last recorded repair finished `resolved` and whose head now merges cleanly LANDS — a resume run completes a successful repair's work, never strands it. Without `--resume`, `reserve()` is the under-lock authority and the behavior is unchanged. Resume mode announces itself (`Resume mode: ...`) and the end-of-run summary breaks out parked-on-resume counts.
 - Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails.
 - After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
 - Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
@@ -162,6 +163,36 @@ the answer will inform a landing.
 - **Symlink Cleanup:** Prunes dangling skill symlinks in `~/.claude/skills/` and `~/.gemini/**/skills/`.
 
 ---
+
+## Drive loop — how an agent runs this skill end to end (GH-623)
+
+`/merge-cleanup` is a driven workflow, not a one-shot report. Follow the loop; do not stop at the
+first refusal, do not degrade the scope silently, and do not report completion over PRs that were
+never attempted:
+
+1. **Dry run first** (Phase 0 + audit + sequence):
+   `python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --prefix <name>`
+2. **Fix the primary** so Phase 0 reports landing-ready (commit or park the dirty intake files per
+   the Phase 0 rules). A dirty primary is a blocker to FIX, not a reason to silently switch to
+   `--teardown-only` and still report completion (the incident's S1 false-Done). If a blocker
+   cannot be resolved autonomously, report the blockers and stop — address them or report them;
+   never silently truncate the task.
+3. **Execute:** add `--execute`.
+4. **On exit 3** (handoff / park / defer): read the printed `export MERGE_CLEANUP_RECORD=...`
+   paths, work the caller ladder below for handoffs, then **re-run with `--resume --execute`** to
+   continue the queue. Repeat until exit 0 or a stop. Deferred PRs (network) are named in the
+   summary; they are not PR failures — re-run once the network is healthy.
+5. **On exit 2**: diagnose before anything else; the diagnostic names the gate. A re-run is only
+   valid once the cause is fixed.
+
+**Done rule:** do not report Done unless Phase 5 ran to completion (exit 0; or exit 3 whose
+handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked
+for `--teardown-only` / `--scan-only` / `--prs-only`.
+
+**Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
+retry the identical command once before escalating to the operator — a block that succeeds on a
+verbatim retry was non-deterministic, and surrendering the run to it is how an operator ends up
+hand-driving the loop four times (the incident's S2).
 
 ## Caller decision ladder (Phase C) — what the script hands off
 
@@ -194,12 +225,15 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | coordinator-pinned-to-primary | 5 | script | TestCScript.test_omitted_primary_is_refused_and_no_record_root_is_minted |
 | teardown-trash-only | 6 | script | TestCScript.test_teardown_refuses_without_trash |
 | dependents-blocked | 5 | script | TestCScript.test_dependent_of_a_handed_off_pr_is_not_attempted_and_an_independent_pr_proceeds |
+| soft-edge-nonblocking | 5 | script | TestGh623Resilience.test_soft_edge_predecessor_does_not_block_a_collision_dependent |
+| network-retry-defer | 5 | script | TestGh623Resilience.test_transient_view_failure_defers_and_independents_land |
+| resume-skips-parked | 5 | script | TestGh623Resilience.test_resume_skips_a_still_conflicting_exhausted_pr |
 | reconciliation-gating | 5 | script | TestCScript.test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable |
 | code-conflict-recon | 5 | caller | — |
 | code-conflict-resolution | 5 | caller | — |
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--resume`.
 
 ## CLI Usage
 
@@ -229,6 +263,9 @@ export MERGE_CLEANUP_RECORD=/abs/primary/.tick/merge-cleanup/HiQS-Labs-XYZ-forge
 python3 skills/merge-cleanup/scripts/attempt_record.py note --kind diagnosis --text "same-key update on gh_number 100"
 python3 skills/merge-cleanup/scripts/attempt_record.py reserve --rung ponytail --head <sha> --clone "$PWD"   # exit 3 → /unstuck
 python3 skills/merge-cleanup/scripts/attempt_record.py finish --index 0 --outcome resolved
+
+# 8. Continue a previous run after repairs or a network outage (GH-623)
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --resume --execute
 ```
 
 ---
