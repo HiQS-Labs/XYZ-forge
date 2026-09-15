@@ -2,9 +2,9 @@
 gh_issue: 595
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/595
 title: "merge-cleanup requires operator-owned primary-checkout deferral"
-status: active
+status: Complete
 created: 2026-09-12
-updated: 2026-09-12
+updated: 2026-09-15
 owner: Codex
 doc_type: bugfix
 goal: >
