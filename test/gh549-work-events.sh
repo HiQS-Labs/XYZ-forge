@@ -599,6 +599,8 @@ import ast, sys
 src = open(sys.argv[1], encoding="utf-8").read()
 tree = ast.parse(src)
 fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "land_prs")
+post = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "run_post_merge_reconcile")
+wait = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "wait_for_hosted_reconcile")
 lines = {}
 for node in ast.walk(fn):
     if not isinstance(node, ast.Call):
@@ -611,9 +613,22 @@ for node in ast.walk(fn):
     ):
         lines.setdefault("landing_fast_forward", node.lineno)
 assert lines["execute_pr_merge"] < lines["landing_fast_forward"] < lines["run_post_merge_reconcile"] < lines["emit_pr_merged"] < lines["commit_and_push_phase5_writes"], lines
+post_calls = {
+    node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+    for node in ast.walk(post) if isinstance(node, ast.Call)
+}
+wait_calls = {
+    node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+    for node in ast.walk(wait) if isinstance(node, ast.Call)
+}
+assert {"wait_for_hosted_reconcile", "run_local_wave_reconcile"} <= post_calls, post_calls
+assert {"_gh", "sleep"} <= wait_calls, wait_calls
+assert '"--workflow", "wave-reconcile.yml"' in src
+assert '"--commit", merged_head' in src
+assert 'HOSTED_WAIT_ENV = "MERGE_CLEANUP_HOSTED_WAIT_S"' in src
 PYORDER
 [ $? -eq 0 ] \
-  && ok "merge-cleanup emits only after reconciliation, then commits and pushes the event" \
+  && ok "merge-cleanup waits for hosted reconciliation before emission, then commits and pushes the event" \
   || bad "merge-cleanup Phase 5 durability order drifted"
 
 echo "17. the VENDORED github_board connector, through normal config, offline (impl QA r2)"

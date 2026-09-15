@@ -52,6 +52,8 @@ import tempfile
 
 # Labels that mean "do not land this" (#444): the merge loop never touches a PR carrying one.
 HOLD_LABEL_TOKENS = ("hold", "do not merge", "do-not-merge", "blocked", "wip")
+HOSTED_WAIT_ENV = "MERGE_CLEANUP_HOSTED_WAIT_S"
+HOSTED_POLL_ENV = "MERGE_CLEANUP_HOSTED_POLL_S"
 
 
 def _gh_bin() -> str:
@@ -269,10 +271,105 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
     return emitted
 
 
-def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True) -> bool:
-    """Executes wave_reconcile.py, RELEASES DB check, and pdda issue-doc-sync."""
+def _seconds_from_env(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = float(raw)
+        if value < 0:
+            raise ValueError
+        return value
+    except ValueError:
+        log_warn(f"Ignoring invalid {name}={raw!r}; using {default:g}s")
+        return default
+
+
+def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
+                              integration_branch: str) -> str:
+    """Return success, fallback, or active_timeout for this merge head's hosted run.
+
+    `--commit` is the identity boundary: an older successful run must never satisfy a newer
+    landing. An observed active run is polled to completion and is never raced by the local
+    writer. Empty/unavailable results mean the hosted workflow does not exist for this repo and
+    select the local fallback.
+    """
+    wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
+    poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
+    deadline = time.monotonic() + wait_s
+    query = [
+        "run", "list", "--workflow", "wave-reconcile.yml",
+        "--branch", integration_branch, "--commit", merged_head,
+        "--json", "databaseId,status,conclusion", "--limit", "5",
+    ]
+
+    while True:
+        res = _gh(query, repo_path, timeout=60)
+        if res.returncode != 0:
+            log_warn(
+                "Hosted wave-reconcile lookup unavailable; using local reconciliation: "
+                + (res.stderr.strip() or f"gh exited {res.returncode}")
+            )
+            return "fallback"
+        try:
+            runs = json.loads(res.stdout or "[]")
+            if not isinstance(runs, list):
+                raise ValueError("expected a JSON array")
+        except (TypeError, ValueError) as exc:
+            log_warn(f"Hosted wave-reconcile lookup returned unusable JSON ({exc}); using local reconciliation")
+            return "fallback"
+        if not runs:
+            log(f"No hosted wave-reconcile run found for {merged_head[:10]}; using local reconciliation")
+            return "fallback"
+
+        run = runs[0]
+        status = str(run.get("status") or "").lower()
+        conclusion = str(run.get("conclusion") or "").lower()
+        run_id = run.get("databaseId") or "unknown"
+        if status == "completed":
+            if conclusion == "success":
+                log(f"✅ Hosted wave-reconcile run #{run_id} succeeded for {merged_head[:10]}")
+                return "success"
+            log_warn(
+                f"Hosted wave-reconcile run #{run_id} completed as {conclusion or 'unknown'}; "
+                "using local reconciliation"
+            )
+            return "fallback"
+
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            log_err(
+                f"Hosted wave-reconcile run #{run_id} is still {status or 'active'} after "
+                f"{wait_s:g}s; refusing to start the local reconciler while it is in flight"
+            )
+            return "active_timeout"
+        log(f"Hosted wave-reconcile run #{run_id} is {status or 'active'}; waiting")
+        time.sleep(min(poll_s, remaining))
+
+
+def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
+    """Run the local writer after hosted reconciliation is known absent or completed red."""
+    reconcile_script = repo_path / "utils" / "py" / "wave_reconcile.py"
+    if not reconcile_script.exists():
+        return True
+    r_cmd = [sys.executable, str(reconcile_script), "--pr", str(pr_num)]
+    r_res = subprocess.run(r_cmd, cwd=str(repo_path), capture_output=True, text=True, check=False)
+    if r_res.returncode == 0:
+        log(f"✅ local wave_reconcile for PR #{pr_num} passed")
+        return True
+    log_err(
+        f"wave_reconcile FAILED for PR #{pr_num} (exit {r_res.returncode}): "
+        f"{(r_res.stderr.strip() or r_res.stdout.strip())[-600:]}"
+    )
+    return False
+
+
+def run_post_merge_reconcile(pr_num: int, repo_path: Path,
+                             integration_branch: str = "development",
+                             dry_run: bool = True) -> bool:
+    """Wait for hosted reconciliation (or fall back locally), then run governance checks."""
     if dry_run:
-        log(f"[DRY RUN] Would run wave_reconcile.py --pr {pr_num} and RELEASES DB sync")
+        log(f"[DRY RUN] Would wait for hosted reconciliation or run wave_reconcile.py --pr {pr_num}")
         return True
 
     log(f"Running post-merge reconciliation for PR #{pr_num} in {repo_path}...")
@@ -281,16 +378,27 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True)
     # returns False and the orchestrator stops all downstream mutation.
     ok = True
 
-    # 1. wave_reconcile.py
-    reconcile_script = repo_path / "utils" / "py" / "wave_reconcile.py"
-    if reconcile_script.exists():
-        r_cmd = [sys.executable, str(reconcile_script), "--pr", str(pr_num)]
-        r_res = subprocess.run(r_cmd, cwd=str(repo_path), capture_output=True, text=True, check=False)
-        if r_res.returncode == 0:
-            log(f"✅ wave_reconcile for PR #{pr_num} passed")
-        else:
-            log_err(f"wave_reconcile FAILED for PR #{pr_num} (exit {r_res.returncode}): {(r_res.stderr.strip() or r_res.stdout.strip())[-600:]}")
-            ok = False
+    # 1. The merge fast-forward immediately before this call pins the workflow lookup to the
+    # exact triggering head. Hosted success is authoritative; only an absent/completed-red run
+    # selects the local writer. An active timeout stops instead of racing that writer.
+    head = run_git(repo_path, ["rev-parse", "HEAD"])
+    if head.returncode != 0 or not head.stdout.strip():
+        log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
+        return False
+    hosted = wait_for_hosted_reconcile(head.stdout.strip(), repo_path, integration_branch)
+    if hosted == "active_timeout":
+        return False
+    if hosted == "success":
+        fetched = run_git(repo_path, ["fetch", "origin", integration_branch])
+        if fetched.returncode != 0:
+            log_err(f"Hosted reconciliation succeeded but fetch of origin/{integration_branch} failed: {fetched.stderr.strip()}")
+            return False
+        ff = run_git(repo_path, ["merge", "--ff-only", f"origin/{integration_branch}"])
+        if ff.returncode != 0:
+            log_err(f"Fast-forward onto hosted reconciliation commit failed: {ff.stderr.strip() or 'git refused'}")
+            return False
+    elif not run_local_wave_reconcile(pr_num, repo_path):
+        ok = False
 
     # 2. releases_app.py check
     releases_app = repo_path / "utils" / "py" / "releases_app.py"
@@ -660,7 +768,7 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                 log_err(f"fast-forward to origin/{branch} FAILED: {ff.stderr.strip() or 'git refused'}")
                 log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
                 return 2
-            if not run_post_merge_reconcile(p_num, primary_repo, dry_run=False):
+            if not run_post_merge_reconcile(p_num, primary_repo, integration_branch=branch, dry_run=False):
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
                 return 2
             # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile
@@ -742,7 +850,10 @@ def main():
     if args.reconcile_pr > 0:
         if _primary_blocks("reconcile"):
             return 2
-        return 0 if run_post_merge_reconcile(args.reconcile_pr, primary_repo, dry_run=dry_run) else 2
+        return 0 if run_post_merge_reconcile(
+            args.reconcile_pr, primary_repo,
+            integration_branch=args.integration_branch, dry_run=dry_run,
+        ) else 2
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)

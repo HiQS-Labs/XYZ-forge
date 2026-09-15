@@ -149,9 +149,9 @@ the answer will inform a landing.
 - Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails.
 - After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
 - Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
-  - Wait for hosted `wave-reconcile.yml` run to complete on `development` (`gh run list --workflow wave-reconcile.yml`).
-  - Fast-forward primary onto `origin/development`.
-  - If hosted run fails or for offline/local reconciliation: `python3 utils/py/wave_reconcile.py --pr <PR_NUM>` (use `--force-local-reconcile` only if an active run was manually killed).
+  - Query the hosted `wave-reconcile.yml` run for the exact merged head and integration branch (`gh run list --workflow wave-reconcile.yml --branch <integration> --commit <merged-head>`). If it is queued or in progress, poll until completion for at most `MERGE_CLEANUP_HOSTED_WAIT_S` seconds (default 1800); timing out while it remains active stops the landing rather than racing it locally.
+  - On hosted success, fetch and fast-forward the primary onto `origin/<integration>`'s reconciliation commit.
+  - If no hosted run/workflow/`gh` exists, or the hosted run completed unsuccessfully, fall back to `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`. Never invoke that local writer while the observed hosted run is queued or in progress (`--force-local-reconcile` remains a manual recovery tool only).
   - `python3 utils/py/releases_app.py check`
   - Verify with `bash utils/pdda/pdda.sh issue-doc-sync`.
 

@@ -1,6 +1,6 @@
 # Marathon Phase gh-629
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-629-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -96,3 +96,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Implemented the hosted reconciliation wait in `skills/merge-cleanup/scripts/merge_cleanup.py`: the query is pinned to the integration branch and exact merged HEAD, active runs are polled under `MERGE_CLEANUP_HOSTED_WAIT_S` (default 1800s), hosted success fetches and fast-forwards the primary, and absent/unavailable/completed-red hosted runs select the existing local writer. An active run that exceeds the bound stops instead of being raced locally.
+- Preserved the Phase 5 durability sequence: landing fast-forward → hosted/local reconciliation → `releases_app.py check` / PDDA sync → `pr_merged` emission → commit/push → clean/equal verification.
+- Extended `test/gh534_phase_c_tests.py` with a `gh run list` fixture. The normal fixture returns no runs so the existing two-PR execute case exercises local fallback; the hosted fixture transitions `in_progress` → `completed/success`, pushes a fake hosted commit, and asserts the local writer was not called and that the primary includes that commit before final durability.
+- Updated `test/gh549-work-events.sh`'s static Phase 5 contract probe and documented the exact wait/fallback contract and environment variable in `skills/merge-cleanup/SKILL.md`.
+- Verification: Python AST parsing passed for both changed Python files (`.relay-scratch/gh629-static-check.log`). Per the phase scope lock, no test or project gate was run in this isolated worktree; the harness owns the specified gate.
