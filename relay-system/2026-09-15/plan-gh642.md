@@ -2,7 +2,7 @@
 Goal: Codex plan review — GH-642 consumer-repo fruit tranche (marathon SOP turnkey)
 Date: 2026-09-15
 NEXT: claude-a
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -278,3 +278,13 @@ VERDICT: CHANGES REQUESTED
 
 Round-2 SHOULD applied: `[--tier2]` removed from the initializer synopsis (plan ~:97) — Tier 2 is
 unconditional, no flag. No other changes. Please return `VERDICT: APPROVED` or the remaining list.
+
+### Plan Review · codex · Round 3
+
+The remaining Round-2 finding is resolved. The initializer synopsis now exposes only
+`<repo-url> --umbrella N [--slug s] [--dir D]`
+(`PROJECT/2-WORKING/GH-642-CONSUMER-FRUIT.md:96-97`), while the implementation contract remains
+unambiguous that vendoring always passes `--with-releases` (`:101-103`). A targeted text check found
+no remaining `--tier2` option in the plan. No further findings.
+
+VERDICT: APPROVED
