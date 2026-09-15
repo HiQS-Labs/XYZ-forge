@@ -157,3 +157,7 @@ itself a demonstrated corruption incident. Recurrence trend unknown: no incidenc
 claim, and existing board/reconciler issues are context rather than new incidents.
 Live board config was unresolved in this session; the skill must report that at invocation,
 not ship the author's identity as a default. HiQS was traced read-only, not refreshed.
+
+## Merge evidence
+
+- PR #637 merged 2026-09-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
