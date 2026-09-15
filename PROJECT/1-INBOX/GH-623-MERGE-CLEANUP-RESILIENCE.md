@@ -292,3 +292,13 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   Producer) and the spent token could not be re-claimed, done'd, or reaped afterwards; the
   open token is gitignored local `.tick/` residue, while the committed relay file carries the
   PASS verdict. Implementation starts on the approved plan.
+- 2026-09-14: Codex FINAL implementation QA round 1 (token `RELAY-gh623-impl-qa`, exit 5,
+  "Changes requested", verdict FAIL — 2 proof gaps): (1) the three new capability rows were in
+  SKILL.md's table but not in the guard's `REQUIRED_CAPABILITIES` fixed set, so deleting them
+  stayed green — ACCEPTED, rows added to the fixed set (the deleted-row control now pins each);
+  (2) the R4 Drive-loop/Done-rule/classifier-retry prose had no regression proof — ACCEPTED,
+  `TestGh623DriveLoopDocContract` asserts the load-bearing phrases with three removal controls.
+  Production code unchanged; suite 160/160.
+- 2026-09-14: Codex FINAL implementation QA round 2 (token `RELAY-gh623-impl-qa-r2`): VERDICT
+  PASS — all three graded findings pass; "GH-623 implementation QA is approved." Implementation
+  and proof complete; proceeding to the qualifying gate and PR.
