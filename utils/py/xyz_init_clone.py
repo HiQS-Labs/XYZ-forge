@@ -85,7 +85,8 @@ def main():
                         "must not already contain the derived name")
     args = parser.parse_args()
 
-    harness_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # utils/py/xyz_init_clone.py → utils/py → utils → repo root
+    harness_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     vendor = os.path.join(harness_root, VENDOR_REL)
     if not os.path.isfile(vendor):
         die(f"vendor script not found next to this tool: {vendor}")
