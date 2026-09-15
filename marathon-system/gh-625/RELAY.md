@@ -1,5 +1,5 @@
 # Marathon Phase gh-625
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-625-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -104,3 +104,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Overrode `ThreadingHTTPServer.server_bind` to bind through `socketserver.TCPServer.server_bind`, then populate `server_name` and `server_port` directly from the bound socket. This preserves `server_address` while bypassing `HTTPServer.server_bind` and its `socket.getfqdn` reverse-DNS lookup.
 - Added a bounded GH-625 regression probe that replaces `socket.getfqdn` with a hard failure and requires bridge startup to reach the existing unauthenticated-tunnel refusal with exit 2 within the four-second window. Removing the override makes this control fail before the refusal.
 - Verification: per the phase scope lock, I did not run tests or gates in this isolated worktree; the harness owns `bash test/agent-chorus-bridge.sh` after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The changes fully satisfy the acceptance criteria:
+1. `ThreadingHTTPServer` successfully overrides `server_bind` to bypass `socket.getfqdn`, using `self.socket.getsockname()[:2]` instead, which guarantees no reverse DNS lookup occurs.
+2. The added test check properly guards this by monkeypatching `socket.getfqdn` to block/raise, asserting that the initialization reaches the tunnel refusal point before it exits 2.
+3. A full file sweep found no preexisting issues or logic faults in the surrounding bridge server logic.
+
+**Verdict:** Approved
