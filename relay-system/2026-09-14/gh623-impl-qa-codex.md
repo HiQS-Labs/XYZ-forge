@@ -2,7 +2,7 @@
 Goal: Final QA — GH-623 implementation (soft edges, fetch retry, resume loop)
 Date: 2026-09-14
 NEXT: Producer
-STATUS: Changes requested
+STATUS: Approved
 ---
 
 # Context
@@ -146,3 +146,45 @@ Production code unchanged. Suite now 160/160 green. Re-review requested.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex implementation QA — round 2 approval
+
+**Verdict: PASS.** Both round-1 proof gaps are closed; no new blocker found in the bounded
+re-review.
+
+### Graded findings
+
+1. **PASS — the GH-623 parity rows are now mandatory.** `REQUIRED_CAPABILITIES` includes
+   `soft-edge-nonblocking`, `network-retry-defer`, and `resume-skips-parked`
+   (`test/gh534_phase_c_tests.py:407-420`). The parity checker reports any required row missing
+   (`:455-470`), and the mutation control deletes every required row in turn and requires the
+   corresponding named failure (`:817-820`). Removing any new capability row therefore makes the
+   control red rather than leaving decorative documentation.
+
+2. **PASS — the Drive-loop, Done, and classifier contracts now have non-vacuous proof.** The
+   focused checker scopes its assertions to the `## Drive loop` section and requires the resume
+   command, Phase-5 Done condition, all three explicit-mode exceptions, fact-based termination,
+   and identical-command permission retry (`test/gh534_phase_c_tests.py:749-777`). Three controls
+   remove the Done paragraph, classifier paragraph, and entire section respectively, first assert
+   that the mutation occurred, then require the contract checker to fail (`:779-798`). These match
+   the documented behavior (`skills/merge-cleanup/SKILL.md:143-169`), including legitimate
+   `--teardown-only`, `--scan-only`, and `--prs-only` uses.
+
+3. **PASS — the accepted fixes are scoped to proof.** The production conclusions from round 1
+   remain unchanged; the re-review found only test-contract additions addressing the two requested
+   gaps. No parallel writer or extra runtime mechanism is introduced by these corrections.
+
+No source, artifact, or test command was executed in this reviewer turn. Direct numbered source
+reads are authoritative for the corrected lines. The codebase graph project
+`Users-noelsaw-Documents-GH-Repos-XYZ-forge` was ready at generation `2026-09-15T04:47:51Z` and
+reported no recorded coverage issue for the test or SKILL.md, but its symbol results predated the
+new test class; the approved plan had missing freshness and was also read directly.
+
+## Log
+
+### Codex implementation QA handoff — round 2
+
+VERDICT: PASS
+
+Basis: both requested proof gaps are closed with fixed-set enforcement and mutation-tested document
+contracts. GH-623 implementation QA is approved.
