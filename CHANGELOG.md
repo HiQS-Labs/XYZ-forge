@@ -15,6 +15,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-546/GH-591: produce full-suite evidence inside automatic reconciliation.** The existing macOS job qualifies a pinned integration snapshot in an independent full clone and commits attributable receipts with lifecycle outputs. Complete sequential telemetry is mandatory; failed, partial, stale-identity or malformed proof cannot authorize closeout. Existing local push checks remain in place. This replaces the proposed receipt commit/repush loop and covers PRs regardless of author-side hook routing. Verification: witnessed missing-producer and wrong-identity controls, focused receipt/workflow/Git-boundary regressions; full candidate local gate passes; hosted acceptance remains pending in the active plan. Reversibility: **Costly** for in-flight closeout; revert the workflow opt-in and producer together while preserving historical receipts. Revisit if the serialized full suite creates a sustained queue or exceeds its bounded timeout.
 
+- **GH-595: merge-cleanup makes primary-checkout deferral an operator decision.** Every executing
+  cleanup now refuses before PR landing, checkout teardown, or dangling-symlink pruning when the
+  primary checkout is dirty or otherwise unable to receive the integration branch. The existing
+  `--allow-unready-primary` flag is the sole explicit deferral; zero-PR and `--teardown-only` runs no
+  longer report successful cleanup while silently leaving the primary unresolved. Reversibility:
+  **Easy** — revert the shared pre-mutation gate and its focused tests. Verification: witnessed red
+  controls for both bypasses, then the full merge-cleanup suite green (140/140).
+
 - **CI: retire the StarSling runner; every job is GitHub-hosted.** The `starsling-ubuntu-24.04-8` pool silently stopped claiming jobs at 2026-09-12 06:30 UTC (the StarSling account had no organization linked), leaving five runs queued for ~20 h and forcing two PRs to land on locally-run gate evidence. PR #588 moved the merge-blocking `vendored-smoke` job to `ubuntu-latest`; this change moves the advisory `canary-ubuntu` job as well and tightens `test/ci-workflow.sh` to require `ubuntu-latest` and reject any `starsling-*` label. Reversibility: **Easy** — restore the two `runs-on` lines and the previous assertion. Verification: PR #588's gate ran on GitHub-hosted in 14 s; `test/ci-workflow.sh` green including the new negative assertion.
 
 ## 2026-09-12
