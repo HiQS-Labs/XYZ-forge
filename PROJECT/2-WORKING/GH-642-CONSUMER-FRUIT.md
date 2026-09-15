@@ -2,7 +2,7 @@
 gh_issue: 642
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/642
 title: "Low-hanging fruit from two foreign-repo marathons: make the consumer-repo SOP turnkey"
-status: Active (2-WORKING — plan v2, revised per Codex plan review round 1; re-review pending)
+status: Active (2-WORKING — implemented on feat/gh642-consumer-fruit; QA'd 3 rounds; gate evidence on final SHA)
 created: 2026-09-15
 updated: 2026-09-15
 owner: noelsaw1
@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **PLAN v2 2026-09-15** — Codex plan review round 1 returned CHANGES REQUESTED (3 BLOCKER / 3 SHOULD / 1 NIT); all seven findings accepted and applied: item 4 is a disposable **copy** (symlink rejected — containment hole), behavior fixes land **only in the Python twins** (frozen Bash fallbacks untouched, no `Frozen-twin-exception` needed), initializer is `utils/py/xyz_init_clone.py` (no new Bash), gates move to a **disposable full clone**, relay-pkg regen + freshness added, token-identity spec made explicit, initializer contract pinned, rating rationale recorded and effort re-scored 60→48 (`--force`, reason: plan-review evidence — two preflight-adjacent edits + new initializer + cross-Git-layout tests). | Codex re-review round 2 (fresh token) → implement p1–p4 → gates in disposable clone → final Codex QA → PR against `development`. |
+| **BUILT 2026-09-15 on branch `feat/gh642-consumer-fruit`** — plan APPROVED (Codex, 3 rounds); all six tranche items landed. Final QA ran 3 rounds: rounds 2–3 confirm every item's implementation correct; round 3's remaining findings were test-falsifiability only, and its exact prescribed assertions (default-stream stderr capture, runtime call-site pins) were applied and **mutation-checked red → green**. Focused suite **52 pass / 0 fail**; pinned suites green: xyz-vendor 76/0, gh312 14/0, gh308 38/0, gh320 10/0, gh365 5/0, relay-pkg-freshness 3/0. `ci-local.sh` runs once on this final SHA (evidence in the PR). | Push + PR against `development` (operator-visible next); merge is the operator's call. Deferred follow-ups (fix-rounds, handback preservation, --scaffold, dual-home) need their own issues + arcs. |
 
 ## Rating rationale (2026-09-15, noelsaw1 session)
 
